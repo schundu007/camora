@@ -49,6 +49,16 @@ export const devopsTopicCategoryMap = {
   'circleci-deep-dive':             'cicdtools',
   'buildkite-runners':              'cicdtools',
   'bazel-deep-dive':                'cicdtools',
+  'dagger-ci':                      'cicdtools',
+  'ebpf-programming':               'containers',
+  'containerd-deep-dive':           'containers',
+  'firecracker-microvms':           'containers',
+  'linux-storage-deep-dive':        'foundations',
+  'linux-networking-l2l3':          'foundations',
+  'kubernetes-the-hard-way':        'orchestration',
+  'kubernetes-storage':             'orchestration',
+  'kubernetes-pod-scheduling':      'orchestration',
+  'kubescape-runtime-security':     'devsecops',
   'tekton-pipelines':               'cicdtools',
   'argo-workflows':                 'cicdtools',
   // Continuous Delivery — deploy strategies → flags → progressive → db → release process
@@ -31739,6 +31749,4775 @@ Monitoring a healthy Bazel monorepo (BuildBuddy metrics):
       'https://research.google/pubs/pub45424/',
     ],
   },
+
+{
+  id: 'ebpf-programming',
+  title: 'eBPF Programming',
+  icon: 'cpu',
+  color: '#7c3aed',
+  questions: 5,
+  description: `eBPF lets you run sandboxed programs inside the Linux kernel without changing kernel source or loading kernel modules. It is the foundation for modern observability, networking, and security tooling used by Kubernetes, Cilium, Falco, and Datadog.`,
+  visualizations: [
+    {
+      title: `eBPF Architecture and Execution Pipeline`,
+      description: `An eBPF program begins as C source code compiled by Clang into BPF bytecode, a 64-bit RISC-like instruction set. Before the kernel ever executes a single instruction the bytecode passes through the eBPF verifier, a static analysis engine that proves termination and memory safety. The verifier performs a depth-first traversal of the control-flow graph, tracking register types and ranges at each instruction. It rejects programs with back-edges that could cause infinite loops unless bounded loop support is enabled, and it refuses any instruction that dereferences an unvalidated pointer.
+
+Once the verifier accepts the bytecode, the JIT compiler translates it to native machine code for the host architecture. On x86-64 this is near-zero overhead compared to a raw kernel function. The program is then attached to a hook point, which can be a kprobe on any kernel symbol, a tracepoint on a stable TRACE_EVENT, an XDP hook at the earliest point in the NIC driver receive path, a TC hook at the traffic control layer, a cgroup hook for per-container policy, or a sock_ops hook for per-connection TCP state.
+
+eBPF maps bridge kernel-space programs and user-space processes. A hash map might accumulate per-PID counters that a Go daemon reads every second. A ring buffer delivers high-throughput events to user space without dropping. The perf_event_array pushes variable-length records through the perf subsystem. All map access from BPF programs uses helper functions, never direct pointer arithmetic into map memory, so the verifier can track safety across map lookups.
+
+The libbpf skeleton API auto-generates a C header from your compiled object file. Opening the skeleton, loading it, and attaching it requires roughly ten lines of boilerplate, giving you typed accessors to every map and program in the object. CO-RE relocations encoded in the BTF section of the object file let the same binary run on kernels from 4.14 to 6.x without recompilation.`,
+      image: `/diagrams/devops/ebpf-programming-arch.png`,
+    },
+    {
+      title: `XDP and TC Packet Processing Flow`,
+      description: `XDP operates at the lowest hook point the Linux networking stack exposes: inside the NIC driver's receive function, before sk_buff allocation. A program running at this hook receives a pointer to the raw packet frame and must return one of four codes. XDP_PASS sends the packet up the normal stack. XDP_DROP discards it in the driver with zero allocation cost, making it the fastest possible firewall action. XDP_TX hairpins the modified packet back out the same interface. XDP_REDIRECT sends it to another interface, CPU, or AF_XDP socket for user-space fast-path processing.
+
+The TC hook sits further up the stack, after sk_buff creation, and has access to the full socket buffer metadata including connection tracking state and routing decisions. TC BPF programs can inspect and modify the packet, change the tc verdict, or redirect through the cls_bpf classifier. Because sk_buff is available, TC programs can access L4 headers without manually parsing offsets.
+
+A common Kubernetes CNI pattern uses XDP for the initial ingress drop firewall enforcing network policy, then TC egress for per-pod bandwidth shaping and packet encapsulation. Cilium implements exactly this split: XDP drop for denied connections, TC for VXLAN or Geneve encapsulation and load balancing. The separation keeps the high-frequency deny path at the earliest possible hook while keeping the more complex policy evaluation in TC where sk_buff helpers are available.
+
+bpftrace sits above all of this as a one-liner scripting layer. It compiles AWK-like programs to BPF internally and is ideal for ad-hoc tracing: counting syscalls by comm, measuring block I/O latency as a histogram, or printing every execve argument. For production agents you want libbpf with proper CO-RE because bpftrace does not produce portable binaries.`,
+      image: `/diagrams/devops/ebpf-programming-flow.png`,
+    },
+  ],
+  introduction: `eBPF, originally Extended Berkeley Packet Filter, has grown from a simple packet filtering mechanism into a general-purpose kernel execution environment. Where Berkeley Packet Filter of the 1990s gave tcpdump a safe way to specify which packets to capture, the extended version introduced a 64-bit register file, arbitrary helper calls, persistent maps, and dozens of hook points spanning networking, tracing, and security. The result is a programmability layer that lets you instrument and enforce policy inside the kernel with none of the risk or maintenance burden of writing a kernel module.
+
+The safety guarantee is the central innovation. Every eBPF program submitted via the bpf() syscall is validated by the verifier before it is allowed to run. The verifier explores every possible execution path in the program's control-flow graph, tracks the type and value range of every register and stack slot, and rejects any path that could read out-of-bounds memory, call a non-approved helper, or loop without a provable bound. If the verifier rejects your program you get a human-readable log explaining exactly which instruction failed and why. This makes eBPF safer than any dynamically loaded module while remaining faster than user-space alternatives because there is no system call boundary on the hot path.
+
+CO-RE, Compile Once Run Everywhere, solves the portability problem that historically forced BCC-based tools to ship Clang and kernel headers to every target host so they could recompile at load time. With CO-RE, the eBPF object file carries BTF, BPF Type Format, metadata that describes every struct field the program touches. When libbpf loads the object it consults the running kernel's own BTF, available at /sys/kernel/btf/vmlinux, and rewrites field offsets in the BPF instructions to match the kernel actually running. The same binary works on a 5.10 LTS kernel with one struct layout and a 6.6 kernel with a different layout, with no compiler or kernel headers on the target.
+
+The ecosystem has split into three layers of abstraction. The raw bpf() syscall gives maximum control but requires you to hand-assemble or hand-compile BPF instructions and manage all map file descriptors yourself. libbpf is the canonical middle layer: you write C, compile with Clang targeting BPF, and use the skeleton API for typed access to your programs and maps. BCC sits above libbpf, embedding Python or Lua scripting and compiling BPF C at runtime, which is convenient for interactive development but impractical for shipping agents to production machines that lack kernel headers. bpftrace is a fourth option for one-liners: a domain-specific language that compiles internally to BPF and prints aggregated results, ideal for live debugging sessions.
+
+Operationally, eBPF programs are attached and pinned. Pinning a program or map to the BPF virtual filesystem at /sys/fs/bpf/ keeps it alive after the loading process exits, which is essential for daemons that upgrade in place. Link objects introduced in kernel 5.7 provide reference-counted attachment handles that automatically clean up when the file descriptor closes, removing the need for manual detach logic in signal handlers. Understanding these lifecycle details is essential for writing reliable production agents.`,
+  whenToUse: [
+    `You need sub-microsecond packet filtering or load balancing without leaving the kernel, replacing iptables rules that become slow at scale with XDP programs that run before sk_buff allocation.`,
+    `You want zero-instrumentation observability: measuring syscall latency, tracking TCP retransmits, profiling CPU flame graphs, or auditing file opens by container, all without modifying application code or adding sidecars.`,
+    `You are building a Kubernetes CNI plugin or network policy engine and need per-packet enforcement at line rate across thousands of pods, as Cilium, Calico eBPF mode, and Antrea do.`,
+    `You need kernel-level security enforcement such as blocking specific syscall argument patterns, auditing privilege escalation, or sandboxing untrusted workloads, as Falco and Tetragon do.`,
+    `You want to profile production systems without restarting processes, using uprobes to instrument Go or Rust binaries at specific function entry and return points with nanosecond timestamps.`,
+    `You are replacing a BCC-based agent with a CO-RE libbpf binary so you can ship a single statically linked executable to heterogeneous kernel versions without shipping Clang or kernel headers.`,
+    `You want to implement socket-level load balancing or connection-level TCP metrics collection using sock_ops and sk_msg hooks that fire on individual connection events.`,
+  ],
+  keyConcepts: [
+    {
+      term: `eBPF Verifier and Safety Model`,
+      definition: `The verifier is a static analysis pass that runs inside the kernel before any BPF instruction executes. It performs a depth-first traversal of the program's control-flow graph, tracking the abstract state of every register and every byte of the stack frame at each instruction. Register state includes the type, which may be scalar, pointer to a map value, pointer to the packet data, or pointer to the context struct, and for scalars the minimum and maximum possible value.
+
+The verifier enforces several classes of rules. Pointer arithmetic is only allowed when the resulting pointer can be proven to stay within a known-safe memory region. A packet pointer offset by a runtime value is only safe if the program has already checked that the offset plus the access size is less than the packet length. Map value pointers require a null check after lookup before they can be dereferenced. Helper calls are only valid for the specific program type, for example XDP programs cannot call helpers that require an sk_buff.
+
+Loop support was historically forbidden entirely because the verifier could not prove termination for back-edges. Kernel 5.3 introduced bounded loop support: loops are allowed when the verifier can determine that the loop variable is a scalar with a finite range, meaning every back-edge has a decreasing bound. Kernel 5.17 added open-coded iterators for BPF_FOR_EACH_MAP_ELEM and similar patterns.
+
+When the verifier rejects a program, loading it via libbpf prints the verifier log to stderr. Reading this log is the primary debugging technique. A typical rejection message looks like the following.
+
+\`\`\`
+; if (skb->len < sizeof(struct ethhdr))
+11: (79) r1 = *(u64 *)(r6 +0)
+R6 type=ctx expected=fp
+\`\`\`
+
+This tells you register r6 holds the context pointer but you attempted to read it as a frame pointer, meaning you accidentally used the wrong register. The log prints the source line that maps to the failing instruction, the BPF assembly, and the expected versus actual type.`,
+    },
+    {
+      term: `CO-RE and BTF Portability`,
+      definition: `CO-RE, Compile Once Run Everywhere, solves the kernel version portability problem without requiring kernel headers or Clang on the target machine. The mechanism depends on BTF, BPF Type Format, a compact debug-info format embedded in the kernel itself and in eBPF object files.
+
+When you compile a CO-RE program with Clang, you use vmlinux.h generated from the running kernel's BTF by bpftool. Instead of including individual kernel headers that vary across versions you include this single generated header. Clang emits CO-RE relocations, special annotations in the BPF ELF section, wherever your program accesses a kernel struct field. Each relocation records the field name, the BTF type it belongs to, and the byte offset at compile time.
+
+When libbpf loads the object on the target kernel, it reads the kernel's BTF from /sys/kernel/btf/vmlinux, resolves the actual byte offset of the field in that kernel's struct layout, and patches the BPF instructions with the correct offset before calling the verifier. If the field does not exist in the target kernel, libbpf can optionally skip the program or substitute a default value using the BPF_CORE_READ_BITFIELD_PROBED family of helpers.
+
+A CO-RE field read looks like this.
+
+\`\`\`c
+#include "vmlinux.h"
+#include <bpf/bpf_core_read.h>
+
+SEC("kprobe/tcp_sendmsg")
+int BPF_KPROBE(trace_tcp_sendmsg, struct sock *sk)
+{
+    __u32 pid = bpf_get_current_pid_tgid() >> 32;
+    __u16 dport = BPF_CORE_READ(sk, __sk_common.skc_dport);
+    bpf_printk("pid %u dport %u\\n", pid, dport);
+    return 0;
+}
+\`\`\`
+
+BPF_CORE_READ generates the CO-RE relocation. On a kernel where skc_dport is at offset 68 it patches offset 68; on a kernel where it moved to offset 72 it patches 72. The binary is identical in both cases.`,
+    },
+    {
+      term: `Program Types and Hook Points`,
+      definition: `Each eBPF program type defines the context struct the program receives, the set of helpers it may call, and the return codes it may produce. Mixing types or calling wrong helpers causes verifier rejection.
+
+A kprobe program fires on entry to any kernel function. The context is struct pt_regs, and you use the PT_REGS_PARM1 through PT_REGS_PARM5 macros to read function arguments. A kretprobe fires on return and gives you PT_REGS_RC for the return value.
+
+\`\`\`c
+SEC("kprobe/do_sys_openat2")
+int BPF_KPROBE(trace_open, int dfd, const char *filename)
+{
+    char buf[256];
+    bpf_probe_read_user_str(buf, sizeof(buf), filename);
+    bpf_printk("open: %s\\n", buf);
+    return 0;
+}
+\`\`\`
+
+A uprobe fires on a user-space function entry. You attach it to a binary path and a symbol offset. This does not require recompiling or instrumenting the target process.
+
+A tracepoint program fires on a stable kernel trace event defined with TRACE_EVENT. The context struct is generated from the event format file in /sys/kernel/debug/tracing/events/. Tracepoints are preferred over kprobes for production because their ABI is stable across kernel versions.
+
+An XDP program runs inside the NIC driver receive function. The context is struct xdp_md with data, data_end, and data_meta pointers. The return value must be XDP_PASS, XDP_DROP, XDP_TX, or XDP_REDIRECT.
+
+A TC program runs at the traffic control layer with a full struct __sk_buff context. It has access to more metadata than XDP but runs after sk_buff allocation.
+
+A cgroup/skb program fires on every packet sent or received by any socket in a cgroup, enabling per-container network policy. Sock_ops programs fire on individual TCP connection events such as connection establishment, setting socket options, or timeout.`,
+    },
+    {
+      term: `Map Types`,
+      definition: `eBPF maps are the primary data structures for storing state between program invocations and for communicating with user space. Each map type is optimized for different access patterns.
+
+BPF_MAP_TYPE_HASH is a hash table keyed by arbitrary bytes. Lookup, update, and delete are O(1) average. It is the right choice for per-PID or per-IP counters.
+
+BPF_MAP_TYPE_ARRAY is a fixed-size array keyed by u32 index. It cannot be deleted from; update overwrites the existing slot. It is cache-friendly for small maps accessed by index.
+
+BPF_MAP_TYPE_LRU_HASH automatically evicts the least recently used entry when the map is full. Essential for connection tracking tables where the number of distinct keys is unbounded.
+
+BPF_MAP_TYPE_RINGBUF is the modern way to stream variable-length records to user space. The producer reserves a record, writes into it, and submits it atomically. The consumer polls with a file descriptor. It outperforms perf_event_array because it avoids per-CPU fragmentation and supports large records.
+
+\`\`\`c
+struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 1 << 24); // 16 MB
+} events SEC(".maps");
+
+struct event {
+    __u32 pid;
+    char comm[16];
+};
+
+SEC("tracepoint/syscalls/sys_enter_execve")
+int trace_execve(struct trace_event_raw_sys_enter *ctx)
+{
+    struct event *e = bpf_ringbuf_reserve(&events, sizeof(*e), 0);
+    if (!e) return 0;
+    e->pid = bpf_get_current_pid_tgid() >> 32;
+    bpf_get_current_comm(e->comm, sizeof(e->comm));
+    bpf_ringbuf_submit(e, 0);
+    return 0;
+}
+\`\`\`
+
+BPF_MAP_TYPE_PERF_EVENT_ARRAY is the older per-CPU streaming mechanism. Each CPU has its own perf ring buffer. Preferred when targeting kernels older than 5.8 that lack ringbuf support.
+
+BPF_MAP_TYPE_PROG_ARRAY stores references to other BPF programs, enabling tail calls that replace the current stack frame, allowing programs that would exceed the 1 million instruction limit to be split across multiple programs.`,
+    },
+    {
+      term: `libbpf Skeleton API`,
+      definition: `The libbpf skeleton is a code-generation workflow that removes all manual file descriptor management from eBPF user-space loaders. After compiling your BPF C file to an object, bpftool gen skeleton produces a header with typed structs for your maps and programs.
+
+A minimal counter daemon using the skeleton looks like the following.
+
+\`\`\`c
+// user-space loader: counter.c
+#include "counter.skel.h"
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void)
+{
+    struct counter_bpf *skel = counter_bpf__open();
+    if (!skel) { perror("open"); return 1; }
+
+    int err = counter_bpf__load(skel);
+    if (err) { fprintf(stderr, "load failed\\n"); goto cleanup; }
+
+    err = counter_bpf__attach(skel);
+    if (err) { fprintf(stderr, "attach failed\\n"); goto cleanup; }
+
+    printf("Tracing... Hit Ctrl-C to stop.\\n");
+    for (;;) {
+        sleep(1);
+        __u32 key = 0;
+        __u64 val = 0;
+        bpf_map__lookup_elem(skel->maps.syscall_count,
+                             &key, sizeof(key),
+                             &val, sizeof(val), 0);
+        printf("syscalls: %llu\\n", val);
+    }
+
+cleanup:
+    counter_bpf__destroy(skel);
+    return err;
+}
+\`\`\`
+
+The open step memory-maps the BPF ELF and applies CO-RE relocations. The load step calls the verifier for each program section. The attach step creates the kprobe/tracepoint/XDP links. The destroy step closes all file descriptors and removes all links.
+
+The skeleton accessor skel->maps.syscall_count gives a typed bpf_map pointer without any string lookups. skel->progs.count_syscall gives the bpf_program pointer if you need to set program-level options like log verbosity before loading.`,
+    },
+    {
+      term: `bpftrace One-Liners and Scripts`,
+      definition: `bpftrace is an awk-like front end that compiles to BPF internally. It is ideal for interactive debugging sessions where you want results in seconds without writing a C loader.
+
+Count system calls by process name.
+
+\`\`\`bash
+bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'
+\`\`\`
+
+Measure block I/O latency as a power-of-two histogram.
+
+\`\`\`bash
+bpftrace -e '
+kprobe:blk_account_io_start { @start[arg0] = nsecs; }
+kprobe:blk_account_io_done
+/@start[arg0]/
+{
+    @lat = hist(nsecs - @start[arg0]);
+    delete(@start[arg0]);
+}'
+\`\`\`
+
+Trace every execve with arguments.
+
+\`\`\`bash
+bpftrace -e 'tracepoint:syscalls:sys_enter_execve {
+    printf("pid %d comm %s file %s\\n",
+           pid, comm, str(args->filename));
+}'
+\`\`\`
+
+Sample CPU stacks at 99 Hz across all processes for a flame graph.
+
+\`\`\`bash
+bpftrace -e 'profile:hz:99 { @[kstack] = count(); }' -o stacks.bt
+\`\`\`
+
+bpftrace variables starting with @ are BPF maps. The built-in aggregation functions count(), sum(), avg(), min(), max(), hist(), and lhist() map to BPF map operations. The BEGIN and END probes run setup and teardown logic. The limitation is that bpftrace scripts are not portable binaries; they recompile on each target and require bpftrace to be installed. For production agents use libbpf with CO-RE instead.`,
+    },
+    {
+      term: `XDP Return Codes and Packet Processing`,
+      definition: `XDP programs return a verdict that tells the driver what to do with the frame. The four codes are XDP_PASS, XDP_DROP, XDP_TX, and XDP_REDIRECT.
+
+XDP_PASS hands the packet to the normal Linux network stack. Use this as the default action at the end of a firewall program after the deny rules have not matched.
+
+XDP_DROP discards the packet in the driver before sk_buff allocation. This is the fastest possible discard, measurable in nanoseconds per packet on modern NICs, and is used for DDoS mitigation and network policy enforcement.
+
+XDP_TX hairpins the packet back out the same interface. Useful for a reflective load balancer or for NAT on a single-leg network.
+
+XDP_REDIRECT sends the packet to a different destination. The destination can be another interface via bpf_redirect(), another CPU's XDP queue via bpf_redirect_map() with a CPUMAP, or a user-space AF_XDP socket via an XSKMAP for kernel-bypass receive.
+
+A minimal IP firewall using XDP looks like the following.
+
+\`\`\`c
+SEC("xdp")
+int xdp_firewall(struct xdp_md *ctx)
+{
+    void *data = (void *)(long)ctx->data;
+    void *data_end = (void *)(long)ctx->data_end;
+
+    struct ethhdr *eth = data;
+    if ((void *)(eth + 1) > data_end) return XDP_PASS;
+
+    if (eth->h_proto != bpf_htons(ETH_P_IP)) return XDP_PASS;
+
+    struct iphdr *ip = (void *)(eth + 1);
+    if ((void *)(ip + 1) > data_end) return XDP_PASS;
+
+    // Drop traffic from blocked source
+    __u32 *blocked = bpf_map_lookup_elem(&blocklist, &ip->saddr);
+    if (blocked) return XDP_DROP;
+
+    return XDP_PASS;
+}
+\`\`\`
+
+Every pointer check is mandatory. The verifier rejects any access beyond data_end without a preceding bounds check on that specific pointer.`,
+    },
+  ],
+  approach: [
+    `Start with bpftrace one-liners to understand what data the kernel exposes at your hook point before writing a full libbpf program. Iterating in bpftrace takes seconds; iterating in C takes minutes.`,
+    `Always generate vmlinux.h from the target kernel's BTF with bpftool btf dump file /sys/kernel/btf/vmlinux format c rather than including individual kernel headers, so your CO-RE object works across kernel versions.`,
+    `Read the verifier log on every rejection. Pass log_level = 1 to struct bpf_object_open_opts or set the environment variable LIBBPF_LOG_LEVEL=debug to see the full type-tracking trace for each rejected instruction.`,
+    `Use BPF_MAP_TYPE_RINGBUF for event streaming on kernels 5.8 and newer. Fall back to BPF_MAP_TYPE_PERF_EVENT_ARRAY only when you must support older kernels. Ringbuf avoids per-CPU wasted capacity and handles large variable-length records cleanly.`,
+    `Pin long-lived maps and programs to /sys/fs/bpf/ when building daemons that upgrade in place. A new version of the daemon can open the pinned map by path, preserving accumulated state across restarts.`,
+    `Use tracepoints over kprobes in production wherever a tracepoint exists for the event you care about. Tracepoint argument layouts are stable ABI; kprobe argument registers can change when the kernel function signature changes.`,
+    `Validate all packet pointer accesses with explicit bounds checks before every dereference in XDP and TC programs. Do not cache data_end in a local variable and share it across multiple parse functions; the verifier tracks pointer validity per execution path and may reject programs where it cannot prove the cached value is still valid.`,
+    `Test CO-RE programs on at least three kernel versions in CI using a matrix of lightweight VMs or containers. Tools like vmtest or lima can boot different kernel images quickly. A CO-RE relocation silently substitutes zero for missing fields; running on the wrong kernel without testing may produce incorrect silent data rather than an error.`,
+  ],
+  pitfalls: [
+    `Forgetting to null-check the result of bpf_map_lookup_elem before dereferencing it. The verifier will reject the program with a message about dereferencing a potentially null pointer. This is the most common beginner mistake and the verifier log clearly identifies the failing instruction.`,
+    `Using global or static variables inside BPF programs without declaring them as BPF maps. The verifier does not support mutable globals in the traditional sense; you must use a single-element array map or a per-CPU array map for any mutable state that persists across program invocations.`,
+    `Writing loops without a provable bound. A for loop with a runtime upper limit derived from a map value may be rejected because the verifier cannot determine the scalar range. Annotate the bound with a mask or clamp it to a compile-time constant using a direct comparison before the loop.`,
+    `Calling bpf_probe_read_kernel where bpf_probe_read_user is required, or vice versa. Reading kernel memory with the user variant silently returns garbage or zeros on architectures with address space isolation. Always match the read helper to the address space of the pointer.`,
+    `Attaching XDP programs in SKB mode (XDP_FLAGS_SKB_MODE) during development and then expecting the same performance in production when the NIC driver supports native mode. SKB mode runs after sk_buff allocation and loses the main performance advantage of XDP. Always test with native mode on the actual NIC.`,
+    `Relying on bpf_printk for production observability. bpf_printk writes to /sys/kernel/debug/tracing/trace_pipe at a rate-limited pace and is not suitable for high-frequency events. Use a ringbuf or perf_event_array for structured event delivery.`,
+    `Ignoring the maximum stack size limit of 512 bytes per BPF program. Declaring large character buffers on the stack to hold filenames or command strings causes verifier rejection. Use per-CPU arrays as scratch space for data larger than a few hundred bytes.`,
+    `Assuming CO-RE handles every struct change transparently. If a field is renamed, split, or moved to a union in a new kernel, CO-RE cannot match it by name and the relocation fails. Always test on real kernel versions and use BPF_CORE_READ_BITFIELD_PROBED with a fallback default for fields with known instability history.`,
+  ],
+  keyQuestions: [
+    {
+      question: `What are the main constraints the eBPF verifier enforces, and how do you debug a verifier rejection?`,
+      answer: `The eBPF verifier enforces four broad categories of constraints. First, control-flow safety: the program's control-flow graph must be a directed acyclic graph, or a DAG with bounded back-edges on kernels that support loops. The verifier walks every possible path depth-first and rejects programs where it cannot enumerate all paths or where a path has an unbounded loop. Second, memory safety: every pointer dereference must be preceded by proof that the pointer is non-null and that the access range stays within the bounds of the underlying memory region, whether that is the packet buffer, a map value, or the stack frame. Third, type correctness: you cannot call a helper function that is not approved for your program type, and you cannot pass a pointer to the wrong address space. Fourth, resource limits: programs are limited to one million instructions verified and 512 bytes of stack space.
+
+When the verifier rejects your program, libbpf prints the verifier log to stderr. To get the full log at maximum verbosity, set the log level on the open options.
+
+\`\`\`c
+struct bpf_object_open_opts opts = {};
+opts.sz = sizeof(opts);
+opts.kernel_log_level = 2; // verbose instruction-level trace
+struct counter_bpf *skel = counter_bpf__open_opts(&opts);
+\`\`\`
+
+The log prints each BPF instruction with the abstract register state before and after. A typical null-deref rejection looks like this.
+
+\`\`\`
+; val = bpf_map_lookup_elem(&my_map, &key);
+5: (85) call bpf_map_lookup_elem#1
+ R0=map_value_or_null(...)
+; *val += 1;
+6: (07) r0 += 1
+R0 pointer arithmetic on map_value_or_null is not allowed
+\`\`\`
+
+The fix is to add a null check: if (!val) return 0; immediately after the lookup. The verifier then knows that on the path reaching instruction 6, R0 must be map_value, not map_value_or_null, and the addition is safe.
+
+For loop rejections, the log shows the back-edge and the register state the verifier could not bound. Fix by adding an explicit bound comparison like if (i >= MAX_ITERS) break; with MAX_ITERS as a compile-time constant.`,
+    },
+    {
+      question: `How does CO-RE achieve kernel portability without recompiling on the target, and what are its limitations?`,
+      answer: `CO-RE works through a three-part mechanism: BTF in the kernel, BTF in the BPF object file, and CO-RE relocations that libbpf resolves at load time.
+
+Every kernel from 5.4 onward with CONFIG_DEBUG_INFO_BTF built in exposes its complete type information at /sys/kernel/btf/vmlinux. This is a compact binary encoding of every struct, union, enum, and typedef in the kernel. It is typically a few megabytes and ships with the kernel, not requiring separate debuginfo packages.
+
+When you compile a CO-RE program with Clang, you target bpf with -g to emit BTF in the object file. Wherever your source uses BPF_CORE_READ or a __ksym global or CO-RE flavor of bpf_map_lookup_elem, Clang emits a relocation record in the .BTF.ext section. Each relocation says: at BPF instruction N, the immediate operand encodes a field access to struct X field Y; fix it to the correct offset.
+
+At load time, libbpf reads both BTF sources, matches the struct and field by name, reads the field's offset in the running kernel's BTF, and patches each BPF instruction accordingly. For a little-endian 64-bit field at offset 72 bytes it rewrites the load instruction's offset immediate to 72. For a bitfield it synthesizes shift and mask operations.
+
+The limitations are important to understand. CO-RE matches fields by name only. If a field is renamed between kernel versions, the relocation fails and libbpf either rejects the program or substitutes the BPF_CORE_READ fallback value you specified. If a field changes type, for example from u32 to u64, CO-RE will patch the offset correctly but your program's cast may read the wrong number of bytes silently. You must still test across kernel versions and use bpf_core_type_exists() guards to skip code paths that reference types not present in the target kernel.
+
+\`\`\`c
+// Guard a code path that requires a field added in 5.14
+if (bpf_core_field_exists(struct task_struct, migration_disabled)) {
+    __u32 md = BPF_CORE_READ(task, migration_disabled);
+    // use md
+}
+\`\`\`
+
+This pattern lets a single binary gracefully degrade on older kernels instead of failing to load.`,
+    },
+    {
+      question: `Write a libbpf kprobe program that counts how many times each process calls write(), with a user-space loader that prints the top counts every second.`,
+      answer: `The BPF C program attaches to the sys_enter_write tracepoint and increments a per-PID counter in a hash map.
+
+\`\`\`c
+// write_count.bpf.c
+#include "vmlinux.h"
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 4096);
+    __type(key, __u32);
+    __type(value, __u64);
+} pid_counts SEC(".maps");
+
+SEC("tracepoint/syscalls/sys_enter_write")
+int count_write(struct trace_event_raw_sys_enter *ctx)
+{
+    __u32 pid = bpf_get_current_pid_tgid() >> 32;
+    __u64 *val = bpf_map_lookup_elem(&pid_counts, &pid);
+    if (val) {
+        __sync_fetch_and_add(val, 1);
+    } else {
+        __u64 init = 1;
+        bpf_map_update_elem(&pid_counts, &pid, &init, BPF_ANY);
+    }
+    return 0;
+}
+
+char LICENSE[] SEC("license") = "GPL";
+\`\`\`
+
+Compile with: clang -O2 -target bpf -g -c write_count.bpf.c -o write_count.bpf.o
+
+Generate skeleton: bpftool gen skeleton write_count.bpf.o > write_count.skel.h
+
+The user-space loader reads the map every second and prints the top five entries.
+
+\`\`\`c
+// write_count.c
+#include "write_count.skel.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <bpf/libbpf.h>
+
+static volatile int running = 1;
+static void handle_sig(int s) { running = 0; }
+
+int main(void)
+{
+    signal(SIGINT, handle_sig);
+
+    struct write_count_bpf *skel = write_count_bpf__open_and_load();
+    if (!skel) { perror("open_and_load"); return 1; }
+
+    if (write_count_bpf__attach(skel)) {
+        fprintf(stderr, "attach failed\\n");
+        write_count_bpf__destroy(skel);
+        return 1;
+    }
+
+    printf("Counting write() calls per PID. Ctrl-C to stop.\\n");
+    while (running) {
+        sleep(1);
+        printf("\\n%-8s  %s\\n", "PID", "WRITE COUNT");
+        __u32 key = 0, next_key;
+        __u64 val;
+        while (bpf_map__get_next_key(skel->maps.pid_counts,
+                                     &key, &next_key,
+                                     sizeof(next_key)) == 0) {
+            bpf_map__lookup_elem(skel->maps.pid_counts,
+                                 &next_key, sizeof(next_key),
+                                 &val, sizeof(val), 0);
+            printf("%-8u  %llu\\n", next_key, val);
+            key = next_key;
+        }
+    }
+
+    write_count_bpf__destroy(skel);
+    return 0;
+}
+\`\`\`
+
+Compile with: gcc -o write_count write_count.c -lbpf -lelf -lz
+
+The __sync_fetch_and_add in BPF ensures atomic increments on per-CPU map slots when the map type is not per-CPU. For very high-frequency events prefer BPF_MAP_TYPE_PERCPU_HASH to avoid atomic contention across CPUs, then sum the per-CPU values in user space during the display step.`,
+    },
+    {
+      question: `What is the difference between XDP and TC hook points, and when would you choose one over the other?`,
+      answer: `XDP and TC are both positions in the Linux receive and transmit pipeline where you can attach BPF programs, but they differ in where they sit, what context they have access to, and what trade-offs they impose.
+
+XDP runs inside the NIC driver's receive function, before the kernel allocates an sk_buff. The program context is struct xdp_md, which contains only data, data_end, and data_meta pointers. There is no L4 metadata, no routing decision, no conntrack state. The benefit is that because sk_buff allocation is skipped for dropped or redirected packets, XDP can process packets in the range of 5 to 25 nanoseconds per packet on modern hardware, fast enough to saturate a 100 Gbps NIC with a single core running a drop loop. XDP can only run on the ingress path. It requires driver support for native mode; without a supporting driver you fall back to generic mode which runs after sk_buff creation and loses the performance advantage.
+
+TC runs at the traffic control layer, after sk_buff allocation, and is available on both ingress via the clsact qdisc and egress. The program context is struct __sk_buff, which exposes over 50 fields including the protocol, the packet mark, the routing realm, the ingress ifindex, the connection tracking state via helper calls, and the socket the packet is associated with if one exists. TC programs can call helpers like bpf_sk_lookup_tcp to look up a socket and bpf_l4_csum_replace to update L4 checksums without parsing the full packet manually. This richness comes at the cost of running after sk_buff allocation, so dropped packets still incur the allocation overhead.
+
+The practical decision rule is as follows. Use XDP for high-volume packet drop or redirect decisions where throughput is paramount, such as DDoS mitigation, source-IP blocklists, or ECMP load balancing. Use TC for policy that requires L4 or socket context, such as per-pod Kubernetes network policy enforcement that must check conntrack state, egress NAT, or bandwidth shaping. Many production systems use both: XDP ingress for the deny firewall at maximum speed, TC egress for encapsulation and metering where the richer context is necessary and the egress volume is lower.
+
+On kernels before 5.6 XDP was not available on all virtual device types (veth, geneve) making TC the only option for container-to-container policy. Kernel 5.6 added veth XDP support and 5.9 added generic multi-buffer XDP, so the gap has narrowed significantly.`,
+    },
+    {
+      question: `Compare bpftrace with raw eBPF using libbpf. When is each the right tool, and what are the trade-offs?`,
+      answer: `bpftrace and libbpf represent two ends of the eBPF abstraction spectrum. Choosing between them depends on whether you are investigating a problem interactively or building a production agent.
+
+bpftrace is a single-binary scripting tool that compiles an AWK-like domain-specific language to BPF internally. You write a script, run it as root, and see aggregated results within seconds. It handles all map creation, program loading, and result printing automatically. The syntax for a histogram of read() sizes is three lines.
+
+\`\`\`bash
+bpftrace -e 'tracepoint:syscalls:sys_enter_read {
+    @bytes = hist(args->count);
+}'
+\`\`\`
+
+bpftrace is the right choice for interactive debugging, ad-hoc performance investigations, and one-time questions like which process is making the most DNS queries right now. It is also excellent for prototyping: figure out what data the kernel exposes at a hook before you invest in a full C program.
+
+The limitations are significant for production use. bpftrace programs are not portable binaries; they contain inline C that is compiled by the LLVM embedded in the bpftrace executable, which means bpftrace must be installed on every target machine. bpftrace has no way to persist state across invocations, no structured output format suitable for a monitoring pipeline, and limited control over map types and program structure. You cannot use ringbuf, you cannot implement tail calls, and you cannot build multi-program pipelines.
+
+libbpf with CO-RE gives you a statically linked binary that carries its own BPF bytecode and applies CO-RE relocations at load time. The binary runs on any kernel 5.4 or newer with BTF enabled without any compiler or bpftrace installation on the target.
+
+\`\`\`bash
+# Ship a single binary to a production host
+scp ./my_agent root@prod-host:/usr/local/bin/
+ssh root@prod-host /usr/local/bin/my_agent --daemonize
+\`\`\`
+
+libbpf gives you full control over map types, program types, link lifecycles, pinning, and uprobe attachment to specific binary offsets. It integrates naturally with systemd, Prometheus exporters, and structured logging. The cost is the development cycle: writing C, running Clang, generating the skeleton, compiling the loader, and interpreting verifier errors takes minutes per iteration rather than seconds.
+
+The practical workflow is to use bpftrace for the investigation phase and libbpf for the production implementation. Validate your hook choice and data shape in bpftrace, then translate the logic to a CO-RE C program that ships as a production binary.`,
+    },
+  ],
+  references: [
+    'https://ebpf.io/what-is-ebpf/',
+    'https://docs.kernel.org/bpf/index.html',
+    'https://github.com/libbpf/libbpf',
+    'https://nakryiko.com/posts/bpf-core-reference-guide/',
+    'https://github.com/iovisor/bpftrace',
+    'https://github.com/iovisor/bcc',
+    'https://docs.cilium.io/en/stable/reference-guides/bpf/',
+    'https://www.brendangregg.com/BPF/bpfperftools.html',
+    'https://github.com/xdp-project/xdp-tutorial',
+    'https://www.kernel.org/doc/html/latest/networking/filter.html',
+  ],
+},
+
+{
+  id: 'containerd-deep-dive',
+  title: 'containerd and Container Runtimes',
+  icon: 'box',
+  color: '#0891b2',
+  questions: 5,
+  description: `containerd is the industry-standard container runtime daemon that manages the complete container lifecycle, from image pull and storage through execution and supervision. Understanding its internal architecture, the OCI specifications it implements, and how Kubernetes communicates with it through CRI is essential for any senior DevOps or platform engineering role.`,
+  visualizations: [
+    {
+      title: `containerd Architecture and Internal Subsystems`,
+      description: `containerd is structured as a long-running daemon that exposes a gRPC API consumed by clients such as Docker, nerdctl, and the Kubernetes kubelet. At the outermost layer sits the API surface, split into the native containerd API (used by nerdctl and ctr) and the CRI plugin which translates Kubernetes CRI calls into containerd native calls.
+
+Internally, containerd is organized around several loosely coupled subsystems. The content store is an immutable, content-addressable blob store keyed by SHA-256 digest. Every image layer, manifest, and config lives here. The snapshotter subsystem sits on top of the content store and manages the writable container filesystem by constructing layered views over the read-only image data. The default snapshotter on Linux is overlayfs, which uses kernel-level copy-on-write; alternatives include devmapper for block-level snapshots and native for a plain directory copy approach.
+
+The metadata subsystem uses an embedded BoltDB database to track image references, container records, snapshot names, and content leases. Leases prevent the garbage collector from deleting content that is being actively prepared. The garbage collector runs periodically and removes unreferenced blobs and snapshots.
+
+The tasks subsystem is responsible for creating and managing running processes. When a container is started, containerd spawns a containerd-shim process for each container. The shim is a thin supervisor that remains alive for the full duration of the container. It holds the PTY, stdin/stdout pipes, and the exit status, meaning containerd itself can be restarted without killing running containers.
+
+The events bus provides an internal publish-subscribe mechanism that allows subsystems and external clients to observe lifecycle events such as container-create, task-start, and task-exit. Clients like Kubernetes controllers or log shipping agents subscribe to this bus rather than polling.`,
+      image: `/diagrams/devops/containerd-deep-dive-arch.png`,
+    },
+    {
+      title: `Docker Run to Kernel Process: Full Stack Call Flow`,
+      description: `When you run docker run on a modern Docker installation, the request passes through several discrete layers before a Linux process appears in the kernel. Understanding this full stack is what interviewers are testing when they ask "what happens when you run docker run".
+
+Docker CLI sends an HTTP request to the Docker daemon (dockerd). dockerd, since Docker 20+, delegates container lifecycle to containerd over a Unix socket at /run/containerd/containerd.sock using gRPC. dockerd acts as a containerd client, calling containerd APIs to create and start containers.
+
+containerd receives the CreateContainer and CreateTask calls. It resolves the image from its content store (pulling from the registry if absent), prepares a snapshot via the snapshotter, and generates a runtime bundle: a directory containing the container rootfs and an OCI runtime spec JSON file (config.json) that describes the namespaces, cgroups, capabilities, mounts, and process to execute.
+
+containerd then forks a containerd-shim-runc-v2 process for the container. The shim receives the bundle path and is told to create the container. The shim calls runc create, which reads config.json and uses libcontainer to configure Linux namespaces (pid, net, mnt, uts, ipc, user), apply cgroups for resource limits, set seccomp filters, apply AppArmor or SELinux labels, set up the pivot_root for the filesystem, and finally exec the init process inside the container.
+
+runc exits after setup (it is not a daemon), leaving the shim alive as the supervisor. The shim opens a socket back to containerd to report exit codes. containerd reports task status back to dockerd, which reports back to the Docker CLI. The result is an isolated Linux process running inside a set of kernel namespaces with enforced cgroups, with no long-running runc process in between.
+
+For Kubernetes, the path is identical from the containerd layer down, but the caller is the kubelet CRI plugin rather than dockerd, and the sequencing involves RunPodSandbox before CreateContainer.`,
+      image: `/diagrams/devops/containerd-deep-dive-flow.png`,
+    },
+  ],
+  introduction: `containerd began as an internal component inside Docker and was donated to the CNCF in 2017, graduating to a top-level CNCF project in 2019. Today it is the default container runtime in most Kubernetes distributions including EKS, GKE, AKS, and kubeadm-provisioned clusters. It replaced dockershim, which was removed from kubelet in Kubernetes 1.24, making direct knowledge of containerd essential for modern Kubernetes operations.
+
+The project implements two separate but related specifications from the Open Container Initiative. The OCI Image Specification defines how container images are structured: a manifest referencing a config blob and a set of compressed layer tarballs stored in a content-addressable layout. The OCI Runtime Specification defines the config.json bundle format that instructs a low-level runtime (runc) how to set up the container environment including namespaces, cgroups, capabilities, and the process to execute. containerd bridges these two specs by converting images into runtime bundles.
+
+The relationship between containerd and runc is often misunderstood. containerd is the high-level runtime that manages images, snapshots, containers as records, and tasks as running processes. runc is the low-level OCI runtime that actually creates and configures the Linux primitives. runc is a short-lived CLI binary: it sets up namespaces and cgroups, forks the container init process, and then exits. The containerd-shim sits in between, staying alive to proxy IO and collect exit codes without requiring containerd itself to remain the parent of every container process.
+
+Kubernetes communicates with containerd through the Container Runtime Interface, a gRPC API defined by Kubernetes. The CRI plugin inside containerd translates CRI calls into internal containerd operations. The kubelet calls RunPodSandbox to create a shared network and IPC namespace for a Pod, then calls CreateContainer and StartContainer for each container in the Pod. The sandbox is implemented as a "pause" container whose sole job is to hold the network namespace alive for the Pod's lifetime.
+
+For operators and SREs, containerd exposes two primary CLI tools. ctr is the low-level containerd client bundled with the daemon, intended for debugging and inspection of internal state. nerdctl is a Docker-compatible CLI built on the containerd API, providing the same UX as docker run while bypassing dockerd entirely. For Kubernetes-specific debugging, crictl speaks the CRI gRPC protocol and can inspect pods, containers, and images as the kubelet sees them, making it the correct tool when troubleshooting nodes in a cluster.
+
+The snapshotter subsystem is an area of active development that often trips up engineers who are accustomed to Docker's storage driver model. Unlike Docker storage drivers which are global and monolithic, containerd snapshotters are pluggable and can be selected per-container. overlayfs is the overwhelmingly common choice on Linux kernels 4.0 and above, but devmapper offers better IO isolation on block storage and native is available as a safe fallback when overlayfs kernel support is absent. Understanding which snapshotter is in use is critical when diagnosing disk space issues or when running containerd inside containers (common in CI systems).`,
+  whenToUse: [
+    `When migrating a Kubernetes cluster from dockershim to a direct CRI runtime and you need to verify containerd configuration, socket paths, and sandbox image settings in /etc/containerd/config.toml`,
+    `When debugging a node-level container failure in Kubernetes where kubectl describe pod gives insufficient detail and you need crictl pods, crictl inspect, or crictl logs to examine CRI-level state`,
+    `When running containers in environments where Docker daemon overhead is unacceptable and you want to use nerdctl or ctr to manage containers directly against containerd`,
+    `When building a custom Kubernetes node image or distro and you need to select and configure the appropriate snapshotter (overlayfs vs devmapper) for the underlying storage`,
+    `When implementing a CI pipeline that builds and pushes OCI images without Docker, using tools like buildkit or buildah that push directly to containerd's content store`,
+    `When investigating container startup latency and you need to trace the full containerd to shim to runc call path using containerd events or metrics`,
+    `When diagnosing disk exhaustion on Kubernetes nodes and you need to inspect containerd's content store, snapshot usage, and trigger garbage collection via ctr content ls and ctr snapshots ls`,
+  ],
+  keyConcepts: [
+    {
+      term: `OCI Image Spec vs OCI Runtime Spec`,
+      definition: `The Open Container Initiative defines two independent specifications that together describe the full lifecycle of a container. The Image Specification defines how a container image is stored and distributed. An OCI image consists of a manifest (a JSON document listing a config blob and one or more layer blobs by digest), a config blob (a JSON document describing the image's environment, entrypoint, cmd, and layer diff IDs), and layer blobs (gzip-compressed tarballs of filesystem changes). All blobs are stored in a content-addressable layout keyed by SHA-256 digest.
+
+The Runtime Specification defines the bundle that a low-level runtime like runc receives when it is told to create a container. A bundle is a directory containing a rootfs subdirectory (the unpacked container filesystem) and a config.json file (a JSON document specifying linux namespaces, cgroups, capabilities, seccomp, mounts, and the process to run).
+
+containerd bridges the two specs by pulling OCI images into its content store, using the snapshotter to unpack layers into a prepared rootfs, then generating a config.json from the image config plus any overrides, and presenting the resulting bundle to runc.
+
+\`\`\`bash
+# Inspect an image manifest in the content store
+ctr content get sha256:<manifest-digest> | jq .
+
+# Inspect the OCI runtime config.json for a running task
+# (find the bundle path from the shim process arguments)
+ps aux | grep containerd-shim
+cat /run/containerd/io.containerd.runtime.v2.task/k8s.io/<id>/config.json | jq .process
+\`\`\``,
+    },
+    {
+      term: `containerd-shim-runc-v2 and Shim Architecture`,
+      definition: `The containerd shim is a small supervisor process that decouples containerd from the running container process. When containerd creates a task, it forks a containerd-shim-runc-v2 binary and passes it the bundle path and a Unix socket address. The shim then forks runc create, which configures the container, and runc start, which executes the init process. runc exits after each phase; the shim remains alive.
+
+The shim serves several critical purposes. First, it allows containerd itself to be restarted without killing running containers, because the shim is the actual parent of the container init process (or uses subreaping via the shim's own init). Second, it multiplexes the container's stdio streams via a FIFO or vsock so clients can attach and detach without interrupting the container. Third, it monitors the container exit event and reports it back to containerd over the shim's gRPC socket so containerd can update the task state.
+
+The v2 shim API is a plugin interface, meaning containerd can load alternative shim implementations. This is how kata-containers and gVisor integrate: they provide custom shims (containerd-shim-kata-v2, containerd-shim-runsc-v1) that replace runc with a VM-based or sandbox-based runtime while presenting the same shim API to containerd.
+
+\`\`\`bash
+# See shims running for each container on a node
+ps aux | grep containerd-shim-runc-v2
+
+# Each shim process holds a --bundle path and --address flag
+# /run/containerd/io.containerd.runtime.v2.task/default/<id>/
+ls /run/containerd/io.containerd.runtime.v2.task/default/
+\`\`\``,
+    },
+    {
+      term: `Kubelet CRI gRPC Call Sequence`,
+      definition: `The Container Runtime Interface is a gRPC API that kubelet uses to drive any conformant container runtime. containerd implements CRI via its CRI plugin. The call sequence for starting a Pod has three required phases.
+
+Phase one is RunPodSandbox. kubelet calls RunPodSandbox with a PodSandboxConfig that includes the pod name, namespace, labels, and network configuration. containerd creates a pause container (the sandbox) that holds the network namespace, IPC namespace, and UTS namespace for the pod. The CNI plugin is invoked here to wire up networking. RunPodSandbox returns a sandbox ID.
+
+Phase two is CreateContainer. For each container in the Pod spec, kubelet calls CreateContainer with the sandbox ID and a ContainerConfig describing the image, command, env, mounts, and resources. containerd pulls the image if absent, prepares a snapshot, and records the container. CreateContainer returns a container ID but does not start the process.
+
+Phase three is StartContainer. kubelet calls StartContainer with the container ID. containerd calls into the shim which calls runc start, launching the init process inside the already-prepared namespaces of the sandbox.
+
+\`\`\`bash
+# Watch CRI calls in real time using crictl on a node
+crictl --runtime-endpoint unix:///run/containerd/containerd.sock pods
+crictl ps
+crictl inspect <container-id>
+crictl logs <container-id>
+
+# Verify the sandbox (pause) container exists for a pod
+crictl pods --name my-pod
+\`\`\``,
+    },
+    {
+      term: `Snapshotters: overlayfs, devmapper, and native`,
+      definition: `The snapshotter subsystem in containerd is responsible for constructing the layered filesystem that becomes the container rootfs. Unlike Docker's monolithic storage driver, containerd snapshotters are pluggable and selected in /etc/containerd/config.toml.
+
+The overlayfs snapshotter is the default on Linux kernels 4.0 and above. It uses the kernel overlayfs union filesystem to stack read-only image layers under a single read-write upper layer without copying files. This makes container creation very fast (microseconds for the merge) and efficient for disk space because layers are shared across all containers using the same image.
+
+The devmapper snapshotter uses Linux device mapper thin provisioning to give each container its own block device snapshot. This is slower to create than overlayfs but provides true block-level isolation and supports selinux labeling more reliably on older kernels. It was the required driver for RHEL 7 nodes before overlayfs support matured.
+
+The native snapshotter simply does a full directory copy for each layer, providing a reliable but disk-intensive fallback. It is used in environments that do not support overlayfs, such as running containerd inside a Docker container in CI without privileged mode.
+
+\`\`\`toml
+# /etc/containerd/config.toml
+version = 2
+[plugins."io.containerd.grpc.v1.cri".containerd]
+  snapshotter = "overlayfs"
+  default_runtime_name = "runc"
+\`\`\`
+
+\`\`\`bash
+# List all snapshots for a container
+ctr snapshots ls
+
+# Inspect a specific snapshot
+ctr snapshots info <snapshot-key>
+
+# Check which snapshotter is active
+ctr plugins ls | grep snapshotter
+\`\`\``,
+    },
+    {
+      term: `nerdctl vs Docker CLI`,
+      definition: `nerdctl is a Docker-compatible CLI for containerd developed by the containerd project. It provides the same commands and flags as docker (nerdctl run, nerdctl build, nerdctl ps, nerdctl push) but communicates directly with containerd via the containerd gRPC API, bypassing dockerd entirely. This makes nerdctl suitable for environments where Docker daemon is not installed, such as Kubernetes nodes running pure containerd.
+
+nerdctl supports most Docker features including BuildKit integration for builds, docker-compose compatible files via nerdctl compose, rootless containers via rootlesskit, lazy image pulling via stargz-snapshotter, and namespaces for multi-tenant workloads.
+
+Key behavioral differences from Docker: nerdctl uses containerd namespaces (default is "default" for CLI, "k8s.io" for Kubernetes). Containers created by kubelet live in the k8s.io namespace and are visible with nerdctl --namespace k8s.io ps, not in the default namespace. Docker does not have this namespace concept.
+
+\`\`\`bash
+# Run a container with nerdctl (same syntax as docker)
+nerdctl run -d --name web -p 8080:80 nginx:alpine
+
+# List containers in the Kubernetes namespace
+nerdctl --namespace k8s.io ps
+
+# Build an image using BuildKit
+nerdctl build -t myapp:latest .
+
+# List images including Kubernetes-pulled images
+nerdctl --namespace k8s.io images
+
+# Pull an image into containerd directly
+nerdctl pull alpine:3.19
+\`\`\``,
+    },
+    {
+      term: `ctr for containerd Debugging`,
+      definition: `ctr is the low-level containerd CLI bundled with the daemon binary. Unlike nerdctl which aims for Docker UX compatibility, ctr exposes the raw containerd API surface and is primarily a debugging tool. It lacks features like automatic DNS setup, port mapping, and user-friendly defaults that nerdctl provides.
+
+ctr operates on containerd namespaces. The default namespace for ctr is "default". Kubernetes uses the "k8s.io" namespace. You must specify the namespace explicitly with the -n flag to interact with Kubernetes containers.
+
+ctr is useful for inspecting the content store directly, checking snapshots, examining task state, and triggering garbage collection. It is the correct tool when you need to understand containerd's internal state rather than just managing containers at a high level.
+
+\`\`\`bash
+# List all namespaces
+ctr namespaces ls
+
+# List images in the Kubernetes namespace
+ctr -n k8s.io images ls
+
+# List running tasks (containers) in Kubernetes namespace
+ctr -n k8s.io tasks ls
+
+# Inspect content store blobs
+ctr content ls
+
+# Pull an image (note: no automatic network config)
+ctr images pull docker.io/library/nginx:alpine
+
+# Run a container (minimal, no port mapping)
+ctr run --rm docker.io/library/alpine:latest test-shell sh
+
+# Trigger garbage collection
+ctr content gc
+
+# List snapshots
+ctr -n k8s.io snapshots ls
+\`\`\``,
+    },
+    {
+      term: `containerd Content Store and Garbage Collection`,
+      definition: `The content store is containerd's immutable blob store, located at /var/lib/containerd/io.containerd.content.v1.content/blobs/sha256/. Every image layer tarball, image manifest, and image config blob is stored here as a file named by its SHA-256 digest. The store is strictly append-only and content-addressed, meaning the same blob is never stored twice regardless of how many images reference it.
+
+Leases are the mechanism containerd uses to prevent premature garbage collection of blobs that are in the process of being used. When a client pulls an image, it creates a lease that pins the content blobs until the pull is complete and the image record is committed to metadata. If the pull fails and the lease expires, the garbage collector can safely remove partially pulled blobs.
+
+The garbage collector marks all content referenced by image records and snapshot chains in the metadata store, then sweeps any blobs not in the marked set. On Kubernetes nodes, the kubelet's image garbage collection (configured via --image-gc-high-threshold and --image-gc-low-threshold) triggers containerd image removal when disk usage exceeds thresholds, which in turn allows the containerd GC to reclaim blob space.
+
+\`\`\`bash
+# Check content store disk usage
+du -sh /var/lib/containerd/
+
+# List blobs in the content store
+ctr content ls
+
+# Get a specific blob by digest
+ctr content get sha256:<digest>
+
+# List active leases
+ctr leases ls
+
+# Force garbage collection
+ctr content gc
+
+# List images and their sizes
+ctr -n k8s.io images ls
+\`\`\``,
+    },
+  ],
+  approach: [
+    `Always configure the containerd snapshotter explicitly in /etc/containerd/config.toml for production nodes rather than relying on the autodetected default, because autodetection can select native on kernels that report overlayfs unavailable inside certain container environments`,
+    `Use crictl rather than ctr or nerdctl for any Kubernetes node debugging because crictl speaks CRI and shows the kubelet's exact view of pod and container state, while ctr shows raw containerd records that may not match what kubelet thinks is running`,
+    `Set SystemdCgroup = true in the containerd runc runtime config when running on systemd-based Linux distributions, because without this, runc and systemd both manage cgroup hierarchies and create conflicting cgroup delegation leading to resource accounting failures`,
+    `Pin the pause (sandbox) image explicitly in containerd config using sandbox_image so that node upgrades do not silently switch to a different pause version and cause CRI version mismatches on air-gapped or registry-mirrored clusters`,
+    `Monitor containerd's /metrics endpoint and alert on snapshot preparation latency and content pull duration because slow snapshotters directly delay pod startup and appear as long ContainerCreating states that mislead engineers into blaming the scheduler`,
+    `Use containerd namespaces (nerdctl --namespace k8s.io or ctr -n k8s.io) when debugging images or containers on Kubernetes nodes because all kubelet-managed workloads live in the k8s.io namespace, not the default namespace visible to plain nerdctl ps`,
+    `Configure containerd registry mirrors in /etc/containerd/config.toml for each registry you use in production to provide pull-through caching, reduce public registry rate limiting, and eliminate single points of failure in image pulls during node scaling events`,
+    `Run containerd with a separate state directory (--state /run/containerd) on a fast ephemeral filesystem and the root data directory (--root /var/lib/containerd) on a large persistent filesystem, because the state directory contains high-churn socket and FIFO files while root contains the durable content store`,
+  ],
+  pitfalls: [
+    `Forgetting that runc exits after container creation, so any debug tool that lists runc processes to find running containers will show nothing. The container process is a direct child of the shim, not of runc, and the shim is the process you should inspect`,
+    `Confusing ctr namespaces with Linux kernel namespaces. ctr namespaces are containerd's multi-tenancy partitions (default, k8s.io, moby). Linux namespaces are kernel isolation primitives (pid, net, mnt). They are completely different concepts that happen to share the word namespace`,
+    `Assuming nerdctl ps shows Kubernetes workloads when run without --namespace k8s.io. The kubelet uses the k8s.io containerd namespace and those containers are invisible to the default namespace, leading engineers to incorrectly conclude that containerd is not running the pods`,
+    `Not setting SystemdCgroup = true on systemd hosts, which causes containers to use the cgroupfs driver while systemd uses its own cgroup hierarchy, resulting in pod OOM kills that do not respect resource limits and cgroup slice leaks after container exits`,
+    `Using ctr images pull to pre-pull images for Kubernetes workloads without specifying the k8s.io namespace. The pulled image lands in the default namespace and is invisible to the kubelet, so the node still pulls from the registry at pod scheduling time`,
+    `Relying on docker ps or docker images on a node where containerd is the runtime and dockerd is not installed. These commands will fail or return empty results. The correct replacement is crictl ps for Kubernetes workloads or nerdctl ps for direct containerd workloads`,
+    `Ignoring containerd's garbage collection behavior during rapid scaling events. When many pods are scheduled simultaneously, the GC can run and delete partially prepared snapshots if leases are not properly managed, causing CreateContainer to fail with "snapshot does not exist" errors that resolve on retry`,
+    `Assuming devmapper snapshotter is a drop-in replacement for overlayfs. devmapper requires a pre-provisioned thin pool, separate metadata and data block devices, and careful sizing. Deploying devmapper without these prerequisites leads to "no space left on device" failures even when the filesystem has free space, because the thin pool itself is exhausted`,
+  ],
+  keyQuestions: [
+    {
+      question: `Walk me through the complete stack of what happens when you run docker run nginx on a modern Linux machine with Docker 24+ installed.`,
+      answer: `This question tests understanding of the full container runtime stack from CLI to kernel process.
+
+The Docker CLI sends an HTTP POST to the Docker daemon at /var/run/docker.sock. dockerd, in Docker 24+, is not a standalone container runtime. It delegates to containerd by making gRPC calls to /run/containerd/containerd.sock. dockerd calls containerd's ImageService to pull the nginx image if it is not already in the content store. The pull fetches the manifest from the registry, resolves all layer digests, downloads missing layer tarballs, and stores them in /var/lib/containerd/io.containerd.content.v1.content/ keyed by SHA-256.
+
+dockerd then calls ContainerService.Create to register a container record in containerd's metadata store (BoltDB). Next it calls TaskService.Create to prepare a runtime bundle: containerd instructs the overlayfs snapshotter to construct a merged filesystem view of all image layers, creates a scratch upper layer for the container's writes, generates a config.json in the bundle directory with the OCI runtime spec (namespaces, cgroups, capabilities, mounts, process), and forks a containerd-shim-runc-v2 process passing the bundle path.
+
+The shim calls runc create, passing the bundle directory. runc reads config.json, uses libcontainer to make a series of Linux syscalls: clone(2) with CLONE_NEWPID, CLONE_NEWNET, CLONE_NEWNS, CLONE_NEWIPC, CLONE_NEWUTS flags to create namespaces, writes cgroup entries to limit CPU and memory, sets up the overlay mount for the rootfs, calls pivot_root to make the container rootfs the new root, applies seccomp filters, drops capabilities, and finally exec(2) the nginx binary. runc then exits.
+
+The shim remains alive as the parent/supervisor of the nginx process. It holds the stdio FIFOs and the exit socket back to containerd. containerd reports the task as running. dockerd reports the container as running. The docker CLI prints the container ID. The nginx process is now a regular Linux process visible in the host's process table under a different PID namespace, isolated by cgroups and namespaces, with its root filesystem provided by overlayfs.
+
+\`\`\`bash
+# Verify the shim is alive
+ps aux | grep containerd-shim-runc-v2
+
+# Verify the container process on the host
+ps aux | grep nginx
+
+# Inspect the overlay mounts
+mount | grep overlay
+
+# See the config.json bundle
+cat /run/containerd/io.containerd.runtime.v2.task/moby/<id>/config.json | jq .process
+\`\`\``,
+    },
+    {
+      question: `What is the purpose of the containerd shim, and what happens if you kill it while a container is running?`,
+      answer: `The containerd shim solves a fundamental process-parenting problem in container runtimes. When a container process is created, some process must be its parent in the Linux process tree to receive its exit code when it dies (via wait(2)). If containerd itself were the parent, then restarting containerd would send SIGHUP to all container processes, killing every running container. The shim breaks this dependency.
+
+The shim is a small, stable binary (containerd-shim-runc-v2) that is forked once per container and stays alive for the container's entire lifetime. It serves four purposes. First, it becomes the parent of the container init process (or uses PR_SET_CHILD_SUBREAPER so it collects exit codes from any orphaned descendants). Second, it proxies stdio: it opens the named pipes or PTY for the container's stdin/stdout/stderr and relays them to clients that attach. Third, it maintains a gRPC socket that containerd uses to query task state and receive the exit event when the container dies. Fourth, it allows containerd itself to be upgraded or restarted without touching running containers, because the shim holds the process parentage independently.
+
+If you kill the shim while the container is running, the container process is re-parented to PID 1 (or the next subreaper in the tree) by the kernel. The container itself continues running because the shim is not part of its namespace hierarchy. However, containerd loses the exit event channel. containerd will see the task socket disappear and mark the task as unknown or exited. The stdio streams become inaccessible. On Kubernetes nodes, the kubelet will receive a ContainerDied event and depending on the restart policy may attempt to recreate the container, but it cannot cleanly collect the original exit code.
+
+\`\`\`bash
+# Find the shim PID for a container
+ps aux | grep containerd-shim-runc-v2 | grep <container-id>
+
+# The container process continues after shim dies
+kill <shim-pid>
+ps aux | grep nginx  # still running, re-parented
+
+# containerd marks the task state as lost
+ctr tasks ls  # status may show UNKNOWN
+
+# On Kubernetes, crictl shows container as exited
+crictl ps -a | grep <container-name>
+\`\`\``,
+    },
+    {
+      question: `Describe the exact sequence of CRI gRPC calls that the kubelet makes to containerd when scheduling a new Pod with two containers.`,
+      answer: `The kubelet communicates with containerd through the CRI (Container Runtime Interface), a gRPC protocol defined in the Kubernetes source. The sequence is strictly ordered and failure at any step prevents the pod from starting.
+
+Step one: the kubelet calls ImageService.PullImage for each container image that is not already present in the k8s.io containerd namespace. PullImage fetches from the configured registry, verifies digests, stores blobs in the content store, and returns an ImageRef.
+
+Step two: the kubelet calls RuntimeService.RunPodSandbox with a PodSandboxConfig containing the pod name, namespace, uid, labels, annotations, and the network configuration including DNS settings. containerd creates a special pause container (the sandbox) whose only job is to hold the Linux network namespace, IPC namespace, and UTS namespace for the pod's lifetime. containerd calls the CNI plugin at this point to attach the network interface and assign an IP address to the sandbox namespace. RunPodSandbox returns a sandboxId string.
+
+Step three: for each container in the pod spec, the kubelet calls RuntimeService.CreateContainer with the sandboxId from step two and a ContainerConfig describing the image, command, args, env vars, volume mounts, working dir, and resource limits. containerd prepares an overlayfs snapshot for the container rootfs but does not start any process. CreateContainer returns a containerId string.
+
+Step four: for each container, the kubelet calls RuntimeService.StartContainer with the containerId. containerd calls into the shim which calls runc start, launching the container init process inside the sandbox's namespaces (so all containers in the pod share the same network and IPC namespaces but have separate PID namespaces by default in Kubernetes 1.17+).
+
+\`\`\`bash
+# Watch CRI events in real time while scheduling a pod
+journalctl -u containerd -f
+
+# Inspect the sandbox (pause container) for a pod
+crictl pods --name my-pod --namespace default
+
+# Inspect containers inside a pod sandbox
+crictl ps --pod <sandbox-id>
+
+# Check the full sandbox details including IP
+crictl inspectp <sandbox-id> | jq .status.network
+
+# See the CreateContainer config that kubelet sent
+crictl inspect <container-id> | jq .info.config
+\`\`\``,
+    },
+    {
+      question: `What are the key differences between nerdctl and docker CLI, and when would you choose one over the other?`,
+      answer: `nerdctl and docker CLI appear nearly identical in daily use but differ in their architecture, namespace model, and feature availability in ways that matter for platform engineers.
+
+Architecture: docker CLI sends requests to the Docker daemon (dockerd), a long-running process that in turn talks to containerd. nerdctl sends requests directly to containerd's native gRPC API with no intermediate daemon. On nodes where containerd is the runtime and dockerd is not installed (all modern Kubernetes nodes), nerdctl works and docker CLI does not.
+
+Namespace model: containerd partitions its resources into namespaces. nerdctl defaults to the "default" namespace. Kubernetes workloads live in the "k8s.io" namespace. To see Kubernetes containers with nerdctl you must pass --namespace k8s.io. docker has no equivalent concept because dockerd managed its own separate namespace before talking to containerd. This is the single most common source of confusion when operators switch from docker to nerdctl on Kubernetes nodes.
+
+Feature parity: nerdctl supports docker-compose compatible files via nerdctl compose, rootless container mode via rootlesskit, lazy image pulling via stargz-snapshotter for faster cold starts, and image signing verification via cosign. nerdctl does not support docker swarm, docker plugins, or some advanced networking modes that depend on dockerd's libnetwork. For most application development and node-level debugging workflows, nerdctl provides full parity.
+
+When to choose: use docker CLI when you are developing locally on a machine with Docker Desktop or dockerd installed and want ecosystem compatibility (docker buildx, docker scout, docker contexts). Use nerdctl on Kubernetes nodes for debugging, on build servers that run pure containerd, or when you want to interact with containerd images in the k8s.io namespace. Use crictl (not nerdctl) for Kubernetes-specific operations like inspecting pod sandboxes, checking container status as kubelet sees it, or fetching container logs through CRI.
+
+\`\`\`bash
+# docker vs nerdctl equivalents
+docker ps                          # nerdctl ps
+docker run -d nginx                # nerdctl run -d nginx
+docker build -t app .              # nerdctl build -t app .
+docker images                      # nerdctl images
+
+# nerdctl Kubernetes-namespace equivalents
+nerdctl --namespace k8s.io ps
+nerdctl --namespace k8s.io images
+
+# nerdctl compose (docker-compose compatible)
+nerdctl compose up -d
+
+# rootless mode (no root required)
+nerdctl run --rootless -d nginx
+\`\`\``,
+    },
+    {
+      question: `How does the containerd snapshotter differ from Docker's storage driver model, and what problems does the snapshotter design solve?`,
+      answer: `Docker's storage driver model and containerd's snapshotter model both solve the same problem: how to give each container a copy-on-write view of the image filesystem without copying all layer data. They differ in architecture, flexibility, and failure modes.
+
+Docker's storage driver is a global, monolithic plugin selected per daemon. All containers on a node must use the same storage driver. The driver implements a fixed interface (GraphDriver) that Docker calls directly to create, mount, and unmount container filesystems. This means changing the storage driver requires stopping all containers, removing all images and layers, and restarting the daemon. The driver is tightly coupled to the Docker daemon lifecycle.
+
+containerd's snapshotter is a composable, pluggable subsystem that can be selected per-container (via the runtime configuration) and extended with new implementations without modifying containerd core. The snapshotter interface is based on a tree of snapshots: a base snapshot for the first image layer, child snapshots for each subsequent layer, and a prepared (mutable) snapshot for the container's writable layer. Snapshotters implement Prepare, Commit, and Remove operations on this tree, allowing containerd to handle any filesystem type that supports the abstraction.
+
+The snapshotter design solves three specific problems that the monolithic driver model struggled with. First, it enables lazy image pulling: the stargz-snapshotter implements on-demand layer fetching, where container processes can start before the full image is downloaded, because the snapshotter can serve reads from the remote registry via FUSE. Second, it enables remote snapshots for image sharing in multi-tenant environments where snapshots are stored and deduplicated in a shared remote store rather than local disk. Third, it provides a clean boundary between image unpacking and filesystem mounting, which simplifies implementing block-level snapshotters like devmapper without embedding block device logic inside the container runtime itself.
+
+\`\`\`bash
+# Check which snapshotter containerd is using
+ctr plugins ls | grep snapshotter
+
+# List all snapshots (layered image data)
+ctr snapshots ls
+
+# Inspect a specific snapshot's parent chain (the image layers)
+ctr snapshots info <snapshot-key>
+
+# See overlayfs mounts for a running container
+mount | grep overlay
+
+# Configure snapshotter in containerd config
+grep snapshotter /etc/containerd/config.toml
+\`\`\``,
+    },
+  ],
+  references: [
+    'https://containerd.io/docs/',
+    'https://github.com/containerd/containerd/blob/main/docs/architecture.md',
+    'https://opencontainers.org/about/overview/',
+    'https://github.com/opencontainers/image-spec',
+    'https://github.com/opencontainers/runtime-spec',
+    'https://github.com/containerd/nerdctl',
+    'https://kubernetes.io/docs/concepts/architecture/cri/',
+    'https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/',
+    'https://github.com/opencontainers/runc',
+    'https://github.com/containerd/containerd/blob/main/docs/snapshotters/overlayfs.md',
+    'https://github.com/containerd/containerd/blob/main/docs/cri/config.md',
+    'https://kubernetes.io/blog/2022/02/17/containerd-over-dockershim/',
+  ],
+},
+
+{
+  id: 'firecracker-microvms',
+  title: 'Firecracker microVMs',
+  icon: 'zap',
+  color: '#dc2626',
+  questions: 5,
+  description: `Firecracker is an open-source Virtual Machine Monitor written in Rust by AWS that uses Linux KVM to run lightweight microVMs with millisecond boot times and minimal memory overhead. It powers AWS Lambda and Fargate by combining the hardware isolation of VMs with the density and speed traditionally associated with containers.`,
+  visualizations: [
+    {
+      title: `Firecracker VMM Architecture`,
+      description: `Firecracker runs as a single userspace process per microVM. At the core is the Rust-based VMM that speaks directly to the Linux KVM subsystem via /dev/kvm ioctls. KVM provides the hardware virtualization extensions (Intel VT-x or AMD-V) that allow guest code to run at near-native speed while the host kernel retains control.
+
+The VMM exposes a REST API exclusively over a Unix domain socket. An external orchestrator, such as containerd or a custom Lambda worker manager, configures the VM through this API before boot. Configuration covers the guest kernel image, the root filesystem, network interfaces, and block devices. No general-purpose HTTP port is ever opened.
+
+Virtual devices are implemented via the virtio specification. virtio-net provides the guest network interface backed by a TAP device on the host. virtio-blk provides the root block device backed by a file or block device on the host. vsock is an optional virtio device that enables socket-based communication between the guest and the host without requiring a network interface at all, which is useful for metadata services and log drains.
+
+The jailer is a separate Rust binary that wraps the Firecracker process before it starts. The jailer performs several hardening steps in order: it places the process in a new network namespace, applies cgroup v2 limits for CPU and memory, chroots into a minimal directory containing only the Firecracker binary and the socket path, and installs a seccomp-BPF filter that allows only the specific syscalls Firecracker needs to operate. The result is a process with a drastically reduced attack surface even if the VMM code itself were compromised.`,
+      image: `/diagrams/devops/firecracker-microvms-arch.png`,
+    },
+    {
+      title: `Firecracker Boot Sequence and Serverless Integration`,
+      description: `The full lifecycle from API call to running guest code follows a strict sequence. First, the orchestrator spawns the jailer, which in turn executes the Firecracker binary inside its hardened environment. Firecracker opens the Unix socket and waits for configuration requests.
+
+The orchestrator then issues a series of PUT requests to the REST API: PUT /boot-source with the kernel image path and kernel command-line arguments, PUT /drives/rootfs with the path to the root filesystem image, and PUT /network-interfaces/eth0 with the TAP device name and guest MAC address. Once configuration is complete the orchestrator sends PUT /actions with InstanceStart.
+
+Firecracker loads the kernel directly into guest memory using its built-in Linux loader, bypassing BIOS and GRUB entirely. The kernel boots straight to the init process in the guest root filesystem. Total time from InstanceStart to a running guest process is typically 125 milliseconds or less because there is no firmware phase.
+
+In AWS Lambda the root filesystem is a read-only snapshot. When a new invocation arrives, Lambda clones a memory snapshot of a pre-warmed microVM using Firecracker snapshotting rather than booting from scratch, reducing cold-start latency to single-digit milliseconds for subsequent invocations in the same availability zone.
+
+firecracker-containerd is a project that implements the containerd remote snapshotter and shim interfaces on top of Firecracker. It allows Kubernetes and containerd to schedule OCI container images as Kata-style microVM workloads transparently. Each pod or container gets its own Firecracker microVM, and the container image layers are mounted into the guest via virtiofs or a devicemapper snapshot. This integration path is how organizations run untrusted multi-tenant container workloads with VM-level isolation without changing their Kubernetes control plane.`,
+      image: `/diagrams/devops/firecracker-microvms-flow.png`,
+    },
+  ],
+  introduction: `Firecracker was open-sourced by Amazon Web Services in 2018 and has since become the reference implementation of what the industry calls a microVM: a virtual machine that is stripped of all legacy hardware emulation and sized to run a single workload rather than a general-purpose operating system. The project was motivated by a specific problem: AWS needed to run millions of short-lived Lambda functions with sub-second cold starts while maintaining the hard multi-tenant isolation that hardware virtualization provides. Containers alone did not provide sufficient isolation because they share the host kernel, and traditional hypervisors like QEMU were too slow to start and too heavy on memory to run at Lambda scale.
+
+The VMM is written entirely in Rust, a choice that eliminated whole categories of memory safety vulnerabilities that have historically plagued C-based hypervisors such as QEMU. Rust's ownership model guarantees that buffer overflows, use-after-free errors, and data races are caught at compile time. Given that the VMM processes untrusted guest requests continuously, this property meaningfully reduces the probability that a malicious guest can escape into the host.
+
+Firecracker's device model is intentionally minimal. It emulates exactly the virtio-net, virtio-blk, and vsock devices that a Linux guest needs plus a minimal serial console and an i8042 keyboard controller for orderly shutdown signaling. Every other virtual device that QEMU supports, from USB controllers to sound cards to legacy ISA buses, is simply absent. A smaller emulated surface means fewer code paths that a guest can probe for vulnerabilities.
+
+The jailer binary is the second major security component. Even if a bug in the VMM allowed a guest to execute arbitrary code in the VMM process, the jailer's seccomp-BPF filter would block any syscall that Firecracker does not need, limiting what an attacker could accomplish. Combined with the chroot, network namespace, and cgroup confinement, the jailer makes each microVM an isolated island on the host.
+
+Firecracker has influenced the broader container and serverless ecosystem significantly. The Kata Containers project adopted Firecracker as one of its supported VMM backends, and firecracker-containerd provides a CRI-compatible shim so that Kubernetes can schedule workloads into microVMs without modification. Understanding Firecracker's architecture is therefore essential for engineers working on platform engineering, serverless infrastructure, or multi-tenant container security.`,
+  whenToUse: [
+    `Running untrusted third-party code in a serverless or FaaS platform where container-level isolation is insufficient and full VM boot times are too slow`,
+    `Multi-tenant container workloads on Kubernetes where different customers must have hard kernel isolation, achieved through firecracker-containerd or Kata Containers with the Firecracker backend`,
+    `High-density edge compute where hundreds of microVMs must coexist on a single host, each with a memory footprint starting at 128 MB and booting in under 200 milliseconds`,
+    `Reproducible CI environments where each test run gets a fresh, identical microVM snapshot cloned in milliseconds rather than provisioned from scratch`,
+    `Security-sensitive data processing pipelines where the blast radius of a compromised workload must be limited to the contents of a single microVM with no shared kernel state`,
+    `Lightweight development sandbox environments where developers need full VM isolation but cannot tolerate the two-minute boot cycle of traditional VMs`,
+  ],
+  keyConcepts: [
+    {
+      term: `KVM Backend and VMM Process Model`,
+      definition: `Firecracker uses the Linux Kernel-based Virtual Machine subsystem as its hypervisor layer. KVM exposes /dev/kvm as a character device. The VMM opens this device, creates a VM file descriptor with the KVM_CREATE_VM ioctl, maps guest physical memory as anonymous mmap regions, creates one or more virtual CPU file descriptors with KVM_CREATE_VCPU, and then enters a run loop that calls KVM_RUN in a tight loop per vCPU thread.
+
+Each vCPU thread calls KVM_RUN and blocks until the guest exits to the host. Exits happen for I/O port accesses, MMIO accesses to virtual device registers, and hypercalls. The VMM handles each exit, updates device state, and re-enters the guest. This model means the VMM is entirely single-address-space with the guest memory mapped directly into the VMM process.
+
+\`\`\`rust
+// Simplified sketch of the KVM run loop in Firecracker
+use kvm_ioctls::{Kvm, VmFd, VcpuFd};
+use kvm_bindings::kvm_userspace_memory_region;
+
+let kvm = Kvm::new().unwrap();
+let vm = kvm.create_vm().unwrap();
+
+// Map 128 MiB of guest RAM
+let guest_mem_size: u64 = 128 * 1024 * 1024;
+let guest_mem = unsafe {
+    libc::mmap(
+        std::ptr::null_mut(),
+        guest_mem_size as usize,
+        libc::PROT_READ | libc::PROT_WRITE,
+        libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
+        -1,
+        0,
+    )
+};
+let mem_region = kvm_userspace_memory_region {
+    slot: 0,
+    guest_phys_addr: 0x0,
+    memory_size: guest_mem_size,
+    userspace_addr: guest_mem as u64,
+    flags: 0,
+};
+unsafe { vm.set_user_memory_region(mem_region).unwrap() };
+
+let vcpu = vm.create_vcpu(0).unwrap();
+loop {
+    match vcpu.run().unwrap() {
+        kvm_ioctls::VcpuExit::IoOut(port, data) => { /* handle virtio I/O */ }
+        kvm_ioctls::VcpuExit::MmioWrite(addr, data) => { /* handle MMIO */ }
+        kvm_ioctls::VcpuExit::Hlt => break,
+        _ => {}
+    }
+}
+\`\`\`
+
+Firecracker creates exactly one process per microVM. There is no privileged daemon. The jailer then wraps this process with namespaces and seccomp.`,
+    },
+    {
+      term: `REST API Configuration Over Unix Socket`,
+      definition: `All microVM configuration in Firecracker happens through a REST API served exclusively over a Unix domain socket. There is no TCP listener, no authentication layer beyond filesystem permissions on the socket path, and no persistent daemon. The API is documented via an OpenAPI spec bundled with each release.
+
+The typical configuration sequence uses curl or a purpose-built client:
+
+\`\`\`bash
+FC_SOCK=/tmp/firecracker.sock
+
+# Set the guest kernel
+curl --unix-socket \${FC_SOCK} -X PUT \
+  http://localhost/boot-source \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "kernel_image_path": "/var/fc/vmlinux",
+    "boot_args": "console=ttyS0 reboot=k panic=1 pci=off"
+  }'
+
+# Attach the root filesystem
+curl --unix-socket \${FC_SOCK} -X PUT \
+  http://localhost/drives/rootfs \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "drive_id": "rootfs",
+    "path_on_host": "/var/fc/rootfs.ext4",
+    "is_root_device": true,
+    "is_read_only": false
+  }'
+
+# Configure the network interface backed by a TAP device
+curl --unix-socket \${FC_SOCK} -X PUT \
+  http://localhost/network-interfaces/eth0 \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "iface_id": "eth0",
+    "guest_mac": "AA:FC:00:00:00:01",
+    "host_dev_name": "tap0"
+  }'
+
+# Start the microVM
+curl --unix-socket \${FC_SOCK} -X PUT \
+  http://localhost/actions \
+  -H 'Content-Type: application/json' \
+  -d '{"action_type": "InstanceStart"}'
+\`\`\`
+
+The socket path is typically placed inside the jailer chroot so that only the orchestrator process, which holds a file descriptor opened before the chroot, can communicate with the VMM. After InstanceStart no further configuration changes are allowed on most resources.`,
+    },
+    {
+      term: `The Jailer: Namespaces, cgroups, and seccomp`,
+      definition: `The jailer is a separate binary distributed alongside Firecracker. It is invoked with the Firecracker binary path, a unique ID, the uid and gid to run as, and optionally a cgroup version flag. The jailer performs the following steps in order before exec-ing Firecracker.
+
+First it creates or joins a cgroup v2 hierarchy under /sys/fs/cgroup/firecracker/<id>/ and writes memory and CPU limits. Second it creates a new network namespace so the microVM process has no access to host network interfaces by default. Third it creates a new PID namespace. Fourth it chroots into a minimal directory that contains only the Firecracker binary, the kernel image, the rootfs image, and the socket path, all bind-mounted or copied in. Fifth it drops all Linux capabilities except those strictly required. Sixth it installs a seccomp-BPF filter that creates an allowlist of the roughly 24 syscalls Firecracker needs.
+
+\`\`\`bash
+# Invoking jailer directly (orchestrators typically call this for you)
+jailer \
+  --id vm-abc123 \
+  --exec-file /usr/bin/firecracker \
+  --uid 10000 \
+  --gid 10000 \
+  --chroot-base-dir /srv/jailer \
+  --cgroup-version 2 \
+  -- \
+  --api-sock /run/firecracker.socket \
+  --log-path /var/log/firecracker.log \
+  --level Info
+\`\`\`
+
+The seccomp filter is generated at compile time from a JSON policy file and compiled into the binary. Any syscall not on the allowlist causes the process to receive SIGSYS and terminate immediately. This means even if a guest exploits a VMM bug to gain code execution, the attacker cannot call execve, open, socket, or any other syscall to escape.`,
+    },
+    {
+      term: `virtio Devices: net, blk, and vsock`,
+      definition: `Firecracker implements three virtio devices. The virtio-net device backs each guest network interface with a TAP device on the host. The orchestrator creates the TAP device, connects it to a bridge or configures routing rules, and passes the TAP name to the Firecracker API. Inside the guest the interface appears as a standard Ethernet device.
+
+The virtio-blk device backs block storage. Each drive is a file or a block device on the host. The guest sees it as /dev/vda, /dev/vdb, and so on. Drives can be marked read-only, which is common for the root filesystem in serverless environments where the rootfs is a shared immutable snapshot.
+
+vsock is implemented as a virtio-vsock device with CID-based addressing. It allows the guest and the host to exchange data over a socket-like API without using the network stack at all. AWS Lambda uses vsock to implement the metadata service that Lambda functions query for environment variables and credentials.
+
+\`\`\`bash
+# Creating a TAP device and setting up routing for one microVM
+ip tuntap add dev tap0 mode tap
+ip addr add 172.16.0.1/30 dev tap0
+ip link set tap0 up
+
+# Enable IP masquerade so the guest can reach the internet
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+iptables -A FORWARD -i tap0 -j ACCEPT
+iptables -A FORWARD -o tap0 -j ACCEPT
+
+# Inside the guest, configure the matching address
+ip addr add 172.16.0.2/30 dev eth0
+ip route add default via 172.16.0.1
+\`\`\`
+
+For vsock the host side uses the AF_VSOCK socket family. The guest connects to CID 3 (host CID) on whatever port the host service listens on.`,
+    },
+    {
+      term: `Guest Kernel Requirements and Boot Sequence`,
+      definition: `Firecracker loads the Linux kernel using a built-in ELF loader. The kernel must be an uncompressed vmlinux ELF binary, not the bzImage format used by most distribution kernels. AWS publishes reference kernels but any kernel built from source with a suitable config works.
+
+Required kernel config options include CONFIG_KVM_GUEST for paravirtual optimizations, CONFIG_VIRTIO and CONFIG_VIRTIO_PCI for device drivers, CONFIG_VIRTIO_BLK and CONFIG_VIRTIO_NET for the specific devices Firecracker emulates, CONFIG_EXT4_FS if the rootfs is ext4, and CONFIG_9P_FS with CONFIG_9P_FS_POSIX_ACL if using virtiofs for overlay mounts.
+
+\`\`\`bash
+# Minimal kernel config fragment for Firecracker
+# Start from a defconfig and add these
+cat >> .config << 'EOF'
+CONFIG_KVM_GUEST=y
+CONFIG_VIRTIO=y
+CONFIG_VIRTIO_PCI=y
+CONFIG_VIRTIO_BLK=y
+CONFIG_VIRTIO_NET=y
+CONFIG_VIRTIO_CONSOLE=y
+CONFIG_VIRTIO_VSOCK=m
+CONFIG_EXT4_FS=y
+CONFIG_BINFMT_ELF=y
+CONFIG_NET=y
+CONFIG_INET=y
+CONFIG_IP_PNP=y
+CONFIG_IP_PNP_DHCP=y
+EOF
+
+make olddefconfig
+make -j\$(nproc) vmlinux
+\`\`\`
+
+The boot sequence after InstanceStart is: Firecracker writes the kernel ELF segments into guest RAM, sets the vCPU entry point to the kernel entry address, writes e820 memory map and device tree blobs at well-known addresses, then starts the vCPU threads. The kernel initializes, mounts the virtio-blk rootfs, and runs /sbin/init or the configured init process. No BIOS, no GRUB, no ACPI tables. The entire process typically completes in 125 milliseconds.`,
+    },
+    {
+      term: `Snapshotting and Memory Cloning`,
+      definition: `Firecracker supports pausing a running microVM, serializing its full state to disk, and restoring it later. The snapshot consists of the VM state file (vCPU register state, device state, memory metadata) and a memory file (a dump of all guest RAM pages). Restoring a snapshot is faster than booting because there is no kernel initialization phase.
+
+AWS Lambda uses this to implement the snapshot-and-clone pattern. A base microVM is fully initialized with the runtime and the function code loaded. When a new invocation arrives for a cold start, Lambda restores from the snapshot rather than booting from scratch, bringing restore time down to under 10 milliseconds for small memory configurations.
+
+\`\`\`bash
+# Pause and snapshot a running microVM via the API
+curl --unix-socket \${FC_SOCK} -X PATCH \
+  http://localhost/vm \
+  -H 'Content-Type: application/json' \
+  -d '{"state": "Paused"}'
+
+curl --unix-socket \${FC_SOCK} -X PUT \
+  http://localhost/snapshot/create \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "snapshot_type": "Full",
+    "snapshot_path": "/snapshots/vm-abc123.snap",
+    "mem_file_path": "/snapshots/vm-abc123.mem"
+  }'
+
+# Restore on a different host or later
+firecracker --api-sock /tmp/fc-restore.sock &
+curl --unix-socket /tmp/fc-restore.sock -X PUT \
+  http://localhost/snapshot/load \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "snapshot_path": "/snapshots/vm-abc123.snap",
+    "mem_file_path": "/snapshots/vm-abc123.mem",
+    "enable_diff_snapshots": false,
+    "resume_vm": true
+  }'
+\`\`\`
+
+For true cloning at scale, operators use Linux userfaultfd or copy-on-write block devices so multiple restored microVMs share the same physical memory pages until they diverge.`,
+    },
+    {
+      term: `firecracker-containerd and CRI Integration`,
+      definition: `firecracker-containerd is an open-source project from AWS that implements the containerd Snapshotter and Task API interfaces on top of Firecracker. It allows containerd, and by extension Kubernetes via the CRI, to run OCI container images inside Firecracker microVMs transparently.
+
+The architecture has three components. The firecracker-containerd runtime is a containerd shim v2 that launches a Firecracker microVM for each task. Inside the microVM runs a minimal guest agent that receives task commands over vsock. The devmapper snapshotter prepares thin-provisioned device-mapper block devices from OCI layer snapshots and attaches them to the microVM as additional virtio-blk drives, which the guest agent mounts as overlayfs layers.
+
+\`\`\`toml
+# /etc/containerd/config.toml excerpt to use firecracker-containerd
+version = 2
+
+[plugins."io.containerd.runtime.v2.task"]
+  platforms = ["linux/amd64"]
+
+[plugins."io.containerd.snapshotter.v1.devmapper"]
+  pool_name = "fc-dev-thinpool"
+  root_path = "/var/lib/containerd/io.containerd.snapshotter.v1.devmapper"
+  base_image_size = "10GB"
+
+[[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.firecracker]]
+  runtime_type = "aws.firecracker"
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.firecracker.options]
+    KernelImagePath = "/var/fc/vmlinux"
+    RootDrivePath = "/var/fc/rootfs.ext4"
+\`\`\`
+
+With this configuration, kubectl run commands that specify the firecracker RuntimeClass result in each pod running inside an isolated Firecracker microVM while the container image, resource limits, and lifecycle remain entirely standard Kubernetes constructs.`,
+    },
+  ],
+  approach: [
+    `Build a lean rootfs using Alpine Linux or a custom buildroot image to minimize the guest footprint. Strip all packages that are not needed by the workload. A rootfs under 50 MB keeps drive attach overhead negligible and reduces the memory the page cache consumes at runtime.`,
+    `Always invoke Firecracker through the jailer rather than directly. The jailer is not optional hardening for production deployments; it is the primary isolation boundary between microVMs on the same host. Skipping the jailer means no seccomp filter and no cgroup limits.`,
+    `Use cgroup v2 unified hierarchy exclusively. Cgroup v1 is fragmented across multiple mount points and the jailer's cgroup v2 support is the actively maintained path. Set both memory.max and cpu.max in the cgroup before InstanceStart to guarantee resource accounting.`,
+    `Prepare TAP devices and routing rules before calling the Firecracker API. Network configuration errors surface as opaque boot failures because the guest kernel tries to bring up the interface during init. Pre-validating that the TAP device exists and has the expected routing table entry prevents hard-to-diagnose cold-start failures.`,
+    `Use read-only root drives for ephemeral workloads. Mark the rootfs drive is_read_only true in the API and mount a writable tmpfs inside the guest for any state the workload needs to write. This enables safe snapshot sharing across multiple microVM instances and prevents rootfs corruption from abrupt termination.`,
+    `Pin the Firecracker binary version to a specific release tag and validate its SHA-256 hash before deployment. The jailer seccomp filter is compiled into the binary and changes between versions. Accidental upgrades can change the allowed syscall set and break workloads that depend on specific kernel interfaces.`,
+    `Implement a microVM pool to amortize boot latency. Pre-boot N microVMs to the point just before InstanceStart, keeping them in a configured-but-not-running state. When a workload request arrives, issue InstanceStart and hand off the socket, bringing perceived cold-start latency to only the kernel initialization portion of the boot sequence.`,
+    `Monitor per-microVM memory balloon metrics via the Firecracker metrics endpoint and reclaim guest memory with the virtio-balloon device during idle periods. This allows higher packing density on the host without permanently reserving the maximum guest memory for every microVM in the pool.`,
+  ],
+  pitfalls: [
+    `Using the bzImage kernel format instead of an uncompressed vmlinux ELF binary. Firecracker's built-in loader does not understand bzImage. The VMM will silently fail to load the kernel or crash at boot with a vCPU exit that looks unrelated to the image format.`,
+    `Forgetting to set net.ipv4.ip_forward on the host before starting microVMs. Without this sysctl, packets from the guest TAP device will not be forwarded even if iptables rules are correct. Every new deployment environment needs this sysctl persisted in /etc/sysctl.d/.`,
+    `Assuming that each microVM is free from host CPU side-channel vulnerabilities out of the box. KVM with Spectre and Meltdown mitigations enabled provides strong isolation, but those mitigations must be active on the host kernel. Always boot the host kernel with mitigations=auto and verify via /sys/devices/system/cpu/vulnerabilities/.`,
+    `Sharing a single Unix socket path across concurrent microVM launches. Each Firecracker instance must have a unique socket path. Race conditions on a shared socket path cause configuration commands meant for one microVM to arrive at another, resulting in corrupted or failed boots that are extremely difficult to trace.`,
+    `Neglecting to clean up TAP devices and cgroup directories after microVM termination. TAP devices are persistent kernel objects. A long-running orchestrator that starts and stops thousands of microVMs without cleanup will exhaust the host's network device limit and accumulate stale cgroup hierarchies that confuse subsequent jailer invocations.`,
+    `Building guest rootfs images without the exact virtio drivers compiled in. If CONFIG_VIRTIO_BLK and CONFIG_VIRTIO_NET are compiled as modules but the rootfs has no initramfs to load them, the guest kernel will panic at mount time because it cannot find the root block device. Always compile these drivers as built-ins (=y) for Firecracker guests.`,
+    `Treating the Firecracker REST API as a multi-use interface by leaving the socket accessible after boot. The socket should be closed or permission-restricted immediately after InstanceStart. A socket left open allows any process with filesystem access to the jailer chroot to issue API commands, including CreateSnapshot, which could be used to exfiltrate guest memory.`,
+    `Using Firecracker for workloads that require GPU passthrough, USB devices, or ACPI-based hotplug. Firecracker intentionally omits all of these. Attempting to configure PCI passthrough or expecting ACPI shutdown signals will fail silently or cause the guest to hang on reboot. For GPU workloads, QEMU with vfio-pci or a dedicated GPU VM is the correct tool.`,
+  ],
+  keyQuestions: [
+    {
+      question: `Why do serverless platforms like AWS Lambda use microVMs instead of containers for tenant isolation?`,
+      answer: `Containers share the host kernel. Every container on a host makes system calls that are handled by the same kernel instance. If a vulnerability exists in a kernel subsystem such as the io_uring interface, the TCP stack, or the eBPF verifier, a malicious tenant can exploit it to gain host privileges regardless of which container runtime or seccomp profile is in use. The shared kernel surface area is simply too large to audit completely.
+
+microVMs solve this by giving each tenant a separate kernel instance. The host kernel only sees the KVM ioctl interface and the virtio device backends. The guest kernel handles all tenant system calls in isolation. Even a complete guest kernel compromise gives the attacker control only over that microVM's address space, not the host.
+
+The tradeoff historically was boot time. Traditional VMs with BIOS, GRUB, and a full hardware emulation layer take 30 to 90 seconds to start, which is completely impractical for a FaaS platform that must start a function in response to an HTTP request.
+
+Firecracker resolves this tradeoff by removing everything that causes slow boots. There is no BIOS or firmware phase because Firecracker loads the kernel directly into guest memory and sets the vCPU entry point to the kernel entry address. There is no GRUB because there is no boot menu or chainloader. There is no hardware probe phase because the guest kernel sees only the four virtio devices that Firecracker emulates, all of which respond immediately.
+
+The result is a boot time of approximately 125 milliseconds from InstanceStart to a running process in the guest. Combined with snapshot-based cloning, which restores a pre-initialized guest in under 10 milliseconds, Firecracker provides isolation comparable to a full VM with a cold-start latency comparable to a container runtime.
+
+Memory overhead is also competitive. A minimal Firecracker microVM can run with 128 MB of guest memory assigned, a small footprint for the VMM process itself in host memory, and no BIOS or firmware memory reservations. A host with 64 GB of RAM can run hundreds of concurrent microVMs at the same density as containers.
+
+\`\`\`bash
+# Comparing isolation models
+# Container: shares host kernel, process namespace isolation only
+docker run --rm --security-opt seccomp=default ubuntu uname -r
+# Returns: same as host kernel version
+
+# Firecracker microVM: fully separate kernel
+curl --unix-socket /tmp/fc.sock -X PUT http://localhost/boot-source \
+  -d '{"kernel_image_path":"/var/fc/vmlinux-5.10","boot_args":"console=ttyS0"}'
+# Guest runs kernel 5.10 while host runs 6.x
+\`\`\``,
+    },
+    {
+      question: `Walk through the full Firecracker boot sequence from the moment an orchestrator makes its first API call to a workload process running inside the guest.`,
+      answer: `Step one is jailer invocation. The orchestrator calls the jailer binary with the Firecracker binary path, a unique VM ID, uid/gid, and cgroup version. The jailer creates a cgroup hierarchy at /sys/fs/cgroup/firecracker/<id>/, writes the memory and CPU limits, creates a new network namespace and PID namespace, chroots into /srv/jailer/<id>/root/, drops capabilities, installs the seccomp-BPF filter, and then exec-replaces itself with Firecracker. At this point Firecracker is running inside the hardened environment.
+
+Step two is socket creation. Firecracker opens the Unix domain socket and begins serving the REST API. The orchestrator detects the socket becoming available, typically by polling with a short timeout.
+
+Step three is kernel configuration. The orchestrator issues PUT /boot-source with the path to the vmlinux ELF binary and the kernel command-line string. Common boot args are console=ttyS0 reboot=k panic=1 pci=off nomodules. The pci=off argument tells the guest kernel not to enumerate PCI devices because Firecracker does not implement a PCI bus.
+
+Step four is drive configuration. The orchestrator issues PUT /drives/rootfs with the path to the ext4 or squashfs root filesystem image and is_root_device true. Additional data drives can be attached with additional PUT /drives/<id> calls.
+
+Step five is network configuration. The orchestrator issues PUT /network-interfaces/eth0 with the guest MAC address and the TAP device name. The TAP device must already exist on the host and be connected to whatever routing or bridge configuration the environment requires.
+
+Step six is machine configuration. The orchestrator optionally calls PUT /machine-config to set the vCPU count and memory size in megabytes. The defaults are one vCPU and 128 MB.
+
+Step seven is InstanceStart. The orchestrator issues PUT /actions with action_type InstanceStart. Firecracker allocates the guest RAM via anonymous mmap, creates the KVM VM and vCPU file descriptors, writes the kernel ELF segments into guest RAM, sets up the e820 memory map at the conventional physical address, places the kernel command-line string at address 0x20000, writes the virtio device MMIO configuration into the device tree blob region, and starts the vCPU thread.
+
+Step eight is kernel boot inside the guest. The guest kernel initializes its memory allocator, discovers the virtio devices by walking the device tree blob, loads the virtio-blk and virtio-net drivers, mounts the root filesystem from /dev/vda, and executes /sbin/init.
+
+\`\`\`bash
+FC_SOCK=/tmp/fc-\${VM_ID}.sock
+# Steps 3-7 condensed
+for req in \
+  'PUT /boot-source {"kernel_image_path":"/fc/vmlinux","boot_args":"console=ttyS0 pci=off"}' \
+  'PUT /drives/rootfs {"drive_id":"rootfs","path_on_host":"/fc/rootfs.ext4","is_root_device":true,"is_read_only":true}' \
+  'PUT /network-interfaces/eth0 {"iface_id":"eth0","guest_mac":"AA:FC:00:00:00:01","host_dev_name":"tap0"}' \
+  'PUT /actions {"action_type":"InstanceStart"}'; do
+  method=\${req%% *}; rest=\${req#* }; path=\${rest%% *}; body=\${rest#* }
+  curl -sf --unix-socket \${FC_SOCK} -X \${method} http://localhost\${path} \
+    -H 'Content-Type: application/json' -d "\${body}"
+done
+\`\`\`
+
+Total elapsed time from InstanceStart to a process running inside the guest is approximately 125 milliseconds on modern hardware.`,
+    },
+    {
+      question: `What specific isolation actions does the jailer take, and what attack surface does each action close?`,
+      answer: `The jailer performs six distinct isolation steps before handing control to Firecracker.
+
+The first step is cgroup v2 confinement. The jailer creates a cgroup hierarchy at /sys/fs/cgroup/firecracker/<id>/ and writes memory.max, memory.swap.max, and cpu.max before the Firecracker process starts. This closes the attack surface of resource exhaustion: a guest that triggers excessive memory allocation or CPU spin in the VMM cannot starve other microVMs or the host because the kernel enforces the cgroup limits and OOM-kills the VMM process if it exceeds memory.max.
+
+The second step is network namespace isolation. The jailer calls unshare(CLONE_NEWNET) before exec-ing Firecracker. Inside the new network namespace the only visible interfaces are lo and whatever TAP device the orchestrator explicitly moved into the namespace with ip link set tap0 netns <pid>. This closes the surface of host network enumeration: even if an attacker gains code execution in the VMM, they cannot see or send packets on host interfaces, access the host's listening sockets, or perform ARP spoofing on the host network.
+
+The third step is chroot confinement. The jailer chroots into a minimal directory that contains only the Firecracker binary, the kernel image, the rootfs image, and the socket path. All host filesystem paths outside this directory become invisible. This closes the surface of filesystem-based information leakage: the VMM cannot open /etc/passwd, /proc/keys, or any sensitive host file.
+
+The fourth step is capability drop. The jailer calls setuid and setgid to a non-root uid/gid and drops all Linux capabilities. This closes the surface of privileged kernel operations: the VMM cannot call ioctl variants that require CAP_SYS_ADMIN, cannot load kernel modules, and cannot manipulate other processes.
+
+The fifth step is seccomp-BPF filtering. The jailer installs a allowlist BPF filter that permits approximately 24 syscalls: the KVM ioctls via ioctl, mmap for guest memory allocation, read/write on the socket and log fd, epoll for event handling, and a handful of others. Any other syscall causes SIGSYS. This is the deepest defense layer: even if an attacker achieves arbitrary code execution in the VMM process, they cannot call execve to run another binary, cannot call socket to open a new connection, and cannot call open to read host files.
+
+The sixth step is PID namespace isolation. The jailer creates a new PID namespace so the VMM process appears as PID 1 inside the namespace. This prevents the VMM from seeing or sending signals to host processes.
+
+\`\`\`bash
+# Verifying jailer confinement from outside
+PID=\$(pgrep -f "firecracker.*vm-abc123")
+
+# Check network namespace
+ls -la /proc/\${PID}/ns/net
+# Should differ from /proc/1/ns/net
+
+# Check cgroup membership
+cat /proc/\${PID}/cgroup
+# Should show: 0::/firecracker/vm-abc123/
+
+# Check seccomp mode
+grep Seccomp /proc/\${PID}/status
+# Seccomp: 2  (2 = BPF filter active)
+\`\`\``,
+    },
+    {
+      question: `Compare the security models of gVisor and Firecracker. When is each the right choice?`,
+      answer: `gVisor and Firecracker solve the same problem, running untrusted code with stronger isolation than standard containers, but they use fundamentally different mechanisms and the security properties they provide are distinct.
+
+gVisor intercepts system calls at the user-space boundary using ptrace or the KVM backend in its Sentry component. The Sentry is a Go userspace process that reimplements the Linux kernel API. When a container process issues a syscall, the Sentry handles it and may or may not make a corresponding host syscall, depending on whether the operation requires host kernel involvement. The Gofer component handles filesystem operations separately.
+
+The security property of gVisor is syscall surface reduction from the host kernel's perspective. A container running under gVisor makes host syscalls only through the Sentry, which has a much smaller surface than the full Linux kernel API. However, the Sentry itself is a large and complex codebase written in Go. Bugs in the Sentry's reimplementation of Linux semantics can lead to sandbox escapes. Several CVEs have been disclosed in gVisor over the years due to correctness issues in the Sentry.
+
+Firecracker provides hardware-level isolation. Guest code runs in a separate virtual address space enforced by the CPU's hardware virtualization extensions. The host kernel sees only the KVM ioctl interface. A bug in Firecracker's virtio device code that allows a guest to corrupt VMM memory does not give the guest host kernel access; the attacker still needs a second bug to escape the KVM address space boundary, which has a much smaller known attack surface.
+
+gVisor starts in under 100 milliseconds and adds roughly 2-10% overhead to syscall-heavy workloads. Firecracker starts in 125 milliseconds but has near-zero steady-state overhead because guest code runs natively on the vCPU.
+
+gVisor is the right choice when you need OCI compatibility without kernel changes, when the workload is syscall-heavy and the 2-10% overhead is acceptable, and when you cannot allocate a full separate kernel per workload due to memory constraints.
+
+Firecracker is the right choice for multi-tenant serverless platforms where the security bar is highest, where snapshotting and clone-based cold starts are needed, and where near-native performance is required.
+
+\`\`\`yaml
+# Kubernetes RuntimeClass for gVisor (runsc)
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+---
+# Kubernetes RuntimeClass for Firecracker (via kata-containers or firecracker-containerd)
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: firecracker
+handler: kata-fc
+\`\`\`
+
+In practice AWS uses Firecracker for Lambda (highest isolation requirement) and gVisor is used by Google Cloud Run. Many organizations run both: Firecracker for untrusted external code, gVisor for internal microservices that need stronger isolation than runc but do not justify the memory overhead of full microVMs.`,
+    },
+    {
+      question: `How does firecracker-containerd integrate with the Kubernetes CRI to run container images inside microVMs?`,
+      answer: `The Kubernetes Container Runtime Interface is an abstract gRPC API that kubelet uses to manage pods and containers. kubelet does not call Docker or containerd directly; it speaks CRI to a CRI endpoint, typically the containerd CRI plugin. firecracker-containerd hooks into this stack at two points: the containerd shim layer and the snapshotter layer.
+
+The containerd shim v2 interface defines how containerd launches and manages the lifecycle of a single OCI task. Normally this shim is runc, which calls the OCI runtime to start a container process. firecracker-containerd replaces this shim with one that instead launches a Firecracker microVM per task, runs a lightweight guest agent inside the microVM over vsock, and forwards all CRI lifecycle calls (Create, Start, Kill, Delete) to the guest agent.
+
+The snapshotter interface defines how containerd unpacks and stores OCI image layers. The default overlay snapshotter stores layers as directories on the host filesystem and uses overlayfs to assemble them. This does not work for microVMs because the guest kernel needs to mount the layers, not the host kernel. firecracker-containerd provides a devmapper snapshotter that creates a thin-provisioned device-mapper block device for each snapshot. These block devices are passed to Firecracker as additional virtio-blk drives. The guest agent mounts them as overlayfs layers inside the microVM.
+
+\`\`\`bash
+# RuntimeClass on the cluster tells kubelet which handler to use
+kubectl apply -f - <<'EOF'
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: firecracker
+handler: firecracker
+scheduling:
+  nodeSelector:
+    firecracker-enabled: "true"
+EOF
+
+# Pod spec that requests the firecracker runtime
+kubectl apply -f - <<'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  name: isolated-workload
+spec:
+  runtimeClassName: firecracker
+  containers:
+  - name: app
+    image: nginx:alpine
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+EOF
+\`\`\`
+
+When kubelet creates this pod, it sends a RunPodSandbox CRI call to containerd. The CRI plugin looks up the firecracker handler, invokes the firecracker-containerd shim, which calls the jailer and Firecracker API to boot a new microVM. containerd then sends CreateContainer and StartContainer calls, which the shim forwards over vsock to the guest agent. The guest agent pulls the container image layers from the devmapper block devices, assembles the overlayfs mount, and starts the nginx process inside the guest.
+
+From the Kubernetes control plane's perspective the pod is just a pod. Resource limits, readiness probes, log collection via kubectl logs, and exec via kubectl exec all work through the same CRI interfaces, translated by the shim and guest agent into microVM-appropriate operations. The isolation boundary is completely transparent to the Kubernetes API.`,
+    },
+  ],
+  references: [
+    'https://firecracker-microvm.github.io/',
+    'https://github.com/firecracker-microvm/firecracker',
+    'https://github.com/firecracker-microvm/firecracker-containerd',
+    'https://www.usenix.org/conference/nsdi20/presentation/agache',
+    'https://firecracker-microvm.github.io/faq.html',
+    'https://github.com/firecracker-microvm/firecracker/blob/main/docs/jailer.md',
+    'https://github.com/firecracker-microvm/firecracker/blob/main/docs/getting-started.md',
+    'https://github.com/firecracker-microvm/firecracker/blob/main/docs/snapshotting/snapshot-support.md',
+    'https://github.com/kata-containers/kata-containers/blob/main/docs/hypervisors.md',
+    'https://gvisor.dev/docs/architecture_guide/',
+    'https://docs.kernel.org/virt/kvm/api.html',
+    'https://docs.oasis-open.org/virtio/virtio/v1.2/virtio-v1.2.html',
+  ],
+},
+
+{
+  id: 'dagger-ci',
+  title: 'Dagger',
+  icon: 'git-merge',
+  color: '#7c3aed',
+  questions: 5,
+  description: `Dagger is a programmable CI/CD engine that lets you define pipelines as code using Go, Python, or TypeScript SDKs, backed by a BuildKit-powered DAG executor with automatic caching. It eliminates the gap between local development and CI by running the exact same containerized pipeline everywhere.`,
+  visualizations: [
+    {
+      title: `Dagger Engine Architecture`,
+      description: `The Dagger engine sits at the center of the system as a long-running daemon that exposes a GraphQL API over a Unix socket. Client SDKs written in Go, Python, or TypeScript connect to this API and describe pipelines as a directed acyclic graph of operations rather than as sequential shell scripts.
+
+Each node in the DAG represents a pure function: it takes typed inputs, runs inside a container, and produces outputs that can become inputs to downstream nodes. BuildKit handles the low-level container execution, layer caching, and parallelism. Dagger translates the GraphQL operation graph into a BuildKit LLB graph, which means every intermediate result is content-addressed and stored in a shared cache layer backed by the local BuildKit content store or Dagger Cloud.
+
+On the left side of the architecture are the trigger sources: a developer running dagger call on their laptop, a GitHub Actions job invoking the Dagger CLI, a GitLab CI job, or a Buildkite step. All of them connect to a local or remote Dagger engine instance and submit the same GraphQL payload. The engine resolves the DAG, skips any nodes whose inputs have not changed since the last run, and fans out parallel branches automatically.
+
+On the right side are the outputs: published container images, test results, binaries, deployment artifacts, and structured log streams. Because the DAG is deterministic and content-addressed, a pipeline that passed on a developer laptop produces bit-for-bit identical artifacts in CI unless the source inputs differ.`,
+      image: `/diagrams/devops/dagger-ci-arch.png`
+    },
+    {
+      title: `Dagger Pipeline Execution Flow`,
+      description: `When a developer invokes dagger call build --src . the CLI serializes the function call into a GraphQL mutation and sends it to the engine. The engine checks its BuildKit content store for a cached result keyed by the SHA256 digest of every input: the source directory snapshot, the base image digest, environment variable values, and secret hashes. If a cache hit exists for every node in the subgraph, the result is returned instantly without executing any containers.
+
+For cache misses the engine schedules container execution through BuildKit. Parallel branches run concurrently inside isolated namespaces. A Services node starts a sidecar container, for example a PostgreSQL or Redis instance, and binds it to an ephemeral hostname visible only to peer nodes in the same pipeline run. Integration test nodes connect to this ephemeral hostname as if it were a real server, run their test binary, and stream logs back through the GraphQL subscription.
+
+Cache volumes are named mounts that persist across pipeline runs. A Go module cache volume mounted at /go/pkg/mod means go mod download only fetches new packages. A Node.js volume at /app/node_modules means npm ci is skipped entirely when the lockfile digest matches the previous run. These volumes are stored in BuildKit's content store and, with Dagger Cloud enabled, synchronized to a distributed cache layer so that any runner picking up the same pipeline gets a warm cache regardless of which physical machine it executes on.
+
+At the end of the run the engine publishes the final artifact, emits a structured result back to the CLI, and optionally pushes a cache snapshot to Dagger Cloud. The developer sees pass or fail with the same log output they would see in GitHub Actions, because it is literally the same code path.`,
+      image: `/diagrams/devops/dagger-ci-flow.png`
+    },
+  ],
+  introduction: `Dagger reimagines CI/CD pipelines by treating them as ordinary programs rather than configuration files. Instead of learning a YAML DSL specific to GitHub Actions, GitLab CI, or Jenkins, you write pipeline logic in Go, Python, or TypeScript using a typed SDK that compiles down to a GraphQL description of your build graph. The Dagger engine executes that graph inside containers using BuildKit under the hood, which means every step runs in a reproducible, isolated environment regardless of the host machine.
+
+The core insight behind Dagger is that the gap between local development and CI is mostly a tooling problem. When a pipeline is expressed as a YAML file it can only run on the CI provider that understands that YAML format. When it is expressed as a regular function in a general-purpose language it can run anywhere the Dagger CLI is installed, including a developer laptop, a local Docker environment, and any CI provider. Debugging a failing pipeline no longer requires pushing commits and waiting for a remote runner; you reproduce the exact failure locally in seconds.
+
+Dagger uses BuildKit as its execution substrate, which provides content-addressed caching at the layer level. Every node in the pipeline DAG is hashed based on its inputs. If you change one file in a monorepo only the nodes that transitively depend on that file are re-executed. Everything else is served from cache. This is a fundamentally different caching model from GitHub Actions path filters or Circle CI workspace saves, which are manually specified and easy to get wrong.
+
+The Dagger Module system, accessible through the Daggerverse registry, lets teams publish reusable pipeline functions as versioned packages. A team can depend on a community-published Go module that knows how to build, test, and lint Go code, override individual functions for their specific requirements, and compose it with a Kubernetes deployment module. This composability is closer to how application code is shared through package managers than how CI templates are shared through YAML anchors and template repositories.
+
+Dagger Services extend the pipeline DAG with the ability to start long-running sidecar containers scoped to a pipeline run. A PostgreSQL service starts when a node that depends on it is first evaluated, stays alive for the duration of nodes that bind to it, and is torn down automatically when the run completes. This makes database integration tests as easy to write as unit tests: you declare the service, bind your test binary to its hostname, and run the tests. No Docker Compose files, no pre-provisioned test databases, no cleanup scripts.
+
+Dagger Cloud adds a distributed cache layer on top of the local BuildKit store. Cache volumes and intermediate layer digests are pushed to a content-addressed blob store after each successful run and pulled by any runner that picks up the same pipeline. Combined with the local-equals-CI parity guarantee, this means teams get fast pipelines without pre-warming runners or maintaining custom AMIs with pre-installed dependencies.`,
+  whenToUse: [
+    `You are building a complex multi-stage Go, Python, or TypeScript application where integration tests require real database or cache sidecars and you want those tests to run identically on developer laptops and in CI without separate Docker Compose files.`,
+    `Your monorepo contains many independent services and you need fine-grained DAG-based caching so that changing service A does not re-run the full build and test suite for service B.`,
+    `You are publishing reusable pipeline components for a platform engineering team to consume across dozens of repositories and you want versioned, typed, composable functions rather than copy-pasted YAML templates.`,
+    `Your CI pipelines are slow because cache invalidation is coarse-grained and you want BuildKit-level content-addressed caching tied to actual input digests rather than manually maintained cache keys.`,
+    `You want to run the exact same pipeline locally for debugging without setting up a local GitHub Actions runner or maintaining a separate local build script that diverges from CI over time.`,
+    `You are adopting Dagger Cloud and want a distributed cache layer that warms any runner that picks up a pipeline without requiring sticky runner groups or pre-warmed AMIs.`,
+    `You need to integrate secrets into pipeline steps without exposing them as environment variables that appear in logs, using Dagger's typed Secret type that is scrubbed from all output.`,
+  ],
+  keyConcepts: [
+    {
+      term: `Dagger Engine and GraphQL API`,
+      definition: `The Dagger engine is a long-running daemon that exposes a GraphQL API over a Unix socket. Every operation a client SDK performs, mounting a directory, running a container, publishing an image, is expressed as a GraphQL query or mutation. The engine translates these operations into a BuildKit LLB graph and executes them.
+
+Because the API is GraphQL, the engine can resolve only the subgraph relevant to the requested result, automatically skip nodes with cached outputs, and fan out parallel branches without any explicit parallelism annotations from the caller.
+
+\`\`\`typescript
+// Dagger TypeScript SDK: query the engine for a container's stdout
+import { dag, Container, object, func } from "@dagger.io/dagger";
+
+@object()
+class MyPipeline {
+  @func()
+  async hello(): Promise<string> {
+    return dag
+      .container()
+      .from("alpine:3.18")
+      .withExec(["echo", "hello from dagger"])
+      .stdout();
+  }
+}
+\`\`\`
+
+The dag import is the root client bound to the engine connection. Every chained method call appends a node to the local DAG description. No container actually runs until a terminal method like stdout or sync is awaited, at which point the entire accumulated graph is sent to the engine in one GraphQL call and executed with maximum parallelism.`
+    },
+    {
+      term: `Pipeline as a Dagger Function`,
+      definition: `In Dagger a pipeline is a regular function decorated with SDK-specific annotations. The Dagger CLI introspects these functions and exposes them as sub-commands. Callers invoke them with dagger call function-name --arg value. The function receives typed arguments, builds a DAG of container operations, and returns a typed result.
+
+This design means pipelines are testable, composable, and callable from any context: a developer terminal, a CI step, or another Dagger function in a different module.
+
+\`\`\`go
+// Go SDK: a build function that compiles a Go binary
+package main
+
+import (
+    "context"
+    "dagger.io/dagger"
+)
+
+type Pipeline struct{}
+
+func (p *Pipeline) Build(ctx context.Context, src *dagger.Directory) (*dagger.File, error) {
+    client, _ := dagger.Connect(ctx)
+    defer client.Close()
+
+    goCache := client.CacheVolume("go-mod-cache")
+
+    binary := client.Container().
+        From("golang:1.22-alpine").
+        WithMountedCache("/go/pkg/mod", goCache).
+        WithMountedDirectory("/src", src).
+        WithWorkdir("/src").
+        WithExec([]string{"go", "build", "-o", "/out/app", "./..."}).
+        File("/out/app")
+
+    return binary, nil
+}
+\`\`\`
+
+The function signature uses only Dagger types: Directory for a source tree, File for a build artifact, CacheVolume for a named persistent cache. The engine knows how to serialize and deserialize these types across module boundaries, enabling composition without shared filesystem state.`
+    },
+    {
+      term: `BuildKit-backed DAG and Caching`,
+      definition: `Dagger uses BuildKit as its execution engine. BuildKit represents every operation as a node in a directed acyclic graph where edges are data dependencies. Each node is identified by a content-addressed hash of its inputs: the base image digest, the command arguments, mounted file digests, and environment variable values.
+
+When you run a pipeline twice with identical inputs, BuildKit finds the cached result for every node and returns it without re-executing any container. Change one source file and only the nodes that depend on that file are re-executed. All sibling branches that do not depend on the changed file are served from cache instantly.
+
+\`\`\`python
+# Python SDK: illustrating how cache volumes pin dependency install
+import dagger
+
+async def test(client: dagger.Client, src: dagger.Directory) -> str:
+    node_cache = client.cache_volume("node-modules")
+
+    result = await (
+        client.container()
+        .from_("node:20-alpine")
+        .with_mounted_cache("/app/node_modules", node_cache)
+        .with_mounted_directory("/app", src)
+        .with_workdir("/app")
+        .with_exec(["npm", "ci"])
+        .with_exec(["npm", "test"])
+        .stdout()
+    )
+    return result
+\`\`\`
+
+The node_cache cache volume is keyed by name. Its contents persist in the BuildKit content store across pipeline runs. npm ci reads from node_modules and only fetches packages not already present, dramatically reducing test cycle time. In Dagger Cloud this volume is synchronized to a distributed store so any runner picks up the warm cache.`
+    },
+    {
+      term: `Dagger Modules and Daggerverse`,
+      definition: `Dagger Modules are versioned, self-contained packages of Dagger functions published to the Daggerverse registry or any Git repository. A module declares its own Dagger SDK dependency and exposes typed functions that other modules or CLI callers can invoke by name.
+
+You install a module with dagger install github.com/some-org/some-module@v1.2.3 and call its functions with dagger call function-name --arg value. Module functions can accept and return Dagger types like Directory, Container, Secret, and Service, enabling deep composition across module boundaries.
+
+\`\`\`bash
+# Install a community Go lint module and invoke it
+dagger install github.com/purpleclay/daggerverse/golangci-lint@v0.2.0
+
+dagger call lint --src .
+\`\`\`
+
+\`\`\`typescript
+// Your module can depend on another module
+import { dag, Directory, object, func } from "@dagger.io/dagger";
+
+@object()
+class MyService {
+  @func()
+  async buildAndLint(src: Directory): Promise<string> {
+    // Call a function from an installed module by its generated client
+    const lintResult = await dag.golangciLint().lint(src).stdout();
+    const binary = await dag.myPipeline().build(src).sync();
+    return lintResult;
+  }
+}
+\`\`\`
+
+The Daggerverse acts as a package registry where the community publishes modules for common tasks: building Docker images, deploying to Kubernetes, running security scans, publishing NPM packages. Teams can pin exact versions, fork and override individual functions, and compose modules without YAML template repositories or copy-paste.`
+    },
+    {
+      term: `Services for In-Pipeline Databases and Caches`,
+      definition: `Dagger Services are long-running container sidecars bound to a specific pipeline run. A service starts when the first dependent node is evaluated, stays alive while dependent nodes run, and is torn down automatically when the run ends. Services are referenced by a stable hostname that is only routable within the same pipeline execution.
+
+This makes it trivial to run integration tests against real database engines without pre-provisioned test environments or Docker Compose orchestration outside the pipeline.
+
+\`\`\`go
+// Start a Postgres service and bind integration tests to it
+func (p *Pipeline) IntegrationTest(ctx context.Context, src *dagger.Directory) (string, error) {
+    client, _ := dagger.Connect(ctx)
+    defer client.Close()
+
+    postgres := client.Container().
+        From("postgres:16-alpine").
+        WithEnvVariable("POSTGRES_PASSWORD", "test").
+        WithEnvVariable("POSTGRES_DB", "testdb").
+        WithExposedPort(5432).
+        AsService()
+
+    return client.Container().
+        From("golang:1.22-alpine").
+        WithServiceBinding("db", postgres).
+        WithMountedDirectory("/src", src).
+        WithWorkdir("/src").
+        WithEnvVariable("DATABASE_URL", "postgres://postgres:test@db:5432/testdb").
+        WithExec([]string{"go", "test", "-v", "./..."}).
+        Stdout(ctx)
+}
+\`\`\`
+
+The WithServiceBinding call registers the postgres service under the hostname db. The test binary connects to postgres://postgres:test@db:5432/testdb exactly as it would connect to a real database server. The service is never exposed outside the pipeline and requires no cleanup step because Dagger tears it down when the run graph completes.`
+    },
+    {
+      term: `Secrets Management`,
+      definition: `Dagger has a first-class Secret type that represents sensitive values. Secrets are passed into pipelines from the host environment, from files, or from external secret stores, and they are scrubbed from all log output, GraphQL responses, and cache keys. A secret can be mounted into a container as a file or injected as an environment variable, but its plaintext value is never serialized into the DAG description sent to the engine.
+
+\`\`\`typescript
+// Inject a registry password as a Dagger secret
+@object()
+class Registry {
+  @func()
+  async publish(src: Directory, token: Secret): Promise<string> {
+    return dag
+      .container()
+      .from("alpine:3.18")
+      .withMountedDirectory("/src", src)
+      .withSecretVariable("REGISTRY_TOKEN", token)
+      .withExec(["sh", "-c", "docker login -u user -p \${REGISTRY_TOKEN} ghcr.io"])
+      .withExec(["docker", "push", "ghcr.io/myorg/myapp:latest"])
+      .stdout();
+  }
+}
+\`\`\`
+
+\`\`\`bash
+# Pass the secret from the host environment at call time
+dagger call publish --src . --token env:REGISTRY_TOKEN
+\`\`\`
+
+The env:REGISTRY_TOKEN syntax tells the CLI to read the value from the host environment variable and wrap it in a Secret object before sending it to the engine. The engine stores only the hash of the secret value for cache key computation. Log output that would contain the plaintext is automatically replaced with a redacted marker.`
+    },
+    {
+      term: `Cache Volumes and Local-Equals-CI Parity`,
+      definition: `Cache volumes are named persistent mounts that survive across pipeline runs within the same BuildKit content store or across runners when Dagger Cloud is active. They are declared with client.CacheVolume("name") and mounted into containers with WithMountedCache. The cache is keyed by the volume name and optionally by a sharing mode: shared (default), private (one writer), or locked (exclusive access).
+
+Local-equals-CI parity means the same dagger call command that a developer runs on their laptop produces identical results in a GitHub Actions runner because the containerized environment is always the same. The only variable is which nodes are cache hits. This eliminates an entire class of bugs caused by differences between the local environment and CI, such as different system library versions, missing tools, or different shell initialization.
+
+\`\`\`typescript
+// Reuse Go module and build caches across runs
+@func()
+async build(src: Directory): Promise<File> {
+  const goModCache = dag.cacheVolume("go-mod");
+  const goBuildCache = dag.cacheVolume("go-build");
+
+  return dag
+    .container()
+    .from("golang:1.22-alpine")
+    .withMountedCache("/go/pkg/mod", goModCache)
+    .withMountedCache("/root/.cache/go-build", goBuildCache)
+    .withMountedDirectory("/src", src)
+    .withWorkdir("/src")
+    .withExec(["go", "build", "-o", "/out/app", "./..."])
+    .file("/out/app");
+}
+\`\`\`
+
+\`\`\`yaml
+# GitHub Actions: just run dagger call, no special caching config needed
+- name: Build
+  run: dagger call build --src .
+  env:
+    DAGGER_CLOUD_TOKEN: \${{ secrets.DAGGER_CLOUD_TOKEN }}
+\`\`\`
+
+With Dagger Cloud the go-mod and go-build volumes are pushed to the distributed cache after each successful run. The next runner that picks up the workflow pulls the warm cache before executing any containers.`
+    },
+  ],
+  approach: [
+    `Start by defining your pipeline as a single Dagger module in a new dagger directory at the repo root. Run dagger init --sdk go (or python or typescript) to scaffold the module, then write your build, test, and publish functions using the SDK types before adding any CI YAML.`,
+    `Model data dependencies explicitly as function arguments and return values. Accept a Directory for source code, a Secret for credentials, and a Service for a database. Return a File for a binary or a string for a test report. Explicit types let Dagger cache each node independently and enable composition across modules.`,
+    `Use named cache volumes for every package manager cache: go mod, pip, npm, cargo, maven. Name them descriptively such as go-mod-cache or pip-venv-myservice so different services in a monorepo get independent caches and do not interfere with each other.`,
+    `Declare integration test dependencies as Dagger Services rather than expecting a pre-provisioned environment. Start Postgres, Redis, or Kafka as a service node bound to the test container. This makes the pipeline self-contained and runnable identically on any machine with the Dagger CLI.`,
+    `Publish reusable pipeline logic as a Dagger Module to your organization's internal registry or to the Daggerverse. Version it with Git tags. Downstream repositories install it with dagger install and pin to a specific tag so that pipeline updates are opt-in rather than silently breaking consumers.`,
+    `Pass all secrets through the Dagger Secret type rather than environment variables. Use the env:VAR_NAME or file:PATH syntax when invoking dagger call so that secrets are never serialized into the DAG description or stored in cache entries.`,
+    `Integrate Dagger Cloud early if your team uses ephemeral CI runners. Without a distributed cache each runner starts cold even when the source has not changed. The DAGGER_CLOUD_TOKEN environment variable is the only required change to enable cache sharing across runners.`,
+    `Keep CI YAML thin: a single step that installs the Dagger CLI and runs dagger call with the appropriate arguments. All logic lives in the Dagger module. This means switching CI providers is a five-minute task of updating a short YAML file, not a full pipeline rewrite.`,
+  ],
+  pitfalls: [
+    `Forgetting that cache volume sharing mode defaults to shared, which allows concurrent readers and writers. For package managers that are not safe for concurrent writes, such as pip with certain backends, set the sharing mode to locked to prevent cache corruption when multiple pipeline branches run in parallel.`,
+    `Mounting the entire host source directory including the .git folder and node_modules into a container. Dagger hashes the directory snapshot for cache key computation. Including build artifacts or Git history in the snapshot causes unnecessary cache invalidations. Use WithDirectory with include/exclude filters to mount only the files that affect the build.`,
+    `Returning a Container from a Dagger function when you should return a File or a string. Returning a Container forces the caller to execute additional steps to extract a result and prevents the engine from optimizing the subgraph. Return the most specific terminal type that callers need.`,
+    `Running the Dagger engine as a privileged sidecar in Kubernetes without resource limits. The BuildKit engine spawns containers for every pipeline node and can consume significant CPU and memory. Set resource requests and limits on the engine pod and use node selectors to isolate pipeline workloads from production services.`,
+    `Assuming that WithEnvVariable values are not part of the cache key. Every argument to a container node, including environment variable values, is part of the input hash. Passing a timestamp or a random nonce as an environment variable busts the cache for that node and all downstream nodes on every run.`,
+    `Defining services with WithExposedPort but forgetting that the port is only reachable from containers that use WithServiceBinding. Do not attempt to connect to a service using its container IP address. Always use the hostname registered by WithServiceBinding, for example db or redis, inside test code.`,
+    `Writing pipeline logic that depends on files created by side effects outside the DAG, such as a pre-step that writes a config file to the host filesystem. Dagger pipelines must be self-contained. All inputs must flow through DAG edges as Directory, File, or Secret arguments. Relying on host filesystem state breaks reproducibility and cache correctness.`,
+    `Installing Dagger modules without pinning to a specific version tag. Unpinned module references resolve to the latest commit on the default branch, which can silently introduce breaking changes when a module author pushes an update. Always pin with an @vX.Y.Z or a full commit SHA suffix in dagger.json.`,
+  ],
+  keyQuestions: [
+    {
+      question: `How does Dagger caching work and what causes cache invalidation?`,
+      answer: `Dagger caching is implemented at the BuildKit layer using content-addressed storage. Every container operation node in the DAG is identified by a SHA256 digest computed from all of its inputs: the base image digest, the list of exec arguments, the digests of all mounted files and directories, the names and values of environment variables, and the cache volume sharing mode. If the digest for a node matches an entry in the BuildKit content store, the node is skipped and its cached output is used directly without executing any container.
+
+Cache invalidation is purely input-driven. A node is invalidated when any of its inputs change. Common causes include changing a source file that is mounted into the container, updating the base image tag so that the resolved digest changes, adding or removing an environment variable, changing an exec argument, or modifying a cache volume sharing policy. Because the DAG captures data dependencies explicitly, only the affected node and its downstream dependents are invalidated. Sibling branches whose inputs are unchanged remain cache hits.
+
+\`\`\`go
+// This node is cached as long as src digest and goModCache key are unchanged
+binary := client.Container().
+    From("golang:1.22-alpine").               // cached by image digest
+    WithMountedCache("/go/pkg/mod", goModCache). // cache volume: not an invalidation trigger
+    WithMountedDirectory("/src", src).         // invalidated if any file in src changes
+    WithWorkdir("/src").
+    WithExec([]string{"go", "build", "-o", "/out/app", "./..."}).
+    File("/out/app")
+\`\`\`
+
+Cache volumes are a special case. Mounting a cache volume does not invalidate the node when the volume contents change, because cache volumes are not hashed as inputs. They are persistent side-channel storage that the node can read from and write to freely. This is intentional: you want go mod download to skip already-fetched packages even when source files change.
+
+Cache invalidation pitfalls: passing a build timestamp as an environment variable busts the cache on every run. Including .git history in a mounted directory means any commit invalidates the node even if the source files are unchanged. Using a mutable image tag like latest resolves to a different digest when the upstream image is updated, invalidating all downstream nodes silently. Use explicit image digests for deterministic builds and filter mounted directories with include patterns to exclude non-source files.
+
+With Dagger Cloud, the content store is synchronized to a distributed blob store. A runner pulling a pipeline for the first time fetches matching cache entries from the cloud store before executing any containers, giving remote runners the same warm-cache behavior as a developer's local machine.`
+    },
+    {
+      question: `How does Dagger compare to GitHub Actions for a Go service with database integration tests?`,
+      answer: `GitHub Actions expresses the pipeline as YAML with steps that run shell commands in a pre-configured runner VM. Integration tests that need a Postgres database require either a services block that starts a Docker sidecar, a docker-compose up step, or a pre-provisioned test database. The configuration is specific to GitHub Actions and cannot be reproduced locally without setting up act or a local runner, which often diverges from the hosted runner environment.
+
+\`\`\`yaml
+# GitHub Actions approach: YAML-specific, hard to run locally
+jobs:
+  test:
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+      - run: go test ./... -v
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/testdb
+\`\`\`
+
+\`\`\`go
+// Dagger approach: Go function, runs identically locally and in CI
+func (p *Pipeline) Test(ctx context.Context, src *dagger.Directory) (string, error) {
+    client, _ := dagger.Connect(ctx)
+    defer client.Close()
+
+    goCache := client.CacheVolume("go-mod")
+
+    postgres := client.Container().
+        From("postgres:16-alpine").
+        WithEnvVariable("POSTGRES_PASSWORD", "test").
+        WithExposedPort(5432).
+        AsService()
+
+    return client.Container().
+        From("golang:1.22-alpine").
+        WithMountedCache("/go/pkg/mod", goCache).
+        WithServiceBinding("db", postgres).
+        WithMountedDirectory("/src", src).
+        WithWorkdir("/src").
+        WithEnvVariable("DATABASE_URL", "postgres://postgres:test@db:5432/testdb").
+        WithExec([]string{"go", "test", "-v", "./..."}).
+        Stdout(ctx)
+}
+\`\`\`
+
+\`\`\`yaml
+# GitHub Actions CI YAML becomes a thin wrapper
+- name: Test
+  run: dagger call test --src .
+\`\`\`
+
+Key differences: the Dagger pipeline runs identically on a developer laptop by running dagger call test --src . with no extra tooling. The Postgres service is scoped to the pipeline run and torn down automatically. Go module caching is content-addressed and does not require manually specifying cache keys. Switching from GitHub Actions to GitLab CI or Buildkite requires changing only the thin CI YAML, not the pipeline logic. The tradeoff is that Dagger adds the engine daemon as an operational dependency and has a steeper initial learning curve than writing YAML steps.`
+    },
+    {
+      question: `Explain the Dagger Module system and how Daggerverse enables pipeline composition.`,
+      answer: `A Dagger Module is a self-contained package of Dagger functions with its own dagger.json manifest that declares the SDK version, module name, and dependencies on other modules. Each function in a module is exposed as a CLI sub-command and as a callable endpoint in the GraphQL API. Modules are versioned by Git tags or commit SHAs, published to any accessible Git host, and listed in the Daggerverse registry for community discovery.
+
+The module system solves the YAML template reuse problem. With GitHub Actions reusable workflows you copy a workflow file into each repository, modify it for local needs, and struggle to propagate updates. With Dagger Modules you express the same pipeline logic as a typed function package, install it as a dependency with dagger install, and call it by name. Updates are opt-in through version pinning.
+
+\`\`\`bash
+# Install a community module from Daggerverse
+dagger install github.com/purpleclay/daggerverse/golangci-lint@v0.2.0
+dagger install github.com/dagger/dagger/sdk/go@v0.11.0
+
+# Call a function from the installed module directly
+dagger call lint --src .
+\`\`\`
+
+\`\`\`typescript
+// Your module depends on installed modules via the generated SDK
+import { dag, Directory, File, object, func, Secret } from "@dagger.io/dagger";
+
+@object()
+class MyService {
+  @func()
+  async ciPipeline(src: Directory, registryToken: Secret): Promise<string> {
+    // Call a function from the golangci-lint module
+    const lintOutput = await dag.golangciLint().withSource(src).run().stdout();
+
+    // Build using your own module function
+    const binary = await dag.myService().build(src).sync();
+
+    // Publish using the crane module
+    const imageRef = await dag.crane()
+      .withAuth("ghcr.io", "user", registryToken)
+      .push(binary, "ghcr.io/myorg/myservice:latest");
+
+    return imageRef;
+  }
+}
+\`\`\`
+
+Modules can accept and return Dagger core types like Directory, Container, Service, Secret, and File across boundaries. The engine serializes these type references as DAG node identifiers so that a function in one module can pass a half-built container to a function in another module and the engine composes the graphs without copying data through the host.
+
+Composition enables a platform engineering pattern where a central team publishes a company-wide CI module with standard build, test, lint, and publish functions. Application teams install it, call the functions they need, and override individual steps by wrapping them in their own module functions. This is structurally similar to how application teams consume internal libraries through package managers.`
+    },
+    {
+      question: `How do Dagger Services work for in-pipeline databases and what are the lifecycle guarantees?`,
+      answer: `A Dagger Service is created by calling AsService on a configured container. The container is not started immediately. It is started lazily when the first pipeline node that declares a dependency on it via WithServiceBinding is evaluated by the engine. The service stays alive for the lifetime of all nodes that depend on it and is shut down automatically when the last dependent node completes or when the pipeline run ends.
+
+Services are reachable only through the hostname registered with WithServiceBinding. The hostname is valid only within the same pipeline execution context and is not routable from the host machine or from containers in other pipeline runs. This isolation means you can run multiple pipeline instances in parallel without port conflicts or shared state between runs.
+
+\`\`\`go
+func (p *Pipeline) IntegrationTest(ctx context.Context, src *dagger.Directory) (string, error) {
+    client, _ := dagger.Connect(ctx)
+    defer client.Close()
+
+    // Define Postgres service - not started yet
+    postgres := client.Container().
+        From("postgres:16-alpine").
+        WithEnvVariable("POSTGRES_PASSWORD", "secret").
+        WithEnvVariable("POSTGRES_USER", "app").
+        WithEnvVariable("POSTGRES_DB", "apptest").
+        WithExposedPort(5432).
+        AsService()
+
+    // Define Redis service - also not started yet
+    redis := client.Container().
+        From("redis:7-alpine").
+        WithExposedPort(6379).
+        AsService()
+
+    // Test container binds both services; engine starts them before this runs
+    return client.Container().
+        From("golang:1.22-alpine").
+        WithServiceBinding("postgres", postgres).
+        WithServiceBinding("cache", redis).
+        WithMountedDirectory("/src", src).
+        WithWorkdir("/src").
+        WithEnvVariable("DB_URL", "postgres://app:secret@postgres:5432/apptest").
+        WithEnvVariable("REDIS_URL", "redis://cache:6379").
+        WithExec([]string{"go", "test", "-v", "-count=1", "./integration/..."}).
+        Stdout(ctx)
+}
+\`\`\`
+
+Health check behavior: by default Dagger waits for the service container to be ready before starting dependent containers. Readiness is determined by TCP connectivity on the exposed port. For services that need extra initialization time you can specify a custom health check command using WithHealthcheck.
+
+The lifecycle guarantee is that a service is available for the entire duration of all containers bound to it and is torn down as soon as they complete. There are no leaked sidecar containers, no cleanup scripts, and no shared databases polluted by parallel test runs. Each pipeline execution gets its own ephemeral service instances, making integration tests as isolated as unit tests.`
+    },
+    {
+      question: `When should you choose Dagger over a YAML-based CI system and what are the tradeoffs?`,
+      answer: `Choose Dagger when the pipeline logic itself is complex enough to benefit from a real programming language: branching based on computed values, loops over directories, typed error handling, reusable abstractions, and testable functions. Choose Dagger when developer experience and local reproducibility matter enough to justify the additional tooling dependency. Choose Dagger when your team publishes shared pipeline components across many repositories and needs versioning, composition, and typed interfaces instead of YAML templates.
+
+Choose YAML-based CI when your pipelines are simple sequences of shell commands with no significant branching or composition. Choose YAML when your team has no Go, Python, or TypeScript expertise and does not want to invest in learning the Dagger SDK. Choose YAML when the CI provider's native features, such as GitHub Actions marketplace actions or GitLab CI components, already cover your needs without significant duplication.
+
+Concrete tradeoffs to evaluate:
+
+Local reproducibility: Dagger wins decisively. Running dagger call test --src . on a laptop runs the exact same containers as CI. Reproducing a GitHub Actions failure locally requires act or a local runner that rarely matches the hosted environment precisely.
+
+Cache efficiency: Dagger wins for content-addressed caching. GitHub Actions cache action requires manually specified cache keys and restore-keys fallback patterns that are easy to misconfigure. Dagger cache volumes and BuildKit layer caching invalidate precisely based on input digests.
+
+\`\`\`bash
+# GitHub Actions: manually managed cache key that is easy to get wrong
+- uses: actions/cache@v4
+  with:
+    path: ~/go/pkg/mod
+    key: \${{ runner.os }}-go-\${{ hashFiles('**/go.sum') }}
+    restore-keys: \${{ runner.os }}-go-
+
+# Dagger: cache volume managed by the engine, no key configuration needed
+goCache := client.CacheVolume("go-mod-cache")
+ctr.WithMountedCache("/go/pkg/mod", goCache)
+\`\`\`
+
+Operational complexity: YAML wins for simplicity. Dagger requires the engine daemon, the CLI installation step in CI, and understanding of BuildKit concepts. Teams adopting Dagger need to invest in onboarding and documentation.
+
+Provider portability: Dagger wins. Switching from GitHub Actions to GitLab CI means changing a ten-line YAML file. The pipeline logic in the Dagger module is unchanged.
+
+Ecosystem maturity: YAML-based CI wins. GitHub Actions has thousands of community actions, extensive documentation, and a large support community. Daggerverse is growing but has fewer published modules and less community knowledge today.
+
+The decision hinges on pipeline complexity and team investment capacity. For a small project with simple pipelines the YAML overhead is acceptable. For a platform team managing pipelines across dozens of microservices, Dagger's composability, caching, and local parity justify the investment.`
+    },
+  ],
+  references: [
+    'https://docs.dagger.io/',
+    'https://docs.dagger.io/api/reference',
+    'https://docs.dagger.io/manuals/developer/modules/',
+    'https://docs.dagger.io/manuals/developer/services/',
+    'https://docs.dagger.io/manuals/developer/secrets/',
+    'https://docs.dagger.io/manuals/developer/cache-volumes/',
+    'https://daggerverse.dev/',
+    'https://docs.dagger.io/manuals/administrator/cloud/',
+    'https://docs.dagger.io/integrations/github-actions/',
+    'https://github.com/dagger/dagger',
+  ],
+},
+
+{
+  id: 'linux-storage-deep-dive',
+  title: 'Linux Storage',
+  icon: 'hard-drive',
+  color: '#d97706',
+  questions: 5,
+  description: `Linux storage spans the full stack from physical block devices through partition tables, filesystems, and the Virtual Filesystem Switch (VFS) to application-level syscalls. Mastery of this stack is essential for tuning databases, container runtimes, and high-throughput services where I/O is the bottleneck.`,
+  visualizations: [
+    {
+      title: `Linux Storage Stack Architecture`,
+      description: `The Linux storage stack is a layered architecture where each tier provides a clean interface to the layer above it while abstracting the hardware below.
+
+At the top sits the application layer, where processes issue POSIX calls such as open, read, write, and fsync. These calls enter the kernel through the system call interface, where the Virtual Filesystem Switch (VFS) acts as a unified abstraction layer. VFS defines common in-memory structures: the superblock (filesystem metadata), the inode (per-file metadata), the dentry (directory-entry cache), and the file object (per-open-file state). Any conforming filesystem plugs into VFS by implementing the inode_operations and file_operations function pointer tables.
+
+Below VFS sits the concrete filesystem layer. ext4, XFS, btrfs, and tmpfs each implement the VFS contracts differently. ext4 uses a journal (the JBD2 layer) for crash consistency. XFS uses a separate log and allocation groups to achieve high parallelism. btrfs uses copy-on-write B-trees for everything.
+
+Below the filesystem is the block layer. The filesystem calls submit_bio to issue block I/O requests. The I/O scheduler (historically CFQ or deadline, now mq-deadline or none/kyber on NVMe) orders and merges these requests before dispatching to the device driver. Device mapper (used by LVM) and md (software RAID) insert themselves as virtual block devices at this layer, intercepting bio requests and redirecting or mirroring them.
+
+Finally the device driver communicates with the physical hardware via controller-specific protocols (SATA AHCI, NVMe, iSCSI). The path from application write to committed bits on a platter or NAND cell traverses every one of these layers.`,
+      image: `/diagrams/devops/linux-storage-deep-dive-arch.png`,
+    },
+    {
+      title: `Write Path: from write() to Disk`,
+      description: `Tracing a single write() call end-to-end reveals where latency accumulates, where data can be lost on a crash, and what each durability guarantee actually covers.
+
+When an application calls write(), the kernel first copies bytes from userspace into a page cache page marked dirty. Control returns to the application immediately — this is the source of "buffered I/O" performance. The dirty page sits in the page cache, visible to subsequent reads, but not yet on disk. The kernel's writeback threads (pdflush / bdi-writeback) flush dirty pages to disk according to two tunables: dirty_expire_centisecs (how old a dirty page can get, default 3000 = 30 s) and dirty_ratio / dirty_background_ratio (memory pressure thresholds).
+
+For filesystems with journaling (ext4, XFS), metadata changes are first written to the journal before being applied to the main filesystem area. In ext4 ordered mode (the default), data blocks are written to their final location before the metadata commit is written to the journal, preserving the invariant that journal-committed metadata always points to valid data. In writeback mode, metadata is journaled but data order is not guaranteed, giving higher throughput at the cost of stale-data exposure after a crash. In full journal mode, both data and metadata go through the journal, providing the strongest guarantee but roughly halving write bandwidth.
+
+An application that cannot tolerate data loss must call fsync() or fdatasync() after writing. fsync() triggers writeback of the file's dirty pages and then issues a FLUSH CACHE command to the storage device (or an FUA-tagged write on NVMe), ensuring data survives controller power loss. O_DIRECT bypasses the page cache entirely, issuing aligned DMA transfers straight to the device, which databases like PostgreSQL and MySQL use to manage their own caching and avoid double-buffering.
+
+The final step is the storage device itself. SSDs and NVMe drives have volatile write-back caches. Without power-loss protection (PLP) capacitors, a power failure after the kernel flushes but before the device commits to NAND can still lose data. Enterprise-grade drives carry PLP and can safely advertise completion without risk.`,
+      image: `/diagrams/devops/linux-storage-deep-dive-flow.png`,
+    },
+  ],
+  introduction: `Linux presents storage to applications through a deep software stack that begins at the physical block device and surfaces to userspace as familiar POSIX file operations. Understanding the full path — block device, partition, filesystem, VFS, page cache, syscall — is critical for any engineer who needs to reason about performance, durability, or capacity on Linux systems.
+
+The Virtual Filesystem Switch (VFS) is the kernel's unifying abstraction. It defines a common set of in-memory objects (superblock, inode, dentry, file) and function pointer tables (inode_operations, file_operations, address_space_operations) that every filesystem must implement. This design allows ext4, XFS, btrfs, tmpfs, and network filesystems to coexist and be mounted at different points in a single directory tree without the application caring which is which.
+
+ext4 is the default filesystem on most Linux distributions. It extended the original ext2/3 design with extents (contiguous block ranges that replace indirect-block trees, dramatically reducing metadata for large files), a journal for crash consistency via the JBD2 layer, and delayed allocation (also called allocate-on-flush) to improve contiguity. Its three journal modes trade durability for performance: ordered mode protects against metadata corruption after a crash; writeback mode maximises throughput; full data journaling provides the strongest guarantee.
+
+XFS was designed by SGI for high-concurrency, large-file workloads. It partitions the disk into allocation groups that each have their own inode allocator and free-space B-trees, allowing multiple threads to allocate simultaneously without a global lock. XFS pioneered delayed allocation and supports reflink (shared data extents, enabling instant CoW copies), sparse files, and direct I/O for database use cases. It does not support shrinking, and its lack of data journaling makes fsync-heavy workloads depend entirely on correct barrier ordering.
+
+btrfs brings copy-on-write semantics to the filesystem layer. Every write goes to a new location, so the old version remains intact until a transaction commits. This enables atomic snapshots (a snapshot captures the B-tree root at a point in time in microseconds), subvolumes (independent filesystem trees within one btrfs pool), online defragmentation, and checksumming of both data and metadata. The CoW design also means that fragmentation grows over time on update-heavy workloads, and the recommended use case today is read-heavy or snapshot-heavy environments rather than high-IOPS databases.
+
+LVM, md RAID, and overlay filesystems sit between raw block devices and the filesystem layer. LVM adds logical indirection: physical volumes are pooled into a volume group, and logical volumes are carved out on demand, with online resize, snapshots, thin provisioning, and live migration (pvmove) available. md provides software RAID, with RAID 1 for pure mirroring, RAID 5/6 for parity-based redundancy, and RAID 10 for the combined throughput and redundancy sweet spot. overlayfs layers two directory trees (lower read-only, upper read-write) into a unified mount, which is the mechanism Docker uses to implement image layers and container writable layers efficiently without copying.`,
+  whenToUse: [
+    `Sizing and partitioning new servers where choosing between ext4, XFS, or btrfs depends on workload (sequential vs random, file sizes, snapshot requirements)`,
+    `Tuning database servers (PostgreSQL, MySQL, Cassandra) to use XFS with noatime, direct I/O, and appropriate readahead settings`,
+    `Designing LVM layouts for production databases where online resize, thin provisioning, and pvmove (zero-downtime disk migration) are required`,
+    `Building storage-resilient clusters using mdadm RAID arrays combined with LVM on top for flexible logical volume management`,
+    `Diagnosing disk-full errors where df and du disagree due to deleted-but-open file handles, reserved blocks, or sparse file accounting`,
+    `Architecting Docker or Kubernetes node storage, selecting between overlayfs, devicemapper, and btrfs storage drivers and understanding their durability trade-offs`,
+    `Implementing backup strategies using btrfs or LVM snapshots to provide crash-consistent point-in-time copies without stopping the application`,
+    `Investigating write latency spikes on SSDs where the culprit might be journaling mode, write-back cache policies, or kernel I/O scheduler selection`,
+  ],
+  keyConcepts: [
+    {
+      term: `ext4 Journal Modes and Inode Structure`,
+      definition: `ext4 is the most widely deployed Linux filesystem. Its journaling layer (JBD2) operates in three modes selected at mount time with the data= option.
+
+In ordered mode (the default), ext4 guarantees that data blocks reach their final on-disk location before the metadata transaction that references them is committed to the journal. This prevents the post-crash scenario where metadata says a block belongs to a file but the block contains garbage from a previous file. Ordered mode does not journal data, so a crash between the data write and the metadata commit can leave the file with its old size and old data, but it cannot expose another file's data.
+
+In writeback mode, ext4 only journals metadata. Data writes and metadata commits are independent. This is the fastest mode but means a crash can expose stale data blocks through newly committed metadata — acceptable for databases that manage their own consistency but dangerous for general-purpose use.
+
+In journal mode (data=journal), both data and metadata are written to the journal before being applied to the main filesystem. This gives the strongest durability guarantee but roughly halves write throughput because every write goes to disk twice.
+
+ext4 stores file data location using extents rather than the block-pointer tree of ext2/3. An extent is a (logical_block, physical_block, length) triple. Up to four extents fit directly in the inode, covering contiguous files up to about 512 MB with zero indirection. Larger files use an extent tree. This design dramatically reduces metadata for large sequential files compared to the triple-indirect block maps of ext3.
+
+\`\`\`bash
+# check journal mode of a mounted ext4 filesystem
+tune2fs -l /dev/sda1 | grep "Default mount options"
+
+# mount with writeback mode for a database data directory
+mount -o data=writeback,noatime,barrier=0 /dev/sda1 /var/lib/mysql
+
+# inspect inode and extent info for a file
+debugfs -R "stat /var/lib/mysql/ibdata1" /dev/sda1
+
+# check inode usage (ext4 has a fixed inode table)
+df -i /var/lib/mysql
+\`\`\`
+
+A critical operational fact: ext4 reserves 5% of disk space for the root user by default. On a data volume this is wasted capacity. Set it to 1% or 0% with tune2fs -m.`,
+    },
+    {
+      term: `XFS Allocation Groups and Delayed Allocation`,
+      definition: `XFS divides the filesystem into allocation groups (AGs). Each AG is a self-contained region of the disk with its own inode B-tree, free-space B-trees (one indexed by offset, one by size), and free inode B-tree. Because each AG is independent, multiple threads can allocate files simultaneously without a global lock, making XFS scale linearly with CPU count on multi-threaded create-heavy workloads.
+
+Delayed allocation (also called allocate-on-flush or delalloc) means XFS does not assign real disk blocks to a write until writeback time. When an application writes, XFS marks the range as "delayed" and tracks it in an in-memory extent map. At writeback the allocator sees the full contiguous region to be written and can find the best physical placement, improving spatial locality compared to allocating one block at a time. The trade-off is that file size reported by stat may be larger than allocated space until flush.
+
+XFS supports reflink, which lets two files share the same underlying data extents (like hard links but at the block level). A copy operation using cp --reflink=always completes in milliseconds regardless of file size. The first write to a shared extent triggers a copy-on-write split. This is used by btrfs-style snapshot workflows on XFS (since Linux 4.9).
+
+Direct I/O bypasses the page cache and issues DMA transfers directly to/from user buffers. XFS handles direct I/O particularly well because its allocation group parallelism means concurrent O_DIRECT writes from multiple threads do not serialize on a single allocator lock. PostgreSQL, MySQL InnoDB, and Cassandra all default to or recommend direct I/O on XFS.
+
+\`\`\`bash
+# create an XFS filesystem with a specific allocation group size
+mkfs.xfs -d agcount=16 /dev/sdb
+
+# mount with noatime and allocsize hint for large sequential writes
+mount -o noatime,allocsize=256m /dev/sdb /data
+
+# show allocation group info
+xfs_info /data
+
+# defragment a file (XFS defrag rewrites extents for better locality)
+xfs_fsr /data/bigfile
+
+# reflink copy (instant, CoW)
+cp --reflink=always /data/src/large.tar /data/dst/large.tar
+
+# check fragmentation
+xfs_db -c frag -r /dev/sdb
+\`\`\`
+
+XFS cannot be shrunk online — plan the initial size carefully. It can be grown online with xfs_growfs after expanding the underlying block device.`,
+    },
+    {
+      term: `btrfs Copy-on-Write, Subvolumes, and Snapshots`,
+      definition: `btrfs uses copy-on-write (CoW) for all writes. Rather than overwriting an existing block, btrfs writes the new data to a free location and updates the B-tree that maps logical addresses to physical addresses. The old block is freed only after the transaction commits. This design makes every write atomic at the filesystem level and enables instant snapshots.
+
+A snapshot in btrfs is just a new subvolume whose root B-tree node is a reference to the same root as the source subvolume at the moment of the snapshot. No data is copied. The two subvolumes share extents; a write to either triggers CoW, allocating new space only for the changed blocks.
+
+Subvolumes are independently mountable filesystem subtrees within one btrfs pool. Common layouts use a top-level subvolume named @ for the root filesystem and a subvolume @home for /home, allowing the root to be rolled back (by making @ point to a snapshot) without touching home data.
+
+\`\`\`bash
+# create a btrfs filesystem spanning two devices (RAID 1 metadata, single data)
+mkfs.btrfs -m raid1 -d single /dev/sdb /dev/sdc
+
+# create a subvolume
+btrfs subvolume create /mnt/btrfs/@
+
+# create a read-only snapshot (useful for backups)
+btrfs subvolume snapshot -r /mnt/btrfs/@ /mnt/btrfs/@snapshots/2026-06-17
+
+# list subvolumes
+btrfs subvolume list /mnt/btrfs
+
+# send a snapshot incrementally to another host
+btrfs send -p /mnt/btrfs/@snapshots/2026-06-16 /mnt/btrfs/@snapshots/2026-06-17 \
+  | ssh backup-host btrfs receive /backup/btrfs
+
+# check filesystem usage (CoW means du and df diverge heavily)
+btrfs filesystem df /mnt/btrfs
+btrfs filesystem usage /mnt/btrfs
+\`\`\`
+
+The main operational hazard with btrfs is CoW fragmentation on database-style random-update workloads. Every small random write creates a new extent, scattering data across the disk. For databases, mount with nodatacow (disables checksumming and CoW for that file) or use a separate non-btrfs volume.`,
+    },
+    {
+      term: `LVM: Physical Volumes, Volume Groups, Logical Volumes, and Thin Provisioning`,
+      definition: `LVM inserts a logical indirection layer between block devices and filesystems. A physical volume (PV) is a block device (or partition) initialized for LVM use. Multiple PVs are pooled into a volume group (VG), which maintains a mapping of 4 MB physical extents (PEs) across all member PVs. Logical volumes (LVs) are carved from the VG's PE pool and appear to the OS as regular block devices on which you format a filesystem.
+
+Thin provisioning allows LVs to be created larger than the actual available storage. A thin pool LV holds the actual data; thin LVs are virtual volumes that allocate real space on demand. This enables over-commitment: a VG with 100 GB can host five 50 GB thin LVs if average utilization is low. The risk is that if thin LVs collectively write more data than the pool holds, the pool runs out of space and thin LVs go into error state.
+
+pvmove migrates extents from one PV to another while the filesystem remains mounted and the system stays online. This is used to drain a disk before replacement without downtime.
+
+\`\`\`bash
+# initialize disks as PVs and create a VG
+pvcreate /dev/sdb /dev/sdc
+vgcreate vg_data /dev/sdb /dev/sdc
+
+# create a standard LV and format it
+lvcreate -L 200G -n lv_pgdata vg_data
+mkfs.xfs /dev/vg_data/lv_pgdata
+
+# extend an LV and grow the filesystem online
+lvextend -L +50G /dev/vg_data/lv_pgdata
+xfs_growfs /var/lib/postgresql
+
+# create a thin pool and thin LVs
+lvcreate -L 100G --thinpool tp_pool vg_data
+lvcreate -V 50G --thin -n lv_app1 vg_data/tp_pool
+lvcreate -V 50G --thin -n lv_app2 vg_data/tp_pool
+
+# monitor thin pool usage (watch for >80% to avoid outage)
+lvs -o lv_name,lv_size,data_percent,metadata_percent vg_data
+
+# migrate extents off a failing disk (online, zero downtime)
+pvmove /dev/sdb /dev/sdd
+
+# create an LVM snapshot (CoW, traditional thick snapshot)
+lvcreate -L 10G -s -n lv_pgdata_snap /dev/vg_data/lv_pgdata
+\`\`\`
+
+A key pitfall is forgetting to set up automatic thin pool extension. Add thin_pool_autoextend_threshold = 80 and thin_pool_autoextend_percent = 20 in /etc/lvm/lvm.conf and enable lvm2-monitor.service so the pool grows automatically before hitting 100%.`,
+    },
+    {
+      term: `mdadm Software RAID`,
+      definition: `mdadm creates software RAID arrays from block devices managed by the Linux kernel's md (multiple devices) layer. The md layer sits below the filesystem and above device drivers, presenting a virtual block device to the filesystem. RAID is implemented entirely in kernel code, making it portable across hardware controllers.
+
+RAID 0 stripes data across N disks with no redundancy. Read and write throughput scale with N but a single disk failure destroys the array. RAID 1 mirrors data to N disks; reads can be parallelized across mirrors, but write throughput is limited by the slowest member. RAID 5 uses N-1 disks for data and one parity stripe distributed across all disks; it survives one disk failure. RAID 6 uses two independent parity schemes and survives two simultaneous disk failures at the cost of two disks' worth of overhead. RAID 10 (1+0) stripes across mirrored pairs, combining RAID 1 redundancy with RAID 0 throughput — the most common production choice for database servers.
+
+\`\`\`bash
+# create a RAID 10 array from four disks
+mdadm --create /dev/md0 --level=10 --raid-devices=4 /dev/sd{b,c,d,e}
+
+# check array status
+cat /proc/mdstat
+mdadm --detail /dev/md0
+
+# save the RAID config so it survives reboot
+mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+update-initramfs -u   # Debian/Ubuntu
+
+# simulate a disk failure and replace it
+mdadm --fail /dev/md0 /dev/sdb
+mdadm --remove /dev/md0 /dev/sdb
+mdadm --add /dev/md0 /dev/sdf   # new disk — resync starts automatically
+
+# set read policy (round-robin reads from mirrors)
+echo 2 > /sys/block/md0/md/stripe_cache_size   # adjust stripe cache
+mdadm --grow /dev/md0 --bitmap=internal         # add write-intent bitmap (faster resync)
+\`\`\`
+
+The write-intent bitmap (--bitmap=internal) records which stripes are being written. After a crash, only the stripes marked dirty need resyncing rather than the full array, dramatically reducing recovery time. Without it, a resync of a 4-disk RAID 10 array with 10 TB of data can take hours.`,
+    },
+    {
+      term: `overlayfs, bind mounts, and tmpfs`,
+      definition: `overlayfs is a union filesystem that merges two directory trees: a read-only lower layer and a read-write upper layer. Reads are served from upper if the file exists there, otherwise from lower. Writes create new files or modified copies in upper (the copy-up operation). A workdir directory (on the same filesystem as upper) is used for atomic copy-up staging. The merged view is presented at the mount point.
+
+Docker uses overlayfs2 as its default storage driver. Each image layer maps to a lower directory. The running container adds an upper directory and a workdir. When the container writes to a file that exists in a lower layer, overlayfs copies the entire file to upper first (copy-up), then applies the write. This means the first write to a large file has latency proportional to the file size. Volumes (bind mounts or named volumes) bypass overlayfs entirely by mounting real host paths into the container, making them suitable for databases and any state that must survive container restarts.
+
+A bind mount re-exposes a directory (or file) from one location in the VFS tree to another without creating a new filesystem. It is the mechanism behind Kubernetes hostPath volumes and Docker -v /host/path:/container/path.
+
+tmpfs is an in-memory filesystem backed by anonymous memory and swap. It is used for /dev/shm (POSIX shared memory), /tmp on many modern systemd distros, and Kubernetes emptyDir volumes with medium: Memory. Because tmpfs data lives in RAM, it disappears on umount or reboot.
+
+\`\`\`bash
+# manual overlayfs mount (useful for understanding Docker internals)
+mkdir -p /overlay/{lower,upper,work,merged}
+echo "base content" > /overlay/lower/file.txt
+mount -t overlay overlay \
+  -o lowerdir=/overlay/lower,upperdir=/overlay/upper,workdir=/overlay/work \
+  /overlay/merged
+
+# bind mount a host directory into a container path
+mount --bind /data/postgres /var/lib/postgresql/data
+
+# make a bind mount read-only
+mount --bind /etc/certs /run/secrets
+mount -o remount,ro,bind /run/secrets
+
+# tmpfs for shared memory with size limit
+mount -t tmpfs -o size=512m tmpfs /dev/shm
+
+# inspect what Docker overlayfs layers look like
+docker inspect <container_id> | grep -A 10 GraphDriver
+ls /var/lib/docker/overlay2/<layer_id>/diff
+\`\`\`
+
+overlayfs copy-up is a well-known performance gotcha for containers that modify large files (log rotation, SQLite databases, etc.). The solution is always to mount those paths as volumes, keeping hot write paths off the overlay stack.`,
+    },
+    {
+      term: `/etc/fstab Options, UUIDs, and Mount Flags`,
+      definition: `The /etc/fstab file defines how block devices are mounted at boot. Each line specifies the device, mount point, filesystem type, options, dump flag, and fsck pass order.
+
+Using UUIDs instead of device names (/dev/sdb1) prevents breakage when disk enumeration order changes after adding hardware or rebooting after a kernel update. The UUID is stable across renames.
+
+Key mount options that affect performance and durability:
+
+noatime disables updating the access-time inode field on every read. On spinning disks this eliminates an extra write per read. For most workloads (databases, web servers) access time is irrelevant and noatime is a safe default. relatime (the kernel default since 2.6.30) is a compromise that updates atime only when it is older than mtime, avoiding most writes while remaining POSIX-compliant for applications that depend on atime ordering.
+
+barrier controls whether the filesystem issues write barriers (cache flush commands) to enforce ordering between journal commit and data writes. On drives with reliable write-back caches and power-loss protection, barrier=0 can improve throughput. On consumer drives without PLP, disabling barriers risks corruption after a power failure.
+
+nofail tells the kernel to continue booting even if the device is absent — essential for secondary data disks that should not prevent the system from starting.
+
+\`\`\`bash
+# find UUID for a block device
+blkid /dev/sdb1
+lsblk -o NAME,UUID,FSTYPE,MOUNTPOINT
+
+# example /etc/fstab entries
+# system root with relatime (kernel default)
+UUID=a1b2c3d4-...  /              ext4  defaults,relatime     0 1
+
+# XFS data volume for a database, noatime, no barriers (enterprise SSD with PLP)
+UUID=e5f6a7b8-...  /var/lib/pgsql xfs   noatime,barrier=0     0 2
+
+# tmpfs for /tmp, limited to 1 GB
+tmpfs              /tmp           tmpfs size=1g,mode=1777    0 0
+
+# bind mount (must use bind option)
+/data/shared       /var/www/html  none  bind                  0 0
+
+# NFS with nofail so boot continues if NAS is unreachable
+nas:/exports/data  /mnt/nas       nfs   defaults,nofail,_netdev 0 0
+
+# verify fstab without rebooting (mount all entries not yet mounted)
+mount -a
+systemctl daemon-reload   # for systemd-aware mount units
+\`\`\`
+
+Always run mount -a after editing fstab to catch syntax errors before the next reboot. A typo in fstab can drop a server into emergency mode.`,
+    },
+  ],
+  approach: [
+    `Choose the filesystem based on workload: XFS for large files, high-concurrency, or database servers; ext4 for general-purpose workloads where inode count is a concern; btrfs where snapshots and subvolumes are the primary requirement; tmpfs for ephemeral in-memory scratch space.`,
+    `Always mount database data directories with noatime and, on hardware with verified power-loss protection, barrier=0 to eliminate unnecessary cache-flush round-trips without sacrificing durability.`,
+    `Use UUIDs in /etc/fstab instead of device names to prevent mount failures after disk re-enumeration; verify with mount -a after every edit before relying on the next reboot.`,
+    `Place LVM thin pools under lvm2-monitor.service with autoextend thresholds configured at 80% so pools grow automatically before reaching 100% and pushing thin LVs into error state.`,
+    `Add a write-intent bitmap (mdadm --bitmap=internal) to all software RAID arrays so that post-crash resync reads and rewrites only the stripes that were in-flight at the time of the crash rather than rebuilding the full array.`,
+    `Reserve overlayfs (Docker storage driver) only for image layers and ephemeral container state; mount all database files, log directories, and any state that must survive container restart as named volumes or bind mounts to keep writes off the overlay stack and avoid copy-up latency.`,
+    `Monitor thin pool and RAID resync progress separately from filesystem-level capacity; use lvs -o data_percent for thin pools and cat /proc/mdstat for RAID so alerts fire before capacity or redundancy is lost.`,
+    `When using LVM over software RAID, put LVM on top of md (LVM PV on /dev/md0) rather than md on top of LVM; the md layer needs direct block device alignment information, and wrapping it in LVM first can misalign stripes.`,
+  ],
+  pitfalls: [
+    `Disabling barriers on consumer SSDs or HDDs without power-loss protection: barrier=0 tells the filesystem it can skip cache flush commands, but if the drive's write-back cache is volatile and power fails between a journal commit write and the subsequent data write, the filesystem can be left in an inconsistent state that requires fsck and may involve data loss.`,
+    `Letting LVM thin pools reach 100% utilization: when the pool is full, all thin LVs that depend on it transition to an error state simultaneously, causing every filesystem on those LVs to go read-only or emit I/O errors. Set autoextend at 80% and alert at 85%.`,
+    `Forgetting that ext4 reserves 5% of disk space for root by default on data volumes: a 2 TB database volume loses 100 GB to reserved blocks that the database process (running as postgres, not root) cannot use; set tune2fs -m 1 at format time.`,
+    `Using btrfs for write-intensive random-update workloads (databases, message queues): CoW means every random write allocates a new extent, fragments the free-space B-tree, and leaves dead extents until the background cleaner runs. Performance degrades over months and may require a filesystem balance operation that pauses write I/O.`,
+    `Confusing df output with actual file content size: df reports filesystem-level block allocation, which includes reserved blocks, sparse file holes counted as allocated, and blocks belonging to deleted files whose file descriptors are still open. du reports the disk usage of directory trees, which misses the open-descriptor case. A process holding an open file descriptor to a deleted multi-GB log file keeps the blocks allocated until the fd is closed.`,
+    `Running out of inodes on ext4 while disk space remains: ext4 pre-allocates a fixed inode table at format time (default one inode per 16 KB of capacity). Workloads that create millions of small files (email servers, object stores, package repositories) can exhaust inodes with gigabytes of disk still free. Set mkfs.ext4 -i 4096 (one inode per 4 KB) for small-file workloads, or use XFS which allocates inodes dynamically.`,
+    `Nested virtualization of storage layers adding latency without benefit: stacking LVM on top of LVM, or btrfs on top of LVM on top of md, multiplies the metadata write amplification and makes I/O paths harder to reason about. Keep the stack shallow: md (if RAID needed) then LVM (if LV management needed) then one filesystem.`,
+    `Not aligning partitions and RAID stripes to the underlying erase-block size: HDDs need 4K alignment; SSDs with 4 KB logical sectors need 4K alignment; RAID 5/6 with 256 KB chunk size benefits from volume-group alignment to 256 KB so RAID stripes land on chunk boundaries. Misalignment causes write amplification on SSDs and read-modify-write penalties on HDDs in parity RAID.`,
+  ],
+  keyQuestions: [
+    {
+      question: `Walk me through the full path of a write() system call from the application to the physical disk, including where data can be lost on a crash at each step.`,
+      answer: `The journey begins in userspace. The application calls write(fd, buf, len), which crosses into the kernel via the system call interface. The kernel's VFS layer looks up the file's address_space object and calls the filesystem's write_begin / write_end page-cache operations.
+
+The data is copied from the user buffer into one or more page cache pages, which are marked dirty. At this point write() returns to the application. The data is now in RAM but not on disk. A power failure here loses the write unless the application has been told otherwise.
+
+The kernel's writeback subsystem (bdi-writeback kthreads per block device) periodically walks the dirty page list and submits write bios to the block layer. Two tunables govern this: vm.dirty_expire_centisecs (default 3000 = 30 s, maximum age before a page must be flushed) and vm.dirty_background_ratio / vm.dirty_ratio (memory pressure thresholds). A crash during this window, before writeback, loses the write.
+
+For journaled filesystems (ext4 in ordered mode, which is the default): before the filesystem writes the metadata transaction (inode size update, extent map entry) to the journal, it first ensures all data blocks for that transaction have been written to their final on-disk locations. Once the metadata commit record lands in the journal, a crash and replay are safe — the journal commit is redone and metadata points to valid data. But the window between the application's write() return and the journal commit is still a loss window.
+
+If the application calls fsync(fd) after writing, the kernel flushes all dirty pages belonging to the file, then issues a write barrier or FLUSH CACHE command to the block device. This command forces the device's volatile write-back cache to commit to persistent media before signaling completion. After fsync() returns, the data survives a power failure assuming the storage device honors the barrier (which enterprise drives with power-loss protection capacitors do; consumer drives sometimes lie).
+
+O_DIRECT bypasses the page cache entirely. The application's buffer must be aligned to the logical block size. Reads and writes go directly to the device via DMA. There is no writeback delay, but there is also no read caching. Databases use O_DIRECT to manage their own buffer pool and ensure that fsync() semantics are predictable.
+
+\`\`\`bash
+# check current dirty page thresholds
+sysctl vm.dirty_expire_centisecs vm.dirty_background_ratio vm.dirty_ratio
+
+# open a file with O_DIRECT (application-level, shown in C-like pseudocode)
+# int fd = open("/data/pg/base/16384/1259", O_RDWR | O_DIRECT);
+
+# force all dirty pages for all files to disk
+sync
+
+# force journal commit on ext4 (flushes journal to disk, then checkpoints)
+# mount option: sync forces per-write sync; for testing:
+echo 3 > /proc/sys/vm/drop_caches   # not for production, educational only
+\`\`\`
+
+The short answer for an interview: write() puts data in the page cache and returns. Writeback moves it to the journal or directly to disk. fsync issues a device flush. Each step is a potential loss boundary.`,
+    },
+    {
+      question: `When would you choose XFS over ext4 for a database server, and what specific mount and filesystem options would you configure?`,
+      answer: `XFS is the better choice for a database server in several concrete scenarios:
+
+First, when the database creates many concurrent write streams. PostgreSQL WAL writes, checkpoint writes, and backend heap writes can all proceed simultaneously. XFS allocation groups each have an independent free-space allocator and inode table, so ten concurrent allocating threads can proceed in parallel. ext4 serializes allocation through a single journal transaction, so concurrent allocations queue behind each other.
+
+Second, for large databases with large files. XFS handles files in the tens or hundreds of gigabytes efficiently using its B-tree extent map. ext4 also uses extents, but XFS was designed from the ground up for large-file performance and shows measurably lower fragmentation on heavy-append workloads.
+
+Third, when online capacity growth is required. XFS supports online filesystem expansion (xfs_growfs after lvextend). It cannot shrink, but databases almost never need to shrink a live filesystem.
+
+Fourth, for workloads using direct I/O. PostgreSQL and MySQL InnoDB use O_DIRECT to bypass the page cache. XFS + direct I/O is a well-tested and recommended combination in production database deployments.
+
+Recommended configuration:
+
+\`\`\`bash
+# format with default (inode size 512, sunit/swidth matching RAID or LVM stripe)
+# assume LVM stripe size 512K across 4 disks (sunit=512K/512=1024, swidth=1024*4=4096)
+mkfs.xfs -d su=512k,sw=4 /dev/vg_data/lv_pgdata
+
+# /etc/fstab entry for a PostgreSQL data directory
+UUID=<uuid>  /var/lib/postgresql  xfs  noatime,nobarrier,allocsize=64m,inode64  0 2
+
+# noatime: skip access-time writes on every read
+# nobarrier: safe only on enterprise SSD with power-loss protection
+# allocsize=64m: hint the allocator to reserve 64 MB chunks for pre-allocation
+# inode64: allow inodes to be placed anywhere on disk (not just the first 1 TB)
+
+# after mounting, set readahead for the block device
+blockdev --setra 256 /dev/vg_data/lv_pgdata   # 128 KB readahead
+
+# PostgreSQL postgresql.conf for XFS + direct I/O
+# wal_sync_method = fdatasync
+# wal_level = replica
+# checkpoint_completion_target = 0.9
+\`\`\`
+
+The one trade-off: XFS has no data journaling. If the server loses power between a data write and the metadata commit, fsync-careful applications like PostgreSQL are safe because they control their own fsync discipline. For applications that do not use fsync consistently, ext4 in ordered mode provides an extra safety net at a small throughput cost.`,
+    },
+    {
+      question: `What are the risks of LVM thin provisioning in production, and how do you mitigate them?`,
+      answer: `LVM thin provisioning is powerful but carries three primary production risks that have caused real outages.
+
+The first and most serious risk is pool exhaustion. When a thin pool reaches 100% utilization, every thin LV backed by that pool simultaneously enters an error state. The kernel returns I/O errors to all filesystems on those LVs, causing databases to crash, applications to log-fail, and filesystems to remount read-only. Unlike running out of space on a regular LV (where only that LV's filesystem fills), a pool exhaustion event is a cascading failure affecting all tenants of the pool simultaneously.
+
+Mitigation: configure automatic pool extension in lvm.conf (thin_pool_autoextend_threshold = 80, thin_pool_autoextend_percent = 20), enable lvm2-monitor.service, and set up alerts at 75% pool usage so you have time to add capacity before autoextend triggers.
+
+\`\`\`bash
+# check thin pool usage
+lvs -o lv_name,lv_size,data_percent,metadata_percent vg_data
+
+# manually extend the thin pool if autoextend is not set up
+lvextend -L +50G /dev/vg_data/tp_pool
+
+# check lvm.conf thin pool settings
+grep -A 5 "thin_pool_autoextend" /etc/lvm/lvm.conf
+
+# enable and verify lvm2-monitor
+systemctl enable --now lvm2-monitor.service
+systemctl status lvm2-monitor.service
+\`\`\`
+
+The second risk is metadata exhaustion. The thin pool stores a metadata LV alongside the data LV. The metadata LV tracks the mapping of virtual extents to physical extents for every thin LV. Heavy snapshot churn or millions of small writes can exhaust metadata even when data space remains. The default metadata LV size is often too small. Specify it explicitly at creation.
+
+\`\`\`bash
+# create a thin pool with an explicit, generous metadata size
+lvcreate -L 200G --poolmetadatasize 2G --thinpool tp_pool vg_data
+\`\`\`
+
+The third risk is snapshot accumulation debt. Each thin LV snapshot holds divergent data separately from the origin. If many snapshots accumulate without being removed, the pool fills with snapshot delta data. A single large write to the origin LV may trigger copy-on-write for multiple snapshot extents simultaneously, causing write amplification proportional to the number of live snapshots.
+
+Mitigation: implement a snapshot rotation policy. Keep no more than 5-10 snapshots per thin LV and automate deletion. Monitor per-snapshot delta size with lvs -o snap_percent.
+
+In summary: never deploy thin provisioning without autoextend configured, metadata pre-sized generously, and active monitoring on data_percent. Treat a thin pool at 80% as an immediate on-call event.`,
+    },
+    {
+      question: `How does overlayfs work, and how does Docker use it to implement image layers and container storage?`,
+      answer: `overlayfs is a Linux union filesystem that presents a merged view of two or more directory trees without copying files. It works by stacking a read-write upper directory on top of one or more read-only lower directories. When the kernel resolves a path in the merged view, it checks upper first, then lower. Reads are transparent. Writes use a copy-up mechanism: the first time a process writes to a file that exists only in lower, overlayfs atomically copies the entire file to upper (using a staging workdir for atomicity), then applies the write to the upper copy. Subsequent writes to the same file go directly to upper without another copy-up.
+
+Docker's overlayfs2 driver maps this mechanism onto image and container storage as follows:
+
+An image is a stack of read-only layers. Each layer corresponds to a Dockerfile instruction that changed the filesystem (RUN, COPY, ADD). The layer is stored as a directory in /var/lib/docker/overlay2/<layer-id>/diff. When Docker constructs a merged view for a container, it passes all image layers as the lowerdir list (overlayfs supports multiple lower layers since Linux 4.0, which is what the "2" in overlayfs2 signifies).
+
+When a container is created, Docker adds one more directory as upperdir (the container's writable layer) and a workdir for copy-up staging. The merged mount is the root filesystem the container processes see.
+
+\`\`\`bash
+# inspect a running container's overlay configuration
+docker inspect <container_id> --format '{{json .GraphDriver}}' | python3 -m json.tool
+
+# output shows something like:
+# "Data": {
+#   "LowerDir": "/var/lib/docker/overlay2/<id-n>/diff:...:<id-1>/diff",
+#   "MergedDir": "/var/lib/docker/overlay2/<container-id>/merged",
+#   "UpperDir":  "/var/lib/docker/overlay2/<container-id>/diff",
+#   "WorkDir":   "/var/lib/docker/overlay2/<container-id>/work"
+# }
+
+# look at the upper (writable) layer contents for a running container
+ls /var/lib/docker/overlay2/<container-id>/diff/
+
+# understand copy-up cost: writing to a large file in a lower layer
+# copies the entire file to upper before the write proceeds
+# solution: mount the file as a volume to bypass overlayfs
+docker run -v /host/data:/var/lib/mysql mysql:8
+
+# kernel-level mount syntax (for understanding, not production)
+mount -t overlay overlay \
+  -o lowerdir=/layer3/diff:/layer2/diff:/layer1/diff,\
+upperdir=/container/diff,workdir=/container/work \
+  /container/merged
+\`\`\`
+
+Key performance implication: copy-up is triggered once per file per container lifetime. For small files the cost is negligible. For multi-GB files (database data files, large binaries), copy-up blocks the writing process for the duration of the file copy. This is why all database documentation for Docker instructs you to use named volumes or bind mounts — not because overlayfs cannot store the data, but because the first write to any file in a lower layer will cause a full-file copy before the write proceeds.
+
+Container layers also do not survive container removal by default. Named volumes, by contrast, are managed by Docker's volume subsystem and persist independently of container lifecycle.`,
+    },
+    {
+      question: `Why might df and du report different values for the same directory, and how do you diagnose and resolve each cause?`,
+      answer: `df and du measure fundamentally different things. df asks the filesystem how many blocks are allocated and how many are free, using the statfs() syscall. du walks the directory tree using stat() on each file and sums the block counts the kernel reports. The two can diverge for several distinct reasons.
+
+The most common production cause is deleted files with open file descriptors. When a process deletes a file (unlink()), the kernel removes the directory entry and marks the inode for reuse, but the blocks are not freed until every open file descriptor referring to that inode is closed. A log rotation script may delete a 10 GB log file that is still open by the application. df sees 10 GB of "used" space; du does not see the deleted file because it walks the directory tree and the file is no longer in any directory.
+
+\`\`\`bash
+# find processes holding open file descriptors to deleted files
+lsof +L1 /var/log
+# output shows files with link count 0 — these are deleted but still open
+
+# restart the process or truncate in place (> /var/log/app.log) to free blocks immediately
+# for systemd services:
+systemctl restart myapp
+
+# if you cannot restart, you can truncate the fd from outside the process
+# (only frees data, inode stays open — a workaround, not a fix)
+# find the fd path from lsof output, e.g. /proc/1234/fd/5
+truncate -s 0 /proc/1234/fd/5
+\`\`\`
+
+The second cause is filesystem reserved blocks. ext4 reserves 5% of total disk space for the root user by default. df reports these as "used" in the context of available space to non-root users, but du never counts them because they are not assigned to any file.
+
+\`\`\`bash
+# check reserved block percentage
+tune2fs -l /dev/sda1 | grep "Reserved block count"
+# reduce reserved blocks on a data volume (not the root filesystem)
+tune2fs -m 1 /dev/sda1
+\`\`\`
+
+The third cause is sparse files. A sparse file has "holes" — ranges of zeroes that are not actually stored on disk. du --apparent-size reports the logical size; du (without --apparent-size) reports actual disk blocks consumed. df reports allocated blocks.
+
+\`\`\`bash
+# create and inspect a sparse file
+dd if=/dev/zero of=/tmp/sparse.img bs=1 count=0 seek=1G
+ls -lh /tmp/sparse.img   # shows 1 GB apparent size
+du -h /tmp/sparse.img    # shows nearly 0 actual usage
+du --apparent-size -h /tmp/sparse.img  # shows 1 GB
+\`\`\`
+
+The fourth cause is btrfs or snapshotted filesystems. btrfs filesystem df / btrfs filesystem usage shows actual CoW allocation including shared extents across subvolumes and snapshots, which can differ from both df and du significantly because shared extents are counted by both subvolumes but physically stored once.
+
+The diagnostic flowchart: first run lsof +L1 to rule out deleted open files (this is the cause in at least half of production disk-full mysteries). Then check tune2fs -l for reserved blocks. Then consider sparse files and snapshot overhead.`,
+    },
+  ],
+  references: [
+    'https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html',
+    'https://xfs.wiki.kernel.org/',
+    'https://btrfs.readthedocs.io/en/latest/',
+    'https://www.sourceware.org/lvm2/',
+    'https://raid.wiki.kernel.org/index.php/Linux_Raid',
+    'https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html',
+    'https://www.kernel.org/doc/html/latest/admin-guide/devices.html',
+    'https://man7.org/linux/man-pages/man8/tune2fs.8.html',
+    'https://man7.org/linux/man-pages/man8/xfs_info.8.html',
+    'https://man7.org/linux/man-pages/man8/mdadm.8.html',
+    'https://www.postgresql.org/docs/current/storage.html',
+    'https://docs.docker.com/storage/storagedriver/overlayfs-driver/',
+  ],
+},
+
+{
+  id: 'linux-networking-l2l3',
+  title: 'Linux Networking L2 and L3',
+  icon: 'network',
+  color: '#0891b2',
+  questions: 5,
+  description: `Linux networking spans two foundational OSI layers: Layer 2 handles Ethernet framing, MAC addressing, ARP, and bridging, while Layer 3 handles IP routing, policy rules, and the netfilter subsystem that powers iptables and container networking.`,
+  visualizations: [
+    {
+      title: `Linux Network Stack: Layers, Namespaces, and Netfilter`,
+      description: `This diagram illustrates the full Linux networking stack from a containerized workload to the physical NIC. At the bottom sits the physical or virtual NIC, above which the kernel network device layer exposes named interfaces. The netfilter framework hooks into the kernel at five well-defined points: PREROUTING intercepts every inbound packet before the routing decision, INPUT delivers locally destined packets to socket buffers, FORWARD passes transit packets between interfaces, OUTPUT catches locally generated packets after the routing decision, and POSTROUTING runs on every outgoing packet just before it leaves an interface.
+
+Each hook is visited by four built-in tables in a fixed priority order. The raw table runs first and is used to exempt flows from connection tracking. The mangle table follows and allows packet field modification such as ToS and TTL changes. The nat table runs next and is responsible for DNAT in PREROUTING and SNAT or MASQUERADE in POSTROUTING. The filter table runs last and is the default location for ACCEPT and DROP rules.
+
+Container networking introduces Linux network namespaces. Each namespace owns its own routing table, interface list, ARP cache, and netfilter rule set. Docker creates a veth pair for each container: one end lives inside the container namespace as eth0, and the other end lives in the root namespace with a generated name such as vethXXXXXX. Both ends are connected at Layer 2. The host-side veth is enslaved to the docker0 Linux bridge, which acts as a virtual Layer 2 switch. The bridge has an IP address (typically 172.17.0.1) which is the default gateway for all containers on that bridge.
+
+Packets leaving a container travel from the container eth0, across the veth pair kernel boundary, onto the docker0 bridge, then through the root namespace routing table, through POSTROUTING where MASQUERADE rewrites the source IP to the host's outbound interface address, and finally onto the physical NIC. The return path reverses this sequence, with PREROUTING DNAT restoring the original destination and connection tracking matching replies to their originating flows.`,
+      image: `/diagrams/devops/linux-networking-l2l3-arch.png`,
+    },
+    {
+      title: `CNI Plugin Contract and Docker Bridge End-to-End Flow`,
+      description: `This diagram traces a single TCP SYN packet from a Kubernetes pod through the CNI bridge plugin, across a veth pair, through every netfilter chain in the host namespace, through NAT, and out to the internet, then maps the return path.
+
+The CNI interface is invoked by the container runtime (kubelet calling containerd or CRI-O) at pod creation time. The runtime executes the CNI binary found on disk (for example /opt/cni/bin/bridge), passes a JSON configuration blob on stdin, and sets environment variables: CNI_COMMAND is ADD, DEL, or CHECK; CNI_NETNS is the path to the network namespace file such as /proc/12345/ns/net; CNI_IFNAME is the desired interface name inside the namespace; CNI_CONTAINERID is an opaque identifier; and CNI_PATH lists directories to search for chained plugins.
+
+The bridge CNI plugin reads the stdin config, creates the veth pair, moves one end into the pod namespace and renames it to eth0, enslaves the host-side veth to the specified bridge, and calls the IPAM delegate plugin (commonly host-local) to allocate an IP from a subnet range stored on disk. The IPAM plugin writes results back to the bridge plugin as JSON, which in turn emits the full CNI result JSON to stdout. The runtime reads stdout to learn the assigned IP and routes.
+
+The packet flow on egress is: pod eth0 to veth peer in root namespace to bridge to ip_forward kernel flag to FORWARD chain filter rules to POSTROUTING MASQUERADE rule rewrites src IP to eth0 of host to physical NIC to internet. On ingress a reply arrives at the physical NIC, passes PREROUTING (no DNAT needed for established connections because conntrack handles it), matches the FORWARD chain, crosses the bridge, travels the veth pair into the pod namespace, and arrives at the application socket.
+
+In Kubernetes pod-to-pod traffic across nodes the CNI overlay (Flannel, Calico, Cilium) encapsulates or routes at Layer 3 so ARP is resolved either via proxy ARP at the node or via BGP-distributed routes depending on the CNI choice.`,
+      image: `/diagrams/devops/linux-networking-l2l3-flow.png`,
+    },
+  ],
+  introduction: `Linux networking is built on a layered model where Layer 2 and Layer 3 each have distinct responsibilities but cooperate tightly inside the kernel. Layer 2, the data link layer, concerns itself with how bytes travel between two directly connected devices: it defines the Ethernet frame format (destination MAC, source MAC, EtherType, payload, FCS), address resolution via ARP, and logical grouping of interfaces using Linux bridges and 802.1Q VLAN tagging. Layer 3, the network layer, introduces the concept of logical addressing with IP, autonomous routing decisions based on destination prefix lookups, and policy-based routing that can forward packets based on source IP, firewall mark, or DSCP bits.
+
+The netfilter framework is the kernel subsystem that ties these layers together with stateful packet inspection and manipulation. Every packet that enters, traverses, or leaves a Linux machine visits a sequence of netfilter hooks. Tables contain chains of rules, and iptables is the classical userspace tool for managing those rules. nftables is the modern replacement with a unified syntax, but iptables remains dominant in production environments, container runtimes, and Kubernetes data planes, so understanding both is essential for any DevOps or infrastructure engineer.
+
+Linux network namespaces virtualize the network stack itself. A namespace owns a private view of interfaces, routing tables, iptables rules, ARP caches, and sockets. This is the kernel primitive that makes containers possible: each container runs inside its own namespace, isolated from every other container and from the host. Veth pairs are the wire between namespaces: they behave like a crossed Ethernet cable at the kernel level, delivering frames from one end to the other with essentially zero latency and no intermediate switching logic.
+
+Docker and Kubernetes build their entire networking models on top of these primitives. Docker creates a Linux bridge (docker0), provisions veth pairs for each container, and installs iptables MASQUERADE rules so outbound traffic can reach the internet. Kubernetes delegates network setup entirely to CNI plugins, which are short-lived binaries invoked by the container runtime. The CNI specification defines a precise contract: the runtime passes configuration on stdin and reads a JSON result from stdout, allowing any conforming plugin to wire up pod networking without modifying the runtime.
+
+Understanding this stack end-to-end is required for debugging packet drops (ip route, ip neigh, conntrack, iptables -L -n -v), for designing multi-tenant network isolation (namespaces, VLAN tags, policy routing tables), and for reasoning about the performance characteristics and failure modes of container networking overlays. A candidate who can trace a packet from a containerized application through every kernel layer to the physical wire, and back, demonstrates the depth needed for senior infrastructure, SRE, and platform engineering roles.`,
+  whenToUse: [
+    `Debugging why a container cannot reach an external service when the host can, requiring inspection of iptables FORWARD and POSTROUTING rules and the docker0 bridge ARP table`,
+    `Designing multi-tenant isolation on a bare-metal host where different customer workloads must share a NIC but not see each other's traffic, using network namespaces, VLAN subinterfaces, and policy routing tables`,
+    `Tracing intermittent connection resets in a Kubernetes cluster that turn out to be conntrack table exhaustion causing SYN packets to be dropped by the stateful FORWARD chain`,
+    `Implementing a custom CNI plugin for a bare-metal environment where no existing plugin satisfies the required IP allocation or BGP peering model`,
+    `Tuning ECMP routing on a host with multiple uplinks to achieve per-flow load balancing without packet reordering, using ip route multipath and sysctl rp_filter settings`,
+    `Auditing iptables rules on a production node after a security incident to identify unauthorized DNAT or SNAT rules that redirect traffic to attacker-controlled endpoints`,
+    `Setting up a Linux router between two subnets using ip_forward, static routes, and NAT masquerade during a lab or interview live-coding exercise`,
+    `Diagnosing ARP thrashing on a host with bonded interfaces where gratuitous ARPs cause MAC table flapping on the upstream switch`,
+  ],
+  keyConcepts: [
+    {
+      term: `Ethernet Frame and ARP`,
+      definition: `An Ethernet frame is the fundamental unit of Layer 2 communication. Its structure is: 6-byte destination MAC, 6-byte source MAC, optional 4-byte 802.1Q VLAN tag (EtherType 0x8100 followed by PCP, DEI, and 12-bit VID), 2-byte EtherType (0x0800 for IPv4, 0x0806 for ARP, 0x86DD for IPv6), variable payload (46-1500 bytes for standard MTU), and 4-byte FCS. When a host needs to send an IP packet to a destination on the same subnet, it must resolve the destination IP to a MAC address. The Address Resolution Protocol handles this: the sender broadcasts an ARP request containing the target IP, and the owner of that IP replies with its MAC. Linux caches these mappings in the neighbor (ARP) table managed by the kernel's neighbour subsystem.
+
+\`\`\`bash
+# Show the ARP / neighbor table
+ip neigh show
+
+# Force an ARP request for a specific IP
+arping -I eth0 192.168.1.1
+
+# Show Layer 2 details of an interface
+ip link show eth0
+
+# Add a static ARP entry
+ip neigh add 192.168.1.50 lladdr de:ad:be:ef:00:01 dev eth0
+
+# Capture ARP traffic
+tcpdump -i eth0 arp
+\`\`\`
+
+ARP operates only within a broadcast domain. Routers do not forward ARP requests, so each subnet requires its own ARP resolution. In Kubernetes, each node is its own broadcast domain at Layer 2; pod-to-pod communication across nodes therefore relies on Layer 3 routing (or encapsulation) rather than ARP.`,
+    },
+    {
+      term: `Linux Bridge and 802.1Q VLAN Tagging`,
+      definition: `A Linux bridge is a software implementation of an Ethernet switch. It maintains a forwarding database (FDB) mapping MAC addresses to bridge ports. When a frame arrives on a port, the bridge looks up the destination MAC: if found, the frame is forwarded to the specific port; if not, it is flooded to all ports except the one it arrived on. The bridge learns source MACs from incoming frames and ages them out. Docker enslaves each container's host-side veth to the docker0 bridge, so containers on the same host communicate at Layer 2 without leaving the kernel.
+
+\`\`\`bash
+# Create a bridge
+ip link add name br0 type bridge
+ip link set br0 up
+
+# Enslave an interface to the bridge
+ip link set eth1 master br0
+
+# Show bridge forwarding database
+bridge fdb show br0
+
+# Create a VLAN subinterface (802.1Q tag 100)
+ip link add link eth0 name eth0.100 type vlan id 100
+ip link set eth0.100 up
+ip addr add 10.100.0.1/24 dev eth0.100
+
+# Show VLANs on bridge ports
+bridge vlan show
+\`\`\`
+
+802.1Q VLAN tagging inserts a 4-byte tag into the Ethernet frame between the source MAC and EtherType fields. The 12-bit VID field allows 4094 distinct VLANs. Linux VLAN subinterfaces strip the tag on ingress and insert it on egress, presenting a clean untagged interface to upper-layer protocols. Bridge VLAN filtering (bridge link set dev eth1 pvid 100 vid 100) can enforce VLAN membership at the port level, providing isolation equivalent to a managed switch.`,
+    },
+    {
+      term: `IP Routing Table and ECMP`,
+      definition: `The Linux routing table maps destination IP prefixes to nexthops. The kernel performs longest-prefix-match (LPM) lookup for every outbound packet. A route entry specifies the destination network, the nexthop (gateway IP or directly connected), the output interface, and metric. The main routing table (table 254) handles normal traffic; local (table 255) handles loopback and broadcast; policy routing adds user-defined tables (1-252) selected by ip rules.
+
+\`\`\`bash
+# Show the main routing table
+ip route show table main
+
+# Add a static route
+ip route add 10.10.0.0/16 via 192.168.1.1 dev eth0
+
+# Add a default route
+ip route add default via 192.168.1.1
+
+# ECMP: add two equal-cost nexthops for load balancing
+ip route add 10.20.0.0/24 \
+  nexthop via 192.168.1.1 dev eth0 weight 1 \
+  nexthop via 192.168.2.1 dev eth1 weight 1
+
+# Policy routing: route packets from 10.0.0.0/8 via table 100
+ip rule add from 10.0.0.0/8 table 100
+ip route add default via 10.0.0.254 table 100
+
+# Show all routing rules
+ip rule show
+\`\`\`
+
+ECMP (Equal-Cost Multi-Path) allows the kernel to distribute flows across multiple nexthops. Linux uses a hash of the 5-tuple (src IP, dst IP, protocol, src port, dst port) to select the nexthop, ensuring that all packets of a single TCP connection take the same path (preventing reordering). The sysctl net.ipv4.fib_multipath_hash_policy controls the hash inputs.`,
+    },
+    {
+      term: `Netfilter Tables and Chains`,
+      definition: `Netfilter is the kernel framework that processes packets at five hook points. iptables organizes rules into tables, each with a fixed set of chains. The raw table (chains: PREROUTING, OUTPUT) runs before connection tracking and is used to exempt specific flows via the NOTRACK target. The mangle table (all five chains) allows modification of packet fields like TTL, ToS, and firewall mark. The nat table (PREROUTING, INPUT, OUTPUT, POSTROUTING) performs address translation; DNAT rules appear in PREROUTING and SNAT/MASQUERADE appear in POSTROUTING. The filter table (INPUT, FORWARD, OUTPUT) is the default for allow/deny rules.
+
+\`\`\`bash
+# List all rules with counters in all chains of filter table
+iptables -t filter -L -n -v --line-numbers
+
+# Allow forwarding between two interfaces
+iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+
+# MASQUERADE outbound traffic on eth0
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# DNAT: redirect incoming port 80 to internal server
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 10.0.0.5:80
+
+# Show connection tracking table
+conntrack -L
+
+# Delete all rules in a table
+iptables -t nat -F
+\`\`\`
+
+Connection tracking (conntrack) is the kernel module that maintains state for each flow. States are NEW (first packet of a new connection), ESTABLISHED (bidirectional traffic seen), RELATED (new connection related to an existing one, such as FTP data), and INVALID (packets that do not match any connection). Most FORWARD chains use -m state --state RELATED,ESTABLISHED to pass return traffic without explicit rules.`,
+    },
+    {
+      term: `Linux Network Namespaces and Veth Pairs`,
+      definition: `A network namespace is a complete virtualization of the Linux network stack: it owns its own interfaces, routing tables, iptables rules, neighbor cache, and socket namespace. The root namespace (pid 1's namespace) is the default. New namespaces are created with ip netns add or unshare --net. Processes join a namespace by calling setns() on the namespace file descriptor.
+
+A veth pair is created as a single unit: two virtual Ethernet interfaces that are connected back-to-back in the kernel. A frame written to one end is immediately readable on the other end. They are the standard mechanism for connecting a network namespace to the root namespace or to a bridge.
+
+\`\`\`bash
+# Create a namespace
+ip netns add container1
+
+# Create a veth pair
+ip link add veth0 type veth peer name veth1
+
+# Move one end into the namespace
+ip link set veth1 netns container1
+
+# Configure addresses
+ip addr add 172.17.0.1/24 dev veth0
+ip link set veth0 up
+ip netns exec container1 ip addr add 172.17.0.2/24 dev veth1
+ip netns exec container1 ip link set veth1 up
+ip netns exec container1 ip link set lo up
+
+# Add a default route inside the namespace
+ip netns exec container1 ip route add default via 172.17.0.1
+
+# Run a command inside the namespace
+ip netns exec container1 ping 8.8.8.8
+
+# List all named namespaces
+ip netns list
+\`\`\`
+
+Named network namespaces appear as files under /var/run/netns/. Container runtimes create anonymous namespaces via clone() or unshare() and reference them through /proc/PID/ns/net. The CNI specification requires the runtime to pass this path in the CNI_NETNS environment variable so the CNI plugin can open and configure the namespace.`,
+    },
+    {
+      term: `CNI Plugin Contract`,
+      definition: `The Container Network Interface specification defines a binary interface between a container runtime and a network plugin. At pod creation, the runtime executes a CNI binary with these environment variables set: CNI_COMMAND (ADD, DEL, or CHECK), CNI_CONTAINERID (opaque unique ID), CNI_NETNS (path to the network namespace file, e.g. /proc/12345/ns/net), CNI_IFNAME (interface name inside the namespace, typically eth0), CNI_ARGS (optional semicolon-separated key=value pairs), and CNI_PATH (colon-separated list of directories to search for plugin binaries).
+
+The plugin reads a JSON network configuration from stdin. A typical bridge plugin config looks like this:
+
+\`\`\`json
+{
+  "cniVersion": "0.4.0",
+  "name": "mynet",
+  "type": "bridge",
+  "bridge": "cni0",
+  "isGateway": true,
+  "ipMasq": true,
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.244.0.0/24",
+    "routes": [{ "dst": "0.0.0.0/0" }]
+  }
+}
+\`\`\`
+
+On ADD the plugin must: create the bridge if absent, create a veth pair, move one end into the container namespace and rename it to CNI_IFNAME, enslave the host-side veth to the bridge, invoke the IPAM delegate to allocate an IP, assign the IP to the container interface, add routes inside the namespace, and write a JSON result to stdout containing the allocated IPs and routes. On DEL the plugin must tear down the veth pair and release the IP back to IPAM. On CHECK it must verify the configuration matches expectations and return an error if not.
+
+\`\`\`bash
+# Manually invoke a CNI plugin (useful for debugging)
+CNI_COMMAND=ADD \
+CNI_CONTAINERID=test123 \
+CNI_NETNS=/var/run/netns/test \
+CNI_IFNAME=eth0 \
+CNI_PATH=/opt/cni/bin \
+/opt/cni/bin/bridge < /etc/cni/net.d/10-bridge.conf
+
+# Inspect what the host-local IPAM has allocated
+cat /var/lib/cni/networks/mynet/*
+\`\`\`
+
+The host-local IPAM plugin stores allocations as files named by IP address under /var/lib/cni/networks/NETNAME/. Each file contains the container ID that owns the allocation, making it straightforward to audit or debug stale allocations after a crash.`,
+    },
+  ],
+  approach: [
+    `Always enable ip_forward before expecting the kernel to route packets between interfaces. Set net.ipv4.ip_forward=1 in /etc/sysctl.conf and apply with sysctl -p. Without this the kernel silently drops packets that arrive on one interface destined for a different subnet.`,
+    `Use conntrack -L to inspect the connection tracking table when debugging NAT or stateful firewall issues. Stale entries after a process crash can cause new connections to be incorrectly classified as INVALID and dropped by rules that match only RELATED,ESTABLISHED.`,
+    `When adding iptables rules for container networking, always use -m comment --comment to annotate rules with the container ID or workload name. Production nodes accumulate hundreds of rules; anonymous rules are impossible to audit.`,
+    `Test veth pair connectivity with ip netns exec NAMESPACE ping HOST_IP before adding application-layer complexity. This isolates Layer 3 reachability problems from application or DNS issues.`,
+    `Use tcpdump with -i any and -e (show Ethernet headers) to trace packets across all interfaces simultaneously. Packet captures on both ends of a veth pair confirm whether a frame is being delivered and whether VLAN tags or MACs are correct.`,
+    `Configure rp_filter (reverse path filtering) carefully when using policy routing or ECMP. A value of 1 (strict) drops packets whose source address would not be reachable via the same interface, which breaks asymmetric routing. Set to 2 (loose) or 0 when asymmetric paths are intentional.`,
+    `When writing a CNI plugin, always handle the DEL command idempotently. The runtime may call DEL multiple times after a crash or node failure. A plugin that returns an error on a second DEL (because the veth no longer exists) will block pod cleanup and leak namespace files.`,
+    `Use ip route get DST_IP to simulate a routing decision without sending a packet. This shows which interface and nexthop the kernel would select, including the effects of policy routing rules, and is the fastest way to diagnose routing misconfigurations.`,
+  ],
+  pitfalls: [
+    `Forgetting that iptables rules are stateless by default. A FORWARD rule that allows traffic from eth0 to eth1 does not automatically allow return traffic. Always pair forward rules with a RELATED,ESTABLISHED rule or use connection tracking explicitly, otherwise the first packet of a reply is dropped.`,
+    `Assuming MASQUERADE and SNAT are equivalent. MASQUERADE looks up the outbound interface's IP at packet time (correct for DHCP interfaces that change IP), while SNAT requires a fixed IP specified at rule creation time. Using MASQUERADE on a static-IP interface adds a small per-packet lookup overhead, but the more dangerous mistake is using SNAT on a dynamic interface that gets a new IP after a lease renewal, causing all NAT sessions to break silently.`,
+    `Creating a veth pair but forgetting to bring both ends up with ip link set up. A veth end that is DOWN will silently discard all frames. This is the most common cause of "container can ping the gateway but nothing else" bugs, often because the host-side veth is up but the bridge port is not.`,
+    `Exhausting the conntrack table under high connection rates. The default nf_conntrack_max is sized for modest workloads. When the table fills, new connections are dropped without any error visible to the application. Monitor /proc/sys/net/netfilter/nf_conntrack_count against nf_conntrack_max and tune with sysctl net.netfilter.nf_conntrack_max and net.netfilter.nf_conntrack_buckets.`,
+    `Relying on iptables -F to clear rules without also flushing the nat table. iptables -F flushes only the filter table by default. Use iptables -t nat -F, iptables -t mangle -F, and iptables -t raw -F separately, or wrap them in a loop over all tables to ensure a clean state.`,
+    `Mixing ip route and route commands. The legacy route tool does not support policy routing, ECMP, or the full feature set of iproute2. It also interprets arguments differently. Use only ip route, ip rule, and ip neigh in any script or runbook that may run on modern kernels.`,
+    `Ignoring MTU mismatches when using VLAN subinterfaces or overlay encapsulation. An 802.1Q VLAN tag adds 4 bytes, reducing the effective payload from 1500 to 1496 bytes if the parent interface MTU is 1500. VXLAN encapsulation adds 50 bytes. Failure to set the correct MTU on inner interfaces causes silent fragmentation or PMTUD blackholes, manifesting as connections that complete handshakes but stall when transferring large payloads.`,
+    `Assuming that CNI ADD success means the pod has full connectivity. The bridge plugin only wires the pod to the local bridge. Pod-to-pod traffic across nodes requires a separate mechanism: an overlay like VXLAN installed by flannel, BGP route distribution by Calico, or eBPF datapath by Cilium. Forgetting to install or configure the cross-node component produces intermittent failures that look like DNS or application bugs rather than networking gaps.`,
+  ],
+  keyQuestions: [
+    {
+      question: `Trace a TCP SYN packet from a Docker container to the internet through every iptables chain it visits.`,
+      answer: `A container on the docker0 bridge at 172.17.0.2 sends a SYN destined for 1.1.1.1:443. Here is the exact chain sequence in the root network namespace.
+
+The packet arrives at the docker0 bridge interface in the root namespace. The bridge forwards it at Layer 2 to the kernel IP stack via the bridge's own IP device. At this point netfilter sees an incoming packet on docker0.
+
+Chain 1: PREROUTING (raw table). The raw table runs first. If no rule exempts the flow, the packet enters connection tracking and is marked as a NEW connection. Docker does not normally add raw rules, so the packet continues.
+
+Chain 2: PREROUTING (mangle table). No-op in a default Docker setup. Packet continues.
+
+Chain 3: PREROUTING (nat table). Docker adds a DNAT rule here for published ports. Since this is outbound traffic from the container (not inbound to a published port), no DNAT rule matches. Packet continues.
+
+The kernel now makes a routing decision. The destination 1.1.1.1 matches the default route via eth0 (the host's uplink). Because the output interface (eth0) differs from the input interface (docker0), the packet is a transit packet and hits the FORWARD chain, not INPUT.
+
+Chain 4: FORWARD (mangle table). No-op default.
+
+Chain 5: FORWARD (filter table). Docker installs a rule: -A DOCKER-USER and then -A FORWARD -i docker0 ! -o docker0 -j ACCEPT (for outbound) and -A FORWARD -i docker0 -o docker0 -j ACCEPT (for intra-bridge). The SYN matches the outbound rule and is ACCEPTed.
+
+Chain 6: POSTROUTING (mangle table). No-op default.
+
+Chain 7: POSTROUTING (nat table). Docker installs: -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE. The SYN source (172.17.0.2) matches the source range and the output interface is eth0 (not docker0), so MASQUERADE rewrites the source IP to the host's eth0 IP (say 203.0.113.5) and records the mapping in the conntrack table. The packet leaves eth0 with src=203.0.113.5 and dst=1.1.1.1.
+
+On the return path, the SYN-ACK arrives on eth0. It hits PREROUTING (nat), where conntrack identifies it as ESTABLISHED and automatically un-NATes the destination back to 172.17.0.2. The packet then hits FORWARD (filter) and matches the RELATED,ESTABLISHED rule. It exits via docker0 and crosses the veth pair into the container namespace.
+
+\`\`\`bash
+# Observe the conntrack entry for the flow
+conntrack -L -p tcp --dport 443
+
+# Watch iptables counters in real time
+watch -n1 'iptables -t nat -L POSTROUTING -n -v'
+
+# Trace a specific packet through all tables (kernel 4.11+)
+iptables -t raw -A OUTPUT -p tcp --dport 443 -j TRACE
+iptables -t raw -A PREROUTING -p tcp --sport 443 -j TRACE
+# then read: dmesg | grep TRACE
+\`\`\``,
+    },
+    {
+      question: `Explain veth pair mechanics at the kernel level. What happens when you write a byte to one end?`,
+      answer: `A veth pair is created by a single call to the veth driver's newlink function, which allocates two net_device structures and cross-links them: each end holds a pointer to its peer. Unlike a real NIC that passes frames through hardware, the veth driver's xmit function directly calls netif_rx() on the peer device, injecting the frame into the peer's receive queue in software. The entire transfer happens in the same CPU context if the peer is in the same namespace, or via a brief context switch if napi polling is involved.
+
+From a performance standpoint, veth pairs achieve nearly the same throughput as loopback and far exceed what a physical NIC can sustain, because there is no PCI DMA, no interrupt coalescing, and no serialization across a PCIe bus. The limiting factors are CPU cache pressure and lock contention on the sk_buff allocation pool.
+
+\`\`\`bash
+# Demonstrate veth pair: namespace A can reach namespace B
+ip netns add ns-a
+ip netns add ns-b
+ip link add veth-a type veth peer name veth-b
+ip link set veth-a netns ns-a
+ip link set veth-b netns ns-b
+ip netns exec ns-a ip addr add 192.168.99.1/24 dev veth-a
+ip netns exec ns-b ip addr add 192.168.99.2/24 dev veth-b
+ip netns exec ns-a ip link set veth-a up
+ip netns exec ns-b ip link set veth-b up
+ip netns exec ns-a ping -c3 192.168.99.2
+\`\`\`
+
+Key behaviors to understand in interviews: if the peer end is DOWN (ip link set veth-b down), the xmit on veth-a silently discards frames (returns NETDEV_TX_OK but increments the dropped counter). There is no error propagated to the sender. This is the most common cause of "container can start but has no connectivity" bugs. The fix is always to check both ends with ip link show and ensure both are UP.
+
+When a veth end is enslaved to a bridge, the bridge becomes the Layer 2 forwarder. Frames arriving on the bridge port are no longer delivered directly to the veth's net_device IP stack; instead the bridge makes the forwarding decision. The bridge then delivers frames to the correct port's peer, which in turn injects them into the target namespace via netif_rx.`,
+    },
+    {
+      question: `What is the difference between PREROUTING and POSTROUTING in iptables? When would you use each?`,
+      answer: `PREROUTING and POSTROUTING are netfilter hooks that run at opposite ends of the kernel's routing decision.
+
+PREROUTING fires on every packet that arrives at any interface before the kernel makes the routing decision. At this point the kernel has not yet decided whether the packet is destined for a local socket (INPUT path) or for forwarding to another interface (FORWARD path). Because the routing decision has not happened, PREROUTING rules can rewrite the destination IP and port (DNAT) and thereby redirect the packet to a different host or port. The kernel will then make its routing decision on the modified destination. This is how Docker port publishing works: an incoming packet for the host's port 8080 hits PREROUTING DNAT and is rewritten to 172.17.0.5:80, after which the routing decision forwards it to the container.
+
+POSTROUTING fires on every packet that is about to leave any interface, after the routing decision and after the FORWARD or OUTPUT chain. The source IP and port are still the original values at this point (unless a prior rule modified them). POSTROUTING is where SNAT and MASQUERADE live. The kernel uses the routing decision to determine the output interface, and POSTROUTING can rewrite the source to make the packet appear to originate from the host or from a specific IP.
+
+\`\`\`bash
+# DNAT: redirect packets arriving on port 443 to an internal TLS terminator
+iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination 10.0.0.10:8443
+
+# SNAT: make all traffic from the internal lab subnet appear to come from the host's public IP
+iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -o eth0 -j SNAT --to-source 203.0.113.5
+
+# MASQUERADE: same as above but learns the outbound IP dynamically (for DHCP interfaces)
+iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -o eth0 -j MASQUERADE
+\`\`\`
+
+The critical distinction: PREROUTING modifies where a packet goes (destination), POSTROUTING modifies who it appears to come from (source). You can combine them: a load balancer might DNAT in PREROUTING to select a backend, and the backend's reply travels the return path where SNAT in POSTROUTING ensures the client sees the load balancer's IP in the reply, not the backend's. Connection tracking makes this transparent by storing the original tuple and automatically reversing the NAT on reply packets.`,
+    },
+    {
+      question: `How does ARP work for pod-to-pod traffic across different Kubernetes nodes? Walk through the full resolution path.`,
+      answer: `The answer depends on the CNI plugin, because Kubernetes does not mandate a single Layer 2 topology. The two dominant approaches are overlay networks (VXLAN) and pure Layer 3 routing (BGP). Here is how each handles ARP for cross-node pod-to-pod traffic.
+
+Pure Layer 3 (Calico with BGP): Each node advertises its pod CIDR (/24 or /26) to the BGP fabric. The routing table on every node has a host route (/32) for every pod, with the nexthop being the node's IP. When pod A (10.244.1.2 on node 1) sends a packet to pod B (10.244.2.5 on node 2), the kernel on node 1 looks up 10.244.2.5, finds a route pointing to node 2's IP (192.168.0.2). It then ARPs for 192.168.0.2 on its eth0, which is a standard Layer 2 ARP on the physical network. Node 2 answers, and the packet travels as a normal IP packet between nodes. On node 2, a host route for 10.244.2.5 points to a veth that connects to pod B's namespace. There is no tunnel and no per-pod ARP across nodes.
+
+\`\`\`bash
+# On a Calico node, see per-pod host routes
+ip route show | grep cali
+
+# Example output:
+# 10.244.2.5 dev cali1234abcd scope link
+\`\`\`
+
+VXLAN overlay (Flannel in VXLAN mode): Each node has a VTEP (VXLAN Tunnel Endpoint) interface (flannel.1). Flannel populates the VTEP's FDB and ARP proxy tables with entries learned from etcd or the Kubernetes API. When pod A sends a packet to pod B, the kernel on node 1 looks up 10.244.2.5, finds a route via flannel.1 nexthop 10.244.2.0 (the pod's gateway). Before encapsulating, the kernel needs the MAC of the nexthop. Instead of broadcasting an ARP, the flannel VTEP has a static ARP entry for 10.244.2.0 pointing to the MAC of node 2's VTEP, populated by flannel via netlink. The kernel encapsulates the entire original frame in a UDP/VXLAN packet (UDP port 4789) addressed to node 2's IP. Node 2's kernel decapsulates and delivers to the pod.
+
+\`\`\`bash
+# See the ARP proxy entries on the flannel VTEP
+ip neigh show dev flannel.1
+
+# See the VTEP FDB (which remote VTEP owns which inner MAC)
+bridge fdb show dev flannel.1
+\`\`\`
+
+The key insight: in both cases, actual Layer 2 ARP between pods on different nodes is avoided. Pure L3 uses BGP routes so the kernel never broadcasts for remote pod IPs. Overlay uses pre-populated ARP and FDB tables in the VTEP so the kernel finds the answer locally. Broadcast ARP across nodes would be impossible anyway because each node is in a separate broadcast domain.`,
+    },
+    {
+      question: `Describe the CNI plugin contract precisely. What must a plugin do on ADD, and what guarantees must it make on DEL?`,
+      answer: `The CNI specification (currently 1.0.0, with 0.4.0 still widely deployed) defines a strict contract between the container runtime and the plugin binary.
+
+Runtime responsibilities before calling ADD: the runtime must have already created the network namespace, which exists at the path passed in CNI_NETNS. The runtime must not yet have set up any network interfaces inside the namespace. The runtime sets five environment variables (CNI_COMMAND, CNI_CONTAINERID, CNI_NETNS, CNI_IFNAME, CNI_PATH) and writes the plugin's configuration JSON to the binary's stdin.
+
+Plugin responsibilities on ADD:
+1. Read the config JSON from stdin and parse it.
+2. Create the requested network resources (bridge, veth pair, etc.).
+3. Move the container-side veth into the namespace at CNI_NETNS and rename it to CNI_IFNAME.
+4. Configure the interface: assign IP addresses, bring it UP, add routes inside the namespace.
+5. If the config references an IPAM plugin, delegate to it by re-executing the IPAM binary with CNI_COMMAND=ADD and the ipam section of the config as stdin. Parse its JSON result to obtain the allocated IP, gateway, and routes.
+6. Write a JSON result to stdout containing the CNI version, the list of IPs allocated, the DNS config, and the interface list. Return exit code 0 on success, nonzero on error.
+
+\`\`\`json
+{
+  "cniVersion": "0.4.0",
+  "interfaces": [
+    { "name": "cni0", "mac": "0a:58:0a:f4:00:01" },
+    { "name": "vethXXXXXX", "mac": "...", "sandbox": "" },
+    { "name": "eth0", "mac": "...", "sandbox": "/proc/12345/ns/net" }
+  ],
+  "ips": [
+    {
+      "version": "4",
+      "address": "10.244.0.5/24",
+      "gateway": "10.244.0.1",
+      "interface": 2
+    }
+  ],
+  "routes": [{ "dst": "0.0.0.0/0" }]
+}
+\`\`\`
+
+Plugin guarantees on DEL: the plugin must be idempotent. The runtime may call DEL multiple times (kubelet retry after crash, node draining, forced pod deletion). If the veth pair no longer exists, the plugin must not return an error that blocks the DEL from completing. The correct behavior is to attempt teardown, log a warning if resources are already gone, release the IP back to IPAM (also idempotent: host-local will silently succeed if the file is already absent), and return exit code 0. A plugin that returns an error on a missing veth will leak the pod namespace file and cause kubelet to retry indefinitely, eventually exhausting kernel namespace slots.
+
+\`\`\`bash
+# Invoke DEL manually for a stale container
+CNI_COMMAND=DEL \
+CNI_CONTAINERID=stale123 \
+CNI_NETNS=/proc/99999/ns/net \
+CNI_IFNAME=eth0 \
+CNI_PATH=/opt/cni/bin \
+/opt/cni/bin/bridge < /etc/cni/net.d/10-bridge.conf
+
+# Check for leaked IPAM allocations
+ls /var/lib/cni/networks/mynet/
+\`\`\``,
+    },
+  ],
+  references: [
+    'https://www.kernel.org/doc/html/latest/networking/netfilter.html',
+    'https://www.netfilter.org/documentation/HOWTO/netfilter-hacking-HOWTO.html',
+    'https://www.cni.dev/docs/spec/',
+    'https://www.cni.dev/plugins/current/main/bridge/',
+    'https://docs.docker.com/network/drivers/bridge/',
+    'https://linux.die.net/man/8/ip',
+    'https://man7.org/linux/man-pages/man8/iptables.8.html',
+    'https://man7.org/linux/man-pages/man8/conntrack.8.html',
+    'https://www.projectcalico.org/blog/why-bgp',
+    'https://github.com/flannel-io/flannel/blob/master/Documentation/backends.md',
+  ],
+},
+
+{
+  id: 'kubernetes-the-hard-way',
+  title: 'Kubernetes the Hard Way',
+  icon: 'tool',
+  color: '#4f46e5',
+  questions: 5,
+  description: `Kubernetes the Hard Way is a manual bootstrapping approach that teaches every component of a Kubernetes cluster without automation tools like kubeadm. Understanding this process reveals how etcd, the API server, scheduler, controller manager, kubelet, and kube-proxy interact to form a working control plane and data plane.`,
+  visualizations: [
+    {
+      title: `Control Plane Architecture`,
+      description: `The Kubernetes control plane consists of five primary components that work in concert to manage cluster state. At the center is etcd, a distributed key-value store that persists all cluster state using the Raft consensus algorithm. Every other component communicates exclusively through the kube-apiserver, which is the single gateway to etcd.
+
+The kube-apiserver receives requests from clients such as kubectl, authenticates and authorizes them through a multi-stage chain, runs admission controllers, and then reads or writes to etcd. When a resource changes in etcd, the API server notifies watchers through its internal watch mechanism, which is how controllers and the scheduler react to state changes without polling.
+
+The kube-scheduler watches for unscheduled pods via a watch on the API server. When a new pod appears with no node assignment, the scheduler runs the pod through a sequence of filter predicates to eliminate ineligible nodes, then scores the remaining nodes, and finally binds the pod to the highest-scoring node by writing a Binding object back through the API server.
+
+The kube-controller-manager bundles dozens of independent control loops into one process. Each controller observes a specific resource type through a watch, compares observed state to desired state, and takes corrective action. For example, the ReplicaSet controller creates or deletes pods to match a desired replica count, while the Node controller evicts pods from nodes that stop reporting heartbeats.
+
+On each worker node, the kubelet is the primary agent. It registers the node with the API server, watches for pods assigned to its node, and drives the container runtime through the CRI interface, the network plugin through CNI, and the storage driver through CSI. The kubelet's sync loop runs continuously, reconciling the desired pod specifications with the actual running containers.
+
+Finally, kube-proxy runs on every node and programs the kernel's networking rules so that Service ClusterIPs route to healthy pod endpoints. It watches EndpointSlice objects and translates them into either iptables chains or IPVS virtual servers depending on its mode configuration.`,
+      image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
+    },
+    {
+      title: `kubectl apply to Running Pod Data Flow`,
+      description: `Tracing a single kubectl apply command through the entire stack is one of the most instructive exercises in understanding Kubernetes internals. The journey begins at the client and ends with a container process running on a worker node, touching every control plane component along the way.
+
+When a user runs kubectl apply, the client reads the kubeconfig file to determine the cluster API server address and the credentials to use. The kubeconfig contains a cluster entry with a certificate authority, a user entry with a client certificate and key or a token, and a context that maps a cluster to a user. kubectl sends an HTTP request to the API server with these credentials.
+
+The kube-apiserver receives the request and runs it through the authentication chain. The chain tries each configured authenticator in order: x509 client certificates, bearer tokens, and webhook authenticators. Once authentication succeeds and a user identity is established, the request proceeds to authorization where RBAC checks whether the identity has the correct verb and resource permission.
+
+After authorization, admission controllers run in two phases. First, mutating admission webhooks may modify the object, for example adding default values or injecting sidecar containers. Second, validating admission webhooks and built-in validating controllers reject objects that violate policies. If all admission steps pass, the API server serializes the object to etcd.
+
+When etcd commits the write, the API server notifies all watchers of that resource type. The scheduler, which holds an open watch for pods with no node name, receives the new pod event. It runs the pod through filter predicates such as NodeResourcesFit, NodeAffinity, and TaintToleration to produce a list of feasible nodes. It then scores feasible nodes using priority functions and selects the winner, writing a Binding object to the API server, which sets the pod's nodeName field in etcd.
+
+The kubelet on the winning node, which also holds a watch for pods assigned to its node name, receives the pod event. The kubelet's sync loop calls the container runtime via CRI to pull images and create containers, calls the CNI plugin to set up the pod network namespace and assign an IP, and optionally calls CSI to attach and mount persistent volumes. Once all containers are running, the kubelet updates the pod status fields in etcd through the API server, and the pod is now visible as Running.`,
+      image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
+    },
+  ],
+  introduction: `Kubernetes the Hard Way refers to the practice of bootstrapping a Kubernetes cluster entirely by hand, generating every certificate, writing every configuration file, and starting every component explicitly rather than delegating to an installer like kubeadm. The exercise was popularized by Kelsey Hightower as a learning tool, and it remains the most effective way to build deep operational intuition about how Kubernetes actually works under the hood. Engineers who have done this work understand exactly why a cluster fails to start, how to recover from certificate expiry, and what each component is responsible for.
+
+The foundation of any Kubernetes cluster is etcd, a strongly consistent distributed key-value store that implements the Raft consensus algorithm. Every piece of cluster state lives in etcd: node registrations, pod specifications, service definitions, secrets, and ConfigMaps. Because all control plane components are stateless and derive their view of the world from etcd, the health and integrity of the etcd cluster directly determines the health and integrity of the entire Kubernetes cluster. Understanding how to size an etcd cluster for quorum, how to back it up and restore it, and how to compact and defragment its data is essential operational knowledge.
+
+The kube-apiserver is the only component that communicates directly with etcd. Every other component, whether it is the scheduler, the controller manager, or a kubelet on a worker node, reads and writes cluster state exclusively through the API server's REST endpoints. The API server enforces a multi-stage request pipeline consisting of authentication, authorization, and admission control before any write reaches etcd. This architecture means that a well-configured API server with RBAC and admission controllers provides a comprehensive security boundary around the cluster's persistent state.
+
+The scheduler and controller manager are both consumers of the API server's watch mechanism. Rather than polling for changes, they establish long-lived HTTP connections to the API server and receive streaming notifications when resources they care about change. This event-driven model means that the scheduler reacts to new unscheduled pods within milliseconds of their creation, and controllers converge cluster state toward the desired state with minimal latency. The scheduler's algorithm is organized into two phases: filters that eliminate nodes which cannot host the pod, and scores that rank the remaining nodes to find the best placement.
+
+The kubelet is the agent that actually runs workloads. It bridges the abstract pod specification world of the control plane with the concrete container runtime world of the worker node. The kubelet translates a PodSpec into a series of calls to the container runtime interface, the container network interface, and the container storage interface. Each of these interfaces is a well-defined gRPC API that allows the kubelet to work with any conformant runtime, network plugin, or storage driver. The kubelet also continuously monitors running containers and updates pod status in the API server so that controllers and users always have an accurate view of what is actually running.
+
+kube-proxy handles the network translation that makes Kubernetes Services work. When a client sends a packet to a Service's ClusterIP, kube-proxy has already programmed the kernel's networking layer to translate that virtual IP to one of the pod IPs behind the service. In iptables mode this is done through chains of DNAT rules, and in IPVS mode it is done through the kernel's IP Virtual Server module which provides more efficient load balancing at scale. Understanding the difference between these two modes, and knowing when IPVS is preferable, is important for operating large clusters where iptables rule counts become a performance bottleneck.`,
+  whenToUse: [
+    `When preparing for a senior platform engineer or SRE interview where interviewers ask about internal Kubernetes mechanics rather than surface-level kubectl usage`,
+    `When debugging a cluster that will not start after a certificate rotation or etcd failure and you need to understand which component depends on which certificate`,
+    `When designing a high-availability control plane and you need to reason about etcd quorum requirements and API server load balancing`,
+    `When evaluating whether iptables or IPVS mode is appropriate for a cluster based on the number of Services and performance requirements`,
+    `When onboarding to a bare-metal Kubernetes deployment where no managed control plane exists and every component must be configured explicitly`,
+    `When writing a custom scheduler plugin or admission webhook and you need to understand how the scheduler framework and admission chain are structured`,
+    `When performing a security audit and you need to trace exactly which certificates authenticate which components and what RBAC permissions each control plane identity holds`,
+  ],
+  keyConcepts: [
+    {
+      term: `etcd Raft Consensus and Quorum`,
+      definition: `etcd uses the Raft distributed consensus algorithm to ensure that all members of the cluster agree on the same state. Raft elects a single leader node that accepts all writes and replicates them to followers. A write is committed only after a majority quorum of nodes acknowledges it. For a cluster of N members, quorum requires floor(N/2)+1 nodes to be healthy. A 3-member cluster tolerates 1 failure, and a 5-member cluster tolerates 2 failures.
+
+When bootstrapping etcd for Kubernetes the Hard Way, you generate a unique set of TLS certificates for each member and for clients such as the API server. The initial cluster string tells each member how to find the others.
+
+\`\`\`bash
+etcd \\
+  --name controller-0 \\
+  --cert-file=/etc/etcd/kubernetes.pem \\
+  --key-file=/etc/etcd/kubernetes-key.pem \\
+  --peer-cert-file=/etc/etcd/kubernetes.pem \\
+  --peer-key-file=/etc/etcd/kubernetes-key.pem \\
+  --trusted-ca-file=/etc/etcd/ca.pem \\
+  --peer-trusted-ca-file=/etc/etcd/ca.pem \\
+  --peer-client-cert-auth \\
+  --client-cert-auth \\
+  --initial-advertise-peer-urls https://\${INTERNAL_IP}:2380 \\
+  --listen-peer-urls https://\${INTERNAL_IP}:2380 \\
+  --listen-client-urls https://\${INTERNAL_IP}:2379,https://127.0.0.1:2379 \\
+  --advertise-client-urls https://\${INTERNAL_IP}:2379 \\
+  --initial-cluster-token etcd-cluster-0 \\
+  --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380 \\
+  --initial-cluster-state new \\
+  --data-dir=/var/lib/etcd
+\`\`\`
+
+Compaction removes old revisions so that disk usage does not grow unboundedly. Defragmentation reclaims the freed space on disk. Both operations should be automated in production.
+
+\`\`\`bash
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \\
+  --cacert=/etc/etcd/ca.pem \\
+  --cert=/etc/etcd/kubernetes.pem \\
+  --key=/etc/etcd/kubernetes-key.pem \\
+  compact \$(etcdctl endpoint status --write-out="json" | jq -r '.[0].Status.header.revision')
+
+ETCDCTL_API=3 etcdctl defrag --endpoints=https://127.0.0.1:2379 \\
+  --cacert=/etc/etcd/ca.pem \\
+  --cert=/etc/etcd/kubernetes.pem \\
+  --key=/etc/etcd/kubernetes-key.pem
+\`\`\``,
+    },
+    {
+      term: `kube-apiserver Authentication and Authorization Chain`,
+      definition: `Every request to the kube-apiserver passes through a pipeline before touching etcd. The first stage is authentication, where the server tries each enabled authenticator in order. The most common authenticators are x509 client certificate authentication, bearer token authentication, and webhook token authentication. When an authenticator succeeds it attaches a user identity consisting of a username, UID, and groups to the request context.
+
+The second stage is authorization. Kubernetes supports multiple authorization modes including RBAC, ABAC, Node, and Webhook. RBAC is the standard choice. The server checks whether the authenticated identity has a RoleBinding or ClusterRoleBinding that grants the requested verb on the requested resource. If no authorizer approves the request, it is rejected with 403.
+
+\`\`\`bash
+kube-apiserver \\
+  --authorization-mode=Node,RBAC \\
+  --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,\\
+ServiceAccount,DefaultStorageClass,ResourceQuota,MutatingAdmissionWebhook,\\
+ValidatingAdmissionWebhook \\
+  --client-ca-file=/var/lib/kubernetes/ca.pem \\
+  --tls-cert-file=/var/lib/kubernetes/kubernetes.pem \\
+  --tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem \\
+  --etcd-cafile=/var/lib/kubernetes/ca.pem \\
+  --etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\
+  --etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \\
+  --etcd-servers=https://10.240.0.10:2379,https://10.240.0.11:2379
+\`\`\`
+
+After authorization, admission controllers run. Mutating controllers run first and may modify the object. Validating controllers run second and may only approve or reject. Built-in controllers like LimitRanger add default resource requests, ServiceAccount injects a service account token, and NodeRestriction prevents kubelets from modifying objects outside their own node scope. Custom webhooks registered as MutatingWebhookConfiguration or ValidatingWebhookConfiguration plug into the same pipeline.`,
+    },
+    {
+      term: `Scheduler Filter Predicates and Score Priorities`,
+      definition: `The kube-scheduler selects a node for every unscheduled pod through a two-phase algorithm. The filter phase eliminates nodes that cannot satisfy the pod's requirements. The score phase ranks the surviving nodes and selects the winner. This design keeps the algorithm extensible because both phases are composed of independently registered plugins.
+
+Common filter plugins include NodeResourcesFit, which checks that the node has sufficient CPU and memory for the pod's requests; NodeAffinity, which enforces required node selector terms; TaintToleration, which rejects nodes whose taints the pod does not tolerate; and PodTopologySpread, which enforces topology spread constraints.
+
+Common score plugins include NodeResourcesBalancedAllocation, which prefers nodes where resources are used more evenly; InterPodAffinity, which scores nodes higher if they already host pods that this pod wants affinity with; and ImageLocality, which gives a bonus to nodes that already have the pod's container images pulled.
+
+\`\`\`yaml
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+  - schedulerName: default-scheduler
+    plugins:
+      filter:
+        enabled:
+          - name: NodeResourcesFit
+          - name: NodeAffinity
+          - name: TaintToleration
+          - name: PodTopologySpread
+      score:
+        enabled:
+          - name: NodeResourcesBalancedAllocation
+            weight: 1
+          - name: InterPodAffinity
+            weight: 2
+          - name: ImageLocality
+            weight: 1
+\`\`\`
+
+Custom scheduler plugins implement the Plugin interface and register with the framework by returning themselves from a factory function registered with the out-of-tree scheduler. This allows operators to add domain-specific scheduling logic without forking the scheduler binary.`,
+    },
+    {
+      term: `TLS Bootstrapping and kubeconfig Anatomy`,
+      definition: `Every component in a Kubernetes cluster authenticates to the API server using TLS certificates signed by the cluster's certificate authority. In a from-scratch deployment you generate a CA, then use it to sign certificates for each component. The common name in the certificate determines the username the API server sees, and the organization field maps to Kubernetes groups.
+
+\`\`\`bash
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+cat > kube-controller-manager-csr.json <<EOF
+{
+  "CN": "system:kube-controller-manager",
+  "key": { "algo": "rsa", "size": 2048 },
+  "names": [{ "O": "system:kube-controller-manager" }]
+}
+EOF
+
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem \\
+  -config=ca-config.json -profile=kubernetes \\
+  kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager
+\`\`\`
+
+A kubeconfig file encodes three pieces of information: how to reach the cluster, which identity to present, and which context links them together. Each component has its own kubeconfig that points to the API server's load-balanced address and includes its signed certificate and key.
+
+\`\`\`bash
+kubectl config set-cluster kubernetes-the-hard-way \\
+  --certificate-authority=ca.pem \\
+  --embed-certs=true \\
+  --server=https://\${KUBERNETES_PUBLIC_ADDRESS}:6443 \\
+  --kubeconfig=kube-controller-manager.kubeconfig
+
+kubectl config set-credentials system:kube-controller-manager \\
+  --client-certificate=kube-controller-manager.pem \\
+  --client-key=kube-controller-manager-key.pem \\
+  --embed-certs=true \\
+  --kubeconfig=kube-controller-manager.kubeconfig
+
+kubectl config set-context default \\
+  --cluster=kubernetes-the-hard-way \\
+  --user=system:kube-controller-manager \\
+  --kubeconfig=kube-controller-manager.kubeconfig
+
+kubectl config use-context default \\
+  --kubeconfig=kube-controller-manager.kubeconfig
+\`\`\`
+
+Kubelet certificates use the Node authorization mode, where the username must be system:node:NODENAME and the group must be system:nodes. The NodeRestriction admission plugin then limits each kubelet to only reading and writing objects related to its own node and the pods assigned to it.`,
+    },
+    {
+      term: `kubelet Sync Loop and CRI/CNI/CSI Integration`,
+      definition: `The kubelet's primary job is to reconcile the desired pod state delivered by the API server with the actual state of containers running on the node. It runs a continuous sync loop that compares the list of pods that should be running with the list of containers that are actually running and takes action to close any gap.
+
+When the kubelet decides a pod needs to start, it calls the container runtime through the CRI gRPC interface. The CRI defines two services: RuntimeService for pod and container lifecycle operations and ImageService for image management. The kubelet first calls RunPodSandbox to create the pod's network namespace and pause container, then calls CreateContainer and StartContainer for each container in the spec.
+
+\`\`\`bash
+kubelet \\
+  --config=/var/lib/kubelet/kubelet-config.yaml \\
+  --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \\
+  --kubeconfig=/var/lib/kubelet/kubeconfig \\
+  --register-node=true \\
+  --v=2
+\`\`\`
+
+After the sandbox is created, the kubelet invokes the CNI plugin to configure networking for the pod's network namespace. The CNI plugin assigns an IP address, sets up routing, and potentially connects the namespace to an overlay network. The kubelet passes the pod's namespace path to the plugin and receives back the assigned IP address, which it then reports in the pod status.
+
+For storage, the kubelet calls the CSI driver to attach volumes to the node and mount them into the pod's filesystem. The kubelet coordinates with the attachdetach controller in kube-controller-manager, which is responsible for attaching volumes to nodes, while the kubelet itself is responsible for mounting attached volumes into pod containers.
+
+The kubelet also runs liveness, readiness, and startup probes. Liveness probe failures cause the kubelet to restart the container. Readiness probe failures cause the kubelet to remove the pod's IP from endpoint slices. Startup probe failures prevent liveness and readiness probes from running until the container has had time to initialize.`,
+    },
+    {
+      term: `kube-proxy iptables vs IPVS Mode`,
+      definition: `kube-proxy is responsible for implementing Kubernetes Services by programming the node's kernel networking layer. When a Service is created, the API server allocates a ClusterIP from the service CIDR. kube-proxy watches Service and EndpointSlice objects and translates them into kernel networking rules so that packets destined for the ClusterIP are forwarded to one of the healthy pod IPs.
+
+In iptables mode, kube-proxy creates chains in the NAT table. For each Service there is a KUBE-SVC chain. For each endpoint there is a KUBE-SEP chain that performs DNAT to the pod IP. The KUBE-SVC chain uses statistic match rules to distribute traffic randomly across the KUBE-SEP chains.
+
+\`\`\`bash
+iptables -t nat -L KUBE-SERVICES | grep my-service
+iptables -t nat -L KUBE-SVC-XXXXXXXXXXXX
+iptables -t nat -L KUBE-SEP-XXXXXXXXXXXX
+\`\`\`
+
+In IPVS mode, kube-proxy creates virtual servers in the kernel's IPVS subsystem. Each Service ClusterIP becomes an IPVS virtual server and each endpoint becomes a real server entry. IPVS maintains connection state in a hash table, which scales much better than iptables as the number of Services grows because iptables rules are evaluated linearly while IPVS lookups are O(1).
+
+\`\`\`bash
+ipvsadm -ln
+ipvsadm -ln --stats
+\`\`\`
+
+kube-proxy also writes iptables rules in IPVS mode to handle hairpin traffic and masquerading, so both subsystems are active simultaneously in IPVS mode. IPVS mode also supports additional load balancing algorithms beyond round-robin, including least connection and shortest expected delay.
+
+For clusters with fewer than a few hundred Services, the performance difference between the two modes is negligible. Beyond that scale, IPVS mode is strongly preferred because iptables rule processing time grows linearly with the number of rules while IPVS lookup time remains constant.`,
+    },
+    {
+      term: `etcd Backup and Restore Procedure`,
+      definition: `etcd backup is one of the most critical operational procedures in a Kubernetes cluster. Because etcd holds all cluster state, a successful restore from backup is the recovery path after a catastrophic control plane failure. The standard tool for backups is etcdctl snapshot save, which takes a consistent point-in-time snapshot of the data directory.
+
+\`\`\`bash
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot-\$(date +%Y%m%dT%H%M%S).db \\
+  --endpoints=https://127.0.0.1:2379 \\
+  --cacert=/etc/etcd/ca.pem \\
+  --cert=/etc/etcd/kubernetes.pem \\
+  --key=/etc/etcd/kubernetes-key.pem
+
+ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot-latest.db \\
+  --write-out=table
+\`\`\`
+
+To restore, stop all API servers first because they cache state and writing new state while a restore is in progress causes inconsistency. Then restore each etcd member from the same snapshot using a unique data directory and unique member name per node. The --skip-hash-check flag is useful when restoring from a snapshot that was taken on a different cluster.
+
+\`\`\`bash
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot-latest.db \\
+  --name controller-0 \\
+  --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380 \\
+  --initial-cluster-token etcd-cluster-restore-1 \\
+  --initial-advertise-peer-urls https://10.240.0.10:2380 \\
+  --data-dir=/var/lib/etcd-restored
+
+mv /var/lib/etcd /var/lib/etcd-old
+mv /var/lib/etcd-restored /var/lib/etcd
+systemctl restart etcd
+systemctl restart kube-apiserver
+\`\`\`
+
+Backups should be automated to run at least every 30 minutes in production and stored in object storage outside the cluster. The backup retention policy should account for recovery time objective requirements.`,
+    },
+  ],
+  approach: [
+    `Generate all certificates from a single root CA before starting any components, and store the CA key in a hardware security module or at minimum in an encrypted volume that is not mounted during normal operation`,
+    `Bootstrap etcd as a 3 or 5 member cluster from the beginning rather than starting single-node and expanding, because changing cluster membership requires careful coordination and the initial-cluster-state flag cannot be reused after the cluster is formed`,
+    `Run the kube-apiserver behind a load balancer even in development so that kubeconfigs point to the load balancer address, which means adding more API server replicas later requires no certificate regeneration`,
+    `Enable RBAC and the NodeRestriction admission plugin together so that each kubelet can only read and modify objects pertaining to its own node, limiting the blast radius of a compromised node`,
+    `Configure etcd compaction and defragmentation as periodic jobs rather than manual operations, using a dedicated service account with minimal permissions to run etcdctl commands`,
+    `Use EndpointSlices rather than Endpoints throughout the cluster and configure kube-proxy in IPVS mode for any cluster expected to grow beyond one hundred Services, because both choices improve control plane scalability`,
+    `Rotate certificates before they expire by automating renewal at 80 percent of the certificate lifetime, and test the renewal procedure in a non-production cluster to verify that each component correctly picks up renewed certificates without a restart`,
+    `Store kubeconfig files with 0600 permissions and ensure they are not included in any configuration management system that stores secrets in plaintext, preferring sealed secrets or a secrets manager integration instead`,
+  ],
+  pitfalls: [
+    `Generating certificates with incorrect Subject Alternative Names is the most common bootstrapping mistake: the API server certificate must include every IP address and hostname through which the server will be reached, including the load balancer IP, each server's internal IP, and the kubernetes.default.svc cluster DNS name`,
+    `Starting all etcd members simultaneously without setting initial-cluster-state to new causes each member to attempt to join an already-initialized cluster that does not exist yet, resulting in cryptic peer communication errors that are hard to diagnose`,
+    `Forgetting to enable the Node authorization mode alongside RBAC means that kubelets authenticate as system:nodes members but are authorized through RBAC rules that may be too permissive, defeating the purpose of the NodeRestriction admission plugin`,
+    `Running etcd on nodes that share storage with other I/O-intensive workloads causes write latency spikes that can cause the Raft leader to step down, leading to brief control plane unavailability during periods of high disk activity`,
+    `Using iptables mode in a cluster with more than a few hundred Services causes kube-proxy to spend increasing amounts of time regenerating and applying iptables rules, which can cause brief drops in network programming coverage during rule updates`,
+    `Not configuring a Service account signing key separate from the API server TLS key means that rotating the API server certificate also invalidates all existing service account tokens, causing all pods that use mounted service account tokens to lose API access simultaneously`,
+    `Omitting the --pod-cidr flag from the kubelet and controller-manager configuration means that pod network addresses are not allocated per-node, so CNI plugins that depend on per-node CIDR allocation will fail to assign IP addresses to new pods`,
+    `Deploying the controller manager without a leader election flag in a multi-master setup causes duplicate controller instances to both act as leader, creating conflicting reconciliation actions that can cause resource count oscillation and unnecessary churn in the cluster`,
+  ],
+  keyQuestions: [
+    {
+      question: `How do you recover a Kubernetes cluster after losing quorum in the etcd cluster?`,
+      answer: `Losing quorum means the etcd cluster can no longer commit writes, so the API server becomes read-only and eventually stops serving requests as its watch connections are terminated. The recovery procedure depends on how many members remain healthy and whether you have a recent snapshot backup.
+
+If you still have at least one healthy etcd member with intact data, you can force a new cluster from that member. This is the most dangerous procedure in Kubernetes operations because it discards the state of the unreachable members permanently.
+
+First, stop all API servers to prevent any new writes or watch connections from interfering.
+
+\`\`\`bash
+systemctl stop kube-apiserver
+\`\`\`
+
+Then on the surviving etcd member, edit the etcd configuration or unit file to add the --force-new-cluster flag and restart it. This causes the single member to elect itself leader and form a new single-member cluster.
+
+\`\`\`bash
+etcd --force-new-cluster --data-dir=/var/lib/etcd
+\`\`\`
+
+Verify the new cluster is healthy and contains the expected data, then remove the failed members from the cluster membership and add new replacement members one at a time. Start API servers only after the etcd cluster has re-established quorum with the desired number of members.
+
+If no members retain intact data but you have a snapshot backup, you must restore every member from the same snapshot. Stop all API servers and all etcd members, then run etcdctl snapshot restore on each machine using a unique initial-cluster-token to prevent the restored cluster from accidentally communicating with any existing cluster fragments.
+
+\`\`\`bash
+ETCDCTL_API=3 etcdctl snapshot restore /backup/latest.db \\
+  --name controller-0 \\
+  --initial-cluster controller-0=https://10.240.0.10:2380,controller-1=https://10.240.0.11:2380,controller-2=https://10.240.0.12:2380 \\
+  --initial-cluster-token etcd-restore-\$(date +%s) \\
+  --initial-advertise-peer-urls https://10.240.0.10:2380 \\
+  --data-dir=/var/lib/etcd-restored
+\`\`\`
+
+Run this same command with different name and advertise-peer-urls on each controller node, then replace the data directory and restart etcd on all nodes before restarting the API servers. All state that was written after the backup snapshot was taken will be permanently lost, which is why frequent automated backups are essential.`,
+    },
+    {
+      question: `Walk through the complete path from kubectl apply to a running pod, naming every component and every API call involved.`,
+      answer: `The journey starts when kubectl reads the manifest file and the kubeconfig. The kubeconfig provides the API server address, the client certificate and key for the current user context, and the cluster CA certificate to verify the server. kubectl serializes the manifest and sends an HTTP PATCH or POST request to the API server, using server-side apply if the --server-side flag is present.
+
+The API server receives the request and authenticates it. For a user with a client certificate, the server verifies the certificate signature against the cluster CA and extracts the CN as the username and the O field as groups. It then runs the RBAC authorization check to confirm the user has the create or patch verb on the pods resource in the target namespace.
+
+\`\`\`bash
+kubectl apply -f pod.yaml --v=8
+\`\`\`
+
+The --v=8 flag shows every HTTP request and response, which is the best way to observe this pipeline directly. After authorization, admission controllers run. LimitRanger may add default CPU and memory requests. ServiceAccount adds the default service account token volume. MutatingAdmissionWebhook calls any registered webhooks. ValidatingAdmissionWebhook calls validating webhooks. If all pass, the API server writes the pod object to etcd and returns 201 Created to kubectl.
+
+etcd commits the write and notifies the API server's internal watch dispatcher. The scheduler, which holds an open watch on pods where spec.nodeName is empty, receives a watch event for the new pod. The scheduler places the pod in its internal queue and eventually dequeues it for scheduling.
+
+The scheduler runs filter plugins against every node in its cached node list. Nodes that fail any filter such as NodeResourcesFit or TaintToleration are eliminated. The scheduler then runs score plugins against the remaining feasible nodes and sums the weighted scores. The highest-scoring node wins.
+
+The scheduler writes a Binding object to the API server with the pod name and the chosen node name. The API server updates the pod's spec.nodeName field in etcd.
+
+The kubelet on the winning node, which holds an open watch on pods where spec.nodeName equals its own node name, receives the watch event. The kubelet's sync loop processes the pod. It calls the CRI plugin with RunPodSandbox to create the pause container and network namespace. It then calls the CNI plugin to assign an IP address to the namespace. It calls CreateContainer and StartContainer for each app container. Finally it calls the CSI driver if the pod has persistent volume claims.
+
+Once all containers pass their startup probes and the liveness probe grace period, the kubelet writes a Running pod status update to the API server. The endpoint controller in the controller manager picks up the updated pod status and adds the pod IP to the EndpointSlice for any Service that selects this pod. kube-proxy on all nodes receives the EndpointSlice update and programs iptables or IPVS rules so that Service traffic can reach the new pod.`,
+    },
+    {
+      question: `What is the difference between scheduler filter predicates and score priorities, and how do you write a custom plugin?`,
+      answer: `Filter predicates and score priorities are the two phases of the Kubernetes scheduler's node selection algorithm. They serve different purposes and run at different points in the scheduling cycle.
+
+Filter predicates run first and produce a binary outcome for each node: either the node is feasible for the pod or it is not. A node that fails any single filter is eliminated from consideration. There is no partial credit in the filter phase. Common examples are NodeResourcesFit, which checks CPU and memory availability; NodeAffinity, which evaluates required node selector expressions; TaintToleration, which checks that the pod tolerates every taint on the node; and VolumeBinding, which verifies that the required persistent volumes can be attached to the node.
+
+Score priorities run after filtering and assign a numeric score to each feasible node. Each score plugin returns a value between 0 and 100 for each node. Each plugin has a weight, and the scheduler computes a final score by summing the weighted scores from all plugins. The node with the highest total score wins. If there is a tie, the scheduler breaks it randomly.
+
+To write a custom plugin using the scheduler framework, you implement one or more plugin interfaces. Each extension point has its own interface: FilterPlugin, ScorePlugin, PreFilterPlugin, PostFilterPlugin, ReservePlugin, and so on.
+
+\`\`\`go
+package customplugin
+
+import (
+  "context"
+  "k8s.io/kubernetes/pkg/scheduler/framework"
+  v1 "k8s.io/api/core/v1"
+)
+
+type CustomScorer struct{}
+
+const Name = "CustomScorer"
+
+func (cs *CustomScorer) Name() string { return Name }
+
+func (cs *CustomScorer) Score(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeName string) (int64, *framework.Status) {
+  // return a score between 0 and framework.MaxNodeScore
+  return 50, nil
+}
+
+func (cs *CustomScorer) ScoreExtensions() framework.ScoreExtensions { return nil }
+
+func New(_ runtime.Object, h framework.Handle) (framework.Plugin, error) {
+  return &CustomScorer{}, nil
+}
+\`\`\`
+
+Register the plugin with the scheduler's registry and reference it by name in the KubeSchedulerConfiguration profiles section with a weight. You can run the custom scheduler as a second scheduler alongside the default one and assign pods to it by setting schedulerName in the pod spec.`,
+    },
+    {
+      question: `Describe the kubelet reconciliation loop in detail. What happens when the desired state diverges from actual state?`,
+      answer: `The kubelet's reconciliation loop is the mechanism that keeps the actual state of containers on a node aligned with the desired state expressed in pod specifications. The loop runs continuously, roughly every sync period which defaults to 10 seconds, plus it reacts to watch events from the API server for immediate response to changes.
+
+At each iteration of the loop, the kubelet computes the desired state by merging pods from three sources: the API server watch, static pod manifests from a local directory, and optionally an HTTP endpoint. The kubelet then queries the container runtime via CRI to list all currently running containers and maps them back to their pod sandbox. This produces a set of observed pods and a set of desired pods.
+
+The reconciler computes the difference between desired and observed and dispatches work items. If a pod is in desired but not in observed, the kubelet starts it. If a pod is in observed but not in desired and its deletion timestamp has passed, the kubelet terminates it. If a pod exists in both but its containers have drifted from the spec, for example a container has exited and its restart policy is Always, the kubelet restarts it.
+
+\`\`\`bash
+journalctl -u kubelet -f | grep -i sync
+\`\`\`
+
+For a new pod, the kubelet goes through a well-defined start sequence. It calls RunPodSandbox to create the pause container that holds the network namespace. It then calls SetupPod on the CNI plugin, passing the network namespace path. The CNI plugin assigns an IP and sets up routing. The kubelet then calls CreateContainer and StartContainer for init containers in order, waiting for each to complete successfully before proceeding. Finally it calls CreateContainer and StartContainer for all app containers.
+
+During the pod's lifetime, the kubelet runs probes on a per-container goroutine. If a liveness probe fails consecutively more than failureThreshold times, the kubelet calls StopContainer followed by StartContainer. If a readiness probe fails, the kubelet updates the pod condition in the API server, which causes the endpoint controller to remove the pod's IP from EndpointSlices so that Service traffic stops reaching it. If a startup probe fails, the liveness and readiness probes do not run until it succeeds.
+
+When a pod is deleted, the API server sets the pod's deletionTimestamp. The kubelet sees this in its watch and begins the termination sequence: it calls the prestop hooks, then sends SIGTERM to containers, waits for the terminationGracePeriodSeconds, and finally sends SIGKILL. It then calls RemoveContainer and TeardownPod on the CNI plugin. Once all containers are gone and the network is torn down, the kubelet removes the pod's finalizer, allowing the API server to garbage collect the pod object.`,
+    },
+    {
+      question: `Compare kube-proxy iptables mode and IPVS mode. When does the performance difference matter and how do you switch between them?`,
+      answer: `kube-proxy in iptables mode programs the kernel's netfilter subsystem to intercept packets destined for Service ClusterIPs and DNAT them to a randomly selected pod IP. Each Service gets a KUBE-SVC chain and each endpoint gets a KUBE-SEP chain. The KUBE-SVC chain uses iptables statistics match rules to implement probabilistic load balancing across the endpoint chains.
+
+The fundamental performance problem with iptables mode is that netfilter rule evaluation is linear. When a packet arrives, the kernel walks the rules in order until it finds a match. With hundreds of Services and thousands of endpoints, this means each packet traverses thousands of rules before being matched. Rule installation is also slow because kube-proxy must dump the entire iptables ruleset, modify it, and restore it atomically using iptables-restore. This operation takes longer as the ruleset grows and causes brief periods where programming is incomplete.
+
+\`\`\`bash
+iptables -t nat -L | wc -l
+time iptables-save | wc -l
+\`\`\`
+
+IPVS mode uses the Linux kernel's IP Virtual Server subsystem, which was designed specifically for high-performance load balancing. IPVS maintains virtual server and real server entries in a hash table. Packet matching is O(1) regardless of the number of Services because hash lookups do not grow linearly. kube-proxy also does not need to dump and restore the entire ruleset when adding a new endpoint; it can add a single real server entry to the existing virtual server atomically.
+
+\`\`\`bash
+ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port Forward Weight ActiveConn InActConn
+TCP  10.96.0.1:443 rr
+  -> 10.240.0.10:6443 Masq 1 5 0
+  -> 10.240.0.11:6443 Masq 1 3 0
+\`\`\`
+
+IPVS mode also supports richer load balancing algorithms including round-robin, least connection, shortest expected delay, never queue, and source hash, whereas iptables mode only supports random selection weighted by endpoint count.
+
+To switch kube-proxy from iptables to IPVS mode, ensure the ip_vs, ip_vs_rr, ip_vs_wrr, ip_vs_sh, and nf_conntrack kernel modules are loaded on every node, then update the kube-proxy ConfigMap and restart kube-proxy. kube-proxy will flush existing iptables rules and install IPVS virtual servers.
+
+\`\`\`bash
+modprobe ip_vs ip_vs_rr ip_vs_wrr ip_vs_sh nf_conntrack
+
+kubectl edit configmap kube-proxy -n kube-system
+# set mode: "ipvs" under data.config.conf
+
+kubectl rollout restart daemonset/kube-proxy -n kube-system
+ipvsadm -ln
+\`\`\`
+
+For clusters with fewer than roughly 500 Services the difference in practice is rarely observable. Beyond that scale, especially in high-traffic production clusters, IPVS mode meaningfully reduces CPU overhead on each node and eliminates the brief programming gaps that iptables mode introduces during updates.`,
+    },
+  ],
+  references: [
+    'https://github.com/kelseyhightower/kubernetes-the-hard-way',
+    'https://kubernetes.io/docs/concepts/overview/components/',
+    'https://etcd.io/docs/v3.5/op-guide/clustering/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/',
+    'https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/',
+    'https://kubernetes.io/docs/concepts/architecture/nodes/',
+    'https://kubernetes.io/docs/reference/access-authn-authz/rbac/',
+    'https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/',
+    'https://kubernetes.io/docs/concepts/services-networking/service/',
+    'https://kubernetes.io/docs/concepts/storage/volumes/#csi',
+    'https://github.com/kubernetes/design-proposals-archive/blob/main/network/kube-proxy-ipvs.md',
+    'https://kubernetes.io/docs/concepts/cluster-administration/certificates/',
+  ],
+},
+
+{
+  id: 'kubernetes-storage',
+  title: 'Kubernetes Storage',
+  icon: 'database',
+  color: '#0891b2',
+  questions: 5,
+  description: `Kubernetes Storage covers the full lifecycle of persistent volumes, storage classes, and CSI drivers that allow stateful workloads to survive pod restarts and rescheduling. Understanding PV binding, dynamic provisioning, access modes, and snapshot workflows is essential for running databases and other stateful applications reliably in Kubernetes.`,
+  visualizations: [
+    {
+      title: `Kubernetes Storage Architecture`,
+      description: `The Kubernetes storage architecture is built around three primary API objects that interact to provide durable storage to pods. A PersistentVolume (PV) represents a piece of storage in the cluster, provisioned either by an administrator (static) or automatically by a StorageClass controller (dynamic). A PersistentVolumeClaim (PVC) is a user request for storage that specifies the desired size, access mode, and optionally a StorageClass. The control plane watches for unbound PVCs and runs a binding loop to match them against available PVs based on capacity, access mode, and label selectors.
+
+When dynamic provisioning is in play, the PVC references a StorageClass by name. The StorageClass encodes which CSI provisioner to call, the reclaimPolicy, the volumeBindingMode, and any driver-specific parameters. The provisioner contacts the underlying infrastructure (a cloud block store, NFS filer, or distributed storage system) and creates the physical volume, then creates the PV object in Kubernetes and binds it to the waiting PVC. The pod mounts the PVC as a volume and the kubelet on the target node calls the CSI node plugin to stage and publish the volume.
+
+The CSI (Container Storage Interface) layer sits between Kubernetes and storage backends. On the controller side, external sidecar containers such as external-provisioner, external-attacher, and external-resizer watch Kubernetes API objects and translate state changes into gRPC calls against the CSI controller plugin. On the node side, the node-driver-registrar registers the CSI node plugin with the kubelet, and the liveness-probe sidecar monitors plugin health. This split design keeps storage driver code entirely out of the Kubernetes core.`,
+      image: `/diagrams/devops/kubernetes-storage-arch.png`,
+    },
+    {
+      title: `PVC Lifecycle and VolumeSnapshot Restore Flow`,
+      description: `A PVC moves through a well-defined set of phases during its lifetime. When created, it starts in Pending. The controller binding loop or dynamic provisioner then binds it to a PV, transitioning both objects to Bound. A pod that mounts the PVC causes the kubelet to call the CSI node plugin to NodeStageVolume and NodePublishVolume, making the storage visible inside the container. When the pod is deleted, NodeUnpublishVolume and NodeUnstageVolume run. When the PVC itself is deleted, the PV enters Released, and then its fate depends on the reclaimPolicy: Delete removes the backing storage, Retain keeps it for manual recovery, and Recycle (deprecated) ran rm -rf on the volume.
+
+The VolumeSnapshot system adds a separate API layer for point-in-time copies. A VolumeSnapshotClass names the CSI driver and policies for creating snapshots. When a user creates a VolumeSnapshot pointing to a source PVC, the snapshot controller calls CreateSnapshot on the CSI driver. A VolumeSnapshotContent object is created representing the actual snapshot in the backend. To restore, the user creates a new PVC with a dataSource field that references the VolumeSnapshot. The CSI provisioner calls CreateVolume with a snapshot source parameter, and the backend clones the snapshot data into the new volume. The new PVC proceeds through normal binding and can then be mounted by a pod, giving a full restore path without manual backup tooling.
+
+StatefulSets use volumeClaimTemplates to give each pod replica its own stable PVC. When a StatefulSet scales up, each new pod gets a PVC created from the template with the pod ordinal in the name, such as data-mydb-0, data-mydb-1, and so on. These PVCs are not deleted when the StatefulSet scales down or when the pod is rescheduled, preserving data across restarts.`,
+      image: `/diagrams/devops/kubernetes-storage-flow.png`,
+    },
+  ],
+  introduction: `Kubernetes was originally designed for stateless workloads, but real production systems require durable storage for databases, message queues, file stores, and logging pipelines. The storage subsystem has matured through multiple generations, moving from in-tree volume plugins tightly coupled to cloud providers, through the out-of-tree FlexVolume mechanism, to the current Container Storage Interface standard that cleanly decouples storage vendor code from the Kubernetes release cycle.
+
+The core abstraction is the PersistentVolume and PersistentVolumeClaim pair. PVs are cluster-scoped resources representing actual storage capacity, while PVCs are namespace-scoped requests for that storage. This two-level design lets administrators configure and quota storage centrally while developers request it by capability rather than by name or location. Dynamic provisioning via StorageClass removes the need for admins to pre-create PVs and enables self-service storage at scale.
+
+Access modes control how many nodes and pods can mount a volume simultaneously. ReadWriteOnce (RWO) means the volume can be mounted as read-write by a single node, which maps to the semantics of cloud block devices like AWS EBS and GCP Persistent Disk. ReadOnlyMany (ROX) allows multiple nodes to mount read-only, useful for static content. ReadWriteMany (RWX) allows multiple nodes to mount read-write, which requires a networked file system or distributed storage backend like NFS, CephFS, or Azure Files. ReadWriteOncePod (RWOP) is the strictest mode, limiting read-write access to a single pod rather than a single node, and is enforced at the Kubernetes API layer rather than relying solely on the storage backend.
+
+StorageClass is the central knob for tuning storage behavior. The reclaimPolicy determines what happens to the PV and backing storage when a PVC is deleted. Retain is the safest choice for production databases because it prevents accidental data loss at the cost of requiring manual cleanup. Delete automates cleanup and is appropriate for ephemeral or easily-recreated data. The volumeBindingMode field controls when binding and provisioning occur. Immediate means the PV is provisioned and bound as soon as the PVC is created, which can place storage in an availability zone that has no schedulable nodes for the workload. WaitForFirstConsumer defers binding until a pod using the PVC is scheduled, allowing the scheduler to factor in node topology and zone constraints before the volume is provisioned, which is the recommended mode for most cloud block storage.
+
+The CSI driver model splits storage logic into controller components that manage cluster-wide operations like provisioning and snapshotting, and node components that mount and unmount volumes on individual nodes. A set of standardized external sidecar containers distributed by the Kubernetes SIG Storage team handle the translation between Kubernetes API events and CSI gRPC calls, so storage vendors only need to implement the gRPC interface and ship a single plugin binary. CSI migration is the ongoing project to replace all in-tree volume plugins with equivalent CSI drivers while keeping the user-facing API identical.
+
+VolumeSnapshot support, added through the snapshot.storage.k8s.io API group, brings database-style point-in-time backup and restore capabilities to any CSI driver that implements the snapshot gRPC calls. Combined with tools like Velero, VolumeSnapshots enable application-consistent backup strategies. StatefulSet volumeClaimTemplates make it straightforward to give each database replica its own dedicated storage with a predictable naming scheme, which is the foundation of most production database deployments on Kubernetes.`,
+  whenToUse: [
+    `Running a relational database such as PostgreSQL or MySQL inside Kubernetes where data must survive pod restarts and rescheduling`,
+    `Deploying a distributed stateful system such as Kafka, Elasticsearch, or Cassandra using a StatefulSet and per-pod PVCs`,
+    `Implementing a backup and restore workflow using VolumeSnapshots to create point-in-time copies of database volumes`,
+    `Using WaitForFirstConsumer to ensure cloud block volumes are provisioned in the same availability zone as the pod that will use them`,
+    `Migrating from an in-tree volume plugin to a CSI driver without changing any application manifests`,
+    `Sharing read-only reference data across many pods in different nodes using a ReadOnlyMany volume backed by NFS or a CSI driver that supports ROX`,
+    `Enforcing exclusive single-pod access to a volume beyond what RWO provides by using ReadWriteOncePod`,
+    `Expanding a volume online without downtime by enabling allowVolumeExpansion in a StorageClass and editing the PVC resource request`,
+  ],
+  keyConcepts: [
+    {
+      term: `PersistentVolume Lifecycle`,
+      definition: `A PersistentVolume goes through five phases: Available (provisioned but not yet bound), Bound (matched to a PVC), Released (the PVC was deleted but the PV has not been reclaimed), Failed (automatic reclamation failed), and implicitly Pending when dynamic provisioning is in flight. The transition from Released to the next state depends on the reclaimPolicy. With Retain, the PV stays in Released indefinitely until an administrator manually deletes the PV object and the backing storage. With Delete, the external-provisioner sidecar automatically calls DeleteVolume on the CSI driver and then deletes the PV object.
+
+Static provisioning means an administrator pre-creates the PV with a specific capacity and access mode before any PVC exists. The binding loop matches PVCs to PVs by finding a PV whose capacity is at least as large as the PVC request and whose access modes are a superset of what the PVC needs. Dynamic provisioning creates the PV on demand in response to a PVC that names a StorageClass; no pre-created PV is needed.
+
+\`\`\`yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-static-example
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-0a1b2c3d4e5f67890
+    fsType: ext4
+\`\`\`
+
+Understanding each phase is critical for debugging stuck PVCs and for designing disaster recovery procedures that do not accidentally delete production data.`,
+    },
+    {
+      term: `StorageClass Configuration`,
+      definition: `A StorageClass is the factory specification for PVs created dynamically. The provisioner field names the CSI driver that will handle CreateVolume calls. The parameters map passes driver-specific options such as disk type, IOPS tier, or encryption key. reclaimPolicy and volumeBindingMode are the two most operationally significant fields.
+
+Setting volumeBindingMode to WaitForFirstConsumer is essential when using zonal block storage in a multi-zone cluster. Without it, a PVC for a PostgreSQL pod might be provisioned in us-east-1a while the pod gets scheduled to us-east-1b, causing the pod to stay in Pending forever because the volume cannot be attached across zones.
+
+allowVolumeExpansion: true enables users to edit a PVC's storage request upward after creation. The CSI driver must implement the NodeExpandVolume and ControllerExpandVolume RPCs for online expansion to work. Most major cloud CSI drivers support this for ext4 and xfs filesystems.
+
+\`\`\`yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-encrypted
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+  kmsKeyId: arn:aws:kms:us-east-1:123456789012:key/mrk-abc123
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+\`\`\``,
+    },
+    {
+      term: `Access Modes and Volume Modes`,
+      definition: `Access modes express the concurrency contract between a volume and its mounters. ReadWriteOnce (RWO) permits read-write by one node; it is the mode supported by nearly all block storage backends and is the right choice for a single-instance database. ReadOnlyMany (ROX) allows many nodes to mount read-only; useful for content that is written once and read by many pods. ReadWriteMany (RWX) is the most demanding mode and requires a networked filesystem or distributed storage backend; NFS, CephFS, Azure Files, and AWS EFS via the efs-csi-driver all support RWX. ReadWriteOncePod (RWOP), introduced in Kubernetes 1.22 and graduated to stable in 1.29, restricts read-write access to exactly one pod even if multiple pods on the same node request it.
+
+Volume mode controls whether the volume is presented as a formatted filesystem (Filesystem, the default) or as a raw block device (Block). Raw block mode is used by storage systems like Ceph RBD that do their own internal formatting, or by databases like PostgreSQL when configured to bypass the OS filesystem cache.
+
+\`\`\`yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-raw-block
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 200Gi
+  storageClassName: gp3-encrypted
+\`\`\`
+
+A pod that uses a Block-mode PVC references the volume with a volumeDevices entry instead of volumeMounts, and the device path appears under /dev inside the container rather than a directory path.`,
+    },
+    {
+      term: `CSI Sidecar Architecture`,
+      definition: `The CSI driver for a storage backend is split into two plugin types: a controller plugin that runs as a Deployment and handles cluster-wide operations, and a node plugin that runs as a DaemonSet on every node and handles local mount operations. The Kubernetes SIG Storage team maintains a set of external sidecar containers that translate Kubernetes API events into CSI gRPC calls, so the storage vendor only ships the gRPC server binary.
+
+The external-provisioner sidecar watches for PVCs that request a matching StorageClass and calls CreateVolume on the CSI controller plugin. The external-attacher watches VolumeAttachment objects and calls ControllerPublishVolume (attach) and ControllerUnpublishVolume (detach). The external-resizer watches PVC edits and calls ControllerExpandVolume followed by NodeExpandVolume via the node plugin. The external-snapshotter manages VolumeSnapshot objects and calls CreateSnapshot and DeleteSnapshot.
+
+On the node side, the node-driver-registrar registers the CSI node plugin socket with kubelet via the kubelet plugin registration mechanism so that kubelet knows which socket to use for NodeStageVolume and NodePublishVolume calls. The liveness-probe sidecar calls the CSI Probe RPC on a timer and reports unhealthy if the plugin does not respond, enabling automatic pod restart.
+
+\`\`\`yaml
+# Partial controller Deployment showing sidecar containers
+containers:
+  - name: ebs-plugin
+    image: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver:v1.30.0
+  - name: external-provisioner
+    image: registry.k8s.io/sig-storage/csi-provisioner:v4.0.0
+    args:
+      - --csi-address=\$(ADDRESS)
+      - --v=2
+      - --feature-gates=Topology=true
+      - --leader-election=true
+  - name: external-attacher
+    image: registry.k8s.io/sig-storage/csi-attacher:v4.6.0
+  - name: external-resizer
+    image: registry.k8s.io/sig-storage/csi-resizer:v1.10.0
+  - name: external-snapshotter
+    image: registry.k8s.io/sig-storage/csi-snapshotter:v7.0.1
+\`\`\``,
+    },
+    {
+      term: `StatefulSet volumeClaimTemplates`,
+      definition: `StatefulSets use volumeClaimTemplates to automatically provision a dedicated PVC for each pod replica. The template is a PVC spec embedded in the StatefulSet spec. When the StatefulSet controller creates a pod with ordinal index N, it also creates a PVC named <template-name>-<statefulset-name>-N in the same namespace. These PVCs persist across pod deletions and rescheduling, giving each replica stable storage identity that matches its stable network identity.
+
+Critically, PVCs created by a StatefulSet are not deleted when the StatefulSet is scaled down or deleted. This is a deliberate safety decision to prevent data loss. Administrators must manually delete the PVCs when decommissioning a StatefulSet permanently.
+
+\`\`\`yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: gp3-encrypted
+        resources:
+          requests:
+            storage: 50Gi
+\`\`\`
+
+This creates PVCs named data-postgres-0, data-postgres-1, and data-postgres-2, each bound to a separate PV in a topology-aware zone.`,
+    },
+    {
+      term: `VolumeSnapshot and Restore`,
+      definition: `VolumeSnapshot support is provided through three CRDs: VolumeSnapshotClass (driver and deletion policy), VolumeSnapshotContent (the actual snapshot in the backend), and VolumeSnapshot (the user-facing request). The workflow mirrors the PV/PVC pattern. Creating a VolumeSnapshot triggers the snapshot controller to call CreateSnapshot on the CSI driver via the external-snapshotter sidecar. A VolumeSnapshotContent is created and bound to the VolumeSnapshot.
+
+Restore works by creating a new PVC with a dataSource that references the VolumeSnapshot. The CSI provisioner detects the dataSource and calls CreateVolume with a VolumeContentSource pointing to the snapshot, causing the backend to clone snapshot data into a new volume. The new PVC binds normally and can be mounted by a pod.
+
+\`\`\`yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: postgres-snap-2026-06-17
+spec:
+  volumeSnapshotClassName: csi-aws-vsc
+  source:
+    persistentVolumeClaimName: data-postgres-0
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-restore-pvc
+spec:
+  dataSource:
+    name: postgres-snap-2026-06-17
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted
+  resources:
+    requests:
+      storage: 50Gi
+\`\`\`
+
+The deletion policy on VolumeSnapshotClass controls whether deleting a VolumeSnapshot also deletes the VolumeSnapshotContent and the backend snapshot (Delete) or retains them (Retain).`,
+    },
+    {
+      term: `CSI Migration`,
+      definition: `CSI migration is the process of replacing Kubernetes in-tree volume plugins (code inside the kube-controller-manager and kubelet binaries) with external CSI drivers while keeping the existing PV, PVC, and StorageClass manifests unchanged. When CSI migration is enabled for a plugin, the in-tree code becomes a shim that translates in-tree API calls to the equivalent CSI gRPC calls directed at the installed CSI driver.
+
+Migration is controlled per-plugin via feature gates. As of Kubernetes 1.29, migrations for AWS EBS, GCE PD, Azure Disk, Azure File, Cinder, and vSphere are all enabled by default (GA). Migration can be disabled per-node with the CSIMigration<Plugin>Disable feature gate if a node does not have the CSI driver installed, giving a gradual rollout path.
+
+\`\`\`bash
+# Verify CSI migration status for EBS on a node
+kubectl get node ip-10-0-1-5.ec2.internal -o jsonpath='{.metadata.annotations}' | \
+  jq '."storage.alpha.kubernetes.io/migrated-plugins"'
+
+# A PVC originally created with the in-tree kubernetes.io/aws-ebs provisioner
+# will show driver: ebs.csi.aws.com in its PV after migration is active
+kubectl get pv <pv-name> -o jsonpath='{.spec.csi.driver}'
+\`\`\`
+
+The practical implication is that operators must install the appropriate CSI driver before enabling migration, and must ensure the driver version supports all features (snapshots, resize) that the workloads depend on.`,
+    },
+  ],
+  approach: [
+    `Always set volumeBindingMode to WaitForFirstConsumer on StorageClasses backed by zonal block storage to prevent cross-zone volume-to-pod topology mismatches that leave pods stuck in Pending`,
+    `Use reclaimPolicy Retain for production stateful workloads and set up a manual cleanup process; never use Delete on a StorageClass that backs databases unless the data is fully expendable`,
+    `Enable allowVolumeExpansion on every StorageClass from the start so that teams can grow volumes online without recreating pods or rebuilding StorageClasses later`,
+    `Give StatefulSet pods their own PVCs via volumeClaimTemplates rather than sharing a single RWX volume whenever the storage backend supports RWO; shared RWX volumes add network latency and concurrency complexity`,
+    `Pin CSI driver versions in your Helm chart or manifests and test upgrades in a staging cluster before rolling to production, as CSI driver bugs can cause data unavailability cluster-wide`,
+    `Use VolumeSnapshotClass with deletionPolicy Retain for production snapshots and implement a lifecycle policy externally (a CronJob or backup tool) to avoid accumulating unbounded snapshot costs`,
+    `Monitor PVC storage usage and set up alerts before volumes reach 80% full; Kubernetes does not automatically expand volumes, and a full volume will crash the database process`,
+    `Label PVCs and PVs with environment, team, and application metadata so that storage audits and cost attribution are possible when the cluster has hundreds of volumes`,
+  ],
+  pitfalls: [
+    `Using Immediate binding mode with zonal block storage in a multi-zone cluster causes volumes to be provisioned before the scheduler knows which node will run the pod, often landing the volume in a different zone than the pod, which makes the pod permanently unschedulable`,
+    `Deleting a StatefulSet without also deleting its PVCs leaves orphaned volumes accumulating cost; conversely, deleting PVCs before the StatefulSet is fully removed can cause data loss if a pod still holds the volume`,
+    `Setting reclaimPolicy Delete on a StorageClass used by production databases means that a developer who deletes a PVC by mistake triggers permanent deletion of the backing block volume with no recovery path`,
+    `Using ReadWriteMany with a block storage backend (EBS, GCP PD, Azure Disk) that does not support it causes all pods referencing the PVC to stay in ContainerCreating because the volume can only attach to one node`,
+    `Forgetting to install and configure the VolumeSnapshot CRDs and snapshot controller before creating VolumeSnapshotClass objects leaves VolumeSnapshot resources stuck with no reconciler to process them`,
+    `Not setting resource limits on CSI sidecar containers in production deployments allows a misbehaving sidecar to consume unbounded memory on the node running the CSI controller pod`,
+    `Assuming volume expansion is instant; for cloud block devices the ControllerExpandVolume call is fast but NodeExpandVolume (filesystem resize) happens only when a pod mounts the volume, so the PVC may show resizePending for a long time if no pod is running`,
+    `Mixing volumeMode: Block and volumeMode: Filesystem PVCs with the same CSI driver without verifying the driver supports both modes; some drivers only implement one mode and will return an error at NodeStageVolume time`,
+  ],
+  keyQuestions: [
+    {
+      question: `A PVC has been in Pending state for 10 minutes. Walk me through how you would diagnose and resolve it.`,
+      answer: `The first step is to describe the PVC and read the Events section at the bottom of the output.
+
+\`\`\`bash
+kubectl describe pvc <pvc-name> -n <namespace>
+\`\`\`
+
+The most common event messages and their meaning are: "no persistent volumes available for this claim and no storage class is set" means the PVC has no storageClassName and there is no default StorageClass; fix by adding a storageClassName or annotating a StorageClass as default. "waiting for a volume to be created, either by external provisioner or manually" in combination with volumeBindingMode WaitForFirstConsumer means no pod is currently using the PVC; as soon as a pod is scheduled, provisioning begins. "provision volume with StorageClass <name> failed" followed by a driver error means the CSI provisioner encountered an error; check the logs of the external-provisioner sidecar in the CSI controller pod.
+
+\`\`\`bash
+# Find the CSI controller pod
+kubectl get pods -n kube-system -l app=ebs-csi-controller
+
+# Read the external-provisioner sidecar logs
+kubectl logs -n kube-system ebs-csi-controller-<hash> -c external-provisioner --tail=50
+\`\`\`
+
+If the StorageClass references a provisioner that does not exist or whose driver pod is not running, the PVC will stay in Pending indefinitely with no events because no controller is watching it. Verify the provisioner name in the StorageClass matches the driver name reported by the installed CSI driver.
+
+\`\`\`bash
+kubectl get storageclasses
+kubectl get csidrivers
+\`\`\`
+
+For static provisioning, confirm the PV exists and its capacity, access mode, and storageClassName all match what the PVC requests. A capacity mismatch where the PV is smaller than the PVC request will prevent binding. A storageClassName mismatch, including one side being empty string and the other being a name, will prevent binding even if everything else matches. After fixing the root cause, the PVC will bind automatically without any manual intervention.`,
+    },
+    {
+      question: `Explain the role of each CSI sidecar container and why they are separate processes rather than part of the main driver binary.`,
+      answer: `CSI sidecars are maintained by Kubernetes SIG Storage rather than by storage vendors. Separating them from the driver binary means storage vendors do not need to reimplement Kubernetes API watch loops, leader election, or retry logic. They only ship the gRPC server that implements CSI RPCs, and the sidecars handle the translation layer. This also means sidecar upgrades (for example, picking up a fix to the external-provisioner's leader election logic) do not require a new driver release.
+
+The external-provisioner watches for PVCs that reference a matching StorageClass and whose volume binding mode does not require a pod (or where a pod has already been scheduled for WaitForFirstConsumer). It calls CreateVolume on the CSI controller plugin and then creates the PV object in Kubernetes, binding it to the PVC.
+
+The external-attacher watches VolumeAttachment objects, which kubelet creates when a pod using a CSI volume is scheduled to a node. It calls ControllerPublishVolume (attach) to make the volume available to the node, and ControllerUnpublishVolume (detach) when the pod is deleted.
+
+The external-resizer watches for PVCs where the user has increased the storage request and the PV has not yet been resized. It calls ControllerExpandVolume on the driver. The node-side resize (filesystem expansion) happens via NodeExpandVolume, which is called by kubelet directly during volume mount.
+
+The external-snapshotter watches VolumeSnapshot and VolumeSnapshotContent objects and calls CreateSnapshot and DeleteSnapshot on the CSI controller plugin. It also handles the binding between VolumeSnapshot and VolumeSnapshotContent objects.
+
+\`\`\`bash
+# Verify all sidecars are running in the CSI controller pod
+kubectl get pod -n kube-system -l app=ebs-csi-controller -o jsonpath='{.items[0].spec.containers[*].name}'
+# Expected output: ebs-plugin external-provisioner external-attacher external-resizer external-snapshotter
+\`\`\`
+
+The node-driver-registrar runs in the DaemonSet pod on each node. It calls the CSI node plugin's GetPluginInfo RPC to learn the driver name and then registers the plugin's Unix socket path with kubelet via the kubelet plugin registration directory at /var/lib/kubelet/plugins_registry. Without this registration, kubelet does not know which socket to call for NodeStageVolume.
+
+The liveness-probe sidecar calls the CSI Probe RPC periodically. If the probe fails, the liveness probe causes kubelet to restart the pod, which is the recovery mechanism for a hung CSI plugin process.`,
+    },
+    {
+      question: `When should you use WaitForFirstConsumer instead of Immediate for volumeBindingMode, and what are the tradeoffs?`,
+      answer: `WaitForFirstConsumer should be used whenever the storage backend provisions volumes in a specific topology zone or rack, and the pod consuming the volume must run in the same topology zone. The canonical example is AWS EBS, GCP Persistent Disk, and Azure Disk: these are zonal resources that can only be attached to nodes in their availability zone. With Immediate binding, the PVC is provisioned and a zone is chosen before any pod is scheduled. The scheduler then finds the pod can only run on nodes in the PV's zone, which may conflict with affinity rules, node selector constraints, resource availability, or the placement of other volumes the pod needs.
+
+\`\`\`yaml
+# StorageClass with WaitForFirstConsumer for zonal block storage
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-topology-aware
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+parameters:
+  type: gp3
+\`\`\`
+
+With WaitForFirstConsumer, the PVC stays in Pending until a pod that references it is created. When the scheduler assigns the pod to a node, it annotates the PVC with the selected zone. The external-provisioner reads that annotation and calls CreateVolume with a topology requirement pointing to the chosen zone. This guarantees the volume is in the same zone as the node.
+
+The tradeoffs are: pod startup latency increases slightly because provisioning happens after scheduling rather than in advance; if the provisioning call fails, the pod stays in ContainerCreating rather than Pending on the PVC side, which can make diagnosis less obvious; and PVCs sit in Pending indefinitely if no pod references them, which can confuse operators who create PVCs as preparation before deploying the workload.
+
+WaitForFirstConsumer is generally the right default for production clusters running on cloud block storage. Immediate is appropriate for storage backends that are not topology-constrained, such as NFS servers or distributed storage systems that can serve any node in the cluster from the same volume.`,
+    },
+    {
+      question: `Describe the full VolumeSnapshot restore workflow from snapshot creation to mounting the restored volume in a pod.`,
+      answer: `The restore workflow has three phases: creating the snapshot, creating a PVC from the snapshot, and mounting that PVC in a pod.
+
+Phase one: creating the snapshot. The operator first ensures a VolumeSnapshotClass exists that names the CSI driver and sets a deletionPolicy.
+
+\`\`\`yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: csi-aws-vsc
+driver: ebs.csi.aws.com
+deletionPolicy: Retain
+\`\`\`
+
+The user creates a VolumeSnapshot referencing the source PVC:
+
+\`\`\`yaml
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: db-snapshot-20260617
+spec:
+  volumeSnapshotClassName: csi-aws-vsc
+  source:
+    persistentVolumeClaimName: data-postgres-0
+\`\`\`
+
+The snapshot controller calls CreateSnapshot on the CSI driver. The driver creates the snapshot in the backend (for EBS, this is an EBS snapshot). The external-snapshotter creates a VolumeSnapshotContent object. When the snapshot is ready, the VolumeSnapshot status shows readyToUse: true and the snapshot handle.
+
+\`\`\`bash
+kubectl get volumesnapshot db-snapshot-20260617 -o jsonpath='{.status.readyToUse}'
+\`\`\`
+
+Phase two: creating the restore PVC. The operator creates a PVC with a dataSource pointing to the VolumeSnapshot:
+
+\`\`\`yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-restore-20260617
+spec:
+  dataSource:
+    name: db-snapshot-20260617
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-encrypted
+  resources:
+    requests:
+      storage: 50Gi
+\`\`\`
+
+The external-provisioner detects the dataSource and calls CreateVolume with a VolumeContentSource that references the snapshot. The backend clones the snapshot data into a new block volume. The PV is created and bound to the PVC.
+
+Phase three: mounting in a pod. A pod references the restore PVC in its volumes list. The kubelet calls NodeStageVolume and NodePublishVolume on the CSI node plugin, which attaches the new volume and mounts it at the container's mountPath. The pod has access to all data present at the time the snapshot was taken.`,
+    },
+    {
+      question: `What is the difference between ReadWriteOnce and ReadWriteMany, and which storage backends support each? What happens if you use the wrong one?`,
+      answer: `ReadWriteOnce (RWO) means the volume can be mounted as read-write by containers on a single node at a time. Multiple pods on the same node can share an RWO volume. ReadWriteMany (RWX) means the volume can be mounted as read-write by containers on multiple nodes simultaneously.
+
+RWO is supported by virtually all block storage backends because the underlying device (an EBS volume, a GCP Persistent Disk, an iSCSI LUN) can only be attached to one host at the OS level. The list of RWO-capable CSI drivers includes ebs.csi.aws.com, pd.csi.storage.gke.io, disk.csi.azure.com, cinder.csi.openstack.org, and vsphere.csi.vmware.com. Most local volume provisioners also only support RWO.
+
+RWX requires a storage backend that supports concurrent multi-host access. The common options are NFS (via kubernetes.io/nfs or the NFS CSI driver), CephFS (via the Rook operator or standalone CSI), Azure Files (file.csi.azure.com), AWS EFS (efs.csi.aws.com), and GCP Filestore (filestore.csi.storage.gke.io). Distributed block storage systems like Longhorn can also support RWX by implementing multi-attach at the storage layer.
+
+\`\`\`bash
+# Check what access modes a CSI driver advertises
+kubectl get csidriver efs.csi.aws.com -o jsonpath='{.spec.volumeLifecycleModes}'
+\`\`\`
+
+If you request accessModes: [ReadWriteMany] but the StorageClass's provisioner only supports RWO, the PVC will be provisioned successfully (the provisioner may not validate access modes at CreateVolume time), but the second pod on a different node that tries to mount the same PVC will stay in ContainerCreating. Kubelet will log an error from the CSI driver: ControllerPublishVolume returns multi-attach error indicating the volume is already attached to a different node, or NodeStageVolume fails because the device is not present on that node.
+
+The correct fix is to choose a CSI driver and backend that natively support RWX, or to redesign the application so that each pod uses its own RWO volume and shares data through an application-level protocol like a message queue or a shared database rather than a shared filesystem.`,
+    },
+  ],
+  references: [
+    'https://kubernetes.io/docs/concepts/storage/persistent-volumes/',
+    'https://kubernetes.io/docs/concepts/storage/storage-classes/',
+    'https://kubernetes.io/docs/concepts/storage/volume-snapshot-classes/',
+    'https://kubernetes.io/docs/concepts/storage/volume-snapshots/',
+    'https://kubernetes.io/docs/concepts/storage/volumes/#csi',
+    'https://kubernetes-csi.github.io/docs/introduction.html',
+    'https://kubernetes-csi.github.io/docs/sidecar-containers.html',
+    'https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-storage',
+    'https://kubernetes.io/docs/concepts/storage/storage-capacity/',
+    'https://github.com/kubernetes-sigs/aws-ebs-csi-driver',
+  ],
+},
+
+{
+  id: 'kubernetes-pod-scheduling',
+  title: 'Kubernetes Pod Scheduling',
+  icon: 'cpu',
+  color: '#7c3aed',
+  questions: 5,
+  description: `Kubernetes pod scheduling determines how the control plane assigns pods to nodes using a multi-phase pipeline of filtering, scoring, and binding decisions. Mastering scheduling lets you control placement for availability, performance, cost, and fault isolation across your cluster.`,
+  visualizations: [
+    {
+      title: `Scheduler Pipeline Architecture`,
+      description: `The Kubernetes scheduler operates as a two-phase system: the scheduling cycle and the binding cycle. During the scheduling cycle, the scheduler first runs through a series of filter plugins to eliminate nodes that cannot satisfy the pod's requirements. These filters evaluate resource requests and limits, node selectors, node affinity rules, pod affinity and anti-affinity rules, taints and tolerations, volume topology constraints, and custom plugin logic. Only nodes that pass every filter enter the scoring phase.
+
+In the scoring phase, each surviving node receives a normalized score from every enabled score plugin. Plugins such as LeastRequestedPriority, BalancedResourceAllocation, InterPodAffinityPriority, TaintTolerationPriority, and SelectorSpreadPriority each contribute a weighted score. The scheduler sums the weighted scores and selects the node with the highest total. Ties are broken randomly to distribute load evenly.
+
+After a node is selected, the Reserve extension point marks internal scheduler state to prevent double-booking while the binding cycle proceeds asynchronously. The Permit extension point allows plugins to block, wait, or approve the scheduling decision, enabling batch and gang scheduling scenarios. Finally, the Bind extension point creates the binding object that writes the nodeName into the pod spec, committing the assignment to the API server.
+
+The scheduling framework introduced in Kubernetes 1.15 made all of these extension points pluggable. Operators can compile custom scheduler plugins and deploy them as out-of-tree schedulers or alongside the default scheduler, giving teams precise control over placement logic without forking core Kubernetes.`,
+      image: `/diagrams/devops/kubernetes-pod-scheduling-arch.png`,
+    },
+    {
+      title: `Topology Spread and Affinity Flow`,
+      description: `When pods must be distributed across failure domains such as availability zones or physical racks, Kubernetes provides two complementary mechanisms: pod anti-affinity rules and topology spread constraints. The flow starts at pod creation time when the API server validates the pod spec and passes it to the scheduler queue.
+
+The scheduler dequeues the pod and evaluates topology spread constraints first as filter logic. For each constraint, it counts how many qualifying pods already exist in each topology bucket for the given topologyKey label. If placing the new pod on a candidate node would make the difference between the maximum and minimum bucket counts exceed maxSkew, that node is filtered out when the whenUnsatisfiable policy is DoNotSchedule. If the policy is ScheduleAnyway, the node remains eligible but receives a lower priority score.
+
+Pod affinity and anti-affinity rules are evaluated separately by the InterPodAffinity filter and scorer. Anti-affinity with topologyKey set to kubernetes.io/hostname creates a hard constraint that no two matching pods share the same node. Anti-affinity with topologyKey set to topology.kubernetes.io/zone prevents co-location at the zone level. Required affinity rules block scheduling entirely if unsatisfied, while preferred rules reduce the score without blocking.
+
+The interaction between these two systems means you must understand which takes precedence. Topology spread constraints are generally more expressive and easier to tune than anti-affinity because they encode the skew tolerance numerically, whereas anti-affinity is binary. When a cluster autoscaler is present, topology spread constraints also help the autoscaler understand which zone needs a new node before it provisions one.`,
+      image: `/diagrams/devops/kubernetes-pod-scheduling-flow.png`,
+    },
+  ],
+  introduction: `Kubernetes pod scheduling is the process by which the control plane decides which node should run each newly created pod. The default kube-scheduler watches for unscheduled pods and processes them through a pipeline of filter and score plugins before committing a node assignment. Understanding this pipeline in depth is essential for building clusters that maintain high availability across zones, prevent resource contention, and scale efficiently under dynamic workloads.
+
+The scheduling framework, stabilized in Kubernetes 1.19, replaced the older predicates-and-priorities model with a structured set of extension points: PreEnqueue, PreFilter, Filter, PostFilter, PreScore, Score, Reserve, Permit, PreBind, Bind, and PostBind. Each extension point accepts one or more plugins that can read pod and node state, mutate scheduling decisions, or communicate with external systems. This architecture allows platform teams to ship custom placement logic as compiled Go plugins without maintaining a full scheduler fork.
+
+Node affinity and pod affinity are the primary declarative mechanisms for influencing placement. Node affinity targets node labels, letting you express requirements like "schedule only on nodes with an SSD" or "prefer nodes in us-east-1a." Pod affinity and anti-affinity target other pods' labels through a topology key, making it possible to co-locate pods that communicate frequently or separate replicas across failure boundaries. The distinction between requiredDuringSchedulingIgnoredDuringExecution and preferredDuringSchedulingIgnoredDuringExecution controls whether the rule is a hard filter or a soft scoring hint.
+
+Topology spread constraints, introduced in Kubernetes 1.16 and going GA in 1.19, provide a more powerful and operationally simpler way to distribute pods across topology domains. Rather than writing complex anti-affinity expressions, you declare the maximum allowed imbalance (maxSkew) and the topology dimension (topologyKey). The scheduler then enforces this balance automatically, integrating with the cluster autoscaler to request nodes in underrepresented zones when needed.
+
+Taints and tolerations act as the inverse of affinity: they repel pods from nodes unless a pod explicitly opts in. This is used to dedicate nodes to specific workloads, mark nodes with hardware defects as unschedulable, or orchestrate graceful eviction with NoExecute taints. Combined with PriorityClass and preemption, taints give operators fine-grained control over which workloads can land where and which get evicted first when resources are scarce.
+
+Quality of Service classes tie resource management directly to scheduling and eviction. A pod's QoS class (Guaranteed, Burstable, or BestEffort) is derived from how requests and limits are set on each container. During memory pressure, the kubelet evicts BestEffort pods first, then Burstable pods that have exceeded their requests, then Guaranteed pods as a last resort. Understanding QoS is critical for designing workloads that survive node pressure without unexpected terminations.`,
+  whenToUse: [
+    `Distributing stateless application replicas across multiple availability zones to survive a zone outage without downtime`,
+    `Co-locating a sidecar or data cache pod on the same node as its primary workload to minimize inter-pod network latency`,
+    `Dedicating GPU nodes to machine learning training jobs using taints so general workloads do not consume expensive GPU capacity`,
+    `Preventing two replicas of a stateful service from landing on the same node, ensuring a single-node failure does not cause quorum loss`,
+    `Controlling eviction priority during a node memory pressure event by assigning critical system components a high PriorityClass`,
+    `Enabling the cluster autoscaler to provision nodes in the correct zone by expressing topology spread constraints that reveal where pods are underrepresented`,
+    `Restricting noisy-neighbor tenants to specific node pools using node affinity combined with PodDisruptionBudgets to bound disruption during node maintenance`,
+    `Scheduling batch jobs with low PriorityClass so long-running analytical workloads are preempted gracefully when real-time serving pods arrive`,
+  ],
+  keyConcepts: [
+    {
+      term: `Scheduler Extension Points and the Scheduling Framework`,
+      definition: `The Kubernetes scheduling framework defines a sequence of well-known extension points that plugins implement. The Filter extension point determines whether a node is eligible for a pod. The Score extension point assigns a numeric priority to each eligible node. Reserve claims the node in the scheduler's internal cache to prevent double-booking between the scheduling cycle and the async binding cycle. Permit can block the binding cycle until an external condition is met, which batch schedulers use to ensure all pods in a group are schedulable before any is bound. Bind writes the PodBinding object to the API server.
+
+A minimal custom filter plugin in Go looks like this:
+
+\`\`\`go
+type MyFilter struct{}
+
+func (f *MyFilter) Name() string { return "MyFilter" }
+
+func (f *MyFilter) Filter(
+  ctx context.Context,
+  state *framework.CycleState,
+  pod *v1.Pod,
+  nodeInfo *framework.NodeInfo,
+) *framework.Status {
+  node := nodeInfo.Node()
+  if node.Labels["dedicated"] != pod.Labels["team"] {
+    return framework.NewStatus(
+      framework.Unschedulable,
+      "node not dedicated to this team",
+    )
+  }
+  return nil
+}
+\`\`\`
+
+The plugin is registered in the scheduler configuration and compiled into the scheduler binary or loaded as a separately deployed scheduler with a custom KubeSchedulerProfile. Multiple profiles can coexist, and pods opt in to a profile by setting schedulerName in the pod spec.`,
+    },
+    {
+      term: `Node Affinity: Required vs Preferred`,
+      definition: `Node affinity uses label selectors against node labels. The requiredDuringSchedulingIgnoredDuringExecution field acts as a hard filter: if no node matches, the pod stays pending indefinitely. The preferredDuringSchedulingIgnoredDuringExecution field adds a weighted score bonus without blocking scheduling.
+
+matchExpressions supports operators In, NotIn, Exists, DoesNotExist, Gt, and Lt, giving you expressive multi-label rules that are not possible with the older nodeSelector map.
+
+\`\`\`yaml
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values: [amd64]
+            - key: node-role
+              operator: In
+              values: [compute]
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 80
+        preference:
+          matchExpressions:
+            - key: topology.kubernetes.io/zone
+              operator: In
+              values: [us-east-1a]
+      - weight: 20
+        preference:
+          matchExpressions:
+            - key: node-type
+              operator: In
+              values: [spot]
+\`\`\`
+
+The ignored-during-execution suffix means an already-running pod is not evicted if a node's labels change after the pod is placed. A future requiredDuringSchedulingRequiredDuringExecution field is planned but not yet available in stable releases.`,
+    },
+    {
+      term: `Pod Affinity and Anti-Affinity with topologyKey`,
+      definition: `Pod affinity and anti-affinity use label selectors against other pods and a topologyKey to define the scope of the constraint. When topologyKey is topology.kubernetes.io/zone, the rule applies at zone granularity: all nodes in a zone share the same value for that label, so a pod anti-affinity at zone scope prevents two matching pods from being placed in the same zone. When topologyKey is kubernetes.io/hostname, the constraint is per-node, ensuring no two matching pods share a single machine.
+
+\`\`\`yaml
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app: api-server
+        topologyKey: kubernetes.io/hostname
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app: api-server
+          topologyKey: topology.kubernetes.io/zone
+  podAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app: redis-cache
+          topologyKey: kubernetes.io/hostname
+\`\`\`
+
+This example places api-server pods on distinct nodes (hard) and distinct zones (soft), while preferring to co-locate with a redis-cache pod on the same node to reduce cache latency. Anti-affinity rules scale poorly in large clusters because the scheduler must compare the candidate pod against every running pod that matches the selector, making scheduling O(pods) per node candidate.`,
+    },
+    {
+      term: `Topology Spread Constraints`,
+      definition: `Topology spread constraints express the desired distribution of pods across topology domains without the O(pods) cost of anti-affinity. The maxSkew field is the maximum allowed difference between the domain with the most matching pods and the domain with the fewest. The topologyKey identifies the node label that defines domains. The whenUnsatisfiable field is either DoNotSchedule (hard) or ScheduleAnyway (soft). The minDomains field, added in Kubernetes 1.25, specifies the minimum number of eligible domains; if fewer domains exist, the global minimum is treated as zero.
+
+\`\`\`yaml
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: web
+    minDomains: 3
+  - maxSkew: 2
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app: web
+\`\`\`
+
+With three zones (a, b, c) and this constraint, the scheduler will not place a pod in zone a if zone a already has two more web pods than zone c. The minDomains: 3 declaration tells the scheduler to assume the global minimum is zero when fewer than three zones have eligible nodes, preventing the constraint from relaxing when the cluster has only one or two zones available. The second constraint softly encourages even per-node spread but does not block scheduling if nodes are unbalanced.`,
+    },
+    {
+      term: `Taints and Tolerations`,
+      definition: `A taint is a key-value pair with an effect applied to a node. The NoSchedule effect prevents new pods from being scheduled on the node unless they have a matching toleration. The PreferNoSchedule effect softly discourages scheduling. The NoExecute effect evicts existing pods that lack a toleration and blocks new ones; pods with a matching toleration can optionally include tolerationSeconds to specify how long they survive before eviction.
+
+\`\`\`bash
+# Apply a taint to a node
+kubectl taint nodes node1 dedicated=gpu:NoSchedule
+
+# Add a temporary NoExecute taint with eviction delay
+kubectl taint nodes node1 node.kubernetes.io/not-ready:NoExecute
+\`\`\`
+
+\`\`\`yaml
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: gpu
+    effect: NoSchedule
+  - key: node.kubernetes.io/not-ready
+    operator: Exists
+    effect: NoExecute
+    tolerationSeconds: 300
+\`\`\`
+
+The system automatically adds taints for node conditions such as not-ready, unreachable, memory-pressure, disk-pressure, pid-pressure, and unschedulable. DaemonSet pods receive automatic tolerations for these system taints so they remain on degraded nodes to perform cleanup work. The tolerationSeconds: 300 pattern is a common production pattern for giving long-running pods five minutes to finish in-flight requests before the kubelet forces eviction.`,
+    },
+    {
+      term: `QoS Classes and Eviction Order`,
+      definition: `Kubernetes assigns one of three Quality of Service classes to every pod based on how resource requests and limits are configured. Guaranteed pods have every container with CPU and memory requests equal to their limits. Burstable pods have at least one container with a request below its limit, or limits set without requests. BestEffort pods have no resource requests or limits on any container.
+
+\`\`\`yaml
+# Guaranteed QoS
+resources:
+  requests:
+    cpu: "500m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+# Burstable QoS
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+# BestEffort QoS (no resources block at all)
+\`\`\`
+
+During memory pressure, the kubelet evicts pods in this order: BestEffort first because they have no memory floor, then Burstable pods that are consuming more memory than their request, then Burstable pods consuming at or below their request, and finally Guaranteed pods. The OOM killer uses a similar ordering via oom_score_adj, which is set to 1000 for BestEffort containers, proportionally lower for Burstable containers based on how much they exceed their request, and -997 for Guaranteed containers so the kernel kills them last. Setting accurate resource requests is therefore both a scheduling concern and a runtime reliability concern.`,
+    },
+    {
+      term: `PriorityClass and Preemption`,
+      definition: `PriorityClass assigns a numeric priority to pods. When a high-priority pod cannot be scheduled because all nodes are full, the scheduler's PostFilter extension point runs the preemption plugin, which identifies victim pods on candidate nodes whose removal would make room. The scheduler evicts the minimum set of lowest-priority pods needed to free enough resources, then places the pending pod.
+
+\`\`\`yaml
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority-serving
+value: 1000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Critical serving tier, preempts batch and best-effort jobs"
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: batch-low
+value: 10000
+preemptionPolicy: Never
+description: "Batch analytics jobs that yield to all serving workloads"
+\`\`\`
+
+\`\`\`yaml
+spec:
+  priorityClassName: high-priority-serving
+\`\`\`
+
+Setting preemptionPolicy: Never on the batch-low class means those pods will not preempt other pods even though they have a priority number, which is useful for workloads that should only run on spare capacity. System-critical components like kube-dns and metrics-server use the built-in system-cluster-critical and system-node-critical classes with priority values of 2000000000 and 2000001000 respectively, which are above the maximum user-configurable value of 1000000000 to ensure they cannot be accidentally outranked.`,
+    },
+  ],
+  approach: [
+    `Start with topology spread constraints instead of pod anti-affinity for zone distribution. Topology spread constraints are more expressive, scale better in large clusters, and integrate naturally with the cluster autoscaler's zone balancing logic`,
+    `Always set resource requests accurately on every container. The scheduler uses requests for bin-packing decisions, and inaccurate requests cause nodes to appear fuller or emptier than they are, leading to imbalanced placement and unexpected OOM evictions`,
+    `Use requiredDuringScheduling affinity only when a constraint is truly hard. If a required rule cannot be satisfied, pods remain pending indefinitely and no error is surfaced on the deployment, making the root cause difficult to diagnose`,
+    `Combine a PodDisruptionBudget with anti-affinity or topology spread constraints. The spread constraint distributes pods across nodes, while the PDB ensures the cluster does not drain too many nodes simultaneously during a rolling upgrade or node maintenance event`,
+    `Assign PriorityClass to all workloads explicitly. Without explicit priority, all pods default to priority zero, which means the scheduler cannot make intelligent preemption decisions during resource contention and may evict critical serving pods to make room for batch jobs`,
+    `Use node affinity with the Exists operator for node pool selection rather than hard-coding specific node names. Labels like nodepool=gpu or cloud.google.com/gke-nodepool=highmem survive node replacements during auto-scaling, whereas node-name selectors break when nodes are recycled`,
+    `Test scheduling constraints in a staging cluster with exactly the zone and node count that production uses. A topology spread constraint with minDomains: 3 will silently relax if staging only has two zones, hiding misconfigurations until production`,
+    `Review scheduler logs and pod events together when a pod is stuck pending. The event message from FailedScheduling contains the filter reason for every node evaluated, and aggregating these across all nodes reveals whether the blocking constraint is affinity, resources, taints, or topology skew`,
+  ],
+  pitfalls: [
+    `Writing pod anti-affinity with a broad label selector (app: myservice) and topologyKey: kubernetes.io/hostname in a large deployment causes O(pods squared) comparisons in the scheduler, significantly increasing scheduling latency for clusters with thousands of pods. Prefer topology spread constraints which have linear complexity`,
+    `Forgetting that requiredDuringSchedulingIgnoredDuringExecution does not evict existing pods when node labels change. If a node's zone label is removed, pods on that node stay running but new pods from the same deployment may be unable to schedule because the constraint references a zone that no longer appears in node labels`,
+    `Setting maxSkew: 1 with DoNotSchedule on a three-zone cluster where one zone has no nodes causes all new pods to stay pending permanently because the scheduler cannot satisfy the constraint. Use minDomains or switch to ScheduleAnyway until the zone is repopulated`,
+    `Mixing QoS classes within a deployment by setting limits on some containers but not others. This makes some pods Guaranteed and others Burstable even within the same workload, leading to inconsistent eviction behavior during node pressure that is difficult to debug in production`,
+    `Assigning a high PriorityClass to a deployment without thinking through the blast radius of preemption. A single misconfigured high-priority deployment can evict an entire batch tier across every node, causing cascading failures in data pipelines that take hours to recover`,
+    `Using taints without coordinating with the cluster autoscaler's taint-toleration configuration. If a new node pool has a taint that the autoscaler does not know how to replicate on scale-out nodes, the autoscaler will provision untainted nodes and the waiting pods will never be placed there`,
+    `Ignoring the difference between topology spread constraints and pod anti-affinity when the cluster autoscaler is involved. Anti-affinity alone does not tell the autoscaler which zone needs a new node; topology spread constraints are understood by the autoscaler's scale-up simulation and correctly trigger zone-specific node provisioning`,
+    `Relying on PreferNoSchedule taints for true workload isolation. Prefer does not guarantee the node stays dedicated; under high cluster load, pods without tolerations will still land on preferred-taint nodes. Use NoSchedule for actual isolation and reserve PreferNoSchedule only for soft guidance like spreading across node types`,
+  ],
+  keyQuestions: [
+    {
+      question: `How would you configure a deployment to spread 10 replicas evenly across 3 availability zones, ensuring no zone has more than 1 pod extra compared to any other zone?`,
+      answer: `The cleanest solution is a topology spread constraint with maxSkew: 1 and topologyKey set to the zone label. This tells the scheduler to keep the difference between the most-populated and least-populated zone at most 1, which for 10 pods across 3 zones gives a distribution of 4-3-3.
+
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-api
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: web-api
+  template:
+    metadata:
+      labels:
+        app: web-api
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: web-api
+          minDomains: 3
+      containers:
+        - name: web-api
+          image: web-api:latest
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+\`\`\`
+
+The minDomains: 3 field is critical. Without it, if a zone becomes temporarily unavailable and the scheduler sees only 2 eligible zones, it relaxes the global minimum to zero and may concentrate all 10 pods in one zone. With minDomains: 3, the scheduler treats the third zone as having zero pods (the global minimum), which means adding more pods to the two available zones would immediately violate maxSkew: 1, so new pods stay pending until the third zone recovers. This is the correct behavior for a production HA deployment.
+
+You should also set the whenUnsatisfiable policy to DoNotSchedule rather than ScheduleAnyway. ScheduleAnyway still tries to honor the constraint as a score but will place pods on any node if no balanced option exists, which means during a partial zone outage you silently lose your spread guarantee. DoNotSchedule makes the violation visible as a pending pod event, which triggers your alerting and forces human intervention.
+
+Finally, verify that all nodes in each zone carry the topology.kubernetes.io/zone label. Managed Kubernetes providers (GKE, EKS, AKS) apply this label automatically, but self-managed clusters may require manual labeling or a node labeler DaemonSet.`,
+    },
+    {
+      question: `What is the difference between pod anti-affinity and topology spread constraints for distributing pods, and when should you prefer one over the other?`,
+      answer: `Pod anti-affinity and topology spread constraints both distribute pods across topology domains, but they differ in expressiveness, performance, and cluster autoscaler integration.
+
+Pod anti-affinity with topologyKey: kubernetes.io/hostname is binary: either two pods with matching labels share a node or they do not. There is no concept of "one extra is acceptable." This means if you have 10 replicas and 9 nodes, the 10th pod stays pending forever because no node is free of its siblings. Anti-affinity is also expensive in large clusters because the scheduler must evaluate the rule against every running pod that matches the label selector, making scheduling time scale as O(pending pods times running pods).
+
+\`\`\`yaml
+# Anti-affinity: hard, binary, per-node
+podAntiAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchLabels:
+          app: cache
+      topologyKey: kubernetes.io/hostname
+\`\`\`
+
+Topology spread constraints are additive and numeric. You define a maxSkew tolerance, so a value of 1 means one extra pod in a busier domain is acceptable. This allows 10 pods on 9 nodes (one node carries 2). Topology spread constraints also compose across multiple topologyKey dimensions in a single pod spec, letting you simultaneously bound zone-level and node-level skew.
+
+\`\`\`yaml
+# Topology spread: numeric tolerance, multi-level, autoscaler-aware
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: cache
+\`\`\`
+
+Most importantly, the cluster autoscaler understands topology spread constraints during its scale-up simulation. When a pod is pending because maxSkew would be violated in all existing zones, the autoscaler identifies that adding a node in the underrepresented zone would unblock scheduling and provisions a node there. Anti-affinity rules do not carry this information, so the autoscaler may add nodes in any zone and the pod remains pending.
+
+Prefer topology spread constraints for stateless workloads where you want zone balance with some tolerance. Use anti-affinity with topologyKey: kubernetes.io/hostname for strict single-instance-per-node requirements such as node-local DaemonSet alternatives or database replicas where two instances on one node would be a quorum risk.`,
+    },
+    {
+      question: `Walk through the order in which the kubelet evicts pods during a node memory pressure event. What determines where each pod falls in the eviction order?`,
+      answer: `The kubelet's eviction manager monitors memory usage and triggers eviction when available memory drops below a configured threshold (default evictionHard: memory.available less than 100Mi). The eviction order is determined primarily by QoS class and then by how much a pod is exceeding its memory request.
+
+BestEffort pods are evicted first. They have no memory requests set, so the kubelet has no floor to protect. The kernel's OOM killer assigns them an oom_score_adj of 1000, the highest possible value, making them the first candidates for termination at both the kubelet and kernel level.
+
+\`\`\`yaml
+# BestEffort: no resources defined anywhere
+containers:
+  - name: worker
+    image: worker:latest
+    # no resources block
+\`\`\`
+
+Burstable pods are evicted next, ordered by the ratio of their current memory usage to their memory request. A pod using 400Mi with a 100Mi request (4x over request) is evicted before a pod using 300Mi with a 200Mi request (1.5x over request). The kubelet computes this ratio across all containers in the pod and sorts eviction candidates accordingly.
+
+\`\`\`yaml
+# Burstable: request below limit
+resources:
+  requests:
+    memory: "128Mi"
+  limits:
+    memory: "512Mi"
+\`\`\`
+
+Guaranteed pods are the last to be evicted. Every container has requests equal to limits, so the scheduler placed them on a node with enough reserved capacity and the kernel gives them oom_score_adj of -997. The kubelet only evicts Guaranteed pods when no BestEffort or Burstable pods remain on the node and memory pressure persists.
+
+\`\`\`yaml
+# Guaranteed: requests == limits on every container
+resources:
+  requests:
+    cpu: "500m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+\`\`\`
+
+The practical implication is that inaccurate memory requests are dangerous. If a Burstable pod's true steady-state usage is 800Mi but its request is set to 100Mi, it will be evicted under pressure even though it is running normally, and a restart will likely reproduce the same pattern immediately. Always set memory requests to the p95 steady-state usage observed from metrics, not a conservative minimum.`,
+    },
+    {
+      question: `Explain the mechanics of pod preemption. What happens step by step when a high-priority pod cannot be scheduled on any node?`,
+      answer: `Preemption is triggered by the scheduler's PostFilter extension point, which runs only after the Filter phase finds zero eligible nodes for a pending pod.
+
+Step 1: The scheduler identifies the set of nodes that would become eligible for the pending pod if one or more lower-priority pods were removed from them. For each candidate node, it simulates removing pods in ascending priority order until the pending pod's resource requests and affinity constraints can be satisfied.
+
+Step 2: Among the candidate nodes, the scheduler selects the one that minimizes disruption. It prefers the node whose highest-priority victim has the lowest priority, and among ties it prefers the node that requires removing the fewest pods.
+
+Step 3: The scheduler sets the nominatedNodeName field on the pending pod's status to the selected node. This is a hint, not a binding. The nominated node is not reserved, which means another pod could claim resources there before the eviction completes.
+
+Step 4: The scheduler sends delete requests for the victim pods. Victims go through the normal graceful termination lifecycle: the pod receives SIGTERM, its terminationGracePeriodSeconds countdown starts, and the kubelet forces SIGKILL when the countdown expires. Victims with PodDisruptionBudgets are respected only partially: the scheduler checks PDB availability before selecting victims, but it will still evict a pod if doing so is the only way to place the high-priority pod, as preemption takes precedence over PDB constraints.
+
+Step 5: After victims terminate and resources free up on the nominated node, the scheduler runs another scheduling cycle for the pending pod. If another pod has claimed the freed resources in the interim, the scheduler repeats the preemption search.
+
+\`\`\`yaml
+# High-priority class definition
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: serving-critical
+value: 900000
+preemptionPolicy: PreemptLowerPriority
+
+# Batch class that never preempts
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: batch-jobs
+value: 1000
+preemptionPolicy: Never
+\`\`\`
+
+A common production pattern is to assign preemptionPolicy: Never to batch workloads so they consume spare capacity without being able to evict anything, and PreemptLowerPriority to serving workloads so they can reclaim resources quickly when traffic spikes. This creates a clear two-tier system without needing separate node pools.`,
+    },
+    {
+      question: `Your cluster autoscaler is not scaling up even though several pods have been pending for 10 minutes due to insufficient CPU. What are the likely root causes and how do you diagnose each one?`,
+      answer: `The cluster autoscaler evaluates pending pods every 10 seconds and simulates whether a new node of any configured instance type would unblock them. If the simulation succeeds, it triggers a node group scale-up. When scale-up is not happening despite pending pods, the root causes fall into several categories.
+
+First, the autoscaler's scale-up simulation itself may determine that adding a node would not help. This happens when the pending pod has constraints that no available node type can satisfy. Check the autoscaler's logs with kubectl logs -n kube-system -l app=cluster-autoscaler and look for messages like "pod is not unschedulable" or "no node group can scale up." Common constraint mismatches include: a nodeAffinity requiring a specific label that only pre-existing nodes carry, a topology spread constraint with whenUnsatisfiable: DoNotSchedule in a zone where the node group has zero capacity, or a pod requesting more memory than the largest node type in any node group.
+
+\`\`\`bash
+# Check autoscaler logs for scale-up decisions
+kubectl logs -n kube-system deployment/cluster-autoscaler --tail=200 | grep -i "scale-up\|unschedulable\|cannot"
+
+# Check pending pod events for scheduling failure reason
+kubectl describe pod \${POD_NAME} | grep -A 20 Events
+\`\`\`
+
+Second, the autoscaler may be scale-up suppressed by a cooldown period. After a failed scale-up attempt (for example, the cloud provider returned an error or the node never became Ready), the autoscaler waits for a backoff period before retrying. Check the autoscaler's recorded scale-up failures in its status ConfigMap.
+
+\`\`\`bash
+kubectl get configmap cluster-autoscaler-status -n kube-system -o yaml
+\`\`\`
+
+Third, the node group may have already reached its maximum size. Check the min/max configuration in your node group spec (for EKS this is the Auto Scaling Group, for GKE this is the node pool bounds). If max nodes is set to the current count, the autoscaler will not provision more nodes regardless of pending pods.
+
+Fourth, the pending pod may have a PodDisruptionBudget or a PriorityClass with preemptionPolicy: Never that the autoscaler treats as a signal the pod is not truly unschedulable. Verify by temporarily removing the PDB and observing whether scale-up triggers.
+
+Fifth, if the pods have pod affinity rules that reference other pods, the autoscaler's simulation may fail because the referenced pods do not yet exist on the simulated new node. This is a known limitation: the autoscaler simulates a single new node in isolation and cannot reason about multi-pod placement chains. The workaround is to replace pod affinity with topology spread constraints, which the autoscaler understands natively.`,
+    },
+  ],
+  references: [
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/scheduler-perf-tuning/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/',
+    'https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/',
+    'https://kubernetes.io/docs/concepts/workloads/pods/pod-qos/',
+    'https://kubernetes.io/docs/reference/scheduling/config/',
+    'https://github.com/kubernetes/enhancements/tree/master/keps/sig-scheduling/895-pod-topology-spread',
+    'https://kubernetes.io/blog/2020/12/21/writing-crd-validation-rules-in-cel/',
+  ],
+},
+
+{
+  id: 'kubescape-runtime-security',
+  title: 'Kubescape and Kubernetes Runtime Security',
+  icon: 'shield',
+  color: '#dc2626',
+  questions: 5,
+  description: `Kubescape and Kubernetes runtime security tools provide continuous posture assessment and real-time threat detection across cluster infrastructure. This topic covers the full defense-in-depth stack from static scanning and admission control through kernel-level syscall monitoring and policy enforcement.`,
+  visualizations: [
+    {
+      title: `Kubernetes Runtime Security Architecture`,
+      description: `The runtime security architecture layers multiple detection and enforcement planes across a Kubernetes cluster. At the foundation, Falco runs as a DaemonSet on every node, deploying either a kernel module or eBPF probe to intercept raw syscalls from the Linux kernel. When a container executes a syscall that matches a Falco rule condition, the event is enriched with Kubernetes metadata and forwarded to Falco Sidekick, which fans out alerts to Slack, PagerDuty, Elasticsearch, or any webhook target.
+
+Above the kernel layer, the Kubernetes API server hosts two admission webhook phases. In the mutating phase, Kyverno ClusterPolicies can inject sidecar containers, set default resource limits, or apply seccomp profiles before objects are persisted. In the validating phase, OPA Gatekeeper evaluates ConstraintTemplate-derived constraints and blocks objects that violate policy. Both tools operate on AdmissionReview requests and must respond within the webhook timeout window.
+
+The Pod Security Standards admission controller runs inside kube-apiserver itself and enforces one of three profiles per namespace via a label. Restricted namespaces reject pods that lack a seccomp profile, request host namespaces, run as root, or set allowPrivilegeEscalation. Baseline namespaces block the most dangerous capabilities and host paths while permitting setuid binaries.
+
+Kubescape operates at a higher abstraction level, consuming the live cluster state or manifest files and scoring them against control frameworks such as NSA-CISA, MITRE ATT&CK for Kubernetes, and CIS Benchmarks. Each control maps to an RBAC, workload, or network configuration check and produces a weighted risk score. The in-cluster operator schedules periodic rescans and exports metrics to Prometheus so teams can track posture drift over time.
+
+Seccomp and AppArmor profiles form the last enforcement layer. A seccomp profile expressed in JSON defines an allowlist or denylist of syscall numbers, and RuntimeDefault delegates this decision to the container runtime. AppArmor profiles are loaded into the host kernel and restrict file paths, network operations, and capabilities at a finer grain than seccomp alone.`,
+      image: `/diagrams/devops/kubescape-runtime-security-arch.png`
+    },
+    {
+      title: `Runtime Security Event and Policy Flow`,
+      description: `The event and policy flow diagram traces the lifecycle of a suspicious runtime event from kernel detection through alerting, remediation recommendation, and posture score update. When a container process calls execve to spawn a shell, the Falco eBPF probe captures the syscall in a ring buffer and passes it to the Falco userspace engine. The engine evaluates the event against its ordered ruleset, enriches it with the pod name, namespace, container ID, and service account from the Kubernetes enrichment cache, and emits a structured JSON alert.
+
+Falco Sidekick receives the alert over HTTP and applies its own output routing rules. High-priority alerts tagged terminal_shell_in_container are sent to PagerDuty and also written to an Elasticsearch index for SIEM correlation. Lower-priority informational events go only to a Slack channel for developer visibility.
+
+In parallel, the Kubescape operator has run its scheduled posture scan. It pulls the live workloads and RBAC policies from the API server, evaluates each control, and writes a WorkloadConfigurationScanSummary custom resource. The summary shows that two deployments in the payments namespace are missing readOnlyRootFilesystem and one ServiceAccount has wildcard verb bindings. Prometheus scrapes the kubescape_resources_by_severity metric and Grafana fires a posture-regression alert when critical findings increase week-over-week.
+
+On the admission path, a developer submits a new Deployment that omits a seccomp profile and sets hostNetwork to true. The Pod Security Standards controller, enforcing the Restricted profile on that namespace, rejects the pod with a descriptive reason. If the namespace is Baseline, the hostNetwork rejection still fires but the missing seccomp profile is permitted, illustrating how the three tiers create graduated enforcement rings. The developer consults the Kyverno policy report generated from the same object to understand which additional ClusterPolicy rules were violated even without hard blocking.`,
+      image: `/diagrams/devops/kubescape-runtime-security-flow.png`
+    },
+  ],
+  introduction: `Kubernetes cluster security spans two fundamentally different time horizons. Static posture assessment catches misconfigurations before workloads are admitted or before they reach production, while runtime security detects malicious behavior in workloads that have already passed through all gates. A mature security program requires both layers because no admission policy can anticipate every zero-day exploitation path or insider threat, and no runtime detector can compensate for an attacker who already holds an overprivileged RBAC role obtained from a misconfigured cluster.
+
+Kubescape was created by ARMO and donated to the CNCF as the first open-source tool to implement the NSA and CISA Kubernetes Hardening Guidance as machine-executable controls. It also implements MITRE ATT&CK for Kubernetes, which maps adversarial techniques such as container escapes, lateral movement via the service account token, and data exfiltration through DNS tunneling to specific configuration checks. The combination gives security teams a vocabulary aligned with threat intelligence reports rather than arbitrary checklist items.
+
+Falco, originally built at Sysdig and now a CNCF graduated project, attaches to the Linux kernel through either a loadable kernel module or an eBPF probe. eBPF is preferred in modern environments because it does not require kernel headers at deploy time, can be loaded without a reboot, and is verifiable by the kernel's own BPF verifier, reducing the risk of a probe bug causing a node panic. Falco's rule language expresses detection logic as a condition field written in a Sysdig filter syntax, which can reference the syscall arguments, the process tree, container metadata, and Kubernetes pod fields simultaneously.
+
+Policy enforcement at admission time is covered by two tools with different philosophical foundations. OPA Gatekeeper uses the Rego policy language from the Open Policy Agent project, expressing constraints as Rego modules wrapped in Kubernetes CRDs. Kyverno is a Kubernetes-native policy engine that expresses rules as YAML patterns, making it immediately accessible to platform engineers who are already fluent in Kubernetes manifests but have not learned Rego. Both support validating and mutating webhooks, though Kyverno's mutation capabilities are more ergonomic for common tasks like image tag pinning or seccomp profile injection.
+
+The Pod Security Standards replaced the deprecated PodSecurityPolicy API in Kubernetes 1.25 and are enforced by a built-in admission controller rather than a webhook. PSS defines three profiles: Privileged, Baseline, and Restricted. Namespaces opt in by adding a label that specifies both the profile and the enforcement mode, which can be enforce, audit, or warn. This graduation mechanism lets teams introduce the Restricted profile in audit mode first, observe which workloads would be blocked, and harden them before enabling enforcement.
+
+Seccomp and AppArmor profiles operate at the Linux security module layer below Kubernetes and restrict what syscalls and filesystem paths a container process is allowed to touch. RuntimeDefault is a seccomp profile maintained by the container runtime (containerd or cri-o) that blocks the most dangerous syscalls without requiring a custom profile, making it a safe default for nearly all workloads. Custom profiles go further by enumerating only the syscalls a specific application actually needs, which requires profiling the application under realistic load conditions and then generating a minimal allowlist.`,
+  whenToUse: [
+    `Running a Kubernetes security audit before a compliance review such as SOC 2, PCI-DSS, or FedRAMP, where documented evidence of cluster hardening controls is required.`,
+    `Setting up a new cluster and wanting to gate pull requests so that manifests failing NSA-CISA or CIS Benchmark controls are blocked before merge.`,
+    `Investigating a suspected container escape or credential theft incident where kernel-level syscall telemetry is needed to reconstruct the attack timeline.`,
+    `Enforcing organizational policies such as required resource limits, prohibited images from untrusted registries, or mandatory seccomp profiles across all namespaces without burdening each development team.`,
+    `Detecting cryptomining or reverse shell activity in workloads that passed static analysis but contain a runtime vulnerability or depend on a compromised dependency.`,
+    `Measuring posture regression over time after infrastructure changes, using Kubescape's Prometheus metrics and Grafana dashboards to track the weekly critical finding count.`,
+    `Hardening a multi-tenant cluster where different tenants require different Pod Security Standard profiles and the default namespace isolation is insufficient.`,
+    `Building a CI pipeline for Helm chart or Kustomize overlay validation where Kubescape scan failures should break the build before any artifact is published.`,
+  ],
+  keyConcepts: [
+    {
+      term: `Kubescape Frameworks and Risk Scoring`,
+      definition: `Kubescape evaluates cluster resources against control frameworks defined as JSON configuration files. The NSA-CISA framework contains controls covering RBAC hardening, pod security, network policies, and secrets management. The MITRE ATT&CK for Kubernetes framework maps each control to a tactic and technique identifier such as TA0004 (Privilege Escalation) or T1525 (Implant Container Image). Each control has a weight that reflects its severity, and Kubescape computes a weighted risk score from zero to one hundred where higher values indicate better posture.
+
+Running a scan in CI mode against a directory of manifests uses the kubescape scan framework command. The exit code is nonzero when findings exceed a configurable threshold, making it easy to integrate with GitHub Actions or GitLab CI.
+
+\`\`\`bash
+# Scan local manifests against NSA-CISA framework and fail if risk score < 60
+kubescape scan framework nsa ./k8s/ --threshold 60 --format json --output results.json
+
+# Scan a live cluster against MITRE ATT&CK
+kubescape scan framework mitre --kubeconfig \${HOME}/.kube/config
+
+# Install the in-cluster Kubescape operator
+helm repo add kubescape https://kubescape.github.io/helm-charts
+helm upgrade --install kubescape kubescape/kubescape-operator \\
+  --namespace kubescape --create-namespace \\
+  --set clusterName=\$(kubectl config current-context) \\
+  --set capabilities.continuousScan=enable
+\`\`\`
+
+The in-cluster operator creates WorkloadConfigurationScan and WorkloadConfigurationScanSummary custom resources for every namespace. A Prometheus ServiceMonitor scrapes the kubescape_resources_by_severity gauge, allowing Grafana alerting rules to fire when the critical finding count increases. The operator also integrates with the ARMO cloud platform for centralized multi-cluster posture management, though the open-source standalone mode does not require cloud connectivity.`
+    },
+    {
+      term: `Falco Rules: Condition, Output, Priority, and Tags`,
+      definition: `A Falco rule is a YAML document with four mandatory fields and several optional ones. The condition field is a Sysdig filter expression that can reference syscall arguments, process metadata, container information, and Kubernetes pod fields. The output field is a Go-style format string that embeds variable references for the alert message. The priority field is one of EMERGENCY, ALERT, CRITICAL, ERROR, WARNING, NOTICE, INFORMATIONAL, or DEBUG. The tags list helps downstream consumers such as Falco Sidekick apply routing or suppression rules.
+
+Macros are named boolean sub-expressions that can be composed into larger conditions, and lists are named YAML arrays of strings or patterns. Both reduce duplication across rules.
+
+\`\`\`yaml
+# Custom rule: detect execve of a shell inside any container
+- rule: Terminal Shell in Container
+  desc: A shell was spawned inside a container
+  condition: >
+    spawned_process and container
+    and shell_procs
+    and not container.image.repository in (trusted_shell_images)
+  output: >
+    Shell spawned in container
+    (user=%user.name user_loginuid=%user.loginuid
+     container_id=%container.id
+     image=%container.image.repository
+     shell=%proc.name
+     parent=%proc.pname
+     cmdline=%proc.cmdline
+     k8s_pod=%k8s.pod.name
+     k8s_ns=%k8s.ns.name)
+  priority: WARNING
+  tags: [container, shell, mitre_execution]
+
+- list: trusted_shell_images
+  items: [debug-tools, my-company/maintenance]
+
+- macro: shell_procs
+  condition: proc.name in (bash, sh, zsh, fish, tcsh, ksh)
+\`\`\`
+
+Falco ships with a default ruleset that covers the most common attack patterns: reading sensitive files like /etc/shadow, writing to /etc/crontab, modifying binary directories, spawning shells inside containers, and making outbound network connections from containers that normally have no egress. Overriding a default rule is done by redefining it with the same name and append: true or by setting enabled: false to disable it entirely.`
+    },
+    {
+      term: `Falco eBPF Probe vs Kernel Module`,
+      definition: `Falco can instrument the kernel using two mechanisms. The classic kernel module (falco.ko) is compiled against the running kernel headers and loaded with insmod. It can intercept all syscalls but requires kernel headers at build time and can cause a kernel panic if it contains a bug, because kernel modules run in ring 0 with no sandboxing.
+
+The eBPF probe uses the Linux extended Berkeley Packet Filter subsystem. eBPF programs are verified by the kernel's built-in verifier before loading, which guarantees they cannot crash the kernel, loop infinitely, or access memory out of bounds. The probe is loaded into the kernel using the bpf() syscall and attaches to tracepoints. The modern eBPF driver (also called the Falco libs driver) is preferred because it requires only kernel version 4.14 or later with CONFIG_BPF_SYSCALL enabled, which covers all current distributions. GKE, EKS, and AKS all support the eBPF probe without additional node configuration.
+
+\`\`\`yaml
+# Falco Helm chart values to select the eBPF driver
+driver:
+  kind: ebpf
+  ebpf:
+    hostNetwork: false
+
+# Deploy Falco DaemonSet with eBPF driver
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm upgrade --install falco falcosecurity/falco \\
+  --namespace falco --create-namespace \\
+  --set driver.kind=ebpf \\
+  --set falcosidekick.enabled=true \\
+  --set falcosidekick.config.slack.webhookurl=\${SLACK_WEBHOOK_URL} \\
+  --set falcosidekick.config.pagerduty.routingKey=\${PD_ROUTING_KEY}
+\`\`\`
+
+The eBPF probe does have slightly higher CPU overhead than the kernel module on very high syscall rate workloads because verified programs cannot use certain kernel optimization paths. For most production workloads the difference is below one percent of node CPU and the safety and portability benefits outweigh the cost.`
+    },
+    {
+      term: `Seccomp Profiles: RuntimeDefault and Custom`,
+      definition: `Seccomp (secure computing mode) is a Linux kernel feature that restricts which syscalls a process may invoke. In Kubernetes, a seccomp profile is set in the pod's securityContext at either the pod or container level. The RuntimeDefault value delegates profile selection to the container runtime (containerd or cri-o), which ships a hardened default profile that blocks roughly 44 of the most dangerous syscalls including ptrace, mount, create_module, and kexec_load while permitting the hundreds of syscalls that typical workloads need.
+
+A Localhost profile references a JSON file placed on each node at a path relative to the kubelet's seccompProfileRoot directory, which defaults to /var/lib/kubelet/seccomp. The JSON file lists syscalls and actions using the seccomp filter format.
+
+\`\`\`yaml
+# Pod-level RuntimeDefault seccomp profile
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-app
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: app
+    image: myapp:v1.2.3
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 1000
+      capabilities:
+        drop: [ALL]
+\`\`\`
+
+\`\`\`json
+// Custom seccomp profile stored at /var/lib/kubelet/seccomp/profiles/myapp.json
+{
+  "defaultAction": "SCMP_ACT_ERRNO",
+  "syscalls": [
+    {
+      "names": ["read","write","open","close","stat","fstat","mmap","mprotect",
+                "munmap","brk","rt_sigaction","rt_sigprocmask","ioctl","access",
+                "pipe","select","sched_yield","mremap","msync","mincore","madvise",
+                "shmget","shmat","shmctl","dup","dup2","nanosleep","getitimer",
+                "alarm","setitimer","getpid","sendfile","socket","connect",
+                "accept","sendto","recvfrom","sendmsg","recvmsg","shutdown",
+                "bind","listen","getsockname","getpeername","socketpair",
+                "setsockopt","getsockopt","clone","fork","vfork","execve","exit",
+                "wait4","kill","uname","fcntl","flock","fsync","fdatasync",
+                "truncate","ftruncate","getdents","getcwd","chdir","fchdir",
+                "getrlimit","getrusage","sysinfo","times","getuid","syslog",
+                "getgid","setuid","setgid","geteuid","getegid","setpgid",
+                "getppid","getpgrp","setsid","setreuid","setregid","getgroups",
+                "setgroups","setresuid","getresuid","setresgid","getresgid",
+                "getpgid","setfsuid","setfsgid","getsid","capget","capset",
+                "rt_sigpending","rt_sigtimedwait","rt_sigqueueinfo",
+                "rt_sigsuspend","sigaltstack","utime","mknod","uselib",
+                "personality","ustat","statfs","fstatfs","sysfs","getpriority",
+                "setpriority","prctl","arch_prctl","futex","set_tid_address",
+                "clock_gettime","clock_getres","clock_nanosleep","exit_group",
+                "epoll_wait","epoll_ctl","tgkill","utimes","epoll_create",
+                "set_robust_list","get_robust_list","openat","mkdirat",
+                "newfstatat","unlinkat","renameat","faccessat","pselect6",
+                "ppoll","set_mempolicy","get_mempolicy","epoll_pwait",
+                "utimensat","accept4","dup3","pipe2","epoll_create1",
+                "preadv","pwritev","recvmmsg","sendmmsg","getrandom",
+                "memfd_create","statx"],
+      "action": "SCMP_ACT_ALLOW"
+    }
+  ]
+}
+\`\`\`
+
+Generating a minimal custom profile is done by running the application under load with seccomp set to SCMP_ACT_LOG, capturing the logged syscall numbers from the kernel audit log or from strace, and then constructing the allowlist. Tools such as oci-seccomp-bpf-hook or inspektor-gadget automate this profiling step.`
+    },
+    {
+      term: `Pod Security Standards: Privileged, Baseline, and Restricted`,
+      definition: `Pod Security Standards are enforced by a built-in admission controller called PodSecurity. Each namespace receives zero or one PSS label per enforcement mode. The three modes are enforce (reject non-conforming pods), audit (allow but record in the audit log), and warn (allow but return a warning header to the client). A namespace can simultaneously have different profiles for different modes, for example Baseline enforcement with Restricted audit and Restricted warn, which lets teams see what would break under a stricter profile before enabling it.
+
+The Privileged profile applies no restrictions and is intended for cluster system components that need full host access. The Baseline profile prevents the most dangerous configurations: hostNetwork, hostPID, hostIPC, privileged containers, host path mounts, and dangerous capabilities such as NET_RAW or SYS_ADMIN. The Restricted profile adds all Baseline restrictions plus requirements for a seccomp profile (RuntimeDefault or Localhost), dropping all capabilities with capabilities.drop containing ALL, setting allowPrivilegeEscalation to false, and requiring runAsNonRoot or a nonzero runAsUser.
+
+\`\`\`yaml
+# Apply Restricted enforcement to a namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: payments
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.30
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.30
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.30
+\`\`\`
+
+The version label pins the policy evaluation to a specific Kubernetes version so that upgrading the cluster does not silently change which fields are checked. Using latest as the version tracks the current Kubernetes version's policy, which may add new checks that break existing workloads on upgrade.`
+    },
+    {
+      term: `OPA Gatekeeper vs Kyverno`,
+      definition: `Both tools implement Kubernetes admission webhooks but differ in their policy language and Kubernetes integration philosophy. OPA Gatekeeper uses a two-resource model: a ConstraintTemplate defines the Rego logic and a corresponding Constraint resource (generated as a CRD from the template) configures the scope and parameters. This separation lets cluster administrators install templates from a library and then allow namespace owners to instantiate constraints with their own parameters.
+
+Kyverno uses a single ClusterPolicy or Policy resource where rules are expressed as YAML patterns. A mutate rule can add fields, patch existing fields, or inject strategic merge patches. A validate rule can enforce field values, required fields, or patterns using the match and deny blocks. Kyverno also supports generate rules that create ConfigMaps, NetworkPolicies, or other resources in response to namespace or pod creation events.
+
+\`\`\`yaml
+# OPA Gatekeeper ConstraintTemplate requiring seccomp
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: requireseccomp
+spec:
+  crd:
+    spec:
+      names:
+        kind: RequireSeccomp
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package requireseccomp
+      violation[{"msg": msg}] {
+        input.review.object.kind == "Pod"
+        profile := input.review.object.spec.securityContext.seccompProfile.type
+        not profile == "RuntimeDefault"
+        not profile == "Localhost"
+        msg := sprintf("Pod %v must have seccompProfile RuntimeDefault or Localhost", [input.review.object.metadata.name])
+      }
+
+---
+# Kyverno ClusterPolicy requiring seccomp (equivalent validation)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-seccomp-profile
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: check-seccomp
+    match:
+      any:
+      - resources:
+          kinds: [Pod]
+    validate:
+      message: "Pods must have seccompProfile type RuntimeDefault or Localhost"
+      pattern:
+        spec:
+          securityContext:
+            seccompProfile:
+              type: "RuntimeDefault | Localhost"
+\`\`\`
+
+Gatekeeper is the better choice for organizations that already use OPA in other infrastructure contexts (Terraform, Envoy, Kafka) because Rego is reusable across policy domains. Kyverno is more accessible for Kubernetes-native teams and excels at mutation and generation use cases. Both tools support audit mode that generates PolicyReport resources listing all existing cluster objects that violate policy without blocking new admissions.`
+    },
+    {
+      term: `AppArmor Profiles in Kubernetes`,
+      definition: `AppArmor is a Linux Mandatory Access Control module that restricts what files, network operations, and capabilities a process is allowed to use, based on profiles loaded into the kernel at node startup. Kubernetes supports AppArmor profiles through annotations on pod metadata and, starting in Kubernetes 1.30, through the securityContext.appArmorProfile field at both the pod and container level.
+
+An AppArmor profile is a text file with three sections: the profile path (usually the container binary path or a wildcard), file rules, and capability rules. The complain mode generates audit log entries for violations without enforcing, which is used during profiling. The enforce mode blocks violations and optionally signals the process with SIGKILL.
+
+\`\`\`
+# AppArmor profile for a web server container
+# Saved to /etc/apparmor.d/nginx-container on each node
+#include <tunables/global>
+
+profile nginx-container flags=(attach_disconnected) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  network inet tcp,
+  network inet6 tcp,
+
+  /usr/sbin/nginx mr,
+  /etc/nginx/** r,
+  /var/log/nginx/** w,
+  /var/run/nginx.pid w,
+  /run/nginx.pid w,
+  /tmp/** rw,
+
+  deny /proc/sys/kernel/** w,
+  deny @{PROC}/@{pid}/mem w,
+  deny @{PROC}/@{pid}/maps w,
+
+  capability net_bind_service,
+  capability dac_override,
+  capability setuid,
+  capability setgid,
+}
+\`\`\`
+
+\`\`\`yaml
+# Kubernetes 1.30+ securityContext field
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.27
+    securityContext:
+      appArmorProfile:
+        type: Localhost
+        localhostProfile: nginx-container
+\`\`\`
+
+AppArmor profiles must be pre-loaded on each node where the pod can schedule. In managed Kubernetes, this typically means a DaemonSet that copies profiles and runs apparmor_parser to load them at startup, or a node configuration tool like node-feature-discovery combined with a node setup script baked into the AMI or machine image.`
+    },
+  ],
+  approach: [
+    `Start with a Kubescape scan in CI mode against all manifests on every pull request. Set the failure threshold to 80 percent and fix critical controls before merging. This catches misconfigurations before they reach any cluster.`,
+    `Deploy Falco with the eBPF driver rather than the kernel module on managed Kubernetes services to avoid node pool compatibility issues with kernel header availability.`,
+    `Enable Falco Sidekick and route CRITICAL and ALERT priority events to PagerDuty while WARNING and below go to Slack, so on-call engineers are paged only for confirmed high-fidelity detections.`,
+    `Apply Pod Security Standards in audit mode first by adding the audit label to namespaces, then review the Kubernetes audit log for policy violations over a two-week window before switching to enforce mode.`,
+    `Use Kyverno ClusterPolicies to mutate pods with a missing seccomp profile by injecting RuntimeDefault automatically, so that workloads comply with PSS Restricted without requiring every team to learn securityContext syntax.`,
+    `Store OPA Gatekeeper ConstraintTemplates and Kyverno ClusterPolicies in a dedicated policies Git repository and apply them with Argo CD or Flux so that policy changes follow the same review and rollback process as application code.`,
+    `Install the Kubescape in-cluster operator and expose its Prometheus metrics to track posture over time. Create a Grafana alert that fires when the weekly critical finding count increases by more than ten percent, indicating infrastructure drift.`,
+    `Profile each production workload under realistic load using inspektor-gadget or oci-seccomp-bpf-hook to capture its actual syscall set, then generate a custom seccomp profile with a minimal allowlist rather than relying on RuntimeDefault alone.`,
+  ],
+  pitfalls: [
+    `Setting Falco rule conditions that are too broad, such as matching all execve syscalls without excluding init containers or known maintenance images, causes alert fatigue that trains operators to ignore notifications.`,
+    `Enabling PSS Restricted enforcement on existing namespaces without first running audit mode causes immediate pod eviction for any workload that lacks a seccomp profile or runs as root, creating production outages.`,
+    `Using the Kubescape score as the sole compliance measure without understanding which controls are weighted most heavily. A high score can coexist with a single critical RBAC misconfiguration that allows cluster-admin escalation.`,
+    `Running Gatekeeper or Kyverno webhooks with failurePolicy set to Fail without configuring proper replica counts and PodDisruptionBudgets for the webhook pods, causing all pod scheduling to block if the webhook pod crashes during a node upgrade.`,
+    `Loading AppArmor profiles only on a subset of nodes. If a pod with an AppArmor annotation schedules onto a node that does not have the profile loaded, the pod fails to start with a cryptic AppArmor profile not found error.`,
+    `Writing Falco output strings without escaping fields that might contain special characters or newlines, which causes structured log parsers to mis-parse the alert and SIEM correlation rules to fail silently.`,
+    `Using RuntimeDefault seccomp for workloads that call container-specific syscalls such as clone with CLONE_NEWUSER for rootless container builds inside containers, because RuntimeDefault blocks those syscalls and the application fails without an obvious error message.`,
+    `Treating Kubescape CI scan results as authoritative for live cluster state without running the in-cluster operator. Helm values overrides, operator mutations, and admission controller injections can cause the running pod specification to differ significantly from the source manifest.`,
+  ],
+  keyQuestions: [
+    {
+      question: `How does Falco syscall detection differ from Kubernetes audit log analysis, and what threats does each approach miss?`,
+      answer: `Falco and audit log analysis operate at different layers of the Kubernetes stack and have complementary blind spots. Falco attaches to the Linux kernel and observes every syscall made by every process running inside containers on a node. This gives it visibility into behaviors such as a container process reading /etc/shadow, writing to a binary directory, spawning a reverse shell, or making an unexpected outbound TCP connection. None of these actions involve the Kubernetes API server, so they are completely invisible to audit log analysis.
+
+Kubernetes audit logs record all API server requests: resource creation, deletion, exec commands, secret reads, and RBAC binding changes. This gives them visibility into behaviors such as a compromised service account token being used to list secrets, a new ClusterRoleBinding granting cluster-admin to an anonymous user, or a ConfigMap being exfiltrated via repeated get operations. None of these API-level actions involve a new syscall on the node, so Falco only sees them if the attacker's action happens to involve process execution or filesystem writes on the node as a side effect.
+
+The gap between the two tools is illustrated by two specific attacks. A Kubernetes API-level threat such as lateral movement using a stolen service account JWT to query the metadata API and obtain IAM credentials is entirely invisible to Falco because no new container process runs and no unusual file is opened on the node. Conversely, a container escape via a kernel exploit that overwrites a binary in /usr/bin without touching the API server is entirely invisible to audit log analysis but would be detected by Falco's write_below_binary_dir rule.
+
+The recommended architecture combines both. Falco covers node-level and process-level telemetry and detects runtime exploitation, cryptomining, and lateral movement via exec. The Kubernetes audit log is shipped to a SIEM for API-level threat detection covering privilege escalation, secret exfiltration, and anomalous service account usage. Tools such as Falco's k8s_audit event source can also ingest audit log events into Falco rules, providing a unified rule language across both data sources.
+
+\`\`\`yaml
+# Falco rule consuming Kubernetes audit log events
+- rule: K8s Secret Access by Service Account
+  desc: A service account read a secret via the API
+  condition: >
+    ka.verb in (get, list, watch) and
+    ka.target.resource = secrets and
+    ka.auth.decision = allow and
+    not ka.user.name in (system:serviceaccount:kube-system:default)
+  output: >
+    Secret accessed via API
+    (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s, secrets, mitre_credential_access]
+\`\`\`
+
+The practical conclusion is that teams should not choose between Falco and audit log analysis but should deploy both and correlate their events in a SIEM. A single alert combining a Falco terminal_shell_in_container event with a subsequent audit log event showing a secret read from the same pod name within thirty seconds is a high-confidence indicator of active compromise.`
+    },
+    {
+      question: `What syscalls does RuntimeDefault seccomp actually block, and when should you use a custom profile instead?`,
+      answer: `RuntimeDefault is a seccomp profile maintained by the container runtime (containerd or cri-o) that targets a middle ground: block syscalls that are almost never needed by application code and are frequently used in container escapes or privilege escalation, while allowing the full set of syscalls that typical web services, databases, and data processing workloads use. The containerd default profile blocks approximately 44 syscalls including acct, add_key, bpf, clock_adjtime, clock_settime, create_module, delete_module, finit_module, get_kernel_syms, get_mempolicy, init_module, ioperm, iopl, ioprio_set, kcmp, kexec_file_load, kexec_load, keyctl, lookup_dcookie, mbind, mount, move_pages, name_to_handle_at, nfsservctl, open_by_handle_at, perf_event_open, personality, pivot_root, process_vm_readv, process_vm_writev, ptrace, query_module, quotactl, reboot, request_key, set_mempolicy, setns, settimeofday, stime, sysfs, _sysctl, umount2, unshare, uselib, userfaultfd, ustat, and vm86.
+
+RuntimeDefault is sufficient for the vast majority of stateless web services, REST APIs, and queue consumers. The cases where it is insufficient fall into four categories. First, container-in-container workloads that run Docker or containerd inside a pod need mount, unshare, and potentially ptrace, all of which RuntimeDefault blocks. Second, high-performance databases like PostgreSQL use io_uring for async I/O, and older RuntimeDefault profiles block io_uring_setup. Third, profiling and tracing tools need perf_event_open or ptrace. Fourth, some JVM versions use clone3 with flags that older profiles deny.
+
+A custom Localhost profile should be created when RuntimeDefault causes application failures or when compliance requirements demand a minimal attack surface that can be documented per workload. The profiling workflow is to run the application with audit action on all syscalls, collect the audit log over a realistic load test, extract the unique syscall names, and generate a JSON profile that allows exactly that set.
+
+\`\`\`bash
+# Collect syscalls used by a pod using inspektor-gadget
+kubectl gadget trace syscall --namespace payments --podname api-7f9d4c --timeout 120s \\
+  | awk '{print \$NF}' | sort -u > used-syscalls.txt
+
+# Generate a seccomp profile JSON from the collected syscall list
+cat used-syscalls.txt | jq -Rs '
+  split("\n") | map(select(. != "")) |
+  {
+    defaultAction: "SCMP_ACT_ERRNO",
+    syscalls: [{ names: ., action: "SCMP_ACT_ALLOW" }]
+  }
+' > /var/lib/kubelet/seccomp/profiles/payments-api.json
+\`\`\`
+
+The tradeoff of a custom profile is operational overhead: the profile file must be distributed to every node where the pod can schedule (via a DaemonSet or node image bake), and the allowlist must be updated whenever the application adds a new dependency that introduces new syscalls. For most teams, RuntimeDefault plus the Restricted Pod Security Standard enforcing its presence is the right default, with custom profiles reserved for high-value or high-risk workloads.`
+    },
+    {
+      question: `How does Kubescape calculate its risk score and which controls carry the most weight?`,
+      answer: `Kubescape computes a weighted risk score as a percentage between zero and one hundred, where one hundred means all evaluated controls passed and zero means all failed. Each control in the framework has a base weight defined in the control configuration JSON. The overall score is the sum of passed control weights divided by the sum of all control weights for evaluated controls. Controls that could not be evaluated due to missing permissions are excluded from both numerator and denominator so they do not penalize teams scanning a cluster with limited RBAC.
+
+The controls with the highest weights in the NSA-CISA framework are those that directly enable cluster-admin access or container escape. The cluster-admin binding check, which detects ClusterRoleBindings that grant cluster-admin to non-system accounts, typically carries a weight of ten. The privileged container check, which finds containers with securityContext.privileged set to true, carries eight. The host path mount check that detects volumes mounting /etc, /var/run/docker.sock, or /proc carries seven. By contrast, best-practice controls such as liveness probe presence carry a weight of one.
+
+\`\`\`bash
+# List all controls for the NSA framework with their weights
+kubescape list controls --framework nsa --format json | \\
+  jq '.[] | {name: .name, weight: .baseScore, severity: .scoreFactor}' | \\
+  jq -s 'sort_by(-.weight)'
+
+# Scan and get per-control results to identify which failed controls have highest weight
+kubescape scan framework nsa --format json --output nsa-results.json
+jq '.results[] | select(.testConfiguration.status == "failed") |
+  {control: .controlID, severity: .severity, weight: .baseScore, resource: .resourceID}' \\
+  nsa-results.json | jq -s 'sort_by(-.weight)'
+\`\`\`
+
+The practical implication is that a cluster can have a score of 75 while still having a wildcard ClusterRoleBinding granting a developer service account get and list on all resources in all API groups. Because that control may be weighted at three while the cluster is passing many low-weight best-practice controls, the absolute score does not substitute for reviewing the specific critical and high severity findings. The recommended operational practice is to gate CI on both the overall score threshold and on the presence of any critical severity finding, using the --severity-threshold flag in addition to --threshold.`
+    },
+    {
+      question: `What does the PSS Restricted profile require, and how do you migrate a workload from Baseline to Restricted without downtime?`,
+      answer: `The Pod Security Standards Restricted profile requires the following fields to be set correctly on every pod or the pod is rejected at admission. The securityContext.seccompProfile.type must be RuntimeDefault or Localhost. The securityContext.allowPrivilegeEscalation must be false or the container must set securityContext.allowPrivilegeEscalation: false explicitly. The container must either set securityContext.runAsNonRoot: true or set securityContext.runAsUser to a nonzero value. All capabilities must be dropped, meaning securityContext.capabilities.drop must include ALL. Adding capabilities beyond the dropped set is restricted to a small list of allowed capabilities (none in the default Restricted profile), so any container that adds any capability such as NET_BIND_SERVICE will be rejected unless the namespace is using a more permissive profile.
+
+Migrating without downtime requires a staged approach. First, add the audit and warn labels to the namespace without the enforce label. This lets existing pods continue running while showing which new pod submissions would be rejected. The Kubernetes API server returns an HTTP warning header on any pod admission that would fail the labeled profile, and the kubectl command line prints these warnings. Second, review the policy report generated by running kubectl get events with reason PodSecurityViolation in the namespace, or use a Kyverno or Gatekeeper audit report to enumerate existing violations. Third, update deployment specs to add the required security context fields. Fourth, trigger a rolling update so that new pods come up with the corrected spec while old pods continue serving traffic. Fifth, after all pods have been replaced, apply the enforce label.
+
+\`\`\`bash
+# Step 1: add audit and warn labels without enforce
+kubectl label namespace payments \\
+  pod-security.kubernetes.io/audit=restricted \\
+  pod-security.kubernetes.io/audit-version=v1.30 \\
+  pod-security.kubernetes.io/warn=restricted \\
+  pod-security.kubernetes.io/warn-version=v1.30
+
+# Step 2: check which current pods would fail
+kubectl get events -n payments --field-selector reason=FailedCreate | grep -i security
+
+# Step 3: patch a deployment to add required security context
+kubectl patch deployment api -n payments --type=json -p='[
+  {"op": "add", "path": "/spec/template/spec/securityContext",
+   "value": {"seccompProfile": {"type": "RuntimeDefault"}, "runAsNonRoot": true, "runAsUser": 1000}},
+  {"op": "add", "path": "/spec/template/spec/containers/0/securityContext",
+   "value": {"allowPrivilegeEscalation": false, "capabilities": {"drop": ["ALL"]},
+              "readOnlyRootFilesystem": true}}
+]'
+
+# Step 4: after rolling update completes, enable enforcement
+kubectl label namespace payments \\
+  pod-security.kubernetes.io/enforce=restricted \\
+  pod-security.kubernetes.io/enforce-version=v1.30
+\`\`\`
+
+The most common blockers in practice are init containers that run as root to set file permissions, sidecars injected by service meshes that add NET_ADMIN capability, and legacy JVM images that set allowPrivilegeEscalation implicitly. Each of these requires coordination with the relevant team or a Kyverno mutation rule to inject the correct securityContext before the workload team can update their own manifests.`
+    },
+    {
+      question: `When should you choose Kyverno over OPA Gatekeeper, and what are the operational tradeoffs?`,
+      answer: `The choice between Kyverno and Gatekeeper involves a tradeoff between policy language accessibility, ecosystem integration, and operational complexity. Kyverno's primary advantage is that its policies are expressed as Kubernetes YAML with a declarative pattern matching syntax that any Kubernetes engineer can read without learning a new language. A Kyverno validate rule looks like a Kubernetes resource spec where fields are patterns to match. A mutate rule looks like a strategic merge patch. A generate rule looks like the resource it will create. This makes Kyverno policies reviewable in pull requests by the same engineers who review application manifests.
+
+Gatekeeper's primary advantage is the power and composability of Rego. Complex policies that involve joining data across multiple resources, for example verifying that a Service's selector matches at least one live Pod with the required labels, can be expressed in Rego with multi-document evaluation that would require multiple rules and a complex match block in Kyverno. Organizations that already use OPA in other contexts (Terraform Sentinel-style policy, Envoy authorization policy, or Open Policy Agent standalone REST API for other services) benefit from sharing Rego expertise and potentially sharing policy modules across the stack.
+
+Operational tradeoffs favor Kyverno for smaller teams. Kyverno ships with a single Helm chart that deploys admission, background scan, and cleanup controllers. Policy reports are native CRDs that kubectl can query directly. The policy exception CRD allows per-namespace or per-resource overrides without modifying the ClusterPolicy. Gatekeeper's two-CRD model (ConstraintTemplate plus Constraint) adds a compilation step where Gatekeeper generates a new CRD from the template, which can take several seconds after applying a template before the Constraint CRD is available. If a ConstraintTemplate has a Rego syntax error, the generated CRD is not created and the failure mode is non-obvious.
+
+\`\`\`yaml
+# Kyverno mutating rule to inject RuntimeDefault seccomp if missing
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-default-seccomp
+spec:
+  rules:
+  - name: add-seccomp-to-pods
+    match:
+      any:
+      - resources:
+          kinds: [Pod]
+    mutate:
+      patchStrategicMerge:
+        spec:
+          securityContext:
+            +(seccompProfile):
+              type: RuntimeDefault
+\`\`\`
+
+\`\`\`rego
+# Gatekeeper equivalent using Rego (no native mutation — use separate mutating webhook)
+package k8srequiredseccomp
+
+violation[{"msg": msg}] {
+  pod := input.review.object
+  not pod.spec.securityContext.seccompProfile.type
+  msg := sprintf("Pod %v must set seccompProfile", [pod.metadata.name])
+}
+\`\`\`
+
+For a new cluster with a small platform team and no existing OPA investment, Kyverno is the faster path to comprehensive policy coverage. For a large enterprise with a dedicated security engineering team, existing Rego expertise, and a need for complex cross-resource policies, Gatekeeper's Rego foundation is more powerful. Both tools can coexist in the same cluster if needed, though running two admission webhooks increases API server latency on every pod admission request.`
+    },
+  ],
+  references: [
+    'https://kubescape.io/docs/',
+    'https://github.com/kubescape/kubescape',
+    'https://falco.org/docs/',
+    'https://falco.org/docs/rules/',
+    'https://github.com/falcosecurity/falco',
+    'https://kubernetes.io/docs/concepts/security/pod-security-standards/',
+    'https://kubernetes.io/docs/tutorials/security/seccomp/',
+    'https://kubernetes.io/docs/tutorials/security/apparmor/',
+    'https://open-policy-agent.github.io/gatekeeper/website/docs/',
+    'https://kyverno.io/docs/',
+    'https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF',
+    'https://attack.mitre.org/matrices/enterprise/containers/',
+    'https://github.com/falcosecurity/falcosidekick',
+    'https://inspektor-gadget.io/docs/',
+  ],
+},
+
 
   {
     id: 'devops-coding-challenges',
