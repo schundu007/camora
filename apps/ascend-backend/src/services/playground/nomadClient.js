@@ -7,11 +7,11 @@ const NOMAD_ADDR = () => {
 const NOMAD_TOKEN = () => process.env.NOMAD_TOKEN || null;
 
 const IMAGES = {
-  ubuntu: 'camora/pg-ubuntu:latest',
-  docker: 'camora/pg-docker:latest',
-  'k8s-single': 'camora/pg-k8s-single:latest',
-  'k8s-multi': 'camora/pg-k8s-multi:latest',
-  'cloud-cli': 'camora/pg-cloud-cli:latest',
+  ubuntu: 'chundubabu/pg-ubuntu:latest',
+  docker: 'chundubabu/pg-docker:latest',
+  'k8s-single': 'chundubabu/pg-k8s-single:latest',
+  'k8s-multi': 'chundubabu/pg-k8s-multi:latest',
+  'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
 };
 
 const RESOURCES = {
