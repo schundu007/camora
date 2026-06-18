@@ -316,7 +316,7 @@ export default function LandingPage() {
           style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.55) 35%, rgba(139,92,246,0.45) 65%, transparent 95%)' }}
         />
 
-        <Container className="relative pt-16 pb-20 md:pt-24 md:pb-28">
+        <Container className="relative pt-16 pb-16 md:pt-24 md:pb-20">
           {/* Centered headline block */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
@@ -378,15 +378,6 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* Live session preview — below the centered headline */}
-          <motion.div
-            className="mt-16 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.40, delay: 0.28, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <LiveSessionPreview />
-          </motion.div>
         </Container>
 
         <style>{`
@@ -411,6 +402,20 @@ export default function LandingPage() {
             50%      { transform: translateY(-18px) scale(1.15); opacity: 0.7; }
           }
         `}</style>
+      </section>
+
+      {/* ═══════════ SONA PREVIEW ═══════════ */}
+      <section className="bg-[var(--bg-surface)] py-12">
+        <Container>
+          <motion.div
+            className="max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.40, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
+          >
+            <LiveSessionPreview />
+          </motion.div>
+        </Container>
       </section>
 
       {/* ═══════════ LOGO STRIP ═══════════ */}
