@@ -1,22 +1,38 @@
 import { WebSocket as WsClient } from 'ws';
 
 // ttyd binary protocol:
-//   FROM ttyd → browser: binary frames, first byte = type ('0'=output, '1'=title, '2'=prefs)
-//   TO ttyd ← browser:   binary frames, first byte = type ('0'=input, '1'=resize JSON)
-//   Handshake: browser sends JSON {"AuthToken":"","columns":N,"rows":N} as text on open
+//   Recv from ttyd: binary frames, byte[0]='0' output, '1' title, '2' prefs
+//   Send to ttyd:   text frame JSON {"AuthToken":"","columns":N,"rows":N} on open
+//                   binary frames byte[0]='0' input, byte[0]='1' resize JSON
 //
-// Pass frames through raw — no JSON wrapping — browser speaks ttyd natively.
+// The browser sends the handshake text frame immediately on WS open.
+// We must buffer browser messages that arrive before ttyd connects, then flush.
 
 export function createTtydProxy(browserWs, ttydHost, ttydPort) {
   const ttydWs = new WsClient(`ws://${ttydHost}:${ttydPort}`, ['tty']);
 
+  // Buffer messages from browser that arrive before ttyd is ready
+  const pendingFromBrowser = [];
+  let ttydReady = false;
+
+  // Queue messages from browser until ttyd is open
+  browserWs.on('message', (data, isBinary) => {
+    if (ttydReady && ttydWs.readyState === WsClient.OPEN) {
+      ttydWs.send(data, { binary: isBinary });
+    } else {
+      pendingFromBrowser.push({ data, isBinary });
+    }
+  });
+
   ttydWs.on('open', () => {
-    // Forward all browser frames straight to ttyd
-    browserWs.on('message', (data, isBinary) => {
+    ttydReady = true;
+    // Flush any messages that arrived before ttyd was ready
+    for (const { data, isBinary } of pendingFromBrowser) {
       if (ttydWs.readyState === WsClient.OPEN) {
         ttydWs.send(data, { binary: isBinary });
       }
-    });
+    }
+    pendingFromBrowser.length = 0;
   });
 
   // Forward all ttyd frames straight to browser
