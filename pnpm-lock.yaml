@@ -108,6 +108,9 @@ importers:
       uuid:
         specifier: ^13.0.0
         version: 13.0.1
+      ws:
+        specifier: ^8.18.0
+        version: 8.20.0
     devDependencies:
       vitest:
         specifier: ^4.1.5
