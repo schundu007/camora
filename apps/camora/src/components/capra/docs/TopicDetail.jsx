@@ -2868,48 +2868,63 @@ export default function TopicDetail({
             <section id="key-concepts" className="scroll-mt-24">
               <ContentHeading title="Key Concepts" />
               <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {topicDetails.keyConcepts.map((kc, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
-                    <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-2.5">
-                      <span
-                        className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded"
-                        style={{
-                          color: 'var(--cam-gold-leaf, #c9a55d)',
-                          background: 'rgba(201, 165, 93, 0.08)',
-                          border: '1px solid rgba(201, 165, 93, 0.3)',
-                        }}
-                      >
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
+                {topicDetails.keyConcepts.map((kc, i) => {
+                  const codeIdx = kc.definition ? kc.definition.indexOf('```') : -1;
+                  const prose = codeIdx > 0 ? kc.definition.slice(0, codeIdx).trim() : null;
+                  const code  = codeIdx > 0 ? kc.definition.slice(codeIdx).trim() : null;
+                  const splitLayout = !!(prose && code);
+                  return (
+                    <div
+                      key={i}
+                      className={`rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]${splitLayout ? ' lg:col-span-2' : ''}`}
+                    >
+                      <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-2.5">
+                        <span
+                          className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded"
+                          style={{
+                            color: 'var(--cam-gold-leaf, #c9a55d)',
+                            background: 'rgba(201, 165, 93, 0.08)',
+                            border: '1px solid rgba(201, 165, 93, 0.3)',
+                          }}
+                        >
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term}</span>
+                      </div>
+                      {splitLayout ? (
+                        <div className="flex divide-x divide-[var(--border)] min-h-0">
+                          <div className="flex-1 min-w-0 px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
+                            <FormattedContent content={prose} color="amber" />
+                          </div>
+                          <div className="w-[52%] shrink-0 min-w-0 overflow-x-auto">
+                            <FormattedContent content={code} color="amber" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
+                          <FormattedContent content={kc.definition} color="amber" />
+                        </div>
+                      )}
                     </div>
-                    <div className="px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
-                      <FormattedContent content={kc.definition} color="amber" />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
 
-          {/* ── 5 / Approach — numbered timeline ── */}
+          {/* ── 5 / Approach — two-column step cards ── */}
           {topicDetails.approach && topicDetails.approach.length > 0 && (
             <section id="approach" className="scroll-mt-24">
               <ContentHeading title="Step-by-Step Approach" />
-              <div className="pt-3">
-                <SlideCard>
-                  <ol className="relative space-y-4">
-                    {topicDetails.approach.map((step, i) => (
-                      <li key={i} className="flex items-start gap-3 relative">
-                        {i < topicDetails.approach.length - 1 && (
-                          <div className="absolute left-[13px] top-7 w-0.5" style={{ height: 'calc(100% - 6px)', background: 'var(--accent)', opacity: 0.25 }} />
-                        )}
-                        <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
-                        <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed pb-4 landing-body"><FormattedContent content={step} inline /></div>
-                      </li>
-                    ))}
-                  </ol>
-                </SlideCard>
+              <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {topicDetails.approach.map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                    <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 landing-mono">{i + 1}</div>
+                    <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
+                      <FormattedContent content={step} inline />
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
