@@ -58,6 +58,8 @@ export const sreTopicCategoryMap = {
   'five-whys':                 'incidents',
   'incident-comms':            'incidents',
   'gamedays-chaos':            'incidents',
+  'ace-sre-troubleshooting-multi-region-latency': 'incidents',
+  'ace-sre-zero-downtime-schema-migration': 'incidents',
   // Automation
   'toil-quantified':           'automation',
   'iac-terraform-pulumi':      'automation',
@@ -11654,6 +11656,58 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
       'https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final',
       'https://attack.mitre.org/',
       'https://www.cisa.gov/cyber-incident-response',
+    ],
+  },
+
+  {
+    id: 'ace-sre-troubleshooting-multi-region-latency',
+    title: 'Multi-Region Latency Spike Diagnosis',
+    icon: 'globe',
+    color: '#ef4444',
+    questions: 2,
+    description: 'Diagnosing latency spikes affecting users in one region but not others in a multi-region deployment.',
+    introduction: 'Multi-region latency issues are hard to diagnose because they span routing, replication, and infrastructure layers. Systematic scoping — which region, which endpoints, which percentage of users — is the first step before touching anything.',
+    keyQuestions: [
+      {
+        question: 'A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?',
+        answer: 'Scope first: which region, which percentage of users, which endpoints, and what is the latency delta versus the healthy region. Check Route53 routing: are health checks passing for the affected region? Is the routing policy (latency-based, geolocation, or failover) directing traffic correctly? Run dig from the affected region using Route53 Resolver Query Logging. Check inter-region traffic: is the affected region making synchronous calls to another region? The X-Ray service map shows cross-region call latency. Check CloudFront: are users hitting the nearest edge? Check origin latency in CloudFront access logs. Check the regional stack independently: RDS read replica replication lag (CloudWatch ReplicaLag metric), ElastiCache cross-AZ latency, ECS or EKS CPU throttling in the affected AZ. Cross-AZ traffic: if an AZ in the affected region has failing instances, the load balancer routes across AZs adding 1-5ms and bandwidth costs. Enable CloudWatch Container Insights to correlate latency spikes with deployment timeline and resource utilization.',
+      },
+      {
+        question: 'How do you design a multi-region active-active system and what are the consistency tradeoffs?',
+        answer: 'Traffic routing: Route53 latency-based routing with health check failover, or AWS Global Accelerator for anycast routing that directs users to the nearest healthy endpoint at the network layer. Data layer: DynamoDB Global Tables provides multi-region active-active with eventual consistency within approximately 1 second; Aurora Global Database provides a primary write region with local reads from replicas, with replication lag under 1 second. Application state: avoid session affinity — store sessions in DynamoDB or ElastiCache so any region can serve any user. Consistency model: accept eventual consistency for reads on user profiles and product catalogs, require strong consistency only for writes to payments and inventory. Conflict resolution: last-write-wins for simple state, vector clocks or CRDTs for complex collaborative state. Cost reality: active-active is 2-3x more expensive than active-passive (doubled infrastructure, cross-region replication data transfer at $0.02/GB, Global Accelerator at $0.01/GB plus $0.025/hr per accelerator). Justify it only when RPO must be near-zero and RTO must be seconds.',
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html',
+      'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html',
+      'https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html',
+      'https://aws.amazon.com/global-accelerator/',
+    ],
+  },
+
+  {
+    id: 'ace-sre-zero-downtime-schema-migration',
+    title: 'Zero-Downtime Database Schema Migrations',
+    icon: 'database',
+    color: '#8b5cf6',
+    questions: 2,
+    description: 'Deploying breaking schema changes to production databases with zero downtime using the expand-contract pattern.',
+    introduction: 'Breaking schema changes — column renames, type changes, NOT NULL additions — are among the highest-risk database operations. The expand-contract pattern decouples schema changes from code changes, eliminating the window where incompatible versions coexist.',
+    keyQuestions: [
+      {
+        question: 'You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?',
+        answer: 'The expand-contract pattern requires 3 phases. Phase 1 — Expand: add the new column as nullable with no default, deploy the new app version that writes to both old and new columns simultaneously. Both old and new app versions can run in parallel during the blue-green transition window without schema errors. Phase 2 — Backfill: run a background job with rate limiting (use pg_sleep between batches to avoid starving OLTP queries) that populates the new column for all existing rows; monitor progress with SELECT COUNT(*) queries. Phase 3 — Contract: once the backfill is complete and verified, deploy the app version that reads only the new column; follow up with ALTER TABLE to make the column NOT NULL and DROP the old column. For column renames: never rename directly — add the new column, dual-write, backfill, switch reads, then deprecate the old. For index changes: use CREATE INDEX CONCURRENTLY in PostgreSQL (non-locking, but takes hours on large tables and cannot run inside a transaction). For large table rewrites: pg_repack rewrites the table without holding an access-exclusive lock.',
+      },
+      {
+        question: 'What are the risks of running database migrations inside a deployment pipeline, and how do you mitigate them?',
+        answer: 'Risk 1 — schema-code timing gap: if migration runs before the new code deploys, old code runs against the new schema for a window; if migration runs after, new code runs against the old schema. Mitigation: only use backward-compatible schema changes (additive: new nullable columns, new tables) so old code is never broken by a new schema. Risk 2 — partial migration failure: the migration applies half the changes, leaving the schema in an inconsistent state that is hard to roll back. Mitigation: wrap each migration in a transaction (DDL is transactional in PostgreSQL); set a statement_timeout to fail fast rather than hang. Risk 3 — lock contention: ALTER TABLE acquires an access-exclusive lock that blocks all reads and writes for the duration. Mitigation: use ADD COLUMN with a volatile DEFAULT only on PostgreSQL 11+ (instant); for earlier versions add nullable first. Risk 4 — pipeline timeout with orphaned migration: a long-running migration times out the CI job but continues running in the database. Mitigation: separate migration pipeline from app deployment — run migrations, verify, then trigger the app deploy as a downstream step. Always test migrations on a production-sized replica before prod.',
+      },
+    ],
+    references: [
+      'https://www.postgresql.org/docs/current/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY',
+      'https://github.com/reorg/pg_repack',
+      'https://flywaydb.org/documentation/',
+      'https://www.liquibase.org/documentation/',
     ],
   },
 ];
