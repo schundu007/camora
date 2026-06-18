@@ -47,7 +47,7 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   const { host, port } = await getTaskAddress(jobId);
 
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt);
+  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, port);
 
   await updateSessionStatus(session.id, 'ready');
   await setTTL(session.id, 3600);
