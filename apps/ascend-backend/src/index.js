@@ -1521,7 +1521,7 @@ server.on('connection', (socket) => {
 const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (req, socket, head) => {
-  const match = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)$/);
+  const match = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
   if (!match) { socket.destroy(); return; }
   const sessionId = match[1];
 
