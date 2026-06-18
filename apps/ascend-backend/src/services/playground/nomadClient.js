@@ -9,6 +9,7 @@ const NOMAD_TOKEN = () => process.env.NOMAD_TOKEN || null;
 const IMAGES = {
   ubuntu: 'chundubabu/pg-ubuntu:latest',
   docker: 'chundubabu/pg-docker:latest',
+  'agent-sandbox': 'chundubabu/pg-agent-sandbox:latest',
   'k8s-single': 'chundubabu/pg-k8s-single:latest',
   'k8s-multi': 'chundubabu/pg-k8s-multi:latest',
   'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
@@ -17,6 +18,7 @@ const IMAGES = {
 const RESOURCES = {
   ubuntu: { CPU: 500, MemoryMB: 512 },
   docker: { CPU: 1000, MemoryMB: 1024 },
+  'agent-sandbox': { CPU: 1000, MemoryMB: 1536 },
   'k8s-single': { CPU: 2000, MemoryMB: 2048 },
   'k8s-multi': { CPU: 3000, MemoryMB: 4096 },
   'cloud-cli': { CPU: 500, MemoryMB: 512 },
