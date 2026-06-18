@@ -514,14 +514,14 @@ export default function LandingPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.45)' }}>
+                      <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.68)' }}>
                         {step.desc}
                       </p>
 
                       {/* Arrow link */}
                       <span
                         className="text-[12px] font-semibold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
-                        style={{ color: 'rgba(212,160,67,0.6)', fontFamily: 'var(--font-mono)' }}
+                        style={{ color: 'rgba(212,160,67,0.88)', fontFamily: 'var(--font-mono)' }}
                       >
                         Explore
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
@@ -567,7 +567,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ FEATURES — Bento grid ═══════════ */}
-      <Section tone="surface" spacing="lg">
+      <Section tone="muted" spacing="lg">
         <Container>
           <Reveal>
             <SectionHeading
