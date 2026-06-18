@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
 import { useDialog } from '@/components/shared/Dialog';
-import EnvironmentPicker, { ENVIRONMENTS } from './EnvironmentPicker';
+import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
 
 const TERMINAL_PREVIEW = `[32mcamora[0m:[34m~[0m$ `;
@@ -177,8 +177,8 @@ export default function PlaygroundShell() {
                 padding: 20,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
-                    {selectedEnv.icon} {selectedEnv.label}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <EnvIcon icon={selectedEnv.icon} /> {selectedEnv.label}
                   </span>
                   <button
                     type="button"
@@ -274,7 +274,7 @@ export default function PlaygroundShell() {
               {/* Selected env info */}
               <div style={{ padding: '0 16px', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <span style={{ fontSize: 18 }}>{selectedEnv.icon}</span>
+                  <EnvIcon icon={selectedEnv.icon} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{selectedEnv.label}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
