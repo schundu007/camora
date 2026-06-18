@@ -2,6 +2,8 @@ name: Build Desktop
 
 on:
   push:
+    branches: [main]
+  push:
     tags:
       - 'desktop-v*'
   workflow_dispatch:
@@ -73,9 +75,28 @@ jobs:
       - name: List artifacts
         run: ls -lh dist/
 
+      - name: Determine release target
+        id: rel
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "name=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=desktop-latest" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "name=Desktop latest ($(date -u +%Y-%m-%d))" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload to GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          tag_name: ${{ steps.rel.outputs.tag }}
+          name: ${{ steps.rel.outputs.name }}
+          prerelease: ${{ steps.rel.outputs.prerelease }}
           files: dist/**
           fail_on_unmatched_files: true
