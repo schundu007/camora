@@ -711,3 +711,72 @@ export function FeatureMockSessionAnim() {
     </div>
   );
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   FEATURE 5: PLAYGROUND — terminal with animated kubectl commands
+   ───────────────────────────────────────────────────────────────── */
+export function FeaturePlaygroundAnim() {
+  const lines = [
+    { prompt: '$', cmd: 'kubectl get pods', delay: 0.2 },
+    { prompt: '', cmd: 'ubuntu-0   Running   4s', delay: 0.9, muted: true },
+    { prompt: '', cmd: 'ubuntu-1   Running   4s', delay: 1.2, muted: true },
+    { prompt: '$', cmd: 'docker run --rm ubuntu bash', delay: 2.0 },
+    { prompt: '', cmd: 'cursor', delay: 2.7, cursor: true },
+  ];
+  return (
+    <div
+      style={{
+        ...base,
+        background: '#0D1117',
+        padding: '10px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+        fontFamily: MONO,
+      }}
+    >
+      {/* Traffic lights */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+        {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => (
+          <span key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c, flexShrink: 0 }} />
+        ))}
+      </div>
+
+      {lines.map((l, i) => (
+        <div
+          key={i}
+          style={{
+            display: 'flex',
+            gap: 5,
+            marginBottom: 3,
+            opacity: 0,
+            animation: `card-fade-up 0.35s ease-out ${l.delay}s forwards`,
+          }}
+        >
+          {l.prompt && (
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#3FB950', flexShrink: 0 }}>{l.prompt}</span>
+          )}
+          {l.cursor ? (
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
+              root@c3f8a2:/#&nbsp;
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 5,
+                  height: 9,
+                  background: '#3FB950',
+                  verticalAlign: 'text-bottom',
+                  animation: 'card-cursor-blink 1s step-end infinite',
+                }}
+              />
+            </span>
+          ) : (
+            <span style={{ fontSize: 9, color: l.muted ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
+              {l.cmd}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
