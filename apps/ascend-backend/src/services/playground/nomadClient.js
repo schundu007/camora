@@ -74,7 +74,7 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
   ];
   if (scenarioId) envFlags.push(`-e SCENARIO_ID=${scenarioId}`);
 
-  const cmd = `docker run -d --rm --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 -p 0:8080 ${image}`;
+  const cmd = `docker run -d --rm --pull=always --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 -p 0:8080 ${image}`;
   const containerId = await sshExec(cmd);
 
   if (!containerId || containerId.length < 12) {
