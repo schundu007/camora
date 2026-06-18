@@ -1,4 +1,5 @@
 import { Client } from 'ssh2';
+import net from 'net';
 
 const WORKER_HOST = () => process.env.WORKER_HOST || '172.104.210.63';
 const WORKER_USER = () => process.env.WORKER_USER || 'pgrunner';
@@ -112,6 +113,19 @@ export async function getTaskAddress(jobId) {
   }
   if (!ttydPort) throw new Error('Timed out waiting for ttyd port mapping');
   if (!codeServerPort) throw new Error('Timed out waiting for code-server port mapping');
+
+  // ttyd starts AFTER code-server readiness check (up to 30s). Probe until it accepts TCP.
+  const probeDeadline = Date.now() + 90_000;
+  while (Date.now() < probeDeadline) {
+    const ready = await new Promise((resolve) => {
+      const sock = net.connect(ttydPort, WORKER_HOST());
+      sock.on('connect', () => { sock.destroy(); resolve(true); });
+      sock.on('error', () => resolve(false));
+      setTimeout(() => { sock.destroy(); resolve(false); }, 2000);
+    });
+    if (ready) break;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
 
   return { host: WORKER_HOST(), ttydPort, codeServerPort };
 }
