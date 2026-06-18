@@ -62,6 +62,7 @@ import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
 import prepDocsRouter from './routes/prepDocs.js';
 import jobAlertsRouter from './routes/jobAlerts.js';
+import caraRouter from './routes/cara.js';
 import cron from 'node-cron';
 import { sendJobAlertDigest } from './services/jobAlertEmailService.js';
 
@@ -1450,6 +1451,9 @@ app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
 // MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
 app.use('/api/v1/mcq', authenticate, aiLimiter, mcqRouter);
+
+// Cara — platform-wide AI guide (⌘K command bar)
+app.use('/api/v1/cara', authenticate, aiLimiter, caraRouter);
 
 // Learn topic content — Redis L1 + Postgres L2 cache, auto-generated on first visit
 app.use('/api/v1/learn/topic', apiLimiter, learnTopicRouter);
