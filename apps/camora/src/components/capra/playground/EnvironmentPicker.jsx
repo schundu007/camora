@@ -1,3 +1,6 @@
+import { isOwner } from '@/lib/owner';
+import { useAuth } from '@/contexts/AuthContext';
+
 const ENVIRONMENTS = [
   { id: 'ubuntu', label: 'Ubuntu', icon: '🖥', plan: 'free' },
   { id: 'docker', label: 'Docker', icon: '🐳', plan: 'free' },
@@ -6,8 +9,11 @@ const ENVIRONMENTS = [
   { id: 'cloud-cli', label: 'Cloud CLI', icon: '☁', plan: 'pro' },
 ];
 
+const PAID_PLANS = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
+
 export default function EnvironmentPicker({ selected, onChange, userPlan, disabled }) {
-  const isPro = userPlan === 'pro_monthly' || userPlan === 'pro_yearly' || userPlan === 'team' || userPlan === 'lifetime';
+  const { user } = useAuth();
+  const isPro = isOwner(user) || PAID_PLANS.has(userPlan);
 
   return (
     <div className="flex flex-col gap-1.5">
