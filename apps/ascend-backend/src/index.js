@@ -1528,6 +1528,12 @@ server.on('upgrade', (req, socket, head) => {
   const sessionId = match[1];
 
   wss.handleUpgrade(req, socket, head, async (ws) => {
+    // Buffer ALL browser messages immediately — before any async session lookup.
+    // Browser sends auth text frame on ws.onopen (after 101) but we await DB here;
+    // without this buffer the auth message is lost before createTtydProxy sets up its listener.
+    const preBuf = [];
+    ws.on('message', (data, isBinary) => preBuf.push({ data, isBinary }));
+
     console.log(`[PlaygroundWS] upgrade sessionId=${sessionId}`);
     try {
       let token = null;
@@ -1569,10 +1575,11 @@ server.on('upgrade', (req, socket, head) => {
 
       const host = session.ttyd_host;
       const port = session.ttyd_port;
-      console.log(`[PlaygroundWS] proxying to ttyd host=${host} port=${port}`);
+      console.log(`[PlaygroundWS] proxying to ttyd host=${host} port=${port} preBuf=${preBuf.length}`);
       if (!host || !port) { console.log('[PlaygroundWS] close: no ttyd addr'); ws.close(4500, 'Session has no ttyd address'); return; }
 
-      createTtydProxy(ws, host, port);
+      ws.removeAllListeners('message');
+      createTtydProxy(ws, host, port, preBuf);
     } catch (err) {
       console.error('[PlaygroundWS] upgrade error:', err.message);
       ws.close(4500, 'Internal error');

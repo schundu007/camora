@@ -63,12 +63,15 @@ const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, initial
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
+      term.write('\x1b[90mConnecting to terminal...\x1b[0m\r\n');
+
       const ws = new WebSocket(wsUrl, ['tty']);
       ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
 
       ws.onopen = () => {
         ws.send(JSON.stringify({ AuthToken: '', columns: term.cols, rows: term.rows }));
+        term.write('\x1b[90mHandshaking...\x1b[0m\r\n');
       };
 
       ws.onmessage = (e) => {
@@ -80,10 +83,18 @@ const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, initial
         // 0x31='1' title, 0x32='2' prefs — ignore
       };
 
-      ws.onerror = () => term.write('\r\n\x1b[31m[Connection error]\x1b[0m\r\n');
+      ws.onerror = (e) => {
+        const msg = e.message || 'WebSocket error';
+        term.write(`\r\n\x1b[31m[Error: ${msg}]\x1b[0m\r\n`);
+        console.error('[TerminalPane] ws error', e);
+      };
 
-      ws.onclose = () => {
-        if (!disposed) term.write('\r\n\x1b[33m[Disconnected]\x1b[0m\r\n');
+      ws.onclose = (e) => {
+        if (!disposed) {
+          const reason = e.reason ? ` (${e.reason})` : '';
+          term.write(`\r\n\x1b[33m[Disconnected: code ${e.code}${reason}]\x1b[0m\r\n`);
+          console.warn('[TerminalPane] ws closed', e.code, e.reason);
+        }
       };
 
       term.onData((data) => {
