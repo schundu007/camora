@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 
-function EnvIcon({ icon }) {
+export function EnvIcon({ icon }) {
   if (!icon) return null;
   if (icon.logos) {
     return (
