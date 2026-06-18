@@ -42,6 +42,20 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      '/api/v1/playground': {
+        target: 'http://localhost:3010',
+        changeOrigin: true,
+      },
+      '/playground/ws': {
+        target: 'ws://localhost:3010',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/pg-ide': {
+        target: 'http://localhost:3010',
+        changeOrigin: true,
+        ws: true,
+      },
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
