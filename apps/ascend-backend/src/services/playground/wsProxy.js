@@ -35,6 +35,7 @@ export function createTtydProxy(browserWs, ttydHost, ttydPort) {
   });
 
   connectToTtyd(url).then((ttydWs) => {
+    console.log(`[WsProxy] ttyd connected url=${url} buffered=${pendingFromBrowser.length} browserState=${browserWs.readyState}`);
     browserWs.removeAllListeners('message');
 
     for (const { data, isBinary } of pendingFromBrowser) {
@@ -47,10 +48,16 @@ export function createTtydProxy(browserWs, ttydHost, ttydPort) {
     });
 
     ttydWs.on('message', (data, isBinary) => {
-      if (browserWs.readyState === browserWs.OPEN) browserWs.send(data, { binary: isBinary });
+      console.log(`[WsProxy] ttyd→browser isBinary=${isBinary} len=${data.length} byte0=${data[0]} browserState=${browserWs.readyState}`);
+      if (browserWs.readyState === browserWs.OPEN) {
+        browserWs.send(data, { binary: isBinary });
+      } else {
+        console.warn(`[WsProxy] browser closed (state=${browserWs.readyState}) before ttyd output arrived`);
+      }
     });
 
     ttydWs.on('close', (code, reason) => {
+      console.log(`[WsProxy] ttyd closed code=${code} reason=${reason}`);
       if (browserWs.readyState === browserWs.OPEN) browserWs.close(1000, reason);
     });
 
@@ -59,7 +66,8 @@ export function createTtydProxy(browserWs, ttydHost, ttydPort) {
       if (browserWs.readyState === browserWs.OPEN) browserWs.close(1011, 'upstream error');
     });
 
-    browserWs.on('close', () => {
+    browserWs.on('close', (code) => {
+      console.log(`[WsProxy] browser closed code=${code}`);
       if (ttydWs.readyState === WsClient.OPEN || ttydWs.readyState === WsClient.CONNECTING) ttydWs.close();
     });
 
