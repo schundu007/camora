@@ -1,13 +1,13 @@
 import { query } from '../../config/database.js';
 import { cacheGet, cacheSet, cacheDel } from '../redis.js';
 
-export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort) {
+export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort) {
   const result = await query(
     `INSERT INTO playground_sessions
-       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port)
-     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7)
+       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port, code_server_port)
+     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7, $8)
      RETURNING *`,
-    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null],
+    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null, codeServerPort || null],
   );
   return result.rows[0];
 }
