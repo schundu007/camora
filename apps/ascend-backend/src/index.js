@@ -1552,26 +1552,35 @@ server.on('connection', (socket) => {
   trackConnection(socket);
 });
 
-// WebSocket upgrade handler — proxies /playground/ws/:id to ttyd and /pg-ide/* to code-server
+// WebSocket upgrade handler — proxies /playground/ws/:id → ttyd, /pg-ide/* → code-server
+function proxyWs(socket, head, host, port, path, rawHeaders) {
+  const upstream = net.connect(port, host, () => {
+    // Reconstruct upgrade request using rawHeaders to control Host exactly once
+    let reqStr = `GET ${path} HTTP/1.1\r\n`;
+    for (let i = 0; i < rawHeaders.length; i += 2) {
+      if (rawHeaders[i].toLowerCase() === 'host') continue;
+      reqStr += `${rawHeaders[i]}: ${rawHeaders[i + 1]}\r\n`;
+    }
+    reqStr += `Host: ${host}:${port}\r\n\r\n`;
+    upstream.write(reqStr);
+    if (head && head.length) upstream.write(head);
+    socket.pipe(upstream);
+    upstream.pipe(socket);
+  });
+  upstream.on('error', () => socket.destroy());
+  socket.on('error', () => upstream.destroy());
+}
+
 server.on('upgrade', async (req, socket, head) => {
   const wsMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
   const pgIdeMatch = req.url?.startsWith('/pg-ide');
 
   if (wsMatch) {
     const sessionId = wsMatch[1];
-    const pgIdeCookie = req.headers.cookie?.match(/(?:^|;\s*)pg_ide=([^;]+)/)?.[1];
     let session;
     try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
-    if (!session || !session.ttyd_host || !session.ttyd_port) { socket.destroy(); return; }
-    const upstream = net.connect(session.ttyd_port, session.ttyd_host, () => {
-      upstream.write(`GET ${req.url} HTTP/1.1\r\nHost: ${session.ttyd_host}:${session.ttyd_port}\r\n${
-        Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\r\n')
-      }\r\n\r\n`);
-      upstream.write(head);
-      socket.pipe(upstream).pipe(socket);
-    });
-    upstream.on('error', () => socket.destroy());
-    socket.on('error', () => upstream.destroy());
+    if (!session?.ttyd_host || !session?.ttyd_port) { socket.destroy(); return; }
+    proxyWs(socket, head, session.ttyd_host, session.ttyd_port, req.url, req.rawHeaders);
     return;
   }
 
@@ -1581,17 +1590,9 @@ server.on('upgrade', async (req, socket, head) => {
     if (!sessionId) { socket.destroy(); return; }
     let session;
     try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
-    if (!session || !session.ttyd_host || !session.code_server_port) { socket.destroy(); return; }
+    if (!session?.ttyd_host || !session?.code_server_port) { socket.destroy(); return; }
     const wsPath = req.url.replace(/^\/pg-ide/, '') || '/';
-    const upstream = net.connect(session.code_server_port, session.ttyd_host, () => {
-      upstream.write(`GET ${wsPath} HTTP/1.1\r\nHost: ${session.ttyd_host}:${session.code_server_port}\r\n${
-        Object.entries(req.headers).map(([k, v]) => `${k}: ${v}`).join('\r\n')
-      }\r\n\r\n`);
-      upstream.write(head);
-      socket.pipe(upstream).pipe(socket);
-    });
-    upstream.on('error', () => socket.destroy());
-    socket.on('error', () => upstream.destroy());
+    proxyWs(socket, head, session.ttyd_host, session.code_server_port, wsPath, req.rawHeaders);
   }
 });
 
