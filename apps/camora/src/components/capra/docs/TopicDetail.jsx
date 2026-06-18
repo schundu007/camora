@@ -3016,6 +3016,54 @@ export default function TopicDetail({
             </section>
           )}
 
+          {/* ── 9 / Deep Dives — pre-generated Graphviz PNGs ── */}
+          {(() => {
+            const gen = GENERATED_DIAGRAMS[topicDetails.id || selectedTopic];
+            if (!gen?.deepDives?.length) return null;
+            return (
+              <section id="deep-dives" className="scroll-mt-24">
+                <ContentHeading title="Deep Dives" actions={<GlassPill>{gen.deepDives.length}</GlassPill>} />
+                <div className="pt-3 space-y-6">
+                  {gen.deepDives.map(d => (
+                    <div key={d.id}>
+                      <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{d.title}</p>
+                      <TopicDiagram
+                        topicId={topicDetails.id || selectedTopic}
+                        kind={`deep-dive-${d.id}`}
+                        alt={d.title}
+                        caption={d.title}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
+
+          {/* ── 10 / Design Decisions — pre-generated tradeoff PNGs ── */}
+          {(() => {
+            const gen = GENERATED_DIAGRAMS[topicDetails.id || selectedTopic];
+            if (!gen?.tradeoffs?.length) return null;
+            return (
+              <section id="design-decisions" className="scroll-mt-24">
+                <ContentHeading title="Design Decisions" actions={<GlassPill>{gen.tradeoffs.length}</GlassPill>} />
+                <div className="pt-3 space-y-6">
+                  {gen.tradeoffs.map(t => (
+                    <div key={t.id}>
+                      <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{t.title}</p>
+                      <TopicDiagram
+                        topicId={topicDetails.id || selectedTopic}
+                        kind={`tradeoff-${t.id}`}
+                        alt={t.title}
+                        caption={t.title}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
+
         </div>
         );
       })()}
