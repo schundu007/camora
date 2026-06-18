@@ -103,6 +103,23 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
           {/* Right cluster */}
           <div className="hidden md:flex items-center gap-2 ml-auto">
+            {isAuthenticated && (
+              <Link
+                to="/capra/playground"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors no-underline"
+                style={{
+                  background: isActive('/capra/playground') ? 'rgba(212,160,67,0.22)' : 'rgba(212,160,67,0.10)',
+                  border: '1px solid rgba(212,160,67,0.35)',
+                  color: '#e8c46a',
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="4 17 10 11 4 5" />
+                  <line x1="12" y1="19" x2="20" y2="19" />
+                </svg>
+                Playground
+              </Link>
+            )}
             <button
               type="button"
               onClick={toggleTheme}
@@ -178,6 +195,20 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                   </Link>
                 ))}
                 <div className="mt-2 pt-3 border-t border-[var(--border)] flex flex-col gap-1">
+                  {isAuthenticated && (
+                    <Link
+                      to="/capra/playground"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2 py-2.5 text-[14px] font-bold no-underline"
+                      style={{ color: '#e8c46a' }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <polyline points="4 17 10 11 4 5" />
+                        <line x1="12" y1="19" x2="20" y2="19" />
+                      </svg>
+                      Playground
+                    </Link>
+                  )}
                   {isAuthenticated ? (
                     <>
                       <Link to="/account/team" onClick={() => setOpen(false)} className="flex items-center justify-between py-2.5 text-[14px] font-semibold text-[var(--text-primary)]">
