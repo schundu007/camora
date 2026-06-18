@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTerminalResize } from '@/hooks/useTerminalResize';
+import 'xterm/css/xterm.css';
 
 export default function TerminalPane({ sessionId, wsUrl, onOutput }) {
   const containerRef = useRef(null);
@@ -18,14 +19,11 @@ export default function TerminalPane({ sessionId, wsUrl, onOutput }) {
     let disposed = false;
 
     async function init() {
-      // Indirect imports so bundler does not resolve these at build time.
-      // xterm packages must be installed (pnpm install) before the
-      // playground can be used; they are intentionally not bundled.
-      const load = (pkg) => new Function('p', 'return import(p)')(pkg);
-      const { Terminal } = await load('xterm');
-      const { FitAddon } = await load('xterm-addon-fit');
-      const { WebLinksAddon } = await load('xterm-addon-web-links');
-      const { SearchAddon } = await load('xterm-addon-search');
+
+      const { Terminal } = await import('xterm');
+      const { FitAddon } = await import('xterm-addon-fit');
+      const { WebLinksAddon } = await import('xterm-addon-web-links');
+      const { SearchAddon } = await import('xterm-addon-search');
 
       term = new Terminal({
         theme: {
