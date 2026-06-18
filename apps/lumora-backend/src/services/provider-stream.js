@@ -2,7 +2,7 @@
  * Multi-provider streaming dispatcher with automatic fallback.
  *
  * Provider chain (primary = user's selected model, then fallbacks in order):
- *   Claude → Gemini 1.5 Flash → Qwen-2.5-72B (OpenRouter) → DeepSeek-V3 (OpenRouter) → GPT-4o-mini
+ *   Gemini 2.0 Flash → DeepSeek-V3 (direct) → Claude → Qwen-2.5-72B (OpenRouter) → GPT-4o-mini
  *
  * If a provider yields an `error` event before any `token` has been streamed,
  * the error is suppressed and the next provider is tried transparently.
@@ -12,6 +12,18 @@ import OpenAI from 'openai';
 import { streamResponse as streamClaude } from './claude.js';
 import { streamResponseOpenAI } from './openai-stream.js';
 import { streamResponseGemini } from './gemini-stream.js';
+
+// Lazy DeepSeek singleton — direct API, OpenAI-SDK-compatible.
+let _deepseekClient = null;
+function getDeepSeekClient() {
+  if (!_deepseekClient && process.env.DEEPSEEK_API_KEY) {
+    _deepseekClient = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: 'https://api.deepseek.com',
+    });
+  }
+  return _deepseekClient;
+}
 
 // Lazy OpenRouter singleton — OpenAI-SDK-compatible, routes to open-weights models.
 let _openrouterClient = null;
@@ -29,47 +41,49 @@ function getOpenRouterClient() {
 /**
  * Resolve which provider owns a model ID prefix.
  * @param {string|null} modelId
- * @returns {'claude'|'openai'|'gemini'}
+ * @returns {'deepseek'|'claude'|'openai'|'gemini'}
  */
 export function resolveProvider(modelId) {
-  if (!modelId) return 'claude';
+  if (!modelId) return 'gemini';
   const id = modelId.toLowerCase();
-  if (id.startsWith('gpt-')) return 'openai';
   if (id.startsWith('gemini-')) return 'gemini';
-  return 'claude';
+  if (id.startsWith('deepseek-')) return 'deepseek';
+  if (id.startsWith('gpt-')) return 'openai';
+  if (id.startsWith('claude-')) return 'claude';
+  return 'gemini';
 }
 
 /**
  * Build the ordered provider list: user's primary provider first, then fallbacks.
  */
 function buildProviderChain(primaryProvider, options) {
+  const deepseekClient = getDeepSeekClient();
   const openrouterClient = getOpenRouterClient();
 
   const providers = [
+    {
+      key: 'gemini',
+      label: 'Gemini',
+      fn: streamResponseGemini,
+      opts: { ...options, model: options.model?.startsWith('gemini-') ? options.model : 'gemini-2.0-flash' },
+    },
+    deepseekClient && {
+      key: 'deepseek',
+      label: 'DeepSeek-V3',
+      fn: streamResponseOpenAI,
+      opts: { ...options, model: 'deepseek-chat', client: deepseekClient },
+    },
     {
       key: 'claude',
       label: 'Claude',
       fn: streamClaude,
       opts: options,
     },
-    {
-      key: 'gemini',
-      label: 'Gemini',
-      fn: streamResponseGemini,
-      // Use the user's Gemini model if they explicitly selected one; otherwise use Flash.
-      opts: { ...options, model: options.model?.startsWith('gemini-') ? options.model : 'gemini-1.5-flash' },
-    },
     openrouterClient && {
       key: 'qwen',
       label: 'Qwen-2.5-72B',
       fn: streamResponseOpenAI,
       opts: { ...options, model: 'qwen/qwen-2.5-72b-instruct', client: openrouterClient },
-    },
-    openrouterClient && {
-      key: 'deepseek',
-      label: 'DeepSeek-V3',
-      fn: streamResponseOpenAI,
-      opts: { ...options, model: 'deepseek/deepseek-chat-v3-0324', client: openrouterClient },
     },
     {
       key: 'openai',
