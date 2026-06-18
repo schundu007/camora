@@ -47,21 +47,22 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   const jobTag = randomBytes(6).toString('hex');
   const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
 
-  const { host, port } = await getTaskAddress(jobId);
+  const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
 
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, port);
+  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort);
 
   await updateSessionStatus(session.id, 'ready');
   await setTTL(session.id, 3600);
 
   return {
     sessionId: session.id,
-    wsUrl: `ws://${host}:${port}`,
+    wsUrl: `ws://${host}:${ttydPort}`,
     expiresAt,
     environment,
     host,
-    port,
+    port: ttydPort,
+    codeServerPort,
   };
 }
 

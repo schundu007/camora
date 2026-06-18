@@ -74,7 +74,7 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
   ];
   if (scenarioId) envFlags.push(`-e SCENARIO_ID=${scenarioId}`);
 
-  const cmd = `docker run -d --rm --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 ${image}`;
+  const cmd = `docker run -d --rm --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 -p 0:8080 ${image}`;
   const containerId = await sshExec(cmd);
 
   if (!containerId || containerId.length < 12) {
@@ -87,32 +87,33 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
 export async function getTaskAddress(jobId) {
   const deadline = Date.now() + 60_000;
 
-  // Phase 1: wait for Docker port mapping to appear
-  let address = null;
+  // Wait for Docker port mappings for BOTH 7681 (ttyd) and 8080 (code-server).
+  let ttydPort = null;
+  let codeServerPort = null;
   while (Date.now() < deadline) {
     try {
-      const out = await sshExec(`docker port ${jobId} 7681`);
-      for (const line of out.split('\n')) {
-        const port = parseInt(line.split(':').at(-1), 10);
-        if (port > 0) { address = { host: WORKER_HOST(), port }; break; }
+      if (!ttydPort) {
+        const out = await sshExec(`docker port ${jobId} 7681`);
+        for (const line of out.split('\n')) {
+          const port = parseInt(line.split(':').at(-1), 10);
+          if (port > 0) { ttydPort = port; break; }
+        }
       }
-      if (address) break;
+      if (!codeServerPort) {
+        const out = await sshExec(`docker port ${jobId} 8080`);
+        for (const line of out.split('\n')) {
+          const port = parseInt(line.split(':').at(-1), 10);
+          if (port > 0) { codeServerPort = port; break; }
+        }
+      }
+      if (ttydPort && codeServerPort) break;
     } catch { /* container starting */ }
     await new Promise((r) => setTimeout(r, 500));
   }
-  if (!address) throw new Error('Timed out waiting for container port mapping');
+  if (!ttydPort) throw new Error('Timed out waiting for ttyd port mapping');
+  if (!codeServerPort) throw new Error('Timed out waiting for code-server port mapping');
 
-  // Phase 2: TCP-probe from the worker until ttyd is actually listening.
-  // Docker-in-Docker containers (pg-docker) wait ~15-30s for dockerd before
-  // starting ttyd, so we probe here rather than retrying in the WS proxy.
-  while (Date.now() < deadline) {
-    try {
-      await sshExec(`nc -z -w1 127.0.0.1 ${address.port}`);
-      return address;
-    } catch { /* ttyd not listening yet */ }
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  throw new Error('Timed out waiting for ttyd to start listening');
+  return { host: WORKER_HOST(), ttydPort, codeServerPort };
 }
 
 export async function stopJob(jobId) {

@@ -51,12 +51,16 @@ import libraryRouter from './routes/library.js';
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
 import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
+import http from 'http';
+import net from 'net';
 import { playgroundRouter } from './routes/playground.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { WebSocketServer } from 'ws';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
 import { createTtydProxy } from './services/playground/wsProxy.js';
 import { getSession } from './services/playground/sessionStore.js';
+import { stopJob } from './services/playground/nomadClient.js';
+import { cacheDel } from './services/redis.js';
 import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
 import learnTopicRouter from './routes/learnTopic.js';
@@ -701,6 +705,7 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_playground_sessions_status ON playground_sessions(status)');
     await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_host TEXT');
     await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_port INTEGER');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS code_server_port INTEGER');
     await query(`CREATE TABLE IF NOT EXISTS playground_objective_completions (
       session_id    UUID REFERENCES playground_sessions(id) ON DELETE CASCADE,
       objective_id  TEXT NOT NULL,
@@ -1360,6 +1365,68 @@ app.use('/api/solve', authenticate, hourBudgetGate, aiLimiter, solveRouter);
 app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
+// Helper: parse JWT without throwing (used in proxy routes below)
+function tryParseToken(token) {
+  try { return verifyToken(token); } catch { return null; }
+}
+
+// code-server HTTP proxy — serves VS Code IDE from inside playground containers
+app.use('/playground/ide', async (req, res, next) => {
+  // Auth: Bearer header, SSO cookie, one-time query token, or session cookie
+  let user = null;
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    const payload = tryParseToken(req.headers.authorization.slice(7));
+    if (payload) user = { id: parseInt(payload.sub, 10) };
+  }
+  if (!user && req.cookies?.cariara_sso) {
+    const payload = tryParseToken(req.cookies.cariara_sso);
+    if (payload) user = { id: parseInt(payload.sub, 10) };
+  }
+  if (!user) {
+    const qt = new URL(req.url, 'http://localhost').searchParams.get('token');
+    if (qt) {
+      const payload = tryParseToken(qt);
+      if (payload) user = { id: parseInt(payload.sub, 10) };
+    }
+  }
+  // session cookie set on a previous authenticated request
+  if (!user) {
+    const pathMatch = req.path.match(/^\/([a-f0-9-]+)/);
+    if (pathMatch && req.cookies?.[`pg_${pathMatch[1]}`]) user = { id: -1, _cookieAuth: pathMatch[1] };
+  }
+  if (!user) return res.status(401).end('Unauthorized');
+
+  const pathMatch = req.path.match(/^\/([a-f0-9-]+)(\/.*)?$/);
+  if (!pathMatch) return res.status(400).end();
+  const sessionId = pathMatch[1];
+  const rest = (pathMatch[2] || '/') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+
+  let session;
+  try {
+    session = await getSession(sessionId);
+  } catch { return res.status(502).end(); }
+
+  if (!session) return res.status(404).end('Session not found');
+  if (!user._cookieAuth && session.user_id !== user.id) return res.status(403).end('Forbidden');
+  if (!session.code_server_port) return res.status(503).end('IDE not ready');
+
+  // Set auth cookie so subsequent same-prefix requests work without token
+  res.cookie(`pg_${sessionId}`, '1', { httpOnly: true, maxAge: 3600, path: `/playground/ide/${sessionId}` });
+
+  const proxyReq = http.request({
+    hostname: session.ttyd_host,
+    port: session.code_server_port,
+    path: rest,
+    method: req.method,
+    headers: { ...req.headers, host: `${session.ttyd_host}:${session.code_server_port}`, connection: 'close' },
+  }, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+  proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+  req.pipe(proxyReq, { end: true });
+});
+
 app.use('/api/v1/playground', authenticate, playgroundLimiter, playgroundRouter);
 app.use('/api/v1/playground/sessions', authenticate, playgroundSessionsRouter);
 app.use('/api/v1/ask', authenticate, aiLimiter, askRouter);
@@ -1519,12 +1586,81 @@ server.on('connection', (socket) => {
   trackConnection(socket);
 });
 
+// Periodic cleanup: stop containers for sessions that have expired
+setInterval(async () => {
+  try {
+    const { rows } = await query(
+      `SELECT id, nomad_job_id FROM playground_sessions
+       WHERE status NOT IN ('destroyed') AND expires_at < NOW() - INTERVAL '2 minutes'
+       LIMIT 50`
+    );
+    for (const row of rows) {
+      try {
+        if (row.nomad_job_id) await stopJob(row.nomad_job_id);
+        await query(`UPDATE playground_sessions SET status='destroyed', destroyed_at=NOW() WHERE id=$1`, [row.id]);
+        await cacheDel(`playground:session:${row.id}:ttl`);
+        console.log(`[Cleanup] destroyed expired session ${row.id}`);
+      } catch (e) {
+        console.warn(`[Cleanup] error destroying session ${row.id}:`, e.message);
+      }
+    }
+  } catch (e) {
+    console.warn('[Cleanup] error in session cleanup:', e.message);
+  }
+}, 5 * 60 * 1000);
+
 // Playground WebSocket proxy — browser ↔ ttyd inside Nomad container
 const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (req, socket, head) => {
-  const match = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
-  if (!match) { socket.destroy(); return; }
+  const wsMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
+  const ideMatch = req.url?.match(/^\/playground\/ide\/([a-f0-9-]+)(\/.*)?$/);
+
+  if (ideMatch) {
+    const sessionId = ideMatch[1];
+    const restPath = (ideMatch[2] || '/') + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+    (async () => {
+      try {
+        let token = null;
+        const urlObj = new URL(req.url, 'http://localhost');
+        token = urlObj.searchParams.get('token');
+        if (!token && req.headers.cookie) {
+          const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
+          if (m) token = decodeURIComponent(m[1]);
+        }
+        let userId = null;
+        if (token) {
+          const payload = verifyToken(token);
+          userId = parseInt(payload.sub, 10);
+        } else {
+          // check session cookie
+          const m = req.headers.cookie?.match(new RegExp(`(?:^|;\\s*)pg_${sessionId}=`));
+          if (m) userId = -1; // cookie auth
+        }
+        if (!userId) { socket.destroy(); return; }
+        const session = await getSession(sessionId);
+        if (!session || (userId !== -1 && session.user_id !== userId) || !session.code_server_port) {
+          socket.destroy(); return;
+        }
+        const target = net.connect(session.code_server_port, session.ttyd_host, () => {
+          target.write(`${req.method} ${restPath} HTTP/${req.httpVersion}\r\n`);
+          for (const [key, val] of Object.entries(req.headers)) {
+            target.write(`${key}: ${val}\r\n`);
+          }
+          target.write('\r\n');
+          if (head?.length) target.write(head);
+          socket.pipe(target);
+          target.pipe(socket);
+        });
+        target.on('error', () => { try { socket.destroy(); } catch {} });
+        socket.on('error', () => { try { target.destroy(); } catch {} });
+      } catch { try { socket.destroy(); } catch {} }
+    })();
+    return;
+  }
+
+  if (!wsMatch) { socket.destroy(); return; }
+  const match = wsMatch;
   const sessionId = match[1];
 
   wss.handleUpgrade(req, socket, head, async (ws) => {

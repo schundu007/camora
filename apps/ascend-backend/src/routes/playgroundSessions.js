@@ -6,6 +6,7 @@ import {
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
 import { getSession, getSessionHistory } from '../services/playground/sessionStore.js';
+import { streamContainerLogs } from '../services/playground/logStreamer.js';
 
 export const playgroundSessionsRouter = Router();
 
@@ -49,6 +50,65 @@ playgroundSessionsRouter.get('/history', async (req, res) => {
   } catch (err) {
     console.error('[PlaygroundSessions] history error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch session history' });
+  }
+});
+
+playgroundSessionsRouter.get('/:id/events', async (req, res) => {
+  try {
+    await checkSessionOwner(req.params.id, req.user.id);
+    const session = await getSession(req.params.id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const STEP_MAP = {
+      container_ready: { label: 'Container started', phase: 'SYSTEM CHECKS', progress: 1, total: 4 },
+      env_setup:       { label: 'Environment configured', phase: 'SYSTEM CHECKS', progress: 2, total: 4 },
+      ide_start:       { label: 'IDE ready', phase: 'TOOLS', progress: 3, total: 4 },
+      terminal_ready:  { label: 'Terminal ready', phase: 'TOOLS', progress: 4, total: 4 },
+    };
+
+    const sendEvent = (data) => {
+      if (!res.writableEnded) res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    const ac = new AbortController();
+    req.on('close', () => ac.abort());
+
+    let done = false;
+    const deadline = setTimeout(() => {
+      sendEvent({ type: 'ready' });
+      done = true;
+      ac.abort();
+    }, 3 * 60 * 1000);
+
+    await streamContainerLogs(session.nomad_job_id, (line) => {
+      if (done) return;
+      if (!line.includes('__PROGRESS__:')) return;
+      const idx = line.indexOf('__PROGRESS__:');
+      try {
+        const event = JSON.parse(line.slice(idx + '__PROGRESS__:'.length));
+        const meta = STEP_MAP[event.step];
+        if (meta) {
+          sendEvent({ ...event, ...meta });
+          if (event.step === 'terminal_ready' && event.status === 'done') {
+            clearTimeout(deadline);
+            sendEvent({ type: 'ready' });
+            done = true;
+            ac.abort();
+          }
+        }
+      } catch {}
+    }, ac.signal);
+
+    clearTimeout(deadline);
+    if (!res.writableEnded) res.end();
+  } catch (err) {
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to stream events' });
   }
 });
 
