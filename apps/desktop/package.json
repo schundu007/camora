@@ -22,7 +22,9 @@
     "appId": "com.cariara.camora",
     "productName": "Camora",
     "artifactName": "Camora-${version}-${arch}.${ext}",
-    "directories": { "output": "build" },
+    "directories": {
+      "output": "build"
+    },
     "files": [
       "main.js",
       "preload.js",
@@ -33,7 +35,13 @@
       "category": "public.app-category.productivity",
       "icon": "icon.icns",
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ],
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
@@ -49,7 +57,12 @@
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "icon.icns",
       "artifactName": "Camora-${version}-Setup.${ext}"
@@ -64,9 +77,18 @@
       "title": "Camora",
       "iconSize": 100,
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
-    }
+    },
+    "publish": null
   }
 }
