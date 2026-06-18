@@ -1,5 +1,4 @@
 // This vs That — cloud and DevOps comparison guide for interview prep.
-// Content sourced from AceCloudInterviews.com comparisons section.
 // Each topic covers the key decision criteria between two or more options.
 
 export const comparisonCategories = [
@@ -57,4 +56,1214 @@ export const comparisonTopicCategoryMap = {
   'cmp-route53-routing-policies': 'networking',
 };
 
-export const comparisonTopics = [];
+export const comparisonTopics = [
+
+  // ─── COMPUTE ────────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-ec2-vs-lambda',
+    title: 'EC2 vs Lambda',
+    icon: 'cpu',
+    color: '#f97316',
+    description: 'When to run long-lived servers versus event-driven functions.',
+    introduction: 'EC2 gives you full control over a virtual machine that runs continuously. Lambda runs your code only when triggered, charging only for the duration of each invocation. The tradeoff is control and predictability against operational simplicity and cost efficiency at low or spiky traffic volumes.',
+    whenToUse: 'EC2: stateful applications, long-running processes, custom OS configuration, predictable high-throughput workloads. Lambda: event-driven tasks, APIs with variable traffic, scheduled jobs, glue code between AWS services.',
+    keyConcepts: [
+      { title: 'Cold Starts', description: 'Lambda containers must initialize before handling the first request after a period of inactivity. EC2 instances are always warm once running. Cold starts range from milliseconds to several seconds depending on runtime and package size.' },
+      { title: 'Execution Duration', description: 'Lambda has a hard 15-minute execution limit per invocation. EC2 processes can run indefinitely. Any workload requiring longer computation must use EC2, ECS, or Batch.' },
+      { title: 'Pricing Model', description: 'EC2 charges per hour (or second for some instance types) regardless of idle time. Lambda charges per request and per GB-second of execution time, with a free tier of 1 million requests monthly.' },
+      { title: 'Scaling Behavior', description: 'Lambda scales automatically to thousands of concurrent executions without any configuration. EC2 requires Auto Scaling Groups with launch templates and warm-up time before new instances serve traffic.' },
+    ],
+    approach: [
+      { step: 'Analyze traffic patterns', details: 'Measure requests per second and their distribution. Spiky or bursty workloads favor Lambda. Constant high-throughput workloads favor EC2 Reserved Instances for cost predictability.' },
+      { step: 'Evaluate execution duration', details: 'Profile typical job durations. If any task exceeds 15 minutes or requires persistent in-memory state between requests, Lambda is disqualified. Consider EC2 or Fargate instead.' },
+      { step: 'Measure cold start impact', details: 'For latency-sensitive user-facing APIs, benchmark cold start time for your Lambda runtime and package size. Provisioned Concurrency eliminates cold starts at additional cost.' },
+      { step: 'Model total cost', details: 'Calculate EC2 Reserved Instance cost versus Lambda cost at expected request volume. Lambda is often cheaper under 1 million daily requests; EC2 Reserved wins above that threshold.' },
+    ],
+    pitfalls: [
+      { title: 'Ignoring cold start latency', description: 'Lambda cold starts add 100ms to several seconds to p99 latency. User-facing APIs with strict SLAs may require Provisioned Concurrency or EC2.' },
+      { title: 'Overestimating Lambda cost savings at scale', description: 'At millions of daily requests Lambda becomes more expensive than a Reserved EC2 instance. Always model cost at projected scale before committing to either.' },
+      { title: 'Running long workloads in Lambda', description: 'Splitting a 20-minute batch job into Lambda invocations adds orchestration complexity and timeout risk. Use AWS Batch or ECS for long-running compute.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you choose EC2 over Lambda?', a: 'Choose EC2 when your application runs continuously with predictable load, requires custom OS-level configuration such as kernel parameters or specific file system mounts, has jobs exceeding 15 minutes, or needs GPU acceleration. EC2 Reserved Instances also become more cost-effective than Lambda above roughly 1 to 2 million daily invocations depending on memory and duration.' },
+      { q: 'How do you reduce Lambda cold start latency?', a: 'First minimize package size by tree-shaking dependencies and using Lambda Layers for shared libraries. Use compiled runtimes like Go or Rust instead of interpreted Python or Node for faster initialization. Enable Provisioned Concurrency to keep a set number of Lambda containers warm at all times. Use Lambda SnapStart for Java to restore from a pre-initialized snapshot. Finally, place your Lambda in a VPC only if required, as VPC attachment itself adds cold start overhead.' },
+      { q: 'How does Lambda handle concurrency limits?', a: 'Each AWS account has a default regional concurrency limit of 1000 simultaneous Lambda executions. When this limit is reached, Lambda throttles new invocations with a 429 error. You can request a limit increase via AWS Support or reserve concurrency for critical functions to guarantee capacity while capping others. Use SQS as an event source to buffer bursts and prevent throttling.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html',
+      'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html',
+    ],
+  },
+
+  {
+    id: 'cmp-ecs-vs-eks',
+    title: 'ECS vs EKS',
+    icon: 'gitBranch',
+    color: '#f97316',
+    description: 'When to use AWS-native container orchestration versus Kubernetes.',
+    introduction: 'ECS is AWS-native container orchestration designed for simplicity. EKS is managed Kubernetes that gives you access to the full CNCF ecosystem. The decision comes down to team expertise, multi-cloud ambitions, and the complexity your workloads require.',
+    whenToUse: 'ECS: AWS-only shops, smaller teams, simpler web services, Fargate-based workloads. EKS: multi-cloud portability, existing Kubernetes expertise, complex scheduling and affinity needs, CNCF tooling requirements.',
+    keyConcepts: [
+      { title: 'Control Plane Cost', description: 'ECS control plane is fully managed and free. EKS charges $0.10 per hour per cluster (approximately $72 per month) plus the cost of worker nodes and add-ons.' },
+      { title: 'Portability', description: 'EKS workloads described in Kubernetes manifests can be moved to GKE, AKS, or on-premises clusters with minimal changes. ECS task definitions are AWS-proprietary.' },
+      { title: 'Ecosystem Breadth', description: 'EKS provides access to the full CNCF ecosystem including Istio, Argo Workflows, Helm, Karpenter, and Flux. ECS relies on AWS-native integrations like ALB ingress and CloudWatch.' },
+      { title: 'Operational Complexity', description: 'ECS task definitions are simpler JSON documents. Kubernetes requires understanding of Pods, Deployments, Services, Ingress controllers, RBAC, and namespaces before anything runs.' },
+    ],
+    approach: [
+      { step: 'Evaluate team Kubernetes expertise', details: 'ECS requires understanding AWS primitives only. EKS requires Kubernetes knowledge including pod networking, persistent volumes, and cluster add-on management. Assess your team honestly before choosing EKS.' },
+      { step: 'Assess vendor lock-in tolerance', details: 'If your roadmap includes multi-cloud or hybrid deployments, EKS manifests are portable. ECS binds you to AWS APIs. Make this decision explicit rather than defaulting.' },
+      { step: 'Compare operational overhead', details: 'EKS requires managing node groups, cluster upgrades, and add-on compatibility. ECS Fargate removes all node management. If your team cannot dedicate time to Kubernetes operations, ECS Fargate is the better default.' },
+    ],
+    pitfalls: [
+      { title: 'Over-engineering with EKS for small teams', description: 'A team of three engineers managing a handful of services does not need Kubernetes. ECS with Fargate provides sufficient orchestration without the operational burden.' },
+      { title: 'Underestimating EKS upgrade burden', description: 'Kubernetes minor version support windows are approximately 14 months. EKS clusters must be upgraded regularly, and each upgrade requires testing node group compatibility and add-on versions.' },
+      { title: 'Forgetting EKS control plane cost', description: 'Running multiple EKS clusters for dev, staging, and production adds $216 per month in control plane fees before any compute. ECS clusters are free.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you choose ECS over EKS?', a: 'Choose ECS when your team lacks Kubernetes expertise, you operate exclusively on AWS, and workloads are straightforward web services or batch jobs. ECS integrates natively with ALB, IAM roles for tasks, and CloudWatch without additional tooling. Fargate launch type removes all node management, which is the right default for teams that want to focus on application code rather than infrastructure.' },
+      { q: 'How do you migrate from ECS to EKS?', a: 'Start by writing Kubernetes Deployment and Service manifests equivalent to each ECS task definition. Use eksctl to provision the cluster with managed node groups. Migrate services one at a time using weighted routing in Route 53 or ALB target group weights to shift traffic gradually. Run both stacks in parallel until the EKS deployment is validated, then decommission ECS services. Pay close attention to IAM: ECS uses task roles while EKS uses IAM Roles for Service Accounts via OIDC.' },
+      { q: 'How does Fargate compare between ECS and EKS?', a: 'Fargate is available on both platforms but behaves differently. On ECS, Fargate runs tasks directly with no node concept. On EKS, Fargate runs individual Pods but with restrictions: it does not support DaemonSets, stateful workloads with persistent volumes, or privileged containers. ECS Fargate is generally simpler to configure. EKS Fargate makes sense when you need Kubernetes APIs but want to avoid node management for stateless workloads.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonECS/latest/developerguide/',
+      'https://docs.aws.amazon.com/eks/latest/userguide/',
+    ],
+  },
+
+  {
+    id: 'cmp-containers-vs-serverless',
+    title: 'Containers vs Serverless',
+    icon: 'layers',
+    color: '#f97316',
+    description: 'Architectural tradeoffs between containerized services and function-as-a-service platforms.',
+    introduction: 'Containers package your application and its dependencies into a portable image that runs consistently across environments. Serverless abstracts the infrastructure entirely, letting you deploy individual functions triggered by events. The choice affects cost, latency, operational burden, and deployment granularity.',
+    whenToUse: 'Containers: complex applications, stateful services, predictable traffic, custom runtimes or binaries. Serverless: event-driven workflows, low-traffic APIs, scheduled tasks, glue code, and workloads where operational simplicity outweighs fine-grained control.',
+    keyConcepts: [
+      { title: 'Unit of Deployment', description: 'Containers deploy an entire application process with its runtime. Serverless deploys individual functions, each potentially written in a different language and deployed independently.' },
+      { title: 'State and Persistence', description: 'Containers can maintain in-memory state across requests within a single instance. Serverless functions are stateless by design; any state must be stored externally in a database or cache.' },
+      { title: 'Cold Start vs Warm Container', description: 'Serverless functions incur cold start latency after idle periods. Containers behind a load balancer are always running and serve requests immediately once healthy.' },
+      { title: 'Operational Model', description: 'Containers require managing images, registries, orchestration, networking, and scaling policies. Serverless requires only the function code and an IAM permission policy.' },
+    ],
+    approach: [
+      { step: 'Identify stateful requirements', details: 'If the service maintains connection pools, in-memory caches, or WebSocket connections, containers are the appropriate choice. Serverless requires all state to live externally.' },
+      { step: 'Profile request duration and frequency', details: 'Serverless excels at infrequent or bursty workloads where idle costs on containers would be wasteful. High-frequency short-duration tasks are cheaper on serverless. Long-duration tasks require containers.' },
+      { step: 'Evaluate cold start tolerance', details: 'Measure acceptable p99 latency for the service. If the SLA cannot tolerate cold starts, containers win. For asynchronous processing, cold starts are irrelevant.' },
+    ],
+    pitfalls: [
+      { title: 'Using serverless for every microservice', description: 'Decomposing a monolith into dozens of Lambda functions adds distributed tracing complexity, cold start variance, and IAM policy sprawl. Containers often provide a better balance for complex services.' },
+      { title: 'Underestimating serverless vendor lock-in', description: 'Serverless functions often use cloud-provider-specific event triggers (S3 events, DynamoDB Streams) that are hard to replicate locally or on another cloud.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you decide between containers and serverless for a new microservice?', a: 'Start with the traffic pattern and execution duration. If the service handles continuous traffic, has jobs exceeding 15 minutes, maintains state, or needs custom binaries, use containers. If the service is event-driven, bursty, or stateless with short-lived requests, serverless is simpler and likely cheaper. Also consider team familiarity: a team fluent in Docker and Kubernetes will be more productive with containers.' },
+      { q: 'Can you use containers and serverless together?', a: 'Yes, and this is common in production architectures. An ECS or EKS service handles the main API and stateful workloads while Lambda handles asynchronous event processing, S3 triggers, scheduled cleanup jobs, and webhook receivers. The two models complement each other rather than compete.' },
+      { q: 'What is the cost crossover point between containers and serverless?', a: 'A rough rule is that Lambda becomes cost-comparable to a t3.small EC2 instance at approximately 1 to 2 million monthly invocations with 100ms average duration. Above that volume, Reserved EC2 or Fargate typically wins on cost. Always model this with your actual invocation count, memory allocation, and duration profile rather than rules of thumb.' },
+    ],
+    references: [
+      'https://aws.amazon.com/serverless/',
+      'https://docs.aws.amazon.com/lambda/latest/dg/welcome.html',
+    ],
+  },
+
+  {
+    id: 'cmp-fargate-vs-ec2',
+    title: 'Fargate vs EC2 Launch Type',
+    icon: 'server',
+    color: '#f97316',
+    description: 'Serverless containers versus self-managed EC2 nodes for ECS and EKS workloads.',
+    introduction: 'Fargate runs containers without you managing the underlying EC2 instances. The EC2 launch type gives you direct access to instance configuration, GPU support, custom AMIs, and the ability to use Savings Plans and Reserved Instances for cost optimization. Fargate trades cost efficiency at scale for operational simplicity.',
+    whenToUse: 'Fargate: teams that want zero node management, variable workloads, dev and staging environments, security-sensitive workloads requiring strong task isolation. EC2: GPU workloads, cost optimization at scale with Reserved Instances, custom AMIs, DaemonSet-style sidecar patterns.',
+    keyConcepts: [
+      { title: 'Node Management', description: 'Fargate removes EC2 node provisioning, patching, and scaling entirely. EC2 launch type requires managing Auto Scaling Groups, launch templates, AMI updates, and node capacity.' },
+      { title: 'Isolation Model', description: 'Each Fargate task runs in its own dedicated micro-VM with no shared kernel with other tasks. EC2 tasks share the instance kernel, which is a weaker isolation boundary for multi-tenant environments.' },
+      { title: 'Cost at Scale', description: 'Fargate charges per vCPU and GB of memory per second. EC2 Reserved Instances offer up to 72% discount over On-Demand pricing. High-throughput steady-state workloads are significantly cheaper on EC2 Reserved.' },
+      { title: 'GPU and Specialized Hardware', description: 'Fargate does not support GPU instances. Machine learning inference, video processing, and scientific computing workloads require EC2 launch type with GPU instances such as p3 or g4dn.' },
+    ],
+    approach: [
+      { step: 'Determine if GPU or specialized hardware is required', details: 'If the workload uses CUDA, video transcoding, or high-performance computing libraries, Fargate is disqualified. Use EC2 with the appropriate accelerated instance family.' },
+      { step: 'Model cost at expected scale', details: 'Calculate Fargate cost at peak vCPU and memory allocation versus EC2 Reserved Instance cost for the same capacity. Fargate often wins below moderate scale; EC2 Reserved wins at sustained high throughput.' },
+      { step: 'Evaluate node patching appetite', details: 'EC2 nodes require OS patching. If your team lacks capacity for node lifecycle management, Fargate eliminates this entirely at a modest cost premium.' },
+    ],
+    pitfalls: [
+      { title: 'Assuming Fargate is always cheaper', description: 'Fargate pricing is transparent but can exceed EC2 Reserved pricing by 2x or more at high sustained utilization. Run the cost math before assuming simplicity is free.' },
+      { title: 'Missing Fargate EKS limitations', description: 'EKS Fargate does not support DaemonSets, stateful workloads with EBS volumes, or privileged containers. Teams migrating from EC2 to EKS Fargate must redesign any workload using these features.' },
+    ],
+    keyQuestions: [
+      { q: 'When is Fargate worth the cost premium over EC2?', a: 'Fargate is worth it when the operational savings exceed the cost delta. A small DevOps team maintaining EC2 Auto Scaling Groups, AMI pipelines, and node patching across multiple environments spends engineering hours that cost more than the Fargate premium. Fargate also provides stronger task isolation by default, which matters for multi-tenant SaaS platforms.' },
+      { q: 'How do Savings Plans interact with Fargate?', a: 'Compute Savings Plans apply to Fargate usage at up to 52% discount in exchange for a one-year or three-year commitment to a consistent dollar amount of compute usage. This significantly reduces the cost gap between Fargate and EC2 Reserved Instances for steady-state workloads.' },
+      { q: 'Can you mix Fargate and EC2 launch types in the same ECS cluster?', a: 'Yes. A single ECS cluster can run services on both Fargate and EC2 launch types simultaneously. A common pattern is running production services on EC2 Reserved for cost optimization while using Fargate for development environments, batch jobs, and services with unpredictable scaling needs.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html',
+      'https://aws.amazon.com/fargate/pricing/',
+    ],
+  },
+
+  {
+    id: 'cmp-ec2-instance-types',
+    title: 'EC2 Instance Type Selection',
+    icon: 'cpu',
+    color: '#f97316',
+    description: 'Choosing the right EC2 instance family for compute, memory, storage, and accelerated workloads.',
+    introduction: 'EC2 offers over 600 instance types grouped into families optimized for different workload profiles. General purpose instances balance CPU and memory. Compute-optimized instances provide higher CPU ratios. Memory-optimized instances are designed for in-memory databases. Choosing poorly means paying for capacity you do not use or running into bottlenecks you cannot escape without downtime.',
+    whenToUse: 'T-series: burstable dev and low-traffic workloads. M-series: general-purpose web servers and application servers. C-series: CPU-bound batch processing and HPC. R-series: in-memory databases and caching. I-series: high IOPS storage. P/G-series: machine learning and GPU compute.',
+    keyConcepts: [
+      { title: 'Instance Families', description: 'T (burstable general purpose), M (balanced), C (compute optimized), R (memory optimized), I (storage optimized), P/G (GPU accelerated), X (extreme memory). The number after the family letter indicates the generation; newer generations offer better price-performance.' },
+      { title: 'vCPU to Memory Ratio', description: 'M5 instances offer 4 GB per vCPU. C5 instances offer 2 GB per vCPU for compute-heavy workloads. R5 instances offer 8 GB per vCPU for memory-heavy workloads. Selecting the wrong ratio wastes the underutilized resource.' },
+      { title: 'Graviton ARM Instances', description: 'AWS Graviton (M6g, C6g, R6g) ARM-based instances offer up to 40% better price-performance than equivalent x86 instances. Most major runtimes (Java, Python, Node, Go) run natively on ARM with no code changes.' },
+      { title: 'Burstable Credit System', description: 'T3 and T4g instances earn CPU credits during idle periods and spend them during bursts. A t3.micro with sustained 100% CPU will exhaust credits and throttle to a baseline of 10% CPU. Use T-series only for workloads with genuine idle periods.' },
+    ],
+    approach: [
+      { step: 'Profile CPU and memory usage', details: 'Use CloudWatch metrics or instance-level tools to measure actual CPU and memory utilization over 24 to 48 hours. Right-size to roughly 60 to 70 percent utilization at peak to leave headroom.' },
+      { step: 'Identify workload type', details: 'CPU-bound: consider C-family. Memory-bound (large caches, in-memory DBs): consider R-family. Balanced web app: M-family. Variable background jobs: T-family with Unlimited mode disabled.' },
+      { step: 'Evaluate Graviton migration', details: 'Test your application on a Graviton equivalent instance. If benchmarks confirm compatibility and equivalent performance, switch to Graviton for 20 to 40 percent cost savings with no application changes.' },
+    ],
+    pitfalls: [
+      { title: 'Running production databases on T-series', description: 'T-series instances throttle when credits are exhausted. A production RDS or ElastiCache on t3.micro will show latency spikes during credit exhaustion. Use M or R series for predictable database performance.' },
+      { title: 'Not evaluating Graviton', description: 'Many teams default to x86 out of habit. Graviton instances provide better performance per dollar for most common workloads and should be the default evaluation starting point.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you select an EC2 instance type for a new application?', a: 'Start by profiling a similar workload or using load testing to model CPU and memory requirements. Choose the instance family based on the CPU-to-memory ratio that matches your profile. Prefer the latest generation within a family. Evaluate Graviton (G suffix) variants first since they offer better price-performance. Size for 60 to 70 percent average utilization. Use Savings Plans or Reserved Instances once the instance type is proven stable for 30 days.' },
+      { q: 'What is the difference between T3 Unlimited mode and standard mode?', a: 'In standard mode, a T3 instance can only burst above its baseline CPU until it exhausts earned credits. In Unlimited mode, the instance can burst indefinitely by borrowing against future credits, with additional charges for surplus CPU at $0.05 per vCPU-hour beyond what is covered by credits. Unlimited mode prevents throttling but can generate unexpected charges on workloads with sustained high CPU.' },
+      { q: 'When would you use an I-series instance instead of adding EBS volumes?', a: 'I-series instances have locally attached NVMe SSDs that deliver up to 3.3 million IOPS and sub-millisecond latency, far exceeding what EBS io2 Block Express can deliver per-volume. Use I-series for latency-sensitive NoSQL databases like Cassandra or MongoDB, high-frequency trading platforms, or any workload where storage latency is the critical bottleneck.' },
+    ],
+    references: [
+      'https://aws.amazon.com/ec2/instance-types/',
+      'https://aws.amazon.com/ec2/graviton/',
+    ],
+  },
+
+  // ─── STORAGE ────────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-s3-vs-efs-vs-ebs',
+    title: 'S3 vs EFS vs EBS',
+    icon: 'database',
+    color: '#3b82f6',
+    description: 'Choosing the right AWS storage service for objects, files, or block-level access.',
+    introduction: 'S3 is object storage accessed via HTTP API. EBS is block storage attached to a single EC2 instance like a virtual hard drive. EFS is a managed NFS file system that can be mounted by multiple instances simultaneously. Each targets a different access pattern, and choosing the wrong one creates unnecessary cost or compatibility problems.',
+    whenToUse: 'S3: static assets, backups, data lake, media files, application artifacts. EBS: root volumes, databases requiring low-latency block access on a single instance. EFS: shared file systems needed by multiple EC2 instances or containers simultaneously.',
+    keyConcepts: [
+      { title: 'Access Pattern', description: 'S3 uses HTTP PUT and GET operations; not mountable as a file system natively. EBS is a block device mountable as a file system on exactly one EC2 instance at a time (Multi-Attach is an exception for io1/io2). EFS is NFS v4 mountable by thousands of instances concurrently.' },
+      { title: 'Durability and Availability', description: 'S3 provides 11 nines of durability by replicating objects across three AZs. EBS volumes are replicated within a single AZ. EFS replicates across multiple AZs in a region.' },
+      { title: 'Cost Profile', description: 'S3 Standard costs approximately $0.023 per GB. EBS gp3 costs $0.08 per GB provisioned. EFS Standard costs $0.30 per GB stored (pay per use, not provisioned). EFS is expensive per GB but cost-effective when actual usage is much less than total capacity.' },
+      { title: 'Performance Characteristics', description: 'EBS gp3 delivers up to 16,000 IOPS and 1,000 MB/s throughput. EFS throughput scales with file system size in Bursting mode. S3 is high-throughput but introduces higher per-request latency than block storage.' },
+    ],
+    approach: [
+      { step: 'Identify whether shared access is required', details: 'If multiple EC2 instances or containers must read and write the same files simultaneously, EFS is the only AWS-managed option. EBS cannot be shared (with rare io1 Multi-Attach exceptions). S3 supports concurrent access but requires application-level consistency handling.' },
+      { step: 'Determine latency requirements', details: 'Database engines require sub-millisecond block I/O. Use EBS gp3 or io2 for databases. File processing and log aggregation tolerate NFS latency on EFS. Object retrieval from S3 typically adds 10 to 100 milliseconds.' },
+      { step: 'Calculate storage cost', details: 'EFS charges only for bytes stored; if you provision 1 TB on EBS but use 200 GB, you pay for 1 TB. Compare provisioned EBS cost versus pay-per-use EFS cost based on actual usage patterns.' },
+    ],
+    pitfalls: [
+      { title: 'Using EFS for high-IOPS database workloads', description: 'EFS NFS latency is too high for transactional databases. PostgreSQL and MySQL on EFS will show severe performance degradation. Always use EBS for database storage.' },
+      { title: 'Mounting S3 as a file system using third-party tools', description: 'Tools like s3fs-fuse expose S3 as a POSIX file system but with severe limitations including no atomic renames and poor consistency. Use EFS or EBS if true file system semantics are required.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you use EFS over EBS?', a: 'Use EFS when multiple EC2 instances or ECS tasks need to share the same file data simultaneously. Common use cases include content management systems where multiple web servers read shared media assets, machine learning training jobs that need shared dataset access, and development environments where multiple engineers mount the same build artifacts. EFS also simplifies scaling because new instances mount the same file system without data migration.' },
+      { q: 'How do S3 consistency guarantees work?', a: 'Since December 2020, S3 provides strong read-after-write consistency for PUT and DELETE operations on existing objects. If you write a new object and immediately read it, you will see the updated version. This replaced the eventual consistency model for overwrite operations. For list operations across buckets, S3 is still eventually consistent in practice for very high-throughput workloads.' },
+      { q: 'When should you use EBS io2 instead of gp3?', a: 'Use io2 when your workload requires more than 16,000 IOPS or 1,000 MB/s throughput per volume, needs sub-millisecond latency guarantees with 99.999% volume durability (versus 99.8% for gp3), or requires Multi-Attach to share a volume between multiple EC2 instances in the same AZ. io2 Block Express supports up to 256,000 IOPS per volume. Most database workloads are well served by gp3 with provisioned IOPS.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonS3/latest/userguide/',
+      'https://docs.aws.amazon.com/efs/latest/ug/',
+      'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html',
+    ],
+  },
+
+  {
+    id: 'cmp-rds-vs-dynamodb',
+    title: 'RDS vs DynamoDB',
+    icon: 'database',
+    color: '#3b82f6',
+    description: 'Relational SQL databases versus managed NoSQL for AWS workloads.',
+    introduction: 'RDS provides managed relational databases (PostgreSQL, MySQL, Aurora) with ACID transactions, complex queries, and joins. DynamoDB is a managed key-value and document store designed for single-digit millisecond latency at any scale. The choice centers on data model, query flexibility, and consistency requirements.',
+    whenToUse: 'RDS: complex relational data models, ad-hoc queries, reporting, applications requiring joins and transactions across multiple tables. DynamoDB: single-table access patterns, high-throughput key-value or document lookups, global tables, serverless architectures needing auto-scaling storage.',
+    keyConcepts: [
+      { title: 'Data Model Flexibility', description: 'RDS stores data in normalized tables with defined schemas. DynamoDB stores items in tables with a mandatory partition key and optional sort key; you can store heterogeneous attributes per item but query flexibility is limited to the key structure.' },
+      { title: 'Query Capabilities', description: 'RDS supports arbitrary SQL including joins, aggregations, window functions, and full-text search. DynamoDB queries must use the partition key; access patterns not covered by indexes require full table scans via Scan API, which is expensive.' },
+      { title: 'Scaling Model', description: 'RDS scales vertically by changing instance size, with read scaling via read replicas. DynamoDB scales horizontally without limit using on-demand capacity mode; provisioned capacity mode scales predictably.' },
+      { title: 'Consistency Guarantees', description: 'RDS provides full ACID transactions. DynamoDB provides eventual consistency by default with an option for strongly consistent reads on individual items. DynamoDB Transactions (TransactWriteItems) support atomic multi-item operations within a single region.' },
+    ],
+    approach: [
+      { step: 'Model all access patterns upfront', details: 'DynamoDB design requires knowing every query pattern before creating the table because table structure follows access patterns. If you cannot enumerate all queries, RDS is safer because SQL is flexible by design.' },
+      { step: 'Evaluate transaction scope', details: 'If your application requires multi-table ACID transactions (e.g., deducting from an account balance while inserting an audit record), RDS handles this natively. DynamoDB Transactions work but are limited to 100 items per transaction and carry additional cost.' },
+      { step: 'Project scale and traffic spikes', details: 'If you expect traffic to grow from hundreds to millions of requests per day with unpredictable spikes, DynamoDB on-demand mode scales instantly without capacity planning. RDS requires vertical scaling or Aurora Serverless v2 for elastic scaling.' },
+    ],
+    pitfalls: [
+      { title: 'Using DynamoDB like a relational database', description: 'Attempting to model relational data with many foreign key relationships in DynamoDB leads to complex single-table designs or expensive Scan operations. If you find yourself doing application-side joins, RDS is the right tool.' },
+      { title: 'Hot partition keys in DynamoDB', description: 'DynamoDB distributes data by partition key. If all requests target the same partition key (e.g., a daily timestamp), one partition gets all traffic while others sit idle. Design partition keys with high cardinality to distribute load.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you decide between RDS and DynamoDB for a new application?', a: 'Start by listing every query the application needs to perform. If the list includes multi-table joins, ad-hoc reporting, or aggregations that change frequently, choose RDS. If every query can be modeled as a lookup by a known key or a range scan within a known partition, DynamoDB is likely a better fit. Also factor in scale: DynamoDB handles 10 million requests per second transparently while RDS requires architectural changes to approach that throughput.' },
+      { q: 'Can you use DynamoDB for financial transaction data?', a: 'Yes, with careful design. Use DynamoDB Transactions for atomic multi-item writes such as debiting one account and crediting another in a single call. Enable point-in-time recovery for compliance. Use DynamoDB Streams to maintain an audit log. The limitation is reporting: complex financial reports with aggregations across all accounts are impractical to run against DynamoDB directly. Pair it with a data warehouse like Redshift for analytical queries.' },
+      { q: 'What is the Global Table feature in DynamoDB and when do you need it?', a: 'DynamoDB Global Tables replicate a table across multiple AWS regions with multi-master writes. Any region can accept writes, which are asynchronously propagated to other regions with sub-second replication lag. Use Global Tables for globally distributed applications that need low-latency reads and writes from multiple continents, or for active-active multi-region disaster recovery. The tradeoff is last-writer-wins conflict resolution, which is unsuitable for inventory or financial balance records.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/rds/',
+      'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/',
+    ],
+  },
+
+  {
+    id: 'cmp-sql-vs-nosql',
+    title: 'SQL vs NoSQL',
+    icon: 'database',
+    color: '#3b82f6',
+    description: 'Relational versus non-relational database models and when each fits.',
+    introduction: 'SQL databases organize data into tables with predefined schemas, enforce relationships via foreign keys, and support ACID transactions and joins. NoSQL databases sacrifice some of these guarantees in exchange for horizontal scalability, flexible schemas, and optimized access patterns. Neither is universally superior; the right choice depends on data shape, query patterns, and scale requirements.',
+    whenToUse: 'SQL: financial systems, ERPs, applications with complex relationships, reporting, multi-table transactions. NoSQL: user profiles, product catalogs, real-time personalization, IoT sensor data, session stores, content delivery at global scale.',
+    keyConcepts: [
+      { title: 'Schema Flexibility', description: 'SQL enforces a rigid schema at the table level; adding a column requires a migration. NoSQL document stores like MongoDB allow each document to have different fields. This is powerful for evolving data models but makes data integrity harder to enforce at the database level.' },
+      { title: 'ACID vs BASE', description: 'SQL databases are ACID (Atomicity, Consistency, Isolation, Durability) by default. Many NoSQL systems follow BASE (Basically Available, Soft state, Eventually consistent). BASE systems tolerate temporary inconsistency for higher availability and throughput.' },
+      { title: 'Horizontal Scalability', description: 'SQL databases scale vertically (bigger server) and can scale reads via replicas. Sharding SQL is operationally complex. NoSQL databases like Cassandra and DynamoDB are designed to shard horizontally across commodity hardware from the start.' },
+      { title: 'Query Language', description: 'SQL is a standardized, declarative query language capable of expressing complex operations. NoSQL query languages vary widely by system and are often limited to the database\'s built-in access patterns.' },
+    ],
+    approach: [
+      { step: 'Identify data relationships', details: 'If entities have many-to-many relationships that you need to traverse in queries, a relational model with joins is more expressive than duplicating data in NoSQL.' },
+      { step: 'Enumerate consistency requirements', details: 'If users expect to read their own writes immediately and strong consistency is a product requirement, SQL or strongly consistent NoSQL configurations are appropriate. For recommendation feeds or social timelines, eventual consistency is acceptable.' },
+      { step: 'Estimate write and read volume', details: 'If peak writes exceed what a single SQL master can handle, evaluate read replicas, connection pooling, or NoSQL. PostgreSQL with PgBouncer handles tens of thousands of queries per second for most applications.' },
+    ],
+    pitfalls: [
+      { title: 'Choosing NoSQL to avoid schema design work', description: 'Schemaless does not mean design-free. Poor data modeling in NoSQL leads to bloated documents, missing indexes, and unqueryable data that is expensive to fix after the fact.' },
+      { title: 'Assuming SQL cannot scale', description: 'Modern managed SQL services like Aurora can handle millions of queries per second through read replicas and connection pooling. Do not abandon SQL for scale concerns before profiling actual bottlenecks.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you choose a NoSQL database for a new greenfield application?', a: 'Choose NoSQL when you can precisely enumerate all access patterns upfront, the data model is document-shaped or key-value with no complex joins, you expect massive horizontal write scale, or you need schema flexibility for rapid iteration on a product with an evolving data model. E-commerce product catalogs, user session stores, and event streams are classic NoSQL fits.' },
+      { q: 'How does NewSQL fit into this comparison?', a: 'NewSQL systems like Google Spanner, CockroachDB, and TiDB combine the horizontal scalability of NoSQL with ACID transactions and SQL query support. They use distributed consensus (Paxos or Raft) to maintain consistency across nodes. Use them when you genuinely need both global scale and strong relational consistency, accepting higher operational complexity and cost compared to single-region SQL.' },
+      { q: 'How do you handle schema migrations in a NoSQL system?', a: 'NoSQL systems lack built-in migration tooling. Common patterns include dual-write and lazy migration (reading old format, writing new format, migrating lazily on read), versioned documents (storing a schema version field per document and running migrations in application code), and background migration jobs. These approaches require careful coordination during deploys to avoid reading unversioned documents with new code.' },
+    ],
+    references: [
+      'https://aws.amazon.com/nosql/',
+      'https://www.postgresql.org/docs/',
+    ],
+  },
+
+  {
+    id: 'cmp-aurora-vs-rds',
+    title: 'Aurora vs RDS',
+    icon: 'database',
+    color: '#3b82f6',
+    description: 'When to use Aurora\'s distributed storage engine versus standard RDS managed databases.',
+    introduction: 'Aurora is AWS\'s cloud-native relational database that reimagines the storage layer. Instead of replicating the full database instance, Aurora replicates data six times across three AZs at the storage level, separating compute from storage. Standard RDS runs unmodified PostgreSQL, MySQL, MariaDB, Oracle, or SQL Server with synchronous replication to a standby instance.',
+    whenToUse: 'Aurora: high-availability production workloads, applications that benefit from Aurora Serverless v2 auto-scaling, read-heavy workloads requiring up to 15 read replicas, multi-master write scaling. RDS: specific engine version requirements, Oracle or SQL Server licensing, migration from on-premises with engine compatibility constraints, cost-sensitive smaller workloads.',
+    keyConcepts: [
+      { title: 'Storage Architecture', description: 'Aurora stores data in a distributed storage cluster of six copies across three AZs automatically. There is no standby instance to failover to; instead the compute layer reconnects to the storage layer within 30 seconds of failure.' },
+      { title: 'Read Replicas', description: 'Aurora supports up to 15 low-latency read replicas that share the same underlying storage with the writer. RDS read replicas require replaying the binary log, introducing replication lag.' },
+      { title: 'Aurora Serverless v2', description: 'Aurora Serverless v2 scales compute capacity in fine-grained increments (0.5 ACU) within seconds in response to load. This is ideal for development environments and applications with variable traffic patterns.' },
+      { title: 'Engine Compatibility', description: 'Aurora offers MySQL-compatible and PostgreSQL-compatible editions but may have minor behavioral differences from vanilla MySQL and PostgreSQL. Applications using engine-specific extensions or requiring exact version pinning should verify compatibility.' },
+    ],
+    approach: [
+      { step: 'Evaluate high availability requirements', details: 'Aurora Multi-AZ is built into the storage layer with automatic failover in under 30 seconds. RDS Multi-AZ uses a synchronous standby replica and typically fails over in 60 to 120 seconds. For applications requiring minimal RPO and RTO, Aurora is the default choice.' },
+      { step: 'Check engine and version compatibility', details: 'If the application requires Oracle, SQL Server, or a specific MySQL or PostgreSQL minor version only available in RDS, Aurora may not be an option. Verify compatibility before committing.' },
+      { step: 'Compare cost at expected instance size', details: 'Aurora pricing is roughly 20 percent higher than RDS for equivalent compute, but storage is priced per GB of actual usage rather than provisioned. For smaller databases the RDS cost advantage is meaningful; for large, read-heavy databases Aurora\'s replica and storage model often delivers better total cost of ownership.' },
+    ],
+    pitfalls: [
+      { title: 'Assuming Aurora is always faster', description: 'Aurora delivers better performance for read-heavy workloads with multiple replicas but write throughput is comparable to or slightly lower than RDS for single-writer workloads due to the storage layer write quorum requirement.' },
+      { title: 'Not testing Aurora Serverless cold starts', description: 'Aurora Serverless v1 (legacy) had cold start latency of several seconds when scaling from zero. Aurora Serverless v2 is always warm and scales continuously. Verify which version is being used.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you choose RDS over Aurora?', a: 'Choose RDS when you need Oracle or SQL Server engines unavailable in Aurora, require a specific MySQL or PostgreSQL minor version for compatibility with third-party software, need the lowest possible cost for a small non-critical database, or are migrating an on-premises database using AWS DMS where Aurora compatibility has not been verified.' },
+      { q: 'What is Aurora Global Database and when do you need it?', a: 'Aurora Global Database replicates an Aurora cluster to up to five secondary regions with sub-second replication lag using Aurora\'s dedicated storage replication path rather than database-level replication. Use it for globally distributed applications requiring low-latency reads in multiple regions or for active-passive disaster recovery with RPO of under one second and RTO of under one minute for a manual failover.' },
+      { q: 'How does Aurora Serverless v2 differ from provisioned Aurora?', a: 'Aurora Serverless v2 automatically adjusts compute capacity between a minimum and maximum ACU (Aurora Capacity Unit) setting in response to actual load, scaling in 0.5 ACU increments within seconds. Provisioned Aurora has a fixed instance size that must be manually changed or scaled via instance modification. Serverless v2 is ideal for variable workloads and development environments. Provisioned is preferable for predictable high-throughput workloads where Reserved pricing provides cost savings.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/',
+      'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/',
+    ],
+  },
+
+  {
+    id: 'cmp-elasticache-redis-vs-memcached',
+    title: 'ElastiCache Redis vs Memcached',
+    icon: 'zap',
+    color: '#3b82f6',
+    description: 'When to use Redis versus Memcached for distributed caching on AWS.',
+    introduction: 'Both Redis and Memcached are in-memory data stores available as managed services through ElastiCache. Redis supports rich data structures, persistence, replication, and pub/sub. Memcached is a simple, multi-threaded key-value cache optimized for pure horizontal scaling. Redis has become the default choice for most use cases due to its additional capabilities at comparable performance.',
+    whenToUse: 'Redis: session storage, leaderboards, rate limiting, pub/sub messaging, geospatial queries, persistent cache that survives restarts. Memcached: purely stateless caching with extremely simple key-value access, horizontal scaling to many nodes, multi-threaded CPU utilization on large instance types.',
+    keyConcepts: [
+      { title: 'Data Structure Support', description: 'Redis supports strings, hashes, lists, sets, sorted sets, bitmaps, HyperLogLog, streams, and geospatial indexes. Memcached stores only opaque byte strings with no server-side data manipulation.' },
+      { title: 'Persistence and Replication', description: 'Redis supports RDB snapshots and AOF logging for persistence across restarts. Redis Cluster and replication groups provide automatic failover. Memcached has no persistence; data is lost on node failure or restart.' },
+      { title: 'Threading Model', description: 'Redis is single-threaded for command execution (multi-threaded for I/O since Redis 6). Memcached is fully multi-threaded and can more efficiently utilize multi-core instances for pure throughput.' },
+      { title: 'ElastiCache Feature Support', description: 'ElastiCache for Redis supports Global Datastore (cross-region replication), cluster mode (data sharding), backup and restore, and read replicas. ElastiCache for Memcached supports only horizontal scaling and auto-discovery.' },
+    ],
+    approach: [
+      { step: 'Determine if you need data persistence', details: 'If cache data must survive node restarts or planned maintenance, Redis is the only option. Memcached data evaporates on restart, which is only acceptable if the cache is purely a performance optimization that can be rebuilt from the origin.' },
+      { step: 'Identify data structure requirements', details: 'If you need sorted sets for leaderboards, counters for rate limiting, or pub/sub for lightweight messaging between services, Redis provides these as native operations. Memcached would require implementing them in application code.' },
+      { step: 'Evaluate failover requirements', details: 'Redis replication groups provide automatic failover with a standby replica, achieving under one minute of downtime on primary failure. Memcached has no replication; losing a node loses its data and requires the application to re-populate from the origin.' },
+    ],
+    pitfalls: [
+      { title: 'Using Redis pub/sub for durable messaging', description: 'Redis pub/sub delivers messages only to currently connected subscribers. Messages sent while a subscriber is disconnected are lost. Use Redis Streams or a dedicated message broker for durable delivery.' },
+      { title: 'Ignoring Redis memory fragmentation', description: 'Redis uses jemalloc for memory management but can develop significant fragmentation over time with many small writes and deletes. Monitor the mem_fragmentation_ratio metric and schedule periodic restarts for long-running clusters.' },
+    ],
+    keyQuestions: [
+      { q: 'Why would you choose Redis over Memcached today?', a: 'Redis is the default choice for nearly all new use cases because it supports persistence, replication, rich data structures, and Lua scripting at performance comparable to Memcached. The only scenario where Memcached still wins is when you need multi-threaded cache nodes with massive horizontal scaling for simple string caching and you have no interest in persistence, pub/sub, or advanced data structures.' },
+      { q: 'How does ElastiCache Redis Cluster mode work?', a: 'In Cluster mode, data is sharded across up to 500 node groups using consistent hashing. Each shard holds a subset of the keyspace (16,384 hash slots). Multi-key operations must target keys in the same hash slot, which you can control using hash tags. Cluster mode enables both horizontal scaling of write capacity and large datasets beyond the memory of a single node.' },
+      { q: 'How do you handle cache invalidation at scale?', a: 'Common strategies are TTL-based expiration (simple but may serve stale data briefly), event-driven invalidation (write-through or write-behind cache where application code explicitly invalidates on update), and the cache-aside pattern with versioned keys where each data version uses a unique cache key. For distributed invalidation, Redis pub/sub can broadcast invalidation events to multiple application instances, though this adds coupling between the application and cache.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/',
+      'https://redis.io/docs/',
+    ],
+  },
+
+  {
+    id: 'cmp-redshift-vs-athena',
+    title: 'Redshift vs Athena',
+    icon: 'barChart',
+    color: '#3b82f6',
+    description: 'Provisioned columnar warehouse versus serverless SQL-on-S3 for analytical queries.',
+    introduction: 'Redshift is a managed columnar data warehouse that stores data on dedicated nodes, supporting petabyte-scale analytics with consistent query performance. Athena is a serverless interactive query service that runs SQL directly against data in S3 using Presto, charging per terabyte of data scanned. The choice depends on query frequency, data volume, and whether you want to manage cluster capacity.',
+    whenToUse: 'Redshift: frequent complex analytical queries, dashboards requiring sub-second latency, workloads that benefit from distribution keys and sort keys, organizations with data already loaded into Redshift. Athena: ad-hoc exploration of S3 data lakes, infrequent queries, ETL pipelines that query raw files, pay-per-query cost model.',
+    keyConcepts: [
+      { title: 'Query Execution Model', description: 'Redshift runs queries on dedicated compute nodes using massively parallel processing (MPP). Athena spins up Presto workers on demand per query with no persistent cluster. Redshift delivers consistent latency; Athena has variable startup latency per query.' },
+      { title: 'Data Loading', description: 'Redshift requires COPY commands to load data from S3 into Redshift-managed storage. Athena queries data in S3 directly without loading; the data never leaves S3.' },
+      { title: 'Cost Model', description: 'Redshift charges per node-hour (approximately $0.25 per hour for ra3.xlplus). Athena charges $5 per TB of data scanned. Columnar formats like Parquet and Snappy compression reduce Athena scan costs by 60 to 90 percent.' },
+      { title: 'Concurrency', description: 'Redshift supports concurrent queries up to the cluster\'s WLM (workload management) queue configuration. Athena supports up to 20 concurrent queries per account by default with limit increases available.' },
+    ],
+    approach: [
+      { step: 'Estimate query frequency', details: 'If analytics dashboards run hundreds of queries per day on the same dataset, Redshift\'s persistent cluster amortizes better than Athena\'s per-scan cost. If queries are weekly or ad-hoc, Athena avoids paying for idle cluster time.' },
+      { step: 'Evaluate data format in S3', details: 'If data is already stored as Parquet or ORC in S3, Athena delivers strong performance without ETL. If data arrives as JSON or CSV, convert to columnar format to reduce scan costs before evaluating Athena.' },
+      { step: 'Consider Redshift Serverless', details: 'Redshift Serverless scales capacity automatically and charges only for actual query compute. It bridges the gap between Redshift and Athena for workloads with unpredictable query volume.' },
+    ],
+    pitfalls: [
+      { title: 'Running Athena against unpartitioned large tables', description: 'A query against an unpartitioned 10 TB S3 table scans all 10 TB and costs $50 per query. Always partition S3 data by time or key dimensions and add partition projection or AWS Glue catalog partitions.' },
+      { title: 'Underestimating Redshift cluster management', description: 'Redshift clusters require distribution key selection, sort key optimization, vacuum and analyze operations, and periodic resize. Teams without a dedicated data engineer may find Athena plus S3 simpler to operate.' },
+    ],
+    keyQuestions: [
+      { q: 'When should you choose Athena over Redshift?', a: 'Choose Athena when your data lives in S3 in columnar format, queries are infrequent or exploratory, you need to query raw event logs without loading them, or you want to avoid managing cluster capacity. Athena also integrates tightly with AWS Glue Data Catalog, Lake Formation for access control, and Step Functions for serverless ETL pipelines.' },
+      { q: 'How do you optimize Athena query costs?', a: 'Convert data to Parquet or ORC format with Snappy compression to reduce bytes scanned by 60 to 90 percent. Partition tables by common filter dimensions such as date, region, or event type. Use partition projection to avoid Glue catalog calls. Limit SELECT to required columns rather than SELECT star. Use columnar statistics to enable predicate pushdown.' },
+      { q: 'Can Redshift query S3 data directly?', a: 'Yes, Redshift Spectrum extends Redshift queries to external tables backed by S3 data. You can join Redshift-managed tables with Spectrum external tables in a single query, pushing the S3 scan to a fleet of Spectrum nodes independent of your cluster size. This is useful for tiering cold historical data to S3 while keeping hot recent data in Redshift managed storage.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/redshift/latest/mgmt/',
+      'https://docs.aws.amazon.com/athena/latest/ug/',
+    ],
+  },
+
+  // ─── MESSAGING ──────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-sqs-vs-sns',
+    title: 'SQS vs SNS',
+    icon: 'send',
+    color: '#8b5cf6',
+    description: 'Queue-based point-to-point messaging versus topic-based fan-out delivery.',
+    introduction: 'SQS is a distributed message queue where a single consumer processes each message. SNS is a pub/sub notification service that delivers messages to all subscribers simultaneously. They solve different problems and are frequently used together in a fan-out pattern where SNS distributes to multiple SQS queues.',
+    whenToUse: 'SQS: work queues where exactly one consumer should process each job, buffering between services, retry and dead-letter patterns. SNS: broadcasting events to multiple systems simultaneously, sending notifications across email, SMS, HTTP, Lambda, and SQS simultaneously.',
+    keyConcepts: [
+      { title: 'Delivery Model', description: 'SQS holds messages until a consumer polls and deletes them. A message is delivered to exactly one consumer. SNS pushes messages to all subscribers at the moment of publish; there is no persistence after delivery.' },
+      { title: 'Message Persistence', description: 'SQS retains messages for up to 14 days if not consumed. SNS has no storage; if a subscriber is unavailable, the message is lost unless a dead-letter queue is configured.' },
+      { title: 'Fan-out Pattern', description: 'A single SNS topic with multiple SQS queue subscriptions delivers each published message to all queues simultaneously. Each downstream service then processes messages from its own queue independently at its own pace.' },
+      { title: 'Ordering', description: 'Standard SQS queues deliver messages in roughly FIFO order but do not guarantee it. SQS FIFO queues guarantee strict ordering and exactly-once processing at up to 3,000 messages per second per message group. SNS does not guarantee delivery order.' },
+    ],
+    approach: [
+      { step: 'Identify the consumption pattern', details: 'If multiple independent services need to react to the same event, use SNS. If exactly one service processes each work item, use SQS directly.' },
+      { step: 'Design for failure', details: 'Configure dead-letter queues on SQS to capture messages that fail processing after the maximum retry count. Configure redrive policies to automatically move failed messages. SNS subscriptions can also configure DLQs for failed delivery attempts.' },
+      { step: 'Choose queue type', details: 'Use Standard SQS for high-throughput workloads where at-least-once delivery and best-effort ordering is acceptable. Use FIFO SQS when message ordering or exactly-once processing is a business requirement, accepting the throughput limit of 3,000 messages per second.' },
+    ],
+    pitfalls: [
+      { title: 'Treating SNS as durable storage', description: 'SNS does not retain messages. If a Lambda subscriber is throttled or unavailable, messages can be lost. Add SQS as a buffer between SNS and any processing Lambda to provide retry capability.' },
+      { title: 'Large message payloads in SQS', description: 'SQS has a 256 KB message size limit. For larger payloads, store the data in S3 and include only the S3 object reference in the SQS message. The SQS Extended Client Library automates this pattern.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you use SNS and SQS together instead of SNS alone?', a: 'Use the SNS-to-SQS fan-out pattern whenever consumers need to process events asynchronously, independently, and at their own pace. SNS alone is suitable for fire-and-forget notifications to email or SMS. But for service-to-service communication where reliability matters, each consumer should have its own SQS queue subscribed to the SNS topic. This decouples producers from consumers, enables per-service scaling, and provides retry and dead-letter capabilities.' },
+      { q: 'How do you handle duplicate messages in SQS Standard?', a: 'Design consumers to be idempotent so processing the same message twice produces the same result. Maintain a processed message ID store in DynamoDB or Redis with a TTL slightly longer than the SQS visibility timeout window. On receipt, check if the message ID has been processed before executing the business logic. SQS FIFO queues with the message deduplication ID feature provide exactly-once delivery at the queue level, eliminating the need for application-level deduplication.' },
+      { q: 'What is visibility timeout and why does it matter?', a: 'When a consumer receives an SQS message, the message becomes invisible to other consumers for the visibility timeout period (30 seconds by default). If the consumer processes and deletes the message before the timeout, it is removed. If the consumer fails or takes longer than the timeout, the message becomes visible again and another consumer can process it. Set visibility timeout to slightly longer than the maximum expected processing time to prevent duplicate delivery while allowing recovery from failures.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/',
+      'https://docs.aws.amazon.com/sns/latest/dg/',
+    ],
+  },
+
+  {
+    id: 'cmp-sqs-vs-eventbridge',
+    title: 'SQS vs EventBridge',
+    icon: 'send',
+    color: '#8b5cf6',
+    description: 'Work queues versus event routing for decoupled AWS architectures.',
+    introduction: 'SQS is a durable message queue for worker patterns. EventBridge is a serverless event bus that routes events from AWS services, SaaS applications, and custom sources to targets based on content-based routing rules. EventBridge is optimized for event-driven integration and routing; SQS is optimized for reliable work distribution.',
+    whenToUse: 'SQS: reliable work queues where processing order or exactly-once delivery matters, buffering, retry with backoff. EventBridge: routing CloudWatch events, integrating SaaS tools, multi-target fan-out with content-based filtering, scheduled events (cron), cross-account and cross-region event delivery.',
+    keyConcepts: [
+      { title: 'Routing Capability', description: 'EventBridge rules can filter and route events based on any field in the event payload using content-based filtering rules. SQS has no routing; all messages go to a single queue.' },
+      { title: 'Native AWS Integration', description: 'EventBridge has built-in integrations with over 200 AWS services as sources and targets. CloudWatch alarm state changes, S3 object events, CodePipeline state changes, and EC2 instance state changes all natively emit to EventBridge.' },
+      { title: 'SaaS Integration', description: 'EventBridge supports SaaS partner event sources from Shopify, Zendesk, PagerDuty, and others without building custom integrations. SQS requires a custom producer service to receive SaaS webhooks and enqueue them.' },
+      { title: 'Event Retention', description: 'EventBridge retries delivery for 24 hours on failure. SQS retains messages for up to 14 days. For long retry windows, SQS provides more durable buffering.' },
+    ],
+    approach: [
+      { step: 'Determine if content-based routing is needed', details: 'If different event types should trigger different actions (e.g., order.created goes to fulfillment and billing, order.cancelled only goes to billing), EventBridge rules eliminate the need for message routing logic in application code.' },
+      { step: 'Identify existing AWS service events', details: 'If the trigger is an AWS service lifecycle event (EC2 state change, S3 upload, RDS snapshot), EventBridge is already the native integration path. Building a custom SQS producer for these events adds unnecessary complexity.' },
+      { step: 'Evaluate processing guarantees', details: 'EventBridge guarantees at-least-once delivery with up to 185 retry attempts over 24 hours. For stricter exactly-once or FIFO processing requirements, SQS FIFO queues are the better choice.' },
+    ],
+    pitfalls: [
+      { title: 'Using EventBridge as a work queue', description: 'EventBridge does not provide visibility timeout, backpressure, or the ability to re-queue messages for delayed retry. Do not use it as a substitute for SQS in worker patterns where consumers need to control the rate of processing.' },
+      { title: 'Missing EventBridge archive and replay', description: 'EventBridge Pipes and Archives allow replaying past events to a target, which is powerful for debugging and backfilling. Many teams miss this feature and build custom replay mechanisms in application code.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you route EventBridge events into SQS rather than directly to Lambda?', a: 'Route EventBridge to SQS when the downstream Lambda has high throughput that could exceed concurrency limits, when you need backpressure to prevent overwhelming a downstream service, when you want dead-letter queue retry semantics beyond EventBridge\'s 24-hour retry window, or when processing must be FIFO ordered. SQS acts as a buffer and rate limiter between the event bus and the processor.' },
+      { q: 'What are EventBridge Pipes?', a: 'EventBridge Pipes create point-to-point integrations between a source (SQS, DynamoDB Streams, Kinesis, Kafka) and a target with optional filtering and enrichment steps in between. They replace common patterns that previously required a Lambda function solely to read from one service and write to another. For example, a Pipe can read from a DynamoDB Stream, filter for specific change types, optionally enrich via an API call, and write to an SQS queue or HTTP endpoint without any custom code.' },
+      { q: 'How does EventBridge Schema Registry help development?', a: 'EventBridge Schema Registry discovers event schemas automatically from your event bus traffic and stores them as versioned JSON Schema documents. It generates code bindings for Java, Python, and TypeScript so your application can deserialize events with type safety. This reduces integration errors when event producers change their payload structure, as the registry tracks schema versions and IDEs can surface type mismatches during development.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/eventbridge/latest/userguide/',
+      'https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/',
+    ],
+  },
+
+  {
+    id: 'cmp-kafka-vs-sqs',
+    title: 'Kafka vs SQS',
+    icon: 'send',
+    color: '#8b5cf6',
+    description: 'High-throughput distributed log versus managed message queue for event streaming.',
+    introduction: 'Apache Kafka is a distributed event log designed for high-throughput, ordered, replayable event streams. SQS is a fully managed simple message queue for point-to-point work distribution. Kafka retains messages for configurable periods and allows any consumer group to replay from any offset. SQS deletes messages once consumed.',
+    whenToUse: 'Kafka: event sourcing, change data capture, audit logs, multiple independent consumer groups reading the same stream, streaming analytics pipelines. SQS: work queues, task distribution, simple point-to-point messaging without replay requirements.',
+    keyConcepts: [
+      { title: 'Message Retention and Replay', description: 'Kafka retains messages for a configurable retention period (default 7 days, unlimited with tiered storage). Any consumer group can seek to any offset and replay historical events. SQS deletes messages after they are consumed; replay is impossible without re-publishing.' },
+      { title: 'Consumer Groups', description: 'Multiple independent Kafka consumer groups each read the full stream at their own position. SQS competes among consumers; each message is processed by exactly one consumer.' },
+      { title: 'Throughput', description: 'A single Kafka partition handles millions of messages per second. Kafka throughput scales by adding partitions. SQS Standard has essentially unlimited throughput but higher per-message cost at massive scale.' },
+      { title: 'Operational Complexity', description: 'Self-managed Kafka requires running brokers, ZooKeeper (pre-KRaft), managing partition rebalancing, and monitoring ISR lag. AWS MSK (Managed Streaming for Kafka) reduces but does not eliminate operational burden. SQS is fully serverless.' },
+    ],
+    approach: [
+      { step: 'Identify replay requirements', details: 'If downstream consumers need to replay historical events (e.g., a new analytics service needs to bootstrap from 30 days of order events), Kafka is required. SQS cannot fulfill this requirement.' },
+      { step: 'Count independent consumer groups', details: 'If three independent services (billing, fulfillment, analytics) each need to process every order event independently, Kafka fan-out is natural. Achieving the same with SQS requires duplicating messages to three queues via SNS fan-out.' },
+      { step: 'Evaluate operational capacity', details: 'SQS requires zero operational investment. MSK requires VPC configuration, broker sizing, and monitoring setup. Confirm your team can support Kafka operations before committing.' },
+    ],
+    pitfalls: [
+      { title: 'Using Kafka for simple task queues', description: 'Kafka\'s partition and offset model adds complexity that is unnecessary for simple work queue patterns. SQS is simpler, cheaper, and fully managed for task distribution.' },
+      { title: 'Underpartitioning Kafka topics', description: 'Kafka parallelism is bounded by partition count. A topic with 3 partitions can only be consumed by 3 consumers in the same consumer group simultaneously. Design topics with future scale in mind and pre-create sufficient partitions.' },
+    ],
+    keyQuestions: [
+      { q: 'Why would you choose Kafka over SQS for an event-driven architecture?', a: 'Choose Kafka when you have multiple independent consumers that each need to process every message, when replay of historical events is a functional requirement (e.g., rebuilding a downstream view from scratch), when you need strict partition-level ordering across high-throughput streams, or when you are building a streaming analytics pipeline with tools like Flink or Spark Streaming that have native Kafka connectors.' },
+      { q: 'What is Kafka consumer group lag and why does it matter?', a: 'Consumer group lag is the difference between the latest offset in a Kafka topic partition and the last committed offset of a consumer group. It measures how far behind a consumer is from the tip of the log. High lag indicates the consumer cannot keep up with production rate. Monitor lag per consumer group and partition in CloudWatch (MSK) or Prometheus. Alert on sustained lag growth to catch consumer bottlenecks before they cause business impact.' },
+      { q: 'What is AWS MSK Serverless and when would you use it?', a: 'MSK Serverless is a fully managed Kafka cluster that scales capacity automatically without requiring broker instance sizing. You pay per partition-hour and data throughput. Use it for workloads with variable traffic, new Kafka deployments where capacity requirements are uncertain, or teams that want Kafka semantics without cluster management. The tradeoff is higher per-partition cost than provisioned MSK at sustained high throughput.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/msk/latest/developerguide/',
+      'https://kafka.apache.org/documentation/',
+    ],
+  },
+
+  {
+    id: 'cmp-kinesis-vs-kafka',
+    title: 'Kinesis vs Kafka',
+    icon: 'send',
+    color: '#8b5cf6',
+    description: 'AWS-native data streaming versus open-source distributed event log.',
+    introduction: 'Amazon Kinesis Data Streams is a fully managed data streaming service tightly integrated with the AWS ecosystem. Apache Kafka (available via MSK) is the open-source standard for high-throughput event streaming with a rich ecosystem. Both serve similar use cases but differ in integration, operational model, and ecosystem portability.',
+    whenToUse: 'Kinesis: AWS-native real-time data pipelines, existing AWS ecosystem integration (Lambda, Firehose, Analytics), teams that want zero Kafka operations. Kafka/MSK: multi-cloud or hybrid architectures, existing Kafka expertise, Kafka-native tooling (Kafka Connect, Kafka Streams, ksqlDB), high-throughput streaming analytics.',
+    keyConcepts: [
+      { title: 'Shard vs Partition Model', description: 'Kinesis organizes streams into shards, each supporting 1 MB/s writes and 2 MB/s reads. Adding shards scales capacity but requires explicit resharding. Kafka uses partitions, which can be freely increased (but not decreased) without service interruption.' },
+      { title: 'Retention', description: 'Kinesis retains data for 24 hours by default, up to 7 days standard or 365 days with long-term retention. Kafka retains data for configurable durations (default 7 days) or indefinitely with tiered storage, typically at lower cost per GB.' },
+      { title: 'Ecosystem Integration', description: 'Kinesis integrates natively with Lambda (trigger), Firehose (delivery to S3/Redshift), and Kinesis Data Analytics (Apache Flink). MSK integrates with the full Kafka ecosystem: Kafka Connect, ksqlDB, Schema Registry, Kafka Streams.' },
+      { title: 'Pricing Model', description: 'Kinesis charges per shard-hour and payload unit. MSK charges per broker-hour and storage. At very high throughput, MSK is often cheaper. At low throughput, Kinesis pay-per-use avoids the fixed broker cost.' },
+    ],
+    approach: [
+      { step: 'Assess ecosystem lock-in tolerance', details: 'Kinesis is AWS-proprietary with no open-source equivalent. MSK runs standard Apache Kafka. If multi-cloud portability is a future requirement, MSK keeps options open.' },
+      { step: 'Evaluate existing tooling', details: 'If your team already uses Kafka Connect for CDC from databases, or ksqlDB for stream processing, MSK extends naturally. Kinesis has no equivalent open-source tooling.' },
+      { step: 'Compare at target throughput', details: 'Model monthly cost at expected MB/s of throughput. Kinesis is often cheaper at low throughput; MSK provisioned is cheaper at sustained high throughput. MSK Serverless is a middle ground.' },
+    ],
+    pitfalls: [
+      { title: 'Treating Kinesis shards as unlimited', description: 'Kinesis has default shard quotas per region. Hitting the shard limit blocks scaling. Request limit increases proactively as throughput grows.' },
+      { title: 'Missing Kinesis Enhanced Fan-Out', description: 'Standard Kinesis GetRecords polling shares 2 MB/s read bandwidth across all consumers per shard. Enhanced Fan-Out provides a dedicated 2 MB/s pipe per consumer per shard via push-based delivery. Enable it for latency-sensitive consumers.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you choose Kinesis over MSK Kafka?', a: 'Choose Kinesis when you want a fully managed serverless streaming service with no cluster management, when your pipeline is AWS-native (Lambda trigger, Firehose delivery to S3, Kinesis Data Analytics with Flink), when throughput is moderate and the per-shard pricing model is acceptable, or when your team lacks Kafka operational expertise.' },
+      { q: 'How does Kinesis Firehose fit into the streaming picture?', a: 'Kinesis Firehose (now called Data Firehose) is a fully managed delivery stream that reads from Kinesis Data Streams or directly from producers and delivers buffered, compressed batches to S3, Redshift, OpenSearch, or Splunk. It handles partitioning, format conversion (JSON to Parquet), and delivery retries automatically. Use it for data lake ingestion pipelines where the destination is S3 and you do not need real-time stream processing.' },
+      { q: 'What is the ordering guarantee difference between Kinesis and Kafka?', a: 'Both guarantee ordering within a partition or shard. Messages with the same partition key in Kinesis or the same key in Kafka always land in the same shard or partition, preserving order for related events. Cross-shard and cross-partition ordering is not guaranteed in either system. Design your partition key strategy so all events that require relative ordering share the same key (e.g., all events for a given order ID).' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/streams/latest/dev/',
+      'https://docs.aws.amazon.com/msk/latest/developerguide/',
+    ],
+  },
+
+  {
+    id: 'cmp-rabbitmq-vs-sqs',
+    title: 'RabbitMQ vs SQS',
+    icon: 'send',
+    color: '#8b5cf6',
+    description: 'Traditional AMQP message broker versus AWS-managed queue service.',
+    introduction: 'RabbitMQ is an open-source message broker implementing the AMQP protocol with rich routing, exchange types, and consumer acknowledgment semantics. SQS is a fully managed AWS queue service with simpler semantics and zero operational overhead. RabbitMQ offers more expressive routing; SQS eliminates all broker management.',
+    whenToUse: 'RabbitMQ: complex routing topologies with topic and fanout exchanges, existing AMQP clients, message priorities, per-message TTL, consumer acknowledgment patterns. SQS: serverless workloads, AWS-native architectures, teams prioritizing operational simplicity over routing flexibility.',
+    keyConcepts: [
+      { title: 'Exchange and Binding Model', description: 'RabbitMQ routes messages through exchanges (direct, fanout, topic, headers) to queues via bindings. This provides expressive content-based routing at the broker level. SQS is a flat queue with no routing layer.' },
+      { title: 'Protocol Support', description: 'RabbitMQ supports AMQP 0-9-1, AMQP 1.0, MQTT, STOMP, and WebSockets. SQS exposes an HTTP/HTTPS API only. RabbitMQ is the default for IoT devices and polyglot environments using AMQP clients.' },
+      { title: 'Message Acknowledgment', description: 'RabbitMQ supports consumer acknowledgments, negative acknowledgments, and dead-lettering with fine-grained control. SQS uses visibility timeout as an implicit acknowledgment; deleted messages are confirmed processed.' },
+      { title: 'Operational Overhead', description: 'Self-managed RabbitMQ requires cluster management, disk sizing, connection monitoring, and upgrade planning. Amazon MQ for RabbitMQ is a managed option. SQS is fully serverless with no broker to manage.' },
+    ],
+    approach: [
+      { step: 'Assess protocol and client requirements', details: 'If existing services use AMQP libraries or you are working with IoT devices using MQTT, RabbitMQ (or Amazon MQ) provides native protocol support. Migrating to SQS requires replacing the message transport layer in all clients.' },
+      { step: 'Evaluate routing complexity', details: 'If messages need routing to different queues based on routing keys or headers, RabbitMQ exchanges handle this at the broker. SQS requires application-side routing logic or SNS topic with filter policies.' },
+      { step: 'Model operational capacity', details: 'RabbitMQ clusters require active monitoring of queue depths, connection counts, and memory usage. SQS provides CloudWatch metrics with no cluster to manage. Weigh routing capability against operational cost.' },
+    ],
+    pitfalls: [
+      { title: 'RabbitMQ memory alarms causing publisher blocking', description: 'RabbitMQ blocks publishers when the broker reaches its memory high watermark. Unmonitored queue depth growth can cause application-wide pauses. Set per-queue message limits and monitor queue depth continuously.' },
+      { title: 'Ignoring Amazon MQ as a managed RabbitMQ option', description: 'Many teams run self-managed RabbitMQ on EC2 for AMQP compatibility. Amazon MQ for RabbitMQ provides a managed broker with automatic minor version upgrades, Multi-AZ deployment, and CloudWatch integration without changing application AMQP code.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you migrate from RabbitMQ to SQS?', a: 'Migrate to SQS when your team spends significant time managing RabbitMQ clusters, when routing requirements are simple enough to replace with SNS topic filter policies, when you are adopting a serverless architecture where SQS integrates natively with Lambda triggers, or when you want to eliminate broker single-point-of-failure risk without the complexity of a multi-node RabbitMQ cluster.' },
+      { q: 'How do RabbitMQ dead letter exchanges work?', a: 'A dead letter exchange (DLX) is a normal exchange that receives messages rejected by consumers with basic.nack or basic.reject without requeue, or messages that expire TTL on a queue. Configure a queue\'s dead-letter-exchange argument to route failed messages to a separate DLX and dead letter queue for inspection and reprocessing. This is equivalent to the SQS dead-letter queue but more flexible because messages can be re-routed based on headers.' },
+      { q: 'What is the difference between RabbitMQ topic exchanges and SQS message filtering?', a: 'RabbitMQ topic exchanges route messages to bound queues based on a routing key pattern using wildcards (star matches one word, hash matches zero or more words). Routing happens at the broker before consumers receive messages. SQS filter policies on SNS subscriptions filter messages at the subscription level based on message attributes after SNS has received the message. Both achieve content-based routing but at different architectural layers.' },
+    ],
+    references: [
+      'https://www.rabbitmq.com/documentation.html',
+      'https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/',
+    ],
+  },
+
+  // ─── CI/CD ──────────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-github-actions-vs-jenkins',
+    title: 'GitHub Actions vs Jenkins',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    description: 'Cloud-native CI/CD versus self-hosted automation server.',
+    introduction: 'GitHub Actions is a cloud-native CI/CD platform built into GitHub, using YAML workflow files committed alongside code. Jenkins is a self-hosted open-source automation server with thousands of plugins and a long history in enterprise environments. Actions eliminates infrastructure management; Jenkins provides unlimited customization at the cost of operational burden.',
+    whenToUse: 'GitHub Actions: code hosted on GitHub, cloud-native teams, modern workflows, serverless runners, GitHub ecosystem integration. Jenkins: self-hosted on-premises compute requirements, compliance environments that prohibit cloud CI, existing Jenkins investment, complex plugin-dependent workflows.',
+    keyConcepts: [
+      { title: 'Infrastructure Model', description: 'GitHub Actions runs on GitHub-hosted runners (Ubuntu, macOS, Windows) or self-hosted runners in your own infrastructure. Jenkins runs on servers you provision, patch, and scale.' },
+      { title: 'Configuration as Code', description: 'GitHub Actions workflows are YAML files stored in .github/workflows in the repository. Jenkins pipelines are Groovy DSL Jenkinsfiles committed to the repo, or pipelines defined in the Jenkins UI (not ideal for code review).' },
+      { title: 'Marketplace Ecosystem', description: 'GitHub Actions has a marketplace of thousands of reusable community actions. Jenkins has thousands of plugins maintained at varying quality levels. Actions are versioned and pinnable; Jenkins plugin compatibility requires testing.' },
+      { title: 'Cost Model', description: 'GitHub Actions is free for public repositories and included with GitHub plans (2,000 minutes per month free for private repos). Jenkins infrastructure costs are the operator\'s responsibility: server compute, storage, and maintenance time.' },
+    ],
+    approach: [
+      { step: 'Assess infrastructure requirements', details: 'If CI must run within your VPC to access private resources, both GitHub Actions (self-hosted runners) and Jenkins work. If the team wants zero infrastructure management, GitHub-hosted runners are the path of least resistance.' },
+      { step: 'Inventory existing Jenkins investment', details: 'Migrating a Jenkins installation with 50 pipelines and custom plugins is a significant project. Evaluate the ROI of migration versus incremental modernization of existing Jenkins pipelines.' },
+      { step: 'Evaluate secrets management integration', details: 'GitHub Actions integrates with GitHub Secrets and OIDC for keyless authentication to AWS and GCP. Jenkins uses credential stores and plugins for secret management, which require more configuration.' },
+    ],
+    pitfalls: [
+      { title: 'Using unsecured community GitHub Actions', description: 'Third-party Actions run with access to your repository secrets. Pin Actions to a specific commit SHA rather than a mutable tag. Review Actions that request excessive permissions and prefer well-maintained official Actions.' },
+      { title: 'Underestimating Jenkins upgrade complexity', description: 'Jenkins and its plugins have independent release cycles. Upgrading Jenkins core often breaks plugin compatibility. Organizations running Jenkins face an ongoing upgrade coordination burden to maintain security patches.' },
+    ],
+    keyQuestions: [
+      { q: 'How does GitHub Actions OIDC authentication to AWS work?', a: 'GitHub Actions supports OIDC (OpenID Connect) to authenticate to AWS without storing long-lived credentials as secrets. Configure an IAM OIDC identity provider in AWS pointing to the GitHub OIDC endpoint. Create an IAM role with a trust policy that allows assumption by the specific GitHub org, repository, and branch. In the workflow, use the configure-aws-credentials Action to exchange a GitHub-issued JWT for a short-lived AWS STS credential. This eliminates static AWS access keys in GitHub Secrets entirely.' },
+      { q: 'When would you keep Jenkins instead of migrating to GitHub Actions?', a: 'Keep Jenkins when you have compliance requirements mandating on-premises CI with no outbound internet connectivity, when your pipelines depend on Jenkins plugins with no GitHub Actions equivalent, when you have significant Groovy Pipeline library investments that would be expensive to rewrite, or when CI runs on self-hosted GPU or specialized hardware that is more practical to manage via Jenkins than GitHub self-hosted runners.' },
+      { q: 'How do you manage reusable workflows in GitHub Actions?', a: 'Use reusable workflows defined in a separate repository (e.g., .github/workflows/build.yml in an org-level repo) and call them from other repositories using the uses keyword with the repository path and workflow file. Reusable workflows can accept inputs and secrets. This is equivalent to Jenkins Shared Libraries but version-controlled at the workflow file level. Composite Actions are an alternative for sharing individual steps rather than entire workflows.' },
+    ],
+    references: [
+      'https://docs.github.com/en/actions',
+      'https://www.jenkins.io/doc/',
+    ],
+  },
+
+  {
+    id: 'cmp-gitlab-ci-vs-github-actions',
+    title: 'GitLab CI vs GitHub Actions',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    description: 'Comparing two leading cloud-native CI/CD platforms for modern DevOps teams.',
+    introduction: 'GitLab CI/CD is deeply integrated into the GitLab DevOps platform, covering the full SDLC from planning to monitoring. GitHub Actions is deeply integrated with GitHub, the dominant code hosting platform. Both use YAML configuration, support self-hosted runners, and provide marketplace/component ecosystems. The choice often follows your code hosting platform.',
+    whenToUse: 'GitLab CI: code on GitLab, need for integrated DevOps platform (boards, security scanning, container registry, package registry, Kubernetes integration), self-hosted GitLab for compliance. GitHub Actions: code on GitHub, deep GitHub ecosystem integration (Issues, PRs, GitHub Packages), large open-source contributor base.',
+    keyConcepts: [
+      { title: 'Pipeline Structure', description: 'GitLab CI uses stages with jobs that run in parallel within a stage. GitHub Actions uses jobs with steps, allowing more granular dependency control with the needs keyword. GitLab\'s stage model is simpler; Actions provides more flexibility for complex DAGs.' },
+      { title: 'Built-in Security Scanning', description: 'GitLab Ultimate includes SAST, DAST, container scanning, dependency scanning, and secret detection as native pipeline features. GitHub Advanced Security provides similar capabilities but requires a separate license add-on.' },
+      { title: 'Container Registry', description: 'Both platforms include an integrated container registry. GitLab Container Registry is part of the GitLab instance. GitHub Container Registry (ghcr.io) is available on all GitHub plans.' },
+      { title: 'Self-Hosted Option', description: 'GitLab is available as a fully self-hosted instance (GitLab CE/EE) running entirely on your infrastructure. GitHub has no self-hosted option (GitHub Enterprise Server requires GitHub licensing and significant maintenance).' },
+    ],
+    approach: [
+      { step: 'Follow code hosting', details: 'The primary factor in this decision is usually where your code lives. Migrating 500 repositories between GitHub and GitLab is a significant investment with limited technical justification unless you need platform-specific features.' },
+      { step: 'Evaluate integrated DevOps needs', details: 'If your team wants a single platform for issue tracking, CI/CD, security scanning, container registry, and Kubernetes deployment, GitLab provides more out of the box. GitHub requires assembling third-party integrations.' },
+      { step: 'Assess open-source community requirements', details: 'If your project needs contributions from a large open-source community, GitHub\'s larger developer population and familiar pull request model are advantages. GitLab is less familiar to casual contributors.' },
+    ],
+    pitfalls: [
+      { title: 'Overcomplicating GitLab pipeline inheritance', description: 'GitLab supports extends, include, and anchors for DRY pipelines. Deeply nested inheritance chains become hard to debug. Keep include depth to two levels maximum and document template sources.' },
+      { title: 'Missing GitHub Actions concurrency controls', description: 'Without concurrency groups, multiple workflow runs for the same PR can run simultaneously and conflict. Use the concurrency key to cancel in-progress workflows for the same branch when a new push arrives.' },
+    ],
+    keyQuestions: [
+      { q: 'What is the equivalent of GitHub Actions reusable workflows in GitLab CI?', a: 'GitLab CI achieves reusability through include with project, file, or template references. A central pipeline template repository can define reusable job templates that other projects include. The extends keyword locally reuses job configurations within a pipeline. GitLab 15.3 introduced CI/CD Components (alpha, GA in 16.x) which are versioned, parameterized pipeline fragments analogous to GitHub reusable workflows.' },
+      { q: 'How does GitLab CI handle Kubernetes deployments natively?', a: 'GitLab provides built-in Kubernetes integration through GitLab Agent for Kubernetes (KAS). Connect a cluster by installing the agent and it creates a bidirectional tunnel without exposing the Kubernetes API externally. Use GitLab CI environment deployments with review apps to spin up ephemeral Kubernetes namespaces per merge request. The Auto DevOps feature automates build, test, scan, and deploy pipelines for Kubernetes without manual pipeline authoring.' },
+      { q: 'When would you self-host GitLab instead of using GitLab.com?', a: 'Self-host GitLab when regulatory requirements mandate data residency (source code, artifacts, and CI logs must remain on-premises), when internet connectivity is restricted, when you need full control over storage retention policies and encryption, or when your organization has a GitLab EE license that justifies the operational cost of running the full platform internally.' },
+    ],
+    references: [
+      'https://docs.gitlab.com/ee/ci/',
+      'https://docs.github.com/en/actions',
+    ],
+  },
+
+  {
+    id: 'cmp-circleci-vs-github-actions',
+    title: 'CircleCI vs GitHub Actions',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    description: 'Dedicated CI/CD SaaS platform versus GitHub-integrated workflow automation.',
+    introduction: 'CircleCI is a dedicated CI/CD platform with advanced caching, parallelism, resource class configuration, and first-class Docker Layer Caching. GitHub Actions is GitHub-native with tight integration to repository events and the GitHub ecosystem. CircleCI historically led on build speed optimization; GitHub Actions has closed the gap while offering tighter GitHub integration.',
+    whenToUse: 'CircleCI: teams that need advanced Docker Layer Caching, fine-grained resource classes (ARM, GPU, large memory), sophisticated test parallelism, CircleCI orbs ecosystem. GitHub Actions: teams wanting CI configuration to live fully within GitHub, tight integration with GitHub Checks API, simpler OIDC-based cloud authentication.',
+    keyConcepts: [
+      { title: 'Docker Layer Caching', description: 'CircleCI offers paid Docker Layer Caching that stores intermediate Docker image layers between builds, dramatically reducing build times for Docker-heavy pipelines. GitHub Actions caches Docker layers only via third-party Actions with manual configuration.' },
+      { title: 'Test Parallelism', description: 'CircleCI has built-in intelligent test splitting that automatically distributes test files across parallel containers based on historical timing data. GitHub Actions matrix strategy requires manual test splitting configuration.' },
+      { title: 'Resource Classes', description: 'CircleCI offers resource classes from small (1 vCPU, 2 GB) to 2XL (8 vCPU, 16 GB) and specialty classes for ARM and GPU. GitHub Actions runners are fixed sizes (2 vCPU, 7 GB for standard Linux runners) with larger runners available on Team and Enterprise plans.' },
+      { title: 'Orbs vs Actions', description: 'CircleCI Orbs are reusable packages of CircleCI configuration (commands, jobs, executors) distributed via the CircleCI registry. GitHub Actions has a larger marketplace of community Actions. Both support version pinning.' },
+    ],
+    approach: [
+      { step: 'Measure current build performance', details: 'If builds take more than 10 minutes, profile where time is spent. CircleCI Docker Layer Caching and intelligent test splitting can reduce build time significantly. GitHub Actions can match this with proper caching configuration but requires more manual setup.' },
+      { step: 'Evaluate resource requirements', details: 'If builds require more than 7 GB RAM or ARM instances, compare CircleCI resource classes against GitHub Actions larger runners. Factor in the additional cost of larger runners on both platforms.' },
+      { step: 'Assess GitHub ecosystem dependency', details: 'Teams that want CI status checks, PR merge gates, and deployment environments to be first-class GitHub features will benefit from Actions native integration versus CircleCI webhooks.' },
+    ],
+    pitfalls: [
+      { title: 'Not using CircleCI workspaces for artifact sharing', description: 'CircleCI jobs within a workflow run in separate containers. Artifacts produced in one job (compiled binaries, test reports) must be persisted to a workspace to be accessible by downstream jobs. Forgetting workspace persistence leads to hard-to-debug missing artifact errors.' },
+      { title: 'GitHub Actions context injection security', description: 'GitHub Actions expressions that inject untrusted input from PR titles or issue comments into shell commands are vulnerable to injection attacks. Use intermediate environment variables rather than inline expressions for untrusted input.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you keep CircleCI instead of migrating to GitHub Actions?', a: 'Keep CircleCI when your build heavily uses Docker Layer Caching that would add significant time to GitHub Actions builds, when you rely on CircleCI\'s intelligent test splitting to keep test suites under 5 minutes, when builds require resource classes (large memory, ARM) that exceed GitHub-hosted runner limits, or when your team has significant investment in CircleCI Orbs that would be expensive to rewrite as Actions.' },
+      { q: 'How does CircleCI handle secrets management compared to GitHub Actions?', a: 'CircleCI stores secrets in project-level or organization-level context variables that are injected as environment variables into builds. Organization contexts can be shared across projects with access control. GitHub Actions uses repository secrets, environment secrets (with required reviewers), and organization secrets. Both support OIDC for keyless cloud authentication, though GitHub Actions OIDC integration is more widely documented and used.' },
+      { q: 'What are CircleCI dynamic configuration and continuation?', a: 'CircleCI dynamic configuration allows a pipeline to generate its own continuation configuration at runtime based on changed files or other conditions. A setup workflow runs first, inspects the repository, and generates a continue_config.yml that controls which jobs run. This is equivalent to GitHub Actions path filters but more powerful because the generated configuration can add jobs, change resource classes, or modify the entire pipeline topology dynamically.' },
+    ],
+    references: [
+      'https://circleci.com/docs/',
+      'https://docs.github.com/en/actions',
+    ],
+  },
+
+  {
+    id: 'cmp-argo-vs-flux',
+    title: 'Argo CD vs Flux',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    description: 'GitOps continuous delivery tools for Kubernetes compared.',
+    introduction: 'Argo CD and Flux are the two dominant GitOps tools for Kubernetes continuous delivery. Both reconcile the state of a Kubernetes cluster with a Git repository as the source of truth. Argo CD emphasizes a rich web UI and application-centric model. Flux emphasizes composability, a pure pull-based controller model, and a CLI-first experience. Both are CNCF projects.',
+    whenToUse: 'Argo CD: teams that want a rich visual dashboard for deployment status, multi-tenant Argo CD installations, ApplicationSets for fleet management. Flux: teams that prefer a Kubernetes-native controller approach, GitOps Toolkit composability, Helm and Kustomize without a centralized UI dependency.',
+    keyConcepts: [
+      { title: 'Reconciliation Model', description: 'Both tools continuously compare the desired state in Git against live cluster state and reconcile differences. Argo CD uses a centralized server component. Flux distributes reconciliation across specialized controllers (source-controller, kustomize-controller, helm-controller).' },
+      { title: 'Web UI', description: 'Argo CD ships a feature-rich web UI showing application health, sync status, resource trees, rollback history, and real-time diff. Flux is CLI-first with no built-in UI, though Weave GitOps provides a UI on top of Flux.' },
+      { title: 'Multi-tenancy', description: 'Argo CD has mature multi-tenancy via Projects that restrict which Git repositories and Kubernetes namespaces a team can deploy to. Flux achieves multi-tenancy through namespace-scoped controllers and Kubernetes RBAC.' },
+      { title: 'Helm Integration', description: 'Both support Helm chart deployments. Argo CD renders Helm charts server-side and shows the resulting manifests in the UI. Flux uses a dedicated HelmRelease CRD that decouples chart source from the release configuration.' },
+    ],
+    approach: [
+      { step: 'Evaluate UI requirements', details: 'If engineering and platform teams need a visual deployment dashboard that non-CLI users can navigate, Argo CD\'s UI is a significant operational advantage. Flux without an external UI requires CLI proficiency for status checks and debugging.' },
+      { step: 'Assess multi-cluster management scope', details: 'Argo CD ApplicationSets enable templated deployment of applications across many clusters from a single Argo CD instance. Flux requires running controllers in each cluster (the recommended model) or using Flux\'s pull-based multi-cluster patterns.' },
+      { step: 'Consider composability requirements', details: 'Flux\'s GitOps Toolkit allows mixing and matching controllers. You can use only source-controller to sync manifests and integrate your own reconciliation. Argo CD is a monolithic application.' },
+    ],
+    pitfalls: [
+      { title: 'Argo CD out-of-sync detection with Helm hooks', description: 'Argo CD marks applications as OutOfSync when Helm hook resources exist because hooks are not tracked as part of managed resources. Configure the skipHooks option or use sync waves to manage hook-based deployments.' },
+      { title: 'Flux drift detection limitations', description: 'Flux detects drift in managed resources but does not reconcile resources managed outside Flux unless they overlap with Flux-managed manifests. Document which resources are Flux-managed versus manually applied.' },
+    ],
+    keyQuestions: [
+      { q: 'What is the core philosophical difference between Argo CD and Flux?', a: 'Argo CD takes an application-centric view: an Application CRD represents a deployable unit with health, sync status, and history. Flux takes a resource-centric view: each Git repository, Helm chart, and Kustomization is an independent controller object that can be composed freely. Argo CD is optimized for operator visibility and control. Flux is optimized for Kubernetes-native composability and automation without a centralized dependency.' },
+      { q: 'How does Argo CD handle application rollbacks?', a: 'Argo CD maintains a history of deployed application revisions. From the UI or CLI, you can roll back to any previous Git commit hash that was successfully deployed. The rollback sets the sync target to the historical revision and reconciles the cluster back to that state. Flux does not have a native rollback command; rollback requires reverting the Git commit that introduced the change, which is more aligned with the pure GitOps model where Git history is the only source of truth.' },
+      { q: 'What are Argo CD ApplicationSets used for?', a: 'ApplicationSets automate the creation of multiple Argo CD Applications using templates and generators. For example, a cluster generator can automatically create an Application for each registered cluster, deploying the same base application to a fleet of clusters with per-cluster value overrides. A Git generator creates an Application per directory in a Git repository, useful for managing many microservices that each have their own subdirectory of manifests.' },
+    ],
+    references: [
+      'https://argo-cd.readthedocs.io/en/stable/',
+      'https://fluxcd.io/flux/',
+    ],
+  },
+
+  {
+    id: 'cmp-spinnaker-vs-argo-cd',
+    title: 'Spinnaker vs Argo CD',
+    icon: 'gitMerge',
+    color: '#22c55e',
+    description: 'Enterprise multi-cloud delivery platform versus Kubernetes-native GitOps tool.',
+    introduction: 'Spinnaker is a multi-cloud continuous delivery platform developed by Netflix supporting complex canary and blue-green pipelines across AWS, GCP, Azure, and Kubernetes. Argo CD is a Kubernetes-native GitOps continuous delivery tool focused on declarative deployment. Spinnaker excels at complex multi-stage delivery pipelines across heterogeneous clouds; Argo CD excels at Kubernetes GitOps workflows.',
+    whenToUse: 'Spinnaker: multi-cloud deployments, complex bake-deploy-verify pipelines, Netflix-style canary analysis with Kayenta, organizations already invested in Spinnaker. Argo CD: Kubernetes-only environments, GitOps workflows, simpler deployment model, teams that want a modern CNCF-backed tool.',
+    keyConcepts: [
+      { title: 'Deployment Model', description: 'Spinnaker uses a pipeline-based model with stages (Bake, Deploy, Manual Judgment, Canary Analysis). Argo CD uses a declarative GitOps model where the cluster state is driven by Git commits without explicit pipeline stages.' },
+      { title: 'Cloud Provider Support', description: 'Spinnaker supports AWS EC2, ECS, Kubernetes, GCP GKE, Azure AKS, and Cloud Foundry in a unified UI. Argo CD is Kubernetes-exclusive.' },
+      { title: 'Operational Complexity', description: 'Spinnaker consists of approximately 12 microservices (Gate, Deck, Orca, Clouddriver, Front50, Rosco, etc.) requiring significant infrastructure to run reliably. Argo CD is a single application with a simpler operational footprint.' },
+      { title: 'Canary Analysis', description: 'Spinnaker includes Kayenta, a dedicated canary analysis service that compares production and canary metrics to automatically promote or rollback canary deployments. Argo CD relies on external tools like Argo Rollouts for canary analysis.' },
+    ],
+    approach: [
+      { step: 'Assess Kubernetes exclusivity', details: 'If all workloads run on Kubernetes, Argo CD is simpler to operate and actively maintained. Spinnaker\'s multi-cloud breadth adds complexity you do not need for Kubernetes-only environments.' },
+      { step: 'Evaluate canary analysis requirements', details: 'If automated canary analysis based on production metrics is a deployment requirement, Spinnaker Kayenta or Argo Rollouts with an analysis plugin are the two options. Evaluate both against your metrics platform.' },
+      { step: 'Consider maintenance burden', details: 'Spinnaker requires dedicated platform engineering to maintain at production quality. Most organizations without an existing Spinnaker investment are better served by Argo CD, which has lower operational overhead and active CNCF support.' },
+    ],
+    pitfalls: [
+      { title: 'Underestimating Spinnaker operational cost', description: 'A production Spinnaker installation requires a dedicated team to maintain, upgrade, and monitor. Organizations without this capacity find Spinnaker running degraded without the team noticing until a critical deployment fails.' },
+      { title: 'Confusing Argo CD and Argo Rollouts', description: 'Argo CD handles GitOps delivery (what to deploy). Argo Rollouts handles progressive delivery strategies (how to deploy). For canary and blue-green on Kubernetes, you typically need both.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you still choose Spinnaker over Argo CD in 2025?', a: 'Choose Spinnaker when you have mixed workloads on Kubernetes and VM-based EC2 or GCE that all need unified delivery pipelines, when your organization already has a working Spinnaker installation with trained operators, or when you need Kayenta\'s automated canary analysis integrated directly into the delivery pipeline without additional tooling. Greenfield Kubernetes-only environments should default to Argo CD.' },
+      { q: 'How does Argo Rollouts complement Argo CD for progressive delivery?', a: 'Argo CD manages the desired state of Kubernetes manifests from Git. Argo Rollouts replaces standard Deployments with Rollout resources that implement canary and blue-green strategies. Argo CD deploys the Rollout object; Argo Rollouts executes the progressive delivery logic including traffic weight management via service mesh, metric analysis via Prometheus or Datadog, and automated promotion or rollback based on analysis results.' },
+      { q: 'What is Spinnaker Front50 and why does it matter for upgrades?', a: 'Front50 is the Spinnaker service that stores application metadata, pipeline configurations, and project definitions in a persistent store (typically Google Cloud Storage or S3). When upgrading Spinnaker, Front50 migrations must complete successfully or pipeline configurations can be lost. Always snapshot the Front50 storage bucket before major Spinnaker upgrades and verify pipeline counts match before and after the upgrade.' },
+    ],
+    references: [
+      'https://spinnaker.io/docs/',
+      'https://argo-cd.readthedocs.io/en/stable/',
+    ],
+  },
+
+  // ─── MONITORING ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-cloudwatch-vs-datadog',
+    title: 'CloudWatch vs Datadog',
+    icon: 'activity',
+    color: '#06b6d4',
+    description: 'AWS-native monitoring versus third-party unified observability platform.',
+    introduction: 'CloudWatch is the native AWS monitoring service for metrics, logs, dashboards, and alarms. Datadog is a third-party SaaS observability platform providing unified metrics, logs, traces, and APM across any cloud or on-premises infrastructure. CloudWatch is tightly integrated with AWS services at low cost; Datadog provides a richer feature set with better cross-cloud and application-layer visibility.',
+    whenToUse: 'CloudWatch: AWS-only infrastructure, tight budget, basic alerting and dashboards, CloudWatch Insights for ad-hoc log analysis. Datadog: multi-cloud or hybrid environments, deep APM and distributed tracing, advanced anomaly detection, unified metric-log-trace correlation, custom dashboards.',
+    keyConcepts: [
+      { title: 'Data Unification', description: 'Datadog correlates metrics, logs, and traces under a single timeline and UI, enabling one-click navigation from a latency spike metric to the traces that caused it to the logs from those traces. CloudWatch separates these in distinct services (Metrics, Logs, X-Ray) with limited cross-linking.' },
+      { title: 'APM and Distributed Tracing', description: 'Datadog APM provides flame graphs, service maps, error tracking, and latency percentiles per service and endpoint with automatic instrumentation. CloudWatch relies on X-Ray for tracing, which is powerful but has a separate UI and limited APM-style analysis.' },
+      { title: 'Cost Model', description: 'CloudWatch charges per metric, dashboard, API call, and log ingestion volume. Datadog charges per host per month (approximately $23 per host for Infrastructure) plus per log volume and APM service. Datadog becomes expensive at large host counts; CloudWatch costs scale with metric and log volume.' },
+      { title: 'Integration Breadth', description: 'Datadog has over 700 integrations including Kubernetes, databases, third-party SaaS, and custom applications. CloudWatch integrates natively with AWS services and requires custom metrics or agents for application-layer visibility.' },
+    ],
+    approach: [
+      { step: 'Identify monitoring scope', details: 'If monitoring is limited to AWS infrastructure (EC2, RDS, Lambda health metrics), CloudWatch provides sufficient visibility at minimal cost. If monitoring spans application performance, third-party services, or multiple clouds, Datadog provides a substantially better unified experience.' },
+      { step: 'Evaluate APM requirements', details: 'If engineering teams need to trace requests across microservices, identify slow database queries, and correlate application errors with infrastructure events, Datadog APM delivers this natively. X-Ray provides similar capability with more configuration effort.' },
+      { step: 'Model cost at scale', details: 'Calculate Datadog per-host cost at your current and projected host count. For fleets exceeding 500 hosts, Datadog cost can exceed $10K per month. Compare against CloudWatch cost for equivalent metric volume and log retention.' },
+    ],
+    pitfalls: [
+      { title: 'CloudWatch log retention defaults', description: 'CloudWatch log groups retain logs indefinitely by default, which causes unbounded cost growth. Set retention policies (30, 90, or 365 days) on all log groups immediately after creation.' },
+      { title: 'Datadog custom metrics cardinality explosion', description: 'Each unique combination of metric name and tag set is counted as a custom metric. Tagging metrics with high-cardinality fields like user IDs or request IDs creates millions of custom metrics and unexpected billing spikes.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you correlate CloudWatch metrics and X-Ray traces for a Lambda latency investigation?', a: 'Start in CloudWatch Metrics with Lambda duration percentiles (p50, p95, p99) to identify the time window of increased latency. Switch to CloudWatch Logs Insights to query the Lambda log group for invocations during that window, filtering for timeouts or errors. Open X-Ray Service Map filtered to the same time window to see the full trace for slow requests, identifying downstream bottlenecks in DynamoDB or API calls. CloudWatch Container Insights or Lambda Insights provide enhanced per-invocation metrics that correlate with traces.' },
+      { q: 'What is Datadog SLO monitoring and how does it work?', a: 'Datadog Service Level Objectives let you define error budget-based targets as metric-based SLOs (percentage of time a metric meets a threshold) or monitor-based SLOs (percentage of time a monitor is in OK state). Datadog calculates remaining error budget in real time, fires alerts when the burn rate threatens to exhaust the budget before the SLO window ends, and provides historical SLO compliance reports for SRE reporting.' },
+      { q: 'When would you use both CloudWatch and Datadog together?', a: 'A common architecture uses CloudWatch for AWS infrastructure metrics and alarms (it is free for basic metrics and integrates natively), while Datadog handles APM, log aggregation from all services, and cross-service correlation. This avoids duplicating log ingestion costs while keeping Datadog as the single pane of glass for application health. CloudWatch metrics are forwarded to Datadog via the AWS Metrics integration without paying Datadog host pricing for CloudWatch-only metrics.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/cloudwatch/',
+      'https://docs.datadoghq.com/',
+    ],
+  },
+
+  {
+    id: 'cmp-prometheus-vs-datadog',
+    title: 'Prometheus vs Datadog',
+    icon: 'activity',
+    color: '#06b6d4',
+    description: 'Open-source pull-based metrics versus commercial SaaS observability.',
+    introduction: 'Prometheus is the CNCF standard for Kubernetes monitoring, using a pull-based scraping model with a powerful query language (PromQL). Datadog is a commercial SaaS that ingests Prometheus metrics alongside its own agents, providing unified storage, dashboards, and alerting. The choice is between full control and operational overhead versus managed service simplicity at commercial pricing.',
+    whenToUse: 'Prometheus: Kubernetes-native monitoring, PromQL-based alerting with Alertmanager, open-source toolchain, cost-sensitive environments with large metric volumes. Datadog: teams wanting zero monitoring infrastructure management, unified metrics and APM, built-in anomaly detection and forecasting.',
+    keyConcepts: [
+      { title: 'Scrape vs Push Model', description: 'Prometheus scrapes metrics by polling HTTP /metrics endpoints on defined intervals. Datadog agents push metrics to Datadog servers. Pull-based models make it easy to detect when a target goes down (scrape failure); push-based models work better for short-lived processes.' },
+      { title: 'PromQL', description: 'Prometheus Query Language is a powerful functional language for aggregating, filtering, and transforming time-series data. PromQL expressions drive alerting rules and Grafana dashboards. Datadog uses its own query syntax which is less portable but integrated into the Datadog UI.' },
+      { title: 'Long-term Storage', description: 'Prometheus is designed for short-term storage (default 15 days). Long-term retention requires a remote write backend like Thanos, Cortex, or Mimir. Datadog retains metrics for 15 months at full resolution with no additional configuration.' },
+      { title: 'Cardinality Limits', description: 'High cardinality labels in Prometheus (many unique tag values) cause memory pressure on the Prometheus server. Datadog handles high-cardinality metrics better at the cost of custom metric pricing.' },
+    ],
+    approach: [
+      { step: 'Evaluate operational capacity for monitoring infrastructure', details: 'Running Prometheus with Thanos or Mimir for long-term storage, Alertmanager for routing, and Grafana for dashboards is a meaningful operational commitment. If your team cannot dedicate bandwidth to maintaining monitoring infrastructure, Datadog eliminates this entirely.' },
+      { step: 'Assess metric volume and cost', details: 'Prometheus is effectively free for metric storage (server cost only). Datadog custom metrics are $0.05 per metric per month beyond the included allocation. At hundreds of thousands of custom metrics, Datadog cost can become prohibitive.' },
+      { step: 'Evaluate alerting sophistication needs', details: 'Prometheus Alertmanager provides routing, grouping, inhibition, and silence for alert notifications. Datadog provides these plus built-in anomaly detection, outlier detection, and composite monitors without additional configuration.' },
+    ],
+    pitfalls: [
+      { title: 'Prometheus single point of failure without HA', description: 'A standalone Prometheus instance is a single point of failure for your monitoring system. Run Prometheus in HA mode with two replicas using a deduplicating query layer (Thanos Query) or use a managed Prometheus service like Amazon Managed Service for Prometheus.' },
+      { title: 'Datadog agent sampling gaps', description: 'Datadog agents report metrics at 15-second default intervals. Short-lived spikes lasting less than 15 seconds may be missed in the default resolution. Configure higher-resolution collection for latency-sensitive services.' },
+    ],
+    keyQuestions: [
+      { q: 'What is the Prometheus recording rule and why is it important?', a: 'Recording rules precompute expensive PromQL expressions and store the result as a new time series. For example, computing the 99th percentile of request latency across all services is expensive when evaluated at query time over days of data. A recording rule runs the computation at scrape interval and stores the result, making dashboards load instantly. Recording rules are essential for Grafana dashboards that query across high-cardinality metrics with long time windows.' },
+      { q: 'How does Thanos extend Prometheus for production use?', a: 'Thanos adds global query capability across multiple Prometheus instances, long-term object storage (S3, GCS), downsampling for efficient long-range queries, and deduplication of HA Prometheus replicas. Thanos Sidecar runs alongside each Prometheus instance, uploading blocks to object storage. Thanos Query federates queries across all Prometheus instances and object storage. Thanos Compactor downsamples historical data to reduce storage cost and query time for year-over-year dashboards.' },
+      { q: 'Can you send Prometheus metrics to Datadog?', a: 'Yes. The Datadog Agent includes a Prometheus and OpenMetrics check that scrapes Prometheus /metrics endpoints and forwards metrics to Datadog. This lets you use existing Prometheus instrumentation while centralizing storage and alerting in Datadog. Alternatively, Datadog Agent supports OpenTelemetry Collector as a pipeline, which can receive Prometheus metrics and forward them to multiple backends including Datadog.' },
+    ],
+    references: [
+      'https://prometheus.io/docs/introduction/overview/',
+      'https://docs.datadoghq.com/',
+    ],
+  },
+
+  {
+    id: 'cmp-grafana-vs-kibana',
+    title: 'Grafana vs Kibana',
+    icon: 'barChart',
+    color: '#06b6d4',
+    description: 'Multi-source metrics dashboarding versus Elasticsearch-centric log analytics.',
+    introduction: 'Grafana is an open-source visualization platform that connects to dozens of data sources (Prometheus, Loki, InfluxDB, CloudWatch, Elasticsearch, PostgreSQL) to build unified dashboards. Kibana is the visualization layer of the Elastic Stack, designed primarily for querying Elasticsearch indices. Grafana is the dashboard standard for metrics; Kibana excels at full-text log search and analytics on Elasticsearch.',
+    whenToUse: 'Grafana: multi-source dashboards, Prometheus metrics visualization, Loki log correlation alongside metrics, unified observability dashboards. Kibana: deep log search and analytics on Elasticsearch data, Elastic APM, security analytics with Elastic SIEM, log aggregation from Logstash or Beats.',
+    keyConcepts: [
+      { title: 'Data Source Support', description: 'Grafana supports over 60 data sources as plugins without storing data itself. Kibana is tightly coupled to Elasticsearch and its Lucene query syntax. Using Kibana for non-Elasticsearch data requires custom plugins or data ingestion into Elasticsearch.' },
+      { title: 'Query Languages', description: 'Grafana delegates queries to the underlying data source language: PromQL for Prometheus, LogQL for Loki, SQL for databases. Kibana uses Kibana Query Language (KQL) and Lucene syntax for Elasticsearch queries.' },
+      { title: 'Log Correlation', description: 'Grafana Loki + Explore allows navigating from a Prometheus metric spike directly to correlated logs using the same time range and label selectors. Kibana provides log context within the same Elasticsearch index but lacks native correlation with external metric systems.' },
+      { title: 'Alerting', description: 'Grafana Alerting (Grafana 8+) provides a unified alerting layer across all data sources with alert rules, contact points, notification policies, and silence management. Kibana Alerting is Elasticsearch-specific with rules triggered by Elasticsearch queries.' },
+    ],
+    approach: [
+      { step: 'Identify the primary data source', details: 'If your metrics live in Prometheus and logs in Loki or CloudWatch, Grafana is the natural choice. If your team uses the Elastic Stack for log aggregation, Kibana provides deeper Elasticsearch-native analytics that Grafana cannot replicate.' },
+      { step: 'Evaluate multi-team dashboard requirements', details: 'Grafana Organizations and RBAC allow multiple teams to share a Grafana instance with per-team dashboards and data source permissions. Kibana Spaces provide similar isolation within a single Kibana deployment.' },
+      { step: 'Consider embedding and sharing', details: 'Grafana supports embedding dashboards and panels in external applications. Kibana dashboards are embeddable only in Elastic products and authenticated contexts.' },
+    ],
+    pitfalls: [
+      { title: 'Treating Grafana as a log search tool', description: 'Grafana with Loki supports log browsing but Loki is not a full-text search engine. Complex log analytics with free-text Lucene queries require Elasticsearch and Kibana. Use the right tool for the log query complexity you need.' },
+      { title: 'Kibana disk usage without index lifecycle management', description: 'Without ILM policies, Elasticsearch indices grow without bound and disk fills. Configure ILM rollover and delete policies on all log indices to automatically archive or delete data beyond your retention window.' },
+    ],
+    keyQuestions: [
+      { q: 'What is the Grafana LGTM stack and how does it compare to the Elastic Stack?', a: 'The LGTM stack (Loki for logs, Grafana for dashboards, Tempo for traces, Mimir or Prometheus for metrics) is a fully open-source observability stack optimized for cost efficiency and Kubernetes-native deployment. Loki indexes only log metadata (labels) rather than full text, reducing storage by 10 to 100x compared to Elasticsearch. The tradeoff is that full-text log search is limited to indexed labels. The Elastic Stack provides better full-text search and Elastic APM, but at higher storage and compute cost.' },
+      { q: 'When should you use Kibana Discover versus Grafana Explore for log investigation?', a: 'Use Kibana Discover when your logs are in Elasticsearch and you need full-text Lucene search across all log fields, when investigating security incidents that require forensic search across structured and unstructured log fields, or when Elastic APM traces are part of the investigation. Use Grafana Explore when your logs are in Loki and you want to correlate logs with Prometheus metrics in the same time range using shared labels.' },
+      { q: 'How do you share Grafana dashboards across teams?', a: 'Grafana supports dashboard sharing via public URLs (with optional embed token), snapshot links (point-in-time static snapshots without live data), and library panels (shared panel templates reused across multiple dashboards). For organization-wide standards, use Grafana provisioning to deploy dashboards as JSON files via ConfigMaps in Kubernetes, ensuring dashboards are version-controlled and reproduced consistently across environments.' },
+    ],
+    references: [
+      'https://grafana.com/docs/grafana/latest/',
+      'https://www.elastic.co/guide/en/kibana/current/',
+    ],
+  },
+
+  {
+    id: 'cmp-jaeger-vs-zipkin',
+    title: 'Jaeger vs Zipkin',
+    icon: 'activity',
+    color: '#06b6d4',
+    description: 'CNCF distributed tracing versus the original open-source trace aggregation system.',
+    introduction: 'Zipkin pioneered distributed tracing and defined many of the trace context propagation standards used today. Jaeger, developed by Uber and donated to CNCF, is a modern distributed tracing system with better scalability, adaptive sampling, and Kubernetes-native deployment. Both support the OpenTelemetry data model, making the backend choice increasingly decoupled from instrumentation.',
+    whenToUse: 'Jaeger: new tracing installations, Kubernetes-native architectures, CNCF ecosystem alignment, adaptive sampling, deeper Prometheus and Grafana integration. Zipkin: existing Zipkin instrumentation, simpler deployment requirements, Spring Cloud Sleuth compatibility.',
+    keyConcepts: [
+      { title: 'Adaptive Sampling', description: 'Jaeger supports adaptive sampling that automatically adjusts sampling rates per service and endpoint based on observed traffic, ensuring low-traffic operations are sampled at higher rates. Zipkin uses fixed rate or probabilistic sampling without per-endpoint adaptation.' },
+      { title: 'Storage Backend', description: 'Jaeger supports Cassandra, Elasticsearch, and Kafka (for streaming ingestion). Zipkin supports MySQL, Cassandra, and Elasticsearch. Both can use the same Elasticsearch cluster, making the backend choice shared.' },
+      { title: 'OpenTelemetry Compatibility', description: 'Both Jaeger and Zipkin can receive OpenTelemetry traces via OTLP. The OpenTelemetry Collector can forward traces to either backend, decoupling application instrumentation from the tracing backend choice.' },
+      { title: 'UI Capabilities', description: 'Jaeger UI provides service dependency graphs, deep search by tags and duration, span gantt charts, and comparison between trace samples. Zipkin UI is simpler but includes the core trace timeline and service dependency graph.' },
+    ],
+    approach: [
+      { step: 'Adopt OpenTelemetry for instrumentation', details: 'Instrument applications with the OpenTelemetry SDK rather than native Jaeger or Zipkin clients. This decouples the instrumentation from the backend, allowing you to switch between Jaeger, Zipkin, or Tempo without re-instrumenting applications.' },
+      { step: 'Evaluate storage at scale', details: 'Both backends require Elasticsearch or Cassandra at production scale. Factor in the cost and expertise of maintaining the storage backend when choosing a tracing system.' },
+      { step: 'Consider Grafana Tempo as an alternative', details: 'Grafana Tempo is a cost-efficient tracing backend that stores traces in object storage (S3) with no indexing overhead. It is significantly cheaper than Elasticsearch-backed Jaeger at high trace volume. Evaluate Tempo if cost is a primary concern.' },
+    ],
+    pitfalls: [
+      { title: 'High trace storage cost without sampling', description: 'Storing every trace from a high-throughput service generates enormous amounts of data. Configure head-based sampling at the SDK level or use the OpenTelemetry Collector tail-based sampling processor to retain interesting traces (errors, high latency) and drop routine successful traces.' },
+      { title: 'Missing trace context propagation across async boundaries', description: 'Trace context must be explicitly propagated through message queue payloads, async job metadata, and event headers. Without propagation, traces break at asynchronous service boundaries and appear as disconnected root spans.' },
+    ],
+    keyQuestions: [
+      { q: 'What is W3C Trace Context and why does it matter?', a: 'W3C Trace Context is an IETF-standardized HTTP header format (traceparent and tracestate) for propagating distributed trace identifiers across service boundaries. Both Jaeger and Zipkin support it alongside their own formats (Jaeger trace headers, B3 headers). Using the W3C standard ensures trace context passes correctly between services using different instrumentation libraries and tracing backends without configuration.' },
+      { q: 'How does tail-based sampling differ from head-based sampling?', a: 'Head-based sampling makes the keep-or-drop sampling decision at trace inception (when the first span is created). This is simple but may discard traces that turn out to be interesting errors or outliers. Tail-based sampling buffers the full trace in memory until it is complete, then makes the sampling decision based on the full trace attributes (was there an error, was latency above threshold). The OpenTelemetry Tail Sampling Processor implements tail-based sampling in the Collector. The tradeoff is higher memory usage for the Collector and complexity managing buffer windows.' },
+      { q: 'When would you use Grafana Tempo instead of Jaeger?', a: 'Choose Grafana Tempo when trace storage cost is a primary concern: Tempo stores traces in Parquet format on S3 without Elasticsearch, reducing storage cost by 5 to 10x for equivalent trace volume. Tempo integrates natively with Grafana Explore and Loki for metric-log-trace correlation. The tradeoff is that Tempo has no native search by span attributes (it queries by trace ID only by default; TraceQL search requires additional configuration). Use Jaeger when full-text span search is a requirement.' },
+    ],
+    references: [
+      'https://www.jaegertracing.io/docs/',
+      'https://zipkin.io/pages/architecture.html',
+    ],
+  },
+
+  {
+    id: 'cmp-elk-vs-loki',
+    title: 'ELK Stack vs Loki',
+    icon: 'activity',
+    color: '#06b6d4',
+    description: 'Full-text log indexing versus label-based log aggregation for observability.',
+    introduction: 'The ELK Stack (Elasticsearch, Logstash, Kibana) provides full-text search and analytics over logs by indexing every field of every log line. Grafana Loki indexes only log stream labels (not log content), storing compressed log chunks in object storage. Loki is dramatically cheaper and simpler for operational log viewing; ELK is necessary for complex free-text log search and security analytics.',
+    whenToUse: 'ELK: security event correlation (SIEM), compliance log auditing requiring full-text search, complex log analytics across unstructured fields, Elastic APM integration. Loki: Kubernetes pod log aggregation, cost-sensitive environments, teams using Grafana for metrics who want log correlation.',
+    keyConcepts: [
+      { title: 'Indexing Strategy', description: 'Elasticsearch indexes every field of every log document by default, enabling sub-second full-text queries across petabytes but at high storage and CPU cost. Loki indexes only log stream labels (Kubernetes pod, namespace, app name) and stores log lines compressed; queries filter by labels then grep the raw log lines.' },
+      { title: 'Storage Cost', description: 'Elasticsearch storage typically requires 3 to 5x raw log size for index overhead plus replicas. Loki stores compressed log chunks in S3 at approximately 0.2x raw log size. For the same log volume, Loki storage cost can be 10 to 20x cheaper.' },
+      { title: 'Query Language', description: 'Elasticsearch uses KQL and Lucene for full-text queries with regex, fuzzy matching, and aggregations. Loki uses LogQL, which filters log streams by labels and then applies line filter expressions or metric queries.' },
+      { title: 'Ingestion Pipeline', description: 'ELK uses Logstash or Beats for log collection and transformation. Loki uses Promtail or the OpenTelemetry Collector for log collection with minimal parsing (structured labels are extracted; log line content is stored verbatim).' },
+    ],
+    approach: [
+      { step: 'Define log query requirements', details: 'List the most critical log searches your team performs daily. If they require free-text search across arbitrary log fields (e.g., search all logs for a specific SQL query), Elasticsearch is necessary. If queries are always filtered by service name or pod and then grep the content, Loki is sufficient.' },
+      { step: 'Estimate log volume and budget', details: 'Calculate daily log ingestion volume. For environments generating more than 100 GB per day, Loki\'s storage cost advantage becomes significant. Run a cost model for both platforms at your target retention period.' },
+      { step: 'Evaluate team operational capacity', details: 'Running Elasticsearch at scale requires capacity planning, JVM tuning, index lifecycle management, and snapshot management. Loki with S3 backend requires much less operational attention. Factor in the total cost of ownership including engineering time.' },
+    ],
+    pitfalls: [
+      { title: 'Loki high cardinality labels causing performance issues', description: 'Adding high-cardinality values as Loki labels (request IDs, user IDs, IP addresses) creates a massive number of log streams that overwhelms the Loki index. Only low-cardinality values (environment, service name, namespace) should be labels; high-cardinality values should be part of the log line, queryable via line filter.' },
+      { title: 'ELK open indices without ILM', description: 'Without Index Lifecycle Management, Elasticsearch indices grow indefinitely. Shard counts increase over time, degrading cluster performance. Configure ILM rollover policies to create new daily indices and delete or archive old ones beyond the retention window.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you run both ELK and Loki in the same environment?', a: 'Run both when different log use cases require different capabilities. Loki handles operational Kubernetes pod logs for developer debugging and Grafana correlation at low cost. Elasticsearch handles security events from AWS CloudTrail, VPC Flow Logs, and authentication logs that require full-text SIEM analysis and compliance archiving. Route security-relevant logs to ELK and operational service logs to Loki using the OpenTelemetry Collector with routing processors.' },
+      { q: 'How does Loki\'s LogQL metric query work?', a: 'LogQL supports metric queries that extract numerical values from log lines and compute rate, count, or quantile over time. For example, you can compute the per-second error rate by counting log lines matching an error pattern per minute and dividing by 60. These metric queries integrate natively with Grafana and Prometheus Alertmanager, allowing log-derived metrics to trigger the same alerts as Prometheus metrics without duplicating data.' },
+      { q: 'What is OpenSearch and how does it relate to the ELK stack?', a: 'OpenSearch is an open-source fork of Elasticsearch and Kibana created by AWS after Elastic changed its licensing in 2021. Amazon OpenSearch Service is the AWS managed offering, which previously supported Elasticsearch and now supports both Elasticsearch-compatible API and OpenSearch. For new deployments on AWS, OpenSearch Service is the default managed option. The query APIs are largely compatible but OpenSearch has diverged in features and security model. Evaluate your tooling for Elastic versus OpenSearch API compatibility before migrating.' },
+    ],
+    references: [
+      'https://grafana.com/docs/loki/latest/',
+      'https://www.elastic.co/guide/en/elasticsearch/reference/current/',
+    ],
+  },
+
+  // ─── DEPLOYMENT ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-blue-green-vs-canary',
+    title: 'Blue-Green vs Canary Deployment',
+    icon: 'layers',
+    color: '#f59e0b',
+    description: 'Instant environment swap versus gradual traffic shifting for zero-downtime releases.',
+    introduction: 'Blue-green deployment maintains two identical environments. The inactive environment receives the new version, and traffic is atomically switched. Canary deployment gradually shifts a small percentage of traffic to the new version, monitoring for errors before full rollout. Blue-green provides instant rollback; canary limits blast radius during rollout.',
+    whenToUse: 'Blue-green: database schema changes that are non-backward-compatible, critical financial or healthcare systems requiring instant rollback, environments where gradual rollout is impractical. Canary: high-traffic production systems where testing with real traffic is valuable, when you want to validate new code behavior with a subset of users before full rollout.',
+    keyConcepts: [
+      { title: 'Traffic Switch Mechanism', description: 'Blue-green switches traffic instantaneously at the load balancer level (DNS or ALB target group weight). Canary adjusts traffic weights gradually (5% -> 25% -> 50% -> 100%) over minutes or hours.' },
+      { title: 'Infrastructure Cost', description: 'Blue-green requires double the infrastructure: both blue and green environments run simultaneously until the switch. Canary can shift traffic to a small subset of new instances in the same pool, requiring less additional infrastructure.' },
+      { title: 'Rollback Speed', description: 'Blue-green rollback is instant: switch traffic back to the previous environment. Canary rollback shifts the 5% traffic back to 100% old version, which is also fast but requires automation to execute reliably under incident pressure.' },
+      { title: 'Database Compatibility', description: 'Blue-green with database schema changes requires the new schema to be backward-compatible with the old application code during the transition window. Canary has the same requirement because old and new code run simultaneously against the same database.' },
+    ],
+    approach: [
+      { step: 'Evaluate infrastructure cost tolerance', details: 'Blue-green doubles infrastructure cost during the deployment window. For large fleets this can be significant. Canary adds only the incremental capacity for the small initial percentage.' },
+      { step: 'Define success metrics and error thresholds', details: 'Canary deployments require automated metric analysis to decide promotion or rollback. Define error rate thresholds, latency SLOs, and business metric signals (conversion rate, payment success) that trigger automatic rollback if violated.' },
+      { step: 'Plan database migration strategy', details: 'Both strategies require backward-compatible schema changes during the transition. Use the expand-contract pattern: add new columns without removing old ones, deploy new code that writes to both, migrate data, then remove old columns in a later deployment.' },
+    ],
+    pitfalls: [
+      { title: 'Blue-green with stateful sessions', description: 'If users have active sessions stored in application memory (not externalized to Redis or a database), switching from blue to green invalidates all active sessions. Externalize session state before implementing blue-green.' },
+      { title: 'Canary without automated rollback', description: 'Manually monitoring a canary at 5% traffic during off-hours is unreliable. Implement automated rollback triggered by error rate thresholds in your CD tool (Argo Rollouts, Flagger) so rollback happens even without human intervention.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you implement blue-green on ECS?', a: 'Configure two ECS target groups (blue and green) behind an ALB. Use AWS CodeDeploy with the ECS deployment controller to manage the shift. During deployment, CodeDeploy registers the new task set as the green target group at 0% weight, runs health checks, optionally pauses for manual verification, then atomically shifts the listener rule to 100% green. The old blue task set remains running for a configurable period before being terminated to enable instant rollback via CodeDeploy rollback API.' },
+      { q: 'What is Argo Rollouts and how does it automate canary analysis?', a: 'Argo Rollouts extends Kubernetes Deployment with a Rollout CRD that implements canary and blue-green strategies. Define a Rollout with canary steps (setWeight 20, pause for 10 minutes, setWeight 50, pause, setWeight 100) and an AnalysisTemplate that queries Prometheus, Datadog, or a web hook to evaluate metrics at each step. If the analysis finds the error rate exceeds the threshold at 20%, Argo Rollouts automatically resets traffic to 0% on the new version and marks the rollout as degraded.' },
+      { q: 'When would you use neither blue-green nor canary?', a: 'Rolling deployments replace instances one at a time without a parallel environment. Use rolling when infrastructure cost prevents blue-green, when traffic volume is too low to make canary sampling meaningful, or when the deployment cadence is too high to justify complex staged rollouts. Rolling deployments accept a brief period where old and new versions coexist, which requires backward-compatible API and data changes. They are the default in Kubernetes Deployments for a reason.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/codedeploy/latest/userguide/deployment-steps-ecs.html',
+      'https://argoproj.github.io/argo-rollouts/',
+    ],
+  },
+
+  {
+    id: 'cmp-rolling-vs-blue-green',
+    title: 'Rolling vs Blue-Green Deployment',
+    icon: 'layers',
+    color: '#f59e0b',
+    description: 'Incremental in-place replacement versus full environment swap for production releases.',
+    introduction: 'Rolling deployment replaces instances one by one (or in small batches), maintaining service capacity throughout the update. Blue-green keeps a complete parallel environment and atomically switches traffic. Rolling is simpler and cheaper; blue-green provides instant rollback and avoids mixed-version coexistence during deployment.',
+    whenToUse: 'Rolling: default for most Kubernetes workloads, cost-sensitive environments, backward-compatible changes. Blue-green: changes requiring a clean cutover with no mixed-version period, financial systems, situations where instant rollback capability is non-negotiable.',
+    keyConcepts: [
+      { title: 'Mixed Version Window', description: 'During a rolling deployment, old and new versions serve traffic simultaneously for the duration of the rollout. This requires API backward compatibility and database schema compatibility. Blue-green has no mixed-version window after the switch.' },
+      { title: 'Rollback Complexity', description: 'Rolling rollback requires re-rolling all updated instances back to the previous version, which can take as long as the original deployment. Blue-green rollback is instantaneous at the load balancer level.' },
+      { title: 'Resource Usage', description: 'Rolling deployment uses surge instances temporarily (one new instance added before removing one old). Blue-green requires 100% of production capacity in parallel as the staging environment.' },
+      { title: 'Kubernetes Native Support', description: 'Rolling update is the default Kubernetes Deployment strategy. Blue-green on Kubernetes requires tools like Argo Rollouts, Flagger, or manual service label manipulation.' },
+    ],
+    approach: [
+      { step: 'Identify API compatibility constraints', details: 'If the new version changes an API in a non-backward-compatible way (removes a field, changes a type), rolling deployment is unsafe because old consumers may hit new instances during the rollout. Evaluate whether the change can be made backward-compatible or whether blue-green is required.' },
+      { step: 'Configure maxSurge and maxUnavailable', details: 'Kubernetes rolling strategy parameters control deployment speed and capacity impact. maxSurge allows temporary capacity increase (set to 25% for faster rollouts). maxUnavailable controls how many pods can be down simultaneously (set to 0 to prevent any capacity reduction during rollout).' },
+      { step: 'Plan readiness probe configuration', details: 'Rolling deployments depend on readiness probes to determine when a new pod is ready before removing an old one. Misconfigured or absent readiness probes cause traffic to be routed to unhealthy pods. Verify probe endpoints represent actual application readiness, not just process startup.' },
+    ],
+    pitfalls: [
+      { title: 'Rolling back during a rolling deployment creates a three-version window', description: 'If you roll back partway through a rolling deployment, you briefly have old, new, and rollback-in-progress versions serving traffic. Minimize this window by completing the rollback as quickly as possible and ensuring all three versions are API compatible.' },
+      { title: 'Blue-green with long-lived connections', description: 'Long-lived WebSocket or gRPC connections active at switch time continue to the blue environment until they close. The green environment serves all new connections. Plan for a graceful drain period on the old environment before terminating it.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you configure a Kubernetes rolling deployment to minimize blast radius?', a: 'Set maxUnavailable to 0 so rolling never reduces capacity below 100%. Set maxSurge to 1 or 25% to add new pods gradually. Set minReadySeconds to 30 or 60 seconds to wait for each new pod to stabilize before proceeding. Configure readiness probes that exercise the actual request path. Set terminationGracePeriodSeconds to allow in-flight requests to complete. Together these settings create a slow, safe rollout that stops at the first unhealthy pod.' },
+      { q: 'What is the difference between blue-green and A/B testing?', a: 'Blue-green is a deployment strategy: the goal is to safely release a new version and roll back if it fails. Traffic splitting is temporary and removed once the deployment succeeds. A/B testing is an experimentation strategy: different user cohorts receive different versions intentionally to measure behavioral differences. A/B tests run for hours or days; blue-green deployments run for minutes. Both use traffic splitting mechanics but serve fundamentally different goals.' },
+      { q: 'How does Flagger implement progressive delivery on Kubernetes?', a: 'Flagger automates canary and blue-green deployments by creating a stable service (current version) and a canary service (new version) and gradually shifting traffic between them using service mesh weights (Istio, Linkerd) or ingress controller annotations (Nginx, Traefik). Flagger runs metric analysis at each step, querying Prometheus for error rate and latency. If metrics pass, it increments the canary weight. If metrics fail, it rolls back to the stable version and alerts via Slack or webhook.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment',
+      'https://docs.flagger.app/',
+    ],
+  },
+
+  {
+    id: 'cmp-ecs-vs-lambda-deployment',
+    title: 'ECS vs Lambda Deployment Patterns',
+    icon: 'layers',
+    color: '#f59e0b',
+    description: 'Deployment strategies and update patterns for containerized versus serverless workloads.',
+    introduction: 'ECS and Lambda deployments follow different lifecycle models. ECS supports blue-green via CodeDeploy or rolling updates via service update. Lambda uses function versioning, aliases, and traffic shifting to achieve equivalent deployment strategies. Understanding each model is critical for implementing zero-downtime deployments and safe rollbacks.',
+    whenToUse: 'ECS deployment patterns: services with stateful connections, gradual traffic shifting across multiple services, blue-green with CodeDeploy for compliance-required rollback documentation. Lambda deployment patterns: function aliases for version management, traffic shifting for canary Lambda releases, automated rollbacks via CloudWatch alarms.',
+    keyConcepts: [
+      { title: 'Lambda Versions and Aliases', description: 'Each Lambda publish creates an immutable numbered version. Aliases are named pointers to specific versions. An alias can have a routing configuration that splits traffic between two versions with configurable weights (e.g., 95% to stable, 5% to canary).' },
+      { title: 'ECS Task Set Model', description: 'CodeDeploy for ECS deploys a new task set alongside the existing one. An Application Load Balancer test listener can route internal traffic to the new version before the production listener is updated, enabling pre-production validation on live infrastructure.' },
+      { title: 'Rollback Trigger', description: 'Lambda supports automatic rollback of alias traffic shifting based on CloudWatch alarm state. If error rate exceeds a threshold during a weighted alias deployment, CodeDeploy automatically reverts the alias to the previous stable version. ECS CodeDeploy supports the same CloudWatch alarm-triggered rollback.' },
+      { title: 'Deployment Groups', description: 'AWS CodeDeploy organizes deployments into groups with deployment configuration (linear, canary, or all-at-once). Lambda canary configurations shift a percentage over a fixed time window; linear configurations increase by a fixed percentage per interval.' },
+    ],
+    approach: [
+      { step: 'Instrument with deployment-aware metrics', details: 'Define CloudWatch alarms on error rates and latency before configuring automatic rollback. The alarm ARNs are referenced in the CodeDeploy deployment configuration. Without pre-configured alarms, automatic rollback cannot trigger.' },
+      { step: 'Use Lambda aliases in all invocation paths', details: 'Never invoke Lambda functions by ARN or by version number. Always invoke by alias name. This ensures traffic shifting is transparent to callers and the stable alias can be updated to a new version atomically.' },
+      { step: 'Test the CodeDeploy AppSpec file in staging', details: 'The AppSpec hooks (BeforeAllowTraffic, AfterAllowTraffic Lambda functions) run validation logic before and after traffic shifts. Validate that hook functions complete within their timeout and return the correct status codes before deploying to production.' },
+    ],
+    pitfalls: [
+      { title: 'Cold starts during weighted Lambda deployments', description: 'When a Lambda alias shifts 5% of traffic to a new function version, the new version containers are cold at deployment time. The first requests to the canary version may have elevated latency from cold starts, which can trigger false positive rollbacks if alarm thresholds are too tight.' },
+      { title: 'ECS CodeDeploy deployment not cleaning up old task sets', description: 'Failed ECS CodeDeploy deployments can leave orphaned task sets running alongside the current production task set, consuming capacity and potentially causing confusion. Monitor for orphaned task sets and configure automatic termination of failed deployment task sets.' },
+    ],
+    keyQuestions: [
+      { q: 'How does Lambda alias traffic shifting work for a canary deployment?', a: 'Publish a new Lambda version with your code changes. Update the production alias to shift 5% of traffic to the new version using UpdateAlias with routing configuration. CodeDeploy manages this automatically when configured as the deployment provider. CloudWatch alarms monitor the new version\'s error rate and latency. If alarms trigger, CodeDeploy rolls the alias back to 100% on the previous version. If no alarms trigger after the configured window, CodeDeploy shifts to 100% on the new version.' },
+      { q: 'What is the ECS CodeDeploy test listener and how do you use it?', a: 'The CodeDeploy ECS deployment model creates a new task set and registers it with a second ALB listener (test listener) on a separate port. You can run automated integration tests or synthetic monitoring against the test listener before the production listener is updated. This provides a window to validate the new version on live infrastructure with real data access but without serving production user traffic. Configure AfterAllowTestTraffic hooks to run automated tests and return success or failure to CodeDeploy.' },
+      { q: 'How do you implement a zero-downtime Lambda dependency update?', a: 'Update the Lambda Layer (for shared dependencies) as a new layer version. Create a new function version pointing to the new layer version. Use a weighted alias to shift traffic to the new version gradually. Validate via CloudWatch metrics and Lambda Insights that the new layer version behaves correctly. Promote the alias to 100% on the new version. Retire the old layer version after all functions referencing it have been migrated. This pattern ensures no in-flight requests use a mixture of old and new dependency versions.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/codedeploy/latest/userguide/deployment-steps-lambda.html',
+      'https://docs.aws.amazon.com/codedeploy/latest/userguide/deployment-steps-ecs.html',
+    ],
+  },
+
+  {
+    id: 'cmp-helm-vs-kustomize',
+    title: 'Helm vs Kustomize',
+    icon: 'layers',
+    color: '#f59e0b',
+    description: 'Kubernetes package manager with templating versus configuration overlay system.',
+    introduction: 'Helm packages Kubernetes manifests as charts with a Go templating engine, enabling parameterized deployment of complex applications. Kustomize uses a base-and-overlay model that modifies plain YAML without templating, treating configuration as data rather than code. Helm is better for distributing reusable packages; Kustomize is better for environment-specific customization without template complexity.',
+    whenToUse: 'Helm: deploying open-source applications published as Helm charts (Nginx, Prometheus, Kafka), managing complex multi-resource applications with many configurable parameters. Kustomize: environment-specific overlays on top of base manifests, managing patches without introducing template syntax, GitOps workflows where plain YAML is preferred.',
+    keyConcepts: [
+      { title: 'Templating vs Overlay', description: 'Helm templates replace values in YAML using Go template syntax. Kustomize applies strategic merge patches and JSON patches on top of base YAML without modifying the base files. Helm is more powerful but harder to debug; Kustomize is simpler but less flexible for deep customization.' },
+      { title: 'Chart Ecosystem', description: 'The Helm chart ecosystem provides thousands of pre-packaged applications (Artifact Hub). Kustomize has no equivalent package repository because it operates on raw manifests.' },
+      { title: 'Release Management', description: 'Helm tracks releases in the cluster (stored as Secrets), enabling helm upgrade, helm rollback, and helm history commands. Kustomize generates manifests; release management is the responsibility of kubectl or your GitOps tool.' },
+      { title: 'Secret Management', description: 'Helm supports secrets via Helm Secrets plugin (SOPS-encrypted values files). Kustomize uses SecretGenerator and can integrate with external secret operators (External Secrets Operator, Sealed Secrets) more cleanly because there is no Helm values layer to work through.' },
+    ],
+    approach: [
+      { step: 'Identify whether you need a chart ecosystem', details: 'If deploying well-known open-source tools with published Helm charts, Helm saves significant manifest authoring effort. For in-house applications where manifests are already authored, Kustomize overlays add less overhead than Helm templating.' },
+      { step: 'Evaluate template complexity tolerance', details: 'Helm charts with complex conditionals, named templates, and range iterations can be hard to read and debug. If your team struggles with Go template syntax, Kustomize\'s plain YAML approach is more maintainable long-term.' },
+      { step: 'Consider using both together', details: 'Argo CD and Flux both support rendering Helm charts through Kustomize post-rendering. Deploy upstream Helm charts and then apply Kustomize patches on top for environment-specific overrides without forking the chart.' },
+    ],
+    pitfalls: [
+      { title: 'Helm chart values sprawl', description: 'Large Helm values files with dozens of overrides become hard to review and audit. Break values into logical groups using values file layering (default values, environment values, secret values) and document the purpose of each non-default value.' },
+      { title: 'Kustomize patch ordering assumptions', description: 'Strategic merge patches apply in the order listed in kustomization.yaml. Patches that assume a previous patch has already applied a specific field value can fail silently if ordering changes. Test patch combinations in isolation.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you use Kustomize overlays instead of Helm values?', a: 'Use Kustomize overlays when you have a set of base manifests that are environment-agnostic and you want to apply minimal patches per environment (dev, staging, production) without introducing template syntax. For example, the base Deployment has 1 replica; the production overlay patches it to 5. The base has no resource limits; the production overlay adds them. Kustomize keeps these changes explicit and auditable without requiring anyone to understand Go template syntax.' },
+      { q: 'How does Helm 3 differ from Helm 2?', a: 'Helm 3 removed Tiller, the server-side component that stored release state in the cluster with broad RBAC permissions. In Helm 3, the Helm client directly interacts with the Kubernetes API using the operator\'s credentials. Release history is stored as Secrets in the release namespace. This eliminates the Tiller security concern where Tiller ran with cluster-admin access. Helm 3 also introduced Chart.yaml API version 2 support, library charts (non-deployable shared templates), and improved hook handling.' },
+      { q: 'How do you implement Helm chart testing in CI?', a: 'Use helm lint to check chart syntax and value schema compliance. Use helm template to render manifests and pipe to kubeval or kubeconform for Kubernetes API schema validation. Use helm unittest (a Helm plugin) to write unit tests that assert on rendered template output. For integration testing, use chart-testing (ct) which provisions a Kind cluster, deploys the chart, and runs helm test hooks that validate the deployment is functional. Run all of these in CI before publishing a new chart version.' },
+    ],
+    references: [
+      'https://helm.sh/docs/',
+      'https://kubectl.docs.kubernetes.io/guides/introduction/kustomize/',
+    ],
+  },
+
+  // ─── NETWORKING ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'cmp-alb-vs-nlb',
+    title: 'ALB vs NLB',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Layer 7 application load balancing versus Layer 4 network load balancing on AWS.',
+    introduction: 'Application Load Balancer operates at Layer 7, terminating HTTP and HTTPS connections and enabling content-based routing, sticky sessions, authentication integration, and WebSocket support. Network Load Balancer operates at Layer 4, passing TCP and UDP connections through to targets with extremely low latency and without modifying packet headers. Each solves a distinct set of problems.',
+    whenToUse: 'ALB: HTTP/HTTPS microservices, path-based or host-based routing, WebSocket, gRPC, AWS WAF integration, Cognito authentication offloading. NLB: TCP pass-through, TLS offloading at extreme throughput, preserving client source IP, static IP requirements, non-HTTP protocols (MQTT, custom TCP).',
+    keyConcepts: [
+      { title: 'OSI Layer', description: 'ALB terminates Layer 7 connections, inspects HTTP headers, and makes routing decisions based on path, host, query string, and headers. NLB passes Layer 4 TCP or UDP flows to targets without inspection, maintaining ultra-low latency and preserving TCP flow semantics.' },
+      { title: 'Client IP Preservation', description: 'NLB preserves the original client IP address natively at the target. ALB replaces the source IP with the ALB node IP; the original client IP is available in the X-Forwarded-For header. Some applications (e.g., those using source IP for rate limiting) require NLB for accurate client IP.' },
+      { title: 'Static IP Addresses', description: 'NLB provides static Elastic IP addresses per AZ, enabling IP-based allowlisting by partners or firewall rules. ALB uses dynamic IPs that can change; DNS-based access is the only reliable approach for ALB.' },
+      { title: 'Latency', description: 'NLB operates at sub-millisecond latency with extremely high throughput (millions of requests per second). ALB adds overhead for HTTP parsing, header inspection, and rule evaluation, typically adding 1 to 5 milliseconds.' },
+    ],
+    approach: [
+      { step: 'Identify the protocol', details: 'For HTTP and HTTPS traffic with standard web applications, ALB is the default. For TCP, UDP, TLS pass-through, or any protocol that is not HTTP, NLB is required.' },
+      { step: 'Check for static IP requirements', details: 'If downstream consumers or partners require IP-based allowlisting or firewall rules pointing to the load balancer IP, NLB with Elastic IPs is required. ALB does not have static IPs.' },
+      { step: 'Evaluate AWS WAF integration', details: 'AWS WAF can only be attached to ALB (and CloudFront). If you need web application firewall protection, rate limiting, or bot management at the load balancer layer, ALB is required. NLB cannot integrate with WAF.' },
+    ],
+    pitfalls: [
+      { title: 'Expecting ALB to scale immediately for traffic spikes', description: 'ALB pre-warms capacity gradually. For known large traffic events (product launches, promotions), submit an ALB pre-warming request to AWS Support or use NLB which scales instantly.' },
+      { title: 'NLB health check sensitivity', description: 'NLB health checks default to TCP port checks that pass as long as the port accepts connections. A service that accepts TCP connections but returns HTTP 500s will appear healthy to NLB. Configure HTTP health checks on NLB for accurate application health detection.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you put an NLB in front of an ALB?', a: 'Use an NLB in front of an ALB when external partners require static IP addresses to allowlist access to your service, but you still want ALB features (path routing, WAF, authentication) behind it. NLB with a static EIP provides the stable IP; ALB handles the application routing. ALB IP addresses are registered as NLB targets. This pattern also works for AWS PrivateLink integration, which requires NLB as the service endpoint.' },
+      { q: 'How does ALB target group weighting support canary deployments?', a: 'ALB listener rules support weighted target group routing where two target groups can receive a configurable percentage of traffic (e.g., 95% to stable and 5% to canary). Adjust weights programmatically via the AWS CLI or SDK during deployment. This enables canary deployments without a separate tool, though Argo Rollouts or AWS CodeDeploy provide better automation and metric-driven rollback.' },
+      { q: 'What is ALB Access Logs and how do you analyze them cost-effectively?', a: 'ALB Access Logs deliver compressed log files to an S3 bucket for every request processed by the load balancer, including client IP, request time, target response time, status code, and user agent. Enable access logs for production ALBs with a 5-minute delivery interval. Analyze with Athena using the AWS-provided ALB log table schema without loading data into Elasticsearch. Partition the S3 prefix by date to reduce Athena scan cost and query only the time window of interest.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/',
+      'https://docs.aws.amazon.com/elasticloadbalancing/latest/network/',
+    ],
+  },
+
+  {
+    id: 'cmp-vpc-peering-vs-tgw',
+    title: 'VPC Peering vs Transit Gateway',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Direct VPC-to-VPC connections versus centralized hub-and-spoke network topology.',
+    introduction: 'VPC Peering creates a direct routing connection between two VPCs. Transit Gateway acts as a regional network hub that connects multiple VPCs, VPNs, and Direct Connect connections through a central router. VPC Peering is simpler and cheaper for a small number of connections; Transit Gateway becomes essential when the number of VPCs exceeds 5 to 10.',
+    whenToUse: 'VPC Peering: two to five VPCs, simple point-to-point connectivity, lowest latency and cost. Transit Gateway: many VPCs requiring a meshed or hub-and-spoke topology, shared services VPC, on-premises connectivity via VPN or Direct Connect through a central gateway, cross-account and cross-region routing.',
+    keyConcepts: [
+      { title: 'Transitive Routing', description: 'VPC Peering is non-transitive. If VPC A peers with VPC B and VPC B peers with VPC C, traffic cannot flow from A to C through B. Each pair that needs connectivity requires its own peering. Transit Gateway is transitive by design: all attached VPCs can route to each other through the gateway.' },
+      { title: 'Connection Count Scaling', description: 'With 10 VPCs requiring full mesh connectivity via peering, you need 45 peering connections. With Transit Gateway, all 10 VPCs connect to one hub with 10 attachments. The operational advantage of TGW grows exponentially with VPC count.' },
+      { title: 'Cost', description: 'VPC Peering has no hourly charge; you pay only for data transfer. Transit Gateway charges $0.05 per attachment-hour and $0.02 per GB of data processed. For low-traffic connections, peering is cheaper. For high-traffic shared services, TGW overhead is worth the management simplification.' },
+      { title: 'Cross-Region and Cross-Account', description: 'Both VPC Peering and Transit Gateway support cross-region and cross-account connectivity. Transit Gateway peering connects two TGWs across regions, enabling multi-region hub-and-spoke architectures. VPC cross-region peering is available but must be individually configured per VPC pair.' },
+    ],
+    approach: [
+      { step: 'Count VPCs requiring interconnectivity', details: 'Draw the connectivity matrix. If every VPC pair requires routing, calculate peering connection count (n*(n-1)/2). Above 5 to 7 VPCs, Transit Gateway administration is simpler.' },
+      { step: 'Identify shared services', details: 'If certain VPCs provide shared services (security scanning, DNS resolvers, centralized NAT) consumed by all others, Transit Gateway with route table segmentation simplifies routing policy and reduces peering sprawl.' },
+      { step: 'Plan on-premises connectivity', details: 'If VPN or Direct Connect connections to on-premises networks must be accessible from multiple VPCs, Transit Gateway is the only practical option. Attaching VPN to every VPC individually is not scalable.' },
+    ],
+    pitfalls: [
+      { title: 'Overlapping CIDR blocks blocking peering', description: 'VPC Peering requires non-overlapping CIDR ranges between the two VPCs. Plan IP address space across all VPCs from the start to avoid CIDR conflicts that prevent peering. Transit Gateway has the same requirement.' },
+      { title: 'Transit Gateway route table segmentation misconfiguration', description: 'TGW route tables control which attachments can route to which other attachments. Misconfiguring route table propagation can inadvertently allow or block traffic between production and development VPCs. Document and test route table policies for every new TGW attachment.' },
+    ],
+    keyQuestions: [
+      { q: 'How does Transit Gateway route table segmentation work?', a: 'Each Transit Gateway attachment is associated with one route table for inbound routing decisions and can propagate routes to one or more route tables. Create separate route tables for production, development, and shared services attachments. Configure development VPCs to route to shared services but not to production. This network segmentation prevents lateral movement between environments without requiring security group rules on every individual instance.' },
+      { q: 'Can you replace existing VPC Peering connections with Transit Gateway?', a: 'Yes, but it requires a migration window. Add VPC attachments to the Transit Gateway and configure route tables to route traffic through TGW. Update VPC route tables in each VPC to use the TGW as the next hop for the peer VPC CIDR ranges. Test connectivity through TGW before removing existing peering connections. The main risk is routing black holes if route updates are applied in the wrong order across the VPCs.' },
+      { q: 'What is AWS Network Manager and how does it relate to Transit Gateway?', a: 'AWS Network Manager is a centralized network management service that provides a global view of your Transit Gateway network topology, Route 53 Resolver DNS connectivity, and on-premises SD-WAN integration. It aggregates routing, events, and metrics from multiple TGWs across regions into a single dashboard. Use it to visualize inter-VPC traffic flows, identify unused attachments, and monitor Transit Gateway operational health across a global network.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/peering/',
+      'https://docs.aws.amazon.com/vpc/latest/tgw/',
+    ],
+  },
+
+  {
+    id: 'cmp-privatelink-vs-peering',
+    title: 'PrivateLink vs VPC Peering',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Service endpoint exposure versus full VPC routing for private connectivity.',
+    introduction: 'AWS PrivateLink exposes a specific service endpoint (backed by NLB) to consumers in other VPCs without allowing full VPC routing. VPC Peering or Transit Gateway create full bidirectional routing between VPC CIDR blocks. PrivateLink is preferred for exposing services to external customers or untrusted VPCs; peering is appropriate for first-party VPCs requiring broad connectivity.',
+    whenToUse: 'PrivateLink: SaaS service exposure to customer VPCs, exposing a microservice to partners or tenants without VPC-level access, keeping CIDR blocks private from consumers. VPC Peering: first-party VPCs owned by the same organization, internal shared services, when multiple endpoints from the same VPC are needed.',
+    keyConcepts: [
+      { title: 'Access Scope', description: 'PrivateLink exposes only the specific service (TCP port on NLB) to consumers; they cannot route to any other resource in the provider VPC. VPC Peering or TGW exposes the full CIDR block of the provider VPC, allowing routing to any resource within it.' },
+      { title: 'Direction', description: 'PrivateLink is unidirectional: consumer initiates connections to the provider endpoint. VPC Peering is bidirectional; either side can initiate connections to any IP in the other VPC\'s CIDR range (subject to security group and NACL rules).' },
+      { title: 'CIDR Overlap Tolerance', description: 'PrivateLink consumers connect to the Interface Endpoint IP in their own VPC; they never need to route to the provider VPC CIDR. PrivateLink works even when provider and consumer VPCs have overlapping CIDR ranges. VPC Peering requires non-overlapping CIDRs.' },
+      { title: 'DNS Integration', description: 'PrivateLink Interface Endpoints create VPC endpoint-specific DNS names. Enable private DNS to resolve the service\'s public DNS name to the private endpoint IP within the consumer VPC. VPC Peering uses standard IP routing with no DNS integration.' },
+    ],
+    approach: [
+      { step: 'Identify the trust level of the consumer VPC', details: 'For internal first-party VPCs, VPC Peering provides full connectivity appropriate for trusted workloads. For customer or partner VPCs, PrivateLink limits exposure to only the specific service endpoint, following the principle of least privilege.' },
+      { step: 'Check for CIDR overlap constraints', details: 'If the provider and consumer VPCs may have overlapping IP ranges (common in multi-tenant SaaS), PrivateLink avoids this constraint entirely. Document this requirement early to avoid architecture rework.' },
+      { step: 'Design NLB configuration for PrivateLink', details: 'PrivateLink requires an NLB as the service endpoint. Target groups must be correctly configured for health checks and cross-zone load balancing. Plan NLB capacity to handle all consumer connection rates.' },
+    ],
+    pitfalls: [
+      { title: 'Exposing too many ports via PrivateLink', description: 'PrivateLink listeners are configured per-port on the NLB. Exposing more ports than necessary widens the attack surface. Configure PrivateLink listeners only for the specific TCP ports required by the service.' },
+      { title: 'Not enabling endpoint acceptance for PrivateLink', description: 'By default, PrivateLink endpoint service accepts any consumer who requests a connection. Enable acceptance required and whitelist specific AWS account IDs that are permitted to create endpoints. Without this, any AWS account can connect to your service.' },
+    ],
+    keyQuestions: [
+      { q: 'When would you use PrivateLink over VPC Peering for an internal service?', a: 'Use PrivateLink for an internal service when the consumer VPC should not have access to any other resource in the provider VPC, when you anticipate many consumer VPCs (PrivateLink scales better than a mesh of peering connections), when you want to centrally control which consumer accounts can connect, or when CIDR overlap is a concern across organizational units that manage VPC IP addressing independently.' },
+      { q: 'How does PrivateLink compare to Gateway Endpoints for S3 and DynamoDB?', a: 'Gateway Endpoints are free endpoints for S3 and DynamoDB that route traffic through the AWS backbone via a VPC route table entry. They do not create an ENI in your VPC and do not incur data processing charges. Interface Endpoints (PrivateLink) for S3 create an ENI with a private IP in your VPC, enabling DNS-based private access and supporting more complex routing scenarios. Use Gateway Endpoints for S3 and DynamoDB in most cases to avoid the Interface Endpoint hourly cost; use Interface Endpoints only when Gateway Endpoints do not satisfy your routing requirements (e.g., from Direct Connect on-premises environments).' },
+      { q: 'What is AWS Verified Access and how does it relate to PrivateLink?', a: 'AWS Verified Access provides zero-trust network access to internal applications without VPN by evaluating user identity (via IAM Identity Center or OIDC) and device posture before granting access. It is conceptually different from PrivateLink: PrivateLink provides private connectivity between VPCs for service-to-service communication. Verified Access provides user-to-application access with identity-aware policies. They complement each other in a zero-trust architecture where users access applications via Verified Access and services call each other via PrivateLink.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/privatelink/',
+      'https://docs.aws.amazon.com/vpc/latest/peering/',
+    ],
+  },
+
+  {
+    id: 'cmp-cloudfront-vs-alb',
+    title: 'CloudFront vs ALB',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Global CDN with edge caching versus regional application load balancer for web traffic.',
+    introduction: 'CloudFront is a global content delivery network that caches responses at edge locations worldwide, reducing latency for geographically distributed users and offloading origin traffic. ALB distributes traffic to backend targets within a region. CloudFront sits in front of ALB for global applications; ALB is used directly for regional or internal APIs.',
+    whenToUse: 'CloudFront: globally distributed user bases, static asset delivery, API caching, DDoS mitigation via Shield, WAF at the edge, reducing origin load. ALB: regional applications, internal microservice routing, gRPC, WebSocket, applications where caching is undesirable or inapplicable.',
+    keyConcepts: [
+      { title: 'Edge Caching', description: 'CloudFront caches responses at 400+ edge locations worldwide. A user in Tokyo requesting a US-origin API served through CloudFront may receive a cached response from the Tokyo edge with sub-50ms latency versus 150ms for a direct origin request.' },
+      { title: 'Cache Control', description: 'CloudFront caches based on Cache-Control and Expires headers from the origin, plus custom cache policies. Vary header support and cache key customization (forwarded headers, cookies, query strings) allow fine-grained control over what is cached and for whom.' },
+      { title: 'Lambda@Edge and CloudFront Functions', description: 'CloudFront supports running code at edge nodes: Lambda@Edge for complex logic (authentication, URL rewriting), CloudFront Functions for lightweight request/response manipulation (header injection, URL normalization) with sub-millisecond execution.' },
+      { title: 'AWS WAF and Shield', description: 'AWS WAF and Shield Advanced can be deployed at CloudFront for edge-level DDoS mitigation and bot protection. Attaching WAF to ALB only provides protection after traffic reaches your VPC. CloudFront blocks malicious traffic before it reaches the origin.' },
+    ],
+    approach: [
+      { step: 'Identify cacheable content', details: 'Profile your API or web application for cacheable responses. Static assets (JS, CSS, images) are 100% cacheable. GET API responses with consistent outputs per URL are cacheable with appropriate Cache-Control headers. POST requests and authenticated-user-specific responses are typically not cacheable.' },
+      { step: 'Measure geographic user distribution', details: 'If 80% of users are in one region, CloudFront adds cost without meaningful latency improvement. If users are globally distributed, CloudFront edge caching can reduce p99 latency by 50 to 80 percent for cached content.' },
+      { step: 'Plan cache invalidation strategy', details: 'Design how to invalidate CloudFront caches on content updates. CloudFront invalidation requests cost $0.005 per path. Use versioned URL patterns (bundle.[hash].js) for static assets to eliminate the need for invalidation on every deploy.' },
+    ],
+    pitfalls: [
+      { title: 'Caching authenticated responses', description: 'Without proper cache key configuration, CloudFront can serve one user\'s authenticated response to another user. Configure cache policies to include authorization cookies or headers in the cache key, or set Cache-Control: private, no-store on authenticated responses.' },
+      { title: 'Ignoring CloudFront error caching', description: 'CloudFront caches 4xx and 5xx error responses for a default TTL of 10 seconds. A brief origin outage can cause CloudFront to serve cached errors for longer than expected. Configure custom error pages and error caching TTLs explicitly.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you architect CloudFront in front of an API backed by ALB?', a: 'Configure CloudFront with the ALB DNS name as the origin. Set the Origin Protocol Policy to HTTPS-only. Configure cache behaviors per path prefix: /static/* uses a high-TTL caching policy; /api/* uses a no-cache policy (CachingDisabled) to pass requests directly to origin. Attach an AWS WAF web ACL to the CloudFront distribution for edge protection. Set Viewer Protocol Policy to redirect HTTP to HTTPS. Configure CORS headers via a CloudFront Response Headers Policy.' },
+      { q: 'What is CloudFront signed URLs and when do you use them?', a: 'CloudFront signed URLs restrict access to specific CloudFront-distributed content to authenticated users by requiring a time-limited, cryptographically signed token in the URL. Use signed URLs for distributing private downloadable content (e.g., licensed PDFs, user-generated media exports) where each URL is specific to one user and resource. Use signed cookies instead of signed URLs when the access token should apply to multiple files (e.g., accessing all content in a streaming video player).' },
+      { q: 'How does CloudFront Origin Failover work?', a: 'Configure an Origin Group with a primary origin (your main ALB) and a secondary origin (a static S3 bucket or a secondary-region ALB). Define which HTTP status codes from the primary trigger failover (502, 503, 504 are typical). When CloudFront receives a failover-triggering status from the primary, it retries the same request against the secondary origin and returns the secondary response if successful. This provides basic active-passive failover at the CDN layer without Route 53 health checks.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/',
+      'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/',
+    ],
+  },
+
+  {
+    id: 'cmp-route53-routing-policies',
+    title: 'Route 53 Routing Policies',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Choosing the right DNS routing policy for traffic management, failover, and geo-distribution.',
+    introduction: 'Route 53 supports eight routing policies that determine how DNS queries are answered when multiple records exist for the same name. Choosing the correct policy directly affects application availability, latency, compliance with data residency requirements, and disaster recovery behavior. Simple routing is the default; the others serve specific architectural needs.',
+    whenToUse: 'Simple: single resource, no traffic management. Weighted: A/B testing, canary DNS migration, traffic shifting between endpoints. Latency: routing users to the lowest-latency region. Failover: active-passive disaster recovery. Geolocation: data residency compliance, language-based routing. Geoproximity: complex regional traffic distribution with bias. Multi-value: basic multi-IP round-robin with health checking. IP-based: CIDR-based routing for on-premises or known IP ranges.',
+    keyConcepts: [
+      { title: 'Weighted Routing', description: 'Assign numeric weights to records. Route 53 distributes queries proportionally to the weight of each record. Setting one record to 100 and another to 5 sends approximately 5% of traffic to the second record. Use for canary deployments, load distribution, and gradual migration between environments.' },
+      { title: 'Latency Routing', description: 'Route 53 routes users to the AWS region with the lowest measured network latency for their location. Health checks can be combined with latency routing to exclude unhealthy regions. Use for global applications hosted in multiple AWS regions.' },
+      { title: 'Failover Routing', description: 'Configure a primary and secondary record. Route 53 health checks monitor the primary. When the primary fails its health check, Route 53 automatically returns the secondary record. Use for active-passive disaster recovery.' },
+      { title: 'Geolocation vs Geoproximity', description: 'Geolocation routes based on the continent or country of the requesting IP address. Geoproximity routes based on the geographic distance between the user and the resource, with a configurable bias that artificially expands or shrinks a region\'s routing area.' },
+    ],
+    approach: [
+      { step: 'Define the routing goal', details: 'Availability: use Failover with health checks. Lowest latency: use Latency routing. Traffic shifting or canary: use Weighted. Data residency compliance: use Geolocation. Multi-region with distance optimization: use Geoproximity.' },
+      { step: 'Configure health checks for all non-simple policies', details: 'Weighted, Latency, Failover, and Geolocation routing all support health check association. An unhealthy record is excluded from DNS responses. Health checks must match the endpoint protocol and path that represents true application health.' },
+      { step: 'Test DNS responses with dig', details: 'Use dig or Route 53 policy simulation to verify that DNS responses match expectations before deploying. Route 53 policy records can be complex with multiple policies stacked; always test end-to-end routing behavior in a staging hosted zone.' },
+    ],
+    pitfalls: [
+      { title: 'DNS TTL too high for failover policies', description: 'If Route 53 failover health check triggers a record change but the TTL is 300 seconds, clients may continue routing to the failed endpoint for up to 5 minutes. Set TTL to 60 seconds for failover records. DNS TTL and health check evaluation interval together determine the actual failover time.' },
+      { title: 'Geolocation with missing default record', description: 'If no geolocation record matches a client\'s location (e.g., no default record for unmatched locations), Route 53 returns NODATA and the DNS query fails. Always include a default geolocation record that covers all unmatched locations.' },
+    ],
+    keyQuestions: [
+      { q: 'How do you implement active-passive failover with Route 53?', a: 'Create a primary failover record pointing to your main endpoint (e.g., us-east-1 ALB) and a secondary failover record pointing to the DR endpoint (e.g., us-west-2 ALB). Associate a Route 53 health check with the primary record that monitors the ALB health check path. When the health check fails three consecutive times (at your configured interval), Route 53 stops returning the primary record and returns the secondary. Set TTL to 60 seconds to minimize failover propagation time. Use CloudWatch alarms on the health check to alert the on-call team when failover triggers.' },
+      { q: 'When would you use Weighted routing over ALB target group weights?', a: 'Use Route 53 Weighted routing for DNS-level traffic shifting between independently deployed stacks in different AWS accounts, different regions, or different cloud providers. This is useful for cross-region canary deployments or cloud migration where you shift traffic from on-premises to AWS gradually. Use ALB target group weights for traffic shifting within the same ALB and region, which provides more granular control and faster adjustment without DNS propagation delays.' },
+      { q: 'What is Route 53 Resolver and how does it differ from public Route 53?', a: 'Public Route 53 hosts internet-accessible DNS zones. Route 53 Resolver is the DNS resolver running within your VPC that handles DNS queries from EC2 instances and services. It resolves both public and private hosted zones. Route 53 Resolver Endpoints extend this to forward DNS queries from on-premises networks to AWS (inbound endpoints) and from VPC to on-premises DNS servers (outbound endpoints with forwarding rules). This enables split-horizon DNS where on-premises hosts resolve internal AWS service names via the corporate DNS infrastructure.' },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-types.html',
+    ],
+  },
+
+];
