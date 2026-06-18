@@ -60,7 +60,7 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
               },
               Env: taskEnv,
               Resources: resources,
-              KillTimeout: '10s',
+              KillTimeout: 10_000_000_000,
             },
           ],
           Networks: [
