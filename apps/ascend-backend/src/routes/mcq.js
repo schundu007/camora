@@ -19,7 +19,7 @@ const mcqLimiter = rateLimit({
 
 // ── Load MCQ problem metadata once at startup ─────────────────────────────────
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const MCQ_DATA_PATH = resolve(__dirname, '../../../../apps/camora/src/data/capra/mcq-problems.json');
+const MCQ_DATA_PATH = resolve(__dirname, '../data/mcq-problems.json');
 
 let mcqProblemsMap = {};
 try {
