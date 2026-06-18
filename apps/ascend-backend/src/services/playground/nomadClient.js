@@ -21,7 +21,7 @@ const RESOURCES = {
   'agent-sandbox': { CPU: 1000, MemoryMB: 1536 },
   'k8s-single': { CPU: 2000, MemoryMB: 2048 },
   'k8s-multi': { CPU: 3000, MemoryMB: 4096 },
-  'cloud-cli': { CPU: 500, MemoryMB: 512 },
+  'cloud-cli': { CPU: 1500, MemoryMB: 1536 },
 };
 
 function nomadHeaders() {
