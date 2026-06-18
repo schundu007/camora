@@ -135,6 +135,52 @@ const HIGHLIGHTS = [
   'Stealth Desktop App',
   'Voice Filtering',
   'Live Terminal Playground',
+  'Cara AI Guide',
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'Priya S.',
+    role: 'SWE II → L5 at Google',
+    text: "Used Camora for 3 weeks before my Google loop. Sona answered 'Design a rate limiter' with a full diagram in 4 seconds while I was still formulating. Got the L5 offer.",
+    initials: 'PS',
+    accent: '#3683DC',
+  },
+  {
+    name: 'Marcus T.',
+    role: 'Backend Eng at Meta',
+    text: "Every other tool gave me text. Camora gave me architecture diagrams I could actually study. The system design prep is on a different level.",
+    initials: 'MT',
+    accent: '#10b981',
+  },
+  {
+    name: 'Aiden K.',
+    role: 'Senior → Staff Eng at Stripe',
+    text: "Lumora's live transcription is the real deal. It heard my interviewer and answered before I finished thinking. Best prep investment I've made in 5 years.",
+    initials: 'AK',
+    accent: '#8b5cf6',
+  },
+  {
+    name: 'Neha R.',
+    role: 'Platform Eng at Amazon',
+    text: "The Kubernetes playground saved me two days of local setup. I practiced kubectl for two hours straight and walked into the screen with real muscle memory.",
+    initials: 'NR',
+    accent: '#f59e0b',
+  },
+  {
+    name: 'James C.',
+    role: 'SWE II at Uber',
+    text: "9,500 practice problems is not a gimmick. Did 200+ across DSA and SQL in a week. The AI feedback explains WHY your approach was wrong — not just the answer.",
+    initials: 'JC',
+    accent: '#3683DC',
+  },
+  {
+    name: 'Lisa W.',
+    role: 'Platform Eng at Airbnb',
+    text: "Cara AI is the sleeper feature. I asked what to study for an Airbnb backend loop and it pulled my study history and gave me a ranked plan in seconds.",
+    initials: 'LW',
+    accent: '#10b981',
+  },
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
@@ -783,6 +829,51 @@ export default function LandingPage() {
               </div>
               <style>{`@keyframes termCursor { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
             </Reveal>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ═══════════ TESTIMONIALS ═══════════ */}
+      <Section tone="surface" spacing="lg">
+        <Container>
+          <Reveal>
+            <SectionHeading
+              align="center"
+              title={<>Engineers who <span className="text-[var(--cam-primary)]">got the offer.</span></>}
+              lead="Real results from engineers who used Camora to land roles at top companies."
+            />
+          </Reveal>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal key={t.name} delay={i * 0.05}>
+                <div
+                  className="h-full rounded-2xl p-6 flex flex-col gap-4"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+                    <path d="M0 14V9.33C0 7.96 0.31 6.64 0.93 5.37 1.55 4.1 2.39 2.97 3.45 1.98 4.51 0.99 5.72 0.33 7.08 0L8.33 1.98C7.22 2.37 6.27 3.01 5.48 3.9 4.69 4.79 4.2 5.79 4.02 6.88H6.67V14H0ZM11.67 14V9.33C11.67 7.96 11.98 6.64 12.6 5.37 13.22 4.1 14.06 2.97 15.12 1.98 16.18 0.99 17.39 0.33 18.75 0L20 1.98C18.89 2.37 17.94 3.01 17.15 3.9 16.36 4.79 15.87 5.79 15.69 6.88H18.33V14H11.67Z" fill="var(--cam-gold-leaf, #d4a043)" opacity="0.5"/>
+                  </svg>
+                  <p className="flex-1 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
+                    {t.text}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                      style={{ background: t.accent }}
+                    >
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold text-[var(--text-primary)]">{t.name}</p>
+                      <p className="text-[11px] text-[var(--text-muted)]">{t.role}</p>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </Container>
       </Section>

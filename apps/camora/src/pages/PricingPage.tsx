@@ -37,6 +37,8 @@ const COMPARE_SECTIONS: CompareSection[] = [
       { label: 'Prep · 1,400+ topics',                 free: '1 / category',       monthly: 'All',            yearly: 'All',          team: 'All' },
       { label: 'Coding solver + system design',        free: 'Limited',             monthly: '✓',              yearly: '✓',            team: '✓' },
       { label: 'Voice filter + architecture diagrams', free: '—',                  monthly: '✓',              yearly: '✓',            team: '✓' },
+      { label: 'Terminal playground (Ubuntu · Docker · K8s)', free: 'Ubuntu only', monthly: '✓',              yearly: '✓',            team: '✓' },
+      { label: 'Cara AI guide (⌘K)',                          free: '✓',           monthly: '✓',              yearly: '✓',            team: '✓' },
     ],
   },
   {
