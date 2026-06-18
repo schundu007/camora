@@ -1,4 +1,4 @@
-import { query } from '@camora/shared-db';
+import { query } from '../lib/db.js';
 import { cacheGet, cacheSet, cacheDel } from '../redis.js';
 
 export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort) {
