@@ -5,7 +5,7 @@ import { writeFile, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir, platform } from 'os';
 import { randomUUID, createHash } from 'crypto';
-import { query } from '@camora/shared-db';
+import { query } from '../lib/db.js';
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 
