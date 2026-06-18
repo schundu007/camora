@@ -54,7 +54,7 @@ function sshExec(command) {
 
     conn.connect({
       host: WORKER_HOST(),
-      port: 22,
+      port: parseInt(process.env.WORKER_SSH_PORT || '20022', 10),
       username: WORKER_USER(),
       privateKey: workerKey(),
       readyTimeout: 10_000,
