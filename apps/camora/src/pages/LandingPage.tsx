@@ -115,6 +115,12 @@ const FEATURES = [
     desc: 'Timed practice sessions with instant feedback. Scored on communication, accuracy, and code quality.',
     Anim: FeatureMockSessionAnim,
   },
+  {
+    label: 'Playground',
+    title: 'Real terminals. Real Docker. Real Kubernetes.',
+    desc: 'Spin up a live Ubuntu, Docker, or Kubernetes environment in under 5 seconds. Run kubectl, deploy containers, and demo infra skills — right in your browser. No VM setup required.',
+    Anim: FeatureLiveAIAnim,
+  },
 ];
 
 const SKILLS = [
@@ -128,6 +134,7 @@ const HIGHLIGHTS = [
   'Company-Specific Prep',
   'Stealth Desktop App',
   'Voice Filtering',
+  'Live Terminal Playground',
 ];
 
 /* ── Hooks ────────────────────────────────────────────── */
@@ -604,6 +611,91 @@ export default function LandingPage() {
               ctaHref="/pricing"
               tone="dark"
             />
+          </div>
+        </Container>
+      </Section>
+
+      {/* ═══════════ PLAYGROUND ═══════════ */}
+      <Section tone="muted" spacing="lg">
+        <Container>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            <Reveal>
+              <Eyebrow tone="accent">Playground</Eyebrow>
+              <SectionHeading
+                title={<>Practice on real infra.<br /><span className="text-[var(--cam-primary)]">Not screenshots.</span></>}
+                lead="Spin up a live Ubuntu, Docker, or Kubernetes terminal in under 5 seconds. Run actual kubectl commands, deploy real containers, and build the muscle memory interviewers test for."
+              />
+              <ul className="mt-6 space-y-3">
+                {[
+                  ['Ubuntu', 'Full bash shell — apt, curl, git, everything.'],
+                  ['Docker', 'Build images, run containers, inspect networks.'],
+                  ['Kubernetes', 'Real cluster — pods, services, deployments, RBAC.'],
+                  ['Cloud CLI', 'AWS, GCP, Azure CLIs pre-configured and ready.'],
+                ].map(([env, desc]) => (
+                  <li key={env} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(212,160,67,0.15)', border: '1px solid rgba(212,160,67,0.35)' }}>
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="#d4a043" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                    <span>
+                      <span className="text-[13px] font-bold text-[var(--text-primary)]">{env} — </span>
+                      <span className="text-[13px] text-[var(--text-secondary)]">{desc}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <CTAButton to="/capra/playground" variant="primary" size="md" trailingArrow>
+                  Open Playground
+                </CTAButton>
+              </div>
+            </Reveal>
+
+            {/* Terminal preview card */}
+            <Reveal delay={0.08}>
+              <div className="rounded-2xl overflow-hidden"
+                style={{
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: '0 32px 64px rgba(0,0,0,0.4)',
+                }}>
+                {/* Title bar */}
+                <div className="flex items-center gap-2 px-4 py-3" style={{ background: '#111', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#febc2e' }} />
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#28c840' }} />
+                  <span className="ml-3 text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>camora — ubuntu — bash</span>
+                </div>
+                {/* Terminal body */}
+                <div className="p-5 font-mono text-[12.5px] leading-relaxed" style={{ color: '#e4e4e4', minHeight: 240 }}>
+                  {[
+                    { prompt: true, text: 'kubectl get pods -n production' },
+                    { prompt: false, text: 'NAME                     READY   STATUS    RESTARTS', muted: true },
+                    { prompt: false, text: 'api-server-7d9f8c-xk2p   1/1     Running   0' },
+                    { prompt: false, text: 'worker-6b4d9f-m3nq        1/1     Running   0' },
+                    { prompt: false, text: 'redis-5c8b7f-p9lw          1/1     Running   0' },
+                    { prompt: false, text: '' },
+                    { prompt: true, text: 'kubectl scale deployment api-server --replicas=3' },
+                    { prompt: false, text: 'deployment.apps/api-server scaled', color: '#10b981' },
+                    { prompt: false, text: '' },
+                    { prompt: true, text: '█', cursor: true },
+                  ].map((line, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      {line.prompt && (
+                        <span style={{ color: '#10b981', flexShrink: 0 }}>$</span>
+                      )}
+                      <span style={{
+                        color: line.cursor ? '#10b981' : line.color || (line.muted ? 'rgba(255,255,255,0.35)' : '#e4e4e4'),
+                        animation: line.cursor ? 'termCursor 1s step-end infinite' : undefined,
+                      }}>{line.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <style>{`@keyframes termCursor { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+            </Reveal>
           </div>
         </Container>
       </Section>
