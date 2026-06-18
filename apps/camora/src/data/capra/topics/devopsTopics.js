@@ -48,6 +48,7 @@ export const devopsTopicCategoryMap = {
   'jenkins-deep-dive':              'cicdtools',
   'circleci-deep-dive':             'cicdtools',
   'buildkite-runners':              'cicdtools',
+  'bazel-deep-dive':                'cicdtools',
   'tekton-pipelines':               'cicdtools',
   'argo-workflows':                 'cicdtools',
   // Continuous Delivery — deploy strategies → flags → progressive → db → release process
@@ -30733,6 +30734,1009 @@ A: Full observability coverage, validated runbooks for each automated action, te
       'https://www.pagerduty.com/platform/aiops/',
       'https://www.datadoghq.com/blog/bits-ai-sre/',
       'https://sre.google/workbook/alerting-on-slos/',
+    ],
+  },
+
+  {
+    id: 'bazel-deep-dive',
+    title: 'Bazel',
+    icon: 'package',
+    color: '#22c55e',
+    questions: 6,
+    description: 'Google\'s hermetic build system for monorepos. Incremental, multi-language builds with remote caching and remote execution. Used at Google, Stripe, Dropbox, Spotify, Databricks. Right tool when Turborepo and Nx don\'t scale far enough.',
+    visualizations: [
+      {
+        title: 'Bazel build graph, hermeticity, and remote cache flow',
+        description: `Bazel computes a directed acyclic graph (DAG) of build targets from explicit BUILD file declarations. For each target, it hashes all declared inputs (source files, dependency outputs, toolchain version, build flags) to produce a cache key.
+
+Build flow for bazel build //services/payments:server:
+- Bazel traverses the dependency graph from //services/payments:server to all transitive dependencies.
+- For each node, checks the local action cache, then the remote cache (if configured).
+- Cache hit: fetch artifact from ContentAddressableStorage (CAS) by digest, skip the action entirely.
+- Cache miss: execute the action inside a hermetic sandbox (only declared inputs visible), capture outputs, write to local and remote cache.
+
+Hermeticity enforcement: each action runs in a sandboxed subprocess. The sandbox mounts only the declared input files. Undeclared files are invisible. If an action reads a file it did not declare, it fails at build time with a clear error. This makes the hash meaningful: same declared inputs always produce identical outputs.
+
+Remote cache: a content-addressed store (commonly GCS, S3, or a dedicated service like BuildBuddy or Buildbarn). First build on main populates it; subsequent builds on other developer machines and CI hit it. Cache hit rates above 80% are achievable for active monorepos.
+
+The graph separates Bazel from package-manager-tier tools like Turborepo and Nx: the graph is computed from explicit BUILD file declarations, not from heuristic file-watching or package.json traversal.`,
+        image: '/diagrams/devops/ct8-bazel.png',
+      },
+      {
+        title: 'Remote execution architecture — Buildbarn and BuildBuddy',
+        description: `Remote execution (RBE) extends remote caching: instead of only caching outputs, Bazel dispatches build and test actions to a remote compute cluster for parallel execution.
+
+Architecture (Remote Execution API, REAPI):
+- Bazel client: computes the full action graph locally. For each action, checks if the result is already cached (cache hit = no dispatch). Cache miss: sends the action to the remote execution service.
+- Scheduler: receives actions from Bazel clients. Queues and routes to available workers. Implements the REAPI Execution service.
+- Workers: execute sandboxed build actions. Write outputs to the Content Addressable Storage (CAS). Report results to the scheduler.
+- CAS: shared object store for inputs and outputs. Bazel uploads inputs before dispatch; workers read from CAS and write outputs back.
+
+Popular REAPI implementations:
+- Buildbarn: open source, runs on Kubernetes, used by large self-hosted deployments.
+- BuildBuddy: SaaS plus self-hosted, adds a rich UI, test analytics, and Bazel invocation profiling.
+- EngFlow: SaaS founded by ex-Googlers, focused on enterprise Bazel features.
+- Google Cloud RBE: available for GCP-native shops.
+
+The economic case: a monorepo with 8,000 C++ compilation units takes 80 minutes to build on 16 local cores. With 100 remote workers, build time approaches the critical path depth (the longest serial dependency chain), typically 5-10 minutes. RBE transforms build time from proportional to total action count to proportional to critical path depth.
+
+RBE requires hermetic builds. Non-hermetic actions produce different outputs on different machines, poisoning the shared CAS with wrong artifacts that pass cache lookups but contain incorrect content.`,
+        image: '/diagrams/devops/ct8-bazel-rbe.png',
+      },
+    ],
+    introduction: `Bazel is Google's open-source build and test tool, released in 2015 as the externalized version of Google's internal Blaze system. It targets monorepos where conventional build tools break down: repositories with multiple languages, hundreds of services, thousands of engineers, and test suites measured in hours.
+
+The Google origin matters. Google's monorepo -- approximately 2 billion lines of code per Potvin and Levenberg (CACM 2016) -- runs on the same underlying design as Bazel. Every design choice is informed by operating at that scale for decades. The result is a build tool with strong correctness guarantees and high operational capability, combined with a steep learning curve and significant initial configuration investment.
+
+Why Bazel differs from conventional build tools:
+
+Hermetic builds by default. Bazel enforces hermeticity through sandboxing. Each build action runs in an isolated environment with only its declared inputs visible. A Makefile, npm script, or Gradle task can read any file in the repository; a Bazel action cannot. This is what makes Bazel's cache trustworthy: same declared inputs produce the same outputs.
+
+Multi-language, single build graph. Bazel handles Java, Go, Python, C++, TypeScript, Rust, Scala, Kotlin, Swift -- any language with Bazel rules -- in a single build graph. Cross-language dependencies are expressed the same way as same-language dependencies. A Python service that generates proto code and a Go service that imports it can be connected in a single BUILD file with full incremental correctness.
+
+Remote caching and remote execution. Bazel's caching is not just local. A shared remote cache (GCS bucket, S3, or a dedicated cache service) means the first build populates the cache; every subsequent build -- developer laptops, CI runners, other pipelines -- gets cache hits. Remote execution dispatches actions to a compute cluster, parallelizing the build graph to its critical path.
+
+Incremental correctness. Because the build graph is explicitly declared and all inputs are tracked, Bazel's incremental builds are correct. Running bazel test //... on an unchanged repo after a full CI build should produce 100% cache hits. This is qualitatively different from heuristics-based "runs tests that changed" approaches.
+
+Who uses Bazel in 2026: Google (invented it), Stripe (one of the most-discussed public Bazel migrations), Dropbox (migrated Python monorepo around 2020), Databricks, Spotify, Canva, LinkedIn, Uber, Pinterest (for both mobile and backend), Square/Block, Jane Street (via OCaml rules). The company size and engineering investment required creates self-selection toward well-resourced engineering organizations.
+
+When NOT to use Bazel:
+
+Small teams and repos. Below 20 services or 30 contributors, Bazel's learning curve and BUILD-file maintenance cost exceed its benefit. Turborepo or Nx is the right default for JS/TS monorepos.
+
+JavaScript-only monorepos. Turborepo or Nx provide 80% of Bazel's caching benefit with 10% of the configuration cost.
+
+Short total build times. If your full CI suite runs in under 10 minutes, incremental builds and remote caching add minimal value. Invest in Bazel when build time is a genuine productivity drain.
+
+The three concepts that govern everything in Bazel:
+
+Targets and BUILD files. Every buildable artifact -- binary, library, test, Docker image -- is a target declared in a BUILD file. Rules define what a target type does; targets specify which sources and dependencies belong to it.
+
+Hermetic sandboxing. Each action runs with only its declared inputs. The sandbox enforces the declaration at the OS level. Hermeticity is what makes caching correct.
+
+Content-addressed caching. Artifacts are keyed by a hash of all their inputs. Same inputs: cache hit, no rebuild. Different inputs: cache miss, new artifact written. Shared remote cache means one build populates it for everyone.`,
+    whenToUse: [
+      'Monorepo with 4+ languages needing a unified build graph (Java, Python, Go, TypeScript together)',
+      'Total CI test suite exceeds 15 minutes and incremental rebuilds are needed for developer productivity',
+      'Remote caching required across developer machines and CI to share build work without repeating it',
+      'Cross-language dependencies (proto definitions, generated code) need explicit dependency tracking',
+      'Compliance or security requirement for hermetic, reproducible, auditable builds with provenance',
+      'Migrating from a Blaze-based internal system to open-source tooling',
+    ],
+    keyConcepts: [
+      {
+        term: 'Packages, targets, and BUILD files',
+        definition: `A package is a directory containing a BUILD or BUILD.bazel file. A target is a named buildable or testable artifact declared inside a BUILD file. Rules define what a target type does; targets instantiate rules with specific sources and dependencies.
+
+Example BUILD file for a Go service:
+
+\`\`\`python
+# services/payments/BUILD.bazel
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "payments_lib",
+    srcs = glob(["*.go"], exclude = ["*_test.go"]),
+    importpath = "github.com/myorg/monorepo/services/payments",
+    deps = [
+        "//packages/proto:payments_go_proto",
+        "//packages/db:db_lib",
+        "@com_github_gin_gonic_gin//:gin",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+go_binary(
+    name = "server",
+    embed = [":payments_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "payments_test",
+    srcs = glob(["*_test.go"]),
+    embed = [":payments_lib"],
+    deps = [
+        "@com_github_stretchr_testify//assert",
+    ],
+)
+\`\`\`
+
+Target labels follow the pattern //package:target. //services/payments:server refers to the server binary. :payments_lib is shorthand for //services/payments:payments_lib within the same package.
+
+deps declares explicit build-time dependencies. Bazel traverses these to build the dependency graph. Any dep not declared here is invisible to the build action. If the Go code imports it, the build fails with a clear, actionable error.
+
+visibility controls which other packages can depend on this target. "//visibility:public" allows any package. Restrict to specific packages for internal-only libraries to enforce architectural boundaries.`,
+      },
+      {
+        term: 'Hermeticity and sandboxing',
+        definition: `Hermeticity means a build action's output is fully determined by its declared inputs. Same declared inputs produce byte-identical outputs on every machine, every time. This is what makes Bazel's cache trustworthy.
+
+Bazel enforces hermeticity by running each action in a sandbox. On Linux, this is a symlink forest (a directory containing only declared inputs) combined with Linux namespaces to isolate the process. On macOS, similar isolation via sandbox-exec.
+
+What the sandbox prevents:
+- Reading files not declared as inputs: the file is simply not present in the sandbox filesystem.
+- Writing to the source tree: outputs must go to a declared output location.
+- Accessing the network: disabled by default with --sandbox_block_network.
+- Reading environment variables not explicitly passed: Bazel controls the environment.
+
+.bazelrc sandbox settings:
+
+\`\`\`python
+build --sandbox_default_allow_network=false
+build --sandbox_block_network
+build --incompatible_strict_action_env
+\`\`\`
+
+Common hermeticity violations and fixes:
+
+1. Reading /etc/hostname or /etc/passwd in tests. Fix: use a test fixture; mock the hostname.
+
+2. Embedding git revision via a shell call inside an action. Fix: use --workspace_status_command. Bazel runs a workspace status script, stamps the values as a stable status file, and declares it as an input to stamped rules only.
+
+\`\`\`bash
+# workspace_status.sh
+echo "BUILD_SCM_REVISION $(git rev-parse HEAD)"
+\`\`\`
+
+\`\`\`python
+# .bazelrc
+build --workspace_status_command=workspace_status.sh
+\`\`\`
+
+3. Reading $HOME for config files. Fix: set HOME to a controlled path in the action environment.
+
+4. Using time.Now() or date in generated code. Fix: inject time via BUILD_TIMESTAMP from workspace status.
+
+Non-hermetic actions produce wrong cache hits: Bazel caches an artifact, serves it from cache on the next run, but the artifact is wrong because a hidden input differed. The failure: tests pass on CI, fail locally, with no code changes. Diagnosing: run with --sandbox_debug to log what a sandboxed action actually accesses.`,
+      },
+      {
+        term: 'Remote caching — end-to-end',
+        definition: `Bazel supports a remote cache via the Remote Execution API (REAPI). The cache stores build artifacts keyed by action hashes.
+
+Configuring remote cache with BuildBuddy (recommended for teams without GCS):
+
+\`\`\`python
+# .bazelrc
+build --bes_backend=grpcs://remote.buildbuddy.io
+build --bes_results_url=https://app.buildbuddy.io/invocation/
+build --remote_cache=grpcs://remote.buildbuddy.io
+build --remote_header=x-buildbuddy-api-key=YOUR_API_KEY
+build --remote_timeout=600
+build --experimental_remote_cache_compression
+build --remote_download_minimal
+\`\`\`
+
+Configuring with GCS:
+
+\`\`\`python
+# .bazelrc
+build --remote_cache=https://storage.googleapis.com/my-bazel-cache
+build --google_default_credentials
+build --remote_timeout=3600
+build --experimental_remote_cache_compression
+build --remote_download_minimal
+\`\`\`
+
+Cache hit mechanics:
+1. Bazel computes the action key: SHA-256 of command, input file digests, environment, and platform.
+2. Queries ActionCache.GetActionResult(action_digest) on the remote.
+3. Hit: fetch artifact from ContentAddressableStorage by digest. Skip the action.
+4. Miss: execute action locally. Upload outputs to CAS. Write ActionResult to ActionCache.
+
+--remote_download_minimal: only download final outputs the developer needs locally. Intermediate artifacts stay in the cache. Critical for large builds where downloading everything would negate the cache speedup.
+
+What breaks remote caching:
+- Non-hermetic actions: same hash, wrong output. Cache is poisoned.
+- Toolchain version drift: different developer machines have different compiler versions not declared in the toolchain. Hashes differ per machine.
+- Timestamps in outputs: generated files embedding build timestamps get unique hashes every build.
+- ACTION_ENV pollution: --action_env=PATH passes the host $PATH. $PATH differs per machine. Cache keys diverge. Use --incompatible_strict_action_env.
+
+Cache hit rate measurement:
+
+\`\`\`bash
+bazel build --profile=/tmp/profile.gz //...
+bazel analyze-profile /tmp/profile.gz
+\`\`\`
+
+A healthy hit rate is 80-95% for an active monorepo. Below 70% means hermeticity issues or environment pollution.`,
+      },
+      {
+        term: 'Starlark -- the BUILD file language',
+        definition: `Starlark is a Python-like language used for BUILD files and rule definitions. It is intentionally restricted: no imports, no network access, no filesystem I/O, deterministic execution, no mutable global state after module initialization.
+
+Restrictions vs Python: no while loops, no classes, no import statement, no recursion, no file I/O.
+
+A custom rule in Starlark:
+
+\`\`\`python
+# rules/proto_gen.bzl
+def _proto_gen_impl(ctx):
+    proto_file = ctx.file.proto
+    out_dir = ctx.actions.declare_directory(ctx.attr.name + "_pb")
+
+    ctx.actions.run(
+        inputs = [proto_file] + ctx.files._protoc,
+        outputs = [out_dir],
+        executable = ctx.executable._protoc,
+        arguments = [
+            "--go_out=" + out_dir.path,
+            "--go_opt=paths=source_relative",
+            "-I", proto_file.dirname,
+            proto_file.path,
+        ],
+        progress_message = "Generating Go code for %s" % proto_file.short_path,
+        mnemonic = "ProtoGen",
+    )
+
+    return [DefaultInfo(files = depset([out_dir]))]
+
+proto_gen = rule(
+    implementation = _proto_gen_impl,
+    attrs = {
+        "proto": attr.label(allow_single_file = [".proto"], mandatory = True),
+        "_protoc": attr.label(
+            default = "@com_google_protobuf//:protoc",
+            executable = True,
+            cfg = "exec",
+        ),
+    },
+)
+\`\`\`
+
+Key concepts in rule authoring:
+- ctx.actions.run: declares a single sandboxed subprocess with declared inputs and outputs.
+- ctx.actions.run_shell: shell script action.
+- ctx.actions.write: creates a file from string content (no sandboxing needed).
+- depset: an efficient, deduplicating collection of files supporting lazy traversal. Critical for large dependency graphs -- never call list() on a depset inside a rule.
+- cfg = "exec": the tool runs on the execution machine, not the target machine. Relevant for cross-compilation.
+
+Starlark's restrictions guarantee that BUILD files are deterministic and analyzable without executing arbitrary code. The Bazel analysis phase can run without side effects or network calls.`,
+      },
+      {
+        term: 'Bzlmod -- modern dependency management (MODULE.bazel)',
+        definition: `Bzlmod replaces the legacy WORKSPACE file with a module-based system modeled on Go modules. Enabled by default since Bazel 7.0. The Bazel Central Registry (registry.bazel.build) is the package index.
+
+Problems with WORKSPACE: no version resolution (last load wins, conflicts are manual), opaque procedural execution, no package registry.
+
+MODULE.bazel replaces WORKSPACE:
+
+\`\`\`python
+# MODULE.bazel
+module(
+    name = "my_monorepo",
+    version = "0.1",
+)
+
+bazel_dep(name = "rules_go", version = "0.46.0")
+bazel_dep(name = "gazelle", version = "0.35.0")
+bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "com_google_protobuf", version = "25.3")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.22.3")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12", is_default = True)
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(go_deps,
+    "com_github_gin_gonic_gin",
+    "org_golang_google_grpc",
+)
+\`\`\`
+
+Version resolution: Bzlmod uses Minimum Version Selection (MVS, same algorithm as Go modules). Diamond dependency conflicts are resolved automatically to the highest required version. No manual conflict resolution.
+
+MODULE.bazel.lock: records the resolved dependency graph. Commit it for reproducibility.
+
+Migration from WORKSPACE: (1) Enable --enable_bzlmod in .bazelrc. (2) Translate http_archive calls to bazel_dep() entries using registry.bazel.build names. (3) Convert toolchain setup to use_extension calls. (4) Run bazel mod tidy to generate the lockfile and missing use_repo declarations. (5) Verify with bazel build //... and remove WORKSPACE entries incrementally.
+
+Private registries: host a Bazel registry as a static file server matching the BCR layout for internal modules. Add to .bazelrc:
+
+\`\`\`python
+common --registry=https://registry.mycompany.com/bazel
+common --registry=https://bcr.bazel.build
+\`\`\``,
+      },
+      {
+        term: 'Gazelle -- automatic BUILD file generation',
+        definition: `Gazelle is a Bazel BUILD file generator maintained by the rules_go team. Without Gazelle, every Go import must be manually declared in a BUILD file -- a maintenance burden that makes Go monorepos impractical at scale. Gazelle also supports Python and JavaScript.
+
+Setup in root BUILD.bazel:
+
+\`\`\`python
+# BUILD.bazel (root)
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/myorg/monorepo
+
+gazelle(name = "gazelle")
+\`\`\`
+
+Running Gazelle:
+
+\`\`\`bash
+# Generate or update BUILD files for all Go packages
+bazel run //:gazelle
+
+# Verify BUILD files are up to date (for CI)
+bazel run //:gazelle -- check
+
+# Fix a single package
+bazel run //:gazelle -- services/payments
+\`\`\`
+
+What Gazelle generates for Go:
+- Walks the repo tree, reads Go source files, extracts import paths.
+- Writes go_library, go_binary, go_test targets for each package directory.
+- Infers deps from import statements, maps import paths to Bazel labels via go_deps.
+- Handles cgo, build constraints, testdata directories.
+
+Gazelle directives -- inline instructions in BUILD files:
+
+\`\`\`python
+# gazelle:prefix github.com/myorg/monorepo   -- set import root (usually in root BUILD only)
+# gazelle:ignore                              -- skip this package
+# gazelle:exclude vendor/                     -- exclude a path
+\`\`\`
+
+CI integration to prevent drift:
+
+\`\`\`yaml
+# In CI pipeline
+- label: "Verify BUILD files"
+  command: bazel run //:gazelle -- check
+  # Exits non-zero if any BUILD file is out of sync
+\`\`\`
+
+Pre-commit hook:
+
+\`\`\`bash
+#!/bin/bash
+bazel run //:gazelle -- check || {
+  echo "BUILD files out of sync. Run: bazel run //:gazelle"
+  exit 1
+}
+\`\`\``,
+      },
+      {
+        term: 'bazel query, cquery, and aquery',
+        definition: `Bazel provides three query tools for inspecting and debugging the build graph.
+
+bazel query: evaluates BUILD files without configuration. Use for target relationships.
+
+\`\`\`bash
+# What does //services/payments:server depend on (all transitive deps)?
+bazel query 'deps(//services/payments:server)'
+
+# What targets in //... depend on //packages/db:db_lib?
+bazel query 'rdeps(//..., //packages/db:db_lib)'
+
+# Find all test targets under services/
+bazel query 'kind(go_test, //services/...)'
+
+# Dependency path between two targets
+bazel query 'somepath(//services/payments:server, //packages/auth:auth_lib)'
+\`\`\`
+
+bazel cquery: configuration-aware query. Use when targets have multiple configurations (cross-compilation, coverage instrumentation).
+
+\`\`\`bash
+bazel cquery 'deps(//services/payments:server)' --output=label_kind
+\`\`\`
+
+bazel aquery: action graph query. Shows the actual commands that would be executed.
+
+\`\`\`bash
+# What command compiles //services/payments:payments_lib?
+bazel aquery 'mnemonic("GoCompile", //services/payments:payments_lib)' --output=text
+
+# What inputs does a specific action consume?
+bazel aquery 'inputs("*.go", //services/payments:payments_lib)'
+\`\`\`
+
+Affected-target computation for CI (run only tests for changed code):
+
+\`\`\`bash
+#!/bin/bash
+BASE=\${CI_MERGE_REQUEST_TARGET_BRANCH:-main}
+CHANGED_FILES=$(git diff --name-only origin/$BASE..HEAD)
+
+# Convert changed file paths to Bazel targets
+CHANGED_TARGETS=$(echo "$CHANGED_FILES" | while read f; do
+  dir=$(dirname "$f")
+  bazel query "//$dir:*" 2>/dev/null
+done | sort -u)
+
+# Find all tests that transitively depend on the changed targets
+AFFECTED_TESTS=$(bazel query \
+  "rdeps(//..., set($CHANGED_TARGETS)) intersect kind(test, //...)" \
+  --output=label 2>/dev/null | tr '\n' ' ')
+
+echo "Affected tests: $AFFECTED_TESTS"
+bazel test $AFFECTED_TESTS --remote_download_minimal
+\`\`\``,
+      },
+    ],
+    approach: [
+      'Start with a single language (Go or Python) before expanding to multi-language; early wins build team confidence',
+      'Use Gazelle from day one -- manually maintained BUILD files do not scale past 20 packages',
+      'Set up remote caching before remote execution -- remote cache alone gives 70% of the value with 10% of the complexity',
+      'Configure a shared .bazelrc in the repo root with remote cache settings; use user.bazelrc for personal overrides',
+      'Use Bzlmod (MODULE.bazel) for all new setups; WORKSPACE is legacy and will be removed in a future Bazel version',
+      'Pin all toolchain versions in MODULE.bazel -- floating toolchains destroy cache hit rates across machines',
+      'Enable --incompatible_strict_action_env and --sandbox_block_network from the start to catch hermeticity issues early',
+      'Use bazel test on affected targets only in CI (bazel query rdeps); bazel test //... on every PR wastes the incremental model',
+      'Run Gazelle check in CI (bazel run //:gazelle -- check) to catch BUILD file drift before it breaks builds',
+      'Instrument with BuildBuddy or similar for cache hit rate dashboards and invocation profiling',
+    ],
+    pitfalls: [
+      'Using glob() too broadly -- glob reads the filesystem at analysis time; large directories with wide globs slow the analysis phase significantly',
+      'Undeclared inputs in rules -- action reads a file it did not declare; hermetic failure manifests as mysterious test flakiness (action gets wrong cache hit)',
+      'Floating external dependency versions -- toolchain version changes invalidate all cached artifacts silently; always pin with sha256',
+      'ACTION_ENV pollution -- --action_env=PATH passes host $PATH; $PATH differs per machine; cache keys diverge; fix with --incompatible_strict_action_env',
+      'Network calls inside build actions (curl, pip install, npm install in a genrule) -- breaks hermeticity and reproducibility; fetch in WORKSPACE/MODULE.bazel, not at action time',
+      'Setting visibility = ["//visibility:public"] on everything -- the dependency graph becomes a complete graph; affected-target computation loses meaning',
+      'Running bazel test //... on every PR without affected-target filtering -- defeats the incremental model; CI time approaches full-build time',
+      'Not running Gazelle in CI -- BUILD files drift from source; imports break at build time, not at code-review time',
+      'Migrating a large polyglot repo to Bazel all at once -- migrate one language at a time, starting with the one causing the most build pain',
+      'Evaluating Bazel for a pure JS/TS or single-language monorepo -- Turborepo or Nx gives 80% of the value with 10% of the configuration cost',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain Bazel\'s hermetic build model. What does hermetic mean, why does it matter, and what are the most common ways it breaks?',
+        answer: `A hermetic build is one where the output is fully determined by the declared inputs. Given the same set of declared inputs -- source files, dependency outputs, toolchain version, environment variables, build flags -- the build produces byte-identical outputs on every machine, every time.
+
+Why hermeticity matters for caching: Bazel caches build artifacts keyed by a hash of all declared inputs. If a build is truly hermetic, "same hash" reliably means "same output" -- cache hits are safe to serve. Without hermeticity, "same hash" might produce different outputs on different machines (because an undeclared input differs), yet Bazel serves the cached artifact anyway. The result: corrupted cache, builds that fail mysteriously, test results that do not reflect actual code.
+
+How Bazel enforces hermeticity through sandboxing: each build action runs in a sandboxed subprocess. On Linux, Bazel constructs a symlink forest containing only declared input files, then executes the action in a namespace where only that forest is mounted. The action literally cannot read files it did not declare -- they are not in its filesystem view. On macOS, similar isolation via sandbox-exec profiles.
+
+.bazelrc settings for strict enforcement:
+
+\`\`\`python
+build --sandbox_default_allow_network=false
+build --sandbox_block_network
+build --incompatible_strict_action_env   # fixed PATH, not host PATH
+\`\`\`
+
+Common hermeticity violations:
+
+1. Embedding git revision inside a build action:
+
+\`\`\`bash
+# Wrong: this genrule reads from git at action time
+genrule(
+    name = "version",
+    outs = ["version.txt"],
+    cmd = "git rev-parse HEAD > $@",    # network access + undeclared input
+)
+\`\`\`
+
+Fix: use --workspace_status_command. Bazel runs a workspace status script before the build, stamps values as a stable status file, and declares it as an explicit input only for rules that opt in with stamp = 1.
+
+\`\`\`bash
+# workspace_status.sh
+echo "BUILD_SCM_REVISION $(git rev-parse HEAD)"
+echo "BUILD_TIMESTAMP $(date -u +%s)"
+\`\`\`
+
+\`\`\`python
+# .bazelrc
+build --workspace_status_command=workspace_status.sh
+\`\`\`
+
+2. Test reads /etc/hostname or /proc/cpuinfo. Fix: mock in the test; use a test fixture. For hostname specifically, pass it via an environment variable declared in the test rule.
+
+3. ACTION_ENV pollution. --action_env=PATH includes the host $PATH. Different developer machines have different $PATH contents. Same action hash, different environment, different outputs. Fix: --incompatible_strict_action_env uses a fixed minimal PATH.
+
+4. Timestamps in generated outputs. A code generator that embeds time.Now() produces a unique file on every build, defeating caching. Fix: pass epoch (0) as the timestamp, or strip timestamps in a post-processing step.
+
+5. Network calls in genrules (curl, pip install, npm ci). These fetch content that may change, making the hash meaningless. Fix: use http_archive or go_deps in MODULE.bazel to pre-fetch at workspace setup time; the action receives the pre-fetched content as a declared input.
+
+Diagnosing hermeticity issues:
+
+\`\`\`bash
+# See the exact filesystem a sandboxed action runs with
+bazel build //services/payments:server --sandbox_debug --verbose_failures
+
+# Compare artifacts from two identical-source builds
+bazel build //services/payments:server --output_base=/tmp/build1
+bazel build //services/payments:server --output_base=/tmp/build2
+diff /tmp/build1/execroot/... /tmp/build2/execroot/...
+\`\`\`
+
+Cache poisoning -- the worst failure mode: a non-hermetic action on machine A produces a wrong output, uploads it to the remote cache. Machine B gets a cache hit, uses the wrong artifact. Test failures on machine B are not reproducible on machine A. Fix: run with --noremote_upload_local_results during the debugging period until the hermeticity bug is fixed.`,
+      },
+      {
+        question: 'Walk me through setting up Bazel for a Go monorepo from zero.',
+        answer: `Step-by-step setup for a Go monorepo with Bazel 7 and Bzlmod.
+
+Step 1: Pin the Bazel version with .bazelversion.
+
+\`\`\`
+7.1.2
+\`\`\`
+
+Install Bazelisk (brew install bazelisk). Bazelisk reads .bazelversion and downloads the correct Bazel automatically. Never install Bazel directly; it prevents version pinning.
+
+Step 2: Write MODULE.bazel.
+
+\`\`\`python
+# MODULE.bazel
+module(
+    name = "mymonorepo",
+    version = "0.1",
+)
+
+bazel_dep(name = "rules_go", version = "0.46.0")
+bazel_dep(name = "gazelle", version = "0.35.0")
+bazel_dep(name = "com_google_protobuf", version = "25.3")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.22.3")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(go_deps,
+    "com_github_gin_gonic_gin",
+    "com_github_stretchr_testify",
+    "org_golang_google_grpc",
+)
+\`\`\`
+
+Step 3: Configure .bazelrc.
+
+\`\`\`python
+# .bazelrc
+common --enable_bzlmod
+
+build --jobs=auto
+build --sandbox_default_allow_network=false
+build --incompatible_strict_action_env
+
+# Remote cache (replace with your endpoint)
+build --remote_cache=grpcs://remote.buildbuddy.io
+build --remote_header=x-buildbuddy-api-key=${BUILDBUDDY_API_KEY}
+build --experimental_remote_cache_compression
+build --remote_download_minimal
+
+test --test_output=errors
+test --test_timeout=300
+
+try-import %workspace%/user.bazelrc
+\`\`\`
+
+Step 4: Set up Gazelle in root BUILD.bazel.
+
+\`\`\`python
+# BUILD.bazel (root)
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/myorg/monorepo
+
+gazelle(name = "gazelle")
+\`\`\`
+
+Step 5: Run Gazelle to generate BUILD files.
+
+\`\`\`bash
+bazel run //:gazelle
+\`\`\`
+
+Gazelle walks the repo, reads .go source files, and writes BUILD.bazel for every Go package. Example of what it generates:
+
+\`\`\`python
+# services/payments/BUILD.bazel (generated by Gazelle)
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "payments_lib",
+    srcs = [
+        "handler.go",
+        "server.go",
+    ],
+    importpath = "github.com/myorg/monorepo/services/payments",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//packages/db",
+        "@com_github_gin_gonic_gin//:gin",
+    ],
+)
+
+go_binary(
+    name = "server",
+    embed = [":payments_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "payments_test",
+    srcs = ["handler_test.go"],
+    embed = [":payments_lib"],
+    deps = ["@com_github_stretchr_testify//assert"],
+)
+\`\`\`
+
+Step 6: Build and test.
+
+\`\`\`bash
+# Build a single service
+bazel build //services/payments:server
+
+# Test all services
+bazel test //services/...
+
+# Build everything
+bazel build //...
+\`\`\`
+
+Step 7: Lock Go dependencies.
+
+\`\`\`bash
+# After updating go.mod, regenerate go_deps lockfile
+bazel run //:gazelle -- update-repos \
+  -from_file=go.mod \
+  -to_macro=go_deps.bzl%go_deps \
+  -prune
+\`\`\`
+
+Step 8: CI integration with affected-target detection.
+
+\`\`\`bash
+#!/bin/bash
+BASE=\${CI_MERGE_REQUEST_TARGET_BRANCH:-main}
+CHANGED=$(git diff --name-only origin/$BASE..HEAD)
+
+TARGETS=$(echo "$CHANGED" | while read f; do
+  bazel query "//$(dirname $f):*" 2>/dev/null
+done | sort -u | tr '\n' ' ')
+
+AFFECTED_TESTS=$(bazel query \
+  "rdeps(//..., set($TARGETS)) intersect kind(test, //...)" \
+  --output=label 2>/dev/null | tr '\n' ' ')
+
+bazel test $AFFECTED_TESTS --remote_download_minimal
+\`\`\`
+
+Step 9: Enforce BUILD file hygiene in CI.
+
+\`\`\`bash
+# CI check -- fails if any BUILD file is out of sync with source
+bazel run //:gazelle -- check
+\`\`\`
+
+Typical timeline: a 20-service Go monorepo can be migrated to basic Bazel + remote caching in 2-3 weeks. Remote execution adds another 2-4 weeks. Full hermeticity hardening (toolchain pinning, sandbox enforcement, workspace status) takes another week. Budget 6-8 weeks for a production-grade setup with monitoring.`,
+      },
+      {
+        question: 'What is remote execution in Bazel? How does it differ from remote caching, and when does it justify the operational cost?',
+        answer: `Remote caching and remote execution are distinct capabilities that compose. Understanding the difference is a common interview slip.
+
+Remote caching stores build artifacts indexed by action hash. When a target's inputs have not changed, Bazel fetches the cached output instead of rebuilding. Remote caching eliminates repeated work -- work already done by any machine is not repeated by any other machine. But actions still execute serially on the local machine if they miss the cache.
+
+Remote execution dispatches build and test actions to a remote compute cluster. The local Bazel client computes the full action graph, identifies which actions need to run (cache misses), and sends those actions to a remote scheduler. Workers execute actions in parallel across the cluster. Build time approaches O(critical path depth) rather than O(total action count).
+
+The REAPI (Remote Execution API) protocol:
+
+\`\`\`
+Client (bazel) -> Execution service (scheduler) -> Workers
+                                                      |
+Client <- Fetch outputs from CAS <- Workers write to CAS
+\`\`\`
+
+REAPI defines three services: Execution (submit and watch actions), ActionCache (read/write cached results), ContentAddressableStorage (read/write file blobs). Remote caching uses only ActionCache and CAS. Remote execution adds the Execution service.
+
+.bazelrc for RBE with BuildBuddy:
+
+\`\`\`python
+build --remote_executor=grpcs://remote.buildbuddy.io
+build --remote_cache=grpcs://remote.buildbuddy.io
+build --remote_header=x-buildbuddy-api-key=YOUR_KEY
+build --remote_download_minimal
+build --jobs=200     # concurrent remote actions; set well above local CPU count
+\`\`\`
+
+The economic case for RBE:
+
+Consider a C++ monorepo with 8,000 compilation units. The critical path (longest serial dependency chain) is 12 targets deep. With 100 remote workers:
+- Local build (cache cold): 80 minutes on 16 cores
+- RBE build (cache cold): 8-12 minutes (critical path only, massive parallelism)
+- Local build (cache warm): 5 minutes (all cache hits -- RBE adds no value here)
+- RBE build (cache warm): 2 minutes (remaining cache misses run on critical path remotely)
+
+RBE pays off when: cache-cold builds block CI (new branches, clean checkouts), the critical path is short relative to total build volume, and the team has enough scale that CI costs justify RBE infrastructure.
+
+When RBE does not justify cost:
+- Cache hit rate above 90%: almost no actions reach remote execution; the RBE cluster sits idle.
+- Pure JS/TS monorepo: Turborepo or Nx with Vercel Remote Cache achieves similar developer experience at a fraction of the setup cost.
+- Under 30 engineers and 50 packages: local builds on modern hardware are fast enough with caching.
+- Short critical path: even serial local builds on 16 cores are fast enough.
+
+Operational cost of RBE: workers must be operated as a Kubernetes cluster with autoscaling and monitoring, or a managed SaaS (BuildBuddy, EngFlow) used. SaaS pricing at $0.01-0.03 per execution minute. At Stripe or Dropbox scale, this is tens of thousands per month -- still cheaper than engineering hours lost to 40-minute CI runs.
+
+Honest 2026 recommendation: start with remote caching. If cache hit rate is above 80% and CI is still slow (critical path is slow), then evaluate RBE. For under 50 services with a JS/TS or single-language stack, Turborepo with remote cache is the practical answer.`,
+      },
+      {
+        question: 'When should a team choose Bazel over Nx or Turborepo for their monorepo?',
+        answer: `Nx and Turborepo cover most monorepos. Bazel is the right answer in specific conditions. Defaulting to Bazel for a new JS monorepo is almost always wrong in 2026.
+
+Decision by dimension:
+
+Language scope:
+- Single language (JS/TS): Turborepo or Nx. Native package.json graph integration, zero configuration for common patterns.
+- Single JVM language (Java, Kotlin): Gradle with build cache is a better default than Bazel for most teams.
+- 2-3 languages: Nx has growing multi-language support (Go, Rust, Python plugins). Can be the right answer.
+- 4+ languages (Go, Python, Java, TypeScript, proto, all together): Bazel. Nx and Turborepo have multi-language support but it is thinner than Bazel. Bazel's cross-language dependency model handles proto-generated code imported across Go and Python services in a single build graph.
+
+Hermeticity requirements:
+- Auditability, compliance, SLSA build provenance: Bazel's sandboxing makes "same inputs, same outputs" verifiable at the OS level. Nx and Turborepo trust the developer to declare inputs correctly; Bazel enforces it.
+- SLSA Level 3 provenance: straightforward with Bazel's hermetic model; harder to achieve with Turborepo or Nx.
+
+Remote execution requirement:
+- Turborepo and Nx offer remote caching (Vercel Remote Cache, Nx Cloud, self-hosted). They do not offer remote execution in the REAPI sense.
+- If critical-path build time requires parallelism across a compute cluster rather than a single machine, Bazel and RBE is the only open-source option with broad production validation.
+
+Team size and investment capacity:
+- Under 20 engineers, under 50 packages: Turborepo. Near-zero configuration, fast to adopt, excellent documentation.
+- 20-100 engineers: Nx with Nx Cloud. Project graph, affected commands, distributed task execution, Nx Console IDE plugin.
+- 100+ engineers, 100+ packages, 4+ languages: Bazel. The investment is justified by engineering productivity at this scale.
+
+What Turborepo and Nx do better than Bazel:
+- Time to first working build: hours vs weeks.
+- JS ecosystem integration: native pnpm, yarn, npm workspace support.
+- Developer experience: familiar tooling, active communities, comprehensive documentation.
+- Lower operational burden: no BUILD files to maintain, no toolchain declarations.
+
+What Bazel does better:
+- Hermeticity enforcement (not trust, enforcement -- sandbox at OS level).
+- Multi-language correctness: Java service importing generated proto from Python tooling, connected in a single build graph with incremental correctness.
+- Remote execution at scale.
+- Build graph analysis tools (bazel query, cquery, aquery) for understanding and optimizing complex dependency graphs.
+- Reproducible builds at the byte level for security and compliance.
+
+The framing for an interview answer: for a new JS/TS monorepo, start with Turborepo and switch to Bazel if the repo grows past 200 packages and develops multi-language needs or strict compliance requirements. For a monorepo with Java, Go, and Python from the start, begin with Bazel and accept the higher initial investment. For regulated industries (finance, healthcare) requiring reproducible build attestation, Bazel is the right default regardless of size.`,
+      },
+      {
+        question: 'How does Bzlmod change dependency management compared to WORKSPACE, and what are the migration steps?',
+        answer: `WORKSPACE is Bazel's original external dependency mechanism: a procedural file executed linearly, with http_archive, git_repository, and macro calls that download and register external repos. Bzlmod (enabled by default in Bazel 7) replaces it with a module-based system modeled on Go modules.
+
+The fundamental problems with WORKSPACE:
+
+1. No version resolution. Two modules both declare rules_go -- WORKSPACE has no mechanism to pick a compatible version. The last load wins. Conflicts require manual intervention.
+
+2. Procedural and opaque. WORKSPACE is executed in order; its final state depends on execution order. Hard to reason about, hard to reproduce.
+
+3. No package registry. Third-party repos are fetched by URL with sha256. No central catalog.
+
+4. Monolithic. All external deps -- direct and transitive -- must be declared in a single WORKSPACE. Transitive deps of deps are not automatically available.
+
+WORKSPACE http_archive (legacy pattern):
+
+\`\`\`python
+# WORKSPACE
+http_archive(
+    name = "rules_go",
+    urls = ["https://github.com/bazelbuild/rules_go/releases/download/v0.46.0/rules_go-v0.46.0.zip"],
+    sha256 = "abc123...",
+)
+
+load("@rules_go//go:deps.bzl", "go_rules_dependencies")
+go_rules_dependencies()
+
+load("@rules_go//go:deps.bzl", "go_register_toolchains")
+go_register_toolchains(version = "1.22.3")
+\`\`\`
+
+Bzlmod MODULE.bazel (modern):
+
+\`\`\`python
+# MODULE.bazel
+module(name = "my_monorepo", version = "0.1")
+
+bazel_dep(name = "rules_go", version = "0.46.0")
+bazel_dep(name = "gazelle", version = "0.35.0")
+
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.22.3")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(go_deps, "com_github_gin_gonic_gin", "org_golang_google_grpc")
+\`\`\`
+
+Key Bzlmod improvements:
+
+Version resolution via MVS (Minimum Version Selection): if my_monorepo needs rules_go 0.44 and a dependency needs rules_go 0.46, Bzlmod picks 0.46 automatically. No manual resolution.
+
+MODULE.bazel.lock: the resolved dependency graph is written to a lockfile. Commit it. Any machine running the build uses the exact same resolution.
+
+Bazel Central Registry: browse registry.bazel.build for module names and versions. Like npm for Bazel.
+
+Module extensions: use_extension runs a small Starlark extension that manages toolchain downloads, go.mod synchronization, etc. Extensions are isolated per module; they cannot pollute the global namespace.
+
+Migration steps from WORKSPACE to Bzlmod:
+
+Step 1: Enable Bzlmod.
+\`\`\`python
+# .bazelrc
+common --enable_bzlmod        # default in Bazel 7; explicit for 6.x
+\`\`\`
+
+Step 2: Create MODULE.bazel with direct deps. Check registry.bazel.build for each http_archive equivalent.
+
+Step 3: Convert toolchain setup to use_extension calls. Replace go_register_toolchains() with go_sdk = use_extension(...); go_sdk.download(version = "1.22.3").
+
+Step 4: Run bazel mod tidy to generate MODULE.bazel.lock and add missing use_repo declarations.
+
+\`\`\`bash
+bazel mod tidy
+\`\`\`
+
+Step 5: Verify the build works.
+
+\`\`\`bash
+bazel build //...
+bazel mod deps --depth=2     # inspect resolved dependency graph
+\`\`\`
+
+Step 6: Handle deps not yet in BCR with overrides.
+
+\`\`\`python
+# MODULE.bazel
+archive_override(
+    module_name = "some_internal_dep",
+    urls = ["https://internal.example.com/archive.tar.gz"],
+    sha256 = "abc123...",
+    strip_prefix = "some_internal_dep-1.0",
+)
+\`\`\`
+
+Step 7: Remove WORKSPACE entries for migrated deps incrementally. When all deps are in MODULE.bazel, WORKSPACE can be emptied or deleted.
+
+Private registries for internal modules:
+
+\`\`\`python
+# .bazelrc
+# Try private registry first, fall back to BCR
+common --registry=https://registry.mycompany.com/bazel
+common --registry=https://bcr.bazel.build
+\`\`\`
+
+Common migration blockers and fixes:
+- Dep not in BCR: use archive_override or git_override in MODULE.bazel.
+- Custom WORKSPACE macros setting up multiple repos: convert to a module extension.
+- Generated code checked into the repo from a WORKSPACE genrule: move into a proper Bzlmod-compatible rule.
+- Circular dependency between modules: Bzlmod enforces a DAG; circular deps in WORKSPACE are silently handled by load order; the migration will expose them.`,
+      },
+      {
+        question: 'What are the most common Bazel pitfalls in production, and how do you diagnose them?',
+        answer: `Bazel pitfalls cluster into three categories: hermeticity failures (wrong builds), performance failures (slow builds despite Bazel), and usability failures (BUILD file maintenance burden).
+
+Hermeticity failures:
+
+Undeclared inputs causing wrong cache hits. A test reads /etc/hostname or an environment variable not declared in the rule. Bazel caches the first result (from machine A) and serves it as a cache hit on machine B, where the undeclared input has a different value.
+
+Symptoms: tests pass on one CI runner, fail on another, despite identical code. No code changes between the passing and failing runs.
+
+Diagnosis:
+\`\`\`bash
+bazel test //services/payments:payments_test \
+  --sandbox_debug \
+  --verbose_failures \
+  --test_output=all
+# Examine /tmp/bazel-sandbox-* to see what files the action actually accessed
+\`\`\`
+
+Fix: add the undeclared input as a declared dependency, or mock it in the test.
+
+ACTION_ENV pollution destroying cache hit rates. --action_env=PATH passes the host $PATH. Different developer machines have different $PATH. Cache keys diverge; cache hit rate collapses to near zero.
+
+Diagnosis:
+\`\`\`bash
+bazel build //... --explain=/tmp/explain.log --verbose_explanations
+# explain.log shows WHY each target was rebuilt
+# Common message: "Env variable PATH changed"
+\`\`\`
+
+Fix:
+\`\`\`python
+# .bazelrc
+build --incompatible_strict_action_env
+# Or pin explicitly:
+build --action_env=PATH=/usr/local/bin:/usr/bin:/bin
+\`\`\`
+
+Performance failures:
+
+Analysis phase too slow. Bazel separates loading BUILD files from executing actions. With thousands of packages and complex macros, analysis can take 30+ seconds even for incremental builds.
+
+Diagnosis:
+\`\`\`bash
+bazel build //... --profile=/tmp/profile.gz
+bazel analyze-profile /tmp/profile.gz
+# Look for: SkyFunction.CONFIGURED_TARGET taking more than 5 seconds total
+\`\`\`
+
+Fix: reduce glob() call scope. Use Gazelle's precise srcs lists instead of glob("*.go"). Reduce macro nesting. Minimize toolchain configurations.
+
+Remote cache hit rate below 50% despite no code changes:
+
+\`\`\`bash
+bazel build //... \
+  --explain=/tmp/explain.log \
+  --verbose_explanations
+# Common causes: changed env variable, changed toolchain hash, timestamp in outputs
+\`\`\`
+
+Timestamps in generated artifacts. A code generator that embeds time.Now() produces a unique file every build. Every target depending on it is a cache miss.
+
+Fix: set source date epoch to 0, or strip timestamps in a post-processing step.
+\`\`\`python
+# In genrule or action environment
+ctx.actions.run(
+    env = {"SOURCE_DATE_EPOCH": "0"},
+    ...
+)
+\`\`\`
+
+Usability failures:
+
+BUILD file drift. Developer adds a new .go file importing a new package, does not run Gazelle. Build breaks for everyone after the next merge.
+
+Fix: CI check and pre-commit hook.
+\`\`\`bash
+# CI
+bazel run //:gazelle -- check    # exits non-zero if BUILD files are out of sync
+\`\`\`
+
+Developer runs bazel test //... instead of affected targets:
+\`\`\`bash
+# Publish a Makefile alias or shell function
+function btest() {
+  TARGETS=$(bazel query "rdeps(//..., set($(
+    git diff HEAD --name-only | xargs -I{} echo {}
+  ))) intersect kind(test, //...)" 2>/dev/null | tr '\n' ' ')
+  bazel test $TARGETS --remote_download_minimal
+}
+\`\`\`
+
+Monitoring a healthy Bazel monorepo (BuildBuddy metrics):
+- Remote cache hit rate: 80-95% target; below 70% means hermeticity or environment issues.
+- Analysis phase time: under 15 seconds for incremental builds.
+- Critical path time: under 10 minutes for PR CI.
+- Total action count per PR: declining trend indicates improving affected-target scoping.`,
+      },
+    ],
+    references: [
+      'https://bazel.build/docs',
+      'https://bazel.build/concepts/build-ref',
+      'https://docs.aspect.build/',
+      'https://github.com/bazelbuild/rules_go',
+      'https://github.com/bazelbuild/bazel-gazelle',
+      'https://registry.bazel.build',
+      'https://www.buildbuddy.io/docs/introduction',
+      'https://research.google/pubs/pub45424/',
     ],
   },
 
