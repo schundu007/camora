@@ -8,6 +8,7 @@ import { HourMeterChip } from './ui/HourMeterChip';
 import Chip from '@/components/shared/ui/Chip';
 import { cn } from '../../utils/cn';
 import { NAV_LINKS } from '../../lib/constants';
+import { caraRegistry } from '@/lib/cara-registry';
 
 const NAV_HEIGHT = 60;
 
@@ -103,6 +104,23 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
 
           {/* Right cluster */}
           <div className="hidden md:flex items-center gap-2 ml-auto">
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => caraRegistry.open()}
+                aria-label="Ask Cara (⌘K)"
+                title="Ask Cara (⌘K)"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors"
+                style={{
+                  background: 'rgba(212,160,67,0.10)',
+                  border: '1px solid rgba(212,160,67,0.25)',
+                  color: '#e8c46a',
+                }}
+              >
+                <span>✦</span>
+                <span>Cara</span>
+              </button>
+            )}
             {isAuthenticated && (
               <Link
                 to="/capra/playground"
