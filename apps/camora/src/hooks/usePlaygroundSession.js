@@ -1,16 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getStoredToken } from '@/utils/tokenStore';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
 
-function getToken() {
-  const ls = localStorage.getItem('camora_token');
-  if (ls) return ls;
-  const match = document.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
-  return match ? match[1] : null;
-}
-
 async function apiFetch(endpoint, options = {}) {
-  const token = getToken();
+  const token = getStoredToken();
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${API_URL}${endpoint}`, {
