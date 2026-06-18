@@ -738,6 +738,31 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
         "file": "deep-dive-merge-vs-rebase.png"
     },
     {
+        "id": "rebase-before-after",
+        "title": "git rebase — Before and After Commit Graph",
+        "file": "deep-dive-rebase-before-after.png"
+    },
+    {
+        "id": "merge-before-after",
+        "title": "git merge — Before and After Commit Graph",
+        "file": "deep-dive-merge-before-after.png"
+    },
+    {
+        "id": "squash-before-after",
+        "title": "git merge --squash — Before and After Commit Graph",
+        "file": "deep-dive-squash-before-after.png"
+    },
+    {
+        "id": "fast-forward-before-after",
+        "title": "Fast-Forward Merge — Before and After Commit Graph",
+        "file": "deep-dive-fast-forward-before-after.png"
+    },
+    {
+        "id": "cherry-pick-before-after",
+        "title": "git cherry-pick — Before and After Commit Graph",
+        "file": "deep-dive-cherry-pick-before-after.png"
+    },
+    {
         "id": "gitops-flow",
         "title": "GitOps Workflow — Git as Single Source of Truth for Kubernetes",
         "file": "deep-dive-gitops-flow.png"

@@ -236,6 +236,277 @@ def diag_tradeoff_squash_vs_merge():
     print('Generated: tradeoff-squash-vs-merge')
 
 
+def cn(g, name, label, c='navy', lost=False):
+    """Commit circle node."""
+    style = 'filled,dashed' if lost else 'filled'
+    g.node(name, label, shape='circle', style=style,
+           fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2],
+           fontname='Helvetica Neue Bold', fontsize='11',
+           width='0.42', height='0.42', fixedsize='true', penwidth='2.0')
+
+
+def bp(g, name, label, c='green'):
+    """Branch pointer label box."""
+    g.node(name, label, shape='box', style='filled,rounded',
+           fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2],
+           fontname='Helvetica Neue', fontsize='10',
+           height='0.28', margin='0.12,0.04', penwidth='1.2')
+
+
+def ce(g, a, b, color='#64748b', style='solid'):
+    """Commit edge."""
+    g.edge(a, b, color=color, penwidth='1.8', style=style, arrowsize='0.7')
+
+
+def diag_rebase_before_after():
+    g = base_graph('rebase_ba', 'git rebase — Replay Branch Commits on Top of main')
+
+    with g.subgraph(name='cluster_before') as b:
+        b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#475569', margin='18')
+        cn(b, 'bA', 'A', 'gray')
+        cn(b, 'bB', 'B', 'navy')
+        cn(b, 'bC', 'C', 'navy')
+        cn(b, 'bD', 'D', 'purple')
+        cn(b, 'bE', 'E', 'purple')
+        bp(b, 'bMain', 'main', 'navy')
+        bp(b, 'bBanana', 'banana', 'purple')
+        ce(b, 'bA', 'bB', '#3b82f6')
+        ce(b, 'bB', 'bC', '#3b82f6')
+        ce(b, 'bA', 'bD', '#6366f1')
+        ce(b, 'bD', 'bE', '#6366f1')
+        ce(b, 'bC', 'bMain', '#3b82f6', 'dashed')
+        ce(b, 'bE', 'bBanana', '#6366f1', 'dashed')
+
+    with g.subgraph(name='cluster_after') as a:
+        a.attr(label='After: git switch banana && git rebase main',
+               style='rounded,filled', fillcolor='#f0fdf4',
+               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#166534', margin='18')
+        cn(a, 'aA', 'A', 'gray')
+        cn(a, 'aB', 'B', 'navy')
+        cn(a, 'aC', 'C', 'navy')
+        cn(a, 'aD_', "D'", 'purple')
+        cn(a, 'aE_', "E'", 'purple')
+        cn(a, 'aD', 'D', 'gray', lost=True)
+        cn(a, 'aE', 'E', 'gray', lost=True)
+        bp(a, 'aMain', 'main', 'navy')
+        bp(a, 'aBanana', 'banana', 'purple')
+        a.node('aLost', '"lost"', shape='plaintext', fontcolor='#94a3b8',
+               fontname='Helvetica Neue', fontsize='10')
+        ce(a, 'aA', 'aB', '#3b82f6')
+        ce(a, 'aB', 'aC', '#3b82f6')
+        ce(a, 'aC', 'aD_', '#6366f1')
+        ce(a, 'aD_', 'aE_', '#6366f1')
+        ce(a, 'aA', 'aD', '#94a3b8', 'dashed')
+        ce(a, 'aD', 'aE', '#94a3b8', 'dashed')
+        ce(a, 'aC', 'aMain', '#3b82f6', 'dashed')
+        ce(a, 'aE_', 'aBanana', '#6366f1', 'dashed')
+        ce(a, 'aE', 'aLost', '#94a3b8', 'dashed')
+
+    g.render(os.path.join(OUT, 'deep-dive-rebase-before-after'), cleanup=True)
+    print('Generated: deep-dive-rebase-before-after')
+
+
+def diag_merge_before_after():
+    g = base_graph('merge_ba', 'git merge — Merge Commit Joins Two Branch Histories')
+
+    with g.subgraph(name='cluster_before') as b:
+        b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#475569', margin='18')
+        cn(b, 'bA', 'A', 'gray')
+        cn(b, 'bB', 'B', 'navy')
+        cn(b, 'bC', 'C', 'navy')
+        cn(b, 'bD', 'D', 'purple')
+        cn(b, 'bE', 'E', 'purple')
+        bp(b, 'bMain', 'main', 'navy')
+        bp(b, 'bBanana', 'banana', 'purple')
+        ce(b, 'bA', 'bB', '#3b82f6')
+        ce(b, 'bB', 'bC', '#3b82f6')
+        ce(b, 'bA', 'bD', '#6366f1')
+        ce(b, 'bD', 'bE', '#6366f1')
+        ce(b, 'bC', 'bMain', '#3b82f6', 'dashed')
+        ce(b, 'bE', 'bBanana', '#6366f1', 'dashed')
+
+    with g.subgraph(name='cluster_after') as a:
+        a.attr(label='After: git switch main && git merge banana',
+               style='rounded,filled', fillcolor='#f0fdf4',
+               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#166534', margin='18')
+        cn(a, 'aA', 'A', 'gray')
+        cn(a, 'aB', 'B', 'navy')
+        cn(a, 'aC', 'C', 'navy')
+        cn(a, 'aD', 'D', 'purple')
+        cn(a, 'aE', 'E', 'purple')
+        cn(a, 'aM', 'M', 'green')
+        bp(a, 'aMain', 'main', 'navy')
+        bp(a, 'aBanana', 'banana', 'purple')
+        a.node('aMlbl', 'merge commit\n(two parents: C and E)', shape='plaintext',
+               fontcolor='#166534', fontname='Helvetica Neue', fontsize='10')
+        ce(a, 'aA', 'aB', '#3b82f6')
+        ce(a, 'aB', 'aC', '#3b82f6')
+        ce(a, 'aA', 'aD', '#6366f1')
+        ce(a, 'aD', 'aE', '#6366f1')
+        ce(a, 'aC', 'aM', '#22c55e')
+        ce(a, 'aE', 'aM', '#22c55e')
+        ce(a, 'aM', 'aMain', '#22c55e', 'dashed')
+        ce(a, 'aE', 'aBanana', '#6366f1', 'dashed')
+        ce(a, 'aM', 'aMlbl', '#86efac', 'dashed')
+
+    g.render(os.path.join(OUT, 'deep-dive-merge-before-after'), cleanup=True)
+    print('Generated: deep-dive-merge-before-after')
+
+
+def diag_squash_before_after():
+    g = base_graph('squash_ba', 'git merge --squash — Collapse Branch Into One Commit')
+
+    with g.subgraph(name='cluster_before') as b:
+        b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#475569', margin='18')
+        cn(b, 'bA', 'A', 'gray')
+        cn(b, 'bB', 'B', 'navy')
+        cn(b, 'bC', 'C', 'navy')
+        cn(b, 'bD', 'D', 'purple')
+        cn(b, 'bE', 'E', 'purple')
+        bp(b, 'bMain', 'main', 'navy')
+        bp(b, 'bBanana', 'banana', 'purple')
+        ce(b, 'bA', 'bB', '#3b82f6')
+        ce(b, 'bB', 'bC', '#3b82f6')
+        ce(b, 'bA', 'bD', '#6366f1')
+        ce(b, 'bD', 'bE', '#6366f1')
+        ce(b, 'bC', 'bMain', '#3b82f6', 'dashed')
+        ce(b, 'bE', 'bBanana', '#6366f1', 'dashed')
+
+    with g.subgraph(name='cluster_after') as a:
+        a.attr(label='After: git switch main && git merge --squash banana && git commit',
+               style='rounded,filled', fillcolor='#fffbeb',
+               color='#fcd34d', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#92400e', margin='18')
+        cn(a, 'aA', 'A', 'gray')
+        cn(a, 'aB', 'B', 'navy')
+        cn(a, 'aC', 'C', 'navy')
+        cn(a, 'aD', 'D', 'purple')
+        cn(a, 'aE', 'E', 'purple')
+        cn(a, 'aDE', 'DE', 'gold')
+        bp(a, 'aMain', 'main', 'navy')
+        bp(a, 'aBanana', 'banana', 'purple')
+        a.node('aDElbl', 'D+E squashed\ninto one commit\n(one parent: C)', shape='plaintext',
+               fontcolor='#92400e', fontname='Helvetica Neue', fontsize='10')
+        ce(a, 'aA', 'aB', '#3b82f6')
+        ce(a, 'aB', 'aC', '#3b82f6')
+        ce(a, 'aA', 'aD', '#6366f1')
+        ce(a, 'aD', 'aE', '#6366f1')
+        ce(a, 'aC', 'aDE', '#f59e0b')
+        ce(a, 'aDE', 'aMain', '#f59e0b', 'dashed')
+        ce(a, 'aE', 'aBanana', '#6366f1', 'dashed')
+        ce(a, 'aDE', 'aDElbl', '#fcd34d', 'dashed')
+
+    g.render(os.path.join(OUT, 'deep-dive-squash-before-after'), cleanup=True)
+    print('Generated: deep-dive-squash-before-after')
+
+
+def diag_fast_forward_before_after():
+    g = base_graph('ff_ba', 'Fast-Forward Merge — main Pointer Advances, No Merge Commit')
+
+    with g.subgraph(name='cluster_before') as b:
+        b.attr(label='Before (main is behind, no divergence)', style='rounded,filled',
+               fillcolor='#f8fafc', color='#cbd5e1', fontsize='13',
+               fontname='Helvetica Neue Bold', fontcolor='#475569', margin='18')
+        cn(b, 'bA', 'A', 'navy')
+        cn(b, 'bB', 'B', 'navy')
+        cn(b, 'bC', 'C', 'navy')
+        cn(b, 'bD', 'D', 'purple')
+        cn(b, 'bE', 'E', 'purple')
+        bp(b, 'bMain', 'main', 'navy')
+        bp(b, 'bBanana', 'banana', 'purple')
+        ce(b, 'bA', 'bB', '#3b82f6')
+        ce(b, 'bB', 'bC', '#3b82f6')
+        ce(b, 'bC', 'bD', '#6366f1')
+        ce(b, 'bD', 'bE', '#6366f1')
+        ce(b, 'bC', 'bMain', '#3b82f6', 'dashed')
+        ce(b, 'bE', 'bBanana', '#6366f1', 'dashed')
+
+    with g.subgraph(name='cluster_after') as a:
+        a.attr(label='After: git switch main && git merge banana (no new commit created)',
+               style='rounded,filled', fillcolor='#f0fdf4',
+               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#166534', margin='18')
+        cn(a, 'aA', 'A', 'navy')
+        cn(a, 'aB', 'B', 'navy')
+        cn(a, 'aC', 'C', 'navy')
+        cn(a, 'aD', 'D', 'navy')
+        cn(a, 'aE', 'E', 'navy')
+        bp(a, 'aMain', 'main', 'navy')
+        bp(a, 'aBanana', 'banana', 'purple')
+        a.node('aFFnote', 'main pointer just\nadvanced to E\nNo merge commit', shape='plaintext',
+               fontcolor='#166534', fontname='Helvetica Neue', fontsize='10')
+        ce(a, 'aA', 'aB', '#3b82f6')
+        ce(a, 'aB', 'aC', '#3b82f6')
+        ce(a, 'aC', 'aD', '#3b82f6')
+        ce(a, 'aD', 'aE', '#3b82f6')
+        ce(a, 'aE', 'aMain', '#22c55e', 'dashed')
+        ce(a, 'aE', 'aBanana', '#6366f1', 'dashed')
+        ce(a, 'aMain', 'aFFnote', '#86efac', 'dashed')
+
+    g.render(os.path.join(OUT, 'deep-dive-fast-forward-before-after'), cleanup=True)
+    print('Generated: deep-dive-fast-forward-before-after')
+
+
+def diag_cherry_pick_before_after():
+    g = base_graph('cherry_ba', 'git cherry-pick — Copy One Specific Commit onto Another Branch')
+
+    with g.subgraph(name='cluster_before') as b:
+        b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#475569', margin='18')
+        cn(b, 'bA', 'A', 'gray')
+        cn(b, 'bB', 'B', 'navy')
+        cn(b, 'bC', 'C', 'navy')
+        cn(b, 'bD', 'D', 'purple')
+        cn(b, 'bE', 'E', 'purple')
+        bp(b, 'bMain', 'main', 'navy')
+        bp(b, 'bBanana', 'banana', 'purple')
+        b.node('bDlbl', 'want this\ncommit', shape='plaintext',
+               fontcolor='#6366f1', fontname='Helvetica Neue', fontsize='10')
+        ce(b, 'bA', 'bB', '#3b82f6')
+        ce(b, 'bB', 'bC', '#3b82f6')
+        ce(b, 'bA', 'bD', '#6366f1')
+        ce(b, 'bD', 'bE', '#6366f1')
+        ce(b, 'bC', 'bMain', '#3b82f6', 'dashed')
+        ce(b, 'bE', 'bBanana', '#6366f1', 'dashed')
+        ce(b, 'bD', 'bDlbl', '#6366f1', 'dashed')
+
+    with g.subgraph(name='cluster_after') as a:
+        a.attr(label="After: git cherry-pick <D's commit hash>",
+               style='rounded,filled', fillcolor='#fdf4ff',
+               color='#d8b4fe', fontsize='13', fontname='Helvetica Neue Bold',
+               fontcolor='#6b21a8', margin='18')
+        cn(a, 'aA', 'A', 'gray')
+        cn(a, 'aB', 'B', 'navy')
+        cn(a, 'aC', 'C', 'navy')
+        cn(a, 'aD', 'D', 'purple')
+        cn(a, 'aE', 'E', 'purple')
+        cn(a, 'aD_', "D'", 'pink')
+        bp(a, 'aMain', 'main', 'navy')
+        bp(a, 'aBanana', 'banana', 'purple')
+        a.node('aD_lbl', "D' = same changes as D\nnew commit SHA\napplied on top of C", shape='plaintext',
+               fontcolor='#9d174d', fontname='Helvetica Neue', fontsize='10')
+        ce(a, 'aA', 'aB', '#3b82f6')
+        ce(a, 'aB', 'aC', '#3b82f6')
+        ce(a, 'aA', 'aD', '#6366f1')
+        ce(a, 'aD', 'aE', '#6366f1')
+        ce(a, 'aC', 'aD_', '#ec4899')
+        ce(a, 'aD_', 'aMain', '#ec4899', 'dashed')
+        ce(a, 'aE', 'aBanana', '#6366f1', 'dashed')
+        ce(a, 'aD_', 'aD_lbl', '#d8b4fe', 'dashed')
+
+    g.render(os.path.join(OUT, 'deep-dive-cherry-pick-before-after'), cleanup=True)
+    print('Generated: deep-dive-cherry-pick-before-after')
+
+
 if __name__ == '__main__':
     diag_three_trees()
     diag_merge_vs_rebase()
@@ -244,4 +515,9 @@ if __name__ == '__main__':
     diag_tradeoff_revert_vs_reset()
     diag_tradeoff_fetch_vs_pull()
     diag_tradeoff_squash_vs_merge()
+    diag_rebase_before_after()
+    diag_merge_before_after()
+    diag_squash_before_after()
+    diag_fast_forward_before_after()
+    diag_cherry_pick_before_after()
     print('All git-for-devops diagrams generated.')
