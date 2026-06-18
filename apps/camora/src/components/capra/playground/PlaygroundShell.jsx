@@ -27,6 +27,7 @@ export default function PlaygroundShell() {
   const [fontSize, setFontSize] = useState(13);
   const [activeTab, setActiveTab] = useState('terminal');
   const [termKey, setTermKey] = useState(0);
+  const [minimized, setMinimized] = useState(false);
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
@@ -34,6 +35,9 @@ export default function PlaygroundShell() {
   const isBooting = status === 'booting';
   const isLoading = isCreating || isBooting;
   const isMobile = false;
+
+  const showTerminal = isActive && !minimized;
+  const showIdle = !isLoading && (!isActive || minimized);
 
   const selectedEnv = ENVIRONMENTS.find((e) => e.id === environment) || ENVIRONMENTS[0];
   const activeEnv = session?.environment
@@ -106,7 +110,7 @@ export default function PlaygroundShell() {
       )}
 
       {/* ── ACTIVE state ── */}
-      {isActive && (
+      {showTerminal && (
         <>
           {/* Row 1: Title bar */}
           <div style={{
@@ -137,6 +141,7 @@ export default function PlaygroundShell() {
               {extendAvailable && (
                 <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }}>+15m</button>
               )}
+              <button type="button" onClick={() => setMinimized(true)} style={{ ...iconBtn }} title="Exit to playground home">← Exit</button>
               <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171' }} title="End session">⏻</button>
             </div>
           </div>
@@ -192,8 +197,8 @@ export default function PlaygroundShell() {
         </>
       )}
 
-      {/* ── IDLE state ── */}
-      {!isActive && !isLoading && (
+      {/* ── IDLE / MINIMIZED state ── */}
+      {showIdle && (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left panel */}
           <div style={{
@@ -257,6 +262,33 @@ export default function PlaygroundShell() {
 
           {/* Right panel */}
           <div style={{ flex: 1, overflowY: 'auto', background: '#0d1117', display: 'flex', flexDirection: 'column' }}>
+            {/* Resume banner when a session is still running */}
+            {isActive && minimized && (
+              <div style={{
+                flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 16px', background: 'rgba(16,185,129,0.08)',
+                borderBottom: '1px solid rgba(16,185,129,0.2)',
+              }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', flex: 1 }}>
+                  Session still running — <span style={{ fontFamily: '"IBM Plex Mono", monospace', color: timerColor, fontWeight: 700 }}>{timerStr}</span> remaining
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMinimized(false)}
+                  style={{ ...iconBtn, color: '#10b981', border: '1px solid rgba(16,185,129,0.35)' }}
+                >
+                  ↩ Resume
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEnd}
+                  style={{ ...iconBtn, color: '#f87171' }}
+                >
+                  ⏻ End
+                </button>
+              </div>
+            )}
             <EnvironmentPicker selected={environment} onChange={setEnvironment} userPlan={user?.plan_type} disabled={isLoading} />
             <div style={{ padding: '8px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               {status === 'error' && error && (
@@ -267,7 +299,7 @@ export default function PlaygroundShell() {
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => createSession(environment)}
+                onClick={() => isActive && minimized ? setMinimized(false) : createSession(environment)}
                 style={{
                   width: '100%', maxWidth: 380, padding: '13px 0', borderRadius: 8,
                   fontSize: 13, fontWeight: 800, letterSpacing: '0.04em',
@@ -278,7 +310,7 @@ export default function PlaygroundShell() {
                   boxShadow: isLoading ? 'none' : '0 0 24px rgba(212,160,67,0.25)',
                 }}
               >
-                Start Playground
+                {isActive && minimized ? '↩ Resume Session' : 'Start Playground'}
               </button>
             </div>
           </div>
