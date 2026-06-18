@@ -561,6 +561,93 @@ export default function LandingPage() {
         </Container>
       </Section>
 
+
+      {/* ═══════════ PLAYGROUND SPOTLIGHT ═══════════ */}
+      <Section tone="muted" spacing="lg">
+        <Container>
+          <Reveal>
+            <div
+              className="relative overflow-hidden rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #080B14 0%, #0a1628 60%, #0d1f3c 100%)',
+                border: '1px solid rgba(212,160,67,0.25)',
+              }}
+            >
+              <div className="absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-[var(--cam-gold-leaf)] rounded-tl opacity-70" />
+              <div className="absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-[var(--cam-gold-leaf)] rounded-tr opacity-70" />
+              <div className="absolute bottom-4 left-4 w-5 h-5 border-b-2 border-l-2 border-[var(--cam-gold-leaf)] rounded-bl opacity-70" />
+              <div className="absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-[var(--cam-gold-leaf)] rounded-br opacity-70" />
+
+              <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-0">
+                <div className="p-8 md:p-12 flex flex-col justify-center">
+                  <Eyebrow tone="inverse">Terminal Playground</Eyebrow>
+                  <h2 className="mt-3 font-display text-[28px] md:text-[36px] font-bold tracking-tight leading-tight text-white">
+                    Run real infra.<br />
+                    <span style={{ color: 'var(--cam-gold-leaf-lt, #e8c46a)' }}>Right in your browser.</span>
+                  </h2>
+                  <p className="mt-4 text-[14.5px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                    Spin up Ubuntu, Docker, or Kubernetes in seconds. No VM, no local setup. Practice the exact commands you will type in a live technical screen — then walk into the interview already knowing the muscle memory.
+                  </p>
+                  <ul className="mt-5 space-y-2">
+                    {[
+                      'Ubuntu shell — full apt, systemd, curl, vim',
+                      'Docker in Docker — build, run, push images live',
+                      'Single-node Kubernetes — kubectl, helm, deployments',
+                      'Sessions last 30 minutes — extend if you need more',
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-3 text-[13px]" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                        <span
+                          className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                          style={{ background: 'rgba(212,160,67,0.18)', border: '1px solid rgba(212,160,67,0.40)' }}
+                        >
+                          <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf,#d4a043)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M13 4 L6 11 L3 8" />
+                          </svg>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-8">
+                    <CTAButton to="/capra/playground" variant="inverse-primary" size="md" trailingArrow>
+                      Open Playground
+                    </CTAButton>
+                  </div>
+                </div>
+
+                <div className="p-8 md:p-12 flex items-center justify-center lg:border-l border-[rgba(212,160,67,0.15)]">
+                  <div
+                    className="w-full max-w-sm rounded-xl overflow-hidden"
+                    style={{
+                      background: '#0a0a0a',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 px-4 py-3" style={{ background: '#161616', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                      <span className="w-3 h-3 rounded-full" style={{ background: '#FF5F57' }} />
+                      <span className="w-3 h-3 rounded-full" style={{ background: '#FFBD2E' }} />
+                      <span className="w-3 h-3 rounded-full" style={{ background: '#28CA41' }} />
+                      <span className="ml-2 text-[11px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>camora — ubuntu-session</span>
+                    </div>
+                    <div className="p-4 font-mono text-[12px] leading-relaxed" style={{ color: '#e4e4e4', minHeight: 200 }}>
+                      <div><span style={{ color: '#10b981' }}>user@camora</span><span style={{ color: 'rgba(255,255,255,0.4)' }}>:~$</span> <span style={{ color: '#e4e4e4' }}>docker run -it nginx</span></div>
+                      <div style={{ color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>Unable to find image locally</div>
+                      <div style={{ color: 'rgba(255,255,255,0.45)' }}>Pulling from library/nginx...</div>
+                      <div style={{ color: '#10b981', marginTop: 4 }}>Status: Downloaded newer image</div>
+                      <div style={{ marginTop: 8 }}><span style={{ color: '#10b981' }}>user@camora</span><span style={{ color: 'rgba(255,255,255,0.4)' }}>:~$</span> <span style={{ color: '#e4e4e4' }}>kubectl get pods</span></div>
+                      <div style={{ color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>NAME{'                   '}READY{'   '}STATUS</div>
+                      <div style={{ color: '#e4e4e4' }}>nginx-deployment-abc{'   '}1/1{'     '}<span style={{ color: '#10b981' }}>Running</span></div>
+                      <div style={{ marginTop: 8 }}><span style={{ color: '#10b981' }}>user@camora</span><span style={{ color: 'rgba(255,255,255,0.4)' }}>:~$</span> <span style={{ color: '#e8c46a' }}>_</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </Container>
+      </Section>
+
       {/* ═══════════ JOB URL ANALYSIS ═══════════ */}
       <Section tone="muted" spacing="lg">
         <Container>
