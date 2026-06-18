@@ -97,22 +97,34 @@ export function createTtydProxy(browserWs, ttydHost, ttydPort, preBuf = []) {
       }
     });
 
+    // Ping every 30s to prevent Railway's 100s idle WebSocket timeout
+    const keepAlive = setInterval(() => {
+      if (ttydWs.readyState === WsClient.OPEN) ttydWs.ping();
+      if (browserWs.readyState === browserWs.OPEN) browserWs.ping();
+    }, 30_000);
+
+    const cleanup = () => clearInterval(keepAlive);
+
     ttydWs.on('close', (code, reason) => {
+      cleanup();
       console.log(`[WsProxy] ttyd closed code=${code} reason=${reason}`);
       if (browserWs.readyState === browserWs.OPEN) browserWs.close(1000, reason);
     });
 
     ttydWs.on('error', (err) => {
+      cleanup();
       console.error('[WsProxy] ttyd error:', err.message);
       if (browserWs.readyState === browserWs.OPEN) browserWs.close(1011, 'upstream error');
     });
 
     browserWs.on('close', (code) => {
+      cleanup();
       console.log(`[WsProxy] browser closed code=${code}`);
       if (ttydWs.readyState === WsClient.OPEN || ttydWs.readyState === WsClient.CONNECTING) ttydWs.close();
     });
 
     browserWs.on('error', (err) => {
+      cleanup();
       console.error('[WsProxy] browser ws error:', err.message);
       if (ttydWs.readyState === WsClient.OPEN) ttydWs.close();
     });
