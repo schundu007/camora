@@ -117,6 +117,14 @@ export default function CaraBar() {
           >
             ⌘K
           </span>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setOpen(false)}
+            className="ml-2 flex items-center justify-center rounded-md w-6 h-6 text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors"
+          >
+            ✕
+          </button>
         </div>
 
         {lumoraActive ? (
@@ -125,22 +133,33 @@ export default function CaraBar() {
           </p>
         ) : (
           <div className="p-4 flex flex-col gap-3">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
-              placeholder="What should I study next?"
-              disabled={loading}
-              className="w-full rounded-lg px-3 py-2.5 text-[13px] text-white placeholder-white/30 outline-none transition-opacity"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                opacity: loading ? 0.6 : 1,
-              }}
-              onFocus={e => { e.currentTarget.style.borderColor = 'rgba(212,160,67,0.4)'; }}
-              onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
-            />
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); }}
+                placeholder="What should I study next?"
+                disabled={loading}
+                className="flex-1 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder-white/30 outline-none transition-opacity"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.10)',
+                  opacity: loading ? 0.6 : 1,
+                }}
+                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(212,160,67,0.4)'; }}
+                onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading || !input.trim()}
+                className="rounded-lg px-3 py-2.5 text-[13px] font-semibold transition-opacity disabled:opacity-40"
+                style={{ background: 'rgba(212,160,67,0.15)', border: '1px solid rgba(212,160,67,0.30)', color: '#e8c46a' }}
+              >
+                {loading ? '…' : '↵'}
+              </button>
+            </div>
 
             {response && (
               <div

@@ -49,9 +49,10 @@ export async function askCara({ message, context }) {
   });
 
   const raw = msg.content[0]?.text?.trim() ?? '';
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(cleaned);
     return {
       answer: typeof parsed.answer === 'string' ? parsed.answer : raw,
       action: parsed.action ?? null,
