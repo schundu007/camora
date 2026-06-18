@@ -1,47 +1,41 @@
 import { WebSocket as WsClient } from 'ws';
 
+// ttyd binary protocol:
+//   FROM ttyd → browser: binary frames, first byte = type ('0'=output, '1'=title, '2'=prefs)
+//   TO ttyd ← browser:   binary frames, first byte = type ('0'=input, '1'=resize JSON)
+//   Handshake: browser sends JSON {"AuthToken":"","columns":N,"rows":N} as text on open
+//
+// Pass frames through raw — no JSON wrapping — browser speaks ttyd natively.
+
 export function createTtydProxy(browserWs, ttydHost, ttydPort) {
-  const ttydWs = new WsClient(`ws://${ttydHost}:${ttydPort}`);
+  const ttydWs = new WsClient(`ws://${ttydHost}:${ttydPort}`, ['tty']);
 
   ttydWs.on('open', () => {
-    browserWs.on('message', (raw) => {
-      let msg;
-      try {
-        msg = JSON.parse(raw);
-      } catch {
-        return;
-      }
-
-      if (msg.type === 'input' && typeof msg.data === 'string') {
-        if (ttydWs.readyState === WsClient.OPEN) {
-          ttydWs.send(msg.data);
-        }
-      } else if (msg.type === 'resize' && msg.cols && msg.rows) {
-        if (ttydWs.readyState === WsClient.OPEN) {
-          ttydWs.send(`\x1b[8;${msg.rows};${msg.cols}t`);
-        }
+    // Forward all browser frames straight to ttyd
+    browserWs.on('message', (data, isBinary) => {
+      if (ttydWs.readyState === WsClient.OPEN) {
+        ttydWs.send(data, { binary: isBinary });
       }
     });
   });
 
-  ttydWs.on('message', (data) => {
+  // Forward all ttyd frames straight to browser
+  ttydWs.on('message', (data, isBinary) => {
     if (browserWs.readyState === browserWs.OPEN) {
-      browserWs.send(JSON.stringify({ type: 'output', data: data.toString() }));
+      browserWs.send(data, { binary: isBinary });
     }
   });
 
-  ttydWs.on('close', () => {
+  ttydWs.on('close', (code, reason) => {
     if (browserWs.readyState === browserWs.OPEN) {
-      browserWs.send(JSON.stringify({ type: 'destroyed', reason: 'session_ended' }));
-      browserWs.close();
+      browserWs.close(1000, reason);
     }
   });
 
   ttydWs.on('error', (err) => {
     console.error('[WsProxy] ttyd error:', err.message);
     if (browserWs.readyState === browserWs.OPEN) {
-      browserWs.send(JSON.stringify({ type: 'destroyed', reason: 'connection_error' }));
-      browserWs.close();
+      browserWs.close(1011, 'upstream error');
     }
   });
 
