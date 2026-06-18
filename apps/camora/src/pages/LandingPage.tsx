@@ -564,11 +564,9 @@ export default function LandingPage() {
             />
           </Reveal>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4" style={{ gridAutoFlow: 'dense' }}>
-            {FEATURES.map((f, i) => {
-              const wide = f.label === 'Live AI' || f.label === 'Mock Interviews';
-              return (
-                <Reveal key={f.title} delay={i * 0.06} className={wide ? 'md:col-span-2' : ''}>
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {FEATURES.map((f, i) => (
+                <Reveal key={f.title} delay={i * 0.06}>
                   <SurfaceCard interactive padding="lg" className="h-full group">
                     <Eyebrow tone="accent">{f.label}</Eyebrow>
                     <h3 className="mt-2 font-display text-[20px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
@@ -577,18 +575,12 @@ export default function LandingPage() {
                     <p className="mt-2 text-[13.5px] leading-relaxed text-[var(--text-secondary)]">
                       {f.desc}
                     </p>
-                    <div className={cn(
-                      "mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl relative transition-all duration-300",
-                      wide
-                        ? "bg-gradient-to-br from-[var(--cam-primary)]/[0.03] via-[var(--bg-elevated)] to-[var(--cam-gold-leaf)]/[0.02] group-hover:from-[var(--cam-primary)]/[0.06] group-hover:to-[var(--cam-gold-leaf)]/[0.04]"
-                        : "bg-[var(--bg-elevated)]",
-                    )}>
+                    <div className="mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl relative bg-[var(--bg-elevated)] transition-all duration-300">
                       <f.Anim />
                     </div>
                   </SurfaceCard>
                 </Reveal>
-              );
-            })}
+            ))}
           </div>
 
           {/* Highlights — flat divided list */}
