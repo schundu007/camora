@@ -734,6 +734,8 @@ export default function DocsPage({ onBack }) {
       lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
       roadmapTopics, engBlogTopics, sreTopics, devopsTopics,
+      cloudTopics, linuxTopics, networkingTopics, troubleshootingTopics,
+      warStoriesTopics, comparisonTopics,
     ];
     for (const arr of allSources) {
       const found = arr?.find(t => t.id === selectedTopic);
