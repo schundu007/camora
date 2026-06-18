@@ -725,6 +725,47 @@ export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
     }
 ],
   },
+  'git-for-devops': {
+    deepDives: [
+    {
+        "id": "three-trees",
+        "title": "Git Three Trees — Working Directory, Index, Repository",
+        "file": "deep-dive-three-trees.png"
+    },
+    {
+        "id": "merge-vs-rebase",
+        "title": "Merge vs Rebase — History, Safety, and When to Use Each",
+        "file": "deep-dive-merge-vs-rebase.png"
+    },
+    {
+        "id": "gitops-flow",
+        "title": "GitOps Workflow — Git as Single Source of Truth for Kubernetes",
+        "file": "deep-dive-gitops-flow.png"
+    },
+    {
+        "id": "branching-strategies",
+        "title": "Branching Strategies — Trunk-Based vs Gitflow vs GitHub Flow",
+        "file": "deep-dive-branching-strategies.png"
+    }
+],
+    tradeoffs: [
+    {
+        "id": "revert-vs-reset",
+        "title": "git revert vs git reset — Safety on Shared Branches",
+        "file": "tradeoff-revert-vs-reset.png"
+    },
+    {
+        "id": "fetch-vs-pull",
+        "title": "git fetch vs git pull — Control vs Convenience",
+        "file": "tradeoff-fetch-vs-pull.png"
+    },
+    {
+        "id": "squash-vs-merge",
+        "title": "Squash Merge vs Regular Merge vs Rebase Merge",
+        "file": "tradeoff-squash-vs-merge.png"
+    }
+],
+  },
   'google-docs': {
     deepDives: [
     {
