@@ -111,8 +111,8 @@ export default function TerminalPane({ sessionId, wsUrl, onOutput }) {
   }, [wsUrl]);
 
   return (
-    <div className="relative w-full h-full" style={{ background: '#0a0a0a' }}>
-      <div ref={containerRef} className="w-full h-full" style={{ minHeight: 0 }} />
+    <div className="relative w-full h-full" style={{ background: '#0a0a0a', position: 'relative' }}>
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       {warning && (
         <div
           className="absolute top-3 right-3 px-3 py-2 rounded-lg text-xs font-semibold"

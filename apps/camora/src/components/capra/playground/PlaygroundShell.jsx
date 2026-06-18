@@ -135,7 +135,7 @@ export default function PlaygroundShell() {
           </div>
 
           {/* Terminal area */}
-          <div className="flex-1 min-w-0 min-h-0 flex flex-col" style={{ background: '#0a0a0a' }}>
+          <div className="flex-1 min-w-0 min-h-0" style={{ background: '#0a0a0a', position: 'relative' }}>
             {isActive && session?.wsUrl ? (
               <TerminalPane
                 sessionId={session.sessionId}
