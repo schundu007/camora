@@ -78,16 +78,39 @@ export const networkingTopics = [
     color: '#3b82f6',
     questions: 6,
     description: 'Seven-layer OSI model, four-layer TCP/IP stack, encapsulation, and how HTTP maps to each layer.',
-    visualizations: [],
-    introduction: `The OSI model is a conceptual framework dividing network communication into seven layers: Physical (1), Data Link (2), Network (3), Transport (4), Session (5), Presentation (6), Application (7). In practice, engineers use it as a diagnostic framework more than a strict implementation guide.
+    visualizations: [
+      {
+        title: 'OSI vs TCP/IP Layer Mapping',
+        caption: 'Seven-layer OSI model mapped to the four-layer TCP/IP stack, with the canonical diagnostic tool for each layer.',
+        image: '/diagrams/networking/osi-model-layers.png',
+      },
+      {
+        title: 'HTTP Request Encapsulation',
+        caption: 'A single HTTPS GET request shown as nested protocol headers at each OSI layer, with AWS Security Group and NACL inspection points called out.',
+        image: '/diagrams/networking/osi-model-encapsulation.png',
+      },
+    ],
+    introduction: `The **OSI model** is a conceptual framework dividing network communication into seven layers:
+- **Layer 1 — Physical**: bits and signals (cables, radio, fiber)
+- **Layer 2 — Data Link**: MAC addressing, Ethernet frames, switches
+- **Layer 3 — Network**: IP addressing and routing (routers, VPC route tables)
+- **Layer 4 — Transport**: TCP (reliable, ordered) and UDP (connectionless)
+- **Layer 5 — Session**: session establishment and teardown
+- **Layer 6 — Presentation**: encoding, encryption (TLS spans L4-L6)
+- **Layer 7 — Application**: HTTP, HTTPS, DNS, SMTP, gRPC
 
-The TCP/IP model (the actual Internet stack) collapses OSI into four layers: Link (OSI 1-2), Internet (OSI 3), Transport (OSI 4), Application (OSI 5-7).
+The **TCP/IP model** (the actual Internet stack) collapses OSI into four layers: **Link** (OSI 1-2), **Internet** (OSI 3), **Transport** (OSI 4), **Application** (OSI 5-7).
 
-Each layer adds a header as data travels down the stack (encapsulation) and removes headers as it travels up (decapsulation). An HTTP request is: Application HTTP payload wrapped in Transport TCP segment wrapped in Network IP packet wrapped in Link Ethernet frame.
+**Encapsulation** means each layer wraps the payload above with its own header as data travels down the stack, and strips headers traveling up (**decapsulation**). An HTTP request becomes: Application HTTP payload wrapped in Transport TCP segment wrapped in Network IP packet wrapped in Link Ethernet frame.
 
-Understanding which layer a problem exists at determines the right diagnostic tools and fixes. "Cannot reach the server" at Layer 3 (routing) requires different tools than "SSL handshake failed" at Layer 6 (presentation/TLS) or "authentication rejected" at Layer 7 (application).
+## Layers that matter most for DevOps
 
-For DevOps and cloud engineers, the most relevant layers: Layer 3 (IP routing, VPC routing tables, Security Groups operate here), Layer 4 (TCP ports, NACLs are stateless L4 rules, TCP load balancers), Layer 7 (HTTP, HTTP-based ALB, WAF rules, application protocol specifics).`,
+Understanding which layer a problem lives at determines the right tools and fixes:
+- **Layer 3** — IP routing, VPC routing tables, Security Groups (stateful packet filter), ICMP
+- **Layer 4** — TCP ports, NACLs (stateless L4 rules), TCP load balancers, connection tracking
+- **Layer 7** — HTTP, ALB (application load balancer), WAF rules, application authentication
+
+"Cannot reach the server" at Layer 3 (routing) requires different tools than "SSL handshake failed" at Layer 6 (TLS) or "authentication rejected" at Layer 7.`,
     whenToUse: [
       'Structuring a network debugging session — start at Layer 1/2/3 and work up',
       'Explaining the difference between ALB (L7) and NLB (L4) in AWS',
@@ -159,7 +182,18 @@ Both integrate with Auto Scaling, support health checks, and work with ECS and E
     color: '#3b82f6',
     questions: 7,
     description: 'TLS 1.2 vs 1.3 handshake, certificate chain, mTLS, certificate rotation, and SNI.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'TLS 1.2 vs TLS 1.3 Handshake',
+        caption: 'Side-by-side comparison of the 2-RTT TLS 1.2 and 1-RTT TLS 1.3 handshake flows, including the 0-RTT replay risk.',
+        image: '/diagrams/networking/tls-ssl-handshake-comparison.png',
+      },
+      {
+        title: 'mTLS — Mutual Certificate Authentication',
+        caption: 'How a CA hierarchy issues client and server certs for mutual authentication, and how Istio/Envoy sidecars automate the rotation.',
+        image: '/diagrams/networking/tls-ssl-handshake-mtls.png',
+      },
+    ],
     introduction: `TLS (Transport Layer Security) provides confidentiality, integrity, and authentication for network communications. TLS 1.3 (RFC 8446, 2018) is the current standard; TLS 1.2 is still widely deployed. TLS 1.0 and 1.1 are deprecated.
 
 TLS 1.2 handshake (2 round trips): ClientHello (TLS version, cipher suites, random), ServerHello (chosen cipher, random), Certificate (server's cert chain), ServerKeyExchange (for ECDHE), ServerHelloDone; ClientKeyExchange, ChangeCipherSpec, Finished; ChangeCipherSpec, Finished. Then application data.
@@ -243,7 +277,18 @@ For containerized services, also check if the trust store inside the container h
     color: '#22c55e',
     questions: 7,
     description: 'DNS hierarchy, recursive resolution, caching, TTL, negative caching, and DNSSEC validation.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'DNS Recursive Query Flow',
+        caption: 'Full recursive resolution path from browser cache through root, TLD, and authoritative nameservers, with cache-hit and NXDOMAIN short-circuits.',
+        image: '/diagrams/networking/dns-resolution-flow.png',
+      },
+      {
+        title: 'DNS TTL & Propagation Delay',
+        caption: 'Why changing an A record does not take effect immediately, and the standard pre-cutover TTL-lowering procedure to minimize stale-cache windows.',
+        image: '/diagrams/networking/dns-resolution-ttl.png',
+      },
+    ],
     introduction: `DNS (Domain Name System) is the distributed hierarchical naming system that translates human-readable names to IP addresses. It is often called the "phone book of the internet," but a more accurate analogy is a distributed key-value store with hierarchical delegation and time-to-live caching.
 
 The resolution hierarchy: root servers (13 root server clusters managed by IANA; they know who manages .com, .org, etc.) -> TLD nameservers (Verisign manages .com; they know who manages example.com) -> authoritative nameservers (your DNS provider, e.g., Route53; they have the actual A, CNAME, MX records).
@@ -311,7 +356,13 @@ dig api.example.com +trace     # Full resolution from root (requires external re
     color: '#22c55e',
     questions: 5,
     description: 'A, AAAA, CNAME, MX, TXT, SRV, NS, PTR, SOA — use cases and common configuration mistakes.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'DNS Record Types Reference',
+        caption: 'All major record types (A, AAAA, CNAME, MX, TXT, NS, SOA, SRV, PTR, ALIAS) with their purpose, format, and the zone-apex CNAME restriction.',
+        image: '/diagrams/networking/dns-record-types-overview.png',
+      },
+    ],
     introduction: `DNS record types define what kind of data a zone entry contains. Each record type has a specific format and use case.
 
 A and AAAA: Map a hostname to an IPv4 (A) or IPv6 (AAAA) address. The most basic record type. Multiple A records for the same name implement round-robin DNS load balancing.
@@ -373,7 +424,18 @@ Why not just find the ALB's IP and use an A record: ALB IPs are dynamic — AWS 
     color: '#06b6d4',
     questions: 7,
     description: 'Layer 4 TCP/UDP forwarding vs Layer 7 HTTP routing, when to use each, and hybrid architectures.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'NLB vs ALB Decision Matrix',
+        caption: 'Feature comparison and selection criteria for AWS Network Load Balancer (L4) versus Application Load Balancer (L7), including target type support.',
+        image: '/diagrams/networking/l4-vs-l7-lb-comparison.png',
+      },
+      {
+        title: 'Load Balancing Algorithms',
+        caption: 'Round-robin, least-connections, IP-hash, weighted, power-of-two-choices, and sticky-session algorithms with their ideal workload profiles.',
+        image: '/diagrams/networking/l4-vs-l7-lb-algorithms.png',
+      },
+    ],
     introduction: `Load balancers are categorised by the OSI layer at which they make routing decisions. This determines what information they can use to route traffic and what overhead they introduce.
 
 Layer 4 (L4) load balancers operate at the TCP/UDP level. They see source IP, destination IP, and port number but not the content of the payload. Routing decisions are made purely on connection-level metadata. The LB acts as a TCP proxy: it accepts the connection, forwards packets to a backend, and tracks the connection state for the duration of the session. Because it does not parse HTTP, it cannot route based on URL, headers, or cookies. L4 LBs are extremely fast (no protocol parsing) and support any TCP/UDP protocol.
@@ -440,7 +502,13 @@ Metrics to watch: error rate (5xx%), p99 latency, application-specific metrics (
     color: '#06b6d4',
     questions: 6,
     description: 'Edge PoPs, cache hierarchies, cache invalidation, origin shield, and CloudFront vs Fastly.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'CDN Request Flow & Cache Hierarchy',
+        caption: 'End-to-end CDN flow from DNS anycast routing through edge PoP L1 cache, regional L2 shield cache, to origin, with cache-hit/miss paths and invalidation strategy.',
+        image: '/diagrams/networking/cdn-architecture-flow.png',
+      },
+    ],
     introduction: `A CDN (Content Delivery Network) is a geographically distributed network of cache servers (Points of Presence, PoPs) that serve content from locations close to the user, reducing latency and origin load.
 
 When a user requests a resource, DNS routes them to the nearest PoP via anycast or GeoDNS. The PoP checks its cache (cache hit): returns the cached response. Cache miss: fetches from origin (or from a parent PoP in a hierarchy), caches the response, returns it to the user.
@@ -518,7 +586,18 @@ This design: static assets are cached at edges indefinitely (low cost, low laten
     color: '#f59e0b',
     questions: 8,
     description: 'Subnet design, CIDR planning, route tables, internet gateway, NAT gateway, and multi-tier architectures.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'VPC Three-Tier Subnet Design',
+        caption: 'Production VPC pattern with public subnets (ALB, NAT GW), private subnets (app servers), and isolated subnets (RDS, Redis), including Security Group and route table rules.',
+        image: '/diagrams/networking/aws-vpc-design-tiers.png',
+      },
+      {
+        title: 'VPC Connectivity Options',
+        caption: 'Comparison of VPC Peering (non-transitive 1:1), Transit Gateway (hub-and-spoke, transitive), PrivateLink (service endpoint, no CIDR clash), and Direct Connect/VPN for hybrid.',
+        image: '/diagrams/networking/aws-vpc-design-connectivity.png',
+      },
+    ],
     introduction: `A VPC (Virtual Private Cloud) is an isolated virtual network in AWS. Every VPC has a CIDR block (e.g., 10.0.0.0/16) that defines its address space. Subnets are subdivisions of the VPC CIDR, each associated with one Availability Zone.
 
 Subnet types and their route tables: public subnets have a route to an Internet Gateway (IGW), enabling direct internet connectivity for resources with Elastic IPs. Private subnets have no IGW route; outbound internet access goes through a NAT Gateway deployed in a public subnet. Isolated subnets have no internet route at all — used for databases and backend services.
@@ -608,7 +687,13 @@ PrivateLink — expose a specific service, not a full network, to other VPCs/acc
     color: '#f59e0b',
     questions: 6,
     description: 'Envoy sidecar, Istio vs Linkerd, mTLS between services, traffic management, observability, and eBPF alternatives.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'Istio/Envoy Control & Data Planes',
+        caption: 'Service mesh architecture showing Istiod control plane (Pilot xDS, Citadel certs, Galley config) pushing configuration to Envoy sidecars that intercept all pod traffic for mTLS and telemetry.',
+        image: '/diagrams/networking/service-mesh-architecture.png',
+      },
+    ],
     introduction: `A service mesh is an infrastructure layer that handles service-to-service communication in a microservices architecture. It typically uses a sidecar proxy pattern: a proxy (Envoy) is injected into every pod as a sidecar container. All inbound and outbound network traffic from the application container flows through the sidecar proxy.
 
 The control plane (Istiod in Istio) distributes configuration to all sidecars: which services exist, their endpoints, traffic policies (retries, timeouts, circuit breakers), and certificate authority (for mTLS). The data plane (the sidecars) enforces these policies on every request.
@@ -666,7 +751,13 @@ The application code never sees TLS — it sends and receives plaintext on local
     color: '#f97316',
     questions: 6,
     description: 'Layered debugging methodology, tcpdump, Wireshark, mtr, netstat, and cloud-specific tools.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'Debugging Tools by OSI Layer',
+        caption: 'Canonical tool for each network layer — ethtool at L1/2, ping/traceroute at L3, nc/ss at L4, curl/dig/openssl at L7 — plus a four-step debugging ladder.',
+        image: '/diagrams/networking/network-debugging-tools-by-layer.png',
+      },
+    ],
     introduction: `Effective network debugging follows a structured layered approach: start at the lowest layer that could explain the symptom and work upward. An experienced engineer does not randomly run tools — they form a hypothesis about which layer is failing and choose the tool that confirms or refutes that hypothesis.
 
 The debugging ladder:
@@ -748,7 +839,18 @@ Common root causes: NetworkPolicy blocks cross-namespace traffic, Service select
     color: '#f97316',
     questions: 6,
     description: 'Diagnosing network vs application latency, p99 vs average, cross-region trade-offs, and queuing theory.',
-    visualizations: [],
+    visualizations: [
+      {
+        title: 'Latency Sources & Fixes',
+        caption: 'Systematic isolation of latency contributors from client DNS/TCP/TLS through network RTT, load balancer, application, and database, each with targeted remediation.',
+        image: '/diagrams/networking/latency-diagnosis-sources.png',
+      },
+      {
+        title: 'End-to-End Latency Budget',
+        caption: 'Per-phase latency budget (DNS, TCP, TLS, TTFB, transfer, render) with target p95 thresholds and techniques to eliminate each component.',
+        image: '/diagrams/networking/latency-diagnosis-budget.png',
+      },
+    ],
     introduction: `Latency diagnosis requires distinguishing between different types of latency and their causes. Network latency (propagation delay + transmission delay) is largely determined by physics: 1ms per 100km for fiber, 70ms New York to London. Application latency adds queuing delay, processing time, and database round trips on top of network latency.
 
 Understanding the percentile distribution is essential. Average latency hides outliers. p99 latency is the 99th percentile — 1% of requests are slower than this value. p99.9 (tail latency) is often 5-10x p99. In systems with fan-out (a request calls 10 downstream services), the overall p99 approaches the p99.9 of each individual service. This is why reducing tail latency in microservices matters more than improving average latency.
