@@ -5,7 +5,7 @@ import {
   extendSession,
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
-import { getSession, getSessionHistory } from '../services/playground/sessionStore.js';
+import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
 import { streamContainerLogs } from '../services/playground/logStreamer.js';
 
 export const playgroundSessionsRouter = Router();
@@ -81,6 +81,7 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
 
     let done = false;
     const deadline = setTimeout(() => {
+      updateSessionStatus(req.params.id, 'ready').catch(() => {});
       sendEvent({ type: 'ready' });
       done = true;
       ac.abort();
@@ -97,6 +98,7 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
           sendEvent({ ...event, ...meta });
           if (event.step === 'terminal_ready' && event.status === 'done') {
             clearTimeout(deadline);
+            updateSessionStatus(req.params.id, 'ready').catch(() => {});
             sendEvent({ type: 'ready' });
             done = true;
             ac.abort();
@@ -108,7 +110,13 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
     clearTimeout(deadline);
     if (!res.writableEnded) res.end();
   } catch (err) {
-    if (!res.headersSent) res.status(500).json({ error: 'Failed to stream events' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to stream events' });
+    } else {
+      // Headers already sent — close the stream so the client EventSource fires onerror
+      // and its polling fallback takes over immediately.
+      if (!res.writableEnded) res.end();
+    }
   }
 });
 

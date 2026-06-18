@@ -52,7 +52,7 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort);
 
-  await updateSessionStatus(session.id, 'ready');
+  // Leave status as 'provisioning' — the SSE endpoint promotes to 'ready' on terminal_ready.
   await setTTL(session.id, 3600);
 
   return {
