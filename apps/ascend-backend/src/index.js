@@ -699,6 +699,8 @@ async function runMigrations() {
     )`);
     await query('CREATE INDEX IF NOT EXISTS idx_playground_sessions_user ON playground_sessions(user_id)');
     await query('CREATE INDEX IF NOT EXISTS idx_playground_sessions_status ON playground_sessions(status)');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_host TEXT');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_port INTEGER');
     await query(`CREATE TABLE IF NOT EXISTS playground_objective_completions (
       session_id    UUID REFERENCES playground_sessions(id) ON DELETE CASCADE,
       objective_id  TEXT NOT NULL,
@@ -1563,9 +1565,10 @@ server.on('upgrade', (req, socket, head) => {
         return;
       }
 
-      // Resolve ttyd host:port from Nomad job
-      const { getTaskAddress } = await import('./services/playground/nomadClient.js');
-      const { host, port } = await getTaskAddress(session.nomad_job_id);
+      // Use stored host:port — set at session creation time, avoids re-polling Nomad
+      const host = session.ttyd_host;
+      const port = session.ttyd_port;
+      if (!host || !port) { ws.close(4500, 'Session has no ttyd address'); return; }
 
       createTtydProxy(ws, host, port);
     } catch (err) {
