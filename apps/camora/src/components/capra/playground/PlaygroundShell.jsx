@@ -36,7 +36,7 @@ export default function PlaygroundShell() {
 
   const isActive = status === 'ready' && !!session;
   const isCreating = status === 'creating';
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 480;
+  const isMobile = false;
 
   const selectedEnv = ENVIRONMENTS.find((e) => e.id === environment) || ENVIRONMENTS[0];
   const timerStr = formatTime(timeRemaining);
