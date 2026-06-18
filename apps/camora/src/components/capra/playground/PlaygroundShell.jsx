@@ -24,7 +24,7 @@ export default function PlaygroundShell() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
-    <div className="page-wrap flex flex-col" style={{ height: '80vh', minHeight: 0 }}>
+    <div className="page-wrap flex flex-col" style={{ height: 'calc(100vh - 60px)', minHeight: 0 }}>
       {/* Header */}
       <div
         className="cam-hero-strip flex items-center justify-between px-6 py-3 shrink-0"
