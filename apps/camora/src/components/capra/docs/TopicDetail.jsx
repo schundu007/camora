@@ -2787,7 +2787,7 @@ export default function TopicDetail({
               padding: '32px 40px',
             }}
           >
-            <div className="prep-content w-full">{children}</div>
+            <div className="prep-content">{children}</div>
           </div>
         );
 
@@ -2860,7 +2860,7 @@ export default function TopicDetail({
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">{topicDetails.whenToUse}</p>
+                    <FormattedContent content={topicDetails.whenToUse} />
                   )}
                 </SlideCard>
               </div>
