@@ -232,6 +232,53 @@ const icons = {
       <path d="M10 4l.6 1.8H12.5L10.9 7l.6 1.8L10 7.6l-1.5 1.2.6-1.8L7.5 5.8H9.4z"/>
     </svg>
   ),
+  /* Cloud / AWS — cloud outline */
+  cloud: (
+    <svg {...S} viewBox="0 0 20 20">
+      <path d="M5 14a4 4 0 01-.5-7.9A5 5 0 0114.5 8H15a3 3 0 010 6H5z"/>
+    </svg>
+  ),
+  /* Linux — terminal with $ prompt */
+  linux: (
+    <svg {...S} viewBox="0 0 20 20">
+      <rect x="2" y="3" width="16" height="13" rx="2"/>
+      <path d="M2 7h16"/>
+      <path d="M5.5 11L8 13.5M5.5 13.5L8 11"/>
+      <path d="M10 13h4.5"/>
+    </svg>
+  ),
+  /* Networking — three nodes connected */
+  networking: (
+    <svg {...S} viewBox="0 0 20 20">
+      <circle cx="10" cy="4" r="2"/>
+      <circle cx="3.5" cy="15" r="2"/>
+      <circle cx="16.5" cy="15" r="2"/>
+      <path d="M10 6v3M10 9L4.8 13.4M10 9L15.2 13.4"/>
+    </svg>
+  ),
+  /* Troubleshooting — magnifying glass + crosshair */
+  troubleshoot: (
+    <svg {...S} viewBox="0 0 20 20">
+      <circle cx="8.5" cy="8.5" r="5"/>
+      <path d="M12.5 12.5L17 17"/>
+      <path d="M6 8.5h5M8.5 6v5"/>
+    </svg>
+  ),
+  /* War Stories — lightning bolt (incident) */
+  warStories: (
+    <svg {...S} viewBox="0 0 20 20">
+      <path d="M10.5 2L4 11h6.5l-1 7 7.5-9.5H10.5z"/>
+    </svg>
+  ),
+  /* This vs That — two panels with divider */
+  comparisons: (
+    <svg {...S} viewBox="0 0 20 20">
+      <rect x="1.5" y="4" width="7" height="12" rx="1.5"/>
+      <rect x="11.5" y="4" width="7" height="12" rx="1.5"/>
+      <path d="M10 4v12"/>
+      <path d="M3.5 8h3M3.5 11h3M13.5 8h3M13.5 11h3"/>
+    </svg>
+  ),
   /* CodeSignal — lightning bolt */
   bolt: (
     <svg {...S} viewBox="0 0 20 20">
@@ -273,6 +320,12 @@ const sections: NavSection[] = [
       { label: 'Microservices', path: '/capra/prepare/microservices', icon: icons.microservices },
       { label: 'DevOps', path: '/capra/prepare/devops', icon: icons.devops },
       { label: 'SRE', path: '/capra/prepare/sre', icon: icons.sre },
+      { label: 'Cloud / AWS', path: '/capra/prepare/cloud', icon: icons.cloud },
+      { label: 'Linux', path: '/capra/prepare/linux', icon: icons.linux },
+      { label: 'Networking', path: '/capra/prepare/networking', icon: icons.networking },
+      { label: 'Troubleshooting', path: '/capra/prepare/troubleshooting', icon: icons.troubleshoot },
+      { label: 'War Stories', path: '/capra/prepare/war-stories', icon: icons.warStories },
+      { label: 'This vs That', path: '/capra/prepare/comparisons', icon: icons.comparisons },
       { label: 'Databases & SQL', path: '/capra/prepare/databases', icon: icons.database },
       { label: 'Projects', path: '/capra/prepare/projects', icon: icons.folder },
       { label: 'Roadmaps', path: '/capra/prepare/roadmaps', icon: icons.roadmap },
