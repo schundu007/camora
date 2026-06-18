@@ -132,7 +132,34 @@ export async function getTaskAddress(jobId) {
         const ports = allocData?.AllocatedResources?.Shared?.Ports || [];
         const ttydPort = ports.find((p) => p.Label === 'ttyd');
         if (ttydPort) {
-          return { host: ttydPort.HostIP || running.NodeID, port: ttydPort.Value };
+          let host = ttydPort.HostIP;
+
+          // HostIP is often "0.0.0.0" (all-interfaces bind) — not a routable address.
+          // Resolution order: env override → Nomad node HTTPAddr → node attributes.
+          if (!host || host === '0.0.0.0') {
+            const envIp = process.env.NOMAD_CLIENT_PUBLIC_IP;
+            if (envIp) {
+              host = envIp;
+            } else {
+              try {
+                const nodeRes = await fetch(`${addr}/v1/node/${running.NodeID}`, { headers: nomadHeaders() });
+                if (nodeRes.ok) {
+                  const nodeData = await nodeRes.json();
+                  // HTTPAddr is "IP:4646" — take only the IP part
+                  const nodeIp = (nodeData.HTTPAddr || '').split(':')[0];
+                  if (nodeIp && nodeIp !== '0.0.0.0') {
+                    host = nodeIp;
+                  } else {
+                    host = nodeData.Attributes?.['unique.network.ip-address'] || host;
+                  }
+                }
+              } catch {
+                // ignore — keep whatever host we have
+              }
+            }
+          }
+
+          return { host, port: ttydPort.Value };
         }
       }
     }

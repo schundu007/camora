@@ -31,11 +31,12 @@ export default function PlaygroundShell() {
   const [environment, setEnvironment] = useState('ubuntu');
   const [fontSize, setFontSize] = useState(13);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [termKey, setTermKey] = useState(0);
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
   const isCreating = status === 'creating';
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 480;
 
   const selectedEnv = ENVIRONMENTS.find((e) => e.id === environment) || ENVIRONMENTS[0];
   const timerStr = formatTime(timeRemaining);
@@ -130,7 +131,7 @@ export default function PlaygroundShell() {
             }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981', flexShrink: 0 }} />
               {selectedEnv.id === 'ubuntu' ? 'ubuntu-01' : selectedEnv.id === 'docker' ? 'docker-01' : selectedEnv.id === 'agent-sandbox' ? 'agent-01' : 'node-01'}
-              <button type="button" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0 0 0 2px', fontSize: 11, lineHeight: 1, display: 'flex', alignItems: 'center' }} title="Reload">↻</button>
+              <button type="button" onClick={() => setTermKey((k) => k + 1)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0 0 0 2px', fontSize: 11, lineHeight: 1, display: 'flex', alignItems: 'center' }} title="Reconnect terminal">↻</button>
             </div>
             <button type="button" style={{ ...iconBtn, width: 24, height: 24, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, fontSize: 14 }} title="Add terminal">+</button>
             <div style={{ flex: 1 }} />
@@ -181,6 +182,7 @@ export default function PlaygroundShell() {
             )}
             <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#0a0a0a' }}>
               <TerminalPane
+                key={termKey}
                 ref={termRef}
                 sessionId={session.sessionId}
                 wsUrl={session.wsUrl}
