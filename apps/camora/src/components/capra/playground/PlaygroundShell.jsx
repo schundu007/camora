@@ -298,11 +298,21 @@ export default function PlaygroundShell() {
 
               {/* Spacer */}
               <div style={{ flex: 1 }} />
+            </div>
 
-              {/* Launch button */}
-              <div style={{ padding: '0 16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Right panel: environment card grid + centered Start button below */}
+            <div style={{ flex: 1, overflowY: 'auto', background: '#0d1117', display: 'flex', flexDirection: 'column' }}>
+              <EnvironmentPicker
+                selected={environment}
+                onChange={setEnvironment}
+                userPlan={user?.plan_type}
+                disabled={isCreating}
+              />
+
+              {/* Start button — centered below all env cards */}
+              <div style={{ padding: '8px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 {status === 'error' && error && (
-                  <div style={{ padding: '8px 10px', borderRadius: 6, fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 4 }}>
+                  <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
                     {error}
                   </div>
                 )}
@@ -312,11 +322,12 @@ export default function PlaygroundShell() {
                   onClick={() => createSession(environment)}
                   style={{
                     width: '100%',
-                    padding: '11px 0',
+                    maxWidth: 380,
+                    padding: '13px 0',
                     borderRadius: 8,
                     fontSize: 13,
                     fontWeight: 800,
-                    letterSpacing: '0.03em',
+                    letterSpacing: '0.04em',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -327,6 +338,7 @@ export default function PlaygroundShell() {
                     cursor: isCreating ? 'not-allowed' : 'pointer',
                     opacity: isCreating ? 0.85 : 1,
                     textTransform: 'uppercase',
+                    boxShadow: isCreating ? 'none' : '0 0 24px rgba(212,160,67,0.25)',
                   }}
                 >
                   {isCreating && (
@@ -342,16 +354,6 @@ export default function PlaygroundShell() {
                   {isCreating ? 'Starting...' : 'Start Playground'}
                 </button>
               </div>
-            </div>
-
-            {/* Right panel: environment card grid */}
-            <div style={{ flex: 1, overflowY: 'auto', background: '#0d1117' }}>
-              <EnvironmentPicker
-                selected={environment}
-                onChange={setEnvironment}
-                userPlan={user?.plan_type}
-                disabled={isCreating}
-              />
             </div>
           </div>
         </>
