@@ -8,6 +8,9 @@ import { isOwnerEmail } from './lib/owner';
 import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
 import { CelebrationProvider } from './components/shared/Celebration';
+import { caraRegistry } from '@/lib/cara-registry';
+import { useSessionStore } from '@/stores/session-store';
+import CaraBar from '@/components/shared/cara/CaraBar';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -439,6 +442,29 @@ const RouteTitle = () => {
   return null;
 }
 
+const CaraKeyListener = () => {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        caraRegistry.open();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+  return null;
+};
+
+const LumoraSessionSync = () => {
+  const isRecording = useSessionStore(s => s.isRecording);
+  const isStreaming = useSessionStore(s => s.isStreaming);
+  useEffect(() => {
+    caraRegistry.setLumoraActive(isRecording || isStreaming);
+  }, [isRecording, isStreaming]);
+  return null;
+};
+
 export const App = () => {
   return (
     <AuthProvider>
@@ -449,6 +475,9 @@ export const App = () => {
         <PageTracker />
         <ProductAttribute />
         <RouteTitle />
+        <CaraKeyListener />
+        <LumoraSessionSync />
+        <CaraBar />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
