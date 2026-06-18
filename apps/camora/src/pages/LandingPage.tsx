@@ -446,77 +446,76 @@ export default function LandingPage() {
       <Section tone="surface" spacing="lg">
         <Container>
           <Reveal>
-            {/* dark navy card — dot-grid + corner brackets + 2×2 grid */}
+            {/* Always-dark card — immune to light/dark theme */}
             <div
-              className="relative mx-auto max-w-[620px] rounded-2xl overflow-hidden"
-              style={{ background: 'var(--cam-hero-bg)' }}
+              className="relative rounded-2xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #0B1221 0%, #0E1628 50%, #111827 100%)',
+                boxShadow: '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 64px rgba(0,0,0,0.36)',
+                border: '1px solid rgba(255,255,255,0.07)',
+              }}
             >
-              {/* dot-grid overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backgroundImage: 'radial-gradient(circle, color-mix(in oklab, var(--cam-primary) 22%, transparent) 1px, transparent 1px)',
-                  backgroundSize: '22px 22px',
-                }}
-              />
+              {/* Gold top accent line */}
+              <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, rgba(212,160,67,0.7) 30%, rgba(212,160,67,0.7) 70%, transparent)', marginBottom: 0 }} />
 
-              {/* corner brackets — gold leaf accent */}
-              <div className="absolute top-4 left-4 w-6 h-6 border-t-[2px] border-l-[2px] border-[var(--cam-gold-leaf)] rounded-tl opacity-80" />
-              <div className="absolute top-4 right-4 w-6 h-6 border-t-[2px] border-r-[2px] border-[var(--cam-gold-leaf)] rounded-tr opacity-80" />
-              <div className="absolute bottom-4 left-4 w-6 h-6 border-b-[2px] border-l-[2px] border-[var(--cam-gold-leaf)] rounded-bl opacity-80" />
-              <div className="absolute bottom-4 right-4 w-6 h-6 border-b-[2px] border-r-[2px] border-[var(--cam-gold-leaf)] rounded-br opacity-80" />
+              <div className="px-8 pt-8 pb-10 md:px-12 md:pt-10">
+                {/* Header */}
+                <div className="mb-8">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'rgba(212,160,67,0.8)', fontFamily: 'var(--font-mono)' }}>
+                    The process
+                  </p>
+                  <h2 className="text-[22px] md:text-[26px] font-bold tracking-tight leading-tight" style={{ color: '#F0EEE9', fontFamily: 'var(--font-display)' }}>
+                    First application to final offer.
+                  </h2>
+                </div>
 
-              <div className="relative z-10 px-10 pt-10 pb-10">
-                {/* section title */}
-                <h2
-                  className="text-center text-[26px] font-bold text-white mb-10 tracking-tight"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  Apply · Prepare · Practice · Attend
-                </h2>
-
-                {/* 2×2 grid */}
-                <div className="relative grid grid-cols-2">
-                  {/* center intersection dot — gold leaf */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <div
-                      className="w-3 h-3 rounded-full bg-[var(--cam-gold-leaf)]"
-                      style={{ boxShadow: '0 0 10px 2px color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent)' }}
-                    />
-                  </div>
-
+                {/* 4-column horizontal steps */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
                   {APPA.map((step, i) => (
                     <Link
                       key={step.key}
                       to={step.href}
-                      className={cn(
-                        'group flex flex-col items-center text-center gap-5 px-8 py-9 transition-colors duration-200 hover:bg-white/[0.04]',
-                        i % 2 === 0 ? 'border-r border-[color-mix(in_oklab,var(--cam-primary)_20%,transparent)]' : '',
-                        i < 2 ? 'border-b border-[color-mix(in_oklab,var(--cam-primary)_20%,transparent)]' : '',
-                      )}
+                      className="group relative flex flex-col gap-3 px-5 py-6 transition-colors duration-200"
+                      style={{
+                        borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                        borderTop: i >= 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      {/* gradient icon container */}
-                      <div
-                        className="w-[76px] h-[76px] rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
-                        style={{ background: 'linear-gradient(145deg, var(--cam-primary-dk) 0%, var(--cam-primary-lt) 100%)' }}
+                      {/* Step number — large watermark */}
+                      <span
+                        className="text-[48px] font-bold leading-none select-none"
+                        style={{ color: 'rgba(212,160,67,0.18)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.04em' }}
                       >
-                        <svg
-                          width="38" height="38" viewBox="0 0 24 24"
-                          fill="none" stroke="white" strokeWidth={1.6}
-                          strokeLinecap="round" strokeLinejoin="round"
-                        >
-                          {APPA_ICON_PATHS[i]}
-                        </svg>
-                      </div>
-                      {/* label + headline */}
+                        0{i + 1}
+                      </span>
+
+                      {/* Step name */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--cam-gold-leaf-text)] mb-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: 'rgba(212,160,67,0.75)', fontFamily: 'var(--font-mono)' }}>
                           {step.label}
                         </p>
-                        <p className="text-white font-semibold text-[14px] leading-snug max-w-[150px]">
+                        <p className="text-[14px] font-semibold leading-snug" style={{ color: 'rgba(240,238,233,0.92)' }}>
                           {step.headline}
                         </p>
                       </div>
+
+                      {/* Description */}
+                      <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.45)' }}>
+                        {step.desc}
+                      </p>
+
+                      {/* Arrow link */}
+                      <span
+                        className="text-[12px] font-semibold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
+                        style={{ color: 'rgba(212,160,67,0.6)', fontFamily: 'var(--font-mono)' }}
+                      >
+                        Explore
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
+                          <path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
                     </Link>
                   ))}
                 </div>
