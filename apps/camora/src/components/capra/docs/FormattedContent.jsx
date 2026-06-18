@@ -214,45 +214,105 @@ export default function FormattedContent({ content, inline = false }) {
       );
     } else {
       let currentList = [];
+      let currentCliGroup = [];
       let listKeyCounter = 0;
 
       const flushList = () => {
-        if (currentList.length > 0) {
-          const items = currentList;
-          // Indent bullets ml-8 (32px) so they're visually subordinate to
-          // the preceding numbered item / heading / subheading instead of
-          // aligning at the same x-position as "1." / "2." markers. PPT-
-          // style nesting: bullets read as children of the line above.
-          currentSection.body.push(
-            <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2 ml-8">
-              {items.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
-                  <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
-                    {formatInlineText(item)}
-                  </span>
-                </li>
-              ))}
-            </ul>,
-          );
-          currentList = [];
-        }
+        if (currentList.length === 0) return;
+        const items = currentList;
+        currentSection.body.push(
+          <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2 ml-8">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
+                <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
+                  {formatInlineText(item)}
+                </span>
+              </li>
+            ))}
+          </ul>,
+        );
+        currentList = [];
+      };
+
+      // Flush accumulated CLI reference rows as a styled two-column card.
+      // Flag / command in a monospace code pill; description as body prose.
+      // Consecutive CLI-detected lines are grouped into one card; prose
+      // lines between them break the group.
+      const flushCliGroup = () => {
+        if (currentCliGroup.length === 0) return;
+        const rows = currentCliGroup.slice();
+        currentSection.body.push(
+          <div
+            key={`cli-${blockIdx}-${listKeyCounter++}`}
+            className="my-3 rounded-lg overflow-hidden"
+            style={{ border: '1px solid var(--border)' }}
+          >
+            {rows.map((row, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 px-4 py-2.5"
+                style={{
+                  borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none',
+                  background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)',
+                }}
+              >
+                <code
+                  className="flex-shrink-0 text-[12px] font-bold landing-mono px-2 py-0.5 rounded self-start mt-0.5 whitespace-nowrap"
+                  style={{
+                    background: 'color-mix(in oklab, var(--cam-primary, #26619C) 8%, transparent)',
+                    color: 'var(--cam-primary, #26619C)',
+                    border: '1px solid color-mix(in oklab, var(--cam-primary, #26619C) 18%, transparent)',
+                    maxWidth: '260px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                  title={row.cmd}
+                >
+                  {row.cmd}
+                </code>
+                <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body pt-0.5 min-w-0">
+                  {formatInlineText(row.desc)}
+                </span>
+              </div>
+            ))}
+          </div>,
+        );
+        currentCliGroup = [];
+      };
+
+      const flushAll = () => { flushList(); flushCliGroup(); };
+
+      // Detect CLI reference line patterns. Returns { cmd, desc } or null.
+      // A: Flag rows  — "-d   detach" / "--name <n>   assign a name..."
+      //    Starts with - or --, then optional arg, then 2+ spaces, then desc.
+      // B: Column-aligned em-dash — "docker inspect <n>     — full JSON..."
+      //    Any text + 2+ spaces + em dash + desc. 2+ spaces = column-pad signal.
+      // C: Short lowercase phrase em-dash — "stop — sends SIGTERM"
+      //    Only a lowercase word/phrase (≤28 chars) before single-space " — ".
+      //    Avoids false-positives from prose like "Performance — key factor."
+      const detectCliRow = (s) => {
+        const flagM = s.match(/^(-{1,2}[\w][\w.-]*)(\s+\S+)?\s{2,}(\S.+)$/);
+        if (flagM) return { cmd: (flagM[1] + (flagM[2] || '')).trim(), desc: flagM[3] };
+        const col2M = s.match(/^(.+?)\s{2,}—\s+(.+)$/);
+        if (col2M) return { cmd: col2M[1].trim(), desc: col2M[2] };
+        const wordM = s.match(/^([a-z][\w.-]{0,28})\s+—\s+(.+)$/);
+        if (wordM) return { cmd: wordM[1], desc: wordM[2] };
+        return null;
       };
 
       block.lines.forEach((line, lineIdx) => {
         const trimmed = line.trim();
 
         if (!trimmed) {
-          flushList();
+          flushAll();
           return;
         }
 
-        // Databricks/GitHub-style callouts: `> [!NOTE] body`, `> [!TIP] body`,
-        // `> [!WARNING] body`, `> [!CAUTION] body`, `> [!IMPORTANT] body`.
-        // Maps to the four DocsCallout variants — note / tip / warning / caution.
+        // Databricks/GitHub-style callouts: `> [!NOTE] body`, etc.
         const calloutMatch = trimmed.match(/^>\s*\[!(NOTE|TIP|WARNING|CAUTION|IMPORTANT)\]\s*(.*)$/i);
         if (calloutMatch) {
-          flushList();
+          flushAll();
           const tag = calloutMatch[1].toUpperCase();
           const body = calloutMatch[2];
           const variant =
@@ -268,26 +328,16 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
-        // Section heading detection — ONLY when the bold span is a
-        // standalone line (`**Header**` or `**Header:**` or `**Header**:`
-        // with nothing after). When body content follows on the same
-        // line (`**The challenge:** WebSocket connections are long-lived…`)
-        // we let the line fall through to the paragraph renderer so
-        // formatInlineText keeps the bold span as an inline `<strong>`
-        // lead-in. Without this gate every "bold lead, then body" line
-        // was promoted to a 20px h3 and the answer body had wildly
-        // uneven font sizes (the bug shown in the user screenshots).
+        // Section heading: standalone `**Header**` line only — not bold lead-in.
         const standaloneBoldHeader =
           trimmed.match(/^\*\*([^*]+?)\*\*\s*:?\s*$/) ||
           trimmed.match(/^\*\*([^*]+?):\*\*\s*$/);
         if (standaloneBoldHeader) {
-          flushList();
+          flushAll();
           const headerText = standaloneBoldHeader[1].replace(/:\s*$/, '');
           if (isStarKey(headerText)) {
             const keyword =
               headerText.charAt(0).toUpperCase() + headerText.slice(1).toLowerCase();
-            // STAR keys stay inline; they're sub-labels, not section
-            // breaks, so they don't open a new indented group.
             pushBody(
               <div
                 key={`star-${blockIdx}-${lineIdx}`}
@@ -311,7 +361,7 @@ export default function FormattedContent({ content, inline = false }) {
 
         const starHeaderMatch = trimmed.match(/^(Situation|Task|Action|Result)\s*[:]\s*$/i);
         if (starHeaderMatch) {
-          flushList();
+          flushAll();
           const keyword =
             starHeaderMatch[1].charAt(0).toUpperCase() + starHeaderMatch[1].slice(1).toLowerCase();
           pushBody(
@@ -325,28 +375,54 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
-        if (trimmed.endsWith(':') && trimmed.length < 50 && !trimmed.includes('.')) {
-          flushList();
-          openSection(
-            <h4
-              key={`h-${blockIdx}-${lineIdx}`}
-              className="text-[var(--accent)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
-            >
-              {trimmed.replace(/:\s*$/, '')}
-            </h4>,
-          );
+        // Sub-section header: short line ending with `:` containing no `.`.
+        // CLI headers (lowercase, contains spaces) get a monospace eyebrow
+        // pill instead of a prose h4 to signal "reference section".
+        if (trimmed.endsWith(':') && trimmed.length < 60 && !trimmed.includes('.')) {
+          flushAll();
+          const label = trimmed.replace(/:\s*$/, '');
+          const isCliHeader = /\s/.test(label) && /^[a-z]/.test(label);
+          if (isCliHeader) {
+            openSection(
+              <div
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="flex items-center gap-2 mt-6 mb-2 first:mt-0"
+              >
+                <span
+                  className="text-[11px] font-bold landing-mono px-2 py-0.5 rounded"
+                  style={{
+                    background: 'color-mix(in oklab, var(--cam-primary, #26619C) 8%, transparent)',
+                    color: 'var(--cam-primary, #26619C)',
+                    border: '1px solid color-mix(in oklab, var(--cam-primary, #26619C) 18%, transparent)',
+                  }}
+                >
+                  {label}
+                </span>
+              </div>,
+            );
+          } else {
+            openSection(
+              <h4
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="text-[var(--text-primary)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+              >
+                {label}
+              </h4>,
+            );
+          }
           return;
         }
 
         if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          flushCliGroup();
           currentList.push(trimmed.substring(2));
           return;
         }
 
-        // Q&A pairs: lines starting with "Q: " or "A: " get navy/gold badge treatment.
+        // Q&A pairs: "Q: " / "A: " get navy/gold badge treatment.
         const qaMatch = trimmed.match(/^([QA]):\s+(.+)$/);
         if (qaMatch) {
-          flushList();
+          flushAll();
           const label = qaMatch[1];
           const body = qaMatch[2];
           pushBody(
@@ -358,7 +434,17 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
-        flushList();
+        // CLI reference rows: detected flag rows and em-dash command rows
+        // accumulate into a visual two-column card (flushed on next non-CLI line).
+        const cliRow = detectCliRow(trimmed);
+        if (cliRow) {
+          flushList();
+          currentCliGroup.push(cliRow);
+          return;
+        }
+
+        // Plain prose paragraph — flush any pending groups first.
+        flushAll();
         pushBody(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
@@ -369,7 +455,7 @@ export default function FormattedContent({ content, inline = false }) {
         );
       });
 
-      flushList();
+      flushAll();
     }
   });
 
