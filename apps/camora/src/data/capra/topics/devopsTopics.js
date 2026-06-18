@@ -33179,7 +33179,7 @@ From the Kubernetes control plane's perspective the pod is just a pod. Resource 
 {
   id: 'dagger-ci',
   title: 'Dagger',
-  icon: 'git-merge',
+  icon: 'gitMerge',
   color: '#7c3aed',
   questions: 5,
   description: `Dagger is a programmable CI/CD engine that lets you define pipelines as code using Go, Python, or TypeScript SDKs, backed by a BuildKit-powered DAG executor with automatic caching. It eliminates the gap between local development and CI by running the exact same containerized pipeline everywhere.`,
@@ -33688,7 +33688,7 @@ The decision hinges on pipeline complexity and team investment capacity. For a s
 {
   id: 'linux-storage-deep-dive',
   title: 'Linux Storage',
-  icon: 'hard-drive',
+  icon: 'hardDrive',
   color: '#d97706',
   questions: 5,
   description: `Linux storage spans the full stack from physical block devices through partition tables, filesystems, and the Virtual Filesystem Switch (VFS) to application-level syscalls. Mastery of this stack is essential for tuning databases, container runtimes, and high-throughput services where I/O is the bottleneck.`,
