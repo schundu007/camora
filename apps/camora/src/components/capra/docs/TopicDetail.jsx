@@ -440,9 +440,9 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
         <ZoomableImage
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          maxHeight={520}
+          maxHeight={780}
           frameStyle={{ background: 'white' }}
-          imgStyle={{ filter: 'contrast(1.4) saturate(1.15)' }}
+          imgStyle={{ width: '100%', height: 'auto', filter: 'contrast(1.4) saturate(1.15)' }}
         />
         <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
           <span>{provider.toUpperCase()} Architecture</span>
@@ -2266,7 +2266,8 @@ export default function TopicDetail({
                             <ZoomableImage
                               src={diagSrc}
                               alt="Key Design Decisions"
-                              maxHeight={520}
+                              maxHeight={780}
+                              imgStyle={{ width: '100%', height: 'auto' }}
                             />
                           </div>
                         );
@@ -2812,6 +2813,21 @@ export default function TopicDetail({
               <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="viz-figure">
+                    {/* Diagram first — visually anchors the section before the reference text */}
+                    {viz.image && (
+                      <ZoomableImage
+                        src={viz.image}
+                        alt={viz.title}
+                        maxHeight={720}
+                        frameStyle={{
+                          background: 'white',
+                          border: 'none',
+                          borderRadius: 0,
+                          borderBottom: '1px solid var(--border)',
+                        }}
+                        imgStyle={{ width: '100%', height: 'auto' }}
+                      />
+                    )}
                     <figcaption className="viz-caption">
                       <h4 className="viz-caption-title">{viz.title}</h4>
                       {viz.description && (
@@ -2820,17 +2836,6 @@ export default function TopicDetail({
                         </div>
                       )}
                     </figcaption>
-                    {viz.image && (
-                      <div className="px-6 py-4" style={{ background: 'white' }}>
-                        <ZoomableImage
-                          src={viz.image}
-                          alt={viz.title}
-                          maxHeight={320}
-                          imgStyle={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '316px', margin: '0 auto' }}
-                          frameStyle={{ background: 'white' }}
-                        />
-                      </div>
-                    )}
                   </figure>
                 ))}
               </div>
