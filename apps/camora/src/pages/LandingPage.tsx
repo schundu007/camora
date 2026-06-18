@@ -8,7 +8,7 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import {
-  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeaturePlaygroundAnim,
+  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeaturePlaygroundAnim, FeaturePracticeAnim,
   FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockSessionAnim,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
@@ -120,6 +120,12 @@ const FEATURES = [
     title: 'Real terminals. Real Docker. Real Kubernetes.',
     desc: 'Spin up a live Ubuntu, Docker, or Kubernetes environment in under 5 seconds. Run kubectl, deploy containers, and demo infra skills — right in your browser. No VM setup required.',
     Anim: FeaturePlaygroundAnim,
+  },
+  {
+    label: 'Practice',
+    title: '9,500+ problems with AI feedback',
+    desc: 'Coding, DSA, MCQ, system design, SQL across 50+ domains. AI scores your solution and explains the optimal approach.',
+    Anim: FeaturePracticeAnim,
   },
 ];
 
