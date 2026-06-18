@@ -1,9 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
 import EnvironmentPicker from './EnvironmentPicker';
 import SessionTimer from './SessionTimer';
 import TerminalPane from './TerminalPane';
+
+const INIT_STEPS = [
+  'Allocating container',
+  'Pulling environment image',
+  'Starting shell process',
+  'Opening terminal',
+];
+
+const InitProgress = () => {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (step >= INIT_STEPS.length - 1) return;
+    const t = setTimeout(() => setStep(s => s + 1), 2800);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4" style={{ color: 'rgba(255,255,255,0.7)' }}>
+      <div
+        className="w-10 h-10 border-2 rounded-full animate-spin mb-2"
+        style={{ borderColor: 'rgba(212,160,67,0.6)', borderTopColor: 'transparent' }}
+      />
+      <p className="text-sm font-semibold" style={{ color: '#e8c46a' }}>
+        Warming up environment…
+      </p>
+      <div className="flex flex-col gap-1.5 min-w-[220px]">
+        {INIT_STEPS.map((label, i) => (
+          <div key={label} className="flex items-center gap-2 text-xs">
+            {i < step ? (
+              <span style={{ color: '#10b981' }}>✓</span>
+            ) : i === step ? (
+              <span
+                className="w-3 h-3 border rounded-full animate-spin inline-block"
+                style={{ borderColor: 'rgba(212,160,67,0.7)', borderTopColor: 'transparent' }}
+              />
+            ) : (
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>○</span>
+            )}
+            <span style={{ color: i <= step ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)' }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function PlaygroundShell() {
   const { user } = useAuth();
@@ -135,28 +183,28 @@ export default function PlaygroundShell() {
           </div>
 
           {/* Terminal area */}
-          <div className="flex-1 min-w-0 min-h-0" style={{ background: '#0a0a0a', position: 'relative' }}>
+          <div className="flex-1 min-w-0 min-h-0 flex items-center justify-center" style={{ background: '#0a0a0a', position: 'relative' }}>
             {isActive && session?.wsUrl ? (
               <TerminalPane
                 sessionId={session.sessionId}
                 wsUrl={session.wsUrl}
               />
+            ) : isCreating ? (
+              <InitProgress />
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div
-                    className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    {'>'}_
-                  </div>
-                  <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    Select an environment and start a session
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                    Sessions run for 30 minutes
-                  </p>
+              <div className="text-center">
+                <div
+                  className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  {'>'}_
                 </div>
+                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Select an environment and start a session
+                </p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  Sessions run for 30 minutes
+                </p>
               </div>
             )}
           </div>
