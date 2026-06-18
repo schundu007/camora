@@ -17,7 +17,7 @@ RUN pip3 install --no-cache-dir google-generativeai 2>/dev/null || true
 
 RUN npm install -g openai 2>/dev/null || true
 
-RUN useradd -m -s /bin/bash -u 1000 camora && \
+RUN useradd -m -s /bin/bash camora && \
     echo 'camora ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/camora && \
     chmod 0440 /etc/sudoers.d/camora
 
