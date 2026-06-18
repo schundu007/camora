@@ -2,11 +2,12 @@ import { isOwner } from '@/lib/owner';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ENVIRONMENTS = [
-  { id: 'ubuntu', label: 'Ubuntu', icon: '🖥', plan: 'free' },
-  { id: 'docker', label: 'Docker', icon: '🐳', plan: 'free' },
-  { id: 'k8s-single', label: 'K8s Single-node', icon: '☸', plan: 'pro' },
-  { id: 'k8s-multi', label: 'K8s Multi-node', icon: '☸', plan: 'pro' },
-  { id: 'cloud-cli', label: 'Cloud CLI', icon: '☁', plan: 'pro' },
+  { id: 'ubuntu', label: 'Ubuntu 24.04', icon: '🖥', plan: 'free', desc: 'Clean Ubuntu shell' },
+  { id: 'docker', label: 'Docker', icon: '🐳', plan: 'free', desc: 'Docker + Compose ready' },
+  { id: 'agent-sandbox', label: 'AI Agent Sandbox', icon: '🤖', plan: 'pro', desc: 'Claude Code · Codex · Gemini CLI', badge: 'NEW' },
+  { id: 'k8s-single', label: 'K8s Single-node', icon: '☸', plan: 'pro', desc: 'Single-node Kubernetes' },
+  { id: 'k8s-multi', label: 'K8s Multi-node', icon: '☸', plan: 'pro', desc: 'Multi-node cluster' },
+  { id: 'cloud-cli', label: 'Cloud CLI', icon: '☁', plan: 'pro', desc: 'AWS · GCP · Azure CLIs' },
 ];
 
 const PAID_PLANS = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
@@ -41,22 +42,43 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
               opacity: locked ? 0.7 : 1,
             }}
           >
-            <span style={{ fontSize: 16 }}>{env.icon}</span>
-            <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-              {env.label}
-            </span>
-            {env.plan === 'pro' && (
-              <span
-                className="badge-gold text-[10px] font-bold px-1.5 py-0.5 rounded"
-                style={{
-                  background: 'rgba(212,160,67,0.15)',
-                  border: '1px solid rgba(212,160,67,0.35)',
-                  color: 'var(--cam-gold-leaf-lt)',
-                }}
-              >
-                PRO
+            <span style={{ fontSize: 16, lineHeight: 1 }}>{env.icon}</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-medium leading-tight" style={{ color: 'var(--text-primary)' }}>
+                {env.label}
               </span>
-            )}
+              {env.desc && (
+                <span className="block text-[10px] leading-tight mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                  {env.desc}
+                </span>
+              )}
+            </span>
+            <span className="flex flex-col items-end gap-1 shrink-0">
+              {env.badge && (
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                  style={{
+                    background: 'rgba(16,185,129,0.15)',
+                    border: '1px solid rgba(16,185,129,0.35)',
+                    color: '#10b981',
+                  }}
+                >
+                  {env.badge}
+                </span>
+              )}
+              {env.plan === 'pro' && (
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                  style={{
+                    background: 'rgba(212,160,67,0.15)',
+                    border: '1px solid rgba(212,160,67,0.35)',
+                    color: 'var(--cam-gold-leaf-lt)',
+                  }}
+                >
+                  PRO
+                </span>
+              )}
+            </span>
           </button>
         );
       })}
