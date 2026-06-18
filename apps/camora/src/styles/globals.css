@@ -198,9 +198,9 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
-    --bg-base:     #F2F5F9;
-    --bg-app:      #F2F5F9;
-    --bg-surface:  #F9FAFB;
+    --bg-base:     #F4F6FA;
+    --bg-app:      #F4F6FA;
+    --bg-surface:  #F4F6FA;
     --bg-elevated: #FFFFFF;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
@@ -312,9 +312,9 @@
     --cam-gold-leaf-dk:       #2265BF;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
-    --bg-base:                #EEF2F7;
+    --bg-base:                #F4F6FA;
     --bg-app:                 #F4F6FA;
-    --bg-surface:             #FAFBFC;
+    --bg-surface:             #F4F6FA;
     --bg-elevated:            #FFFFFF;
     /* Strip-header tokens — dark text on light bg */
     --cam-section-label-text: var(--text-primary);
@@ -761,14 +761,9 @@
   box-shadow: var(--focus-ring);
 }
 
-/* ─── DELIGHT: hero/page background — subtle dot-grid paper texture ──
-   Tiny 1×1 blue-tinted dots at 24px grid. Pure CSS, no images.
-   Only fires on the html background layer (not cards/panels). */
+/* ─── Light theme body — single flat background color ── */
 [data-theme="light"] body {
-  background-image:
-    radial-gradient(circle, rgba(15,23,42,0.04) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-attachment: fixed;
+  background: var(--bg-app);
 }
 
 /* ─── DELIGHT: card — satisfying inset top-shine reveal on hover ── */
@@ -822,9 +817,6 @@
   [data-theme="light"] .btn-secondary:hover {
     transform: none !important;
     transition: none !important;
-  }
-  [data-theme="light"] body {
-    background-image: none;
   }
 }
 
