@@ -56,6 +56,8 @@ export const devopsTopicCategoryMap = {
   'firecracker-microvms':           'containers',
   'linux-storage-deep-dive':        'foundations',
   'linux-networking-l2l3':          'foundations',
+  'tcp-sockets-servers':            'foundations',
+  'computer-networking-fundamentals':'foundations',
   'kubernetes-the-hard-way':        'orchestration',
   'kubernetes-storage':             'orchestration',
   'kubernetes-pod-scheduling':      'orchestration',
@@ -104,6 +106,14 @@ export const devopsTopicCategoryMap = {
   'docker-swarm':                   'containers',
   'docker-security':                'containers',
   'container-security':             'containers',
+  'container-filesystem-internals': 'containers',
+  'container-networking-internals': 'containers',
+  'linux-cgroups':                  'containers',
+  'container-images-oci':           'containers',
+  'oci-runtime-spec':               'containers',
+  'containers-are-processes':       'containers',
+  'docker-multi-stage-builds':      'containers',
+  'distroless-images':              'containers',
   // Orchestration — architecture → core objects → packaging → networking → advanced
   'kubernetes-architecture':        'orchestration',
   'k8s-core-resources':             'orchestration',
@@ -111,6 +121,10 @@ export const devopsTopicCategoryMap = {
   'ingress-gateway-api':            'orchestration',
   'operators-and-crds':             'orchestration',
   'service-mesh':                   'orchestration',
+  'kubernetes-admission-control':   'orchestration',
+  'kubernetes-runtime-class':       'orchestration',
+  'kubernetes-native-sidecars':     'orchestration',
+  'kubeadm-provisioning':           'orchestration',
   // Observability — foundation → metrics → logs → traces → APM → SLOs → advanced
   'opentelemetry-fundamentals':     'observability',
   'prometheus-grafana-stack':       'observability',
@@ -131,6 +145,9 @@ export const devopsTopicCategoryMap = {
   'supply-chain-slsa':              'devsecops',
   'policy-as-code':                 'devsecops',
   'runtime-security':               'devsecops',
+  'docker-security-fundamentals':   'devsecops',
+  'vault-secrets-management':       'devsecops',
+  'tetragon-security-observability':'devsecops',
   // Cloud Native — app design → services → migration → async patterns → serverless
   'twelve-factor-app':              'cloudnative',
   'microservices-design':           'cloudnative',
@@ -36680,6 +36697,79 @@ git merge --strategy=ours <branch>  — resolve all conflicts by keeping the cur
 git merge --strategy=theirs <branch>  — resolve all conflicts by keeping the other branch version
 git merge --abort  — abort an in-progress merge and restore the working directory
 git mergetool  — open an external merge conflict resolution tool (vimdiff, meld, kdiff3)`,
+      },
+      {
+        title: 'Git Workflow Reference — commit refs, diff, history, combining branches',
+        description: `ways to refer to a commit:
+a branch  — main
+a tag  — v0.1
+a commit id  — 3e887ab
+a remote branch  — origin/main
+current commit  — HEAD
+3 commits ago  — HEAD~~~ or HEAD~3
+parent of HEAD  — HEAD^
+grandparent of HEAD  — HEAD^^
+
+staging and discarding changes:
+git add <file>  — stage a specific file for the next commit
+git add .  — stage all untracked files and unstaged changes
+git add -p  — interactively choose which parts of a file to stage (patch mode)
+git mv <old> <new>  — move or rename a file and stage the change
+git rm <file>  — delete a file from disk and stage the deletion
+git rm --cached <file>  — stop tracking a file without deleting it from disk
+git restore <file>  — discard unstaged changes to a file (keep index)
+git restore --staged --worktree <file>  — discard all staged and unstaged changes to a file
+git restore <file> --source <commit>  — restore a file to its state at a specific commit
+git checkout HEAD <file>  — restore a file to the last committed state (older syntax)
+git reset --hard  — discard all staged and unstaged changes in the working directory
+git clean  — delete untracked files (add -f to force, -fd to include dirs)
+git stash  — save all staged and unstaged changes to a temporary stack
+
+diffing changes:
+git diff  — show unstaged changes vs the index
+git diff --staged  — show staged changes vs the last commit (aka --cached)
+git diff HEAD  — show all staged and unstaged changes since the last commit
+git show <commit>  — show diff between a commit and its parent
+git diff <commit> <commit>  — diff any two commits
+git diff <commit> <file>  — diff one file since a given commit
+git diff <commit> --stat  — summary of changed files rather than full diff
+
+edit history:
+git reset HEAD^  — undo the last commit but keep all your changes in the working directory
+git rebase -i HEAD~6  — interactive rebase to squash, reorder, or amend the last 6 commits
+git commit --amend  — change the last commit message or add a forgotten file
+git reflog BRANCHNAME  — see every HEAD movement on a branch — use to recover from a failed rebase
+git reset --hard <commit>  — hard reset to a specific commit found in reflog
+
+code archaeology:
+git log main  — show a branch's commit history
+git log --graph main  — visualize branch history as an ASCII graph
+git log --oneline  — compact one-line view of the full commit history
+git log <file>  — show every commit that modified a file
+git log --follow <file>  — include commits from before the file was renamed
+git log -G banana  — find every commit that added or removed a specific string
+git blame <file>  — show who last changed each line of a file and when
+
+combining diverged branches:
+git switch banana && git rebase main  — rebase: replay banana commits on top of main for a linear history
+git switch main && git merge banana  — merge: create a merge commit that joins both branch histories
+git switch main && git merge --squash banana && git commit  — squash merge: collapse banana into a single commit on main
+git cherry-pick <commit>  — copy one specific commit onto the current branch
+
+remotes and push/pull:
+git remote add <name> <url>  — add a new remote repository
+git push origin main  — push the main branch to the remote origin
+git push -u origin <name>  — push a branch and set its upstream tracking reference
+git push --force-with-lease  — safe force push: fails if the remote was updated since your last fetch
+git push --tags  — push all local tags to the remote
+git fetch origin main  — download remote changes without touching local branches
+git pull --rebase  — fetch changes then rebase your current branch on top of them
+git pull origin main  — fetch and merge origin/main into the current branch
+
+important files:
+.git/config  — local per-repository git configuration
+~/.gitconfig  — global git config for the current user
+.gitignore  — list of file patterns that git should never track`,
       },
       {
         title: 'Git for DevOps — CI/CD, IaC, GitOps, secrets, rollbacks',

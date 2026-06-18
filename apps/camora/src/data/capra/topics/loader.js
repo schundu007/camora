@@ -115,6 +115,73 @@ export const HEAVY_TOPIC_LOADERS = {
       devopsChallenges: challenges.devopsChallenges,
     };
   },
+
+  // Cloud / AWS — interview prep for cloud engineers.
+  // 11 sub-categories: compute, storage, networking, databases, security,
+  // serverless, containers, monitoring, AI/ML, devtools, migration.
+  cloud: async () => {
+    const mod = await import('./cloudTopics.js');
+    return {
+      cloudCategories: mod.cloudCategories,
+      cloudTopicCategoryMap: mod.cloudTopicCategoryMap,
+      cloudTopics: mod.cloudTopics,
+    };
+  },
+
+  // Linux — fundamentals for cloud/DevOps engineers.
+  // 7 sub-categories: fundamentals, shell, networking, performance, storage, security, systemd.
+  linux: async () => {
+    const mod = await import('./linuxTopics.js');
+    return {
+      linuxCategories: mod.linuxCategories,
+      linuxTopicCategoryMap: mod.linuxTopicCategoryMap,
+      linuxTopics: mod.linuxTopics,
+    };
+  },
+
+  // Networking — cloud and DevOps networking deep dive.
+  // 7 sub-categories: fundamentals, DNS, load balancing, firewalls, protocols, cloud networking, troubleshooting.
+  networking: async () => {
+    const mod = await import('./networkingTopics.js');
+    return {
+      networkingCategories: mod.networkingCategories,
+      networkingTopicCategoryMap: mod.networkingTopicCategoryMap,
+      networkingTopics: mod.networkingTopics,
+    };
+  },
+
+  // Troubleshooting — production incident diagnosis.
+  // 7 sub-categories: AWS infra, networking, CI/CD, observability, database, performance, Kubernetes.
+  troubleshooting: async () => {
+    const mod = await import('./troubleshootingTopics.js');
+    return {
+      troubleshootingCategories: mod.troubleshootingCategories,
+      troubleshootingTopicCategoryMap: mod.troubleshootingTopicCategoryMap,
+      troubleshootingTopics: mod.troubleshootingTopics,
+    };
+  },
+
+  // War Stories — real production incident walkthroughs from AceCloudInterviews.
+  // 6 sub-categories: availability, data, security, performance, deployment, networking.
+  'war-stories': async () => {
+    const mod = await import('./warStoriesTopics.js');
+    return {
+      warStoriesCategories: mod.warStoriesCategories,
+      warStoriesTopicCategoryMap: mod.warStoriesTopicCategoryMap,
+      warStoriesTopics: mod.warStoriesTopics,
+    };
+  },
+
+  // Comparisons — "This vs That" decision guides for common interview choices.
+  // 7 sub-categories: compute, storage, messaging, CI/CD tools, monitoring, deployment, networking.
+  comparisons: async () => {
+    const mod = await import('./comparisonTopics.js');
+    return {
+      comparisonCategories: mod.comparisonCategories,
+      comparisonTopicCategoryMap: mod.comparisonTopicCategoryMap,
+      comparisonTopics: mod.comparisonTopics,
+    };
+  },
 };
 
 /**

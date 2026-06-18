@@ -26,6 +26,12 @@ const CATEGORY_HEX = {
   'behavioral':     'gold',
   'sre':            'navy-dk',
   'devops':         'gold',
+  'cloud':          'navy',
+  'linux':          'navy-lt',
+  'networking':     'navy-dk',
+  'troubleshooting':'gold',
+  'war-stories':    'red',
+  'comparisons':    'navy-lt',
 };
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
@@ -185,6 +191,36 @@ export default function DocsPage({ onBack }) {
   const devopsTopicCategoryMap = heavyData.devopsTopicCategoryMap || {};
   const devopsTopics = heavyData.devopsTopics || [];
   const devopsChallenges = heavyData.devopsChallenges || [];
+
+  // Cloud / AWS — AceCloudInterviews content: 130+ AWS services, tutorials, Q&As.
+  const cloudCategories = heavyData.cloudCategories || [];
+  const cloudTopicCategoryMap = heavyData.cloudTopicCategoryMap || {};
+  const cloudTopics = heavyData.cloudTopics || [];
+
+  // Linux — fundamentals for cloud/DevOps roles.
+  const linuxCategories = heavyData.linuxCategories || [];
+  const linuxTopicCategoryMap = heavyData.linuxTopicCategoryMap || {};
+  const linuxTopics = heavyData.linuxTopics || [];
+
+  // Networking — cloud and DevOps networking deep dive.
+  const networkingCategories = heavyData.networkingCategories || [];
+  const networkingTopicCategoryMap = heavyData.networkingTopicCategoryMap || {};
+  const networkingTopics = heavyData.networkingTopics || [];
+
+  // Troubleshooting — production incident diagnosis scenarios.
+  const troubleshootingCategories = heavyData.troubleshootingCategories || [];
+  const troubleshootingTopicCategoryMap = heavyData.troubleshootingTopicCategoryMap || {};
+  const troubleshootingTopics = heavyData.troubleshootingTopics || [];
+
+  // War Stories — real production incidents from AceCloudInterviews.
+  const warStoriesCategories = heavyData.warStoriesCategories || [];
+  const warStoriesTopicCategoryMap = heavyData.warStoriesTopicCategoryMap || {};
+  const warStoriesTopics = heavyData.warStoriesTopics || [];
+
+  // Comparisons — "This vs That" decision guides.
+  const comparisonCategories = heavyData.comparisonCategories || [];
+  const comparisonTopicCategoryMap = heavyData.comparisonTopicCategoryMap || {};
+  const comparisonTopics = heavyData.comparisonTopics || [];
 
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
@@ -470,6 +506,12 @@ export default function DocsPage({ onBack }) {
       activePage === 'eng-blogs' ? engBlogTopics :
       activePage === 'sre' ? sreTopics :
       activePage === 'devops' ? devopsTopics :
+      activePage === 'cloud' ? cloudTopics :
+      activePage === 'linux' ? linuxTopics :
+      activePage === 'networking' ? networkingTopics :
+      activePage === 'troubleshooting' ? troubleshootingTopics :
+      activePage === 'war-stories' ? warStoriesTopics :
+      activePage === 'comparisons' ? comparisonTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
     const completed = topics.filter(t => completedTopics[t.id]).length;
@@ -617,6 +659,12 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
     else if (activePage === 'sre') topics = sreTopics;
     else if (activePage === 'devops') topics = devopsTopics;
+    else if (activePage === 'cloud') topics = cloudTopics;
+    else if (activePage === 'linux') topics = linuxTopics;
+    else if (activePage === 'networking') topics = networkingTopics;
+    else if (activePage === 'troubleshooting') topics = troubleshootingTopics;
+    else if (activePage === 'war-stories') topics = warStoriesTopics;
+    else if (activePage === 'comparisons') topics = comparisonTopics;
     else return [];
 
     // Apply role-based filtering when navigating from a job prep page
@@ -760,6 +808,12 @@ export default function DocsPage({ onBack }) {
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: 'var(--text-primary)', topics: projectTopics, description: 'Build-from-zero portfolio projects with architecture diagrams and deployment guides.' },
       { id: 'roadmaps', href: 'roadmaps', title: 'Roadmaps', icon: 'trendingUp', color: 'var(--text-primary)', topics: roadmapTopics, description: 'Stage-by-stage learning paths to backend, frontend, ML, and SRE specializations.' },
       { id: 'eng-blogs', href: 'eng-blogs', title: 'Eng Blogs', icon: 'bookOpen', color: 'var(--text-primary)', topics: engBlogTopics, description: 'Curated engineering posts from Netflix, Uber, Stripe, Meta — the architectures behind real products.' },
+      { id: 'cloud', href: 'cloud', title: 'Cloud / AWS', icon: 'cloud', color: 'var(--text-primary)', topics: cloudTopics, description: '130+ AWS services — EC2, S3, Lambda, IAM, RDS, EKS, VPC, CloudFront and more with interview-focused deep dives.' },
+      { id: 'linux', href: 'linux', title: 'Linux', icon: 'terminal', color: 'var(--text-primary)', topics: linuxTopics, description: 'Filesystem, processes, shell scripting, networking, performance tuning, systemd — Linux fundamentals for cloud engineers.' },
+      { id: 'networking', href: 'networking', title: 'Networking', icon: 'globe', color: 'var(--text-primary)', topics: networkingTopics, description: 'TCP/IP, DNS, load balancing, firewalls, VPC, BGP — the networking layer every cloud engineer must own.' },
+      { id: 'troubleshooting', href: 'troubleshooting', title: 'Troubleshooting', icon: 'alertTriangle', color: 'var(--text-primary)', topics: troubleshootingTopics, description: 'Production diagnosis scenarios — EC2 failures, alerting gaps, zero-downtime migrations, latency spikes, Kubernetes crashes.' },
+      { id: 'war-stories', href: 'war-stories', title: 'War Stories', icon: 'zap', color: 'var(--text-primary)', topics: warStoriesTopics, description: 'Real production incidents — what broke, how it was diagnosed, what changed to prevent recurrence.' },
+      { id: 'comparisons', href: 'comparisons', title: 'This vs That', icon: 'gitBranch', color: 'var(--text-primary)', topics: comparisonTopics, description: 'ECS vs EKS, RDS vs DynamoDB, SQS vs SNS, GitHub Actions vs Jenkins — clear decision guides for common interview trade-offs.' },
     ];
     return cats.map(c => {
       const count = c.topics.length;
