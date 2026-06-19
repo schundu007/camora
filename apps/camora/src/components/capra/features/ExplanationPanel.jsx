@@ -1,74 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SectionCard } from '../ui';
+import FormattedContent from '../docs/FormattedContent.jsx';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-
-
-// Format text with basic markdown-like styling
-function FormattedText({ text }) {
-  if (!text) return null;
-
-  const paragraphs = text.split(/\n\n+/);
-
-  return (
-    <div className="space-y-3">
-      {paragraphs.map((para, i) => {
-        if (para.trim().startsWith('```') || para.match(/^[\s]{4,}/m)) {
-          const code = para.replace(/^```\w*\n?|```$/g, '').trim();
-          return (
-            <pre key={i} className="p-3 rounded-lg text-xs font-mono overflow-x-auto bg-[var(--bg-elevated)] text-brand-400 border border-[var(--border)]">
-              {code}
-            </pre>
-          );
-        }
-
-        if (para.match(/^[\s]*[-•*]\s/m)) {
-          const items = para.split(/\n/).filter(line => line.trim());
-          return (
-            <ul key={i} className="space-y-1.5 ml-4 list-disc text-[var(--text-primary)] marker:text-brand-400">
-              {items.map((item, j) => (
-                <li key={j} className="text-sm leading-relaxed">
-                  {item.replace(/^[\s]*[-•*]\s*/, '')}
-                </li>
-              ))}
-            </ul>
-          );
-        }
-
-        if (para.match(/^[\s]*\d+[.)]\s/m)) {
-          const items = para.split(/\n/).filter(line => line.trim());
-          return (
-            <ol key={i} className="space-y-1.5 ml-4 list-decimal text-[var(--text-primary)] marker:text-brand-400">
-              {items.map((item, j) => (
-                <li key={j} className="text-sm leading-relaxed">
-                  {item.replace(/^[\s]*\d+[.)]\s*/, '')}
-                </li>
-              ))}
-            </ol>
-          );
-        }
-
-        const escaped = para
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        const formatted = escaped
-          .split(/\n/)
-          .join(' ')
-          .replace(/\*\*(.+?)\*\*|__(.+?)__/g, '<strong class="font-semibold text-[var(--text-primary)]">$1$2</strong>')
-          .replace(/`([^`]+)`/g, '<code class="bg-brand-400/10 text-brand-400 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
-          .replace(/\*(.+?)\*|_(.+?)_/g, '<em class="text-[var(--text-primary)]">$1$2</em>');
-
-        return (
-          <p
-            key={i}
-            className="text-sm leading-relaxed text-[var(--text-primary)]"
-            dangerouslySetInnerHTML={{ __html: formatted }}
-          />
-        );
-      })}
-    </div>
-  );
-}
 
 export default function ExplanationPanel({ explanations, highlightedLine, pitch, systemDesign, isStreaming, onExpandSystemDesign, canExpandSystemDesign, onFollowUpQuestion, isProcessingFollowUp }) {
   const hasSystemDesign = systemDesign && systemDesign.included;
@@ -594,7 +527,7 @@ export default function ExplanationPanel({ explanations, highlightedLine, pitch,
               </div>
             ) : (
               /* Fallback for string format */
-              <FormattedText text={typeof pitch === 'string' ? pitch : String(pitch)} />
+              <FormattedContent content={typeof pitch === 'string' ? pitch : String(pitch)} />
             )}
           </SectionCard>
         )}
