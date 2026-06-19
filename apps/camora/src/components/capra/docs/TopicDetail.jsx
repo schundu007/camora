@@ -2743,17 +2743,17 @@ export default function TopicDetail({
       {!isLocked && (activePage === 'sre' || activePage === 'devops' || activePage === 'networking' || activePage === 'cloud' || activePage === 'linux' || activePage === 'troubleshooting' || activePage === 'war-stories' || activePage === 'comparisons') && (topicDetails.introduction || topicDetails.keyQuestions || topicDetails.visualizations?.length || topicDetails.topics?.length || topicDetails.quickFire?.length) && (() => {
         // Build the agenda — one entry per section that's actually present.
         const agenda = [];
-        if (topicDetails.introduction)                                          agenda.push({ id: 'overview',     label: 'Overview' });
-        if (topicDetails.visualizations?.length)                                agenda.push({ id: 'visual',       label: 'Visual Explanation' });
-        if (topicDetails.whenToUse && (Array.isArray(topicDetails.whenToUse) ? topicDetails.whenToUse.length : true)) agenda.push({ id: 'when-to-use', label: 'When to Use' });
-        if (topicDetails.keyConcepts?.length)                                   agenda.push({ id: 'key-concepts', label: 'Key Concepts' });
-        if (topicDetails.approach?.length)                                      agenda.push({ id: 'approach',     label: 'Approach' });
-        if (topicDetails.pitfalls?.length)                                      agenda.push({ id: 'pitfalls',     label: 'Common Pitfalls' });
-        if (topicDetails.keyQuestions?.length)                                  agenda.push({ id: 'key-questions',label: 'Questions & Answers' });
-        if (topicDetails.references?.length)                                    agenda.push({ id: 'references',   label: 'References' });
+        if (topicDetails.introduction)                                          agenda.push({ id: 'overview',       label: 'Overview' });
         if (topicDetails.topics?.length)                                        agenda.push({ id: 'topic-sections', label: 'Deep Dive' });
+        if (topicDetails.visualizations?.length)                                agenda.push({ id: 'visual',         label: 'Visual Explanation' });
+        if (topicDetails.whenToUse && (Array.isArray(topicDetails.whenToUse) ? topicDetails.whenToUse.length : true)) agenda.push({ id: 'when-to-use', label: 'When to Use' });
+        if (topicDetails.keyConcepts?.length)                                   agenda.push({ id: 'key-concepts',   label: 'Key Concepts' });
+        if (topicDetails.approach?.length)                                      agenda.push({ id: 'approach',       label: 'Approach' });
+        if (topicDetails.pitfalls?.length)                                      agenda.push({ id: 'pitfalls',       label: 'Common Pitfalls' });
+        if (topicDetails.keyQuestions?.length)                                  agenda.push({ id: 'key-questions',  label: 'Questions & Answers' });
         if (topicDetails.quickFire?.length)                                     agenda.push({ id: 'quick-fire',     label: 'Quick-Fire Q&A' });
-        if (topicDetails.video?.embedUrl)                                       agenda.push({ id: 'video',        label: 'Video Overview' });
+        if (topicDetails.references?.length)                                    agenda.push({ id: 'references',     label: 'References' });
+        if (topicDetails.video?.embedUrl)                                       agenda.push({ id: 'video',          label: 'Video Overview' });
 
         const slideNum = (id) => String(agenda.findIndex(a => a.id === id) + 1).padStart(2, '0');
 
@@ -2806,6 +2806,45 @@ export default function TopicDetail({
                 <SlideCard>
                   <FormattedContent content={topicDetails.introduction} color="blue" />
                 </SlideCard>
+              </div>
+            </section>
+          )}
+
+          {/* ── topics / Deep Dive sections — prose + code per subtopic ── */}
+          {topicDetails.topics && topicDetails.topics.length > 0 && (
+            <section id="topic-sections" className="scroll-mt-24">
+              <ContentHeading title="Deep Dive" actions={<GlassPill>{topicDetails.topics.length} sections</GlassPill>} />
+              <div className="pt-3 space-y-4">
+                {topicDetails.topics.map((sec, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                    <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-3">
+                      <span
+                        className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{ color: 'var(--cam-gold-leaf, #c9a55d)', background: 'rgba(201,165,93,0.08)', border: '1px solid rgba(201,165,93,0.3)' }}
+                      >
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display">{sec.title}</h4>
+                    </div>
+                    <div className="px-5 py-4 prep-content">
+                      {sec.content && <FormattedContent content={sec.content} />}
+                      {sec.codeExample && (
+                        <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                          <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg-elevated)]">
+                            <span className="text-[10px] font-bold landing-mono text-[var(--text-muted)] uppercase tracking-widest">Example</span>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(sec.codeExample); }}
+                              className="text-[10px] landing-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                            >copy</button>
+                          </div>
+                          <pre className="px-4 py-3 overflow-x-auto text-[12px] leading-relaxed landing-mono text-[var(--text-secondary)]" style={{ background: 'var(--bg-code, #0d1117)', margin: 0 }}>
+                            <code>{sec.codeExample}</code>
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
@@ -3050,72 +3089,6 @@ export default function TopicDetail({
             </section>
           )}
 
-          {/* ── 8 / References — citation footer ── */}
-          {topicDetails.references && topicDetails.references.length > 0 && (
-            <section id="references" className="scroll-mt-24">
-              <ContentHeading title="References" />
-              <div className="pt-3">
-                <SlideCard>
-                  <ul className="space-y-1.5">
-                    {topicDetails.references.map((url, i) => (
-                      <li key={i}>
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-start gap-2.5 px-2 py-1.5 -mx-2 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
-                        >
-                          <span className="text-[10px] font-bold landing-mono tabular-nums mt-1 flex-shrink-0 text-[var(--text-muted)]">[{String(i + 1).padStart(2, '0')}]</span>
-                          <Icon name="externalLink" size={11} className="text-[var(--text-muted)] mt-1 flex-shrink-0" />
-                          <span className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--accent)] group-hover:underline break-all landing-mono">{url}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </SlideCard>
-              </div>
-            </section>
-          )}
-
-          {/* ── topics / Deep Dive sections — prose + code per subtopic ── */}
-          {topicDetails.topics && topicDetails.topics.length > 0 && (
-            <section id="topic-sections" className="scroll-mt-24">
-              <ContentHeading title="Deep Dive" actions={<GlassPill>{topicDetails.topics.length} sections</GlassPill>} />
-              <div className="pt-3 space-y-4">
-                {topicDetails.topics.map((sec, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
-                    <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-3">
-                      <span
-                        className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
-                        style={{ color: 'var(--cam-gold-leaf, #c9a55d)', background: 'rgba(201,165,93,0.08)', border: '1px solid rgba(201,165,93,0.3)' }}
-                      >
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display">{sec.title}</h4>
-                    </div>
-                    <div className="px-5 py-4 prep-content">
-                      {sec.content && <FormattedContent content={sec.content} />}
-                      {sec.codeExample && (
-                        <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                          <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg-elevated)]">
-                            <span className="text-[10px] font-bold landing-mono text-[var(--text-muted)] uppercase tracking-widest">Example</span>
-                            <button
-                              onClick={() => { navigator.clipboard.writeText(sec.codeExample); }}
-                              className="text-[10px] landing-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-                            >copy</button>
-                          </div>
-                          <pre className="px-4 py-3 overflow-x-auto text-[12px] leading-relaxed landing-mono text-[var(--text-secondary)]" style={{ background: 'var(--bg-code, #0d1117)', margin: 0 }}>
-                            <code>{sec.codeExample}</code>
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
           {/* ── quickFire / Quick-Fire Q&A — collapsible cards ── */}
           {topicDetails.quickFire && topicDetails.quickFire.length > 0 && (
             <section id="quick-fire" className="scroll-mt-24">
@@ -3151,6 +3124,33 @@ export default function TopicDetail({
                     </div>
                   );
                 })}
+              </div>
+            </section>
+          )}
+
+          {/* ── 8 / References — citation footer ── */}
+          {topicDetails.references && topicDetails.references.length > 0 && (
+            <section id="references" className="scroll-mt-24">
+              <ContentHeading title="References" />
+              <div className="pt-3">
+                <SlideCard>
+                  <ul className="space-y-1.5">
+                    {topicDetails.references.map((url, i) => (
+                      <li key={i}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-start gap-2.5 px-2 py-1.5 -mx-2 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
+                        >
+                          <span className="text-[10px] font-bold landing-mono tabular-nums mt-1 flex-shrink-0 text-[var(--text-muted)]">[{String(i + 1).padStart(2, '0')}]</span>
+                          <Icon name="externalLink" size={11} className="text-[var(--text-muted)] mt-1 flex-shrink-0" />
+                          <span className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--accent)] group-hover:underline break-all landing-mono">{url}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </SlideCard>
               </div>
             </section>
           )}
