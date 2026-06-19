@@ -77,7 +77,7 @@ const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
 const CodeSignalLearnPage = lazy(() => import('./pages/capra/CodeSignalLearnPage'));
 const ProgramizLearnPage = lazy(() => import('./pages/capra/ProgramizLearnPage'));
 const LearnTopicPage = lazy(() => import('./pages/capra/LearnTopicPage'));
-const PlaygroundPage = lazy(() => import('./pages/capra/PlaygroundPage'));
+const PlaygroundPage = lazy(() => import('./pages/PlaygroundPage'));
 
 const Loading = () => {
   return (
@@ -420,6 +420,7 @@ const RouteTitle = () => {
   useEffect(() => {
     const fallbacks: Array<[string, string]> = [
       ['/lumora', 'Lumora — Camora'],
+      ['/playground', 'Playground — Camora'],
       ['/capra/prepare', 'Prepare — Camora'],
       ['/capra/practice', 'Practice — Camora'],
       ['/capra/plan', 'Study Plan — Camora'],
@@ -575,7 +576,8 @@ export const App = () => {
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/topic/:slug" element={<ShellRoute><LearnTopicPage /></ShellRoute>} />
-          <Route path="/capra/playground" element={<ShellRoute><PlaygroundPage /></ShellRoute>} />
+          <Route path="/playground" element={<ShellRoute><PlaygroundPage /></ShellRoute>} />
+          <Route path="/capra/playground" element={<Navigate to="/playground?tab=vm" replace />} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
           <Route path="/capra/achievements" element={<Navigate to="/profile?tab=achievements" replace />} />
