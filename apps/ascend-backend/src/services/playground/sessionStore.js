@@ -3,14 +3,17 @@ import { cacheSet, cacheDel } from '../redis.js';
 
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS setup_script TEXT').catch(() => {});
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB').catch(() => {});
+query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS radar_port INTEGER').catch(() => {});
+query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS radar_ready BOOLEAN DEFAULT FALSE').catch(() => {});
+query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS became_ready_at TIMESTAMPTZ').catch(() => {});
 
-export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort, setupScript, clusterNodes) {
+export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort, setupScript, clusterNodes, radarPort = null) {
   const result = await query(
     `INSERT INTO playground_sessions
-       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port, code_server_port, setup_script, cluster_nodes)
-     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7, $8, $9, $10)
+       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port, code_server_port, setup_script, cluster_nodes, radar_port)
+     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
-    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null, codeServerPort || null, setupScript || null, clusterNodes ? JSON.stringify(clusterNodes) : null],
+    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null, codeServerPort || null, setupScript || null, clusterNodes ? JSON.stringify(clusterNodes) : null, radarPort || null],
   );
   return result.rows[0];
 }
@@ -27,6 +30,10 @@ export async function updateSessionStatus(sessionId, status, extra = {}) {
   const setClauses = ['status = $2'];
   const values = [sessionId, status];
   let idx = 3;
+
+  if (status === 'ready') {
+    setClauses.push(`became_ready_at = COALESCE(became_ready_at, NOW())`);
+  }
 
   for (const [col, val] of Object.entries(extra)) {
     setClauses.push(`${col} = $${idx++}`);
@@ -90,4 +97,11 @@ export async function getSessionHistory(userId, limit = 20) {
     [userId, limit],
   );
   return result.rows;
+}
+
+export async function markRadarReady(sessionId) {
+  await query(
+    `UPDATE playground_sessions SET radar_ready = true WHERE id = $1`,
+    [sessionId],
+  );
 }
