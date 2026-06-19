@@ -7,6 +7,7 @@ import TerminalPane from './TerminalPane';
 import BootProgress from './BootProgress';
 import IdePane from './IdePane';
 import ToolPickerPanel from './ToolPickerPanel';
+import SavedVmsPanel from './SavedVmsPanel';
 
 function formatTime(seconds) {
   if (!seconds && seconds !== 0) return '60:00';
@@ -17,11 +18,12 @@ function formatTime(seconds) {
 
 export default function PlaygroundShell() {
   const { user } = useAuth();
-  const { confirm } = useDialog();
+  const { confirm, alert: dialogAlert } = useDialog();
   const {
     session, status, error, timeRemaining, bootSteps, extendAvailable,
     wsUrl, ideUrl,
     createSession, destroySession, extendSession,
+    saves, savesLoading, slotsUsed, slotsMax, saveVm, restoreVm, deleteSave,
   } = usePlaygroundSession();
 
   const [environment, setEnvironment] = useState('ubuntu');
@@ -30,6 +32,11 @@ export default function PlaygroundShell() {
   const [termKey, setTermKey] = useState(0);
   const [minimized, setMinimized] = useState(false);
   const [toolPickerOpen, setToolPickerOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [restoringId, setRestoringId] = useState(null);
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
@@ -62,6 +69,28 @@ export default function PlaygroundShell() {
   const handleFontDec = useCallback(() => {
     setFontSize(f => { const n = Math.max(10, f - 1); termRef.current?.setFontSize(n); return n; });
   }, []);
+
+  const handleSaveVm = useCallback(async () => {
+    if (!saveName.trim() || !session) return;
+    setSaving(true); setSaveError(null);
+    try {
+      await saveVm(session.sessionId, saveName.trim());
+      setSaveDialogOpen(false); setSaveName('');
+    } catch (err) { setSaveError(err.message); }
+    setSaving(false);
+  }, [saveName, session, saveVm]);
+
+  const handleRestoreVm = useCallback(async (saveId) => {
+    setRestoringId(saveId); setMinimized(false);
+    try { await restoreVm(saveId); } catch (err) { dialogAlert(err.message); }
+    setRestoringId(null);
+  }, [restoreVm, dialogAlert]);
+
+  const handleDeleteSave = useCallback(async (saveId) => {
+    const ok = await confirm({ message: 'Delete this saved VM? This cannot be undone.', tone: 'danger' });
+    if (!ok) return;
+    try { await deleteSave(saveId); } catch {}
+  }, [confirm, deleteSave]);
 
   if (isMobile) {
     return (
@@ -144,6 +173,11 @@ export default function PlaygroundShell() {
                 <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }}>+15m</button>
               )}
               <button type="button" onClick={() => setMinimized(true)} style={{ ...iconBtn }} title="Exit to playground home">← Exit</button>
+              {slotsMax > 0 && (
+                <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }} title="Save VM snapshot">
+                  💾 Save
+                </button>
+              )}
               <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171' }} title="End session">⏻</button>
             </div>
           </div>
@@ -197,6 +231,29 @@ export default function PlaygroundShell() {
               )}
             </div>
           </div>
+          {saveDialogOpen && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+              <div style={{ width: 360, background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Save VM Snapshot</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>
+                  Saves your container state to cloud storage. Takes 1–3 minutes. Restore any time to continue where you left off.
+                </div>
+                <input
+                  autoFocus type="text" placeholder="e.g. My Python setup"
+                  value={saveName} onChange={e => setSaveName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSaveVm(); if (e.key === 'Escape') setSaveDialogOpen(false); }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, fontSize: 13, boxSizing: 'border-box', marginBottom: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', outline: 'none' }}
+                />
+                {saveError && <div style={{ fontSize: 11, color: '#fca5a5', marginBottom: 8 }}>{saveError}</div>}
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => { setSaveDialogOpen(false); setSaveName(''); setSaveError(null); }} style={iconBtn}>Cancel</button>
+                  <button type="button" disabled={saving || !saveName.trim()} onClick={handleSaveVm} style={{ padding: '4px 14px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: saving ? 'rgba(212,160,67,0.4)' : '#d4a043', color: '#1a1200', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                    {saving ? 'Saving...' : 'Save VM'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -303,6 +360,11 @@ export default function PlaygroundShell() {
               </div>
             )}
             <EnvironmentPicker selected={environment} onChange={setEnvironment} userPlan={user?.plan_type} disabled={isLoading} />
+            <SavedVmsPanel
+              saves={saves} slotsUsed={slotsUsed} slotsMax={slotsMax}
+              savesLoading={savesLoading} onRestore={handleRestoreVm}
+              onDelete={handleDeleteSave} restoringId={restoringId}
+            />
             <div style={{ padding: '8px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               {status === 'error' && error && (
                 <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
