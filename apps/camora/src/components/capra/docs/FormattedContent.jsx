@@ -265,7 +265,7 @@ export default function FormattedContent({ content, inline = false }) {
       // Detect JSON/YAML structured-data lines that weren't wrapped in fenced blocks.
       // isJsonLine starts a new group; isYamlContinueLine only extends an open group.
       const isJsonLine = (s) => {
-        if (/^[{}\[\]],?$/.test(s)) return true;
+        if (/^[{}[\]],?$/.test(s)) return true;
         if (/^"[\w$@./-]+":\s/.test(s)) return true;
         if (/^\{.*"/.test(s) && /[}\]],?$/.test(s)) return true;
         if (/^[a-zA-Z][a-zA-Z0-9_-]*:\s+.+,$/.test(s)) return true;

@@ -3739,4 +3739,3580 @@ Every IPv6 host can have a globally unique, publicly reachable address. No NAT r
       'https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols',
     ],
   },
+  {
+    id: 'bgp-routing',
+    title: 'BGP Routing',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'AS numbers, iBGP vs eBGP, path selection attributes (MED/LocalPref/AS_PATH), route aggregation, and BGP hijacking attacks.',
+    visualizations: [],
+    introduction: `BGP (Border Gateway Protocol) is the routing protocol that holds the internet together. As an exterior gateway protocol standardized in RFC 4271, BGP exchanges reachability information between autonomous systems (AS) — collections of IP prefixes under a single administrative domain identified by a unique AS number. Unlike interior routing protocols that optimize for shortest path within a network, BGP is a path-vector protocol that makes routing decisions based on policies and a rich set of attributes.
+
+BGP sessions operate over TCP port 179, ensuring reliable delivery of routing updates. Two fundamental session types exist: eBGP (external BGP) connects routers in different autonomous systems and is the basis of inter-domain internet routing, while iBGP (internal BGP) connects routers within the same AS to distribute externally learned routes internally.
+
+Understanding BGP is critical for SRE and network engineering roles at large-scale companies. Google, Amazon, and Meta each operate large autonomous systems and peer with hundreds of ISPs globally. BGP misconfigurations have caused some of the internet's most severe outages, including the 2021 Facebook incident where an erroneous BGP withdrawal made all Facebook properties unreachable worldwide for over six hours.
+
+In cloud environments, BGP is used extensively: AWS Direct Connect uses BGP to exchange routes between on-premises networks and AWS, Transit Gateway route tables propagate BGP-learned prefixes, and Kubernetes CNI plugins like Calico use BGP to distribute pod CIDR routes across nodes. Mastery of BGP path selection, attribute manipulation, and troubleshooting is expected at the senior SRE and network engineer level.`,
+    whenToUse: [
+      'Designing multi-homed internet connectivity with multiple ISPs',
+      'Configuring AWS Direct Connect or Azure ExpressRoute BGP sessions',
+      'Building large-scale Kubernetes clusters using Calico or similar CNI with BGP',
+      'Investigating internet routing incidents, prefix hijacks, or route leaks',
+      'Architecting anycast routing for global load distribution',
+    ],
+    keyConcepts: [
+      { term: 'Autonomous System (AS)', definition: `A collection of IP prefixes under a single administrative domain, identified by a 16-bit (1-65535) or 32-bit AS number. Public AS numbers are assigned by RIRs. Private AS numbers (64512-65535 for 16-bit) are used internally and stripped at eBGP boundaries.` },
+      { term: 'Path Vector Protocol', definition: `BGP carries the full AS_PATH attribute listing every AS a route has traversed. This prevents routing loops (a router will not accept a route containing its own AS number) and enables policy-based path selection beyond simple hop count.` },
+      { term: 'LOCAL_PREF', definition: `A BGP attribute used within an AS (iBGP only) to influence outbound traffic. Higher LOCAL_PREF is preferred. Routers use this to prefer one exit point over another. Default value is 100. Not advertised to eBGP peers.` },
+      { term: 'MED (Multi-Exit Discriminator)', definition: `A BGP attribute advertised to eBGP peers to suggest a preferred entry point into your AS for a given prefix. Lower MED is preferred. Comparison is only done between routes from the same neighboring AS by default.` },
+      { term: 'BGP Path Selection Order', definition: `BGP selects the best path using a deterministic algorithm: highest WEIGHT (Cisco-proprietary, local only), highest LOCAL_PREF, locally originated routes, shortest AS_PATH, lowest ORIGIN code (IGP less than EGP less than incomplete), lowest MED, eBGP over iBGP, lowest IGP metric to next-hop, lowest router ID.` },
+      { term: 'Route Reflector', definition: `In iBGP, a full mesh of sessions is required between all routers (n*(n-1)/2 sessions). Route reflectors solve this scaling problem by acting as a hub, re-advertising iBGP-learned routes to other iBGP peers (clients). The route reflector does not modify path attributes except adding CLUSTER_LIST and ORIGINATOR_ID to prevent loops.` },
+    ],
+    pitfalls: [
+      'iBGP requires either a full mesh or route reflectors — failing to configure this means iBGP-learned routes will not be redistributed to other iBGP peers, causing black holes.',
+      'BGP next-hop is not changed for iBGP updates by default, so the next-hop IP learned via eBGP must be reachable via IGP inside the AS, or you must use next-hop-self on iBGP sessions.',
+      'Accepting overly specific prefixes from peers without prefix-list filtering enables BGP hijacking and route leak incidents. Always apply inbound prefix filters.',
+      'MED comparison is only between routes from the same AS by default. Comparing MEDs across different ASes requires bgp always-compare-med, which can cause unexpected path selection.',
+      'Forgetting to aggregate routes before advertising to upstream ISPs results in leaking internal topology details and wastes global routing table space.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain the BGP path selection algorithm. Given multiple paths to the same prefix, how does BGP choose the best one?',
+        answer: `## BGP Best Path Selection
+
+BGP evaluates candidate paths in strict order, stopping at the first differentiator:
+
+## Selection Order
+
+- WEIGHT: Highest wins. Cisco-proprietary, local to the router only, not advertised.
+- LOCAL_PREF: Highest wins. Shared within an AS via iBGP. Used to prefer one exit point.
+- Locally originated: Routes originated via network statement or redistribution preferred over learned routes.
+- AS_PATH length: Shortest wins. Can be manipulated with AS_PATH prepending to make a path less preferred.
+- ORIGIN code: IGP (i) preferred over EGP (e) preferred over Incomplete (?).
+- MED: Lowest wins. Compared only between routes from same neighboring AS unless always-compare-med is set.
+- eBGP over iBGP: External routes preferred over internal routes.
+- IGP metric to next-hop: Lowest wins. Picks the closest exit in the AS.
+- Oldest eBGP route: Prefers the route learned first (stability over change).
+- Lowest BGP Router ID: Tiebreaker using the router's RID.
+
+## Practical Example
+
+\`\`\`bash
+# View BGP table and best path on Cisco IOS
+show bgp ipv4 unicast 10.0.0.0/8
+
+# On Linux with FRR/Quagga
+vtysh -c "show bgp ipv4 unicast 203.0.113.0/24"
+
+# Check path attributes in detail
+vtysh -c "show bgp ipv4 unicast 203.0.113.0/24 detail"
+\`\`\`
+
+## Manipulation Strategies
+
+- Outbound (influence how others reach you): Increase AS_PATH length with prepending, adjust MED.
+- Inbound (influence how you exit): Set LOCAL_PREF high on preferred paths, use WEIGHT for per-router control.`,
+      },
+      {
+        question: 'What is a BGP route leak and a BGP hijack? How would you detect and mitigate each?',
+        answer: `## BGP Route Leak
+
+A route leak occurs when an AS re-advertises routes it received from one peer to another peer, violating the expected routing policy. Example: a customer AS receives routes from ISP-A and re-advertises them to ISP-B, causing traffic intended for ISP-A's customers to flow through the customer AS.
+
+Famous example: In 2010, China Telecom (AS23724) leaked around 40,000 prefixes, redirecting traffic for US military, government, and commercial sites through China for 18 minutes.
+
+## BGP Hijack
+
+A hijack occurs when an AS originates a prefix it does not own. More specific prefixes win BGP selection, so an attacker announcing 1.2.3.0/25 can steal traffic for 1.2.3.0/24. Can be used for traffic interception or denial of service.
+
+## Detection
+
+\`\`\`bash
+# Check who is originating a prefix using routing looking glasses
+curl "https://stat.ripe.net/data/bgp-state/data.json?resource=8.8.8.0/24" | jq '.data.routes[].attrs.origin'
+
+# Monitor with BGPmon or Kentik for unexpected origin AS changes
+# Check IRR (Internet Routing Registry) consistency
+whois -h whois.radb.net 8.8.8.0/24
+\`\`\`
+
+## Mitigations
+
+- RPKI (Resource Public Key Infrastructure): Cryptographically signs Route Origin Authorizations (ROAs) that specify which AS is allowed to originate a prefix. Routers with ROV (Route Origin Validation) drop RPKI-invalid prefixes.
+- IRR filtering: Filter based on IRRDB records (RADB, RIPE DB). Less secure than RPKI but widely deployed.
+- BGPsec: Signs the full AS_PATH but has poor adoption due to performance overhead.
+- Prefix lists: Apply strict inbound prefix filters on all BGP sessions, accepting only expected prefixes from each peer.`,
+      },
+      {
+        question: 'How does BGP work over AWS Direct Connect? Walk through the configuration and what happens if the BGP session drops.',
+        answer: `## BGP Over Direct Connect
+
+AWS Direct Connect uses BGP to exchange routes between your on-premises router and the AWS Direct Connect router. Each virtual interface (VIF) type uses BGP differently:
+
+## Virtual Interface Types
+
+- Private VIF: BGP session to a VGW (Virtual Private Gateway) or Direct Connect Gateway. Exchanges VPC CIDRs.
+- Public VIF: BGP session for AWS public IP space. Used to reach S3, DynamoDB endpoints without internet.
+- Transit VIF: BGP session to a Direct Connect Gateway attached to a Transit Gateway.
+
+## Configuration Steps
+
+\`\`\`bash
+# Create a private virtual interface
+aws directconnect create-private-virtual-interface \
+  --connection-id dxcon-xxxxxxxx \
+  --new-private-virtual-interface \
+    virtualInterfaceName=my-private-vif,\
+    vlan=101,\
+    asn=65000,\
+    authKey=yourBGPauthKey,\
+    amazonAddress=169.254.100.1/30,\
+    customerAddress=169.254.100.2/30,\
+    virtualGatewayId=vgw-xxxxxxxx
+
+# Verify BGP session state
+aws directconnect describe-virtual-interfaces \
+  --virtual-interface-id dxvif-xxxxxxxx \
+  --query 'virtualInterfaces[0].bgpPeers'
+\`\`\`
+
+## On-Premises Router (Cisco IOS example)
+
+\`\`\`
+router bgp 65000
+ neighbor 169.254.100.1 remote-as 7224
+ neighbor 169.254.100.1 password yourBGPauthKey
+ network 10.0.0.0 mask 255.255.0.0
+\`\`\`
+
+## Failover Behavior
+
+When the BGP session drops, AWS withdraws the advertised routes. If you have a Site-to-Site VPN configured as backup with lower LOCAL_PREF or higher AS_PATH length, traffic automatically fails over to VPN. The failover time depends on BGP hold timer (default 90 seconds, often tuned to 30s with keepalive 10s) plus VPN establishment time.`,
+      },
+    ],
+    references: [
+      'https://tools.ietf.org/html/rfc4271',
+      'https://docs.aws.amazon.com/directconnect/latest/UserGuide/virtualgateways.html',
+      'https://www.cloudflare.com/learning/security/glossary/bgp-hijacking/',
+      'https://rpki.cloudflare.com/',
+    ],
+  },
+  {
+    id: 'vlan-vxlan',
+    title: 'VLAN & VXLAN',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 5,
+    description: '802.1Q tagging, trunk vs access ports, VXLAN encapsulation over UDP port 4789, VTEP endpoints, and NVO3 overlay networks.',
+    visualizations: [],
+    introduction: `VLANs (Virtual Local Area Networks) and VXLAN (Virtual Extensible LAN) are foundational technologies for network segmentation and overlay networking, both critical in modern cloud and data center infrastructure.
+
+A VLAN is a logical partition of a Layer 2 network. Using IEEE 802.1Q tagging, a 12-bit VLAN ID (1-4094) is inserted into the Ethernet frame header, allowing switches to segregate traffic into isolated broadcast domains without requiring separate physical infrastructure. VLANs are the building block of traditional enterprise network segmentation, used to separate departments, isolate tenants, and reduce broadcast domain size.
+
+However, VLANs have a fundamental limitation: the 4094 VLAN limit is grossly insufficient for large multi-tenant environments like public clouds. AWS, GCP, and Azure each host millions of customer VPCs, far exceeding what 802.1Q can address. VXLAN was designed to solve this.
+
+VXLAN encapsulates Layer 2 Ethernet frames inside UDP packets, creating an overlay network across an existing Layer 3 underlay. The VXLAN header includes a 24-bit VNI (VXLAN Network Identifier), allowing over 16 million virtual segments. Traffic flows between VTEP (VXLAN Tunnel Endpoint) devices, which perform encapsulation and decapsulation.
+
+VXLAN is the backbone of OpenStack Neutron, VMware NSX-T, and Kubernetes CNI plugins like Flannel and Cilium. AWS uses a proprietary variant (Nitro hypervisor encapsulation) for VPC networking. Understanding VTEP behavior, multicast vs unicast VXLAN, and EVPN control plane is expected knowledge for senior networking and cloud platform engineers.`,
+    whenToUse: [
+      'Designing multi-tenant data center overlays exceeding 4094 VLAN limit',
+      'Troubleshooting Kubernetes pod-to-pod networking with overlay CNI plugins',
+      'Configuring VXLAN-based SDN in OpenStack or VMware NSX environments',
+      'Understanding AWS VPC and ENI networking at the hypervisor level',
+      'Implementing network segmentation in bare-metal cloud or colocation environments',
+    ],
+    keyConcepts: [
+      { term: '802.1Q Tagging', definition: `The IEEE standard for VLAN tagging. A 4-byte tag is inserted into the Ethernet frame between the source MAC and EtherType fields. The tag contains: Tag Protocol Identifier (0x8100), Priority Code Point (3 bits, QoS), Drop Eligible Indicator (1 bit), and VLAN ID (12 bits, 1-4094).` },
+      { term: 'Trunk Port vs Access Port', definition: `An access port carries traffic for a single VLAN and does not tag frames — used for connecting end hosts. A trunk port carries traffic for multiple VLANs and tags frames with 802.1Q headers — used for switch-to-switch and switch-to-router links. A native VLAN on a trunk port carries untagged traffic.` },
+      { term: 'VTEP (VXLAN Tunnel Endpoint)', definition: `The device that performs VXLAN encapsulation and decapsulation. A VTEP has an IP address in the underlay network and one or more VNIs in the overlay. VTEPs can be implemented in hardware (ToR switches), hypervisor kernel (Linux VXLAN driver), or software (OVS, Cilium).` },
+      { term: 'VNI (VXLAN Network Identifier)', definition: `The 24-bit segment identifier in the VXLAN header, equivalent to a VLAN ID but with 16 million possible values (2^24). Each VNI defines an independent Layer 2 domain in the overlay. Equivalent to an AWS VPC segment ID internally.` },
+      { term: 'EVPN (Ethernet VPN)', definition: `A BGP-based control plane for VXLAN that replaces flood-and-learn MAC discovery. EVPN uses BGP route types to distribute MAC/IP bindings (Type 2), IP prefix routes (Type 5), and multicast membership (Type 3) between VTEPs. This eliminates broadcast flooding and enables scale-out data center fabrics.` },
+    ],
+    pitfalls: [
+      'VXLAN adds 50 bytes of overhead (8 VXLAN + 8 UDP + 20 IP + 14 Ethernet outer headers). If the underlay MTU is 1500, inner frames must be limited to 1450 bytes or the outer MTU must be increased to 1550+ (jumbo frames). Failing to set jumbo frames causes silent packet drops for large transfers.',
+      'Native VLAN mismatch on trunk ports causes untagged traffic to land in the wrong VLAN, leading to subtle security and connectivity issues that are difficult to diagnose.',
+      'Flood-and-learn VXLAN without an EVPN control plane relies on multicast in the underlay for BUM (Broadcast, Unknown unicast, Multicast) traffic. If multicast is not configured or supported, VXLAN falls back to head-end replication, which is inefficient at scale.',
+      'VLAN pruning on trunk links is often forgotten. Without it, all VLAN traffic floods across all trunk links, wasting bandwidth and creating unnecessary broadcast domains on links that have no members for those VLANs.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does VXLAN encapsulation work, and how would you troubleshoot a scenario where pods in different Kubernetes nodes cannot communicate using a VXLAN-based CNI?',
+        answer: `## VXLAN Encapsulation
+
+A VXLAN frame wraps an inner Ethernet frame:
+
+\`\`\`
+Outer Ethernet | Outer IP (VTEP src/dst) | UDP dst:4789 | VXLAN (VNI) | Inner Ethernet | Inner IP | Payload
+\`\`\`
+
+The sending VTEP looks up the destination MAC in its FDB (Forwarding Database) to find the remote VTEP IP, encapsulates the frame, and sends it over UDP. The receiving VTEP decapsulates and delivers to the local interface.
+
+## Kubernetes VXLAN CNI Troubleshooting
+
+\`\`\`bash
+# 1. Verify VXLAN interface exists on the node (Flannel example)
+ip link show flannel.1
+ip -d link show flannel.1  # Shows VXLAN details including VNI and local VTEP IP
+
+# 2. Check FDB entries — maps remote pod MAC to remote VTEP IP
+bridge fdb show dev flannel.1
+
+# 3. Verify route to remote pod CIDR goes via VXLAN interface
+ip route show | grep 10.244.2.0  # Should show: via <remote-VTEP-IP> dev flannel.1
+
+# 4. Capture VXLAN traffic on the underlay
+tcpdump -i eth0 -n udp port 4789
+
+# 5. Check if underlay UDP 4789 is blocked by security groups or iptables
+iptables -L -n | grep 4789
+# AWS: ensure security group allows UDP 4789 between nodes
+
+# 6. Test inner connectivity with explicit source
+ping -I flannel.1 <remote-pod-IP>
+\`\`\`
+
+## Common Root Causes
+
+- UDP port 4789 blocked by cloud security group rules between nodes
+- MTU mismatch: VXLAN overhead not accounted for, causing fragmentation or drops
+- Stale FDB entries after node restart: entries point to wrong VTEP IP
+- Missing routes: pod CIDR routes not propagated after node addition`,
+      },
+      {
+        question: 'What is the difference between VLAN and VXLAN and when would you choose one over the other in a data center design?',
+        answer: `## VLAN vs VXLAN Comparison
+
+## VLAN (802.1Q)
+
+- Layer 2 segmentation within a single broadcast domain
+- 12-bit ID: maximum 4094 segments
+- No encapsulation overhead
+- Requires Layer 2 adjacency — all switches must participate
+- Simple to configure and debug
+- Limited to Layer 2 topology (STP, no ECMP)
+
+## VXLAN
+
+- Layer 2 overlay over Layer 3 underlay
+- 24-bit VNI: 16 million segments
+- 50-byte encapsulation overhead
+- Works across any routed underlay (IP fabric, Internet)
+- Requires VTEP implementation (hardware or software)
+- Enables ECMP in underlay with Layer 3 fabrics
+
+## When to Choose VLAN
+
+- Small to medium enterprise networks (under 1000 servers)
+- Single-site deployments where 4094 segments is sufficient
+- Simple segmentation needs without multi-tenancy at scale
+- Environments with Layer 2-dependent applications (clustering, PXE boot)
+
+## When to Choose VXLAN
+
+- Multi-tenant environments (cloud provider, large enterprise)
+- Data centers spanning multiple physical sites or availability zones
+- Kubernetes or containerized workloads needing overlay networking
+- Modern Clos/spine-leaf fabrics using BGP EVPN
+- Any environment requiring more than 4094 network segments
+
+## Modern Best Practice
+
+Modern data centers use a combination: a Layer 3 IP underlay (BGP between spine and leaf switches) with VXLAN overlay and EVPN control plane. This provides ECMP in the underlay, eliminates STP, and allows VM and container mobility without Layer 2 stretching.`,
+      },
+    ],
+    references: [
+      'https://tools.ietf.org/html/rfc7348',
+      'https://docs.kernel.org/networking/vxlan.html',
+      'https://docs.tigera.io/calico/latest/networking/configuring/vxlan-ipip',
+    ],
+  },
+  {
+    id: 'grpc-vs-rest',
+    title: 'gRPC vs REST',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'Protocol Buffers vs JSON serialization, streaming modes (unary/server/client/bidirectional), HTTP/2 multiplexing, and choosing the right API style.',
+    visualizations: [],
+    introduction: `gRPC and REST are the two dominant API paradigms in modern distributed systems, and choosing between them has significant performance, developer experience, and operational implications. Understanding both deeply is expected at senior engineering levels at Google, Amazon, and Meta.
+
+REST (Representational State Transfer) is an architectural style using HTTP/1.1 with JSON. It relies on standard HTTP verbs (GET, POST, PUT, DELETE, PATCH), stateless request-response patterns, and human-readable JSON payloads. REST's simplicity, browser compatibility, and universal tooling have made it the default for public-facing APIs.
+
+gRPC is a high-performance RPC framework developed by Google, built on HTTP/2 and Protocol Buffers (protobuf). It uses a schema-first approach where services and messages are defined in .proto files, and code is generated for both client and server in dozens of languages. gRPC supports four communication patterns: unary (single request-response, like REST), server streaming (one request, multiple responses), client streaming (multiple requests, one response), and bidirectional streaming.
+
+The performance difference is substantial in high-throughput scenarios. Protobuf serialization is 3-10x faster than JSON and produces payloads 2-5x smaller. HTTP/2 multiplexing eliminates head-of-line blocking and allows hundreds of concurrent requests over a single TCP connection. gRPC also supports flow control, header compression (HPACK), and built-in deadline propagation.
+
+In production systems, gRPC is used for internal service-to-service communication (Google's internal Stubby protocol inspired gRPC), while REST or GraphQL is typically used for external APIs. Kubernetes uses gRPC for its API server communication with kubelets. Envoy proxy uses gRPC for its xDS configuration protocol.`,
+    whenToUse: [
+      'Designing high-throughput internal microservice APIs requiring low latency',
+      'Building streaming APIs for real-time data feeds, logging pipelines, or chat systems',
+      'Generating strongly-typed clients in multiple languages from a single contract',
+      'Choosing between REST and gRPC for a new service in a polyglot microservices architecture',
+      'Evaluating API gateway and service mesh configuration for gRPC traffic',
+    ],
+    keyConcepts: [
+      { term: 'Protocol Buffers (protobuf)', definition: `A language-neutral, platform-neutral binary serialization format developed by Google. Messages are defined in .proto schema files and compiled to code. Protobuf uses field numbers instead of field names in serialized format, making it compact and backward-compatible. A 1KB JSON payload often serializes to 200-400 bytes in protobuf.` },
+      { term: 'HTTP/2 Multiplexing', definition: `HTTP/2 allows multiple logical streams over a single TCP connection using a framing layer. Each gRPC call is a stream. This eliminates the head-of-line blocking of HTTP/1.1 where a slow response blocks subsequent requests on the same connection. HTTP/2 also compresses headers with HPACK, reducing overhead for repeated headers like authentication tokens.` },
+      { term: 'gRPC Streaming Modes', definition: `Unary: single request, single response (equivalent to REST). Server streaming: client sends one request, server returns a stream of responses (e.g., log tailing). Client streaming: client sends a stream of requests, server returns one response (e.g., file upload). Bidirectional streaming: both sides send streams concurrently (e.g., real-time collaboration).` },
+      { term: 'Deadlines and Cancellation', definition: `gRPC has built-in deadline propagation. A client sets a deadline on a call, and the deadline is propagated to downstream services via gRPC metadata. If the deadline expires, all downstream calls are cancelled. This prevents cascading failures caused by hung upstream requests — a critical feature for production reliability.` },
+      { term: 'gRPC Transcoding', definition: `A technique to expose gRPC services via HTTP/JSON, typically using an API gateway (like Envoy or Google Cloud Endpoints) that translates REST requests to gRPC calls. Allows internal gRPC services to be consumed by HTTP clients without changing the service implementation. Defined via google.api.http annotations in .proto files.` },
+    ],
+    pitfalls: [
+      'gRPC is not natively supported in browsers without grpc-web and a proxy layer. Assuming gRPC works directly in browser JavaScript will result in failure — browsers cannot access HTTP/2 trailers that gRPC relies on for status codes.',
+      'Protobuf requires schema synchronization between clients and servers. Deploying a server with a new required field before updating clients will break existing clients. Always add new fields as optional and use field numbers carefully to maintain backward compatibility.',
+      'gRPC load balancing is connection-level by default in most load balancers. Since all calls share one HTTP/2 connection, a single gRPC connection to one backend can carry all traffic. Requires client-side load balancing or an L7 proxy (Envoy, nginx) that understands gRPC framing.',
+      'REST APIs with JSON have trivially readable payloads in tools like curl and browser devtools. gRPC binary payloads require grpcurl or specialized tools. This makes ad-hoc debugging significantly harder.',
+    ],
+    keyQuestions: [
+      {
+        question: 'When would you choose gRPC over REST for a new microservice, and what operational considerations does that choice introduce?',
+        answer: `## Choosing gRPC vs REST
+
+## Choose gRPC When
+
+- High throughput internal service-to-service calls (thousands of RPS per connection)
+- Streaming is a first-class requirement (log ingestion, real-time feeds)
+- Polyglot environment needing strongly typed, generated clients in Go, Python, Java, etc.
+- You need built-in deadline propagation across a call graph
+- Payload size matters (IoT, mobile, high-frequency data)
+
+## Choose REST When
+
+- Public-facing API consumed by browsers or third-party clients
+- Simple CRUD operations with infrequent calls
+- Team unfamiliar with protobuf toolchain
+- Caching at CDN/HTTP layer is important (gRPC caching is complex)
+- Integration with existing REST ecosystems (OAuth, Swagger/OpenAPI)
+
+## Operational Considerations for gRPC
+
+\`\`\`bash
+# Test a gRPC service without a generated client
+grpcurl -plaintext localhost:50051 list
+grpcurl -plaintext -d '{"user_id": "123"}' localhost:50051 users.UserService/GetUser
+
+# Debug gRPC traffic with envoy access logs
+# gRPC status codes are in HTTP/2 trailers, not response bodies
+# Look for grpc-status: 0 (OK) vs grpc-status: 13 (INTERNAL)
+
+# Check gRPC health using standard protocol
+grpcurl -plaintext localhost:50051 grpc.health.v1.Health/Check
+\`\`\`
+
+## Infrastructure Impact
+
+- Load balancers must support L7 gRPC (HTTP/2): AWS ALB supports gRPC, classic ELB does not
+- Service mesh (Istio/Linkerd) handles gRPC load balancing and observability natively
+- Monitoring: gRPC status codes are separate from HTTP status codes. A gRPC error returns HTTP 200 with grpc-status trailer set to non-zero
+- Distributed tracing: propagate trace context via gRPC metadata, not HTTP headers`,
+      },
+      {
+        question: 'Explain how gRPC bidirectional streaming works and give a real-world use case where it is the right choice.',
+        answer: `## Bidirectional Streaming in gRPC
+
+In bidirectional streaming, both the client and server can send a stream of messages independently over the same connection. Neither side needs to wait for the other to finish. The stream is established with a single HTTP/2 connection and both sides write to their respective streams concurrently.
+
+## Proto Definition
+
+\`\`\`protobuf
+service ChatService {
+  rpc StreamChat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+  string user_id = 1;
+  string content = 2;
+  int64 timestamp = 3;
+}
+\`\`\`
+
+## Server Implementation (Go)
+
+\`\`\`go
+func (s *server) StreamChat(stream pb.ChatService_StreamChatServer) error {
+    for {
+        msg, err := stream.Recv()
+        if err == io.EOF {
+            return nil
+        }
+        if err != nil {
+            return err
+        }
+        response := &pb.ChatMessage{Content: "Echo: " + msg.Content}
+        if err := stream.Send(response); err != nil {
+            return err
+        }
+    }
+}
+\`\`\`
+
+## Real-World Use Cases
+
+- Real-time collaborative editing (Google Docs-style): client sends keystrokes, server sends changes from other users
+- Live telemetry ingestion: client streams metrics, server sends alerting threshold updates
+- Kubernetes watch API: kubectl watches resource changes via server streaming (one request, continuous stream of events)
+- Online game state synchronization: player sends inputs, server sends world state updates
+
+## When Bidirectional Streaming Beats Alternatives
+
+Compared to WebSockets: gRPC streaming has built-in flow control, multiplexing, and typed schemas via protobuf. WebSockets are simpler for browser use but lack these features.
+
+Compared to polling: bidirectional streaming eliminates polling overhead entirely, reducing latency from seconds to milliseconds and reducing server load dramatically.`,
+      },
+    ],
+    references: [
+      'https://grpc.io/docs/what-is-grpc/introduction/',
+      'https://developers.google.com/protocol-buffers/docs/overview',
+      'https://http2.github.io/',
+      'https://grpc.io/docs/guides/deadlines/',
+      'https://github.com/fullstorydev/grpcurl',
+    ],
+  },
+  {
+    id: 'ospf-eigrp',
+    title: 'OSPF & EIGRP',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'Link-state vs distance-vector algorithms, OSPF areas and DR/BDR election, EIGRP DUAL algorithm, and enterprise routing tradeoffs.',
+    visualizations: [],
+    introduction: `OSPF (Open Shortest Path First) and EIGRP (Enhanced Interior Gateway Routing Protocol) are the two dominant interior gateway protocols (IGPs) used within enterprise and service provider networks. While BGP handles inter-AS routing, IGPs handle routing within a single autonomous system.
+
+OSPF is an open-standard link-state protocol defined in RFC 2328. Each router maintains a complete map of the network topology (the Link State Database or LSDB) and runs Dijkstra's SPF algorithm to compute the shortest path tree. OSPF is organized into areas — the backbone area 0 is required, with all other areas connecting to it. This hierarchy limits the size of the LSDB and reduces SPF computation overhead. OSPF is widely used in enterprise networks, service provider cores, and is the IGP of choice for large-scale deployments.
+
+EIGRP is a Cisco-proprietary (later partially open-sourced) advanced distance-vector protocol. Unlike classical distance-vector protocols (like RIP) that simply share routing tables, EIGRP uses the DUAL (Diffusing Update Algorithm) to maintain loop-free paths and provides instant convergence using pre-computed feasible successor routes. EIGRP is unequal-cost load balancing capable and has lower overhead than OSPF in stable networks.
+
+In cloud and SRE contexts, OSPF appears in on-premises enterprise networks, SD-WAN underlay routing, and sometimes within large VPN environments. EIGRP appears in Cisco-centric enterprise environments. Understanding convergence behavior, neighbor relationships, and failure recovery is critical when dealing with network outages and SRE incident response.`,
+    whenToUse: [
+      'Designing enterprise campus or branch office routing with OSPF multi-area hierarchy',
+      'Troubleshooting convergence issues after a link failure in an enterprise network',
+      'Evaluating IGP choices for an SD-WAN underlay or MPLS backbone',
+      'Understanding how on-premises routing affects hybrid cloud failover behavior',
+      'Responding to SRE incidents involving routing convergence delays',
+    ],
+    keyConcepts: [
+      { term: 'Link-State vs Distance-Vector', definition: `Link-state protocols (OSPF, IS-IS) flood topology information to all routers. Each router builds a complete network map and computes its own shortest paths using SPF. Distance-vector protocols (RIP, EIGRP) share computed routing tables with neighbors. Distance-vector is simpler but slower to converge and more prone to loops.` },
+      { term: 'OSPF DR/BDR Election', definition: `On multi-access networks (Ethernet segments with multiple routers), OSPF elects a Designated Router (DR) and Backup Designated Router (BDR) to reduce LSA flooding overhead. All other routers (DROther) form adjacencies only with DR and BDR, not with each other. DR is elected based on highest OSPF priority (default 1, range 0-255), then highest router ID. A priority of 0 disqualifies a router from DR/BDR election.` },
+      { term: 'OSPF Areas', definition: `Area 0 (backbone) is required. All non-backbone areas must connect to area 0 (directly or via virtual link). Area Border Routers (ABRs) connect areas and summarize routes between them. Stub areas block external LSAs (Type 5). Totally stubby areas block both external and inter-area LSAs, receiving only a default route.` },
+      { term: 'DUAL Algorithm (EIGRP)', definition: `DUAL computes loop-free paths by maintaining a Feasibility Condition: a neighbor's reported distance (RD) to a destination must be less than the local best distance (FD) to use it as a feasible successor. Feasible successors are pre-computed backup paths. When the primary path fails, EIGRP promotes a feasible successor instantly without running Bellman-Ford.` },
+      { term: 'Administrative Distance', definition: `When multiple routing protocols provide routes to the same destination, the router uses Administrative Distance (AD) to choose between them. Lower AD wins. Directly connected: 0, Static: 1, EIGRP summary: 5, eBGP: 20, EIGRP internal: 90, OSPF: 110, IS-IS: 115, RIP: 120, iBGP: 200.` },
+    ],
+    pitfalls: [
+      'OSPF requires all areas to connect to area 0. If a non-backbone area becomes disconnected from area 0, inter-area routing breaks. Virtual links can fix this but are complex and considered a workaround.',
+      'OSPF neighbor adjacency will not form if there are mismatches in hello/dead timers, area ID, authentication, subnet mask, or MTU. The router will show neighbors in INIT or 2WAY state but never reach FULL state.',
+      'EIGRP stuck-in-active (SIA) occurs when a router queries neighbors for a route and does not receive a reply within the active timer (default 3 minutes). This puts the route in SIA state and forces a neighbor reset, causing widespread route flaps. Often caused by slow WAN links or unresponsive routers.',
+      'Redistributing routes between OSPF and EIGRP without careful metric and filtering configuration can cause routing loops and suboptimal paths. Always set explicit metrics and use route-maps with prefix-lists when redistributing between protocols.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Describe the OSPF neighbor adjacency formation process and what causes routers to get stuck in each state.',
+        answer: `## OSPF Neighbor State Machine
+
+## States in Order
+
+- Down: No hellos received from neighbor.
+- Init: Hello received, but our router ID is not in the hello packet yet (one-way communication).
+- 2-Way: Bidirectional communication established. DR/BDR election happens here. DROther routers stay in 2-Way with each other.
+- ExStart: Master/slave relationship negotiated using DBD packets. Higher router ID becomes master.
+- Exchange: Full DBD (Database Description) packets exchanged listing LSA headers.
+- Loading: Router sends LSR (Link State Request) for missing LSAs, receives LSU (Link State Update).
+- Full: LSDB synchronized. Adjacency is complete.
+
+## Common Stuck States and Causes
+
+\`\`\`bash
+# Check OSPF neighbor state
+show ip ospf neighbor
+
+# Stuck in INIT: one-way hello — check if ACLs block OSPF multicast (224.0.0.5/224.0.0.6)
+# Stuck in 2-WAY: this is normal for DROther pairs on multi-access segments
+# Stuck in EXSTART: MTU mismatch (ip ospf mtu-ignore workaround), duplicate router IDs
+# Stuck in EXCHANGE: MTU mismatch causing DBD packet drops
+# Stuck in LOADING: corrupted LSA or database corruption
+\`\`\`
+
+## Verification Commands
+
+\`\`\`bash
+# Verify hello/dead timer match
+show ip ospf interface GigabitEthernet0/0
+
+# Check OSPF database
+show ip ospf database
+
+# Debug adjacency formation (use carefully in production)
+debug ip ospf adj
+\`\`\`
+
+MTU mismatch is the most common production cause of OSPF not reaching FULL state. OSPF checks MTU during DBD exchange and will not proceed if MTUs differ.`,
+      },
+      {
+        question: 'How does EIGRP achieve fast convergence compared to OSPF, and when would EIGRP converge faster or slower?',
+        answer: `## EIGRP Convergence via DUAL
+
+EIGRP pre-computes backup paths (feasible successors) that satisfy the Feasibility Condition. When the primary route (successor) fails, EIGRP immediately promotes the feasible successor without any query process.
+
+## Instant Convergence Case
+
+\`\`\`
+Router A -> B (primary, FD = 100)
+Router A -> C -> B (feasible successor, RD from C = 80 < FD 100, FC satisfied)
+\`\`\`
+
+When A-B link fails, A immediately installs A-C-B. Convergence is sub-second, faster than OSPF SPF recalculation.
+
+## Query Process (Slow Case)
+
+If no feasible successor exists, EIGRP goes Active for that route and queries all neighbors. Queries propagate outward until a router with a valid route responds. In large networks with many routers, this query process can take seconds and cause the stuck-in-active problem.
+
+## OSPF Convergence
+
+OSPF convergence involves: LSA flood, SPF trigger delay, SPF calculation, route install. With fast timers (hello 1s/dead 3s, SPF initial 0ms), OSPF can converge in under 1 second on modern hardware. BFD (Bidirectional Forwarding Detection) can detect failures in milliseconds regardless of routing protocol.
+
+## Summary
+
+- EIGRP with feasible successors: sub-second convergence, often faster than OSPF
+- EIGRP without feasible successors: query process, potentially slower than OSPF
+- OSPF with BFD: consistent sub-second convergence regardless of topology
+- Both protocols benefit significantly from BFD for fast failure detection`,
+      },
+    ],
+    references: [
+      'https://tools.ietf.org/html/rfc2328',
+      'https://tools.ietf.org/html/rfc7868',
+      'https://www.cisco.com/c/en/us/support/docs/ip/enhanced-interior-gateway-routing-protocol-eigrp/16406-eigrp-toc.html',
+    ],
+  },
+  {
+    id: 'sd-wan',
+    title: 'SD-WAN',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 4,
+    description: 'Underlay vs overlay separation, intelligent path selection, WAN optimization, and SD-WAN vendor landscape (Cisco Viptela, VMware, Palo Alto).',
+    visualizations: [],
+    introduction: `SD-WAN (Software-Defined Wide Area Network) decouples network control from physical hardware, enabling centralized management and intelligent traffic routing across multiple WAN transport links (MPLS, broadband internet, LTE/5G). It emerged as enterprises sought to reduce expensive MPLS costs while maintaining application performance and security.
+
+Traditional WAN relied on static routing with MPLS circuits providing guaranteed QoS but at high cost and with slow provisioning lead times (weeks to months). SD-WAN introduces a software overlay that monitors all available transport links in real time and routes application traffic based on policy, measured performance metrics (latency, jitter, packet loss), and application identity.
+
+The architecture separates the underlay (physical transport connections — MPLS, internet, LTE) from the overlay (encrypted tunnels forming a virtual network across all underlay paths). The SD-WAN controller (control plane) pushes policies to edge devices. Edge devices (vEdge, vSmart in Viptela) make local forwarding decisions based on current link quality measurements.
+
+Key capabilities include application-aware routing (recognizing Salesforce, Office 365, Zoom by deep packet inspection), zero-touch provisioning (devices phone home to controller and self-configure), centralized security policy, and direct cloud breakout (sending cloud-destined traffic directly to internet rather than backhauling to data center).
+
+In cloud/SRE contexts, SD-WAN is often the connectivity method used by enterprise branch offices connecting to AWS or Azure via public internet tunnels, with SD-WAN handling failover between MPLS and broadband automatically. Understanding SD-WAN topology is essential when designing hybrid cloud architectures.`,
+    whenToUse: [
+      'Designing hybrid cloud connectivity for enterprise branch offices',
+      'Replacing expensive MPLS circuits with broadband internet plus SD-WAN',
+      'Implementing application-aware routing to optimize SaaS application performance',
+      'Building redundant WAN paths with automatic failover between MPLS and internet',
+      'Evaluating vendor solutions (Cisco Viptela, VMware SD-WAN, Palo Alto Prisma) for procurement',
+    ],
+    keyConcepts: [
+      { term: 'Underlay vs Overlay', definition: `The underlay is the physical transport: MPLS circuits, broadband internet, LTE/5G. The overlay is the SD-WAN virtual network: encrypted IPsec tunnels built on top of all underlay transports. SD-WAN devices maintain tunnels over every underlay path simultaneously and measure quality on each. Application traffic is steered to the best-performing overlay path dynamically.` },
+      { term: 'Application-Aware Routing', definition: `SD-WAN identifies application flows using DPI (Deep Packet Inspection), recognizing thousands of applications by signature (e.g., Zoom, Salesforce, Microsoft Teams). Policies define which applications use which paths. For example, real-time voice/video goes via MPLS if available, while bulk backup traffic uses cheaper broadband.` },
+      { term: 'Zero-Touch Provisioning (ZTP)', definition: `SD-WAN edge devices ship to branch offices and self-configure by calling home to a cloud-hosted controller. The controller authenticates the device and pushes the site-specific configuration. This eliminates truck rolls and enables branch deployment without on-site networking expertise.` },
+      { term: 'vSmart Controller', definition: `In Cisco Viptela architecture, the vSmart controller is the control plane, distributing routing and policy information to vEdge routers using OMP (Overlay Management Protocol). The vBond orchestrator handles ZTP and facilitates NAT traversal between edge devices. The vManage NMS provides centralized configuration and monitoring.` },
+    ],
+    pitfalls: [
+      'SD-WAN over internet does not provide guaranteed QoS like MPLS. Real-time applications (voice, video conferencing) on pure internet SD-WAN links will experience quality degradation during internet congestion. MPLS or dedicated circuits remain necessary for latency-sensitive applications in many environments.',
+      'Improper traffic classification leads to misrouting. If DPI signatures are outdated or encrypted traffic is not identified, high-priority applications may be sent over lower-quality links.',
+      'SD-WAN controller is a critical single point of failure for policy management. Without local policy cache on edge devices, a controller outage can prevent new policies from being applied, though existing policies typically continue to function.',
+      'Cloud integration requires careful planning. Direct cloud breakout bypasses data center security stacks. Ensuring firewall, DLP, and threat inspection for cloud-bound traffic requires either cloud-delivered security (SASE) or backhauling through security inspection.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does SD-WAN handle link failover, and what is the difference between active-active and active-passive WAN configurations?',
+        answer: `## SD-WAN Link Failover
+
+SD-WAN continuously measures performance metrics on all active tunnels using BFD (Bidirectional Forwarding Detection) or probe packets: latency, jitter, packet loss. When a link degrades beyond a configured threshold, traffic is immediately moved to a better-performing path.
+
+## Active-Active Configuration
+
+All WAN links carry traffic simultaneously. Traffic is distributed based on application policy and real-time quality metrics. A voice call may use MPLS while a file download uses broadband internet in parallel.
+
+- Advantage: full bandwidth utilization, instant failover (traffic already on secondary link)
+- Disadvantage: complexity in traffic classification, potential for asymmetric routing
+
+## Active-Passive Configuration
+
+Primary link carries all traffic. Secondary link is idle (or carries only backup traffic) until primary fails.
+
+- Advantage: simpler, predictable path
+- Disadvantage: wasted bandwidth on secondary, slightly slower failover (tunnel may need to be established)
+
+## Failover Detection and Timing
+
+\`\`\`
+BFD failure detection: 300ms (3x 100ms intervals) typical
+Traffic switchover: sub-second after BFD failure detection
+Total failover: typically under 1 second for active-active, 1-3 seconds for active-passive
+\`\`\`
+
+## Viptela OMP Route Failover
+
+In Cisco SD-WAN, OMP redistributes route changes from vSmart to all vEdge devices. When a tunnel goes down, vSmart updates OMP routes and all remote sites learn the new best path within seconds. Local site switching is BFD-driven and happens independently of OMP reconvergence.`,
+      },
+    ],
+    references: [
+      'https://www.cisco.com/c/en/us/solutions/enterprise-networks/sd-wan/what-is-sd-wan.html',
+      'https://docs.vmware.com/en/VMware-SD-WAN/index.html',
+      'https://www.paloaltonetworks.com/sase/sd-wan',
+    ],
+  },
+  {
+    id: 'mpls',
+    title: 'MPLS',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 4,
+    description: 'Label switching, Label Switched Paths, LDP and RSVP-TE signaling, MPLS VPN services, and traffic engineering capabilities.',
+    visualizations: [],
+    introduction: `MPLS (Multiprotocol Label Switching) is a high-performance packet forwarding technology that uses short fixed-length labels instead of long IP address lookups to forward packets. Standardized by the IETF in the early 2000s, MPLS became the backbone technology for service provider networks and enterprise WAN services for over two decades.
+
+In traditional IP routing, each router performs a full IP lookup in the routing table for every packet. MPLS replaces this with label-based forwarding: the ingress Label Edge Router (LER) assigns a label to an incoming packet, and all subsequent Label Switching Routers (LSRs) in the MPLS network forward the packet based solely on the label using a simple table lookup — much faster than full IP routing on older hardware.
+
+Labels are 32-bit values inserted between the Layer 2 header and Layer 3 IP header (the "shim header"). Labels can be stacked, enabling VPN services where an outer label identifies the LSP (Label Switched Path) tunnel and an inner label identifies the VPN instance (VRF).
+
+MPLS enables several critical services: Layer 3 VPNs (RFC 4364) where service providers deliver private IP connectivity between enterprise sites, Layer 2 VPNs (VPLS, VPWS) for transparent Ethernet services, and Traffic Engineering (MPLS-TE) where explicit paths are established using RSVP-TE to guarantee bandwidth and route around congestion.
+
+While MPLS is mature technology being replaced at the edge by SD-WAN, it remains ubiquitous in service provider cores and is still offered as a premium enterprise WAN service. Understanding MPLS VPN architecture is directly applicable to understanding how AWS Direct Connect Virtual Interfaces and Transit VIFs work under the hood.`,
+    whenToUse: [
+      'Understanding service provider WAN services offered to enterprise customers',
+      'Designing traffic engineering policies to route around congestion in backbone networks',
+      'Configuring MPLS L3VPN for multi-site enterprise connectivity',
+      'Troubleshooting traceroute behavior that skips hops inside an MPLS cloud',
+      'Evaluating MPLS vs SD-WAN vs direct internet for WAN strategy',
+    ],
+    keyConcepts: [
+      { term: 'Label Switching Router (LSR)', definition: `An MPLS router that forwards packets based on label lookup rather than IP routing table lookup. The ingress LER (Label Edge Router) pushes a label onto packets entering the MPLS network. Core LSRs swap labels. The egress LER pops the label and delivers the original IP packet to the destination.` },
+      { term: 'LDP (Label Distribution Protocol)', definition: `The protocol used by MPLS routers to distribute label bindings for IP prefixes. Each router advertises a label for each prefix in its routing table to its LDP neighbors. LDP creates LSPs that follow the existing IGP routing topology. Simple but cannot engineer specific paths.` },
+      { term: 'RSVP-TE (Resource Reservation Protocol - Traffic Engineering)', definition: `A signaling protocol that establishes explicit LSPs along administratively specified paths with reserved bandwidth. Used for MPLS traffic engineering. RSVP-TE enables bandwidth guarantees and explicit route constraints (must traverse specific routers, avoid specific links). Used in service provider cores for QoS guarantees.` },
+      { term: 'MPLS L3VPN (RFC 4364)', definition: `The most common MPLS VPN service. Each enterprise VPN uses a VRF (Virtual Routing and Forwarding) instance at the PE (Provider Edge) router. Routes are distributed between PE routers using MP-BGP with VPNv4 address family. An outer label identifies the LSP to the remote PE; an inner label (VPN label) identifies the destination VRF. CE (Customer Edge) routers are unaware of MPLS.` },
+    ],
+    pitfalls: [
+      'Traceroute through an MPLS cloud often shows only the ingress PE and egress PE, hiding all core LSR hops. This is because LSRs perform ICMP TTL-exceeded using their MPLS interface address which may not be reachable from the internet, or the ICMP response is generated at the egress LER only. This makes troubleshooting opaque without MPLS traceroute tools.',
+      'LDP and IGP synchronization issues can cause black holes. If LDP labels are not yet distributed when IGP converges after a failure, packets are forwarded toward a destination but dropped because no MPLS label exists for the path. Requires LDP-IGP synchronization configuration.',
+      'PHP (Penultimate Hop Popping) removes the outer MPLS label one hop before the egress LER. This is a performance optimization but means the egress LER receives unlabeled IP packets. If the egress LER needs the label for QoS or VPN lookup, explicit null must be configured instead of PHP.',
+      'VRF route leaking between VPN customers on the same PE must be carefully controlled. Importing the wrong route targets can accidentally leak routes between customer VRFs, violating network isolation.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain how MPLS L3VPN works end-to-end. How does a packet from a branch office reach another branch in the same VPN?',
+        answer: `## MPLS L3VPN Packet Flow
+
+## Architecture Components
+
+- CE (Customer Edge): Customer router, speaks BGP or OSPF with PE, unaware of MPLS
+- PE (Provider Edge): Provider router, maintains per-customer VRFs, runs MP-BGP with other PEs
+- P (Provider Core): Core MPLS LSRs, only see outer labels, unaware of VPN content
+
+## Control Plane (Route Distribution)
+
+\`\`\`
+1. CE-A advertises 10.1.1.0/24 to PE-A via eBGP or OSPF
+2. PE-A imports the route into VRF "CustomerA" and assigns a VPN label (inner label, e.g., 24)
+3. PE-A distributes the route via MP-BGP (VPNv4) to PE-B:
+   Route Distinguisher: 65000:100 (makes prefix globally unique)
+   Route Target: 65000:100 (export RT, determines which VRFs import the route)
+   Next-hop: PE-A loopback IP
+   Label: 24 (VPN label)
+4. PE-B checks VRF "CustomerA" import RTs, imports the route into its VRF
+\`\`\`
+
+## Data Plane (Packet Forwarding)
+
+\`\`\`
+CE-B sends packet destined for 10.1.1.1
+  -> PE-B looks up 10.1.1.1 in VRF "CustomerA" -> next-hop PE-A, VPN label 24
+  -> PE-B pushes: [LSP label to PE-A | VPN label 24] + IP packet
+  -> Core P routers swap outer LSP label (pure label switching)
+  -> Penultimate P router pops outer label (PHP)
+  -> PE-A receives packet with VPN label 24 -> identifies VRF "CustomerA"
+  -> PE-A pops VPN label, routes IP packet to CE-A
+\`\`\`
+
+The CE routers never see MPLS labels. The entire MPLS VPN is transparent to the customer.`,
+      },
+    ],
+    references: [
+      'https://tools.ietf.org/html/rfc3031',
+      'https://tools.ietf.org/html/rfc4364',
+    ],
+  },
+  {
+    id: 'vpc-peering',
+    title: 'VPC Peering',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Transitive peering limitations, non-overlapping CIDR requirement, inter-region peering, and routing table configuration.',
+    visualizations: [],
+    introduction: `VPC Peering is an AWS networking feature that creates a direct, private network connection between two VPCs, enabling instances in either VPC to communicate as if they were on the same network. Traffic remains on the AWS backbone and never traverses the public internet, providing low latency and high bandwidth.
+
+Peering connections can be established between VPCs in the same account, between different AWS accounts, or across AWS regions (inter-region VPC peering). The connection is established through a request-accept workflow: the requester VPC sends a peering request, and the accepter VPC owner approves it. Once active, both sides must update their route tables to direct traffic destined for the peer CIDR through the peering connection.
+
+The most critical limitation of VPC peering is that it is non-transitive. If VPC A is peered with VPC B, and VPC B is peered with VPC C, traffic from VPC A cannot reach VPC C through VPC B. A separate peering connection between A and C is required. This fundamental constraint means that connecting N VPCs requires N*(N-1)/2 peering connections — a scaling problem that Transit Gateway was designed to solve.
+
+VPC peering also requires non-overlapping CIDR blocks. VPCs with overlapping IP ranges cannot be peered, which makes CIDR planning a critical architectural consideration, especially for organizations that did not design CIDR spaces with future growth and connectivity in mind.
+
+In production architectures, VPC peering is appropriate for small numbers of VPCs with specific connectivity needs (e.g., a shared services VPC peered with each application VPC), while Transit Gateway is preferred for hub-and-spoke architectures connecting many VPCs.`,
+    whenToUse: [
+      'Connecting a small number of VPCs (fewer than 10) with specific bilateral connectivity needs',
+      'Providing access from application VPCs to a shared services VPC (DNS, monitoring, tooling)',
+      'Enabling cross-account access without exposing services to the internet',
+      'Low-cost option when Transit Gateway pricing is a concern for simple use cases',
+      'Inter-region data replication between VPCs in different AWS regions',
+    ],
+    keyConcepts: [
+      { term: 'Non-Transitive Peering', definition: `VPC peering is strictly point-to-point. Traffic cannot flow through a VPC to reach another VPC via a chain of peering connections. If A-B and B-C are peered, A cannot reach C through B. This is by design for security isolation. The only workarounds are direct peering (A-C) or using Transit Gateway.` },
+      { term: 'Non-Overlapping CIDR Requirement', definition: `Two VPCs cannot be peered if their IPv4 CIDR blocks overlap. AWS will reject the peering request. This requires careful IP address planning across accounts and regions. Many organizations use RFC 1918 space (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) exhaustion plans to ensure unique CIDRs for every VPC.` },
+      { term: 'Route Table Configuration', definition: `After accepting a peering connection, administrators must manually add routes in both VPCs' route tables. Each route specifies the peer VPC's CIDR as the destination and the peering connection ID as the target. Without these routes, traffic will not flow even though the peering is active.` },
+      { term: 'Inter-Region Peering', definition: `VPC peering supports connections across AWS regions. Traffic is encrypted and uses AWS backbone infrastructure, not the public internet. Inter-region peering incurs data transfer charges (typically $0.01-0.02 per GB depending on regions). DNS resolution for private hostnames across regions requires specific DNS resolver configuration.` },
+      { term: 'Security Group Cross-References', definition: `In VPC peering within the same region and account, security groups can reference the peer VPC's security group IDs as sources/destinations. This provides dynamic, identity-based access control rather than CIDR-based rules. Cross-account security group references require explicit sharing configuration.` },
+    ],
+    pitfalls: [
+      'Forgetting to update route tables on both sides of the peering connection is the most common operational mistake. The peering connection shows as Active but traffic does not flow because routes are missing.',
+      'CIDR overlap discovery after deployment is a painful situation. Organizations that use the same CIDR ranges (e.g., 10.0.0.0/16) in every VPC cannot peer them without re-CIDRing one side, which requires re-deploying infrastructure.',
+      'Security group rules still apply across peered VPCs. A peering connection does not bypass security groups. Instances must explicitly allow traffic from the peer VPC CIDR in their security groups.',
+      'DNS hostnames for private IPs do not resolve across peering boundaries by default. The DNS Resolution and DNS Hostnames options must be enabled on both VPCs and the peering connection for private DNS to work across peers.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What are the limitations of VPC peering and when would you use Transit Gateway instead?',
+        answer: `## VPC Peering Limitations
+
+## Non-Transitivity
+
+The core limitation: peering A-B and B-C does not allow A-C traffic. With N VPCs requiring full mesh, you need N*(N-1)/2 peering connections.
+
+- 5 VPCs: 10 peerings
+- 10 VPCs: 45 peerings
+- 20 VPCs: 190 peerings
+
+This is unmanageable at scale.
+
+## Other Limitations
+
+- Overlapping CIDRs: cannot peer VPCs with overlapping IP ranges
+- No route aggregation: must add specific routes for each peer CIDR in every route table
+- No centralized routing policy: each peering is independently managed
+- Edge-to-edge routing not supported: cannot route through a VPC to reach VPN, Direct Connect, or internet gateway on the other side
+
+## When to Use VPC Peering
+
+\`\`\`bash
+# Check existing peering connections
+aws ec2 describe-vpc-peering-connections \
+  --filters "Name=status-code,Values=active"
+
+# Check route tables for peering routes
+aws ec2 describe-route-tables \
+  --filters "Name=route.gateway-id,Values=pcx-xxxxxxxx"
+\`\`\`
+
+Use peering for:
+- Fewer than 10 VPCs with specific bilateral connectivity needs
+- Cost-sensitive environments (no TGW attachment fees per VPC per hour)
+- Simple shared services VPC (monitoring, DNS) accessed from many app VPCs
+
+## When to Use Transit Gateway
+
+- More than 10 VPCs needing connectivity
+- Centralized routing policy and inspection required
+- VPN or Direct Connect needs to be shared across multiple VPCs
+- Multi-account hub-and-spoke architecture (AWS Organizations)
+- Need to connect VPCs with overlapping CIDRs (TGW with static routing + NAT)`,
+      },
+      {
+        question: 'Walk through the complete steps to establish a VPC peering connection between two accounts, including all configurations required for traffic to flow.',
+        answer: `## Cross-Account VPC Peering Setup
+
+## Step 1: Gather VPC Information
+
+\`\`\`bash
+# Account A - get VPC ID and CIDR
+aws ec2 describe-vpcs --vpc-ids vpc-aaaaaa \
+  --query 'Vpcs[0].{VpcId:VpcId,Cidr:CidrBlock}'
+
+# Account B - same
+aws ec2 describe-vpcs --vpc-ids vpc-bbbbbb \
+  --query 'Vpcs[0].{VpcId:VpcId,Cidr:CidrBlock}'
+\`\`\`
+
+## Step 2: Create Peering Request (Account A)
+
+\`\`\`bash
+aws ec2 create-vpc-peering-connection \
+  --vpc-id vpc-aaaaaa \
+  --peer-vpc-id vpc-bbbbbb \
+  --peer-owner-id 123456789012 \
+  --peer-region us-east-1
+\`\`\`
+
+## Step 3: Accept Peering Request (Account B)
+
+\`\`\`bash
+aws ec2 describe-vpc-peering-connections \
+  --filters "Name=status-code,Values=pending-acceptance"
+
+aws ec2 accept-vpc-peering-connection \
+  --vpc-peering-connection-id pcx-xxxxxxxx
+\`\`\`
+
+## Step 4: Add Routes (Both Accounts)
+
+\`\`\`bash
+# Account A: route to VPC B via peering
+aws ec2 create-route \
+  --route-table-id rtb-aaaa \
+  --destination-cidr-block 10.1.0.0/16 \
+  --vpc-peering-connection-id pcx-xxxxxxxx
+
+# Account B: route to VPC A via peering
+aws ec2 create-route \
+  --route-table-id rtb-bbbb \
+  --destination-cidr-block 10.0.0.0/16 \
+  --vpc-peering-connection-id pcx-xxxxxxxx
+\`\`\`
+
+## Step 5: Update Security Groups (Both Accounts)
+
+\`\`\`bash
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-aaaa \
+  --protocol tcp \
+  --port 443 \
+  --cidr 10.1.0.0/16
+\`\`\`
+
+## Step 6: Enable DNS Resolution
+
+\`\`\`bash
+aws ec2 modify-vpc-peering-connection-options \
+  --vpc-peering-connection-id pcx-xxxxxxxx \
+  --requester-peering-connection-options AllowDnsResolutionFromRemoteVpc=true \
+  --accepter-peering-connection-options AllowDnsResolutionFromRemoteVpc=true
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html',
+      'https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-routing.html',
+    ],
+  },
+  {
+    id: 'transit-gateway',
+    title: 'Transit Gateway',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Hub-and-spoke topology for VPCs, centralized routing tables, TGW peering across regions, and comparison with VPC peering.',
+    visualizations: [],
+    introduction: `AWS Transit Gateway (TGW) is a regional network transit hub that enables customers to connect VPCs, VPNs, and Direct Connect connections through a single gateway, implementing a hub-and-spoke network topology at scale. Launched in 2018, it solved the fundamental scalability problem of VPC peering's non-transitive, full-mesh requirement.
+
+Every VPC, VPN, or Direct Connect attachment connects to the Transit Gateway, and the TGW routes traffic between all connected networks according to its route tables. A single TGW supports up to 5,000 VPC attachments, making it suitable for large enterprise multi-account AWS environments managed via AWS Organizations.
+
+TGW uses a routing table model distinct from VPC route tables. Each TGW has one or more route tables. Each attachment is associated with a route table (for inbound route lookup) and can propagate its CIDR to one or more route tables. This enables sophisticated network segmentation: for example, a production route table that allows VPC-to-VPC communication, a development route table that only allows access to shared services, and a shared services route table accessible from all environments.
+
+Transit Gateway peering extends this capability across AWS regions: two TGWs in different regions can be peered, creating a global network fabric. Cross-region TGW peering uses static routes (no dynamic propagation) and traverses the AWS backbone.
+
+For connectivity with on-premises networks, TGW integrates with Site-to-Site VPN (each VPN tunnel terminates on TGW rather than individual VGWs) and Direct Connect Gateway (DXGW attaches to TGW via Transit VIF). This centralization means all VPCs share a single Direct Connect connection, dramatically reducing costs compared to per-VPC VGW configuration.`,
+    whenToUse: [
+      'Connecting more than 10 VPCs with any-to-any or selective connectivity requirements',
+      'Centralizing VPN and Direct Connect connectivity shared across multiple VPCs',
+      'Implementing network segmentation between environments (prod/dev/shared services) at scale',
+      'Building a global network spanning multiple AWS regions with TGW peering',
+      'Centralized traffic inspection via a firewall VPC in a security hub-and-spoke architecture',
+    ],
+    keyConcepts: [
+      { term: 'TGW Attachment', definition: `The connection between a resource and the Transit Gateway. Attachment types include VPC attachments (one per VPC, choosing subnets in each AZ), VPN attachments (Site-to-Site VPN tunnels), Direct Connect Gateway attachments (via Transit VIF), TGW Peering attachments (cross-region), and Appliance Mode attachments (for stateful inspection).` },
+      { term: 'TGW Route Tables', definition: `TGW has its own route tables separate from VPC route tables. Each attachment is associated with a TGW route table for route lookups. Routes can be static (manually added) or dynamic (propagated from attachments). VPC CIDRs are auto-propagated when propagation is enabled. Multiple route tables enable network segmentation.` },
+      { term: 'Route Propagation', definition: `When propagation is enabled for an attachment to a route table, the attachment automatically advertises its CIDR blocks to that route table. VPC attachments propagate their VPC CIDR. VPN attachments propagate BGP-learned routes from on-premises. Disabling propagation requires manual static routes and is used for isolation policies.` },
+      { term: 'TGW Peering', definition: `Two TGWs in different AWS regions (or different accounts) can be peered. Unlike VPC peering, TGW peering does not use dynamic route propagation — all routes across the peering must be configured as static routes in the respective TGW route tables. This is a key operational difference from intra-region behavior.` },
+      { term: 'Appliance Mode', definition: `For stateful firewall appliances in a centralized inspection VPC, all traffic flows from a specific source VPC must use the same Availability Zone path through the firewall (to maintain flow state). Appliance mode overrides TGW's default per-flow ECMP load balancing to ensure symmetric routing through the firewall.` },
+    ],
+    pitfalls: [
+      'TGW does not automatically route between all attached VPCs. You must explicitly enable route propagation or add static routes. A common mistake is creating attachments without configuring the route tables, resulting in no connectivity between VPCs.',
+      'Overlapping CIDRs across attached VPCs cause routing conflicts. Unlike VPC peering (which prevents you from connecting overlapping VPCs), TGW will accept the attachment but routing will be nondeterministic. CIDR planning is still essential.',
+      'Cross-region TGW peering requires static routes on both sides. There is no dynamic route propagation across TGW peering connections. Missing a static route is a common cause of cross-region connectivity failures.',
+      'TGW pricing is based on attachment-hours plus data processing. For VPCs with low traffic and simple connectivity needs, TGW can be more expensive than VPC peering. Analyze traffic patterns before choosing.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a Transit Gateway architecture for a company with 50 VPCs across 3 environments (production, staging, development) where prod cannot communicate with dev, but all environments can reach a shared services VPC.',
+        answer: `## Multi-Environment TGW Design
+
+## Architecture
+
+Create one TGW with separate route tables per environment:
+
+- Production RT: routes to all prod VPCs + shared services VPC
+- Staging RT: routes to all staging VPCs + shared services VPC
+- Development RT: routes to all dev VPCs + shared services VPC
+- Shared Services RT: routes to all VPCs (or specific CIDRs only)
+
+## Route Table Configuration
+
+\`\`\`bash
+# Create separate route tables for each environment
+aws ec2 create-transit-gateway-route-table \
+  --transit-gateway-id tgw-xxxxxxxxx \
+  --tag-specifications 'ResourceType=transit-gateway-route-table,Tags=[{Key=Name,Value=production-rt}]'
+
+# Associate prod VPC attachments with production-rt
+aws ec2 associate-transit-gateway-route-table \
+  --transit-gateway-route-table-id tgw-rtb-prod \
+  --transit-gateway-attachment-id tgw-attach-prod-vpc1
+
+# Enable propagation from prod VPCs to production-rt
+aws ec2 enable-transit-gateway-route-table-propagation \
+  --transit-gateway-route-table-id tgw-rtb-prod \
+  --transit-gateway-attachment-id tgw-attach-prod-vpc1
+
+# Add static route to shared services from production-rt
+aws ec2 create-transit-gateway-route \
+  --transit-gateway-route-table-id tgw-rtb-prod \
+  --destination-cidr-block 10.255.0.0/16 \
+  --transit-gateway-attachment-id tgw-attach-shared-svc
+\`\`\`
+
+## Isolation Enforcement
+
+Prod VPCs are associated with production-rt. Production-rt only contains routes to prod VPCs and shared services. Dev routes are not propagated to or statically added to production-rt, so prod instances cannot reach dev VPCs at the network layer even if security groups allowed it.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html',
+      'https://docs.aws.amazon.com/vpc/latest/tgw/tgw-route-tables.html',
+      'https://aws.amazon.com/transit-gateway/pricing/',
+    ],
+  },
+  {
+    id: 'aws-privatelink',
+    title: 'AWS PrivateLink',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Interface VPC endpoints, NLB-backed endpoint services, private connectivity without internet traversal, and endpoint service sharing.',
+    visualizations: [],
+    introduction: `AWS PrivateLink provides private connectivity between VPCs, AWS services, and on-premises applications without exposing traffic to the public internet. It enables service providers (whether AWS itself or third-party SaaS vendors) to offer services that consumers can access privately from within their own VPCs.
+
+PrivateLink works through two complementary constructs: VPC Endpoints (on the consumer side) and Endpoint Services (on the provider side). An Interface VPC Endpoint creates one or more Elastic Network Interfaces (ENIs) with private IP addresses in your VPC subnets. Traffic to the service is routed through these ENIs, never leaving the AWS network. This is fundamentally different from internet-based access or even VPC peering — the service's actual infrastructure can be in a completely separate VPC or account.
+
+The provider side uses a Network Load Balancer (NLB) as the front door to an Endpoint Service. The NLB receives traffic from consumers' ENIs and forwards to the actual service targets (EC2 instances, ECS tasks, Lambda functions via ALB). AWS manages the cross-VPC networking transparently.
+
+AWS uses PrivateLink for its own services: S3 Interface Endpoints, DynamoDB Interface Endpoints, SSM, Secrets Manager, ECR, and dozens more all support private connectivity via PrivateLink. This allows EC2 instances in private subnets with no internet gateway to still access AWS APIs securely.
+
+Third-party SaaS vendors (Datadog, Snowflake, New Relic) offer their services via PrivateLink, allowing enterprise customers to consume SaaS without traffic leaving their private network perimeter — critical for compliance-sensitive industries like healthcare and finance.`,
+    whenToUse: [
+      'Accessing AWS services (S3, SSM, ECR) from private subnets without NAT Gateway',
+      'Consuming third-party SaaS (Datadog, Snowflake) without internet exposure for compliance',
+      'Exposing internal microservices to other teams or accounts without VPC peering',
+      'Reducing data transfer costs for high-volume AWS API calls (PrivateLink vs NAT Gateway pricing)',
+      'Meeting regulatory requirements that prohibit any internet-traversing traffic for sensitive data',
+    ],
+    keyConcepts: [
+      { term: 'Interface VPC Endpoint', definition: `A PrivateLink endpoint that creates ENIs with private IPs in your VPC subnets. Traffic to the endpoint service is routed through these ENIs using AWS-internal networking. Supports security groups for access control. DNS entries are created automatically so that the service regional hostname resolves to the private ENI IP.` },
+      { term: 'Gateway Endpoint', definition: `An older endpoint type for S3 and DynamoDB only. Unlike Interface Endpoints, Gateway Endpoints work by adding entries to your VPC route table pointing to the endpoint, not by creating ENIs. Gateway Endpoints have no per-hour charge (unlike Interface Endpoints) but do not support private DNS or cross-region access.` },
+      { term: 'Endpoint Service', definition: `The provider-side PrivateLink construct. Built on top of an NLB in the provider's VPC. The provider configures which AWS accounts or principals can create endpoints to the service. Once a consumer creates an interface endpoint, the provider can accept or auto-accept the connection request.` },
+      { term: 'Private DNS', definition: `When Private DNS is enabled on an Interface Endpoint, AWS creates a private hosted zone in Route 53 that overrides the public DNS hostname for the service within your VPC. For example, s3.us-east-1.amazonaws.com resolves to the ENI private IP instead of the public S3 endpoint. This allows existing code to use PrivateLink without DNS changes.` },
+      { term: 'Endpoint Policies', definition: `Resource-based policies attached to VPC endpoints that restrict which actions and resources can be accessed through the endpoint. For example, an S3 endpoint policy can restrict access to specific S3 buckets, preventing use of the private endpoint to access other accounts' buckets.` },
+    ],
+    pitfalls: [
+      'Interface Endpoints are AZ-specific ENIs. For high availability, you must create endpoints in multiple AZs. An endpoint in a single AZ creates a single point of failure. Use the zonal DNS names (or the regional name with private DNS enabled) to distribute traffic.',
+      'PrivateLink does not support transitive routing. An endpoint in VPC A cannot be reached from VPC B via VPC peering. Each consumer VPC that needs private access must create its own VPC endpoint.',
+      'Endpoint policies are separate from the service IAM policies. A permissive endpoint policy does not bypass IAM. Both must allow the action. Conversely, a restrictive endpoint policy blocks access even if IAM allows it.',
+      'DNS resolution must work correctly for Private DNS to function. If your VPC does not have DNS Support and DNS Hostnames enabled, Private DNS for interface endpoints will not work, and traffic may still route to public endpoints.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you design private connectivity for an EC2 instance in a private subnet (no NAT Gateway, no internet gateway) to access S3, SSM Parameter Store, and ECR for container image pulls?',
+        answer: `## Private Subnet AWS Service Access via PrivateLink
+
+## Required Interface Endpoints
+
+For an EC2 instance to work fully without internet access (especially for SSM and ECR):
+
+\`\`\`bash
+# SSM requires 3 endpoints
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.us-east-1.ssm \
+  --subnet-ids subnet-private-a subnet-private-b \
+  --security-group-ids sg-endpoints
+
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.us-east-1.ssmmessages \
+  --subnet-ids subnet-private-a subnet-private-b \
+  --security-group-ids sg-endpoints
+
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.us-east-1.ec2messages \
+  --subnet-ids subnet-private-a subnet-private-b \
+  --security-group-ids sg-endpoints
+
+# ECR endpoints (2 required: api + docker)
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.us-east-1.ecr.api \
+  --subnet-ids subnet-private-a subnet-private-b \
+  --security-group-ids sg-endpoints
+
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.us-east-1.ecr.dkr \
+  --subnet-ids subnet-private-a subnet-private-b \
+  --security-group-ids sg-endpoints
+
+# S3 Gateway Endpoint (free, for ECR layer pulls from S3)
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-xxxxxxxx \
+  --vpc-endpoint-type Gateway \
+  --service-name com.amazonaws.us-east-1.s3 \
+  --route-table-ids rtb-private
+\`\`\`
+
+## Security Group for Endpoint ENIs
+
+\`\`\`bash
+# Allow HTTPS from VPC CIDR to endpoint ENIs
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-endpoints \
+  --protocol tcp \
+  --port 443 \
+  --cidr 10.0.0.0/16
+\`\`\`
+
+## Important Notes
+
+- ECR image layers are stored in S3. ECR docker endpoint pulls metadata, but layer blobs come from S3. Both ECR and S3 endpoints are required.
+- Private DNS must be enabled on each Interface Endpoint (default: enabled)
+- VPC must have enableDnsHostnames and enableDnsSupport set to true
+- SSM requires 3 separate endpoints: ssm, ssmmessages, and ec2messages`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html',
+      'https://docs.aws.amazon.com/vpc/latest/privatelink/create-interface-endpoint.html',
+      'https://docs.aws.amazon.com/AmazonECR/latest/userguide/vpc-endpoints.html',
+    ],
+  },
+  {
+    id: 'direct-connect-vpn',
+    title: 'Direct Connect & Site-to-Site VPN',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 6,
+    description: 'Dedicated circuits, hosted connections, virtual interface types (public/private/transit), BGP over Direct Connect, and VPN as failover.',
+    visualizations: [],
+    introduction: `AWS Direct Connect and Site-to-Site VPN are the two primary mechanisms for establishing private connectivity between on-premises data centers and AWS. They serve different use cases and are frequently deployed together for redundancy.
+
+AWS Direct Connect provides dedicated network connections from your premises to AWS via a physical fiber circuit. Connections are established at one of AWS's Direct Connect locations (co-location facilities operated by partners). You can order a Dedicated Connection (1G or 10G port owned by you) or a Hosted Connection (sub-1G or 1G/10G shared on a partner's port). Direct Connect provides consistent network performance, reduced data transfer costs compared to internet, and higher bandwidth than VPN.
+
+Once the physical connection is established, you create Virtual Interfaces (VIFs) on it. A Private VIF connects to a Virtual Private Gateway or Direct Connect Gateway to access your VPCs' private resources. A Public VIF connects you to AWS public services (S3, DynamoDB, SQS) over the AWS backbone using public IP addresses. A Transit VIF connects to a Direct Connect Gateway attached to a Transit Gateway, enabling connectivity to all TGW-attached VPCs.
+
+AWS Site-to-Site VPN creates IPsec VPN tunnels over the public internet between your on-premises VPN device and an AWS Virtual Private Gateway or Transit Gateway. Each VPN connection consists of two tunnels for redundancy. VPN is faster to provision (minutes vs weeks for Direct Connect), lower cost, and typically used as backup for Direct Connect or as primary connectivity for smaller offices.
+
+BGP is mandatory for Direct Connect and optional but recommended for Site-to-Site VPN. BGP enables dynamic route exchange, making failover between Direct Connect and VPN automatic when properly configured with appropriate route preferences.`,
+    whenToUse: [
+      'Designing hybrid cloud connectivity for data centers requiring consistent, high-bandwidth AWS access',
+      'Configuring BGP route preferences to implement Direct Connect primary with VPN failover',
+      'Choosing between dedicated vs hosted Direct Connect connections based on bandwidth requirements',
+      'Troubleshooting BGP session issues or route exchange problems on a Direct Connect VIF',
+      'Planning Direct Connect redundancy with multiple connections or diverse locations',
+    ],
+    keyConcepts: [
+      { term: 'Direct Connect Location', definition: `A co-location facility (e.g., Equinix, CyrusOne) where AWS has installed Direct Connect routers. Your router must be physically present or connected via a partner in the same facility. AWS provides a Letter of Authorization (LOA) to cross-connect your equipment to the AWS router.` },
+      { term: 'Virtual Interface (VIF) Types', definition: `Private VIF: BGP session to VGW or Direct Connect Gateway; exchanges private IP routes for VPC access. Public VIF: BGP session for AWS public IP prefixes; access S3, EC2 APIs, etc. over AWS backbone. Transit VIF: BGP session to a Direct Connect Gateway that is attached to Transit Gateway; enables access to all TGW-connected VPCs.` },
+      { term: 'Direct Connect Gateway', definition: `A global resource (not region-specific) that can be associated with multiple VGWs across different regions, or with a Transit Gateway. Allows a single Direct Connect connection to access VPCs in multiple AWS regions. Supports up to 10 VGW associations. Cannot be used for VPC-to-VPC routing (only for on-premises to VPC).` },
+      { term: 'IPsec Site-to-Site VPN', definition: `Creates two IPsec tunnels (IKEv1 or IKEv2) between your on-premises VPN device and an AWS VGW or TGW. Tunnels run over the public internet. Each tunnel can carry up to 1.25 Gbps. Both tunnels are active but AWS prefers one; use BGP AS_PATH prepending or LOCAL_PREF manipulation to control which tunnel carries traffic.` },
+      { term: 'BGP Route Preference for Failover', definition: `With Direct Connect primary and VPN backup, use BGP route attributes to prefer Direct Connect. For outbound traffic (from on-premises to AWS): advertise more specific routes via Direct Connect or use LOCAL_PREF. For inbound traffic (AWS to on-premises): AWS prefers Direct Connect routes by default. Adjust MED or AS_PATH on VPN routes to deprioritize them.` },
+    ],
+    pitfalls: [
+      'Direct Connect does not provide encryption by default. Traffic on the Direct Connect circuit is not encrypted at the link layer. For compliance requirements, you must run an IPsec tunnel over the Direct Connect connection (MACsec is also supported on Dedicated connections for link-layer encryption).',
+      'A single Direct Connect connection is a single point of failure even with two VIFs. For production resilience, use two Direct Connect connections from different Direct Connect locations, ideally with diverse physical paths.',
+      'BGP hold timer defaults (90 second dead timer, 30 second keepalive) mean BGP failure detection takes up to 90 seconds. Use BFD over Direct Connect to achieve sub-second failure detection and faster VPN failover.',
+      'Public VIF BGP sessions exchange AWS public IP prefixes. AWS advertises thousands of prefixes including all CloudFront, EC2 public IPs. Your router must have sufficient memory and processing capacity to handle this routing table.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you configure Direct Connect with VPN failover? Walk through the BGP configuration on both sides.',
+        answer: `## Direct Connect Primary + VPN Failover
+
+## Architecture
+
+- On-premises router with Direct Connect private VIF (BGP AS 65000)
+- AWS VGW or TGW (BGP AS 64512)
+- Site-to-Site VPN as backup (same VGW or TGW)
+
+## Route Preference Principles
+
+AWS prefers Direct Connect routes over VPN routes by default. Configure VPN routes with lower preference using AS_PATH prepending.
+
+## On-Premises BGP Configuration (Cisco IOS example)
+
+\`\`\`
+router bgp 65000
+ neighbor 169.254.100.1 remote-as 64512
+ neighbor 169.254.100.1 description AWS-DX-Primary
+ neighbor 169.254.100.1 password your-bgp-auth-key
+
+ neighbor 169.254.200.1 remote-as 64512
+ neighbor 169.254.200.1 description AWS-VPN-Backup
+ neighbor 169.254.200.1 route-map VPN-BACKUP-OUT out
+
+ network 10.0.0.0 mask 255.255.0.0
+
+route-map VPN-BACKUP-OUT permit 10
+ set as-path prepend 65000 65000 65000
+\`\`\`
+
+## Verification
+
+\`\`\`bash
+# Check Direct Connect BGP session status
+aws directconnect describe-virtual-interfaces \
+  --query 'virtualInterfaces[].{VIF:virtualInterfaceName,BGP:bgpPeers[0].bgpStatus}'
+
+# Check VPN tunnel status
+aws ec2 describe-vpn-connections \
+  --query 'VpnConnections[].{VPN:VpnConnectionId,Tunnels:VgwTelemetry[*].{IP:OutsideIpAddress,Status:Status}}'
+\`\`\`
+
+## BFD for Fast Failure Detection
+
+\`\`\`
+interface GigabitEthernet0/0.101
+ bfd interval 300 min_rx 300 multiplier 3
+
+router bgp 65000
+ neighbor 169.254.100.1 fall-over bfd
+\`\`\``,
+      },
+      {
+        question: 'What is MACsec and when would you use it over a Direct Connect connection instead of IPsec VPN?',
+        answer: `## MACsec vs IPsec Over Direct Connect
+
+## MACsec (IEEE 802.1AE)
+
+MACsec provides Layer 2 encryption hop-by-hop on the Direct Connect link itself. It encrypts all traffic at the Ethernet frame level between your router and the AWS Direct Connect device.
+
+- Operates at Layer 2 (no IP overhead)
+- Near-zero latency overhead (hardware encryption)
+- Available on Dedicated Connections (10Gbps, 100Gbps) only
+- Not available on Hosted Connections
+- Requires MACsec-capable router (Cisco, Juniper hardware)
+
+\`\`\`bash
+# Enable MACsec on a Direct Connect connection
+aws directconnect update-connection \
+  --connection-id dxcon-xxxxxxxx \
+  --encryption-mode must_encrypt
+
+# Associate a MACsec key
+aws directconnect associate-mac-sec-key \
+  --connection-id dxcon-xxxxxxxx \
+  --ckn your-connectivity-key-name \
+  --cak your-connectivity-association-key
+\`\`\`
+
+## IPsec VPN Over Direct Connect
+
+Running IPsec over the Direct Connect circuit provides Layer 3 encryption. Used when:
+- You need encryption but have a Hosted Connection (no MACsec support)
+- Compliance requires end-to-end encryption (MACsec only encrypts the last mile)
+- You need to encrypt traffic to specific destinations differently
+
+## When to Choose MACsec
+
+- 10G or 100G Dedicated Connections requiring link-layer encryption
+- Compliance mandates encrypting the physical circuit
+- Lowest possible latency overhead required
+- Simpler key management than IPsec IKE negotiation
+
+## When to Choose IPsec Over Direct Connect
+
+- Hosted Connections (MACsec not available)
+- Need end-to-end encryption beyond the Direct Connect link
+- Existing IPsec infrastructure and tooling`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/directconnect/latest/UserGuide/Welcome.html',
+      'https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html',
+      'https://docs.aws.amazon.com/directconnect/latest/UserGuide/MACsec.html',
+      'https://aws.amazon.com/directconnect/resiliency-recommendation/',
+    ],
+  },
+  {
+    id: 'hybrid-connectivity',
+    title: 'Hybrid Cloud Connectivity',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Site-to-site VPN architecture, SD-WAN to cloud integration, Transit Gateway with Direct Connect, and latency considerations.',
+    visualizations: [],
+    introduction: `Hybrid cloud connectivity is the practice of linking on-premises infrastructure with public cloud environments (AWS, Azure, GCP) in a secure, performant, and resilient manner. It is one of the most common architectural challenges faced by enterprise SREs and cloud architects, as most large organizations have existing on-premises systems that must coexist and interoperate with cloud-native workloads.
+
+The connectivity options exist on a spectrum of cost, bandwidth, latency, and reliability. At one end, public internet with TLS provides basic connectivity but with unpredictable latency and no bandwidth guarantees. VPN tunnels over internet add IPsec encryption and are cost-effective for low-to-medium bandwidth needs. SD-WAN solutions improve internet-based connectivity with intelligent path selection and application awareness. At the other end, dedicated circuits (AWS Direct Connect, Azure ExpressRoute, GCP Dedicated Interconnect) provide consistent performance, high bandwidth, and reduced data transfer costs at higher fixed expense and longer provisioning times.
+
+Transit Gateway with Direct Connect Gateway represents the modern AWS reference architecture for large-scale hybrid connectivity: a single TGW acts as the centralized hub, all VPCs attach to it, a Direct Connect Gateway bridges the on-premises Direct Connect circuit to the TGW, and a Site-to-Site VPN provides backup. This architecture centralizes routing policy, enables any-to-any connectivity between on-premises and all VPCs, and provides redundancy.
+
+Latency is a critical consideration in hybrid architectures. Even with Direct Connect, round-trip latency from an on-premises data center to an AWS region can be 5-50ms. Applications with synchronous calls crossing the hybrid boundary — particularly databases and distributed transactions — are highly sensitive to this latency and may require architectural changes.`,
+    whenToUse: [
+      'Designing on-premises to cloud connectivity for a multi-account AWS Organization',
+      'Planning failover between Direct Connect and VPN for production hybrid workloads',
+      'Integrating SD-WAN branch offices with cloud-hosted applications',
+      'Analyzing latency impact of hybrid architecture on distributed application performance',
+      'Migrating on-premises workloads to cloud while maintaining connectivity during transition',
+    ],
+    keyConcepts: [
+      { term: 'Hybrid Connectivity Options Spectrum', definition: `Public internet (no guarantee, cheapest) to IPsec VPN over internet (encrypted, 1.25Gbps/tunnel, minutes to provision) to SD-WAN with cloud integration (intelligent path selection, multiple internet paths) to Direct Connect Hosted Connection (dedicated bandwidth, partner-provisioned) to Direct Connect Dedicated Connection (physical port, 1G/10G/100G, highest performance).` },
+      { term: 'Transit VIF + Direct Connect Gateway + TGW', definition: `The AWS reference architecture for scale. A Transit VIF on the Direct Connect connection terminates on a Direct Connect Gateway (global resource). The DXGW attaches to the TGW in each region. On-premises traffic enters via Direct Connect, routes through DXGW to TGW, and TGW routes to any attached VPC. This provides centralized connectivity without per-VPC VGW configuration.` },
+      { term: 'Latency Considerations', definition: `Direct Connect typically provides 1-20ms RTT to AWS regions depending on geographic proximity. Over internet VPN, latency is higher and variable (10-100ms+). Applications using synchronous distributed transactions, database replication, or chatty RPC calls across the hybrid boundary should measure actual latency and consider async patterns or caching to absorb the round-trip overhead.` },
+      { term: 'SD-WAN to Cloud Integration', definition: `SD-WAN vendors provide cloud-native integration: Cisco SD-WAN (Viptela) integrates with AWS Transit Gateway Connect using GRE tunnels and BGP for dynamic routing. VMware SD-WAN provides cloud gateways in AWS and Azure. Palo Alto Prisma SD-WAN connects to cloud via IPsec. These integrations allow SD-WAN-managed branches to reach cloud resources through the SD-WAN overlay.` },
+      { term: 'DNS in Hybrid Environments', definition: `Hybrid environments require DNS resolution to work bidirectionally: on-premises clients resolving AWS private hostnames, and cloud workloads resolving on-premises hostnames. AWS Route 53 Resolver endpoints (inbound for on-premises queries, outbound for cloud queries to on-premises DNS) are the standard solution. Forwarding rules route queries for specific domains to the appropriate DNS server.` },
+    ],
+    pitfalls: [
+      'Not accounting for asymmetric routing in hybrid environments. A packet may enter via Direct Connect but return via VPN if routes are not properly weighted on both sides. Stateful firewalls and NAT devices will drop asymmetrically routed flows.',
+      'MTU mismatches across hybrid connections. VPN encapsulation reduces effective MTU by 50-100 bytes. If on-premises hosts set DF bit and the MSS is not clamped correctly, large packets will be silently dropped, causing connections to hang after the initial handshake.',
+      'Single Direct Connect connection with no redundancy is a common cost-saving mistake that creates a critical single point of failure. AWS recommends at least two connections from different DX locations for production workloads.',
+      'Failing to test failover regularly. Organizations configure DX primary and VPN backup but never test the failover. When DX actually fails, the VPN backup may be misconfigured, expired, or the VPN devices may have been decommissioned.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a resilient hybrid connectivity architecture for an enterprise with a main data center and 20 branch offices needing to access AWS workloads.',
+        answer: `## Resilient Hybrid Connectivity Architecture
+
+## Main Data Center Connectivity
+
+\`\`\`
+Main DC -> Direct Connect (10G) x2 -> AWS Direct Connect Gateway -> Transit Gateway
+                                                                   |-> VPC-Prod
+                                                                   |-> VPC-Dev
+                                                                   |-> VPC-Shared
+
+Main DC -> Site-to-Site VPN (backup) -> Transit Gateway (same TGW)
+\`\`\`
+
+\`\`\`bash
+# Create Transit VIF on primary Direct Connect
+aws directconnect create-transit-virtual-interface \
+  --connection-id dxcon-primary \
+  --new-transit-virtual-interface \
+    virtualInterfaceName=main-dc-primary,\
+    vlan=100,\
+    asn=65000,\
+    directConnectGatewayId=dxgw-xxxxxxxxx
+
+# Attach DXGW to TGW
+aws directconnect create-direct-connect-gateway-association \
+  --direct-connect-gateway-id dxgw-xxxxxxxxx \
+  --gateway-id tgw-xxxxxxxxx \
+  --add-allowed-prefixes-to-direct-connect-gateway \
+    cidr=10.0.0.0/8
+\`\`\`
+
+## Branch Office Connectivity (20 offices)
+
+Option A: SD-WAN with cloud integration
+- Each branch runs an SD-WAN edge device
+- All branches connect to SD-WAN regional hubs
+- Regional hubs connect to TGW via SD-WAN cloud gateway (IPsec/GRE + BGP)
+- Benefit: centralized management, intelligent path selection per office
+
+Option B: VPN per branch
+- Create Site-to-Site VPN for each branch to TGW
+- 20 VPN connections x 2 tunnels = 40 tunnels (TGW supports 5000)
+- Higher management overhead but simpler for small branch count
+
+## DNS Architecture
+
+\`\`\`bash
+# Inbound resolver endpoint (on-premises to AWS)
+aws route53resolver create-resolver-endpoint \
+  --creator-request-id my-inbound-endpoint \
+  --direction INBOUND \
+  --security-group-ids sg-resolver \
+  --ip-addresses SubnetId=subnet-a,Ip=10.0.1.10 SubnetId=subnet-b,Ip=10.0.2.10
+
+# Outbound resolver endpoint (AWS to on-premises DNS)
+aws route53resolver create-resolver-endpoint \
+  --creator-request-id my-outbound-endpoint \
+  --direction OUTBOUND \
+  --security-group-ids sg-resolver \
+  --ip-addresses SubnetId=subnet-a SubnetId=subnet-b
+
+# Forward rule for on-premises domain
+aws route53resolver create-resolver-rule \
+  --creator-request-id my-rule \
+  --rule-type FORWARD \
+  --domain-name corp.example.com \
+  --resolver-endpoint-id rslvr-out-xxxxxxxx \
+  --target-ips Ip=10.100.0.53,Port=53
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/whitepapers/latest/hybrid-connectivity/hybrid-connectivity.html',
+      'https://aws.amazon.com/directconnect/resiliency-recommendation/',
+      'https://docs.aws.amazon.com/route53/latest/DeveloperGuide/resolver.html',
+    ],
+  },
+  {
+    id: 'packet-capture-analysis',
+    title: 'Packet Capture & Analysis',
+    icon: 'tool',
+    color: '#f97316',
+    questions: 6,
+    description: 'tcpdump syntax and BPF expressions, Wireshark display filters, pcap format, and decoding protocol layers from a capture.',
+    visualizations: [],
+    introduction: `Packet capture and analysis is a fundamental SRE and network engineering skill for diagnosing connectivity issues, performance problems, protocol errors, and security incidents that cannot be solved with higher-level metrics and logs alone. When an application reports "connection refused" or "timeout" and log analysis is inconclusive, packet-level inspection is often the only way to determine ground truth.
+
+tcpdump is the standard command-line packet capture tool available on nearly every Linux system. It uses the libpcap library and supports Berkeley Packet Filter (BPF) expressions for efficient kernel-level packet filtering. BPF filtering happens in the kernel before packets are copied to userspace, making tcpdump efficient even on high-traffic interfaces. Understanding BPF syntax — filtering by host, port, protocol, direction, and combining expressions with and/or/not — is essential for targeted captures that don't overwhelm disk or memory.
+
+Wireshark is the standard GUI analysis tool that processes pcap files captured by tcpdump or libpcap. Wireshark dissects protocol layers, reconstructs TCP streams, identifies retransmissions and out-of-order packets, decodes application-layer protocols, and provides powerful display filter syntax separate from capture filters. The combination of tcpdump for capture and Wireshark for offline analysis is the standard production workflow.
+
+In cloud environments, traditional packet capture requires some adaptation. On AWS, VPC Traffic Mirroring mirrors ENI traffic to a network monitoring appliance. EC2 instances can run tcpdump directly on their interfaces. In Kubernetes, tcpdump can be run in a privileged pod or using tools like kubectl-sniff that inject a tcpdump sidecar. Understanding how encapsulation affects what you see in a capture — VXLAN outer headers, TLS encryption, VPN tunnels — is critical for correct interpretation.`,
+    whenToUse: [
+      'Diagnosing TCP connection failures, RST injections, or handshake issues',
+      'Verifying TLS certificate negotiation and cipher suite selection',
+      'Identifying dropped packets, retransmissions, and TCP window size issues affecting throughput',
+      'Analyzing DNS query failures, NXDOMAIN responses, or resolution timing',
+      'Capturing traffic during a security incident for forensic analysis',
+    ],
+    keyConcepts: [
+      { term: 'BPF (Berkeley Packet Filter)', definition: `A kernel-level filtering mechanism that efficiently selects packets before copying them to userspace. BPF expressions filter by protocol (tcp, udp, icmp), host (src host, dst host), port (port, src port, dst port), network (net), and combine with and/or/not. BPF runs in the kernel, dramatically reducing CPU overhead compared to userspace filtering.` },
+      { term: 'pcap File Format', definition: `The standard packet capture file format used by tcpdump, Wireshark, and virtually all network analysis tools. Contains a global header (magic number, snap length, link type) followed by packet records (timestamp, captured length, original length, raw packet bytes). Can be read offline by any pcap-compatible tool.` },
+      { term: 'TCP Stream Reassembly', definition: `Wireshark reassembles TCP byte streams from individual packets, allowing analysis of complete application-layer exchanges (HTTP requests, SMTP conversations). Follow TCP Stream (right-click then Follow then TCP Stream) shows the complete bidirectional conversation. Essential for debugging application protocol issues where the payload spans multiple packets.` },
+      { term: 'Wireshark Display Filters', definition: `Display filters in Wireshark are applied after capture and do not affect captured data. They are more expressive than BPF capture filters. Examples: ip.addr==10.0.0.1, tcp.port==443, http.response.code==500, dns.qry.name contains "example.com", tcp.flags.reset==1. Can be combined with and/or/not and parentheses.` },
+      { term: 'Promiscuous Mode', definition: `Normally, a network interface only passes packets addressed to its own MAC address to the OS. Promiscuous mode configures the interface to capture all packets on the segment, including those destined for other hosts. Essential for capturing on a hub or port span/mirror. tcpdump enables promiscuous mode by default unless -p is specified.` },
+    ],
+    pitfalls: [
+      'Running tcpdump without a snaplen limit on a high-traffic interface captures full packet payloads and can exhaust disk space within seconds. Use -s 96 for headers-only capture when payload content is not needed.',
+      'Not rotating capture files during long captures. A single pcap file with hours of traffic is difficult to analyze. Use tcpdump -C (file size) and -W (number of files) for automatic rotation into a ring buffer.',
+      'Forgetting that TLS-encrypted traffic shows only the TLS handshake in a capture, not the application payload. To decrypt, you need either the server private key (for RSA key exchange) or the session master secrets (exported via SSLKEYLOGFILE environment variable in the client).',
+      'Confusing capture filters (BPF, applied at capture time) with display filters (Wireshark syntax, applied during analysis). They have different syntax. A mistake like writing a Wireshark display filter in tcpdump will either fail or silently capture nothing.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Write tcpdump commands for the following capture scenarios: capturing HTTP traffic, capturing DNS queries, capturing only TCP RST packets, and capturing traffic to/from a specific host while excluding SSH.',
+        answer: `## tcpdump Capture Scenarios
+
+## HTTP Traffic (port 80)
+
+\`\`\`bash
+# Capture HTTP request/response headers (snap first 512 bytes)
+tcpdump -i eth0 -s 512 -A 'tcp port 80'
+
+# Write to file for Wireshark analysis
+tcpdump -i eth0 -s 0 -w /tmp/http-capture.pcap 'tcp port 80'
+\`\`\`
+
+## DNS Queries
+
+\`\`\`bash
+# Capture all DNS (UDP and TCP on port 53)
+tcpdump -i eth0 -n 'port 53'
+
+# Show DNS query names in ascii
+tcpdump -i eth0 -n -s 0 -A 'udp port 53'
+\`\`\`
+
+## TCP RST Packets
+
+\`\`\`bash
+# Capture all TCP RST packets
+tcpdump -i eth0 -n 'tcp[tcpflags] & tcp-rst != 0'
+
+# RSTs with verbose source/destination info
+tcpdump -i eth0 -n -v 'tcp[tcpflags] & tcp-rst != 0'
+
+# RSTs on a specific port
+tcpdump -i eth0 -n 'tcp[tcpflags] & tcp-rst != 0 and port 8080'
+\`\`\`
+
+## Specific Host Excluding SSH
+
+\`\`\`bash
+# Traffic to/from 10.0.0.5, excluding port 22 (SSH)
+tcpdump -i eth0 -n 'host 10.0.0.5 and not port 22'
+
+# Extended: also exclude monitoring traffic
+tcpdump -i eth0 -n 'host 10.0.0.5 and not (port 22 or port 161 or port 162)'
+
+# Write to rotating files (100MB max, keep last 10)
+tcpdump -i eth0 -n -w /tmp/capture.pcap -C 100 -W 10 \
+  'host 10.0.0.5 and not port 22'
+\`\`\`
+
+## Kubernetes Pod Capture
+
+\`\`\`bash
+# Run tcpdump in a Kubernetes pod namespace using debug container
+NODE=$(kubectl get pod mypod -o jsonpath='{.spec.nodeName}')
+kubectl debug node/\${NODE} -it --image=nicolaka/netshoot -- \
+  tcpdump -i eth0 -n -s 0 -w /tmp/pod-capture.pcap
+\`\`\``,
+      },
+      {
+        question: 'How do you use Wireshark to analyze a TCP connection problem? Walk through diagnosing a scenario where connections complete the handshake but data transfer is slow.',
+        answer: `## Wireshark TCP Performance Analysis
+
+## Capture and Open
+
+\`\`\`bash
+# Capture on server side while client runs transfer
+tcpdump -i eth0 -s 0 -w /tmp/slow-transfer.pcap 'host client-ip and port 8080'
+# Open in Wireshark
+wireshark slow-transfer.pcap
+\`\`\`
+
+## Step 1: Check TCP Handshake
+
+Display filter: tcp.flags.syn==1
+- Verify SYN, SYN-ACK, ACK all present with normal timing
+- Check initial Window Size in SYN-ACK (client receive window)
+
+## Step 2: TCP Stream Statistics
+
+Statistics then TCP Stream Graphs then Time-Sequence (tcptrace)
+- Flat lines indicate sender is stalled (waiting for ACKs or window to open)
+- Spiky retransmission markers indicate packet loss
+
+## Step 3: Find Retransmissions
+
+\`\`\`
+Display filter: tcp.analysis.retransmission or tcp.analysis.fast_retransmission
+\`\`\`
+
+## Step 4: Check Window Size
+
+\`\`\`
+Display filter: tcp.window_size_value < 8192
+\`\`\`
+
+A small receive window limits throughput. TCP throughput = window_size / RTT. If window is 65535 bytes and RTT is 50ms, max throughput is about 10Mbps regardless of bandwidth.
+
+## Step 5: Check for Zero Window
+
+\`\`\`
+Display filter: tcp.analysis.zero_window
+\`\`\`
+
+Zero window means the receiver buffer is full. The sender stops until a Window Update is received. Indicates slow receiver processing.
+
+## Common Root Causes
+
+- Receiver buffer full (zero window): increase application read rate or socket buffer size
+- Packet loss causing retransmissions: investigate network path for congestion or errors
+- Window scaling not negotiated: limits window to 65535 bytes, throttling long-RTT transfers
+- Nagle's algorithm plus delayed ACK interaction: causes 200ms delays for small writes`,
+      },
+    ],
+    references: [
+      'https://www.tcpdump.org/manpages/tcpdump.1.html',
+      'https://www.wireshark.org/docs/wsug_html_chunked/',
+      'https://wiki.wireshark.org/DisplayFilters',
+      'https://www.kernel.org/doc/html/latest/networking/filter.html',
+    ],
+  },
+  {
+    id: 'connectivity-failures',
+    title: 'Diagnosing Connectivity Failures',
+    icon: 'tool',
+    color: '#f97316',
+    questions: 6,
+    description: 'Interpreting ping and traceroute output, firewall drop vs reject behavior, MTU black holes, and asymmetric routing issues.',
+    visualizations: [],
+    introduction: `Connectivity failures are one of the most common and frustrating categories of production incidents. A service that worked yesterday suddenly cannot be reached, or a new deployment fails to connect to a dependency. Systematic diagnosis using the right tools and a layered OSI-model approach dramatically reduces mean time to resolution.
+
+The fundamental diagnostic loop is: determine what layer the failure is at (physical, IP, transport, application), then use layer-appropriate tools to isolate the exact failure point. Starting with ping and traceroute provides an initial map of IP-layer connectivity. If IP connectivity exists but TCP connections fail, tcpdump at both endpoints reveals whether SYN packets are arriving and whether RST or ICMP unreachable messages are being sent back. If TCP connects but application responses are wrong, curl and application-layer debugging tools take over.
+
+Understanding the difference between ICMP unreachable (connection rejected, usually a firewall rule returning an explicit deny) and connection timeout (packet dropped silently, usually a stateful firewall or network ACL with no return) is critical. A firewall that sends TCP RST or ICMP port-unreachable is actually more helpful for diagnosis than one that silently drops — the error is immediate and informative. A silent drop causes the client to wait for the full connection timeout (typically 120 seconds) before failing.
+
+MTU black holes are a notoriously difficult class of connectivity failure. TCP connections establish successfully (SYN/SYN-ACK/ACK use small packets) but data transfer fails or hangs. This happens when the Path MTU is smaller than the sender assumes, the DF (Don't Fragment) bit is set, and ICMP "fragmentation needed" messages are blocked by a firewall. The result is silent packet drops for any packet larger than the Path MTU.
+
+In cloud environments, additional failure modes include security group misconfiguration, network ACL issues, route table problems, and DNS resolution failures that masquerade as connectivity issues.`,
+    whenToUse: [
+      'Responding to service unavailability incidents where the root cause is network-related',
+      'Validating network configuration after infrastructure changes or deployments',
+      'Diagnosing intermittent connectivity issues that do not appear in application logs',
+      'Investigating asymmetric routing causing stateful firewall session drops',
+      'Troubleshooting cross-region or cross-account connectivity in AWS environments',
+    ],
+    keyConcepts: [
+      { term: 'ICMP Unreachable vs Silent Drop', definition: `A firewall returning ICMP port-unreachable or TCP RST tells the client immediately that the connection is refused. The client gets an immediate error (Connection refused). A silent drop causes the client to wait until the connection attempt timeout expires (TCP SYN is retransmitted 3-6 times over 60-120 seconds before giving up).` },
+      { term: 'Traceroute Interpretation', definition: `Traceroute sends packets with incrementing TTL values. Each hop decrements TTL by 1; when TTL reaches 0 the router sends ICMP Time Exceeded back, revealing its IP. Asterisks indicate the router did not respond to the probe — not necessarily a failure; many routers rate-limit or drop ICMP TTL-exceeded. A final asterisk means the destination did not respond.` },
+      { term: 'Asymmetric Routing', definition: `When forward-path packets traverse different routers than return-path packets. Stateful firewalls track connection state: if they see a TCP SYN on the forward path but the SYN-ACK returns via a different path (not through the firewall), the firewall has no state for the flow and drops the SYN-ACK. Results in connections that initiate but never complete.` },
+      { term: 'MTU Black Hole', definition: `Occurs when Path MTU Discovery fails because ICMP Fragmentation Needed messages (type 3, code 4) are blocked by firewalls. The sender sets DF bit, sends a packet larger than a link in the path can handle, the intermediate router cannot fragment (DF set), sends ICMP Frag-Needed, but that ICMP is blocked. The sender never learns to use a smaller MTU and retransmits silently discarded large packets.` },
+      { term: 'Network ACL vs Security Group', definition: `In AWS, Security Groups are stateful (return traffic automatically allowed), applied at the ENI level, and support allow-only rules. Network ACLs are stateless (must explicitly allow both inbound and outbound), applied at the subnet level, support both allow and deny rules, and process rules in numbered order (lowest first). A common mistake is configuring the SG correctly but forgetting to allow the return traffic in the NACL.` },
+    ],
+    pitfalls: [
+      'Chasing symptoms rather than isolating layers. Jumping to application log analysis before confirming basic IP and TCP connectivity often leads to incorrect conclusions. Always verify layer by layer: ping (IP), telnet/nc (TCP), curl (HTTP).',
+      'Assuming firewall rules are the problem before verifying routing. A packet that is routed to the wrong interface will be dropped before any firewall rules apply. Check routing tables before firewall rules.',
+      'Ignoring DNS as a connectivity failure cause. Cannot connect to service often turns out to be DNS returning NXDOMAIN or the wrong IP. Always resolve the hostname manually before diagnosing network-layer issues.',
+      'Testing from the wrong vantage point. Testing connectivity from a jump host does not prove the application server can reach the same destination. Security groups, NACLs, and routing can differ between the jump host subnet and the application server subnet.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through your systematic process for diagnosing "service X cannot reach service Y" in a Kubernetes cluster deployed on AWS.',
+        answer: `## Systematic Connectivity Diagnosis: K8s on AWS
+
+## Layer 1-2: Node Connectivity
+
+\`\`\`bash
+# Verify nodes are Ready
+kubectl get nodes
+
+# Check node network interfaces
+kubectl debug node/<node-name> -it --image=nicolaka/netshoot -- ip addr
+kubectl debug node/<node-name> -it --image=nicolaka/netshoot -- ip route
+\`\`\`
+
+## Layer 3: Pod IP Connectivity
+
+\`\`\`bash
+# Get pod IPs for both services
+kubectl get pod -l app=service-x -o wide
+kubectl get pod -l app=service-y -o wide
+
+# Test ICMP from service-x pod to service-y pod IP
+kubectl exec -it <service-x-pod> -- ping -c 3 <service-y-pod-ip>
+
+# If ping fails, check CNI:
+kubectl get pods -n kube-system | grep -E 'flannel|calico|cilium|aws-node'
+kubectl describe pod -n kube-system <cni-pod-on-failing-node>
+\`\`\`
+
+## Layer 4: TCP Port Connectivity
+
+\`\`\`bash
+# Test TCP connectivity to service-y's container port
+kubectl exec -it <service-x-pod> -- nc -zv <service-y-pod-ip> 8080
+
+# Test via Kubernetes Service
+kubectl exec -it <service-x-pod> -- nc -zv service-y.namespace.svc.cluster.local 80
+
+# Check if service endpoints exist
+kubectl get endpoints service-y -n <namespace>
+\`\`\`
+
+## DNS Resolution
+
+\`\`\`bash
+# Verify DNS resolution from service-x pod
+kubectl exec -it <service-x-pod> -- nslookup service-y.namespace.svc.cluster.local
+kubectl exec -it <service-x-pod> -- cat /etc/resolv.conf
+
+# Check CoreDNS is healthy
+kubectl get pods -n kube-system -l k8s-app=kube-dns
+kubectl logs -n kube-system -l k8s-app=kube-dns --tail=50
+\`\`\`
+
+## AWS Network Layer
+
+\`\`\`bash
+# Check security groups allow traffic between node ENIs
+aws ec2 describe-security-groups --group-ids <node-sg-id>
+
+# For VPC CNI (aws-node), check ENI secondary IPs assigned
+aws ec2 describe-network-interfaces \
+  --filters "Name=attachment.instance-id,Values=<node-instance-id>"
+
+# Check VPC route tables include pod CIDR routes
+aws ec2 describe-route-tables \
+  --filters "Name=association.subnet-id,Values=<node-subnet-id>"
+\`\`\`
+
+## Network Policy Check
+
+\`\`\`bash
+# Check if NetworkPolicy is blocking traffic
+kubectl get networkpolicy -n <namespace>
+kubectl describe networkpolicy <policy-name>
+\`\`\``,
+      },
+      {
+        question: 'How do you diagnose and fix an MTU black hole causing TCP connections to hang after the handshake?',
+        answer: `## MTU Black Hole Diagnosis
+
+## Symptoms
+
+- TCP 3-way handshake completes successfully (small SYN/SYN-ACK/ACK packets)
+- Small HTTP requests (GET /) work
+- Large requests or responses hang indefinitely
+- SSH session connects but commands with large output stall
+
+## Why It Happens
+
+\`\`\`
+Client (MTU 1500) -> Tunnel/VPN (MTU 1450 effective) -> Server
+Client sends 1460-byte TCP segment with DF bit set
+Tunnel router cannot fragment (DF bit set)
+Tunnel router sends ICMP type 3 code 4 "Fragmentation Needed" to client
+ICMP is blocked by firewall
+Client never adjusts segment size
+Large packets are silently dropped indefinitely
+\`\`\`
+
+## Diagnosis
+
+\`\`\`bash
+# Test with explicit packet sizes to find the drop point
+ping -M do -s 1400 <destination>  # Linux: force DF bit
+ping -M do -s 1450 <destination>  # Increase until drops
+
+# Check if ICMP frag-needed is being received
+tcpdump -i eth0 -n 'icmp[0] == 3 and icmp[1] == 4'
+
+# Check current MTU on interface
+ip link show eth0
+ip link show tun0
+\`\`\`
+
+## Fixes
+
+\`\`\`bash
+# MSS clamping at VPN/tunnel endpoint
+iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN \
+  -j TCPMSS --clamp-mss-to-pmtu
+
+# Or set explicit MSS value (1500 - 40 IP+TCP header - 50 VPN overhead = 1410)
+iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN \
+  -j TCPMSS --set-mss 1410
+
+# Reduce MTU on the tunnel interface
+ip link set tun0 mtu 1450
+
+# Allow ICMP fragmentation needed through firewalls
+iptables -A INPUT -p icmp --icmp-type fragmentation-needed -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type fragmentation-needed -j ACCEPT
+
+# AWS Security Group: allow ICMP type 3 (Destination Unreachable)
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxxxxxxx \
+  --ip-permissions IpProtocol=icmp,FromPort=3,ToPort=-1,IpRanges=[{CidrIp=0.0.0.0/0}]
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc1191',
+      'https://www.kernel.org/doc/html/latest/networking/ip-sysctl.html',
+      'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/network_mtu.html',
+    ],
+  },
+  {
+    id: 'mtu-fragmentation',
+    title: 'MTU & IP Fragmentation',
+    icon: 'tool',
+    color: '#f97316',
+    questions: 5,
+    description: 'Ethernet 1500-byte MTU, jumbo frames at 9000 bytes, Path MTU Discovery, DF bit, VPN encapsulation overhead, and MSS clamping.',
+    visualizations: [],
+    introduction: `Maximum Transmission Unit (MTU) and IP fragmentation are foundational networking concepts that become critical in cloud and overlay networking environments where encapsulation overhead can silently degrade or break connectivity.
+
+The MTU is the largest IP packet that can be transmitted over a network link without fragmentation. Ethernet's standard MTU is 1500 bytes. This has been the dominant link MTU for decades. However, the effective MTU for application data is smaller: IP headers consume 20 bytes, TCP headers consume 20-60 bytes, leaving a Maximum Segment Size (MSS) of approximately 1460 bytes for TCP payload.
+
+When a packet exceeds the MTU of a link in its path, one of two things happens depending on the IP header's Don't Fragment (DF) bit. If DF is not set, the router fragments the packet into smaller pieces that each fit within the MTU, then reassembles them at the destination (IPv4 only — IPv6 has removed router fragmentation entirely). If DF is set, the router discards the packet and sends an ICMP Type 3 Code 4 "Fragmentation Needed" message back to the sender, which should then reduce its packet size. This mechanism is called Path MTU Discovery (PMTUD).
+
+Fragmentation is generally undesirable: it adds processing overhead at routers and end hosts, increases the number of packets, and any fragment loss requires retransmission of the entire original datagram. VPN and overlay encapsulation aggravate the MTU situation: an IPsec VPN adds 50-100 bytes of overhead, VXLAN adds 50 bytes, and GRE adds 24 bytes. If the outer MTU is 1500 bytes and the encapsulation adds 50 bytes, the inner payload must be 1450 bytes or less — but if inner senders assume 1500 bytes is safe, they will be setting DF and their packets will be dropped with ICMP messages that are often filtered by firewalls.
+
+MSS clamping is the practical fix used in most VPN and tunnel deployments: a firewall or router rewrites the MSS value in TCP SYN packets to a safe value, preventing TCP endpoints from ever sending segments large enough to require fragmentation.`,
+    whenToUse: [
+      'Configuring VPN or VXLAN tunnels and ensuring inner traffic is not silently dropped',
+      'Diagnosing mysterious TCP session hangs where handshake succeeds but data transfer fails',
+      'Enabling jumbo frames in AWS VPCs or on-premises Ethernet for high-throughput workloads',
+      'Configuring MSS clamping on VPN gateway iptables rules',
+      'Explaining why IPv6 behaves differently from IPv4 regarding fragmentation',
+    ],
+    keyConcepts: [
+      { term: 'MTU vs MSS', definition: `MTU (Maximum Transmission Unit) is the maximum Layer 3 IP packet size for a link, typically 1500 bytes for Ethernet. MSS (Maximum Segment Size) is the maximum TCP payload in a single segment, negotiated during the 3-way handshake. MSS = MTU - IP header (20 bytes) - TCP header (20 bytes) = 1460 bytes for standard Ethernet. MSS ensures TCP does not create IP packets that exceed the MTU.` },
+      { term: 'DF Bit (Don\'t Fragment)', definition: `A flag in the IPv4 header that instructs routers not to fragment the packet. When set, a router that cannot forward the packet without fragmentation must drop it and send ICMP Type 3 Code 4 (Fragmentation Needed) back to the source with the next-hop MTU. Most TCP stacks set DF by default to enable PMTUD. UDP applications often do not set DF.` },
+      { term: 'Path MTU Discovery (PMTUD)', definition: `The mechanism by which an IP sender discovers the smallest MTU along the path to a destination. The sender sends packets with DF set. If a router must fragment but cannot (due to DF), it returns ICMP Fragmentation Needed with the max segment size it can handle. The sender reduces its packet size accordingly. PMTUD breaks when ICMP is filtered, causing MTU black holes.` },
+      { term: 'Jumbo Frames', definition: `Ethernet frames larger than the standard 1500-byte MTU. Jumbo frames typically carry 9000-byte MTU payloads. Require all devices in the path (NICs, switches, routers) to support the larger frame size. Common in storage networks (iSCSI, NFS), high-performance computing, and cloud provider backbone networks. AWS VPC supports 9001-byte MTU within a VPC.` },
+      { term: 'MSS Clamping', definition: `A technique where a router or firewall rewrites the MSS value in TCP SYN and SYN-ACK packets to a safe value that accounts for encapsulation overhead. Prevents TCP endpoints from negotiating an MSS that would result in IP packets too large for the tunnel. Implemented with iptables TCPMSS target on Linux. The recommended MSS for a 1500-byte outer MTU VPN with 50-byte overhead is 1410 bytes (1500 - 20 IP - 20 TCP - 50 tunnel).` },
+    ],
+    pitfalls: [
+      'Filtering ICMP completely for security breaks PMTUD. ICMP Type 3 messages (Destination Unreachable, including Fragmentation Needed) must be allowed through firewalls for PMTUD to function. Blocking all ICMP while allowing TCP/UDP is a well-intentioned but harmful security policy.',
+      'IPv6 does not support router fragmentation at all. Only the source host can fragment IPv6 packets. If the path MTU is smaller than the packet, the router sends ICMPv6 Type 2 Packet Too Big and the packet is dropped. PMTUD is mandatory for IPv6, making ICMP filtering even more harmful in IPv6 environments.',
+      'Jumbo frame configuration must be consistent end-to-end. A single switch in the path with standard 1500-byte MTU will silently fragment or drop jumbo frames. Verify every device in the data path — NICs, switches, load balancers — before enabling jumbo frames for production traffic.',
+      'GRE and VXLAN encapsulation overhead is often overlooked in capacity planning. Adding a 50-byte VXLAN header to a path already running at 1500 MTU means inner packets must be 1450 bytes. If the existing application traffic assumes 1500-byte MSS, the encapsulation addition immediately creates an MTU black hole for all traffic.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain Path MTU Discovery and how it breaks. Give a concrete example with VPN encapsulation.',
+        answer: `## Path MTU Discovery (PMTUD) - Mechanics and Failure
+
+## Normal PMTUD Operation
+
+\`\`\`
+1. Host A wants to send data to Host B via VPN gateway
+2. Host A TCP stack negotiates MSS=1460 (standard Ethernet 1500 - 40 headers)
+3. Host A sends a 1500-byte IP packet with DF bit set
+4. The VPN gateway adds 50 bytes overhead -> 1550 bytes total
+5. VPN gateway outbound interface MTU is 1500 bytes -> cannot forward
+6. VPN gateway drops packet, sends ICMP Type 3 Code 4 to Host A:
+   "Fragmentation Needed, next-hop MTU = 1450"
+7. Host A reduces its IP packet size to 1450 bytes
+8. Subsequent packets fit through the tunnel
+\`\`\`
+
+## PMTUD Failure (MTU Black Hole)
+
+\`\`\`
+Steps 1-5 same as above
+6. VPN gateway sends ICMP Fragmentation Needed
+7. Firewall between VPN and Host A blocks all ICMP -> message dropped
+8. Host A never receives the ICMP -> never reduces packet size
+9. Host A retransmits the 1500-byte packet (with DF) -> dropped again
+10. After retransmit timeout, TCP session appears to hang
+\`\`\`
+
+## Real VPN Diagnosis
+
+\`\`\`bash
+# On VPN gateway: identify the MTU black hole
+# Capture ICMP frag-needed being generated
+tcpdump -i eth0 -n 'icmp[0] == 3 and icmp[1] == 4'
+
+# Check VPN interface MTU
+ip link show tun0
+
+# Test PMTUD yourself
+ping -M do -s 1472 <destination>  # 1472 data + 28 IP+ICMP = 1500
+ping -M do -s 1422 <destination>  # 1422 data + 28 = 1450 (should pass through VPN)
+\`\`\`
+
+## Remediation
+
+\`\`\`bash
+# Fix 1: MSS clamping (adjust TCP MSS in SYN packets)
+# Account for VPN overhead: 1500 - 20(IP) - 20(TCP) - 50(VPN) = 1410
+iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN \
+  -j TCPMSS --set-mss 1410
+
+# Fix 2: Allow ICMP Fragmentation Needed through all firewalls
+iptables -A INPUT -p icmp --icmp-type fragmentation-needed -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type fragmentation-needed -j ACCEPT
+
+# Fix 3: Reduce VPN interface MTU
+ip link set tun0 mtu 1400
+\`\`\``,
+      },
+      {
+        question: 'When should you enable jumbo frames in a cloud environment, and what must you verify before doing so?',
+        answer: `## Jumbo Frames in Cloud Environments
+
+## When Jumbo Frames Help
+
+Jumbo frames (9000-byte MTU) reduce CPU overhead for large data transfers by requiring fewer frames to transmit the same amount of data. Fewer frames means fewer interrupt requests, fewer header processing cycles, and lower CPU utilization at high throughput.
+
+Most beneficial for:
+- Storage traffic: NFS, iSCSI, Ceph between storage nodes and compute
+- High-throughput data pipelines: Kafka, Spark data shuffle, ETL workloads
+- High-performance computing with large message passing
+
+## AWS VPC Jumbo Frame Support
+
+\`\`\`bash
+# AWS VPC supports 9001-byte MTU within a VPC and across VPC peering
+# Check current instance MTU
+ip link show eth0
+
+# Enable jumbo frames on an EC2 instance
+ip link set eth0 mtu 9001
+
+# Verify effective MTU
+cat /sys/class/net/eth0/mtu
+\`\`\`
+
+## What to Verify Before Enabling
+
+\`\`\`bash
+# 1. Test jumbo frame connectivity between nodes
+ping -M do -s 8972 <destination>  # 8972 + 28 ICMP header = 9000 bytes
+# If this fails, jumbo frames are not working end-to-end
+
+# 2. Check application socket buffer sizes
+sysctl net.core.rmem_max   # Should be at least 16MB for high throughput
+sysctl net.core.wmem_max
+
+# Increase if needed
+sysctl -w net.core.rmem_max=16777216
+sysctl -w net.core.wmem_max=16777216
+sysctl -w net.ipv4.tcp_rmem='4096 87380 16777216'
+sysctl -w net.ipv4.tcp_wmem='4096 65536 16777216'
+\`\`\`
+
+## Caveats
+
+- Traffic leaving the VPC (internet, VPN, Direct Connect) reverts to 1500-byte MTU at the boundary
+- AWS NLB uses 1500-byte MTU for health checks regardless of instance MTU
+- EKS/Kubernetes: pod MTU must account for CNI overhead (VPC CNI uses 9001, Flannel VXLAN uses 8951)
+- EBS volumes: EBS communication is over the AWS network internally and benefits from jumbo frames automatically`,
+      },
+    ],
+    references: [
+      'https://tools.ietf.org/html/rfc1191',
+      'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/network_mtu.html',
+      'https://www.kernel.org/doc/html/latest/networking/ip-sysctl.html',
+    ],
+  },
+  // ─── LOAD BALANCING ────────────────────────────────────────────────────────
+  {
+    id: 'lb-algorithms',
+    title: 'Load Balancing Algorithms',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 6,
+    description: 'Round-robin, weighted, least-connections, IP hash, random, power-of-two-choices, and consistent hashing with virtual nodes.',
+    visualizations: [],
+    introduction: `Load balancing algorithms determine how a load balancer distributes incoming requests across a pool of backend servers. Choosing the wrong algorithm for your traffic pattern causes hot spots, wasted capacity, or session loss.
+
+Round-robin is the simplest: requests cycle through servers in order. It works well when all servers are homogeneous and request cost is uniform. Weighted round-robin assigns a weight to each server proportional to its capacity, so a server with weight 3 receives three requests for every one sent to a server with weight 1.
+
+Least-connections routes each new request to the server with the fewest active connections at that moment. This naturally adapts to variable-cost requests. Weighted least-connections combines both approaches.
+
+IP hash computes a hash of the client IP address and always routes that client to the same server. This provides basic session stickiness without cookies but breaks if the client changes IP (NAT, mobile, VPN) or if a server is added/removed and the hash modulo changes.
+
+Power-of-two choices (P2C) is used in Nginx Plus and Envoy: pick two servers at random, route to the one with fewer active requests. This achieves near-optimal load distribution with O(1) per-request overhead.
+
+Consistent hashing with virtual nodes is used in distributed caches (Memcached, Redis Cluster). Each server is mapped to multiple points on a hash ring. A request key hashes to a position on the ring and is routed to the nearest server clockwise. Adding or removing a server only remaps a fraction of keys. Virtual nodes (vnodes) improve key distribution uniformity by giving each physical server multiple ring positions.`,
+    whenToUse: [
+      'Selecting a load balancing algorithm for a new service based on traffic characteristics',
+      'Explaining why consistent hashing is used in distributed caches instead of modulo hashing',
+      'Diagnosing hot spots where one backend server is overloaded while others are idle',
+      'Choosing between ALB (round-robin / least-outstanding) and custom HAProxy algorithms',
+    ],
+    keyConcepts: [
+      { term: 'Round-Robin', definition: `Requests are distributed to backends in sequential order. Simple and fair for homogeneous workloads with uniform request cost. No server state is tracked.` },
+      { term: 'Least Connections', definition: `New requests are sent to the backend with the fewest active connections. Adapts to heterogeneous request cost — slow requests accumulate connections and the server receives fewer new ones.` },
+      { term: 'Consistent Hashing', definition: `Servers are mapped to positions on a hash ring. A key hashes to a ring position and is routed to the nearest server. Adding or removing a server only remaps 1/N of keys, minimizing cache misses on topology changes.` },
+      { term: 'Virtual Nodes (Vnodes)', definition: `Each physical server is assigned multiple positions on the hash ring. This improves key distribution uniformity and means that when a server leaves the ring, its load is spread across all remaining servers.` },
+      { term: 'Power-of-Two Choices (P2C)', definition: `Pick two candidate backends at random; route to the one with fewer active requests. Achieves near-optimal load distribution in O(1) without tracking global state. Used in Envoy and Nginx Plus.` },
+      { term: 'IP Hash', definition: `The client source IP is hashed to determine the backend. Provides basic session affinity without cookies but is fragile under NAT and breaks when backends are added or removed.` },
+    ],
+    pitfalls: [
+      'Using round-robin for requests with highly variable cost — a server handling a 10-second DB query becomes a hot spot. Use least-connections instead.',
+      'Using modulo hashing (server = hash(key) % N) in distributed caches — adding or removing one server remaps nearly all keys, causing a cache stampede. Use consistent hashing.',
+      'Assuming IP hash provides reliable stickiness — corporate users behind NAT share one IP, so all are pinned to the same backend. Use cookie-based affinity for true session pinning.',
+      'Ignoring slow-start when bringing new backends online — adding a server to a least-connections pool immediately routes maximum traffic because it has zero connections. Use nginx or HAProxy slow-start (ramp-up period).',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain consistent hashing and why it is preferred over modulo hashing for distributed caches.',
+        answer: `## The Problem with Modulo Hashing
+
+With modulo hashing, server = hash(key) % N. When you add or remove one server, N changes and nearly every key remaps to a different server — causing a cache stampede where all remapped keys miss and hit the database simultaneously.
+
+## Consistent Hashing
+
+Servers are placed on a circular hash ring (0 to 2^32 - 1). A key is hashed to a point on the ring and routed to the first server clockwise. When a server is added or removed, only the keys between that server and its predecessor are remapped — approximately 1/N of keys.
+
+## Virtual Nodes
+
+Without vnodes, servers cluster unevenly on the ring. With 150 vnodes per server, each physical server occupies 150 ring positions, making key distribution statistically uniform. When a server leaves, its load is spread across all remaining servers.
+
+\`\`\`python
+import hashlib
+
+class ConsistentHash:
+    def __init__(self, servers, vnodes=150):
+        self.ring = {}
+        self.sorted_keys = []
+        for server in servers:
+            for i in range(vnodes):
+                key = hashlib.md5(f"{server}:{i}".encode()).hexdigest()
+                h = int(key, 16)
+                self.ring[h] = server
+                self.sorted_keys.append(h)
+        self.sorted_keys.sort()
+
+    def get_server(self, request_key):
+        h = int(hashlib.md5(request_key.encode()).hexdigest(), 16)
+        for ring_key in self.sorted_keys:
+            if h <= ring_key:
+                return self.ring[ring_key]
+        return self.ring[self.sorted_keys[0]]
+\`\`\`
+
+## Real-World Usage
+
+- Memcached clients use consistent hashing by default
+- Redis Cluster uses 16,384 hash slots assigned to nodes
+- Cassandra uses consistent hashing for partition key to node mapping
+- Envoy and Nginx Plus support consistent hashing for upstream selection`,
+      },
+      {
+        question: 'When would you choose power-of-two choices over least-connections?',
+        answer: `## Least-Connections
+
+A centralized load balancer tracks the active connection count per backend and routes to the minimum. This is optimal when one entity has global visibility into all connections.
+
+In a distributed proxy mesh (Envoy sidecar per pod), there is no shared global state. Each proxy only knows its own connection counts, so least-connections decisions based on local state may route to a backend saturated from the perspective of other proxies.
+
+## Power-of-Two Choices (P2C)
+
+Pick two backends uniformly at random. Route to the one with fewer active requests. Using the "balls into bins" mathematical result: P2C achieves O(log log N) maximum load versus O(log N / log log N) for random — exponentially better, and within a constant factor of the global optimum.
+
+\`\`\`go
+func (p *p2cBalancer) Pick() *backend {
+    a := p.backends[rand.Intn(len(p.backends))]
+    b := p.backends[rand.Intn(len(p.backends))]
+    if a.activeRequests < b.activeRequests {
+        return a
+    }
+    return b
+}
+\`\`\`
+
+## When to Use Which
+
+- Use least-connections: centralized load balancer (HAProxy, nginx) with full visibility
+- Use P2C: service meshes (Envoy LEAST_REQUEST policy) where no global state exists
+- Use round-robin: stateless uniform workloads where simplicity beats optimality
+- Use consistent hashing: same key must always reach the same backend (caching, stateful)`,
+      },
+      {
+        question: 'How does nginx implement load balancing, and how do you configure weighted least-connections?',
+        answer: `\`\`\`nginx
+upstream api_backends {
+    least_conn;
+
+    server 10.0.1.10:8080 weight=3 max_fails=3 fail_timeout=30s;
+    server 10.0.1.11:8080 weight=3 max_fails=3 fail_timeout=30s;
+    server 10.0.1.12:8080 weight=1 max_fails=3 fail_timeout=30s;
+
+    keepalive 32;  # persistent connections per worker
+}
+
+server {
+    listen 80;
+    location /api/ {
+        proxy_pass http://api_backends;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";  # required for keepalive
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+    }
+}
+\`\`\`
+
+## Available Algorithms
+
+- Round-robin: default, no directive needed
+- Weighted round-robin: add weight= parameter
+- least_conn: route to backend with fewest active connections
+- ip_hash: hash client IP for basic affinity
+- hash ${variable}: hash on any nginx variable
+
+## Reload Without Downtime
+
+\`\`\`bash
+nginx -t && nginx -s reload
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://nginx.org/en/docs/http/ngx_http_upstream_module.html',
+      'https://www.haproxy.org/download/2.8/doc/configuration.txt',
+      'https://en.wikipedia.org/wiki/Consistent_hashing',
+    ],
+  },
+
+  {
+    id: 'health-checks',
+    title: 'Health Checks and Circuit Breaking',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Active vs passive health checks, HTTP 200 probes, TCP checks, intervals and thresholds, and circuit breaker patterns.',
+    visualizations: [],
+    introduction: `Health checks are the mechanism by which a load balancer determines whether a backend is capable of serving traffic. Without them, requests are sent to dead or degraded backends, resulting in timeouts and errors that the client experiences directly.
+
+Active health checks are periodic requests the load balancer sends to each backend independently of real traffic. A typical HTTP active check sends a GET to /health every 10 seconds. If the backend returns 200 within a timeout window, it is considered healthy. After a configurable number of consecutive failures (the unhealthy threshold — typically 2 or 3), the backend is removed from the rotation. After a number of consecutive successes (the healthy threshold — typically 2), it is reinstated. TCP active checks simply test that the port accepts a connection, which is faster but verifies less.
+
+Passive health checks (circuit breakers) infer health from real traffic. The load balancer or proxy watches response codes and latency on production requests. If a backend returns 5xx errors above a threshold, it is ejected. Envoy's outlier detection is the canonical implementation: if a host returns 5 consecutive 5xx responses, it is ejected for a base ejection time (e.g., 30 seconds), exponentially backing off on repeated ejections.
+
+The circuit breaker pattern has three states: Closed (normal, requests flow through), Open (backend is unhealthy, requests are short-circuited with an error), and Half-Open (a probe request is allowed through to test recovery). Failing fast with a circuit-breaker error is better than letting requests queue up against a dead backend, exhausting thread pools and propagating the failure upstream.
+
+Combining active and passive checks is best practice: active checks catch total failures quickly; passive outlier detection catches partial degradation on a subset of requests.`,
+    whenToUse: [
+      'Configuring health checks on an AWS ALB target group for an ECS or EC2 service',
+      'Implementing circuit breaking in Envoy or Istio service mesh to prevent cascading failures',
+      'Tuning health check intervals and thresholds to balance fast failure detection against false positives',
+      'Designing a /health endpoint that accurately reflects application readiness',
+      'Explaining the difference between liveness and readiness probes in Kubernetes',
+    ],
+    keyConcepts: [
+      { term: 'Active Health Check', definition: `A synthetic probe the load balancer sends to each backend on a fixed interval, independent of real traffic. Detects total outages quickly. Requires a dedicated health endpoint that tests dependencies.` },
+      { term: 'Passive Health Check (Outlier Detection)', definition: `Infers health from production traffic. The proxy watches error rates and latency. If a backend exceeds thresholds, it is ejected from the pool. Catches partial degradation that active checks miss.` },
+      { term: 'Unhealthy / Healthy Threshold', definition: `Unhealthy threshold: consecutive failures before a backend is removed (e.g., 3). Healthy threshold: consecutive successes before a backend is reinstated (e.g., 2). Prevents flapping.` },
+      { term: 'Circuit Breaker States', definition: `Closed: normal operation. Open: backend ejected, requests fail fast. Half-Open: one probe request is allowed to test recovery. Transitions are governed by thresholds and timeouts.` },
+      { term: 'Liveness vs Readiness (Kubernetes)', definition: `Liveness probe: is the container alive? Failing it causes a restart. Readiness probe: is the container ready to serve traffic? Failing it removes the pod from the Service endpoints.` },
+    ],
+    pitfalls: [
+      'Health endpoint that always returns 200 — if /health does not check database connectivity or critical dependencies, a backend can pass health checks while serving errors to real users.',
+      'Tight intervals with low thresholds causing flapping — a 5-second interval with an unhealthy threshold of 1 removes backends on a single transient timeout. Use 2-3 consecutive failures to absorb network jitter.',
+      'Not accounting for startup time — a newly deployed container may not be ready for 30-60 seconds. Set initialDelaySeconds or use readiness probes to prevent premature traffic.',
+      'Circuit breaker without fallback — opening the circuit breaker returns errors to callers unless there is a fallback response (cached data, degraded mode). A raw connection refused is worse than a graceful degraded response.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you configure health checks on an AWS ALB target group, and what makes a good /health endpoint?',
+        answer: `\`\`\`bash
+aws elbv2 create-target-group \\
+  --name my-api-tg \\
+  --protocol HTTP --port 8080 \\
+  --vpc-id vpc-0abc123 \\
+  --health-check-protocol HTTP \\
+  --health-check-path /health \\
+  --health-check-interval-seconds 15 \\
+  --health-check-timeout-seconds 5 \\
+  --healthy-threshold-count 2 \\
+  --unhealthy-threshold-count 3 \\
+  --matcher HttpCode=200
+\`\`\`
+
+## What a Good /health Endpoint Checks
+
+\`\`\`javascript
+app.get('/health', async (req, res) => {
+  const checks = {};
+  let status = 200;
+
+  try {
+    await db.query('SELECT 1');
+    checks.database = 'ok';
+  } catch (err) {
+    checks.database = 'error';
+    status = 503;
+  }
+
+  try {
+    await redis.ping();
+    checks.cache = 'ok';
+  } catch (err) {
+    checks.cache = 'degraded'; // non-critical, do not fail health check
+  }
+
+  res.status(status).json({ status: status === 200 ? 'healthy' : 'unhealthy', checks });
+});
+\`\`\`
+
+## Liveness vs Readiness in Kubernetes
+
+\`\`\`yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8080
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  failureThreshold: 2
+\`\`\``,
+      },
+      {
+        question: 'Explain the circuit breaker pattern and how Envoy implements outlier detection.',
+        answer: `## Circuit Breaker States
+
+- Closed: requests flow normally. Failures are counted.
+- Open: threshold exceeded. Requests fail immediately without hitting the backend. A timer starts.
+- Half-Open: timer expires, one probe request is allowed. Success transitions to Closed; failure resets the timer.
+
+The benefit: short-circuiting returns errors in microseconds, freeing threads that would otherwise queue up against a dead service.
+
+## Envoy Outlier Detection
+
+\`\`\`yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: api-service
+spec:
+  host: api-service
+  trafficPolicy:
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+\`\`\`
+
+## How Ejection Works
+
+1. Host returns 5 consecutive 5xx responses
+2. Envoy ejects the host for baseEjectionTime * (ejection count) — exponential backoff
+3. After the ejection time expires, the host re-enters the pool (half-open)
+4. If it fails again, it is ejected for 2x the previous duration
+
+## Connection-Level Circuit Breaking
+
+\`\`\`yaml
+trafficPolicy:
+  connectionPool:
+    tcp:
+      maxConnections: 100
+    http:
+      http1MaxPendingRequests: 50
+      http2MaxRequests: 200
+\`\`\`
+
+When these limits are exceeded, Envoy returns 503 immediately rather than queuing.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html',
+      'https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/outlier',
+      'https://istio.io/latest/docs/tasks/traffic-management/circuit-breaking/',
+      'https://martinfowler.com/bliki/CircuitBreaker.html',
+    ],
+  },
+
+  {
+    id: 'sticky-sessions',
+    title: 'Sticky Sessions',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 4,
+    description: 'Cookie-based affinity, source IP hashing, JSESSIONID pinning, and how sticky sessions conflict with horizontal scaling.',
+    visualizations: [],
+    introduction: `Sticky sessions (also called session affinity) ensure that a client's requests are consistently routed to the same backend server. This is necessary when server-side session state is stored in-process (in memory) rather than in a shared external store. If a subsequent request lands on a different server, that server has no knowledge of the session and the user experiences an authentication failure or lost cart.
+
+Cookie-based affinity is the most common implementation. The load balancer inserts a cookie (e.g., AWSALB on AWS ALB) into the first response. On subsequent requests, the load balancer reads this cookie and routes to the pinned backend.
+
+Source IP hashing is an alternative that requires no cookie insertion. The client IP is hashed to select a backend. This is weaker: clients behind NAT share one IP and all land on the same backend. IP changes (mobile roaming, VPN) break the affinity.
+
+The fundamental problem with sticky sessions is that they undermine horizontal scaling. If a pinned backend is removed (deployment, failure, scale-in), all its pinned clients lose their session. Sticky sessions also complicate blue-green and canary deployments.
+
+The correct long-term solution is to externalize session state to a shared store (Redis, DynamoDB) so any backend can serve any request. Sticky sessions should be treated as a temporary workaround, not an architecture goal.`,
+    whenToUse: [
+      'Migrating a legacy stateful Java EE or PHP application to a load-balanced deployment without refactoring session handling',
+      'Understanding why ALB stickiness must be disabled before autoscaling works correctly',
+      'Designing a session migration strategy for a monolith decomposition project',
+      'Explaining to a team why an autoscaling event caused user logouts',
+    ],
+    keyConcepts: [
+      { term: 'Cookie-Based Affinity', definition: `The load balancer inserts a cookie (e.g., AWSALB) into the first HTTP response identifying the backend. All subsequent requests carrying the cookie are routed to the same backend. The most reliable form of stickiness.` },
+      { term: 'Source IP Hashing', definition: `The client IP address is hashed to select a backend. No cookie required but fragile: NAT concentrates many clients on one backend; IP changes break affinity.` },
+      { term: 'JSESSIONID Pinning', definition: `Some load balancers read the JSESSIONID cookie set by the Java application server and use it as the affinity key, avoiding the need to insert a separate load-balancer cookie.` },
+      { term: 'Externalized Session State', definition: `Session data stored in a shared external store (Redis, DynamoDB). Any backend can serve any request because session state is not local. Enables true stateless horizontal scaling.` },
+    ],
+    pitfalls: [
+      'Enabling sticky sessions on an autoscaling group — scale-in events terminate instances with pinned sessions, causing forced logouts. Sticky sessions and autoscaling are fundamentally at odds.',
+      'Using IP hash behind a NAT gateway or CDN — the load balancer sees the NAT/CDN IP, routing all users through that hop to the same backend. Use cookie affinity instead.',
+      'Treating sticky sessions as equivalent to session security — AWSALB cookies are signed but not encrypted. Application-level session tokens are still required for authentication.',
+      'Forgetting sticky sessions during blue-green deployments — existing sticky cookies from the old target group are invalid after a traffic cut. Plan for a drain period.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you enable sticky sessions on an AWS ALB, and what are the tradeoffs?',
+        answer: `\`\`\`bash
+aws elbv2 modify-target-group-attributes \\
+  --target-group-arn arn:aws:elasticloadbalancing:us-east-1:123456789:targetgroup/my-tg/abc \\
+  --attributes \\
+    Key=stickiness.enabled,Value=true \\
+    Key=stickiness.type,Value=lb_cookie \\
+    Key=stickiness.lb_cookie.duration_seconds,Value=86400
+\`\`\`
+
+## How It Works
+
+ALB inserts an AWSALB cookie signed with a key known only to ALB. Subsequent requests are routed to the same registered target. If the target becomes unhealthy, ALB ignores the cookie and routes to a healthy target.
+
+## ALB vs App Cookie Stickiness
+
+- lb_cookie: ALB manages the cookie, duration is wall-clock time
+- app_cookie: ALB reads a cookie your app sets (e.g., JSESSIONID) and pins to the backend that set it
+
+## Tradeoffs
+
+Pros: simple fix for stateful legacy apps without code changes.
+
+Cons:
+- Breaks autoscaling — scale-in terminates instances with active pinned sessions
+- Uneven load distribution — clients with long sessions monopolize backends
+- Complicates blue-green deployments
+- Masks the real problem — externalize session state to Redis or DynamoDB
+
+## Disable When Sessions Are Externalized
+
+\`\`\`bash
+aws elbv2 modify-target-group-attributes \\
+  --target-group-arn arn:aws:elasticloadbalancing:... \\
+  --attributes Key=stickiness.enabled,Value=false
+\`\`\``,
+      },
+      {
+        question: 'A team complains users are being logged out during deployments. What causes this and how do you fix it?',
+        answer: `## Common Causes
+
+1. In-memory session state: Sessions stored in the JVM heap or PHP session files. When the instance is terminated, sessions are lost.
+2. Sticky sessions with instance replacement: The pinned instance is removed; ALB routes to a new backend with no session data.
+3. JWT signing key not shared: Each instance generates its own key; new instances cannot verify tokens from old instances.
+4. No connection draining: Old instance terminated before active requests complete.
+
+## Fix: Externalize Session State
+
+\`\`\`javascript
+const RedisStore = require('connect-redis')(session);
+const redis = require('redis').createClient({ url: process.env.REDIS_URL });
+
+app.use(session({
+  store: new RedisStore({ client: redis }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: true, httpOnly: true, maxAge: 86400000 },
+}));
+\`\`\`
+
+## Fix: Enable Connection Draining
+
+\`\`\`bash
+aws elbv2 modify-target-group-attributes \\
+  --target-group-arn arn:aws:elasticloadbalancing:... \\
+  --attributes Key=deregistration_delay.timeout_seconds,Value=60
+\`\`\`
+
+## Fix: Share JWT Signing Key
+
+Store the JWT secret in AWS Secrets Manager or SSM Parameter Store. All instances read the same key at startup.
+
+## Verify
+
+\`\`\`bash
+aws elbv2 describe-target-group-attributes \\
+  --target-group-arn arn:... | jq '.Attributes[] | select(.Key | contains("stickiness"))'
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/sticky-sessions.html',
+      'https://redis.io/docs/manual/client-side-caching/',
+    ],
+  },
+
+  {
+    id: 'anycast',
+    title: 'Anycast Routing',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 4,
+    description: 'Same IP announced from multiple PoPs, BGP selects closest, DDoS resilience, and how 1.1.1.1 and 8.8.8.8 work.',
+    visualizations: [],
+    introduction: `Anycast is a network addressing and routing method where the same IP address is announced from multiple geographically distributed locations (Points of Presence, or PoPs). BGP selects the "closest" PoP based on AS path length and routing policy, so a client in Tokyo reaches the Tokyo PoP while a client in Frankfurt reaches the Frankfurt PoP — both using the same destination IP.
+
+The mechanism works through BGP route announcements. Each PoP originates a BGP route for the same prefix (e.g., 1.1.1.1/32). BGP routers on the Internet receive multiple paths to the same prefix and select the best path based on the BGP decision process — typically shortest AS path, then lowest MED.
+
+Anycast is the foundation of the public DNS infrastructure. Cloudflare's 1.1.1.1, Google's 8.8.8.8, and all 13 DNS root server clusters use anycast. Every DNS resolver in the world reaches its nearest instance, distributing the query load globally.
+
+DDoS resilience is a key operational benefit: a volumetric attack (e.g., 1 Tbps UDP flood) is absorbed across all PoPs simultaneously rather than overwhelming a single IP's physical infrastructure. Cloudflare Magic Transit, AWS Global Accelerator, and Akamai all use anycast as the core mechanism for DDoS absorption.
+
+The tradeoff is that anycast is not designed for TCP sessions that span routing changes: if a client's traffic shifts to a different PoP mid-session (due to BGP convergence), the TCP connection breaks. This makes anycast ideal for stateless protocols (DNS/UDP) and short-lived TCP connections.`,
+    whenToUse: [
+      'Designing a globally distributed DNS or API endpoint that routes users to the nearest PoP',
+      'Explaining how DDoS scrubbing services absorb volumetric attacks across multiple locations',
+      'Comparing anycast with GeoDNS as strategies for latency reduction',
+      'Understanding how AWS Global Accelerator and Cloudflare Magic Transit work under the hood',
+    ],
+    keyConcepts: [
+      { term: 'Anycast', definition: `A routing scheme where the same IP prefix is announced from multiple locations. BGP routes each client to the topologically nearest PoP. Used by DNS resolvers, CDNs, and DDoS scrubbing services.` },
+      { term: 'BGP Route Announcement', definition: `Each PoP uses BGP to advertise the anycast prefix to its upstream ISPs. The rest of the Internet learns multiple paths to the same prefix and each router selects the best path based on AS path length and policy.` },
+      { term: 'PoP (Point of Presence)', definition: `A physical location where a network operator has deployed servers and BGP routing infrastructure. Each PoP independently announces the anycast prefix and handles traffic routed to it.` },
+      { term: 'GeoDNS vs Anycast', definition: `GeoDNS returns different A records based on the resolver's IP geolocation. It requires DNS TTL expiry to reroute. Anycast routes at the IP layer with no DNS dependency and is faster to converge.` },
+      { term: 'DDoS Absorption via Anycast', definition: `A volumetric DDoS targeting an anycast IP is spread across all PoPs simultaneously. Each PoP absorbs a fraction of the attack traffic, preventing any single location from being overwhelmed.` },
+    ],
+    pitfalls: [
+      'Using anycast for long-lived TCP sessions — BGP path changes shift a client to a different PoP mid-session, breaking the TCP connection. Anycast is best for UDP or short-lived TCP.',
+      'Assuming BGP selects the geographically closest PoP — BGP selects the shortest AS path, which correlates with geography but is not identical.',
+      'Not monitoring per-PoP traffic distribution — anycast can create asymmetric load. Each PoP must be capacity-planned independently.',
+      'Confusing anycast with load balancing — anycast routes at the network layer and selects one PoP per client. Within a PoP, a separate load balancer distributes requests across individual servers.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does anycast work, and how does it provide DDoS resilience?',
+        answer: `## How Anycast Works
+
+In unicast, each IP address is assigned to exactly one location. In anycast, the same IP prefix is assigned to multiple locations and each announces the prefix via BGP.
+
+Cloudflare operates 1.1.1.1 from 300+ PoPs. Each PoP announces the route 1.1.1.1/32. A DNS resolver in Singapore reaches the Singapore PoP; a resolver in London reaches the London PoP — both querying the same IP.
+
+\`\`\`bash
+# traceroute to 1.1.1.1 from different locations gives different final hops
+traceroute 1.1.1.1
+# From US East: terminates at Cloudflare Atlanta or Ashburn PoP
+# From Tokyo: terminates at Cloudflare Tokyo or Osaka PoP
+\`\`\`
+
+## BGP Mechanics
+
+Each PoP originates:
+\`\`\`
+BGP UPDATE: NLRI 1.1.1.1/32, AS_PATH: [13335], NEXT_HOP: <PoP BGP peer IP>
+\`\`\`
+
+The Internet converges so each router has a path to 1.1.1.1 terminating at the nearest PoP.
+
+## DDoS Resilience
+
+A 1 Tbps UDP flood targeting 1.1.1.1 is distributed across all PoPs by anycast routing. If Cloudflare has 300 PoPs each with 100 Gbps capacity, total capacity is 30 Tbps. A 1 Tbps attack is a small fraction. Each PoP also runs scrubbing (rate limiting, SYN cookies, BPF filtering).
+
+## Limitations
+
+- Not suitable for long-lived stateful TCP sessions
+- BGP path != shortest physical distance
+- Requires BGP infrastructure`,
+      },
+      {
+        question: 'Compare anycast with GeoDNS. When would you use each?',
+        answer: `## GeoDNS
+
+Returns different DNS A records based on the geographic location of the DNS resolver making the query.
+
+\`\`\`bash
+# Route 53 latency-based routing
+aws route53 change-resource-record-sets --hosted-zone-id Z123 --change-batch '{
+  "Changes": [{
+    "Action": "CREATE",
+    "ResourceRecordSet": {
+      "Name": "api.example.com", "Type": "A",
+      "Region": "us-east-1", "SetIdentifier": "us-east-1",
+      "TTL": 60, "ResourceRecords": [{"Value": "1.2.3.4"}]
+    }
+  }]
+}'
+\`\`\`
+
+## Comparison
+
+| Dimension | GeoDNS | Anycast |
+|-----------|--------|---------|
+| Resolution layer | DNS (Layer 7) | IP routing (Layer 3) |
+| Failover time | DNS TTL (60-300s) | BGP convergence (seconds) |
+| Protocol support | Any | Best for UDP, short TCP |
+| Requires BGP | No | Yes |
+| Cost | Lower | Higher |
+
+## When to Use GeoDNS
+
+- Routing HTTP/HTTPS traffic to regional endpoints (most web applications)
+- When you lack BGP infrastructure (most organizations)
+- AWS Route 53 latency routing is a practical GeoDNS implementation
+
+## When to Use Anycast
+
+- DNS resolver infrastructure (Cloudflare 1.1.1.1, Google 8.8.8.8)
+- DDoS scrubbing services where attack absorption must happen at Layer 3
+- Services where BGP convergence speed (seconds) matters more than DNS TTL (minutes)`,
+      },
+    ],
+    references: [
+      'https://www.cloudflare.com/learning/cdn/glossary/anycast-network/',
+      'https://aws.amazon.com/global-accelerator/',
+      'https://datatracker.ietf.org/doc/html/rfc4786',
+    ],
+  },
+
+  {
+    id: 'nginx-haproxy',
+    title: 'nginx and HAProxy Configuration',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 6,
+    description: 'nginx upstream blocks and proxy_pass directives, HAProxy ACLs and backend pools, stats page, and connection limit tuning.',
+    visualizations: [],
+    introduction: `nginx and HAProxy are the two dominant open-source load balancers and reverse proxies used in production infrastructure.
+
+nginx was designed as a high-performance web server and reverse proxy. Its event-driven, asynchronous architecture handles tens of thousands of concurrent connections per worker process with low memory overhead. nginx excels at HTTP/HTTPS proxying, SSL termination, static file serving, caching, rate limiting, and gzip compression — a full layer-7 feature set in one binary.
+
+HAProxy (High Availability Proxy) is a dedicated TCP and HTTP proxy built specifically for load balancing. It has the richest feature set for traffic management: a powerful ACL system that can inspect any field in a TCP or HTTP request, health checking with fine-grained control, connection draining, and a real-time statistics interface. HAProxy's configuration model separates concerns cleanly into frontend (listen), backend (server pool), and defaults sections.
+
+Key differences: nginx is a web server that also does load balancing, making it a natural choice when the proxy also serves static content or needs caching. HAProxy is a pure proxy with no web server capability, making it more focused for complex routing requirements.
+
+Both support keepalive connections to backends (critical for performance), TLS termination, and health checks. Both are used at massive scale: nginx runs on a large fraction of all web servers; HAProxy routes traffic at major social networks and financial institutions.`,
+    whenToUse: [
+      'Configuring a reverse proxy and load balancer for a multi-instance Node.js or Python application',
+      'Writing HAProxy ACL rules to route traffic based on URL path, Host header, or source IP',
+      'Tuning worker_connections and keepalive settings for high-throughput nginx deployments',
+      'Setting up the HAProxy stats page for real-time backend health monitoring',
+      'Comparing nginx and HAProxy for a new infrastructure decision',
+      'Implementing rate limiting and connection limits to protect backend services',
+    ],
+    keyConcepts: [
+      { term: 'nginx upstream block', definition: `Defines a named group of backend servers with their load balancing algorithm, weights, and health check parameters. Referenced by proxy_pass in server/location blocks.` },
+      { term: 'HAProxy frontend/backend split', definition: `frontend defines what HAProxy listens on (IP, port, ACL rules, default backend). backend defines the pool of servers, algorithm, and health checks. This separation makes routing logic explicit and testable.` },
+      { term: 'HAProxy ACL', definition: `Named conditions that match request attributes (URL path, HTTP method, header values, source IP). ACLs can be combined with AND/OR logic and used to select backends, block requests, or redirect traffic.` },
+      { term: 'proxy_pass', definition: `nginx directive that forwards a request to an upstream group or a specific server. When pointing to an upstream block name, the upstream's algorithm applies.` },
+      { term: 'keepalive (to backends)', definition: `Maintaining persistent TCP connections to backends rather than opening a new connection per request. Eliminates TCP handshake overhead. nginx uses keepalive N in upstream blocks.` },
+      { term: 'HAProxy stats page', definition: `A built-in real-time HTTP dashboard showing backend health, current connections, request rate, error counts, and session statistics per server. Accessible via a dedicated frontend on a management port.` },
+    ],
+    pitfalls: [
+      'Not configuring keepalive connections to backends — without keepalive, nginx or HAProxy opens a new TCP connection for every proxied request. At high traffic this exhausts ephemeral ports and adds latency.',
+      'Forgetting proxy_http_version 1.1 with keepalive — nginx defaults to HTTP/1.0 for backend requests, which does not support keepalive. You must explicitly set proxy_http_version 1.1 and proxy_set_header Connection "".',
+      'Setting worker_connections too low in nginx — the default is 1024. In high-traffic deployments, set worker_connections = 10000+ and ensure the OS file descriptor limit (ulimit -n) matches.',
+      'HAProxy sending requests to a degraded backend — too-lenient health check thresholds mean error traffic continues flowing. Tune rise/fall to detect failures quickly.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Write an nginx configuration for load balancing a Node.js API across four backends with health checks, keepalive, and rate limiting.',
+        answer: `\`\`\`nginx
+worker_processes auto;
+worker_rlimit_nofile 65535;
+
+events {
+    worker_connections 10000;
+    use epoll;
+    multi_accept on;
+}
+
+http {
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/m;
+    limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+
+    upstream node_api {
+        least_conn;
+        server 10.0.1.10:3000 weight=1 max_fails=3 fail_timeout=30s;
+        server 10.0.1.11:3000 weight=1 max_fails=3 fail_timeout=30s;
+        server 10.0.1.12:3000 weight=1 max_fails=3 fail_timeout=30s;
+        server 10.0.1.13:3000 weight=1 max_fails=3 fail_timeout=30s;
+        keepalive 64;
+        keepalive_timeout 60s;
+    }
+
+    server {
+        listen 443 ssl http2;
+        server_name api.example.com;
+
+        ssl_certificate     /etc/ssl/certs/api.crt;
+        ssl_certificate_key /etc/ssl/private/api.key;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        location /api/ {
+            limit_req zone=api_limit burst=20 nodelay;
+            limit_conn conn_limit 10;
+
+            proxy_pass http://node_api;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 30s;
+            proxy_read_timeout 30s;
+
+            proxy_next_upstream error timeout http_500 http_502 http_503;
+            proxy_next_upstream_tries 2;
+        }
+
+        location /health {
+            access_log off;
+            return 200 "OK";
+        }
+    }
+}
+\`\`\`
+
+## Key Settings
+
+- least_conn: routes to backend with fewest active connections
+- max_fails=3 fail_timeout=30s: backend removed after 3 failures in 30s
+- keepalive 64: each worker maintains up to 64 idle persistent connections
+- proxy_http_version 1.1 + Connection "": required for keepalive to backends
+- proxy_next_upstream: retry on another backend on error or timeout
+
+\`\`\`bash
+nginx -t && nginx -s reload
+\`\`\``,
+      },
+      {
+        question: 'How do you configure HAProxy with ACLs to route /api/* to one backend and /static/* to another?',
+        answer: `\`\`\`haproxy
+global
+    maxconn 50000
+    log /dev/log local0
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+
+defaults
+    log global
+    mode http
+    option httplog
+    option forwardfor
+    option http-server-close
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+listen stats
+    bind *:9000
+    stats enable
+    stats uri /stats
+    stats refresh 5s
+    stats auth admin:supersecret
+
+frontend http_in
+    bind *:80
+    bind *:443 ssl crt /etc/haproxy/certs/example.pem alpn h2,http/1.1
+    redirect scheme https code 301 if !{ ssl_fc }
+
+    acl is_api    path_beg /api/
+    acl is_static path_beg /static/
+
+    use_backend api_servers    if is_api
+    use_backend static_servers if is_static
+    default_backend api_servers
+
+backend api_servers
+    balance leastconn
+    option httpchk GET /health HTTP/1.1
+    http-check expect status 200
+    server api1 10.0.1.10:3000 check inter 10s rise 2 fall 3 maxconn 500
+    server api2 10.0.1.11:3000 check inter 10s rise 2 fall 3 maxconn 500
+    server api3 10.0.1.12:3000 check inter 10s rise 2 fall 3 maxconn 500
+
+backend static_servers
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server static1 10.0.2.10:8080 check inter 15s rise 2 fall 2
+    server static2 10.0.2.11:8080 check inter 15s rise 2 fall 2
+\`\`\`
+
+## Runtime Management
+
+\`\`\`bash
+# Drain a backend gracefully
+echo "set server api_servers/api1 state drain" | socat stdio /run/haproxy/admin.sock
+
+# Re-enable
+echo "set server api_servers/api1 state ready" | socat stdio /run/haproxy/admin.sock
+
+# Reload without dropping connections
+haproxy -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid -sf $(cat /run/haproxy.pid)
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://nginx.org/en/docs/http/ngx_http_upstream_module.html',
+      'https://www.haproxy.com/documentation/haproxy-configuration-manual/',
+      'https://www.haproxy.org/download/2.8/doc/management.txt',
+    ],
+  },
+
+  // ─── FIREWALLS ──────────────────────────────────────────────────────────────
+  {
+    id: 'iptables-nftables',
+    title: 'iptables and nftables',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 6,
+    description: 'Netfilter chains (INPUT/OUTPUT/FORWARD/PREROUTING/POSTROUTING), tables (filter/nat/mangle), rule evaluation order, and nft syntax.',
+    visualizations: [],
+    introduction: `iptables and nftables are the primary tools for configuring the Linux kernel's packet filtering framework, Netfilter. Every major Linux firewall, container networking system, and cloud hypervisor ultimately uses Netfilter under the hood — Docker, Kubernetes (kube-proxy), and UFW all write iptables rules or nftables rules.
+
+Netfilter uses the concept of tables and chains. The filter table handles allow/drop decisions. The nat table handles Network Address Translation (SNAT, DNAT, masquerade). The mangle table modifies packet headers (TTL, DSCP, marks). The raw table is evaluated first and can exempt packets from connection tracking.
+
+Within each table, chains represent hook points in the packet processing path. The INPUT chain processes packets destined for the local machine. The OUTPUT chain processes packets originating from the local machine. The FORWARD chain processes packets being routed through the machine. The PREROUTING chain is evaluated before routing decisions — this is where DNAT happens. The POSTROUTING chain is evaluated after routing decisions — this is where SNAT and masquerade happen.
+
+Rules within a chain are evaluated sequentially from top to bottom. The first matching rule applies its target (ACCEPT, DROP, REJECT, LOG, DNAT, SNAT, RETURN, a user-defined chain). If no rule matches, the chain's default policy applies.
+
+nftables replaced iptables as the default in most Linux distributions starting around kernel 5.2. nftables has a cleaner syntax, a single binary (nft) replacing iptables/ip6tables/arptables/ebtables, atomic rule replacement, and better performance for large rulesets.`,
+    whenToUse: [
+      'Debugging connectivity issues caused by firewall rules on a Linux server or container host',
+      'Writing firewall rules to restrict inbound/outbound traffic on an EC2 instance or on-premises server',
+      'Understanding how Docker and Kubernetes (kube-proxy) use iptables for NAT and service routing',
+      'Migrating a server from iptables to nftables',
+      'Implementing port forwarding (DNAT) for a service exposed through a Linux router',
+    ],
+    keyConcepts: [
+      { term: 'Tables', definition: `Groups of chains organized by function. filter: allow/drop. nat: address translation. mangle: packet header modification. raw: connection tracking exemption. Each table has its own set of valid chains.` },
+      { term: 'Chains', definition: `Ordered lists of rules evaluated at a specific hook point. Built-in chains: INPUT (to local), OUTPUT (from local), FORWARD (through), PREROUTING (before routing), POSTROUTING (after routing). User-defined chains act as subroutines.` },
+      { term: 'Rule evaluation order', definition: `Rules are evaluated top-to-bottom. The first matching rule applies its target. No further rules are checked after a terminal target (ACCEPT, DROP, REJECT). RETURN exits a user-defined chain back to the calling chain.` },
+      { term: 'Connection tracking (conntrack)', definition: `Netfilter tracks the state of TCP connections and UDP sessions. States: NEW, ESTABLISHED, RELATED, INVALID. Stateful rules use -m conntrack --ctstate ESTABLISHED,RELATED to allow return traffic.` },
+      { term: 'DNAT and SNAT', definition: `DNAT (Destination NAT) changes the destination IP/port. Applied in PREROUTING. Used for port forwarding. SNAT changes the source IP. Applied in POSTROUTING. MASQUERADE is SNAT using the outgoing interface's IP automatically.` },
+      { term: 'nftables', definition: `The successor to iptables. Uses a single binary (nft), supports atomic rule replacement, has set and map data structures for efficient matching, and handles IPv4, IPv6, ARP, and bridge filtering in one framework.` },
+    ],
+    pitfalls: [
+      'Adding an ACCEPT rule but forgetting the DROP default policy — if the chain default is ACCEPT, all unmatched traffic is allowed. Always set a default DROP policy and explicitly allow required traffic.',
+      'Rule order mistakes — a broad ACCEPT rule before a specific DROP rule makes the DROP unreachable. Use iptables -L -n --line-numbers; insert rules with -I (insert at position) not -A (append).',
+      'Losing SSH access by applying a DROP default policy — always insert an ACCEPT rule for port 22 from your management IP before setting -P INPUT DROP.',
+      'iptables rules not surviving reboot — rules are in-memory only. Use iptables-save > /etc/iptables/rules.v4 and iptables-persistent to reload on boot.',
+      'Conflicting rules from Docker — Docker uses the DOCKER chain. Flushing all rules (iptables -F) breaks Docker networking. Always use the DOCKER-USER chain for custom rules.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through how iptables processes a packet and explain the table and chain evaluation order.',
+        answer: `## Netfilter Hook Points
+
+### Inbound packet to local process:
+1. PREROUTING (raw, mangle, nat)
+2. Routing decision
+3. INPUT (mangle, filter)
+4. Local process receives packet
+
+### Forwarded packet (router/NAT gateway):
+1. PREROUTING (raw, mangle, nat)
+2. Routing decision
+3. FORWARD (mangle, filter)
+4. POSTROUTING (mangle, nat)
+
+### Outbound packet from local process:
+1. Routing decision
+2. OUTPUT (raw, mangle, nat, filter)
+3. POSTROUTING (mangle, nat)
+
+## Table Order at Each Hook
+
+- PREROUTING: raw then mangle then nat
+- INPUT: mangle then filter
+- FORWARD: mangle then filter
+- OUTPUT: raw then mangle then nat then filter
+- POSTROUTING: mangle then nat
+
+## Practical Example: Port Forwarding
+
+\`\`\`bash
+# DNAT: forward external port 8080 to internal server 10.0.1.10:80
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 10.0.1.10:80
+
+# Allow forwarding of the translated packets
+iptables -A FORWARD -p tcp -d 10.0.1.10 --dport 80 \\
+  -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+
+# MASQUERADE so return packets route back through this machine
+iptables -t nat -A POSTROUTING -p tcp -d 10.0.1.10 --dport 80 -j MASQUERADE
+
+# Verify
+iptables -t nat -L PREROUTING -n -v
+\`\`\``,
+      },
+      {
+        question: 'Write a minimal iptables ruleset for a web server that allows SSH, HTTP, HTTPS, and established traffic, and drops everything else.',
+        answer: `\`\`\`bash
+#!/bin/bash
+iptables -F && iptables -X && iptables -Z
+
+iptables -P INPUT ACCEPT   # start permissive, tighten below
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+# Allow loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# Allow established and related connections (return traffic)
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+# Allow ICMP ping
+iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+
+# Allow SSH from management CIDR only
+iptables -A INPUT -p tcp -s 203.0.113.0/24 --dport 22 \\
+  -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+
+# Allow HTTP and HTTPS
+iptables -A INPUT -p tcp --dport 80 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+
+# Log and drop everything else
+iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "iptables DROP: " --log-level 4
+iptables -A INPUT -j DROP
+
+# Set default DROP policy
+iptables -P INPUT DROP
+
+# Persist
+iptables-save > /etc/iptables/rules.v4
+\`\`\`
+
+## Equivalent nftables
+
+\`\`\`bash
+nft flush ruleset
+nft add table ip filter
+nft add chain ip filter input { type filter hook input priority 0 \; policy drop \; }
+nft add chain ip filter output { type filter hook output priority 0 \; policy accept \; }
+
+nft add rule ip filter input iif lo accept
+nft add rule ip filter input ct state established,related accept
+nft add rule ip filter input ip protocol icmp accept
+nft add rule ip filter input ip saddr 203.0.113.0/24 tcp dport 22 ct state new,established accept
+nft add rule ip filter input tcp dport { 80, 443 } ct state new,established accept
+nft add rule ip filter input limit rate 5/minute log prefix '"nft DROP: "' drop
+
+nft list ruleset > /etc/nftables.conf
+\`\`\``,
+      },
+      {
+        question: 'How does Docker use iptables, and why should you never flush all iptables rules on a Docker host?',
+        answer: `## How Docker Uses iptables
+
+Docker inserts iptables rules to manage container networking:
+
+1. nat PREROUTING: the DOCKER chain DNATs published port traffic to container IP:port
+2. filter FORWARD: DOCKER-ISOLATION chains enforce network isolation between Docker networks
+
+\`\`\`bash
+iptables -t nat -L -n -v   # see DOCKER chain with DNAT rules
+iptables -L FORWARD -n -v  # see DOCKER-ISOLATION chains
+\`\`\`
+
+## Why You Must Not Flush All Rules
+
+\`\`\`bash
+# DO NOT DO THIS on a Docker host:
+iptables -F         # destroys DOCKER, DOCKER-USER, DOCKER-ISOLATION chains
+iptables -t nat -F
+
+# Result: all container port publishing breaks, inter-container communication breaks,
+# and Docker does not automatically recreate rules until daemon restart
+\`\`\`
+
+## The DOCKER-USER Chain
+
+DOCKER-USER is called before DOCKER and is not managed by Docker. Put your custom rules here.
+
+\`\`\`bash
+# Allow only specific source IPs to access a published port
+iptables -I DOCKER-USER -p tcp --dport 8080 ! -s 10.0.0.0/8 -j DROP
+
+# Block all external access, allow internal subnet
+iptables -I DOCKER-USER -i eth0 -j DROP
+iptables -I DOCKER-USER -i eth0 -s 10.0.0.0/8 -j RETURN
+\`\`\`
+
+## Safe Rule Management on Docker Hosts
+
+- Never use iptables -F; target specific chains instead
+- Always use DOCKER-USER for custom rules
+- Use docker network inspect to understand bridge IPs and CIDR ranges`,
+      },
+    ],
+    references: [
+      'https://www.netfilter.org/documentation/',
+      'https://wiki.nftables.org/wiki-nftables/index.php/Main_Page',
+      'https://docs.docker.com/network/iptables/',
+    ],
+  },
+
+  {
+    id: 'aws-security-groups',
+    title: 'AWS Security Groups',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Stateful filtering, inbound/outbound rules, port ranges, security group references as sources, and no-deny-rule model.',
+    visualizations: [],
+    introduction: `AWS Security Groups are the primary layer of network access control for EC2 instances, RDS databases, Lambda functions in VPCs, ECS tasks, and most other AWS resources that have network interfaces (ENIs).
+
+A security group is a stateful virtual firewall attached to an ENI. Stateful means that if you allow inbound traffic on port 443, the return traffic is automatically allowed without any outbound rule. The connection tracking is handled by the underlying hypervisor.
+
+Security groups operate on an implicit-deny model: there are no explicit deny rules. All traffic is denied by default, and rules only add allow entries. You cannot write a security group rule that denies a specific IP. If you need explicit deny, use a Network ACL. By default, a new security group allows all outbound traffic.
+
+The most powerful feature is the ability to use another security group as the source or destination of a rule. This means you can write rules like "allow port 3306 from anything in the web-tier security group" — as instances join or leave that group, the rule automatically applies without any IP management. This is the idiomatic AWS pattern for inter-tier communication.
+
+Security groups are applied at the ENI level. A single ENI can have up to 5 security groups applied simultaneously. An instance can have multiple ENIs, each with its own set of security groups.`,
+    whenToUse: [
+      'Designing security group rules for a three-tier web application (ALB, EC2, RDS)',
+      'Explaining the difference between security groups and NACLs',
+      'Troubleshooting connectivity between EC2 instances in the same VPC',
+      'Implementing least-privilege network access for microservices in ECS',
+      'Auditing security group rules for overly permissive access (0.0.0.0/0 on sensitive ports)',
+    ],
+    keyConcepts: [
+      { term: 'Stateful filtering', definition: `Return traffic for allowed connections is automatically permitted without an explicit outbound rule. Connection tracking happens at the hypervisor level. This is the key difference from NACLs, which require explicit rules in both directions.` },
+      { term: 'Implicit deny model', definition: `All traffic is denied by default. Rules only ADD allow entries — there are no deny rules in security groups. To block specific traffic you must use NACLs or not add an allow rule.` },
+      { term: 'Security group as source/destination', definition: `Instead of a CIDR range, a rule can reference another security group ID. Traffic from any ENI with that security group attached is allowed. This eliminates IP management for dynamic environments.` },
+      { term: 'ENI attachment', definition: `Security groups are applied to Elastic Network Interfaces. Up to 5 security groups per ENI, up to 60 inbound and 60 outbound rules per security group (default, adjustable via Service Quotas).` },
+      { term: 'Default security group', definition: `Every VPC has a default security group that allows all inbound from itself and all outbound. Avoid using the default in production; create named, purpose-specific security groups.` },
+    ],
+    pitfalls: [
+      'Opening port 0-65535 from 0.0.0.0/0 — this effectively disables network-level isolation. Only open specific ports from specific sources, and use security group references for internal traffic.',
+      'Relying solely on security groups without NACLs — if an instance is compromised, security groups do not block outbound connections (default allows all outbound). Use NACLs for stateless deny rules.',
+      'Security group sprawl — over time, environments accumulate dozens of security groups with overlapping rules and undocumented purposes. Use resource tags, AWS Config rules, and regular audits.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design security groups for a three-tier application: ALB, EC2 web tier, and RDS database.',
+        answer: `## Architecture
+
+Internet -> ALB -> EC2 (web tier) -> RDS (database tier)
+
+\`\`\`bash
+# 1. ALB Security Group: allow HTTP and HTTPS from the Internet
+aws ec2 authorize-security-group-ingress --group-id sg-alb --protocol tcp --port 80 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-id sg-alb --protocol tcp --port 443 --cidr 0.0.0.0/0
+
+# 2. EC2 Web Tier: only allow from ALB security group
+aws ec2 authorize-security-group-ingress --group-id sg-web --protocol tcp --port 8080 --source-group sg-alb
+
+# SSH from bastion only
+aws ec2 authorize-security-group-ingress --group-id sg-web --protocol tcp --port 22 --source-group sg-bastion
+
+# 3. RDS: only allow from web tier security group
+aws ec2 authorize-security-group-ingress --group-id sg-rds --protocol tcp --port 3306 --source-group sg-web
+\`\`\`
+
+## Why Security Group References
+
+By using sg IDs as sources:
+- New EC2 instances added to sg-web automatically get RDS access
+- Terminated instances automatically lose access
+- No IP address management required
+- Works correctly with autoscaling
+
+## Verify
+
+\`\`\`bash
+aws ec2 describe-security-groups --group-ids sg-rds --output table
+\`\`\``,
+      },
+      {
+        question: 'What is the difference between security groups and NACLs? When do you need both?',
+        answer: `## Security Groups vs NACLs
+
+| Dimension | Security Groups | Network ACLs |
+|-----------|----------------|--------------|
+| Applied to | ENI (instance level) | Subnet (all traffic in/out) |
+| Statefulness | Stateful | Stateless |
+| Rule model | Allow only | Allow and Deny |
+| Rule evaluation | All rules evaluated, most permissive wins | Numbered order, first match wins |
+| Default behavior | Deny all inbound, allow all outbound | Allow all in both directions |
+
+## When You Need Both
+
+Use NACLs for:
+
+1. Explicit deny rules — block a known attacking IP range:
+
+\`\`\`bash
+aws ec2 create-network-acl-entry \\
+  --network-acl-id acl-12345678 --rule-number 100 \\
+  --protocol -1 --rule-action deny \\
+  --cidr-block 185.220.101.0/24 --ingress
+\`\`\`
+
+2. Subnet-wide rules — apply to all instances in a subnet regardless of their security groups.
+
+## Defense in Depth
+
+- Private subnets with NACLs that deny all inbound from the Internet
+- Security groups that allow only specific ports from specific security groups
+- NACLs as a backstop for anomalous traffic
+
+A misconfigured security group (too permissive) is still blocked by the NACL. A NACL misconfiguration is still limited by security groups.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html',
+      'https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html',
+    ],
+  },
+
+  {
+    id: 'aws-nacls',
+    title: 'AWS Network ACLs',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Stateless rule evaluation, numbered rules, explicit allow and deny, ephemeral port ranges, and differences from security groups.',
+    visualizations: [],
+    introduction: `AWS Network Access Control Lists (NACLs) are stateless subnet-level firewalls that provide an additional layer of network security beyond Security Groups. NACLs operate at the subnet boundary and inspect each packet independently without tracking connection state.
+
+Every subnet in a VPC is associated with exactly one NACL. The VPC's default NACL allows all inbound and outbound traffic by default. NACLs affect all instances in the subnet regardless of their individual security group configurations.
+
+The stateless nature of NACLs has a critical practical implication: you must write rules for both the request and the response direction. For a web server receiving HTTPS on port 443, you need an inbound ALLOW rule for port 443, but you also need an outbound ALLOW rule for the ephemeral port range (1024-65535) so the server's response can exit the subnet. The client's source port is an ephemeral port chosen by the OS — typically 32768-60999 on Linux or 49152-65535 on Windows. Forgetting this ephemeral port outbound rule is the most common NACL mistake.
+
+NACL rules are evaluated in ascending numeric order (lowest number first). The first rule that matches determines the action — ALLOW or DENY. After a matching rule is found, no further rules are evaluated. NACLs support explicit DENY rules (Security Groups do not). There is always an implicit DENY at the end (rule *) that drops all unmatched traffic.
+
+NACLs are best used as a coarse-grained subnet boundary control and IP blocklist mechanism, complementing the fine-grained per-instance control provided by Security Groups.`,
+    whenToUse: [
+      'Blocking specific IP ranges (known attackers, Tor exit nodes) at the subnet level',
+      'Adding defense in depth where a misconfigured security group should not expose all subnet traffic',
+      'Restricting traffic between subnets in a VPC',
+      'Troubleshooting connectivity failures caused by NACL rules',
+      'Understanding why adding an inbound allow rule alone is not sufficient',
+    ],
+    keyConcepts: [
+      { term: 'Stateless evaluation', definition: `NACLs do not track TCP connection state. Every packet is evaluated independently. You must write explicit allow rules for both directions — including outbound ephemeral ports for server responses. Return traffic is NOT automatically allowed.` },
+      { term: 'Numbered rules, first-match wins', definition: `Rules are evaluated from lowest number to highest. The first rule that matches determines the action. Rule numbers 1-32766 are user-configurable; rule 32767 is an implicit deny-all.` },
+      { term: 'Explicit ALLOW and DENY', definition: `Unlike Security Groups (allow-only), NACLs support both ALLOW and DENY actions. This enables IP blocklisting — a DENY rule with a lower number blocks specific sources while higher-numbered ALLOW rules permit others.` },
+      { term: 'Ephemeral ports', definition: `TCP/UDP clients use an ephemeral (temporary) source port for each connection. Linux: 32768-60999. Windows: 49152-65535. When a server responds, the response destination port is this ephemeral port. Outbound NACL rules must allow this range.` },
+      { term: 'Subnet association', definition: `Each subnet is associated with exactly one NACL. A NACL can be associated with multiple subnets. Changing a subnet's NACL association takes effect immediately for new connections.` },
+    ],
+    pitfalls: [
+      'Forgetting ephemeral port outbound rules — adding an inbound ALLOW for port 443 but not an outbound ALLOW for ports 1024-65535 means the server can receive the request but the response is blocked. Traffic appears to connect but then hangs.',
+      'Rule number collisions — not planning the number space. Use increments of 100 to leave room for future insertions.',
+      'Using NACLs as the primary security control — NACL rules apply to all instances in the subnet. Fine-grained per-instance control belongs in Security Groups; NACLs are for subnet-boundary coarse control and explicit deny.',
+      'Not accounting for VPC internal traffic — a NACL blocking 0.0.0.0/0 also blocks traffic from other subnets in your own VPC unless you add explicit allow rules.',
+    ],
+    keyQuestions: [
+      {
+        question: 'A web server in a private subnet can receive HTTPS connections but the responses never reach clients. What is the most likely cause and how do you fix it?',
+        answer: `## Root Cause: Missing Ephemeral Port Outbound Rule
+
+NACLs are stateless. When a client connects on port 443:
+
+1. Client sends TCP SYN from source port ~54321 (ephemeral) to destination port 443
+2. Inbound NACL ALLOW rule for port 443 matches — packet reaches the server
+3. Server responds from port 443 to destination port 54321 (client's ephemeral port)
+4. Outbound NACL evaluates the response — destination port 54321 must be explicitly allowed
+5. If no outbound rule allows ports 1024-65535, the implicit deny drops the packet — client sees a timeout
+
+## Diagnosis
+
+\`\`\`bash
+# Check current NACL outbound rules
+aws ec2 describe-network-acls \\
+  --filters Name=association.subnet-id,Values=subnet-12345678 \\
+  --query 'NetworkAcls[].Entries[?Egress==`true`]' \\
+  --output table
+# VPC Flow Logs will show REJECT on outbound traffic to client IP on ports 1024-65535
+\`\`\`
+
+## Fix
+
+\`\`\`bash
+aws ec2 create-network-acl-entry \\
+  --network-acl-id acl-12345678 \\
+  --rule-number 200 --protocol tcp --rule-action allow \\
+  --cidr-block 0.0.0.0/0 --port-range From=1024,To=65535 \\
+  --egress
+\`\`\`
+
+## Complete Minimal NACL for a Public Web Subnet
+
+\`\`\`bash
+# Inbound: allow HTTPS
+aws ec2 create-network-acl-entry --network-acl-id acl-xxx \\
+  --rule-number 100 --protocol tcp --rule-action allow \\
+  --cidr-block 0.0.0.0/0 --port-range From=443,To=443 --ingress
+
+# Inbound: allow ephemeral return traffic
+aws ec2 create-network-acl-entry --network-acl-id acl-xxx \\
+  --rule-number 200 --protocol tcp --rule-action allow \\
+  --cidr-block 0.0.0.0/0 --port-range From=1024,To=65535 --ingress
+
+# Outbound: allow HTTPS
+aws ec2 create-network-acl-entry --network-acl-id acl-xxx \\
+  --rule-number 100 --protocol tcp --rule-action allow \\
+  --cidr-block 0.0.0.0/0 --port-range From=443,To=443 --egress
+
+# Outbound: allow ephemeral ports (responses to clients)
+aws ec2 create-network-acl-entry --network-acl-id acl-xxx \\
+  --rule-number 200 --protocol tcp --rule-action allow \\
+  --cidr-block 0.0.0.0/0 --port-range From=1024,To=65535 --egress
+\`\`\``,
+      },
+      {
+        question: 'How do you use NACLs to block a specific IP range that is attacking your application, and how quickly does the block take effect?',
+        answer: `## Strategy: DENY Rule with Lower Number Than ALLOW
+
+\`\`\`bash
+# Block a known attacking range — rule 50 is lower than the existing ALLOW at 100
+aws ec2 create-network-acl-entry \\
+  --network-acl-id acl-12345678 \\
+  --rule-number 50 --protocol -1 --rule-action deny \\
+  --cidr-block 185.220.101.0/24 --ingress
+
+# Verify
+aws ec2 describe-network-acls --network-acl-ids acl-12345678 \\
+  --query 'NetworkAcls[].Entries[?Egress==`false`]' --output table
+\`\`\`
+
+## How Quickly It Takes Effect
+
+NACL rule changes take effect immediately for new connections — no propagation delay within a region. However, existing TCP connections established before the change are NOT immediately dropped. The NACL only applies to new packets.
+
+## Automating IP Blocklisting
+
+\`\`\`python
+import boto3
+
+def block_ip(ip_cidr, nacl_id, rule_number):
+    ec2 = boto3.client('ec2')
+    ec2.create_network_acl_entry(
+        NetworkAclId=nacl_id,
+        RuleNumber=rule_number,
+        Protocol='-1',
+        RuleAction='deny',
+        CidrBlock=ip_cidr,
+        Ingress=True
+    )
+
+for i, ip in enumerate(attacking_ips[:20]):
+    block_ip(f"{ip}/32", 'acl-12345678', 50 + i)
+\`\`\`
+
+## NACL Rule Limits
+
+Default: 20 inbound + 20 outbound rules per NACL (adjustable via Service Quotas). For large IP blocklists, use AWS WAF (managed IP set supports 10,000 IPs) or GuardDuty with Lambda auto-remediation instead.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html',
+      'https://repost.aws/knowledge-center/resolve-connection-sg-acl-inbound',
+    ],
+  },
+
+  {
+    id: 'zero-trust-networking',
+    title: 'Zero Trust Networking',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 6,
+    description: 'BeyondCorp identity-based access, microsegmentation, ZTNA architecture, mTLS everywhere, and never-trust-always-verify model.',
+    visualizations: [],
+    introduction: `Zero Trust Networking (ZTN) is a security model that eliminates the concept of a trusted network perimeter. Traditional security assumes that traffic inside the corporate network or VPC is trusted. Zero Trust rejects this assumption: "never trust, always verify" — every request must be authenticated and authorized regardless of where it originates.
+
+The model emerged from Google's BeyondCorp initiative (2014-2016). BeyondCorp moved access control from the network layer to the application layer. Employees access corporate applications via a proxy that verifies their device certificate, identity token, and risk posture — not their network location. A laptop on a coffee shop WiFi receives the same treatment as one on the corporate network.
+
+The key principles are: verify explicitly (authenticate and authorize every request using all available signals), use least privilege access (grant minimum necessary permissions), and assume breach (design systems assuming an attacker is already inside; limit blast radius through microsegmentation).
+
+Microsegmentation applies fine-grained network policies that allow only the specific communication paths required by business logic. In Kubernetes, this is implemented via NetworkPolicy. In AWS, via security group references. In a service mesh, via authorization policies on the mTLS-authenticated service identity.
+
+mTLS (mutual TLS) is the cryptographic mechanism underlying Zero Trust service-to-service communication. Unlike standard TLS where only the server presents a certificate, mTLS requires both client and server to present and verify certificates. Service meshes like Istio and Linkerd automate mTLS certificate provisioning, rotation, and enforcement.`,
+    whenToUse: [
+      'Designing access control for a remote workforce accessing internal applications from untrusted networks',
+      'Implementing service-to-service authentication in a microservices architecture',
+      'Explaining microsegmentation as an alternative to VPN-based network isolation',
+      'Designing mTLS with Istio or Linkerd for a Kubernetes-based service mesh',
+      'Scoping the blast radius of a potential security breach in a microservices environment',
+      'Replacing a VPN-based remote access architecture with a ZTNA solution',
+    ],
+    keyConcepts: [
+      { term: 'Never Trust, Always Verify', definition: `No user, device, or service is implicitly trusted based on network location. Every access request must be authenticated and authorized. Being inside the VPC or corporate network confers no trust by itself.` },
+      { term: 'BeyondCorp', definition: `Google's implementation of Zero Trust. Access is controlled by a central access proxy evaluating user identity, device certificate, device inventory status, and request context — not network IP.` },
+      { term: 'Microsegmentation', definition: `Dividing a network into small segments with fine-grained access controls. Each workload can only communicate with the specific other workloads it needs to. Limits lateral movement after a breach.` },
+      { term: 'mTLS (Mutual TLS)', definition: `Both the client and server present X.509 certificates during the TLS handshake. Each service has a cryptographic identity (SPIFFE SVID in service meshes). Requests are authenticated at the transport layer.` },
+      { term: 'ZTNA (Zero Trust Network Access)', definition: `A modern replacement for VPN. Users connect to a ZTNA proxy that evaluates device posture, identity, and context before proxying access to specific applications. Users never have broad network access.` },
+      { term: 'SPIFFE/SPIRE', definition: `Secure Production Identity Framework for Everyone. An open standard for workload identity. SPIRE issues short-lived X.509 SVIDs to workloads. Istio uses SPIFFE-compatible identities automatically.` },
+    ],
+    pitfalls: [
+      'Treating Zero Trust as a product rather than a model — vendors sell "Zero Trust" solutions that are really VPN replacements. True Zero Trust requires identity-aware access at every layer and cannot be achieved by a single product.',
+      'Implementing mTLS without automated certificate rotation — mTLS certificates expire. Without automated rotation (Istio handles this every 24 hours by default), services stop communicating.',
+      'Microsegmentation without service dependency mapping — applying restrictive NetworkPolicy before understanding actual communication paths breaks production traffic. Map dependencies first via service mesh observability or VPC Flow Logs.',
+      'Conflating authentication with authorization — mTLS proves the identity of the calling service. It does not control what that service is authorized to do. Authorization policies must be explicitly defined separately.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain how Istio implements Zero Trust service-to-service authentication using mTLS.',
+        answer: `## How Istio mTLS Works
+
+Istio injects an Envoy sidecar proxy into every pod. All network traffic flows through the sidecar. The sidecars handle mTLS transparently — the application code makes plain HTTP calls; the sidecar encrypts and authenticates them.
+
+## Certificate Provisioning (SPIFFE)
+
+Istio's control plane (istiod) acts as a Certificate Authority. Each sidecar receives a short-lived X.509 certificate with a SPIFFE identity as the SAN:
+
+\`\`\`
+spiffe://cluster.local/ns/production/sa/payment-service
+\`\`\`
+
+This identity is derived from the pod's Kubernetes service account — not its IP address.
+
+## mTLS Handshake
+
+1. A's Envoy sidecar initiates TLS to B's Envoy sidecar
+2. B presents its certificate; A verifies against istiod's CA
+3. A presents its certificate; B verifies against istiod's CA
+4. Encrypted, mutually authenticated connection established
+5. B's sidecar checks authorization policy: is payment-service allowed to call order-service?
+
+## Enabling Strict mTLS
+
+\`\`\`yaml
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: production
+spec:
+  mtls:
+    mode: STRICT  # rejects plaintext, requires valid client cert
+\`\`\`
+
+## Authorization Policy
+
+\`\`\`yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: order-service-policy
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: order-service
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/production/sa/payment-service"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/api/orders/*"]
+\`\`\`
+
+\`\`\`bash
+# Verify mTLS is active
+kubectl get peerauthentication -n production
+istioctl x describe pod payment-service-xxx -n production
+\`\`\``,
+      },
+      {
+        question: 'Compare VPN-based remote access with ZTNA. What are the architectural differences and when do you migrate?',
+        answer: `## Traditional VPN
+
+A VPN creates an encrypted tunnel between the user's device and a VPN concentrator. Once connected, the user joins the corporate network segment and can reach any host on it.
+
+Problems:
+- Network-level access is too broad — a compromised device can reach all internal services
+- No application-level authorization — VPN only controls network access
+- Poor performance — backhauling traffic to a central concentrator adds latency for global workforces
+- No device posture checking
+
+## ZTNA Architecture
+
+\`\`\`
+User Device -> ZTNA Client -> ZTNA Proxy (Edge PoP)
+  -> Identity Provider authentication (Okta/Azure AD)
+  -> Device posture check (certificate, MDM, patch level)
+  -> Policy Engine: is this user+device allowed to access this app?
+  -> If allowed: proxy forwards to internal app via outbound connector
+\`\`\`
+
+The user never joins the corporate network. The application connector initiates an outbound tunnel to the ZTNA proxy — no inbound firewall rules needed.
+
+## Key Differences
+
+| Dimension | VPN | ZTNA |
+|-----------|-----|------|
+| Access scope | Full network segment | Per-application |
+| Authorization | Network ACLs only | Identity + device + context |
+| Lateral movement risk | High | Minimal |
+| Device posture | Usually not checked | Mandatory |
+| Firewall requirements | Inbound ports open | Outbound-only connector |
+
+## When to Migrate
+
+- Contractors or third parties need limited application access, not full network access
+- Security audit identifies overly broad VPN access as a risk
+- Globally distributed employees experience VPN backhauling latency
+- Adopting SaaS applications (ZTNA integrates with SSO natively)
+
+## Migration Approach
+
+Phase 1: Deploy ZTNA in parallel, migrate low-risk apps (wiki, ticketing, CI/CD dashboard).
+Phase 2: Migrate sensitive apps with mandatory device posture.
+Phase 3: Decommission VPN when all applications are accessible via ZTNA.`,
+      },
+    ],
+    references: [
+      'https://cloud.google.com/beyondcorp',
+      'https://istio.io/latest/docs/concepts/security/',
+      'https://www.cloudflare.com/learning/access-management/what-is-ztna/',
+      'https://spiffe.io/',
+      'https://www.nist.gov/publications/zero-trust-architecture',
+    ],
+  },
+
+  {
+    id: 'waf-ddos-protection',
+    title: 'WAF and DDoS Protection',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'WAF rule sets (OWASP CRS), rate limiting, AWS Shield Standard vs Advanced, Cloudflare Magic Transit, and scrubbing centers.',
+    visualizations: [],
+    introduction: `Web Application Firewalls (WAFs) and DDoS protection are two distinct but complementary defenses. A WAF operates at Layer 7 (HTTP) and inspects request content to detect and block application-layer attacks — SQL injection, XSS, path traversal, and other OWASP Top 10 threats. DDoS protection operates at Layers 3, 4, and 7 to absorb volumetric attacks that aim to exhaust bandwidth or compute capacity.
+
+A WAF inspects individual HTTP requests and applies a set of rules (signatures, rate limits, geographic restrictions, IP reputation) to make a per-request decision to allow, block, or challenge. The OWASP Core Rule Set (CRS) is the open-source baseline used by ModSecurity, AWS WAF, and Cloudflare WAF. It contains hundreds of rules detecting common attack patterns.
+
+AWS WAF protects ALBs, CloudFront distributions, API Gateway, and AppSync via Web ACLs containing rule groups. Rules are evaluated in priority order; the default action applies to requests matching no rules.
+
+DDoS protection differs in scale and mechanism. A volumetric attack may send 1-10 Tbps of traffic. Effective DDoS protection requires absorbing or filtering traffic close to its source using a scrubbing infrastructure with global anycast presence and BGP-based traffic diversion.
+
+AWS Shield Standard provides automatic protection against common Layer 3 and Layer 4 attacks for all AWS customers at no cost. AWS Shield Advanced adds SRT (Shield Response Team) support, protection for Elastic IPs and Route 53, cost protection, and Layer 7 DDoS protection. Cloudflare Magic Transit provides anycast-based DDoS protection for your own IP prefixes.`,
+    whenToUse: [
+      'Configuring AWS WAF on an ALB or CloudFront distribution to protect against OWASP Top 10 attacks',
+      'Evaluating AWS Shield Standard vs Advanced for a production workload',
+      'Designing a DDoS mitigation strategy for a high-value public-facing application',
+      'Implementing rate limiting at the WAF layer to prevent credential stuffing or API abuse',
+      'Explaining the difference between WAF and DDoS protection to a stakeholder',
+    ],
+    keyConcepts: [
+      { term: 'WAF (Web Application Firewall)', definition: `An L7 proxy that inspects HTTP request content and applies rules to allow, block, or challenge individual requests. Defends against OWASP Top 10 application-layer attacks. Does not defend against volumetric DDoS.` },
+      { term: 'OWASP Core Rule Set (CRS)', definition: `An open-source collection of rules detecting SQL injection, XSS, path traversal, local/remote file inclusion, command injection, and other common web attacks. Used as the baseline by AWS WAF Managed Rules and Cloudflare WAF.` },
+      { term: 'AWS Shield Standard vs Advanced', definition: `Shield Standard: automatic, free, protects all AWS resources from L3/L4 attacks. Shield Advanced: paid ($3K/month), adds L7 DDoS protection, SRT access, cost protection, Route 53 and Elastic IP protection.` },
+      { term: 'DDoS Scrubbing', definition: `Traffic destined for a protected IP is diverted to a scrubbing center via BGP route advertisement. The scrubbing center filters malicious traffic using rate limiting, connection validation, and signature matching, then forwards clean traffic to the origin.` },
+      { term: 'Rate Limiting', definition: `WAF rules that track request counts from a source IP over a time window and block or challenge sources exceeding a threshold. AWS WAF rate-based rules evaluate counts over 5-minute windows.` },
+    ],
+    pitfalls: [
+      'WAF in monitor mode in production — WAF rules default to COUNT mode during testing (log matches but do not block). Always verify rule actions are set to Block for production.',
+      'Blocking legitimate traffic with OWASP CRS at default sensitivity — the CRS may generate false positives for applications that accept complex input. Always run in COUNT mode first and tune before enabling BLOCK mode.',
+      'Assuming AWS Shield Standard protects against application-layer DDoS — Shield Standard handles volumetric L3/L4 floods. An HTTP flood is an L7 attack that Shield Standard does not mitigate. You need WAF rate limiting plus Shield Advanced for L7 DDoS.',
+      'Not restricting ALB access to CloudFront IP ranges — if the ALB has a public IP and no IP restriction, attackers can bypass the WAF by targeting the ALB directly.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you configure AWS WAF on a CloudFront distribution to block SQL injection and rate limit API abuse?',
+        answer: `## Step 1: Create Web ACL (must be in us-east-1 for CloudFront)
+
+\`\`\`bash
+aws wafv2 create-web-acl \\
+  --name production-web-acl \\
+  --scope CLOUDFRONT \\
+  --region us-east-1 \\
+  --default-action Allow={} \\
+  --visibility-config SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=ProductionWAF
+\`\`\`
+
+## Step 2: Add SQLi Managed Rule + Rate-Based Rule
+
+\`\`\`bash
+TOKEN=$(aws wafv2 get-web-acl --name production-web-acl --scope CLOUDFRONT \\
+  --region us-east-1 --query LockToken --output text)
+
+aws wafv2 update-web-acl \\
+  --name production-web-acl --scope CLOUDFRONT --region us-east-1 \\
+  --lock-token $TOKEN --default-action Allow={} \\
+  --rules '[
+    {
+      "Name": "SQLiRuleSet", "Priority": 10,
+      "OverrideAction": {"Count": {}},
+      "Statement": {"ManagedRuleGroupStatement": {"VendorName": "AWS", "Name": "AWSManagedRulesSQLiRuleSet"}},
+      "VisibilityConfig": {"SampledRequestsEnabled": true, "CloudWatchMetricsEnabled": true, "MetricName": "SQLi"}
+    },
+    {
+      "Name": "APIRateLimit", "Priority": 30, "Action": {"Block": {}},
+      "Statement": {
+        "RateBasedStatement": {
+          "Limit": 1000, "AggregateKeyType": "IP",
+          "ScopeDownStatement": {
+            "ByteMatchStatement": {
+              "SearchString": "/api/",
+              "FieldToMatch": {"UriPath": {}},
+              "TextTransformations": [{"Priority": 0, "Type": "LOWERCASE"}],
+              "PositionalConstraint": "STARTS_WITH"
+            }
+          }
+        }
+      },
+      "VisibilityConfig": {"SampledRequestsEnabled": true, "CloudWatchMetricsEnabled": true, "MetricName": "APIRate"}
+    }
+  ]' \\
+  --visibility-config SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=ProductionWAF
+\`\`\`
+
+## Step 3: Monitor Sampled Requests Before Enabling Block
+
+\`\`\`bash
+aws wafv2 get-sampled-requests \\
+  --web-acl-arn $WEB_ACL_ARN \\
+  --rule-metric-name SQLi --scope CLOUDFRONT \\
+  --time-window StartTime=$(date -u -v-1d +%Y-%m-%dT%H:%M:%SZ),EndTime=$(date -u +%Y-%m-%dT%H:%M:%SZ) \\
+  --max-items 100 --region us-east-1
+\`\`\`
+
+## Key Notes
+
+- Rate-based rules evaluate counts over a 5-minute rolling window
+- ScopeDownStatement narrows rate limiting to /api/ paths only
+- Start all managed rule groups with OverrideAction Count for 1-2 weeks, then switch to Block
+- Associate the Web ACL with your CloudFront distribution in the distribution configuration`,
+      },
+      {
+        question: 'Explain AWS Shield Standard vs Advanced and when you would recommend Shield Advanced.',
+        answer: `## Shield Standard
+
+Included at no cost for all AWS accounts. Automatically enabled. Protects against:
+- Volumetric attacks (UDP flood, SYN flood, ICMP flood)
+- Protocol attacks (TCP state exhaustion)
+- Reflection attacks (NTP amplification, DNS amplification)
+
+No SLA, no DDoS cost protection, no advanced event visibility, no SRT access.
+
+## Shield Advanced
+
+$3,000/month plus data transfer fees. 1-year minimum commitment.
+
+Additional protections:
+- L7 DDoS protection (HTTP floods) via WAF integration
+- Elastic IP protection (Shield Standard does not cover EIPs)
+- Route 53 hosted zone protection
+- Advanced DDoS event visibility in the console
+
+Operational benefits:
+- DDoS cost protection: AWS credits EC2/CloudFront/ELB costs incurred during an attack
+- Shield Response Team (SRT): 24/7 access to AWS DDoS experts who can write WAF rules during active attacks
+- Proactive engagement: SRT contacts you when an attack is detected
+
+\`\`\`bash
+aws shield create-subscription
+aws shield describe-subscription
+\`\`\`
+
+## When to Recommend Shield Advanced
+
+1. Revenue impact from downtime exceeds $3K/month (a 2-hour outage on a $100K/day service costs more than a month of Shield Advanced)
+2. The application is publicly known and likely to be targeted (financial services, gaming, media)
+3. You need guaranteed SRT access during an incident
+4. You run on EC2 with Elastic IPs
+5. DDoS cost protection matters — a large attack can generate significant CloudFront egress charges
+
+## Cost-Effective Alternative
+
+For most workloads, Shield Standard + CloudFront + AWS WAF rate limiting provides strong protection at much lower cost. Shield Advanced value is primarily SRT access and cost protection.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html',
+      'https://docs.aws.amazon.com/waf/latest/developerguide/shield-chapter.html',
+      'https://coreruleset.org/',
+      'https://www.cloudflare.com/magic-transit/',
+      'https://owasp.org/www-project-top-ten/',
+    ],
+  },
+
+  {
+    id: 'network-policies-k8s',
+    title: 'Kubernetes Network Policies',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'NetworkPolicy spec, ingress/egress rules, podSelector and namespaceSelector, and CNI support (Calico/Cilium).',
+    visualizations: [],
+    introduction: `Kubernetes NetworkPolicy resources define rules for how pods can communicate with each other and with endpoints outside the cluster. By default, Kubernetes applies no network isolation — all pods can communicate with all other pods regardless of namespace. NetworkPolicy is the mechanism for implementing Zero Trust microsegmentation within a Kubernetes cluster.
+
+A NetworkPolicy applies to a set of pods (selected by a podSelector label query) and defines which inbound (ingress) and outbound (egress) traffic is allowed. Once at least one NetworkPolicy selects a pod, that pod's traffic is restricted to what the policies explicitly allow — unmatched traffic is denied. A pod with no NetworkPolicy selecting it remains unrestricted.
+
+The NetworkPolicy spec has three key selectors: podSelector (which pods this policy applies to), ingress rules (inbound traffic — from which pods/namespaces/CIDR blocks), and egress rules (outbound traffic — to which pods/namespaces/CIDR blocks). Each ingress or egress rule can specify a combination of podSelector, namespaceSelector, and ipBlock.
+
+A critical implementation detail: NetworkPolicy is enforced by the CNI (Container Network Interface) plugin, not by the Kubernetes control plane itself. The default CNI plugins (Flannel, kubenet) do not enforce NetworkPolicy — they simply ignore the resources. You must use Calico, Cilium, Weave Net, or Antrea. If you apply NetworkPolicy rules without a supporting CNI, the policies exist in the API server but have no effect.
+
+Calico implements NetworkPolicy using iptables rules on each node. It also provides GlobalNetworkPolicy (cluster-wide policies) and host endpoint policies. Cilium implements NetworkPolicy using eBPF programs, achieving higher performance and adding L7-aware policies (HTTP path and method matching) that standard NetworkPolicy cannot express.`,
+    whenToUse: [
+      'Implementing network isolation between namespaces in a multi-tenant Kubernetes cluster',
+      'Restricting pod-to-pod communication so only specific services can reach the database pods',
+      'Implementing a default-deny posture and selectively allowing required traffic',
+      'Choosing between Calico and Cilium CNI for a cluster that requires NetworkPolicy enforcement',
+      'Debugging a connectivity failure caused by a NetworkPolicy blocking expected traffic',
+    ],
+    keyConcepts: [
+      { term: 'Default deny vs default allow', definition: `Without any NetworkPolicy, all pod-to-pod traffic is allowed. Once a NetworkPolicy selects a pod, that pod is isolated — only explicitly allowed traffic passes. To achieve cluster-wide deny-all, apply a policy selecting all pods with empty ingress/egress rules.` },
+      { term: 'podSelector', definition: `A label selector that determines which pods a NetworkPolicy applies to. An empty podSelector ({}) matches all pods in the namespace.` },
+      { term: 'namespaceSelector', definition: `Selects traffic from (ingress) or to (egress) pods in namespaces matching the label query. Combined with podSelector in the same rule element with AND semantics. Separate rule elements combine with OR.` },
+      { term: 'CNI enforcement requirement', definition: `NetworkPolicy resources are enforced by the CNI plugin, not Kubernetes itself. Flannel and kubenet do not enforce NetworkPolicy. Calico (iptables), Cilium (eBPF), Weave Net, and Antrea enforce NetworkPolicy.` },
+      { term: 'Cilium L7 policy', definition: `Cilium extends standard NetworkPolicy with L7-aware rules that can restrict HTTP methods, paths, gRPC service methods, and Kafka topics. Standard Kubernetes NetworkPolicy only operates at L3/L4.` },
+    ],
+    pitfalls: [
+      'Applying NetworkPolicy without a CNI that enforces it — if your cluster uses Flannel, NetworkPolicy resources are silently ignored. Verify CNI support before relying on NetworkPolicy for security.',
+      'Selecting pods for egress without a corresponding DNS allow rule — egress policies that restrict outbound traffic block port 53 (DNS) unless explicitly allowed. A pod that cannot resolve DNS fails all service name lookups.',
+      'Confusing AND vs OR semantics — within a single ingress/egress rule element, multiple selectors combine with AND. Separate rule elements combine with OR.',
+      'Namespace labels not applied — namespaceSelector matches against namespace labels. If the target namespace lacks the expected labels, the selector matches nothing. Verify with kubectl get namespace --show-labels.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Write Kubernetes NetworkPolicy resources to implement a three-tier isolation: frontend can talk to backend, backend can talk to database, no other pod-to-pod traffic allowed.',
+        answer: `\`\`\`bash
+kubectl label namespace frontend tier=frontend
+kubectl label namespace backend tier=backend
+kubectl label namespace database tier=database
+\`\`\`
+
+## Policy 1: Default Deny All
+
+\`\`\`yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: backend  # repeat for frontend and database
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  # No rules = deny all
+\`\`\`
+
+## Policy 2: Allow Frontend to Backend
+
+\`\`\`yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      app: api-server
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          tier: frontend
+      podSelector:
+        matchLabels:
+          app: web-server
+    ports:
+    - protocol: TCP
+      port: 8080
+\`\`\`
+
+## Policy 3: Allow Backend to Database
+
+\`\`\`yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-database
+  namespace: database
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          tier: backend
+      podSelector:
+        matchLabels:
+          app: api-server
+    ports:
+    - protocol: TCP
+      port: 5432
+\`\`\`
+
+## Policy 4: Allow DNS Egress (Critical)
+
+\`\`\`yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+\`\`\`
+
+\`\`\`bash
+kubectl get networkpolicy -n backend
+kubectl run test --image=busybox --rm -it --namespace=frontend -- \\
+  wget -qO- http://api-server.backend.svc.cluster.local:8080/health
+\`\`\``,
+      },
+      {
+        question: 'What is the difference between Calico and Cilium for NetworkPolicy enforcement, and when would you choose Cilium?',
+        answer: `## Calico
+
+Implements NetworkPolicy using iptables rules on each node. Felix agent watches the Kubernetes API and translates NetworkPolicy into iptables chains.
+
+Extensions beyond standard NetworkPolicy:
+- GlobalNetworkPolicy: cluster-wide rules not scoped to a namespace
+- HostEndpoint: policies on node network interfaces
+- Tiered policy ordering for multi-team environments
+
+\`\`\`bash
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml
+kubectl get pods -n calico-system
+\`\`\`
+
+## Cilium
+
+Implements NetworkPolicy using eBPF programs loaded directly into the Linux kernel, bypassing the iptables rule chain.
+
+Advantages:
+- Performance: eBPF runs in kernel space, avoiding iptables traversal (critical at 10K+ rules)
+- L7 policy: can enforce HTTP path/method, gRPC method, and Kafka topic
+- Observability: Hubble provides per-flow network visibility
+- No kube-proxy: Cilium can replace kube-proxy for Service load balancing using eBPF
+
+\`\`\`yaml
+# Cilium L7 HTTP policy -- not possible with standard NetworkPolicy
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: l7-api-policy
+  namespace: backend
+spec:
+  endpointSelector:
+    matchLabels:
+      app: api-server
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: web-server
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/api/v1/.*"
+\`\`\`
+
+## When to Choose Cilium
+
+- You need L7-aware policies (HTTP path/method, gRPC, Kafka)
+- You need deep network observability (Hubble flow logs)
+- You have a large cluster (1000+ nodes) where iptables rule count is a bottleneck
+- You want to eliminate kube-proxy
+- You are building a multi-cluster architecture (Cilium Cluster Mesh)
+
+## When to Choose Calico
+
+- Simpler operational model and more mature deployment history
+- You need GlobalNetworkPolicy (cluster-wide rules)
+- Your team has existing Calico expertise
+- Standard L4 enforcement is sufficient`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/services-networking/network-policies/',
+      'https://docs.tigera.io/calico/latest/network-policy/',
+      'https://docs.cilium.io/en/latest/network/kubernetes/policy/',
+      'https://github.com/ahmetb/kubernetes-network-policy-recipes',
+    ],
+  },
 ];
