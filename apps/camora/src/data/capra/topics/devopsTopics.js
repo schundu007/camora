@@ -40428,6 +40428,908 @@ Interview answer for "how do you run Kubernetes locally?":
   },
 
   {
+    id: 'kubernetes-evictions',
+    title: 'Kubernetes Evictions and Node Pressure',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 18,
+    description: 'Node-pressure eviction, QoS classes, soft vs. hard thresholds, PodDisruptionBudgets, API-initiated vs. kubelet eviction, and debugging eviction events.',
+    topics: [
+      {
+        title: 'Node-Pressure Eviction: How the Kubelet Protects the Node',
+        content: `The kubelet continuously monitors five resource signals every 10 seconds:
+
+memory.available — free memory + reclaimable page cache. Hard default: 100Mi.
+nodefs.available — root filesystem free space. Hard default: 10%.
+nodefs.inodesFree — root filesystem free inodes. Hard default: 5%.
+imagefs.available — container image filesystem free space. Hard default: 15%.
+pid.available — available process IDs. Hard default: 100.
+
+When any signal crosses a threshold, the kubelet enters eviction mode: it selects pods to kill and terminates them to reclaim the resource before the node becomes unresponsive or the Linux OOM killer takes over.
+
+Available memory calculation:
+memory.available = node.status.capacity.memory - memory.workingSet
+workingSet = RSS (resident set) + active cached pages
+Excludes: inactive cache and reclaimable buffer pages the kernel can reclaim itself.
+
+This means the kubelet can act before the kernel OOM killer, giving pods a chance to terminate gracefully rather than being SIGKILL'd mid-operation.`,
+        codeExample: `# kubelet eviction threshold configuration
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+# Hard thresholds — immediate eviction, no grace period
+evictionHard:
+  memory.available: "100Mi"
+  nodefs.available: "10%"
+  imagefs.available: "15%"
+  pid.available: "100"
+# Soft thresholds — eviction begins after grace period elapses
+evictionSoft:
+  memory.available: "300Mi"
+  nodefs.available: "15%"
+evictionSoftGracePeriod:
+  memory.available: "1m30s"
+  nodefs.available: "2m"
+evictionMaxPodGracePeriod: 60
+# Minimum reclaim: avoid oscillation by reclaiming enough headroom
+evictionMinimumReclaim:
+  memory.available: "500Mi"
+  nodefs.available: "1Gi"
+evictionPressureTransitionPeriod: "5m0s"
+# Reserve resources for kubelet + OS (not counted as pod-allocatable)
+kubeReserved:
+  cpu: "200m"
+  memory: "512Mi"
+  ephemeral-storage: "1Gi"
+systemReserved:
+  cpu: "200m"
+  memory: "512Mi"
+  ephemeral-storage: "1Gi"`,
+      },
+      {
+        title: 'QoS Classes and Eviction Order',
+        content: `Kubernetes assigns every pod a Quality of Service (QoS) class based on its resource spec. QoS class determines eviction priority: BestEffort pods die first, Guaranteed pods last.
+
+BestEffort (evicted first):
+No resource requests or limits on any container. Considered expendable — scheduler treats these as zero-cost, and kubelet treats them as first to sacrifice.
+
+Burstable (evicted second):
+At least one container has a request set, but requests do not equal limits (or some containers lack limits entirely). Within this class, pods using the most memory above their request are evicted first.
+
+Guaranteed (evicted last):
+Every container in the pod has requests == limits for both CPU AND memory. The kubelet only evicts Guaranteed pods as a last resort when no other option exists.
+
+Within each QoS class, secondary sort is by pod priority (spec.priorityClassName). Higher-priority pods survive longer.
+
+Interview fact: Setting requests = limits (Guaranteed QoS) + a high PriorityClass is the strongest protection against node-pressure eviction. Use this for critical databases and control-plane adjacent workloads.`,
+        codeExample: `# BestEffort — evicted first (no requests or limits)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: expendable-batch-worker
+spec:
+  containers:
+    - name: worker
+      image: worker:latest
+      # No resources field = BestEffort QoS
+---
+# Burstable — evicted second (requests set, limits different or absent)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-server
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.27
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        # No limits = Burstable QoS
+---
+# Guaranteed — evicted last (requests == limits on every container)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: critical-database
+spec:
+  containers:
+    - name: postgres
+      image: postgres:16
+      resources:
+        requests:
+          cpu: "2"
+          memory: "4Gi"
+        limits:
+          cpu: "2"      # Must equal requests
+          memory: "4Gi" # Must equal requests`,
+      },
+      {
+        title: 'API-Initiated Eviction vs. Node-Pressure Eviction',
+        content: `These are two distinct eviction paths. Confusing them is the most common PDB-related misconception.
+
+API-Initiated Eviction:
+Triggered by: kubectl drain, Descheduler, Cluster Autoscaler, VPA Updater.
+Mechanism: POST /api/v1/namespaces/{ns}/pods/{name}/eviction to the API server.
+PDB behavior: The API server checks the PDB before accepting the eviction. If eviction would violate minAvailable or maxUnavailable, the API returns 429 Too Many Requests and the caller retries.
+Grace period: Respects terminationGracePeriodSeconds.
+
+Node-Pressure Eviction:
+Triggered by: The kubelet itself, when resource signals cross thresholds.
+Mechanism: Kubelet kills pods directly using SIGTERM + SIGKILL.
+PDB behavior: PDBs are IGNORED. The node is fighting for survival.
+Grace period: Hard thresholds = immediate SIGKILL. Soft thresholds = configurable grace.
+
+Key interview insight: "PDBs only protect against voluntary disruptions (drain, autoscaler). They do NOT protect against the kubelet's emergency eviction when the node is running out of memory or disk."`,
+        codeExample: `# PodDisruptionBudget — protects against API-initiated eviction only
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-frontend-pdb
+  namespace: production
+spec:
+  # Choose ONE: minAvailable or maxUnavailable
+  minAvailable: 2          # At least 2 pods must stay running
+  # maxUnavailable: 1      # At most 1 pod may be down at once
+  selector:
+    matchLabels:
+      app: web-frontend
+# Deadlock trap: if minAvailable == replica count, drain blocks forever
+# Fix: ensure minAvailable < replicaCount or temporarily delete PDB
+
+# Check eviction events on a pod
+# kubectl describe pod <name> -n <ns>
+# Status: Failed
+# Reason: Evicted
+# Message: "The node was low on resource: memory. ..."
+
+# Check node conditions
+# kubectl describe node <name> | grep -A5 Conditions
+# MemoryPressure: True   -> BestEffort pods not scheduled here
+# DiskPressure: True     -> No new pods accepted
+# PIDPressure: True      -> No new pods accepted`,
+      },
+      {
+        title: 'Debugging Evictions — Step-by-Step',
+        content: `When pods are evicted, follow this investigation sequence:
+
+Step 1: Check the pod's eviction reason
+kubectl describe pod <evicted-pod> -n <namespace>
+Look for: Status: Failed, Reason: Evicted, Message with specific resource.
+
+Step 2: Check node conditions at the time
+kubectl describe node <node-name>
+Look for MemoryPressure, DiskPressure, or PIDPressure set to True.
+
+Step 3: Examine kubelet logs
+journalctl -u kubelet | grep -i evict
+Reveals which pods were chosen and why: "evicting pod ... usage=1.2Gi, request=512Mi"
+
+Step 4: Historical metrics (Prometheus)
+node_memory_MemAvailable_bytes — did it drop below hard threshold?
+container_memory_working_set_bytes — which pod was consuming most?
+kubelet_evictions_total — eviction frequency trend.
+
+Step 5: Set up alerts
+kube_pod_status_reason{reason="Evicted"} > 0 — any eviction in last hour.
+kube_node_status_condition{condition="MemoryPressure",status="true"} — node under pressure.
+
+Common root causes:
+No resource requests set (BestEffort pods get evicted on any pressure).
+No kubeReserved/systemReserved (workloads starve the kubelet itself).
+Disk pressure from container logs or emptyDir volumes filling the node.
+Image GC not configured (--image-gc-high-threshold, --image-gc-low-threshold).`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the default hard eviction threshold for memory?', a: '100Mi available memory on the node.' },
+      { q: 'What QoS class is evicted first during node pressure?', a: 'BestEffort — pods with no resource requests or limits.' },
+      { q: 'Do PodDisruptionBudgets protect against node-pressure eviction?', a: 'No. PDBs only apply to API-initiated evictions (drain, Descheduler). The kubelet ignores PDBs during emergency eviction.' },
+      { q: 'What is the difference between an OOMKill and an eviction?', a: 'OOMKill: kernel kills a container that exceeded its memory limit. Eviction: kubelet evicts pods because the node itself is low on resources.' },
+      { q: 'How does the kubelet calculate memory.available?', a: 'node capacity minus workingSet (RSS + active cache). Excludes reclaimable page cache.' },
+      { q: 'What happens to pods without resource requests during eviction?', a: 'They are BestEffort class and evicted first, before any pod with requests set.' },
+      { q: 'What is eviction pressure transition period?', a: 'How long a node condition (MemoryPressure, DiskPressure) must stay clear before the kubelet clears it. Default: 5 minutes. Prevents oscillation.' },
+    ],
+    references: [
+      'https://k8s.info/docs/expert/evictions',
+      'https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/',
+      'https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-descheduler',
+    title: 'Kubernetes Descheduler',
+    icon: 'refresh',
+    color: '#8b5cf6',
+    questions: 14,
+    description: 'Post-scheduling rebalancing: RemoveDuplicates, LowNodeUtilization, topology spread repair, eviction limits, PDB interaction, and when NOT to use it.',
+    topics: [
+      {
+        title: 'Why Clusters Drift and What the Descheduler Does',
+        content: `The Kubernetes scheduler makes a placement decision once — at pod creation. After that, pods stay on their assigned node until they die. Over time, this causes cluster drift:
+
+New nodes added (autoscaler, manual) stay empty. Existing pods do not migrate to them.
+Node drained then uncordoned. Pods that were evicted scatter to other nodes and never return.
+Label/taint changes. A pod scheduled before a node label change may now violate its own affinity rules.
+Spot node churn. When spot nodes are reclaimed and replaced, surviving pods pile onto stable nodes.
+Rolling updates. New pods cluster on whichever nodes had capacity at that moment.
+
+The Descheduler runs periodically, identifies suboptimally-placed pods, and evicts them. It does NOT reschedule — it only evicts. The pod's controller (Deployment, StatefulSet) notices the missing pod, creates a replacement, and the standard scheduler places it now, with full visibility of the current cluster state including new nodes.
+
+Important: The Descheduler uses the Eviction API, so it DOES respect PodDisruptionBudgets. Always have PDBs before running the Descheduler.`,
+      },
+      {
+        title: 'Descheduler Strategies (Plugins)',
+        content: `RemoveDuplicates:
+Ensures no two replicas of the same ReplicaSet/Deployment/StatefulSet land on the same node. Evicts one if two ended up colocated (e.g., during a brief node shortage).
+
+LowNodeUtilization:
+Identifies overutilized nodes (CPU/memory/pod count above targetThresholds) and evicts pods from them. Evicted pods reschedule to underutilized nodes (below thresholds). Uses request-based utilization, not actual usage.
+
+HighNodeUtilization (inverse of LowNodeUtilization):
+Evicts pods from underutilized nodes to pack workloads onto fewer nodes. Enables the Cluster Autoscaler to scale down empty nodes. Choose this for cost optimization.
+
+RemovePodsViolatingInterPodAntiAffinity:
+Finds pods violating their own anti-affinity rules (e.g., two pods with podAntiAffinity ending up on the same node after a migration).
+
+RemovePodsViolatingNodeAffinity:
+Finds pods running on nodes that no longer match requiredDuringSchedulingIgnoredDuringExecution node affinity (e.g., a node label was removed after scheduling).
+
+RemovePodsViolatingTopologySpreadConstraint:
+After node additions/removals, topology spread may violate maxSkew. This evicts the excess pods so the scheduler can rebalance.
+
+RemovePodsHavingTooManyRestarts:
+Evicts pods that have restarted more than N times (e.g., stuck in CrashLoopBackOff, consuming resources pointlessly).`,
+        codeExample: `apiVersion: "descheduler/v1alpha2"
+kind: "DeschedulerPolicy"
+profiles:
+  - name: production
+    pluginConfig:
+      # Safety: eviction guardrails
+      - name: DefaultEvictor
+        args:
+          evictLocalStoragePods: false   # Never evict pods using emptyDir/hostPath
+          evictSystemCriticalPods: false # Never evict system-critical pods
+          evictDaemonSetPods: false      # DaemonSets run on every node; skip
+          minReplicas: 2                 # Don't evict if fewer than 2 replicas
+          nodeFit: true                  # Only evict if pod CAN be placed elsewhere
+      # Rebalance utilization
+      - name: LowNodeUtilization
+        args:
+          thresholds:            # Nodes below ALL of these = underutilized
+            cpu: 25
+            memory: 25
+          targetThresholds:      # Nodes above ANY of these = overutilized
+            cpu: 65
+            memory: 65
+          maxNoOfPodsToEvictPerNode: 5
+          maxNoOfPodsToEvictPerNamespace: 10
+          maxNoOfPodsToEvictTotal: 50
+      # Spread replicas
+      - name: RemoveDuplicates
+      # Fix topology drift
+      - name: RemovePodsViolatingTopologySpreadConstraint
+        args:
+          constraints:
+            - DoNotSchedule   # Only fix hard constraints
+      # Clean up crash-looping pods
+      - name: RemovePodsHavingTooManyRestarts
+        args:
+          podRestartThreshold: 20
+          includingInitContainers: true
+    plugins:
+      balance:
+        enabled:
+          - LowNodeUtilization
+          - RemovePodsViolatingTopologySpreadConstraint
+      deschedule:
+        enabled:
+          - RemoveDuplicates
+          - RemovePodsHavingTooManyRestarts`,
+      },
+      {
+        title: 'Deploying the Descheduler',
+        content: `Three deployment modes:
+
+CronJob (most common): Runs every N minutes, evaluates, evicts, exits. Good for clusters with periodic node changes.
+
+Deployment with deschedulingInterval: Runs continuously, re-evaluating every 5 minutes. Better for dynamic autoscaled clusters.
+
+Job: One-shot manual run for specific situations.
+
+The nodeFit: true option is critical. Without it, the Descheduler can evict a pod that gets rescheduled right back to the same node (because it's still the best fit), creating an eviction loop. With nodeFit: true, it verifies a better node exists before evicting.
+
+Cluster Autoscaler interaction: LowNodeUtilization SPREADS pods, which can prevent autoscaler from scaling down. If cost reduction is the goal, use HighNodeUtilization instead to PACK pods onto fewer nodes.
+
+Run every 10-15 minutes — too frequent (every 1 minute) causes churn before pods from the previous run have started.`,
+        codeExample: `# Descheduler as a CronJob (recommended)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: descheduler
+  namespace: kube-system
+spec:
+  schedule: "*/10 * * * *"    # Every 10 minutes
+  concurrencyPolicy: Forbid   # Don't overlap runs
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: descheduler
+          restartPolicy: Never
+          containers:
+            - name: descheduler
+              image: registry.k8s.io/descheduler/descheduler:v0.30.1
+              command: ["/bin/descheduler"]
+              args:
+                - --policy-config-file=/policy/policy.yaml
+                - --v=3
+              volumeMounts:
+                - name: policy
+                  mountPath: /policy
+          volumes:
+            - name: policy
+              configMap:
+                name: descheduler-policy
+
+# Monitor: track how many pods are evicted per run
+# kubectl logs -n kube-system -l app=descheduler
+# Prometheus: descheduler_pods_evicted, descheduler_loop_duration_seconds`,
+      },
+    ],
+    quickFire: [
+      { q: 'Does the Descheduler schedule pods?', a: 'No. It only evicts. The standard scheduler handles re-placement.' },
+      { q: 'Does the Descheduler respect PodDisruptionBudgets?', a: 'Yes. It uses the Eviction API, which checks PDBs. If eviction would violate a PDB, it skips that pod.' },
+      { q: 'What is nodeFit: true in the DefaultEvictor?', a: 'It verifies that an evicted pod can actually be placed on another node before evicting. Without it, the pod may get scheduled back to the same node, creating an eviction loop.' },
+      { q: 'What is the difference between LowNodeUtilization and HighNodeUtilization?', a: 'LowNodeUtilization: spreads pods away from overloaded nodes (balanced utilization). HighNodeUtilization: packs pods onto fewer nodes to free up nodes for autoscaler to remove (cost optimization).' },
+      { q: 'What causes an eviction loop with the Descheduler?', a: 'nodeFit: false + no better node available. Pod gets evicted, rescheduled to same node, then evicted again next run.' },
+      { q: 'When should you NOT use the Descheduler?', a: 'Pods with local storage (data lost on eviction), no PDBs in place, stateful services without replication, or when the scheduler itself is misconfigured (fix the root cause instead).' },
+    ],
+    references: [
+      'https://k8s.info/docs/expert/descheduler',
+      'https://github.com/kubernetes-sigs/descheduler',
+    ],
+  },
+
+  {
+    id: 'kubernetes-custom-schedulers',
+    title: 'Kubernetes Custom Schedulers',
+    icon: 'cpu',
+    color: '#0ea5e9',
+    questions: 16,
+    description: 'Scheduling framework extension points, writing plugins in Go, scheduler profiles, extenders vs. plugins, gang scheduling with Volcano, and GPU topology-aware placement.',
+    topics: [
+      {
+        title: 'The Scheduling Framework: 12 Extension Points',
+        content: `The Kubernetes scheduler processes each pod through a two-phase pipeline. All built-in scheduling logic is implemented as plugins against these extension points — and you can replace or augment any of them.
+
+Scheduling Cycle (synchronous, per-pod):
+QueueSort — determines pod priority in the scheduling queue (default: priority + creation time).
+PreFilter — pre-processing/validation before filtering (e.g., "required PVC does not exist, reject now").
+Filter — removes nodes that cannot run the pod (resource fit, taints, affinity, ports, volumes).
+PostFilter — runs only if Filter left zero feasible nodes. Default: attempts preemption of lower-priority pods.
+PreScore — shared pre-computation before scoring (e.g., calculate topology spread state once).
+Score — ranks feasible nodes 0-100 per plugin. Plugins can have different weights.
+NormalizeScore — normalizes per-plugin scores to 0-100 so they're comparable.
+Reserve — optimistically claims resources on selected node. If bind fails, Unreserve is called.
+
+Binding Cycle (asynchronous):
+Permit — gate that can approve, deny, or WAIT. Wait is used for gang scheduling: hold all gang members until all are schedulable, then release simultaneously.
+PreBind — pre-bind actions (e.g., provision a network volume).
+Bind — writes spec.nodeName to the pod. Only one Bind plugin runs.
+PostBind — post-bind cleanup, logging, notifications.
+
+Key insight: By default, pods go to spec.schedulerName: default-scheduler. Setting a different schedulerName routes the pod to your custom scheduler. Multiple schedulers can coexist — each watches for pods targeting it by name.`,
+      },
+      {
+        title: 'Scheduler Plugins vs. Extenders',
+        content: `Two ways to extend the scheduler. Plugins are the modern approach; extenders are legacy.
+
+Scheduler Plugins (preferred):
+In-process Go code compiled into the scheduler binary. Access to full scheduler cache (all nodes, all pods, all resources). Nanosecond overhead per scheduling cycle. All 12 extension points available. Panics crash the scheduler — implement robust error handling.
+
+Scheduler Extenders (legacy):
+External HTTP server. Scheduler calls it during Filter and Prioritize. One HTTP round trip per scheduling cycle (significant overhead at high pod creation rates). Only Filter and Prioritize phases available. Isolated failure domain (extender crash does not crash scheduler). Use only if you cannot compile a plugin (e.g., non-Go language constraint).
+
+Scheduler Profiles (multiple behaviors, one binary):
+Since Kubernetes 1.19, one scheduler binary can host multiple profiles. Each profile has a unique schedulerName and its own plugin configuration. Eliminates the need to run multiple scheduler Deployments for different workload types.`,
+        codeExample: `# Multi-profile scheduler configuration
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+  # Default profile — general workloads
+  - schedulerName: default-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: NodeResourcesBalancedAllocation
+            weight: 1
+  # GPU-aware profile — ML training pods
+  - schedulerName: gpu-topology-scheduler
+    plugins:
+      filter:
+        enabled:
+          - name: GpuTopologyFilter     # Custom plugin: reject nodes without NVLink
+      score:
+        enabled:
+          - name: GpuTopologyScore      # Custom plugin: prefer NVLink-connected GPUs
+            weight: 10
+          - name: NodeResourcesFit
+            weight: 1
+  # Cost-optimized profile — spot-tolerant batch jobs
+  - schedulerName: cost-aware-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: CostAwareScore        # Custom plugin: prefer spot/preemptible nodes
+            weight: 5
+        disabled:
+          - name: NodeResourcesBalancedAllocation
+
+---
+# Pod targeting the GPU profile
+apiVersion: v1
+kind: Pod
+metadata:
+  name: distributed-training
+spec:
+  schedulerName: gpu-topology-scheduler
+  containers:
+    - name: trainer
+      image: ml-trainer:latest
+      resources:
+        limits:
+          nvidia.com/gpu: 8`,
+      },
+      {
+        title: 'Real-World Use Cases for Custom Schedulers',
+        content: `GPU Topology-Aware Scheduling:
+Multi-GPU training jobs perform best when GPUs communicate over NVLink (intra-node, ~600 GB/s) rather than PCIe (~64 GB/s). A custom Filter plugin rejects nodes where the requested GPUs are not NVLink-connected. A Score plugin prefers nodes with the most tightly-coupled GPUs free. Result: 2-10x faster gradient synchronization in distributed training.
+
+Gang Scheduling (Volcano):
+PyTorch DDP and Horovod require ALL N pods to be scheduled simultaneously. Without gang scheduling, 3 of 4 pods may start and sit idle consuming GPUs while waiting for the 4th. The Permit extension point implements this: hold each pod in a "waiting" state until the entire gang is schedulable, then release all at once. Volcano implements this with its Queue + PodGroup CRDs.
+
+Data Locality:
+Spark on Kubernetes and Presto benefit from running tasks on nodes holding the HDFS/Ceph blocks they need. A Score plugin queries a placement API and returns 100 for nodes holding the required data blocks, 0 otherwise. Reduces cross-rack data transfer by 40-60% for large analytics jobs.
+
+Cost-Aware Bin Packing:
+In multi-cloud/hybrid environments, a Score plugin reads spot pricing from node labels and prefers cheaper nodes for fault-tolerant batch. Reserves on-demand nodes for latency-sensitive services. Achieved 30-50% compute cost reduction in real deployments.`,
+      },
+    ],
+    quickFire: [
+      { q: 'How does a pod select a specific custom scheduler?', a: 'spec.schedulerName: my-custom-scheduler. Omitting it defaults to default-scheduler.' },
+      { q: 'What extension point is used for gang scheduling?', a: 'Permit. It can hold a pod in "waiting" state until all gang members are schedulable, then release all at once.' },
+      { q: 'What happens if Filter removes all nodes?', a: 'PostFilter runs. The default PostFilter attempts preemption — finding a lower-priority pod to evict so this pod can be scheduled.' },
+      { q: 'What RBAC permissions does a custom scheduler need?', a: 'Read: Pods, Nodes, PVCs, Services, StatefulSets, ReplicaSets. Create: Bindings, Events, Leases. Update: Pods (to set nodeName).' },
+      { q: 'What is a scheduler profile?', a: 'A named configuration within one scheduler binary with its own plugin set. Multiple profiles let one scheduler binary serve multiple scheduling behaviors without multiple deployments.' },
+      { q: 'Why do scheduler extenders hurt performance?', a: 'An HTTP round trip per scheduling cycle. At 100+ pods/second, this becomes a bottleneck. In-process plugins add nanosecond overhead instead.' },
+      { q: 'What is the Reserve extension point for?', a: 'Optimistically claims resources on the selected node before the bind completes. If the bind fails, the Unreserve callback releases the claim.' },
+    ],
+    references: [
+      'https://k8s.info/docs/expert/custom-schedulers',
+      'https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/',
+      'https://volcano.sh/en/docs/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-api-aggregation',
+    title: 'Kubernetes API Aggregation',
+    icon: 'server',
+    color: '#06b6d4',
+    questions: 12,
+    description: 'Extending the Kubernetes API beyond CRDs: APIService, proxy architecture, authentication flow, metrics-server as the canonical example, and CRD vs. aggregation decision guide.',
+    topics: [
+      {
+        title: 'What API Aggregation Is and Why CRDs Are Not Always Enough',
+        content: `CRDs store declarative objects in etcd and work through controllers. They are the right tool for declarative configuration where you own the desired state.
+
+But some APIs fundamentally cannot be CRDs:
+- metrics-server: Returns LIVE CPU/memory usage computed from kubelet scrapes. There is no "desired state" to store in etcd.
+- Hardware inventory: Reports real-time GPU temperature, PCIe topology, NVMe health. Must query actual hardware, not etcd.
+- Cost APIs: Returns cloud billing data from an external pricing service.
+- Custom sub-resources: You need /exec, /logs, /proxy, or streaming WebSocket responses.
+
+API Aggregation solves this: register an external API server as the handler for a specific API group. The main kube-apiserver acts as a reverse proxy. Clients see a single unified API endpoint — they cannot tell whether a resource is built-in or aggregated.
+
+Decision table:
+CRDs: declarative config, etcd storage, controller reconciliation, standard Kubernetes tooling.
+API Aggregation: computed responses, custom storage (time-series DB, external SaaS), custom sub-resources, protocol-level control (WebSocket, streaming), high-performance reads.`,
+        codeExample: `# The APIService resource registers your extension server
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io    # Format: <version>.<group>
+spec:
+  group: metrics.k8s.io           # API group this server handles
+  version: v1beta1
+  service:
+    name: metrics-server          # Kubernetes Service in the cluster
+    namespace: kube-system
+    port: 443
+  groupPriorityMinimum: 100
+  versionPriority: 100
+  insecureSkipTLSVerify: false    # Always false in production
+  caBundle: <base64-encoded-CA>   # CA to verify the extension server's TLS cert
+
+# Check health — if AVAILABLE=False, all requests to that API group fail
+# kubectl get apiservices v1beta1.metrics.k8s.io
+# NAME                      SERVICE                      AVAILABLE   AGE
+# v1beta1.metrics.k8s.io   kube-system/metrics-server   True        30d
+
+# If metrics-server APIService is False, kubectl top and HPA both break`,
+      },
+      {
+        title: 'How the Proxy Architecture Works',
+        content: `Request flow for an aggregated API:
+
+1. Client sends: GET https://<apiserver>/apis/metrics.k8s.io/v1beta1/nodes/worker-01
+2. kube-apiserver authenticates the client (bearer token, cert, OIDC).
+3. kube-apiserver checks its APIService registry — finds metrics.k8s.io/v1beta1 routes to kube-system/metrics-server.
+4. kube-apiserver proxies the request to the extension server, injecting the client's identity:
+   X-Remote-User: chundu@example.com
+   X-Remote-Group: system:masters
+   X-Remote-Extra-*: any extra OIDC claims
+5. The extension server trusts these headers because the request arrives over a connection authenticated by the front-proxy client certificate.
+6. The extension server performs its own authorization (typically delegates back to kube-apiserver via SubjectAccessReview).
+7. Response flows back through kube-apiserver to the client.
+
+From the client's perspective: completely transparent. Works with kubectl, client-go, Helm, Argo — anything that speaks Kubernetes API.
+
+Required kube-apiserver flags (usually pre-configured):
+--requestheader-client-ca-file — CA for front-proxy certs
+--requestheader-allowed-names=front-proxy-client
+--requestheader-username-headers=X-Remote-User
+--requestheader-group-headers=X-Remote-Group
+--proxy-client-cert-file — front-proxy client cert
+--proxy-client-key-file — front-proxy client key`,
+      },
+      {
+        title: 'metrics-server: The Canonical Example',
+        content: `metrics-server is the most widely deployed aggregated API. It is the backbone of kubectl top and HPA (CPU/memory autoscaling).
+
+What it does: Scrapes /metrics/resource from every kubelet every 15 seconds. Aggregates CPU and memory usage in memory (no etcd). Serves it via the metrics.k8s.io/v1beta1 API.
+
+Why it cannot be a CRD: The data is live, high-frequency, and computed — not a desired state you reconcile.
+
+If metrics-server is unavailable:
+kubectl top nodes → error: metrics not available
+kubectl top pods → error
+HPA stops making scaling decisions (uses last known values for a grace period, then may scale to minReplicas)
+
+Troubleshooting steps:
+1. kubectl get apiservices v1beta1.metrics.k8s.io — is AVAILABLE True?
+2. kubectl logs -n kube-system deploy/metrics-server — connection refused to kubelet?
+3. Check TLS: metrics-server needs --kubelet-insecure-tls or proper CA config in kubeadm clusters.
+4. Check network policy: metrics-server needs to reach kubelet port 10250 on every node.`,
+        codeExample: `# These all work because metrics-server registers as an aggregated API
+kubectl top nodes
+kubectl top pods -n production
+kubectl get --raw "/apis/metrics.k8s.io/v1beta1/pods" | jq .
+kubectl get --raw "/apis/metrics.k8s.io/v1beta1/nodes" | jq .
+
+# Custom cost API (same pattern, different group)
+kubectl get --raw "/apis/cost.example.com/v1/namespaces/production/costs"
+
+# APIService for a custom cost server
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.cost.example.com
+spec:
+  group: cost.example.com
+  version: v1
+  service:
+    name: cost-api-server
+    namespace: kube-system
+    port: 443
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  caBundle: LS0tLS1CRUdJTi...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cost-api-server
+  namespace: kube-system
+spec:
+  selector:
+    app: cost-api-server
+  ports:
+    - port: 443
+      targetPort: 8443`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the kube-apiserver role in API aggregation?', a: 'It acts as a reverse proxy: authenticates the client, then forwards the request to the extension API server with the client identity in HTTP headers.' },
+      { q: 'What resource registers an extension API server?', a: 'APIService. Format: <version>.<group> (e.g., v1beta1.metrics.k8s.io). Points to a Kubernetes Service in the cluster.' },
+      { q: 'What happens if an aggregated API server goes down?', a: 'AVAILABLE=False on the APIService. All requests to that API group fail. For metrics-server, this breaks kubectl top and HPA.' },
+      { q: 'How does the extension server know who is making the request?', a: 'kube-apiserver injects X-Remote-User and X-Remote-Group headers. The extension server trusts them because the connection is authenticated via front-proxy client certificate.' },
+      { q: 'Why can metrics-server not be a CRD?', a: 'It returns live, computed data from kubelet scrapes. There is no desired state to store in etcd — CRDs are for declarative configuration.' },
+      { q: 'What does the apiserver-builder project do?', a: 'Scaffolds aggregated API server projects in Go, similar to how kubebuilder scaffolds CRD-based operators. Generates boilerplate for types, storage, and server configuration.' },
+    ],
+    references: [
+      'https://k8s.info/docs/expert/api-aggregation',
+      'https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-gpu-ai-scheduling',
+    title: 'Kubernetes AI and GPU Scheduling',
+    icon: 'cpu',
+    color: '#7c3aed',
+    questions: 20,
+    description: 'Device Plugin Framework, NVIDIA device plugin, MIG vs. time-slicing vs. MPS, GPU Operator, training vs. inference patterns, gang scheduling with Volcano, and KubeRay for distributed ML.',
+    topics: [
+      {
+        title: 'The Device Plugin Framework',
+        content: `Standard Kubernetes only manages CPU and memory. GPUs, FPGAs, InfiniBand NICs, and other accelerators are exposed through the Device Plugin Framework (stable since v1.10).
+
+How it works:
+1. A DaemonSet runs the vendor device plugin on every node with that hardware.
+2. The plugin connects to the kubelet via gRPC on /var/lib/kubelet/device-plugins/<resource>.sock.
+3. It calls ListAndWatch to report available devices (e.g., 8 NVIDIA A100 GPUs) as extended resources on the node: nvidia.com/gpu: 8 in node.status.capacity.
+4. When the scheduler places a GPU-requesting pod on a node, it calls Allocate on the plugin.
+5. The plugin assigns a specific physical GPU (e.g., GPU 2), mounts /dev/nvidia2 and driver libraries into the container, and sets NVIDIA_VISIBLE_DEVICES.
+
+Key constraints:
+GPUs are specified in limits ONLY (not requests — no oversubscription by default).
+GPUs are integers — you cannot request 0.5 GPUs without MIG or time-slicing.
+Each GPU is exclusively allocated to one pod by default.
+You cannot specify which GPU number a pod gets — the plugin assigns.`,
+        codeExample: `# Pod requesting 1 GPU (exclusively allocated)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llm-inference
+spec:
+  containers:
+    - name: model-server
+      image: vllm/vllm-openai:latest
+      resources:
+        limits:
+          nvidia.com/gpu: 1     # Limits only — no requests for GPUs
+          cpu: "8"
+          memory: "32Gi"
+      env:
+        - name: MODEL_NAME
+          value: "meta-llama/Llama-3-8B"
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 8000
+        initialDelaySeconds: 120  # Model loading takes time — critical!
+        periodSeconds: 10
+# Nodes must be tainted to prevent non-GPU pods from wasting GPU nodes:
+# kubectl taint nodes gpu-node-01 nvidia.com/gpu=present:NoSchedule
+# GPU pods need tolerations for this taint`,
+      },
+      {
+        title: 'GPU Sharing: MIG, Time-Slicing, and MPS',
+        content: `Running one workload per physical GPU wastes capacity for small models and inference workloads. Three strategies enable sharing:
+
+MIG (Multi-Instance GPU) — Hardware Partitioning:
+Available on A100 and H100 only. Partitions the physical GPU into up to 7 isolated hardware slices. Each slice has dedicated compute units, memory bandwidth, and L2 cache. No performance interference between instances. No memory isolation is not true here — MIG DOES isolate memory. Each instance appears as a separate schedulable resource (nvidia.com/mig-1g.5gb, nvidia.com/mig-2g.10gb, etc.). Requires GPU reset to change partition configuration. Strongest isolation.
+
+Time-Slicing — Context Switching:
+Works on all NVIDIA GPUs. Configures the device plugin to advertise each physical GPU as N virtual GPUs (e.g., replicas: 4 on a 2-GPU node reports nvidia.com/gpu: 8). Pods share the GPU via context switching — like CPU time-slicing. CRITICAL: No memory isolation. If 4 pods each try to use 12GB on a 16GB GPU, all 4 crash with OOM. Must pre-calculate memory budgets.
+
+MPS (Multi-Process Service) — Concurrent CUDA:
+True concurrent GPU access without context switching. Better utilization and lower latency than time-slicing for workloads that do not saturate the GPU. No memory isolation, no fault isolation (one process CUDA error can crash all). Best for: multiple small inference servers sharing a GPU.`,
+        codeExample: `# MIG: request a 1/7 partition of an A100
+apiVersion: v1
+kind: Pod
+metadata:
+  name: small-inference-mig
+spec:
+  containers:
+    - name: model
+      image: inference-server:latest
+      resources:
+        limits:
+          nvidia.com/mig-1g.5gb: 1   # 1 GPU instance with 5GB
+# Available MIG profiles on A100:
+# nvidia.com/mig-1g.5gb   — 1/7 compute, 5GB
+# nvidia.com/mig-2g.10gb  — 2/7 compute, 10GB
+# nvidia.com/mig-3g.20gb  — 3/7 compute, 20GB
+# nvidia.com/mig-7g.40gb  — full GPU, 40GB
+
+---
+# Time-slicing: ConfigMap for NVIDIA device plugin
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvidia-device-plugin-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    version: v1
+    sharing:
+      timeSlicing:
+        renameByDefault: false
+        resources:
+          - name: nvidia.com/gpu
+            replicas: 4   # Each physical GPU appears as 4 schedulable GPUs
+# After this, a 2-GPU node reports nvidia.com/gpu: 8
+# 4 pods can each request nvidia.com/gpu: 1 and share a physical GPU
+# WARNING: No memory isolation — all 4 share the full GPU memory!`,
+      },
+      {
+        title: 'Training vs. Inference Workload Patterns',
+        content: `Training workloads:
+GPU-hungry: A single job may need 8, 16, or thousands of GPUs.
+Duration: Hours to weeks.
+Gang scheduling required: All N pods must be allocated simultaneously. Partial allocation wastes GPUs — 3 of 4 pods sit idle consuming resources while waiting.
+Inter-node communication: NCCL over NVLink (intra-node, ~600 GB/s) and InfiniBand/RoCE (inter-node). Must configure NCCL_SOCKET_IFNAME, NCCL_IB_DISABLE, NCCL_DEBUG.
+Checkpointing: Essential. A node failure mid-training loses all progress since last checkpoint.
+Priority: Often batch priority. Can be preempted by inference workloads.
+
+Inference workloads:
+1-4 GPUs for most models. Large models (70B+ params) need 4-8 GPUs with tensor parallelism.
+Latency-sensitive: Time-to-first-token (TTFT) and inter-token latency are key SLOs.
+Long-running services, not batch jobs.
+HPA candidate: Scale on GPU utilization (from DCGM exporter), queue depth, or request latency.
+GPU sharing target: Inference often underutilizes GPU compute — MIG and time-slicing increase density.
+
+Memory planning for LLMs (FP16 inference):
+Llama 3 8B: ~16 GB → 1 GPU
+Llama 3 70B: ~140 GB → 2× A100 80GB
+Mixtral 8x7B: ~93 GB → 2× A100 80GB
+KV cache for serving adds 10-20 GB on top of model weights for typical batch sizes.
+Training requires 3-4× inference memory for optimizer states + gradients + activations.`,
+        codeExample: `# Multi-GPU distributed training with PyTorch DDP
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: llm-training
+spec:
+  parallelism: 4         # 4 pods, one per node
+  completions: 4
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          image: my-training:latest
+          resources:
+            limits:
+              nvidia.com/gpu: 8    # 8 GPUs per pod = 32 total
+              cpu: "96"
+              memory: "768Gi"
+              rdma/hca: 4          # InfiniBand NICs for inter-node NCCL
+          env:
+            - name: WORLD_SIZE
+              value: "32"
+            - name: NCCL_IB_DISABLE
+              value: "0"           # Enable InfiniBand
+            - name: MASTER_ADDR
+              value: "llm-training-0"
+          command:
+            - torchrun
+            - --nproc_per_node=8
+            - --nnodes=4
+            - train.py
+---
+# Inference deployment with GPU-utilization-based HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-serving-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-serving
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: gpu_utilization      # Custom metric from DCGM exporter
+        target:
+          type: AverageValue
+          averageValue: "70"         # Scale up when GPU > 70% busy`,
+      },
+      {
+        title: 'Gang Scheduling with Volcano and KubeRay',
+        content: `Volcano (CNCF project) extends Kubernetes with batch scheduling primitives needed for AI/HPC:
+
+Gang Scheduling: PodGroup CRD defines minMember. All pods in the group must be schedulable before any start. Implemented via the Permit extension point — holds pods in "waiting" state until the gang is complete.
+
+Queue Management: Jobs submit to named queues. Each queue has resource quotas (CPU, memory, GPU). Enables fair-share scheduling across teams.
+
+Fair-Share Scheduling: Resources distributed proportionally to configured shares. Over time, no team should get more than their share even if they submit more jobs.
+
+Preemption: Higher-priority jobs can preempt lower-priority ones running in a queue.
+
+KubeRay manages Ray clusters on Kubernetes:
+Ray is a popular Python framework for distributed ML (training, hyperparameter tuning, serving, RL).
+RayCluster CRD: Head node + worker nodes with autoscaling.
+RayJob: Cluster spun up for one job, torn down on completion.
+RayService: Ray Serve for model serving with rolling upgrades and zero-downtime deployments.
+KubeRay handles: autoscaling worker groups, fault recovery, head node restart, and Ray version upgrades.`,
+        codeExample: `# Volcano Job with gang scheduling
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: distributed-training
+spec:
+  minAvailable: 4         # Gang: all 4 pods must be schedulable before any start
+  schedulerName: volcano  # Use Volcano scheduler
+  queue: ml-training      # Submit to the training queue
+  policies:
+    - event: PodEvicted
+      action: RestartJob  # Restart the entire job if any pod is evicted
+  tasks:
+    - replicas: 4
+      name: trainer
+      template:
+        spec:
+          containers:
+            - name: trainer
+              image: training:latest
+              resources:
+                limits:
+                  nvidia.com/gpu: 8
+          restartPolicy: OnFailure
+---
+# KubeRay cluster for distributed inference
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: inference-cluster
+spec:
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+    template:
+      spec:
+        containers:
+          - name: ray-head
+            image: rayproject/ray-ml:2.9.0-py310-gpu
+            resources:
+              limits:
+                cpu: "4"
+                memory: "16Gi"
+  workerGroupSpecs:
+    - replicas: 4
+      minReplicas: 2
+      maxReplicas: 8
+      groupName: gpu-workers
+      template:
+        spec:
+          containers:
+            - name: ray-worker
+              image: rayproject/ray-ml:2.9.0-py310-gpu
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
+                  cpu: "8"
+                  memory: "32Gi"`,
+      },
+    ],
+    quickFire: [
+      { q: 'Why are GPUs specified only in limits, not requests?', a: 'GPUs do not support oversubscription by default. The limit equals the request — you always get exactly what you ask for.' },
+      { q: 'What is MIG and which GPUs support it?', a: 'Multi-Instance GPU: hardware partitioning of a physical GPU into up to 7 isolated slices with dedicated compute, memory bandwidth, and L2 cache. Available on A100 and H100 only.' },
+      { q: 'What is the key danger of time-slicing vs. MIG?', a: 'Time-slicing has NO memory isolation. Multiple pods share the full GPU memory. If they collectively exceed it, all crash with CUDA OOM. MIG has dedicated memory per slice.' },
+      { q: 'What is gang scheduling and why do training jobs need it?', a: 'All pods in a group must be scheduled simultaneously before any start. Without it, 3 of 4 training pods sit idle consuming expensive GPUs while waiting for the 4th.' },
+      { q: 'What is the GPU Operator?', a: 'NVIDIA operator that automates the full GPU software stack: driver installation (DaemonSet), container toolkit, device plugin, MIG manager, and DCGM metrics exporter.' },
+      { q: 'Why do inference containers need a long initialDelaySeconds on readiness probes?', a: 'Large model weights take 1-5 minutes to load into GPU memory. Without a sufficient delay, Kubernetes kills the pod (CrashLoopBackOff) before the model is ready.' },
+      { q: 'What metrics does DCGM Exporter expose for HPA?', a: 'GPU utilization (%), GPU memory used/free, temperature, power consumption, NVLink bandwidth. Used as custom metrics for HPA scaling decisions.' },
+      { q: 'What does KubeRay RayService provide over a plain Deployment?', a: 'Zero-downtime rolling upgrades for Ray Serve deployments, built-in fault recovery, and automatic Ray cluster management — without needing to manage the Ray head/worker lifecycle manually.' },
+    ],
+    references: [
+      'https://k8s.info/docs/expert/ai-gpu',
+      'https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/index.html',
+      'https://volcano.sh/en/docs/',
+      'https://ray-project.github.io/kuberay/',
+    ],
+  },
+
+  {
     id: 'devops-coding-challenges',
     title: 'DevOps Coding Challenges',
     icon: 'code',
