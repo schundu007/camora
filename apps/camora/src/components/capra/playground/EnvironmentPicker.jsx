@@ -112,7 +112,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
 
   return (
     <div style={{ padding: '24px 20px' }}>
-      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 16 }}>
         Choose Environment
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -133,13 +133,13 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                 borderRadius: 10,
                 border: isSelected
                   ? `1px solid ${env.color}`
-                  : '1px solid rgba(255,255,255,0.08)',
+                  : '1px solid var(--border)',
                 borderTop: isSelected
                   ? `4px solid ${env.color}`
                   : `4px solid ${env.color}66`,
                 background: isSelected
                   ? `${env.color}14`
-                  : 'rgba(255,255,255,0.03)',
+                  : 'var(--bg-elevated)',
                 cursor: disabled || locked ? 'not-allowed' : 'pointer',
                 opacity: locked ? 0.55 : 1,
                 textAlign: 'left',
@@ -164,17 +164,17 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                   {locked && (
                     <span style={{
                       fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
-                      background: 'rgba(212,160,67,0.15)', border: '1px solid rgba(212,160,67,0.35)', color: '#d4a043',
+                      background: 'var(--accent-secondary-subtle)', border: '1px solid color-mix(in oklab, var(--accent-secondary) 35%, transparent)', color: 'var(--accent-secondary-text)',
                     }}>
                       PRO
                     </span>
                   )}
                 </span>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', lineHeight: 1.3, marginBottom: 4 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: 4 }}>
                 {env.label}
               </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4, marginBottom: 10 }}>
+              <div style={{ fontSize: 10, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 10 }}>
                 {env.desc}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
@@ -196,7 +196,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
         })}
       </div>
       {!isPro && (
-        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 14, textAlign: 'center' }}>
+        <p style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 14, textAlign: 'center' }}>
           Pro environments require a paid subscription
         </p>
       )}

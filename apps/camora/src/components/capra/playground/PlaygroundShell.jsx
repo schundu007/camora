@@ -105,7 +105,7 @@ export default function PlaygroundShell() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: '#0d1117' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg-base)' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
 
       {/* ── BOOTING / CREATING state ── */}
@@ -273,15 +273,15 @@ export default function PlaygroundShell() {
           {/* Left panel */}
           <div style={{
             width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
-            background: '#111827', borderRight: '1px solid rgba(255,255,255,0.07)', overflowY: 'auto',
+            background: 'var(--bg-elevated)', borderRight: '1px solid var(--border)', overflowY: 'auto',
           }}>
             <div style={{ padding: '20px 20px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span style={{ fontSize: 18 }}>⌨️</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Playground</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Playground</span>
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#10b981' }}>BETA</span>
               </div>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                 Disposable Linux VMs with VS Code IDE — start in seconds.
               </p>
             </div>
@@ -304,7 +304,7 @@ export default function PlaygroundShell() {
             <div style={{ padding: '0 16px', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <span style={{ fontSize: 18, display: 'flex', alignItems: 'center' }}><EnvIcon icon={selectedEnv.icon} /></span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{selectedEnv.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{selectedEnv.label}</span>
               </div>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
                 {selectedEnv.category.split(' · ').map(cat => (
@@ -315,14 +315,14 @@ export default function PlaygroundShell() {
                 )}
               </div>
             </div>
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 16px 12px' }} />
+            <div style={{ height: 1, background: 'var(--border)', margin: '0 16px 12px' }} />
             <div style={{ padding: '0 16px', marginBottom: 12 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>Included</p>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Included</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 {[['Terminal', 'bash shell'], ['IDE', 'VS Code in browser'], ['Duration', '60 min']].map(([k, v]) => (
                   <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{k}</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)', fontFamily: '"IBM Plex Mono", monospace' }}>{v}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{k}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -331,7 +331,7 @@ export default function PlaygroundShell() {
           </div>
 
           {/* Right panel */}
-          <div style={{ flex: 1, overflowY: 'auto', background: '#0d1117', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column' }}>
             {/* Resume banner when a session is still running */}
             {isActive && minimized && (
               <div style={{

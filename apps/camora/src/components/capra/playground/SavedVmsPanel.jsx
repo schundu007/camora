@@ -18,21 +18,21 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
   return (
     <div style={{ padding: '0 24px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
           Saved VMs
         </span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{slotsUsed}/{slotsMax} slots</span>
+        <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{slotsUsed}/{slotsMax} slots</span>
       </div>
 
       {savesLoading && saves.length === 0 && (
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', padding: '8px 0' }}>Loading...</div>
+        <div style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '8px 0' }}>Loading...</div>
       )}
 
       {!savesLoading && saves.length === 0 && (
         <div style={{
           padding: '14px 16px', borderRadius: 8, fontSize: 11, textAlign: 'center',
-          background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)',
-          color: 'rgba(255,255,255,0.3)',
+          background: 'var(--bg-surface)', border: '1px dashed var(--border)',
+          color: 'var(--text-secondary)',
         }}>
           No saved VMs yet. Use "Save VM" while a session is running.
         </div>
@@ -45,14 +45,14 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
           return (
             <div key={save.id} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8,
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}><EnvIcon icon={env.icon} /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {save.name}
                 </div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
                   {env.label} · {fmtSize(save.sizeBytes)} · {fmtDate(save.createdAt)}
                 </div>
               </div>
