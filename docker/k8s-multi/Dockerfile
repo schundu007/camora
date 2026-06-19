@@ -28,5 +28,10 @@ RUN curl -fsSL https://github.com/skyhook-io/radar/releases/download/v1.7.9/rada
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
+RUN mkdir -p /home/learner/.local/share/code-server/User && \
+    printf '{\n  "workbench.startupEditor": "none",\n  "workbench.colorTheme": "Default Dark+"\n}\n' \
+    > /home/learner/.local/share/code-server/User/settings.json && \
+    chown -R learner:learner /home/learner/.local
+
 EXPOSE 7681 8080 9280
 CMD ["/start.sh"]

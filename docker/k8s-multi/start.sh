@@ -54,12 +54,14 @@ mkdir -p /home/learner/.local/share/code-server/User
 cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
   "workbench.startupEditor": "none",
-  "workbench.colorTheme": "Default Dark Modern"
+  "workbench.colorTheme": "Default Dark+"
 }
 VSCODE_SETTINGS
 chown -R learner:learner /home/learner/.local
 
-code-server --bind-addr 0.0.0.0:8080 --auth none /home/learner &>/var/log/code-server.log &
+code-server --bind-addr 0.0.0.0:8080 --auth none \
+  --user-data-dir /home/learner/.local/share/code-server \
+  /home/learner &>/var/log/code-server.log &
 
 echo '__PROGRESS__:{"step":"ide_start","status":"done"}'
 echo '__PROGRESS__:{"step":"terminal_ready","status":"done"}'

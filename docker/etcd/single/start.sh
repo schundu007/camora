@@ -44,10 +44,11 @@ ETCD_PID=$!
 # ---------------------------------------------------------------------------
 # Disable built-in terminal panel (duplicate of our ttyd terminal)
 mkdir -p /home/learner/.local/share/code-server/User
+mkdir -p /home/learner/.local/share/code-server/User
 cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
   "workbench.startupEditor": "none",
-  "workbench.colorTheme": "Default Dark Modern"
+  "workbench.colorTheme": "Default Dark+"
 }
 VSCODE_SETTINGS
 chown -R learner:learner /home/learner/.local
@@ -55,6 +56,7 @@ chown -R learner:learner /home/learner/.local
 sudo -u learner code-server \
   --bind-addr 0.0.0.0:8080 \
   --auth none \
+  --user-data-dir /home/learner/.local/share/code-server \
   /home/learner \
   >> /var/log/code-server.log 2>&1 &
 
