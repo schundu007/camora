@@ -24,13 +24,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
     // Stale chunk after deploy — old index.html references hashes that no
-    // longer exist. A hard reload fetches fresh HTML + new chunks.
+    // longer exist. Guard: only reload once per tab session to prevent an
+    // infinite reload loop if the chunk failure is persistent (broken asset,
+    // import error, etc.). The vite:preloadError listener in main.tsx uses
+    // the same key so both guards share a single reload budget.
     if (
       error?.message?.includes('Failed to fetch dynamically imported module') ||
       error?.message?.includes('Importing a module script failed') ||
       error?.name === 'ChunkLoadError'
     ) {
-      window.location.reload();
+      const RELOAD_KEY = 'vite_preload_reload';
+      if (!sessionStorage.getItem(RELOAD_KEY)) {
+        sessionStorage.setItem(RELOAD_KEY, '1');
+        window.location.reload();
+      }
     }
   }
 
