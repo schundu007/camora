@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
 import { usePlaygroundMetrics } from '@/hooks/usePlaygroundMetrics';
@@ -12,6 +12,7 @@ import ToolPickerPanel from './ToolPickerPanel';
 import SavedVmsPanel from './SavedVmsPanel';
 import ClusterView from './ClusterView';
 import ClusterPanel from './ClusterPanel';
+import ExercisePanel from './ExercisePanel';
 
 
 function formatTime(seconds) {
@@ -44,6 +45,8 @@ export default function PlaygroundShell() {
   const [restoringId, setRestoringId] = useState(null);
   const { stats, loading: statsLoading, fetchStats } = usePlaygroundMetrics();
   const termRef = useRef(null);
+  const [k8sExercises, setK8sExercises] = useState(null);
+  const [k8sTopicSlug, setK8sTopicSlug] = useState(null);
 
   const isActive = status === 'ready' && !!session;
   const isCreating = status === 'creating';
@@ -72,6 +75,20 @@ export default function PlaygroundShell() {
   };
 
   const isK8sEnv = session?.environment === 'k8s-single' || session?.environment === 'k8s-multi';
+
+  useEffect(() => {
+    const slug = session?.scenario_slug;
+    if (!isActive || !isK8sEnv || !slug || slug === k8sTopicSlug) return;
+    const token = typeof window !== 'undefined' ? (() => { try { return JSON.parse(localStorage.getItem('camora_token') || 'null'); } catch { return null; } })() : null;
+    const base = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+    fetch(`${base}/api/v1/k8s/topics/${slug}`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.exercises) { setK8sExercises(d.exercises); setK8sTopicSlug(slug); } })
+      .catch(() => {});
+  }, [isActive, isK8sEnv, session?.scenario_slug, k8sTopicSlug]);
   const isClusterEnv = !!session?.isCluster;
   const displaySteps = isClusterEnv
     ? bootSteps.map(s =>
@@ -239,14 +256,23 @@ export default function PlaygroundShell() {
                   <IdePane ideUrl={ideUrl} wsUrl={wsUrl} />
                 </div>
                 {/* Terminal pane */}
-                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'terminal' ? 'block' : 'none', background: '#0a0a0a' }}>
-                  {wsUrl && (
-                    <TerminalPane
-                      key={termKey}
-                      ref={termRef}
-                      wsUrl={wsUrl}
-                      initialFontSize={fontSize}
-                      onExit={() => setMinimized(true)}
+                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'terminal' ? 'flex' : 'none', background: '#0a0a0a' }}>
+                  <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                    {wsUrl && (
+                      <TerminalPane
+                        key={termKey}
+                        ref={termRef}
+                        wsUrl={wsUrl}
+                        initialFontSize={fontSize}
+                        onExit={() => setMinimized(true)}
+                      />
+                    )}
+                  </div>
+                  {isK8sEnv && !isClusterSession && k8sExercises && (
+                    <ExercisePanel
+                      sessionId={session?.sessionId}
+                      exercises={k8sExercises}
+                      onProgressUpdate={() => {}}
                     />
                   )}
                 </div>

@@ -12,6 +12,7 @@ import { setupGracefulShutdown, trackConnection } from './utils/shutdown.js';
 import { query } from './config/database.js';
 import { isStripeConfigured } from './config/stripe.js';
 import { initRedis } from './services/redis.js';
+import { seedK8sCurriculum } from './services/k8s/curriculum.js';
 import { sendTrialEmail } from './services/emailService.js';
 
 // Route imports
@@ -56,6 +57,7 @@ import net from 'net';
 import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
+import { k8sPathRouter } from './routes/k8sPath.js';
 import { playgroundRouter } from './routes/playground.js';
 import { getSession } from './services/playground/sessionStore.js';
 import { stopJob } from './services/playground/nomadClient.js';
@@ -693,11 +695,40 @@ async function runMigrations() {
   await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS code_server_port INTEGER');
   await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB');
 
+  await query(`CREATE TABLE IF NOT EXISTS k8s_topics (
+    id SERIAL PRIMARY KEY,
+    module INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS k8s_exercises (
+    id SERIAL PRIMARY KEY,
+    topic_slug TEXT NOT NULL REFERENCES k8s_topics(slug) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    hint TEXT,
+    spec JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS k8s_progress (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    exercise_id INTEGER NOT NULL REFERENCES k8s_exercises(id) ON DELETE CASCADE,
+    passed_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, exercise_id)
+  )`);
+
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
   }
 }
-runMigrations();
+runMigrations().then(() => seedK8sCurriculum()).catch(err => console.warn('[K8s Curriculum] seed failed:', err.message));
 
 const app = express();
 const PORT = config.PORT;
@@ -1446,6 +1477,7 @@ app.use('/api/v1/playground', authenticate, apiLimiter, playgroundRouter);
 
 // Playground sessions — disposable Linux VMs (Docker-via-SSH on worker)
 app.use('/api/v1/playground/sessions', authenticate, apiLimiter, playgroundSessionsRouter);
+app.use('/api/v1/k8s', authenticate, apiLimiter, k8sPathRouter);
 
 // code-server HTTP proxy — /pg-ide/* → container port 8080
 // Express strips /pg-ide prefix so req.url is already the correct path for code-server.
