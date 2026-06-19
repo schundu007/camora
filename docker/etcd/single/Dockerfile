@@ -60,6 +60,12 @@ RUN curl -fsSL "https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
 # ---------------------------------------------------------------------------
+# learner user (non-root, passwordless sudo)
+# ---------------------------------------------------------------------------
+RUN useradd -m -s /bin/bash learner && \
+    echo 'learner ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# ---------------------------------------------------------------------------
 # Directories
 # ---------------------------------------------------------------------------
 RUN mkdir -p \
@@ -69,14 +75,14 @@ RUN mkdir -p \
     /home/learner/labs
 
 # ---------------------------------------------------------------------------
-# Environment (persistent for all shells)
+# Environment (persistent for learner shells)
 # ---------------------------------------------------------------------------
-RUN echo '' >> /etc/bash.bashrc && \
-    echo '# etcd environment' >> /etc/bash.bashrc && \
-    echo 'export ETCDCTL_API=3' >> /etc/bash.bashrc && \
-    echo 'export ETCDCTL_ENDPOINTS=http://127.0.0.1:2379' >> /etc/bash.bashrc && \
-    echo "alias etcd-logs='tail -f /var/log/etcd.log'" >> /etc/bash.bashrc && \
-    echo "alias ll='ls -la'" >> /etc/bash.bashrc
+RUN echo '' >> /home/learner/.bashrc && \
+    echo '# etcd environment' >> /home/learner/.bashrc && \
+    echo 'export ETCDCTL_API=3' >> /home/learner/.bashrc && \
+    echo 'export ETCDCTL_ENDPOINTS=http://127.0.0.1:2379' >> /home/learner/.bashrc && \
+    echo "alias etcd-logs=\'tail -f /var/log/etcd.log\'" >> /home/learner/.bashrc && \
+    echo "alias ll=\'ls -la\'" >> /home/learner/.bashrc
 
 # ---------------------------------------------------------------------------
 # Lab scripts
@@ -85,7 +91,7 @@ COPY labs/ /home/learner/labs/
 COPY README.md /home/learner/README.md
 
 RUN chmod +x /home/learner/labs/*.sh && \
-    chown -R root:root /home/learner
+    chown -R learner:learner /home/learner
 
 # ---------------------------------------------------------------------------
 # start.sh
@@ -94,15 +100,12 @@ COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 # ---------------------------------------------------------------------------
-# code-server config (no auth, open to 0.0.0.0)
+# code-server config for learner (no auth, 0.0.0.0:8080)
 # ---------------------------------------------------------------------------
-RUN mkdir -p /root/.config/code-server && \
-    cat > /root/.config/code-server/config.yaml << 'EOF'
-bind-addr: 0.0.0.0:8080
-auth: none
-password:
-cert: false
-EOF
+RUN mkdir -p /home/learner/.config/code-server && \
+    printf 'bind-addr: 0.0.0.0:8080\nauth: none\npassword:\ncert: false\n' \
+    > /home/learner/.config/code-server/config.yaml && \
+    chown -R learner:learner /home/learner/.config
 
 # ---------------------------------------------------------------------------
 # Ports
