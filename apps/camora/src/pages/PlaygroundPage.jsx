@@ -46,13 +46,13 @@ export default function PlaygroundPage() {
         borderBottom: '1px solid var(--cam-gold-leaf)',
       }}>
         <Link to="/capra/prepare" style={{
-          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)',
+          fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)',
           textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3,
           flexShrink: 0,
         }}>
           ‹ Home
         </Link>
-        <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 14, background: 'var(--border)', flexShrink: 0 }} />
         <div className="tab-group" style={{ flex: 1 }}>
           {TABS.map(t => (
             <button
