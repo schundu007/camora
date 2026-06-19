@@ -19122,6 +19122,37 @@ Volume: persistent storage that survives pod restarts. A volume appears to conta
 Namespace: a virtual cluster inside a physical cluster. Like different neighborhoods in the same city. Namespaces let multiple teams share a cluster while keeping their resources isolated. Most objects (Pods, Services, ConfigMaps, Secrets) are namespaced. Nodes and PersistentVolumes are cluster-scoped. ResourceQuotas and LimitRanges are applied per namespace.`,
         image: `https://www.cncf.io/wp-content/uploads/2020/07/kubernetes-illustrated-guide-diagram-2.jpg`,
       },
+      {
+        title: `🎬 Smooth Sailing with Kubernetes — The Comic Story`,
+        description: `Google's illustrated comic (art and story by Scott McCloud) tells the full Kubernetes origin story in 49 panels. Here is the complete narrative condensed into the concepts that matter for interviews.
+
+The problem: Jason runs a game company. Servers die, scaling is slow, updates break things, weekends are ruined. He deploys apps in containers but managing them is still slow, inefficient, and full of holes.
+
+Why microservices: Monolithic apps had too many interdependent parts — one change broke the whole thing. By splitting into individual microservices, each service can be debugged, updated, and deployed independently without stopping everything else. Services communicate via lightweight protocols — just enough to cooperate.
+
+Why containers: Each process is built with its own libraries and settings baked in. Everything each process needs to run on any machine — virtual or bare metal — is self-contained. Microservices plus containers unlock portability (run anywhere), reproducibility (same image every time), and scalability (spin up more copies instantly).
+
+What Kubernetes is: Kubernetes is Greek for helmsman. Open source, backed by a large community (GitHub itself runs on it). It was designed to solve exactly Jason's problem — orchestrating containers at scale. The name matters: like a ship's helmsman, Kubernetes guides containers to their destination without the crew managing every wave.
+
+Kubernetes' four key goals:
+  1. Distribute containers in a logical and efficient way — maximize CPU capacity through bin packing
+  2. Scale up or down fast — adapt to demand without manual intervention
+  3. Keep processes continuously running and healthy — never go dark
+  4. Give power over what gets done without forcing micro-management of how
+
+The object model: A Pod is the smallest building block — Kubernetes only sees pods, not individual containers. Most pods hold one container; tightly coupled processes share a pod. A Node is a single machine (real or virtual) that co-locates a group of pods. A Cluster is a group of nodes overseen by a master node. A Deployment is a YAML file declaring the ideal state — the battalion of processes you want running. Kubernetes selects machines, propagates containers per pod, and pulls images from the registry.
+
+Abstracted infrastructure: You never choose the motherboard, Linux distro, location, or IP address. Kubernetes handles all of that. All containers made from a given image are interchangeable — created from the same immutable template. Who cares what machine your process is on? They are all the same to you now.
+
+Self-healing: Kubernetes fanatically compares the ideal state (as expressed in the Deployment) to the actual state of pods and clusters. No tolerance. No excuses. If any violation or inconsistency is detected — something gets terminated and instantly reborn. Risk is distributed across replicas — no single failure point takes down a running process.
+
+Rolling updates: A new container image is pulled from the registry and new containers are deployed from it, usually as a rolling update, for a smooth and stable transition — zero downtime.
+
+Labels and services: Labels let you treat all replicas of a process as a single entity — a service. Kubernetes does not fret over individual processes. It cares about the real-world result: the aggregate services they provide. It is dedicated to keeping services running and healthy every minute of the day.
+
+Read the full comic at: https://cloud.google.com/kubernetes-engine/kubernetes-comic (art and story by Scott McCloud)`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
     ],
     video: {
       embedUrl: `https://www.youtube.com/embed/TlHvYWVUZyc`,
@@ -19137,6 +19168,7 @@ Namespace: a virtual cluster inside a physical cluster. Like different neighborh
       'https://github.com/containernetworking/cni/blob/main/SPEC.md',
       'https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/',
       'https://www.cncf.io/phippy/the-childrens-illustrated-guide-to-kubernetes/',
+      'https://cloud.google.com/kubernetes-engine/kubernetes-comic',
     ],
   },
 
