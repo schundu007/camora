@@ -117,6 +117,9 @@ export const devopsTopicCategoryMap = {
   'oci-runtime-spec':               'containers',
   'containers-are-processes':       'containers',
   'docker-multi-stage-builds':      'containers',
+  'docker-container-lifecycle':     'containers',
+  'docker-debugging':               'containers',
+  'docker-image-internals':         'containers',
   'distroless-images':              'containers',
   // Orchestration — architecture → core objects → packaging → networking → advanced
   'kubernetes-architecture':        'orchestration',
@@ -17162,6 +17165,1158 @@ These are answers a container-security-fluent engineer should give without prepa
       'https://docs.docker.com/engine/security/seccomp/',
       'https://github.com/google/distroless',
       'https://github.com/sigstore/cosign',
+    ],
+  },
+
+  {
+    id: 'docker-multi-stage-builds',
+    title: 'Docker Multi-Stage Builds',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Multi-stage builds use multiple FROM instructions in one Dockerfile to separate build-time tools from the production runtime image. The compiler, test frameworks, and dev dependencies never ship to prod — only the final artifact does. Result: 80-99% smaller images with zero change to the build workflow.',
+    visualizations: [
+      {
+        title: 'Multi-stage build anatomy — stages, COPY --from, and the final image',
+        description: `A multi-stage Dockerfile has multiple FROM instructions. Each FROM starts a new build stage. Stages are numbered (0, 1, 2...) or named with AS <name>. The final FROM stage defines the image docker build produces.
+
+How COPY --from works.
+
+COPY --from=<stage> <src> <dst> copies a file from a previous stage into the current stage. Only files you explicitly copy land in the destination — the rest of the build stage's filesystem is discarded. Heavy build tools stay in the build stage; only the compiled binary or built artifact reaches the runtime stage.
+
+Go binary example — builder stage builds, scratch stage ships:
+
+\`\`\`dockerfile
+# syntax=docker/dockerfile:1.7
+FROM golang:1.23-alpine AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \\
+    CGO_ENABLED=0 GOOS=linux go build -o /out/server ./cmd/server
+
+FROM scratch AS runtime
+COPY --from=build /out/server /server
+EXPOSE 8080
+ENTRYPOINT ["/server"]
+\`\`\`
+
+Stage 1 (build): golang:1.23-alpine (~300MB) with Go toolchain, source, and all dependencies.
+Stage 2 (runtime): scratch (0 bytes base) with only the compiled statically-linked binary.
+Final image size: ~5MB vs ~300MB if shipped from the build stage.
+
+Why scratch for Go? Go compiles to a statically-linked binary with zero runtime dependencies. scratch is a Docker pseudo-image that is truly empty — no OS, no shell, no libc. CGO_ENABLED=0 ensures no dynamic links to libc so the binary runs directly on scratch.
+
+Key rules.
+
+1. Only the last FROM stage's content becomes the output image.
+2. Earlier stages produce artifacts only — they are discarded after the build.
+3. You can have as many stages as needed: deps → build → test → runtime is common.
+4. Named stages make COPY --from readable and allow --target to stop at a specific stage.
+5. BuildKit runs independent stages in parallel automatically — no extra config needed.`,
+      },
+      {
+        title: 'Language-specific patterns — Node.js, Python, Java, Rust with size comparisons',
+        description: `Node.js — separate install, build, and runtime.
+
+\`\`\`dockerfile
+# syntax=docker/dockerfile:1.7
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
+
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+COPY package.json .
+EXPOSE 3000
+USER node
+CMD ["node", "dist/server.js"]
+\`\`\`
+
+Three stages: deps (prod dependencies only), build (TypeScript/Vite/Webpack compilation), runtime (only prod node_modules + compiled output). Dev dependencies (TypeScript compiler, bundler, test frameworks) never reach the final image.
+
+Python — isolate installed packages.
+
+\`\`\`dockerfile
+# syntax=docker/dockerfile:1.7
+FROM python:3.12-slim AS build
+WORKDIR /app
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \\
+    pip install --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim AS runtime
+COPY --from=build /install /usr/local
+COPY src/ ./src/
+USER nobody
+CMD ["python", "-m", "src.server"]
+\`\`\`
+
+pip install --prefix=/install puts packages in a custom dir. COPY --from=build brings only installed packages to the runtime stage — not pip itself, wheels, or build headers.
+
+Java (Maven) — full JDK to build, JRE to run.
+
+\`\`\`dockerfile
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 mvn dependency:go-offline -q
+COPY src/ ./src/
+RUN --mount=type=cache,target=/root/.m2 mvn package -DskipTests -q
+
+FROM eclipse-temurin:21-jre-alpine AS runtime
+WORKDIR /app
+COPY --from=build /app/target/app.jar ./app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+\`\`\`
+
+JDK (~1.3GB) stays in the build stage. JRE-only runtime image (~200MB). The Maven .m2 cache mount avoids re-downloading dependencies on every build.
+
+Rust — static binary on distroless.
+
+\`\`\`dockerfile
+FROM rust:1.79-slim AS build
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+RUN --mount=type=cache,target=/usr/local/cargo/registry \\
+    --mount=type=cache,target=/app/target \\
+    cargo build --release --bin server
+RUN cp /app/target/release/server /server
+
+FROM gcr.io/distroless/cc-debian12 AS runtime
+COPY --from=build /server /server
+CMD ["/server"]
+\`\`\`
+
+Rust compiles to a near-static binary. distroless/cc provides only the C runtime library — no shell, no apt, no utilities. Final image: ~10MB.
+
+Image size reduction summary.
+
+Language  | Without multi-stage | With multi-stage | Reduction
+Go        | ~300MB              | ~5MB             | 98%
+Node.js   | ~800MB              | ~150MB           | 81%
+Python    | ~600MB              | ~120MB           | 80%
+Java      | ~1.3GB              | ~200MB           | 85%
+Rust      | ~1.5GB              | ~10MB            | 99%`,
+      },
+      {
+        title: 'BuildKit cache mounts, --target flag, parallel stages, and build secrets cheatsheet',
+        description: `RUN --mount=type=cache — persistent package cache across builds.
+
+\`\`\`dockerfile
+# Go modules
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+
+# npm
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+# Maven
+RUN --mount=type=cache,target=/root/.m2 mvn package
+
+# pip
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
+
+# Rust (registry + compiled artifacts)
+RUN --mount=type=cache,target=/usr/local/cargo/registry \\
+    --mount=type=cache,target=/app/target \\
+    cargo build --release
+\`\`\`
+
+Cache is local to the builder — never stored in image layers. Share across CI runs with --cache-from.
+
+--target: stop the build at a named stage.
+
+\`\`\`bash
+# Run tests, stop before building the prod image
+docker build --target test -t myapp:test .
+docker run --rm myapp:test
+
+# Build dev image with debug tools
+docker build --target dev -t myapp:dev .
+
+# Default: full prod image (last stage)
+docker build -t myapp:prod .
+\`\`\`
+
+Common stage layout.
+
+\`\`\`dockerfile
+FROM base AS deps         # install all dependencies
+FROM deps AS dev          # add dev tools + hot reload
+FROM deps AS build        # compile / bundle
+FROM build AS test        # run test suite (--target test to stop here)
+FROM base AS runtime      # minimal runtime image
+COPY --from=build ...
+\`\`\`
+
+ARG across stages — must be re-declared after each FROM.
+
+\`\`\`dockerfile
+ARG APP_VERSION=1.0.0     # global ARG (before any FROM)
+
+FROM golang:1.23 AS build
+ARG APP_VERSION            # re-declare to use in this stage
+RUN go build -ldflags="-X main.version=${APP_VERSION}" .
+
+FROM scratch AS runtime
+ARG APP_VERSION            # re-declare again
+LABEL version="${APP_VERSION}"
+COPY --from=build /app /app
+\`\`\`
+
+Build with: docker build --build-arg APP_VERSION=2.1.0 .
+
+Build secrets — never use ARG for sensitive values.
+
+\`\`\`dockerfile
+# syntax=docker/dockerfile:1.7
+FROM python:3.12 AS build
+RUN --mount=type=secret,id=pip_token \\
+    PIP_EXTRA_INDEX_URL=$(cat /run/secrets/pip_token) \\
+    pip install private-package
+\`\`\`
+
+Pass at build time:
+\`\`\`bash
+docker build --secret id=pip_token,src=.pip_token .
+\`\`\`
+
+The secret is injected at build time only — it never appears in docker history or any image layer.
+
+Parallel stage execution.
+
+BuildKit detects independent stages and builds them concurrently. No extra syntax needed:
+
+\`\`\`dockerfile
+FROM node:22 AS frontend          # these two stages
+RUN npm run build                  # build in parallel
+
+FROM golang:1.23 AS backend       # because neither depends
+RUN go build .                    # on the other's output
+
+FROM nginx:alpine AS runtime
+COPY --from=frontend /app/dist /usr/share/nginx/html
+COPY --from=backend /server /server
+\`\`\`
+
+Wall-clock time = max(frontend, backend) instead of their sum.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Multi-Stage Builds.',
+        description: `Rapid-fire facts.
+
+Q: What is a multi-stage build in one sentence?
+A: A Dockerfile with multiple FROM instructions where earlier stages compile and bundle the application and the final FROM stage copies only the artifact, producing a minimal production image without build tools.
+
+Q: How do you copy a file from a previous stage?
+A: COPY --from=<stage-name-or-number> <src> <dst>. Example: COPY --from=build /out/server /server
+
+Q: What happens to earlier stages after a build completes?
+A: They are discarded. Only the last FROM stage's filesystem becomes the pushed image. BuildKit caches stage outputs for fast rebuilds, but they are not part of the image.
+
+Q: What is scratch?
+A: A Docker pseudo-image that is truly empty — no OS, no shell, no libc. Used as a runtime base for statically-linked Go or Rust binaries. The final image contains only what you COPY in.
+
+Q: Why is CGO_ENABLED=0 needed for Go on scratch?
+A: Without it, Go links dynamically against the host's libc. scratch has no libc, so the binary would fail at runtime. CGO_ENABLED=0 forces a fully static binary.
+
+Q: What does --target do?
+A: Stops the build at a named intermediate stage without producing the final image. Used for docker build --target test to run the test suite in CI, or --target dev for a debug image.
+
+Q: What is RUN --mount=type=cache?
+A: A BuildKit feature that mounts a persistent directory (scoped by ID) that survives across builds. Package managers cache downloads there. Next build skips re-downloading unchanged packages.
+
+Q: How does BuildKit parallelize multi-stage builds?
+A: It builds a DAG from stage dependencies. Stages with no COPY --from link between them are built concurrently. Parallelism is automatic — no special syntax required.
+
+Q: Why should secrets never go in ARG or ENV?
+A: ARG values appear in docker history and image metadata. ENV values persist in all child images. Use RUN --mount=type=secret — secrets inject at build time and never land in any layer.
+
+Q: What is the size difference between a naive Node.js image and a multi-stage one?
+A: Typically 800MB naive vs 150MB multi-stage — an 81% reduction by keeping the TypeScript compiler, bundler, and test frameworks out of the runtime image.
+
+These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/build/building/multi-stage/',
+      'https://docs.docker.com/build/cache/',
+      'https://docs.docker.com/reference/dockerfile/#run---mounttypecache',
+      'https://labs.iximiuz.com/tutorials/docker-multi-stage-builds',
+      'https://github.com/GoogleContainerTools/distroless',
+    ],
+  },
+
+  {
+    id: 'docker-container-lifecycle',
+    title: 'Docker Container Lifecycle and Signals',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Every container moves through a defined lifecycle: created, running, paused, stopped, removed. Understanding SIGTERM vs SIGKILL, restart policies (on-failure, unless-stopped, always), and the cgroups freezer behind docker pause is essential for graceful shutdowns and resilient services in production.',
+    visualizations: [
+      {
+        title: 'Container states, transitions, and the full lifecycle command map',
+        description: `Container states.
+
+created    — docker create ran. Filesystem and namespaces allocated. Not yet started.
+running    — docker start ran. PID 1 (ENTRYPOINT/CMD) is executing inside the container.
+paused     — docker pause ran. All container processes frozen via cgroups freezer. No CPU time consumed. Network connections stall (TCP keepalives stop).
+stopped    — PID 1 exited, or docker stop / docker kill was called. Filesystem still exists on disk.
+removing   — docker rm in progress. Writable container layer being deleted.
+dead       — rare: Docker attempted to remove the container but failed (mounted volume in use, etc.).
+
+State transitions and commands.
+
+\`\`\`
+docker create     → created
+docker start      → running
+docker run        → created + running in one step (most common path)
+docker pause      → paused        (freezes processes in place)
+docker unpause    → running       (resumes from exact freeze point)
+docker stop       → stopped       (graceful: SIGTERM → wait → SIGKILL)
+docker kill       → stopped       (immediate: SIGKILL by default)
+docker restart    → stopped → running (stop + start)
+docker rm         → removes stopped container
+docker rm -f      → force-removes running container (sends SIGKILL first)
+\`\`\`
+
+Full lifecycle capstone — create to remove.
+
+\`\`\`bash
+docker create --name myapp myimage          # allocate, don't start
+docker start myapp                          # start
+docker pause myapp                          # freeze
+docker unpause myapp                        # resume
+docker stop myapp                           # graceful shutdown
+docker start myapp                          # restart from same container
+docker kill --signal SIGUSR1 myapp          # send custom signal (nginx config reload)
+docker rm myapp                             # delete the container
+\`\`\`
+
+docker ps state flags.
+
+\`\`\`bash
+docker ps          # running containers only
+docker ps -a       # all containers including stopped
+docker ps -q       # quiet: IDs only (useful for scripting)
+docker ps --filter status=exited    # only exited containers
+docker ps --filter name=myapp       # filter by name
+\`\`\``,
+      },
+      {
+        title: 'Signals, graceful shutdown, and STOPSIGNAL',
+        description: `docker stop vs docker kill.
+
+docker stop <container>
+  Sends SIGTERM to PID 1 inside the container.
+  Waits --time seconds (default 10) for PID 1 to exit cleanly.
+  If PID 1 has not exited after the timeout, sends SIGKILL.
+  Use this in production — allows the application to flush buffers, close DB connections, finish in-flight requests.
+
+docker kill <container>
+  Sends SIGKILL by default. Immediate, no grace period.
+  Can send any signal: docker kill --signal SIGTERM myapp
+  Use for force-terminating a stuck container.
+
+Signals and their common uses.
+
+SIGTERM (15)  — graceful shutdown. Apps should catch this and exit cleanly.
+SIGKILL (9)   — immediate kill. Cannot be caught or ignored by the process.
+SIGHUP  (1)   — reload configuration. nginx, HAProxy, Gunicorn reload config on SIGHUP.
+SIGUSR1 (10)  — user-defined. nginx uses it to reopen log files after rotation.
+SIGUSR2 (12)  — user-defined. Some apps trigger hot reload or graceful restart.
+
+\`\`\`bash
+# Reload nginx config without downtime
+docker kill --signal SIGHUP nginx-container
+
+# Reload HAProxy config
+docker kill --signal SIGUSR2 haproxy-container
+
+# Reopen nginx log files after logrotate
+docker kill --signal SIGUSR1 nginx-container
+\`\`\`
+
+STOPSIGNAL Dockerfile instruction.
+
+By default, docker stop sends SIGTERM. Override with STOPSIGNAL:
+
+\`\`\`dockerfile
+FROM nginx:1.27
+STOPSIGNAL SIGQUIT     # nginx graceful stop is SIGQUIT, not SIGTERM
+\`\`\`
+
+SIGQUIT tells nginx to drain connections before shutting down. SIGTERM causes nginx to stop immediately, potentially dropping active connections.
+
+PID 1 and signal propagation.
+
+The process running as PID 1 receives signals from Docker. If your app launches via a shell script (CMD ["/bin/sh", "-c", "..."]), the shell becomes PID 1 — and shells do not forward signals to child processes by default.
+
+Correct — app is PID 1:
+\`\`\`dockerfile
+CMD ["node", "server.js"]    # exec form — node is PID 1, receives SIGTERM
+\`\`\`
+
+Wrong — shell is PID 1:
+\`\`\`dockerfile
+CMD "node server.js"         # shell form — sh is PID 1, SIGTERM goes to sh, not node
+\`\`\`
+
+Fix for shell scripts: use exec at the end to replace the shell process.
+\`\`\`bash
+#!/bin/sh
+echo "Starting..."
+exec node server.js         # exec replaces sh — node becomes PID 1
+\`\`\`
+
+Alternatively, use tini as PID 1 init process to properly forward signals and reap zombie processes:
+\`\`\`dockerfile
+FROM node:22
+RUN apt-get install -y tini
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "server.js"]
+\`\`\``,
+      },
+      {
+        title: 'Restart policies, pause/unpause, and production resilience patterns',
+        description: `Restart policies — keep containers alive automatically.
+
+Set with: docker run --restart <policy>
+
+Policy          | Behavior
+no              | Never restart (default). Container stays stopped after exit.
+on-failure[:N]  | Restart only on non-zero exit code. Optional max retry count N.
+always          | Always restart regardless of exit code. Also restarts when Docker daemon restarts.
+unless-stopped  | Like always, but does not restart if you manually docker stop it.
+
+Examples.
+
+\`\`\`bash
+# Restart up to 3 times on failure
+docker run --restart on-failure:3 myapp
+
+# Keep running forever (production services)
+docker run --restart unless-stopped myapp
+
+# Restart across daemon/host reboots (long-lived services)
+docker run --restart always myapp
+
+# Check current restart policy
+docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' myapp
+\`\`\`
+
+Restart policy decision guide.
+
+Long-lived service in production   → unless-stopped
+Service that should survive reboots → always
+One-shot job / batch process       → no (default)
+Flaky service with known failures  → on-failure:5 (circuit breaker behavior)
+
+docker pause and docker unpause.
+
+docker pause freezes all processes in the container using the cgroups freezer subsystem. The kernel stops scheduling any thread in the container's cgroup — CPU usage drops to zero immediately. Memory state is fully preserved.
+
+docker unpause resumes all processes from the exact point they were frozen. No reinitialisation, no lost state.
+
+Use cases.
+
+1. Live debugging: pause a running container to take a consistent memory snapshot or checkpoint with CRIU without the process changing state mid-inspection.
+2. Resource management: temporarily yield CPU for a burst workload on the host, then resume.
+3. Testing: pause a dependency (database) to simulate a network partition for chaos testing.
+
+\`\`\`bash
+docker pause mydb          # freeze the database container
+# ... perform snapshot / testing ...
+docker unpause mydb        # resume from exact freeze point
+\`\`\`
+
+Important: TCP connections stall during pause (no keepalives sent). A long pause will cause connection timeouts in clients. Pause is a short-duration operation.
+
+Update a running container's config.
+
+docker update changes resource limits on a running container without restart:
+
+\`\`\`bash
+# Lower CPU quota on a noisy container
+docker update --cpus 0.5 myapp
+
+# Raise memory limit
+docker update --memory 512m --memory-swap 512m myapp
+
+# Change restart policy
+docker update --restart unless-stopped myapp
+
+# Apply to multiple containers
+docker update --memory 256m app1 app2 app3
+\`\`\``,
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Container Lifecycle and Signals.',
+        description: `Rapid-fire facts.
+
+Q: What are the container states in Docker?
+A: created, running, paused, stopped (exited), removing, dead. docker ps shows running; docker ps -a shows all.
+
+Q: What is the difference between docker stop and docker kill?
+A: stop sends SIGTERM, waits the grace period (default 10s), then SIGKILL. kill sends SIGKILL immediately (or any signal via --signal). Prefer stop in production so the app can shut down cleanly.
+
+Q: What does STOPSIGNAL do in a Dockerfile?
+A: Overrides the signal docker stop sends. Example: STOPSIGNAL SIGQUIT for nginx causes docker stop to send SIGQUIT (graceful drain) instead of SIGTERM (immediate stop).
+
+Q: Why does using shell form for CMD break signal handling?
+A: Shell form (CMD "node app.js") runs the app as a child of /bin/sh. sh is PID 1 and does not forward SIGTERM to child processes. Use exec form CMD ["node", "app.js"] so node is PID 1 and receives signals directly.
+
+Q: What is tini?
+A: A minimal init process for containers. As PID 1, tini properly forwards signals to the actual application and reaps zombie (defunct) child processes. Prevents signal delivery failures when using shell wrapper scripts.
+
+Q: What is docker pause and how does it work?
+A: Freezes all container processes using the Linux cgroups freezer subsystem. CPU usage drops to zero; memory state is preserved. docker unpause resumes from the exact freeze point. Network connections stall during the pause.
+
+Q: What restart policies are available?
+A: no (default), on-failure[:N], always, unless-stopped. Use unless-stopped for production services — it restarts on crash and across reboots but respects a manual docker stop.
+
+Q: What does docker update do?
+A: Changes a running container's resource limits (--cpus, --memory) or restart policy without restarting the container.
+
+Q: How do you restart containers automatically after a host reboot?
+A: Set --restart always or --restart unless-stopped when running the container. The Docker daemon restarts matching containers when it starts up after a reboot.
+
+Q: What is the difference between always and unless-stopped restart policies?
+A: Both restart on crash and after daemon/host restart. The difference: unless-stopped will NOT restart a container you manually stopped with docker stop. always will.
+
+These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/engine/containers/start-containers-automatically/',
+      'https://docs.docker.com/reference/cli/docker/container/stop/',
+      'https://docs.docker.com/reference/dockerfile/#stopsignal',
+      'https://labs.iximiuz.com/tutorials/docker-container-commands',
+      'https://github.com/krallin/tini',
+    ],
+  },
+
+  {
+    id: 'docker-debugging',
+    title: 'Docker Debugging and Observability',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Effective Docker debugging uses docker exec for live inspection, docker logs for output capture, docker inspect for full runtime metadata, docker events for audit trails, and docker stats for real-time resource monitoring. These five tools cover 95% of production container debugging without modifying the running container.',
+    visualizations: [
+      {
+        title: 'docker exec, logs, and inspect — the core debugging trio',
+        description: `docker exec — run commands inside a running container.
+
+\`\`\`bash
+# Interactive shell (most common)
+docker exec -it myapp sh
+docker exec -it myapp bash
+
+# Run a single command and exit
+docker exec myapp cat /etc/hosts
+docker exec myapp env | grep DB_
+
+# Run as a specific user
+docker exec -u root myapp sh
+docker exec -u 1000 myapp whoami
+
+# Check a process from inside
+docker exec myapp ps aux
+docker exec myapp netstat -tlnp
+docker exec myapp ss -tlnp        # ss is preferred over netstat on modern Linux
+\`\`\`
+
+exec shares the container's namespaces (PID, network, mount, UTS) without creating a new container. The executed command sees the container's filesystem, network stack, and process tree.
+
+Debugging a distroless container (no shell available).
+
+\`\`\`bash
+# Method 1: use an ephemeral debug container sharing namespaces
+docker run -it --pid=container:myapp --network=container:myapp \\
+  busybox sh
+# Now you're in busybox with myapp's network and PID namespace
+
+# Method 2: use Docker's built-in debug mode (Docker Engine 25+)
+docker debug myapp                   # attaches a debug shell via a sidecar
+\`\`\`
+
+docker logs — capture stdout and stderr.
+
+\`\`\`bash
+docker logs myapp                    # all logs
+docker logs myapp --tail 50          # last 50 lines
+docker logs myapp -f                 # follow (stream live)
+docker logs myapp --since 10m        # logs from last 10 minutes
+docker logs myapp --until 2024-01-15 # logs before a timestamp
+docker logs myapp -t                 # include timestamps
+docker logs myapp 2>&1 | grep ERROR  # pipe logs to grep
+\`\`\`
+
+Log drivers. By default containers write to the json-file driver (local disk). Configure globally in /etc/docker/daemon.json or per container:
+
+\`\`\`bash
+docker run --log-driver journald myapp        # systemd journal
+docker run --log-driver syslog myapp          # syslog
+docker run --log-driver fluentd myapp         # Fluentd aggregator
+docker run --log-driver none myapp            # no logs (disables docker logs)
+docker run --log-opt max-size=10m \\
+           --log-opt max-file=3 myapp         # rotate logs: 3 files x 10MB
+\`\`\`
+
+docker inspect — full runtime metadata.
+
+\`\`\`bash
+# Full JSON blob
+docker inspect myapp
+
+# Specific fields via Go template
+docker inspect --format '{{.State.Status}}' myapp
+docker inspect --format '{{.State.ExitCode}}' myapp
+docker inspect --format '{{.NetworkSettings.IPAddress}}' myapp
+docker inspect --format '{{.HostConfig.RestartPolicy.Name}}' myapp
+docker inspect --format '{{json .Mounts}}' myapp | jq .
+docker inspect --format '{{json .Config.Env}}' myapp | jq .
+
+# Inspect an image (not a container)
+docker inspect myapp:v1.2.3
+
+# Inspect a network or volume
+docker network inspect bridge
+docker volume inspect mydata
+\`\`\``,
+      },
+      {
+        title: 'docker events, stats, top, and diff — live monitoring and change tracking',
+        description: `docker events — real-time audit trail of Docker daemon events.
+
+\`\`\`bash
+# Stream all events live
+docker events
+
+# Filter by event type
+docker events --filter event=start
+docker events --filter event=die
+docker events --filter event=oom     # out-of-memory kills
+
+# Filter by container name
+docker events --filter container=myapp
+
+# Historical events (last 1 hour)
+docker events --since 1h
+
+# JSON output for parsing
+docker events --format '{{json .}}' | jq .
+\`\`\`
+
+Common event types: create, start, stop, kill, die, oom, pause, unpause, rename, destroy, commit, pull, push, tag, untag, exec_create, exec_start, exec_die, network connect/disconnect, volume mount/unmount.
+
+docker stats — real-time resource usage (like top for containers).
+
+\`\`\`bash
+docker stats                          # all running containers, live
+docker stats myapp                    # single container
+docker stats --no-stream              # one snapshot, then exit
+docker stats --format "table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}"
+\`\`\`
+
+Output columns.
+
+Name         — container name
+CPU %        — percentage of host CPU used
+MEM USAGE    — current RSS / memory limit
+MEM %        — memory usage as percentage of limit
+NET I/O      — total bytes received / sent over network
+BLOCK I/O    — total bytes read / written to block devices
+PIDS         — number of processes/threads
+
+CPU % exceeding the number of vCPUs means the container is on an unthrottled cgroup (no --cpus limit set).
+
+docker top — processes inside a container.
+
+\`\`\`bash
+docker top myapp                 # list processes (ps output format)
+docker top myapp aux             # full ps flags
+docker top myapp -eo pid,ppid,cmd,pcpu,pmem
+\`\`\`
+
+docker diff — filesystem changes since container start.
+
+\`\`\`bash
+docker diff myapp
+\`\`\`
+
+Output prefixes.
+A — file added
+C — file changed
+D — file deleted
+
+Use to understand exactly what a running container has modified relative to its base image. Useful for security audits and debugging unexpected file changes.
+
+Copying files in and out of containers.
+
+\`\`\`bash
+# Copy from container to host
+docker cp myapp:/app/logs/error.log ./error.log
+
+# Copy from host into running container
+docker cp ./config.yaml myapp:/app/config.yaml
+
+# Copy from a stopped container (works the same way)
+docker cp stopped-container:/var/log/nginx/error.log ./nginx-error.log
+\`\`\`
+
+docker cp does not require exec access or a shell inside the container — it works via the Docker API on the container's filesystem layer.`,
+      },
+      {
+        title: 'Debugging cheatsheet — common failure patterns and diagnostic commands',
+        description: `Symptom: container exits immediately.
+
+\`\`\`bash
+# Check exit code and last status
+docker inspect --format '{{.State.ExitCode}} {{.State.Error}}' myapp
+
+# Check logs before exit
+docker logs myapp
+
+# Run with a shell to override CMD and inspect environment
+docker run -it --entrypoint sh myapp
+docker run -it --entrypoint bash myapp
+\`\`\`
+
+Exit code reference.
+0    — success / clean exit
+1    — general error (app-level)
+126  — permission denied (cannot execute CMD)
+127  — command not found (CMD binary missing in image)
+137  — SIGKILL (OOM kill or docker kill)
+143  — SIGTERM (docker stop grace period elapsed)
+
+Symptom: container running but app not responding.
+
+\`\`\`bash
+# Check if app process is running
+docker exec myapp ps aux
+
+# Check listening ports from inside
+docker exec myapp ss -tlnp
+docker exec myapp netstat -tlnp
+
+# Check network connectivity
+docker exec myapp curl -s http://localhost:8080/health
+docker exec myapp wget -qO- http://other-service:3000/ping
+
+# Check resource limits
+docker stats --no-stream myapp
+\`\`\`
+
+Symptom: container OOM killed.
+
+\`\`\`bash
+# Confirm OOM event
+docker events --filter event=oom --filter container=myapp
+
+# Check memory usage trend
+docker stats --no-stream myapp
+
+# Inspect memory limit
+docker inspect --format '{{.HostConfig.Memory}}' myapp  # 0 = unlimited
+
+# Raise limit
+docker update --memory 512m --memory-swap 512m myapp
+\`\`\`
+
+Symptom: can't connect between containers.
+
+\`\`\`bash
+# List networks both containers are on
+docker inspect --format '{{json .NetworkSettings.Networks}}' myapp | jq .
+
+# Connect a container to a network
+docker network connect mynetwork myapp
+
+# Test DNS resolution between containers
+docker exec myapp ping othercont
+
+# Inspect network membership
+docker network inspect mynetwork
+\`\`\`
+
+Full diagnostic runbook for an unknown failing container.
+
+\`\`\`bash
+# Step 1: status and exit code
+docker inspect --format '{{.State.Status}} exit={{.State.ExitCode}}' myapp
+
+# Step 2: last log lines
+docker logs --tail 100 myapp
+
+# Step 3: resource consumption
+docker stats --no-stream myapp
+
+# Step 4: process list
+docker exec myapp ps aux 2>/dev/null || echo "container not running"
+
+# Step 5: recent Docker events for this container
+docker events --since 30m --filter container=myapp
+
+# Step 6: full metadata dump
+docker inspect myapp | jq '{status: .[0].State, mounts: .[0].Mounts, env: .[0].Config.Env}'
+\`\`\``,
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Debugging and Observability.',
+        description: `Rapid-fire facts.
+
+Q: How do you get a shell into a running container?
+A: docker exec -it <container> sh (or bash). exec shares the container's namespaces — you see its filesystem, network, and processes.
+
+Q: How do you debug a distroless container that has no shell?
+A: Use docker run with --pid=container: and --network=container: to attach a debug container (busybox, nicolaka/netshoot) that shares the target's namespaces. Docker Engine 25+ also provides docker debug for this purpose.
+
+Q: How do you stream container logs live?
+A: docker logs -f <container>. Add --since 10m for recent logs, --tail 50 for last N lines, -t for timestamps.
+
+Q: What does exit code 137 mean?
+A: The container was killed with SIGKILL — either an OOM kill from the kernel or a manual docker kill. Exit code = 128 + signal number. SIGKILL = 9, so 128 + 9 = 137.
+
+Q: How do you detect an OOM kill?
+A: docker events --filter event=oom --filter container=<name>. Also visible in docker inspect as OOMKilled: true.
+
+Q: What does docker inspect return?
+A: Full JSON metadata for a container, image, network, or volume. Key fields: State (status, ExitCode, OOMKilled), NetworkSettings (IP, ports, networks), HostConfig (resource limits, restart policy), Mounts, Config (Env, Cmd, Image).
+
+Q: What is docker diff?
+A: Shows filesystem changes the container made relative to its base image. A = added, C = changed, D = deleted. Useful for security audits and debugging unexpected file writes.
+
+Q: How do you copy a file from a container to the host without exec?
+A: docker cp <container>:<path> <host-path>. Works via the Docker API on the container's filesystem — no shell inside the container required. Works on stopped containers too.
+
+Q: What does docker stats show and how is it different from docker top?
+A: stats shows real-time resource usage (CPU %, memory, net I/O, block I/O) for all running containers. top shows the process list (ps output) inside a single container. stats = container-level; top = process-level.
+
+Q: How do you set log rotation for a container?
+A: docker run --log-opt max-size=10m --log-opt max-file=3 <image>. Keeps up to 3 log files of 10MB each. Configure globally in /etc/docker/daemon.json under log-opts.
+
+These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://docs.docker.com/reference/cli/docker/container/exec/',
+      'https://docs.docker.com/reference/cli/docker/container/logs/',
+      'https://docs.docker.com/reference/cli/docker/container/inspect/',
+      'https://docs.docker.com/reference/cli/docker/system/events/',
+      'https://docs.docker.com/reference/cli/docker/container/stats/',
+    ],
+  },
+
+  {
+    id: 'docker-image-internals',
+    title: 'Docker Image Internals and OCI Spec',
+    icon: 'package',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Docker images are OCI-compliant stacks of content-addressed layer tarballs plus a JSON config and a manifest. Understanding digests vs tags, image indexes for multi-platform, and the registry API explains why docker pull nginx and docker pull nginx@sha256:abc produce different trust guarantees — and how to transfer images to air-gapped environments.',
+    visualizations: [
+      {
+        title: 'OCI image structure — layers, config, manifest, and image index',
+        description: `An OCI image has three components stored in a registry.
+
+1. Layers — tar archives of filesystem changes.
+
+Each layer is a content-addressed tar archive identified by its SHA256 digest. Layers are stored deduplicated across all images in the registry — if two images share the same ubuntu:22.04 base, they share the exact same layer blobs. When you pull an image, only layers not already in the local cache are downloaded.
+
+2. Config — a JSON document describing the container runtime.
+
+\`\`\`json
+{
+  "architecture": "amd64",
+  "os": "linux",
+  "config": {
+    "Env": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],
+    "Cmd": ["/bin/sh"],
+    "WorkingDir": "/app",
+    "ExposedPorts": {"8080/tcp": {}}
+  },
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": ["sha256:abc...", "sha256:def..."]
+  },
+  "history": [...]
+}
+\`\`\`
+
+The config is also content-addressed. Its SHA256 digest is the Image ID you see in docker images.
+
+3. Manifest — a JSON document pointing to the config and layers.
+
+\`\`\`json
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "config": {
+    "mediaType": "application/vnd.oci.image.config.v1+json",
+    "digest": "sha256:abc...",
+    "size": 1234
+  },
+  "layers": [
+    {"mediaType": "application/vnd.oci.image.layer.v1.tar+gzip", "digest": "sha256:111...", "size": 45000000},
+    {"mediaType": "application/vnd.oci.image.layer.v1.tar+gzip", "digest": "sha256:222...", "size": 1234}
+  ]
+}
+\`\`\`
+
+The manifest's SHA256 digest is the image digest — the fully immutable identifier.
+
+4. Image Index (multi-platform) — a manifest of manifests.
+
+\`\`\`json
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.oci.image.index.v1+json",
+  "manifests": [
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:aaa...",
+      "platform": {"os": "linux", "architecture": "amd64"}
+    },
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:bbb...",
+      "platform": {"os": "linux", "architecture": "arm64"}
+    }
+  ]
+}
+\`\`\`
+
+docker pull nginx on an amd64 host fetches the amd64 manifest automatically. docker pull nginx --platform linux/arm64 fetches the arm64 manifest. Both share the same tag; the index routes to the right platform.`,
+      },
+      {
+        title: 'Tags vs digests, layer inspection, and registry API',
+        description: `Tags vs digests — mutable vs immutable.
+
+Tag (mutable reference).
+docker pull nginx:1.27 — the tag "1.27" is a pointer that the registry owner can update. The same tag can point to a different manifest next week. Reproducible builds require pinning by digest.
+
+Digest (immutable reference).
+docker pull nginx@sha256:abc123... — the digest is the SHA256 hash of the manifest JSON. Content-addressed: the digest changes only if the image content changes. Use in production Dockerfiles for reproducible, tamper-proof pulls.
+
+Pin a base image by digest:
+\`\`\`dockerfile
+FROM nginx@sha256:abc123def456...    # immutable — this exact manifest always
+\`\`\`
+
+Get the digest of a local image:
+\`\`\`bash
+docker inspect --format '{{index .RepoDigests 0}}' nginx:1.27
+# nginx@sha256:abc123...
+
+docker images --digests
+# Shows RepoDigest column
+\`\`\`
+
+Pull by digest from a registry:
+\`\`\`bash
+docker pull nginx@sha256:abc123...
+\`\`\`
+
+Inspect image layers without pulling.
+
+\`\`\`bash
+# Using crane (Google's registry CLI)
+crane manifest nginx:1.27             # raw manifest JSON
+crane manifest nginx:1.27 | jq '.layers[].digest'
+
+# Using docker manifest (experimental)
+docker manifest inspect nginx:1.27    # shows the image index + per-platform manifests
+
+# Using skopeo (RedHat)
+skopeo inspect docker://nginx:1.27    # full image metadata, no pull
+skopeo inspect --raw docker://nginx:1.27  # raw manifest JSON
+\`\`\`
+
+Inspect local image layers.
+
+\`\`\`bash
+# Layer history with sizes
+docker history nginx:1.27
+
+# Layer digests
+docker inspect --format '{{json .RootFS.Layers}}' nginx:1.27 | jq .
+
+# Detailed size breakdown
+docker image ls --no-trunc nginx:1.27
+\`\`\`
+
+Registry API v2 — pull and push by hand.
+
+The OCI Distribution Spec defines the HTTP API:
+
+\`\`\`bash
+# List tags
+curl https://registry-1.docker.io/v2/library/nginx/tags/list
+
+# Get manifest by tag (requires auth for Docker Hub)
+TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull" | jq -r .token)
+curl -H "Authorization: Bearer $TOKEN" \\
+     -H "Accept: application/vnd.oci.image.manifest.v1+json" \\
+     https://registry-1.docker.io/v2/library/nginx/manifests/1.27
+
+# Get manifest by digest (immutable)
+curl -H "Authorization: Bearer $TOKEN" \\
+     https://registry-1.docker.io/v2/library/nginx/manifests/sha256:abc123...
+\`\`\``,
+      },
+      {
+        title: 'docker save, docker load, and air-gapped image transfer cheatsheet',
+        description: `docker save — export images to a tar archive.
+
+docker save exports one or more images (including all layers, manifests, and configs) to a tar file. This is the standard way to transfer images to environments without internet access (air-gapped, secure, offline).
+
+\`\`\`bash
+# Save a single image
+docker save nginx:1.27 -o nginx.tar
+
+# Save with multiple tags (all resolved to the same manifest)
+docker save nginx:1.27 nginx:latest -o nginx.tar
+
+# Save multiple images into one archive
+docker save nginx:1.27 postgres:16 redis:7 -o bundle.tar
+
+# Save and compress in one step
+docker save nginx:1.27 | gzip > nginx.tar.gz
+docker save nginx:1.27 | zstd -T0 > nginx.tar.zst   # faster compression
+\`\`\`
+
+docker load — import images from a tar archive.
+
+\`\`\`bash
+# Load from file
+docker load -i nginx.tar
+
+# Load from stdin (pipe from remote)
+cat nginx.tar | docker load
+scp nginx.tar user@airgapped-host: && ssh user@airgapped-host "docker load -i nginx.tar"
+
+# Load compressed
+gunzip -c nginx.tar.gz | docker load
+zstd -d nginx.tar.zst --stdout | docker load
+\`\`\`
+
+After docker load, the image appears in docker images with its original tags.
+
+Transfer workflow for air-gapped environments.
+
+\`\`\`bash
+# On internet-connected machine:
+docker pull nginx:1.27
+docker pull postgres:16-alpine
+docker pull redis:7-alpine
+docker save nginx:1.27 postgres:16-alpine redis:7-alpine | gzip > images.tar.gz
+
+# Transfer the archive (USB, SCP, internal share, etc.)
+scp images.tar.gz admin@airgapped-host:/tmp/
+
+# On air-gapped machine:
+ssh admin@airgapped-host
+cd /tmp
+gunzip -c images.tar.gz | docker load
+docker images  # all three images available
+\`\`\`
+
+Mirror an image between registries (skopeo — no daemon needed).
+
+\`\`\`bash
+# Copy image between registries without pulling locally
+skopeo copy docker://docker.io/library/nginx:1.27 \\
+            docker://internal-registry.corp.com/library/nginx:1.27
+
+# Copy to local directory (OCI format)
+skopeo copy docker://nginx:1.27 oci:./nginx-oci:1.27
+
+# Copy preserving all platforms (multi-arch)
+skopeo copy --all docker://nginx:1.27 \\
+            docker://internal-registry.corp.com/nginx:1.27
+\`\`\`
+
+docker save vs docker export.
+
+docker save exports an image (all layers + manifest + config). docker load restores it.
+docker export exports a running container's filesystem (flat tar, no layers). docker import restores it as a single-layer image.
+Use save/load for production image transfer. export/import flattens the image (loses history, tags, metadata).
+
+Inspect archive contents.
+
+\`\`\`bash
+# List files in the tar
+tar -tvf nginx.tar
+
+# Extract and inspect manifest
+tar -xOf nginx.tar manifest.json | jq .
+
+# Structure inside the tar:
+# manifest.json  — list of images, tags, and layer paths
+# <sha256>.json  — image config for each image
+# <layer-id>/    — directories containing layer.tar for each layer
+\`\`\``,
+      },
+      {
+        title: 'Quick-fire interview answers — Docker Image Internals and OCI Spec.',
+        description: `Rapid-fire facts.
+
+Q: What are the three components of an OCI image?
+A: Layers (content-addressed tar archives of filesystem changes), Config (JSON with architecture, env, entrypoint, layer digests), and Manifest (JSON pointing to config + layers). Multi-platform images add an Image Index (manifest of per-platform manifests).
+
+Q: What is the Image ID shown in docker images?
+A: The SHA256 digest of the image config JSON. Content-addressed — changes only when the config changes.
+
+Q: What is the image digest?
+A: The SHA256 digest of the manifest JSON. Fully immutable identifier. docker pull nginx@sha256:abc always pulls the exact same manifest.
+
+Q: What is the difference between a tag and a digest?
+A: A tag (nginx:1.27) is a mutable pointer — the registry owner can update it to a new manifest. A digest (nginx@sha256:abc) is immutable — it always refers to exactly one manifest. Use digests in production Dockerfiles for reproducible builds.
+
+Q: What is an image index?
+A: An OCI manifest-of-manifests that points to per-platform manifests. Enables multi-platform images — docker pull nginx resolves to the correct amd64/arm64/etc. manifest for your host automatically.
+
+Q: How do layers get deduplicated?
+A: Layers are stored by their SHA256 digest in the registry and locally. Multiple images sharing the same base layer store only one copy. docker pull skips layers already in the local cache.
+
+Q: What does docker save do and when would you use it?
+A: Exports images (all layers, manifests, configs) to a tar archive. Use for transferring images to air-gapped environments without internet access. docker load restores from the tar.
+
+Q: What is the difference between docker save and docker export?
+A: save exports an image (layered, with full history and metadata). export exports a container's flattened filesystem as a single-layer tar with no history. Use save/load for production image transfer.
+
+Q: How do you inspect a remote image without pulling it?
+A: docker manifest inspect <image> or skopeo inspect docker://<image>. Both use the registry API to fetch manifest/config metadata without downloading layer blobs.
+
+Q: How do you pin a base image to an immutable reference?
+A: Use the digest in the FROM instruction: FROM nginx@sha256:abc123... This guarantees the exact same image on every build regardless of tag mutations.
+
+These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+    ],
+    references: [
+      'https://github.com/opencontainers/image-spec',
+      'https://github.com/opencontainers/distribution-spec',
+      'https://docs.docker.com/reference/cli/docker/image/save/',
+      'https://github.com/google/go-containerregistry/tree/main/cmd/crane',
+      'https://github.com/containers/skopeo',
+      'https://labs.iximiuz.com/tutorials/container-images-internals',
     ],
   },
 
