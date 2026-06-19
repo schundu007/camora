@@ -10,8 +10,13 @@ export function usePageTracker() {
   const lastTracked = useRef('');
 
   useEffect(() => {
-    // Avoid duplicate tracking for the same path in the same session
+    // Avoid duplicate tracking: same path regardless of which dep changed.
+    // user?.email is a dep so the pageview carries the email once auth
+    // resolves, but if pathname hasn't changed we've already tracked it.
     if (pathname === lastTracked.current) return;
+    // Wait until auth has resolved before tracking so the email is included.
+    // Effect re-fires when user?.email changes from null → value.
+    if (user?.email == null) return;
     lastTracked.current = pathname;
 
     // Fire-and-forget analytics. We deliberately avoid Content-Type:

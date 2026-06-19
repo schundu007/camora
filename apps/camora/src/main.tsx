@@ -15,8 +15,15 @@ import { bootstrapTheme } from './hooks/useTheme';
 bootstrapTheme();
 
 // Vite fires this when a lazy import chunk 404s (stale HTML after deploy).
-// Reloading fetches fresh index.html + correct chunk hashes.
+// Guard: only reload once per tab session — prevents an infinite reload loop
+// if the chunk consistently fails (broken asset, SW serving stale HTML, etc.).
 window.addEventListener('vite:preloadError', () => {
+  const RELOAD_KEY = 'vite_preload_reload';
+  if (sessionStorage.getItem(RELOAD_KEY)) {
+    sessionStorage.removeItem(RELOAD_KEY);
+    return;
+  }
+  sessionStorage.setItem(RELOAD_KEY, '1');
   window.location.reload();
 });
 
