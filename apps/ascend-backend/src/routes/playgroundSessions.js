@@ -53,6 +53,7 @@ playgroundSessionsRouter.post('/', async (req, res) => {
       nodes: result.nodes
         ? result.nodes.map(n => ({ ...n, wsUrl: buildNodeWsUrl(result.sessionId, n.nodeIndex) }))
         : null,
+      radar_port: result.radar_port || null,
     });
   } catch (err) {
     if (err.code === 'ENV_NOT_ALLOWED') return res.status(403).json({ error: 'Environment not available on free tier' });

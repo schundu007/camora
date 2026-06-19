@@ -68,6 +68,7 @@ export async function createSession({ userId, userEmail, environment, scenarioId
       nodes: clusterNodes,
       expiresAt,
       environment,
+      radar_port: radarPort,
     };
   }
 
@@ -83,6 +84,7 @@ export async function createSession({ userId, userEmail, environment, scenarioId
     host,
     port: ttydPort,
     codeServerPort,
+    radar_port: radarPort,
   };
 }
 
