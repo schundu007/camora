@@ -140,8 +140,12 @@ app.use('/pg-ide', async (req, res) => {
       }
       delete headers['content-security-policy'];
       delete headers['x-frame-options'];
+      delete headers['cross-origin-resource-policy'];
+      delete headers['x-content-type-options'];
       res.removeHeader('Content-Security-Policy');
       res.removeHeader('X-Frame-Options');
+      res.removeHeader('Cross-Origin-Resource-Policy');
+      res.removeHeader('X-Content-Type-Options');
       headers['content-security-policy'] = `default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors ${FRAME_ORIGINS}`;
       if (!res.headersSent) {
         res.writeHead(proxyRes.statusCode, headers);
