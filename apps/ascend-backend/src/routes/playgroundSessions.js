@@ -6,8 +6,14 @@ import {
   extendSession,
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
-import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
+import { getSession, getSessionHistory, updateSessionStatus, markRadarReady } from '../services/playground/sessionStore.js';
 import { execScriptInContainerStream } from '../services/playground/nomadClient.js';
+import { query } from '../config/database.js';
+
+function isOwner(email) {
+  const owners = (process.env.OWNER_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  return owners.includes((email || '').toLowerCase());
+}
 
 export const playgroundSessionsRouter = Router();
 
@@ -57,6 +63,59 @@ playgroundSessionsRouter.post('/', async (req, res) => {
   }
 });
 
+playgroundSessionsRouter.get('/metrics', async (req, res) => {
+  if (!isOwner(req.user?.email)) return res.status(403).json({ error: 'Admin only' });
+  const win = req.query.window === '30d' ? 30 : 7;
+  try {
+    const [successRow, latencyRow, activeRow, extensionRow, dailyRow, envRow, errorRow] = await Promise.all([
+      query(`SELECT COUNT(*) FILTER (WHERE status IN ('ready','active','destroyed')) AS total, COUNT(*) FILTER (WHERE became_ready_at IS NOT NULL) AS succeeded FROM playground_sessions WHERE created_at >= NOW() - INTERVAL '${win} days'`),
+      query(`SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (became_ready_at - created_at))) AS p50, percentile_cont(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (became_ready_at - created_at))) AS p95 FROM playground_sessions WHERE became_ready_at IS NOT NULL AND created_at >= NOW() - INTERVAL '${win} days'`),
+      query(`SELECT COUNT(*) AS count FROM playground_sessions WHERE status IN ('provisioning','ready','active')`),
+      query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE extended = true) AS extended FROM playground_sessions WHERE created_at >= NOW() - INTERVAL '${win} days'`),
+      query(`SELECT DATE_TRUNC('day', created_at)::date AS date, COUNT(*) AS count FROM playground_sessions WHERE created_at >= NOW() - INTERVAL '${win} days' GROUP BY 1 ORDER BY 1`),
+      query(`SELECT environment, COUNT(*) AS count FROM playground_sessions WHERE created_at >= NOW() - INTERVAL '${win} days' GROUP BY environment`),
+      query(`SELECT status, COUNT(*) AS count FROM playground_sessions WHERE status IN ('error','timeout') AND created_at >= NOW() - INTERVAL '${win} days' GROUP BY status`),
+    ]);
+    const total = parseInt(successRow.rows[0]?.total || 0, 10);
+    const succeeded = parseInt(successRow.rows[0]?.succeeded || 0, 10);
+    const extTotal = parseInt(extensionRow.rows[0]?.total || 0, 10);
+    const extExtended = parseInt(extensionRow.rows[0]?.extended || 0, 10);
+    return res.json({
+      successRate: total > 0 ? Math.round((succeeded / total) * 1000) / 1000 : null,
+      bootP50: latencyRow.rows[0]?.p50 != null ? Math.round(latencyRow.rows[0].p50) : null,
+      bootP95: latencyRow.rows[0]?.p95 != null ? Math.round(latencyRow.rows[0].p95) : null,
+      activeCount: parseInt(activeRow.rows[0]?.count || 0, 10),
+      extensionRate: extTotal > 0 ? Math.round((extExtended / extTotal) * 1000) / 1000 : null,
+      dailyVolume: dailyRow.rows.map(r => ({ date: r.date, count: parseInt(r.count, 10) })),
+      environmentBreakdown: Object.fromEntries(envRow.rows.map(r => [r.environment, parseInt(r.count, 10)])),
+      errorBreakdown: Object.fromEntries(errorRow.rows.map(r => [r.status, parseInt(r.count, 10)])),
+    });
+  } catch (err) {
+    console.error('[PlaygroundSessions] metrics error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch metrics' });
+  }
+});
+
+playgroundSessionsRouter.get('/my-stats', async (req, res) => {
+  try {
+    const [totalsRow, favRow] = await Promise.all([
+      query(`SELECT COUNT(*) AS total_sessions, ROUND(SUM(EXTRACT(EPOCH FROM (COALESCE(destroyed_at, NOW()) - created_at)) / 60)::numeric, 0) AS total_minutes, COUNT(*) FILTER (WHERE became_ready_at IS NOT NULL)::float / NULLIF(COUNT(*), 0) AS success_rate, MAX(created_at) AS last_active FROM playground_sessions WHERE user_id = $1`, [req.user.id]),
+      query(`SELECT environment, COUNT(*) AS count FROM playground_sessions WHERE user_id = $1 GROUP BY environment ORDER BY count DESC LIMIT 1`, [req.user.id]),
+    ]);
+    const row = totalsRow.rows[0] || {};
+    return res.json({
+      totalSessions: parseInt(row.total_sessions || 0, 10),
+      totalMinutes: parseInt(row.total_minutes || 0, 10),
+      favoriteEnvironment: favRow.rows[0]?.environment || null,
+      successRate: row.success_rate != null ? Math.round(parseFloat(row.success_rate) * 1000) / 1000 : null,
+      lastActive: row.last_active || null,
+    });
+  } catch (err) {
+    console.error('[PlaygroundSessions] my-stats error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
 playgroundSessionsRouter.get('/history', async (req, res) => {
   try {
     const history = await getSessionHistory(req.user.id);
@@ -83,6 +142,26 @@ async function pollUntilReady(host, port, abortSignal, deadlineMs) {
   }
   return false;
 }
+
+const K8S_ENVS_SET = new Set(['k8s-single', 'k8s-multi', 'k8s-etcd']);
+
+playgroundSessionsRouter.get('/:id/radar-status', async (req, res) => {
+  try {
+    await checkSessionOwner(req.params.id, req.user.id);
+    const session = await getSession(req.params.id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    const radarAvailable = K8S_ENVS_SET.has(session.environment) && !!session.radar_port;
+    const radarReady = radarAvailable && !!session.radar_ready;
+    return res.json({
+      radarAvailable,
+      radarReady,
+      radarUrl: radarAvailable ? `/pg-radar?_s=${session.id}` : null,
+    });
+  } catch (err) {
+    console.error('[PlaygroundSessions] radar-status error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch radar status' });
+  }
+});
 
 playgroundSessionsRouter.get('/:id/events', async (req, res) => {
   try {
