@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
+import { usePlaygroundMetrics } from '@/hooks/usePlaygroundMetrics';
 import { useDialog } from '@/components/shared/Dialog';
 import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
@@ -40,6 +41,7 @@ export default function PlaygroundShell() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [restoringId, setRestoringId] = useState(null);
+  const { stats, loading: statsLoading, fetchStats } = usePlaygroundMetrics();
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
@@ -190,6 +192,15 @@ export default function PlaygroundShell() {
             {radarUrl && (
               <TabButton active={activeTab === 'radar'} onClick={() => setActiveTab('radar')} label="Radar" icon="◎" />
             )}
+            <TabButton
+              active={activeTab === 'stats'}
+              onClick={() => {
+                setActiveTab('stats');
+                if (!stats && !statsLoading) fetchStats();
+              }}
+              label="Stats"
+              icon="▦"
+            />
             <div style={{ flex: 1 }} />
             {/* Controls */}
             {activeTab === 'terminal' && [['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
@@ -243,6 +254,30 @@ export default function PlaygroundShell() {
                     <RadarPane radarUrl={radarUrl} />
                   </div>
                 )}
+                {/* Stats pane */}
+                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'stats' ? 'block' : 'none', overflowY: 'auto', background: '#0d1117', padding: 24 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Your Session Stats</p>
+                  {statsLoading && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Loading stats…</p>}
+                  {!statsLoading && stats && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                      {[
+                        { label: 'Total Sessions', value: stats.totalSessions ?? '—' },
+                        { label: 'Total Time', value: stats.totalMinutes != null ? `${stats.totalMinutes}m` : '—' },
+                        { label: 'Favorite Env', value: stats.favoriteEnvironment ?? '—' },
+                        { label: 'Success Rate', value: stats.successRate != null ? `${Math.round(stats.successRate * 100)}%` : '—' },
+                        { label: 'Last Active', value: stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : '—' },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="chip" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+                          <span style={{ fontSize: 15, fontWeight: 600 }}>{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!statsLoading && !stats && (
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>No stats available yet.</p>
+                  )}
+                </div>
               </>
             )}
           </div>
