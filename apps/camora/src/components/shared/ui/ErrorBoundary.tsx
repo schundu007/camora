@@ -23,6 +23,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.props.onError?.(error, errorInfo);
+    // Stale chunk after deploy — old index.html references hashes that no
+    // longer exist. A hard reload fetches fresh HTML + new chunks.
+    if (
+      error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.message?.includes('Importing a module script failed') ||
+      error?.name === 'ChunkLoadError'
+    ) {
+      window.location.reload();
+    }
   }
 
   render() {

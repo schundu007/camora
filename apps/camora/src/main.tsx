@@ -14,6 +14,12 @@ import { bootstrapTheme } from './hooks/useTheme';
 // page never flashes the wrong substrate.
 bootstrapTheme();
 
+// Vite fires this when a lazy import chunk 404s (stale HTML after deploy).
+// Reloading fetches fresh index.html + correct chunk hashes.
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload();
+});
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
