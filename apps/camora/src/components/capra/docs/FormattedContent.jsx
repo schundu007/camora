@@ -1,6 +1,18 @@
 import DocsCallout from '../../shared/docs/DocsCallout';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter';
 
+// Common English sentence starters excluded from the "Term. Definition" detector.
+// Technical terms (Pod, Deployment, ConfigMap, etc.) are intentionally absent.
+const TERM_DEF_STARTERS_EXCLUDED = new Set([
+  'The', 'A', 'An', 'This', 'These', 'Those', 'It', 'They', 'We', 'I', 'You', 'He', 'She',
+  'In', 'On', 'At', 'For', 'If', 'When', 'Since', 'Also', 'Both', 'Each', 'Every',
+  'All', 'Some', 'Most', 'Many', 'Any', 'No', 'Not', 'Now', 'Then', 'After', 'Before',
+  'While', 'Because', 'Although', 'However', 'Therefore', 'Thus', 'Hence',
+  'First', 'Second', 'Third', 'Finally', 'Next', 'Last', 'To', 'By', 'Here', 'There',
+  'See', 'As', 'With', 'Without', 'From', 'Into', 'Over', 'Under', 'Between', 'Among',
+  'Through', 'Note', 'Unlike', 'Like', 'Where', 'How', 'Why', 'What', 'Which', 'Who',
+]);
+
 export default function FormattedContent({ content, inline = false }) {
   // Translate AWS service names to Azure/GCP equivalents for the chosen
   // cloud BEFORE parsing into blocks. The formatter skips fenced code so
@@ -218,6 +230,7 @@ export default function FormattedContent({ content, inline = false }) {
       let currentCliGroup = [];
       let currentStructuredGroup = [];
       let currentShellGroup = [];
+      let currentTermDefGroup = [];
       let listKeyCounter = 0;
 
       const flushStructuredGroup = () => {
@@ -361,7 +374,33 @@ export default function FormattedContent({ content, inline = false }) {
         currentCliGroup = [];
       };
 
-      const flushAll = () => { flushList(); flushNumberedList(); flushCliGroup(); flushStructuredGroup(); flushShellGroup(); };
+      // Flush accumulated "Term. Definition" entries as a styled definition list.
+      // Groups of consecutive entries share one <dl>; lone entries still get the visual treatment.
+      const flushTermDefGroup = () => {
+        if (currentTermDefGroup.length === 0) return;
+        const entries = currentTermDefGroup.slice();
+        currentSection.body.push(
+          <dl key={`td-${blockIdx}-${listKeyCounter++}`} className="my-4 space-y-3">
+            {entries.map((entry, i) => (
+              <div
+                key={i}
+                className="pl-4"
+                style={{ borderLeft: '2px solid color-mix(in oklab, var(--accent) 40%, transparent)' }}
+              >
+                <dt className="font-semibold text-[var(--text-primary)] text-[15px] leading-tight landing-display mb-1">
+                  {entry.term}
+                </dt>
+                <dd className="text-[var(--text-secondary)] text-[14px] leading-[1.65] landing-body m-0">
+                  {formatInlineText(entry.definition)}
+                </dd>
+              </div>
+            ))}
+          </dl>,
+        );
+        currentTermDefGroup = [];
+      };
+
+      const flushAll = () => { flushList(); flushNumberedList(); flushCliGroup(); flushStructuredGroup(); flushShellGroup(); flushTermDefGroup(); };
 
       // Detect CLI reference line patterns. Returns { cmd, desc } or null.
       // A: Flag rows  — "-d   detach" / "--name <n>   assign a name..."
@@ -585,6 +624,29 @@ export default function FormattedContent({ content, inline = false }) {
           flushList(); flushStructuredGroup(); flushShellGroup();
           currentCliGroup.push(cliRow);
           return;
+        }
+
+        // "Term. Definition sentence." pattern — catches K8s/DevOps glossary-style entries like
+        // "Pod. The smallest schedulable unit..." where the term has no bold/colon marker.
+        // Conditions: term ≤ 50 chars, starts uppercase, ≤ 5 words, no comma, not a
+        // common English sentence starter, definition ≥ 20 chars.
+        const termPeriodIdx = trimmed.indexOf('. ');
+        if (termPeriodIdx > 1 && termPeriodIdx < 50) {
+          const possibleTerm = trimmed.substring(0, termPeriodIdx);
+          const termDefinition = trimmed.substring(termPeriodIdx + 2);
+          const termFirstWord = possibleTerm.split(/[\s(]/)[0];
+          const termWordCount = possibleTerm.trim().split(/\s+/).length;
+          if (
+            termDefinition.length >= 20 &&
+            /^[A-Z]/.test(possibleTerm) &&
+            termWordCount <= 5 &&
+            !possibleTerm.includes(',') &&
+            !TERM_DEF_STARTERS_EXCLUDED.has(termFirstWord)
+          ) {
+            flushList(); flushNumberedList(); flushCliGroup(); flushStructuredGroup(); flushShellGroup();
+            currentTermDefGroup.push({ term: possibleTerm, definition: termDefinition });
+            return;
+          }
         }
 
         // Plain prose paragraph — flush any pending groups first.
