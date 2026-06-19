@@ -280,6 +280,7 @@ export function usePlaygroundSession() {
         expiresAt: data.expiresAt,
         isCluster: data.isCluster || false,
         nodes: data.nodes || null,
+        radar_port: data.radar_port || null,
       };
       setSession(newSession);
       setStatus('booting');
@@ -291,6 +292,10 @@ export function usePlaygroundSession() {
         const remaining = Math.max(0, Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000));
         setTimeRemaining(remaining);
         startTick(data.expiresAt);
+        // Re-fetch once to pick up radar_port after Radar finishes starting
+        apiFetch(`/api/v1/playground/sessions/${data.sessionId}`).then(r => r.ok ? r.json() : null).then(d => {
+          if (d && mountedRef.current) setSession(prev => prev ? { ...prev, ...d } : d);
+        }).catch(() => {});
         startPolling(data.sessionId, data.expiresAt);
       });
     } catch (err) {
