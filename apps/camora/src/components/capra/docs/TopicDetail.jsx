@@ -2751,6 +2751,7 @@ export default function TopicDetail({
         if (topicDetails.pitfalls?.length)                                      agenda.push({ id: 'pitfalls',     label: 'Common Pitfalls' });
         if (topicDetails.keyQuestions?.length)                                  agenda.push({ id: 'key-questions',label: 'Questions & Answers' });
         if (topicDetails.references?.length)                                    agenda.push({ id: 'references',   label: 'References' });
+        if (topicDetails.video?.embedUrl)                                       agenda.push({ id: 'video',        label: 'Video Overview' });
 
         const slideNum = (id) => String(agenda.findIndex(a => a.id === id) + 1).padStart(2, '0');
 
@@ -3019,6 +3020,29 @@ export default function TopicDetail({
                   );
                 })}
               </div>
+            </section>
+          )}
+
+          {topicDetails.video?.embedUrl && (
+            <section id="video" className="scroll-mt-24">
+              <ContentHeading title={topicDetails.video.title || 'Video Overview'} />
+              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 10, overflow: 'hidden', marginTop: 12 }}>
+                <iframe
+                  src={topicDetails.video.embedUrl}
+                  title={topicDetails.video.title || 'Video'}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              {topicDetails.video.courtesy && (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                  {'Courtesy: '}
+                  <a href={topicDetails.video.courtesyUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                    {topicDetails.video.courtesy}
+                  </a>
+                </p>
+              )}
             </section>
           )}
 
