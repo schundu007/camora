@@ -1,5 +1,75 @@
+import { useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import DocsCallout from '../../shared/docs/DocsCallout';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter';
+
+const LANG_MAP = {
+  bash: 'bash', shell: 'bash', sh: 'bash', zsh: 'bash',
+  yaml: 'yaml', yml: 'yaml',
+  json: 'json',
+  python: 'python', py: 'python',
+  javascript: 'javascript', js: 'javascript',
+  typescript: 'typescript', ts: 'typescript',
+  go: 'go',
+  sql: 'sql',
+  dockerfile: 'docker', docker: 'docker',
+  terraform: 'hcl', hcl: 'hcl', tf: 'hcl',
+  toml: 'toml',
+  xml: 'markup', html: 'markup',
+  css: 'css',
+  nginx: 'nginx',
+  rust: 'rust',
+  java: 'java',
+  cpp: 'cpp', 'c++': 'cpp',
+  c: 'c',
+  ruby: 'ruby', rb: 'ruby',
+  php: 'php',
+  kotlin: 'kotlin',
+  swift: 'swift',
+  code: 'text', text: 'text',
+};
+
+const codeTheme = {
+  ...oneDark,
+  'pre[class*="language-"]': {
+    ...oneDark['pre[class*="language-"]'],
+    background: '#0d1117',
+    margin: 0,
+    padding: '14px 16px',
+    fontSize: '12.5px',
+    lineHeight: '1.6',
+    borderRadius: 0,
+  },
+  'code[class*="language-"]': {
+    ...oneDark['code[class*="language-"]'],
+    background: 'transparent',
+    fontSize: '12.5px',
+  },
+};
+
+const CodeBlock = ({ code, lang, blockKey }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const prismLang = LANG_MAP[(lang || '').toLowerCase()] || 'text';
+  return (
+    <div key={blockKey} className="prep-code-block">
+      <div className="prep-code-header">
+        <span className="prep-code-lang">{lang || 'code'}</span>
+        <button className="prep-code-copy" onClick={handleCopy}>
+          {copied ? 'copied' : 'copy'}
+        </button>
+      </div>
+      <SyntaxHighlighter language={prismLang} style={codeTheme} wrapLongLines={false}>
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
 
 // Common English sentence starters excluded from the "Term. Definition" detector.
 // Technical terms (Pod, Deployment, ConfigMap, etc.) are intentionally absent.
@@ -201,14 +271,7 @@ export default function FormattedContent({ content, inline = false }) {
   blocks.forEach((block, blockIdx) => {
     if (block.type === 'code') {
       pushBody(
-        <div key={`code-${blockIdx}`} className="prep-code-block">
-          {block.lang && block.lang !== 'code' && (
-            <div className="prep-code-lang">{block.lang}</div>
-          )}
-          <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
-            {block.lines.join('\n')}
-          </pre>
-        </div>,
+        <CodeBlock key={`code-${blockIdx}`} code={block.lines.join('\n')} lang={block.lang || 'code'} />,
       );
     } else if (block.type === 'diagram') {
       pushBody(
@@ -238,12 +301,7 @@ export default function FormattedContent({ content, inline = false }) {
         const rows = currentStructuredGroup.slice();
         const lang = rows.some(l => l.trimStart().startsWith('"') || l.includes('": ')) ? 'json' : 'yaml';
         currentSection.body.push(
-          <div key={`struct-${blockIdx}-${listKeyCounter++}`} className="prep-code-block">
-            <div className="prep-code-lang">{lang}</div>
-            <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
-              {rows.join('\n')}
-            </pre>
-          </div>,
+          <CodeBlock key={`struct-${blockIdx}-${listKeyCounter++}`} code={rows.join('\n')} lang={lang} />,
         );
         currentStructuredGroup = [];
       };
@@ -252,12 +310,7 @@ export default function FormattedContent({ content, inline = false }) {
         if (currentShellGroup.length === 0) return;
         const rows = currentShellGroup.slice();
         currentSection.body.push(
-          <div key={`shell-${blockIdx}-${listKeyCounter++}`} className="prep-code-block">
-            <div className="prep-code-lang">bash</div>
-            <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
-              {rows.join('\n')}
-            </pre>
-          </div>,
+          <CodeBlock key={`shell-${blockIdx}-${listKeyCounter++}`} code={rows.join('\n')} lang="bash" />,
         );
         currentShellGroup = [];
       };
