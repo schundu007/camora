@@ -10,6 +10,7 @@ import { query, closePool } from './lib/db.js';
 import { initRedis, cacheDel } from './services/redis.js';
 import { playgroundRouter } from './routes/playground.js';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
+import { playgroundSavesRouter } from './routes/playgroundSaves.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { createTtydProxy } from './services/playground/wsProxy.js';
 import { getSession } from './services/playground/sessionStore.js';
@@ -71,6 +72,7 @@ async function jwtAuth(req, res, next) {
 
 app.use('/api/v1/playground', jwtAuth, playgroundLimiter, playgroundRouter);
 app.use('/api/v1/playground/sessions', jwtAuth, playgroundSessionsRouter);
+app.use('/api/v1/playground/saves', jwtAuth, playgroundSavesRouter);
 
 function tryParseToken(token) {
   try { return verifyToken(token); } catch { return null; }
@@ -165,6 +167,17 @@ async function runMigrations() {
       tests_code TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
+    await query(`CREATE TABLE IF NOT EXISTS playground_saved_vms (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          INTEGER NOT NULL REFERENCES users(id),
+  name             TEXT NOT NULL,
+  environment      TEXT NOT NULL,
+  r2_key           TEXT NOT NULL,
+  size_bytes       BIGINT DEFAULT 0,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  last_restored_at TIMESTAMPTZ
+)`);
+    await query('CREATE INDEX IF NOT EXISTS idx_saved_vms_user ON playground_saved_vms(user_id)');
     console.log('[Migrations] playground tables ensured');
   } catch (e) {
     console.warn('[Migrations] failed:', e.message);
