@@ -24,3 +24,18 @@ RUN chmod +x /start.sh
 
 EXPOSE 7681 8080
 CMD ["/start.sh"]
+
+# learner user (non-root, passwordless sudo)
+RUN useradd -m -s /bin/bash learner && \
+    echo 'learner ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    mkdir -p /home/learner/.kube /home/learner/labs/etcd
+
+COPY labs/etcd/ /home/learner/labs/etcd/
+RUN chmod +x /home/learner/labs/etcd/*.sh && \
+    chown -R learner:learner /home/learner
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 7681 8080
+CMD ["/start.sh"]
