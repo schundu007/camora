@@ -42,7 +42,7 @@ ETCD_PID=$!
 # ---------------------------------------------------------------------------
 # 4. Start code-server in background
 # ---------------------------------------------------------------------------
-code-server \
+sudo -u learner code-server \
   --bind-addr 0.0.0.0:8080 \
   --auth none \
   /home/learner \
@@ -74,4 +74,4 @@ exec ttyd \
   --port 7681 \
   --interface 0.0.0.0 \
   --writable \
-  bash
+  su - learner
