@@ -46,7 +46,7 @@ ETCD_PID=$!
 mkdir -p /home/learner/.local/share/code-server/User
 cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
-  "terminal.integrated.hideOnStartup": "always",
+  "terminal.integrated.enabled": false,
   "workbench.startupEditor": "none"
 }
 VSCODE_SETTINGS
