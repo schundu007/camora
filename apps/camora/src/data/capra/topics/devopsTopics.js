@@ -132,6 +132,10 @@ export const devopsTopicCategoryMap = {
   'kubernetes-runtime-class':       'orchestration',
   'kubernetes-native-sidecars':     'orchestration',
   'kubeadm-provisioning':           'orchestration',
+  'kubectl-cli-reference':          'orchestration',
+  'container-probes':               'orchestration',
+  'kubernetes-app-troubleshooting': 'orchestration',
+  'local-kubernetes-setup':         'orchestration',
   // Observability — foundation → metrics → logs → traces → APM → SLOs → advanced
   'opentelemetry-fundamentals':     'observability',
   'prometheus-grafana-stack':       'observability',
@@ -186,6 +190,34 @@ export const devopsTopicCategoryMap = {
   'aiops-roi-maturity':             'aiops',
   // Coding Challenges
   'devops-coding-challenges':       'challenges',
+  // Linux fundamentals (labex.io gaps)
+  'linux-user-group-management':    'foundations',
+  'linux-file-permissions':         'foundations',
+  'linux-package-management':       'foundations',
+  'linux-text-processing':          'foundations',
+  'bash-conditionals-loops':        'foundations',
+  'bash-functions-variables':       'foundations',
+  'linux-boot-process':             'foundations',
+  'linux-disk-partitioning':        'foundations',
+  'linux-process-scheduling':       'foundations',
+  'linux-cron-scheduling':          'foundations',
+  'linux-security-hardening':       'devsecops',
+  'selinux-apparmor':               'devsecops',
+  'ssh-certificate-auth':           'devsecops',
+  // Git advanced (labex.io gaps)
+  'git-merge-conflict-resolution':  'cicd',
+  'git-interactive-rebase':         'cicd',
+  'git-fixup-autosquash':           'cicd',
+  'git-changing-commit-author':     'cicd',
+  'git-commit-message-template':    'cicd',
+  'git-configure-line-endings':     'cicd',
+  'git-moving-commits-branch':      'cicd',
+  'git-purging-history':            'cicd',
+  'github-actions-for-beginners':   'cicdtools',
+  // CI/CD host-level (labex.io gaps)
+  'linux-host-security-devsecops':  'devsecops',
+  'bash-system-monitoring-scripts': 'foundations',
+  'ansible-rhel-rh294':             'config',
 };
 
 // Topic content lives below — each topic uses the same schema as SRE topics:
@@ -16342,6 +16374,103 @@ A: -p 127.0.0.1:8080:8080. Without specifying the host IP, Docker binds to 0.0.0
 Q: What does docker inspect show that docker stats does not?
 A: Static configuration: mounts, environment variables, network config, labels, restart policy, image digest, port bindings. Stats shows live runtime metrics: CPU%, memory usage, network and block I/O rates.`,
       },
+      {
+        title: 'Lesser-known CLI commands — attach, create, port, search, login, version, info',
+        description: `docker attach — connect stdio to a running container.
+
+docker attach <name>
+  Connects your terminal's stdin/stdout/stderr to a running container's PID 1 I/O streams.
+  Unlike docker exec (which spawns a NEW process inside the container), attach connects to the
+  process that is ALREADY running as PID 1.
+
+  Key difference:
+    docker exec -it myapp sh   → opens a NEW shell process inside the container
+    docker attach myapp        → connects to the EXISTING PID 1 process directly
+
+  Detach without stopping the container: Ctrl+P then Ctrl+Q (the default detach key sequence).
+  Press Enter to trigger if the container is waiting for input.
+  WARNING: if PID 1 exits after you attach, the container stops.
+
+docker create — allocate without starting.
+
+docker create [options] <image>
+  Allocates a writable layer and assigns a container ID but does NOT start the process.
+  The container transitions to the 'created' state.
+
+  Use cases:
+    1. Pre-pull images and create containers in advance; start them exactly when needed.
+    2. Copy files into a container before first start (docker cp works on created containers).
+    3. Inspect the container's configuration before running it.
+
+  docker create --name myapp -p 8080:8080 myimage   # create without starting
+  docker cp ./config.yaml myapp:/app/config.yaml     # copy files in (container not running)
+  docker start myapp                                  # now start it
+
+docker port — list host-port mappings.
+
+docker port <name>
+  Prints the host-side port bindings for a running container.
+  Equivalent to the NetworkSettings.Ports section of docker inspect, but much more readable.
+
+  docker port myapp               # all port mappings
+  docker port myapp 8080/tcp      # specific container port
+  Output: 0.0.0.0:32768 or 127.0.0.1:8080
+
+docker search — query Docker Hub from the CLI.
+
+docker search <term>
+  Searches Docker Hub and returns: NAME, DESCRIPTION, STARS, OFFICIAL, AUTOMATED columns.
+  Does NOT pull anything. Useful for discovering images without opening a browser.
+
+  docker search nginx --limit 10
+  docker search nginx --filter is-official=true
+  docker search redis --filter stars=100
+
+  OFFICIAL column: images curated and maintained by Docker or the upstream vendor.
+  AUTOMATED column: built from a public Dockerfile via Docker Hub automated builds (legacy).
+
+docker login / docker logout — credential management.
+
+docker login [registry]
+  Prompts for username + password (or reads from --password-stdin).
+  Credentials are stored by the configured credential helper:
+    macOS:  docker-credential-desktop (Keychain) specified in ~/.docker/config.json credsStore
+    Linux:  ~/.docker/config.json auths section (base64-encoded, NOT encrypted) by default
+            Use docker-credential-secretservice or pass for encrypted storage on Linux.
+
+  docker login                              # Docker Hub (docker.io)
+  docker login ghcr.io                      # GitHub Container Registry
+  docker login 123.dkr.ecr.us-east-1.amazonaws.com  # AWS ECR
+
+docker logout [registry]
+  Removes credentials from the configured credential store / ~/.docker/config.json.
+  Always run docker logout in CI after pushing to prevent credential leaks if the
+  runner's workspace is reused.
+
+docker version — client and daemon API version.
+
+docker version
+  Shows client version, server (daemon) version, Go version, OS/arch, and the API version
+  negotiated between client and server. Useful for troubleshooting version mismatch errors.
+
+  The API version matters: a newer client talking to an older daemon falls back to the
+  daemon's max supported API version. Some features (BuildKit, native sidecars build arg)
+  require minimum API versions.
+
+docker info — full daemon configuration snapshot.
+
+docker info
+  Displays the complete daemon configuration: storage driver, cgroup driver, logging driver,
+  runtimes, number of containers (running/paused/stopped), images, kernel version,
+  operating system, total memory, CPUs, Docker root dir, registry mirrors, and more.
+
+  Key fields to check in troubleshooting:
+    Cgroup Driver: cgroupfs vs systemd (must match kubelet in k8s setups)
+    Storage Driver: overlay2 (correct) vs devicemapper (legacy, avoid)
+    Logging Driver: json-file (default) vs journald/fluentd
+    Registry: https://index.docker.io/v1/ (default) — shows configured mirrors
+    WARNING: No swap limit support — host kernel lacks swap accounting (memory-swap limits ignored)`,
+      },
     ],
     references: [
       'https://docs.docker.com/reference/cli/docker/container/run/',
@@ -17101,6 +17230,86 @@ A: GHCR: free for public, free for private with GitHub Actions, tied to GitHub o
 
 These are answers a container-registry-fluent engineer should give without preparation.`,
       },
+      {
+        title: 'Local Docker Registry (registry:2) — air-gapped and CI mirror workflows',
+        description: `Running a local Docker registry uses the official registry:2 image, which implements the OCI Distribution Spec.
+
+Start a local registry:
+
+\`\`\`bash
+docker run -d -p 5000:5000 --name registry --restart unless-stopped registry:2
+\`\`\`
+
+This exposes a plain HTTP registry at localhost:5000. Docker clients treat localhost as an
+insecure registry by default — no TLS configuration needed for local-only use.
+
+Push and pull images to the local registry:
+
+\`\`\`bash
+# Tag an existing image with the local registry address
+docker tag myimage:latest localhost:5000/myimage:latest
+
+# Push to local registry
+docker push localhost:5000/myimage:latest
+
+# Pull from local registry (on any machine that can reach the host)
+docker pull localhost:5000/myimage:latest
+
+# Verify what's stored
+curl http://localhost:5000/v2/_catalog
+curl http://localhost:5000/v2/myimage/tags/list
+\`\`\`
+
+Use cases:
+
+1. Air-gapped environments: pull images from Docker Hub on an internet-connected machine,
+   push to the local registry, then all air-gapped hosts pull from it — no internet needed.
+
+2. CI pipeline local mirror: run registry:2 as a service container in CI; push images
+   between pipeline stages without hitting Docker Hub rate limits or paying for a cloud registry.
+
+3. Local development: share images between multiple Docker Compose projects or local k8s
+   clusters (minikube/kind) without a build step on each node.
+
+Persistent storage — mount a volume so images survive container restarts:
+
+\`\`\`bash
+docker run -d -p 5000:5000 --name registry \\
+  -v registry-data:/var/lib/registry \\
+  --restart unless-stopped registry:2
+\`\`\`
+
+TLS + authentication for non-localhost use:
+
+Plain HTTP only works for localhost. For a registry on a LAN host or in a CI network:
+  Option A: Add the host:port to Docker daemon's insecure-registries in daemon.json.
+  Option B: Generate a self-signed cert and configure the registry with TLS_CERT/TLS_KEY.
+  Option C: Put the registry behind nginx/Caddy with a real TLS cert.
+
+\`\`\`json
+// /etc/docker/daemon.json — mark a LAN registry as insecure
+{
+  "insecure-registries": ["192.168.1.100:5000"]
+}
+\`\`\`
+
+docker login / docker logout with a local registry:
+
+\`\`\`bash
+docker login localhost:5000 -u admin --password-stdin
+# Credentials stored in ~/.docker/config.json under "auths": {"localhost:5000": {...}}
+
+docker logout localhost:5000
+# Removes the entry from ~/.docker/config.json
+\`\`\`
+
+registry:2 vs Harbor:
+
+registry:2 is the minimal, zero-dependency OCI Distribution Spec implementation.
+Harbor adds: vulnerability scanning (Trivy), RBAC, image replication, garbage collection,
+webhook triggers, and a web UI — but requires Helm/Compose and much more overhead.
+Use registry:2 for CI mirrors and air-gapped setups; Harbor when compliance/scanning is required.`,
+      },
     ],
     references: [
       'https://github.com/opencontainers/distribution-spec',
@@ -17605,6 +17814,57 @@ Q: What is the size difference between a naive Node.js image and a multi-stage o
 A: Typically 800MB naive vs 150MB multi-stage — an 81% reduction by keeping the TypeScript compiler, bundler, and test frameworks out of the runtime image.
 
 These are answers a Docker-fluent engineer should give without preparation.`,
+      },
+      {
+        title: 'Stage flow diagram — builder → test → final with size annotations',
+        description: `Multi-stage build DAG: stages as nodes, COPY --from edges, size reduction at each boundary.
+
+Stage structure (typical 3-stage build):
+
+  ┌─────────────────────────────┐
+  │  builder  (dashed border)   │  ~800 MB
+  │  FROM node:22 AS builder    │  Full compiler + devDeps
+  │  RUN npm ci && npm run build│
+  └────────────┬────────────────┘
+               │ COPY --from=builder /app/dist ./dist
+               │ COPY --from=builder /app/node_modules ./node_modules (prod only)
+  ┌────────────▼────────────────┐
+  │  test     (dashed border)   │  ~820 MB (adds test frameworks)
+  │  FROM builder AS test       │  Intermediate — not in final image
+  │  RUN npm test               │
+  └────────────────────────────-┘
+               (discarded — test stage output not COPY'd anywhere)
+
+  ┌─────────────────────────────┐
+  │  final    (solid border)    │  ~150 MB
+  │  FROM node:22-alpine AS     │  Runtime only: prod node_modules + dist
+  │  final                      │
+  │  COPY --from=builder ...    │
+  └────────────────────────────-┘
+               │
+               ▼
+  docker build output image  (~150 MB, 81% smaller than single-stage)
+
+Key visual concepts:
+  Dashed borders = intermediate stages discarded after build; never ship to registry.
+  Solid border = the final FROM stage; this is the image produced by docker build.
+  Directed edges = explicit COPY --from=<stage> transfers; only listed files cross stage boundaries.
+  Size annotations at each stage show the progressive reduction: 800 MB → 820 MB (test) → 150 MB (final).
+
+BuildKit parallel execution:
+  Stages with no COPY --from dependency between them run in parallel automatically.
+  Example: if test stage does not depend on builder's output directly, they can build concurrently.
+  BuildKit builds a dependency DAG from FROM and COPY --from instructions; independent nodes parallelize.
+
+--target flag for partial builds:
+  docker build --target test .   → builds only through the test stage; useful in CI to run tests
+                                    without building the final runtime image when the test fails.
+  docker build --target builder . → produces the heavy build-tools image for debugging build failures.
+
+This diagram is the standard visual for explaining multi-stage builds in interviews:
+  "Each stage is an independent filesystem. COPY --from is the only way data crosses stage boundaries.
+   Everything not explicitly copied is discarded. The final image is only the last stage."`,
+        image: '/diagrams/devops/f13-docker-multi-stage.png',
       },
     ],
     references: [
