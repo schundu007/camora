@@ -244,7 +244,7 @@ export default function PlaygroundShell() {
                       ref={termRef}
                       wsUrl={wsUrl}
                       initialFontSize={fontSize}
-                      onExit={destroySession}
+                      onExit={() => setMinimized(true)}
                     />
                   )}
                 </div>
