@@ -23,7 +23,7 @@ COPY labs/etcd/ /home/learner/labs/etcd/
 RUN curl -fsSL https://github.com/skyhook-io/radar/releases/download/v1.7.9/radar_v1.7.9_linux_amd64.tar.gz \
     | tar xz -C /usr/local/bin kubectl-radar && \
     chmod +x /usr/local/bin/kubectl-radar && \
-    ln -s /usr/local/bin/kubectl-radar /usr/local/bin/radar
+    ln -sf /usr/local/bin/kubectl-radar /usr/local/bin/radar
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh

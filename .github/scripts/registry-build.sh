@@ -119,7 +119,8 @@ for i in $(seq 0 $((COUNT - 1))); do
         REG_VAR=$(echo "$ENTRY" | jq -r '.registry_var // ""')
         USER_VAR=$(echo "$ENTRY" | jq -r '.username_var')
         PASS_VAR=$(echo "$ENTRY" | jq -r '.password_var')
-        REGISTRY="${!REG_VAR:-}"
+        REGISTRY=""
+        [[ -n "$REG_VAR" ]] && REGISTRY="${!REG_VAR:-}"
 
         DOCKER_LOGIN_ARGS=(--username "${!USER_VAR}" --password-stdin)
         [[ -n "$REGISTRY" ]] && DOCKER_LOGIN_ARGS+=("$REGISTRY")
