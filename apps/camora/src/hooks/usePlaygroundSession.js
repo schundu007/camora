@@ -100,7 +100,12 @@ export function usePlaygroundSession() {
         if (!res.ok) return;
         const data = await res.json();
         if (data.expiresAt && mountedRef.current) {
-          setSession(prev => prev ? { ...prev, ...data } : data);
+          setSession(prev => prev ? {
+            ...prev,
+            ...data,
+            isCluster: data.isCluster || prev.isCluster || false,
+            nodes: data.nodes || prev.nodes || null,
+          } : data);
           startTick(data.expiresAt);
           saveSession(sessionId, data.environment, data.expiresAt);
         }
@@ -199,7 +204,12 @@ export function usePlaygroundSession() {
         const data = await res.json();
         if (!mountedRef.current) return;
         if (data.status === 'ready' || data.status === 'active') {
-          const fullSession = { ...stored, ...data };
+          const fullSession = {
+            ...stored,
+            ...data,
+            isCluster: data.isCluster || false,
+            nodes: data.nodes || null,
+          };
           setSession(fullSession);
           setStatus('ready');
           const remaining = Math.max(0, Math.floor((new Date(data.expiresAt || stored.expiresAt).getTime() - Date.now()) / 1000));
@@ -264,7 +274,13 @@ export function usePlaygroundSession() {
         return;
       }
       const data = await res.json();
-      const newSession = { sessionId: data.sessionId, environment, expiresAt: data.expiresAt };
+      const newSession = {
+        sessionId: data.sessionId,
+        environment,
+        expiresAt: data.expiresAt,
+        isCluster: data.isCluster || false,
+        nodes: data.nodes || null,
+      };
       setSession(newSession);
       setStatus('booting');
       saveSession(data.sessionId, environment, data.expiresAt);

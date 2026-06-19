@@ -1,15 +1,16 @@
 import { query } from '../../config/database.js';
-import { cacheGet, cacheSet, cacheDel } from '../redis.js';
+import { cacheSet, cacheDel } from '../redis.js';
 
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS setup_script TEXT').catch(() => {});
+query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB').catch(() => {});
 
-export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort, setupScript) {
+export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort, setupScript, clusterNodes) {
   const result = await query(
     `INSERT INTO playground_sessions
-       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port, code_server_port, setup_script)
-     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7, $8, $9)
+       (user_id, environment, scenario_id, nomad_job_id, status, expires_at, ttyd_host, ttyd_port, code_server_port, setup_script, cluster_nodes)
+     VALUES ($1, $2, $3, $4, 'provisioning', $5, $6, $7, $8, $9, $10)
      RETURNING *`,
-    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null, codeServerPort || null, setupScript || null],
+    [userId, environment, scenarioId || null, nomadJobId || null, expiresAt, ttydHost || null, ttydPort || null, codeServerPort || null, setupScript || null, clusterNodes ? JSON.stringify(clusterNodes) : null],
   );
   return result.rows[0];
 }

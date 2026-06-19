@@ -94,6 +94,16 @@ export const ENVIRONMENTS = [
     color: '#419EDA',
   },
   {
+    id: 'etcd-cluster',
+    label: 'etcd Cluster',
+    icon: { logo: 'etcd.io' },
+    plan: 'pro',
+    desc: '3-node etcd cluster — Raft consensus, leader election, fault injection',
+    category: 'Kubernetes',
+    color: '#419EDA',
+    badge: 'NEW',
+  },
+  {
     id: 'cloud-cli',
     label: 'Cloud CLI',
     icon: { logos: ['amazon.com', 'google.com', 'microsoft.com'] },

@@ -691,6 +691,7 @@ async function runMigrations() {
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`);
   await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS code_server_port INTEGER');
+  await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB');
 
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
@@ -1584,8 +1585,22 @@ server.on('upgrade', async (req, socket, head) => {
     let session;
     try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
     if (!session?.ttyd_host || !session?.ttyd_port) { socket.destroy(); return; }
-    // ttyd listens at /ws — rewrite path, drop the /playground/ws/:id routing segment
     proxyWs(socket, head, session.ttyd_host, session.ttyd_port, '/ws', req.rawHeaders);
+    return;
+  }
+
+  const wsNodeMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)\/node\/(\d+)(?:\?.*)?$/);
+  if (wsNodeMatch) {
+    const sessionId = wsNodeMatch[1];
+    const nodeIndex = parseInt(wsNodeMatch[2], 10);
+    let session;
+    try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
+    const clusterNodes = session?.cluster_nodes
+      ? (Array.isArray(session.cluster_nodes) ? session.cluster_nodes : JSON.parse(session.cluster_nodes))
+      : null;
+    const node = clusterNodes?.[nodeIndex];
+    if (!node?.ttydPort || !node?.host) { socket.destroy(); return; }
+    proxyWs(socket, head, node.host, node.ttydPort, '/ws', req.rawHeaders);
     return;
   }
 

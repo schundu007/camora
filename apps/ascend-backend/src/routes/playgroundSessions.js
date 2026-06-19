@@ -11,6 +11,20 @@ import { execScriptInContainerStream } from '../services/playground/nomadClient.
 
 export const playgroundSessionsRouter = Router();
 
+const API_URL = process.env.PLAYGROUND_API_URL || process.env.ASCEND_API_URL || 'http://localhost:3009';
+
+function buildNodeWsUrl(sessionId, nodeIndex) {
+  const base = API_URL.replace(/^http/, 'ws');
+  return `${base}/playground/ws/${sessionId}/node/${nodeIndex}`;
+}
+
+function parseClusterNodes(session) {
+  if (!session.cluster_nodes) return null;
+  return Array.isArray(session.cluster_nodes)
+    ? session.cluster_nodes
+    : JSON.parse(session.cluster_nodes);
+}
+
 playgroundSessionsRouter.post('/', async (req, res) => {
   const { environment, scenarioId, setupScript } = req.body;
   if (!environment) return res.status(400).json({ error: 'environment is required' });
@@ -26,20 +40,18 @@ playgroundSessionsRouter.post('/', async (req, res) => {
     });
     return res.status(201).json({
       sessionId: result.sessionId,
-      wsUrl: result.wsUrl,
+      wsUrl: result.wsUrl || null,
       expiresAt: result.expiresAt,
       environment: result.environment,
+      isCluster: result.isCluster || false,
+      nodes: result.nodes
+        ? result.nodes.map(n => ({ ...n, wsUrl: buildNodeWsUrl(result.sessionId, n.nodeIndex) }))
+        : null,
     });
   } catch (err) {
-    if (err.code === 'ENV_NOT_ALLOWED') {
-      return res.status(403).json({ error: 'Environment not available on free tier' });
-    }
-    if (err.code === 'DAILY_LIMIT_REACHED') {
-      return res.status(429).json({ error: 'Daily session limit reached', upgradeUrl: '/pricing' });
-    }
-    if (err.message === 'NOMAD_ADDR not configured') {
-      return res.status(503).json({ error: 'Playground infrastructure not available' });
-    }
+    if (err.code === 'ENV_NOT_ALLOWED') return res.status(403).json({ error: 'Environment not available on free tier' });
+    if (err.code === 'DAILY_LIMIT_REACHED') return res.status(429).json({ error: 'Daily session limit reached', upgradeUrl: '/pricing' });
+    if (err.message === 'NOMAD_ADDR not configured') return res.status(503).json({ error: 'Playground infrastructure not available' });
     console.error('[PlaygroundSessions] createSession error:', err.message);
     return res.status(500).json({ error: 'Failed to create session' });
   }
@@ -90,8 +102,30 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
 
     const ac = new AbortController();
     req.on('close', () => ac.abort());
-
     const deadlineMs = Date.now() + 3 * 60 * 1000;
+
+    const clusterNodes = parseClusterNodes(session);
+
+    if (clusterNodes) {
+      const total = clusterNodes.length + 1;
+      sendEvent({ step: 'container_ready', label: 'Cluster starting', status: 'done', phase: 'SYSTEM CHECKS', progress: 1, total });
+
+      await Promise.all(clusterNodes.map(async (node, i) => {
+        sendEvent({ step: `node_${node.nodeName}`, label: `${node.nodeName} starting`, status: 'running', phase: 'NODES', progress: i + 2, total });
+        await pollUntilReady(node.host, node.ttydPort, ac.signal, deadlineMs);
+        if (!ac.signal.aborted && !res.writableEnded) {
+          sendEvent({ step: `node_${node.nodeName}`, label: `${node.nodeName} ready`, status: 'done', phase: 'NODES', progress: i + 2, total });
+        }
+      }));
+
+      if (!ac.signal.aborted && !res.writableEnded) {
+        await updateSessionStatus(req.params.id, 'ready').catch(() => {});
+        sendEvent({ type: 'ready' });
+        res.end();
+      }
+      return;
+    }
+
     const host = session.ttyd_host;
     const ttydPort = session.ttyd_port;
     const idePort = session.code_server_port;
@@ -126,8 +160,7 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
               step: `tool_${ev.tool}`,
               label: ev.label || ev.tool,
               toolStatus: ev.status,
-              status: (ev.status === 'done' || ev.status === 'skipped') ? 'done'
-                : ev.status === 'error' ? 'error' : 'running',
+              status: (ev.status === 'done' || ev.status === 'skipped') ? 'done' : ev.status === 'error' ? 'error' : 'running',
               phase: 'SETUP',
               progress: 5,
               total,
@@ -143,14 +176,10 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
 
     await updateSessionStatus(req.params.id, 'ready').catch(() => {});
     sendEvent({ type: 'ready' });
-
     if (!res.writableEnded) res.end();
   } catch (err) {
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to stream events' });
-    } else {
-      if (!res.writableEnded) res.end();
-    }
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to stream events' });
+    else if (!res.writableEnded) res.end();
   }
 });
 
@@ -162,10 +191,22 @@ playgroundSessionsRouter.get('/:id', async (req, res) => {
     const timeRemaining = Math.max(0, expiresAt - now);
     const extendAvailable = !session.extended && timeRemaining < 300_000;
 
+    const clusterNodes = parseClusterNodes(session);
+    const isCluster = !!clusterNodes;
+    const nodes = clusterNodes
+      ? clusterNodes.map(n => ({
+          ...n,
+          wsUrl: buildNodeWsUrl(session.id, n.nodeIndex),
+          status: session.status === 'ready' ? 'ready' : n.status,
+        }))
+      : null;
+
     return res.json({
       ...session,
       timeRemaining,
       extendAvailable,
+      isCluster,
+      nodes,
     });
   } catch (err) {
     if (err.status === 403) return res.status(403).json({ error: 'Access denied' });
