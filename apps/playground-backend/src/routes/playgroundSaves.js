@@ -44,7 +44,7 @@ function sshRun(command, timeoutMs = 5 * 60 * 1000) {
     });
     conn.on('error', e => { clearTimeout(timer); finish(reject, e); });
     conn.connect({
-      host: process.env.WORKER_HOST || '172.104.210.63',
+      host: (() => { const h = process.env.WORKER_HOST; if (!h) throw new Error('WORKER_HOST not configured'); return h; })(),
       port: parseInt(process.env.WORKER_SSH_PORT || '20022', 10),
       username: process.env.WORKER_USER || 'pgrunner',
       privateKey: Buffer.from(process.env.WORKER_SSH_KEY_B64, 'base64').toString('utf8'),
@@ -57,24 +57,21 @@ function sshRun(command, timeoutMs = 5 * 60 * 1000) {
 playgroundSavesRouter.post('/', async (req, res) => {
   const { sessionId, name } = req.body;
   if (!sessionId || !name?.trim()) return res.status(400).json({ error: 'sessionId and name are required' });
-
-  const userId = parseInt(req.user.id, 10);
-  const slots = maxSlots(req.user);
-  if (slots === 0) return res.status(403).json({ error: 'VM saves require a Pro subscription', upgradeUrl: '/pricing' });
-
-  const { rows: counts } = await query(`SELECT COUNT(*) AS cnt FROM playground_saved_vms WHERE user_id=$1`, [userId]);
-  if (parseInt(counts[0].cnt, 10) >= slots) {
-    return res.status(429).json({ error: `Save slot limit reached (${slots} max). Delete a saved VM to free a slot.` });
-  }
-
-  const { rows: sessions } = await query(`SELECT * FROM playground_sessions WHERE id=$1 AND user_id=$2`, [sessionId, userId]);
-  const session = sessions[0];
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-  if (session.status !== 'ready' && session.status !== 'active') return res.status(400).json({ error: 'Session must be active to save' });
-  if (!session.nomad_job_id) return res.status(400).json({ error: 'No container ID for session' });
-
-  const r2Key = `playground-saves/${userId}/${randomBytes(8).toString('hex')}.tar`;
+  let r2Key;
   try {
+    const userId = parseInt(req.user.id, 10);
+    const slots = maxSlots(req.user);
+    if (slots === 0) return res.status(403).json({ error: 'VM saves require a Pro subscription', upgradeUrl: '/pricing' });
+    const { rows: counts } = await query(`SELECT COUNT(*) AS cnt FROM playground_saved_vms WHERE user_id=$1`, [userId]);
+    if (parseInt(counts[0].cnt, 10) >= slots) {
+      return res.status(429).json({ error: `Save slot limit reached (${slots} max). Delete a saved VM to free a slot.` });
+    }
+    const { rows: sessions } = await query(`SELECT * FROM playground_sessions WHERE id=$1 AND user_id=$2`, [sessionId, userId]);
+    const session = sessions[0];
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    if (session.status !== 'ready' && session.status !== 'active') return res.status(400).json({ error: 'Session must be active to save' });
+    if (!session.nomad_job_id) return res.status(400).json({ error: 'No container ID for session' });
+    r2Key = `playground-saves/${userId}/${randomBytes(8).toString('hex')}.tar`;
     const { sizeBytes } = await exportVmToR2(session.nomad_job_id, r2Key);
     const { rows } = await query(
       `INSERT INTO playground_saved_vms (user_id, name, environment, r2_key, size_bytes) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
@@ -83,8 +80,8 @@ playgroundSavesRouter.post('/', async (req, res) => {
     const saved = rows[0];
     return res.status(201).json({ id: saved.id, name: saved.name, environment: saved.environment, sizeBytes: saved.size_bytes, createdAt: saved.created_at });
   } catch (err) {
-    console.error('[PlaygroundSaves] export error:', err.message);
-    deleteR2Object(r2Key).catch(() => {});
+    console.error('[PlaygroundSaves] save error:', err.message);
+    if (r2Key) deleteR2Object(r2Key).catch(() => {});
     return res.status(500).json({ error: 'Failed to save VM: ' + err.message });
   }
 });
@@ -107,16 +104,26 @@ playgroundSavesRouter.get('/', async (req, res) => {
 
 // POST /api/v1/playground/saves/:id/restore
 playgroundSavesRouter.post('/:id/restore', async (req, res) => {
-  const userId = parseInt(req.user.id, 10);
-  const { rows } = await query(`SELECT * FROM playground_saved_vms WHERE id=$1 AND user_id=$2`, [req.params.id, userId]);
-  const save = rows[0];
-  if (!save) return res.status(404).json({ error: 'Saved VM not found' });
-
-  const imageTag = `camora-saved-${save.id}:latest`;
   try {
+    const userId = parseInt(req.user.id, 10);
+    const { rows } = await query(`SELECT * FROM playground_saved_vms WHERE id=$1 AND user_id=$2`, [req.params.id, userId]);
+    const save = rows[0];
+    if (!save) return res.status(404).json({ error: 'Saved VM not found' });
+
+    const { rows: activeSessions } = await query(
+      `SELECT id FROM playground_sessions WHERE user_id=$1 AND status='ready' AND expires_at > NOW()`,
+      [userId]
+    );
+    if (activeSessions.length > 0) {
+      return res.status(409).json({ error: 'You already have an active session. End it before restoring a saved VM.' });
+    }
+
+    const mem = MEM_MB[save.environment];
+    if (!mem) return res.status(400).json({ error: `Unknown environment: ${save.environment}` });
+
+    const imageTag = `camora-saved-${save.id}:latest`;
     await importVmFromR2(save.r2_key, imageTag);
 
-    const mem = MEM_MB[save.environment] || 512;
     const jobTag = randomBytes(6).toString('hex');
     const containerId = await sshRun(
       `docker run -d --rm --memory=${mem}m --hostname playground-${save.environment} -e SESSION_ID=${userId}-${jobTag} -p 0:7681 -p 0:8080 ${imageTag}`
@@ -129,24 +136,28 @@ playgroundSavesRouter.post('/:id/restore', async (req, res) => {
     await updateSessionStatus(session.id, 'ready');
     await setTTL(session.id, 3600);
 
-    deleteVmImage(imageTag).catch(() => {});
     await query(`UPDATE playground_saved_vms SET last_restored_at=NOW() WHERE id=$1`, [save.id]);
+    deleteVmImage(imageTag).catch(() => {});
 
     return res.status(201).json({ sessionId: session.id, expiresAt, environment: save.environment });
   } catch (err) {
     console.error('[PlaygroundSaves] restore error:', err.message);
-    deleteVmImage(imageTag).catch(() => {});
     return res.status(500).json({ error: 'Failed to restore VM: ' + err.message });
   }
 });
 
 // DELETE /api/v1/playground/saves/:id
 playgroundSavesRouter.delete('/:id', async (req, res) => {
-  const userId = parseInt(req.user.id, 10);
-  const { rows } = await query(`SELECT * FROM playground_saved_vms WHERE id=$1 AND user_id=$2`, [req.params.id, userId]);
-  const save = rows[0];
-  if (!save) return res.status(404).json({ error: 'Saved VM not found' });
-  await query(`DELETE FROM playground_saved_vms WHERE id=$1`, [save.id]);
-  deleteR2Object(save.r2_key).catch(() => {});
-  return res.json({ ok: true });
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const { rows } = await query(`SELECT * FROM playground_saved_vms WHERE id=$1 AND user_id=$2`, [req.params.id, userId]);
+    const save = rows[0];
+    if (!save) return res.status(404).json({ error: 'Saved VM not found' });
+    await query(`DELETE FROM playground_saved_vms WHERE id=$1`, [save.id]);
+    deleteR2Object(save.r2_key).catch(() => {});
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[PlaygroundSaves] delete error:', err.message);
+    return res.status(500).json({ error: 'Internal error' });
+  }
 });
