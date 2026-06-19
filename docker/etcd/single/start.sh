@@ -42,6 +42,16 @@ ETCD_PID=$!
 # ---------------------------------------------------------------------------
 # 4. Start code-server in background
 # ---------------------------------------------------------------------------
+# Disable built-in terminal panel (duplicate of our ttyd terminal)
+mkdir -p /home/learner/.local/share/code-server/User
+cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
+{
+  "terminal.integrated.hideOnStartup": "always",
+  "workbench.startupEditor": "none"
+}
+VSCODE_SETTINGS
+chown -R learner:learner /home/learner/.local
+
 sudo -u learner code-server \
   --bind-addr 0.0.0.0:8080 \
   --auth none \

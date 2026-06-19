@@ -13,6 +13,15 @@ fi
 emit '{"step":"env_setup","label":"Environment configured","status":"done","phase":"SYSTEM CHECKS"}'
 emit '{"step":"ide_start","label":"Starting IDE","status":"running","phase":"TOOLS"}'
 
+# Disable built-in terminal panel (duplicate of our ttyd terminal)
+mkdir -p /home/camora/.code-server/User
+cat > /home/camora/.code-server/User/settings.json << 'VSCODE_SETTINGS'
+{
+  "terminal.integrated.hideOnStartup": "always",
+  "workbench.startupEditor": "none"
+}
+VSCODE_SETTINGS
+
 code-server \
   --port 8080 \
   --auth none \
