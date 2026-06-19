@@ -441,7 +441,7 @@ function TabButton({ active, onClick, label, icon, mono, onReconnect }) {
 
 const iconBtn = {
   display: 'inline-flex', alignItems: 'center',
-  padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+  padding: '4px 10px', borderRadius: 5, fontSize: 13, fontWeight: 600,
   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-  color: 'rgba(255,255,255,0.55)', cursor: 'pointer', userSelect: 'none',
+  color: 'rgba(255,255,255,0.65)', cursor: 'pointer', userSelect: 'none',
 };
