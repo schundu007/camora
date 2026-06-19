@@ -48,6 +48,15 @@ echo "${ETCD_PID}" > /var/run/etcd-${NODE_NAME}.pid
 # ---------------------------------------------------------------------------
 # 4. Start code-server in background
 # ---------------------------------------------------------------------------
+mkdir -p /home/learner/.local/share/code-server/User
+cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
+{
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Default Dark Modern"
+}
+VSCODE_SETTINGS
+chown -R learner:learner /home/learner/.local
+
 code-server \
   --bind-addr 0.0.0.0:8080 \
   --auth none \
