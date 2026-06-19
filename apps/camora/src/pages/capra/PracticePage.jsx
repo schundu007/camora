@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { isOwner } from '../../lib/owner';
 import { dialogConfirm } from '../../components/shared/Dialog';
@@ -14,8 +15,6 @@ import Chip from '@/components/shared/ui/Chip';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
-const SQLPlayground = lazy(() => import('../../components/capra/sql/SQLPlayground'));
-const PlaygroundLayout = lazy(() => import('../../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout })));
 const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout').then(m => ({ default: m.AskLayout })));
 
 
@@ -395,7 +394,7 @@ export default function PracticePage() {
     return false;
   };
   const urlView = new URLSearchParams(window.location.search).get('view');
-  const initialView = urlView || (detectSqlFromStorage() ? 'sql-editor' : 'practice');
+  const initialView = urlView || 'practice';
   const [activeView, setActiveViewState] = useState(initialView);
   const setActiveView = (view) => {
     // If the user picks Code Solver but the loaded problem is SQL, route to SQL Editor.
@@ -406,18 +405,6 @@ export default function PracticePage() {
     else url.searchParams.set('view', targetView);
     window.history.replaceState({}, '', url);
   };
-
-  // If a SQL problem gets loaded into localStorage while the user is in Code
-  // Solver, redirect to SQL Editor on the next storage event (e.g. another tab
-  // pushed a new problem) or when the storage poll detects it.
-  useEffect(() => {
-    if (activeView !== 'code-solver') return;
-    const tick = () => { if (detectSqlFromStorage()) setActiveView('sql-editor'); };
-    tick();
-    const id = setInterval(tick, 500);
-    window.addEventListener('storage', tick);
-    return () => { clearInterval(id); window.removeEventListener('storage', tick); };
-  }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stats
   const { user, subscription } = useAuth();
@@ -727,8 +714,6 @@ export default function PracticePage() {
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
               { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={12} /> },
-              { key: 'sql-editor', label: 'SQL Editor', icon: <Icon name="database" size={12} /> },
-              { key: 'playground', label: 'Playground', icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> },
               { key: 'ask-sona', label: 'Ask Sona', icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
             ].map(tab => (
               <button
@@ -749,13 +734,36 @@ export default function PracticePage() {
             ))}
           </div>
           {/* Reset button — clears problem + solution from localStorage */}
-          {(activeView === 'code-solver' || activeView === 'design-solver' || activeView === 'sql-editor') && (
+          {/* Playground shortcuts */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', paddingLeft: 12 }}>
+            <Link
+              to="/playground?tab=code"
+              className="chip"
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', fontSize: 11 }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+              Code Playground
+            </Link>
+            <Link
+              to="/playground?tab=sql"
+              className="chip"
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', fontSize: 11 }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              </svg>
+              SQL Editor
+            </Link>
+          </div>
+          {(activeView === 'code-solver' || activeView === 'design-solver') && (
             <button
               onClick={() => {
                 ['chundu_current_problem', 'chundu_loaded_problem', 'chundu_current_solution', 'chundu_eraser_diagram'].forEach(k => localStorage.removeItem(k));
                 window.location.reload();
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ml-auto"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
               style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
               title="Clear problem and solution"
             >
@@ -779,24 +787,6 @@ export default function PracticePage() {
           <div className="flex-1 min-h-0 overflow-hidden">
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
               <DashboardPage mode="system-design" embedded />
-            </Suspense>
-          </div>
-        )}
-
-        {/* ── SQL Editor View — fills remaining height ── */}
-        {activeView === 'sql-editor' && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-              <SQLPlayground />
-            </Suspense>
-          </div>
-        )}
-
-        {/* ── Playground View ── */}
-        {activeView === 'playground' && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-              <PlaygroundLayout />
             </Suspense>
           </div>
         )}
