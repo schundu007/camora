@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
+import CodeBlock from '../shared/CodeBlock.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import { ContentDiagram } from './ContentDiagram';
 import OnThisPage from '../../shared/docs/OnThisPage';
@@ -1440,29 +1441,8 @@ export default function TopicDetail({
 
           {/* 7. Code Examples — see the implementation */}
           {topicDetails.codeExample && (
-            <div id="code-examples" className="rounded overflow-hidden border border-[var(--border)] scroll-mt-24">
-              <div className="px-4 py-2.5 bg-[#1e1e2e] flex items-center gap-2">
-                <Icon name="code" size={14} className="text-[var(--accent)]" />
-                <h3 className="text-sm font-bold text-[#e2e8f0] landing-display">Code Example</h3>
-                <span className="text-[10px] landing-mono text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded uppercase tracking-[0.12em] ml-1">Python</span>
-                <button
-                  className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1"
-                  onClick={() => { navigator.clipboard.writeText(topicDetails.codeExample); setCopiedCodeIdx('single'); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
-                >
-                  <Icon name={copiedCodeIdx === 'single' ? 'check' : 'copy'} size={12} className={copiedCodeIdx === 'single' ? 'text-[var(--accent)]' : ''} />
-                  {copiedCodeIdx === 'single' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-              <div className="bg-[#1e1e2e] overflow-x-auto">
-                <pre className="text-sm landing-mono leading-6 p-4">
-                  {topicDetails.codeExample.split('\n').map((line, idx) => (
-                    <div key={idx} className="flex">
-                      <span className="w-8 text-right pr-4 text-[var(--text-secondary)] select-none text-xs flex-shrink-0">{idx + 1}</span>
-                      <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
-                    </div>
-                  ))}
-                </pre>
-              </div>
+            <div id="code-examples" className="scroll-mt-24">
+              <CodeBlock code={topicDetails.codeExample} lang={topicDetails.codeLanguage || 'python'} />
             </div>
           )}
 
@@ -1516,16 +1496,7 @@ export default function TopicDetail({
                           <p className="text-xs text-[var(--text-muted)] landing-body">{fmtCloud(activeEx.description)}</p>
                         </div>
                       )}
-                      <div className="bg-[#1e1e2e] overflow-x-auto">
-                        <pre className="text-sm landing-mono leading-6 p-4">
-                          {activeEx.code.split('\n').map((line, idx) => (
-                            <div key={idx} className="flex">
-                              <span className="w-8 text-right pr-4 text-[var(--text-secondary)] select-none text-xs flex-shrink-0">{idx + 1}</span>
-                              <span className="text-[#e2e8f0]" dangerouslySetInnerHTML={{ __html: highlightCodeLine(line) }} />
-                            </div>
-                          ))}
-                        </pre>
-                      </div>
+                      <CodeBlock code={activeEx.code} lang={activeEx.language || 'python'} bare />
                     </div>
                   );
                 })}
@@ -2524,16 +2495,7 @@ export default function TopicDetail({
                       id: lang,
                       label: lang.charAt(0).toUpperCase() + lang.slice(1),
                       content: (
-                        <div className="relative">
-                          <button
-                            onClick={() => navigator.clipboard.writeText(String(code))}
-                            className="absolute top-2 right-2 z-10 px-2 py-1 text-[10px] font-semibold rounded transition-colors landing-mono"
-                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-                          >Copy</button>
-                          <pre className="p-3 overflow-x-auto max-h-96 overflow-y-auto" style={{ background: 'var(--bg-elevated)' }}>
-                            <code className="text-[13px] landing-mono leading-relaxed whitespace-pre" style={{ color: 'var(--text-primary)' }}>{code}</code>
-                          </pre>
-                        </div>
+                        <CodeBlock code={String(code)} lang={lang} bare />
                       ),
                     }))}
                   />
@@ -2646,18 +2608,7 @@ export default function TopicDetail({
               {topicDetails.implementation && (
                 <div className="">
                   <ContentHeading title="Implementation" />
-                  <div className="overflow-x-auto bg-[#0d1117]">
-                    <pre
-                      className="p-4 text-sm leading-6 text-[var(--text-muted)] landing-mono"
-                      style={{
-                        whiteSpace: 'pre',
-                        margin: 0,
-                        tabSize: 4
-                      }}
-                    >
-                      {topicDetails.implementation}
-                    </pre>
-                  </div>
+                  <CodeBlock code={topicDetails.implementation} lang={topicDetails.implementationLanguage || 'code'} />
                 </div>
               )}
 
@@ -2829,17 +2780,8 @@ export default function TopicDetail({
                     <div className="px-5 py-4 prep-content">
                       {sec.content && <FormattedContent content={sec.content} />}
                       {sec.codeExample && (
-                        <div className="mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                          <div className="flex items-center justify-between px-4 py-2 bg-[var(--bg-elevated)]">
-                            <span className="text-[10px] font-bold landing-mono text-[var(--text-muted)] uppercase tracking-widest">Example</span>
-                            <button
-                              onClick={() => { navigator.clipboard.writeText(sec.codeExample); }}
-                              className="text-[10px] landing-mono text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-                            >copy</button>
-                          </div>
-                          <pre className="px-4 py-3 overflow-x-auto text-[12px] leading-relaxed landing-mono text-[var(--text-secondary)]" style={{ background: 'var(--bg-code, #0d1117)', margin: 0 }}>
-                            <code>{sec.codeExample}</code>
-                          </pre>
+                        <div className="mt-4">
+                          <CodeBlock code={sec.codeExample} lang={sec.language || 'code'} />
                         </div>
                       )}
                     </div>

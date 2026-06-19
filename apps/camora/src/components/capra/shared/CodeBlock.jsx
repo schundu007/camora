@@ -46,7 +46,7 @@ const codeTheme = {
   },
 };
 
-export default function CodeBlock({ code, lang }) {
+export default function CodeBlock({ code, lang, bare = false }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(code).catch(() => {});
@@ -56,12 +56,14 @@ export default function CodeBlock({ code, lang }) {
   const prismLang = LANG_MAP[(lang || '').toLowerCase()] || 'text';
   return (
     <div className="prep-code-block">
-      <div className="prep-code-header">
-        <span className="prep-code-lang">{lang || 'code'}</span>
-        <button className="prep-code-copy" onClick={handleCopy}>
-          {copied ? 'copied' : 'copy'}
-        </button>
-      </div>
+      {!bare && (
+        <div className="prep-code-header">
+          <span className="prep-code-lang">{lang || 'code'}</span>
+          <button className="prep-code-copy" onClick={handleCopy}>
+            {copied ? 'copied' : 'copy'}
+          </button>
+        </div>
+      )}
       <SyntaxHighlighter language={prismLang} style={codeTheme} wrapLongLines={false}>
         {code}
       </SyntaxHighlighter>
