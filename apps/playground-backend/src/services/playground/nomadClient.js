@@ -16,6 +16,8 @@ const IMAGES = {
   'k8s-single': 'chundubabu/pg-k8s-single:latest',
   'k8s-multi': 'chundubabu/pg-k8s-multi:latest',
   'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
+  'etcd-single': 'chundubabu/pg-etcd-single:latest',
+  'etcd-cluster': 'chundubabu/pg-etcd-node:latest',
 };
 
 const MEMORY_MB = {
@@ -25,6 +27,8 @@ const MEMORY_MB = {
   'k8s-single': 2048,
   'k8s-multi': 4096,
   'cloud-cli': 1536,
+  'etcd-single': 512,
+  'etcd-cluster': 512,
 };
 
 function sshExec(command) {
@@ -125,3 +129,39 @@ export async function stopJob(jobId) {
 
 export async function getAllocations() { return []; }
 export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }
+
+export async function createClusterNetwork(sessionId) {
+  const networkName = `pg-net-${sessionId.slice(0, 16)}`;
+  await sshExec(`docker network create ${networkName} --driver bridge`);
+  return networkName;
+}
+
+export async function scheduleClusterNode(sessionId, nodeIndex, nodeName, networkName) {
+  const image = IMAGES['etcd-cluster'];
+  const containerName = `pg-${sessionId.slice(0, 8)}-${nodeName}`;
+  const allNodes = 'etcd1,etcd2,etcd3';
+  const cmd = [
+    'docker run -d --rm --pull=always --memory=512m',
+    `--network ${networkName}`,
+    `--network-alias ${nodeName}`,
+    `--name ${containerName}`,
+    `--hostname ${nodeName}`,
+    `-e NODE_NAME=${nodeName}`,
+    `-e NODE_INDEX=${nodeIndex}`,
+    `-e CLUSTER_NODES=${allNodes}`,
+    `-e SESSION_ID=${sessionId}`,
+    '-e force_color_prompt=yes',
+    '-p 0:7681 -p 0:8080',
+    image,
+  ].join(' ');
+  const containerId = await sshExec(cmd);
+  if (!containerId || containerId.length < 12) throw new Error(`docker run failed: ${containerId}`);
+  return containerId;
+}
+
+export async function stopClusterJob(sessionId, networkName, containerIds) {
+  for (const cid of containerIds) {
+    await sshExec(`docker stop ${cid}`).catch(() => {});
+  }
+  await sshExec(`docker network rm ${networkName}`).catch(() => {});
+}

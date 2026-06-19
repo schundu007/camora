@@ -88,3 +88,10 @@ export async function getSessionHistory(userId, limit = 20) {
   );
   return result.rows;
 }
+
+export async function updateClusterNodes(sessionId, networkName, nodes) {
+  await query(
+    'UPDATE playground_sessions SET cluster_network = $1, cluster_nodes = $2 WHERE id = $3',
+    [networkName, JSON.stringify(nodes), sessionId],
+  );
+}

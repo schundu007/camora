@@ -14,7 +14,7 @@ import { playgroundSavesRouter } from './routes/playgroundSaves.js';
 import { playgroundLimiter } from './middleware/playgroundLimiter.js';
 import { createTtydProxy } from './services/playground/wsProxy.js';
 import { getSession } from './services/playground/sessionStore.js';
-import { stopJob } from './services/playground/nomadClient.js';
+import { stopJob, stopClusterJob } from './services/playground/nomadClient.js';
 
 const PORT = parseInt(process.env.PORT || '3010', 10);
 
@@ -177,6 +177,9 @@ async function runMigrations() {
     await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_host TEXT');
     await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS ttyd_port INTEGER');
     await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS code_server_port INTEGER');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS is_cluster BOOLEAN DEFAULT FALSE');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_network VARCHAR(128)');
+    await query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB');
     await query(`CREATE TABLE IF NOT EXISTS playground_objective_completions (
       session_id    UUID REFERENCES playground_sessions(id) ON DELETE CASCADE,
       objective_id  TEXT NOT NULL,
@@ -218,13 +221,21 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 setInterval(async () => {
   try {
     const { rows } = await query(
-      `SELECT id, nomad_job_id FROM playground_sessions
+      `SELECT id, nomad_job_id, is_cluster, cluster_network, cluster_nodes FROM playground_sessions
        WHERE status NOT IN ('destroyed') AND expires_at < NOW() - INTERVAL '2 minutes'
        LIMIT 50`
     );
     for (const row of rows) {
       try {
-        if (row.nomad_job_id) await stopJob(row.nomad_job_id);
+        if (row.is_cluster && row.cluster_nodes) {
+          const nodes = typeof row.cluster_nodes === 'string'
+            ? JSON.parse(row.cluster_nodes)
+            : row.cluster_nodes;
+          const containerIds = nodes.map((n) => n.containerId).filter(Boolean);
+          await stopClusterJob(row.id, row.cluster_network, containerIds);
+        } else if (row.nomad_job_id) {
+          await stopJob(row.nomad_job_id);
+        }
         await query(`UPDATE playground_sessions SET status='destroyed', destroyed_at=NOW() WHERE id=$1`, [row.id]);
         await cacheDel(`playground:session:${row.id}:ttl`);
         console.log(`[Cleanup] destroyed expired session ${row.id}`);
@@ -310,8 +321,26 @@ server.on('upgrade', (req, socket, head) => {
         return;
       }
 
-      const host = session.ttyd_host;
-      const port = session.ttyd_port;
+      let host;
+      let port;
+
+      const urlObj = new URL(req.url, 'http://localhost');
+      const nodeParam = urlObj.searchParams.get('node');
+
+      if (session.is_cluster && session.cluster_nodes && nodeParam !== null) {
+        const nodeIndex = parseInt(nodeParam, 10);
+        const nodes = typeof session.cluster_nodes === 'string'
+          ? JSON.parse(session.cluster_nodes)
+          : session.cluster_nodes;
+        const node = nodes.find((n) => n.nodeIndex === nodeIndex);
+        if (!node) { ws.close(4404, `Cluster node ${nodeIndex} not found`); return; }
+        host = node.ttydHost;
+        port = node.ttydPort;
+      } else {
+        host = session.ttyd_host;
+        port = session.ttyd_port;
+      }
+
       if (!host || !port) { ws.close(4500, 'Session has no ttyd address'); return; }
 
       ws.removeAllListeners('message');
