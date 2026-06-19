@@ -198,6 +198,11 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       }));
 
       if (!ac.signal.aborted && !res.writableEnded) {
+        if (session.radar_port) {
+          pollUntilReady(session.ttyd_host, session.radar_port, ac.signal, Date.now() + 30000)
+            .then(() => markRadarReady(req.params.id))
+            .catch(() => {});
+        }
         await updateSessionStatus(req.params.id, 'ready').catch(() => {});
         sendEvent({ type: 'ready' });
         res.end();
@@ -253,6 +258,11 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       }
     }
 
+    if (session.radar_port) {
+      pollUntilReady(host, session.radar_port, ac.signal, Date.now() + 30000)
+        .then(() => markRadarReady(req.params.id))
+        .catch(() => {});
+    }
     await updateSessionStatus(req.params.id, 'ready').catch(() => {});
     sendEvent({ type: 'ready' });
     if (!res.writableEnded) res.end();

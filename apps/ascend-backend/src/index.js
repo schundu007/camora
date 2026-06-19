@@ -1672,6 +1672,7 @@ server.on('upgrade', async (req, socket, head) => {
     if (!session?.ttyd_host || !session?.radar_port) { socket.destroy(); return; }
     const wsPath = req.url.replace(/^\/pg-radar/, '') || '/';
     proxyWs(socket, head, session.ttyd_host, session.radar_port, wsPath, req.rawHeaders);
+    return;
   }
 });
 
