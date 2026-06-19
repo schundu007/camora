@@ -37,26 +37,23 @@ export default function PlaygroundPage() {
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
-        height: 44,
+        height: 34,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px',
+        gap: 8,
+        padding: '0 12px',
         background: 'var(--cam-hero-strip)',
         borderBottom: '1px solid var(--cam-gold-leaf)',
       }}>
-        <span style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 12, fontWeight: 700,
-          color: 'var(--text-primary)',
-          letterSpacing: '0.04em',
-          display: 'flex', alignItems: 'center', gap: 6,
+        <Link to="/capra/prepare" style={{
+          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.35)',
+          textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3,
+          flexShrink: 0,
         }}>
-          <span>⌨</span>
-          Playground
-        </span>
-
-        <div className="tab-group">
+          ‹ Home
+        </Link>
+        <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+        <div className="tab-group" style={{ flex: 1 }}>
           {TABS.map(t => (
             <button
               key={t.key}
@@ -68,16 +65,6 @@ export default function PlaygroundPage() {
             </button>
           ))}
         </div>
-
-        <Link to="/capra/prepare" style={{
-          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)',
-          textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
-          padding: '3px 8px', borderRadius: 5,
-          border: '1px solid rgba(255,255,255,0.1)',
-          background: 'rgba(255,255,255,0.04)',
-        }}>
-          ← Home
-        </Link>
       </div>
 
       {/* ── Tab content ── */}
