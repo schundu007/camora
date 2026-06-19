@@ -18652,7 +18652,30 @@ A: Stacked: etcd runs on the same nodes as apiserver (kubeadm default). External
 
 These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
       },
+      {
+        title: `🎨 The Phippy Guide — Pods, Labels, Services, Volumes, Namespaces`,
+        description: `Phippy was a simple PHP application looking for a home. Her story — told in the CNCF illustrated guide — maps core Kubernetes concepts to intuitive analogies that make them immediately memorable. All illustrations are CC-BY licensed by The Linux Foundation / CNCF.
+
+Pod: a pod is the smallest deployable unit in Kubernetes. Like a cabin on a ship, a pod groups one or more tightly-coupled containers that share the same network namespace and storage volumes. Kubernetes schedules, starts, and stops pods as a unit. You never run on a bare machine; the pod is the home.
+
+Labels: sticky name tags you put on any Kubernetes object. Labels are key-value pairs (app=frontend, env=production, version=v2). Services use label selectors to route traffic to the right pods. Controllers use them to know which pods they own. Without labels, Kubernetes cannot match anything to anything.
+
+ReplicaSet: guarantees that a specified number of pod replicas are running at any given time. If a pod dies, the ReplicaSet creates a replacement. Scale up: replica count increases. Scale down: excess pods are deleted. Deployment wraps a ReplicaSet and adds rolling update logic on top.
+
+Service: a stable virtual IP (ClusterIP) backed by a set of pods matched by label selector. Pods are ephemeral — they get new IPs when rescheduled — but the Service ClusterIP never changes. Other applications in the cluster talk to the Service address. kube-proxy translates the ClusterIP to an actual pod IP for each connection.
+
+Volume: persistent storage that survives pod restarts. A volume appears to containers as a normal directory but is backed by real storage — EBS, GCS, NFS, Ceph, or a local path. Without a volume, all writes inside a container disappear when the container exits. PersistentVolumeClaims decouple the storage request from the specific backing technology.
+
+Namespace: a virtual cluster inside a physical cluster. Like different neighborhoods in the same city. Namespaces let multiple teams share a cluster while keeping their resources isolated. Most objects (Pods, Services, ConfigMaps, Secrets) are namespaced. Nodes and PersistentVolumes are cluster-scoped. ResourceQuotas and LimitRanges are applied per namespace.`,
+        image: `https://www.cncf.io/wp-content/uploads/2020/07/kubernetes-illustrated-guide-diagram-2.jpg`,
+      },
     ],
+    video: {
+      embedUrl: `https://www.youtube.com/embed/TlHvYWVUZyc`,
+      title: `Kubernetes Explained in 6 Minutes`,
+      courtesy: `ByteByteGo`,
+      courtesyUrl: `https://www.youtube.com/@ByteByteGo`,
+    },
     references: [
       'https://kubernetes.io/docs/concepts/architecture/',
       'https://kubernetes.io/docs/concepts/overview/components/',
@@ -18660,6 +18683,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
       'https://github.com/container-storage-interface/spec',
       'https://github.com/containernetworking/cni/blob/main/SPEC.md',
       'https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/',
+      'https://www.cncf.io/phippy/the-childrens-illustrated-guide-to-kubernetes/',
     ],
   },
 
