@@ -24,7 +24,7 @@ emit '{"step":"ide_start","label":"Starting IDE","status":"running","phase":"TOO
 mkdir -p /home/camora/.code-server/User
 cat > /home/camora/.code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
-  "terminal.integrated.hideOnStartup": "always",
+  "terminal.integrated.enabled": false,
   "workbench.startupEditor": "none"
 }
 VSCODE_SETTINGS
@@ -36,8 +36,8 @@ sudo -u camora code-server \
   --bind-addr 0.0.0.0 \
   --disable-update-check \
   --disable-telemetry \
-  --user-data-dir /root/.code-server \
-  --extensions-dir /root/.code-server/extensions \
+  --user-data-dir /home/camora/.code-server \
+  --extensions-dir /home/camora/.code-server/extensions \
   > /var/log/code-server.log 2>&1 &
 
 for i in $(seq 1 30); do

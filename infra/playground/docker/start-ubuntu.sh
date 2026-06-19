@@ -17,7 +17,7 @@ emit '{"step":"ide_start","label":"Starting IDE","status":"running","phase":"TOO
 mkdir -p /home/camora/.code-server/User
 cat > /home/camora/.code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
-  "terminal.integrated.hideOnStartup": "always",
+  "terminal.integrated.enabled": false,
   "workbench.startupEditor": "none"
 }
 VSCODE_SETTINGS
