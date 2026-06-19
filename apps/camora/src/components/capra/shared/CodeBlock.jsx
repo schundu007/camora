@@ -29,19 +29,20 @@ const LANG_MAP = {
 
 const detectLang = (code) => {
   if (!code || !code.trim()) return 'bash';
-  const head = code.split('\n').slice(0, 8).join('\n');
-  if (/^apiVersion:|^kind:\s|^metadata:|^\s+spec:|^spec:/.test(head)) return 'yaml';
-  if (/^[\s\n]*[{\[][\s\n]*"/.test(head)) return 'json';
-  if (/^(FROM |RUN |CMD |EXPOSE |ENV |COPY |ENTRYPOINT |WORKDIR )/m.test(head)) return 'docker';
+  const head = code.split('\n').slice(0, 12).join('\n');
+  if (/^apiVersion:|^kind:\s|^metadata:|^\s+spec:|^spec:/m.test(head)) return 'yaml';
+  if (/^\s*[{\[]\s*"[\w-]+"\s*:/m.test(head)) return 'json';
+  if (/^(FROM|RUN|CMD|EXPOSE|ENV|COPY|ENTRYPOINT|WORKDIR)\s/m.test(head)) return 'docker';
   if (/^(SELECT|INSERT|UPDATE|DELETE|CREATE TABLE|DROP|ALTER TABLE)\b/im.test(head)) return 'sql';
-  if (/^(package |import \(|func |type \w+ struct)/.test(head)) return 'go';
-  if (/^(pub |fn |use |struct |enum |impl |mod )\b/.test(head)) return 'rust';
-  if (/^(def |class \w|import \w|from \w+ import|if __name__)/.test(head)) return 'python';
-  if (/^(function |const |let |var |import |export |class \w.*\{)/.test(head)) return 'javascript';
-  if (/^(interface |type \w+ =|export (type|interface)|import type)/.test(head)) return 'typescript';
-  if (/^(resource |variable |output |provider |terraform)\s+["\w]/.test(head)) return 'hcl';
-  if (/^(\$\s|#!\s*\/|sudo |kubectl |docker |helm |apt |yum |brew |npm |pip3? |git )/.test(head)) return 'bash';
-  if (/^\s*[-*]\s+\w+:|^\w[\w-]+:\s+\S/.test(head)) return 'yaml';
+  if (/^(package main|import \(|func \w|type \w+ struct)/m.test(head)) return 'go';
+  if (/^(pub (fn|struct|enum|impl|mod)|fn \w|use std|impl \w)/m.test(head)) return 'rust';
+  if (/^(def |class \w|from \w+ import|if __name__|@\w+\n?def )/m.test(head)) return 'python';
+  if (/^(function |const |let |var |import \{|export (default|const)|=>\s*\{)/m.test(head)) return 'javascript';
+  if (/^(interface |type \w+ =|export (type|interface)|import type)/m.test(head)) return 'typescript';
+  if (/^(resource "|variable "|output "|provider "|terraform \{)/m.test(head)) return 'hcl';
+  if (/^(kubectl |helm |docker (run|build|push)|apt-get |yum |brew )/m.test(head)) return 'bash';
+  if (/^(\$ |#!\/)/m.test(head)) return 'bash';
+  if (/^\w[\w-]+:\s+\S|^\s+-\s+\w[\w-]+:/m.test(head)) return 'yaml';
   return 'bash';
 };
 
