@@ -61,229 +61,173 @@ const CATEGORIES = [
   },
 ];
 
+function pg(tool, label, status) {
+  return `echo '##PG##${JSON.stringify({ tool, label, status })}'`;
+}
+
+function toolBlock(id, label, checkCmd, installLines) {
+  return [
+    pg(id, label, 'checking'),
+    `if ! ${checkCmd}; then`,
+    `  ${pg(id, label, 'installing')}`,
+    ...installLines.map(l => `  ${l}`),
+    `  ${pg(id, label, 'done')}`,
+    'else',
+    `  ${pg(id, label, 'skipped')}`,
+    'fi',
+    '',
+  ];
+}
+
 function generateSetupScript(selected) {
   if (!selected.size) return '';
   const lines = [
     '#!/usr/bin/env bash',
     'set -euo pipefail',
     'has() { command -v "$1" &>/dev/null; }',
-    'log() { echo "[SETUP] $*"; }',
     'ARCH=$(dpkg --print-architecture)',
     'export DEBIAN_FRONTEND=noninteractive',
     'apt-get update -qq 2>/dev/null',
     '',
   ];
 
-  if (selected.has('node')) lines.push(
-    '# Node.js 20',
-    'if ! has node; then',
-    '  log "Installing Node.js 20..."',
-    '  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null',
-    '  apt-get install -y nodejs -qq',
-    'fi', '',
-  );
+  if (selected.has('node')) lines.push(...toolBlock('node', 'Node.js 20', 'has node', [
+    'curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null',
+    'apt-get install -y nodejs -qq',
+  ]));
 
-  if (selected.has('go')) lines.push(
-    '# Go 1.22',
-    'if ! has go; then',
-    '  log "Installing Go 1.22..."',
-    '  wget -q "https://go.dev/dl/go1.22.1.linux-${ARCH}.tar.gz" -O /tmp/go.tar.gz',
-    '  tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz',
-    '  echo \'export PATH=$PATH:/usr/local/go/bin\' > /etc/profile.d/go.sh',
-    'fi', '',
-  );
+  if (selected.has('go')) lines.push(...toolBlock('go', 'Go 1.22', 'has go', [
+    'wget -q "https://go.dev/dl/go1.22.1.linux-${ARCH}.tar.gz" -O /tmp/go.tar.gz',
+    'tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz',
+    "echo 'export PATH=$PATH:/usr/local/go/bin' > /etc/profile.d/go.sh",
+  ]));
 
-  if (selected.has('rust')) lines.push(
-    '# Rust',
-    'if ! has rustc; then',
-    '  log "Installing Rust..."',
-    '  curl --proto \'=https\' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet',
-    '  echo \'source "$HOME/.cargo/env"\' > /etc/profile.d/rust.sh',
-    'fi', '',
-  );
+  if (selected.has('rust')) lines.push(...toolBlock('rust', 'Rust', 'has rustc', [
+    "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --quiet",
+    'echo \'source "$HOME/.cargo/env"\' > /etc/profile.d/rust.sh',
+  ]));
 
-  if (selected.has('java')) lines.push(
-    '# Java 17',
-    'if ! has java; then',
-    '  log "Installing Java 17..."',
-    '  apt-get install -y openjdk-17-jdk -qq',
-    'fi', '',
-  );
+  if (selected.has('java')) lines.push(...toolBlock('java', 'Java 17', 'has java', [
+    'apt-get install -y openjdk-17-jdk -qq',
+  ]));
 
-  if (selected.has('ruby')) lines.push(
-    '# Ruby',
-    'if ! has ruby; then',
-    '  log "Installing Ruby..."',
-    '  apt-get install -y ruby-full -qq',
-    'fi', '',
-  );
+  if (selected.has('ruby')) lines.push(...toolBlock('ruby', 'Ruby', 'has ruby', [
+    'apt-get install -y ruby-full -qq',
+  ]));
 
-  if (selected.has('php')) lines.push(
-    '# PHP 8',
-    'if ! has php; then',
-    '  log "Installing PHP 8..."',
-    '  apt-get install -y php php-cli php-common -qq',
-    'fi', '',
-  );
+  if (selected.has('php')) lines.push(...toolBlock('php', 'PHP 8', 'has php', [
+    'apt-get install -y php php-cli php-common -qq',
+  ]));
 
-  if (selected.has('kubectl')) lines.push(
-    '# kubectl',
-    'if ! has kubectl; then',
-    '  log "Installing kubectl..."',
-    '  mkdir -p /etc/apt/keyrings',
-    '  curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg',
-    '  echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list >/dev/null',
-    '  apt-get update -qq && apt-get install -y kubectl -qq',
-    'fi', '',
-  );
+  if (selected.has('kubectl')) lines.push(...toolBlock('kubectl', 'kubectl', 'has kubectl', [
+    'mkdir -p /etc/apt/keyrings',
+    'curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg',
+    'echo "deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list >/dev/null',
+    'apt-get update -qq && apt-get install -y kubectl -qq',
+  ]));
 
-  if (selected.has('helm')) lines.push(
-    '# Helm',
-    'if ! has helm; then',
-    '  log "Installing Helm..."',
-    '  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash 2>/dev/null',
-    'fi', '',
-  );
+  if (selected.has('helm')) lines.push(...toolBlock('helm', 'Helm', 'has helm', [
+    'curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash 2>/dev/null',
+  ]));
 
-  if (selected.has('terraform')) lines.push(
-    '# Terraform',
-    'if ! has terraform; then',
-    '  log "Installing Terraform 1.7.5..."',
-    '  TF_VER=1.7.5',
-    '  wget -q "https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_${ARCH}.zip" -O /tmp/tf.zip',
-    '  unzip -o /tmp/tf.zip -d /usr/local/bin/ && rm /tmp/tf.zip',
-    'fi', '',
-  );
+  if (selected.has('terraform')) lines.push(...toolBlock('terraform', 'Terraform', 'has terraform', [
+    'TF_VER=1.7.5',
+    'wget -q "https://releases.hashicorp.com/terraform/${TF_VER}/terraform_${TF_VER}_linux_${ARCH}.zip" -O /tmp/tf.zip',
+    'unzip -o /tmp/tf.zip -d /usr/local/bin/ && rm /tmp/tf.zip',
+  ]));
 
-  if (selected.has('ansible')) lines.push(
-    '# Ansible',
-    'if ! has ansible; then',
-    '  log "Installing Ansible..."',
-    '  apt-get install -y ansible -qq',
-    'fi', '',
-  );
+  if (selected.has('ansible')) lines.push(...toolBlock('ansible', 'Ansible', 'has ansible', [
+    'apt-get install -y ansible -qq',
+  ]));
 
-  if (selected.has('k9s')) lines.push(
-    '# k9s',
-    'if ! has k9s; then',
-    '  log "Installing k9s..."',
-    '  K9S_VER=v0.32.4',
-    '  wget -q "https://github.com/derailed/k9s/releases/download/${K9S_VER}/k9s_Linux_${ARCH}.tar.gz" -O /tmp/k9s.tar.gz',
-    '  tar -xzf /tmp/k9s.tar.gz -C /usr/local/bin k9s && rm /tmp/k9s.tar.gz',
-    'fi', '',
-  );
+  if (selected.has('k9s')) lines.push(...toolBlock('k9s', 'k9s', 'has k9s', [
+    'K9S_VER=v0.32.4',
+    'wget -q "https://github.com/derailed/k9s/releases/download/${K9S_VER}/k9s_Linux_${ARCH}.tar.gz" -O /tmp/k9s.tar.gz',
+    'tar -xzf /tmp/k9s.tar.gz -C /usr/local/bin k9s && rm /tmp/k9s.tar.gz',
+  ]));
 
-  if (selected.has('aws')) lines.push(
-    '# AWS CLI v2',
-    'if ! has aws; then',
-    '  log "Installing AWS CLI..."',
-    '  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/aws.zip',
-    '  unzip -q /tmp/aws.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws.zip /tmp/aws',
-    'fi', '',
-  );
+  if (selected.has('aws')) lines.push(...toolBlock('aws', 'AWS CLI', 'has aws', [
+    'curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/aws.zip',
+    'unzip -q /tmp/aws.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws.zip /tmp/aws',
+  ]));
 
-  if (selected.has('azure')) lines.push(
-    '# Azure CLI',
-    'if ! has az; then',
-    '  log "Installing Azure CLI..."',
-    '  curl -sL https://aka.ms/InstallAzureCLIDeb | bash',
-    'fi', '',
-  );
+  if (selected.has('azure')) lines.push(...toolBlock('azure', 'Azure CLI', 'has az', [
+    'curl -sL https://aka.ms/InstallAzureCLIDeb | bash',
+  ]));
 
-  if (selected.has('gcp')) lines.push(
-    '# gcloud CLI',
-    'if ! has gcloud; then',
-    '  log "Installing gcloud CLI..."',
-    '  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg',
-    '  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list >/dev/null',
-    '  apt-get update -qq && apt-get install -y google-cloud-cli -qq',
-    'fi', '',
-  );
+  if (selected.has('gcp')) lines.push(...toolBlock('gcp', 'gcloud CLI', 'has gcloud', [
+    'curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg',
+    'echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list >/dev/null',
+    'apt-get update -qq && apt-get install -y google-cloud-cli -qq',
+  ]));
 
-  if (selected.has('pg-client')) lines.push(
-    '# PostgreSQL client',
-    'if ! has psql; then',
-    '  log "Installing psql..."',
-    '  apt-get install -y postgresql-client -qq',
-    'fi', '',
-  );
+  if (selected.has('pg-client')) lines.push(...toolBlock('pg-client', 'psql', 'has psql', [
+    'apt-get install -y postgresql-client -qq',
+  ]));
 
-  if (selected.has('mysql-client')) lines.push(
-    '# MySQL client',
-    'if ! has mysql; then',
-    '  log "Installing MySQL client..."',
-    '  apt-get install -y mysql-client -qq 2>/dev/null || apt-get install -y default-mysql-client -qq',
-    'fi', '',
-  );
+  if (selected.has('mysql-client')) lines.push(...toolBlock('mysql-client', 'MySQL client', 'has mysql', [
+    'apt-get install -y mysql-client -qq 2>/dev/null || apt-get install -y default-mysql-client -qq',
+  ]));
 
-  if (selected.has('redis-cli')) lines.push(
-    '# Redis CLI',
-    'if ! has redis-cli; then',
-    '  log "Installing redis-cli..."',
-    '  apt-get install -y redis-tools -qq',
-    'fi', '',
-  );
+  if (selected.has('redis-cli')) lines.push(...toolBlock('redis-cli', 'redis-cli', 'has redis-cli', [
+    'apt-get install -y redis-tools -qq',
+  ]));
 
-  if (selected.has('mongosh')) lines.push(
-    '# mongosh',
-    'if ! has mongosh; then',
-    '  log "Installing mongosh..."',
-    '  curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor -o /etc/apt/keyrings/mongodb.gpg',
-    '  echo "deb [signed-by=/etc/apt/keyrings/mongodb.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list >/dev/null',
-    '  apt-get update -qq && apt-get install -y mongodb-mongosh -qq',
-    'fi', '',
-  );
+  if (selected.has('mongosh')) lines.push(...toolBlock('mongosh', 'mongosh', 'has mongosh', [
+    'curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg --dearmor -o /etc/apt/keyrings/mongodb.gpg',
+    'echo "deb [signed-by=/etc/apt/keyrings/mongodb.gpg] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list >/dev/null',
+    'apt-get update -qq && apt-get install -y mongodb-mongosh -qq',
+  ]));
 
-  if (selected.has('gh')) lines.push(
-    '# GitHub CLI',
-    'if ! has gh; then',
-    '  log "Installing GitHub CLI..."',
-    '  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg',
-    '  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list >/dev/null',
-    '  apt-get update -qq && apt-get install -y gh -qq',
-    'fi', '',
-  );
+  if (selected.has('gh')) lines.push(...toolBlock('gh', 'GitHub CLI', 'has gh', [
+    'curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg',
+    'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list >/dev/null',
+    'apt-get update -qq && apt-get install -y gh -qq',
+  ]));
 
-  if (selected.has('yq')) lines.push(
-    '# yq',
-    'if ! has yq; then',
-    '  log "Installing yq..."',
-    '  wget -q "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH}" -O /usr/local/bin/yq',
-    '  chmod +x /usr/local/bin/yq',
-    'fi', '',
-  );
+  if (selected.has('yq')) lines.push(...toolBlock('yq', 'yq', 'has yq', [
+    'wget -q "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${ARCH}" -O /usr/local/bin/yq',
+    'chmod +x /usr/local/bin/yq',
+  ]));
 
   if (selected.has('bat')) lines.push(
-    '# bat',
+    pg('bat', 'bat', 'checking'),
     'if ! has bat && ! has batcat; then',
-    '  log "Installing bat..."',
+    `  ${pg('bat', 'bat', 'installing')}`,
     '  apt-get install -y bat -qq 2>/dev/null || apt-get install -y batcat -qq',
     '  [[ -f /usr/bin/batcat ]] && ln -sf /usr/bin/batcat /usr/local/bin/bat || true',
+    `  ${pg('bat', 'bat', 'done')}`,
+    'else',
+    `  ${pg('bat', 'bat', 'skipped')}`,
     'fi', '',
   );
 
   if (selected.has('fd')) lines.push(
-    '# fd-find',
+    pg('fd', 'fd', 'checking'),
     'if ! has fd && ! has fdfind; then',
-    '  log "Installing fd..."',
+    `  ${pg('fd', 'fd', 'installing')}`,
     '  apt-get install -y fd-find -qq',
     '  ln -sf "$(which fdfind)" /usr/local/bin/fd 2>/dev/null || true',
+    `  ${pg('fd', 'fd', 'done')}`,
+    'else',
+    `  ${pg('fd', 'fd', 'skipped')}`,
     'fi', '',
   );
 
   if (selected.has('zsh')) lines.push(
-    '# zsh + oh-my-zsh',
+    pg('zsh', 'zsh + oh-my-zsh', 'checking'),
     'if ! has zsh; then',
-    '  log "Installing zsh..."',
+    `  ${pg('zsh', 'zsh + oh-my-zsh', 'installing')}`,
     '  apt-get install -y zsh -qq',
     'fi',
     'if [[ ! -d "$HOME/.oh-my-zsh" ]]; then',
-    '  log "Installing oh-my-zsh..."',
     '  RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"',
-    'fi', '',
+    'fi',
+    pg('zsh', 'zsh + oh-my-zsh', 'done'),
+    '',
   );
 
-  lines.push('log "Custom setup complete."');
+  lines.push(`echo '##PG##${JSON.stringify({ tool: '__done__', label: 'Setup complete', status: 'done' })}'`);
   return lines.join('\n');
 }
 
