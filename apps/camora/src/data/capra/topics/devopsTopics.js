@@ -136,6 +136,21 @@ export const devopsTopicCategoryMap = {
   'container-probes':               'orchestration',
   'kubernetes-app-troubleshooting': 'orchestration',
   'local-kubernetes-setup':         'orchestration',
+  'kubernetes-evictions':           'orchestration',
+  'kubernetes-descheduler':         'orchestration',
+  'kubernetes-custom-schedulers':   'orchestration',
+  'kubernetes-api-aggregation':     'orchestration',
+  'kubernetes-gpu-ai-scheduling':   'orchestration',
+  'kubernetes-rbac':                'orchestration',
+  'kubernetes-networking':          'orchestration',
+  'kubernetes-autoscaling':         'orchestration',
+  'kubernetes-security':            'orchestration',
+  'kubernetes-observability':       'orchestration',
+  'kubernetes-secrets-management':  'orchestration',
+  'kubernetes-upgrades':            'orchestration',
+  'kubernetes-multitenancy':        'orchestration',
+  'kubernetes-multicloud':          'orchestration',
+  'kubernetes-ai-ml-workloads':     'orchestration',
   // Observability — foundation → metrics → logs → traces → APM → SLOs → advanced
   'opentelemetry-fundamentals':     'observability',
   'prometheus-grafana-stack':       'observability',
@@ -1390,6 +1405,67 @@ The DORA-specific framing: high CFR with high test coverage usually means you\'r
         description: 'Stream-aligned (build the product) + Enabling (consult) + Platform (self-service) + Complicated Subsystem (specialist). Interactions: collaboration, X-as-a-Service, facilitating.',
         image: '/diagrams/devops/a4-team-topologies.png',
       },
+      {
+        title: 'Team Topologies anti-patterns — how orgs get it wrong',
+        description: `The book names four anti-patterns explicitly. Recognizing them in interviews shows depth of understanding.
+
+Anti-pattern 1: "DevOps Team"
+  What it looks like: leadership creates a team called "DevOps" to handle deployments, pipelines, and ops.
+  Why it fails: recreates the dev/ops silo under a new name. The DevOps team becomes a gatekeeper.
+    Dev teams still throw work over the wall. Ownership does not change.
+  What to do instead: embed DevOps capability into stream-aligned teams. Use a Platform team for shared tooling.
+    Use an Enabling team to teach DevOps practices, then withdraw.
+
+Anti-pattern 2: "Pet Platform"
+  What it looks like: a Platform team builds internal tooling that nobody actually uses.
+  Why it fails: Platform team does not treat itself as a product team. No user research, no internal SLAs.
+    The "platform" is a technical hobby project. Stream-aligned teams build shadow alternatives.
+  What to do instead: run the Platform team like a product team. Define internal customers.
+    Run user research. Have a roadmap. Publish internal SLAs. Measure adoption.
+
+Anti-pattern 3: "Shadow IT"
+  What it looks like: stream-aligned teams secretly build their own internal tools because the official platform is too slow or too poor.
+  Why it fails: duplication of effort, inconsistent security posture, fragmented knowledge.
+  What to do instead: treat shadow IT emergence as a signal that the Platform team is failing its customers.
+    Investigate what the stream-aligned team needed that they could not get. Fix the platform.
+
+Anti-pattern 4: Permanent Collaboration
+  What it looks like: two teams are "collaborating" indefinitely on a shared service.
+  Why it fails: two teams in indefinite collaboration have blurry ownership, unclear decision authority,
+    and high cognitive load for both. Integration mode is expensive; it should be time-bounded.
+  What to do instead: collaboration is meant to solve a hard problem and produce a shared service or platform.
+    Once the problem is solved, one team owns the outcome; the other returns to their stream.
+    If collaboration is permanent, the teams should probably be merged.
+
+Cognitive load capacity planning:
+  The book recommends assessing cognitive load before restructuring.
+  Team cognitive load = intrinsic load (problem complexity) + extraneous load (bad tooling) + germane load (expertise).
+  A stream-aligned team that owns 15 services, a shared database, the K8s cluster, AND on-call has too much extraneous load.
+  Platform teams absorb extraneous load. The Platform team success metric is how much it reduces
+  the extraneous load of stream-aligned teams, not how many features the platform has.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Team Topologies',
+        description: `Core Team Topologies questions with crisp, informed answers.
+
+Q: Name the four team types.
+A: Stream-aligned: aligned to one valuable stream of work, owns design, build, deploy, operate end-to-end, roughly 80% of teams in a healthy org. Enabling: specialists who teach a stream-aligned team a capability then withdraw — time-boxed, not permanent operators. Complicated Subsystem: specialists who own a subsystem requiring deep specialist knowledge (ML, video encoding, payments), absorbs cognitive load that stream-aligned teams should not carry. Platform: provides internal services as a self-service product, treated as a product team with internal customers, roadmap, and SLAs.
+
+Q: Name the three interaction modes.
+A: Collaboration: two teams work closely for a defined period to solve a hard problem, high cognitive load, time-boxed. X-as-a-Service: one team consumes another's self-service capability, low cognitive load, the standard pattern for Platform teams. Facilitating: an Enabling team helps a stream-aligned team build a capability, time-boxed knowledge transfer.
+
+Q: What is Conway's Law and how does it affect architecture?
+A: Conway's Law (1968): organizations which design systems are constrained to produce designs which are copies of their communication structures. In practice: your microservice boundaries will mirror your team boundaries. If three teams own a service together, it will have three architecturally incoherent sections. The Inverse Conway Maneuver — restructure teams first, then re-architect — is the correct sequence for any major architectural transformation.
+
+Q: When should an org create a Platform team?
+A: When multiple stream-aligned teams are reinventing the same capability, when cognitive load from shared infrastructure is overwhelming stream-aligned teams, and when the capability can be run as a product with explicit customers. The Platform team needs a roadmap, internal SLAs, and user research. Without product discipline, it becomes a "pet platform" nobody uses.
+
+Q: Why is a "DevOps team" usually the wrong answer?
+A: Because it recreates the dev/ops silo under a new name. The DevOps team becomes a gatekeeper for deployments and infrastructure. Stream-aligned teams still throw work over the wall. The right answer is to embed DevOps capability into stream-aligned teams (each team owns its CI/CD, its on-call) and create a Platform team for shared tooling. An Enabling team can teach DevOps practices org-wide and then withdraw.
+
+Q: What is "cognitive load" in the Team Topologies context?
+A: The total mental effort a team must sustain to do their work. Includes intrinsic load (problem complexity), extraneous load (bad tooling and processes), and germane load (expertise-building). Teams have a finite cognitive bandwidth. Overloaded stream-aligned teams slow down or cut corners. Platform teams absorb extraneous load. The goal is to keep stream-aligned teams within their cognitive bandwidth so they can deliver fast.`,
+      },
     ],
     introduction: `Team Topologies (Matthew Skelton & Manuel Pais, 2019; 2nd ed. updates ongoing) is the canonical organizational design framework for DevOps-aligned teams. It builds on Conway\'s Law and the cognitive-load research of Eduardo Salas et al. The book is the most-cited org-design text in modern DevOps.
 
@@ -1631,6 +1707,93 @@ Right approach (Inverse Conway):
         description: 'The canonical Fowler/XP feedback loop: every push to mainline triggers an automated self-testing build; a red main is the team\'s top priority and either gets fixed within ~10 minutes or the change is reverted.',
         image: '/diagrams/devops/b1-ci.png',
       },
+      {
+        title: 'CI implementation — GitHub Actions example with build speed targets',
+        description: `A concrete GitHub Actions CI setup implementing Fowler's ten practices.
+
+Repository structure:
+  .github/
+    workflows/
+      ci.yml          — main CI workflow, triggered on every push
+      pr-checks.yml   — status checks required before merge
+
+Minimal ci.yml structure (Node.js service):
+
+  name: CI
+  on:
+    push:
+      branches: [main]
+    pull_request:
+  jobs:
+    build-test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@b4ffde65f46a822f516f94c9696ced4cd5c2b01  # v4
+        - uses: actions/setup-node@1d0ff469b1042a85cbfa9e9e9a7a2d7b3a34b34  # v4
+          with:
+            node-version: 20
+            cache: npm
+        - run: npm ci --prefer-offline
+        - run: npm run lint
+        - run: npm test -- --coverage
+        - run: npm run build
+
+Build speed targets and measurement:
+  Target: p95 pipeline duration under 10 minutes (Fowler's heuristic).
+  Measure: track pipeline duration in CI system dashboards weekly.
+  Alert threshold: if p95 exceeds 15 minutes, treat as a build-health incident.
+
+Techniques to hit 10-minute target:
+  Dependency caching: cache node_modules by package-lock.json hash. Saves 60-120 seconds per run.
+  Parallel jobs: lint + type-check in one job, test in another, build in a third. Run concurrently.
+  Test sharding: split test suite across N runners. 6 shards of 2 min each beat 1 runner of 12 min.
+  Selective testing: Nx/Turborepo affected-only for monorepos — only test what changed.
+  Flake quarantine: move flaky tests to a separate job that does not gate the PR; fix them within 1 week.
+
+Branch protection rules (GitHub):
+  Require status checks: build-test must pass before merge.
+  Require branches to be up to date: prevents stale-branch merges.
+  Dismiss stale reviews: force re-review when new commits push to the PR.
+
+Stop-the-line enforcement:
+  In Slack: CI failure notification pings the author and the team channel immediately.
+  Rule: fix within 10 minutes or revert (git revert, PR, force-merge).
+  Track: broken-build hours per month as a team health metric. Elite target: under 30 minutes/month.
+
+Fowler's ten practices — compliance checklist:
+  Single repo: yes — Git monorepo or polyrepo with one repo per service.
+  Automate the build: yes — ci.yml runs on every push.
+  Self-testing build: yes — tests run and fail the build on regression.
+  Daily commits to mainline: yes — trunk-based dev policy enforced.
+  Every commit builds mainline: yes — branch protection and CI on every PR.
+  Fix broken builds immediately: yes — 10-minute rule and revert policy.
+  Keep the build fast: yes — 10-minute SLO measured weekly.
+  Test in a clone of production: yes — Docker Compose with real DB in CI.
+  Easy access to executables: yes — Docker image tagged with commit SHA and pushed to registry.
+  Visibility: yes — build status in Slack, GitHub status checks, wall display.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Continuous Integration',
+        description: `The CI questions every DevOps interview asks and how to answer precisely.
+
+Q: Define CI in Fowler's terms.
+A: From martinfowler.com: "members of a team integrate their work frequently, usually each person integrates at least daily, leading to multiple integrations per day. Each integration is verified by an automated build including test to detect integration errors as quickly as possible." The key phrase is "as quickly as possible" — that is what distinguishes CI from periodic integration.
+
+Q: What makes a CI setup "CI theatre" rather than real CI?
+A: Three failure modes. First, long-lived branches — if PRs live for three days, you are continuously building isolated branches, not integrating. Second, a build that does not self-test — if "passing CI" means "it compiled" without a meaningful test suite failing on regressions, the CI badge carries no information. Third, broken builds tolerated — if mainline can be red for days, the team has normalized failure and the CI signal is gone.
+
+Q: What is Fowler's ten-minute build rule?
+A: The heuristic that CI feedback must arrive within ten minutes of a commit for developers to actually act on it. Past ten minutes, developers context-switch and the feedback loop degrades. In practice, if your commit-stage build takes 30 minutes, developers stop waiting and batch their commits, which is exactly the failure mode CI was designed to prevent.
+
+Q: What does "stop the line" mean in CI?
+A: From Toyota Production System via DevOps Handbook: a red mainline build is the team's top priority, superseding all other work. The default action is to fix forward within ten minutes, or revert the offending commit and re-roll later with a fix included. Other developers do not push until trunk is green. The discipline is what makes CI work; without it, broken-main becomes normalized.
+
+Q: GitHub Actions vs Jenkins — which would you pick for a new project in 2026?
+A: GitHub Actions for a team on GitHub with standard build requirements — deep GitHub integration, the largest action marketplace, built-in free hosted runners. Jenkins for on-prem or regulated environments where GitHub-hosted runners cannot satisfy constraints (air-gapped, GPU, on-prem dependencies), or where existing Jenkins investment and Groovy pipeline complexity make migration impractical. JetBrains 2024 survey: GitHub Actions 33%, Jenkins 28%, GitLab CI 21%.
+
+Q: What is a self-hosted runner and when do you need one?
+A: A build agent you operate yourself instead of using the CI provider's hosted runners. Required when: you have on-prem dependencies (private artifact repo, internal services), you need GPU for ML pipelines, your build minutes exceed hosted plan caps, or your security policy prohibits code leaving the network. Operational risk: persistent self-hosted runners accumulate state and become supply-chain targets. Use ephemeral runners (fresh VM per job) wherever possible.`,
+      },
     ],
     introduction: `Continuous Integration is the practice of merging every developer\'s work to a shared mainline at least once a day, with each merge verified by an automated build that includes the test suite. Martin Fowler\'s canonical 2006 article (martinfowler.com/articles/continuousIntegration.html) defines it: "a software development practice where members of a team integrate their work frequently, usually each person integrates at least daily — leading to multiple integrations per day. Each integration is verified by an automated build (including test) to detect integration errors as quickly as possible."
 
@@ -1789,6 +1952,72 @@ The ranking is useful when consulting on a struggling team: do not start with "w
         title: 'Deployment pipeline — commit to production with explicit gate',
         description: 'Humble & Farley\'s pipeline: commit stage → automated acceptance tests → capacity/UAT stages → manual or automated production gate. Continuous Delivery makes every green build a release candidate; Continuous Deployment automates the final push.',
         image: '/diagrams/devops/b2-cd-vs-deploy.png',
+      },
+      {
+        title: 'Deployment pipeline stages — commit through production with safety gates',
+        description: `Humble and Farley's canonical deployment pipeline (Continuous Delivery, Ch 5) has five stages. The same stages work for Continuous Delivery and Continuous Deployment; only the production gate differs.
+
+Stage 1 — Commit stage (target: 5 minutes):
+  Trigger: every push to mainline.
+  Actions: compile, unit tests, fast static analysis (linting, basic security scan).
+  Build artifact: built exactly once here. Tagged with commit SHA. Pushed to artifact registry.
+  Gate: failure rejects the commit immediately. Author fixes or reverts within 10 minutes.
+  The commit stage is the fastest possible falsification of a change.
+
+Stage 2 — Automated acceptance test stage (target: under 1 hour):
+  Actions: pull the stage-1 artifact, deploy to test environment, run business-readable acceptance tests.
+  Test types: integration tests at API boundaries, BDD scenarios (Cucumber/Gherkin), critical-path UI tests.
+  Environment: ephemeral, provisioned by IaC, torn down after the stage.
+  Gate: failure blocks promotion to capacity stage. Engineers own fixing acceptance failures.
+
+Stage 3 — Capacity and non-functional stage (target: minutes to hours):
+  Actions: load tests (k6, Gatling), soak tests for slow leaks, DAST security scans.
+  Environment: production-like replica with realistic data volumes.
+  When triggered: nightly or on PRs touching performance-sensitive paths (not every commit).
+  Gate: performance regression fails the candidate. SLO-based thresholds.
+
+Stage 4 — Manual test or UAT (optional, should shrink over time):
+  Actions: exploratory testing, product review, regulatory sign-off.
+  For mature teams: mostly empty. Automated stages provide sufficient confidence.
+  For regulated industries: this stage never disappears; it provides the human-approval audit record.
+
+Stage 5 — Release to production:
+  Continuous Delivery: human clicks Approve. The artifact is known releasable from stages 1-4.
+  Continuous Deployment: automatic. Green pipeline = auto-deploy within minutes.
+  Deployment technique: blue/green, canary (percentage rollout), or ring-based.
+  Post-deploy: automated SLO monitoring; rollback if error rate or latency SLO regresses.
+
+Three principles across all stages:
+  Build once, promote many — the stage-1 artifact is the artifact that reaches production.
+  Each stage gates promotion — failure in any stage halts the candidate.
+  Pipeline-as-code — the pipeline definition lives in the repo, versioned alongside the application.
+
+Key numbers for interview:
+  Commit stage: 5 minutes. Acceptance: under 1 hour. Full pipeline elite: under 1 day.
+  Change failure rate elite: under 15%. MTTR elite: under 1 hour.
+  These are DORA elite thresholds, achievable with a well-structured deployment pipeline.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Continuous Delivery vs Deployment',
+        description: `The CD questions every DevOps interview asks and how to answer precisely.
+
+Q: What is the difference between Continuous Delivery and Continuous Deployment?
+A: Continuous Delivery is the capability — every commit that passes the pipeline is a releasable artifact. Humble: "the ability to get changes of all types into production safely and quickly in a sustainable way." Continuous Deployment is the automated exercise of that capability — every green commit auto-deploys to production. Same pipeline, different final gate: Delivery has a human Approve button; Deployment has automation.
+
+Q: What is the deployment pipeline?
+A: Humble and Farley's term for the automated implementation of build-test-deploy. Every change is verified at increasing levels of fidelity until rejected or declared releasable. Five stages: commit (5 min), automated acceptance (under 1 hour), capacity/non-functional, manual UAT (optional), release. Same structure for Delivery and Deployment.
+
+Q: What does "build once, promote" mean and why does it matter?
+A: Build the deployable artifact exactly once in the commit stage. Tag it with the commit SHA. Promote that same artifact through every subsequent stage without rebuilding. Why: rebuild introduces nondeterminism — compiler flags, floating dependencies, environment differences. The acceptance test suite verified stage-1's binary; if you rebuild at stage 5, you deploy a different binary and the acceptance test signal does not transfer.
+
+Q: When should a team practice Continuous Deployment rather than Continuous Delivery?
+A: Three conditions must hold. First, the safety net is real: feature flags, canary rollout, automated SLO-gated rollback, mature observability. Without these, Continuous Deployment is just automated outages. Second, regulatory reality permits it — regulated industries often require human sign-off per release. Third, the team owns production — "you build it, you run it." Without production ownership, automated deploys land in nobody's lap.
+
+Q: Can a regulated industry practice Continuous Delivery?
+A: Yes. A bank or pharma company can have a deployment pipeline that produces a releasable, audited artifact on every commit. The pipeline provides the audit log, the build provenance, the test results. A human clicks Approve for the production release — that human approval is the regulatory gate. They practice Continuous Delivery, not Deployment. The pipeline still eliminates weeks of manual pre-release activity.
+
+Q: What is progressive delivery and how does it relate to Continuous Deployment?
+A: Progressive delivery is the deployment practice that makes Continuous Deployment safe: canary releases (1% of traffic, observe SLOs, then 10%, then 100%), ring-based rollout (internal users first, then external), feature flags (deploy dark, flip on per cohort). Progressive delivery means a bad deploy is caught at low blast radius before reaching all users. Without progressive delivery, Continuous Deployment at 100% blast radius is high-risk. With it, the risk is bounded.`,
       },
     ],
     introduction: `Continuous Delivery (CD) and Continuous Deployment (CDeploy) are different things, and the distinction shows up in interviews because most candidates conflate them.
@@ -1957,6 +2186,72 @@ Pipeline-as-code. The pipeline definition lives in the repo, versioned alongside
         description: 'Trunk-based: short-lived (hours-day) branches off main, merged back constantly, feature flags for incomplete work. Git Flow: long-lived develop + release branches, weekly+ integration. GitHub Flow: feature branches off main, merged via PR; close to trunk-based but typically with longer-lived branches.',
         image: '/diagrams/devops/b6-trunk.png',
       },
+      {
+        title: 'Feature flags — types, lifecycle, and operational discipline',
+        description: `Pete Hodgson's 2017 Martin Fowler article is the canonical reference. Four categories by purpose and lifetime.
+
+Release toggles (short-lived, days to weeks):
+  Purpose: hide incomplete features in production until they are ready for users.
+  Default: off in production.
+  Lifecycle: created when work starts, turned on incrementally (internal, 1%, 10%, 100%), retired promptly after 100%.
+  Anti-pattern: release toggles that live for months become permanent complexity.
+  Test requirement: CI must run with the flag both on and off for every flag in production.
+
+Experiment toggles (medium-lived, weeks to months):
+  Purpose: A/B test variants. Flag value depends on user-cohort assignment.
+  Lifecycle: created at experiment start, retired after experiment concludes (winning variant becomes the default).
+  Tooling: LaunchDarkly, Split, Statsig with built-in experimentation support.
+  Test requirement: record which variant served per user; correlate with downstream metrics.
+
+Ops toggles (long-lived, sometimes permanent):
+  Purpose: operational kill-switches. Disable a problematic code path without redeploying.
+  Example: "disable third-party payment provider and fall back to backup" during an outage.
+  Lifecycle: created as a safety valve; may stay permanently as a circuit-breaker.
+  Test requirement: both on and off paths must be tested; the off path is often less tested.
+
+Permission toggles (long-lived, sometimes permanent):
+  Purpose: premium features for paid users, beta access for selected accounts.
+  Lifecycle: tied to the entitlement system; flags live as long as the feature tier exists.
+  Test requirement: test the entitlement boundary — user with permission sees feature, user without does not.
+
+Flag management discipline:
+  Maximum active flags: set an org policy. More than 20-30 active release toggles is a debt signal.
+  Flag registry: maintain a searchable registry of all flags with owner, creation date, purpose, expiry date.
+  Retire flags: set a calendar reminder at flag creation. If the flag is not retired by the expiry date, it is a bug.
+  Dynamic vs static: static flags (environment variables, config files) require a redeploy to change.
+    Dynamic flags (LaunchDarkly, Split, Unleash, ConfigCat) change in milliseconds without a redeploy.
+    Any flag that needs to act as an ops kill-switch must be dynamic.
+
+Platform choices:
+  LaunchDarkly: most mature, expensive, excellent targeting and experimentation.
+  Split: strong experimentation focus, good analytics integration.
+  Statsig: newer, strong experimentation, product-analytics integration.
+  Unleash: open-source, self-hosted option for teams that cannot use SaaS.
+  ConfigCat: simple, low-cost, good for teams with modest flag needs.
+  Homegrown: a simple boolean table in a database. Viable for fewer than 10 flags; does not scale.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Trunk-Based Development',
+        description: `The TBD questions every DevOps interview asks with interview-ready answers.
+
+Q: Define trunk-based development.
+A: From trunkbaseddevelopment.com (Paul Hammant): "developers collaborate on code in a single branch called trunk, resist any pressure to create other long-lived development branches by employing documented techniques." All developers commit to a single shared branch at least once a day. Branches, when used, live hours to a day, not weeks.
+
+Q: What is the difference between TBD and GitHub Flow?
+A: GitHub Flow — feature branches off main, PR for review, merge to main, deploy — is compatible with TBD when branches live under 24 hours. It is anti-TBD when branches live for days or weeks. Branch lifetime is what distinguishes TBD from GitHub Flow in practice. Many teams call their workflow "GitHub Flow" and are actually doing TBD; many call it "TBD" and are actually doing GitHub Flow with weekly branches.
+
+Q: What is the difference between TBD and Git Flow?
+A: Git Flow has long-lived develop, release, feature, hotfix branches — designed for versioned software (a library with explicit releases). TBD has one branch. Driessen himself (2020 update) qualified that Git Flow is for versioned software; for web apps and SaaS doing continuous delivery, a simpler model like GitHub Flow or TBD is correct.
+
+Q: How does TBD handle features that take multiple weeks to build?
+A: Feature flags. Incomplete code merges to trunk behind a flag that defaults off in production. The feature ships in small daily increments; production users see nothing. When the feature is ready, the flag is turned on incrementally: internal users, then 1%, then 10%, then 100%. This decouples deploy from release and eliminates the long-lived feature branch.
+
+Q: What is branch by abstraction?
+A: A pattern for large refactors without long-lived branches. Introduce an abstraction layer around the code to be replaced. Migrate consumers behind the abstraction one at a time, each in a small trunk commit. When all consumers are on the abstraction, swap the underlying implementation. Remove the old code. Every change lands on trunk daily. Eliminates the "refactor branch" that lives for weeks.
+
+Q: What does DORA research say about branch lifetime?
+A: Accelerate (Forsgren, Humble, Kim, 2018): teams with fewer than 3 active branches and branch lifetimes under a day correlate with elite delivery performance. Long-lived feature branches correlate with low and medium performance bands. The mechanism is small batches: short branches produce small merges, small conflicts, small attribution windows when regressions appear.`,
+      },
     ],
     introduction: `Trunk-based development (TBD) is the source-control branching model where all developers commit to a single shared branch (trunk / main) at least once a day, with branches — when used at all — living hours, not weeks. The canonical reference is trunkbaseddevelopment.com (Paul Hammant, 2017+).
 
@@ -2108,6 +2403,89 @@ What success looks like. Median branch lifetime under 24 hours, p95 under 48 hou
         title: 'Pipeline-as-code lifecycle',
         description: 'Pipeline definition lives in the same repo as the code it builds, reviewed via PR, versioned with the application. The CI server reads the definition on each push; the pipeline is a build artifact, not a server-side configuration.',
         image: '/diagrams/devops/b3-pipeline-as-code.png',
+      },
+      {
+        title: 'GitHub Actions patterns — reusable workflows, security, and at-scale design',
+        description: `GitHub Actions is the most-adopted CI platform in 2024 (JetBrains survey: 33%). Key patterns for production use.
+
+Reusable workflow pattern (DRY at org scale):
+
+  Central repo (.github) defines the canonical workflow:
+    .github/workflows/build-node.yml — callable workflow
+
+  Service repos reference it:
+    on: [push, pull_request]
+    jobs:
+      build:
+        uses: my-org/.github/.github/workflows/build-node.yml@v2
+        with:
+          node-version: '20'
+          run-lint: true
+        secrets: inherit
+
+  Versioning discipline: reference by tag (v2), never by main.
+  Breaking changes: bump major version. Downstream upgrades via explicit PR.
+  Test the central workflow on a canary service repo before rolling org-wide.
+
+Security hardening — the OSSF supply-chain checklist:
+
+  Pin actions by SHA, not tag:
+    uses: actions/checkout@b4ffde65f46a822f516f94c9696ced4cd5c2b01  # v4.1.1
+    Reason: tags are mutable. A compromised upstream repo can rewrite v4 to malicious code.
+    Dependabot updates SHAs automatically — enable it in .github/dependabot.yml.
+
+  Minimum permissions:
+    permissions:
+      contents: read
+    Never use permissions: write-all. Scope tightly to what each job needs.
+
+  OIDC for cloud credentials — no stored secrets:
+    Instead of AWS_ACCESS_KEY_ID in secrets, use GitHub OIDC to assume an IAM role:
+    - uses: aws-actions/configure-aws-credentials@...
+      with:
+        role-to-assume: arn:aws:iam::123456789:role/GitHubActionsRole
+        aws-region: us-east-1
+    Zero long-lived credentials in GitHub secrets.
+
+  Self-hosted runner hygiene:
+    Use ephemeral runners (one job per VM, then terminate). Never persistent.
+    Isolate self-hosted runners from production network where possible.
+    Use runs-on: ubuntu-latest for hosted runners; reserve self-hosted for GPU or on-prem needs.
+
+Workflow optimization for speed:
+  cache: key for dependency restoration (npm ci, pip install, go mod download).
+  Parallel jobs: lint + typecheck in parallel with tests.
+  Matrix strategy: test across multiple Node versions or OS in parallel.
+  Test sharding: split jest or pytest suites across N runners.
+  Conditional steps: skip build if only docs changed using paths-filter action.
+
+Pipeline metrics to track:
+  Workflow duration: p95 under 10 minutes for commit stage. Alert on sustained breach.
+  Queue time: time from trigger to first runner pick-up. High queue = need more runners.
+  Cache hit rate: dependency cache hits. Under 70% means cache key is wrong.
+  Failure rate: percentage of runs that fail. High failure rate with no code regression = flake.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Pipeline-as-Code',
+        description: `Pipeline-as-code interview questions with precise, senior-level answers.
+
+Q: What is pipeline-as-code and why does it matter?
+A: Pipeline-as-code means the CI/CD pipeline is defined in a file (Jenkinsfile, .github/workflows/ci.yml, .gitlab-ci.yml) that lives in the application repository and is versioned, reviewed, and branched alongside the code. Before this, pipelines were click-configured in a UI — no review process, no audit trail, no way to revert a pipeline alongside a code revert. Pipeline-as-code closes the lifecycle loop: the pipeline that built v2.3.1 is tagged in git alongside v2.3.1.
+
+Q: Declarative vs scripted pipelines — which do you pick?
+A: Default to declarative (GitHub Actions YAML, GitLab CI YAML). Easy to read, easy to lint with actionlint or gitlab-ci-lint, easy for any team member to understand. Reach for scripted (Jenkinsfile Groovy) only when YAML's logic ceiling actually bites — complex conditional matrices, library imports, multi-stage dynamic pipelines. Most teams never need scripted.
+
+Q: How do you secure a GitHub Actions pipeline against supply-chain attacks?
+A: Three controls. Pin every external action by commit SHA, not by tag — tags are mutable, SHAs are content-addressed. Use minimum permissions — set permissions: contents: read at the workflow level and scope upward only where needed. Use OIDC for cloud credentials instead of stored secrets — GitHub OIDC lets a job assume an IAM role or GCP service account without a long-lived secret stored in GitHub.
+
+Q: How do you keep pipelines DRY across 30 microservices?
+A: GitHub Actions reusable workflows — a central repo defines a callable workflow; service repos reference it with uses: org/.github/.github/workflows/build-node.yml@v2. Version by tag, never by main. Breaking changes get a major version bump; downstream upgrades are explicit PRs. Composite actions for smaller reusable units within a workflow. Test the central repo on a canary service first before rolling changes org-wide.
+
+Q: When would you choose Jenkins over GitHub Actions?
+A: On-prem or air-gapped environments where GitHub-hosted runners are not permitted. Heavy regulated-industry requirements that need self-hosted runners with specific security postures. Complex Groovy-based pipeline logic that predates YAML-based alternatives and is too expensive to migrate. Legacy plugin dependencies with no GitHub Actions equivalent. In 2026, new projects almost never pick Jenkins; it is a migration target, not a greenfield choice.
+
+Q: What is actionlint and why use it?
+A: actionlint is a static analysis tool for GitHub Actions workflow files. It catches type errors in workflow inputs, invalid job dependency names, incorrect expression syntax, and common security issues. Run it in the CI pipeline as a pre-merge check. Prevents broken workflow syntax from reaching main, which causes an invisible CI failure (the pipeline never starts rather than failing with a clear error).`,
       },
     ],
     introduction: `Pipeline-as-code means the build/test/deploy pipeline is defined as version-controlled source code in the same repository as the application, not as a click-configured job in a CI server\'s UI. The shift was popularized by Jenkins 2.0 (2016) introducing the Jenkinsfile, paralleled by Travis CI\'s \`.travis.yml\` (2011), CircleCI\'s \`.circleci/config.yml\`, GitLab CI\'s \`.gitlab-ci.yml\` (2015), and GitHub Actions\' \`.github/workflows/*.yml\` (2019).
