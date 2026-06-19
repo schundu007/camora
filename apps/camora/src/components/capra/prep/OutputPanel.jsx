@@ -1,128 +1,5 @@
 import { useState, useCallback, Component } from 'react';
-
-// Markdown renderer that handles code blocks, headers, lists, and inline formatting
-function renderMarkdown(text) {
-  if (!text) return null;
-
-  const elements = [];
-  const lines = text.split('\n');
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Code block (triple backticks)
-    if (trimmed.startsWith('```')) {
-      const lang = trimmed.slice(3).trim() || 'code';
-      const codeLines = [];
-      i++;
-      while (i < lines.length && !lines[i].trim().startsWith('```')) {
-        codeLines.push(lines[i]);
-        i++;
-      }
-      elements.push(
-        <div key={`code-${elements.length}`} className="prep-code-block my-3">
-          <div className="prep-code-header">
-            <span className="prep-code-lang">{lang}</span>
-          </div>
-          <pre className="prep-code-content">
-            <code>{codeLines.join('\n')}</code>
-          </pre>
-        </div>
-      );
-      i++; // Skip closing ```
-      continue;
-    }
-
-    // Empty line
-    if (!trimmed) {
-      i++;
-      continue;
-    }
-
-    // Headers — each gets a gold-leaf left rail to match the navy+gold
-    // accent pattern used across the answer surfaces (SectionCard,
-    // ExplanationPanel). Inline-styled because OutputPanel renders into
-    // markdown blocks dynamically; we can't wrap in SectionCard.
-    const railH4 = <span className="inline-block align-middle mr-2" style={{ width: 3, height: 12, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
-    const railH3 = <span className="inline-block align-middle mr-2" style={{ width: 3, height: 14, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
-    const railH2 = <span className="inline-block align-middle mr-2" style={{ width: 4, height: 16, borderRadius: 2, background: 'var(--cam-gold-leaf)' }} />;
-    if (trimmed.startsWith('### ')) {
-      elements.push(<h4 key={`h4-${i}`} className="font-semibold text-sm mt-3 mb-1 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH4}{trimmed.slice(4)}</h4>);
-      i++;
-      continue;
-    }
-    if (trimmed.startsWith('## ')) {
-      elements.push(<h3 key={`h3-${i}`} className="font-semibold text-base mt-3 mb-1 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH3}{trimmed.slice(3)}</h3>);
-      i++;
-      continue;
-    }
-    if (trimmed.startsWith('# ')) {
-      elements.push(<h2 key={`h2-${i}`} className="font-bold text-lg mt-3 mb-2 flex items-center" style={{ color: 'var(--accent-text)' }}>{railH2}{trimmed.slice(2)}</h2>);
-      i++;
-      continue;
-    }
-
-    // Bullet list
-    if (trimmed.match(/^[-*•]\s+/)) {
-      const listItems = [];
-      while (i < lines.length && lines[i].trim().match(/^[-*•]\s+/)) {
-        listItems.push(lines[i].trim().replace(/^[-*•]\s+/, ''));
-        i++;
-      }
-      elements.push(
-        <ul key={`ul-${elements.length}`} className="list-disc list-inside grid grid-cols-1 md:grid-cols-2 gap-1 my-2 ml-2">
-          {listItems.map((item, j) => (
-            <li key={j} className="text-sm" style={{ color: 'var(--content-text)' }} dangerouslySetInnerHTML={{ __html: processInline(item) }} />
-          ))}
-        </ul>
-      );
-      continue;
-    }
-
-    // Numbered list
-    if (trimmed.match(/^\d+\.\s+/)) {
-      const listItems = [];
-      while (i < lines.length && lines[i].trim().match(/^\d+\.\s+/)) {
-        listItems.push(lines[i].trim().replace(/^\d+\.\s+/, ''));
-        i++;
-      }
-      elements.push(
-        <ol key={`ol-${elements.length}`} className="list-decimal list-inside grid grid-cols-1 md:grid-cols-2 gap-1 my-2 ml-2">
-          {listItems.map((item, j) => (
-            <li key={j} className="text-sm" style={{ color: 'var(--content-text)' }} dangerouslySetInnerHTML={{ __html: processInline(item) }} />
-          ))}
-        </ol>
-      );
-      continue;
-    }
-
-    // Regular paragraph
-    elements.push(
-      <p key={`p-${i}`} className="text-sm mb-2" style={{ color: 'var(--content-text)' }} dangerouslySetInnerHTML={{ __html: processInline(trimmed) }} />
-    );
-    i++;
-  }
-
-  return elements;
-}
-
-// Process inline markdown (bold, italic, code, links)
-function processInline(str) {
-  if (!str) return '';
-  // Escape HTML entities first to prevent XSS
-  str = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  // Bold: **text** or __text__
-  str = str.replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--accent);">$1</strong>');
-  str = str.replace(/__(.+?)__/g, '<strong style="color: var(--accent);">$1</strong>');
-  // Italic: *text* or _text_
-  str = str.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-  str = str.replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>');
-  // Inline code: `text`
-  str = str.replace(/`([^`]+)`/g, '<code style="padding: 2px 6px; background: var(--bg-elevated); border-radius: 4px; color: var(--accent-text); font-size: 12px; font-family: Monaco, Consolas, monospace;">$1</code>');
-  return str;
-}
+import FormattedContent from '../docs/FormattedContent.jsx';
 
 // Error boundary to catch rendering errors
 class ErrorBoundary extends Component {
@@ -408,7 +285,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                   </div>
                 ) : (
                   <>
-                    {renderMarkdown(displayContent)}
+                    <FormattedContent content={displayContent} />
                     {isGenerating && <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse" style={{ background: colors.accent }} />}
                   </>
                 )}
@@ -718,7 +595,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                         {/* Simple answer/approach for basic questions */}
                         {(q.answer || q.suggestedAnswer) && !q.approaches && (
                           <div className="mt-2" style={{ color: colors.text }}>
-                            {renderMarkdown((q.answer || q.suggestedAnswer)?.trim())}
+                            <FormattedContent content={(q.answer || q.suggestedAnswer)?.trim()} />
                           </div>
                         )}
                         {q.approach && !q.approaches && (
@@ -843,7 +720,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 <p className="font-semibold text-sm">{c?.concept || ''}</p>
                                 {c?.explanation && (
                                   <div className="text-xs mt-1" style={{ color: colors.textMuted }}>
-                                    {renderMarkdown(String(c.explanation).replace(/\\n/g, '\n'))}
+                                    <FormattedContent content={String(c.explanation).replace(/\\n/g, '\n')} />
                                   </div>
                                 )}
                               </div>
@@ -865,7 +742,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                                 )}
                                 {q?.answer && (
                                   <div className="text-xs mt-2" style={{ color: colors.text }}>
-                                    {renderMarkdown(String(q.answer).replace(/\\n/g, '\n'))}
+                                    <FormattedContent content={String(q.answer).replace(/\\n/g, '\n')} />
                                   </div>
                                 )}
                                 {q?.codeExample && (
@@ -1145,7 +1022,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                               return (
                                 <div key={i} className="pb-4" style={{ borderBottom: `1px solid ${colors.border}` }}>
                                   <p className="font-semibold mb-1 text-base" style={{ color: 'var(--accent-text)' }}>{item.question}</p>
-                                  <div className="text-sm">{renderMarkdown(item.answer.replace(/\\n/g, '\n'))}</div>
+                                  <div className="text-sm"><FormattedContent content={item.answer.replace(/\\n/g, '\n')} /></div>
                                 </div>
                               );
                             }
@@ -1153,7 +1030,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                               return (
                                 <div key={i} className="mb-3 pl-2" style={{ borderLeft: '2px solid var(--accent)' }}>
                                   <p className="font-semibold text-sm">{item.concept}</p>
-                                  <div className="text-xs mt-1" style={{ color: colors.textMuted }}>{renderMarkdown(item.explanation.replace(/\\n/g, '\n'))}</div>
+                                  <div className="text-xs mt-1" style={{ color: colors.textMuted }}><FormattedContent content={item.explanation.replace(/\\n/g, '\n')} /></div>
                                 </div>
                               );
                             }
@@ -1190,7 +1067,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                     .replace(/^"/gm, '')  // Remove leading quotes
                     .trim();
 
-                  return <div className="text-sm whitespace-pre-wrap">{renderMarkdown(cleanedContent)}</div>;
+                  return <div className="text-sm"><FormattedContent content={cleanedContent} /></div>;
                 })()}
 
                 {/* Abbreviations - compact 2 column */}
@@ -1221,7 +1098,7 @@ export default function OutputPanel({ section, content, streamingContent, isGene
                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                         </p>
                         {typeof value === 'string' ? (
-                          <div className="text-sm" style={{ color: colors.text }}>{renderMarkdown(value)}</div>
+                          <div className="text-sm" style={{ color: colors.text }}><FormattedContent content={value} /></div>
                         ) : Array.isArray(value) ? (
                           <div className="space-y-2">
                             {value.map((item, idx) => (
