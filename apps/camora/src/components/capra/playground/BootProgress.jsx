@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const TOOL_STATUS_ICON = {
   checking:   { icon: '○', color: 'rgba(255,255,255,0.3)' },
   installing: { icon: '◉', color: '#f59e0b', spin: true },
@@ -10,13 +12,25 @@ const TOOL_STATUS_ICON = {
 const SYSTEM_STEPS = ['container_ready', 'env_setup', 'ide_start', 'terminal_ready'];
 
 export default function BootProgress({ steps = [], totalSteps = 4, environment }) {
+  const [elapsed, setElapsed] = useState(0);
+
   const systemSteps = steps.filter(s => SYSTEM_STEPS.includes(s.step));
+  const envSubSteps = steps.filter(s => s.step.startsWith('env_sub_'));
   const setupHeader = steps.find(s => s.step === 'custom_tools_header');
   const toolSteps = steps.filter(s => s.step.startsWith('tool_'));
   const isCustom = !!setupHeader;
   const allDone = setupHeader
     ? setupHeader.status === 'done'
     : systemSteps.filter(s => s.status === 'done').length >= 4;
+
+  const envSetupStatus = systemSteps.find(s => s.step === 'env_setup')?.status;
+  const isEnvRunning = envSetupStatus === 'running';
+
+  useEffect(() => {
+    if (!isEnvRunning) { setElapsed(0); return; }
+    const t = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [isEnvRunning]);
 
   if (!steps.length) {
     return (
@@ -88,37 +102,86 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {[
               { step: 'container_ready', label: 'Container started' },
-              { step: 'env_setup',       label: 'Environment ready' },
+              { step: 'env_setup',       label: 'Environment starting' },
               { step: 'ide_start',       label: 'IDE ready' },
               { step: 'terminal_ready',  label: 'Terminal ready' },
             ].map(({ step, label }) => {
               const ev = systemSteps.find(s => s.step === step);
               const status = ev?.status || 'pending';
+              const isEnvSetup = step === 'env_setup';
+              const activeSubSteps = isEnvSetup ? envSubSteps : [];
               return (
-                <div key={step} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '6px 10px', borderRadius: 4,
-                  background: status === 'done' ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${status === 'done' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}`,
-                }}>
-                  {status === 'done' && <span style={{ color: '#10b981', fontSize: 10, width: 12, textAlign: 'center' }}>✓</span>}
-                  {status === 'running' && (
-                    <div style={{
-                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                      border: '1.5px solid rgba(245,158,11,0.2)',
-                      borderTopColor: '#f59e0b',
-                      animation: 'spin 0.9s linear infinite',
-                    }} />
-                  )}
-                  {(status === 'pending') && (
-                    <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, width: 12, textAlign: 'center' }}>○</span>
-                  )}
-                  <span style={{
-                    fontSize: 11, fontFamily: '"IBM Plex Mono", monospace',
-                    color: status === 'done' ? 'rgba(255,255,255,0.5)' : status === 'running' ? '#fff' : 'rgba(255,255,255,0.18)',
+                <div key={step}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '6px 10px', borderRadius: 4,
+                    background: status === 'done' ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${status === 'done' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}`,
                   }}>
-                    {ev?.label || label}
-                  </span>
+                    {status === 'done' && <span style={{ color: '#10b981', fontSize: 10, width: 12, textAlign: 'center' }}>✓</span>}
+                    {status === 'running' && (
+                      <div style={{
+                        width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                        border: '1.5px solid rgba(245,158,11,0.2)',
+                        borderTopColor: '#f59e0b',
+                        animation: 'spin 0.9s linear infinite',
+                      }} />
+                    )}
+                    {status === 'pending' && (
+                      <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, width: 12, textAlign: 'center' }}>○</span>
+                    )}
+                    <span style={{
+                      flex: 1,
+                      fontSize: 11, fontFamily: '"IBM Plex Mono", monospace',
+                      color: status === 'done' ? 'rgba(255,255,255,0.5)' : status === 'running' ? '#fff' : 'rgba(255,255,255,0.18)',
+                    }}>
+                      {ev?.label || label}
+                    </span>
+                    {isEnvSetup && status === 'running' && elapsed > 0 && (
+                      <span style={{
+                        fontSize: 9, fontFamily: '"IBM Plex Mono", monospace', fontWeight: 600,
+                        color: elapsed > 60 ? '#f87171' : '#f59e0b',
+                      }}>
+                        {elapsed}s
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Sub-steps under env_setup while running */}
+                  {isEnvSetup && status === 'running' && (
+                    <div style={{ paddingLeft: 30, marginTop: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      {activeSubSteps.length === 0 ? (
+                        <div style={{
+                          fontSize: 10, color: 'rgba(255,255,255,0.2)',
+                          fontFamily: '"IBM Plex Mono", monospace', padding: '2px 0',
+                          animation: 'pulse 1.5s ease-in-out infinite',
+                        }}>
+                          Usually 30–60 seconds...
+                        </div>
+                      ) : (
+                        activeSubSteps.map(sub => (
+                          <div key={sub.step} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+                            {sub.status === 'done' ? (
+                              <span style={{ color: '#10b981', fontSize: 9, width: 10, flexShrink: 0 }}>✓</span>
+                            ) : (
+                              <div style={{
+                                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                                border: '1.5px solid rgba(245,158,11,0.15)',
+                                borderTopColor: '#f59e0b',
+                                animation: 'spin 0.9s linear infinite',
+                              }} />
+                            )}
+                            <span style={{
+                              fontSize: 10, fontFamily: '"IBM Plex Mono", monospace',
+                              color: sub.status === 'done' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)',
+                            }}>
+                              {sub.label}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
