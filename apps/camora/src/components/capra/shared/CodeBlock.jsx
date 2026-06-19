@@ -20,7 +20,40 @@ import cpp from 'highlight.js/lib/languages/cpp';
 import 'highlight.js/styles/atom-one-dark.css';
 
 hljs.registerLanguage('yaml', yaml);
-hljs.registerLanguage('bash', bash);
+
+const CLI_TOOLS = [
+  'docker','kubectl','helm','k9s','aws','gcloud','az','terraform','tofu',
+  'git','npm','yarn','pnpm','pip','pip3','apt','apt-get','yum','dnf','brew','apk','cargo',
+  'systemctl','journalctl','service','crontab',
+  'curl','wget','ssh','scp','sftp','rsync',
+  'make','cmake','bazel',
+  'python','python3','node','deno','bun','java','mvn','gradle','ant','ruby','php',
+  'ansible','ansible-playbook','ansible-vault','ansible-galaxy',
+  'vault','consul','nomad','nginx','apache2','httpd',
+  'jq','yq','openssl','keytool',
+  'kubeadm','kind','minikube','k3s','k3d','eksctl',
+  'istioctl','kustomize','skaffold','flux','argocd','argo',
+  'crictl','ctr','nerdctl','podman','buildah','ko','skopeo',
+  'trivy','snyk','grype','syft',
+  'oc','etcdctl','redis-cli','psql','mysql','mongosh','mongo',
+  'prometheus','promtool','amtool','alertmanager',
+  'fluentd','filebeat','logstash','vector',
+  'chmod','chown','tar','gzip','find','grep','awk','sed',
+  'ping','dig','nslookup','nmap','nc','ss','ip','netstat','iptables','ufw',
+  'timedatectl','hostnamectl','uname','ps','top','htop','kill','df','du','free',
+  'ln','cp','mv','rm','mkdir','touch','cat','head','tail','less','more',
+  'stern','kubectx','kubens','skaffold','velero',
+].join('|');
+
+const bashWithTools = (hljsInst) => {
+  const lang = bash(hljsInst);
+  lang.contains = [
+    { scope: 'built_in', match: new RegExp(`\\b(${CLI_TOOLS})\\b`) },
+    ...lang.contains,
+  ];
+  return lang;
+};
+hljs.registerLanguage('bash', bashWithTools);
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('typescript', typescript);
