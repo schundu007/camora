@@ -18,7 +18,7 @@ const TERMINAL_PREVIEWS = {
   custom: '$ bash setup.sh',
 };
 
-export default function EnvironmentConfigPanel({ env }) {
+const EnvironmentConfigPanel = ({ env }) => {
   if (!env) return null;
 
   const nodes = env.nodes || [{ name: env.id, role: 'Node', mem: '512 MB', tools: ['Terminal', 'IDE'] }];
@@ -171,4 +171,6 @@ export default function EnvironmentConfigPanel({ env }) {
       </div>
     </div>
   );
-}
+};
+
+export default EnvironmentConfigPanel;
