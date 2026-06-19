@@ -1088,6 +1088,68 @@ VSM tells you WHERE the time is going. DORA gives you a single number to track o
         description: 'Deployment Frequency × Lead Time for Changes × Change Failure Rate × MTTR. Elite teams: multiple deploys/day, < 1 day lead time, < 15% failure, < 1 hour MTTR.',
         image: '/diagrams/devops/a2-dora-metrics.png',
       },
+      {
+        title: 'DORA metric instrumentation — how to actually collect the four keys',
+        description: `Automated instrumentation is mandatory. Survey-based DORA measurement consistently over-reports performance by one band. Instrument from systems, not from people.
+
+Deployment Frequency:
+  Source: CI/CD pipeline events. Tag every successful deploy-to-production job.
+  In GitHub Actions, a workflow run that completes the production deploy step.
+  In Argo CD or Flux, a GitOps sync event completing for the production cluster.
+  Granularity: per service, not per org. Roll up to org level separately.
+  Tools: Google Four Keys (open source), Sleuth, LinearB, Faros AI, Allstacks.
+
+  Common trap: counting every pipeline run including staging. Only production deploys count.
+
+Lead Time for Changes:
+  Source: the commit SHA that is part of a deployment, correlated with its commit timestamp.
+  Algorithm: for each production deploy, identify all commits it contains that were not in the prior deploy. Lead Time per commit = deploy_timestamp minus commit_timestamp. Median across commits for the period.
+  Tools: GitHub Deployments API gives per-SHA deploy timestamps. LinearB instruments this automatically.
+
+  Common trap: measuring from PR open, not from first commit. The first commit is when work started.
+
+Change Failure Rate:
+  Source: incidents or hotfix deploys correlated to the deploy that caused them.
+  Method 1: PagerDuty/OpsGenie incidents tagged "deploy-related: true" divided by total deploys.
+  Method 2: hotfix deployments (tagged in CI) divided by total deployments.
+  Method 3: automated rollbacks as a fraction of total deploys.
+
+  Common trap: under-tagging incidents as deploy-related. Leads to artificially low CFR.
+
+Mean Time to Restore (MTTR):
+  Source: incident management system. incident_resolved_at minus incident_detected_at, filtered to service-impacting incidents.
+  Only "deploy-related" incidents if you want MTTR in the DORA sense. All incidents if you want SRE MTTR.
+  Tools: PagerDuty analytics, Grafana Incident, Rootly, Blameless.
+
+  Common trap: measuring time to merge a hotfix, not time to service restoration. Restoration matters.
+
+Cadence and reporting:
+  Compute trailing 28-day or trailing 90-day windows. Do not report single-week numbers — too noisy.
+  Review quarterly with engineering leadership. Treat sustained regression in any metric as an incident.
+  Celebrate improvements; do not punish low starting points.`,
+      },
+      {
+        title: 'Quick-fire interview answers — DORA Metrics',
+        description: `The questions every DevOps interview asks, with precise answers.
+
+Q: Name the four DORA metrics.
+A: Deployment Frequency — how often production receives a successful release. Lead Time for Changes — time from code committed to code running in production. Change Failure Rate — percentage of deployments causing a failure in production. Mean Time to Restore (MTTR) — time to restore service after an incident. A fifth metric, Reliability, was added in 2021: does the service meet its SLOs?
+
+Q: What are the elite-tier thresholds?
+A: Deployment Frequency: multiple deploys per day. Lead Time: less than one day. Change Failure Rate: 0-15%. MTTR: less than one hour. These come from the 2024 State of DevOps Report.
+
+Q: Why is "speed vs stability" a false trade-off?
+A: Accelerate (Forsgren, Humble, Kim, 2018) found a strong positive correlation between velocity metrics and stability metrics across thousands of teams. Faster-deploying teams have lower failure rates because small deploys have smaller blast radii; if something breaks, fewer changes are in scope for the rollback. Also, teams that deploy frequently have battle-tested pipelines, runbooks, and rollback paths — their processes are practiced and reliable.
+
+Q: How would you start measuring DORA for a team that has never done it?
+A: Start with Deployment Frequency — easiest to instrument from CI/CD events. Add Lead Time next using the commit-to-deploy correlation. Add CFR by tagging incidents as deploy-related in the incident tool. Add MTTR last from incident timestamps. Use trailing 90-day windows. Bucket into the four bands honestly. Pick the worst metric and invest there.
+
+Q: A team has a 30% Change Failure Rate despite 99% test coverage. What is wrong?
+A: Several possibilities: the tests are wrong (high coverage, low assertion quality), the tests run too late (after merge, not on PR), production differs from staging in ways tests cannot see, there is no progressive delivery (100% blast radius on each deploy), or observability is insufficient to detect regressions before customers do. The fix is usually progressive delivery (canary, feature flags, automated rollback) before adding more tests.
+
+Q: What is the fifth DORA metric?
+A: Reliability — added in 2021. Asks whether the service meets customer expectations as expressed by SLOs. Bridges the DORA framework to SRE's SLO model. A team can have elite velocity and stability metrics and still have users who are unhappy if the SLOs are poorly defined or not met.`,
+      },
     ],
     introduction: `DORA (DevOps Research and Assessment) is a research program founded by Nicole Forsgren, Jez Humble, and Gene Kim in ~2014, acquired by Google in 2018 and now run as part of Google Cloud. The annual State of DevOps Report has 9+ years of survey data from tens of thousands of respondents across every industry.
 
