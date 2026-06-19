@@ -24,7 +24,7 @@ function isPaidPlan(plan) {
   return PAID_PLAN_TYPES.has(plan);
 }
 
-export async function createSession({ userId, userEmail, environment, scenarioId, plan }) {
+export async function createSession({ userId, userEmail, environment, scenarioId, plan, setupScript }) {
   const owner = isOwner(userEmail);
   const paid = owner || isPaidPlan(plan);
 
@@ -50,7 +50,7 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
 
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort);
+  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort, setupScript);
 
   // Leave status as 'provisioning' — the SSE endpoint promotes to 'ready' on terminal_ready.
   await setTTL(session.id, 3600);

@@ -126,5 +126,16 @@ export async function stopJob(jobId) {
   }
 }
 
+export async function execScriptInContainer(containerId, scriptContent) {
+  const b64 = Buffer.from(scriptContent).toString('base64');
+  const tmpFile = `/tmp/pg-setup-${containerId.slice(0, 8)}.sh`;
+  await sshExec(
+    `echo '${b64}' | base64 -d > ${tmpFile} && ` +
+    `docker cp ${tmpFile} ${containerId}:/tmp/setup.sh && ` +
+    `docker exec ${containerId} bash /tmp/setup.sh && ` +
+    `rm -f ${tmpFile}`,
+  );
+}
+
 export async function getAllocations() { return []; }
 export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }

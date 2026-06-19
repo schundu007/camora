@@ -216,13 +216,14 @@ export function usePlaygroundSession() {
     return unsub;
   }, [status, stopAll]);
 
-  const createSession = useCallback(async (environment, scenarioId) => {
+  const createSession = useCallback(async (environment, scenarioId, setupScript) => {
     setStatus('creating');
     setError(null);
     setBootSteps([]);
     try {
       const body = { environment };
       if (scenarioId) body.scenarioId = scenarioId;
+      if (setupScript) body.setupScript = setupScript;
       const res = await apiFetch('/api/v1/playground/sessions', {
         method: 'POST',
         body: JSON.stringify(body),
