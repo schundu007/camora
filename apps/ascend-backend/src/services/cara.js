@@ -45,19 +45,48 @@ export async function askCara({ message, context }) {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 300,
     system: buildSystemPrompt(context),
-    messages: [{ role: 'user', content: message }],
+    // Prefill forces the model to start mid-JSON — prevents preamble text
+    messages: [
+      { role: 'user', content: message },
+      { role: 'assistant', content: '{' },
+    ],
   });
 
-  const raw = msg.content[0]?.text?.trim() ?? '';
-  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  // Prepend the prefilled '{' the model continued from
+  const raw = '{' + (msg.content[0]?.text?.trim() ?? '');
 
+  // Strategy 1: raw is valid JSON
   try {
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(raw);
     return {
       answer: typeof parsed.answer === 'string' ? parsed.answer : raw,
       action: parsed.action ?? null,
     };
-  } catch {
-    return { answer: raw, action: null };
+  } catch {}
+
+  // Strategy 2: JSON inside a ```json ... ``` block anywhere in the text
+  const codeBlock = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (codeBlock) {
+    try {
+      const parsed = JSON.parse(codeBlock[1].trim());
+      return {
+        answer: typeof parsed.answer === 'string' ? parsed.answer : raw,
+        action: parsed.action ?? null,
+      };
+    } catch {}
   }
+
+  // Strategy 3: find any {...} object in the text
+  const jsonObj = raw.match(/\{[\s\S]*\}/);
+  if (jsonObj) {
+    try {
+      const parsed = JSON.parse(jsonObj[0]);
+      return {
+        answer: typeof parsed.answer === 'string' ? parsed.answer : raw,
+        action: parsed.action ?? null,
+      };
+    } catch {}
+  }
+
+  return { answer: raw, action: null };
 }
