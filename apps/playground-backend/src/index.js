@@ -103,7 +103,7 @@ app.use('/pg-ide', async (req, res) => {
   if (userId !== -1 && session.user_id !== userId) return res.status(403).end('Forbidden');
   if (!session.code_server_port) return res.status(503).end('IDE not ready');
 
-  res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide' });
+  res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide', sameSite: 'none', secure: true });
 
   const FRAME_ORIGINS = [
     "'self'",
