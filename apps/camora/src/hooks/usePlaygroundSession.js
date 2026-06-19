@@ -296,7 +296,7 @@ export function usePlaygroundSession() {
       try { await apiFetch(`/api/v1/playground/sessions/${currentSession.sessionId}`, { method: 'DELETE' }); } catch {}
     }
     if (opts.navigate !== false) {
-      navigate('/capra/playground');
+      navigate('/playground?tab=vm');
     }
   }, [session, stopAll, navigate]);
 
