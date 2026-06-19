@@ -4,6 +4,9 @@ ENV ETCD_VERSION=3.5.14
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl wget && rm -rf /var/lib/apt/lists/*
 
+# Remove any broken alias lines the base image may have baked into bash.bashrc
+RUN sed -i '/^alias etcd-logs=/d; /^alias ll=/d' /etc/bash.bashrc 2>/dev/null || true
+
 # Install etcdctl + etcdutl
 RUN curl -fsSL "https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz" \
     | tar xz --strip-components=1 -C /usr/local/bin \
