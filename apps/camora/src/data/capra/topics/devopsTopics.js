@@ -8260,6 +8260,27 @@ spec:
 \`\`\``,
         image: '/diagrams/devops/ct6-argo-wf.png',
       },
+      {
+        title: `Argo Workflows Architecture Diagram`,
+        description: `KubeDiagram showing the Argo Workflows control plane: argo-server, workflow-controller, their Services, ServiceAccounts, ClusterRoles, and the Workflow CRD relationship.
+
+Key components:
+  argo-server — REST API + UI. Authenticates users, streams workflow logs, provides artifact browser. Stateless; connect to the argo-server Service on port 2746.
+  workflow-controller — the reconciliation engine. Watches Workflow, CronWorkflow, and WorkflowTemplate CRDs. Creates Pods for each step/task. Manages Pod lifecycle, retries, timeouts.
+  executor sidecar (argoexec) — injected into every workflow Pod as a sidecar or init container (depending on executor type). Manages artifact upload/download, captures outputs, reports step status back to the controller.
+
+Executor types (configured via workflow-controller-configmap):
+  emissary (default since v3.1) — replaces the container entrypoint; no volume sharing needed; most secure
+  pns (Process Namespace Sharing) — shares process namespace; can capture stdout of any process
+  k8sapi — uses Kubernetes API to stream logs; slowest but works in any environment
+
+Artifact storage: S3, GCS, Azure Blob, OSS, or HDFS. Artifacts pass between steps by saving to object storage and loading in the next step. No direct pod-to-pod data transfer needed.
+
+DAG vs Steps templates: Steps runs linearly with parallelism control. DAG declares task dependencies explicitly and executes all tasks with no upstream dependencies in parallel. DAG is preferred for complex workflows.
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Workflows manifest.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-workflows.png`,
+      },
     ],
     introduction: `Argo Workflows is the Kubernetes-native general-purpose workflow engine. CNCF Graduated (graduated November 2022). Originated at Applatix → Intuit (2017+), now broadly adopted at BlackRock, NVIDIA, GitHub, Adobe, NASA JPL.
 
@@ -9675,6 +9696,39 @@ Spinnaker — for completeness. Netflix-pioneered multi-cloud deploy platform wi
 LaunchDarkly Release Management, Statsig deployment-aware flags — feature flag platforms with rollout capabilities at the application layer (in-app routing, not infrastructure). Different model: works for any app stack, but doesn't shape K8s pod traffic. Often layered with Argo Rollouts or Flagger for "K8s rollout + per-user flag" hybrid.`,
       },
       {
+        title: 'Argo Rollouts — Progressive Delivery Controller',
+        description: `KubeDiagram showing Argo Rollouts components: the rollouts-controller Deployment, rollout-dashboard, their ClusterRoles, ServiceAccounts, and the relationship between a Rollout CRD and the generated ReplicaSets.
+
+How Argo Rollouts extends Kubernetes:
+  Rollout CRD replaces Deployment for workloads that need progressive delivery
+  rollouts-controller watches Rollout objects and manages canary or blue-green promotion
+  The controller creates and scales ReplicaSets just like Deployment does, but with fine-grained control
+
+Canary strategy flow:
+  1. New version pushed to Rollout spec.template
+  2. Controller creates new ReplicaSet and sends canary-weight% of traffic to it
+  3. AnalysisRun (optional) queries Prometheus/Datadog/NewRelic for metrics
+  4. If metrics pass, controller advances the step (increases weight)
+  5. If metrics fail, controller automatically rolls back to stable ReplicaSet
+  6. At 100% weight, old ReplicaSet scales to 0
+
+Blue-green strategy flow:
+  1. New version deployed to preview Service (no production traffic)
+  2. Automated analysis or manual approval gates promotion
+  3. On promotion: active Service selector switches to new ReplicaSet
+  4. Old ReplicaSet kept for scaleDownDelaySeconds then removed
+
+Traffic management integrations:
+  Gateway API HTTPRoute weight fields — most forward-compatible
+  Istio VirtualService — weighted routing between stable and canary subsets
+  NGINX Ingress — canary annotation weight
+  AWS ALB — weighted target groups
+  SMI TrafficSplit — service mesh traffic splitting spec
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Rollouts install manifest.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-rollouts.png`,
+      },
+      {
         title: 'Metric-driven canary analysis — what to measure and how',
         description: `The hard part of canary deploys isn't the traffic split — it's the decision: is this canary healthy?
 
@@ -10987,6 +11041,49 @@ Common failure modes:
 - Apply rejected: missing CRD, RBAC issue. Resource shows Missing or Failed; UI highlights the issue.`,
         image: '/diagrams/devops/g2-argocd.png',
       },
+      {
+        title: `Argo CD Full Deployment Diagram — HA Install`,
+        description: `KubeDiagram of a production Argo CD HA installation showing all microservices, their Services, ConfigMaps, Secrets, ServiceAccounts, and ClusterRoleBindings in the argocd namespace.
+
+Components visible in the diagram:
+  argocd-server (Deployment) — exposed via Service on port 443 (HTTPS) + 80 (HTTP); managed by a HorizontalPodAutoscaler in HA mode
+  argocd-application-controller (StatefulSet in HA mode) — StatefulSet gives each shard a stable pod identity; sharded across replicas with --shard flag and Redis coordination for leader election
+  argocd-repo-server (Deployment) — multiple replicas for parallel manifest rendering; each has a git credentials Secret mounted
+  argocd-redis-ha (StatefulSet) — Redis Sentinel mode with 3 replicas for HA persistence of rendered manifests and app status cache
+  argocd-dex-server (Deployment) — OIDC federation for SSO; disabled if you use direct OIDC to your IdP
+
+RBAC objects: argocd-application-controller ClusterRole grants read access to all cluster resources (it needs to compare cluster state). argocd-server ClusterRole is narrower — it needs to create/update resources during sync but can be restricted per AppProject.
+
+ConfigMaps: argocd-cm (main config — OIDC, repos, plugins), argocd-rbac-cm (RBAC policies in policy.csv format), argocd-ssh-known-hosts-cm (SSH host keys for git), argocd-tls-certs-cm (custom TLS CA certs for private registries/git).
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from the official argocd-install-ha.yaml manifest.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-cd-manifests-ha-install.png`,
+      },
+      {
+        title: `Argo CD Blue-Green Deployment via ApplicationSet`,
+        description: `KubeDiagram showing an Argo CD ApplicationSet generating two Applications (blue and green environments) from a git-files generator, each deployed to a different namespace with separate Services and Deployments.
+
+Blue-green with Argo CD pattern:
+  ApplicationSet uses a git-files generator that reads environment-definition JSON files from the repo
+  Each JSON file produces one Application targeting a specific namespace (blue-env or green-env)
+  Both Applications reference the same Helm chart but with different values files
+  A shared Gateway or Ingress routes production traffic to one and staging to the other
+  Switch: update the Ingress/HTTPRoute weight — no re-deploy needed
+
+Why ApplicationSet instead of two separate Applications?
+  Single source of truth for the pattern — add a new JSON file to add a new environment
+  Consistent sync policy and health checks across all generated Applications
+  Matrix generator: combine cluster list with environment list to generate N*M Applications for multi-cluster blue-green
+
+ApplicationSet generators most used for this pattern:
+  git-files — reads YAML/JSON files from repo, each file becomes one Application
+  list — static list of environments with parameter overrides
+  matrix — outer loop (clusters) x inner loop (environments)
+  cluster — one Application per registered Argo CD cluster
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from argocd-example-apps blue-green example.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argoproj-argocd-example-apps-blue-green.png`,
+      },
     ],
     introduction: `Argo CD is the dominant Kubernetes GitOps tool in 2026. Originated at Intuit; CNCF Graduated December 2022. Production-deployed at Intuit, IBM, Adobe, Tesla, BMW, JPMorgan, Red Hat (the engine behind OpenShift GitOps), and thousands of other organizations.
 
@@ -11943,6 +12040,37 @@ Performance characteristics: the two-step model (source-controller fetches, kust
 
 Webhook-triggered: configure Receiver CRD that GitHub/GitLab webhook hits. Receiver triggers a re-fetch on the GitRepository. Reduces lag from minutes to seconds.`,
         image: '/diagrams/devops/g3-fluxcd.png',
+      },
+      {
+        title: `Argo CD vs Flux CD — Bank of Anthos Real-World App Deployment`,
+        description: `KubeDiagram of the Bank of Anthos microservices demo deployed on Kubernetes, showing Deployments, Services, ServiceAccounts, and ConfigMaps across multiple services (frontend, accounts-db, ledger-db, balance-reader, transaction-history, contacts, userservice, ledgerwriter, loadgenerator).
+
+This diagram illustrates what a real GitOps-managed application looks like at the resource level — the kind of view that Argo CD resource tree and Flux CD object graph both expose in their UIs.
+
+Argo CD vs Flux CD — key operational differences:
+
+Multi-tenancy model:
+  Argo CD: AppProject CRD provides explicit tenancy boundaries; per-project RBAC; centralized control plane
+  Flux CD: namespace-per-tenant model; Flux controllers run per-namespace with namespace-scoped RBAC; more Kubernetes-native
+
+Pull model vs push triggers:
+  Both are pull-based (controller polls git); Argo CD also accepts push notifications via webhooks for immediate reconciliation
+  Flux CD: webhook receiver component handles push triggers; Argo CD: git webhook hits argocd-server directly
+
+Drift detection:
+  Argo CD: syncs on a cycle (default 3 min) or webhook; shows OutOfSync status in UI immediately
+  Flux CD: continuous reconciliation with configurable interval; Kustomization/HelmRelease has spec.interval
+
+Helm handling:
+  Argo CD: repo-server renders Helm templates server-side; diff shows rendered manifests
+  Flux CD: HelmRelease CRD + helm-controller; applies rendered chart directly; stores chart in OCI registry or Helm repo
+
+Image update automation:
+  Argo CD: argocd-image-updater (separate component; writes back to git)
+  Flux CD: image-reflector-controller + image-automation-controller (built-in; writes back to git)
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from Bank of Anthos manifests.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/bank-of-anthos/diagrams/bank-of-anthos.png`,
       },
     ],
     introduction: `Flux v2 is the K8s-native GitOps tool from Weaveworks (the originators of the term GitOps in 2017). v1 was the original implementation; v2 (released 2021) is a complete rewrite into the GitOps Toolkit (GOTK) — a set of composable Kubernetes controllers. CNCF Graduated November 2022, the same month as Argo CD.
@@ -13159,6 +13287,30 @@ Q: Hybrid topology in one sentence?
 A: One hub per region or security boundary, hubs federated via a meta-repo — region-level single pane plus cross-region blast-radius isolation.
 
 These are answers a fleet-fluent platform engineer should give without preparation.`,
+      },
+      {
+        title: `Gateway API Multi-Cluster Routing`,
+        description: `KubeDiagram showing Gateway API multi-cluster routing patterns: a GatewayClass backed by a multi-cluster gateway controller, with HTTPRoutes in multiple clusters routing through a central gateway to backend Services distributed across clusters.
+
+Multi-cluster gateway patterns:
+  Centralized gateway (hub-and-spoke): one cluster hosts the Gateway; worker clusters expose Services via ServiceImport (MCS API); the gateway routes to ServiceImport endpoints across clusters
+  Federated gateways: each cluster has its own Gateway; a global DNS layer (e.g. Route 53, Cloud DNS) routes to the closest healthy gateway
+  GKE Gateway (multi-cluster mode): GKE gateway controller reads HTTPRoutes from multiple clusters via the GKE Hub fleet; a GCLB instance handles global routing
+
+ServiceExport and ServiceImport (Multi-Cluster Services API):
+  ServiceExport in cluster A marks a Service as available to other clusters
+  ServiceImport appears automatically in cluster B and C (managed by the MCS controller)
+  HTTPRoute backendRef can reference a ServiceImport by name + namespace
+  Traffic goes through the gateway to the correct cluster without manual endpoint management
+
+Argo CD multi-cluster ApplicationSet pattern:
+  cluster generator iterates over all registered Argo CD clusters
+  Each cluster gets its own Application with cluster-specific values
+  Argo CD pushes manifests to each target cluster independently
+  Health status per cluster visible in the Argo CD UI
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from Gateway API multicluster examples.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/multicluster.png`,
       },
     ],
     references: [
@@ -19116,6 +19268,83 @@ Q: Most common Ingress annotation pitfall?
 A: Copying NGINX rewrite-target without understanding the regex capture and the trailing-slash behavior.
 
 These are answers a Kubernetes-fluent platform engineer should give without preparation.`,
+      },
+      {
+        title: `Gateway API: Simple Gateway + HTTPRoute`,
+        description: `KubeDiagram showing a GatewayClass, Gateway, and HTTPRoute wired together. The GatewayClass (cluster-scoped) names the controller implementation. The Gateway declares a listener on port 80 in the gateway-infra namespace. The HTTPRoute (in an app namespace) attaches to the Gateway via parentRefs and routes /api/* to a backend Service.
+
+This is the minimal Gateway API deployment pattern — three objects replacing a single Ingress resource, but with clean role separation: infra team owns GatewayClass and Gateway, app team owns HTTPRoute.
+
+Key fields in each object:
+  GatewayClass: spec.controllerName — identifies the gateway implementation (e.g. gateway.envoyproxy.io/gatewayclass-controller)
+  Gateway: spec.listeners[].protocol (HTTP/HTTPS/TCP/TLS), spec.listeners[].port, spec.listeners[].allowedRoutes.namespaces
+  HTTPRoute: spec.parentRefs[].name + namespace (the Gateway to attach to), spec.rules[].matches (path/header/method), spec.rules[].backendRefs (Service + port + weight)
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API conformance examples.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/simple-gateway.png`,
+      },
+      {
+        title: `Gateway API: HTTP Routing Rules — path, header, method matchers`,
+        description: `KubeDiagram showing multiple HTTPRoutes attached to a single Gateway, each routing to different backend Services based on path prefix, exact path, or header value matchers.
+
+Gateway API routing rule capabilities (all in-spec, no annotations needed):
+  Path matching: PathPrefix, Exact, RegularExpression
+  Header matching: exact header value match, case-insensitive
+  Method matching: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+  Query parameter matching: exact or regex
+
+Multiple HTTPRoutes can attach to the same Gateway listener. The controller merges them and resolves conflicts using the route creation timestamp (older route wins on conflict) and specificity (more specific matches take priority).
+
+Filters available per rule:
+  RequestHeaderModifier — add/set/remove request headers
+  ResponseHeaderModifier — add/set/remove response headers
+  URLRewrite — rewrite path or hostname before forwarding
+  RequestRedirect — return 301/302 redirect to client
+  RequestMirror — shadow traffic to a secondary backend (zero extra latency for primary)
+  ExtensionRef — reference controller-specific filter CRDs
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API HTTP routing examples.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/http-routing.png`,
+      },
+      {
+        title: `Gateway API: Cross-Namespace Routing + ReferenceGrant`,
+        description: `KubeDiagram showing how an HTTPRoute in a tenant namespace attaches to a Gateway in a platform namespace, with a ReferenceGrant explicitly allowing the cross-namespace reference.
+
+Cross-namespace routing is a first-class feature in Gateway API. An app team can own their HTTPRoute in their own namespace while a platform team manages the shared Gateway. The connection is controlled by ReferenceGrant objects — a Gateway namespace admin grants permission for specific HTTPRoute namespaces to reference their Gateway.
+
+Without ReferenceGrant: the cross-namespace parentRef is silently rejected. The Route status shows NotAllowedByListeners. The request never reaches the Gateway.
+
+With ReferenceGrant:
+  spec.from: namespaces where the referencing objects live and their kinds (HTTPRoute, TCPRoute)
+  spec.to: the allowed target (kind: Gateway, name: specific gateway or * for all)
+
+This model is much safer than Ingress where any Ingress in any namespace could reference any TLS secret by name with no access control.
+
+Traffic splitting: HTTPRoute backendRefs support weight fields for weighted load balancing between multiple backends — enabling canary deployments (95% to stable, 5% to canary) declaratively without separate Ingress controllers or service mesh.
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API cross-namespace routing examples.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/cross-namespace-routing.png`,
+      },
+      {
+        title: `Gateway API: Traffic Splitting + TLS Termination`,
+        description: `KubeDiagram showing a Gateway with a TLS listener terminating HTTPS and an HTTPRoute splitting traffic between two backend Services by weight.
+
+TLS in Gateway API:
+  Gateway listener sets protocol: HTTPS and tls.mode: Terminate (default) or Passthrough
+  TLS certificate referenced via spec.listeners[].tls.certificateRefs pointing to a Secret
+  Passthrough mode: TLS is forwarded to the backend unmodified (SNI routing via TLSRoute)
+  Backend TLS (BackendTLSPolicy, experimental): re-encrypts traffic from gateway to backend pod
+
+Traffic splitting (weighted backendRefs):
+  - 90% to stable Service + 10% to canary Service
+  - No external tool required — just weight fields in spec.rules[].backendRefs
+  - Weight 0 removes the backend from rotation without deleting the rule
+  - Useful for: blue-green switchover, canary analysis, A/B testing
+
+Combined with Argo Rollouts or Flagger: the rollout controller updates the weights in the HTTPRoute object as it progresses the canary analysis, giving progressive delivery with Gateway API as the traffic layer.
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API traffic splitting examples.`,
+        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/traffic-splitting.png`,
       },
     ],
     references: [

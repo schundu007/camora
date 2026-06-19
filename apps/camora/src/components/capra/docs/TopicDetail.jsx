@@ -2829,14 +2829,14 @@ export default function TopicDetail({
                       />
                     )}
                     {viz.video && (
-                      <div className="w-full" style={{ borderBottom: '1px solid var(--border)' }}>
-                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                      <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+                        <div style={{ position: 'relative', width: '60%', maxWidth: 560, aspectRatio: '16/9' }}>
                           <iframe
                             src={`https://www.youtube.com/embed/${new URL(viz.video).searchParams.get('v') || viz.video.split('/').pop()}`}
                             title={viz.title}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: 6 }}
                           />
                         </div>
                       </div>
@@ -3026,7 +3026,8 @@ export default function TopicDetail({
           {topicDetails.video?.embedUrl && (
             <section id="video" className="scroll-mt-24">
               <ContentHeading title={topicDetails.video.title || 'Video Overview'} />
-              <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: 10, overflow: 'hidden', marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+                <div style={{ position: 'relative', width: '60%', maxWidth: 560, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
                 <iframe
                   src={topicDetails.video.embedUrl}
                   title={topicDetails.video.title || 'Video'}
@@ -3034,6 +3035,7 @@ export default function TopicDetail({
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
+                </div>
               </div>
               {topicDetails.video.courtesy && (
                 <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
