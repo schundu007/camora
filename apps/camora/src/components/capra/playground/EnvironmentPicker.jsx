@@ -115,7 +115,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
       <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>
         Choose Environment
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         {ENVIRONMENTS.map((env) => {
           const locked = env.plan === 'pro' && !isPro;
           const isSelected = selected === env.id;
