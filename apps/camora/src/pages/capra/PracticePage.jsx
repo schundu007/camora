@@ -376,29 +376,12 @@ export default function PracticePage() {
     return () => { document.title = 'Camora'; };
   }, []);
 
-  // Top-level tab: practice | code-solver | design-solver | sql-editor — persist in URL.
-  // SQL problems are auto-routed to sql-editor: the backend code runner doesn't
-  // support SQL, but SQLPlayground runs queries in-browser via sql.js.
-  const detectSqlFromStorage = () => {
-    try {
-      const raw = localStorage.getItem('chundu_current_solution');
-      if (raw) {
-        const sol = JSON.parse(raw);
-        if (typeof sol?.language === 'string' && /^sql$|^mysql$|^postgres/i.test(sol.language)) return true;
-      }
-      const code = JSON.parse(localStorage.getItem('chundu_current_solution') || '{}')?.code || '';
-      const problem = localStorage.getItem('chundu_current_problem') || localStorage.getItem('chundu_loaded_problem') || '';
-      if (/^\s*(--|SELECT |INSERT |UPDATE |DELETE |CREATE |WITH |ALTER )/im.test(code)) return true;
-      if (/\b(SQL|query|table|JOIN|GROUP BY|ORDER BY)\b/i.test(problem) && /SELECT|INSERT|UPDATE|DELETE|FROM/i.test(problem)) return true;
-    } catch { /* ignore parse errors */ }
-    return false;
-  };
+  // Top-level tab: practice | code-solver | design-solver — persist in URL.
   const urlView = new URLSearchParams(window.location.search).get('view');
   const initialView = urlView || 'practice';
   const [activeView, setActiveViewState] = useState(initialView);
   const setActiveView = (view) => {
-    // If the user picks Code Solver but the loaded problem is SQL, route to SQL Editor.
-    const targetView = (view === 'code-solver' && detectSqlFromStorage()) ? 'sql-editor' : view;
+    const targetView = view;
     setActiveViewState(targetView);
     const url = new URL(window.location);
     if (targetView === 'practice') url.searchParams.delete('view');
