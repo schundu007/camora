@@ -242,6 +242,59 @@ export const devopsTopics = [
         description: 'First Way: optimize value flow left-to-right (concept → production). Second Way: amplify feedback right-to-left (telemetry → development). Third Way: continual experimentation and learning.',
         image: '/diagrams/devops/a1-three-ways.png',
       },
+      {
+        title: 'The Three Ways in practice — team habits, tooling, and metrics',
+        description: `Translating the Three Ways from philosophy to daily engineering practice.
+
+First Way — Systems Thinking in practice:
+  Visualize the entire value stream, not just your silo.
+  Use value stream maps to see where work waits between teams.
+  Own the pipeline end-to-end: dev writes Dockerfile, owns alerts, rotates on-call.
+
+  Anti-pattern: "We do not deploy on Fridays" reveals a deployment problem to fix, not avoid.
+  Fix: Make deploys boring and reversible via feature flags, blue/green, automated rollback.
+
+Second Way — Feedback Loops in practice:
+  Measure mean time to detect (MTTD) and mean time to recover (MTTR).
+  Ship small PRs (less than 400 lines) — faster review, fewer merge conflicts, clearer deploys.
+  Require a monitoring alert alongside every new feature. "Feature + alert = done."
+
+  Anti-pattern: Discovering production bugs from customer tickets, not dashboards.
+  Fix: Define SLOs, build error rate and latency dashboards before feature launch.
+
+Third Way — Continuous Experimentation in practice:
+  Blameless postmortems — five whys, systemic fixes, no scapegoating.
+  Game days and chaos engineering — inject failures before they find you.
+  Toil reduction: if you do it twice, automate it; if it is in a runbook, script it.
+
+Measurement framework:
+  Deployment frequency — how often do you ship to prod?
+  Lead time for changes — commit to prod in minutes, not weeks.
+  Change failure rate — less than 15% for elite teams.
+  MTTR — less than 1 hour for elite teams.`,
+      },
+      {
+        title: 'Quick-fire interview answers — The Three Ways',
+        description: `Common interview questions on the Three Ways and how to answer them precisely.
+
+Q: What is the First Way?
+A: Optimize the entire value stream from concept to production. The unit of optimization is the system, not individual silos. Reduce batch sizes, eliminate handoffs, surface and remove queues. Key practices: trunk-based development, CI/CD, infrastructure-as-code, pipeline-as-code. Measure with lead time for changes.
+
+Q: What is the Second Way?
+A: Amplify and shorten feedback loops from production back to development. Make defects visible while they are cheap to fix. Key practices: telemetry, observability (logs, metrics, traces), automated testing, fail-fast deployment gates, blameless postmortems. Measure with mean time to detect.
+
+Q: What is the Third Way?
+A: Build a generative, high-trust culture that allocates time to daily-work improvement and treats failure as data. Key practices: blameless postmortems, game days, chaos engineering, communities of practice, retrospective follow-through. Measure by whether postmortem action items ship.
+
+Q: Why does the order matter?
+A: Flow first — you cannot improve what you cannot deliver. Feedback second — you cannot improve what you cannot see. Learning third — you cannot improve without acting on what you see. Skipping any one breaks the system.
+
+Q: What is the difference between the Three Ways and CALMS?
+A: The Three Ways are the organizing principles from The DevOps Handbook — philosophical. CALMS (Culture, Automation, Lean, Measurement, Sharing) is the operational prescription — practical. Westrum typology measures culture maturity. DORA metrics measure outcomes. All four frameworks describe facets of the same system.
+
+Q: Give an example of CI/CD mapped to the Three Ways.
+A: CI/CD is a First Way practice (it reduces batch size and increases flow). Automated tests in the pipeline are a Second Way practice (feedback loops catch defects at the earliest stage). Blameless postmortems on pipeline failures are a Third Way practice (learning from what goes wrong). The pipeline embodies all three.`,
+      },
     ],
     introduction: `The Three Ways are the foundational organizing principles of DevOps, articulated in The Phoenix Project (Kim, Behr, Spafford, 2013) and codified in The DevOps Handbook (Kim, Humble, Debois, Willis, 2016, 2nd ed. 2020). Every DevOps practice — CI/CD, observability, blameless postmortems, chaos engineering, error budgets — is an application of one or more of the Three Ways.
 
@@ -413,6 +466,84 @@ The diagnostic discipline: don\'t fix randomly. Identify which Way is blocking, 
         title: 'Westrum + CALMS — measure culture, prescribe practice',
         description: 'Westrum: Pathological → Bureaucratic → Generative organizational types. CALMS: Culture, Automation, Lean, Measurement, Sharing. Westrum diagnoses; CALMS treats.',
         image: '/diagrams/devops/a3-westrum-calms.png',
+      },
+      {
+        title: 'Westrum typology — diagnostic signals for each org type',
+        description: `Concrete behavioral signals that reveal where an organization sits on the Westrum spectrum.
+
+Pathological signals (power-oriented):
+  "We figured out who was responsible for the outage" — scapegoating, not learning.
+  Incident postmortems are private or not published.
+  Engineers fear raising problems because it reflects badly on their team.
+  Cross-team contact requires management approval.
+  New ideas are killed before they reach leadership.
+  On-call rotation is adversarial — ops blames dev for bad code.
+  Information about production issues is withheld until forced.
+
+Bureaucratic signals (rule-oriented):
+  "We followed the change-advisory-board process, so it is not our fault" — rules over mission.
+  Postmortems produce no action items because nothing is "clearly against policy."
+  Teams share information only through official channels and ticketing systems.
+  A known broken process cannot be changed because "that is how it has always been done."
+  Cross-team improvements require six months of approvals.
+
+Generative signals (performance-oriented):
+  Postmortems are published org-wide and produce shipped action items.
+  Engineers can DM any team and get a response the same day.
+  Bad news surfaces quickly because the messenger is valued, not punished.
+  Failure is treated as data — "what can the system learn?" not "who did this?"
+  Teams share tooling, runbooks, and on-call experience across org boundaries.
+  The question after an incident is "what systemic fix prevents recurrence?"
+
+Assessment method:
+  Ask engineers in 1:1s: "What happens here when something goes wrong?"
+  Pathological: "We find out who screwed up."
+  Bureaucratic: "We review whether procedure was followed."
+  Generative: "We run a blameless postmortem and ship action items."
+
+Accelerate (Forsgren, Humble, Kim, 2018):
+  Generative culture score predicts DORA metrics with statistical significance.
+  Culture is not a soft concern — it is the limiting factor for delivery performance.`,
+      },
+      {
+        title: 'CALMS — five pillars mapped to concrete practices and anti-patterns',
+        description: `CALMS operationalized: what each pillar looks like when working, and what it looks like when broken.
+
+C — Culture (shared accountability):
+  Working: dev and ops share the same on-call rotation; production incidents are everyone's problem.
+  Working: "You build it, you run it" (Werner Vogels, AWS, 2006) is the operating model.
+  Broken: dev ships code and throws it over the wall; ops fires alerts back at dev via tickets.
+  Broken: separate quarterly OKRs for dev (features shipped) and ops (uptime) with no shared metric.
+  Fix: shared on-call, shared error-budget SLOs, co-located dev and ops in the same team.
+
+A — Automation (eliminate manual repetition):
+  Working: CI/CD pipeline builds, tests, and deploys on every commit; humans approve at release.
+  Working: infrastructure provisioned via Terraform or Pulumi; no manual console clicks.
+  Working: toil capped at 50% of on-call engineer time (SRE model); excess toil is a bug.
+  Broken: "we will automate that eventually" runbooks that never become scripts.
+  Broken: environment provisioning via ticket to a separate team; PR cycle for a config change.
+  Fix: instrument toil, set a toil budget, treat automation investment as capacity planning.
+
+L — Lean (continuous improvement, small batches):
+  Working: PRs merged within 24 hours; small, reviewable changesets under 400 lines.
+  Working: value stream map done quarterly; largest bottleneck attacked each quarter.
+  Broken: features built in six-week sprints and released in quarterly "big bang" deploys.
+  Broken: WIP unlimited; every engineer has 5 concurrent feature branches and 3 incidents.
+  Fix: WIP limits, Kanban pull model, small-batch releases, Theory of Constraints applied to the pipeline.
+
+M — Measurement (outcomes, not vanity metrics):
+  Working: DORA four keys measured and reviewed quarterly with leadership.
+  Working: SLOs defined per service; error budgets drive prioritization of reliability work.
+  Broken: measuring lines of code shipped, story points completed, hours worked.
+  Broken: "our uptime is 99.9%" without defining what a minute of downtime costs the business.
+  Fix: DORA metrics as the engineering dashboard; customer satisfaction + error budgets as the outcomes layer.
+
+S — Sharing (knowledge across org boundaries):
+  Working: postmortems published org-wide; engineers from other teams can read and learn.
+  Working: communities of practice meet monthly; tooling and runbooks are open-source internally.
+  Broken: each team reinvents the observability stack, the deploy system, the alert playbook.
+  Broken: lessons from a major incident live in one team's private Confluence space.
+  Fix: internal TechDocs platform, postmortem library, open-source culture for internal tooling.`,
       },
     ],
     introduction: `Two frameworks every senior DevOps engineer should be able to discuss precisely:
@@ -628,6 +759,73 @@ The order to invest:
         title: 'Value stream — current vs future state',
         description: 'Map every step from idea to running-in-production: code, review, build, test, deploy. For each: lead time + process time + wait time. The biggest gap is the bottleneck.',
         image: '/diagrams/devops/a5-value-stream.png',
+      },
+      {
+        title: 'VSM worked example — 4-month to 3-day lead time transformation',
+        description: `A realistic VSM exercise showing how to find and eliminate bottlenecks.
+
+Current-state map (typical enterprise before DevOps transformation):
+
+  Step              Lead Time   Process Time   Wait Time   PT/LT ratio
+  Code              2 weeks     2 weeks        0           100%
+  Code review       3 weeks     30 min         ~3 weeks    0.3%
+  QA queue          4 weeks     3 days         ~3.5 weeks  10%
+  Stage deploy      1 week      15 min         ~1 week     0.4%
+  UAT               2 weeks     2 days         ~1.5 weeks  14%
+  Prod approval     3 weeks     1 hour         ~3 weeks    0.1%
+  Prod deploy       1 week      30 min         ~1 week     0.6%
+
+  Total lead time: ~16 weeks
+  Total process time: ~3 days
+  Overall PT/LT ratio: 2.7%
+
+Diagnosis:
+  Largest wait: prod approval (3 weeks). Root cause: change-advisory-board meets monthly.
+  Second largest: QA queue (4 weeks). Root cause: separate QA team, 6:1 dev-to-QA ratio.
+  Third largest: code review (3 weeks). Root cause: single senior engineer approves all PRs.
+
+Future-state map (after targeted fixes):
+
+  Step              Lead Time   Process Time   Fix Applied
+  Code              0.5 days    0.5 days       Trunk-based dev, small PRs
+  Code review       4 hours     30 min         Review SLA, distributed CODEOWNERS
+  Automated tests   15 min      15 min         Shift-left, in-team QA, automated suite
+  Stage deploy      5 min       5 min          IaC, automated environment provisioning
+  Prod approval     5 min       5 min          Policy-as-code, SLO-gated auto-approval
+  Prod deploy       10 min      10 min         Canary rollout, automated
+
+  Total lead time: ~1 day
+  Total process time: ~2 hours
+  Overall PT/LT ratio: 25%
+
+  Result: lead time from 16 weeks to 1 day. DORA band: Low to Elite.
+
+Key lesson:
+  The improvement did not come from coding faster. It came from eliminating wait.
+  85-95% of lead time in most value streams is waiting, not working.
+  VSM identifies where the waiting is; targeted practice changes remove it.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Value Stream Mapping',
+        description: `Common VSM interview questions with precise, interview-ready answers.
+
+Q: What is a value stream?
+A: The full sequence of activities required to deliver value to a customer. For software: idea, design, code, review, build, test, stage, deploy, run, learn. Every value stream has waste — handoffs, queues, rework — that can be measured and reduced.
+
+Q: What are the three numbers in VSM?
+A: Lead Time (LT) — wall-clock time from arriving at a step to leaving it, including waiting. Process Time (PT) — actual hands-on work time. Wait Time (WT) — LT minus PT, the time spent in queues. The key ratio is PT/LT. In most software value streams this is 5-15%, meaning 85-95% of lead time is waiting.
+
+Q: How do you run a VSM workshop?
+A: Six steps. First, pick a specific value stream and a recent concrete example (a feature shipped last month). Second, list every step from idea to value delivered. Third, gather LT, PT, and WT for each step by interviewing the people who did the work. Fourth, compute totals and the PT/LT ratio. Fifth, identify the step with the largest wait time — that is the bottleneck. Sixth, design a future-state map with targeted fixes for the bottleneck: smaller PRs, automated testing, IaC, policy-as-code for approvals.
+
+Q: How does VSM relate to DORA Lead Time for Changes?
+A: DORA Lead Time is the sum of lead times across your value stream — VSM in a single number. VSM tells you where the time is going; DORA tracks whether your fixes are working over time. Use them together: measure DORA monthly, run VSM workshops when DORA lead time regresses.
+
+Q: What is a common anti-pattern when doing VSM?
+A: Mapping at too high a level. "Development takes 2 weeks" is not useful. You need to see the sub-steps: coding, waiting for review, responding to comments, waiting for CI, waiting for staging. The waste is in the transitions between steps, not inside the steps. Granular mapping reveals the actual bottleneck.
+
+Q: What is the PT/LT ratio for world-class teams?
+A: Elite DORA teams have lead times under one day for the whole stream. If coding takes 4 hours, review takes 2 hours, and deploy takes 10 minutes, the PT/LT ratio is over 90% — waiting is nearly eliminated. The typical enterprise starts at 2-5%.`,
       },
     ],
     introduction: `Value Stream Mapping (VSM) is a Lean-manufacturing technique adapted by Toyota in the 1990s and now standard in software DevOps. Verbatim from The DevOps Handbook (Ch 4): "A value stream is the sequence of activities that an organization undertakes to deliver upon a customer request."
