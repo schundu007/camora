@@ -81,8 +81,7 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
   ];
   if (scenarioId) envFlags.push(`-e SCENARIO_ID=${scenarioId}`);
 
-  const radarPortFlag = isKubernetesEnv(environment) ? '-p 0:9280' : '';
-  const cmd = `docker run -d --rm --pull=always --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 -p 0:8080 ${radarPortFlag} ${image}`.replace(/\s+/g, ' ').trim();
+  const cmd = `docker run -d --rm --pull=always --memory=${mem}m --hostname ${hostname} ${envFlags.join(' ')} -p 0:7681 -p 0:8080 ${image}`.replace(/\s+/g, ' ').trim();
   const containerId = await sshExec(cmd);
 
   if (!containerId || containerId.length < 12) {
@@ -94,11 +93,9 @@ export async function scheduleJob(sessionId, environment, scenarioId) {
 
 export async function getTaskAddress(jobId, environment = '') {
   const deadline = Date.now() + 60_000;
-  const needsRadar = isKubernetesEnv(environment);
 
   let ttydPort = null;
   let codeServerPort = null;
-  let radarPort = null;
 
   while (Date.now() < deadline) {
     try {
@@ -116,15 +113,6 @@ export async function getTaskAddress(jobId, environment = '') {
           if (port > 0) { codeServerPort = port; break; }
         }
       }
-      if (needsRadar && !radarPort) {
-        try {
-          const out = await sshExec(`docker port ${jobId} 9280`);
-          for (const line of out.split('\n')) {
-            const port = parseInt(line.split(':').at(-1), 10);
-            if (port > 0) { radarPort = port; break; }
-          }
-        } catch { /* radar may start later than ttyd */ }
-      }
       if (ttydPort && codeServerPort) break;
     } catch { /* container starting */ }
     await new Promise((r) => setTimeout(r, 500));
@@ -132,7 +120,7 @@ export async function getTaskAddress(jobId, environment = '') {
   if (!ttydPort) throw new Error('Timed out waiting for ttyd port mapping');
   if (!codeServerPort) throw new Error('Timed out waiting for code-server port mapping');
 
-  return { host: WORKER_HOST(), ttydPort, codeServerPort, radarPort };
+  return { host: WORKER_HOST(), ttydPort, codeServerPort };
 }
 
 export async function stopJob(jobId) {
@@ -226,7 +214,7 @@ async function scheduleEtcdCluster(sessionId, networkName) {
 async function scheduleK8sMultiCluster(sessionId, networkName) {
   const image = 'chundubabu/pg-k8s-multi:latest';
   const serverEnvFlags = `-e SESSION_ID=${sessionId} -e force_color_prompt=yes`;
-  const serverCmd = `docker run -d --rm --pull=always --memory=2048m --network ${networkName} --hostname k8s-master --name pg-${sessionId}-master --privileged ${serverEnvFlags} -p 0:7681 -p 0:8080 -p 0:9280 ${image}`;
+  const serverCmd = `docker run -d --rm --pull=always --memory=2048m --network ${networkName} --hostname k8s-master --name pg-${sessionId}-master --privileged ${serverEnvFlags} -p 0:7681 -p 0:8080 ${image}`;
   const serverContainerId = await sshExec(serverCmd);
   if (!serverContainerId || serverContainerId.length < 12) throw new Error('k8s-multi server failed to start');
 
@@ -277,7 +265,6 @@ export async function scheduleCluster(sessionId, environment) {
 export async function getClusterAddresses(nodes, environment = '') {
   const deadline = Date.now() + 90_000;
   const host = WORKER_HOST();
-  const needsRadar = isKubernetesEnv(environment);
 
   return Promise.all(nodes.map(async (node) => {
     let ttydPort = null;
@@ -308,18 +295,7 @@ export async function getClusterAddresses(nodes, environment = '') {
       }
     }
 
-    let radarPort = null;
-    if (needsRadar && node.role === 'server') {
-      try {
-        const out = await sshExec(`docker port ${node.containerId} 9280`);
-        for (const line of out.split('\n')) {
-          const port = parseInt(line.split(':').at(-1), 10);
-          if (port > 0) { radarPort = port; break; }
-        }
-      } catch { /* radar may not be up yet; radarReady will be polled by the frontend */ }
-    }
-
-    return { ...node, host, ttydPort, codeServerPort, radarPort, status: 'provisioning' };
+    return { ...node, host, ttydPort, codeServerPort, status: 'provisioning' };
   }));
 }
 
