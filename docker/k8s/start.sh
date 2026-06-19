@@ -3,7 +3,6 @@ set -e
 
 echo '__PROGRESS__:{"step":"container_ready","status":"done"}'
 
-# --cluster-init enables k3s embedded etcd (instead of SQLite)
 k3s server --disable traefik --disable servicelb --cluster-init &>/var/log/k3s.log &
 
 echo '__PROGRESS__:{"step":"env_setup","status":"done"}'
@@ -14,17 +13,14 @@ for i in $(seq 1 60); do
   sleep 2
 done
 
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> /etc/bash.bashrc
+# Give learner kubectl access
+mkdir -p /home/learner/.kube
+cp /etc/rancher/k3s/k3s.yaml /home/learner/.kube/config
+chmod 600 /home/learner/.kube/config
+chown learner:learner /home/learner/.kube/config
 
-# Wait for etcd certs (written by k3s after cluster-init)
-for i in $(seq 1 30); do
-  [ -f /var/lib/rancher/k3s/server/tls/etcd/server-client.crt ] && break
-  sleep 2
-done
-
-# Always configure etcdctl to talk to k3s embedded etcd
-cat >> /etc/bash.bashrc << 'BASHRC'
+cat >> /home/learner/.bashrc << 'BASHRC'
+export KUBECONFIG=/home/learner/.kube/config
 export ETCDCTL_API=3
 export ETCDCTL_ENDPOINTS="https://127.0.0.1:2379"
 export ETCDCTL_CACERT="/var/lib/rancher/k3s/server/tls/etcd/server-ca.crt"
@@ -32,19 +28,24 @@ export ETCDCTL_CERT="/var/lib/rancher/k3s/server/tls/etcd/server-client.crt"
 export ETCDCTL_KEY="/var/lib/rancher/k3s/server/tls/etcd/server-client.key"
 alias etcd-health='etcdctl endpoint health'
 alias etcd-status='etcdctl endpoint status --write-out=table'
-alias etcd-members='etcdctl member list --write-out=table'
 alias k8s-etcd='etcdctl get --prefix /registry/ --keys-only'
+alias ll='ls -la'
 BASHRC
 
-# When SCENARIO_ID=etcd: copy lab scripts and show welcome message
+# Make etcd certs readable by learner
+chmod 644 /var/lib/rancher/k3s/server/tls/etcd/server-ca.crt 2>/dev/null || true
+chmod 644 /var/lib/rancher/k3s/server/tls/etcd/server-client.crt 2>/dev/null || true
+chmod 644 /var/lib/rancher/k3s/server/tls/etcd/server-client.key 2>/dev/null || true
+
 if [ "${SCENARIO_ID}" = "etcd" ]; then
   cp -r /home/learner/labs/etcd/. /home/learner/
-  echo 'echo "=== etcd Playground: run etcd-health to verify, then bash ~/01-basics.sh for Lab 01 ==="' >> /etc/bash.bashrc
+  chown learner:learner /home/learner/*.sh 2>/dev/null || true
+  echo 'echo "=== etcd Playground: run etcd-health to verify, then bash ~/01-basics.sh ==="' >> /home/learner/.bashrc
 fi
 
-code-server --bind-addr 0.0.0.0:8080 --auth none /home/learner &>/var/log/code-server.log &
+sudo -u learner code-server --bind-addr 0.0.0.0:8080 --auth none /home/learner &>/var/log/code-server.log &
 
 echo '__PROGRESS__:{"step":"ide_start","status":"done"}'
 echo '__PROGRESS__:{"step":"terminal_ready","status":"done"}'
 
-exec ttyd --port 7681 --writable --max-clients 1 bash
+exec ttyd --port 7681 --writable --max-clients 1 su - learner
