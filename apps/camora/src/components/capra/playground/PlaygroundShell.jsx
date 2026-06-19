@@ -198,7 +198,7 @@ export default function PlaygroundShell() {
                   Save VM
                 </button>
               )}
-              <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171' }} title="End session">⏻</button>
+              <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171', fontSize: 18, lineHeight: 1, padding: '2px 10px' }} title="End session">⏻</button>
             </div>
           </div>
 
