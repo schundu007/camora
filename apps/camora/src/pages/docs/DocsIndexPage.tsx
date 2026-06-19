@@ -22,6 +22,7 @@ const USER_GUIDES: DocCard[] = [
   { title: 'Desktop app', description: 'Stealth-mode desktop client with global hotkey, system audio, and BYOK.', href: '/docs/desktop' },
   { title: 'Voice filtering', description: 'Speaker verification — only transcribe the interviewer, not your own voice.', href: '/docs/voice-filtering' },
   { title: 'Audio setup', description: 'Mics, speakers, system loopback, BlackHole / VoiceMeeter — every customer setup.', href: '/docs/audio-setup' },
+  { title: 'Playground', description: 'Disposable Linux containers with browser terminal and VS Code IDE — start in seconds, save your environment.', href: '/docs/playground' },
 ];
 
 const ADMIN_RUNBOOKS: DocCard[] = [
@@ -32,6 +33,7 @@ const ADMIN_RUNBOOKS: DocCard[] = [
   { title: 'Database schema', description: 'Tables, idempotent migrations, when to manually intervene.', href: '/docs/admin/database' },
   { title: 'Refund approval', description: 'Reviewing and approving top-up refund requests via /admin/teams.', href: '/docs/admin/refunds' },
   { title: 'Incident response', description: 'When Stripe is down, when an LLM provider 502s, when the pool gate misfires.', href: '/docs/admin/incidents' },
+  { title: 'Playground (engineering)', description: 'SSH Docker orchestration, WebSocket proxies, VM save/restore, boot progress protocol, issues faced and design decisions.', href: '/docs/admin/playground' },
 ];
 
 function DocCardLink({ card }: { card: DocCard }) {
