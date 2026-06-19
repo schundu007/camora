@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { scheduleJob, getTaskAddress, stopJob } from './nomadClient.js';
+import { scheduleJob, getTaskAddress, stopJob, scheduleCluster, getClusterAddresses, stopCluster } from './nomadClient.js';
 import {
   createSessionRecord,
   getSession,
@@ -14,6 +14,7 @@ import {
 const FREE_ENVIRONMENTS = new Set(['ubuntu', 'docker']);
 const FREE_DAILY_LIMIT = 1;
 const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
+const CLUSTER_ENVIRONMENTS = new Set(['etcd-cluster', 'k8s-multi']);
 
 function isOwner(email) {
   const owners = (process.env.OWNER_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
@@ -43,18 +44,33 @@ export async function createSession({ userId, userEmail, environment, scenarioId
     }
   }
 
-  // Unique job ID per session — prevents collisions when same user creates multiple sessions.
   const jobTag = randomBytes(6).toString('hex');
-  const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
-
-  const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
-
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort, setupScript);
 
-  // Leave status as 'provisioning' — the SSE endpoint promotes to 'ready' on terminal_ready.
+  if (CLUSTER_ENVIRONMENTS.has(environment)) {
+    const { networkName, nodes } = await scheduleCluster(`${userId}-${jobTag}`, environment);
+    const nodesWithPorts = await getClusterAddresses(nodes);
+    const clusterNodes = nodesWithPorts.map(n => ({ ...n, status: 'provisioning' }));
+
+    const primary = nodesWithPorts[0];
+    const session = await createSessionRecord(
+      userId, environment, null, networkName, expiresAt,
+      primary.host, primary.ttydPort, primary.codeServerPort, null, clusterNodes,
+    );
+    await setTTL(session.id, 3600);
+    return {
+      sessionId: session.id,
+      isCluster: true,
+      nodes: clusterNodes,
+      expiresAt,
+      environment,
+    };
+  }
+
+  const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
+  const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
+  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort, setupScript, null);
   await setTTL(session.id, 3600);
-
   return {
     sessionId: session.id,
     wsUrl: `ws://${host}:${ttydPort}`,
@@ -70,10 +86,14 @@ export async function destroySession(sessionId) {
   const session = await getSession(sessionId);
   if (!session) return;
 
-  if (session.nomad_job_id) {
-    try {
-      await stopJob(session.nomad_job_id);
-    } catch (err) {
+  if (session.cluster_nodes) {
+    const nodes = Array.isArray(session.cluster_nodes) ? session.cluster_nodes : JSON.parse(session.cluster_nodes);
+    const containerIds = nodes.map(n => n.containerId).filter(Boolean);
+    try { await stopCluster(session.nomad_job_id, containerIds); } catch (err) {
+      console.warn('[PlaygroundSession] stopCluster failed:', err.message);
+    }
+  } else if (session.nomad_job_id) {
+    try { await stopJob(session.nomad_job_id); } catch (err) {
       console.warn(`[PlaygroundSession] stopJob failed for ${session.nomad_job_id}:`, err.message);
     }
   }

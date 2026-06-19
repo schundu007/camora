@@ -183,3 +183,118 @@ export async function execScriptInContainerStream(containerId, scriptContent, on
 
 export async function getAllocations() { return []; }
 export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }
+
+export function getWorkerHost() {
+  return WORKER_HOST();
+}
+
+async function scheduleEtcdCluster(sessionId, networkName) {
+  const image = 'chundubabu/pg-etcd-node:latest';
+  const initialCluster = 'etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380';
+  const nodes = [];
+  for (let i = 1; i <= 3; i++) {
+    const nodeName = `etcd${i}`;
+    const envFlags = [
+      `-e SESSION_ID=${sessionId}`,
+      `-e force_color_prompt=yes`,
+      `-e NODE_NAME=${nodeName}`,
+      `-e INITIAL_CLUSTER=${initialCluster}`,
+    ].join(' ');
+    const cmd = `docker run -d --rm --pull=always --memory=512m --network ${networkName} --hostname ${nodeName} --name pg-${sessionId}-${nodeName} ${envFlags} -p 0:7681 ${image}`;
+    const containerId = await sshExec(cmd);
+    if (!containerId || containerId.length < 12) throw new Error(`etcd node ${nodeName} failed to start`);
+    nodes.push({ nodeIndex: i - 1, nodeName, containerId, role: 'etcd' });
+  }
+  return nodes;
+}
+
+async function scheduleK8sMultiCluster(sessionId, networkName) {
+  const image = 'chundubabu/pg-k8s-multi:latest';
+  const serverEnvFlags = `-e SESSION_ID=${sessionId} -e force_color_prompt=yes`;
+  const serverCmd = `docker run -d --rm --pull=always --memory=2048m --network ${networkName} --hostname k8s-master --name pg-${sessionId}-master --privileged ${serverEnvFlags} -p 0:7681 -p 0:8080 ${image}`;
+  const serverContainerId = await sshExec(serverCmd);
+  if (!serverContainerId || serverContainerId.length < 12) throw new Error('k8s-multi server failed to start');
+
+  let token = null;
+  const tokenDeadline = Date.now() + 90_000;
+  while (Date.now() < tokenDeadline) {
+    try {
+      const out = await sshExec(`docker exec ${serverContainerId} cat /var/lib/rancher/k3s/server/node-token 2>/dev/null`);
+      if (out && out.trim().length > 10) { token = out.trim(); break; }
+    } catch {}
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  if (!token) throw new Error('k3s server did not generate node-token in time');
+
+  const nodes = [{ nodeIndex: 0, nodeName: 'k8s-master', containerId: serverContainerId, role: 'server' }];
+
+  for (let i = 1; i <= 2; i++) {
+    const nodeName = `k8s-node${i}`;
+    const agentEnvFlags = [
+      `-e SESSION_ID=${sessionId}`,
+      `-e force_color_prompt=yes`,
+      `-e K3S_ROLE=agent`,
+      `-e K3S_URL=https://k8s-master:6443`,
+      `-e K3S_TOKEN=${token}`,
+    ].join(' ');
+    const cmd = `docker run -d --rm --memory=1024m --network ${networkName} --hostname ${nodeName} --name pg-${sessionId}-${nodeName} --privileged ${agentEnvFlags} -p 0:7681 ${image}`;
+    const containerId = await sshExec(cmd);
+    if (!containerId || containerId.length < 12) throw new Error(`k8s agent ${nodeName} failed to start`);
+    nodes.push({ nodeIndex: i, nodeName, containerId, role: 'agent' });
+  }
+  return nodes;
+}
+
+export async function scheduleCluster(sessionId, environment) {
+  const networkName = `pg-net-${sessionId}`;
+  await sshExec(`docker network create ${networkName}`);
+  let nodes;
+  if (environment === 'etcd-cluster') {
+    nodes = await scheduleEtcdCluster(sessionId, networkName);
+  } else if (environment === 'k8s-multi') {
+    nodes = await scheduleK8sMultiCluster(sessionId, networkName);
+  } else {
+    throw new Error(`Unknown cluster environment: ${environment}`);
+  }
+  return { networkName, nodes };
+}
+
+export async function getClusterAddresses(nodes) {
+  const deadline = Date.now() + 90_000;
+  const host = WORKER_HOST();
+  return Promise.all(nodes.map(async (node) => {
+    let ttydPort = null;
+    while (Date.now() < deadline && !ttydPort) {
+      try {
+        const out = await sshExec(`docker port ${node.containerId} 7681`);
+        for (const line of out.split('\n')) {
+          const port = parseInt(line.split(':').at(-1), 10);
+          if (port > 0) { ttydPort = port; break; }
+        }
+      } catch {}
+      if (!ttydPort) await new Promise(r => setTimeout(r, 500));
+    }
+    if (!ttydPort) throw new Error(`Timed out waiting for ttyd port on ${node.nodeName}`);
+
+    let codeServerPort = null;
+    if (node.role === 'server') {
+      const ideDeadline = Date.now() + 30_000;
+      while (Date.now() < ideDeadline && !codeServerPort) {
+        try {
+          const out = await sshExec(`docker port ${node.containerId} 8080`);
+          for (const line of out.split('\n')) {
+            const port = parseInt(line.split(':').at(-1), 10);
+            if (port > 0) { codeServerPort = port; break; }
+          }
+        } catch {}
+        if (!codeServerPort) await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    return { ...node, host, ttydPort, codeServerPort, status: 'provisioning' };
+  }));
+}
+
+export async function stopCluster(networkName, containerIds) {
+  await Promise.allSettled(containerIds.map(id => sshExec(`docker stop ${id}`).catch(() => {})));
+  try { await sshExec(`docker network rm ${networkName}`); } catch {}
+}
