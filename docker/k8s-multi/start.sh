@@ -47,9 +47,6 @@ if [ "${SCENARIO_ID}" = "etcd" ]; then
   echo 'echo "=== etcd Playground: run etcd-health to verify, then bash ~/01-basics.sh for Lab 01 ==="' >> /etc/bash.bashrc
 fi
 
-# Start Radar observability sidecar on server node only
-radar --port 9280 --no-browser &>/var/log/radar.log &
-
 mkdir -p /home/learner/.local/share/code-server/User
 cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
 {

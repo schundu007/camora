@@ -6,7 +6,7 @@ import {
   extendSession,
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
-import { getSession, getSessionHistory, updateSessionStatus, markRadarReady } from '../services/playground/sessionStore.js';
+import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
 import { execScriptInContainerStream } from '../services/playground/nomadClient.js';
 import { query } from '../config/database.js';
 
@@ -53,7 +53,6 @@ playgroundSessionsRouter.post('/', async (req, res) => {
       nodes: result.nodes
         ? result.nodes.map(n => ({ ...n, wsUrl: buildNodeWsUrl(result.sessionId, n.nodeIndex) }))
         : null,
-      radar_port: result.radar_port || null,
     });
   } catch (err) {
     if (err.code === 'ENV_NOT_ALLOWED') return res.status(403).json({ error: 'Environment not available on free tier' });
@@ -144,26 +143,6 @@ async function pollUntilReady(host, port, abortSignal, deadlineMs) {
   return false;
 }
 
-const K8S_ENVS_SET = new Set(['k8s-single', 'k8s-multi', 'k8s-etcd']);
-
-playgroundSessionsRouter.get('/:id/radar-status', async (req, res) => {
-  try {
-    await checkSessionOwner(req.params.id, req.user.id);
-    const session = await getSession(req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-    const radarAvailable = K8S_ENVS_SET.has(session.environment) && !!session.radar_port;
-    const radarReady = radarAvailable && !!session.radar_ready;
-    return res.json({
-      radarAvailable,
-      radarReady,
-      radarUrl: radarAvailable ? `/pg-radar?_s=${session.id}` : null,
-    });
-  } catch (err) {
-    console.error('[PlaygroundSessions] radar-status error:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch radar status' });
-  }
-});
-
 playgroundSessionsRouter.get('/:id/events', async (req, res) => {
   try {
     await checkSessionOwner(req.params.id, req.user.id);
@@ -199,11 +178,6 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       }));
 
       if (!ac.signal.aborted && !res.writableEnded) {
-        if (session.radar_port) {
-          pollUntilReady(session.ttyd_host, session.radar_port, ac.signal, Date.now() + 30000)
-            .then(() => markRadarReady(req.params.id))
-            .catch(() => {});
-        }
         await updateSessionStatus(req.params.id, 'ready').catch(() => {});
         sendEvent({ type: 'ready' });
         res.end();
@@ -259,11 +233,6 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       }
     }
 
-    if (session.radar_port) {
-      pollUntilReady(host, session.radar_port, ac.signal, Date.now() + 30000)
-        .then(() => markRadarReady(req.params.id))
-        .catch(() => {});
-    }
     await updateSessionStatus(req.params.id, 'ready').catch(() => {});
     sendEvent({ type: 'ready' });
     if (!res.writableEnded) res.end();

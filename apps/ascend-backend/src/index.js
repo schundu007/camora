@@ -1498,52 +1498,6 @@ app.use('/pg-ide', async (req, res) => {
   req.pipe(proxyReq);
 });
 
-// Radar HTTP proxy — /pg-radar/* → container port 9280
-// Same auth pattern as /pg-ide. Only available for k8s environments that expose radar_port.
-app.use('/pg-radar', async (req, res) => {
-  const qs = new URL(req.url, 'http://localhost').searchParams;
-
-  let userId = -1;
-  const qt = qs.get('_t');
-  if (qt) { const p = pgParseToken(qt); if (p?.sub) userId = parseInt(p.sub, 10); }
-  if (userId === -1 && req.cookies?.cariara_sso) {
-    const p = pgParseToken(req.cookies.cariara_sso);
-    if (p?.sub) userId = parseInt(p.sub, 10);
-  }
-  const isAssetRequest = !qt && !req.cookies?.cariara_sso && req.cookies?.pg_radar;
-  if (userId === -1 && !isAssetRequest) return res.status(401).end('Unauthorized');
-
-  const sessionId = qs.get('_s') || req.cookies?.pg_radar;
-  if (!sessionId) return res.status(400).end('Missing session');
-
-  let session;
-  try { session = await getSession(sessionId); } catch { return res.status(502).end(); }
-  if (!session) return res.status(404).end('Session not found');
-  if (userId > 0 && session.user_id !== userId) return res.status(403).end('Forbidden');
-  if (!session.ttyd_host || !session.radar_port) return res.status(503).end('Radar not ready');
-
-  res.cookie('pg_radar', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-radar', sameSite: 'strict' });
-  res.removeHeader('content-security-policy');
-  res.removeHeader('x-frame-options');
-
-  const proxyReq = http.request({
-    hostname: session.ttyd_host,
-    port: session.radar_port,
-    path: req.url || '/',
-    method: req.method,
-    headers: { ...req.headers, host: `${session.ttyd_host}:${session.radar_port}` },
-  }, (proxyRes) => {
-    delete proxyRes.headers['content-security-policy'];
-    delete proxyRes.headers['x-frame-options'];
-    proxyRes.headers['content-security-policy'] =
-      "default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors 'self' https://camora.cariara.com https://caprab.cariara.com";
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
-    proxyRes.pipe(res);
-  });
-  proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
-  req.pipe(proxyReq);
-});
-
 // Enhanced health check
 app.get('/api/health', (req, res) => {
   res.json({
@@ -1662,18 +1616,6 @@ server.on('upgrade', async (req, socket, head) => {
     return;
   }
 
-  const pgRadarMatch = req.url?.startsWith('/pg-radar');
-  if (pgRadarMatch) {
-    const pgRadarCookie = req.headers.cookie?.match(/(?:^|;\s*)pg_radar=([^;]+)/)?.[1];
-    const sessionId = pgRadarCookie ? decodeURIComponent(pgRadarCookie) : null;
-    if (!sessionId) { socket.destroy(); return; }
-    let session;
-    try { session = await getSession(sessionId); } catch { socket.destroy(); return; }
-    if (!session?.ttyd_host || !session?.radar_port) { socket.destroy(); return; }
-    const wsPath = req.url.replace(/^\/pg-radar/, '') || '/';
-    proxyWs(socket, head, session.ttyd_host, session.radar_port, wsPath, req.rawHeaders);
-    return;
-  }
 });
 
 

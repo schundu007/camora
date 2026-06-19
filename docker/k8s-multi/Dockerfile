@@ -19,11 +19,6 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN mkdir -p /home/learner/labs/etcd
 
 COPY labs/etcd/ /home/learner/labs/etcd/
-# Install Radar observability binary (binary is named kubectl-radar inside the archive)
-RUN curl -fsSL https://github.com/skyhook-io/radar/releases/download/v1.7.9/radar_v1.7.9_linux_amd64.tar.gz \
-    | tar xz -C /usr/local/bin kubectl-radar && \
-    chmod +x /usr/local/bin/kubectl-radar && \
-    ln -sf /usr/local/bin/kubectl-radar /usr/local/bin/radar
 
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
@@ -33,5 +28,5 @@ RUN mkdir -p /home/learner/.local/share/code-server/User && \
     > /home/learner/.local/share/code-server/User/settings.json && \
     chown -R learner:learner /home/learner/.local
 
-EXPOSE 7681 8080 9280
+EXPOSE 7681 8080
 CMD ["/start.sh"]
