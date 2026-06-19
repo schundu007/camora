@@ -5,6 +5,16 @@ import { presignPut, presignGet, deleteObject, headObject } from './r2Client.js'
 const WORKER_HOST = () => process.env.WORKER_HOST || '172.104.210.63';
 const WORKER_USER = () => process.env.WORKER_USER || 'pgrunner';
 
+// Validate ID/tag/key to prevent shell injection — must be alphanumeric with limited special chars
+function validateId(value, fieldName) {
+  if (!value || typeof value !== 'string') {
+    throw new Error(`Invalid ${fieldName}: not a string`);
+  }
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_.\-:/]*$/.test(value)) {
+    throw new Error(`Invalid ${fieldName}: "${value}" contains forbidden characters`);
+  }
+}
+
 function workerKey() {
   const b64 = process.env.WORKER_SSH_KEY_B64;
   if (!b64) throw new Error('WORKER_SSH_KEY_B64 not configured');
@@ -43,6 +53,8 @@ function sshExec(command, timeoutMs = 10 * 60 * 1000) {
 }
 
 export async function exportVmToR2(containerId, r2Key) {
+  validateId(containerId, 'containerId');
+  validateId(r2Key, 'r2Key');
   // 2hr presigned PUT — export can be slow for large containers
   const putUrl = await presignPut(r2Key, 7200);
   // Worker streams docker export directly to R2 — no data routes through backend
@@ -55,6 +67,8 @@ export async function exportVmToR2(containerId, r2Key) {
 }
 
 export async function importVmFromR2(r2Key, imageTag) {
+  validateId(r2Key, 'r2Key');
+  validateId(imageTag, 'imageTag');
   const getUrl = await presignGet(r2Key, 3600);
   // Worker downloads from R2 and imports — no data routes through backend
   await sshExec(
@@ -66,9 +80,15 @@ export async function importVmFromR2(r2Key, imageTag) {
 export async function deleteVmImage(imageTag) {
   try {
     await sshExec(`docker rmi "${imageTag}" 2>/dev/null || true`);
-  } catch { /* best effort */ }
+  } catch (err) {
+    console.warn('[vmSaver] deleteVmImage failed:', imageTag, err.message);
+  }
 }
 
 export async function deleteR2Object(r2Key) {
-  try { await deleteObject(r2Key); } catch { /* best effort */ }
+  try {
+    await deleteObject(r2Key);
+  } catch (err) {
+    console.warn('[vmSaver] deleteR2Object failed:', r2Key, err.message);
+  }
 }
