@@ -37,7 +37,6 @@ const ChartPanel = ({ title, children }: { title: string; children: React.ReactN
 );
 
 export default function AdminPlaygroundObservePage() {
-  const { user } = useAuth();
   const [win, setWin] = useState<'7d' | '30d'>('7d');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,12 +47,13 @@ export default function AdminPlaygroundObservePage() {
     setError(null);
     fetch(`${API}/api/v1/playground/sessions/metrics?window=${win}`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-      .then((d: Metrics) => { setMetrics(d); setLoading(false); })
+      .then((d) => {
+        if (!d || typeof d !== 'object') throw new Error('Invalid metrics response');
+        setMetrics(d as Metrics);
+        setLoading(false);
+      })
       .catch((e: unknown) => { setError(String(e)); setLoading(false); });
   }, [win]);
-
-  // Suppress unused-var warning — user is available for future owner gating
-  void user;
 
   const envPieData = metrics
     ? Object.entries(metrics.environmentBreakdown).map(([name, value]) => ({ name, value }))
