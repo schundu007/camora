@@ -52,6 +52,9 @@ cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTI
 VSCODE_SETTINGS
 chown -R learner:learner /home/learner/.local
 
+# Start Radar observability sidecar (k8s topology, resources, traffic)
+KUBECONFIG=/etc/rancher/k3s/k3s.yaml radar --port 9280 --no-browser &>/var/log/radar.log &
+
 sudo -u learner code-server --bind-addr 0.0.0.0:8080 --auth none /home/learner &>/var/log/code-server.log &
 
 echo '__PROGRESS__:{"step":"ide_start","status":"done"}'
