@@ -22,12 +22,17 @@ playgroundSessionsRouter.post('/', async (req, res) => {
       scenarioId: scenarioId || null,
       plan: req.user.plan_type || null,
     });
-    return res.status(201).json({
+    const body = {
       sessionId: result.sessionId,
       wsUrl: result.wsUrl,
       expiresAt: result.expiresAt,
       environment: result.environment,
-    });
+    };
+    if (result.isCluster) {
+      body.isCluster = true;
+      body.nodes = result.nodes;
+    }
+    return res.status(201).json(body);
   } catch (err) {
     if (err.code === 'ENV_NOT_ALLOWED') {
       return res.status(403).json({ error: 'Environment not available on free tier' });
@@ -120,7 +125,18 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       ac.abort();
     }, 90 * 1000);
 
-    await streamContainerLogs(session.nomad_job_id, (line) => {
+    // For cluster sessions, stream logs from the primary node (etcd1 / nodeIndex=0)
+    // Its terminal_ready signal means the full cluster is healthy.
+    let logTarget = session.nomad_job_id;
+    if (session.is_cluster && session.cluster_nodes) {
+      const nodes = typeof session.cluster_nodes === 'string'
+        ? JSON.parse(session.cluster_nodes)
+        : session.cluster_nodes;
+      const primary = nodes.find((n) => n.nodeIndex === 0);
+      if (primary?.containerId) logTarget = primary.containerId;
+    }
+
+    await streamContainerLogs(logTarget, (line) => {
       if (done) return;
       if (!line.includes('__PROGRESS__:')) return;
       const idx = line.indexOf('__PROGRESS__:');
@@ -156,11 +172,23 @@ playgroundSessionsRouter.get('/:id', async (req, res) => {
     const timeRemaining = Math.max(0, expiresAt - now);
     const extendAvailable = !session.extended && timeRemaining < 300_000;
 
-    return res.json({
-      ...session,
-      timeRemaining,
-      extendAvailable,
-    });
+    const body = { ...session, timeRemaining, extendAvailable };
+
+    if (session.is_cluster && session.cluster_nodes) {
+      const WS_BASE = process.env.PLAYGROUND_WS_BASE || 'wss://playground-backend-production.up.railway.app';
+      const nodes = typeof session.cluster_nodes === 'string'
+        ? JSON.parse(session.cluster_nodes)
+        : session.cluster_nodes;
+      body.isCluster = true;
+      body.wsUrl = `${WS_BASE}/playground/ws/${session.id}?node=0`;
+      body.nodes = nodes.map(({ nodeIndex, nodeName }) => ({
+        nodeIndex,
+        nodeName,
+        wsUrl: `${WS_BASE}/playground/ws/${session.id}?node=${nodeIndex}`,
+      }));
+    }
+
+    return res.json(body);
   } catch (err) {
     if (err.status === 403) return res.status(403).json({ error: 'Access denied' });
     if (err.status === 404) return res.status(404).json({ error: 'Session not found' });

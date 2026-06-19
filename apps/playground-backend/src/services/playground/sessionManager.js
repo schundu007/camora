@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { scheduleJob, getTaskAddress, stopJob } from './nomadClient.js';
+import { scheduleJob, getTaskAddress, stopJob, createClusterNetwork, scheduleClusterNode, stopClusterJob } from './nomadClient.js';
 import {
   createSessionRecord,
   getSession,
@@ -9,11 +9,18 @@ import {
   setTTL,
   clearTTL,
   getUserDailyCount,
+  updateClusterNodes,
 } from './sessionStore.js';
 
 const FREE_ENVIRONMENTS = new Set(['ubuntu', 'docker']);
 const FREE_DAILY_LIMIT = 1;
 const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
+const CLUSTER_ENVIRONMENTS = new Set(['etcd-cluster']);
+const CLUSTER_NODE_NAMES = ['etcd1', 'etcd2', 'etcd3'];
+
+function isClusterEnvironment(env) {
+  return CLUSTER_ENVIRONMENTS.has(env);
+}
 
 function isOwner(email) {
   const owners = (process.env.OWNER_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
@@ -44,11 +51,66 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   }
 
   const jobTag = randomBytes(6).toString('hex');
-  const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
+  const sessionTag = `${userId}-${jobTag}`;
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  if (isClusterEnvironment(environment)) {
+    // Create a placeholder session record first so we have a stable session.id (UUID)
+    const placeholderSession = await createSessionRecord(userId, environment, scenarioId, null, expiresAt, null, null, null);
+    const sessionId = placeholderSession.id;
+
+    // Mark is_cluster in DB immediately
+    await updateSessionStatus(sessionId, 'provisioning', { is_cluster: true });
+
+    // 1. Create bridge network
+    const networkName = await createClusterNetwork(sessionId);
+
+    // 2. Start all cluster node containers in parallel
+    const nodeResults = await Promise.all(
+      CLUSTER_NODE_NAMES.map((nodeName, nodeIndex) =>
+        scheduleClusterNode(sessionId, nodeIndex, nodeName, networkName)
+      )
+    );
+
+    // 3. Resolve port mappings in parallel — use primary container (etcd1) for nomad_job_id
+    const nodeAddresses = await Promise.all(
+      nodeResults.map((containerId) => getTaskAddress(containerId))
+    );
+
+    const nodes = CLUSTER_NODE_NAMES.map((nodeName, nodeIndex) => ({
+      nodeIndex,
+      nodeName,
+      containerId: nodeResults[nodeIndex],
+      ttydPort: nodeAddresses[nodeIndex].ttydPort,
+      codeServerPort: nodeAddresses[nodeIndex].codeServerPort,
+      ttydHost: nodeAddresses[nodeIndex].host,
+    }));
+
+    // 4. Persist network + nodes; primary container id stored as nomad_job_id for log streaming
+    await updateClusterNodes(sessionId, networkName, nodes);
+    await updateSessionStatus(sessionId, 'ready', { nomad_job_id: nodes[0].containerId });
+    await setTTL(sessionId, 3600);
+
+    const WS_BASE = process.env.PLAYGROUND_WS_BASE || 'wss://playground-backend-production.up.railway.app';
+    return {
+      sessionId,
+      environment,
+      isCluster: true,
+      expiresAt,
+      wsUrl: `${WS_BASE}/playground/ws/${sessionId}?node=0`,
+      nodes: nodes.map(({ nodeIndex, nodeName }) => ({
+        nodeIndex,
+        nodeName,
+        wsUrl: `${WS_BASE}/playground/ws/${sessionId}?node=${nodeIndex}`,
+      })),
+    };
+  }
+
+  // ── Single-container flow (unchanged) ────────────────────────────────────
+  const { jobId } = await scheduleJob(sessionTag, environment, scenarioId);
 
   const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
 
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort);
 
   await updateSessionStatus(session.id, 'ready');
@@ -69,7 +131,17 @@ export async function destroySession(sessionId) {
   const session = await getSession(sessionId);
   if (!session) return;
 
-  if (session.nomad_job_id) {
+  if (session.is_cluster && session.cluster_nodes) {
+    const nodes = typeof session.cluster_nodes === 'string'
+      ? JSON.parse(session.cluster_nodes)
+      : session.cluster_nodes;
+    const containerIds = nodes.map((n) => n.containerId).filter(Boolean);
+    try {
+      await stopClusterJob(sessionId, session.cluster_network, containerIds);
+    } catch (err) {
+      console.warn(`[PlaygroundSession] stopClusterJob failed for ${sessionId}:`, err.message);
+    }
+  } else if (session.nomad_job_id) {
     try {
       await stopJob(session.nomad_job_id);
     } catch (err) {
