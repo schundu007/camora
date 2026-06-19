@@ -10547,7 +10547,7 @@ const userTime = convertToTimezone(now(), user.timezone);
   }
   return false;
 }
-\`\`\`
+\`\`\`yaml
 
 **Unsubscribe**:
 - One-click unsubscribe in emails (CAN-SPAM)
@@ -11193,7 +11193,7 @@ if tokens >= cost then
   return {1, tokens}  -- allowed
 end
 return {0, tokens}  -- denied
-\`\`\`
+\`\`\`yaml
 
 **Solution 2: Local Cache + Sync**
 - Each server has local counter
@@ -12508,7 +12508,7 @@ if trending_score > 3: boost significantly
 \`\`\`
 Search Logs → Kafka → Flink → Aggregator → Trie Updater
                               (1 min windows)
-\`\`\`
+\`\`\`yaml
 
 **Update Frequency**:
 - Trending queries: Every 1-5 minutes
@@ -14946,7 +14946,7 @@ License Server validates:
 - Download count within limits
         ↓
 Returns decryption key (valid for 30 days)
-\`\`\`
+\`\`\`yaml
 
 **Offline Sync**:
 - Background sync when on WiFi
@@ -16689,7 +16689,7 @@ Constraints:
 \`\`\`
 "Your Dasher is picking up another order nearby.
  This adds approximately 5 minutes to your delivery."
-\`\`\`
+\`\`\`yaml
 - Transparency about batching builds trust
 - Customer can pay extra for "Priority Delivery" (no batching)`
         }
@@ -17275,7 +17275,7 @@ Where credibility considers:
   - Follower count (log scaled)
   - Past spam history
   - Verification status
-\`\`\`
+\`\`\`yaml
 
 **Real-time vs Batch**:
 - Real-time: Basic rate limiting, known bot lists
@@ -21942,7 +21942,7 @@ ZREVRANGE temp:result 0 49 WITHSCORES
 
 # Clean up
 DEL temp:friends:player123 temp:result
-\`\`\`
+\`\`\`yaml
 
 **Recommendation**: Option 1 for small friend lists (<500), Option 2 for very large friend lists. Cache the result for 30 seconds since friend leaderboards don't need to be real-time.`
         }
@@ -26407,7 +26407,7 @@ cart_items {
 UPDATE inventory
 SET quantity = quantity - 1, version = version + 1
 WHERE product_id = ? AND quantity > 0 AND version = ?
-\`\`\`
+\`\`\`yaml
 If version mismatch, retry. If quantity = 0, sold out.
 
 **For extreme flash sales (>10K TPS per item)**:
@@ -27164,7 +27164,7 @@ merchants {
 3. Process payment with payment network
 4. UPDATE idempotency_keys SET status=COMPLETE, response={...}
 5. Return response to client
-\`\`\`
+\`\`\`yaml
 
 **Edge Cases**:
 - Client timeout + retry: idempotency key catches duplicate

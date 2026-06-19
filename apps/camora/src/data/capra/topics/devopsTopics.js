@@ -3995,7 +3995,7 @@ jobs:
           role-to-assume: arn:aws:iam::123456789012:role/gha-deploy-prod
           aws-region: us-east-1
       - run: ./scripts/deploy-prod.sh \${{ needs.build.outputs.digest }}
-\`\`\`
+\`\`\`yaml
 
 What this demonstrates, in order:
 
@@ -5070,7 +5070,7 @@ spec:
     pods: "200"
     requests.cpu: "200"
     requests.memory: 400Gi
-\`\`\`
+\`\`\`yaml
 
 NetworkPolicy. Default-deny egress from gitlab-runners namespace except to: GitLab itself (for runner manager), container registries (for image pulls), package mirrors (for dependencies), the cluster API (for kubectl jobs that need it). Prevents lateral movement.
 
@@ -6123,7 +6123,7 @@ notify-failure:
   if: failure()
   runs-on: ubuntu-latest
   steps: [...]
-\`\`\`
+\`\`\`yaml
 
 Things that don't translate well:
 
@@ -7029,7 +7029,7 @@ strategy:
     shard: [1, 2, 3, 4, 5, 6, 7, 8]
 steps:
   - run: npm test -- --shard=\${{ matrix.shard }}/8
-\`\`\`
+\`\`\`yaml
 
 Native test runner sharding (Jest --shard, Vitest --shard, pytest-shard, Go's -shard) splits tests by hash, not timing. Splits are deterministic but not balanced — a fast container finishes in 30s while a slow one takes 4min. CircleCI's timing-based split balances by historical data.
 
@@ -7220,7 +7220,7 @@ Pipeline DSL: pipeline.yml is the entry point. Steps can be hardcoded YAML or ge
 steps:
   - command: ./.buildkite/generate-pipeline.sh | buildkite-agent pipeline upload
     label: ":pipeline: Generate"
-\`\`\`
+\`\`\`yaml
 
 3. The generate-pipeline.sh script (or .py / .rb / .js — any language) inspects the repo state — git diff against main, services touched, build matrix needed — and emits a pipeline YAML to stdout.
 
@@ -7895,7 +7895,7 @@ Autoscaler config. Buildkite ships buildkite-agent-scaler that runs as a sidecar
   max: 200
   scaleUpFactor: 1.5          # scale 1.5x faster than queue grows
   scaleDownFactor: 0.5        # scale down conservatively
-\`\`\`
+\`\`\`yaml
 
 Min capacity matters for time-sensitive PRs — cold-start lag delays first feedback. 5-10 warm agents per queue typical.
 
@@ -8940,7 +8940,7 @@ spec:
     count/taskruns.tekton.dev: "100"
     requests.cpu: "100"
     requests.memory: 200Gi
-\`\`\`
+\`\`\`yaml
 
 This caps damage from runaway pipeline triggers.
 
@@ -9889,7 +9889,7 @@ spec:
     - name: process
       container:
         volumeMounts: [{ name: workdir, mountPath: /work }]
-\`\`\`
+\`\`\`yaml
 
 Hybrid pattern: PVC for fast intermediate state within a workflow; artifact for durable outputs that survive workflow completion.
 
@@ -10100,7 +10100,7 @@ topologySpreadConstraints:
     whenUnsatisfiable: ScheduleAnyway
     labelSelector:
       matchLabels: { app: api }
-\`\`\`
+\`\`\`yaml
 
 Resource requests for HPA. HPA needs requests set on containers. Without it, HPA can't compute utilization and won't scale. The most common "HPA isn't working" cause.
 
@@ -10465,7 +10465,7 @@ spec:
     webhooks:
       - name: load-test
         url: http://flagger-loadtester/
-\`\`\`
+\`\`\`yaml
 
 Properties:
 - Wraps existing Deployment — when the Deployment image changes, Flagger detects, scales up a "primary" + "canary" ReplicaSet pair, and orchestrates traffic shift via service mesh / ingress.
@@ -11173,7 +11173,7 @@ jobs:
       - uses: slsa-framework/slsa-github-generator@v2.0.0
         with:
           base64-subjects: \${{ steps.hash.outputs.hashes }}
-\`\`\`
+\`\`\`yaml
 
 Verification at deploy time:
 - Admission controller (Kyverno, OPA Gatekeeper, sigstore-policy-controller) verifies image signature before scheduling pods.
@@ -11687,7 +11687,7 @@ sealed-secrets controller in cluster has a private key. SealedSecret CRD contain
 echo -n 'my-db-password' | kubectl create secret generic db-creds \\
   --dry-run=client --from-file=password=/dev/stdin -o yaml | \\
   kubeseal --format=yaml > sealed-secret.yaml
-\`\`\`
+\`\`\`yaml
 
 Pros: Simple, K8s-native, OSS, no external dependencies.
 
@@ -12679,7 +12679,7 @@ Rollback procedure:
 
 \`\`\`bash
 helm rollback argocd <previous-revision> -n argocd
-\`\`\`
+\`\`\`yaml
 
 If CRD migration was breaking, may need to manually patch resources back. Rare.
 
@@ -13773,7 +13773,7 @@ spec:
     namespace: argocd
   syncPolicy:
     automated: { prune: true, selfHeal: true }
-\`\`\`
+\`\`\`yaml
 
 Argo CD applies the root, sees the children as ordinary Kubernetes resources of kind Application, and the controller takes ownership of each. From a single argocd app create root (or a manifest commit), you bootstrap an entire cluster.
 
@@ -13845,7 +13845,7 @@ spec:
         automated: { prune: true, selfHeal: true }
         syncOptions:
           - CreateNamespace=true
-\`\`\`
+\`\`\`yaml
 
 This single ApplicationSet emits one Application per (prod-cluster, addon) pair. Add a cluster, all addons follow. Add an addon, all clusters get it. The controller's reconcile loop diffs the previous generator output against the current one and creates/deletes Applications accordingly.
 
@@ -14004,7 +14004,7 @@ Flux multi-tenancy uses one bootstrap per cluster:
 \`\`\`bash
 flux bootstrap github --owner=myorg --repository=fleet \\
   --branch=main --path=clusters/prod-us-east-1 --personal
-\`\`\`
+\`\`\`yaml
 
 Each cluster gets its own path under clusters/. The path's kustomization.yaml composes the addons and tenant Kustomizations for that cluster. Flux's Kustomization CRD has a path field that scopes reconciliation, and postBuild.substitute injects cluster-identifying values without templating engines.
 
@@ -14917,7 +14917,7 @@ terraform {
     plan { method = method.aes_gcm.method }
   }
 }
-\`\`\`
+\`\`\`yaml
 
 Terraform never shipped this — major OpenTofu differentiator. Top-three reason for shops to migrate to OpenTofu in 2026.
 
@@ -15228,7 +15228,7 @@ FROM gcr.io/distroless/static-debian12
 COPY --from=build /out/api /api
 USER 65532:65532
 ENTRYPOINT ["/api"]
-\`\`\`
+\`\`\`yaml
 
 Final image is ~15 MB instead of ~1 GB.
 
@@ -15434,7 +15434,7 @@ A minimal play:
       ansible.builtin.service:
         name: nginx
         state: reloaded
-\`\`\`
+\`\`\`yaml
 
 Handlers fire only if a notifying task reported changed: true, and only once at end of play.
 
@@ -15472,7 +15472,7 @@ roles/
     templates/             # Jinja2 templates
     files/                 # static files
     meta/main.yml          # role metadata
-\`\`\`
+\`\`\`yaml
 
 Roles are the unit of reuse for in-repo Ansible code. Most teams structure as one role per service (role/api, role/postgres, role/monitoring-agent).
 
@@ -15876,7 +15876,7 @@ OSQuery. Facebook-originated agent that exposes the OS as a SQL-queryable databa
 \`\`\`sql
 SELECT name, version FROM rpm_packages WHERE name = 'nginx';
 SELECT * FROM listening_ports WHERE port = 22;
-\`\`\`
+\`\`\`yaml
 
 Run via Fleet (osquery-fleet) or Kolide for fleet-wide queries.
 
@@ -16445,7 +16445,7 @@ apt-get update
 apt-get install -y --no-install-recommends curl ca-certificates
 rm -rf /var/lib/apt/lists/*
 EOF
-\`\`\`
+\`\`\`yaml
 
 Layer-cache rule. Order from least-changing to most-changing. Copy package.json + lockfile first; install deps; only then copy source.
 
@@ -16944,7 +16944,7 @@ ko build ./cmd/api
 # Produces and pushes ghcr.io/myorg/api@sha256:... to KO_DOCKER_REPO
 
 ko build --bare --tags=v1.2.3 ./cmd/api
-\`\`\`
+\`\`\`yaml
 
 What ko does:
 - No Dockerfile. Reads main package, runs go build, layers the resulting binary into base image.
@@ -18538,7 +18538,7 @@ docker login localhost:5000 -u admin --password-stdin
 
 docker logout localhost:5000
 # Removes the entry from ~/.docker/config.json
-\`\`\`
+\`\`\`yaml
 
 registry:2 vs Harbor:
 
@@ -19298,7 +19298,7 @@ RUN go build .                    # on the other's output
 FROM nginx:alpine AS runtime
 COPY --from=frontend /app/dist /usr/share/nginx/html
 COPY --from=backend /server /server
-\`\`\`
+\`\`\`yaml
 
 Wall-clock time = max(frontend, backend) instead of their sum.`,
       },
@@ -20567,7 +20567,7 @@ spec:
         identities:
           - issuer: https://token.actions.githubusercontent.com
             subjectRegExp: ^https://github.com/myorg/.*\\.github/workflows/release\\.yml@refs/tags/.*$
-\`\`\`
+\`\`\`yaml
 
 Kyverno + Gatekeeper. General-purpose policy engines for image signature checks, plus broader rules.
 
@@ -21713,7 +21713,7 @@ service:
       receivers: [otlp, filelog]
       processors: [memory_limiter, attributes/redact, batch]
       exporters: [loki]
-\`\`\`
+\`\`\`yaml
 
 Production patterns:
 - Agent collectors (DaemonSet) handle initial ingestion + light processing; forward to gateway via OTLP.
@@ -22655,7 +22655,7 @@ datasources:
         spanStartTimeShift: '-30s'
         spanEndTimeShift: '30s'
         filterByTraceID: true
-\`\`\`
+\`\`\`yaml
 
 Click a span → Grafana queries Loki for logs in time range with trace_id=<span.traceID>. Shows all logs related to that trace span.
 
@@ -22863,7 +22863,7 @@ remote_write:
       capacity: 10000
       max_samples_per_send: 5000
       batch_send_deadline: 5s
-\`\`\`
+\`\`\`yaml
 
 Prometheus continues local 15-day retention; remote_write streams to Mimir for long-term + global query.
 
@@ -23930,7 +23930,7 @@ route:
       receiver: slack-team
     - matchers: [severity = "info"]
       receiver: email
-\`\`\`
+\`\`\`yaml
 
 Critical → page (24/7). Warning → Slack (during business hours). Info → email (FYI; no immediate response).
 
@@ -24141,7 +24141,7 @@ LogQL examples:
 {service="payments"} | json | level="error"                     # parse JSON; filter level
 {service="payments"} | logfmt | duration > 1s                  # parse logfmt; filter
 sum by (service) (rate({namespace="prod"} |= "error" [5m]))    # error rate per service
-\`\`\`
+\`\`\`yaml
 
 Loki's value: 10x cheaper storage than Elastic. 1TB/day raw logs cost ~$60/month in S3 (vs $5k+/month in Elastic Cloud). Compute for ingesters/queriers is the dominant cost (~$1-2k/month for moderate scale).`,
         image: '/diagrams/devops/o4-log-agg.png',
@@ -25306,7 +25306,7 @@ S3 lifecycle for long-term archive:
     ]
   }]
 }
-\`\`\`
+\`\`\`yaml
 
 90 days hot → Glacier. 1 year → Deep Archive. Cost $0.001/GB/month vs S3 standard $0.023.
 
@@ -26484,7 +26484,7 @@ def process(msg):
     ) as span:
         span.set_attribute('publish.id', publish_id)
         # ... process ...
-\`\`\`
+\`\`\`yaml
 
 This approach: two independent traces (producer, consumer), explicitly linked. Backends like Datadog and Honeycomb handle links well; Tempo's link support is improving.
 
@@ -27687,7 +27687,7 @@ service:
   pipelines:
     traces:
       exporters: [datadog, otlp/tempo]                   # multi-export during transition
-\`\`\`
+\`\`\`yaml
 
 Send to both during validation phase. After parity verified, drop Datadog exporter; keep Tempo.
 
@@ -27953,7 +27953,7 @@ Implementation in PromQL (sketch):
 sum(rate(http_requests_total{status=~"5.."}[1h]))
   / sum(rate(http_requests_total[1h]))
   / 0.001  # 1 - 0.999 SLO target
-\`\`\`
+\`\`\`yaml
 
 Then alert: this expression ≥ 14.4 AND a 5m version ≥ 14.4 → page.
 
@@ -29660,7 +29660,7 @@ cosign verify \\
   --certificate-identity-regexp='^https://github.com/myorg/myrepo/.*$' \\
   --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \\
   ghcr.io/myorg/api:v1.2.3
-\`\`\`
+\`\`\`yaml
 
 in-toto — attestation framework. Statements about artifacts (provenance, scan results, approvals), signed and verifiable. SLSA provenance is one in-toto predicate type.
 
@@ -30630,7 +30630,7 @@ Separate process:
 SELECT id, payload FROM outbox WHERE published = false ORDER BY id LIMIT 100;
 -- publish to Kafka
 UPDATE outbox SET published = true WHERE id IN (...);
-\`\`\`
+\`\`\`yaml
 
 Properties:
 - At-least-once delivery (consumers must be idempotent).
@@ -33689,7 +33689,7 @@ def oomkilled_enricher(event: PodEvent, action_params: OOMKilledParams):
         title=f"OOMKilled: {pod.name}",
         severity=FindingSeverity.HIGH,
     ))
-\`\`\`
+\`\`\`yaml
 
 Robusta sinks: Slack (formatted blocks with collapsible log sections), PagerDuty (enrichment as note on the incident), Datadog (event with enrichment payload), OpsGenie.
 
@@ -35136,7 +35136,7 @@ function btest() {
   ))) intersect kind(test, //...)" 2>/dev/null | tr '\n' ' ')
   bazel test $TARGETS --remote_download_minimal
 }
-\`\`\`
+\`\`\`yaml
 
 Monitoring a healthy Bazel monorepo (BuildBuddy metrics):
 - Remote cache hit rate: 80-95% target; below 70% means hermeticity or environment issues.
@@ -35772,7 +35772,7 @@ libbpf with CO-RE gives you a statically linked binary that carries its own BPF 
 # Ship a single binary to a production host
 scp ./my_agent root@prod-host:/usr/local/bin/
 ssh root@prod-host /usr/local/bin/my_agent --daemonize
-\`\`\`
+\`\`\`yaml
 
 libbpf gives you full control over map types, program types, link lifecycles, pinning, and uprobe attachment to specific binary offsets. It integrates naturally with systemd, Prometheus exporters, and structured logging. The cost is the development cycle: writing C, running Clang, generating the skeleton, compiling the loader, and interpreting verifier errors takes minutes per iteration rather than seconds.
 
@@ -36957,7 +36957,7 @@ spec:
         memory: "256Mi"
         cpu: "500m"
 EOF
-\`\`\`
+\`\`\`yaml
 
 When kubelet creates this pod, it sends a RunPodSandbox CRI call to containerd. The CRI plugin looks up the firecracker handler, invokes the firecracker-containerd shim, which calls the jailer and Firecracker API to boot a new microVM. containerd then sends CreateContainer and StartContainer calls, which the shim forwards over vsock to the guest agent. The guest agent pulls the container image layers from the devmapper block devices, assembles the overlayfs mount, and starts the nginx process inside the guest.
 
@@ -37464,7 +37464,7 @@ Cache efficiency: Dagger wins for content-addressed caching. GitHub Actions cach
 # Dagger: cache volume managed by the engine, no key configuration needed
 goCache := client.CacheVolume("go-mod-cache")
 ctr.WithMountedCache("/go/pkg/mod", goCache)
-\`\`\`
+\`\`\`yaml
 
 Operational complexity: YAML wins for simplicity. Dagger requires the engine daemon, the CLI installation step in CI, and understanding of BuildKit concepts. Teams adopting Dagger need to invest in onboarding and documentation.
 
@@ -37779,7 +37779,7 @@ nas:/exports/data  /mnt/nas       nfs   defaults,nofail,_netdev 0 0
 # verify fstab without rebooting (mount all entries not yet mounted)
 mount -a
 systemctl daemon-reload   # for systemd-aware mount units
-\`\`\`
+\`\`\`yaml
 
 Always run mount -a after editing fstab to catch syntax errors before the next reboot. A typo in fstab can drop a server into emergency mode.`,
     },
@@ -37989,7 +37989,7 @@ dd if=/dev/zero of=/tmp/sparse.img bs=1 count=0 seek=1G
 ls -lh /tmp/sparse.img   # shows 1 GB apparent size
 du -h /tmp/sparse.img    # shows nearly 0 actual usage
 du --apparent-size -h /tmp/sparse.img  # shows 1 GB
-\`\`\`
+\`\`\`yaml
 
 The fourth cause is btrfs or snapshotted filesystems. btrfs filesystem df / btrfs filesystem usage shows actual CoW allocation including shared extents across subvolumes and snapshots, which can differ from both df and du significantly because shared extents are counted by both subvolumes but physically stored once.
 
@@ -38972,7 +38972,7 @@ kubectl edit configmap kube-proxy -n kube-system
 
 kubectl rollout restart daemonset/kube-proxy -n kube-system
 ipvsadm -ln
-\`\`\`
+\`\`\`yaml
 
 For clusters with fewer than roughly 500 Services the difference in practice is rarely observable. Beyond that scale, especially in high-traffic production clusters, IPVS mode meaningfully reduces CPU overhead on each node and eliminates the brief programming gaps that iptables mode introduces during updates.`,
     },
@@ -39405,7 +39405,7 @@ RWX requires a storage backend that supports concurrent multi-host access. The c
 \`\`\`bash
 # Check what access modes a CSI driver advertises
 kubectl get csidriver efs.csi.aws.com -o jsonpath='{.spec.volumeLifecycleModes}'
-\`\`\`
+\`\`\`yaml
 
 If you request accessModes: [ReadWriteMany] but the StorageClass's provisioner only supports RWO, the PVC will be provisioned successfully (the provisioner may not validate access modes at CreateVolume time), but the second pod on a different node that tries to mount the same PVC will stay in ContainerCreating. Kubelet will log an error from the CSI driver: ControllerPublishVolume returns multi-attach error indicating the volume is already attached to a different node, or NodeStageVolume fails because the device is not present on that node.
 
@@ -39875,7 +39875,7 @@ Second, the autoscaler may be scale-up suppressed by a cooldown period. After a 
 
 \`\`\`bash
 kubectl get configmap cluster-autoscaler-status -n kube-system -o yaml
-\`\`\`
+\`\`\`yaml
 
 Third, the node group may have already reached its maximum size. Check the min/max configuration in your node group spec (for EKS this is the Auto Scaling Group, for GKE this is the node pool bounds). If max nodes is set to the current count, the autoscaler will not provision more nodes regardless of pending pods.
 
@@ -41052,7 +41052,7 @@ kubeadm join LOAD_BALANCER_DNS:6443 \\
   --discovery-token-ca-cert-hash sha256:<hash> \\
   --control-plane \\
   --certificate-key <cert-key>
-\`\`\`
+\`\`\`yaml
 
 The --certificate-key value references an encrypted Secret in kube-system that contains the control plane certificates. It expires after 2 hours for security. Run kubeadm init phase upload-certs --upload-certs to generate a fresh key if the window has passed.
 
@@ -41134,7 +41134,7 @@ kubeadm token list
 
 # Delete a token
 kubeadm token delete <token-id>
-\`\`\`
+\`\`\`yaml
 
 After the initial cert is issued, the kubelet rotates it automatically using the rotateCertificates: true kubelet config option. The kubelet generates a new key and CSR 10% of the way through the certificate's lifetime and rotates to the new cert before the old one expires.`,
       },
@@ -41352,7 +41352,7 @@ containerd configuration for multiple runtimes in /etc/containerd/config.toml:
 
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
   runtime_type = "io.containerd.kata.v2"
-\`\`\`
+\`\`\`yaml
 
 The runtime_type string identifies the containerd shim binary. containerd-shim-runsc-v1 for gVisor, containerd-shim-kata-v2 for kata.`,
         image: `/diagrams/devops/g1-k8s-arch.png`,
@@ -41399,7 +41399,7 @@ spec:
   containers:
     - name: app
       image: nginx
-\`\`\`
+\`\`\`yaml
 
 The kubelet sees the runtimeClassName, looks up the RuntimeClass, finds the handler name, and passes it to containerd as the runtime handler for this sandbox. If the named RuntimeClass does not exist or the handler is not configured in containerd, the pod fails to start with a RuntimeClass not found or handler not found error.
 
@@ -41531,7 +41531,7 @@ initContainers:
         port: 15021
       initialDelaySeconds: 1
       periodSeconds: 2
-\`\`\`
+\`\`\`yaml
 
 Log collector use case (Fluent Bit, Fluentd):
 Kubernetes Job pods historically lost their last log lines. The job container exits, Kubernetes terminates all containers, and the log collector is killed before it can flush the final buffer. With native sidecars the flow is: job container exits, kubelet sends SIGTERM to log collector, log collector flushes buffer, log collector exits, pod terminates.
@@ -41841,7 +41841,7 @@ kubectl annotate deployment myapp description="deployed by CI"
 
 # Remove an annotation
 kubectl annotate deployment myapp description-
-\`\`\`
+\`\`\`yaml
 
 Labels are used by selectors (Services, ReplicaSets, NetworkPolicies). Annotations store
 arbitrary metadata (build IDs, owner, URLs) — not used by selectors.`,
@@ -42029,7 +42029,7 @@ livenessProbe:
     port: 8080
   periodSeconds: 10
   failureThreshold: 3       # tight: fails fast once the app is up
-\`\`\`
+\`\`\`yaml
 
 startupProbe gives the app up to 300 seconds to become healthy. Once it does, livenessProbe
 takes over with tight thresholds — detecting actual hangs in 30 seconds (3 × 10s).
@@ -42335,7 +42335,7 @@ minikube service myapp --url
 # Stop / delete
 minikube stop
 minikube delete
-\`\`\`
+\`\`\`yaml
 
 Drivers:
   docker      — no VM; best performance on Linux; default on Linux

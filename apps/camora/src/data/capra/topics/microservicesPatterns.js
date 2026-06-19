@@ -424,7 +424,7 @@ Failure scenario:
         answer: `Kubernetes has built-in service discovery through three mechanisms:
 
 **1. ClusterIP Services (most common)**:
-\`\`\`
+\`\`\`yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -1385,7 +1385,7 @@ Tier 2 outage does not affect Tier 1.
 \`\`\`
 
 **Layer 5 — Network-level (service mesh)**:
-\`\`\`
+\`\`\`yaml
 Istio DestinationRule:
 
 apiVersion: networking.istio.io/v1beta1
@@ -2076,7 +2076,7 @@ With mTLS:
 - Used for authorization policies (not just encryption)
 
 **Authorization policy example**:
-\`\`\`
+\`\`\`yaml
 Only payment-service can call billing-service:
 
 apiVersion: security.istio.io/v1beta1
@@ -3667,7 +3667,7 @@ Best for: Microservices needing centralized, versioned config
 \`\`\`
 
 **Approach 3 — Kubernetes ConfigMaps and Secrets**:
-\`\`\`
+\`\`\`yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -3953,7 +3953,7 @@ Features:
 \`\`\`
 
 **Kubernetes Secrets** (basic, not sufficient alone):
-\`\`\`
+\`\`\`yaml
   apiVersion: v1
   kind: Secret
   metadata:

@@ -16944,7 +16944,7 @@ Self-hosted (without CDN):
 \`\`\`
 
 **Measuring HTTP/3 benefit for your users**:
-\`\`\`
+\`\`\`yaml
 A/B test approach:
   Group A: HTTP/2 only (disable Alt-Svc header)
   Group B: HTTP/2 + HTTP/3 (enable Alt-Svc header)
