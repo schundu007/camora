@@ -433,7 +433,7 @@ export default function FormattedContent({ content, inline = false }) {
         if (hashM) return { cmd: hashM[1].trim(), desc: hashM[2] };
         const col2M = s.match(/^(.+?)\s{2,}—\s+(.+)$/);
         if (col2M) return { cmd: col2M[1].trim(), desc: col2M[2] };
-        const wordM = s.match(/^([a-z][\w.-]{0,28})\s+—\s+(.+)$/);
+        const wordM = s.match(/^([a-zA-Z][\w.-]{0,28})\s+—\s+(.+)$/);
         if (wordM) return { cmd: wordM[1], desc: wordM[2] };
         return null;
       };
@@ -541,7 +541,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--text-primary)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+                className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
               >
                 {label}
               </h4>,
@@ -569,7 +569,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--text-primary)] font-semibold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+                className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
               >
                 {text}
               </h4>,
@@ -690,7 +690,7 @@ export default function FormattedContent({ content, inline = false }) {
       {sec.body.length > 0 && (
         sec.header
           ? (
-            <div className="pl-4 ml-1" style={{ borderLeft: '2px solid var(--cam-gold-leaf)' }}>
+            <div className="pl-4 ml-1">
               {sec.body}
             </div>
           )
