@@ -80,11 +80,45 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
     req.on('close', () => ac.abort());
 
     let done = false;
+    const syntheticTimers = [];
+    const sentSubSteps = [];
+
+    const cancelSynthetics = () => {
+      syntheticTimers.forEach((t) => clearTimeout(t));
+      syntheticTimers.length = 0;
+    };
+
+    const finishSynthetics = () => {
+      cancelSynthetics();
+      for (const step of sentSubSteps) {
+        if (!done) sendEvent({ step, status: 'done' });
+      }
+    };
+
+    // Synthetic sub-steps so users see progress even when the container startup
+    // script emits no __PROGRESS__ markers.
+    const ENV_SUB_SCHEDULE = [
+      { delay: 2000,  step: 'env_sub_shell', label: 'Initializing shell environment' },
+      { delay: 8000,  step: 'env_sub_pkg',   label: 'Configuring packages' },
+      { delay: 18000, step: 'env_sub_ide',   label: 'Starting code editor' },
+      { delay: 32000, step: 'env_sub_term',  label: 'Starting terminal service' },
+      { delay: 52000, step: 'env_sub_wait',  label: 'Waiting for services...' },
+    ];
+    for (const { delay, step, label } of ENV_SUB_SCHEDULE) {
+      const t = setTimeout(() => {
+        if (done) return;
+        sendEvent({ step, label, status: 'running' });
+        sentSubSteps.push(step);
+      }, delay);
+      syntheticTimers.push(t);
+    }
+
     const deadline = setTimeout(() => {
+      finishSynthetics();
       sendEvent({ type: 'ready' });
       done = true;
       ac.abort();
-    }, 3 * 60 * 1000);
+    }, 90 * 1000);
 
     await streamContainerLogs(session.nomad_job_id, (line) => {
       if (done) return;
@@ -97,6 +131,7 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
           sendEvent({ ...event, ...meta });
           if (event.step === 'terminal_ready' && event.status === 'done') {
             clearTimeout(deadline);
+            finishSynthetics();
             sendEvent({ type: 'ready' });
             done = true;
             ac.abort();
@@ -105,6 +140,7 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
       } catch {}
     }, ac.signal);
 
+    cancelSynthetics();
     clearTimeout(deadline);
     if (!res.writableEnded) res.end();
   } catch (err) {
