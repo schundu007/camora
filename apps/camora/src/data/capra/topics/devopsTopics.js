@@ -16568,6 +16568,143 @@ A: Any process (or container) with access to the socket has full Docker API acce
 Q: What does overlay2 storage driver store on disk?
 A: Each image layer is stored as four directories: lowerdir (read-only parent layers), upperdir (writable container layer), workdir (atomic operations), merged (unified mount point shown to the container).`,
       },
+    {
+      title: 'dockerd startup sequence and socket configuration',
+      description: `Understanding how dockerd starts and what happens before it accepts API calls is essential for debugging daemon startup failures in production.
+
+Startup sequence:
+1. Read /etc/docker/daemon.json and merge with CLI flags.
+   Conflict between the two causes immediate exit with:
+   "unable to configure the Docker daemon with file /etc/docker/daemon.json:
+    the following directives are specified both as a flag and in the configuration file"
+
+2. Initialize storage backend (overlay2 by default).
+   Overlay2 requires kernel 4.0+, XFS with ftype=1, or ext4.
+   Failure here: "Failed to initialize 'overlay2' graphdriver"
+
+3. Initialize containerd (or connect to existing).
+   If containerd is not running, dockerd starts its own embedded instance.
+   Check: ps aux | grep containerd
+
+4. Start the Docker API listener.
+   Default: unix:///var/run/docker.sock (permissions: 660, group docker)
+   TCP: requires explicit --host tcp://0.0.0.0:2376 in daemon.json
+
+Daemon listen address configuration in daemon.json:
+  {
+    "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2376"],
+    "tls": true,
+    "tlsverify": true,
+    "tlscacert": "/etc/docker/ca.pem",
+    "tlscert": "/etc/docker/server-cert.pem",
+    "tlskey": "/etc/docker/server-key.pem"
+  }
+
+Systemd socket activation conflict:
+  When systemd manages docker.socket, the hosts[] key in daemon.json must NOT include
+  the socket path — it is inherited from systemd. Duplicate causes:
+  "failed to start daemon: address already in use"
+  Fix: remove "unix:///var/run/docker.sock" from daemon.json hosts[] when using systemd.
+
+Debugging daemon startup:
+  journalctl -u docker.service -n 50 --no-pager
+  dockerd --debug 2>&1 | head -50   # start in foreground for one-shot debugging
+
+Reload without restart (limited settings only):
+  kill -SIGHUP $(pidof dockerd)
+  # Reloads: daemon.json options that support live-reload (debug, log-level, log-driver)
+  # Does NOT reload: storage-driver, hosts, tls settings (require full restart)`,
+    },
+    {
+      title: 'unix socket + TLS remote API — security model and client config',
+      description: `The Docker daemon API is the highest-privilege interface on a Docker host. Misconfiguring it allows full host compromise.
+
+Unix socket (default — /var/run/docker.sock):
+  Owner: root:docker, mode 660
+  Any process in the docker group has FULL Docker API access = root on host.
+  Never add CI service accounts to the docker group on shared hosts.
+  Mounting the socket into a container (DinD alternative) = privilege escalation:
+    docker run -v /var/run/docker.sock:/var/run/docker.sock ...
+    # Container can docker run --privileged, docker exec into any container, etc.
+
+TCP API without TLS (:2375) — NEVER DO THIS in production:
+  Exposes full Docker API with zero authentication.
+  Any host that can reach port 2375 owns the machine.
+  Scanning the internet for :2375 is a common crypto-miner attack vector.
+
+TCP API with mutual TLS (:2376) — production remote API:
+  Server cert: signed by your CA, presented to clients
+  Client cert: signed by your CA, required from clients (mutual TLS)
+  daemon.json:
+    { "hosts": ["tcp://0.0.0.0:2376"], "tls": true, "tlsverify": true,
+      "tlscacert": "/etc/docker/ca.pem",
+      "tlscert":   "/etc/docker/server-cert.pem",
+      "tlskey":    "/etc/docker/server-key.pem" }
+
+  Client side (docker CLI):
+    export DOCKER_HOST=tcp://remote-host:2376
+    export DOCKER_TLS_VERIFY=1
+    export DOCKER_CERT_PATH=~/.docker/certs/
+    docker ps   # authenticated via client cert
+
+Socket proxy (safer alternative for CI):
+  Run a socket proxy that limits which API endpoints are accessible:
+    docker run -d -v /var/run/docker.sock:/var/run/docker.sock \\
+      -p 2375:2375 tecnativa/docker-socket-proxy \\
+      -e CONTAINERS=1 -e IMAGES=1  # allow only these APIs
+  CI connects to the proxy on :2375; the proxy never forwards dangerous endpoints
+  (like /containers/{id}/exec or /images/load).
+
+containerd shim socket (separate):
+  /run/containerd/containerd.sock — gRPC, not HTTP
+  Only accessible to root and the containerd group by default
+  kubelet on a Kubernetes node connects here directly (bypassing dockerd)`,
+    },
+    {
+      title: 'containerd shim process tree — how dockerd, containerd, and runc relate at the OS level',
+      description: `A complete view of the Linux process tree when Docker is running containers helps explain crash behavior, zombie processes, and why containers survive daemon restarts.
+
+Process tree for a running nginx container:
+
+  systemd (PID 1)
+  └── dockerd (PID 1001)         [/usr/bin/dockerd]
+       └── containerd (PID 1050) [/usr/bin/containerd]  (or embedded)
+            └── containerd-shim-runc-v2 (PID 2100)  [one per container]
+                 └── nginx: master process (PID 2110)    [container PID 1 in ns]
+                      └── nginx: worker process (PID 2111)
+
+What each process does:
+  dockerd          Handles Docker API, image management, network/volume lifecycle
+  containerd       Manages container state, image content store, snapshotter
+  shim             Stays alive for full container lifetime; holds stdio FIFOs and exit code
+  runc             Created by shim; sets up namespaces + cgroups; exits after container starts
+
+What survives a dockerd restart (with live-restore: true):
+  containerd         stays running
+  shim               stays running (parent reparented to init/containerd)
+  container process  stays running
+  containers         continue serving traffic uninterrupted
+
+What survives a containerd restart:
+  shim               stays running (parent reparented to init)
+  container process  stays running
+
+What happens WITHOUT live-restore (default):
+  dockerd stop -> signals containerd -> signals shims -> SIGTERM to containers
+  Containers stop; all running work is lost.
+
+Zombie shim processes (debugging):
+  If a container exits but dockerd is unable to collect the exit code,
+  the shim stays alive as a zombie (defunct).
+  Check: ps aux | grep containerd-shim | grep -v grep
+  Clean up: docker rm <container-id>  # forces shim cleanup
+  If stuck: kill -9 <shim-pid>; then docker rm -f <container-id>
+
+PID namespace visibility:
+  From the host: container processes are visible with their host PIDs (e.g., PID 2110).
+  From inside the container: the same process appears as PID 1 (the init).
+  nsenter -t 2110 -p --mount -- ps aux  # enter container's PID namespace from host`,
+    },
     ],
     references: [
       'https://docs.docker.com/reference/cli/dockerd/',
@@ -16697,6 +16834,153 @@ A: It's a kernel value (lower = less likely to be killed). Docker lowers the dae
 
 These are answers a container-resource-fluent engineer should give without preparation.`,
       },
+    {
+      title: 'cgroup v2 hierarchy — how limits propagate through the tree',
+      description: `cgroup v2 uses a unified hierarchy under /sys/fs/cgroup/. Every Docker container gets its own leaf cgroup; limits set on parent cgroups apply to all descendants.
+
+cgroup hierarchy for Docker containers:
+  /sys/fs/cgroup/
+  ├── system.slice/           (systemd services)
+  ├── user.slice/             (user sessions)
+  └── docker/                 (Docker cgroup root — created by dockerd)
+       ├── <container-id-1>/  (one cgroup per container)
+       │    ├── memory.max              <- hard memory limit (-m flag)
+       │    ├── memory.swap.max         <- RAM+swap combined (--memory-swap)
+       │    ├── memory.low              <- soft reservation (--memory-reservation)
+       │    ├── cpu.max                 <- "quota period" (--cpus)
+       │    ├── cpu.weight              <- 1-10000 mapped from --cpu-shares/1024*100
+       │    ├── cpuset.cpus             <- --cpuset-cpus
+       │    └── pids.max                <- --pids-limit
+       └── <container-id-2>/
+
+Reading live cgroup values from inside a container (cgroup v2):
+  cat /sys/fs/cgroup/memory.max       # "max" if unlimited, bytes if limited
+  cat /sys/fs/cgroup/memory.current   # current usage in bytes
+  cat /sys/fs/cgroup/cpu.max          # "250000 100000" = 2.5 CPUs; "max 100000" = unlimited
+  cat /sys/fs/cgroup/pids.current     # current PID count
+  cat /sys/fs/cgroup/pids.max         # "max" or integer limit
+
+Host-side inspection:
+  CGID=$(docker inspect --format '{{.Id}}' mycontainer)
+  cat /sys/fs/cgroup/docker/\${CGID}/memory.max
+  cat /sys/fs/cgroup/docker/\${CGID}/cpu.max
+
+cgroup v1 vs v2 (compatibility):
+  cgroup v1: separate hierarchies per controller (/sys/fs/cgroup/memory/, /cpu/, ...)
+  cgroup v2: single unified hierarchy; all controllers under /sys/fs/cgroup/
+  Docker detects and uses whatever the kernel provides.
+  Kubernetes 1.25+ requires cgroup v2 for proper QoS support.
+  Check: stat -f /sys/fs/cgroup | grep Type  # tmpfs=v1, cgroup2=v2
+
+Parent cgroup limits cascade:
+  If /sys/fs/cgroup/docker/memory.max = 4GB, no single container can exceed 4GB
+  even if its own memory.max is "max" (unlimited).
+  Kubernetes uses this for node-level guarantees.`,
+    },
+    {
+      title: 'OOMKilled vs memory.oom_kill_disable — container memory failure modes',
+      description: `When a container hits its memory limit, the Linux OOM killer takes action. Understanding the failure modes prevents debugging confusion in production.
+
+Normal OOM kill sequence:
+  1. Container process allocates memory past -m limit.
+  2. Kernel invokes OOM killer for the container's cgroup.
+  3. OOM killer selects the process with highest oom_score inside the cgroup.
+  4. SIGKILL sent to that process.
+  5. If that process is PID 1 of the container, the container exits.
+  6. Docker sets container State.OOMKilled = true.
+  7. docker inspect --format '{{.State.OOMKilled}}' mycontainer  ->  true
+
+Detecting OOM events:
+  # Check exit reason
+  docker inspect --format '{{.State.OOMKilled}} {{.State.ExitCode}}' mycontainer
+
+  # Kernel OOM log (host)
+  dmesg | grep -i "out of memory"
+  dmesg | grep "oom_kill_process"
+
+  # cgroup OOM events counter
+  cat /sys/fs/cgroup/docker/<container-id>/memory.events
+  # Output: low 0 high 0 max 5 oom 2 oom_kill 2
+
+memory.oom_kill_disable (--oom-kill-disable flag):
+  Setting this disables the OOM killer for the container's cgroup.
+  The container is NOT killed when it exceeds its memory limit.
+  Instead: memory allocations inside the container start failing (ENOMEM).
+  Processes that don't handle ENOMEM crash unpredictably.
+  WITHOUT -m set: the host kernel will begin killing OTHER processes to satisfy
+  this container's allocations — potential host destabilization.
+  Rule: only use --oom-kill-disable when paired with a strict -m hard limit.
+
+OOM score adjustment (--oom-score-adj):
+  Docker sets container processes to oom_score_adj=0 (default).
+  dockerd itself has a lower score (less likely to be killed).
+  To make a container more likely to be killed first under host pressure:
+    --oom-score-adj 500   (range: -1000 to 1000; higher = killed first)
+  To protect a critical container (reduce kill probability):
+    --oom-score-adj -500  (use carefully — can starve other containers)
+
+Swap interaction:
+  --memory 512m --memory-swap 512m:  no swap; OOM at 512MB RAM usage
+  --memory 512m --memory-swap 1g:    up to 512MB swap; OOM at 1GB total
+  --memory 512m (swap unset):        container can use 512MB swap implicitly
+  --memory 512m --memory-swap -1:    unlimited swap (host swap only bound)
+  Recommended for databases: --memory-swap equal to --memory (zero swap)
+  to prevent swap thrash that causes latency spikes.`,
+    },
+    {
+      title: 'CPU shares vs CPU quota — enforcement under contention and throttling',
+      description: `Docker exposes two orthogonal CPU control mechanisms. Confusing them is one of the most common reasons engineers set limits that have no effect or that cause unexpected throttling.
+
+CPU shares (--cpu-shares, default 1024):
+  Implemented via cgroup cpu.weight (v2) or cpu.shares (v1).
+  A SOFT proportional weight, only meaningful when the host CPU is fully contended.
+  Container A with 2048 shares vs Container B with 1024 shares:
+    Under full contention: A gets 2/3 of CPU, B gets 1/3.
+    When B is idle: A can use 100% of CPU (shares don't cap).
+  Use case: multi-tenant hosts where you want proportional fairness, not hard limits.
+
+CPU quota (--cpus, --cpu-period, --cpu-quota):
+  Implemented via cgroup cpu.max = "quota period".
+  A HARD limit enforced regardless of host load.
+  --cpus 1.5 translates to: cpu.max = "150000 100000"
+    Container gets at most 150ms of CPU per 100ms period.
+    Even if the host is idle, the container is throttled at this rate.
+  Use case: preventing a container from monopolizing CPU at any time.
+
+Detecting CPU throttling in production:
+  # From inside the container
+  cat /sys/fs/cgroup/cpu.stat
+  # Key fields:
+  #   nr_throttled    — number of periods where container was throttled
+  #   throttled_usec  — total microseconds of throttle time
+
+  # From the host
+  cat /sys/fs/cgroup/docker/<id>/cpu.stat
+
+  # Prometheus metric (cAdvisor / Docker stats):
+  container_cpu_throttled_seconds_total
+
+Throttle gotcha — the "Java/Go startup burst" problem:
+  JVM startup or Go binary init can burst CPU far above steady-state.
+  With --cpus 0.5, the burst exhausts the CFS quota in the first 50ms of a period.
+  The container then sits throttled for the remaining 50ms — appears to freeze.
+  Fix 1: increase --cpus for the startup phase (or use init containers in Kubernetes).
+  Fix 2: increase --cpu-period to 500ms; quota is still 0.5 but spreads the burst.
+  Fix 3: use --cpu-shares (soft) instead of --cpus (hard) if neighbors are not noisy.
+
+Setting limits in Compose (v3 deploy block):
+  services:
+    api:
+      image: myapi:latest
+      deploy:
+        resources:
+          limits:
+            cpus: "2.0"      # hard cap; throttled above this
+            memory: "1g"
+          reservations:
+            cpus: "0.5"      # soft minimum weight (cpu.weight)
+            memory: "256m"   # memory.low soft reservation`,
+    },
     ],
     references: [
       'https://docs.docker.com/engine/containers/resource_constraints/',
@@ -17109,6 +17393,183 @@ A: docker compose down -v — stops containers, removes networks, removes named 
 
 These are answers a Docker-Compose-fluent engineer should give without preparation.`,
       },
+    {
+      title: 'Compose v2 vs v3 schema — what actually changed and what was removed',
+      description: `Compose file schema versioning caused years of confusion. Understanding what changed prevents common migration errors.
+
+Historical schema versions (now obsolete — do not use version: key):
+  version: "2.x"  — single-host, all features including resources
+  version: "3.x"  — designed for Swarm deploy: blocks; removed some v2 resource keys
+
+Current state (Compose Specification, 2020+):
+  The Compose Specification merged v2 and v3 into one unified schema.
+  The version: key at the top of compose.yaml is now IGNORED by Docker Compose v2 CLI.
+  All features from both schemas are available without a version declaration.
+  docker compose --version should show 2.x.x (the CLI version, not schema version)
+
+What was in v3 but confusingly missing vs v2:
+  v2 had: mem_limit, cpus, cpu_shares at service level (runtime)
+  v3 moved these to: deploy.resources.limits / deploy.resources.reservations
+  The Compose Spec re-unifies them — both forms work with modern compose CLI.
+
+What deploy: means today:
+  deploy: block is honored by docker compose (single-host) for resource limits.
+  deploy.replicas is IGNORED by docker compose (only Swarm stacks use it).
+  deploy.update_config / restart_policy are also Swarm-only.
+
+Practical migration from version: "3.8" files:
+  1. Remove the version: "3.8" line entirely (or leave it; it is ignored).
+  2. Move resource limits from top-level mem_limit: to deploy.resources.limits.
+  3. healthcheck: syntax is identical across all versions.
+  4. depends_on: with condition: was re-added in Compose Spec after being removed in v3.
+
+Common confusion points:
+  docker stack deploy reads compose.yaml and REQUIRES deploy: blocks.
+  docker compose up on the same file IGNORES deploy.replicas but USES deploy.resources.
+  The CLI tool "Docker Compose" (plugin, v2) is different from "docker-compose" (Python, v1 — EOL January 2024).
+  docker compose is now a Docker CLI plugin, not a separate binary.
+  python docker-compose (v1) reached end-of-life; use docker compose (v2) everywhere.`,
+    },
+    {
+      title: 'Health-check-based startup ordering — depends_on patterns for production',
+      description: `The most common Compose failure in production is a service starting before its dependency is ready. depends_on with condition: service_healthy solves this — but requires correct healthcheck configuration.
+
+The problem without healthchecks:
+  web starts after db container starts, but postgres takes 2-5 seconds to initialize.
+  web immediately tries to connect: "Connection refused" or "FATAL: database does not exist".
+  Without retry logic in the application, web crashes and never comes back.
+
+Solution: healthcheck + condition: service_healthy
+
+  services:
+    db:
+      image: postgres:16
+      environment:
+        POSTGRES_DB: mydb
+        POSTGRES_USER: app
+        POSTGRES_PASSWORD: secret
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U app -d mydb"]
+        interval: 5s       # check every 5 seconds
+        timeout: 5s        # fail the check if it takes >5s
+        retries: 5         # mark unhealthy after 5 consecutive failures
+        start_period: 10s  # grace period before checks start (for slow init)
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+
+    web:
+      build: .
+      depends_on:
+        db:
+          condition: service_healthy   # waits for pg_isready to pass
+      ports:
+        - "8080:8080"
+
+  volumes:
+    pgdata:
+
+Healthcheck test forms:
+  CMD string — runs in shell: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+  CMD exec — no shell: ["CMD", "curl", "-f", "http://localhost/health"]
+  NONE — disables inherited healthcheck from base image
+
+Useful healthcheck patterns by service type:
+  PostgreSQL:   pg_isready -U \${POSTGRES_USER} -d \${POSTGRES_DB}
+  MySQL:        mysqladmin ping -h localhost -u root -p\${MYSQL_ROOT_PASSWORD}
+  Redis:        redis-cli ping
+  HTTP service: curl -f http://localhost:8080/health || exit 1
+  Kafka:        kafka-broker-api-versions --bootstrap-server localhost:9092
+
+condition: service_completed_successfully — for one-shot jobs:
+  services:
+    migrate:
+      image: myapp
+      command: python manage.py migrate
+      depends_on:
+        db:
+          condition: service_healthy
+
+    web:
+      image: myapp
+      depends_on:
+        migrate:
+          condition: service_completed_successfully
+        db:
+          condition: service_healthy
+
+  This pattern ensures migrations run before the app server, preventing startup errors
+  on first deployment or after schema changes.`,
+    },
+    {
+      title: 'Multi-environment Compose override pattern — base + dev + prod files',
+      description: `Compose's file merging mechanism allows a single base configuration to be extended for different environments without duplication.
+
+Base file (compose.yaml) — production-ready defaults:
+  services:
+    web:
+      image: myapp:latest
+      environment:
+        - LOG_LEVEL=info
+        - DB_HOST=db
+      restart: unless-stopped
+      deploy:
+        resources:
+          limits:
+            memory: 512m
+    db:
+      image: postgres:16
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U app"]
+        interval: 10s
+        retries: 5
+  volumes:
+    pgdata:
+
+Dev override (compose.override.yaml — auto-merged):
+  services:
+    web:
+      image: myapp:dev              # override image for local dev
+      build: .                      # build locally instead of pulling
+      ports:
+        - "8080:8080"               # expose for local access (no reverse proxy in dev)
+        - "5678:5678"               # debugger port
+      environment:
+        - LOG_LEVEL=debug           # more verbose
+        - RELOAD=true               # hot reload
+      volumes:
+        - .:/app                    # live code mount for hot reload
+    db:
+      ports:
+        - "5432:5432"               # expose DB directly for local tools (e.g. pgAdmin)
+
+Production deployment (no override file — use base only):
+  docker compose -f compose.yaml up -d
+  # No compose.override.yaml in prod; only base file with hardened settings
+
+Staging with specific file:
+  docker compose -f compose.yaml -f compose.staging.yaml up -d
+
+Merge semantics (important for debugging):
+  Scalars (image, command): override file wins
+  Lists (ports, volumes): APPENDED (not replaced)
+  Maps (environment, labels): MERGED (override values take precedence per key)
+  Example: if base has env LOG_LEVEL=info and override has LOG_LEVEL=debug,
+           the merged result is LOG_LEVEL=debug.
+
+Environment variable substitution:
+  Use .env file (auto-loaded from project directory):
+    DB_PASSWORD=secret
+    RAILS_ENV=production
+  Reference in compose.yaml:
+    environment:
+      - DB_PASSWORD=\${DB_PASSWORD}
+  Override for specific runs:
+    DB_PASSWORD=other docker compose up
+  Check resolved values before deploying:
+    docker compose config   # prints fully-interpolated compose.yaml`,
+    },
     ],
     references: [
       'https://docs.docker.com/compose/',
@@ -17309,6 +17770,87 @@ registry:2 is the minimal, zero-dependency OCI Distribution Spec implementation.
 Harbor adds: vulnerability scanning (Trivy), RBAC, image replication, garbage collection,
 webhook triggers, and a web UI — but requires Helm/Compose and much more overhead.
 Use registry:2 for CI mirrors and air-gapped setups; Harbor when compliance/scanning is required.`,
+      },
+      {
+        title: 'Docker Hub rate limits and ECR/GHCR token lifecycle — avoiding CI pull failures',
+        description: `Docker Hub rate limits have broken CI pipelines since 2020. Every team running containers in CI needs a strategy to avoid them.
+
+Docker Hub pull rate limits (as of 2024):
+
+  Plan            Authenticated pulls     Unauthenticated
+  ─────────────── ───────────────────── ────────────────────
+  Anonymous        100 per 6 hours       (per IP — shared on CI runners)
+  Free account     200 per 6 hours       (per account)
+  Pro ($5/mo)      Unlimited             —
+  Team ($7/seat)   Unlimited             —
+
+  Rate limit response: HTTP 429 Too Many Requests
+    message: "You have reached your pull rate limit. You may increase it by authenticating."
+
+  Rate limit headers in pull response:
+    RateLimit-Limit: 100;w=21600
+    RateLimit-Remaining: 0;w=21600
+
+In CI (GitHub Actions, GitLab, Jenkins) your runners often share an IP with thousands of other builds — unauthenticated limit is exhausted almost instantly. Always authenticate.
+
+Strategies to avoid rate limit failures in CI:
+
+1. Authenticate to Docker Hub (adds 200 pulls per 6h per account):
+   echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+2. Mirror images to GHCR or ECR on schedule, pull from mirror in CI:
+   # Mirror once a week in a maintenance workflow
+   docker pull node:20-alpine
+   docker tag node:20-alpine ghcr.io/myorg/mirror/node:20-alpine
+   docker push ghcr.io/myorg/mirror/node:20-alpine
+   # All CI pulls: FROM ghcr.io/myorg/mirror/node:20-alpine
+
+3. Use a pull-through cache (registry:2 or Harbor configured as a Docker Hub proxy):
+   daemon.json:
+   { "registry-mirrors": ["https://my-registry-mirror.example.com"] }
+
+4. Switch to rate-limit-free base images:
+   GitHub Container Registry (ghcr.io) — no rate limits for public images
+   Google Artifact Registry (gcr.io) — no rate limits for public images
+
+ECR token lifecycle — 12-hour expiry:
+
+  AWS ECR tokens are short-lived (12 hours). Unlike Docker Hub, they cannot be stored long-term.
+
+  Get a token (valid 12h):
+    aws ecr get-login-password --region us-east-1 | \\
+      docker login --username AWS --password-stdin 123456789.dkr.ecr.us-east-1.amazonaws.com
+
+  In CI — use OIDC instead of stored credentials (no secrets, role-based):
+    # GitHub Actions with OIDC + IAM role
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::123456789:role/GitHubActionsECR
+        aws-region: us-east-1
+    - uses: aws-actions/amazon-ecr-login@v2
+
+  ECR lifecycle policies — auto-delete old images to control costs:
+    { "rules": [{
+        "rulePriority": 1,
+        "description": "Keep last 10 images",
+        "selection": { "tagStatus": "any", "countType": "imageCountMoreThan", "countNumber": 10 },
+        "action": { "type": "expire" }
+    }]}
+
+GHCR token lifecycle — GitHub Actions GITHUB_TOKEN:
+
+  GITHUB_TOKEN is scoped to the workflow run and expires when the run completes.
+  For multi-stage or multi-job workflows, re-authenticate at the start of each job:
+    echo "\${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u \${{ github.actor }} --password-stdin
+
+  For cross-repo access (different org), use a PAT with packages:read scope stored as a secret.
+
+Pull-through cache configuration (daemon.json) — transparently mirror Docker Hub:
+  {
+    "registry-mirrors": ["https://my-registry-mirror.internal:5000"]
+  }
+  Any docker pull nginx now first checks the mirror; falls through to Docker Hub only on miss.
+  Set up registry:2 as the mirror: REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io`,
       },
     ],
     references: [
@@ -17525,12 +18067,217 @@ A: USER non-root, --cap-drop ALL, --no-new-privileges, --read-only rootfs, secco
 
 These are answers a container-security-fluent engineer should give without preparation.`,
       },
+      {
+        title: 'AppArmor and seccomp profiles — writing and applying mandatory access control',
+        description: `AppArmor and seccomp are complementary kernel-level security mechanisms. Seccomp filters which syscalls can be made; AppArmor controls what files and capabilities those syscalls can touch.
+
+AppArmor profiles for containers:
+
+Docker loads AppArmor profiles by name. The default profile (docker-default) is auto-loaded when the daemon starts. To apply a custom profile:
+
+Write a custom AppArmor profile:
+
+  #include <tunables/global>
+  profile myapp-profile flags=(attach_disconnected,mediate_deleted) {
+    #include <abstractions/base>
+
+    deny /proc/** w,
+    deny /sys/** w,
+    /app/server ix,
+    /etc/myapp/** r,
+
+    network tcp,
+    deny network udp,
+  }
+
+Load into kernel and apply:
+  apparmor_parser -r -W /etc/apparmor.d/myapp-profile
+  docker run --security-opt apparmor=myapp-profile myapp
+
+Disable AppArmor (not recommended):
+  docker run --security-opt apparmor=unconfined myapp
+
+Default AppArmor profile (docker-default) blocks:
+  - Writing to /proc/sysrq-trigger, /proc/irq, /proc/sys
+  - /sys/** writes
+  - Mounting filesystems
+  - Loading kernel modules
+
+Seccomp profiles — custom syscall allowlists:
+
+Default Docker seccomp profile blocks ~44 syscalls. For tighter control, whitelist only what your app needs:
+
+  {
+    "defaultAction": "SCMP_ACT_ERRNO",
+    "architectures": ["SCMP_ARCH_X86_64", "SCMP_ARCH_AARCH64"],
+    "syscalls": [{
+      "names": ["read", "write", "open", "close", "stat", "fstat", "mmap",
+                "mprotect", "munmap", "brk", "futex", "nanosleep", "getpid",
+                "socket", "connect", "accept", "sendto", "recvfrom",
+                "bind", "listen", "setsockopt", "clone", "execve", "wait4",
+                "exit", "exit_group", "getuid", "getgid"],
+      "action": "SCMP_ACT_ALLOW"
+    }]
+  }
+
+Apply:
+  docker run --security-opt seccomp=./seccomp-profile.json myapp
+
+Disable seccomp (gives full syscall access — never in production):
+  docker run --security-opt seccomp=unconfined myapp
+
+Kubernetes equivalents:
+  securityContext:
+    seccompProfile:
+      type: Localhost
+      localhostProfile: profiles/myapp-seccomp.json
+    appArmorProfile:
+      type: Localhost
+      localhostProfile: myapp-profile
+
+AppArmor vs seccomp — which does what:
+  seccomp  — blocks syscall numbers at BPF level. Zero path/network awareness. Very low overhead.
+  AppArmor — enforces access control on the resources syscalls touch (paths, networks, caps). Higher-level.
+
+Use both together: seccomp reduces the attack surface at the syscall gate; AppArmor restricts what allowed syscalls can reach.`,
+      },
+      {
+        title: 'Rootless Docker — full setup, user namespace mapping, and behavior differences',
+        description: `Rootless Docker runs the entire daemon and all containers as an unprivileged user. A container escape yields only the host UID of the running user — not root.
+
+How it works — user namespaces:
+  Container UID 0 (root)  →  maps to host UID 100000+ (via /etc/subuid)
+  Container UID 1000      →  maps to host UID 101000
+  Host never sees container root as its own root.
+
+Prerequisites:
+  # Check subuid/subgid ranges are configured
+  grep $(whoami) /etc/subuid   # e.g. user:100000:65536
+  grep $(whoami) /etc/subgid
+
+  # If missing, add them:
+  sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $(whoami)
+
+Install and start rootless Docker:
+  curl -fsSL https://get.docker.com/rootless | sh
+
+  export PATH=$HOME/bin:$PATH
+  export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock
+
+  systemctl --user enable docker
+  systemctl --user start docker
+  sudo loginctl enable-linger $(whoami)   # keep service after logout
+
+Behavior differences vs rootful Docker:
+
+  Feature                  Rootful          Rootless
+  ─────────────────────── ──────────────── ─────────────────────────
+  Daemon runs as           root             your user
+  Container escape yields  host root        your user UID only
+  Port < 1024 binding      allowed          requires sysctl or workaround
+  macvlan / ipvlan         supported        not supported
+  AppArmor profiles        supported        may not load
+  overlay2 storage         default          requires kernel 5.11+ (or fuse-overlayfs)
+  VXLAN overlay networks   supported        not supported
+  docker.sock location     /var/run/docker  $XDG_RUNTIME_DIR/docker.sock
+
+Expose low-number ports in rootless mode:
+  sudo sysctl net.ipv4.ip_unprivileged_port_start=80   # allow all users to bind low ports
+  # Or: use nginx/Caddy on root's 80/443 → rootless container port (recommended)
+
+Check rootless mode is active:
+  docker info | grep "rootless"   # → Security Options: rootless
+
+Rootless Docker is recommended for CI runners, developer workstations, and shared daemon hosts — eliminates the Docker socket privilege escalation vector entirely.`,
+      },
+      {
+        title: 'Supply-chain security — SBOM attestations and keyless cosign signing in CI',
+        description: `Container supply-chain security: prove what is in your image and who built it, without managing private keys.
+
+Three components:
+  SBOM        — Software Bill of Materials: what packages are in the image
+  Provenance  — who built it, from what source, with what inputs (SLSA)
+  Signature   — cryptographic proof the image was not tampered with after build
+
+SBOM generation with BuildKit:
+  docker buildx build \\
+    --attest type=sbom \\
+    --attest type=provenance,mode=max \\
+    -t ghcr.io/myorg/myapp:v1.2.3 \\
+    --push .
+
+Inspect the SBOM in the registry:
+  docker buildx imagetools inspect ghcr.io/myorg/myapp:v1.2.3 --format '{{json .SBOM}}'
+
+Standalone SBOM tools:
+  syft ghcr.io/myorg/myapp:v1.2.3 -o spdx-json > sbom.spdx.json
+  grype sbom:sbom.spdx.json   # scan SBOM for CVEs
+
+Keyless cosign signing in GitHub Actions (no private key required):
+
+  cosign uses OIDC tokens to prove identity — GitHub Actions provides a token for the workflow identity.
+
+  # .github/workflows/build-sign.yml
+  permissions:
+    contents: read
+    packages: write
+    id-token: write   # required for keyless OIDC signing
+
+  steps:
+    - uses: sigstore/cosign-installer@v3
+
+    - name: Build and push
+      id: build
+      run: |
+        docker buildx build \\
+          --attest type=sbom \\
+          --attest type=provenance,mode=max \\
+          -t ghcr.io/\${{ github.repository }}:\${{ github.sha }} \\
+          --push --metadata-file build-metadata.json .
+        echo "digest=$(jq -r '."containerimage.digest"' build-metadata.json)" >> $GITHUB_OUTPUT
+
+    - name: Sign image (keyless OIDC — no private key)
+      run: |
+        cosign sign --yes \\
+          ghcr.io/\${{ github.repository }}@\${{ steps.build.outputs.digest }}
+
+Verify a signed image (in deployment or admission controller):
+  cosign verify \\
+    --certificate-identity-regexp "https://github.com/myorg/myapp/.github/workflows/.*" \\
+    --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \\
+    ghcr.io/myorg/myapp:v1.2.3
+
+Kyverno admission policy to require signed images (Kubernetes):
+  apiVersion: kyverno.io/v1
+  kind: ClusterPolicy
+  spec:
+    validationFailureAction: Enforce
+    rules:
+      - name: check-image-signature
+        verifyImages:
+          - imageReferences: ["ghcr.io/myorg/*"]
+            attestors:
+              - entries:
+                  - keyless:
+                      subject: "https://github.com/myorg/*"
+                      issuer: "https://token.actions.githubusercontent.com"
+
+Supply-chain security checklist:
+  1. Scan for CVEs in CI (trivy/grype) before pushing
+  2. Generate SBOM attestation at build time (--attest type=sbom)
+  3. Generate SLSA provenance (--attest type=provenance,mode=max)
+  4. Sign image digest with cosign keyless OIDC — no key management
+  5. Verify signature in deployment pipeline or admission controller
+  6. Pin base images by SHA digest in Dockerfiles (not mutable tags)`,
+      },
     ],
     references: [
       'https://docs.docker.com/engine/security/',
       'https://docs.docker.com/engine/security/seccomp/',
       'https://github.com/google/distroless',
       'https://github.com/sigstore/cosign',
+      'https://docs.docker.com/engine/security/rootless/',
+      'https://docs.docker.com/build/attestations/',
     ],
   },
 
@@ -18767,6 +19514,167 @@ A: Use the digest in the FROM instruction: FROM nginx@sha256:abc123... This guar
 
 These are answers a Docker-fluent engineer should give without preparation.`,
       },
+    {
+      title: 'Layer diffID chain — how image config links to layer blobs',
+      description: `The OCI image config JSON contains two distinct identifiers for layers. Understanding the difference is critical for image inspection, reproducibility, and debugging "image not found" errors in registries.
+
+diffID vs digest — the two identifiers every layer has:
+
+diffID (in image config rootfs.diff_ids[])
+  The SHA256 of the UNCOMPRESSED layer tar.
+  Computed locally; does not change when you push to different registries.
+  Used to verify layer integrity after decompression.
+  This is what docker inspect and containerd show as the "layer ID".
+
+digest (in image manifest layers[].digest)
+  The SHA256 of the COMPRESSED (gzip/zstd) layer blob.
+  Registry-specific: same layer re-compressed gives a different digest.
+  Used by the registry to address blobs in its content store.
+  This is what you see in crane manifest or skopeo inspect --raw.
+
+Chain verification:
+  1. Pull manifest:        manifest.layers[0].digest = sha256:AAA  (compressed blob)
+  2. Download blob AAA,    decompress it
+  3. SHA256 decompressed = sha256:BBB  (diffID)
+  4. Image config rootfs.diff_ids[0] must equal sha256:BBB
+  If it does not match, the layer was corrupted in transit.
+
+Practical inspection:
+  # Get diffIDs from image config
+  docker inspect --format '{{json .RootFS.Layers}}' nginx:1.27 | jq .
+  # Output: ["sha256:diffID1", "sha256:diffID2", ...]
+
+  # Get compressed digests from manifest
+  crane manifest nginx:1.27 | jq '.layers[].digest'
+  # Output: ["sha256:compressedDigest1", ...]
+
+  # The image ID = SHA256 of the image config JSON (not the manifest)
+  docker images --no-trunc nginx:1.27
+  # IMAGE ID column = sha256:configDigest
+
+Image content addressability:
+  Two images with identical layers but different configs (e.g., different CMD)
+  will have the same diffIDs but different image IDs.
+  docker pull image1 then docker tag image1 image2 shares ALL layer blobs on disk.`,
+    },
+    {
+      title: 'Multi-arch image index — how docker buildx creates cross-platform images',
+      description: `A multi-architecture image is not a single image but an OCI Image Index — a manifest of manifests. The registry serves the correct platform-specific manifest transparently based on the pulling client's architecture.
+
+OCI Image Index structure:
+  {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "manifests": [
+      { "digest": "sha256:amd64manifest", "platform": {"os": "linux", "architecture": "amd64"} },
+      { "digest": "sha256:arm64manifest", "platform": {"os": "linux", "architecture": "arm64"} },
+      { "digest": "sha256:s390xmanifest", "platform": {"os": "linux", "architecture": "s390x"} }
+    ]
+  }
+
+Building with docker buildx:
+  # Create a builder with multi-platform support
+  docker buildx create --name mybuilder --use
+
+  # Build and push for three platforms simultaneously
+  docker buildx build \\
+    --platform linux/amd64,linux/arm64,linux/arm/v7 \\
+    --tag myregistry/myapp:1.0 \\
+    --push .
+
+  # Inspect the resulting image index
+  docker buildx imagetools inspect myregistry/myapp:1.0
+
+Cross-compilation strategies:
+  Strategy 1: QEMU emulation (default, slower)
+    Buildx registers QEMU binfmt handlers on the build host.
+    ARM instructions are emulated on the AMD64 host.
+    Build time: 3-10x slower than native; works for any target.
+    Install: docker run --privileged --rm tonistiigi/binfmt --install all
+
+  Strategy 2: Native nodes in a buildx context
+    docker buildx create --name multiarch \\
+      --node node-amd64 --platform linux/amd64 ssh://amd64-host \\
+      --node node-arm64 --platform linux/arm64 ssh://arm64-host
+    Each platform builds natively on the matching machine.
+    Result images pushed to registry; buildx assembles the index.
+
+  Strategy 3: Cross-compilation (fastest for Go/Rust)
+    Use BUILDPLATFORM and TARGETPLATFORM ARGs in Dockerfile:
+      FROM --platform=\$BUILDPLATFORM golang:1.22 AS builder
+      ARG TARGETARCH
+      RUN GOARCH=\$TARGETARCH go build -o app .
+    Compiler runs on host arch; no QEMU needed.
+
+Gotchas:
+  docker pull on an index fetches only the local platform manifest.
+  docker pull --platform linux/arm64 to override.
+  Attestation manifests (SBOM, provenance) add extra entries to the index.
+  crane index append to add a platform to an existing index without rebuilding others.`,
+    },
+    {
+      title: 'Image signing with Cosign and Notation — supply chain security',
+      description: `Unsigned container images are a critical supply chain risk: a compromised registry or MITM attack can serve a malicious image under a trusted tag. Signing proves the image came from a known key, not just a name.
+
+Two competing standards:
+
+Cosign (Sigstore project, CNCF)
+  Signs the image manifest digest, stores the signature as an OCI artifact in the same registry.
+  Supports keyless signing via OIDC (no long-lived keys — uses GitHub Actions OIDC or Google Workload Identity).
+  Integrated with: GitHub Actions, Kubernetes policy (Kyverno, OPA), AWS ECR, GCR.
+
+  # Generate a keypair
+  cosign generate-key-pair
+
+  # Sign an image (key-based)
+  cosign sign --key cosign.key myregistry/myapp@sha256:abc123
+
+  # Sign keyless (in CI with OIDC)
+  cosign sign myregistry/myapp@sha256:abc123
+
+  # Verify a signature
+  cosign verify --key cosign.pub myregistry/myapp:1.0
+
+  # Signatures are stored as OCI artifacts at the same registry:
+  # myregistry/myapp:sha256-abc123.sig
+
+Notation (CNCF, backed by Microsoft/AWS)
+  Stores signatures as OCI referrers (OCI 1.1 spec), attached to the manifest.
+  Integrated with: AWS Signer, Azure Key Vault, Venafi.
+  Designed for enterprise PKI with X.509 certificate chains.
+
+  notation cert generate-test --default mykey
+  notation sign myregistry/myapp:1.0
+  notation verify myregistry/myapp:1.0
+
+Kubernetes admission enforcement (Kyverno + Cosign):
+  apiVersion: kyverno.io/v1
+  kind: ClusterPolicy
+  metadata:
+    name: verify-image
+  spec:
+    rules:
+    - name: check-image
+      match:
+        resources: {kinds: [Pod]}
+      verifyImages:
+      - imageReferences: ["myregistry/*"]
+        attestors:
+        - entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                <cosign.pub contents>
+                -----END PUBLIC KEY-----
+
+SBOM attestation (software bill of materials):
+  # Attach an SBOM to an image
+  syft myregistry/myapp:1.0 -o spdx-json > sbom.json
+  cosign attest --predicate sbom.json --type spdxjson myregistry/myapp:1.0
+
+  # Verify SBOM attestation exists
+  cosign verify-attestation --type spdxjson myregistry/myapp:1.0`,
+    },
     ],
     references: [
       'https://github.com/opencontainers/image-spec',
@@ -33498,6 +34406,142 @@ A common Kubernetes CNI pattern uses XDP for the initial ingress drop firewall e
 bpftrace sits above all of this as a one-liner scripting layer. It compiles AWK-like programs to BPF internally and is ideal for ad-hoc tracing: counting syscalls by comm, measuring block I/O latency as a histogram, or printing every execve argument. For production agents you want libbpf with proper CO-RE because bpftrace does not produce portable binaries.`,
       image: `/diagrams/devops/ebpf-programming-flow.png`,
     },
+    {
+      title: 'eBPF maps — types, access patterns, and pinning',
+      description: `eBPF maps are the shared memory between kernel-space BPF programs and user-space processes. Every map type is identified by a numeric key and returns a value; the map lives in kernel memory referenced by a file descriptor.
+
+Common map types and their use cases:
+
+BPF_MAP_TYPE_HASH
+  Hash table with arbitrary key/value types. O(1) average lookup.
+  Use: per-PID counters, connection tracking tables, policy lookup.
+  Max entries is a required parameter at creation; exceeding it drops inserts.
+
+BPF_MAP_TYPE_ARRAY
+  Fixed-size array indexed by u32. All entries pre-allocated at creation.
+  Use: per-CPU statistics, indexed configuration values.
+  index 0..max_entries-1 always exists; lookup never returns NULL.
+
+BPF_MAP_TYPE_PERCPU_HASH / BPF_MAP_TYPE_PERCPU_ARRAY
+  Per-CPU variant of hash/array. Each CPU has its own copy of the value.
+  Use: high-frequency counters with no lock contention.
+  User-space reads all CPU copies and sums them. Avoids atomic operations on hot paths.
+
+BPF_MAP_TYPE_RINGBUF (kernel 5.8+)
+  Lock-free ring buffer for event streaming from kernel to user space.
+  Preferred over perf_event_array for new code: no per-CPU overhead, variable-size records.
+  User-space polls with ring_buffer__poll() from libbpf.
+
+BPF_MAP_TYPE_LRU_HASH
+  Hash with automatic eviction of least-recently-used entries when full.
+  Use: connection tracking or DNS cache where bounded memory matters more than completeness.
+
+Map access from BPF programs (must use helpers, not direct pointer):
+  void *val = bpf_map_lookup_elem(&my_map, &key);
+  if (!val) return 0;   // null check is MANDATORY; verifier enforces it
+  __sync_fetch_and_add(val, 1);
+
+Map pinning — keep a map alive after the loading process exits:
+  # Pin to BPF virtual filesystem
+  bpftool map pin id <map-id> /sys/fs/bpf/my_map
+
+  # Another process opens the pinned map
+  int fd = bpf_obj_get("/sys/fs/bpf/my_map");
+
+  # List all loaded maps
+  bpftool map list
+
+  # Dump contents of a map
+  bpftool map dump id <map-id>`,
+    },
+    {
+      title: 'eBPF tracing programs — kprobe, tracepoint, uprobe, perf_event',
+      description: `Tracing hook types differ in stability, overhead, and available context. Choosing the right hook prevents production breakage.
+
+kprobe / kretprobe
+  Attaches to any kernel function by symbol name. Unstable: function names can change between kernel versions.
+  kprobe fires on function entry; kretprobe fires on return.
+  Context: struct pt_regs. Access arguments via PT_REGS_PARM1..5 macros.
+  Overhead: ~100ns per hit due to int3 breakpoint or ftrace trampoline.
+
+  SEC("kprobe/tcp_connect")
+  int BPF_KPROBE(trace_connect, struct sock *sk) { ... }
+
+tracepoint
+  Stable, versioned instrumentation points defined by TRACE_EVENT macros in kernel source.
+  Stable ABI: field names and types guaranteed not to change within a major version.
+  Context: a generated struct specific to the tracepoint (e.g., struct trace_event_raw_sys_enter).
+  Lower overhead than kprobe because no int3 patching.
+
+  SEC("tp/syscalls/sys_enter_openat")
+  int trace_openat(struct trace_event_raw_sys_enter *ctx) {
+      char fname[256];
+      bpf_probe_read_user_str(fname, sizeof(fname), (void *)ctx->args[1]);
+      bpf_printk("openat: %s\\n", fname);
+      return 0;
+  }
+
+uprobe / uretprobe
+  Attaches to a specific offset in a user-space binary or shared library.
+  Use: tracing Go/Rust/Java functions without modifying application code.
+  Overhead: higher than kprobe due to user/kernel boundary crossing per hit.
+  Specify binary path + symbol or offset:
+
+  SEC("uprobe//usr/bin/python3:PyObject_Call")
+  int trace_py_call(struct pt_regs *ctx) { ... }
+
+perf_event
+  Attaches to hardware performance counters (CPU cycles, cache misses) or software events.
+  Use: CPU profiling, cache miss analysis, branch misprediction tracking.
+  Combined with BPF_MAP_TYPE_STACK_TRACE to build flamegraph-quality profiles.
+
+bpftrace one-liners for ad-hoc tracing (compile to BPF internally):
+  # Count syscalls by process name
+  bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'
+
+  # Histogram of read() sizes
+  bpftrace -e 'tracepoint:syscalls:sys_enter_read { @bytes = hist(args->count); }'
+
+  # Trace all execve calls with arguments
+  bpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s %s\\n", comm, str(args->filename)); }'`,
+    },
+    {
+      title: 'Cilium eBPF CNI — how Kubernetes networking uses eBPF',
+      description: `Cilium replaces kube-proxy and iptables-based CNI with eBPF programs that run in the kernel. Understanding this is essential for platform engineering interviews at companies using EKS, GKE with Dataplane V2, or self-managed clusters.
+
+Traditional kube-proxy path (iptables):
+  Pod -> veth -> bridge -> iptables PREROUTING (DNAT) -> routing -> veth -> Pod
+  Problem: iptables rules grow linearly with service count. 10k services = 100k+ iptables rules.
+  Rule lookup is O(n) linear scan. Becomes a bottleneck at cluster scale.
+
+Cilium eBPF path:
+  Pod -> veth -> TC hook (BPF program) -> BPF map lookup O(1) -> direct redirect -> Pod
+  No iptables. No NAT table. Service VIP resolution happens in a BPF hash map.
+
+Key BPF programs in Cilium:
+  from-container (TC egress on each pod veth):
+    - Enforce egress NetworkPolicy via identity-based BPF map lookups
+    - Encapsulate for cross-node traffic (VXLAN or Geneve via bpf_redirect)
+  to-container (TC ingress on each pod veth):
+    - Enforce ingress NetworkPolicy
+    - DNAT service VIP -> pod IP via BPF map
+  from-netdev / to-netdev (TC on host NIC):
+    - XDP-level ingress drop for denied sources
+    - Decapsulate VXLAN packets from remote nodes
+
+Cilium identity model:
+  Each pod gets a 32-bit security identity derived from its labels.
+  NetworkPolicy enforcement is identity-to-identity, not IP-to-IP.
+  When a pod is rescheduled and gets a new IP, its identity stays the same.
+  BPF maps are updated atomically by Cilium agent; no iptables flush required.
+
+Useful Cilium CLI for debugging:
+  cilium status                          # overall health
+  cilium endpoint list                   # all endpoints and their identities
+  cilium monitor --type drop             # watch dropped packets in real time
+  cilium bpf ct list global             # connection tracking table
+  cilium bpf lb list                    # service -> backend mappings in BPF`,
+    },
   ],
   introduction: `eBPF, originally Extended Berkeley Packet Filter, has grown from a simple packet filtering mechanism into a general-purpose kernel execution environment. Where Berkeley Packet Filter of the 1990s gave tcpdump a safe way to specify which packets to capture, the extended version introduced a 64-bit register file, arbitrary helper calls, persistent maps, and dozens of hook points spanning networking, tracing, and security. The result is a programmability layer that lets you instrument and enforce policy inside the kernel with none of the risk or maintenance burden of writing a kernel module.
 
@@ -34004,6 +35048,138 @@ runc exits after setup (it is not a daemon), leaving the shim alive as the super
 For Kubernetes, the path is identical from the containerd layer down, but the caller is the kubelet CRI plugin rather than dockerd, and the sequencing involves RunPodSandbox before CreateContainer.`,
       image: `/diagrams/devops/containerd-deep-dive-flow.png`,
     },
+    {
+      title: 'containerd snapshotter internals — overlayfs layer chain',
+      description: `The snapshotter subsystem is how containerd converts OCI image layers into a usable container rootfs. Understanding it is essential for diagnosing disk space issues and running containerd-in-container CI environments.
+
+Snapshot chain for a 3-layer nginx image:
+
+Layer 0 (base: ubuntu)    sha256:aaa...   /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/1/
+Layer 1 (apt packages)    sha256:bbb...   /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/2/
+Layer 2 (nginx binary)    sha256:ccc...   /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/3/
+Active layer (container)  writable        /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/4/
+
+Each snapshot directory contains: fs/ (the unpacked layer files) and work/ (overlayfs work dir).
+The active snapshot adds upperdir (writable) and workdir on top of all parent lowerdirs.
+
+The overlayfs mount the container sees:
+  lowerdir=/snapshots/3/fs:/snapshots/2/fs:/snapshots/1/fs
+  upperdir=/snapshots/4/fs
+  workdir=/snapshots/4/work
+  merged=/run/containerd/io.containerd.runtime.v2.task/default/<id>/rootfs
+
+Key commands for inspection:
+  # List all snapshots
+  ctr snapshots ls
+
+  # Show the full mount spec for a container's rootfs
+  ctr snapshots mounts /tmp/mnt <snapshot-name>
+
+  # Check disk usage by snapshotter
+  du -sh /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/
+
+  # Garbage collect unreferenced content and snapshots
+  ctr content gc
+  # containerd GC runs automatically but can lag; check with:
+  ctr leases ls
+
+Gotcha: containerd-in-Docker (common in CI)
+  Docker's overlay2 driver uses overlayfs. containerd inside that container tries to use overlayfs again.
+  Nested overlayfs requires kernel 5.11+. On older kernels, set:
+    [plugins."io.containerd.snapshotter.v1.overlayfs"]
+      slow_chown = true
+  Or switch to the native snapshotter inside the CI container.`,
+    },
+    {
+      title: 'containerd config.toml — production configuration reference',
+      description: `The primary configuration file is /etc/containerd/config.toml. Generate a default with:
+  containerd config default > /etc/containerd/config.toml
+
+Critical sections for production Kubernetes nodes:
+
+[grpc]
+  address = "/run/containerd/containerd.sock"    # kubelet CRI socket path
+  max_recv_message_size = 16777216               # 16MB; increase for very large images
+
+[plugins."io.containerd.grpc.v1.cri"]
+  sandbox_image = "registry.k8s.io/pause:3.9"   # must match kubeadm version; mismatch = pod sandbox failures
+  [plugins."io.containerd.grpc.v1.cri".containerd]
+    snapshotter = "overlayfs"                    # default; use "devmapper" on block storage
+    default_runtime_name = "runc"
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+      runtime_type = "io.containerd.runc.v2"
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+        SystemdCgroup = true                     # REQUIRED for kubeadm/k3s — must match kubelet --cgroup-driver
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://mirror.example.com"]  # pull-through cache
+
+[plugins."io.containerd.snapshotter.v1.overlayfs"]
+  root_path = ""          # default: /var/lib/containerd/io.containerd.snapshotter.v1.overlayfs
+  slow_chown = false      # set true for kernel < 5.11 when running overlayfs-in-overlayfs
+
+Systemd cgroup driver mismatch — the most common Kubernetes node failure:
+  If kubelet uses cgroupv2 systemd driver but containerd uses cgroupfs,
+  kubelet cannot enforce resource limits and pods may be OOMKilled unpredictably.
+  Fix: set SystemdCgroup = true in config.toml AND --cgroup-driver=systemd in kubelet config.
+  Verify: cat /sys/fs/cgroup/cgroup.controllers should show cpu memory io pids
+
+After any config.toml change:
+  systemctl restart containerd
+  # Verify the runtime is healthy:
+  crictl --runtime-endpoint unix:///run/containerd/containerd.sock info`,
+    },
+    {
+      title: 'ctr vs nerdctl vs crictl — when to use which CLI',
+      description: `Three CLIs exist for interacting with containerd. Each targets a different level of the stack.
+
+ctr (low-level containerd client)
+  Bundled with containerd. Speaks the native containerd gRPC API.
+  Use for: debugging internal containerd state, inspecting content store, managing namespaces.
+  Drawback: not Docker-compatible. No compose support. No automatic CNI networking.
+
+  # Pull an image into the 'default' namespace
+  ctr images pull docker.io/library/nginx:latest
+
+  # Run a container (no automatic port mapping or DNS)
+  ctr run --rm docker.io/library/nginx:latest nginx-test
+
+  # Inspect content store (raw blobs)
+  ctr content ls
+
+  # List namespaces (Kubernetes uses k8s.io namespace)
+  ctr namespaces ls
+
+nerdctl (Docker-compatible CLI)
+  Maintained by containerd project. Supports: run, build (via BuildKit), compose, network, volume.
+  Use for: replacing docker CLI on hosts that run containerd without dockerd.
+  Supports rootless mode via rootlesskit. Supports CNI networking via /etc/cni/.
+
+  nerdctl run -d -p 8080:80 nginx
+  nerdctl compose up -d
+  nerdctl build -t myapp .
+  nerdctl image ls
+
+crictl (CRI-level client)
+  Speaks the Kubernetes CRI gRPC protocol. Operates in the k8s.io containerd namespace.
+  Use for: Kubernetes node debugging — exactly what kubelet sees.
+  Not for: general container management. Cannot pull arbitrary images or manage volumes.
+
+  # Set the endpoint (usually already in /etc/crictl.yaml)
+  crictl --runtime-endpoint unix:///run/containerd/containerd.sock pods
+  crictl ps                          # containers as kubelet sees them
+  crictl inspect <container-id>      # full runtime spec + state
+  crictl logs <container-id>
+  crictl exec -it <container-id> sh
+  crictl images                      # images in k8s.io namespace only
+  crictl rmi --prune                 # remove unused images (safe GC)
+
+Rule of thumb:
+  Kubernetes node debugging   -> crictl
+  Docker-compatible workflows -> nerdctl
+  Internal containerd state   -> ctr`,
+    },
   ],
   introduction: `containerd began as an internal component inside Docker and was donated to the CNCF in 2017, graduating to a top-level CNCF project in 2019. Today it is the default container runtime in most Kubernetes distributions including EKS, GKE, AKS, and kubeadm-provisioned clusters. It replaced dockershim, which was removed from kubelet in Kubernetes 1.24, making direct knowledge of containerd essential for modern Kubernetes operations.
 
@@ -34403,6 +35579,157 @@ In AWS Lambda the root filesystem is a read-only snapshot. When a new invocation
 
 firecracker-containerd is a project that implements the containerd remote snapshotter and shim interfaces on top of Firecracker. It allows Kubernetes and containerd to schedule OCI container images as Kata-style microVM workloads transparently. Each pod or container gets its own Firecracker microVM, and the container image layers are mounted into the guest via virtiofs or a devicemapper snapshot. This integration path is how organizations run untrusted multi-tenant container workloads with VM-level isolation without changing their Kubernetes control plane.`,
       image: `/diagrams/devops/firecracker-microvms-flow.png`,
+    },
+    {
+      title: 'Firecracker jailer hardening — seccomp, namespaces, cgroups',
+      description: `The jailer binary is a mandatory wrapper that applies defense-in-depth isolation before the Firecracker VMM process starts. It runs as root, applies all restrictions, then drops privileges before exec-ing Firecracker.
+
+Jailer hardening sequence (in order):
+
+1. cgroup v2 setup
+   The jailer places the Firecracker process in a cgroup before exec.
+   CPU and memory limits are applied here, not inside the guest.
+   Example: /sys/fs/cgroup/firecracker/<id>/memory.max = 512M
+            /sys/fs/cgroup/firecracker/<id>/cpu.max = "50000 100000"  (0.5 vCPU)
+
+2. Network namespace isolation
+   The jailer creates a new network namespace for the Firecracker process.
+   TAP devices for guest networking are created in this namespace.
+   The host default namespace is inaccessible to the VMM process.
+
+3. chroot jail
+   The jailer chroots into a minimal directory (e.g., /srv/jailer/firecracker/<id>/root/).
+   This directory contains only: the Firecracker binary, the Unix socket path, and device nodes.
+   The rest of the host filesystem is invisible to the VMM process.
+
+4. seccomp-BPF syscall filter
+   After chroot, the jailer installs a whitelist seccomp filter.
+   Only the specific syscalls Firecracker needs are allowed.
+   Disallowed syscalls return EPERM. A malicious guest that achieves RCE in the VMM
+   cannot call execve, fork, open arbitrary paths, or load kernel modules.
+
+Allowed syscall categories (approximate):
+  KVM ioctls via ioctl()    — core virtualization
+  epoll_wait, read, write   — event loop and I/O
+  mmap, mprotect, munmap    — guest memory management
+  recvmsg, sendmsg          — Unix socket API
+  clock_gettime, getpid     — metadata
+
+Blocked (examples that would matter in an escape):
+  execve, fork, clone       — process creation
+  ptrace                    — process tracing
+  open, openat (most paths) — filesystem access outside chroot
+  init_module               — kernel module loading
+
+Running the jailer (typical invocation):
+  /usr/bin/jailer \\
+    --id vm-001 \\
+    --exec-file /usr/bin/firecracker \\
+    --uid 10001 --gid 10001 \\
+    --chroot-base-dir /srv/jailer \\
+    --cgroup cpu.shares=512 \\
+    --cgroup memory.limit_in_bytes=536870912`,
+    },
+    {
+      title: 'Firecracker snapshotting — cold start vs warm clone',
+      description: `Firecracker snapshotting is the mechanism that makes AWS Lambda cold starts single-digit milliseconds for subsequent invocations. Understanding it is critical for any serverless platform engineering interview.
+
+Two startup modes:
+
+Mode 1: Fresh boot (first invocation)
+  orchestrator spawns jailer + Firecracker
+  VMM receives REST config: kernel, rootfs, network, machine config
+  PUT /actions {"action_type": "InstanceStart"}
+  Firecracker loads kernel directly into guest memory (no BIOS/GRUB)
+  Linux boots to init, runtime initializes, function handler loads
+  Typical time: 100-125ms to ready state
+
+Mode 2: Snapshot restore (subsequent invocations)
+  Snapshot = memory state file + microVM state file (vCPU registers, device state)
+  Snapshot is taken after the runtime is initialized but before the function runs
+  Restore: VMM maps the memory file, restores vCPU state, resumes guest
+  Typical time: 5-10ms to ready state (memory pages loaded on-demand via userfaultfd)
+
+Creating a snapshot via the REST API:
+  # Pause the guest (flush dirty memory)
+  curl --unix-socket /tmp/fc.sock -X PATCH http://localhost/vm \\
+    -d '{"state": "Paused"}'
+
+  # Take the snapshot
+  curl --unix-socket /tmp/fc.sock -X PUT http://localhost/snapshot/create \\
+    -d '{
+      "snapshot_type": "Full",
+      "snapshot_path": "/snapshots/vm-001.snap",
+      "mem_file_path": "/snapshots/vm-001.mem",
+      "version": "1.0.0"
+    }'
+
+Restoring from snapshot:
+  curl --unix-socket /tmp/fc.sock -X PUT http://localhost/snapshot/load \\
+    -d '{
+      "snapshot_path": "/snapshots/vm-001.snap",
+      "mem_backend": {"backend_type": "File", "backend_path": "/snapshots/vm-001.mem"},
+      "enable_diff_snapshots": false,
+      "resume_vm": true
+    }'
+
+userfaultfd — lazy memory loading:
+  The memory file can be huge (512MB+). Firecracker uses userfaultfd so the guest
+  resumes immediately and memory pages are faulted in from the snapshot file on demand.
+  This is why restore appears near-instant even for large memory footprints.
+
+Gotcha: network state after restore
+  TAP devices and IP addresses must be recreated externally after restore.
+  The guest kernel's network stack sees the restored state, but the host TAP is gone.
+  Orchestrators must: delete old TAP, create new TAP, hot-attach it via the REST API
+  before resuming the guest.`,
+    },
+    {
+      title: 'firecracker-containerd — Kubernetes integration for microVMs',
+      description: `firecracker-containerd bridges the OCI/Kubernetes world and Firecracker's REST API, allowing standard container tooling to schedule workloads into microVMs transparently.
+
+Architecture components:
+
+containerd (standard)
+  Receives CRI calls from kubelet as usual.
+  Selects runtime class "firecracker" based on RuntimeClass resource.
+
+firecracker-containerd shim (containerd-shim-aws-firecracker)
+  Implements the containerd shim v2 API.
+  Instead of calling runc, it spawns a Firecracker microVM per pod/container.
+  Translates containerd task lifecycle (Create/Start/Wait/Delete) into Firecracker REST API calls.
+
+remote snapshotter
+  Standard containerd snapshotter pulls image layers to the host.
+  firecracker-containerd uses a devmapper-based remote snapshotter to expose
+  image layers as block devices inside the guest via virtio-blk.
+  Alternative: virtiofs to expose image layers as filesystem mounts inside the guest.
+
+Guest agent (fc-agent)
+  A small binary running inside the microVM.
+  Communicates with the shim over vsock (not network).
+  Receives exec requests, manages container process lifecycle inside the guest.
+  Returns exit codes and log streams back to the shim via vsock.
+
+Kubernetes RuntimeClass configuration:
+  apiVersion: node.k8s.io/v1
+  kind: RuntimeClass
+  metadata:
+    name: firecracker
+  handler: aws-firecracker
+
+  # Pod spec to opt into microVM isolation:
+  spec:
+    runtimeClassName: firecracker
+    containers:
+    - name: app
+      image: myapp:latest
+
+Security properties vs standard containers:
+  Standard container: shared host kernel, namespaces only
+  firecracker-containerd: separate KVM guest kernel per pod, hardware VMX isolation
+  Threat model: guest kernel compromise does not affect host or other guests
+  Cost: ~125ms cold start, ~5MB memory overhead for VMM process per microVM`,
     },
   ],
   introduction: `Firecracker was open-sourced by Amazon Web Services in 2018 and has since become the reference implementation of what the industry calls a microVM: a virtual machine that is stripped of all legacy hardware emulation and sized to run a single workload rather than a general-purpose operating system. The project was motivated by a specific problem: AWS needed to run millions of short-lived Lambda functions with sub-second cold starts while maintaining the hard multi-tenant isolation that hardware virtualization provides. Containers alone did not provide sufficient isolation because they share the host kernel, and traditional hypervisors like QEMU were too slow to start and too heavy on memory to run at Lambda scale.
