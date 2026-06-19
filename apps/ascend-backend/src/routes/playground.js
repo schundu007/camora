@@ -18,55 +18,40 @@ const router = Router();
 // ---------------------------------------------------------------------------
 
 const PIP_ALIAS = {
-  cv2:        'opencv-python',
-  PIL:        'Pillow',
-  sklearn:    'scikit-learn',
-  bs4:        'beautifulsoup4',
-  yaml:       'PyYAML',
-  dotenv:     'python-dotenv',
-  Crypto:     'pycryptodome',
-  google:     'google-api-python-client',
-  serial:     'pyserial',
-  dateutil:   'python-dateutil',
-  jwt:        'PyJWT',
-  MySQLdb:    'mysqlclient',
-  psycopg2:   'psycopg2-binary',
-  redis:      'redis',
-  pymongo:    'pymongo',
-  pydantic:   'pydantic',
-  aiohttp:    'aiohttp',
-  httpx:      'httpx',
-  attr:       'attrs',
-  click:      'click',
-  rich:       'rich',
-  loguru:     'loguru',
-  tabulate:   'tabulate',
-  arrow:      'arrow',
-  pendulum:   'pendulum',
-  tqdm:       'tqdm',
-  faker:      'Faker',
-  colorama:   'colorama',
+  cv2: 'opencv-python',
+  PIL: 'Pillow',
+  sklearn: 'scikit-learn',
+  bs4: 'beautifulsoup4',
+  yaml: 'PyYAML',
+  dotenv: 'python-dotenv',
+  Crypto: 'pycryptodome',
 };
 
 function missingModule(stderr = '') {
   return stderr.match(/ModuleNotFoundError: No module named '([\w.]+)'/)?.[1]?.split('.')?.[0] ?? null;
 }
 
+async function findPip() {
+  const whichCmd = platform() === 'win32' ? 'where' : 'which';
+  for (const pip of ['pip3', 'pip']) {
+    try {
+      const { stdout } = await execFileAsync(whichCmd, [pip], { timeout: 3000, encoding: 'utf8' });
+      const p = stdout.trim().split('\n')[0];
+      if (p) return p;
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
 async function pipInstall(importName) {
   if (!/^[a-zA-Z0-9._-]+$/.test(importName)) return false;
   const pkgName = PIP_ALIAS[importName] ?? importName;
-  // Use `python3 -m pip` — guaranteed to find the right pip for whatever
-  // Python binary is on PATH, regardless of whether pip3/pip are symlinked.
-  for (const flag of ['--break-system-packages', '--user']) {
-    try {
-      await execFileAsync('python3', ['-m', 'pip', 'install', '--quiet', flag, pkgName],
-        { timeout: 90000, encoding: 'utf8' });
-      console.log(`[playground] pip installed: ${pkgName} (${flag})`);
-      return true;
-    } catch { /* try next flag */ }
-  }
-  console.warn(`[playground] pip install failed for ${pkgName}`);
-  return false;
+  const pip = await findPip();
+  if (!pip) return false;
+  try {
+    await execFileAsync(pip, ['install', '--quiet', '--user', pkgName], { timeout: 30000, encoding: 'utf8' });
+    return true;
+  } catch { return false; }
 }
 
 const CODE_LIMIT = 50 * 1024; // 50KB
@@ -149,58 +134,23 @@ async function callExplain(prompt) {
 // Single shared namespace (_ns) is critical: exec with separate globals/locals
 // breaks cross-references between top-level classes/functions and prevents
 // `if __name__ == '__main__':` from ever being true.
-const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io, re as _re, subprocess as _sp
-
-def _auto_install(mod_name):
-    _pkg = {
-        'cv2': 'opencv-python', 'PIL': 'Pillow', 'sklearn': 'scikit-learn',
-        'bs4': 'beautifulsoup4', 'yaml': 'PyYAML', 'dotenv': 'python-dotenv',
-        'Crypto': 'pycryptodome', 'dateutil': 'python-dateutil', 'jwt': 'PyJWT',
-        'psycopg2': 'psycopg2-binary', 'attr': 'attrs', 'faker': 'Faker',
-    }.get(mod_name, mod_name)
-    for _flag in ['--break-system-packages', '--user']:
-        try:
-            _sp.check_call([_s.executable, '-m', 'pip', 'install', '--quiet', _flag, _pkg],
-                           stdout=_sp.DEVNULL, stderr=_sp.DEVNULL, timeout=90)
-            return True
-        except Exception:
-            pass
-    return False
+const PYTHON_WRAPPER = `import json as _j, sys as _s, traceback as _t, io as _io
 
 with open('code.py', 'r') as _f:
     _src = _f.read()
 
 _cap = _io.StringIO()
 _s.stdout = _cap
-import builtins as _bi
-_orig_input = _bi.input
-def _silent_input(prompt=''):
-    return _orig_input()
-_bi.input = _silent_input
 _ns = {'__name__': '__main__'}
 
-_MAX_RETRIES = 5
-for _attempt in range(_MAX_RETRIES + 1):
-    try:
-        exec(compile(_src, 'code.py', 'exec'), _ns)
-        break
-    except ModuleNotFoundError as _e:
-        _s.stdout = _s.__stdout__
-        _mod = _re.search(r"No module named '([\\w.]+)'", str(_e))
-        _mod = _mod.group(1).split('.')[0] if _mod else None
-        if not _mod or _attempt == _MAX_RETRIES or not _auto_install(_mod):
-            _s.stdout.write(_cap.getvalue())
-            _s.stderr.write(_t.format_exc())
-            _s.stderr.flush()
-            _s.exit(1)
-        _cap = _io.StringIO()
-        _s.stdout = _cap
-    except Exception:
-        _s.stdout = _s.__stdout__
-        _s.stdout.write(_cap.getvalue())
-        _s.stderr.write(_t.format_exc())
-        _s.stderr.flush()
-        _s.exit(1)
+try:
+    exec(compile(_src, 'code.py', 'exec'), _ns)
+except Exception:
+    _s.stdout = _s.__stdout__
+    _s.stdout.write(_cap.getvalue())
+    _s.stderr.write(_t.format_exc())
+    _s.stderr.flush()
+    _s.exit(1)
 
 _s.stdout = _s.__stdout__
 _s.stdout.write(_cap.getvalue())
@@ -235,41 +185,20 @@ async function withTmpDir(fn) {
   }
 }
 
-function spawnPython(dir, stdinData = '') {
-  return new Promise((resolve, reject) => {
-    const child = spawn('python3', ['main.py'], { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] });
-    let stdout = '', stderr = '';
-    const timer = setTimeout(() => child.kill('SIGKILL'), 10000);
-    child.stdout.on('data', d => { stdout += d; });
-    child.stderr.on('data', d => { stderr += d; });
-    if (stdinData) child.stdin.write(stdinData, 'utf8');
-    child.stdin.end();
-    child.on('close', (code, signal) => {
-      clearTimeout(timer);
-      if (signal === 'SIGKILL') {
-        resolve({ stdout, stderr: stderr + '\n[Execution timed out after 10s — showing partial output]', timedOut: true });
-      } else if (code === 0) {
-        resolve({ stdout, stderr });
-      } else {
-        reject(Object.assign(new Error('Command failed: python3 main.py'), { stdout, stderr, code: code ?? 1 }));
-      }
-    });
-    child.on('error', e => { clearTimeout(timer); reject(e); });
-  });
-}
-
-async function runPython(code, stdinData = '') {
+async function runPython(code) {
   return withTmpDir(async (dir) => {
     await writeFile(join(dir, 'code.py'), code, 'utf8');
     await writeFile(join(dir, 'main.py'), PYTHON_WRAPPER, 'utf8');
     const start = Date.now();
 
+    const exec = () => execFileAsync('python3', ['main.py'], { cwd: dir, timeout: 10000, ...EXEC_OPTS });
+
     let lastErr = null;
     for (let attempt = 0; attempt <= 5; attempt++) {
       try {
-        const { stdout, stderr, timedOut } = await spawnPython(dir, stdinData);
+        const { stdout, stderr } = await exec();
         const { cleanStderr, variables } = parseVarsSentinel(stderr);
-        return { stdout, stderr: cleanStderr, exitCode: timedOut ? 1 : 0, duration: Date.now() - start, variables };
+        return { stdout, stderr: cleanStderr, exitCode: 0, duration: Date.now() - start, variables };
       } catch (err) {
         lastErr = err;
         const mod = missingModule(err.stderr);
@@ -279,7 +208,7 @@ async function runPython(code, stdinData = '') {
       }
     }
 
-    const { cleanStderr, variables } = parseVarsSentinel(lastErr.stderr ?? '');
+    const { cleanStderr, variables } = parseVarsSentinel(lastErr.stderr);
     return {
       stdout: lastErr.stdout || '',
       stderr: cleanStderr || lastErr.message,
@@ -416,48 +345,25 @@ router.post('/explain', async (req, res, next) => {
     }
 
     const lineNumber = Number(line);
-    const allLines = code.split('\n');
-    const rawContent = allLines[lineNumber - 1] ?? '';
-    if (!rawContent.trim()) return res.json({ explanation: '' });
-
-    // Strip comment-only lines so the LLM sees only active code
-    const activeLines = allLines.filter(l => !/^\s*#/.test(l));
-    const activeCode = activeLines.join('\n').trim();
-    if (!activeCode) return res.json({ what: '', how: [], concepts: [] });
-
-    // If cursor is on a comment line, find nearest active line below then above
-    let targetContent = rawContent;
-    let targetLineNumber = lineNumber;
-    if (/^\s*#/.test(rawContent)) {
-      const below = allLines.slice(lineNumber).findIndex(l => l.trim() && !/^\s*#/.test(l));
-      const above = allLines.slice(0, lineNumber - 1).reverse().findIndex(l => l.trim() && !/^\s*#/.test(l));
-      if (below !== -1) {
-        targetLineNumber = lineNumber + below + 1;
-        targetContent = allLines[targetLineNumber - 1];
-      } else if (above !== -1) {
-        targetLineNumber = lineNumber - above - 1;
-        targetContent = allLines[targetLineNumber - 1];
-      } else {
-        return res.json({ what: '', how: [], concepts: [] });
-      }
-    }
+    const lineContent = code.split('\n')[lineNumber - 1] ?? '';
+    if (!lineContent.trim()) return res.json({ explanation: '' });
 
     const cacheKey = createHash('sha256')
-      .update(`${activeCode}:${targetContent}:${language}`)
+      .update(`${code}:${lineNumber}:${language}`)
       .digest('hex');
 
     if (EXPLAIN_CACHE.has(cacheKey)) {
       return res.json(EXPLAIN_CACHE.get(cacheKey));
     }
 
-    const prompt = `You are a beginner-friendly coding tutor. Explain this line from the ${language} code below.
+    const prompt = `You are a beginner-friendly coding tutor. Explain line ${lineNumber} from the ${language} code below.
 
-Code (active lines only):
+Code:
 \`\`\`${language}
-${activeCode}
+${code}
 \`\`\`
 
-Target line: ${targetContent}
+Line ${lineNumber}: ${lineContent}
 
 Return ONLY a JSON object (no markdown fences). Schema:
 {
@@ -512,10 +418,9 @@ router.post('/run', async (req, res, next) => {
     }
 
     const lang = String(language || '').toLowerCase();
-    const stdin = typeof req.body.stdin === 'string' ? req.body.stdin : '';
     let result;
     switch (lang) {
-      case 'python3': result = await runPython(code, stdin); break;
+      case 'python3': result = await runPython(code); break;
       case 'bash':    result = await runBash(code);   break;
       case 'docker':  result = await runDockerLint(code); break;
       case 'terraform': result = await runTerraform(code); break;

@@ -1,11 +1,10 @@
-import { useState, useRef, useCallback, CSSProperties, useEffect } from 'react';
+import { useState, useRef, useCallback, CSSProperties } from 'react';
 import { useMonaco } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
 import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
 import { OutputPane, type RunEntry } from './OutputPane';
 import { playgroundAPI, type PlaygroundLanguage, type ExplainResult } from '../../../lib/capra-api';
-import { useTheme } from '../../../hooks/useTheme';
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   python3:   'print("Hello, World!")\n',
@@ -15,106 +14,6 @@ const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
 };
 
 const sans: CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
-const mono: CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" };
-
-function detectInputCalls(code: string): string[] {
-  const labels: string[] = [];
-  const stripped = code.split('\n').filter(l => !/^\s*#/.test(l)).join('\n');
-  const re = /\binput\s*\(([^)]*)\)/g;
-  let m: RegExpExecArray | null;
-  let n = 1;
-  while ((m = re.exec(stripped)) !== null) {
-    const arg = m[1].trim();
-    const strMatch = arg.match(/^(['"`])([\s\S]*?)\1$/);
-    const label = strMatch
-      ? strMatch[2].replace(/:?\s*$/, '').trim() || `Input ${n}`
-      : `Input ${n}`;
-    labels.push(label);
-    n++;
-  }
-  return labels;
-}
-
-interface InputModalProps {
-  labels: string[];
-  values: string[];
-  onChange: (idx: number, val: string) => void;
-  onRun: () => void;
-  onCancel: () => void;
-}
-
-const InputModal = ({ labels, values, onChange, onRun, onCancel }: InputModalProps) => {
-  const firstRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { firstRef.current?.focus(); }, []);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.60)' }}
-      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}
-    >
-      <div
-        className="w-full max-w-sm rounded-xl p-6 shadow-2xl"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-gold-leaf)' }}
-      >
-        <p className="text-[11px] uppercase tracking-widest font-semibold mb-4" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
-          Provide Input Values
-        </p>
-
-        <div className="flex flex-col gap-3">
-          {labels.map((label, i) => (
-            <div key={i}>
-              <label className="block text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)', ...sans }}>
-                {label}
-              </label>
-              <input
-                ref={i === 0 ? firstRef : undefined}
-                type="text"
-                value={values[i] ?? ''}
-                onChange={e => onChange(i, e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    if (i === labels.length - 1) onRun();
-                    else (e.currentTarget.closest('.flex')?.querySelector(`input:nth-of-type(${i + 2})`) as HTMLInputElement | null)?.focus();
-                  }
-                  if (e.key === 'Escape') onCancel();
-                }}
-                className="w-full px-3 py-2 rounded-md text-sm outline-none"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
-                  ...mono,
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-end gap-2 mt-5">
-          <button
-            onClick={onCancel}
-            className="px-4 py-1.5 text-xs rounded-md"
-            style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', ...sans }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onRun}
-            className="px-5 py-1.5 text-xs font-bold rounded-md"
-            style={{
-              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
-              color: '#0a0e1a',
-              ...sans,
-            }}
-          >
-            ▶ Run
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface ExplainState {
   rich: ExplainResult | null;
@@ -126,7 +25,7 @@ interface ExplainState {
 const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   if (!line) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: 'var(--text-muted)', ...sans }}>
+      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: '#475569', ...sans }}>
         <span className="text-[28px]">↑</span>
         <span className="text-[13px]">Move cursor to any line</span>
       </div>
@@ -134,9 +33,9 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-auto" style={{ background: 'var(--bg-app)' }}>
-      <div className="px-4 py-2 sticky top-0 flex items-center gap-2" style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
-        <span className="text-[9px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--text-muted)' }}>Line {line}</span>
+    <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
+      <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2">
+        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
@@ -145,30 +44,32 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
 
       <div className="px-4 py-4 flex-1 space-y-5">
         {error ? (
-          <p className="text-[12px] leading-relaxed" style={{ ...sans, color: 'var(--danger)' }}>{error}</p>
+          <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
         ) : loading ? (
-          <p className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>Analysing…</p>
+          <p className="text-[#475569] text-[11px] italic" style={sans}>Analysing…</p>
         ) : rich ? (
           <>
+            {/* What it does */}
             {(rich.what || rich.explanation) && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)', ...sans }}>What it does</div>
-                <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)', ...sans }}>{rich.what || rich.explanation}</p>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
+                <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
               </div>
             )}
 
+            {/* How it works */}
             {rich.how && rich.how.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)', ...sans }}>How it works</div>
-                <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
+                <div className="rounded-lg overflow-hidden border border-[#1e293b]">
                   {rich.how.map((step, i) => (
-                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
-                      <div className="px-3 py-2.5" style={{ background: 'var(--bg-base)', borderRight: '1px solid var(--border)' }}>
-                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
+                    <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
+                      <div className="px-3 py-2.5" style={{ background: '#0d1117', borderRight: '1px solid #1e293b' }}>
+                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
                       </div>
                       <div className="px-3 py-2.5 flex items-start gap-2">
-                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
-                        <span className="text-[12px] leading-relaxed" style={{ color: 'var(--text-secondary)', ...sans }}>{step.text}</span>
+                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
                       </div>
                     </div>
                   ))}
@@ -176,6 +77,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+            {/* State trace */}
             {rich.trace && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
@@ -185,6 +87,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+            {/* Analogy */}
             {rich.analogy && (
               <div>
                 <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
@@ -194,19 +97,20 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
               </div>
             )}
 
+            {/* Concepts */}
             {rich.concepts && rich.concepts.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)', ...sans }}>Concepts used</div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#334155', ...sans }}>Concepts used</div>
                 <div className="flex flex-wrap gap-1.5">
                   {rich.concepts.map((c, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', ...sans }}>{c}</span>
+                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
                   ))}
                 </div>
               </div>
             )}
           </>
         ) : (
-          <p className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>No explanation yet</p>
+          <p className="text-[#475569] text-[11px] italic" style={sans}>No explanation yet</p>
         )}
       </div>
     </div>
@@ -214,26 +118,20 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
 };
 
 export const PlaygroundLayout = () => {
-  const { theme } = useTheme();
-  const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
-
-  const [activeTab, setActiveTab]     = useState<PlaygroundLanguage>('python3');
-  const [running, setRunning]         = useState(false);
-  const [formatting, setFormatting]   = useState(false);
-  const [copied, setCopied]           = useState(false);
+  const [activeTab, setActiveTab]   = useState<PlaygroundLanguage>('python3');
+  const [running, setRunning]       = useState(false);
+  const [formatting, setFormatting] = useState(false);
+  const [copied, setCopied]         = useState(false);
   const [explainMode, setExplainMode] = useState(false);
-  const [rightTab, setRightTab]       = useState<'output' | 'explain'>('output');
-  const [runs, setRuns]               = useState<RunEntry[]>([]);
-  const [explain, setExplain]         = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
-  const [inputModal, setInputModal]   = useState<{ labels: string[]; values: string[] } | null>(null);
+  const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
+  const [runs, setRuns]             = useState<RunEntry[]>([]);
+  const [explain, setExplain]       = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
 
-  const codeRef        = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
-  const editorRef      = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoInst     = useMonaco();
-  const explainTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const codeRef       = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
+  const editorRef     = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoInst    = useMonaco();
+  const explainTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentLineRef = useRef(1);
-
-  useEffect(() => { if (monacoInst) monacoInst.editor.setTheme(monacoTheme); }, [monacoInst, monacoTheme]);
 
   const fetchExplain = useCallback((line: number, code: string, lang: PlaygroundLanguage) => {
     if (explainTimer.current) clearTimeout(explainTimer.current);
@@ -245,7 +143,7 @@ export const PlaygroundLayout = () => {
       } catch {
         setExplain(prev => ({ ...prev, error: 'Explanation unavailable.', loading: false, rich: null }));
       }
-    }, 2000);
+    }, 500);
   }, []);
 
   const handleCursorChange = useCallback((line: number, code: string) => {
@@ -272,14 +170,14 @@ export const PlaygroundLayout = () => {
 
   const handleCodeChange = useCallback((value: string) => {
     codeRef.current[activeTab] = value;
-    if (explainMode) fetchExplain(currentLineRef.current, value, activeTab);
-  }, [activeTab, explainMode, fetchExplain]);
+  }, [activeTab]);
 
-  const doRun = useCallback(async (code: string, stdin: string) => {
+  const handleRun = useCallback(async () => {
+    const code = codeRef.current[activeTab];
     setRunning(true);
     setRightTab('output');
     try {
-      const r = await playgroundAPI.run({ language: activeTab, code, stdin });
+      const r = await playgroundAPI.run({ language: activeTab, code });
       setRuns(prev => [...prev, { ts: new Date(), result: r, error: null }]);
     } catch (err: unknown) {
       setRuns(prev => [...prev, { ts: new Date(), result: null, error: err instanceof Error ? err.message : 'Execution failed' }]);
@@ -287,35 +185,6 @@ export const PlaygroundLayout = () => {
       setRunning(false);
     }
   }, [activeTab]);
-
-  const handleRun = useCallback(async () => {
-    const code = codeRef.current[activeTab];
-    if (activeTab === 'python3') {
-      const labels = detectInputCalls(code);
-      if (labels.length > 0) {
-        setInputModal({ labels, values: new Array(labels.length).fill('') });
-        return;
-      }
-    }
-    doRun(code, '');
-  }, [activeTab, doRun]);
-
-  const handleModalRun = useCallback(() => {
-    if (!inputModal) return;
-    const code = codeRef.current[activeTab];
-    const stdin = inputModal.values.map(v => v + '\n').join('');
-    setInputModal(null);
-    doRun(code, stdin);
-  }, [inputModal, activeTab, doRun]);
-
-  const handleModalChange = useCallback((idx: number, val: string) => {
-    setInputModal(prev => {
-      if (!prev) return prev;
-      const values = [...prev.values];
-      values[idx] = val;
-      return { ...prev, values };
-    });
-  }, []);
 
   const handleFormat = useCallback(async () => {
     if (activeTab === 'docker') return;
@@ -340,7 +209,9 @@ export const PlaygroundLayout = () => {
     });
   }, [activeTab]);
 
-  const handleClear = useCallback(() => { setRuns([]); }, []);
+  const handleClear = useCallback(() => {
+    setRuns([]);
+  }, []);
 
   const handleEditorMount = useCallback((editor: Monaco.editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
@@ -354,7 +225,6 @@ export const PlaygroundLayout = () => {
   const handleTabChange = useCallback((lang: PlaygroundLanguage) => {
     setActiveTab(lang);
     setRuns([]);
-    setInputModal(null);
   }, []);
 
   const tabBtn = (label: string, tab: 'output' | 'explain') => (
@@ -364,40 +234,21 @@ export const PlaygroundLayout = () => {
       style={{
         ...sans,
         borderColor: rightTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
-        color: rightTab === tab ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
+        color: rightTab === tab ? 'var(--cam-gold-leaf)' : '#475569',
       }}
     >
       {label}
     </button>
   );
 
-  const ghostBtn = (active: boolean) => ({
-    ...sans,
-    background: active
-      ? 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)'
-      : 'var(--bg-elevated)',
-    border: `1px solid ${active ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
-    color: active ? '#0a0e1a' : 'var(--text-secondary)',
-  });
-
   return (
-    <div className="flex flex-col h-full" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
-      {inputModal && (
-        <InputModal
-          labels={inputModal.labels}
-          values={inputModal.values}
-          onChange={handleModalChange}
-          onRun={handleModalRun}
-          onCancel={() => setInputModal(null)}
-        />
-      )}
-
+    <div className="flex flex-col h-full bg-[#111318] text-white">
       <LanguageTabs active={activeTab} onChange={handleTabChange} />
 
       {/* Toolbar */}
-      <div className="flex items-center px-4 py-2" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--cam-gold-leaf-dk)' }}>
+      <div className="flex items-center px-4 py-2 bg-[#0a0e1a] border-b border-[var(--cam-gold-leaf-dk)]">
         <div className="flex-1">
-          <span className="text-[10px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--cam-gold-leaf-dk)' }}>
+          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] uppercase tracking-widest font-medium" style={sans}>
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
           </span>
         </div>
@@ -407,18 +258,60 @@ export const PlaygroundLayout = () => {
               onClick={handleFormat}
               disabled={formatting}
               className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
-              style={{ ...sans, ...ghostBtn(false), border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)' }}
+              style={{
+                ...sans,
+                background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
+                border: '1px solid var(--cam-gold-leaf)',
+                color: 'var(--cam-gold-leaf)',
+              }}
             >
               {formatting ? 'Formatting…' : 'Format'}
             </button>
           )}
-          <button onClick={handleCopy} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90" style={ghostBtn(copied)}>
+          <button
+            onClick={handleCopy}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90"
+            style={copied ? {
+              ...sans,
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
+              border: '1px solid var(--cam-gold-leaf)',
+              color: '#0a0e1a',
+            } : {
+              ...sans,
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
             {copied ? 'Copied!' : 'Copy'}
           </button>
-          <button onClick={handleToggleExplain} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90" style={ghostBtn(explainMode)}>
+          <button
+            onClick={handleToggleExplain}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            style={explainMode ? {
+              ...sans,
+              background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
+              border: '1px solid var(--cam-gold-leaf)',
+              color: '#0a0e1a',
+            } : {
+              ...sans,
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
             Explain
           </button>
-          <button onClick={handleClear} className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90" style={ghostBtn(false)}>
+          <button
+            onClick={handleClear}
+            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            style={{
+              ...sans,
+              background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
             Clear
           </button>
           <button
@@ -435,13 +328,14 @@ export const PlaygroundLayout = () => {
           </button>
         </div>
         <div className="flex-1 flex items-center justify-end">
-          <span className="text-[10px] hidden md:block" style={{ ...sans, color: 'var(--cam-gold-leaf-dk)' }}>⌘↵ · ⌘L · ⌘D</span>
+          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] hidden md:block" style={sans}>⌘↵ · ⌘L · ⌘D</span>
         </div>
       </div>
 
       {/* Split pane */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/2 overflow-hidden" style={{ borderRight: '1px solid var(--border)' }}>
+        {/* Editor */}
+        <div className="w-1/2 border-r border-[#1e293b] overflow-hidden">
           <PlaygroundEditor
             key={activeTab}
             language={activeTab}
@@ -449,13 +343,14 @@ export const PlaygroundLayout = () => {
             onChange={handleCodeChange}
             onMount={handleEditorMount}
             onCursorChange={handleCursorChange}
-            theme={monacoTheme}
           />
         </div>
 
+        {/* Right pane: Output | Explain */}
         <div className="w-1/2 overflow-hidden flex flex-col">
+          {/* Tab bar — always visible when explain mode on, hidden otherwise */}
           {explainMode && (
-            <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-app)' }}>
+            <div className="flex border-b border-[#1e293b] bg-[#0a0d12] shrink-0">
               {tabBtn('Output', 'output')}
               {tabBtn('Explain', 'explain')}
             </div>
