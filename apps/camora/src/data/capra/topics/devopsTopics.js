@@ -35827,6 +35827,91 @@ When etcd commits the write, the API server notifies all watchers of that resour
 The kubelet on the winning node, which also holds a watch for pods assigned to its node name, receives the pod event. The kubelet's sync loop calls the container runtime via CRI to pull images and create containers, calls the CNI plugin to set up the pod network namespace and assign an IP, and optionally calls CSI to attach and mount persistent volumes. Once all containers are running, the kubelet updates the pod status fields in etcd through the API server, and the pod is now visible as Running.`,
       image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
     },
+    {
+      title: `🔐 TLS/PKI Certificate Architecture — 1 CA, 8 Certs`,
+      description: `Every component-to-component connection in a Kubernetes cluster is encrypted and mutually authenticated using TLS certificates signed by a single root CA. Understanding which certificate is used for which connection is essential for debugging authentication failures and for rotating certificates safely.
+
+The cluster CA is generated first and its key must be protected above all other secrets. All other certificates are signed by this CA. The API server verifies client certificates by checking the signature against this CA public key.
+
+The 8 certificates generated in Kubernetes the Hard Way:
+
+admin.pem — CN: admin, O: system:masters. Used by kubectl for cluster-admin access. The system:masters group bypasses RBAC entirely.
+
+kube-controller-manager.pem — CN: system:kube-controller-manager, O: system:kube-controller-manager. Used by the controller manager to authenticate to the API server.
+
+kube-proxy.pem — CN: system:kube-proxy, O: system:node-proxier. Used by kube-proxy on each worker node.
+
+kube-scheduler.pem — CN: system:kube-scheduler, O: system:kube-scheduler. Used by the scheduler to authenticate to the API server.
+
+kubernetes.pem — CN: kubernetes, SANs include the API server load balancer IP, each controller IP, 10.32.0.1 (first ClusterIP), and kubernetes.default.svc.cluster.local. This is the server-side TLS certificate for the API server and is also used for etcd peer and client communication.
+
+service-account.pem — CN: service-accounts. This is NOT a TLS certificate for a connection. The API server uses the private key to sign service account JWT tokens that are mounted into pods, and uses the public key to verify them.
+
+Each worker node gets its own certificate — CN: system:node:NODE_NAME, O: system:nodes. The Node authorization mode uses the system:nodes group membership to limit what each kubelet can access, and the NodeRestriction admission plugin further limits each kubelet to only modifying objects related to its own node.
+
+The O (Organization) field is how certificate identity maps to Kubernetes RBAC groups. When the API server sees a client certificate with O: system:masters, that client has cluster-admin rights. When it sees O: system:nodes, the Node authorizer handles the request. This mapping is how the cluster bootstraps its own access control without needing API objects to already exist.
+
+Certificate SANs trap: the kubernetes.pem certificate must include every address through which the API server will be reached — load balancer IP, each controller private IP, 127.0.0.1, and the kubernetes service ClusterIP (typically 10.32.0.1). Missing any of these causes TLS handshake failures from that access path.`,
+      image: `/diagrams/devops/g1-k8s-arch.png`,
+    },
+    {
+      title: `🌐 Networking Deep Dive — Pod CIDR, CNI Bridge, kube-proxy iptables`,
+      description: `Kubernetes networking is built on three non-overlapping IP spaces that never NAT between nodes: the Node CIDR (physical machine IPs), the Pod CIDR (virtual IPs inside overlay or routed network), and the Service CIDR (virtual IPs that exist only in iptables/IPVS rules). Getting these three ranges right is the first networking decision and errors here require full cluster rebuilds.
+
+In Kubernetes the Hard Way, the IP ranges are:
+  Node network: 10.240.0.0/24 (GCP VPC, 3 machines)
+  Pod CIDR: 10.200.0.0/16 (each node gets a /24 slice: 10.200.0.0/24, 10.200.1.0/24, 10.200.2.0/24)
+  Service CIDR: 10.32.0.0/24 (ServiceIPs are virtual — no packets are actually sent to them)
+
+The br-netfilter kernel module is mandatory. Without it, iptables cannot see traffic crossing Linux bridge devices, so kube-proxy rules are silently bypassed for pod-to-pod traffic. It is loaded with: modprobe br-netfilter. The net.bridge.bridge-nf-call-iptables sysctl must also be set to 1.
+
+Static routes are configured per-node in the Hard Way so each node knows which /24 prefix lives on which other node's IP. This is the simplest possible L3 routing model — no overlay, just static host routes:
+
+  ip route add 10.200.1.0/24 via 10.240.0.21
+
+CNI bridge plugin creates a bridge device called cni0 on each node. When a pod is created, a veth pair is created: one end goes into the pod network namespace as eth0, the other end is attached to cni0. The bridge plugin assigns the pod IP from the node's /24 slice.
+
+kube-proxy iptables chains translate Service ClusterIPs to pod IPs. For each Service there is a KUBE-SVC-HASH chain. For each endpoint (pod) there is a KUBE-SEP-HASH chain with a DNAT rule. The KUBE-SVC chain probabilistically selects one KUBE-SEP chain using --probability statistic match rules. When a connection arrives for ClusterIP:port, it is NATed to one of the backing pod IPs and a conntrack entry is created so return packets are NATed back.
+
+DNS uses CoreDNS deployed as a Deployment with a Service at 10.32.0.10 by default. The kubelet configures each pod's /etc/resolv.conf to point to this ClusterIP. CoreDNS watches Service and Endpoint objects and answers A/AAAA queries for service.namespace.svc.cluster.local names.`,
+      image: `/diagrams/devops/g2-k8s-resources.png`,
+    },
+    {
+      title: `⚙️ Bootstrap Sequence — Component Startup Order and Systemd Units`,
+      description: `Bootstrapping Kubernetes the Hard Way reveals a precise dependency ordering that automated tools obscure. Understanding this order is critical for diagnosing startup failures — each component will hang or crash-loop if a dependency is not yet healthy.
+
+Phase 1 — Infrastructure (before any K8s components):
+  Generate root CA and all 8 component certificates. Distribute certs to each machine.
+  Generate kubeconfig files for each component (controller-manager, scheduler, kube-proxy, admin).
+  Generate the data encryption config for secret encryption at rest.
+
+Phase 2 — etcd (must start before API server):
+  etcd is deployed as a systemd service on each control plane node.
+  It takes --initial-cluster with all peer addresses and starts in --initial-cluster-state new.
+  Health check: etcdctl endpoint status must return all members with isLeader or isLearner.
+  Only after etcd is healthy can the API server start.
+
+Phase 3 — Control Plane (kube-apiserver first, then others):
+  kube-apiserver starts and connects to etcd. It also generates its own internal state.
+  kube-controller-manager starts and connects to the API server. It waits until the API server is ready before it begins controller reconciliation loops.
+  kube-scheduler starts and connects to the API server. It begins watching for unscheduled pods.
+  All three are run as systemd services with Restart=on-failure.
+
+Phase 4 — Worker Nodes (after control plane is healthy):
+  containerd starts first as the container runtime.
+  kubelet starts and registers the node with the API server via a POST to /api/v1/nodes.
+  kube-proxy starts and begins programming iptables rules for existing Services.
+
+Phase 5 — Cluster Addons:
+  CoreDNS is deployed as a Kubernetes Deployment and Service.
+  The kubelet configures /etc/resolv.conf in each pod to use the CoreDNS Service IP.
+
+Systemd unit key flags that differ from kubeadm defaults:
+  kubelet --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock
+  containerd requires SystemdCgroup = true in /etc/containerd/config.toml — without this, containerd and kubelet use different cgroup drivers and pods restart in a loop.
+  The Delegate=yes and CPUAccounting=yes settings in the kubelet service unit are required for cgroup v2 resource accounting to propagate from the kubelet's own cgroup into pod cgroups.`,
+      image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
+    },
   ],
   introduction: `Kubernetes the Hard Way refers to the practice of bootstrapping a Kubernetes cluster entirely by hand, generating every certificate, writing every configuration file, and starting every component explicitly rather than delegating to an installer like kubeadm. The exercise was popularized by Kelsey Hightower as a learning tool, and it remains the most effective way to build deep operational intuition about how Kubernetes actually works under the hood. Engineers who have done this work understand exactly why a cluster fails to start, how to recover from certificate expiry, and what each component is responsible for.
 
@@ -38235,6 +38320,648 @@ spec:
       'https://prometheus.io/docs/alerting/latest/alertmanager/',
       'https://prometheus.io/docs/alerting/latest/configuration/',
       'https://www.pagerduty.com/docs/guides/dead-man-snitch-integration-guide/',
+    ],
+  },
+
+  {
+    id: 'kubeadm-provisioning',
+    title: 'Kubeadm Provisioning',
+    icon: 'tool',
+    color: '#0284c7',
+    questions: 4,
+    description: `kubeadm is the official Kubernetes cluster provisioning tool that automates the same steps performed manually in Kubernetes the Hard Way. It generates certificates, kubeconfig files, static pod manifests for control plane components, and configures worker node join tokens. Understanding what kubeadm does internally makes you effective at troubleshooting failed bootstraps and customizing cluster configurations.`,
+    visualizations: [
+      {
+        title: `kubeadm init Phase Breakdown`,
+        description: `kubeadm init is decomposed into named phases that can be run individually with kubeadm init phase <phase-name>. This makes it possible to customize the cluster bootstrap at any step without forking the tool.
+
+preflight: Checks system requirements — swap disabled, required ports free, container runtime responding, correct kernel modules loaded (br-netfilter, overlay).
+
+certs: Generates the same PKI that you create manually in the Hard Way. Certificate output directory defaults to /etc/kubernetes/pki/. The CA key is stored here and must be backed up — if lost, all component certificates must be regenerated.
+
+kubeconfig: Generates kubeconfig files for admin, controller-manager, and scheduler in /etc/kubernetes/.
+
+control-plane: Writes static pod manifests for kube-apiserver, kube-controller-manager, and kube-scheduler to /etc/kubernetes/manifests/. The kubelet watches this directory and starts the components as static pods.
+
+etcd: Writes the static pod manifest for etcd to /etc/kubernetes/manifests/etcd.yaml (local etcd) or skips this phase if external etcd is used.
+
+wait-control-plane: Polls until the API server responds to health checks.
+
+upload-config: Uploads the kubeadm and kubelet configuration to a ConfigMap in kube-system.
+
+upload-certs: Optionally uploads control plane certificates as encrypted Secrets for HA cluster join.
+
+mark-control-plane: Taints the control plane node with node-role.kubernetes.io/control-plane:NoSchedule.
+
+bootstrap-token: Creates a bootstrap token used by worker nodes to join.
+
+kubelet-finalize: Updates kubelet configuration to use client certificate rotation.
+
+addon: Deploys CoreDNS and kube-proxy as DaemonSet/Deployment.
+
+To skip all worker scheduling on the control plane (single node): kubectl taint nodes --all node-role.kubernetes.io/control-plane-`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
+      {
+        title: `kubeadm vs Hard Way — What Gets Automated`,
+        description: `Comparing kubeadm to the Hard Way reveals exactly which operational concerns each approach hides. This comparison is a common senior interview question because it tests whether you actually understand the bootstrap process or just know kubectl commands.
+
+Certificate generation: Hard Way uses cfssl manually; kubeadm generates the same certificates automatically to /etc/kubernetes/pki/. SANs are computed from the --apiserver-cert-extra-sans flag and the node's IP.
+
+Static pod manifests: Hard Way writes systemd unit files; kubeadm writes static pod YAML to /etc/kubernetes/manifests/ and the kubelet monitors that directory and manages those pods without the API server.
+
+kubeconfig distribution: Hard Way requires manually copying kubeconfigs to each node; kubeadm generates them locally and worker nodes use bootstrap tokens to obtain their own certificates via the TLS bootstrap API.
+
+TLS bootstrap flow (kubeadm-specific): Worker nodes start with a bootstrap kubeconfig containing a bootstrap token. The kubelet uses this to authenticate and call the certificatesigningrequests API to request its own kubelet client certificate. The controller manager auto-approves these via the nodeclient and selfnodeclient RBAC groups.
+
+Etcd management: Hard Way manages etcd as a standalone systemd service; kubeadm manages it as a static pod, which means etcd logs appear in kubectl logs -n kube-system etcd-<nodename>.
+
+HA control plane: Hard Way requires you to run a load balancer and manually join API server replicas; kubeadm join --control-plane uploads a control plane certificate bundle to a Secret so the joining node can pull and decrypt all the control plane PKI without manual scp.
+
+Upgrade path: kubeadm upgrade apply handles draining control plane nodes, regenerating certificates if needed, updating component versions, and restarting static pods in place. The Hard Way has no upgrade tooling.
+
+When to use Hard Way in production: Almost never. The Hard Way is a learning exercise. In production, kubeadm, kOps, Cluster API, or a managed service (EKS/GKE/AKS) is preferred. The value of the Hard Way is the mental model it builds, not the operational procedure.`,
+        image: `/diagrams/devops/g2-k8s-resources.png`,
+      },
+      {
+        title: `HA Control Plane with kubeadm`,
+        description: `A production Kubernetes cluster requires at least 3 control plane nodes for etcd quorum and API server redundancy. kubeadm supports this with the --control-plane flag on join commands and stacked or external etcd topologies.
+
+Stacked etcd topology: each control plane node runs an etcd member and a full set of API server, controller-manager, and scheduler. Simpler to operate, used in most on-prem clusters. Requires 3 control plane nodes minimum for quorum.
+
+External etcd topology: etcd runs on separate dedicated nodes, and control plane nodes run only the API server, controller-manager, and scheduler. More expensive but allows etcd and API server to be scaled independently. Required when etcd I/O load is high enough to starve the API server.
+
+kubeadm join for additional control plane nodes:
+
+\`\`\`bash
+kubeadm init --control-plane-endpoint "LOAD_BALANCER_DNS:6443" \\
+  --upload-certs \\
+  --pod-network-cidr=10.244.0.0/16
+
+kubeadm join LOAD_BALANCER_DNS:6443 \\
+  --token <token> \\
+  --discovery-token-ca-cert-hash sha256:<hash> \\
+  --control-plane \\
+  --certificate-key <cert-key>
+\`\`\`
+
+The --certificate-key value references an encrypted Secret in kube-system that contains the control plane certificates. It expires after 2 hours for security. Run kubeadm init phase upload-certs --upload-certs to generate a fresh key if the window has passed.
+
+The load balancer in front of the API servers must use a TCP (L4) load balancer, not HTTP (L7), because the API server uses mutual TLS and the load balancer cannot terminate TLS without breaking client certificate authentication.
+
+etcd quorum requirement: with 3 control plane nodes (stacked), you can tolerate 1 node failure. With 5 nodes you can tolerate 2 failures. Adding a 4th node gives the same fault tolerance as 3 nodes (quorum is still 3 of 4 = floor(4/2)+1), so the upgrade from 3 to 5 members is the meaningful step.`,
+        image: `/diagrams/devops/g5-multi-cluster.png`,
+      },
+      {
+        title: `Quick-fire Interview Q&A`,
+        description: `What does kubeadm init do in sequence?
+Runs preflight checks, generates PKI in /etc/kubernetes/pki/, writes kubeconfigs, writes static pod manifests to /etc/kubernetes/manifests/, waits for API server to be healthy, uploads config and certs, creates bootstrap token, deploys CoreDNS and kube-proxy.
+
+What is a static pod and why does kubeadm use them for control plane components?
+A static pod is managed directly by the kubelet based on YAML files in a watched directory. The kubelet starts and restarts them without contacting the API server. kubeadm uses static pods for API server, controller-manager, and scheduler so the control plane can come up before the API server is running, and so it is self-healing via the kubelet.
+
+How does a worker node join without being given certificates manually?
+TLS bootstrap. The node starts with a bootstrap token in a kubeconfig. It uses the token to authenticate and submit a CertificateSigningRequest to the API server. The controller-manager auto-approves this CSR because the bootstrap token is in the system:bootstrappers group, which has RBAC permission to create node client CSRs. The kubelet then uses the approved certificate for all future API server communication.
+
+What happens when you run kubeadm upgrade apply?
+It pulls the target version image, drains the control plane node, updates the static pod manifests for API server, controller-manager, and scheduler, renews certificates if they will expire within 6 months, waits for each component to come up healthy, and then undrains the node.
+
+Difference between kubeadm token create and kubeadm token create --print-join-command?
+Both create a bootstrap token. --print-join-command additionally prints the complete kubeadm join command including the CA cert hash, making it convenient to copy-paste for new node joins.
+
+How do you reset a node bootstrapped with kubeadm?
+kubeadm reset. It deletes /etc/kubernetes/, drains the node, removes the CNI network, and optionally resets iptables and IPVS rules. You still need to manually clean up the CNI network plugin data directory (e.g. /etc/cni/net.d/ and /opt/cni/bin/).`,
+        image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
+      },
+    ],
+    introduction: `kubeadm is the tool that automates the manual steps of Kubernetes the Hard Way into a reliable, repeatable process. It was designed to be a building block — it handles the security-critical bootstrapping steps but deliberately leaves CNI plugin selection, load balancer configuration, and monitoring to the operator. This separation of concerns is why kubeadm is used as the foundation of higher-level tools like Cluster API, RKE2, and K3s.
+
+The most important thing to understand about kubeadm is its phase model. Every major step of kubeadm init is an independently runnable phase. If a default behavior does not fit your environment, you can run kubeadm init phase certs to generate certificates with custom configuration, then skip that phase when running the full init. This composability is what makes kubeadm suitable as a foundation for automation.
+
+Static pods are the second key concept. kubeadm deploys kube-apiserver, kube-controller-manager, kube-scheduler, and etcd as static pods — YAML files in /etc/kubernetes/manifests/ that the kubelet watches and manages without needing the API server to be operational. This bootstrapping trick solves the chicken-and-egg problem: the kubelet is the only component that does not need the API server to start. Every other component runs as a static pod that the kubelet manages, so even if the API server crashes, the kubelet will restart it.
+
+TLS bootstrap is the mechanism that allows worker nodes to join the cluster securely without pre-distributing certificates. A bootstrap token acts as a one-time credential that a new kubelet uses to request its own certificate from the API server. The controller manager auto-approves these requests for nodes in the bootstrappers group. After joining, the kubelet rotates its certificate automatically before expiry using client certificate rotation. This model scales to thousands of nodes without any manual certificate management.`,
+    whenToUse: [
+      `When setting up a new on-premises Kubernetes cluster and deciding between kubeadm, a distribution like RKE2/K3s, or a cloud managed service`,
+      `When troubleshooting a failed kubeadm init or join and need to understand which phase failed and why`,
+      `When customizing the control plane configuration beyond the defaults, such as enabling audit logging, configuring API server flags, or using an external etcd cluster`,
+      `When preparing for CKA (Certified Kubernetes Administrator) exam questions about cluster bootstrapping and upgrade procedures`,
+      `When evaluating Cluster API and need to understand what kubeadm bootstrap provider does vs. what the infrastructure provider does`,
+    ],
+    keyConcepts: [
+      {
+        term: `Static Pod Manifests`,
+        definition: `Static pods are Kubernetes pods managed directly by the kubelet process on a specific node, without going through the API server. The kubelet watches a directory (default /etc/kubernetes/manifests/) for YAML files and creates, updates, and deletes the corresponding containers as the files change.
+
+kubeadm uses static pods for all control plane components because it solves the bootstrapping problem: the API server cannot run until etcd is available, and the scheduler and controller-manager cannot run until the API server is available, but all of them need to be managed somehow. The kubelet is the one component that has no upstream dependency.
+
+\`\`\`bash
+ls /etc/kubernetes/manifests/
+# etcd.yaml  kube-apiserver.yaml  kube-controller-manager.yaml  kube-scheduler.yaml
+
+# Edit a static pod manifest directly to change a flag
+# kubelet will automatically restart the pod within seconds
+vim /etc/kubernetes/manifests/kube-apiserver.yaml
+\`\`\`
+
+Static pods appear in kubectl output as regular pods suffixed with the node name (e.g., kube-apiserver-controlplane), but they cannot be deleted via kubectl — you must remove or rename the manifest file.`,
+      },
+      {
+        term: `Bootstrap Tokens and TLS Bootstrap`,
+        definition: `TLS bootstrap is the mechanism that allows worker nodes to join a cluster without receiving certificates in advance. It involves three actors: the bootstrap token (credentials), the kubelet (certificate requester), and the controller-manager (certificate approver).
+
+A bootstrap token is a short-lived credential stored as a Secret in the kube-system namespace. Its name follows the pattern bootstrap-token-<token-id>. The token grants the holder membership in the system:bootstrappers group.
+
+When a worker node runs kubeadm join, the kubelet starts with a bootstrap kubeconfig that contains the token. It authenticates to the API server using the token, then submits a CertificateSigningRequest for a node client certificate with CN: system:node:<nodename> and O: system:nodes.
+
+The controller-manager's csrapproving controller auto-approves CSRs from the system:bootstrappers group for the kubernetes.io/kube-apiserver-client-kubelet signer. Once approved, the kubelet retrieves its signed certificate and begins using it. It then discards the bootstrap token.
+
+\`\`\`bash
+# Create a new token (expires in 24h by default)
+kubeadm token create --print-join-command
+
+# List existing tokens
+kubeadm token list
+
+# Delete a token
+kubeadm token delete <token-id>
+\`\`\`
+
+After the initial cert is issued, the kubelet rotates it automatically using the rotateCertificates: true kubelet config option. The kubelet generates a new key and CSR 10% of the way through the certificate's lifetime and rotates to the new cert before the old one expires.`,
+      },
+    ],
+    references: [
+      `https://kubernetes.io/docs/reference/setup-tools/kubeadm/`,
+      `https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/`,
+      `https://github.com/kelseyhightower/kubernetes-the-hard-way`,
+    ],
+  },
+
+  {
+    id: 'kubernetes-admission-control',
+    title: 'Kubernetes Admission Control',
+    icon: 'shield',
+    color: '#7c3aed',
+    questions: 4,
+    description: `Admission controllers are the last line of defense in the Kubernetes API request pipeline. They run after authentication and authorization but before the object is written to etcd. Mutating controllers can modify objects; validating controllers can accept or reject them. Understanding the admission chain is critical for implementing security policies and for debugging mysterious resource creation failures.`,
+    visualizations: [
+      {
+        title: `🛡️ Admission Chain: Mutating then Validating`,
+        description: `Every write request to the Kubernetes API server passes through a two-phase admission chain before reaching etcd. This chain is the mechanism through which policy engines, security tools, and service meshes intercept and modify or reject resources.
+
+Phase 1 — Mutating admission:
+  Built-in mutating controllers run first in a fixed order.
+  Then all MutatingAdmissionWebhook webhooks run. The API server calls each registered webhook endpoint with the object. Webhooks can return a patch (JSON Patch format) to modify the object.
+  Mutating webhooks can run multiple times — if a mutating webhook modifies an object, the entire mutating phase reruns to give other webhooks a chance to react to the change.
+
+Built-in mutating controllers include:
+  LimitRanger — fills in default CPU/memory requests and limits from LimitRange objects
+  ServiceAccount — injects a projected service account token volume and mounts it at /var/run/secrets/kubernetes.io/serviceaccount/
+  DefaultStorageClass — sets the default StorageClass on PVCs that do not specify one
+  MutatingAdmissionWebhook — the extension point that calls external webhook services
+
+Phase 2 — Validating admission:
+  Built-in validating controllers run first.
+  Then all ValidatingAdmissionWebhook webhooks run in parallel (not sequentially like mutating).
+  If any webhook rejects the request, the entire request is rejected with the webhook's message.
+  ValidatingAdmissionPolicy (CEL-based, K8s 1.26+) also runs here — these are in-cluster policies written in Common Expression Language without needing a webhook server.
+
+Key operational concern: a failing webhook blocks ALL resource creation if its failurePolicy is Fail. Always set a narrow namespaceSelector to exclude kube-system and always set a reasonable timeoutSeconds (5s max recommended). A webhook that times out with failurePolicy: Fail will prevent new pods from starting in the matched namespaces.
+
+Webhook registration: the webhook endpoint receives an AdmissionReview JSON object with request.object containing the resource being created. It must return an AdmissionReview with response.allowed: true/false and optionally response.patch for mutations.`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
+      {
+        title: `Pod Security Admission and OPA/Gatekeeper`,
+        description: `Pod Security Admission (PSA) is the built-in replacement for the deprecated PodSecurityPolicy. It enforces Pod Security Standards at the namespace level with three modes: enforce (blocks creation), audit (logs violations), and warn (returns warnings to kubectl but allows creation).
+
+Three pre-defined security profiles:
+  privileged — no restrictions, allows all pod fields
+  baseline — prevents most known privilege escalations: no hostNetwork, no hostPID, no privileged containers, no host path volumes mounting sensitive paths
+  restricted — heavily restricted, requires non-root containers, read-only root filesystem, drops all capabilities
+
+Apply to a namespace with a label:
+
+\`\`\`yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+\`\`\`
+
+OPA/Gatekeeper provides policy-as-code beyond what PSA covers. Gatekeeper runs as a MutatingAdmissionWebhook and ValidatingAdmissionWebhook. Policies are written as ConstraintTemplates (Rego code) and Constraints (instances of a template with parameters).
+
+\`\`\`yaml
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: require-team-label
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Namespace"]
+  parameters:
+    labels: ["team"]
+\`\`\`
+
+ValidatingAdmissionPolicy (CEL-based, GA in K8s 1.30) is the native in-cluster alternative to Gatekeeper for simple policies. Policies are written in CEL expressions directly in Kubernetes objects — no webhook server required, lower latency, no single point of failure.
+
+\`\`\`yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: require-run-as-non-root
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    - expression: "object.spec.securityContext.runAsNonRoot == true"
+      message: "Pods must run as non-root"
+\`\`\``,
+        image: `/diagrams/devops/g2-k8s-resources.png`,
+      },
+      {
+        title: `Common Built-in Admission Controllers Reference`,
+        description: `The API server flag --enable-admission-plugins controls which built-in controllers are active. The current defaults include: NamespaceLifecycle, LimitRanger, ServiceAccount, TaintNodesByCondition, PodSecurity, Priority, DefaultTolerationSeconds, DefaultStorageClass, StorageObjectInUseProtection, PersistentVolumeClaimResize, RuntimeClass, CertificateApproval, CertificateSigning, CertificateSubjectRestriction, DefaultIngressClass, MutatingAdmissionWebhook, ValidatingAdmissionPolicy, ValidatingAdmissionWebhook, ResourceQuota.
+
+Critical controllers to understand:
+
+NodeRestriction — limits what a kubelet can modify via the API. A kubelet authenticated as system:node:my-node can only read/write objects for its own node and the pods assigned to it. Prevents a compromised node from poisoning other nodes' pod specs.
+
+ResourceQuota — enforces namespace-level resource limits. If a namespace has a ResourceQuota, every pod that lands in it must have resource requests set, because the quota system cannot count resources without requests.
+
+PodSecurity — enforces Pod Security Standards profiles based on namespace labels.
+
+LimitRanger — fills in default resource requests/limits when pods do not specify them. Requires a LimitRange object to exist in the namespace.
+
+ServiceAccount — injects the service account token. If serviceAccountName is not set, it uses the default service account. The token is projected into the pod at /var/run/secrets/kubernetes.io/serviceaccount/token with a configurable expiry (default 1 hour).
+
+MutatingAdmissionWebhook and ValidatingAdmissionWebhook — the extension points. Service meshes like Istio and Linkerd use MutatingAdmissionWebhook to inject sidecar containers. Security tools like Kyverno and Gatekeeper use ValidatingAdmissionWebhook to enforce custom policies.`,
+        image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
+      },
+      {
+        title: `Quick-fire Interview Q&A`,
+        description: `What is the difference between a MutatingAdmissionWebhook and a ValidatingAdmissionWebhook?
+Mutating webhooks run first and can modify the object (return a JSON Patch). Validating webhooks run second, in parallel, and can only accept or reject — they cannot modify the object. This ordering ensures that the object being validated is the final mutated form.
+
+What happens if an admission webhook is down?
+If failurePolicy is Fail (the default): the request is rejected. All resource creation matching the webhook's rules will fail. If failurePolicy is Ignore: the webhook is skipped and the request proceeds. Use Ignore only for convenience webhooks, never for security-critical policies.
+
+How does Istio inject its sidecar proxy?
+Istio registers a MutatingAdmissionWebhook that triggers on pod creation in namespaces with the istio-injection: enabled label. When a pod is created, Istio's istiod receives the AdmissionReview, adds the istio-proxy container and the istio-init init container to the pod spec, and returns a JSON Patch. The pod that runs has these containers injected without the user specifying them.
+
+What is ValidatingAdmissionPolicy and why is it better than Gatekeeper for simple cases?
+ValidatingAdmissionPolicy is a native Kubernetes resource (GA in 1.30) that lets you write policies in CEL expressions directly in the cluster. No webhook server needed — the API server evaluates CEL inline. Advantages: no latency from HTTP calls to an external webhook, no webhook server to manage or scale, no webhook timeout risk, no single point of failure. Gatekeeper remains better for complex Rego policies, audit mode reporting, and policy templates with parameters.
+
+How would you debug a pod that cannot be created but shows no obvious error?
+Run kubectl create -f pod.yaml -v=8 to see all API calls. If the error says admission webhook denied the request, look at the webhook's logs. If the error is connection refused or timeout, the webhook service is down — check the webhook pod and service. Run kubectl get validatingwebhookconfigurations and kubectl get mutatingwebhookconfigurations to list all registered webhooks and their selectors.`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
+    ],
+    introduction: `Admission control is the mechanism that makes Kubernetes policy enforcement possible. Without admission controllers, any authenticated user who has RBAC permission to create pods could create pods that run as root, mount host paths, or bypass resource limits. Admission controllers provide the second policy layer that transforms Kubernetes from a simple container scheduler into a multi-tenant platform with enforceable governance.
+
+The most important conceptual shift is understanding that admission is a pipeline, not a single check. A request that reaches admission has already been authenticated (the user is who they say they are) and authorized (they have permission to create this resource type). Admission is the third layer that asks whether this specific object is acceptable given the cluster's policies.
+
+MutatingAdmissionWebhooks enable the injection pattern that powers service meshes like Istio, Linkerd, and Cilium. Rather than requiring users to manually add sidecar containers, the mesh injects them transparently at create time. The user sees a pod with one container in their YAML; the cluster runs a pod with three containers. Understanding this injection mechanism is essential for debugging why pods have unexpected containers or why a pod fails to start with init container errors.
+
+ValidatingAdmissionPolicy (CEL-based, GA in 1.30) represents the direction Kubernetes is heading for in-cluster policy enforcement. Instead of deploying and managing a separate policy webhook server, policies are just Kubernetes objects evaluated natively by the API server. For teams that currently use Gatekeeper or Kyverno only for simple label/annotation checks or security context enforcement, CEL policies can replace those tools with zero operational overhead.`,
+    whenToUse: [
+      `When implementing a security baseline for a production cluster and deciding between PSA, OPA/Gatekeeper, Kyverno, and ValidatingAdmissionPolicy`,
+      `When debugging resource creation failures that return webhook rejection errors without obvious reasons`,
+      `When a service mesh is not working as expected and you need to understand why sidecar injection is or is not happening`,
+      `When preparing for CKA or CKAD exam topics on security contexts and pod security standards`,
+      `When writing a custom admission webhook and need to understand the request/response contract and failure modes`,
+    ],
+    keyConcepts: [
+      {
+        term: `Webhook failurePolicy and Selector Scoping`,
+        definition: `The failurePolicy field in a webhook configuration determines what happens when the webhook endpoint is unreachable or returns an error. Fail (the default) causes the API request to be rejected. Ignore causes the webhook to be skipped and the request to proceed.
+
+The choice of failurePolicy is a security/availability tradeoff. For security-critical webhooks (deny-all-privileged), use Fail — you want to block resource creation when the policy engine is down rather than allow potentially unsafe resources. For convenience webhooks (label defaulting), use Ignore — a transient webhook outage should not block pod creation.
+
+Namespace selectors are equally critical. Always exclude kube-system from validating webhooks, because if the webhook itself fails to start (it lives in kube-system), and its failurePolicy is Fail, new pods cannot be created in kube-system to fix the webhook — a deadlock.
+
+\`\`\`yaml
+namespaceSelector:
+  matchExpressions:
+    - key: kubernetes.io/metadata.name
+      operator: NotIn
+      values: [kube-system, kube-public, cert-manager]
+\`\`\`
+
+Also set timeoutSeconds: 5 (maximum recommended). The default is 10 seconds, and a slow webhook on every pod creation will make your cluster feel sluggish.`,
+      },
+    ],
+    references: [
+      `https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/`,
+      `https://kubernetes.io/docs/concepts/security/pod-security-admission/`,
+      `https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/`,
+      `https://open-policy-agent.github.io/gatekeeper/`,
+    ],
+  },
+
+  {
+    id: 'kubernetes-runtime-class',
+    title: 'Kubernetes Runtime Classes',
+    icon: 'container',
+    color: '#0891b2',
+    questions: 3,
+    description: `RuntimeClass lets you select the container runtime for individual pods. Different workloads have different security and performance requirements — high-security workloads can use kernel-isolated runtimes like gVisor or kata-containers while standard workloads continue using containerd with runc. RuntimeClass makes this selection explicit in the pod spec rather than requiring node selector hacks.`,
+    visualizations: [
+      {
+        title: `🏃 Container Runtime Stack: runc, gVisor, kata-containers`,
+        description: `The Kubernetes container runtime stack has three layers: the kubelet, the high-level runtime (containerd or CRI-O), and the low-level runtime that actually creates the container process. RuntimeClass controls which low-level runtime is used.
+
+Layer 1 — CRI (Container Runtime Interface): The kubelet communicates with the high-level runtime over gRPC. The interface is defined by the CRI API. containerd (most common) and CRI-O both implement this interface.
+
+Layer 2 — High-level runtime (containerd): containerd manages image pulling, snapshotters for layers, and delegates actual container creation to a shim. Each shim corresponds to a low-level runtime.
+
+Layer 3 — Low-level runtime choices:
+  runc — the OCI default. Uses Linux namespaces and cgroups to isolate a regular process. Fastest. Shares the host kernel. Appropriate for trusted workloads.
+  gVisor (runsc) — user-space kernel from Google. The container process's system calls are intercepted by a Go process (Sentry) that implements a Linux-compatible syscall surface. The host kernel sees far fewer, simpler syscalls. Strong isolation but ~20% CPU overhead on syscall-heavy workloads.
+  kata-containers — lightweight VMs. Each container (or pod) gets its own VM with its own kernel via QEMU or Cloud Hypervisor. Strongest isolation. Longer startup time (200-500ms vs <10ms for runc). Required for multi-tenant environments where tenants cannot trust each other.
+  Wasm (wasmtime/WasmEdge) — experimental. Runs WebAssembly modules instead of Linux processes. Near-native speed, memory-safe, no kernel required for many operations.
+
+containerd configuration for multiple runtimes in /etc/containerd/config.toml:
+
+\`\`\`toml
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.gvisor]
+  runtime_type = "io.containerd.runsc.v1"
+
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+  runtime_type = "io.containerd.kata.v2"
+\`\`\`
+
+The runtime_type string identifies the containerd shim binary. containerd-shim-runsc-v1 for gVisor, containerd-shim-kata-v2 for kata.`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
+      {
+        title: `RuntimeClass Object and Pod Selection`,
+        description: `A RuntimeClass object maps a name to a runtime handler configured in containerd. The handler name must match exactly what is configured in the containerd runtime configuration.
+
+\`\`\`yaml
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+scheduling:
+  nodeSelector:
+    runtime: gvisor
+  tolerations:
+    - effect: NoSchedule
+      key: runtime
+      value: gvisor
+      operator: Equal
+overhead:
+  podFixed:
+    memory: "120Mi"
+    cpu: "250m"
+\`\`\`
+
+Key fields:
+  handler: the handler name as configured in containerd's config.toml
+  scheduling.nodeSelector: automatically applied to pods using this RuntimeClass, ensuring they are scheduled on nodes that have the runtime installed
+  scheduling.tolerations: automatically applied to pods, allowing them to land on nodes tainted for that runtime
+  overhead.podFixed: resource overhead the scheduler adds to the pod's resource requests when computing node fitness — accounts for the VM memory or runsc process memory
+
+To use the RuntimeClass in a pod:
+
+\`\`\`yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-workload
+spec:
+  runtimeClassName: gvisor
+  containers:
+    - name: app
+      image: nginx
+\`\`\`
+
+The kubelet sees the runtimeClassName, looks up the RuntimeClass, finds the handler name, and passes it to containerd as the runtime handler for this sandbox. If the named RuntimeClass does not exist or the handler is not configured in containerd, the pod fails to start with a RuntimeClass not found or handler not found error.
+
+Multi-runtime cluster strategy: run nodes in multiple node pools — one pool with runc for standard workloads, one pool with gVisor for sensitive data processing, one pool with kata-containers for multi-tenant SaaS. Use RuntimeClass scheduling fields to route pods automatically.`,
+        image: `/diagrams/devops/g2-k8s-resources.png`,
+      },
+      {
+        title: `Quick-fire Interview Q&A`,
+        description: `What is the difference between containerd and runc?
+containerd is the high-level runtime that manages image pulling, storage, and pod lifecycle via the CRI gRPC API. runc is the low-level OCI runtime that actually creates the container process using Linux namespaces and cgroups. containerd delegates to runc (or another runtime) via a containerd shim process.
+
+Why would you use gVisor instead of runc?
+When you need stronger isolation than Linux namespaces provide but lighter weight than full VMs. gVisor intercepts syscalls in user space so the host kernel is exposed to far fewer attack surface vectors. Ideal for running untrusted third-party code, multi-tenant processing, or anything where a container escape to the host kernel is unacceptable.
+
+What is the performance tradeoff of kata-containers?
+Startup time: kata takes 200-500ms to start vs under 10ms for runc (VM boot overhead). Memory: each pod has a separate kernel consuming 40-80MB. CPU: near-native for compute-bound workloads after startup; slight overhead for I/O operations because the virtio I/O path adds a layer.
+
+What happens if you specify a runtimeClassName that does not exist?
+The pod is created in the API but remains in Pending state. The kubelet tries to start the pod, finds no RuntimeClass object with that name, and generates a FailedCreate event. The error message is RuntimeClass not found.
+
+How does RuntimeClass interact with node taints?
+The RuntimeClass scheduling.tolerations field automatically adds tolerations to all pods using that class. This is how you can taint nodes with runtime=kata:NoSchedule and have kata-class pods automatically tolerate the taint without users having to specify tolerations in every pod spec.
+
+What is SystemdCgroup and why does it matter?
+containerd's SystemdCgroup = true setting in config.toml makes containerd manage container cgroups through systemd rather than directly. The kubelet's cgroupDriver must match — both must use systemd or both must use cgroupfs. A mismatch causes kubelet to reject nodes or pods to fail with cgroup setup errors.`,
+        image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
+      },
+    ],
+    introduction: `RuntimeClass is the Kubernetes primitive that exposes the security/performance knob for container isolation. Most clusters run everything with runc because it is fast and well-understood, but this is a one-size-fits-all choice that is increasingly inadequate as Kubernetes is used for more sensitive workloads. RuntimeClass provides the API to make different isolation choices per workload without changing the deployment interface.
+
+The security isolation problem that RuntimeClass solves is real: Linux container namespaces isolate processes from each other but they share the host kernel. A kernel exploit (CVE-2019-5736 runc escape, for example) can allow a container to gain root on the host. gVisor's user-space kernel and kata-containers' VM boundary provide additional layers of isolation that make kernel exploits much harder to leverage.
+
+The containerd 2.x series (the current major version as of 2025) made significant changes to the default containerd configuration, including the default containerd.sock path and the format of config.toml. When setting up new clusters, always check the containerd version because configuration examples from containerd 1.x may not work verbatim. The SystemdCgroup = true setting in /etc/containerd/config.toml is essential for any cluster using cgroup v2 — without it, the kubelet and containerd will disagree about which cgroup hierarchy to use and pods will fail in hard-to-diagnose ways.`,
+    whenToUse: [
+      `When running multi-tenant workloads where different tenants' pods should not be able to affect each other even via kernel exploits`,
+      `When deploying sensitive data processing workloads (PII, financial data, health data) that require stronger isolation guarantees than Linux namespaces`,
+      `When adding gVisor or kata-containers to an existing cluster and troubleshooting why pods with a runtimeClassName fail to start`,
+      `When evaluating the performance cost of different isolation levels for a latency-sensitive application`,
+    ],
+    keyConcepts: [
+      {
+        term: `containerd Shim Architecture`,
+        definition: `containerd does not call runc or gVisor directly. Instead, for each pod sandbox it starts a shim process — a small binary that acts as an adapter between containerd and the low-level runtime. The shim process persists for the lifetime of the sandbox and handles the runtime's lifecycle, I/O forwarding, and exit code reporting.
+
+Shim binaries follow a naming convention: containerd-shim-<runtime>-<version>. For runc this is containerd-shim-runc-v2. For gVisor this is containerd-shim-runsc-v1. For kata this is containerd-shim-kata-v2.
+
+The shim architecture means that if containerd itself is upgraded or restarted, running pods are not affected — the shim processes continue managing their sandboxes independently.
+
+\`\`\`bash
+# See shim processes on a node
+ps aux | grep containerd-shim
+
+# Check which handler containerd knows about
+crictl info | jq .config.containerd.runtimes
+\`\`\`
+
+The handler name in the RuntimeClass spec must exactly match the key in the containerd config.toml runtimes section.`,
+      },
+    ],
+    references: [
+      `https://kubernetes.io/docs/concepts/containers/runtime-class/`,
+      `https://gvisor.dev/docs/`,
+      `https://katacontainers.io/docs/`,
+      `https://containerd.io/docs/`,
+    ],
+  },
+
+  {
+    id: 'kubernetes-native-sidecars',
+    title: 'Kubernetes Native Sidecar Containers',
+    icon: 'container',
+    color: '#059669',
+    questions: 3,
+    description: `Native sidecar containers (stable in Kubernetes 1.29) solve a long-standing lifecycle problem: regular sidecar containers in the main containers list start and stop in an arbitrary order, causing proxy sidecars like Envoy to not be ready when the app starts, or log collectors to die before flushing the last batch. Native sidecars are init containers with restartPolicy: Always — they start before main containers and are guaranteed to terminate after them.`,
+    visualizations: [
+      {
+        title: `🔄 Sidecar Lifecycle: Old Pattern vs Native`,
+        description: `The lifecycle problem with traditional sidecar patterns is that Kubernetes provides no ordering guarantees between containers in the main containers list. All containers in a pod start roughly simultaneously, which causes two categories of failure:
+
+Startup ordering failure: A service mesh proxy (Envoy, Linkerd proxy) must be running before the application container can make outbound connections. With regular containers this is not guaranteed. Teams work around this with initContainers that sleep until the proxy socket is ready, or by having the app retry connections. Both are fragile.
+
+Shutdown ordering failure: A log collection sidecar (Fluent Bit, Filebeat) must keep running until the application has flushed its last log lines and the application container has exited. With regular containers the log sidecar may terminate first, losing the last log batch. This is why Kubernetes Jobs historically lost logs at completion.
+
+Native sidecar pattern (K8s 1.29+ stable):
+  Declare the sidecar as an initContainer with restartPolicy: Always
+  The kubelet starts all native sidecars before starting main containers
+  Native sidecars are kept running for the lifetime of the pod
+  The kubelet does not terminate the pod until all main containers have exited
+  Then the kubelet sends SIGTERM to the native sidecars
+  Native sidecars receive a graceful shutdown period to flush state
+
+\`\`\`yaml
+apiVersion: v1
+kind: Pod
+spec:
+  initContainers:
+    - name: log-collector
+      image: fluent/fluent-bit:latest
+      restartPolicy: Always
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log/app
+  containers:
+    - name: app
+      image: myapp:latest
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log/app
+\`\`\``,
+        image: `/diagrams/devops/g2-k8s-resources.png`,
+      },
+      {
+        title: `Service Mesh and Log Collector Use Cases`,
+        description: `The two primary use cases for native sidecars are service mesh proxies and log/metrics collectors. Both require the same lifecycle guarantees: start before main containers, terminate after main containers.
+
+Service mesh proxy use case (Istio/Linkerd):
+Without native sidecars, Istio injects istio-proxy as a regular container alongside the app. The app may try to make outbound HTTP calls before istio-proxy has opened its listening ports, causing connection refused errors at startup. Istio works around this with a hold_application_until_proxy_starts setting, but this is an application-specific workaround.
+
+With native sidecars, the proxy can be injected as an initContainer with restartPolicy: Always. The kubelet guarantees that the proxy's readinessProbe passes before starting the app container.
+
+\`\`\`yaml
+initContainers:
+  - name: istio-proxy
+    image: istio/proxyv2:1.22
+    restartPolicy: Always
+    readinessProbe:
+      httpGet:
+        path: /healthz/ready
+        port: 15021
+      initialDelaySeconds: 1
+      periodSeconds: 2
+\`\`\`
+
+Log collector use case (Fluent Bit, Fluentd):
+Kubernetes Job pods historically lost their last log lines. The job container exits, Kubernetes terminates all containers, and the log collector is killed before it can flush the final buffer. With native sidecars the flow is: job container exits, kubelet sends SIGTERM to log collector, log collector flushes buffer, log collector exits, pod terminates.
+
+Metrics sidecar pattern:
+Sidecar containers that expose Prometheus metrics from a main app that does not natively expose metrics also benefit. The metrics exporter runs alongside the app and is ready before the app registers with the service mesh.
+
+Resource sizing note: native sidecars count toward the pod's resource requests. Include the sidecar's CPU and memory in capacity planning.`,
+        image: `/diagrams/devops/g1-k8s-arch.png`,
+      },
+      {
+        title: `Quick-fire Interview Q&A`,
+        description: `What is a native sidecar container in Kubernetes?
+An initContainer with restartPolicy: Always. Unlike regular init containers (which run to completion before any main containers start), a native sidecar starts before main containers, keeps running alongside them for the pod lifetime, and terminates after all main containers have exited.
+
+Before native sidecars, how did Istio handle proxy startup ordering?
+Workarounds: a postStart lifecycle hook on the proxy container that blocks the app container from starting, or the PILOT_HOLD_APPLICATION_UNTIL_PROXY_STARTS Istio feature flag, or custom init containers that sleep-poll the proxy socket. All are fragile. Native sidecars replace them cleanly.
+
+What is the key lifecycle difference between a regular initContainer and a native sidecar?
+Regular init containers: run sequentially, must exit successfully before the next one starts, all must complete before main containers start. Native sidecars: run like init containers during startup (start before main containers, in order), but have restartPolicy: Always so they are kept running for the pod's lifetime. They receive termination signals after all main containers have exited.
+
+How does a native sidecar affect resource scheduling?
+The kubelet includes the native sidecar's resource requests in the pod's effective resource request. The scheduler uses the pod's total effective request when finding a fitting node — you must budget CPU and memory for the sidecar.
+
+Can you have multiple native sidecars in one pod?
+Yes. Multiple initContainers with restartPolicy: Always start in order (waiting for each prior one's readiness probe to pass if a readinessProbe is defined), and all are running before any main container starts.
+
+When was native sidecar support stable in Kubernetes?
+Kubernetes 1.29 (released December 2023) moved native sidecar containers to beta. Kubernetes 1.31 (released 2024) made them stable. The feature gate SidecarContainers is enabled by default from 1.29+.`,
+        image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
+      },
+    ],
+    introduction: `Native sidecar containers solve one of the most persistent operational pain points in the sidecar pattern: the lack of guaranteed lifecycle ordering between the proxy/collector and the main application. For years, engineers running Istio, Linkerd, Fluent Bit, and similar tools built fragile workarounds using init containers, shell loops, and sleep commands. Native sidecars (stable in Kubernetes 1.29) eliminate these workarounds with a single API field: restartPolicy: Always on an initContainer.
+
+The simplicity of the API belies how significant the change is. Prior to native sidecars, the sidecar pattern was not a first-class Kubernetes concept — it was an operator convention with no lifecycle guarantees. This caused a spectrum of bugs ranging from occasional connection refused errors at app startup (when the proxy was not yet ready) to the systematic last-log-line loss in Kubernetes Jobs (when the log collector was terminated before flushing its buffer).
+
+Native sidecars make Kubernetes' sidecar support explicit and reliable. The kubelet's understanding of initContainers with restartPolicy: Always means the runtime correctly orders startups and shutdowns without any application-level coordination. This is particularly important for platform teams that inject sidecars via MutatingAdmissionWebhook — the injection is transparent to application developers and now the lifecycle ordering is also correct transparently.`,
+    whenToUse: [
+      `When troubleshooting service mesh proxy startup failures where the app gets connection refused because the proxy is not yet ready`,
+      `When Kubernetes Jobs are losing the last log batch because the log collector sidecar exits before flushing`,
+      `When designing a new sidecar injection pattern via MutatingAdmissionWebhook and wanting lifecycle guarantees without workarounds`,
+      `When evaluating K8s 1.29+ features for upgrading an existing cluster and assessing migration from manual sidecar ordering workarounds`,
+    ],
+    keyConcepts: [
+      {
+        term: `restartPolicy on initContainers`,
+        definition: `The restartPolicy field is now valid on initContainers (K8s 1.29+). Setting restartPolicy: Always on an initContainer converts it to a native sidecar. The other two values (OnFailure and Never, the defaults for regular pods) cause the initContainer to behave like a traditional init container that must succeed before proceeding.
+
+A native sidecar (restartPolicy: Always initContainer):
+  Starts in order with other initContainers
+  Does NOT have to exit before the next initContainer or main containers start
+  If the native sidecar's readinessProbe passes, the kubelet starts the next init container
+  Is restarted if it crashes (like a main container with restartPolicy: Always)
+  Is NOT sent SIGTERM until all main containers have exited
+
+\`\`\`yaml
+initContainers:
+  - name: envoy-proxy
+    image: envoyproxy/envoy:v1.32
+    restartPolicy: Always
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 9901
+      initialDelaySeconds: 1
+      periodSeconds: 1
+    lifecycle:
+      preStop:
+        exec:
+          command: ["/bin/sh", "-c", "sleep 5"]
+\`\`\`
+
+The preStop hook on the native sidecar is important in mesh scenarios: you may want the proxy to continue accepting traffic for a few seconds after main container exit to drain in-flight connections before the proxy itself shuts down.`,
+      },
+    ],
+    references: [
+      `https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/`,
+      `https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/`,
+      `https://github.com/kubernetes/enhancements/issues/753`,
     ],
   },
 
