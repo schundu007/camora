@@ -8,6 +8,7 @@ import BootProgress from './BootProgress';
 import IdePane from './IdePane';
 import ToolPickerPanel from './ToolPickerPanel';
 import SavedVmsPanel from './SavedVmsPanel';
+import ClusterView from './ClusterView';
 
 function formatTime(seconds) {
   if (!seconds && seconds !== 0) return '60:00';
@@ -57,6 +58,24 @@ export default function PlaygroundShell() {
   const isAmber = timeRemaining > 0 && timeRemaining < 300;
   const isRed = timeRemaining > 0 && timeRemaining < 60;
   const timerColor = isRed ? '#ef4444' : isAmber ? '#f59e0b' : 'rgba(255,255,255,0.5)';
+
+  const CLUSTER_STEP_LABELS = {
+    container_ready: 'Provisioning 3 nodes...',
+    env_setup:       'Configuring etcd cluster...',
+    ide_start:       'Starting code editor...',
+    terminal_ready:  'Cluster ready — 3 nodes online',
+  };
+
+  const isClusterEnv = activeEnv.id === 'etcd-cluster';
+  const displaySteps = isClusterEnv
+    ? bootSteps.map(s =>
+        CLUSTER_STEP_LABELS[s.step]
+          ? { ...s, label: CLUSTER_STEP_LABELS[s.step] }
+          : s
+      )
+    : bootSteps;
+
+  const isClusterSession = !!session?.isCluster;
 
   const handleEnd = useCallback(async () => {
     const ok = await confirm({ message: 'End session? The container will be destroyed.', tone: 'danger' });
@@ -135,7 +154,7 @@ export default function PlaygroundShell() {
             </div>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <BootProgress steps={bootSteps} totalSteps={4} environment={activeEnv.id} />
+            <BootProgress steps={displaySteps} totalSteps={4} environment={activeEnv.id} />
           </div>
         </>
       )}
@@ -199,7 +218,7 @@ export default function PlaygroundShell() {
             <TabButton
               active={activeTab === 'terminal'}
               onClick={() => setActiveTab('terminal')}
-              label={activeEnv.id === 'ubuntu' ? 'ubuntu-01' : activeEnv.id === 'docker' ? 'docker-01' : activeEnv.id === 'agent-sandbox' ? 'agent-01' : 'shell-01'}
+              label={activeEnv.id === 'ubuntu' ? 'ubuntu-01' : activeEnv.id === 'docker' ? 'docker-01' : activeEnv.id === 'agent-sandbox' ? 'agent-01' : activeEnv.id === 'etcd-single' ? 'etcd-01' : activeEnv.id === 'etcd-cluster' ? 'etcd-cluster' : 'shell-01'}
               icon="$"
               mono
               onReconnect={activeTab === 'terminal' ? () => setTermKey(k => k + 1) : null}
@@ -214,22 +233,31 @@ export default function PlaygroundShell() {
 
           {/* Content pane */}
           <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-            {/* IDE pane */}
-            <div style={{ position: 'absolute', inset: 0, display: activeTab === 'ide' ? 'block' : 'none' }}>
-              <IdePane ideUrl={ideUrl} wsUrl={wsUrl} />
-            </div>
-            {/* Terminal pane */}
-            <div style={{ position: 'absolute', inset: 0, display: activeTab === 'terminal' ? 'block' : 'none', background: '#0a0a0a' }}>
-              {wsUrl && (
-                <TerminalPane
-                  key={termKey}
-                  ref={termRef}
-                  wsUrl={wsUrl}
-                  initialFontSize={fontSize}
-                  onExit={destroySession}
-                />
-              )}
-            </div>
+            {isClusterSession ? (
+              /* Cluster view — replaces single IDE + terminal tabs */
+              <div style={{ position: 'absolute', inset: 0 }}>
+                <ClusterView session={session} onClose={() => setMinimized(true)} />
+              </div>
+            ) : (
+              <>
+                {/* IDE pane */}
+                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'ide' ? 'block' : 'none' }}>
+                  <IdePane ideUrl={ideUrl} wsUrl={wsUrl} />
+                </div>
+                {/* Terminal pane */}
+                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'terminal' ? 'block' : 'none', background: '#0a0a0a' }}>
+                  {wsUrl && (
+                    <TerminalPane
+                      key={termKey}
+                      ref={termRef}
+                      wsUrl={wsUrl}
+                      initialFontSize={fontSize}
+                      onExit={destroySession}
+                    />
+                  )}
+                </div>
+              </>
+            )}
           </div>
           {saveDialogOpen && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
