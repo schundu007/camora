@@ -62,7 +62,7 @@ export function usePlaygroundSession() {
   const stopAll = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
-    if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+    if (sseRef.current) { sseRef.current.abort(); sseRef.current = null; }
   }, []);
 
   const startTick = useCallback((expiresAt) => {
@@ -98,54 +98,82 @@ export function usePlaygroundSession() {
   }, [startTick]);
 
   const subscribeBootEvents = useCallback((sessionId, onReady) => {
-    if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+    // Cancel any previous stream
+    if (sseRef.current) { sseRef.current.abort(); sseRef.current = null; }
+
+    const ac = new AbortController();
+    sseRef.current = ac;
 
     const token = getStoredToken() || '';
-    const url = `${API_URL}/api/v1/playground/sessions/${sessionId}/events?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
-    sseRef.current = es;
+    const url = `${API_URL}/api/v1/playground/sessions/${sessionId}/events`;
 
-    es.onmessage = (e) => {
-      if (!mountedRef.current) return;
+    (async () => {
       try {
-        const event = JSON.parse(e.data);
-        if (event.type === 'ready') {
-          es.close();
-          sseRef.current = null;
-          onReady();
-        } else if (event.step) {
-          setBootSteps(prev => {
-            const existing = prev.findIndex(s => s.step === event.step);
-            if (existing >= 0) {
-              const next = [...prev];
-              next[existing] = event;
-              return next;
-            }
-            return [...prev, event];
-          });
-        }
-      } catch {}
-    };
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'text/event-stream' },
+          credentials: 'include',
+          signal: ac.signal,
+        });
 
-    es.onerror = () => {
-      if (!mountedRef.current) return;
-      es.close();
-      sseRef.current = null;
-      // Fallback: if SSE fails, poll for readiness
-      const check = setInterval(async () => {
-        try {
-          const res = await apiFetch(`/api/v1/playground/sessions/${sessionId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.status === 'ready' || data.status === 'active') {
-              clearInterval(check);
-              onReady();
-            }
+        if (!res.ok || !res.body) throw new Error(`SSE ${res.status}`);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+
+          // SSE messages are separated by double newline
+          const parts = buf.split('\n\n');
+          buf = parts.pop(); // keep incomplete last chunk
+
+          for (const part of parts) {
+            const dataLine = part.split('\n').find(l => l.startsWith('data: '));
+            if (!dataLine) continue;
+            try {
+              const event = JSON.parse(dataLine.slice(6));
+              if (!mountedRef.current) return;
+              if (event.type === 'ready') {
+                ac.abort();
+                sseRef.current = null;
+                onReady();
+                return;
+              } else if (event.step) {
+                setBootSteps(prev => {
+                  const existing = prev.findIndex(s => s.step === event.step);
+                  if (existing >= 0) {
+                    const next = [...prev];
+                    next[existing] = event;
+                    return next;
+                  }
+                  return [...prev, event];
+                });
+              }
+            } catch {}
           }
-        } catch {}
-      }, 2000);
-      setTimeout(() => clearInterval(check), 3 * 60 * 1000);
-    };
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        if (!mountedRef.current) return;
+        // Fallback: poll session status until ready
+        const check = setInterval(async () => {
+          try {
+            const r = await apiFetch(`/api/v1/playground/sessions/${sessionId}`);
+            if (r.ok) {
+              const data = await r.json();
+              if (data.status === 'ready' || data.status === 'active') {
+                clearInterval(check);
+                onReady();
+              }
+            }
+          } catch {}
+        }, 5000);
+        setTimeout(() => clearInterval(check), 3 * 60 * 1000);
+      }
+    })();
   }, []);
 
   // Restore session on mount
