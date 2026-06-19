@@ -121,6 +121,7 @@ export const devopsTopicCategoryMap = {
   // Orchestration — architecture → core objects → cluster internals → setup → workloads → networking → security → scaling → operations → advanced
   'kubernetes-architecture':        'orchestration',
   'k8s-core-resources':             'orchestration',
+  'kubernetes-services':            'orchestration',
   'kubernetes-the-hard-way':        'orchestration',
   'kubernetes-storage':             'orchestration',
   'kubernetes-pod-scheduling':      'orchestration',
@@ -20940,6 +20941,180 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
       'https://kubernetes.io/docs/concepts/services-networking/service/',
       'https://kubernetes.io/docs/concepts/storage/persistent-volumes/',
       'https://kubernetes.io/docs/concepts/policy/resource-quotas/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-services',
+    title: 'Kubernetes Services',
+    icon: 'globe',
+    color: '#0ea5e9',
+    questions: 12,
+    description: 'Pods are ephemeral — they restart with new IPs. Services provide a stable virtual endpoint (ClusterIP) backed by a label selector that survives pod churn. This topic covers the full lifecycle: how kube-proxy implements ClusterIP via iptables DNAT, all four service types (ClusterIP, NodePort, LoadBalancer, ExternalName), EndpointSlices, headless services, and the externalTrafficPolicy trade-off.',
+    topics: [
+      {
+        title: 'Why Services Exist — The Pod IP Problem',
+        image: '/diagrams/devops/k8s-services-flow.png',
+        content: `Pods are temporary. When a Pod restarts — due to a node failure, OOM kill, rolling update, or reschedule — it gets a new IP address. No component in Kubernetes guarantees IP stability for a Pod. If you hardcode a Pod IP in your application or config, that reference breaks the moment the Pod is replaced.
+
+Services solve this with a stable virtual IP called a ClusterIP. A Service is a Kubernetes object that selects a set of Pods via a label selector and presents them behind a single stable address. The Service IP never changes for the lifetime of the Service object — only the set of backing Pods behind it changes.
+
+The traffic path looks like this:
+1. User sends a request to your application.
+2. Request hits the Service IP / DNS name (e.g., my-service.default.svc.cluster.local).
+3. kube-proxy on the node intercepts the packet and rewrites the destination IP to one of the healthy Pod IPs (DNAT via iptables or IPVS).
+4. The Pod handles the request. If a Pod fails and a new one starts with a new IP, the EndpointSlice controller updates kube-proxy automatically.
+5. From the caller's perspective, the Service IP never changed — application remains available.
+
+kube-proxy watches the Kubernetes API for Service and EndpointSlice changes. In the default iptables mode, it programs a chain of PREROUTING rules: when a packet hits the ClusterIP, iptables randomly selects one of the ready Pod IPs and rewrites the destination. In IPVS mode, it creates a virtual server with a round-robin (or other) scheduling algorithm, which performs better at >1,000 Services because IPVS uses a hash table rather than a linear iptables rule chain.
+
+The label selector is the key mechanism. A Service like selector: app: frontend matches every Pod that has the label app=frontend, regardless of which node it runs on, regardless of when it was created. Add a new replica with kubectl scale and it becomes a backend within seconds — no Service change required.`,
+        codeExample: `# Create a simple ClusterIP service for a deployment
+kubectl expose deployment my-app --port=80 --target-port=3000 --name=my-service
+
+# Equivalent manifest
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app          # matches all Pods with this label
+  ports:
+    - port: 80           # Service port (what callers connect to)
+      targetPort: 3000   # Pod port (where your app listens)
+  type: ClusterIP        # default — internal only
+
+# Check what Pods the Service is routing to
+kubectl get endpoints my-service
+kubectl get endpointslices -l kubernetes.io/service-name=my-service
+
+# Test connectivity from inside the cluster
+kubectl run test --rm -it --image=busybox -- wget -qO- http://my-service:80
+
+# DNS resolution — every Service gets a DNS name
+# Format: <service>.<namespace>.svc.cluster.local
+nslookup my-service.default.svc.cluster.local`,
+      },
+      {
+        title: 'Service Types — ClusterIP, NodePort, LoadBalancer',
+        image: '/diagrams/devops/k8s-service-types.png',
+        content: `Kubernetes defines four Service types, each exposing the backing Pods at a different network scope.
+
+ClusterIP (default). Allocates a virtual IP from the cluster's service CIDR (typically 10.96.0.0/12). Reachable only from within the cluster. Use for: internal microservice-to-microservice calls, databases, caches. Most Services are ClusterIP — only expose externally what needs to be external.
+
+NodePort. Builds on ClusterIP and additionally opens a static port (30000–32767 by default) on every node's external IP. Traffic to any-node-IP:nodePort is forwarded to the Service's ClusterIP and then to a Pod. Use for: dev/test access, bare-metal clusters without a cloud load balancer, on-prem environments with an external HA-proxy in front of nodes. Drawback: callers must know a node IP, nodes are a single point of failure if not load-balanced externally, and the high port range may conflict with firewall rules.
+
+LoadBalancer. Builds on NodePort and instructs the cloud controller manager (CCM) to provision an external load balancer (AWS ELB/NLB, GCP Cloud Load Balancer, Azure Load Balancer). The external LB is configured to forward traffic to the NodePort on all nodes. Once provisioned, the Service gets an EXTERNAL-IP. Use for: production ingress for individual services, HTTPS with cloud TLS termination. Drawback: each LoadBalancer Service provisions its own cloud LB — expensive at scale. Use an Ingress controller (one LB for many routes) instead when you have many HTTP services.
+
+ExternalName. A DNS CNAME redirect — no selector, no endpoints, no proxying. The cluster DNS returns a CNAME record pointing to the externalName value. Use for: referencing external databases or APIs with a cluster-internal DNS alias so you can swap the target without changing application config (e.g., change the Service spec instead of 50 ConfigMaps).
+
+Headless Service (clusterIP: None). Returns all ready Pod IPs directly from DNS (A records) instead of a single ClusterIP. StatefulSets use this for stable per-Pod DNS: pod-0.my-service.namespace.svc.cluster.local. Also used for client-side load balancing — the application receives all Pod IPs and makes its own routing decisions (e.g., gRPC clients, database drivers that need to connect to a specific replica).`,
+        codeExample: `# NodePort — accessible at <any-node-ip>:30080
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: my-app
+  ports:
+    - port: 80
+      targetPort: 3000
+      nodePort: 30080    # omit to get a random port in 30000-32767
+
+# LoadBalancer — cloud provisions external LB automatically
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-lb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb  # NLB instead of CLB
+spec:
+  type: LoadBalancer
+  selector:
+    app: my-app
+  ports:
+    - port: 80
+      targetPort: 3000
+
+kubectl get svc my-lb   # wait for EXTERNAL-IP column to populate
+
+# ExternalName — DNS alias to external resource
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-database
+spec:
+  type: ExternalName
+  externalName: prod-db.us-east-1.rds.amazonaws.com
+
+# Headless — DNS returns all Pod IPs
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-headless
+spec:
+  clusterIP: None
+  selector:
+    app: my-stateful-app
+  ports:
+    - port: 5432`,
+      },
+      {
+        title: 'EndpointSlices, externalTrafficPolicy, and Source IP',
+        content: `EndpointSlices replaced the legacy Endpoints object for scale reasons. A single Endpoints object holds all Pod IPs for a Service as one etcd key. At ~1,000 backing Pods, that object approaches the 1MB etcd value limit. EndpointSlices shard the backing Pods into multiple objects of up to 100 entries each. The kube-proxy and other consumers watch EndpointSlices instead. This is transparent to Service users but matters if you're debugging at the API level — use kubectl get endpointslices, not kubectl get endpoints, on large clusters.
+
+externalTrafficPolicy controls what happens to the source IP when traffic enters via NodePort or LoadBalancer.
+
+Cluster (default). The receiving node proxies the packet to any ready Pod, even if it's on another node. The source IP the Pod sees is the node's IP, not the original client IP. This loses the real client IP but achieves true load balancing across all Pods.
+
+Local. Traffic is only forwarded to Pods on the same node that received the packet. The source IP is preserved — the Pod sees the real client IP. But if a node has no local Pods, those health check probes fail and the cloud LB stops sending traffic to that node. This creates imbalanced load distribution — nodes with more Pods receive more traffic. Use Local when you need real IP (WAF, geo-routing, audit logging) and accept the trade-off.
+
+Session affinity. Add sessionAffinity: ClientIP to the Service spec to route a client IP to the same Pod for up to sessionAffinityConfig.clientIP.timeoutSeconds (default 10800 = 3 hours). Implemented in iptables via recent module. Useful for stateful connections that don't use a session store.`,
+        codeExample: `# Check EndpointSlices for a service
+kubectl get endpointslices -l kubernetes.io/service-name=my-service -o wide
+
+# externalTrafficPolicy: Local — preserves client source IP
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-lb-local
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local   # preserve client IP, no cross-node hop
+  selector:
+    app: my-app
+  ports:
+    - port: 80
+      targetPort: 3000
+
+# Session affinity — sticky sessions by client IP
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-sticky
+spec:
+  selector:
+    app: my-app
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+  ports:
+    - port: 80
+      targetPort: 3000
+
+# Debug: which node is handling traffic for Local policy?
+kubectl get pods -o wide -l app=my-app
+# Nodes without pods won't receive LB traffic`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/services-networking/service/',
+      'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/',
+      'https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/',
     ],
   },
 
