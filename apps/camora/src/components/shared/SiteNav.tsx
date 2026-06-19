@@ -123,10 +123,10 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             )}
             {isAuthenticated && (
               <Link
-                to="/capra/playground"
+                to="/playground"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors no-underline"
                 style={{
-                  background: isActive('/capra/playground') ? 'rgba(212,160,67,0.22)' : 'rgba(212,160,67,0.10)',
+                  background: isActive('/playground') ? 'rgba(212,160,67,0.22)' : 'rgba(212,160,67,0.10)',
                   border: '1px solid rgba(212,160,67,0.35)',
                   color: '#e8c46a',
                 }}
@@ -215,7 +215,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 <div className="mt-2 pt-3 border-t border-[var(--border)] flex flex-col gap-1">
                   {isAuthenticated && (
                     <Link
-                      to="/capra/playground"
+                      to="/playground"
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2 py-2.5 text-[14px] font-bold no-underline"
                       style={{ color: '#e8c46a' }}
