@@ -9,6 +9,7 @@ import {
 import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
 import { execScriptInContainerStream, execInContainer } from '../services/playground/nomadClient.js';
 import { parseClusterList, getExecContainer } from '../services/playground/clusterState.js';
+import { validateExercise } from '../services/k8s/validator.js';
 import { query } from '../config/database.js';
 
 function isOwner(email) {
@@ -301,6 +302,33 @@ playgroundSessionsRouter.delete('/:id', async (req, res) => {
     if (err.status === 404) return res.status(404).json({ error: 'Session not found' });
     console.error('[PlaygroundSessions] destroySession error:', err.message);
     return res.status(500).json({ error: 'Failed to destroy session' });
+  }
+});
+
+playgroundSessionsRouter.post('/:id/validate-exercise', async (req, res) => {
+  const { exerciseId } = req.body;
+  if (!exerciseId) return res.status(400).json({ error: 'exerciseId required' });
+  const session = await getSession(req.params.id);
+  if (!session || session.user_id !== req.user.id) return res.status(404).end();
+  const K8S_ENVS = new Set(['k8s-single', 'k8s-multi']);
+  if (!K8S_ENVS.has(session.environment)) return res.status(400).json({ error: 'Not a k8s session' });
+  try {
+    const exRes = await query('SELECT * FROM k8s_exercises WHERE id=$1', [exerciseId]);
+    if (!exRes.rows.length) return res.status(404).json({ error: 'Exercise not found' });
+    const exercise = exRes.rows[0];
+    const containerId = getExecContainer(session);
+    if (!containerId) return res.status(400).json({ error: 'Cannot resolve container' });
+    const result = await validateExercise(containerId, exercise.spec);
+    if (result.pass) {
+      await query(
+        'INSERT INTO k8s_progress(user_id,exercise_id) VALUES($1,$2) ON CONFLICT DO NOTHING',
+        [req.user.id, exerciseId],
+      );
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error('[PlaygroundSessions] validate-exercise error:', err.message);
+    return res.status(500).json({ error: 'Validation failed' });
   }
 });
 
