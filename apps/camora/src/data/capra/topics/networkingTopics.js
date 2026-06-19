@@ -1034,4 +1034,1370 @@ Database connection pool exhausted — requests queue waiting for a connection.
       'https://www.brendangregg.com/usemethod.html',
     ],
   },
+
+  // ─── DNS ───────────────────────────────────────────────────────────────────
+  {
+    id: 'dnssec',
+    title: 'DNSSEC',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 5,
+    description: 'DNSSEC chain of trust, ZSK/KSK key pairs, RRSIG/DNSKEY/DS records, validation process, and real-world adoption challenges.',
+    visualizations: [],
+    introduction: `DNSSEC (Domain Name System Security Extensions) adds cryptographic authentication to DNS, protecting against cache poisoning and man-in-the-middle attacks. Without DNSSEC, a resolver has no way to verify that the answer it received for a query actually came from the authoritative nameserver and was not tampered with in transit. The 2008 Kaminsky attack demonstrated how DNS cache poisoning could be weaponized at scale, accelerating DNSSEC adoption.
+
+DNSSEC does not encrypt DNS traffic — it only signs DNS responses so resolvers can verify authenticity. Each DNS zone signs its resource records with a private key, and resolvers validate those signatures using the corresponding public key, which is itself authenticated by the parent zone.
+
+The trust chain starts at the DNS root (managed by IANA). The root zone signs the keys for TLDs (.com, .org), TLDs sign the keys for second-level domains, and so on down the hierarchy. A validating resolver only needs to trust the root's public key (the Root Trust Anchor, updated via RFC 5011) to validate any signed zone.
+
+DNSSEC introduces several new record types: DNSKEY (public keys), RRSIG (cryptographic signatures over resource record sets), DS (Delegation Signer, a hash linking parent to child zone), and NSEC/NSEC3 (authenticated denial of existence for NXDOMAIN responses).
+
+In practice, DNSSEC adoption remains incomplete. Many registrars support it, but configuration complexity, key rollover procedures, and the risk of SERVFAIL on misconfiguration cause many operators to skip it. High-value domains (banking, government) are more likely to be signed. Cloud DNS services like Route 53 and Cloud DNS support DNSSEC signing. DNSSEC does not protect against DDoS amplification (it makes responses larger), and it cannot prevent compromised authoritative servers from serving false signed records.`,
+    whenToUse: [
+      'Evaluating whether a domain is properly secured against cache poisoning and BGP hijacking attacks.',
+      'Debugging SERVFAIL errors caused by DNSSEC validation failures at the resolver.',
+      'Configuring a new domain on a registrar that supports DS record submission.',
+      'Designing a certificate issuance pipeline using DANE (TLSA records anchored by DNSSEC).',
+      'Auditing DNS security posture for compliance frameworks that require authenticated DNS.',
+    ],
+    keyConcepts: [
+      {
+        term: 'Zone Signing Key (ZSK)',
+        definition: `The ZSK is the key pair used to sign individual resource record sets (RRSets) within a zone. The private ZSK signs each RRSIG record; the public ZSK is published in the zone as a DNSKEY record. ZSKs are rotated frequently (monthly to quarterly) because they are used heavily. Rollover is done using either pre-publication (publish new key before using it) or double-signature (sign with both keys simultaneously) methods.`,
+      },
+      {
+        term: 'Key Signing Key (KSK)',
+        definition: `The KSK signs only the DNSKEY RRSet (which contains the public ZSK). The KSK's public key hash is submitted to the parent zone as a DS record, anchoring the chain of trust. KSKs are rotated less frequently (annually) because changing them requires coordination with the parent zone registrar to update the DS record. A KSK rollover that fails to update the DS record in the parent zone will cause SERVFAIL for all validators.`,
+      },
+      {
+        term: 'DS Record (Delegation Signer)',
+        definition: `A DS record lives in the parent zone (e.g., .com) and contains a hash of the child zone's KSK public key. When a resolver queries child.example.com and receives a referral, it fetches the DS record from the parent and compares it to the DNSKEY in the child zone. A match means the child zone's keys are authenticated by the parent. DS records use algorithm numbers (e.g., 13 = ECDSA P-256 SHA-256, 8 = RSA SHA-256) to identify the signing algorithm.`,
+      },
+      {
+        term: 'RRSIG Record',
+        definition: `An RRSIG record is a cryptographic signature over a specific RRSet (e.g., the A records for www.example.com). It contains the signature itself, the algorithm used, the key tag identifying which DNSKEY signed it, and an expiration timestamp. Resolvers verify the RRSIG by fetching the DNSKEY, reconstructing the canonical RRSet wire format, and verifying the signature. Expired RRSIGs cause SERVFAIL — zone signing must re-sign before expiry.`,
+      },
+      {
+        term: 'NSEC and NSEC3',
+        definition: `Authenticated denial of existence records. NSEC links zone names in sorted order, allowing resolvers to prove that a queried name does not exist (NXDOMAIN) without requiring the zone to be online to sign each negative response. However, NSEC allows zone enumeration (walking the chain reveals all names). NSEC3 hashes the names with a salt before chaining, preventing trivial enumeration. NSEC3 with opt-out mode reduces signing overhead for large zones with many unsigned delegations.`,
+      },
+      {
+        term: 'Chain of Trust',
+        definition: `The unbroken cryptographic path from the DNS root to the queried zone. Root zone signs TLD DNSKEY via DS record in root, TLD signs second-level domain DNSKEY via DS record in TLD, and so on. A validating resolver starts at the Root Trust Anchor (a hardcoded or RFC 5011-managed public key) and follows DS records down to the queried zone. Any break in the chain — missing DS record, mismatched key, expired RRSIG — causes SERVFAIL for strict validators.`,
+      },
+    ],
+    pitfalls: [
+      'Rotating the KSK without updating the DS record in the parent zone. The new KSK is not trusted by validators, causing SERVFAIL for all clients using validating resolvers. Always verify the DS record is published in the parent before decommissioning the old KSK.',
+      'Letting RRSIG records expire. RRSIGs have a validity window (typically 2-4 weeks). If zone signing automation fails silently, signatures expire and validators return SERVFAIL. Monitor RRSIG expiry as an operational metric with alerting at 7 days before expiry.',
+      'Assuming DNSSEC protects confidentiality. DNSSEC only authenticates responses; it does not encrypt them. DNS queries and responses are still visible to network observers. Use DNS-over-HTTPS (DoH) or DNS-over-TLS (DoT) for confidentiality.',
+      'DNSSEC amplification in DDoS attacks. DNSSEC responses are much larger than unsigned responses (DNSKEY and RRSIG records add hundreds of bytes). Attackers use DNSSEC-signed zones as amplifiers in UDP reflection attacks. Mitigate with rate limiting and Response Rate Limiting (RRL) on authoritative servers.',
+      'Enabling DNSSEC validation on resolvers without handling validation failures gracefully. Applications that treat SERVFAIL identically to NXDOMAIN will silently fail when DNSSEC validation breaks. Log and alert on validation failures separately from authoritative NXDOMAIN responses.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain the DNSSEC chain of trust from the root to a leaf domain. What records are involved at each step?',
+        answer: `## Chain of Trust Overview
+
+The chain of trust is a cryptographic delegation path from the DNS root to the queried domain. Each level signs the keys of the level below it.
+
+## Step-by-Step: resolving www.example.com with DNSSEC
+
+### Step 1: Root Trust Anchor
+The validating resolver has the Root Trust Anchor hardcoded (or updated via RFC 5011). This is the public KSK of the root zone. The resolver implicitly trusts this key.
+
+### Step 2: Root -> .com delegation
+The root zone contains a DS record for .com:
+
+\`\`\`
+com.   86400  IN  DS  30909 8 2 E2D3C916F6DEEAC73294E8268FB5885044A833FC...
+\`\`\`
+
+The resolver fetches .com's DNSKEY records and verifies that the hash of the KSK matches the DS record signed by the root. The root's RRSIG over the DS record is verified using the Root Trust Anchor.
+
+### Step 3: .com -> example.com delegation
+The .com zone contains a DS record for example.com. The resolver verifies this DS record's RRSIG using .com's ZSK (which was authenticated in Step 2).
+
+### Step 4: example.com zone
+The resolver fetches example.com's DNSKEY records and verifies the KSK hash matches the DS record from .com. The ZSK is verified because it is signed by the KSK (RRSIG over the DNSKEY RRSet).
+
+### Step 5: www.example.com A record
+The resolver fetches the A record for www.example.com along with its RRSIG. It verifies the RRSIG using example.com's ZSK.
+
+## Verification commands
+
+\`\`\`bash
+# Check if a domain is DNSSEC-signed
+dig +dnssec example.com A
+
+# Check DS record in parent zone
+dig +dnssec example.com DS
+
+# Check DNSKEY records in the zone
+dig +dnssec example.com DNSKEY
+
+# Verify the full chain (requires dnssec-verify or delv)
+delv @8.8.8.8 example.com A +rtrace
+
+# Check RRSIG validity and expiry
+dig +dnssec +multiline example.com A | grep -A5 RRSIG
+\`\`\`
+
+## What causes SERVFAIL?
+
+- DS record in parent does not match the DNSKEY in child zone (key mismatch after rotation)
+- RRSIG has expired (zone signing automation failed)
+- Signature algorithm not supported by the resolver
+- Missing NSEC/NSEC3 records for authenticated denial
+
+The key insight: the chain is only as strong as its weakest link. A missing DS update after KSK rollover breaks the entire chain for that domain for all validating resolvers worldwide.`,
+      },
+      {
+        question: 'How would you debug a SERVFAIL that you suspect is caused by a DNSSEC validation failure?',
+        answer: `## Diagnosis Strategy
+
+First, distinguish between a DNSSEC validation failure and an authoritative server problem. A DNSSEC failure returns SERVFAIL from validating resolvers but a correct answer from non-validating resolvers.
+
+## Step 1: Compare validating vs non-validating resolver
+
+\`\`\`bash
+# Query Google's validating resolver (DNSSEC-validating)
+dig @8.8.8.8 example.com A
+
+# Query a non-validating resolver or use +cd (checking disabled)
+dig @8.8.8.8 +cd example.com A
+
+# If +cd returns an answer but without +cd it returns SERVFAIL:
+# => DNSSEC validation is failing, not the authoritative server
+\`\`\`
+
+## Step 2: Use delv for detailed chain tracing
+
+\`\`\`bash
+# delv performs full DNSSEC validation and reports each step
+delv @8.8.8.8 example.com A +rtrace +vtrace
+
+# Look for: "no valid signature found", "signature expired", "key not found"
+\`\`\`
+
+## Step 3: Check RRSIG expiry
+
+\`\`\`bash
+dig +dnssec +multiline example.com A | grep -A8 "RRSIG"
+# The "20260619" style timestamps are YYYYMMDDHHmmSS UTC
+# If expiry timestamp is in the past, signatures have expired
+\`\`\`
+
+## Step 4: Verify DS record matches DNSKEY
+
+\`\`\`bash
+# Get DS record from parent zone
+dig example.com DS
+
+# Get DNSKEY from zone
+dig example.com DNSKEY
+
+# Use dnssec-dsfromkey to compute expected DS from DNSKEY output
+# The tag number and hash must match
+\`\`\`
+
+## Step 5: Use online validators
+
+- dnsviz.net — visualizes the entire chain of trust with color-coded pass/fail
+- dnssec-analyzer.verisignlabs.com — Verisign's DNSSEC debugger
+
+## Common root causes found
+
+- KSK was rotated but DS record was not updated at the registrar (most common)
+- Zone signing daemon (e.g., OpenDNSSEC, BIND inline-signing) crashed and RRSIGs expired
+- Algorithm mismatch between what was signed and what the resolver supports
+- Clock skew on the authoritative server causing signatures with future inception times
+
+## Fix procedure
+
+Once the root cause is identified:
+1. If DS mismatch: update DS record at registrar to match current KSK, wait for TTL expiry in parent zone
+2. If expired RRSIGs: re-sign the zone immediately, verify new RRSIGs are served by authoritative
+3. If automation failure: fix the signing daemon, add monitoring on RRSIG expiry dates`,
+      },
+      {
+        question: 'What is the difference between ZSK and KSK, and why are two key pairs used instead of one?',
+        answer: `## Single Key Approach — Why It Fails
+
+A single key signing everything in a zone would require that key's hash (DS record) to be updated in the parent zone every time the key is rotated. Updating a DS record requires registrar interaction, which is slow, error-prone, and cannot be automated end-to-end without registrar API support. Rotating keys frequently under this model creates operational risk.
+
+## Two-Key Solution
+
+The ZSK/KSK split separates concerns:
+
+- The KSK signs only the DNSKEY RRSet (the set of public keys for the zone)
+- The ZSK signs all other RRSets (A, AAAA, MX, CNAME, etc.)
+- The DS record in the parent zone contains a hash of the KSK only
+
+This means:
+
+- ZSKs can be rotated frequently (monthly) without touching the parent zone DS record — only the zone itself changes
+- KSKs are rotated infrequently (annually) because each rotation requires updating the DS record at the registrar
+
+## Operational consequences
+
+\`\`\`bash
+# During ZSK rollover (pre-publication method):
+# 1. Publish new ZSK alongside old ZSK in DNSKEY RRSet
+# 2. Wait for old ZSK TTL to expire from caches (1-2 days)
+# 3. Start signing new RRSets with new ZSK
+# 4. Remove old ZSK from DNSKEY RRSet after old RRSIG TTLs expire
+
+# During KSK rollover:
+# 1. Generate new KSK
+# 2. Add new KSK to DNSKEY RRSet (double-KSK period)
+# 3. Submit new DS record to registrar — CRITICAL STEP
+# 4. Wait for parent DS TTL to expire
+# 5. Remove old KSK
+\`\`\`
+
+## Key sizes
+
+- ZSK: typically 1024-bit RSA or 256-bit ECDSA (P-256). Smaller is acceptable because rotation is frequent.
+- KSK: typically 2048-bit RSA or 384-bit ECDSA (P-384). Larger for long-term security since rotation is infrequent.
+
+Algorithm 13 (ECDSA P-256 SHA-256) is now the modern default, producing smaller signatures than RSA while maintaining equivalent security, which matters for UDP response size limits.`,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc4033',
+      'https://www.rfc-editor.org/rfc/rfc4034',
+      'https://www.rfc-editor.org/rfc/rfc4035',
+      'https://dnsviz.net/',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html',
+      'https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en',
+    ],
+  },
+
+  {
+    id: 'dns-route53',
+    title: 'Route 53 & DNS Routing Policies',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 6,
+    description: 'AWS Route 53 hosted zones, routing policies (simple/weighted/latency/failover/geolocation), health checks, and alias records.',
+    visualizations: [],
+    introduction: `AWS Route 53 is a globally distributed authoritative DNS service with additional traffic management capabilities that go far beyond standard DNS. It operates from 13 geographically distributed DNS server clusters, providing low-latency responses worldwide and SLA-backed availability of 100% for authoritative DNS.
+
+Route 53 combines three functions: domain registration, authoritative DNS hosting (hosted zones), and health check-based traffic routing. This combination makes it a core building block for multi-region availability, blue/green deployments, and gradual traffic shifting in AWS architectures.
+
+Hosted zones come in two types. Public hosted zones serve DNS responses to the public internet for your domain. Private hosted zones are associated with one or more VPCs and answer DNS queries only from within those VPCs, enabling internal service naming without exposing records publicly. Private hosted zones are commonly used to provide readable names for internal services and override public DNS records inside the VPC boundary (split-horizon DNS).
+
+Route 53 routing policies determine how Route 53 responds when it receives a query for a record set. Simple routing returns a single resource. Weighted routing splits traffic by percentage across multiple resources. Latency-based routing directs each query to the AWS region with the lowest measured latency from the query origin. Failover routing directs traffic to a primary resource and switches to a secondary when the primary's health check fails. Geolocation routing directs users based on the geographic origin of the DNS query. Geoproximity routing (requires Traffic Flow) directs based on geographic coordinates with adjustable bias.
+
+Alias records are a Route 53-specific extension that behave like CNAME records but work at the zone apex (e.g., example.com pointing to an ELB). Standard DNS forbids CNAME at the apex; alias records resolve this by returning the actual IP addresses of the target resource, not a CNAME chain. Alias records to AWS resources (ELB, CloudFront, S3, API Gateway) are also free of per-query charges, unlike regular A records resolving external IPs.`,
+    whenToUse: [
+      'Designing multi-region active-active or active-passive architectures with automatic DNS-based failover.',
+      'Gradually shifting traffic between application versions using weighted routing for canary deployments.',
+      'Routing users to the geographically nearest deployment for latency optimization.',
+      'Setting up internal service DNS inside a VPC without exposing names to the public internet.',
+      'Pointing a root domain (zone apex) to an Application Load Balancer or CloudFront distribution.',
+      'Implementing blue/green deployments at the DNS layer by swapping weighted records from 0/100 to 100/0.',
+    ],
+    keyConcepts: [
+      {
+        term: 'Hosted Zone',
+        definition: `A container for DNS records for a specific domain. Public hosted zones answer queries from the internet; private hosted zones answer queries only from associated VPCs. Each hosted zone gets four Route 53 nameservers (NS records) from different top-level domains for redundancy. You must update your domain registrar's NS records to point to these Route 53 nameservers for the zone to be authoritative.`,
+      },
+      {
+        term: 'Alias Record',
+        definition: `A Route 53-specific record type that maps a name to an AWS resource endpoint (ALB, NLB, CloudFront, S3 website, API Gateway, Elastic Beanstalk, another Route 53 record). Alias records resolve to the actual IP addresses of the target, not a CNAME chain, making them usable at the zone apex. Route 53 automatically reflects IP changes when the target resource's IPs change. Alias records to AWS resources incur no per-query charge.`,
+      },
+      {
+        term: 'Health Checks',
+        definition: `Route 53 health checkers poll endpoints from multiple AWS regions and aggregate results. Health check types: HTTP/HTTPS (checks status code and optionally response body), TCP (checks connection establishment), and Calculated health checks (logical AND/OR over other health checks). Health check status affects routing for failover, weighted, latency, and geolocation routing policies. Health checks can also monitor CloudWatch alarms, enabling complex composite conditions.`,
+      },
+      {
+        term: 'Weighted Routing',
+        definition: `Multiple records for the same name, each with a weight from 0-255. Route 53 selects a record probabilistically in proportion to weights. Weight 0 means the record receives no traffic unless all records have weight 0 (in which case traffic is distributed equally). Weighted routing is commonly used for canary releases (e.g., 95/5 weight split between stable and new version) and blue/green deployments.`,
+      },
+      {
+        term: 'Latency-Based Routing',
+        definition: `Route 53 maintains a latency table mapping resolver IP ranges to AWS regions based on empirical measurements. When a query arrives, Route 53 looks up which region has the lowest latency from the resolver's location and returns the record set associated with that region. Latency records are created per-region; each record specifies its associated region. This is not the same as geolocation — a user in London might be routed to eu-west-1 or us-east-1 depending on measured latency at query time.`,
+      },
+      {
+        term: 'Failover Routing',
+        definition: `Designates one record as Primary and one as Secondary for the same name. Route 53 returns the Primary record when its health check passes and switches to the Secondary when the Primary is unhealthy. Failover is DNS-layer only — switching adds DNS propagation latency (TTL of the record). For faster failover, use low TTL values (30-60 seconds) at the cost of higher DNS query volume and charges.`,
+      },
+    ],
+    pitfalls: [
+      'Using high TTLs (300+ seconds) on failover records. When the primary fails, clients with cached DNS responses continue sending traffic to the failed endpoint for the duration of the TTL. For critical failover scenarios, use TTL of 30-60 seconds and accept the additional query cost.',
+      'Confusing latency routing with geolocation routing. Latency routing measures actual network latency from the resolver to AWS regions; it can route a user in Europe to us-east-1 if transatlantic latency is somehow lower. Geolocation routing uses the geographic origin of the query regardless of measured latency.',
+      'Using CNAME at the zone apex. Standard DNS prohibits CNAME records at the zone apex (e.g., example.com). A CNAME at the apex would prevent all other records at the apex (SOA, NS) from existing. Use Alias records to point the apex to an AWS resource.',
+      'Assuming health checks are instant. Route 53 health checkers check every 30 seconds by default (10 seconds for fast health checks at extra cost). A failed resource must fail 3 consecutive checks before being marked unhealthy. This means up to 90 seconds of failure before DNS failover begins, plus the TTL for cached responses to expire.',
+      'Forgetting to associate private hosted zones with all relevant VPCs. A private hosted zone only answers queries from explicitly associated VPCs. Queries from non-associated VPCs fall through to public DNS, potentially exposing internal naming schemes or routing to wrong endpoints.',
+      'Over-relying on DNS-based failover for sub-second recovery. DNS failover takes TTL + health check failure detection time (30-90 seconds minimum). For sub-second failover, use Application Load Balancer health checks, which operate at the connection level within a region.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a multi-region active-passive architecture using Route 53. What routing policies and health checks would you use, and what are the failure mode timelines?',
+        answer: `## Architecture
+
+Two regions: us-east-1 (primary), eu-west-1 (secondary). API behind ALBs in each region.
+
+## Route 53 Configuration
+
+\`\`\`bash
+# Create health check for primary ALB
+aws route53 create-health-check \\
+  --caller-reference "primary-$(date +%s)" \\
+  --health-check-config '{
+    "Type": "HTTPS",
+    "FullyQualifiedDomainName": "api-primary.us-east-1.elb.amazonaws.com",
+    "Port": 443,
+    "ResourcePath": "/health",
+    "RequestInterval": 10,
+    "FailureThreshold": 3
+  }'
+
+# Create primary failover record (us-east-1 ALB alias)
+aws route53 change-resource-record-sets \\
+  --hosted-zone-id ZONE_ID \\
+  --change-batch '{
+    "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.example.com",
+        "Type": "A",
+        "SetIdentifier": "primary",
+        "Failover": "PRIMARY",
+        "HealthCheckId": "HEALTH_CHECK_ID",
+        "AliasTarget": {
+          "HostedZoneId": "Z35SXDOTRQ7X7K",
+          "DNSName": "api-primary.us-east-1.elb.amazonaws.com",
+          "EvaluateTargetHealth": true
+        }
+      }
+    }]
+  }'
+
+# Create secondary failover record (eu-west-1 ALB alias)
+# No health check needed on secondary — receives traffic when primary fails
+\`\`\`
+
+## Failure Timeline
+
+1. Primary ALB health check fails (connection refused, 5xx, timeout)
+2. Route 53 health checker marks it unhealthy after 3 consecutive failures x 10-second interval = 30 seconds
+3. Route 53 stops returning the primary record, starts returning secondary
+4. Clients with cached DNS must wait for TTL to expire before re-resolving
+5. Total failover time: 30 seconds (health check detection) + TTL (set to 30-60s) = 60-90 seconds
+
+## TTL Tradeoff
+
+- TTL 30s: failover in ~60s, ~2x DNS query volume, higher Route 53 cost
+- TTL 300s: failover in ~6 minutes, normal query volume
+- For SLA-critical services: TTL 30s with fast health checks (10s, extra charge)
+
+## EvaluateTargetHealth
+
+Setting EvaluateTargetHealth: true on the alias record means Route 53 also considers the ALB's own health checks. If all ALB targets are unhealthy, Route 53 treats the alias as unhealthy automatically, even without an explicit Route 53 health check on the ALB DNS name. This provides a second layer of protection.
+
+## Multi-region active-active variant
+
+Use latency routing instead of failover, with health checks on each record. Route 53 routes each query to the lowest-latency healthy region. If a region fails its health check, Route 53 excludes it from responses automatically.`,
+      },
+      {
+        question: 'What is the difference between an Alias record and a CNAME, and when must you use an Alias record?',
+        answer: `## CNAME Behavior
+
+A CNAME record maps one name to another name. DNS resolvers must recursively resolve the CNAME target to get an IP. This adds a DNS lookup hop and CNAME targets cannot be at the zone apex due to the DNS specification (RFC 1034): an apex zone must have SOA and NS records, and a CNAME at a name means no other record type can exist there.
+
+\`\`\`bash
+# A CNAME works for subdomains:
+www.example.com.  CNAME  d123.cloudfront.net.
+
+# This is ILLEGAL — apex cannot have CNAME:
+# example.com.  CNAME  d123.cloudfront.net.  # RFC violation
+\`\`\`
+
+## Alias Record Behavior
+
+Alias records are a Route 53 extension. They behave as an A/AAAA record to resolvers but internally map to an AWS resource endpoint. Route 53 resolves the alias target and returns the actual IPs directly in the response. No additional DNS hop for the client.
+
+\`\`\`bash
+# Alias record at apex — fully legal:
+example.com.  A  ALIAS  d123.cloudfront.net.
+# Route 53 returns the actual CloudFront IPs for the A record
+
+# Query to see alias resolution:
+dig example.com A  # Returns IP addresses, not a CNAME chain
+\`\`\`
+
+## When you must use Alias instead of CNAME
+
+1. Zone apex (root domain): example.com must use Alias to point to CloudFront, ALB, S3, or API Gateway
+2. AWS resource endpoints that change IPs: ELBs frequently change their IPs. Alias records automatically track these changes; hardcoded A records would break.
+3. Cost: Alias records to AWS resources are free per-query; CNAME resolution involves additional queries that are charged
+
+## Alias targets supported by Route 53
+
+- Application/Network/Classic Load Balancers
+- CloudFront distributions
+- Elastic Beanstalk environments
+- S3 website endpoints
+- API Gateway regional/edge endpoints
+- VPC endpoints
+- Another Route 53 record in the same hosted zone
+
+## Alias limitations
+
+- Alias targets must be in AWS (cannot alias to external domains like GitHub Pages)
+- Cannot create Alias record pointing to a CNAME record
+- Alias records do not support TTL configuration — TTL is inherited from the target resource`,
+      },
+      {
+        question: 'How does Route 53 weighted routing work, and how would you implement a canary release?',
+        answer: `## Weighted Routing Mechanics
+
+Route 53 calculates each record's probability as weight / sum(all weights). With records weighted 95 and 5, the probability split is 95% and 5%. Weight 0 means the record receives no traffic (useful to temporarily disable a version without deleting the record).
+
+\`\`\`bash
+# Create weighted records for canary deployment
+
+# Stable version (weight 95)
+aws route53 change-resource-record-sets \\
+  --hosted-zone-id ZONE_ID \\
+  --change-batch '{
+    "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.example.com",
+        "Type": "A",
+        "SetIdentifier": "stable",
+        "Weight": 95,
+        "TTL": 60,
+        "ResourceRecords": [{"Value": "1.2.3.4"}]
+      }
+    }]
+  }'
+
+# Canary version (weight 5)
+aws route53 change-resource-record-sets \\
+  --hosted-zone-id ZONE_ID \\
+  --change-batch '{
+    "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.example.com",
+        "Type": "A",
+        "SetIdentifier": "canary",
+        "Weight": 5,
+        "TTL": 60,
+        "ResourceRecords": [{"Value": "5.6.7.8"}]
+      }
+    }]
+  }'
+\`\`\`
+
+## Canary Release Progression
+
+\`\`\`bash
+# Step 1: Deploy canary at 5% traffic
+# Monitor error rate, latency, business metrics for 30 minutes
+
+# Step 2: If healthy, increase to 25%
+aws route53 change-resource-record-sets --hosted-zone-id ZONE_ID \\
+  --change-batch '{"Changes": [{"Action": "UPSERT", "ResourceRecordSet": {
+    "Name": "api.example.com", "Type": "A",
+    "SetIdentifier": "canary", "Weight": 25,
+    "TTL": 60, "ResourceRecords": [{"Value": "5.6.7.8"}]
+  }}]}'
+
+# Step 3: 50/50 split — validate parity
+# Step 4: Promote canary to 100%, set stable to 0
+# Step 5: Eventually delete the stable record
+
+# Emergency rollback: set canary weight to 0
+\`\`\`
+
+## Sticky Sessions Caveat
+
+DNS-level routing is not sticky. A single user can receive responses from both the stable and canary version within the TTL window (as DNS resolvers re-query, or different resolvers are used). This is acceptable for stateless APIs but problematic for session-based applications. For sticky canary traffic, use ALB weighted target groups instead, which provide connection-level routing consistency.
+
+## Combining with Health Checks
+
+Attach health checks to each weighted record. If the canary crashes, Route 53 stops returning it and sends all traffic to the stable record, providing automatic rollback without manual intervention.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-how-route-53-chooses-records.html',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover.html',
+    ],
+  },
+
+  {
+    id: 'split-horizon-dns',
+    title: 'Split-Horizon DNS',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 4,
+    description: 'Internal vs external DNS views for the same domain, use in VPCs and split-tunnel VPNs, and private hosted zones.',
+    visualizations: [],
+    introduction: `Split-horizon DNS (also called split-brain DNS or split-view DNS) is a configuration where the same domain name returns different DNS responses depending on the source of the query. External clients resolving api.example.com receive the public IP of a load balancer; internal clients within the VPC receive the private IP of the same service, bypassing the load balancer and NAT gateway entirely.
+
+This pattern is fundamental to cloud networking. In AWS, Route 53 private hosted zones implement split-horizon DNS natively — you create a private hosted zone for example.com, associate it with specific VPCs, and records in that private zone shadow the public hosted zone for queries originating inside those VPCs. The resolver inside the VPC (169.254.169.253, the VPC's built-in resolver at the second IP of the VPC CIDR) checks private hosted zones first, then falls through to public DNS.
+
+Split-horizon DNS solves the hairpinning problem. Without it, an application inside a VPC that calls api.example.com would resolve to the public ELB IP, send traffic out through the internet gateway, have it NATted back in, traverse the ELB, and reach the target — adding latency and NAT gateway cost. With a private hosted zone pointing api.example.com to the internal ALB or directly to service IPs, traffic stays on the AWS private network.
+
+The same pattern applies to split-tunnel VPNs. Employees connected to a corporate VPN with split tunneling receive internal DNS responses for company domains (routing those queries through the VPN tunnel to an internal resolver) while public internet traffic bypasses the VPN. The VPN client is configured with DNS search domains that determine which queries go to the internal resolver.
+
+Split-horizon DNS introduces operational complexity. When internal and external views diverge, debugging connectivity issues requires knowing which view a client is using. Certificate management must account for both views — internal services may use private CAs or self-signed certificates that external clients should not trust.`,
+    whenToUse: [
+      'Preventing VPC traffic from hairpinning through the internet gateway when calling internal services by their public domain name.',
+      'Providing internal services with human-readable names without exposing those names or IPs publicly.',
+      'Configuring split-tunnel VPNs so corporate DNS queries resolve internally while public traffic bypasses the tunnel.',
+      'Overriding public DNS records inside a VPC to point to a different backend (e.g., pointing an external SaaS vendor domain to an internal mock during testing).',
+    ],
+    keyConcepts: [
+      {
+        term: 'Private Hosted Zone (Route 53)',
+        definition: `A Route 53 hosted zone associated with one or more VPCs. Queries from within an associated VPC resolve using the private zone records first; if no record exists in the private zone, the query falls through to public DNS. Private hosted zones are not visible outside the associated VPCs. They can override public records (e.g., a private zone for example.com with an api record pointing to a private IP shadows the public api.example.com record for VPC clients).`,
+      },
+      {
+        term: 'VPC Resolver (AmazonProvidedDNS)',
+        definition: `Each AWS VPC has a built-in DNS resolver at the base of the VPC CIDR + 2 (e.g., 10.0.0.2 for a 10.0.0.0/16 VPC), also accessible via the link-local address 169.254.169.253. This resolver checks Route 53 private hosted zones associated with the VPC, then resolves public DNS. Route 53 Resolver endpoints extend this to on-premises networks via inbound and outbound resolver rules.`,
+      },
+      {
+        term: 'DNS Search Domain',
+        definition: `A list of domain suffixes appended to unqualified hostnames for resolution. In split-tunnel VPN setups, the VPN client pushes internal search domains (e.g., corp.example.com) to the client's resolver. Queries for internal services (api.corp.example.com) are sent to the internal resolver through the tunnel; everything else uses the public resolver. This avoids routing all DNS traffic through the VPN while still resolving internal names correctly.`,
+      },
+      {
+        term: 'Hairpinning',
+        definition: `When traffic exits a private network to a public address and immediately re-enters the same network. A VM calling an ELB by its public DNS name sends packets out through the internet gateway, the packets are NATted to the ELB's public IP, the ELB routes them to targets inside the same VPC, and responses travel back the same path. Split-horizon DNS eliminates hairpinning by resolving the service to its private IP, keeping traffic on the internal network.`,
+      },
+      {
+        term: 'Route 53 Resolver Rules',
+        definition: `Rules that forward DNS queries matching specified domain names to specific IP addresses (resolver endpoints). Used to extend split-horizon DNS to hybrid cloud environments. Outbound rules forward internal domain queries from the VPC to on-premises resolvers. Inbound rules allow on-premises servers to resolve Route 53 private hosted zone names by querying the inbound endpoint IPs. This creates bidirectional split-horizon DNS across VPN or Direct Connect.`,
+      },
+    ],
+    pitfalls: [
+      'Forgetting to associate the private hosted zone with all VPCs that need internal resolution. A new VPC peered with the main VPC does not automatically inherit private hosted zone associations. Each VPC must be explicitly associated, and VPC peering does not extend DNS resolution across the peer by default — you must enable DNS resolution support on the peering connection.',
+      'Assuming split-horizon DNS works over VPC peering automatically. Peered VPCs cannot use each other\'s private hosted zones by default. You must share the private hosted zone using RAM (Resource Access Manager) or configure Route 53 Resolver rules with forwarding endpoints in each VPC.',
+      'Creating split-horizon ambiguity during debugging. If a service is unreachable, the first question is which DNS view the client is using. Always check which resolver is being used (dig +norecurse, check /etc/resolv.conf) before assuming the record is wrong.',
+      'Overlapping private hosted zones causing unexpected shadowing. If you create a private hosted zone for example.com, ALL queries for example.com and its subdomains from associated VPCs resolve against that private zone. Records not present in the private zone will return NXDOMAIN even if they exist in the public zone. Use specific subzones (internal.example.com) rather than shadowing the entire public zone.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does split-horizon DNS work in AWS, and how would you implement it for a service that has both internal and external clients?',
+        answer: `## Scenario
+
+Service api.example.com is served by an internet-facing ALB (public IP) and an internal ALB (private IP 10.0.10.100). External clients should hit the public ALB; internal VPC clients should hit the internal ALB directly.
+
+## Implementation
+
+### Step 1: Public hosted zone (already exists)
+\`\`\`
+api.example.com.  60  A  ALIAS  external-alb-123.us-east-1.elb.amazonaws.com
+\`\`\`
+
+### Step 2: Create a private hosted zone for example.com
+
+\`\`\`bash
+aws route53 create-hosted-zone \\
+  --name example.com \\
+  --caller-reference "private-$(date +%s)" \\
+  --hosted-zone-config '{"PrivateZone": true, "Comment": "Internal VPC resolution"}' \\
+  --vpc '{"VPCRegion": "us-east-1", "VPCId": "vpc-12345"}'
+\`\`\`
+
+### Step 3: Add the internal A record
+
+\`\`\`bash
+aws route53 change-resource-record-sets \\
+  --hosted-zone-id PRIVATE_ZONE_ID \\
+  --change-batch '{
+    "Changes": [{
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.example.com",
+        "Type": "A",
+        "TTL": 60,
+        "ResourceRecords": [{"Value": "10.0.10.100"}]
+      }
+    }]
+  }'
+\`\`\`
+
+### Step 4: Associate additional VPCs
+
+\`\`\`bash
+aws route53 associate-vpc-with-hosted-zone \\
+  --hosted-zone-id PRIVATE_ZONE_ID \\
+  --vpc '{"VPCRegion": "us-east-1", "VPCId": "vpc-67890"}'
+\`\`\`
+
+## Verification
+
+\`\`\`bash
+# From inside the VPC — should return private IP
+dig api.example.com @169.254.169.253
+
+# From outside — should return public ALB IPs
+dig api.example.com @8.8.8.8
+
+# Check which resolver is configured on a Linux instance
+cat /etc/resolv.conf
+# nameserver 10.0.0.2  (VPC resolver)
+\`\`\`
+
+## Cross-account private hosted zone sharing
+
+\`\`\`bash
+# Share the private hosted zone via RAM
+aws ram create-resource-share \\
+  --name "internal-dns-share" \\
+  --resource-arns "arn:aws:route53:::hostedzone/PRIVATE_ZONE_ID" \\
+  --principals "123456789012"  # target account ID
+
+# Target account associates their VPC
+aws route53 associate-vpc-with-hosted-zone \\
+  --hosted-zone-id PRIVATE_ZONE_ID \\
+  --vpc '{"VPCRegion": "us-east-1", "VPCId": "vpc-target"}'
+\`\`\`
+
+## Key operational note
+
+The private zone for example.com shadows the entire public zone for associated VPCs. Any public subdomain not replicated in the private zone will return NXDOMAIN for internal clients. Either replicate all records needed internally, or use a dedicated internal subdomain (internal.example.com) for the private zone to avoid shadowing.`,
+      },
+      {
+        question: 'How does DNS resolution work over VPC peering, and what do you need to enable for split-horizon DNS to work across peered VPCs?',
+        answer: `## Default Behavior
+
+VPC peering connects two VPCs at the network layer, but DNS resolution is not automatically shared. By default, instances in VPC-B cannot resolve Route 53 private hosted zone records from VPC-A even if they have network connectivity through the peering connection.
+
+## Required Configuration
+
+\`\`\`bash
+# Step 1: Enable DNS resolution support on the peering connection
+# Both sides must enable this:
+
+# VPC-A (requester side)
+aws ec2 modify-vpc-peering-connection-options \\
+  --vpc-peering-connection-id pcx-12345 \\
+  --requester-peering-connection-options '{"AllowDnsResolutionFromRemoteVpc": true}'
+
+# VPC-B (accepter side)
+aws ec2 modify-vpc-peering-connection-options \\
+  --vpc-peering-connection-id pcx-12345 \\
+  --accepter-peering-connection-options '{"AllowDnsResolutionFromRemoteVpc": true}'
+\`\`\`
+
+## What this enables
+
+With DNS resolution enabled on the peering connection, instances in either VPC can resolve the private DNS hostnames (ec2-internal hostnames like ip-10-0-1-5.ec2.internal) of instances in the peered VPC to their private IPs.
+
+## Private Hosted Zone Sharing Across Peered VPCs
+
+DNS resolution on the peering connection does NOT automatically share Route 53 private hosted zones. You must explicitly associate the private hosted zone with VPC-B:
+
+\`\`\`bash
+# Associate private hosted zone from VPC-A's account with VPC-B
+aws route53 associate-vpc-with-hosted-zone \\
+  --hosted-zone-id ZONE_ID \\
+  --vpc '{"VPCRegion": "us-east-1", "VPCId": "vpc-B-id"}'
+\`\`\`
+
+## Transit Gateway DNS Consideration
+
+VPC peering is a one-to-one connection. For hub-and-spoke DNS across many VPCs, use Transit Gateway with Route 53 Resolver endpoints:
+
+- Deploy an inbound resolver endpoint in the central DNS VPC
+- Create resolver rules in spoke VPCs forwarding internal domain queries to the central endpoint
+- This scales to hundreds of VPCs without point-to-point peering for DNS`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/hosted-zones-private.html',
+      'https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html',
+      'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resolver.html',
+      'https://aws.amazon.com/blogs/networking-and-content-delivery/centralized-dns-management-of-hybrid-cloud-with-amazon-route-53-and-aws-transit-gateway/',
+    ],
+  },
+
+  {
+    id: 'service-discovery',
+    title: 'Service Discovery',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 6,
+    description: 'Consul service mesh, CoreDNS in Kubernetes, headless services, SRV records, and client-side vs server-side discovery patterns.',
+    visualizations: [],
+    introduction: `Service discovery is the mechanism by which services in a distributed system locate each other's network endpoints without hardcoded IPs or configuration files. In dynamic environments where containers, pods, and instances start, stop, and move frequently, static service endpoints are impractical. Service discovery solves this by maintaining a real-time registry of healthy service endpoints and providing a consistent interface for clients to query it.
+
+There are two primary discovery patterns. In client-side discovery, the client queries a service registry (such as Consul or Eureka) directly, receives a list of healthy endpoints, and applies its own load balancing logic to select an instance. Netflix Ribbon used this pattern extensively. In server-side discovery, the client sends requests to a fixed intermediary (a load balancer or service mesh proxy), which queries the registry and routes the request. Kubernetes services and AWS ECS use server-side discovery, where kube-proxy or the cloud load balancer handles the routing transparently.
+
+Kubernetes implements service discovery through its built-in DNS system, powered by CoreDNS. Every Service object gets a DNS name in the format service-name.namespace.svc.cluster.local. A ClusterIP service returns a single virtual IP; the traffic is intercepted by kube-proxy (or eBPF-based solutions like Cilium) and load-balanced to healthy pods. Headless services (ClusterIP: None) return the individual pod IPs directly via DNS instead of a virtual IP, enabling client-side load balancing and direct pod addressing.
+
+SRV records extend DNS-based discovery to include port and protocol information. A SRV record encodes the hostname, port, priority, and weight for a service instance, allowing clients to discover not just where a service runs but what port it listens on. etcd, Consul, and gRPC name resolvers all support SRV-based discovery.
+
+Consul goes beyond DNS to provide health-checked service registration, service mesh (with Envoy sidecar proxies), key-value storage, and ACL-based access control. Its DNS interface integrates service discovery into standard DNS resolution while its HTTP API enables programmatic registry access.`,
+    whenToUse: [
+      'Connecting microservices in Kubernetes without hardcoding service IPs or ports.',
+      'Implementing zero-downtime deployments where service endpoints change as pods roll over.',
+      'Building a service mesh where policy, mTLS, and observability are applied at the discovery layer.',
+      'Enabling stateful service discovery where clients need to talk to specific instances (e.g., Kafka brokers, Cassandra nodes) rather than any healthy replica.',
+      'Cross-cluster or multi-cloud service discovery where services span multiple Kubernetes clusters or cloud providers.',
+      'Replacing static configuration files with dynamic service registries in legacy application migrations.',
+    ],
+    keyConcepts: [
+      {
+        term: 'Client-Side vs Server-Side Discovery',
+        definition: `In client-side discovery, the client queries the service registry, gets a list of endpoints, and picks one using its own load balancing policy. This gives the client control but requires each client to implement discovery logic. In server-side discovery, the client sends requests to a stable endpoint (load balancer, service mesh proxy); the proxy queries the registry and forwards the request. Kubernetes services use server-side discovery — the client only knows the Service ClusterIP, not individual pod IPs.`,
+      },
+      {
+        term: 'CoreDNS in Kubernetes',
+        definition: `CoreDNS is the cluster DNS server in Kubernetes, running as a Deployment in the kube-system namespace. It serves the cluster.local domain. Every Service gets an A record (service.namespace.svc.cluster.local) resolving to the ClusterIP. Pods get A records (pod-ip.namespace.pod.cluster.local). CoreDNS is configured via a Corefile, which specifies plugins for forwarding, caching, health checking, and custom zone handling. Cluster DNS is configured in /etc/resolv.conf of each pod via the kubelet.`,
+      },
+      {
+        term: 'Headless Service',
+        definition: `A Kubernetes Service with spec.clusterIP: None. Instead of creating a virtual ClusterIP, Kubernetes DNS returns the individual pod IPs directly for the service's DNS name. This enables client-side load balancing, direct pod addressing, and StatefulSet pod discovery (each pod gets a stable DNS name like pod-0.service.namespace.svc.cluster.local). Headless services are used by stateful applications (Cassandra, Kafka, MongoDB) where clients need to address specific instances.`,
+      },
+      {
+        term: 'SRV Record',
+        definition: `A DNS SRV record encodes service location information: priority, weight, port, and target hostname. Format: _service._proto.name. TTL class SRV priority weight port target. Example: _http._tcp.myservice.example.com SRV 10 20 8080 host1.example.com. Clients query SRV records to discover both hostname and port dynamically. gRPC uses SRV records for name resolution; Kubernetes creates SRV records for named ports in Services (e.g., _http._tcp.service.namespace.svc.cluster.local).`,
+      },
+      {
+        term: 'Consul Service Mesh',
+        definition: `Consul operates as a service registry (agents register services with health checks), DNS resolver (consul.service.consul format), and service mesh (Consul Connect injects Envoy sidecars that handle mTLS, traffic policies, and observability). The Consul catalog stores service name, address, port, tags, and health status. Services are registered via API, CLI, or configuration files. Consul supports multiple datacenters with WAN gossip federation, enabling multi-region service discovery.`,
+      },
+      {
+        term: 'Service Mesh vs DNS Discovery',
+        definition: `DNS discovery returns endpoints for a service name, leaving load balancing and health checking to the client or a proxy. A service mesh (Istio, Linkerd, Consul Connect) injects a sidecar proxy alongside each service instance that intercepts all traffic, enforces mTLS, applies traffic policies (circuit breaking, retries, rate limiting), and emits telemetry. The mesh control plane (Pilot/Istiod) distributes endpoint information to sidecars using xDS APIs, not DNS. DNS discovery is simpler; service meshes add security and observability at the cost of operational complexity.`,
+      },
+    ],
+    pitfalls: [
+      'Relying on DNS TTL for fast failover in Kubernetes. Kubernetes DNS records for ClusterIP services have a TTL (typically 5 seconds in CoreDNS cache). When a pod becomes unhealthy, kube-proxy updates iptables rules within seconds, but DNS clients with cached responses continue to resolve to the same ClusterIP — which kube-proxy handles correctly. The real issue is with headless services and client-side discovery: cached pod IPs may point to terminated pods until TTL expires.',
+      'Using ClusterIP services for stateful workloads that need specific instance routing. A ClusterIP service load-balances across all ready pods. For Kafka consumers, Cassandra tokens, or Redis clusters where clients must connect to a specific node, use headless services and StatefulSet stable DNS names (pod-0.service.namespace.svc.cluster.local).',
+      'Forgetting ndots configuration in Kubernetes. The default resolv.conf in pods has ndots:5, meaning any hostname with fewer than 5 dots triggers search domain appended resolution attempts before the absolute name is tried. A call to api.example.com generates up to 6 DNS queries (api.example.com.default.svc.cluster.local, api.example.com.svc.cluster.local, api.example.com.cluster.local, then api.example.com). For external hostnames, append a trailing dot (api.example.com.) to force absolute resolution and avoid the search domain overhead.',
+      'Not configuring health checks in Consul before using the service in routing. Consul registers services immediately when the agent receives the registration; if health checks are not configured, the service is marked healthy by default even if the process has not finished starting. Always define health checks (HTTP, TCP, or script-based) and set DeregisterCriticalServiceAfter to automatically remove services that fail health checks for too long.',
+      'Assuming Consul DNS and Kubernetes DNS can be trivially merged. Running Consul inside Kubernetes requires configuring CoreDNS to forward .consul queries to the Consul DNS server. Without this, services registered in Consul are not resolvable via Kubernetes DNS. Add a stub zone to the CoreDNS Corefile for the consul domain.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain how Kubernetes service discovery works end-to-end, from a pod making a DNS request to receiving a response from another service.',
+        answer: `## Full Request Path
+
+### Step 1: DNS configuration in the pod
+
+\`\`\`bash
+# Check pod's DNS config
+kubectl exec -it mypod -- cat /etc/resolv.conf
+# nameserver 10.96.0.10        (CoreDNS ClusterIP)
+# search default.svc.cluster.local svc.cluster.local cluster.local
+# options ndots:5
+\`\`\`
+
+The nameserver 10.96.0.10 is the CoreDNS Service ClusterIP. The search domains are added by kubelet when the pod starts.
+
+### Step 2: Application calls a service
+
+\`\`\`python
+# Application calls: requests.get("http://payment-service/charge")
+# Resolver sees "payment-service" with no dots (< ndots:5)
+# Appends search domains in order:
+# 1. payment-service.default.svc.cluster.local  <-- matches!
+\`\`\`
+
+### Step 3: CoreDNS receives the query
+
+\`\`\`bash
+# CoreDNS checks its zone data for the cluster.local domain
+# Finds the Service "payment-service" in namespace "default"
+# Returns the ClusterIP: 10.100.200.30
+
+# Verify what CoreDNS returns:
+kubectl exec -it mypod -- dig payment-service.default.svc.cluster.local A
+# Answer: 10.100.200.30
+\`\`\`
+
+### Step 4: kube-proxy intercepts the packet
+
+The pod sends a TCP SYN to 10.100.200.30:80. kube-proxy (or eBPF/Cilium) has installed iptables DNAT rules:
+
+\`\`\`bash
+# On a node, see the DNAT rules:
+iptables -t nat -L KUBE-SERVICES | grep payment-service
+# DNAT rules redirect 10.100.200.30:80 to one of the pod IPs
+# e.g., 10.244.1.5:8080 (round-robin or random selection)
+\`\`\`
+
+### Step 5: Packet reaches the pod
+
+The packet arrives at pod 10.244.1.5 with destination address rewritten to the pod IP. The pod processes the request and responds.
+
+## Headless Service variant
+
+\`\`\`bash
+# For a headless service (clusterIP: None):
+kubectl exec -it mypod -- dig payment-service.default.svc.cluster.local A
+# Returns multiple A records — one per ready pod:
+# 10.244.1.5
+# 10.244.2.8
+# 10.244.3.1
+# Client chooses an endpoint; no kube-proxy involvement
+\`\`\`
+
+## StatefulSet stable DNS
+
+\`\`\`bash
+# StatefulSet "kafka" with 3 replicas in namespace "messaging"
+# Each pod gets a stable DNS name:
+dig kafka-0.kafka.messaging.svc.cluster.local  # always pod-0's IP
+dig kafka-1.kafka.messaging.svc.cluster.local  # always pod-1's IP
+# These names are stable even through pod restarts
+\`\`\`
+
+## SRV records for named ports
+
+\`\`\`bash
+# Service with a named port "http":
+dig _http._tcp.payment-service.default.svc.cluster.local SRV
+# Returns: priority weight port hostname
+# 0 100 80 payment-service.default.svc.cluster.local.
+\`\`\``,
+      },
+      {
+        question: 'What is the difference between client-side and server-side service discovery, and what are the tradeoffs of each pattern?',
+        answer: `## Client-Side Discovery
+
+The client queries the service registry directly (e.g., Consul HTTP API, Eureka REST endpoint, etcd key lookup), receives a list of healthy endpoints, and applies its own load balancing policy to select one.
+
+\`\`\`python
+# Client-side discovery with Consul HTTP API
+import requests
+
+def discover_endpoint(service_name):
+    response = requests.get(
+        f"http://consul:8500/v1/health/service/{service_name}?passing=true"
+    )
+    services = response.json()
+    # Client picks one — round-robin, random, least-connections
+    instance = services[0]
+    return f"{instance['Service']['Address']}:{instance['Service']['Port']}"
+
+endpoint = discover_endpoint("payment-service")
+# Returns: "10.0.1.5:8080"
+\`\`\`
+
+Advantages:
+- Client has full control over load balancing policy (affinity, circuit breaking)
+- No additional network hop through a proxy
+- Lower latency per request
+
+Disadvantages:
+- Every client must implement discovery and load balancing logic
+- Adds dependency on the registry (if Consul is down, discovery fails)
+- Harder to enforce traffic policies centrally
+
+## Server-Side Discovery
+
+The client sends requests to a fixed, stable address. The intermediary (load balancer, service mesh proxy) queries the registry and routes to a healthy instance.
+
+\`\`\`bash
+# Kubernetes service — client always calls "payment-service:80"
+# kube-proxy intercepts and routes to a healthy pod
+# Client never sees individual pod IPs
+
+curl http://payment-service/charge
+# kube-proxy translates to: 10.244.1.5:8080 or 10.244.2.8:8080
+\`\`\`
+
+Advantages:
+- Simple client — just a hostname and port, no registry SDK needed
+- Policies (retries, circuit breaking, mTLS) enforced centrally by the proxy
+- Registry changes are transparent to clients
+
+Disadvantages:
+- Extra network hop through proxy (adds ~0.2-1ms per request)
+- Single point of failure if proxy is not distributed/replicated
+- Less flexible per-client load balancing
+
+## When to choose each
+
+| Criteria | Client-Side | Server-Side |
+|---|---|---|
+| Many different client languages | Bad (each needs SDK) | Good (HTTP to fixed endpoint) |
+| Need custom load balancing | Good | Bad |
+| Policy enforcement | Hard | Easy |
+| Kubernetes native workloads | Use server-side (Services) | Default |
+| gRPC with streaming | Client-side often preferred | Proxy must support HTTP/2 |
+
+## Service mesh as a hybrid
+
+A service mesh (Istio, Linkerd) is server-side discovery (the Envoy sidecar is the proxy) with client-side flexibility (each sidecar has the full endpoint list and applies sophisticated routing). The application sees server-side simplicity; the mesh provides client-side control.`,
+      },
+      {
+        question: 'How would you set up Consul for service discovery in a multi-datacenter environment? What is the WAN gossip pool?',
+        answer: `## Consul Architecture
+
+Each datacenter runs a cluster of Consul servers (3 or 5 for quorum). Consul agents run on every node and register services. The WAN gossip pool connects server agents across datacenters.
+
+## Single datacenter setup
+
+\`\`\`hcl
+# consul server config (server.hcl)
+datacenter = "us-east-1"
+data_dir   = "/opt/consul/data"
+server     = true
+bootstrap_expect = 3
+
+bind_addr   = "0.0.0.0"
+client_addr = "0.0.0.0"
+
+retry_join = ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
+
+ui_config {
+  enabled = true
+}
+\`\`\`
+
+\`\`\`bash
+# Register a service via API
+curl -X PUT http://localhost:8500/v1/agent/service/register \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "Name": "payment-service",
+    "ID": "payment-1",
+    "Address": "10.0.1.5",
+    "Port": 8080,
+    "Tags": ["v2", "primary"],
+    "Check": {
+      "HTTP": "http://10.0.1.5:8080/health",
+      "Interval": "10s",
+      "DeregisterCriticalServiceAfter": "1m"
+    }
+  }'
+
+# Discover via DNS
+dig @127.0.0.1 -p 8600 payment-service.service.consul SRV
+# Returns: priority weight port host
+
+# Discover via HTTP API
+curl http://localhost:8500/v1/health/service/payment-service?passing=true
+\`\`\`
+
+## Multi-datacenter with WAN gossip
+
+\`\`\`hcl
+# Add to server config in each datacenter
+retry_join_wan = ["10.1.0.1", "10.1.0.2"]  # server IPs in other DCs
+\`\`\`
+
+The WAN gossip pool is a separate Serf gossip ring that connects only server nodes across datacenters. It uses port 8302 (default). LAN gossip (all agents within a datacenter) uses port 8301.
+
+\`\`\`bash
+# Query a service in another datacenter
+curl "http://localhost:8500/v1/health/service/payment-service?dc=eu-west-1&passing=true"
+
+# Via DNS: service.datacenter.consul format
+dig @127.0.0.1 -p 8600 payment-service.service.eu-west-1.consul SRV
+\`\`\`
+
+## Prepared queries for failover
+
+\`\`\`bash
+# Create a prepared query that fails over to another DC
+curl -X POST http://localhost:8500/v1/query \\
+  -d '{
+    "Name": "payment-with-failover",
+    "Service": {
+      "Service": "payment-service",
+      "Failover": {
+        "NearestN": 2,
+        "Datacenters": ["us-east-1", "eu-west-1"]
+      }
+    }
+  }'
+
+# Query via DNS uses the nearest healthy DC automatically
+dig @127.0.0.1 -p 8600 payment-with-failover.query.consul
+\`\`\`
+
+## Consul Connect for service mesh
+
+\`\`\`hcl
+# Enable sidecar proxy in service registration
+service {
+  name = "payment-service"
+  port = 8080
+  connect {
+    sidecar_service {
+      proxy {
+        upstreams = [{
+          destination_name = "database"
+          local_bind_port  = 5432
+        }]
+      }
+    }
+  }
+}
+\`\`\`
+
+Services connect to upstreams via localhost:local_bind_port; the Envoy sidecar handles mTLS and service identity automatically.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/',
+      'https://developer.hashicorp.com/consul/docs/architecture',
+      'https://coredns.io/plugins/',
+      'https://kubernetes.io/docs/concepts/services-networking/service/#headless-services',
+      'https://istio.io/latest/docs/concepts/traffic-management/',
+    ],
+  },
+
+  {
+    id: 'dns-caching',
+    title: 'DNS Caching & TTL',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 5,
+    description: 'TTL mechanics, negative caching, NXDOMAIN propagation, stale-while-revalidate, cache poisoning attacks, and resolver hierarchies.',
+    visualizations: [],
+    introduction: `DNS caching is fundamental to the scalability of the internet. Without caching, every DNS query would traverse from the client to the root nameservers, through TLD nameservers, to the authoritative nameservers for every single request. Caching allows resolvers to store and reuse responses for the duration specified by the Time-To-Live (TTL) value in each DNS record, dramatically reducing query volume to authoritative servers and decreasing resolution latency for clients.
+
+The TTL field in a DNS resource record specifies how long, in seconds, the record may be cached by resolvers. When an authoritative nameserver returns a record, it includes the TTL; each resolver that caches the response decrements the TTL as time passes and re-queries the authoritative server when it reaches zero. A record with TTL 300 cached by a resolver five minutes ago has TTL 0 — the resolver must re-query before serving the record to the next client.
+
+The resolver hierarchy has several layers. Clients first check their local DNS cache (maintained by the OS resolver), then query a stub resolver (typically the router or DHCP-provided nameserver), which queries a recursive resolver (often the ISP's resolver or a public resolver like 8.8.8.8). The recursive resolver caches responses and serves them to multiple clients, making its cache the most impactful layer for TTL decisions.
+
+Negative caching handles NXDOMAIN (non-existent domain) responses. RFC 2308 standardizes that NXDOMAIN responses should be cached for the duration specified in the SOA record's minimum field or the SOA TTL, whichever is smaller. This prevents resolvers from hammering authoritative servers with repeated queries for domains that do not exist.
+
+Cache poisoning is the most serious security threat to DNS caching. An attacker who can inject a fraudulent DNS response into a resolver's cache can redirect traffic for any domain the resolver serves. The Kaminsky attack in 2008 showed how an attacker could poison the cache of any resolver by racing to inject a forged response before the legitimate one arrived. DNSSEC provides cryptographic protection against cache poisoning; source port randomization and 0x20 encoding are mitigations for non-DNSSEC resolvers.`,
+    whenToUse: [
+      'Planning DNS record TTL values for a deployment that requires fast failover vs one that prioritizes caching efficiency.',
+      'Debugging why DNS changes are not propagating to all clients despite being updated on the authoritative nameserver.',
+      'Investigating elevated DNS query rates on authoritative nameservers and determining whether resolver-side caching is working correctly.',
+      'Understanding the blast radius of a DNS cache poisoning attack and evaluating mitigations.',
+      'Implementing stale-while-revalidate behavior in application-level DNS caching to reduce resolution latency on the hot path.',
+    ],
+    keyConcepts: [
+      {
+        term: 'TTL (Time-To-Live)',
+        definition: `A 32-bit integer in each DNS resource record specifying the maximum number of seconds the record may be cached by resolvers. When an authoritative server returns a record with TTL 300, a recursive resolver caches it for up to 300 seconds. The resolver decrements the TTL in real time and returns the remaining TTL to clients who query it. Clients see the TTL decrement as records age in the resolver's cache. Once TTL reaches 0, the resolver must query the authoritative server again. Setting TTL low (30-60s) enables fast propagation of record changes; high TTL (3600-86400s) reduces authoritative server query volume.`,
+      },
+      {
+        term: 'Negative Caching (NXDOMAIN)',
+        definition: `RFC 2308 defines how NXDOMAIN responses are cached. When an authoritative server returns NXDOMAIN, it includes the SOA record for the zone. Resolvers cache the NXDOMAIN for min(SOA minimum field, SOA TTL) seconds. During this period, the resolver returns NXDOMAIN to clients without re-querying the authoritative server. Negative caching is why a newly created DNS record takes time to become accessible — resolvers that previously received NXDOMAIN for that name will not re-query until the negative cache entry expires.`,
+      },
+      {
+        term: 'Resolver Hierarchy',
+        definition: `DNS resolution passes through multiple caching layers. The OS resolver maintains a small local cache (Windows DNS Client, nscd on Linux, mDNSResponder on macOS). The stub resolver forwards to a recursive resolver (configured via DHCP or /etc/resolv.conf). The recursive resolver (ISP, corporate DNS, or public resolvers like 8.8.8.8 or 1.1.1.1) caches responses and serves many clients. Because recursive resolvers serve many clients, their cache is the most impactful — a record served from a popular recursive resolver cache effectively bypasses the authoritative server entirely.`,
+      },
+      {
+        term: 'Cache Poisoning',
+        definition: `An attack where a malicious party injects a fraudulent DNS record into a resolver's cache. The classic method exploits the fact that DNS queries use predictable transaction IDs and source ports. An attacker floods the resolver with forged responses; if one arrives before the legitimate response and matches the transaction ID, the forged record is cached and served to all clients. The Kaminsky attack (2008) demonstrated this at scale. Mitigations: DNSSEC (cryptographic authentication), random source port selection (now standard), 0x20 encoding (randomize case in queries and verify case matches in responses), and Response Rate Limiting.`,
+      },
+      {
+        term: 'Stale-While-Revalidate',
+        definition: `An extension to caching behavior (RFC 8767) where a resolver serves a stale (expired TTL) record to the client immediately while simultaneously fetching a fresh copy from the authoritative server in the background. This eliminates the latency spike that occurs when a cached record expires and the client must wait for the authoritative query to complete (typically 10-100ms). The risk is that clients receive an outdated record for one request after the TTL expires. Unbound, BIND 9.12+, and Knot Resolver support stale-while-revalidate.`,
+      },
+      {
+        term: 'Minimum TTL Floor',
+        definition: `Many DNS resolvers enforce a minimum TTL floor regardless of what the authoritative server specifies. Cloudflare's resolver enforces a 1-second minimum; Google's 8.8.8.8 enforces a minimum of approximately 30 seconds for practical purposes. AWS Route 53 alias records inherit the TTL of the target resource. This means setting TTL to 0 or 1 on your authoritative records does not guarantee that resolvers will re-query on every request — most public resolvers will cache for at least 30 seconds, limiting how fast DNS-based failover can propagate.`,
+      },
+    ],
+    pitfalls: [
+      'Setting TTL to 0 expecting real-time DNS propagation. Most recursive resolvers enforce a minimum cache floor (30-300 seconds). Zero TTL increases authoritative server query volume significantly without guaranteeing cache-free resolution at clients. Use low but non-zero TTLs (30-60 seconds) for records requiring fast failover, and accept that propagation takes at least one resolver cache interval.',
+      'Changing DNS records without accounting for resolver caches. When you update a record on the authoritative nameserver, existing resolvers continue serving the old record until their cache TTL expires. If the record had TTL 3600 and was cached 59 minutes ago, a resolver will serve the old record for another hour after your change. For planned migrations, reduce the TTL 24-48 hours before the change to allow resolver caches to drain.',
+      'Forgetting negative cache TTL when creating new records. If a resolver previously queried a name that did not exist (NXDOMAIN), it cached that negative response for the SOA minimum TTL. Creating the record afterward does not immediately clear resolver caches — clients using those resolvers still receive NXDOMAIN until the negative cache entry expires. This is a common source of confusion during new service rollouts.',
+      'Ignoring OS-level DNS cache. The operating system maintains its own DNS cache independent of the recursive resolver. On macOS, the mDNSResponder process caches DNS responses. On Windows, the DNS Client service maintains its cache. Application-level DNS caching (in JVM, Golang net package, Python dnspython) adds another layer. A record change may be live on the authoritative server and recursive resolver but still return the old value from OS or application cache.',
+      'Using long TTLs for records that may need to change for security reasons. If an IP address or endpoint is compromised and needs to be removed or changed immediately, long TTL values mean the change propagates slowly. High-security records (mail servers, authentication endpoints) should use moderate TTLs to allow reasonable incident response speed without excessive query volume.',
+    ],
+    keyQuestions: [
+      {
+        question: 'You update a DNS A record on Route 53 but some users still see the old IP an hour later. Walk me through all the caching layers that could explain this.',
+        answer: `## Complete Cache Hierarchy
+
+When a DNS record is updated at the authoritative server, the change propagates through multiple independent caching layers, each with its own TTL counter.
+
+## Layer 1: Route 53 propagation
+
+Route 53 propagates changes to all its authoritative nameserver clusters globally. This typically takes 60 seconds or less. After this, any resolver that queries Route 53 directly receives the new record.
+
+\`\`\`bash
+# Verify the authoritative server has the new record
+dig @ns-1234.awsdns-12.org example.com A
+# If this returns the old IP, the Route 53 propagation is not complete yet
+\`\`\`
+
+## Layer 2: Recursive resolver cache
+
+The recursive resolver (ISP resolver, 8.8.8.8, 1.1.1.1, or corporate DNS) cached the old record with its original TTL. If the record had TTL 3600 and was cached 30 minutes before your change, the resolver serves the old IP for another 30 minutes.
+
+\`\`\`bash
+# Check what a recursive resolver returns (note the TTL in the answer)
+dig @8.8.8.8 example.com A
+# ;; ANSWER SECTION:
+# example.com.  1823  IN  A  1.2.3.4
+# The "1823" is the remaining TTL in the resolver's cache
+# This resolver has 1823 more seconds of cached old record
+
+# Check 1.1.1.1 for comparison (different resolver = different cache state)
+dig @1.1.1.1 example.com A
+\`\`\`
+
+## Layer 3: OS resolver cache
+
+Even after the recursive resolver has the new record, the local OS cache may still hold the old value.
+
+\`\`\`bash
+# Check macOS DNS cache
+sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+
+# Check Windows DNS cache
+ipconfig /displaydns | findstr example.com
+ipconfig /flushdns
+
+# Check Linux (if nscd is running)
+nscd --invalidate=hosts
+
+# Check what your OS resolver is returning
+nslookup example.com  # uses OS resolver
+dig example.com       # uses resolver in /etc/resolv.conf directly
+\`\`\`
+
+## Layer 4: Application-level cache
+
+Java JVM, Python dnspython, Go net package, and many HTTP clients cache DNS results in-process.
+
+\`\`\`bash
+# JVM caches DNS results — default is 30 seconds for positive, 10 for negative
+# Override in Java:
+# -Dsun.net.inetaddr.ttl=0 (no caching — not recommended for production)
+
+# Node.js does NOT cache DNS by default
+# HTTP keep-alive connections bypass DNS entirely — the connection reuses
+# an existing socket to the old IP even after DNS changes
+\`\`\`
+
+## Layer 5: Persistent HTTP connections
+
+This is the most counterintuitive layer. If a client has an established HTTP keep-alive connection to the old IP, DNS changes have no effect on that connection. The client continues using the old IP until the connection closes.
+
+## Diagnosis workflow
+
+\`\`\`bash
+# 1. Verify authoritative has new record
+dig @ns-1234.awsdns-12.org example.com A
+
+# 2. Check recursive resolver cache TTL remaining
+dig @8.8.8.8 example.com A  # look at TTL in answer
+
+# 3. Check from the affected client's machine
+ssh affected-client "dig example.com A; nslookup example.com"
+
+# 4. Check OS cache on affected client
+ssh affected-client "cat /etc/resolv.conf"  # see which resolver is configured
+
+# 5. Check for active TCP connections to old IP
+ssh affected-client "ss -tnp | grep OLD_IP"
+\`\`\`
+
+## Prevention: pre-change TTL reduction
+
+\`\`\`bash
+# 48 hours before a planned DNS change, reduce TTL to 60 seconds
+# This drains resolver caches and ensures fast propagation on change day
+aws route53 change-resource-record-sets --hosted-zone-id ZONE_ID \\
+  --change-batch '{"Changes": [{"Action": "UPSERT", "ResourceRecordSet": {
+    "Name": "example.com", "Type": "A", "TTL": 60,
+    "ResourceRecords": [{"Value": "1.2.3.4"}]
+  }}]}'
+# Wait 48 hours (original TTL drain time) then make the actual change
+\`\`\``,
+      },
+      {
+        question: 'Explain the Kaminsky DNS cache poisoning attack and what mitigations are in place today.',
+        answer: `## Background
+
+Dan Kaminsky discovered in 2008 that DNS cache poisoning was much more practical than previously understood. Prior to this, the assumption was that an attacker would need to correctly guess both the transaction ID (16-bit, 65536 possibilities) and arrive before the legitimate response — a narrow window.
+
+## The Classic Attack
+
+\`\`\`
+1. Attacker controls an authoritative server for attacker.com
+2. Attacker sends thousands of queries to target resolver:
+   GET random123.example.com (a name that does not exist)
+3. Resolver must query example.com's authoritative server for random123
+4. Attacker simultaneously floods the resolver with forged responses
+   claiming to be the authoritative server for example.com
+5. Each forged response has a guessed transaction ID (0-65535)
+6. ONE of the 65536 responses matches the transaction ID
+7. The forged response includes a malicious glue record:
+   example.com NS attacker-ns.attacker.com
+   attacker-ns.attacker.com A 1.2.3.4 (attacker's server)
+8. Resolver caches the poisoned NS record
+9. All subsequent queries for example.com go to attacker's server
+10. Attacker returns any records they want for example.com
+\`\`\`
+
+The key insight Kaminsky found: by querying for random non-existent subdomains, the attacker forces the resolver to send thousands of queries, each creating a new poisoning opportunity. The birthday paradox means with enough concurrent attempts, collisions happen rapidly.
+
+## Modern Mitigations
+
+### 1. Source port randomization (RFC 5452)
+
+\`\`\`bash
+# UDP source port is now randomized (0-65535 range)
+# An attacker must guess BOTH transaction ID (16-bit) AND source port (16-bit)
+# = 2^32 = 4 billion combinations instead of 65536
+# Makes the attack computationally infeasible within a response window
+
+# Check if a resolver uses randomized source ports
+dig +short @8.8.8.8 porttest.dns.measurement-factory.com TXT
+# Returns how many unique source ports were seen from the resolver
+\`\`\`
+
+### 2. DNSSEC (cryptographic authentication)
+
+\`\`\`bash
+# DNSSEC signs all records with RSA/ECDSA signatures
+# A forged response cannot produce a valid RRSIG without the private key
+# Validating resolvers discard unsigned or incorrectly signed responses
+
+# Check if a resolver validates DNSSEC
+dig @8.8.8.8 sigfail.verteiltesysteme.net A
+# Should return SERVFAIL if resolver validates DNSSEC (the zone is intentionally broken)
+\`\`\`
+
+### 3. 0x20 encoding
+
+\`\`\`bash
+# Mix uppercase and lowercase letters randomly in the query:
+# "ExAmPlE.CoM" instead of "example.com"
+# The authoritative server reflects the same case in the response
+# An attacker cannot know the random case pattern to forge a matching response
+# Not widely deployed but effective as a complementary control
+\`\`\`
+
+### 4. Response Rate Limiting (RRL)
+
+Authoritative servers can limit the rate of identical responses, reducing amplification value of poisoning attacks.
+
+### 5. DNS-over-HTTPS and DNS-over-TLS
+
+\`\`\`bash
+# DoH/DoT encrypt the entire DNS transaction, preventing MITM injection
+# Resolvers: 1.1.1.1 (DoH), 8.8.8.8 (DoH), Cloudflare DoT (:853)
+
+# Test DoH with curl
+curl -H 'accept: application/dns-json' \\
+  'https://cloudflare-dns.com/dns-query?name=example.com&type=A'
+\`\`\`
+
+## Remaining risks
+
+- Resolvers without DNSSEC validation remain vulnerable to sophisticated attackers who can position themselves between the resolver and authoritative server (on-path attacks)
+- Internal/corporate resolvers often skip source port randomization and DNSSEC validation, making them easier targets
+- BGP hijacking can redirect legitimate authoritative server traffic to an attacker, bypassing all DNS-layer mitigations (requires RPKI to address at the routing layer)`,
+      },
+      {
+        question: 'How does negative caching work, and how does it affect new service deployments?',
+        answer: `## Negative Caching Overview
+
+RFC 2308 defines how DNS resolvers cache NXDOMAIN (non-existent domain) and NODATA (name exists but no records of requested type) responses.
+
+## SOA Record and Negative TTL
+
+When a resolver queries for a name that does not exist, the authoritative server returns:
+
+\`\`\`
+;; AUTHORITY SECTION:
+example.com.  3600  IN  SOA  ns1.example.com. admin.example.com. (
+                    2024061901  ; serial
+                    3600        ; refresh
+                    900         ; retry
+                    604800      ; expire
+                    300         ; minimum TTL  <-- negative cache TTL
+                )
+\`\`\`
+
+The resolver caches the NXDOMAIN for min(SOA TTL, SOA minimum field) = min(3600, 300) = 300 seconds.
+
+\`\`\`bash
+# See a negative cache entry in action:
+dig @8.8.8.8 definitelynotareal.example.com A
+# NXDOMAIN in status, SOA in authority section
+
+# The remaining negative TTL is visible in the SOA TTL in the authority section
+dig @8.8.8.8 definitelynotareal.example.com A
+# If queried again 60 seconds later, SOA TTL will be ~240 seconds
+\`\`\`
+
+## Impact on New Service Deployments
+
+### Scenario: deploying api.newservice.example.com
+
+\`\`\`bash
+# Before deployment, testers query the name and get NXDOMAIN
+dig api.newservice.example.com
+# Status: NXDOMAIN
+# SOA minimum: 300 seconds -> cached negative for 5 minutes
+
+# You deploy the service and create the DNS record
+aws route53 change-resource-record-sets \\
+  --hosted-zone-id ZONE_ID \\
+  --change-batch '{"Changes": [{"Action": "CREATE", "ResourceRecordSet": {
+    "Name": "api.newservice.example.com", "Type": "A",
+    "TTL": 60, "ResourceRecords": [{"Value": "10.0.1.5"}]
+  }}]}'
+
+# Resolvers that cached NXDOMAIN still return NXDOMAIN for up to 300 seconds
+# Even though the record now exists on the authoritative server
+dig @8.8.8.8 api.newservice.example.com
+# Still returns NXDOMAIN from cached negative entry
+\`\`\`
+
+### Mitigation strategies
+
+\`\`\`bash
+# 1. Reduce SOA minimum TTL before deployment to limit negative cache window
+# Edit the SOA record's minimum TTL field at the zone level
+
+# 2. Use a low SOA minimum for zones with frequent additions (e.g., 60 seconds)
+# Tradeoff: negative queries hit authoritative server more often
+
+# 3. Flush caches on internal resolvers before testing
+# For BIND9:
+rndc flushname api.newservice.example.com
+
+# For Unbound:
+unbound-control flush api.newservice.example.com
+
+# For corporate resolvers, request cache flush from DNS admins
+
+# 4. Test against the authoritative server directly during deployment
+dig @ns-1234.awsdns-12.org api.newservice.example.com A
+# Bypasses any cached negative entries in recursive resolvers
+\`\`\`
+
+## NODATA vs NXDOMAIN negative caching
+
+\`\`\`bash
+# NXDOMAIN: name does not exist at all
+dig api.newservice.example.com A  # name doesn't exist -> NXDOMAIN
+
+# NODATA: name exists but has no records of this type
+dig api.newservice.example.com AAAA  # name exists (A record) but no AAAA -> NODATA
+# NODATA responses are also negatively cached per SOA minimum TTL
+# Adding an AAAA record to an existing name that got NODATA cached
+# has the same propagation delay as NXDOMAIN resolution for new records
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc2308',
+      'https://www.rfc-editor.org/rfc/rfc5452',
+      'https://www.rfc-editor.org/rfc/rfc8767',
+      'https://www.kaminsky.com/kaminsky_7_10_08.pdf',
+      'https://support.dnsimple.com/articles/what-is-dns-ttl/',
+      'https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/',
+    ],
+  },
 ];

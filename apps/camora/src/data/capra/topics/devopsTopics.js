@@ -2628,6 +2628,73 @@ Run a canary. The platform team upgrades their own one or two pipelines to the n
         description: 'Cohn\'s pyramid: ~70% unit, ~20% integration, ~10% E2E. The ice-cream cone is the inverted shape — heavy E2E, thin unit base — slow, brittle, expensive to maintain.',
         image: '/diagrams/devops/b4-test-pyramid.png',
       },
+      {
+        title: 'Test doubles — mocks, stubs, fakes, spies, dummies explained',
+        description: `Gerard Meszaros coined the "test double" taxonomy in xUnit Test Patterns (2007). Five types, each with a distinct role. Using the wrong type produces either over-specified (brittle) or under-specified (leaky) tests.
+
+Dummy:
+  Purpose: fills a parameter slot that the test does not exercise.
+  Example: a Logger passed to a constructor whose behavior is not tested.
+    const logger = null;  // or an empty object — the test does not call it
+  Risk: almost none. The dummy is never called.
+
+Stub:
+  Purpose: returns canned responses to calls made during the test. Does not record anything.
+  Example: a UserRepository.findById stub that always returns a specific User object.
+    jest.spyOn(repo, 'findById').mockReturnValue({ id: 1, name: 'Test User' });
+  Risk: if the stub returns unrealistic data, the test passes for an impossible scenario.
+
+Fake:
+  Purpose: a working implementation that is simpler than production but real enough to test real behavior.
+  Examples: an in-memory database (SQLite in memory), a fake email server (Mailhog, smtp4dev).
+  Risk: the fake can diverge from production behavior. Fakes require maintenance.
+  When to use: integration testing where a real external service is impractical.
+
+Spy:
+  Purpose: wraps a real object, records calls for later assertion. Often also stubs some calls.
+  Example: jest.spyOn(emailService, 'send') — the real method runs but the test can also assert it was called.
+  Risk: if the test asserts too many call details (argument order, exact call count), it becomes brittle to refactors.
+
+Mock:
+  Purpose: pre-programmed with expectations. Verifies that the system under test calls it correctly.
+  Example: expect(mockPaymentGateway.charge).toHaveBeenCalledWith({ amount: 99.99, currency: 'USD' })
+  Risk: mocks couple the test to the implementation detail of HOW the code calls a dependency.
+    If you refactor the call without changing behavior, the mock breaks. Use sparingly.
+
+Best practices:
+  Prefer fakes and stubs over mocks for most unit tests — they test behavior, not implementation.
+  Mocks are appropriate at architectural boundaries where you need to verify the interface contract.
+  Every mock or stub of an external service should be backed by at least one integration test against the real thing.
+  Name test doubles clearly: userRepoStub, emailServiceSpy — not userRepo (ambiguous).
+
+The pyramid connection:
+  Unit tests: heavy use of stubs, fakes, dummies. Mocks sparingly.
+  Integration tests: fakes (in-memory DB), real HTTP clients against test containers.
+  Contract tests (Pact): the consumer side uses a mock provider; the provider side runs against the real pact.
+  E2E tests: no doubles — the whole system runs.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Test Pyramid',
+        description: `The testing questions every DevOps and SRE interview asks with concise, senior-level answers.
+
+Q: Explain the test pyramid.
+A: Mike Cohn (Succeeding with Agile, 2009): many fast unit tests at the base, fewer integration tests in the middle, very few end-to-end tests at the top. Rough proportions: 70% unit, 20% integration, 10% E2E. The shape matters because test levels have radically different speed, determinism, and maintenance cost. Unit tests run in milliseconds; E2E tests run in minutes. The pyramid packs maximum signal into minimum time, enabling a 10-minute commit stage.
+
+Q: What is the ice-cream cone anti-pattern?
+A: (Alister Scott, 2012) The inverted distribution: many E2E tests at the top, thin unit base. Produces 90-minute suites, 8-15% flake rates, poor failure attribution, and an engineering culture that learns to ignore CI failures. Caused by QA-owned testing organizations that gravitate to UI tests, record-and-playback tools that make E2E look easy, and lack of testable architecture at the unit level.
+
+Q: What are contract tests and when do you use them?
+A: Contract tests (Pact is the canonical tool) verify the interface between two services without standing up both simultaneously. The consumer writes a test against a mock provider; the recorded interaction (the pact) is published to a Pact Broker; the provider's pipeline verifies it satisfies every pact. Use them when you have 5+ services owned by 3+ teams and independent deployability is a real goal. They restore the pyramid's middle layer in microservice architectures where full integration tests become impractical.
+
+Q: What is mutation testing and how does it relate to coverage?
+A: Mutation testing (Pitest for Java, Stryker for JS) automatically introduces small bugs into the source code and checks whether the test suite catches them. A test suite with 100% line coverage but low mutation score has tests that touch code without asserting on its behavior. Mutation testing is the quality metric for the test suite; coverage is the quantity metric. For a CI pipeline, mutation score above 75% is a reasonable threshold for business-critical code.
+
+Q: Where do load tests fit in the pyramid?
+A: At the top, outside the standard pyramid, in the capacity or non-functional stage of the deployment pipeline. They are not in the commit stage (too slow) or acceptance stage (too resource-intensive). They run nightly or on PRs touching performance-sensitive paths against a production-like environment. The threshold is an SLO: p99 latency under 200ms at 500 RPS. Failure blocks the release candidate.
+
+Q: What is a test double?
+A: Gerard Meszaros's term (xUnit Test Patterns, 2007) for any object that stands in for a real dependency in a test. Five types: dummy (fills a parameter, never called), stub (returns canned responses), fake (working simplified implementation), spy (records calls), mock (pre-programmed with expectations, verifies interactions). Prefer stubs and fakes for most unit tests; use mocks sparingly at architectural boundaries only.`,
+      },
     ],
     introduction: `The test pyramid is Mike Cohn\'s mental model from Succeeding with Agile (2009) for distributing automated tests across levels of granularity. The shape is a triangle, widest at the base and narrowest at the top.
 
@@ -2772,6 +2839,77 @@ When to adopt: ≥5 services owned by ≥3 teams; independent deployability is a
         title: 'Monorepo build graph + remote cache',
         description: 'Build systems compute a target dependency graph, hash inputs per target, and consult a remote cache for hits. Cache hit → skip. Cache miss → build + write back. Incremental builds skip everything not affected by the change.',
         image: '/diagrams/devops/b5-monorepo-build.png',
+      },
+      {
+        title: 'Turborepo vs Nx vs Bazel — comparison table and decision guide',
+        description: `Three tools at different points on the complexity-power spectrum. The right choice depends on language scope, team size, and build performance requirements.
+
+Feature comparison:
+
+  Capability                  Turborepo         Nx                  Bazel
+  Language support            JS/TS only        JS/TS primary,      All languages
+                                                multi-lang plugins
+  Config complexity           Very low          Moderate            High (BUILD files)
+  Hermeticity enforcement     Trust-based       Trust-based         Sandbox-enforced
+  Remote cache                Vercel Cache      Nx Cloud / custom   Buildbarn / BuildBuddy
+  Remote execution            No                No                  Yes
+  Dependency graph            Yes               Yes                 Yes
+  Affected-only runs          Yes               Yes                 Yes (bazel query)
+  Code generators             No                Yes (generators)    No
+  Migration cost              Hours to days     Days to weeks       Months
+  Learning curve              Low               Moderate            High
+  Ideal team size             2-20 engineers    5-100 engineers     50+ engineers
+  Ideal repo size             Under 50 pkgs     10-200 pkgs         200+ pkgs or multi-lang
+
+Turborepo — when to choose:
+  JS/TS only monorepo, often Next.js + Vercel deployed.
+  You want minimum config: turbo.json at the root, tasks defined there, per-package package.json scripts.
+  You want Vercel Remote Cache out of the box.
+  You do not need code generators or a plugin ecosystem.
+  New projects with up to 30-40 packages.
+
+Nx — when to choose:
+  JS/TS primary with some multi-language packages (Go, Python, Rust via community plugins).
+  You want a structured framework: generators for new libraries and apps, enforced architecture rules.
+  You want project graph visualization (nx graph).
+  You have a mid-size engineering org (5-100 engineers) where shared generators and enforced module boundaries add real value.
+
+Bazel — when to choose:
+  Genuinely polyglot monorepo: Java + Go + Python + C++ + TypeScript.
+  Hermeticity is a hard requirement (regulated output, reproducible builds for audit).
+  Build and test workload exceeds remote cache capacity and remote execution is needed.
+  You have dedicated build-infrastructure engineers to maintain BUILD files and toolchain configs.
+  Scale: typically 200+ packages, 50+ engineers, or large artifact volume.
+
+Migration paths:
+  Polyrepo to Nx: add nx.json to an existing npm workspace. Incremental.
+  Turborepo to Nx: add nx.json and project.json files alongside turbo.json. Run both in parallel.
+  Nx to Bazel: hardest migration — requires BUILD file authoring for every target.
+  Greenfield: pick Turborepo if JS-only, Nx if mid-complexity, Bazel only with a build-systems engineer.
+
+The anti-pattern to avoid: choosing Bazel because Google uses it, then spending a year writing BUILD files and shipping slower than a team on Turborepo would have.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Monorepo Build Systems',
+        description: `The monorepo questions that come up in platform and DevOps interviews with senior-level answers.
+
+Q: What is a monorepo and what problem does a build system solve that npm workspaces does not?
+A: A monorepo is a single git repository containing multiple services, libraries, or frontends. npm/pnpm/yarn workspaces solve dependency management — deduplicated node_modules, internal package linking. They do not solve the build problem: without a build system, naive CI runs every test on every change. A real build system (Turborepo, Nx, Bazel) adds a dependency graph to compute which packages are affected by a change, per-target input hashing to identify cache hits, and a remote cache to share built artifacts across machines and CI runners.
+
+Q: What is a hermetic build?
+A: A build whose declared inputs fully determine its outputs. Same declared inputs produce byte-identical outputs across machines and time. Hermeticity is the precondition for trustworthy caching: "same hash, same artifact" only holds if every input is declared. Non-hermetic builds have hidden inputs — the system clock, an undeclared environment variable, a network fetch to a moving target — that cause the cache to serve a stale artifact. Bazel enforces hermeticity via sandbox; Nx and Turborepo trust the developer to declare inputs correctly.
+
+Q: How does remote caching work?
+A: For each build target, the build system computes a hash from all declared inputs (source files, dependency hashes, toolchain version, build flags). It queries a remote content-addressed store for that hash. Cache hit: fetch the stored artifact, skip running the build action. Cache miss: run the action, write outputs to the cache keyed by the hash. The cache is shared across developers and CI runners. Developer A builds; developer B and CI get cache hits. With a healthy hit rate (80-95%), CI runs for non-overlapping package changes finish in under a minute.
+
+Q: When would you choose Bazel over Turborepo?
+A: Bazel when: genuinely polyglot monorepo (Java + Go + TypeScript + C++ in one repo); hermeticity is a hard requirement (regulated artifacts, reproducible builds); build workload exceeds what local + remote cache absorbs and remote execution is needed; you have dedicated build-systems engineers to maintain BUILD files. Turborepo when: JS/TS only, modest scale (under 50 packages), minimum config is the priority, Vercel is the deployment target.
+
+Q: What is "affected builds" and why does it matter for CI performance?
+A: In Nx or Turborepo, "affected" computes the subset of packages whose tests should run for a given change. Algorithm: parse the dependency graph, find all packages that transitively depend on any changed package, run only those. A change to a leaf library in an 80-package monorepo might affect 6 packages. CI runs tests for those 6 only. The other 74 are cache hits. This converts a 40-minute full-suite run into a 90-second affected-only run for most PRs.
+
+Q: What is the monorepo vs polyrepo trade-off?
+A: Monorepo: atomic cross-cutting changes (update an API and its callers in one PR), shared tooling and standards, visibility across the org, simpler dependency management within the org. Cost: requires build-system investment as scale grows; git performance needs tuning (partial clone, sparse checkout) at very large scale. Polyrepo: each service is independent, smaller, simpler to reason about in isolation. Cost: cross-cutting changes require coordinated PRs across repos, tooling standardization is harder to enforce, dependency drift between services is common. For teams of 5-50 with strong shared standards, monorepo is usually the better default.`,
       },
     ],
     introduction: `A monorepo is a single repository containing multiple projects (services, libraries, frontends). The pattern is mainstream — Google\'s monorepo is the canonical extreme (~2 billion lines, multi-thousand engineers; Potvin & Levenberg, "Why Google Stores Billions of Lines of Code in a Single Repository," CACM 2016). Meta (Mercurial-based), Microsoft (Windows on Git, with VFS for Git), and many product companies use the model.
