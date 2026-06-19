@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 
 const PlaygroundLayout = lazy(() =>
   import('../components/lumora/playground/PlaygroundLayout').then(m => ({ default: m.PlaygroundLayout }))
@@ -69,7 +69,15 @@ export default function PlaygroundPage() {
           ))}
         </div>
 
-        <span style={{ width: 100 }} />
+        <Link to="/capra/prepare" style={{
+          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)',
+          textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
+          padding: '3px 8px', borderRadius: 5,
+          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.04)',
+        }}>
+          ← Home
+        </Link>
       </div>
 
       {/* ── Tab content ── */}
