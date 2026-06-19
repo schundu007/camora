@@ -137,5 +137,47 @@ export async function execScriptInContainer(containerId, scriptContent) {
   );
 }
 
+export async function execScriptInContainerStream(containerId, scriptContent, onLine) {
+  const b64 = Buffer.from(scriptContent).toString('base64');
+  const tmpFile = `/tmp/pg-setup-${containerId.slice(0, 8)}.sh`;
+  await sshExec(
+    `echo '${b64}' | base64 -d > ${tmpFile} && docker cp ${tmpFile} ${containerId}:/tmp/setup.sh && rm -f ${tmpFile}`,
+  );
+
+  return new Promise((resolve, reject) => {
+    const conn = new Client();
+    let done = false;
+    const finish = (fn, val) => { if (!done) { done = true; conn.end(); fn(val); } };
+
+    conn.on('ready', () => {
+      conn.exec(`docker exec ${containerId} bash /tmp/setup.sh`, (err, stream) => {
+        if (err) return finish(reject, err);
+        let buf = '';
+        stream.on('data', (d) => {
+          buf += d.toString();
+          const parts = buf.split('\n');
+          buf = parts.pop();
+          for (const line of parts) { if (line.trim()) onLine(line); }
+        });
+        stream.stderr.on('data', () => {});
+        stream.on('close', (code) => {
+          if (buf.trim()) onLine(buf);
+          if (code !== 0) finish(reject, new Error(`setup script exit ${code}`));
+          else finish(resolve, undefined);
+        });
+      });
+    });
+
+    conn.on('error', (err) => finish(reject, err));
+    conn.connect({
+      host: WORKER_HOST(),
+      port: parseInt(process.env.WORKER_SSH_PORT || '20022', 10),
+      username: WORKER_USER(),
+      privateKey: workerKey(),
+      readyTimeout: 10_000,
+    });
+  });
+}
+
 export async function getAllocations() { return []; }
 export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }

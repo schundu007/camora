@@ -7,7 +7,7 @@ import {
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
 import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
-import { execScriptInContainer } from '../services/playground/nomadClient.js';
+import { execScriptInContainerStream } from '../services/playground/nomadClient.js';
 
 export const playgroundSessionsRouter = Router();
 
@@ -114,13 +114,30 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
     sendEvent({ step: 'terminal_ready', label: 'Terminal ready', status: 'done', phase: 'TOOLS', progress: 4, total });
 
     if (hasScript) {
-      sendEvent({ step: 'custom_tools', label: 'Installing your tools...', status: 'running', phase: 'CUSTOM', progress: 5, total: 5 });
+      sendEvent({ step: 'custom_tools_header', label: 'Installing custom tools', status: 'running', phase: 'SETUP', progress: 5, total });
       try {
-        await execScriptInContainer(session.nomad_job_id, session.setup_script);
-        sendEvent({ step: 'custom_tools', label: 'Tools installed', status: 'done', phase: 'CUSTOM', progress: 5, total: 5 });
+        await execScriptInContainerStream(session.nomad_job_id, session.setup_script, (line) => {
+          if (!line.startsWith('##PG##')) return;
+          try {
+            const ev = JSON.parse(line.slice(6));
+            if (!ev.tool || !ev.status) return;
+            if (ev.tool === '__done__') return;
+            sendEvent({
+              step: `tool_${ev.tool}`,
+              label: ev.label || ev.tool,
+              toolStatus: ev.status,
+              status: (ev.status === 'done' || ev.status === 'skipped') ? 'done'
+                : ev.status === 'error' ? 'error' : 'running',
+              phase: 'SETUP',
+              progress: 5,
+              total,
+            });
+          } catch {}
+        });
+        sendEvent({ step: 'custom_tools_header', label: 'Tools ready', status: 'done', phase: 'SETUP', progress: 5, total });
       } catch (err) {
         console.warn('[PlaygroundSessions] setup script failed:', err.message);
-        sendEvent({ step: 'custom_tools', label: 'Setup finished (some tools may have failed)', status: 'done', phase: 'CUSTOM', progress: 5, total: 5 });
+        sendEvent({ step: 'custom_tools_header', label: 'Setup finished (some tools may have failed)', status: 'done', phase: 'SETUP', progress: 5, total });
       }
     }
 
