@@ -149,8 +149,8 @@ export default function AdminPlaygroundObservePage() {
                       outerRadius={70}
                       dataKey="value"
                       nameKey="name"
-                      label={({ name, percent }: { name: string; percent?: number }) =>
-                        `${name} ${Math.round((percent ?? 0) * 100)}%`
+                      label={({ name, percent }: { name?: string; percent?: number }) =>
+                        `${name ?? ''} ${Math.round((percent ?? 0) * 100)}%`
                       }
                       labelLine={false}
                     >
