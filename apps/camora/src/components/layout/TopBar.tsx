@@ -10,6 +10,7 @@ import CamoraLogo from '../shared/CamoraLogo';
 const CommandPalette = lazy(() => import('./CommandPalette'));
 import Chip from '@/components/shared/ui/Chip';
 import { NAV_LINKS } from '../../lib/constants';
+import { caraRegistry } from '@/lib/cara-registry';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -182,6 +183,32 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
 
         {/* -- Right: theme toggle + avatar + sign out ------------ */}
         <div className="flex items-center gap-2">
+          {/* Cara + Playground — desktop */}
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => caraRegistry.open()}
+              aria-label="Ask Cara (⌘K)"
+              title="Ask Cara (⌘K)"
+              className="hidden sm:block"
+            >
+              <Chip variant="gold" className="gap-1.5 cursor-pointer">
+                <span>✦</span>
+                <span>Cara</span>
+              </Chip>
+            </button>
+          )}
+          {isAuthenticated && (
+            <Link to="/playground" className="hidden sm:block no-underline" aria-label="Playground">
+              <Chip variant="gold" className="gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="4 17 10 11 4 5" />
+                  <line x1="12" y1="19" x2="20" y2="19" />
+                </svg>
+                Playground
+              </Chip>
+            </Link>
+          )}
           {/* Theme toggle */}
           <button
             type="button"
@@ -314,6 +341,25 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 </Link>
               ))}
               <div className="pt-3 mt-2" style={{ borderTop: '1px solid var(--border)' }}>
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={() => { caraRegistry.open(); setMenuOpen(false); }}
+                    className="block w-full text-left py-2.5 text-[14px] font-bold"
+                    style={{ color: 'var(--cam-gold-leaf, #D4A043)' }}
+                  >
+                    ✦ Cara
+                  </button>
+                )}
+                {isAuthenticated && (
+                  <Link to="/playground" onClick={() => setMenuOpen(false)} className="flex items-center gap-2 py-2.5 text-[14px] font-bold no-underline" style={{ color: 'var(--cam-gold-leaf, #D4A043)' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="4 17 10 11 4 5" />
+                      <line x1="12" y1="19" x2="20" y2="19" />
+                    </svg>
+                    Playground
+                  </Link>
+                )}
                 {isAuthenticated && (
                   <Link to="/profile" onClick={() => setMenuOpen(false)} className="block py-2.5 text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Profile</Link>
                 )}
