@@ -440,7 +440,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
         <ZoomableImage
           src={staticSrc}
           alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          maxHeight={780}
+          maxHeight={9999}
           frameStyle={{ background: 'white' }}
           imgStyle={{ width: '100%', height: 'auto', filter: 'contrast(1.4) saturate(1.15)' }}
         />
@@ -2266,7 +2266,7 @@ export default function TopicDetail({
                             <ZoomableImage
                               src={diagSrc}
                               alt="Key Design Decisions"
-                              maxHeight={780}
+                              maxHeight={9999}
                               imgStyle={{ width: '100%', height: 'auto' }}
                             />
                           </div>
@@ -2818,7 +2818,7 @@ export default function TopicDetail({
                       <ZoomableImage
                         src={viz.image}
                         alt={viz.title}
-                        maxHeight={720}
+                        maxHeight={9999}
                         frameStyle={{
                           background: 'white',
                           border: 'none',
