@@ -216,7 +216,54 @@ export default function FormattedContent({ content, inline = false }) {
       let currentList = [];
       let currentNumberedList = [];
       let currentCliGroup = [];
+      let currentStructuredGroup = [];
+      let currentShellGroup = [];
       let listKeyCounter = 0;
+
+      const flushStructuredGroup = () => {
+        if (currentStructuredGroup.length === 0) return;
+        const rows = currentStructuredGroup.slice();
+        const lang = rows.some(l => l.trimStart().startsWith('"') || l.includes('": ')) ? 'json' : 'yaml';
+        currentSection.body.push(
+          <div key={`struct-${blockIdx}-${listKeyCounter++}`} className="prep-code-block">
+            <div className="prep-code-lang">{lang}</div>
+            <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
+              {rows.join('\n')}
+            </pre>
+          </div>,
+        );
+        currentStructuredGroup = [];
+      };
+
+      const flushShellGroup = () => {
+        if (currentShellGroup.length === 0) return;
+        const rows = currentShellGroup.slice();
+        currentSection.body.push(
+          <div key={`shell-${blockIdx}-${listKeyCounter++}`} className="prep-code-block">
+            <div className="prep-code-lang">bash</div>
+            <pre className="prep-code-pre" style={{ whiteSpace: 'pre', tabSize: 2, margin: 0 }}>
+              {rows.join('\n')}
+            </pre>
+          </div>,
+        );
+        currentShellGroup = [];
+      };
+
+      // Detect JSON/YAML structured-data lines that weren't wrapped in fenced blocks.
+      // isJsonLine starts a new group; isYamlContinueLine only extends an open group.
+      const isJsonLine = (s) => {
+        if (/^[{}\[\]],?$/.test(s)) return true;
+        if (/^"[\w$@./-]+":\s/.test(s)) return true;
+        if (/^\{.*"/.test(s) && /[}\]],?$/.test(s)) return true;
+        if (/^[a-zA-Z][a-zA-Z0-9_-]*:\s+.+,$/.test(s)) return true;
+        return false;
+      };
+      const isYamlContinueLine = (s) => {
+        if (/^[a-z][a-zA-Z0-9_-]*:\s+\S/.test(s) && !/[.!?]$/.test(s)) return true;
+        if (/^\s{2,}[a-z][a-zA-Z0-9_-]*[\s:]/.test(s)) return true;
+        if (/^\s*-\s+[a-z_A-Z]/.test(s)) return true;
+        return false;
+      };
 
       const flushList = () => {
         if (currentList.length === 0) return;
@@ -314,7 +361,7 @@ export default function FormattedContent({ content, inline = false }) {
         currentCliGroup = [];
       };
 
-      const flushAll = () => { flushList(); flushNumberedList(); flushCliGroup(); };
+      const flushAll = () => { flushList(); flushNumberedList(); flushCliGroup(); flushStructuredGroup(); flushShellGroup(); };
 
       // Detect CLI reference line patterns. Returns { cmd, desc } or null.
       // A: Flag rows  — "-d   detach" / "--name <n>   assign a name..."
@@ -512,11 +559,30 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
+        // Shell commands: lines starting with "$ " accumulate as a bash code block.
+        if (trimmed.startsWith('$ ')) {
+          flushList(); flushNumberedList(); flushCliGroup(); flushStructuredGroup();
+          currentShellGroup.push(trimmed);
+          return;
+        }
+
+        // JSON/YAML structured data lines that weren't in fenced code blocks.
+        // isJsonLine() starts a new group; isYamlContinueLine() only extends one.
+        if (isJsonLine(trimmed)) {
+          flushList(); flushNumberedList(); flushCliGroup(); flushShellGroup();
+          currentStructuredGroup.push(trimmed);
+          return;
+        }
+        if (isYamlContinueLine(trimmed) && currentStructuredGroup.length > 0) {
+          currentStructuredGroup.push(trimmed);
+          return;
+        }
+
         // CLI reference rows: detected flag rows and em-dash command rows
         // accumulate into a visual two-column card (flushed on next non-CLI line).
         const cliRow = detectCliRow(trimmed);
         if (cliRow) {
-          flushList();
+          flushList(); flushStructuredGroup(); flushShellGroup();
           currentCliGroup.push(cliRow);
           return;
         }
