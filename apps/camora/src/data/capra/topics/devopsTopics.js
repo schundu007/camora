@@ -20816,6 +20816,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
     visualizations: [
       {
         title: 'Pods, workload controllers, Services, storage, namespace policy',
+        image: '/diagrams/devops/k8s-core-resources.png',
         description: `Pod. The smallest schedulable unit. One or more containers sharing network namespace, shared volumes, and a Pod-level lifecycle. Patterns: Sidecar (sidecar container as v1.29 GA via restartPolicy: Always on initContainer), Adapter, Ambassador, Init container.
 
 You almost never write a bare Pod. Pods are managed by a controller.
@@ -20952,6 +20953,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
     visualizations: [
       {
         title: 'Helm 3 charts and Kustomize overlays',
+        image: '/diagrams/devops/k8s-helm-kustomize.png',
         description: `Helm is the package manager for Kubernetes. A chart is a directory: Chart.yaml (metadata + dependencies), values.yaml (defaults), templates/*.yaml (Go templates), templates/_helpers.tpl (named templates), charts/ (vendored sub-charts).
 
 Templates render Go template syntax against the merged values. helm install myrelease ./mychart -f prod-values.yaml renders templates with merged values (chart defaults + -f files + --set CLI overrides), validates against the K8s OpenAPI schema, and applies as a Release. Helm tracks releases as Secrets in the cluster (kind=helm.sh/release.v1).
@@ -21090,6 +21092,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
     visualizations: [
       {
         title: 'Ingress legacy and Gateway API role separation',
+        image: '/diagrams/devops/k8s-ingress-gateway.png',
         description: `Ingress is the original K8s API for HTTP(S) ingress. Stable since v1.19 (networking.k8s.io/v1). The Ingress resource describes intent. An Ingress controller running in the cluster watches Ingress objects and configures something (NGINX config, Envoy xDS, HAProxy config, cloud LB) to make it real.
 
 The annotation problem. The Ingress spec is intentionally minimal; advanced features are smuggled through controller-specific annotations: nginx.ingress.kubernetes.io/* (~80 annotations), traefik.ingress.kubernetes.io/*, alb.ingress.kubernetes.io/*, haproxy.org/*. Switching controllers requires rewriting every annotation.
@@ -21334,6 +21337,7 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway AP
     visualizations: [
       {
         title: 'CRDs, controller pattern, building operators',
+        image: '/diagrams/devops/k8s-operators-crds.png',
         description: `A CustomResourceDefinition (CRD) extends the Kubernetes API with a new kind. The CRD itself is a cluster-scoped resource. Once the CRD exists, kubectl get postgresclusters works just like kubectl get pods. The OpenAPI schema is enforced by the apiserver.
 
 A controller is a process that runs the reconcile loop:
@@ -21484,6 +21488,7 @@ These are answers a Kubernetes-fluent platform engineer should give without prep
     visualizations: [
       {
         title: 'Data plane architectures and 2026 mesh capabilities',
+        image: '/diagrams/devops/k8s-service-mesh.png',
         description: `Every service mesh has two halves: a data plane (intercepts traffic) and a control plane (configures the data plane).
 
 Sidecar data plane. A proxy container in every Pod. The proxy intercepts ingress/egress traffic via iptables redirection. Used by: Istio (Envoy sidecar), Linkerd (Linkerd2-proxy sidecar), Consul Connect, AWS App Mesh. Tradeoff: per-Pod resource cost (50-200MB RAM, 0.1-0.5 CPU per sidecar) and an extra hop on every request (~0.5-2ms).
@@ -43402,6 +43407,7 @@ spec:
   topics: [
     {
       title: 'RBAC Model: Roles, Verbs, Resources, and API Groups',
+        image: '/diagrams/devops/k8s-rbac.png',
       content: `The kube-apiserver evaluates every request through an ordered chain of authorizers set by the --authorization-mode flag. A typical production cluster uses Node,RBAC,Webhook. The Node authorizer handles kubelet requests; RBAC handles everything else; a Webhook authorizer can extend decisions further. If any authorizer returns ALLOW the request proceeds; if all return DENY or NO_OPINION the server returns HTTP 403 Forbidden.
 
 Role: applies within a single namespace. ClusterRole: applies cluster-wide or can be scoped to a namespace through a RoleBinding. This distinction is critical — a ClusterRole itself carries no scope, only the binding object determines scope. A RoleBinding that references a ClusterRole limits its rules to the namespace where the binding lives. This is the most common pattern for shared roles that you want to reuse across many namespaces without duplicating YAML.
@@ -43748,6 +43754,7 @@ rbac-lookup github-actions -k ServiceAccount -o wide`,
   topics: [
     {
       title: 'The Pod Network Model and CNI Dataplane',
+        image: '/diagrams/devops/k8s-networking-cni.png',
       content: `The Kubernetes network model makes three guarantees: pods on a node can communicate with all pods on all nodes without NAT; agents on a node (kubelet, kube-proxy) can communicate with all pods on that node; and pods in the host network namespace see the node's IP, not a pod IP. These guarantees are enforced purely by convention and the CNI plugin — Kubernetes itself does not implement them at the control plane level.
 
 Every Pod runs its containers in a shared Linux network namespace. The first container created in a pod is the pause (infra) container, whose sole job is to hold the network namespace open for the lifetime of the pod. All application containers then join that namespace, sharing the same loopback, the same IP address, and the same port space. Two containers in the same pod communicate over localhost.
@@ -44096,6 +44103,7 @@ kubectl run debug --image=nicolaka/netshoot --rm -it --restart=Never -- sh
   topics: [
     {
       title: 'HPA v2: Algorithm, Behavior Block, and Custom Metrics',
+        image: '/diagrams/devops/k8s-autoscaling.png',
       content: `The Horizontal Pod Autoscaler has been on the v2 API (autoscaling/v2) since Kubernetes 1.23 and is the right version to use in all current clusters. The v1 API only supported CPU percentage; v2 supports multiple metric sources simultaneously.
 
 The core scaling algorithm is: desiredReplicas = ceil(currentReplicas × currentMetricValue / desiredMetricValue). For CPU, currentMetricValue is the sum of CPU usage across all pods in the target divided by the number of pods; desiredMetricValue is the target CPU millicore or utilization percentage you set. If the ratio is greater than 1, replicas increase; if less than 1, they decrease. The ceil ensures you never round down to fewer replicas than needed to service current load.
