@@ -6,6 +6,7 @@ import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
 import BootProgress from './BootProgress';
 import IdePane from './IdePane';
+import RadarPane from './RadarPane';
 import ToolPickerPanel from './ToolPickerPanel';
 import SavedVmsPanel from './SavedVmsPanel';
 import ClusterView from './ClusterView';
@@ -23,7 +24,7 @@ export default function PlaygroundShell() {
   const { confirm, alert: dialogAlert } = useDialog();
   const {
     session, status, error, timeRemaining, bootSteps, extendAvailable,
-    wsUrl, ideUrl,
+    wsUrl, ideUrl, radarUrl,
     createSession, destroySession, extendSession,
     saves, savesLoading, slotsUsed, slotsMax, saveVm, restoreVm, deleteSave,
   } = usePlaygroundSession();
@@ -186,6 +187,9 @@ export default function PlaygroundShell() {
               mono
               onReconnect={activeTab === 'terminal' ? () => setTermKey(k => k + 1) : null}
             />
+            {radarUrl && (
+              <TabButton active={activeTab === 'radar'} onClick={() => setActiveTab('radar')} label="Radar" icon="◎" />
+            )}
             <div style={{ flex: 1 }} />
             {/* Controls */}
             {activeTab === 'terminal' && [['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
@@ -233,6 +237,12 @@ export default function PlaygroundShell() {
                     />
                   )}
                 </div>
+                {/* Radar pane — k8s environments only */}
+                {radarUrl && (
+                  <div style={{ position: 'absolute', inset: 0, display: activeTab === 'radar' ? 'block' : 'none' }}>
+                    <RadarPane radarUrl={radarUrl} />
+                  </div>
+                )}
               </>
             )}
           </div>

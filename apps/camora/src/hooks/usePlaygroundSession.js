@@ -344,6 +344,11 @@ export function usePlaygroundSession() {
     ? `${API_URL}/pg-ide/?_s=${session.sessionId}&_t=${encodeURIComponent(getStoredToken() || '')}`
     : null;
 
+  // Construct Radar URL — only when session has a radar_port (k8s environments)
+  const radarUrl = session?.sessionId && session?.radar_port
+    ? `${API_URL}/pg-radar/?_s=${session.sessionId}&_t=${encodeURIComponent(getStoredToken() || '')}`
+    : null;
+
   const saveVm = useCallback(async (sessionId, name) => {
     const res = await savesFetch('/api/v1/playground/saves', { method: 'POST', body: JSON.stringify({ sessionId, name }) });
     const data = await res.json();
@@ -381,6 +386,7 @@ export function usePlaygroundSession() {
     extendAvailable,
     wsUrl,
     ideUrl,
+    radarUrl,
     createSession,
     destroySession,
     extendSession,
