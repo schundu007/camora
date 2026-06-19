@@ -82,6 +82,15 @@ export default function CaraBar() {
     }
   };
 
+  const renderAnswer = (text: string) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) =>
+      part.startsWith('**') && part.endsWith('**')
+        ? <strong key={i}>{part.slice(2, -2)}</strong>
+        : part
+    );
+  };
+
   const handleNavigate = () => {
     if (!response?.action) return;
     navigate(response.action.path);
@@ -270,7 +279,7 @@ export default function CaraBar() {
                     fontFamily: 'var(--font-sans)',
                     margin: 0,
                   }}>
-                    {response.answer}
+                    {renderAnswer(response.answer)}
                   </p>
                   {response.action && (
                     <button
