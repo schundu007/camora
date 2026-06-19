@@ -335,49 +335,7 @@ export default function PlaygroundShell() {
                 Disposable Linux VMs with VS Code IDE — start in seconds.
               </p>
             </div>
-            <div style={{ margin: '0 16px 16px' }}>
-              <div style={{
-                height: 100, borderRadius: 8, background: '#0a0a0a',
-                border: `2px solid ${selectedEnv.color}44`, borderTop: `3px solid ${selectedEnv.color}`,
-                overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                padding: '8px 10px', fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#e4e4e4',
-              }}>
-                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b' }} />
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
-                </div>
-                <div style={{ color: '#10b981' }}>root@{selectedEnv.id}:~$ <span style={{ animation: 'pulse 1.2s step-end infinite' }}>▊</span></div>
-                <div style={{ color: 'rgba(255,255,255,0.25)', marginTop: 4, fontSize: 9 }}>{selectedEnv.desc}</div>
-              </div>
-            </div>
-            <div style={{ padding: '0 16px', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <span style={{ fontSize: 18, display: 'flex', alignItems: 'center' }}><EnvIcon icon={selectedEnv.icon} /></span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{selectedEnv.label}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
-                {selectedEnv.category.split(' · ').map(cat => (
-                  <span key={cat} style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, background: `${selectedEnv.color}22`, color: selectedEnv.color }}>{cat}</span>
-                ))}
-                {selectedEnv.plan === 'free' && (
-                  <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3, background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>Free</span>
-                )}
-              </div>
-            </div>
-            <div style={{ height: 1, background: 'var(--border)', margin: '0 16px 12px' }} />
-            <div style={{ padding: '0 16px', marginBottom: 12 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 8 }}>Included</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {[['Terminal', 'bash shell'], ['IDE', 'VS Code in browser'], ['Duration', '60 min']].map(([k, v]) => (
-                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{k}</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ flex: 1 }} />
+            <EnvironmentConfigPanel env={selectedEnv} />
           </div>
 
           {/* Right panel */}
