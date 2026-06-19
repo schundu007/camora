@@ -8,9 +8,9 @@ const SQLPlayground = lazy(() => import('../components/capra/sql/SQLPlayground')
 const PlaygroundShell = lazy(() => import('../components/capra/playground/PlaygroundShell'));
 
 const TABS = [
-  { key: 'code', label: 'Code' },
-  { key: 'sql',  label: 'SQL'  },
-  { key: 'vm',   label: 'VM'   },
+  { key: 'vm',   label: 'Containers' },
+  { key: 'code', label: 'Coding'     },
+  { key: 'sql',  label: 'SQL'        },
 ];
 
 const Spinner = () => (
@@ -28,7 +28,7 @@ const Spinner = () => (
 export default function PlaygroundPage() {
   const [params, setParams] = useSearchParams();
   const rawTab = params.get('tab');
-  const tab = TABS.some(t => t.key === rawTab) ? rawTab : 'code';
+  const tab = TABS.some(t => t.key === rawTab) ? rawTab : 'vm';
 
   const setTab = (key) => setParams({ tab: key }, { replace: false });
 
