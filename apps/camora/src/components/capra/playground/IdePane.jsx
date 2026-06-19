@@ -9,13 +9,19 @@ export default function IdePane({ ideUrl, wsUrl }) {
   const [loaded, setLoaded] = useState(false);
   const [termH, setTermH] = useState(DEFAULT_TERM_H);
   const [termKey, setTermKey] = useState(0);
+  const [dragging, setDragging] = useState(false);
 
   const onDividerMouseDown = useCallback((e) => {
     e.preventDefault();
     const startY = e.clientY;
     const startH = termH;
     const onMove = (mv) => setTermH(Math.max(MIN_TERM_H, Math.min(MAX_TERM_H, startH + (startY - mv.clientY))));
-    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    const onUp = () => {
+      setDragging(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    setDragging(true);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   }, [termH]);
@@ -50,6 +56,7 @@ export default function IdePane({ ideUrl, wsUrl }) {
           allow="clipboard-read; clipboard-write"
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
         />
+        {dragging && <div style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'ns-resize' }} />}
       </div>
 
       {/* Drag handle */}
