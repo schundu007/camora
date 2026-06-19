@@ -22,9 +22,13 @@ const ALLOWED_ORIGINS = [
   'https://camora.cariara.com',
   'https://www.camora.cariara.com',
   'https://capra.cariara.com',
+  'https://playground-backend-production.up.railway.app',
   'http://localhost:3000',
+  'http://localhost:3005',
   'http://localhost:5173',
 ];
+
+const HOP_BY_HOP = new Set(['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailers', 'transfer-encoding', 'upgrade']);
 
 const app = express();
 
@@ -114,23 +118,43 @@ app.use('/pg-ide', async (req, res) => {
     'http://localhost:5173',
   ].join(' ');
 
+  const reqHeaders = {};
+  for (const [k, v] of Object.entries(req.headers)) {
+    if (!HOP_BY_HOP.has(k.toLowerCase())) reqHeaders[k] = v;
+  }
+  reqHeaders.host = `${session.ttyd_host}:${session.code_server_port}`;
+  reqHeaders.connection = 'close';
+  reqHeaders['accept-encoding'] = 'gzip';
+
   const proxyReq = http.request({
     hostname: session.ttyd_host,
     port: session.code_server_port,
     path: req.url,
     method: req.method,
-    headers: { ...req.headers, host: `${session.ttyd_host}:${session.code_server_port}`, connection: 'close' },
+    headers: reqHeaders,
   }, (proxyRes) => {
-    const headers = { ...proxyRes.headers };
-    delete headers['content-security-policy'];
-    delete headers['x-frame-options'];
-    res.removeHeader('Content-Security-Policy');
-    res.removeHeader('X-Frame-Options');
-    headers['content-security-policy'] = `default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors ${FRAME_ORIGINS}`;
-    res.writeHead(proxyRes.statusCode, headers);
-    proxyRes.pipe(res, { end: true });
+    try {
+      const headers = {};
+      for (const [k, v] of Object.entries(proxyRes.headers)) {
+        if (!HOP_BY_HOP.has(k.toLowerCase())) headers[k] = v;
+      }
+      delete headers['content-security-policy'];
+      delete headers['x-frame-options'];
+      res.removeHeader('Content-Security-Policy');
+      res.removeHeader('X-Frame-Options');
+      headers['content-security-policy'] = `default-src * 'unsafe-inline' 'unsafe-eval' blob: data: ws: wss:; frame-ancestors ${FRAME_ORIGINS}`;
+      if (!res.headersSent) {
+        res.writeHead(proxyRes.statusCode, headers);
+        proxyRes.pipe(res, { end: true });
+      }
+    } catch (e) {
+      if (!res.headersSent) res.status(500).end();
+    }
   });
-  proxyReq.on('error', () => { if (!res.headersSent) res.status(502).end(); });
+  proxyReq.on('error', (e) => {
+    console.error('[pg-ide] proxy error:', e.message);
+    if (!res.headersSent) res.status(502).end();
+  });
   req.pipe(proxyReq, { end: true });
 });
 
