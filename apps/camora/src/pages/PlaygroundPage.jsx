@@ -33,7 +33,7 @@ export default function PlaygroundPage() {
   const setTab = (key) => setParams({ tab: key }, { replace: false });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       {/* ── Header ── */}
       <div style={{
         flexShrink: 0,
