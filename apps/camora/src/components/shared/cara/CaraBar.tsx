@@ -17,7 +17,7 @@ interface CaraResponse {
 }
 
 const VALID_PATHS = new Set([
-  '/capra/prepare', '/capra/practice', '/capra/playground', '/capra/mcq',
+  '/capra/prepare', '/capra/practice', '/playground', '/capra/mcq',
   '/capra/resume', '/capra/company-prep', '/capra/plan', '/capra/library',
   '/capra/achievements', '/capra/hr-library', '/lumora', '/pricing',
   '/profile', '/docs', '/jobs',
