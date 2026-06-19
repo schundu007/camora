@@ -47,7 +47,8 @@ fi
 mkdir -p /home/learner/.local/share/code-server/User
 cat > /home/learner/.local/share/code-server/User/settings.json << 'VSCODE_SETTINGS'
 {
-  "workbench.startupEditor": "none"
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Default Dark Modern"
 }
 VSCODE_SETTINGS
 chown -R learner:learner /home/learner/.local
