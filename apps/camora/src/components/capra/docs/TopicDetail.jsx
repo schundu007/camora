@@ -2736,7 +2736,7 @@ export default function TopicDetail({
           <div
             className="rounded-lg overflow-hidden"
             style={{
-              background: 'var(--bg-surface)',
+              background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
               padding: '32px 40px',
             }}
@@ -2767,7 +2767,7 @@ export default function TopicDetail({
               <ContentHeading title="Deep Dive" actions={<GlassPill>{topicDetails.topics.length} sections</GlassPill>} />
               <div className="pt-3 space-y-4">
                 {topicDetails.topics.map((sec, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                  <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
                     <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-3">
                       <span
                         className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
@@ -2775,7 +2775,7 @@ export default function TopicDetail({
                       >
                         {String(i + 1).padStart(2, '0')}
                       </span>
-                      <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display">{sec.title}</h4>
+                      <h4 className="text-[var(--accent)] font-bold text-[14px] leading-snug landing-display">{sec.title}</h4>
                     </div>
                     <div className="px-5 py-4 prep-content">
                       {sec.content && <FormattedContent content={sec.content} />}
@@ -2877,7 +2877,7 @@ export default function TopicDetail({
                   return (
                     <div
                       key={i}
-                      className={`rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]${splitLayout ? ' lg:col-span-2' : ''}`}
+                      className={`rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]${splitLayout ? ' lg:col-span-2' : ''}`}
                     >
                       <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-2.5">
                         <span
@@ -2890,7 +2890,7 @@ export default function TopicDetail({
                         >
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        <span className="text-[14px] font-semibold text-[var(--text-primary)] landing-display">{kc.term || kc.title}</span>
+                        <span className="text-[14px] font-bold text-[var(--accent)] landing-display">{kc.term || kc.title}</span>
                       </div>
                       {splitLayout ? (
                         <div className="flex divide-x divide-[var(--border)] min-h-0">
@@ -2972,7 +2972,7 @@ export default function TopicDetail({
                   const questionKey = `sre-${index}`;
                   const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
                   return (
-                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
                         className="w-full px-4 py-3 flex items-center gap-3 bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-elevated)] transition-colors text-left"
@@ -3040,7 +3040,7 @@ export default function TopicDetail({
                   const qKey = `qf-${index}`;
                   const isExpanded = expandedTheoryQuestions[qKey] === undefined ? index < 3 : expandedTheoryQuestions[qKey];
                   return (
-                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-surface)]">
+                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [qKey]: !isExpanded }))}
                         className="w-full px-4 py-3 flex items-center gap-3 bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-elevated)] transition-colors text-left"
