@@ -1,5 +1,4 @@
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import CodeBlock from '../shared/CodeBlock.jsx';
 import Chip from '@/components/shared/ui/Chip';
 
 const DIFFICULTY_STYLES = {
@@ -246,28 +245,7 @@ export default function DevopsChallengeDetail({ challenge, onBack }) {
         <>
           <section>
             <SectionHeading>Solution</SectionHeading>
-            <div
-              style={{
-                borderRadius: 10,
-                overflow: 'hidden',
-                border: '1px solid var(--border)',
-              }}
-            >
-              <SyntaxHighlighter
-                language={challenge.solutionLang || 'bash'}
-                style={vscDarkPlus}
-                customStyle={{
-                  margin: 0,
-                  borderRadius: 10,
-                  fontSize: 13,
-                  lineHeight: 1.65,
-                  padding: '18px 20px',
-                }}
-                showLineNumbers={false}
-              >
-                {challenge.solution}
-              </SyntaxHighlighter>
-            </div>
+              <CodeBlock code={challenge.solution} lang={challenge.solutionLang || 'bash'} />
           </section>
           <SectionDivider />
         </>
