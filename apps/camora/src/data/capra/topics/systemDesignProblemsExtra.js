@@ -3771,7 +3771,7 @@ request_logs {
 User -> Edge PoP (SFO) -> [HIT] -> serve
 User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [HIT] -> serve, cache at edge
 User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [MISS] -> Origin -> serve, cache at shield + edge
-\`\`\`
+\`\`\`yaml
 
 **Shield Assignment**:
 - Each edge PoP is assigned to one shield PoP (based on network proximity)
@@ -4918,7 +4918,7 @@ WHERE td.depends_on_task_id = 'B'
       AND tr.status != 'succeeded'
   )
 -- Returns tasks whose ALL dependencies have succeeded
-\`\`\`
+\`\`\`yaml
 
 **Failure Propagation**:
 - If Task B fails: what happens to C and D?
@@ -7113,7 +7113,7 @@ Phase 2 (Query with Global Stats):
 Phase 3 (Fetch):
   - Coordinating node determines final top-N across all shards
   - Fetches full documents from relevant shards
-\`\`\`
+\`\`\`yaml
 
 **Solution 2: Shard-Local Scoring (default, good enough)**:
 - With enough documents per shard (~10K+), local statistics approximate global

@@ -2372,7 +2372,7 @@ PK: USER#123        SK: PROFILE        (user data)
 PK: USER#123        SK: ORDER#2025-01  (user's orders)
 PK: ORDER#2025-01   SK: ITEM#456       (order line items)
 PK: PRODUCT#456     SK: METADATA       (product data)
-\`\`\`
+\`\`\`yaml
 All related data co-located in same partition for single-query retrieval.`
       },
       {

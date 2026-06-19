@@ -573,7 +573,7 @@ Deploy static JS/CSS with content-hash filenames (main.abc123.js). Long TTL is s
 
 \`\`\`bash
 aws cloudfront create-invalidation --distribution-id E123 --paths "/index.html" "/api/*"
-\`\`\`
+\`\`\`yaml
 
 **Result**: static assets cached at edges indefinitely (low cost, low latency), API always fresh (bypass cache), HTML pages short TTL with fast invalidation capability.`,
       },
@@ -664,7 +664,7 @@ AZ-b:
   Public:       10.0.1.0/24
   Private-app:  10.0.6.0/23
   Private-data: 10.0.8.0/24
-\`\`\`
+\`\`\`yaml
 
 ## Gateways
 
@@ -916,7 +916,7 @@ If packets arrive but get no response, it is an app issue. If no packets arrive,
 
 \`\`\`bash
 kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
-\`\`\`
+\`\`\`yaml
 
 **Common root causes**: NetworkPolicy blocks cross-namespace traffic, Service selector typo, CoreDNS returning wrong IP, port number mismatch.`,
       },
@@ -5551,7 +5551,7 @@ sysctl -w net.core.rmem_max=16777216
 sysctl -w net.core.wmem_max=16777216
 sysctl -w net.ipv4.tcp_rmem='4096 87380 16777216'
 sysctl -w net.ipv4.tcp_wmem='4096 65536 16777216'
-\`\`\`
+\`\`\`yaml
 
 ## Caveats
 

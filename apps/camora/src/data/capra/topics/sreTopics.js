@@ -5207,7 +5207,7 @@ readinessProbe:
     port: 8080
   periodSeconds: 10
   timeoutSeconds: 5
-\`\`\`
+\`\`\`yaml
 
 The takeaway: probes are load-bearing AND dangerous. A misconfigured probe doesn\'t protect — it can take you down.`,
       },
@@ -6735,7 +6735,7 @@ CircuitBreakerConfig.custom()
   .slidingWindowSize(20)
   .waitDurationInOpenState(Duration.ofSeconds(30))
   .build();
-\`\`\`
+\`\`\`yaml
 
 Both target the same outcome via different mechanisms.`,
       },
@@ -7090,7 +7090,7 @@ Circuit breaker + fallback (resilience4j, Polly):
 public Data getData() { return upstream.fetch(); }
 
 public Data getFallbackData(Exception e) { return cachedData; }
-\`\`\`
+\`\`\`yaml
 
 Service mesh + sidecar fallback:
 - Istio + Envoy can return a default response on upstream failure.
@@ -7491,7 +7491,7 @@ trafficPolicy:
   outlierDetection:
     consecutiveErrors: 5
     interval: 30s
-\`\`\`
+\`\`\`yaml
 
 (Istio doesn\'t have a direct "retry budget" knob; the combination of \`outlierDetection\` + retry policy + maxConnections approximates one.)
 
@@ -7694,7 +7694,7 @@ def handle_request(req):
         return 503, "Shed: priority too low for current load"
 
     return process(req)
-\`\`\`
+\`\`\`yaml
 
 The discipline:
 - Only the gateway sets priority (avoid clients lying about their priority).
@@ -7992,7 +7992,7 @@ The dedup entry stores the operation reference, not the result:
   status: "completed" | "in_progress" | "failed",
   result_url: "/operations/op_789"
 }
-\`\`\`
+\`\`\`yaml
 
 Timeouts:
 - Per the dedup TTL: 24 hours typically.
@@ -8254,7 +8254,7 @@ def query_admin_dashboard():
 
 def run_batch_job():
     return batch_pool.execute(batch_query)
-\`\`\`
+\`\`\`yaml
 
 The categorization usually maps to API path or annotation.
 
@@ -8602,7 +8602,7 @@ result = circuit_breaker(dep_X).execute(
     ),
     fallback=cached_x_value
 )
-\`\`\`
+\`\`\`yaml
 
 Each layer prevents a different failure mode:
 - Timeout: hangs.
@@ -9327,7 +9327,7 @@ Summary: Checkout service\'s p99 latency exceeded 1s for 5 minutes.
 ## Post-incident
 - File followup: [Why was the autoscaling lagging?]
 - Tag the postmortem with this runbook for refinement.
-\`\`\`
+\`\`\`yaml
 
 The features:
 - One-line summary at top.
@@ -9712,7 +9712,7 @@ Hypothesis: DB connection pool exhausted; investigating cause.
 Action: Bob investigating DB; Alice on rollback prep; Carol drafting status page update.
 ETA mitigation: estimated 14:45 UTC.
 Next update: 14:45 UTC or sooner if mitigation lands.
-\`\`\`
+\`\`\`yaml
 
 Components:
 - Time elapsed.
@@ -10519,7 +10519,7 @@ Service uses credentials for 1 hour.
 After 1 hour, Vault automatically deletes the user.
 Service: "I need DB credentials."
 Vault: "Here\'s a NEW username..."
-\`\`\`
+\`\`\`yaml
 
 Why it\'s powerful:
 

@@ -712,7 +712,7 @@ Problem 5: Capacity planning
 \`\`\`
 
 **Kubernetes with sticky sessions**:
-\`\`\`
+\`\`\`yaml
   apiVersion: v1
   kind: Service
   metadata:
