@@ -9,6 +9,7 @@ import {
   setTTL,
   clearTTL,
   getUserDailyCount,
+  markRadarReady,
 } from './sessionStore.js';
 
 const FREE_ENVIRONMENTS = new Set(['ubuntu', 'docker']);
@@ -49,13 +50,16 @@ export async function createSession({ userId, userEmail, environment, scenarioId
 
   if (CLUSTER_ENVIRONMENTS.has(environment)) {
     const { networkName, nodes } = await scheduleCluster(`${userId}-${jobTag}`, environment);
-    const nodesWithPorts = await getClusterAddresses(nodes);
+    const nodesWithPorts = await getClusterAddresses(nodes, environment);
     const clusterNodes = nodesWithPorts.map(n => ({ ...n, status: 'provisioning' }));
 
     const primary = nodesWithPorts[0];
+    const serverNode = nodesWithPorts.find(n => n.role === 'server') || primary;
+    const radarPort = serverNode.radarPort || null;
+
     const session = await createSessionRecord(
       userId, environment, null, networkName, expiresAt,
-      primary.host, primary.ttydPort, primary.codeServerPort, null, clusterNodes,
+      primary.host, primary.ttydPort, primary.codeServerPort, null, clusterNodes, radarPort,
     );
     await setTTL(session.id, 3600);
     return {
@@ -68,8 +72,8 @@ export async function createSession({ userId, userEmail, environment, scenarioId
   }
 
   const { jobId } = await scheduleJob(`${userId}-${jobTag}`, environment, scenarioId);
-  const { host, ttydPort, codeServerPort } = await getTaskAddress(jobId);
-  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort, setupScript, null);
+  const { host, ttydPort, codeServerPort, radarPort } = await getTaskAddress(jobId, environment);
+  const session = await createSessionRecord(userId, environment, scenarioId, jobId, expiresAt, host, ttydPort, codeServerPort, setupScript, null, radarPort);
   await setTTL(session.id, 3600);
   return {
     sessionId: session.id,
