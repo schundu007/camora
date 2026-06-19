@@ -62,9 +62,6 @@ export const devopsTopicCategoryMap = {
   'linux-networking-l2l3':          'foundations',
   'tcp-sockets-servers':            'foundations',
   'computer-networking-fundamentals':'foundations',
-  'kubernetes-the-hard-way':        'orchestration',
-  'kubernetes-storage':             'orchestration',
-  'kubernetes-pod-scheduling':      'orchestration',
   'kubescape-runtime-security':     'devsecops',
   'tekton-pipelines':               'cicdtools',
   'argo-workflows':                 'cicdtools',
@@ -121,32 +118,35 @@ export const devopsTopicCategoryMap = {
   'docker-debugging':               'containers',
   'docker-image-internals':         'containers',
   'distroless-images':              'containers',
-  // Orchestration — architecture → core objects → packaging → networking → advanced
+  // Orchestration — architecture → core objects → cluster internals → setup → workloads → networking → security → scaling → operations → advanced
   'kubernetes-architecture':        'orchestration',
   'k8s-core-resources':             'orchestration',
+  'kubernetes-the-hard-way':        'orchestration',
+  'kubernetes-storage':             'orchestration',
+  'kubernetes-pod-scheduling':      'orchestration',
+  'kubeadm-provisioning':           'orchestration',
+  'local-kubernetes-setup':         'orchestration',
+  'kubectl-cli-reference':          'orchestration',
+  'container-probes':               'orchestration',
   'helm-vs-kustomize':              'orchestration',
   'ingress-gateway-api':            'orchestration',
   'operators-and-crds':             'orchestration',
   'service-mesh':                   'orchestration',
+  'kubernetes-rbac':                'orchestration',
+  'kubernetes-security':            'orchestration',
   'kubernetes-admission-control':   'orchestration',
   'kubernetes-runtime-class':       'orchestration',
   'kubernetes-native-sidecars':     'orchestration',
-  'kubeadm-provisioning':           'orchestration',
-  'kubectl-cli-reference':          'orchestration',
-  'container-probes':               'orchestration',
-  'kubernetes-app-troubleshooting': 'orchestration',
-  'local-kubernetes-setup':         'orchestration',
+  'kubernetes-networking':          'orchestration',
+  'kubernetes-autoscaling':         'orchestration',
+  'kubernetes-observability':       'orchestration',
+  'kubernetes-secrets-management':  'orchestration',
   'kubernetes-evictions':           'orchestration',
   'kubernetes-descheduler':         'orchestration',
   'kubernetes-custom-schedulers':   'orchestration',
   'kubernetes-api-aggregation':     'orchestration',
   'kubernetes-gpu-ai-scheduling':   'orchestration',
-  'kubernetes-rbac':                'orchestration',
-  'kubernetes-networking':          'orchestration',
-  'kubernetes-autoscaling':         'orchestration',
-  'kubernetes-security':            'orchestration',
-  'kubernetes-observability':       'orchestration',
-  'kubernetes-secrets-management':  'orchestration',
+  'kubernetes-app-troubleshooting': 'orchestration',
   'kubernetes-upgrades':            'orchestration',
   'kubernetes-multitenancy':        'orchestration',
   'kubernetes-multicloud':          'orchestration',
@@ -41173,7 +41173,7 @@ Phase 2 — Validating admission:
 Key operational concern: a failing webhook blocks ALL resource creation if its failurePolicy is Fail. Always set a narrow namespaceSelector to exclude kube-system and always set a reasonable timeoutSeconds (5s max recommended). A webhook that times out with failurePolicy: Fail will prevent new pods from starting in the matched namespaces.
 
 Webhook registration: the webhook endpoint receives an AdmissionReview JSON object with request.object containing the resource being created. It must return an AdmissionReview with response.allowed: true/false and optionally response.patch for mutations.`,
-        image: `/diagrams/devops/g1-k8s-arch.png`,
+        image: '/diagrams/devops/k8s-admission-control.png',
       },
       {
         title: `Pod Security Admission and OPA/Gatekeeper`,
@@ -41924,6 +41924,7 @@ Temporal ordering:
   1. startupProbe runs first (if configured). livenessProbe and readinessProbe wait.
   2. startupProbe succeeds → liveness and readiness begin.
   3. livenessProbe and readinessProbe run independently on their own periodSeconds cadence.`,
+        image: '/diagrams/devops/k8s-probes-flow.png',
       },
       {
         title: 'Three probe mechanisms — httpGet, tcpSocket, exec',
@@ -42175,6 +42176,7 @@ kubectl top pod <name>       # current usage (if pod is still Running)
 
 # Fix: increase memory limit, or profile the app for memory leaks
 \`\`\``,
+        image: '/diagrams/devops/k8s-app-troubleshooting.png',
       },
       {
         title: 'Debugging workflow — Events-first pattern',
@@ -42337,6 +42339,7 @@ Drivers:
   virtualbox  — VirtualBox VM (slowest; full isolation)
 
 minikube is not suitable for multi-node testing — it creates exactly one node.`,
+        image: '/diagrams/devops/k8s-local-setup.png',
       },
       {
         title: 'kind — multi-node clusters in Docker for CI',
@@ -42537,6 +42540,7 @@ systemReserved:
   cpu: "200m"
   memory: "512Mi"
   ephemeral-storage: "1Gi"`,
+        image: '/diagrams/devops/k8s-evictions.png',
       },
       {
         title: 'QoS Classes and Eviction Order',
@@ -42780,6 +42784,7 @@ profiles:
         enabled:
           - RemoveDuplicates
           - RemovePodsHavingTooManyRestarts`,
+        image: '/diagrams/devops/k8s-descheduler.png',
       },
       {
         title: 'Deploying the Descheduler',
@@ -42934,6 +42939,7 @@ spec:
       resources:
         limits:
           nvidia.com/gpu: 8`,
+        image: '/diagrams/devops/k8s-custom-schedulers.png',
       },
       {
         title: 'Real-World Use Cases for Custom Schedulers',
@@ -43012,6 +43018,7 @@ spec:
 # v1beta1.metrics.k8s.io   kube-system/metrics-server   True        30d
 
 # If metrics-server APIService is False, kubectl top and HPA both break`,
+        image: '/diagrams/devops/k8s-api-aggregation.png',
       },
       {
         title: 'How the Proxy Architecture Works',
@@ -43158,6 +43165,7 @@ spec:
 # Nodes must be tainted to prevent non-GPU pods from wasting GPU nodes:
 # kubectl taint nodes gpu-node-01 nvidia.com/gpu=present:NoSchedule
 # GPU pods need tolerations for this taint`,
+        image: '/diagrams/devops/k8s-gpu-scheduling.png',
       },
       {
         title: 'GPU Sharing: MIG, Time-Slicing, and MPS',
@@ -43465,6 +43473,7 @@ roleRef:
   kind: ClusterRole              # ClusterRole, but binding is namespace-scoped
   name: admin
   apiGroup: rbac.authorization.k8s.io`,
+      image: `/diagrams/devops/k8s-rbac.png`,
     },
     {
       title: 'Bindings, ServiceAccounts, and Projected Tokens',
@@ -43777,6 +43786,7 @@ kubectl -n kube-system exec -it ds/cilium -- cilium status
 kubectl -n kube-system exec -it ds/cilium -- cilium endpoint list
 # Check if eBPF host routing is active (bypasses kube-proxy)
 kubectl -n kube-system exec -it ds/cilium -- cilium status | grep "KubeProxy replacement"`,
+      image: `/diagrams/devops/k8s-networking-cni.png`,
     },
     {
       title: 'CoreDNS and Kubernetes DNS Resolution',
@@ -44160,6 +44170,7 @@ spec:
 #     kind: Deployment
 #     jsonPointers:
 #       - /spec/replicas`,
+      image: `/diagrams/devops/k8s-autoscaling.png`,
     },
     {
       title: 'VPA: Recommender, Updater, Admission Plugin, and Update Modes',
@@ -44483,6 +44494,7 @@ metadata:
 ---
 # Verify PSS is active on the namespace
 # kubectl describe ns production | grep pod-security`,
+        image: '/diagrams/devops/k8s-security.png',
       },
       {
         title: 'SecurityContext — Container and Pod Isolation',
@@ -44744,6 +44756,7 @@ node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100
 # CPU throttling: % of CPU quota time that was throttled
 rate(container_cpu_cfs_throttled_seconds_total[5m])
   / rate(container_cpu_cfs_periods_total[5m])`,
+        image: '/diagrams/devops/k8s-observability.png',
       },
       {
         title: 'Prometheus Operator and kube-prometheus-stack',
@@ -45049,6 +45062,7 @@ resources:
 #   --key=/etc/kubernetes/pki/etcd/server.key \
 #   get /registry/secrets/default/my-secret | hexdump -C | head
 # Output should start with k8s:enc:kms:v2: (not plaintext values)`,
+        image: '/diagrams/devops/k8s-secrets-management.png',
       },
       {
         title: 'External Secrets Operator (ESO)',
@@ -45316,6 +45330,7 @@ kubectl convert -f old-manifest.yaml --output-version apps/v1
 
 # Verify version skew: apiserver at v1.31, kubelets must be >= v1.28
 kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.nodeInfo.kubeletVersion}{"\n"}{end}'`,
+        image: '/diagrams/devops/k8s-upgrades.png',
       },
       {
         title: 'Control Plane Upgrade with kubeadm',
@@ -45611,6 +45626,7 @@ subjects:
   name: team-alpha
   apiGroup: rbac.authorization.k8s.io
 EOF`,
+        image: '/diagrams/devops/k8s-multitenancy.png',
       },
       {
         title: 'Policy-as-Code: OPA/Gatekeeper and Kyverno',
@@ -45948,6 +45964,7 @@ spec:
   providerConfigRef:
     name: aws-provider
 EOF`,
+        image: '/diagrams/devops/k8s-multicloud.png',
       },
       {
         title: 'Fleet Management: Cluster API, Rancher, and Fleet',
@@ -46300,6 +46317,7 @@ curl -s http://localhost:9400/metrics | grep DCGM_FI_DEV_GPU_UTIL
 # Memory formula checks (example: Llama-3-70B)
 # FP16 inference: 70B * 2 bytes = 140GB → need 2x H100 80GB (160GB total)
 # FP16 training:  70B * 16 bytes = 1120GB → need 14+ H100 80GB with ZeRO-3`,
+        image: '/diagrams/devops/k8s-ai-ml.png',
       },
       {
         title: 'Distributed Training Patterns',
