@@ -46,6 +46,11 @@ export const ENVIRONMENTS = [
     desc: 'Clean Ubuntu shell',
     category: 'Linux',
     color: '#10b981',
+    nodes: [
+      { name: 'ubuntu', role: 'Shell', mem: '512 MB', tools: ['Terminal', 'IDE'] },
+    ],
+    specs: { totalMem: '512 MB', bootTime: '~5s' },
+    features: ['bash', 'vim', 'curl', 'wget', 'git', 'python3', 'node.js'],
   },
   {
     id: 'docker',
@@ -55,6 +60,11 @@ export const ENVIRONMENTS = [
     desc: 'Docker + Compose ready',
     category: 'Containers',
     color: '#2563eb',
+    nodes: [
+      { name: 'docker', role: 'Host', mem: '1 GB', tools: ['Terminal', 'IDE'] },
+    ],
+    specs: { totalMem: '1 GB', bootTime: '~8s' },
+    features: ['Docker 26', 'Compose v2', 'BuildKit', 'bash', 'git'],
   },
   {
     id: 'agent-sandbox',
@@ -65,6 +75,11 @@ export const ENVIRONMENTS = [
     category: 'AI · Programming',
     color: '#7c3aed',
     badge: 'NEW',
+    nodes: [
+      { name: 'sandbox', role: 'Dev Environment', mem: '2 GB', tools: ['Terminal', 'IDE'] },
+    ],
+    specs: { totalMem: '2 GB', bootTime: '~15s' },
+    features: ['Claude Code', 'Gemini CLI', 'Codex CLI', 'Python', 'Node.js', 'Go', 'git'],
   },
   {
     id: 'k8s-single',
@@ -74,6 +89,11 @@ export const ENVIRONMENTS = [
     desc: 'K8s v1.34 · containerd v2.1 · 1 control-plane node · practice bootstrapping, RBAC, networking',
     category: 'Kubernetes',
     color: '#0ea5e9',
+    nodes: [
+      { name: 'k8s-node', role: 'Control Plane', mem: '2 GB', tools: ['Terminal', 'IDE', 'Radar'] },
+    ],
+    specs: { totalMem: '2 GB', bootTime: '~30s' },
+    features: ['K8s v1.34', 'containerd v2.1', 'kubectl', 'etcdctl', 'RBAC', 'Radar'],
   },
   {
     id: 'k8s-multi',
@@ -83,6 +103,13 @@ export const ENVIRONMENTS = [
     desc: 'K8s v1.34 · kubeadm · 1 control-plane + 2 workers · Flannel CNI · practice scheduling & draining',
     category: 'Kubernetes',
     color: '#0ea5e9',
+    nodes: [
+      { name: 'server', role: 'Control Plane', mem: '2 GB', tools: ['Terminal', 'IDE', 'Radar'] },
+      { name: 'agent-1', role: 'Worker', mem: '1 GB', tools: ['Terminal'] },
+      { name: 'agent-2', role: 'Worker', mem: '1 GB', tools: ['Terminal'] },
+    ],
+    specs: { totalMem: '4 GB', bootTime: '~60s' },
+    features: ['K8s v1.34', 'kubeadm', 'Flannel CNI', 'kubectl', 'etcdctl', 'Radar'],
   },
   {
     id: 'k8s-etcd',
@@ -92,6 +119,11 @@ export const ENVIRONMENTS = [
     desc: 'etcd v3.6 embedded in K8s · practice watch, leases, transactions, compaction, defrag',
     category: 'Kubernetes',
     color: '#419EDA',
+    nodes: [
+      { name: 'k8s-etcd', role: 'Control Plane', mem: '2 GB', tools: ['Terminal', 'IDE', 'Radar'] },
+    ],
+    specs: { totalMem: '2 GB', bootTime: '~30s' },
+    features: ['etcd v3.6', 'etcdctl', 'K8s v1.34', 'watch API', 'leases', 'transactions'],
   },
   {
     id: 'etcd-cluster',
@@ -102,6 +134,13 @@ export const ENVIRONMENTS = [
     category: 'Kubernetes',
     color: '#419EDA',
     badge: 'NEW',
+    nodes: [
+      { name: 'etcd1', role: 'Primary', mem: '512 MB', tools: ['Terminal', 'IDE'] },
+      { name: 'etcd2', role: 'Member', mem: '512 MB', tools: ['Terminal'] },
+      { name: 'etcd3', role: 'Member', mem: '512 MB', tools: ['Terminal'] },
+    ],
+    specs: { totalMem: '1.5 GB', bootTime: '~20s' },
+    features: ['etcd v3.6', 'etcdctl', 'Raft consensus', 'leader election', 'snapshots', 'fault injection'],
   },
   {
     id: 'cloud-cli',
@@ -111,6 +150,11 @@ export const ENVIRONMENTS = [
     desc: 'AWS · GCP · Azure · Terraform · K8s',
     category: 'Cloud',
     color: '#f59e0b',
+    nodes: [
+      { name: 'cloud-cli', role: 'CLI Workstation', mem: '1 GB', tools: ['Terminal', 'IDE'] },
+    ],
+    specs: { totalMem: '1 GB', bootTime: '~10s' },
+    features: ['AWS CLI v2', 'gcloud', 'az CLI', 'Terraform', 'kubectl', 'Helm'],
   },
   {
     id: 'custom',
@@ -120,6 +164,11 @@ export const ENVIRONMENTS = [
     desc: 'Pick languages, DevOps tools, cloud CLIs',
     category: 'Custom',
     color: '#8b5cf6',
+    nodes: [
+      { name: 'custom', role: 'Custom', mem: '1 GB', tools: ['Terminal', 'IDE'] },
+    ],
+    specs: { totalMem: '1 GB', bootTime: '~15s' },
+    features: ['Choose your tools', 'Languages', 'DevOps CLIs', 'Cloud SDKs'],
   },
 ];
 
