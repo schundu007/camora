@@ -47,6 +47,12 @@ export const USER_GROUPS: DocsSidebarGroup[] = [
       { label: 'Voice filtering', to: '/docs/voice-filtering' },
     ],
   },
+  {
+    label: 'Playground',
+    items: [
+      { label: 'Playground', to: '/docs/playground' },
+    ],
+  },
 ];
 
 export const ADMIN_GROUPS: DocsSidebarGroup[] = [
@@ -77,6 +83,10 @@ export const ADMIN_GROUPS: DocsSidebarGroup[] = [
   {
     label: 'On-call',
     items: [{ label: 'Incident response', to: '/docs/admin/incidents' }],
+  },
+  {
+    label: 'Playground',
+    items: [{ label: 'Playground (engineering)', to: '/docs/admin/playground' }],
   },
 ];
 

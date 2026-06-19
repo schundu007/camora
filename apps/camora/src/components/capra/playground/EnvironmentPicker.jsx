@@ -102,24 +102,6 @@ export const ENVIRONMENTS = [
     category: 'Custom',
     color: '#8b5cf6',
   },
-  {
-    id: 'etcd-single',
-    label: 'etcd Single Node',
-    icon: { emoji: '⚙️' },
-    plan: 'free',
-    desc: 'Key-value ops, watches, TTL leases, transactions on a single etcd node',
-    category: 'Distributed Systems',
-    color: '#419EDA',
-  },
-  {
-    id: 'etcd-cluster',
-    label: 'etcd Cluster',
-    icon: { emoji: '🔗' },
-    plan: 'pro',
-    desc: '3-node raft cluster — leader election, dynamic member add/remove, fault injection',
-    category: 'Distributed Systems',
-    color: '#419EDA',
-  },
 ];
 
 const PAID_PLANS = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
