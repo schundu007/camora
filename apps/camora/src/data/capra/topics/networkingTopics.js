@@ -5713,7 +5713,7 @@ server {
 - Weighted round-robin: add weight= parameter
 - least_conn: route to backend with fewest active connections
 - ip_hash: hash client IP for basic affinity
-- hash ${variable}: hash on any nginx variable
+- hash \${variable}: hash on any nginx variable
 
 ## Reload Without Downtime
 
@@ -6684,7 +6684,7 @@ NACLs are stateless. When a client connects on port 443:
 # Check current NACL outbound rules
 aws ec2 describe-network-acls \\
   --filters Name=association.subnet-id,Values=subnet-12345678 \\
-  --query 'NetworkAcls[].Entries[?Egress==`true`]' \\
+  --query 'NetworkAcls[].Entries[?Egress==\`true\`]' \\
   --output table
 # VPC Flow Logs will show REJECT on outbound traffic to client IP on ports 1024-65535
 \`\`\`
@@ -6736,7 +6736,7 @@ aws ec2 create-network-acl-entry \\
 
 # Verify
 aws ec2 describe-network-acls --network-acl-ids acl-12345678 \\
-  --query 'NetworkAcls[].Entries[?Egress==`false`]' --output table
+  --query 'NetworkAcls[].Entries[?Egress==\`false\`]' --output table
 \`\`\`
 
 ## How Quickly It Takes Effect
