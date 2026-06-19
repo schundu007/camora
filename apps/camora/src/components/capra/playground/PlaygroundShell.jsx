@@ -175,7 +175,7 @@ export default function PlaygroundShell() {
               <button type="button" onClick={() => setMinimized(true)} style={{ ...iconBtn }} title="Exit to playground home">← Exit</button>
               {slotsMax > 0 && (
                 <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }} title="Save VM snapshot">
-                  💾 Save
+                  Save VM
                 </button>
               )}
               <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171' }} title="End session">⏻</button>
