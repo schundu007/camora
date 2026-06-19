@@ -18116,6 +18116,47 @@ A: Both restart on crash and after daemon/host restart. The difference: unless-s
 
 These are answers a Docker-fluent engineer should give without preparation.`,
       },
+      {
+        title: 'Container lifecycle state machine diagram — states, transitions, triggering commands',
+        description: `Docker container state machine — six states with triggering commands on each edge.
+
+States (color-coded by group):
+
+  [created]   — allocated, not started (gray)
+  [running]   — PID 1 executing (green)
+  [paused]    — cgroups freezer active, CPU=0, memory preserved (amber)
+  [stopped]   — PID 1 exited or killed, layer still on disk (gray)
+  [removing]  — docker rm in progress, writable layer being deleted (orange)
+  [dead]      — removal failed (mounted volume in use, etc.) (red)
+
+State transitions and triggering commands:
+
+  created  ──── docker start ────────────────────────►  running
+  running  ──── docker pause ─────────────────────────► paused
+  paused   ──── docker unpause ───────────────────────► running
+  running  ──── docker stop (SIGTERM → wait → SIGKILL) ► stopped
+  running  ──── docker kill (SIGKILL) ─────────────────► stopped
+  running  ──── PID 1 exits (success or error) ────────► stopped
+  stopped  ──── docker start ────────────────────────►  running
+  stopped  ──── docker rm ─────────────────────────────► removing → (gone)
+  running  ──── docker rm -f ─────────────────────────► removing → (gone)
+  removing ──── failure (volume lock, etc.) ───────────► dead
+  dead     ──── docker rm -f (retry) ─────────────────► (gone)
+
+The 'docker run' shortcut:
+  docker run = docker create + docker start in a single command.
+  Most common path; rarely need docker create separately unless pre-staging containers.
+
+'docker restart' is not a state; it is stop + start as two sequential operations.
+
+Interview-ready summary:
+  "A container is created (layer allocated), transitions to running when the process starts,
+   can be paused (frozen in-place by the cgroups freezer) and unpaused, stopped when PID 1
+   exits or the daemon sends a signal, and finally removed when the writable layer is deleted.
+   The dead state is rare — it means removal was attempted but failed, typically because a
+   mounted volume is locked by another process."`,
+        image: '/diagrams/devops/f14-docker-lifecycle-states.png',
+      },
     ],
     references: [
       'https://docs.docker.com/engine/containers/start-containers-automatically/',
@@ -39480,6 +39521,877 @@ The preStop hook on the native sidecar is important in mesh scenarios: you may w
       `https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/`,
       `https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/`,
       `https://github.com/kubernetes/enhancements/issues/753`,
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // New Kubernetes topics — kubectl CLI, probes, troubleshooting, local setup
+  // ─────────────────────────────────────────────────────────────────────
+
+  {
+    id: 'kubectl-cli-reference',
+    title: 'kubectl CLI Command Reference',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 6,
+    description: 'kubectl is the primary interface to a Kubernetes cluster. Beyond get and apply, interviews test knowledge of the inspection trio (describe/logs/exec), local access patterns (port-forward/proxy), node management (cordon/uncordon/taint), resource usage (top), and the imperative workflow (create/expose/run/set image).',
+    visualizations: [
+      {
+        title: 'Imperative workflow — create, expose, run, set image',
+        description: `Imperative commands create objects directly without a YAML manifest. Useful for quick prototyping, one-off operations, and exam environments like CKA.
+
+kubectl create — create named resources imperatively.
+
+\`\`\`bash
+kubectl create deployment nginx --image=nginx:1.27 --replicas=3
+kubectl create service clusterip mysvc --tcp=80:8080
+kubectl create configmap app-config --from-literal=ENV=prod --from-file=config.yaml
+kubectl create secret generic db-pass --from-literal=password=s3cr3t
+kubectl create namespace staging
+\`\`\`
+
+kubectl expose — create a Service for an existing resource.
+
+\`\`\`bash
+kubectl expose deployment nginx --port=80 --target-port=8080 --type=ClusterIP
+kubectl expose deployment nginx --port=80 --type=NodePort
+kubectl expose deployment nginx --port=443 --type=LoadBalancer --name=nginx-lb
+\`\`\`
+
+kubectl run — create a Pod (not a Deployment) from an image.
+
+\`\`\`bash
+kubectl run debug --image=busybox --rm -it -- sh    # one-shot debug pod
+kubectl run myapp --image=myimage:v2 --port=8080    # single pod (no deployment)
+\`\`\`
+
+kubectl set image — update a container image in a Deployment/StatefulSet/DaemonSet.
+
+\`\`\`bash
+kubectl set image deployment/nginx nginx=nginx:1.28        # triggers rolling update
+kubectl set image deployment/myapp app=myapp:v2 --record  # (--record deprecated, use annotation)
+\`\`\`
+
+kubectl scale — change replica count without editing YAML.
+
+\`\`\`bash
+kubectl scale deployment nginx --replicas=5
+kubectl scale --replicas=0 deployment/nginx    # scale to zero (stop without deleting)
+\`\`\``,
+      },
+      {
+        title: 'Inspection trio — describe, logs, exec',
+        description: `The three commands to diagnose a misbehaving Pod:
+
+1. kubectl describe — full object state including the Events section.
+
+\`\`\`bash
+kubectl describe pod <pod-name>
+kubectl describe node <node-name>
+kubectl describe deployment <name>
+\`\`\`
+
+The Events section at the bottom of kubectl describe pod output is the FIRST place to look
+for scheduling failures, image pull errors, and probe failures. Events show the timestamp,
+source (scheduler/kubelet), reason code, and human-readable message.
+
+Key Events to recognize:
+  FailedScheduling    → scheduler could not find a node (quota, taint, affinity)
+  BackOff             → container keeps crashing (CrashLoopBackOff)
+  Failed              → ImagePullBackOff, volume mount failure
+  Killing             → liveness probe failed, container being restarted
+
+2. kubectl logs — read container stdout/stderr.
+
+\`\`\`bash
+kubectl logs <pod-name>                          # default container
+kubectl logs <pod-name> -c <container-name>      # specify container in multi-container pod
+kubectl logs <pod-name> --previous               # logs from the PREVIOUS container instance
+kubectl logs <pod-name> -f                       # follow (stream in real-time)
+kubectl logs <pod-name> --tail=100               # last 100 lines only
+kubectl logs <pod-name> --since=1h               # logs from last 1 hour
+kubectl logs -l app=myapp --all-containers=true  # logs from all pods matching label
+\`\`\`
+
+--previous is the critical flag: when a container is in CrashLoopBackOff, kubectl logs
+shows the CURRENT (restarted) container's output, which may be empty. --previous shows
+the logs from the crashed instance before it restarted — that's where the error is.
+
+3. kubectl exec — run a command inside a running container.
+
+\`\`\`bash
+kubectl exec -it <pod-name> -- sh                  # interactive shell
+kubectl exec -it <pod-name> -c <container> -- bash # specify container
+kubectl exec <pod-name> -- cat /etc/hosts          # one-shot command
+kubectl exec <pod-name> -- env | grep DB_          # check env vars
+kubectl exec <pod-name> -- wget -qO- http://mysvc  # test internal connectivity
+\`\`\`
+
+exec runs in the existing container's namespaces — same network, filesystem, PID tree.
+Fails with "container not running" if the pod is not in Running state.`,
+      },
+      {
+        title: 'Local access — port-forward and proxy',
+        description: `kubectl port-forward — tunnel a pod or service port to localhost.
+
+\`\`\`bash
+# Forward pod port 8080 to localhost:8080
+kubectl port-forward pod/<pod-name> 8080:8080
+
+# Forward service port 80 to localhost:8080
+kubectl port-forward service/<svc-name> 8080:80
+
+# Forward deployment (picks a ready pod automatically)
+kubectl port-forward deployment/<name> 8080:8080
+
+# Bind to all interfaces (useful when port-forwarding on a remote server)
+kubectl port-forward --address 0.0.0.0 pod/<name> 8080:8080
+\`\`\`
+
+port-forward bypasses the Service's load balancer and goes directly to one Pod's port
+over the kubectl → API server → kubelet → pod tunnel. Useful for debugging a specific
+pod without modifying the Service or Ingress.
+
+kubectl proxy — expose the Kubernetes API server locally.
+
+\`\`\`bash
+kubectl proxy                    # default: localhost:8001
+kubectl proxy --port=8080        # custom port
+kubectl proxy --address=0.0.0.0  # bind to all interfaces
+\`\`\`
+
+Once kubectl proxy is running, you can access:
+  http://localhost:8001/api/v1/namespaces/default/pods       — list pods via REST
+  http://localhost:8001/api/v1/namespaces/<ns>/services/<svc>/proxy/  — proxy to a service
+
+The proxy command is how you access cluster-internal services from your laptop without
+a NodePort or Ingress — it proxies through the API server using your kubeconfig credentials.
+
+Difference between port-forward and proxy:
+  port-forward: direct tunnel to a specific pod port; does not go through the Service.
+  proxy: exposes the full Kubernetes REST API; also proxies to Services via the API server path.`,
+      },
+      {
+        title: 'Node management — cordon, uncordon, taint, top',
+        description: `kubectl cordon — mark a node unschedulable.
+
+\`\`\`bash
+kubectl cordon <node-name>
+\`\`\`
+
+Adds the taint node.kubernetes.io/unschedulable:NoSchedule to the node and sets
+spec.unschedulable: true. The scheduler will not place NEW pods on the node.
+Existing pods already running on the node are NOT evicted.
+
+Use case: preparing a node for maintenance. Cordon first, then drain.
+
+kubectl uncordon — re-enable scheduling on a node.
+
+\`\`\`bash
+kubectl uncordon <node-name>
+\`\`\`
+
+kubectl drain — evict all pods from a node (for maintenance).
+
+\`\`\`bash
+kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
+\`\`\`
+
+drain = cordon + evict all pods (except DaemonSet pods, which are re-created on any node).
+--ignore-daemonsets is required; DaemonSet pods cannot be evicted (they run on every node).
+--delete-emptydir-data: required if any pod uses emptyDir volumes (data will be lost).
+
+kubectl taint — add/remove node taints.
+
+\`\`\`bash
+# Add a taint
+kubectl taint nodes <node-name> key=value:NoSchedule
+kubectl taint nodes <node-name> dedicated=gpu:NoSchedule
+
+# Remove a taint (trailing -)
+kubectl taint nodes <node-name> key=value:NoSchedule-
+kubectl taint nodes <node-name> dedicated-
+
+# View taints on a node
+kubectl describe node <node-name> | grep Taint
+\`\`\`
+
+Taint effects:
+  NoSchedule       — new pods without matching toleration are not scheduled here
+  PreferNoSchedule — scheduler tries to avoid placing pods here (soft constraint)
+  NoExecute        — existing pods WITHOUT matching toleration are evicted immediately
+
+kubectl top — live resource usage (requires metrics-server).
+
+\`\`\`bash
+kubectl top nodes                   # CPU and memory usage per node
+kubectl top pods                    # CPU and memory usage per pod (default namespace)
+kubectl top pods -n kube-system     # system pods
+kubectl top pods --sort-by=memory   # sort by memory consumption
+kubectl top pods -l app=myapp       # pods matching label selector
+\`\`\`
+
+kubectl top requires the metrics-server addon (or Prometheus Adapter) to be installed.
+Shows CURRENT usage, not limits/requests. Combine with kubectl describe to compare usage vs limits.
+
+kubectl annotate and kubectl label — add/update/remove metadata.
+
+\`\`\`bash
+# Add a label
+kubectl label pod <name> env=prod
+
+# Overwrite an existing label
+kubectl label pod <name> env=staging --overwrite
+
+# Remove a label (trailing -)
+kubectl label pod <name> env-
+
+# Add an annotation
+kubectl annotate deployment myapp description="deployed by CI"
+
+# Remove an annotation
+kubectl annotate deployment myapp description-
+\`\`\`
+
+Labels are used by selectors (Services, ReplicaSets, NetworkPolicies). Annotations store
+arbitrary metadata (build IDs, owner, URLs) — not used by selectors.`,
+      },
+    ],
+    introduction: `kubectl is the Swiss Army knife of Kubernetes operations. In interviews, knowing only kubectl get and kubectl apply is insufficient — interviewers expect fluency with the full debugging workflow (describe → logs → exec), local access patterns (port-forward/proxy), and node management commands (cordon/drain/taint). CKA and CKAD exams are entirely kubectl-based with no GUI.
+
+The single most important debugging habit: always start with kubectl describe pod and read the Events section before checking logs. Events surface scheduling, image pull, and probe failures before any log output exists.`,
+    whenToUse: [
+      'Diagnosing a pod stuck in Pending — kubectl describe pod → Events section shows FailedScheduling reason',
+      'Investigating CrashLoopBackOff — kubectl logs --previous to see the crash output from the prior container instance',
+      'Accessing a cluster-internal service from laptop — kubectl port-forward service/<name> 8080:80',
+      'Preparing a node for OS maintenance — kubectl cordon then kubectl drain with --ignore-daemonsets',
+      'Checking which pods are consuming the most memory — kubectl top pods --sort-by=memory',
+    ],
+    keyConcepts: [
+      {
+        term: 'kubectl describe Events section',
+        definition: 'The Events table at the bottom of kubectl describe pod output is produced by the scheduler, kubelet, and other controllers. It shows the sequence of actions and failures — FailedScheduling (no node found), BackOff (crash loop), Failed (image pull error), Killing (probe triggered restart). This is the first diagnostic step for any pod that is not Running.',
+      },
+      {
+        term: 'kubectl logs --previous',
+        definition: 'Fetches logs from the most recently terminated container instance in the pod — not the currently running one. Critical for CrashLoopBackOff: the current container restarts immediately and may produce no output, but --previous shows what the crashed instance printed before dying.',
+      },
+      {
+        term: 'kubectl port-forward vs kubectl proxy',
+        definition: 'port-forward tunnels directly to one pod\'s TCP port, bypassing the Service — useful for debugging a specific pod. proxy exposes the full Kubernetes REST API at localhost and can also proxy to Services via the /api/v1/namespaces/<ns>/services/<svc>/proxy/ path — useful for accessing any cluster service without changing routing.',
+      },
+      {
+        term: 'cordon vs drain',
+        definition: 'cordon marks a node unschedulable (no new pods) but does not touch existing pods. drain = cordon + evict all pods (respecting PodDisruptionBudgets). Use cordon for soft maintenance preparation; use drain before OS upgrades or node replacement.',
+      },
+      {
+        term: 'Taint effects: NoSchedule vs NoExecute',
+        definition: 'NoSchedule prevents NEW pods without a matching toleration from being scheduled on the node — existing pods are unaffected. NoExecute additionally evicts EXISTING pods without a matching toleration (after optional tolerationSeconds). NoExecute is used by Kubernetes itself to evict pods when a node becomes NotReady.',
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/reference/kubectl/',
+      'https://kubernetes.io/docs/reference/kubectl/cheatsheet/',
+      'https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/',
+      'https://labex.io/courses/kubernetes-practice-labs',
+    ],
+  },
+
+  {
+    id: 'container-probes',
+    title: 'Container Probes — Liveness, Readiness, Startup',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 5,
+    description: 'Kubernetes has three probe types (liveness, readiness, startup) and three probe mechanisms (httpGet, tcpSocket, exec). Understanding which probe causes which kubelet action — container restart vs EndpointSlice removal — and when to use startupProbe for slow-starting JVM/Python apps is essential for zero-downtime operations.',
+    visualizations: [
+      {
+        title: 'Three probe types — livenessProbe, readinessProbe, startupProbe',
+        description: `Kubernetes kubelet evaluates probes at the container level and takes a different action depending on which probe fails.
+
+livenessProbe — "Is this container alive? If not, restart it."
+
+  On failure: kubelet sends SIGTERM to the container, waits terminationGracePeriodSeconds,
+              then SIGKILL. The container restarts according to the pod's restartPolicy.
+  Use for: deadlock detection, hung processes, memory leaks that cause the process to stop
+           responding without exiting.
+  Interview answer: "Liveness failure = container restart."
+
+readinessProbe — "Is this container ready to serve traffic? If not, remove it from the Service."
+
+  On failure: kubelet removes the pod's IP from the EndpointSlice that backs the Service.
+              The Service stops routing NEW requests to this pod. Existing connections may
+              continue. The pod is NOT restarted.
+  On recovery: kubelet re-adds the pod's IP to the EndpointSlice automatically.
+  Use for: database connection establishment, cache warmup, dependency availability checks.
+  Interview answer: "Readiness failure = removed from EndpointSlice, no restart."
+
+startupProbe — "Has the application finished starting up? Gates liveness and readiness."
+
+  On success: kubelet begins evaluating livenessProbe and readinessProbe.
+  On failure (exhausting failureThreshold): kubelet kills the container and restarts it.
+  While running: livenessProbe and readinessProbe are NOT evaluated at all.
+  Use for: slow-starting containers (JVM startup, Python loading large models) where a
+           fixed initialDelaySeconds on livenessProbe is brittle.
+  Interview answer: "startupProbe buys slow apps time to start without liveness killing them."
+
+Temporal ordering:
+  1. startupProbe runs first (if configured). livenessProbe and readinessProbe wait.
+  2. startupProbe succeeds → liveness and readiness begin.
+  3. livenessProbe and readinessProbe run independently on their own periodSeconds cadence.`,
+      },
+      {
+        title: 'Three probe mechanisms — httpGet, tcpSocket, exec',
+        description: `Each probe type (liveness/readiness/startup) can use any of three mechanisms:
+
+httpGet — send an HTTP GET request; success = 2xx or 3xx response.
+
+\`\`\`yaml
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+    httpHeaders:
+      - name: Custom-Header
+        value: health-check
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+\`\`\`
+
+httpGet is the most common mechanism. The probe makes a GET request from the kubelet (not
+the pod network) directly to the container's IP and specified port. Return 200-399 = success.
+
+tcpSocket — attempt a TCP connection; success = port accepts connection.
+
+\`\`\`yaml
+readinessProbe:
+  tcpSocket:
+    port: 5432     # database port
+  initialDelaySeconds: 5
+  periodSeconds: 10
+\`\`\`
+
+tcpSocket does not send any data — it only checks if the port is open. Useful for databases,
+message brokers, or any TCP service without an HTTP health endpoint.
+
+exec — run a command inside the container; success = exit code 0.
+
+\`\`\`yaml
+livenessProbe:
+  exec:
+    command:
+      - sh
+      - -c
+      - "redis-cli ping | grep PONG"
+  periodSeconds: 10
+  failureThreshold: 3
+\`\`\`
+
+exec runs the command using the container's runtime (not a new shell by default). Exit 0 = healthy.
+Avoid expensive commands (database queries, large file scans) — probes run every periodSeconds.
+
+Key probe fields:
+
+  initialDelaySeconds  — wait this long after container start before first probe (default: 0)
+  periodSeconds        — how often to run the probe (default: 10s)
+  timeoutSeconds       — probe times out after this many seconds (default: 1s)
+  successThreshold     — consecutive successes needed to mark healthy (default: 1; liveness must be 1)
+  failureThreshold     — consecutive failures before action is taken (default: 3)
+
+Total startup budget calculation:
+  initialDelaySeconds + (failureThreshold × periodSeconds) = maximum time before the probe acts.
+  For a startupProbe: 0 + (30 × 10s) = 300s maximum startup time before container is killed.`,
+      },
+      {
+        title: 'Common mistakes and the EndpointSlice removal flow',
+        description: `Startup probe use case — slow-starting JVM app:
+
+Without startupProbe:
+\`\`\`yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 60    # brittle: too short kills app, too long delays failure detection
+  periodSeconds: 10
+  failureThreshold: 3
+\`\`\`
+
+Problem: Spring Boot apps can take 45-90 seconds to start. Setting initialDelaySeconds: 60
+works when the app starts in < 60s but kills it during a slow start (cold JVM, DB migrations).
+
+With startupProbe:
+\`\`\`yaml
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  failureThreshold: 30      # 30 × 10s = 300 second startup budget
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10
+  failureThreshold: 3       # tight: fails fast once the app is up
+\`\`\`
+
+startupProbe gives the app up to 300 seconds to become healthy. Once it does, livenessProbe
+takes over with tight thresholds — detecting actual hangs in 30 seconds (3 × 10s).
+
+ReadinessProbe and EndpointSlice:
+
+1. Pod starts → readinessProbe begins after initialDelaySeconds.
+2. readinessProbe fails → kubelet updates pod's Ready condition to False.
+3. Endpoint controller detects Ready=False → removes pod IP from the EndpointSlice.
+4. kube-proxy (or Cilium/Calico) updates iptables/eBPF rules — Service no longer routes to this pod.
+5. readinessProbe succeeds → Ready=True → pod IP re-added to EndpointSlice → Service resumes routing.
+
+This is the mechanism for zero-downtime rolling updates: new pods become Ready before old pods
+are terminated, so there is always at least one Ready pod serving traffic.
+
+Common readinessProbe mistake:
+  A readinessProbe that returns 200 always (trivial health endpoint) provides no signal.
+  The probe should check the application's actual ability to serve: database pool connected,
+  cache warmed, downstream service reachable. A readinessProbe that can't fail is useless.`,
+        image: '/diagrams/devops/k8s-probes-flow.png',
+      },
+    ],
+    introduction: `Container probes are the mechanism by which Kubernetes determines whether a container is healthy, ready to serve traffic, or still starting up. The three probe types map to three distinct kubelet actions: restart (liveness), EndpointSlice removal (readiness), and startup gating (startup). Most production incidents involving unexpected pod restarts or dropped traffic during rolling updates trace back to misconfigured probes — particularly missing startupProbes on slow-starting apps, or readinessProbes that are too aggressive during rolling updates.`,
+    whenToUse: [
+      'Configuring a Spring Boot / JVM app that takes 60+ seconds to start — add startupProbe with a high failureThreshold × periodSeconds budget',
+      'Zero-downtime rolling updates — readinessProbe ensures new pods serve traffic before old pods terminate',
+      'Detecting deadlocked or memory-leaking processes that are alive but unresponsive — livenessProbe with httpGet to a meaningful health endpoint',
+      'Databases or TCP services without HTTP — use tcpSocket probe mechanism',
+      'Investigating why a pod is removed from Service load balancing intermittently — check readinessProbe failures in kubectl describe pod Events',
+    ],
+    keyConcepts: [
+      {
+        term: 'livenessProbe',
+        definition: 'Kubelet action on failure: kill the container and restart it (per restartPolicy). Detects deadlocks, hangs, and processes that have stopped functioning without exiting. If livenessProbe keeps failing, the container enters CrashLoopBackOff with exponential backoff between restarts.',
+      },
+      {
+        term: 'readinessProbe',
+        definition: 'Kubelet action on failure: set pod Ready condition to False → endpoint controller removes pod IP from EndpointSlice → Service stops routing traffic. The pod is NOT restarted. Use for: DB connection available, cache warm, dependencies up. Recovery is automatic when the probe succeeds again.',
+      },
+      {
+        term: 'startupProbe',
+        definition: 'Blocks liveness and readiness probes until it succeeds. Gives slow-starting containers a configurable startup budget (failureThreshold × periodSeconds seconds) before any probe action is taken. On exhaustion: container is killed and restarted. Use for JVM apps, Python model loading, large dependency initialization.',
+      },
+      {
+        term: 'EndpointSlice removal',
+        definition: 'When a pod\'s readinessProbe fails, the endpoint controller removes the pod\'s IP from the EndpointSlice backing the Service. kube-proxy (or the CNI\'s BPF dataplane) updates its forwarding rules to exclude the pod. New connections are not routed to it. This is the traffic gate for zero-downtime deployments.',
+      },
+      {
+        term: 'Probe fields: failureThreshold and periodSeconds',
+        definition: 'failureThreshold × periodSeconds = maximum time before the probe takes action. For startupProbe: 30 × 10 = 300 seconds startup budget. For livenessProbe: 3 × 10 = 30 seconds to detect a hang. Always size these based on your actual app startup time and acceptable detection latency.',
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/',
+      'https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/',
+      'https://labex.io/courses/kubernetes-practice-labs',
+    ],
+  },
+
+  {
+    id: 'kubernetes-app-troubleshooting',
+    title: 'Kubernetes Application Troubleshooting',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 6,
+    description: 'Systematic pod troubleshooting maps each status string (Pending, ContainerCreating, CrashLoopBackOff, ImagePullBackOff, OOMKilled) to its root cause and the exact kubectl command sequence to diagnose it. The Events-first pattern from kubectl describe is the universal starting point.',
+    visualizations: [
+      {
+        title: 'Pod status strings — causes and diagnostic commands',
+        description: `Pending — pod has not been scheduled to any node.
+
+Root causes (in order of likelihood):
+  1. Insufficient resources: no node has enough CPU/memory to satisfy the pod's requests.
+  2. Taint/toleration mismatch: nodes have taints the pod does not tolerate.
+  3. Node affinity / nodeSelector mismatch: no node matches the pod's placement constraints.
+  4. Resource quota exceeded: namespace quota for CPU/memory/pods is at the limit.
+  5. PersistentVolumeClaim not bound: pod needs a volume that has no matching PersistentVolume.
+
+Diagnostic:
+\`\`\`bash
+kubectl describe pod <name>
+# Read the Events section:
+# "0/3 nodes are available: 3 Insufficient memory."
+# "0/3 nodes are available: 3 node(s) had taint {...}: NoSchedule."
+\`\`\`
+
+ContainerCreating — pod is scheduled; container is being set up.
+
+Root causes:
+  1. Image pull in progress (normal; check if it takes > 60s).
+  2. Image pull failure (wrong image name, tag does not exist, registry auth).
+  3. Volume mount failure (PVC not found, secret/configmap not found).
+  4. Init container running or failed.
+
+Diagnostic:
+\`\`\`bash
+kubectl describe pod <name>
+# Events show: "pulling image...", "Failed to pull image...", "MountVolume.SetUp failed..."
+\`\`\`
+
+CrashLoopBackOff — container starts, exits non-zero, kubelet retries with exponential backoff.
+
+Backoff sequence: 10s, 20s, 40s, 80s, 160s, 300s (max). "BackOff" in Events.
+Root causes: application crash on startup (bad config, missing env var, port already in use),
+             OOM before crash loop (check OOMKilled), bad CMD/ENTRYPOINT in image.
+
+Diagnostic:
+\`\`\`bash
+kubectl logs <pod-name> --previous     # CRITICAL: logs from the crashed instance
+kubectl describe pod <name>            # Events show "Back-off restarting failed container"
+kubectl get pod <name> -o jsonpath='{.status.containerStatuses[0].lastState.terminated.exitCode}'
+\`\`\`
+
+Exit codes:
+  1   — application error (check --previous logs)
+  127 — command not found (bad CMD/ENTRYPOINT path)
+  137 — killed by SIGKILL (often OOMKilled — check kubectl describe for OOMKilled reason)
+  139 — segmentation fault
+  143 — killed by SIGTERM (graceful shutdown triggered by probe or scaling)
+
+ImagePullBackOff — kubelet cannot pull the container image.
+
+Root causes:
+  1. Image name or tag typo (myapp:lates instead of myapp:latest).
+  2. Image does not exist in the registry at that tag.
+  3. Private registry: no imagePullSecret configured, or secret has wrong credentials.
+  4. Registry rate limit (Docker Hub: 100 pulls/6h unauthenticated).
+  5. Registry unreachable from the node (network policy, firewall).
+
+Diagnostic:
+\`\`\`bash
+kubectl describe pod <name>
+# Events: "Failed to pull image: rpc error: code = NotFound..."
+# Events: "Failed to pull image: unauthorized: authentication required"
+\`\`\`
+
+OOMKilled — container exceeded its memory limit; kernel OOM killer terminated it.
+
+The pod's Ready condition goes False; kubectl describe shows:
+  Last State: Terminated, Reason: OOMKilled, Exit Code: 137
+
+Diagnostic and fix:
+\`\`\`bash
+kubectl describe pod <name>
+# Last State shows: Reason: OOMKilled
+
+# Check memory usage just before OOM:
+kubectl top pod <name>       # current usage (if pod is still Running)
+
+# Fix: increase memory limit, or profile the app for memory leaks
+\`\`\``,
+      },
+      {
+        title: 'Debugging workflow — Events-first pattern',
+        description: `The universal Kubernetes pod debugging workflow:
+
+Step 1 — kubectl get pod (get the status string).
+
+\`\`\`bash
+kubectl get pod <name>
+kubectl get pods -n <namespace>    # check the STATUS column
+\`\`\`
+
+Step 2 — kubectl describe pod (read the Events section).
+
+\`\`\`bash
+kubectl describe pod <name>
+\`\`\`
+
+The Events section at the bottom is the most information-dense section:
+  Timestamp / Count / From (scheduler or kubelet) / Reason / Message
+  Most scheduling, image pull, and volume errors surface here before any log output.
+
+Step 3 — kubectl logs (read application output).
+
+\`\`\`bash
+kubectl logs <pod-name>
+kubectl logs <pod-name> --previous    # if CrashLoopBackOff — read crashed instance logs
+kubectl logs <pod-name> -c <container>  # multi-container pods
+\`\`\`
+
+Step 4 — kubectl exec (inspect the live container).
+
+\`\`\`bash
+kubectl exec -it <pod-name> -- sh
+# Inside: check env vars, file permissions, network connectivity, running processes
+env | grep DB_
+cat /etc/hosts
+wget -qO- http://my-service:8080/health
+\`\`\`
+
+Step 5 — Node-level inspection (when pod-level tools are insufficient).
+
+\`\`\`bash
+# SSH to the node (or use a debug pod on the node)
+kubectl debug node/<node-name> -it --image=busybox
+
+# On the node: use crictl (container runtime interface CLI)
+crictl ps                     # list containers (bypasses Docker)
+crictl logs <container-id>    # logs from a container by runtime ID
+crictl inspect <container-id> # full container inspect
+\`\`\`
+
+When to escalate to crictl:
+  Pod-level commands fail (kubectl exec returns error, kubectl logs returns nothing).
+  The kubelet itself is unresponsive or the pod is stuck in a terminal state.
+  Investigating a node-level issue (disk pressure, kubelet crash, containerd failure).
+
+One-liner diagnostic sequence for a broken pod:
+
+\`\`\`bash
+POD=myapp-abc123
+kubectl describe pod $POD | tail -20          # Events
+kubectl logs $POD --previous 2>/dev/null || kubectl logs $POD
+kubectl get pod $POD -o json | jq '.status.containerStatuses[0]'
+\`\`\``,
+      },
+    ],
+    introduction: `Kubernetes application troubleshooting follows a consistent pattern: status string → describe Events → logs (--previous for crashes) → exec (live inspection) → crictl on the node (when all else fails). Knowing which status string maps to which root cause — and which kubectl command to run next — is a core CKA/CKAD skill and comes up in every SRE and DevOps interview. CrashLoopBackOff with kubectl logs --previous and ImagePullBackOff with registry auth are the two most common real-world failure modes.`,
+    whenToUse: [
+      'Pod stuck in Pending — use kubectl describe pod and read Events for scheduling failure reason (resource shortage, taint mismatch, quota)',
+      'CrashLoopBackOff — always use kubectl logs --previous to read the crashed container\'s output; current logs may be empty',
+      'ImagePullBackOff — check Events for "unauthorized" (auth) vs "not found" (wrong tag) to distinguish registry auth vs image name issues',
+      'OOMKilled — kubectl describe pod shows Last State: OOMKilled; fix by raising memory limit or profiling for leaks',
+      'Pods running but not receiving traffic — check readinessProbe failures in Events and pod Ready condition in kubectl describe',
+    ],
+    keyConcepts: [
+      {
+        term: 'CrashLoopBackOff',
+        definition: 'Container exits with non-zero exit code; kubelet restarts it with exponential backoff (10s, 20s, 40s... 300s max). The key diagnostic is kubectl logs --previous — this shows the CRASHED instance\'s output, not the current restarted container (which may have empty logs). Exit code 137 = OOMKilled or SIGKILL; 127 = bad CMD path; 1 = app error.',
+      },
+      {
+        term: 'Events section in kubectl describe',
+        definition: 'The structured event log at the bottom of kubectl describe output. Each event has: LastSeen, Count, From (scheduler or kubelet), Type (Normal/Warning), Reason (FailedScheduling/BackOff/Pulling), and Message. This is the first place to look — most failures surface here before any log output exists.',
+      },
+      {
+        term: 'kubectl logs --previous',
+        definition: 'Retrieves logs from the most recently TERMINATED container instance in the pod. Critical for CrashLoopBackOff: the container may restart so fast that the current instance\'s log buffer is empty. --previous bypasses the current running instance and reads the last dead instance\'s stdout/stderr.',
+      },
+      {
+        term: 'OOMKilled (exit code 137)',
+        definition: 'The Linux kernel OOM killer terminated the container because it exceeded its memory limit (resources.limits.memory). Visible in kubectl describe pod as Last State: Terminated, Reason: OOMKilled. Fix: increase the memory limit or profile the app for leaks. OOMKilled is NOT the same as CrashLoopBackOff — a pod can OOMKill once and recover, or enter CrashLoopBackOff if it OOMKills repeatedly.',
+      },
+      {
+        term: 'crictl vs kubectl for node-level debugging',
+        definition: 'crictl is the CRI (Container Runtime Interface) CLI that talks directly to containerd or CRI-O, bypassing the Kubernetes API server. Use it on the node when: kubectl exec/logs fails, the kubelet is unresponsive, or a container is visible in containerd but not in kubectl. crictl ps, crictl logs, crictl inspect mirror docker ps/logs/inspect.',
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/debug/debug-application/',
+      'https://kubernetes.io/docs/tasks/debug/debug-pod/',
+      'https://labex.io/courses/kubernetes-for-beginners',
+      'https://labex.io/courses/kubernetes-practice-labs',
+    ],
+  },
+
+  {
+    id: 'local-kubernetes-setup',
+    title: 'Local Kubernetes Cluster Setup (minikube / kind / k3d)',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 4,
+    description: 'Local Kubernetes tools let you run a real cluster on your laptop for development and testing. minikube is best for local exploration with addons; kind (Kubernetes IN Docker) is the standard for CI pipelines and multi-node testing; k3d runs k3s in Docker for the fastest startup. Docker Desktop includes a built-in single-node cluster as a zero-setup option.',
+    visualizations: [
+      {
+        title: 'minikube — local exploration with VM or container driver',
+        description: `minikube creates a single-node Kubernetes cluster in a VM or a Docker container (depending on the driver). It includes a large addon ecosystem (dashboard, ingress, metrics-server, registry) and is the most feature-rich local option.
+
+\`\`\`bash
+# Install (macOS)
+brew install minikube
+
+# Start with Docker driver (recommended, no VM needed)
+minikube start --driver=docker
+
+# Start with hyperkit (macOS VM, better isolation)
+minikube start --driver=hyperkit
+
+# Start with specific Kubernetes version
+minikube start --kubernetes-version=v1.30.0
+
+# Check status
+minikube status
+
+# Access the dashboard
+minikube dashboard
+
+# Enable addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+minikube addons enable registry    # local registry at $(minikube ip):5000
+
+# Load a local image into minikube (avoids push to registry)
+minikube image load myapp:latest
+
+# Get the node IP (for NodePort access)
+minikube ip
+
+# Open a service URL in the browser
+minikube service myapp --url
+
+# Stop / delete
+minikube stop
+minikube delete
+\`\`\`
+
+Drivers:
+  docker      — no VM; best performance on Linux; default on Linux
+  hyperkit    — lightweight macOS hypervisor (deprecated; replaced by qemu)
+  qemu        — cross-platform VM driver
+  virtualbox  — VirtualBox VM (slowest; full isolation)
+
+minikube is not suitable for multi-node testing — it creates exactly one node.`,
+      },
+      {
+        title: 'kind — multi-node clusters in Docker for CI',
+        description: `kind (Kubernetes IN Docker) runs each Kubernetes node as a Docker container. It supports true multi-node clusters (multiple control planes, multiple workers) and is the standard tool for CI pipelines. GitHub Actions, CircleCI, and Buildkite all use kind for Kubernetes integration tests.
+
+\`\`\`bash
+# Install
+go install sigs.k8s.io/kind@latest
+# or: brew install kind
+
+# Create a default single-node cluster
+kind create cluster
+
+# Create with a custom name
+kind create cluster --name staging
+
+# Create with a multi-node config file
+cat > kind-config.yaml <<EOF
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+EOF
+kind create cluster --config kind-config.yaml
+
+# Load a local image into kind nodes (avoids registry)
+kind load docker-image myapp:latest
+
+# Get cluster info
+kind get clusters
+kubectl cluster-info --context kind-kind
+
+# Delete cluster
+kind delete cluster --name staging
+\`\`\`
+
+kind in GitHub Actions CI:
+
+\`\`\`yaml
+- uses: helm/kind-action@v1
+  with:
+    cluster_name: test
+- run: kubectl apply -f k8s/
+- run: kubectl wait --for=condition=Ready pods --all --timeout=60s
+\`\`\`
+
+kind does not support NodePort via localhost on all platforms. Use kubectl port-forward
+or the kind cluster's internal IP for service access in CI.`,
+      },
+      {
+        title: 'k3d, Docker Desktop Kubernetes, and the decision matrix',
+        description: `k3d — k3s clusters inside Docker.
+
+k3d wraps Rancher's k3s (a lightweight Kubernetes distribution) in Docker containers.
+k3s removes some in-tree plugins and uses sqlite/etcd-lite by default, but is fully
+conformant. k3d starts in under 30 seconds.
+
+\`\`\`bash
+# Install
+brew install k3d
+
+# Create a cluster with 1 server + 2 agents
+k3d cluster create mycluster --agents 2
+
+# Create with port mapping (expose NodePort 30080 on localhost:8080)
+k3d cluster create mycluster --port "8080:30080@loadbalancer"
+
+# Load a local image
+k3d image import myapp:latest -c mycluster
+
+# List clusters
+k3d cluster list
+
+# Delete
+k3d cluster delete mycluster
+\`\`\`
+
+k3d port mapping: k3d can expose a cluster port to localhost at startup, which solves the
+NodePort-on-localhost problem that kind has. This makes k3d popular for local development
+where you want to curl services on localhost without port-forward.
+
+Docker Desktop Kubernetes:
+
+Built into Docker Desktop (macOS and Windows). Enable in Settings → Kubernetes → Enable Kubernetes.
+  Pros: zero setup, automatically updates with Docker Desktop, integrates with kubectl.
+  Cons: single node only; uses the same Docker daemon as your containers (shared resource pool);
+        less control over Kubernetes version; no multi-node support.
+
+Decision matrix:
+
+  Use case                          Recommended tool
+  ──────────────────────────────    ─────────────────
+  Local exploration and learning    minikube (rich addons, dashboard, simple UX)
+  CI pipeline integration tests     kind (Docker-native, multi-node, no VM overhead)
+  Local dev with fast startup       k3d (k3s in Docker, starts in <30s, port mapping)
+  Zero-setup laptop environment     Docker Desktop Kubernetes (built-in, zero config)
+  Production-like multi-node test   kind or k3d with multi-agent config
+  Production cluster bootstrap      kubeadm (bare metal / cloud VMs)
+  From-scratch binary learning      Kubernetes the Hard Way (kubeadm equivalent)
+
+Interview answer for "how do you run Kubernetes locally?":
+  "For CI I use kind because it runs as Docker containers with no VM overhead and supports
+   multi-node clusters. For local development I prefer k3d for its fast startup and built-in
+   port mapping. For learning and addon exploration I recommend minikube."`,
+      },
+    ],
+    introduction: `Local Kubernetes tools fill the gap between laptop development and production clusters. kubeadm and Kubernetes the Hard Way cover production-grade HA setup, but for the day-to-day developer workflow — running integration tests, iterating on Helm charts, testing Operators — you need a cluster that starts in seconds, runs on your laptop, and is disposable. The ecosystem settled on kind for CI (GitHub Actions uses it) and minikube/k3d for local dev. Docker Desktop's built-in cluster is the zero-friction onramp for developers who just want kubectl to work.`,
+    whenToUse: [
+      'Setting up a Kubernetes learning environment — minikube start --driver=docker and minikube dashboard',
+      'Running Kubernetes integration tests in GitHub Actions CI — kind via helm/kind-action',
+      'Local development with service port access on localhost — k3d with --port flag',
+      'Zero-setup Kubernetes on a developer laptop — Docker Desktop Kubernetes (Enable in Settings)',
+      'Multi-node cluster testing on a single machine — kind with a config file defining control-plane + worker nodes',
+    ],
+    keyConcepts: [
+      {
+        term: 'minikube driver model',
+        definition: 'minikube uses a driver to create the cluster: docker (container), hyperkit/qemu (macOS VM), virtualbox (cross-platform VM). The docker driver requires no separate hypervisor and is fastest on Linux. On macOS, the qemu driver provides better isolation. --driver=docker is the current recommended default.',
+      },
+      {
+        term: 'kind node-as-container model',
+        definition: 'kind runs each Kubernetes node (control-plane and worker) as a Docker container using a custom image (kindest/node) that includes kubeadm, kubelet, and containerd. Multiple worker containers on one machine simulate a real multi-node cluster. kind clusters are ephemeral — delete the containers and the cluster is gone.',
+      },
+      {
+        term: 'k3s vs Kubernetes in k3d',
+        definition: 'k3s is a CNCF-certified lightweight Kubernetes distribution: removes alpha/unused features, replaces etcd with SQLite for single-node (or uses embedded etcd for HA), and ships as a single ~60MB binary. It is fully conformant — all standard Kubernetes APIs work. k3d wraps k3s nodes in Docker containers for easy cluster lifecycle management.',
+      },
+      {
+        term: 'Loading local images into local clusters',
+        definition: 'Local clusters run in separate container/VM environments. docker build on your host does not automatically make the image available inside the cluster. Each tool has its own load command: minikube image load myapp:latest, kind load docker-image myapp:latest, k3d image import myapp:latest. Alternatively, run a local registry and push/pull via localhost:5000.',
+      },
+    ],
+    references: [
+      'https://minikube.sigs.k8s.io/docs/',
+      'https://kind.sigs.k8s.io/',
+      'https://k3d.io/',
+      'https://docs.docker.com/desktop/kubernetes/',
+      'https://labex.io/courses/kubernetes-for-beginners',
     ],
   },
 
