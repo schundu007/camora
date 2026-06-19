@@ -2830,7 +2830,7 @@ export default function TopicDetail({
                     )}
                     {viz.video && (
                       <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-                        <div style={{ position: 'relative', width: '60%', maxWidth: 560, aspectRatio: '16/9' }}>
+                        <div style={{ position: 'relative', width: '85%', maxWidth: 900, aspectRatio: '16/9' }}>
                           <iframe
                             src={`https://www.youtube.com/embed/${new URL(viz.video).searchParams.get('v') || viz.video.split('/').pop()}`}
                             title={viz.title}
@@ -3027,7 +3027,7 @@ export default function TopicDetail({
             <section id="video" className="scroll-mt-24">
               <ContentHeading title={topicDetails.video.title || 'Video Overview'} />
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                <div style={{ position: 'relative', width: '60%', maxWidth: 560, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', width: '85%', maxWidth: 900, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
                 <iframe
                   src={topicDetails.video.embedUrl}
                   title={topicDetails.video.title || 'Video'}
