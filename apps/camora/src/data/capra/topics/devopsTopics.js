@@ -42606,6 +42606,3268 @@ spec:
     ],
   },
 
+
+
+{
+  id: 'kubernetes-rbac',
+  title: 'Kubernetes RBAC',
+  icon: 'lock',
+  color: '#ef4444',
+  questions: 20,
+  description: 'Kubernetes RBAC (Role-Based Access Control) is the primary authorization mechanism in every production cluster. It governs which identities — human users, groups, and ServiceAccounts — may perform which verbs on which API resources. This topic covers the full model: Role and ClusterRole definitions with their verb and resource subsets, the binding objects that attach those roles to subjects, the namespace-scoping trick of binding a ClusterRole via a RoleBinding, default and projected ServiceAccount tokens including the TokenRequest API, OIDC integration for human users through Dex or Keycloak, and cloud-provider workload identity patterns such as IRSA on EKS and Workload Identity on GKE. You will also learn the aggregated ClusterRole pattern, how the authorization mode chain (Node, RBAC, Webhook) evaluates requests, common least-privilege failures in CI/CD pipelines, and the audit tooling — kubectl-who-can, rbac-lookup, rakkess — that makes RBAC audits tractable at scale.',
+  topics: [
+    {
+      title: 'RBAC Model: Roles, Verbs, Resources, and API Groups',
+      content: `The kube-apiserver evaluates every request through an ordered chain of authorizers set by the --authorization-mode flag. A typical production cluster uses Node,RBAC,Webhook. The Node authorizer handles kubelet requests; RBAC handles everything else; a Webhook authorizer can extend decisions further. If any authorizer returns ALLOW the request proceeds; if all return DENY or NO_OPINION the server returns HTTP 403 Forbidden.
+
+Role: applies within a single namespace. ClusterRole: applies cluster-wide or can be scoped to a namespace through a RoleBinding. This distinction is critical — a ClusterRole itself carries no scope, only the binding object determines scope. A RoleBinding that references a ClusterRole limits its rules to the namespace where the binding lives. This is the most common pattern for shared roles that you want to reuse across many namespaces without duplicating YAML.
+
+Verbs are the HTTP-level operations mapped to Kubernetes semantics: get (read one), list (read all), watch (long-poll stream), create, update (PUT — full replace), patch (PATCH — partial update), delete (single resource), deletecollection (bulk delete). The wildcard verb (*) grants all current and future verbs — avoid it except in tightly controlled operator roles.
+
+Resources are specified as the plural lowercase name of the API type: pods, deployments, services, configmaps. Subresources are appended with a slash: pods/log, pods/exec, pods/portforward, deployments/scale, deployments/status. Granting pods/exec is effectively a root shell on the node for any pod running as root — treat it like node-level access. The API group must match: core types (Pod, Service, ConfigMap) use the empty string "", while Deployment/StatefulSet/DaemonSet use apps, NetworkPolicy uses networking.k8s.io, and custom CRDs use their own group.
+
+Aggregated ClusterRoles allow you to compose roles without modifying the parent. The built-in view, edit, and admin ClusterRoles carry aggregation rules: any ClusterRole with the label rbac.authorization.k8s.io/aggregate-to-view: "true" has its rules merged into the view ClusterRole automatically. This is how CRD operators expose their resource permissions into the standard built-in roles — add the label to a ClusterRole that covers your CRD and cluster admins get visibility automatically.
+
+One special identity bypasses RBAC entirely: the system:masters group. Any user or ServiceAccount placed in system:masters is granted unrestricted access without ever consulting RBAC rules. This group is used internally for the initial cluster bootstrap. Never bind external identities to it.`,
+      codeExample: `# Role: developer-read — namespace-scoped, read-only on common workload resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer-read
+  namespace: staging
+rules:
+  - apiGroups: [""]                      # core API group
+    resources: ["pods", "pods/log", "pods/exec", "services", "configmaps", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]     # allow kubectl scale without full update
+    verbs: ["get", "update", "patch"]
+---
+# RoleBinding: bind to the dev-team group in this namespace only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-read-binding
+  namespace: staging
+subjects:
+  - kind: Group
+    name: dev-team          # matches --oidc-groups-claim value from your OIDC provider
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer-read
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole with aggregate-to-view label — auto-merged into built-in view role
+# Install this once and all namespaces that grant "view" gain CRD visibility
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: myapp-crd-view
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups: ["myapp.io"]
+    resources: ["widgets", "gadgets"]
+    verbs: ["get", "list", "watch"]
+---
+# RoleBinding that SCOPES a ClusterRole to one namespace (common pattern)
+# The ClusterRole "cluster-admin" is referenced but access is limited to "ops" ns only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ops-admin-scoped
+  namespace: ops
+subjects:
+  - kind: User
+    name: alice@example.com
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole              # ClusterRole, but binding is namespace-scoped
+  name: admin
+  apiGroup: rbac.authorization.k8s.io`,
+    },
+    {
+      title: 'Bindings, ServiceAccounts, and Projected Tokens',
+      content: `Every namespace gets a default ServiceAccount created automatically. Unless you opt out, every Pod has this ServiceAccount's token mounted at /var/run/secrets/kubernetes.io/serviceaccount/token. Prior to Kubernetes 1.20, this was a long-lived static JWT with no expiry and no audience binding — a leaked token provided permanent API access. Setting automountServiceAccountToken: false on the ServiceAccount or on the individual Pod spec prevents this mount entirely and is the recommended default for workloads that make no Kubernetes API calls.
+
+The TokenRequest API (GA in 1.20) replaced static tokens with projected volumes. A projected token is audience-bound (the token is only valid for the specified audience), time-limited (expirationSeconds — default 3600, minimum 600), and bound to the pod's UID. The kubelet automatically rotates the token before expiry. The resulting projected volume configuration is more verbose but substantially more secure than legacy tokens.
+
+IRSA (IAM Roles for Service Accounts) on EKS uses OIDC federation to exchange a Kubernetes projected token for AWS STS credentials. The EKS cluster exposes an OIDC provider endpoint; you create an IAM role whose trust policy allows sts:AssumeRoleWithWebIdentity from that OIDC issuer for a specific ServiceAccount (identified by sub: system:serviceaccount:NAMESPACE:SA_NAME). Annotating the ServiceAccount with iam.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/ROLE causes the AWS SDK in the pod to find the projected token, call STS, and get short-lived AWS credentials. No long-lived AWS keys are ever stored in the cluster.
+
+GKE's Workload Identity and AKS Pod Identity (now superseded by Azure Workload Identity) follow the same OIDC projection pattern. The core insight is that all cloud providers now treat the OIDC token as a portable identity document that their STS services can validate — IRSA is not EKS-specific in principle.
+
+For human users, ClusterRoleBinding works well for small teams. For large organizations with many namespaces, the preferred pattern is: create one ClusterRole with the intended permissions, then create a RoleBinding per namespace referencing that ClusterRole. This avoids managing hundreds of individual Role objects while still enforcing namespace scoping.
+
+Impersonation allows privileged users to act as another identity for auditing without sharing credentials: kubectl --as=system:serviceaccount:default:myapp get pods. Impersonation requires the impersonate verb on the users, groups, or serviceaccounts resource — grant it sparingly.`,
+      codeExample: `# ServiceAccount with projected token volume (audience + expiry bound)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-api
+  namespace: production
+  annotations:
+    # IRSA: EKS annotates SA so AWS SDK exchanges the OIDC token for STS creds
+    iam.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/production-backend-role
+automountServiceAccountToken: false   # never mount legacy static token
+---
+# Pod using projected token — explicit control over audience and expiry
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-api
+  namespace: production
+spec:
+  serviceAccountName: backend-api
+  volumes:
+    - name: kube-api-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: https://kubernetes.default.svc   # kube-apiserver audience
+              expirationSeconds: 3600                    # kubelet rotates at 80% of TTL
+              path: token
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+                - key: ca.crt
+                  path: ca.crt
+          - downwardAPI:
+              items:
+                - path: namespace
+                  fieldRef:
+                    fieldPath: metadata.namespace
+  containers:
+    - name: app
+      image: myapp:latest
+      volumeMounts:
+        - name: kube-api-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+
+# IAM Trust Policy JSON for the IRSA role (attach to the IAM role, not a K8s object)
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [{
+#     "Effect": "Allow",
+#     "Principal": { "Federated": "arn:aws:iam::123456789012:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/CLUSTERID" },
+#     "Action": "sts:AssumeRoleWithWebIdentity",
+#     "Condition": {
+#       "StringEquals": {
+#         "oidc.eks.us-east-1.amazonaws.com/id/CLUSTERID:sub": "system:serviceaccount:production:backend-api",
+#         "oidc.eks.us-east-1.amazonaws.com/id/CLUSTERID:aud": "sts.amazonaws.com"
+#       }
+#     }
+#   }]
+# }
+
+# --- Auth debugging commands ---
+# List what a ServiceAccount can do
+kubectl auth can-i --list --as=system:serviceaccount:production:backend-api -n production
+
+# Check a specific permission
+kubectl auth can-i get pods --as=system:serviceaccount:production:backend-api -n production
+
+# Who am I (kubectl 1.28+)
+kubectl auth whoami
+
+# Show all ClusterRoleBindings to cluster-admin (audit)
+kubectl get clusterrolebindings -o json | jq '.items[] | select(.roleRef.name=="cluster-admin") | {name:.metadata.name, subjects:.subjects}'`,
+    },
+    {
+      title: 'RBAC for Human Users and OIDC Integration',
+      content: `Kubernetes has no built-in user database. Human users are identified by the identity their client certificate or OIDC token presents — the CN field of a client cert becomes the username; the Groups extension becomes their groups. OIDC is the production standard for human auth because it delegates identity to an existing provider (Google Workspace, Okta, Auth0, Active Directory via Dex) and supports MFA, session expiry, and group synchronization.
+
+To enable OIDC, the kube-apiserver needs four flags: --oidc-issuer-url (the provider's discovery endpoint, must be HTTPS), --oidc-client-id (must match what your provider issues tokens for), --oidc-username-claim (usually email or sub), and --oidc-groups-claim (usually groups — the array of group strings becomes the user's RBAC group membership). A ClusterRoleBinding binding a group name (like engineering-sre) to a ClusterRole means anyone in that group in the OIDC provider instantly has that role — no per-user RBAC changes required.
+
+Dex is a common OIDC broker: it connects to upstream providers (LDAP, GitHub, SAML, Google) and issues OIDC tokens that kube-apiserver trusts. Keycloak is an alternative with a full admin UI. The kubelogin kubectl credential plugin handles the browser-based OIDC flow: kubectl triggers kubelogin, the user authenticates in a browser, kubelogin exchanges the code for tokens and caches them, kubectl uses the id_token as a Bearer token in API requests. The id_token is a signed JWT the kube-apiserver validates locally without an external call — important for availability.
+
+For audit and verification, kubectl auth can-i is the primary tool. The --list flag shows all allowed operations for the specified identity in a namespace. The --as flag impersonates another user or ServiceAccount. Third-party tools extend this significantly: kubectl-who-can (from rbac-tool) answers "who can VERB RESOURCE" — the inverse of can-i. rbac-lookup shows all roles a given user, group, or ServiceAccount has across all namespaces. rakkess (access matrix) shows a grid of all resources and which verbs you can perform. Running these tools against production regularly surfaces over-privileged bindings that crept in during incident response.
+
+For declarative RBAC management, kubectl auth reconcile -f rbac.yaml applies RBAC objects and adds missing rules without removing unrecognized ones — safer than kubectl apply for cumulative RBAC management. Using a GitOps tool like Argo CD to manage RBAC YAML gives you audit trails via git history.`,
+      codeExample: `# kube-apiserver flags for OIDC (set in kubeadm ClusterConfiguration or managed K8s provider options)
+# --oidc-issuer-url=https://accounts.google.com
+# --oidc-client-id=my-kubectl-client
+# --oidc-username-claim=email
+# --oidc-groups-claim=groups
+# --oidc-username-prefix=oidc:        # prevents collision with system: usernames
+
+---
+# ClusterRoleBinding: all members of the "sre-team" OIDC group get cluster-level read
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sre-team-view
+subjects:
+  - kind: Group
+    name: sre-team          # must match the value in the groups OIDC claim array
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+# Grant impersonation rights to a dedicated auditor account only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: impersonator
+rules:
+  - apiGroups: [""]
+    resources: ["users", "groups", "serviceaccounts"]
+    verbs: ["impersonate"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["userextras/oidc:email"]
+    verbs: ["impersonate"]
+
+---
+# --- Audit commands ---
+
+# What can the sre-team do in the production namespace?
+kubectl auth can-i --list --as-group=sre-team --as=audit-proxy -n production
+
+# Can the CI ServiceAccount create deployments?
+kubectl auth can-i create deployments --as=system:serviceaccount:ci:github-actions -n staging
+
+# Who can delete secrets cluster-wide? (kubectl-who-can plugin)
+kubectl-who-can delete secrets
+kubectl-who-can get secrets -n production
+
+# All roles bound across all namespaces for a ServiceAccount (rbac-lookup plugin)
+rbac-lookup github-actions --kind ServiceAccount --output wide
+
+# Apply RBAC declaratively without overwriting extra rules
+kubectl auth reconcile -f ./rbac/
+
+# All ClusterRoleBindings that grant cluster-admin (run this regularly)
+kubectl get clusterrolebindings -o json \
+  | jq -r '.items[] | select(.roleRef.name=="cluster-admin") \
+    | "\(.metadata.name): \(.subjects // [] | map(.kind + "/" + .name) | join(", "))"'`,
+    },
+    {
+      title: 'Least Privilege Patterns and RBAC Audit',
+      content: `The most common RBAC failure in production is convenience-driven escalation: a developer needs to debug a problem at midnight and is granted cluster-admin because it is fast. Days later no one removes it. A second pattern is wildcard abuse: Rules with resources: ["*"] and verbs: ["*"] are effectively cluster-admin scoped to a namespace. These appear in operator scaffolding templates and often never get tightened.
+
+CI/CD ServiceAccounts deserve special scrutiny. A pipeline that deploys to Kubernetes needs create and update on Deployments in its target namespace. It does not need list on Secrets, exec on Pods, or any ClusterRole. Write the minimum viable Role, bind it to the CI ServiceAccount, and review it quarterly. Never use a human admin's kubeconfig in a CI system — personal credentials rotate and expire unexpectedly.
+
+Operator patterns follow a predictable shape. An operator typically needs: list/watch/get on its own CRDs (to receive events), create/update/patch/delete on the resources it manages (Pods, Services, ConfigMaps, its CRD status subresource), and occasionally list/watch on other resources it observes (like Nodes for a storage operator). The scaffolding from operator-sdk and kubebuilder generates these roles; review and tighten the generated YAML before deploying to production.
+
+Namespace isolation through RBAC is only as strong as your NetworkPolicy enforcement. RBAC prevents a compromised pod from calling the Kubernetes API in another namespace but does not prevent it from making direct network connections to other pods if NetworkPolicy is not configured.
+
+For periodic audits, automate a check for: all subjects bound to cluster-admin, all Roles and ClusterRoles with wildcard verbs or resources, all ServiceAccounts with automountServiceAccountToken not set to false in non-system namespaces, and all RoleBindings that have not been used in 90 days (requires audit logging to cluster audit sink or SIEM). The combination of kubectl auth reconcile in CI and a scheduled audit job gives you both declarative enforcement and drift detection.`,
+      codeExample: `# Minimal CI/CD ServiceAccount role — only what GitHub Actions needs to deploy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ci-deployer
+  namespace: staging
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "create", "update", "patch"]
+  # Explicitly NO secrets access, NO exec, NO cluster-level resources
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ci-deployer-binding
+  namespace: staging
+subjects:
+  - kind: ServiceAccount
+    name: github-actions
+    namespace: staging
+roleRef:
+  kind: Role
+  name: ci-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Operator ClusterRole — only what the controller needs
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: myapp-operator
+rules:
+  - apiGroups: ["myapp.io"]
+    resources: ["widgets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["myapp.io"]
+    resources: ["widgets/status"]       # status subresource updated separately
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["myapp.io"]
+    resources: ["widgets/finalizers"]
+    verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]           # operator emits events for kubectl describe
+---
+# Audit: find all wildcards in Roles and ClusterRoles
+kubectl get roles,clusterroles -A -o json \
+  | jq -r '.items[] | select(.rules[]? | (.verbs[]? == "*") or (.resources[]? == "*")) \
+    | "\(.kind)/\(.metadata.namespace)/\(.metadata.name)"'
+
+# rakkess: show full access matrix for current user
+kubectl rakkess
+
+# rbac-lookup: everything bound to a ServiceAccount across all namespaces
+rbac-lookup github-actions -k ServiceAccount -o wide`,
+    },
+  ],
+  quickFire: [
+    { q: 'What is the difference between Role and ClusterRole?', a: 'Role is namespace-scoped; ClusterRole is cluster-scoped or can be namespace-scoped when bound via RoleBinding. ClusterRole rules apply cluster-wide only when bound with ClusterRoleBinding.' },
+    { q: 'Can a RoleBinding reference a ClusterRole? What does that do?', a: 'Yes. A RoleBinding referencing a ClusterRole scopes the ClusterRole\'s rules to the namespace where the RoleBinding lives. This is the standard pattern for reusing shared roles across namespaces without duplicating YAML.' },
+    { q: 'Give an example of a resource subresource in RBAC.', a: 'pods/log, pods/exec, pods/portforward, deployments/scale, deployments/status. Subresources are listed separately — granting "pods" does not grant "pods/exec".' },
+    { q: 'What does setting automountServiceAccountToken: false do?', a: 'Prevents the kubelet from mounting the ServiceAccount token into the pod. The pod cannot use the Kubernetes API unless a projected volume is explicitly configured.' },
+    { q: 'Explain how IRSA works on EKS.', a: 'The EKS cluster exposes an OIDC provider. The ServiceAccount is annotated with an IAM role ARN. The kubelet mounts a projected OIDC token into the pod. The AWS SDK exchanges this token with STS via AssumeRoleWithWebIdentity to get short-lived AWS credentials. No static keys are stored in the cluster.' },
+    { q: 'How do you check what a ServiceAccount can do in a namespace?', a: 'kubectl auth can-i --list --as=system:serviceaccount:NAMESPACE:NAME -n NAMESPACE' },
+    { q: 'What permissions does the default ServiceAccount have by default?', a: 'Almost none. It can only perform unauthenticated or public API calls. It has no RBAC rules unless you explicitly bind a Role to it.' },
+    { q: 'How do aggregated ClusterRoles work?', a: 'A ClusterRole with a label like rbac.authorization.k8s.io/aggregate-to-view: "true" has its rules automatically merged into the built-in view ClusterRole. Used to expose CRD permissions into standard roles.' },
+    { q: 'What does system:masters group do and why is it dangerous?', a: 'Members of system:masters bypass RBAC entirely and have unrestricted cluster access. RBAC rules are never consulted. No external identity should ever be placed in this group.' },
+    { q: 'How does OIDC groups claim map to RBAC?', a: 'The kube-apiserver --oidc-groups-claim flag names the JWT claim containing group strings. Each group string becomes a RBAC Group subject. A ClusterRoleBinding to that group name grants permissions to all OIDC users in that group.' },
+    { q: 'What RBAC verb is needed to use kubectl --as for impersonation?', a: 'The impersonate verb on the users, groups, or serviceaccounts resource in the rbac.authorization.k8s.io API group.' },
+    { q: 'Why is cluster-admin for CI/CD dangerous?', a: 'It grants unrestricted access to all resources cluster-wide. A compromised pipeline token could delete namespaces, exfiltrate Secrets, or create privileged pods. CI only needs create/update on specific resources in target namespaces.' },
+    { q: 'What is the difference between TokenRequest tokens and legacy static tokens?', a: 'TokenRequest tokens are audience-bound, time-limited (default 1h, minimum 10m), and bound to the pod UID. Static tokens are long-lived JWTs with no expiry and no audience binding — a security liability if leaked.' },
+    { q: 'Does the Node authorizer use RBAC?', a: 'No. The Node authorizer is a separate built-in module that grants kubelets access to Pods, Nodes, Secrets, and ConfigMaps they need to run. It is evaluated before RBAC in the authorization chain.' },
+    { q: 'Name two CLI tools for auditing RBAC and what each answers.', a: 'kubectl-who-can (rbac-tool): "who can VERB RESOURCE" — inverse of can-i. rbac-lookup: "what roles does this user/group/SA have across all namespaces." rakkess: full access matrix showing all verbs for all resources.' },
+  ],
+  references: [
+    'https://kubernetes.io/docs/reference/access-authn-authz/rbac/',
+    'https://kubernetes.io/docs/reference/access-authn-authz/authorization/',
+    'https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/',
+    'https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/',
+    'https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens',
+    'https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html',
+    'https://github.com/aquasecurity/kubectl-who-can',
+    'https://github.com/corneliusweig/rakkess',
+  ],
+  },
+
+  {
+  id: 'kubernetes-networking',
+  title: 'Kubernetes Networking Deep Dive',
+  icon: 'globe',
+  color: '#06b6d4',
+  questions: 22,
+  description: 'Kubernetes networking rests on a single foundational contract: every Pod gets a unique, routable IP, and any Pod can reach any other Pod on any node without NAT. This topic traces that contract from the Linux kernel primitives that implement it — network namespaces, veth pairs, bridges, and iptables — through the CNI plugin ecosystem (Flannel VXLAN overlay, Calico BGP underlay, Cilium eBPF dataplane), up through CoreDNS service discovery including the ndots:5 problem, NetworkPolicy enforcement and its CNI dependencies, and Service networking internals including how kube-proxy implements ClusterIP via iptables DNAT chains or IPVS virtual servers, EndpointSlice sharding, and the externalTrafficPolicy: Local trade-off for source IP preservation.',
+  topics: [
+    {
+      title: 'The Pod Network Model and CNI Dataplane',
+      content: `The Kubernetes network model makes three guarantees: pods on a node can communicate with all pods on all nodes without NAT; agents on a node (kubelet, kube-proxy) can communicate with all pods on that node; and pods in the host network namespace see the node's IP, not a pod IP. These guarantees are enforced purely by convention and the CNI plugin — Kubernetes itself does not implement them at the control plane level.
+
+Every Pod runs its containers in a shared Linux network namespace. The first container created in a pod is the pause (infra) container, whose sole job is to hold the network namespace open for the lifetime of the pod. All application containers then join that namespace, sharing the same loopback, the same IP address, and the same port space. Two containers in the same pod communicate over localhost.
+
+When the kubelet calls the CNI plugin to set up a pod, the CNI creates a veth pair: a virtual Ethernet cable with one end placed inside the pod's network namespace (typically named eth0) and the other end placed on the node's root network namespace (typically named vethXXXXXX). The node-side end is connected to a Linux bridge (often cbr0). The bridge acts as a virtual switch connecting all pods on the same node. Traffic from pod A to pod B on the same node crosses the bridge without leaving the node.
+
+For cross-node traffic, the CNI plugin must route packets from one node's bridge to another node's pod CIDR. Two major approaches exist. Overlay networks (Flannel VXLAN, Calico VXLAN mode) encapsulate pod packets inside UDP packets with the destination node's real IP. The VXLAN UDP port is 8472. This adds approximately 50 bytes of overhead per packet, so the effective MTU inside the overlay is 1450 bytes on a standard 1500-byte network. Failing to set the container MTU correctly causes silent packet fragmentation and hard-to-diagnose performance degradation.
+
+BGP underlay (Calico BGP mode, Cilium BGP) eliminates encapsulation. Each node advertises its pod CIDR as a BGP route. The underlying network fabric (physical switches or cloud VPC route tables) learns these routes and routes pod traffic natively. This requires a network that supports BGP peering and is significantly more efficient — no encapsulation overhead, no MTU headaches. Cloud managed node groups typically support this through custom VPC routing tables rather than actual BGP.
+
+Cilium replaces the entire traditional kernel networking stack with eBPF programs. Instead of packets traversing kernel bridges, iptables chains, and conntrack tables, eBPF programs attached to network interfaces handle routing, load balancing, and policy enforcement in a single XDP or TC hook. This yields 10-30% latency reduction and dramatically lower CPU overhead on high-throughput nodes. Cilium also supports direct pod-to-pod communication via eBPF socket-level redirection, bypassing the network stack entirely for pods on the same node.`,
+      codeExample: `# Inspect the network namespace of a running pod
+# Find the pod's process on the node
+kubectl get pod mypod -o jsonpath='{.status.containerStatuses[0].containerID}'
+# On the node:
+crictl inspect <containerID> | jq .info.pid
+nsenter -t <PID> -n ip addr show eth0
+nsenter -t <PID> -n ip route show
+
+# Check veth pairs on the node (each pod gets one)
+ip link show type veth
+
+# Show the bridge and connected veth interfaces
+bridge link show
+
+# Check overlay MTU (should be 1450 for VXLAN on 1500 MTU links)
+nsenter -t <POD_PID> -n ip link show eth0 | grep mtu
+
+# Calico BGP peer status (if using BGP mode)
+calicoctl node status
+kubectl -n kube-system exec -it $(kubectl -n kube-system get pod -l k8s-app=calico-node -o name | head -1) \
+  -- birdcl show protocols
+
+# Cilium connectivity and eBPF datapath status
+kubectl -n kube-system exec -it ds/cilium -- cilium status
+kubectl -n kube-system exec -it ds/cilium -- cilium endpoint list
+# Check if eBPF host routing is active (bypasses kube-proxy)
+kubectl -n kube-system exec -it ds/cilium -- cilium status | grep "KubeProxy replacement"`,
+    },
+    {
+      title: 'CoreDNS and Kubernetes DNS Resolution',
+      content: `CoreDNS is the cluster DNS server since Kubernetes 1.13. It runs as a Deployment (typically 2 replicas) in the kube-system namespace behind a Service at the cluster's DNS ClusterIP (the 10th IP of the service CIDR, by convention — this address is baked into kubelet --cluster-dns). Every pod by default has /etc/resolv.conf entries pointing to that IP and a set of search domains.
+
+The DNS specification for Kubernetes services follows the pattern service.namespace.svc.cluster.local. Pod IP DNS is formatted as ip-dashes.namespace.pod.cluster.local (e.g., 10-0-1-5.default.pod.cluster.local). CoreDNS returns A records for ClusterIP services, AAAA records if the cluster has IPv6, and SRV records for named ports.
+
+The ndots:5 default in /etc/resolv.conf is the most impactful DNS performance problem in clusters. The ndots:5 setting means that any hostname with fewer than 5 dots in it triggers the resolver to attempt all search domain suffixes before making an absolute lookup. For a hostname like api.stripe.com (2 dots), the resolver tries api.stripe.com.production.svc.cluster.local, api.stripe.com.svc.cluster.local, api.stripe.com.cluster.local, api.stripe.com.ec2.internal (if on AWS), then finally api.stripe.com. — five lookups instead of one, with CoreDNS receiving the first four and returning NXDOMAIN for each. At scale, this adds measurable latency to every external HTTP call. Solutions: set dnsConfig.options.ndots: 2 in the pod spec for workloads that primarily call external APIs, or append a trailing dot to fully-qualified external hostnames (api.stripe.com.) to force an absolute lookup.
+
+Headless Services (clusterIP: None) tell CoreDNS to return A records for all ready pod IPs instead of the ClusterIP virtual IP. This is the mechanism StatefulSets use to give each pod a stable DNS name: pod-0.service.namespace.svc.cluster.local resolves directly to that pod's IP. Headless services are also used for peer-discovery in distributed systems (etcd, Cassandra, ZooKeeper clusters).
+
+ExternalName Services create a CNAME record. They are used to give a Kubernetes DNS alias to an external database hostname — the service resolves to the CNAME target, which is then resolved by the pod's DNS according to its resolv.conf settings.
+
+CoreDNS is configured via a ConfigMap in kube-system. The Corefile uses a plugin chain: errors logs errors, health serves /health, ready serves /ready for readiness probes, kubernetes provides the in-cluster resolution, cache 30 caches responses for 30 seconds (substantial reduction in upstream load), forward sends non-cluster queries to upstream resolvers. CoreDNS can be horizontally scaled using cluster-proportional-autoscaler at approximately 1 replica per 256 nodes with a minimum of 2. Always deploy a PodDisruptionBudget ensuring at least 1 CoreDNS pod is available during node drains.`,
+      codeExample: `# CoreDNS ConfigMap — custom forward, tuned cache, log enabled for debugging
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        prometheus :9153
+        forward . 169.254.20.10 {       # use VPC DNS resolver (e.g., AWS Route 53 Resolver)
+            max_concurrent 1000
+        }
+        cache 30 {
+            success 9984                 # max positive cache entries
+            denial 9984                  # max negative (NXDOMAIN) cache entries
+        }
+        loop
+        reload
+        loadbalance
+    }
+---
+# Pod dnsConfig: fix ndots for workloads that call external APIs heavily
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-caller
+spec:
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "2"              # only 2 dots needed to skip search domains
+      - name: single-request   # avoid parallel A+AAAA queries on some resolvers
+  containers:
+    - name: app
+      image: myapp:latest
+---
+# Service with externalTrafficPolicy: Local (preserve client source IP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local    # no SNAT, no cross-node hop — source IP preserved
+  selector:
+    app: ingress-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+---
+# DNS debugging inside a pod
+# kubectl exec -it debug-pod -- sh
+# nslookup kubernetes.default.svc.cluster.local
+# nslookup myservice.mynamespace.svc.cluster.local
+# dig +short api.stripe.com                        # check if external DNS resolves
+# dig +short @10.96.0.10 api.stripe.com            # query CoreDNS directly
+# cat /etc/resolv.conf                             # inspect ndots and search domains
+# nslookup api.stripe.com.                         # trailing dot = absolute lookup, no search`,
+    },
+    {
+      title: 'NetworkPolicy Deep Dive',
+      content: `Kubernetes NetworkPolicy is the API for declaring which pods may communicate with which other pods and external endpoints. The default posture is wide open: if no NetworkPolicy selects a pod, all ingress and egress are allowed from any source to any destination. The moment a single NetworkPolicy selects a pod on ingress, that pod's ingress becomes default-deny for all traffic not explicitly allowed by that or any other policy. Ingress and egress are independent — a policy that only sets ingress rules does not affect egress on that pod.
+
+NetworkPolicy selects pods via podSelector (matches pods in the same namespace by label), namespaceSelector (matches pods in any namespace matching namespace labels — namespace labels are not set by default; you must label your namespaces), and ipBlock (CIDR ranges, with optional except). Within a single from or to entry, multiple selectors are ANDed together — a rule with both podSelector and namespaceSelector matches pods that satisfy BOTH selectors. Multiple from or to entries are ORed — any matching entry allows the traffic.
+
+Port matching supports protocol (TCP, UDP, SCTP), port (number or named port string), and endPort (for port ranges, v1.25 stable). Port is optional — omitting it means all ports are allowed for that peer selector.
+
+A frequently missed requirement is egress to CoreDNS. If you create an egress NetworkPolicy on a pod, you must explicitly allow UDP port 53 (and TCP port 53 for large DNS responses) to the kube-system namespace (or the CoreDNS pods specifically). Without this, DNS resolution fails immediately, causing seemingly random connection failures that are difficult to trace.
+
+The NetworkPolicy API only works if the CNI plugin enforces it. Flannel does not enforce NetworkPolicy without a companion policy engine. Calico and Cilium both enforce standard NetworkPolicy. Critically, host-network pods (hostNetwork: true) bypass NetworkPolicy entirely — they use the node's IP and are not subject to pod-level policy rules.
+
+Cilium extends the standard API with CiliumNetworkPolicy. The toFQDNs rule enforces egress by DNS name rather than IP address — essential when external services have dynamic IPs. The L7 HTTP rule enforces egress or ingress by HTTP method and path. The toServices selector references a Kubernetes Service by name rather than requiring you to know the ClusterIP CIDR. These extensions cannot be expressed in standard NetworkPolicy and require Cilium to be the CNI.`,
+      codeExample: `# Default deny all ingress and egress for a namespace, then allow selectively
+---
+# 1. Deny all ingress for pods labeled app: backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  # No ingress rules = deny all ingress
+---
+# 2. Allow ingress only from pods in same namespace labeled app: frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend          # AND namespaceSelector not set = same namespace only
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# 3. Egress policy: allow DNS + specific external CIDR only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-egress
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Egress
+  egress:
+    - ports:                          # allow DNS — REQUIRED when egress policy exists
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:          # AND podSelector: CoreDNS pods only
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+    - to:
+        - ipBlock:
+            cidr: 10.100.0.0/16       # internal microservices CIDR
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16        # allow external internet, deny RFC1918
+
+---
+# Cilium CiliumNetworkPolicy with DNS-aware egress (toFQDNs)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-stripe-egress
+  namespace: production
+spec:
+  endpointSelector:
+    matchLabels:
+      app: payment-service
+  egress:
+    - toFQDNs:
+        - matchName: api.stripe.com
+        - matchPattern: "*.stripe.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP`,
+    },
+    {
+      title: 'Service Networking Internals: ClusterIP, kube-proxy, and EndpointSlice',
+      content: `A ClusterIP Service creates a virtual IP address that exists in no physical interface anywhere in the cluster. It is a fiction maintained by kube-proxy (or its replacement) on every node via iptables or IPVS rules. When a pod sends a packet to a ClusterIP, the kernel intercepts the packet at the PREROUTING iptables hook and rewrites the destination IP to one of the backing pod IPs via DNAT. The rewrite is tracked in conntrack so return packets are reverse-DNAT'ed back to the ClusterIP.
+
+In iptables mode, kube-proxy creates a chain hierarchy: KUBE-SERVICES is traversed for every outbound packet; each service gets a KUBE-SVC-xxx chain that randomly (using statistic module probability matching) selects a KUBE-SEP-xxx (endpoint) chain, which performs the actual DNAT to the pod IP and port. For a service with 100 endpoints, traversing 100 iptables rules on every packet is expensive. iptables is also non-incremental — adding one endpoint triggers a full rewrite of the chain.
+
+IPVS mode (kernel 2.11+) uses the Linux Virtual Server in-kernel load balancer. kube-proxy creates an IPVS virtual server for each ClusterIP:port and adds real servers for each endpoint. IPVS uses hash tables for O(1) lookup regardless of endpoint count and supports multiple scheduling algorithms (rr, lc, sh, sed, nq). Incremental updates are supported. At clusters above ~1000 services or ~10000 endpoints, IPVS is meaningfully more efficient than iptables.
+
+Cilium completely replaces kube-proxy with eBPF programs that handle DNAT at the socket layer (via BPF_PROG_TYPE_SOCK_OPS) — packets are rewritten before they even leave the socket buffer, eliminating conntrack overhead entirely. This is called kube-proxy replacement mode.
+
+Session affinity (sessionAffinity: ClientIP) causes kube-proxy to consistently route packets from the same source IP to the same backend pod for the sessionAffinityConfig.clientIP.timeoutSeconds duration (default 10800 seconds — 3 hours).
+
+ExternalTrafficPolicy: Local is critical for ingress controllers and anywhere source IP matters for logging, rate-limiting, or geo-targeting. When set to Cluster (default), any node's iptables rules will SNAT the packet and forward to any endpoint on any node — the original source IP is lost. When set to Local, the LoadBalancer only routes to nodes running pods, and no SNAT occurs — the source IP is preserved. The trade-off is that if a node has no local pods, the cloud load balancer healthcheck fails and no traffic is sent there, requiring pod scheduling on every node (often achieved with a DaemonSet for ingress controllers).
+
+EndpointSlice (GA in v1.21) solves an etcd size problem. The original Endpoints object stores all pod IPs in a single object — at ~1000 pods this object exceeds the 1MB etcd value limit. EndpointSlice shards endpoint lists into objects capped at 100 endpoints each. kube-proxy watches EndpointSlice instead of Endpoints. EndpointSlice also carries topology hints (zone, node) enabling Topology Aware Routing: the EndpointSlice controller annotates endpoints with hints, and kube-proxy prefers endpoints in the same zone, reducing cross-zone data transfer costs in multi-AZ clusters.`,
+      codeExample: `# Inspect iptables rules kube-proxy creates for a Service
+# Run on a node (requires node shell or privileged pod)
+iptables -t nat -L KUBE-SERVICES -n --line-numbers
+iptables -t nat -L KUBE-SVC-<hash> -n          # service chain
+iptables -t nat -L KUBE-SEP-<hash> -n          # endpoint chain with DNAT rule
+
+# IPVS virtual servers (if kube-proxy is in ipvs mode)
+ipvsadm -Ln
+ipvsadm -Ln -t 10.96.0.1:443                   # specific ClusterIP:port
+
+# EndpointSlice for a Service — shows zone hints and addresses
+kubectl get endpointslices -n mynamespace -l kubernetes.io/service-name=myservice -o yaml
+
+# Service with Topology Aware Routing (prefer same-zone endpoints)
+apiVersion: v1
+kind: Service
+metadata:
+  name: myservice
+  annotations:
+    service.kubernetes.io/topology-mode: Auto    # enable zone-aware endpoint hints
+spec:
+  selector:
+    app: myapp
+  ports:
+    - port: 80
+      targetPort: 8080
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+
+---
+# Headless Service for StatefulSet — DNS returns all pod IPs
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+  namespace: data
+spec:
+  clusterIP: None                   # headless: DNS returns pod IPs directly
+  selector:
+    app: cassandra
+  ports:
+    - port: 9042
+      name: cql
+# DNS: cassandra-0.cassandra.data.svc.cluster.local → pod IP of pod cassandra-0
+# DNS: cassandra.data.svc.cluster.local → all ready pod IPs (round-robin)
+
+---
+# Debug: test DNS resolution and service connectivity from a temporary pod
+kubectl run debug --image=nicolaka/netshoot --rm -it --restart=Never -- sh
+# Inside:
+# nslookup myservice.mynamespace.svc.cluster.local
+# curl -v http://myservice.mynamespace.svc.cluster.local:80/health
+# dig +short SRV _http._tcp.myservice.mynamespace.svc.cluster.local
+# ss -tlnp                         # local listening ports
+# conntrack -L | grep 10.96        # active conntrack entries for ClusterIP range`,
+    },
+  ],
+  quickFire: [
+    { q: 'How do packets travel from a pod on node A to a pod on node B in a VXLAN overlay?', a: 'The packet from the pod crosses the node bridge to the VTEP interface, gets encapsulated in a UDP packet with the destination node\'s real IP on port 8472, travels over the physical network, is decapsulated on the destination node\'s VTEP, and delivered to the destination pod via its veth and bridge.' },
+    { q: 'What is the pause container and why does every pod have one?', a: 'The pause (infra) container is the first container created in a pod. Its only job is to hold the Linux network namespace open. All application containers in the pod join this namespace, sharing the same IP, loopback, and port space. If the pause container dies, all containers restart.' },
+    { q: 'What is the ndots:5 problem and how do you fix it?', a: 'ndots:5 means any hostname with fewer than 5 dots triggers appending all search domain suffixes, causing 4-5 DNS lookups before the external name resolves. Fix: set dnsConfig.options.ndots: 2, or append a trailing dot to FQDNs (api.stripe.com.) to force an absolute lookup.' },
+    { q: 'What does a headless service return from DNS?', a: 'A records for all ready pod IPs instead of a single ClusterIP. Used for StatefulSet per-pod DNS (pod-0.service.ns.svc.cluster.local) and peer discovery in distributed systems.' },
+    { q: 'What is the default NetworkPolicy behavior when no policies exist?', a: 'All ingress and egress is allowed between all pods in the cluster. Policies are additive — the default is open, and the first policy selecting a pod introduces default-deny for that traffic direction.' },
+    { q: 'How does kube-proxy implement ClusterIP in iptables mode?', a: 'It creates iptables NAT chains: KUBE-SERVICES routes to per-service KUBE-SVC chains, which probabilistically select a KUBE-SEP chain per endpoint, which DNATs the destination to the pod IP:port. conntrack tracks the translation for reply packets.' },
+    { q: 'What is the trade-off between externalTrafficPolicy: Local and Cluster?', a: 'Cluster: load balances across all nodes, adds SNAT, hides source IP, always reachable. Local: no SNAT, preserves source IP, no cross-node hop, but fails if no pods are scheduled on a node receiving traffic from the LB.' },
+    { q: 'Which CNI plugins enforce NetworkPolicy? Does Flannel alone enforce it?', a: 'Calico, Cilium, Antrea, and Weave enforce NetworkPolicy. Flannel alone does not — it provides connectivity only. You can add Calico NetworkPolicy enforcement on top of Flannel overlay (Canal), but Flannel is not a policy engine.' },
+    { q: 'When would you choose IPVS mode over iptables for kube-proxy?', a: 'Clusters with more than ~1000 services or ~10000 endpoints. IPVS uses kernel hash tables for O(1) lookup and supports incremental updates. iptables does linear rule traversal and rewrites the entire chain on any change.' },
+    { q: 'What happens if CoreDNS crashes — can existing connections continue?', a: 'Existing connections survive because they are already established (no DNS needed). New connection attempts that require DNS resolution fail. Cached entries (30s default) in the application\'s resolver may temporarily compensate.' },
+    { q: 'How does Cilium L7 NetworkPolicy differ from standard NetworkPolicy?', a: 'Standard NetworkPolicy operates at L3/L4 (IP + port only). Cilium CiliumNetworkPolicy can match on L7 HTTP method, path, and headers, and can enforce egress by DNS name via toFQDNs rather than by IP CIDR.' },
+    { q: 'Why was EndpointSlice introduced and what limit does it solve?', a: 'The original Endpoints object stores all pod IPs in one etcd value, which hit the 1MB etcd limit at around 1000 pods for large services. EndpointSlice shards into 100-pod slices, making updates incremental and keeping each object small.' },
+    { q: 'How do you debug DNS failures inside a pod?', a: 'kubectl exec into the pod or run a netshoot debug pod: check /etc/resolv.conf for search domains and ndots, run nslookup or dig against the service name, dig directly at the CoreDNS IP, and check kubectl logs on CoreDNS pods for NXDOMAIN or connection errors.' },
+    { q: 'Why must Service CIDR and Pod CIDR not overlap?', a: 'ClusterIP addresses and Pod IPs live in different CIDR ranges. If they overlap, a packet destined for a pod IP could be incorrectly intercepted by iptables DNAT rules intended for a ClusterIP, causing routing failures.' },
+    { q: 'What is the primary benefit of the eBPF kube-proxy replacement in Cilium?', a: 'Packets are rewritten at the socket level before leaving the socket buffer, bypassing iptables and conntrack entirely. This eliminates per-packet overhead of chain traversal and connection tracking, yielding lower latency and higher throughput per CPU core.' },
+  ],
+  references: [
+    'https://kubernetes.io/docs/concepts/cluster-administration/networking/',
+    'https://kubernetes.io/docs/concepts/services-networking/network-policies/',
+    'https://kubernetes.io/docs/concepts/services-networking/service/',
+    'https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/',
+    'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/',
+    'https://kubernetes.io/docs/concepts/services-networking/topology-aware-routing/',
+    'https://cilium.io/blog/2021/05/11/cni-benchmark/',
+    'https://docs.cilium.io/en/stable/network/kubernetes/policy/',
+    'https://github.com/containernetworking/cni',
+  ],
+  },
+
+  {
+  id: 'kubernetes-autoscaling',
+  title: 'Kubernetes Autoscaling: HPA, VPA, KEDA, and Cluster Autoscaler',
+  icon: 'zap',
+  color: '#f59e0b',
+  questions: 20,
+  description: 'Kubernetes provides a layered autoscaling stack that addresses horizontal replica scaling, vertical resource right-sizing, event-driven scale-to-zero, and node provisioning. This topic covers the HPA v2 algorithm and behavior block, including custom and external metrics via the Prometheus Adapter; VPA\'s three-component architecture, its four update modes, and the rule against combining VPA and HPA on the same resource metric; KEDA v2 and its ScaledObject/ScaledJob model that brings scale-to-zero to any workload through 60+ scalers; and node-level scaling through the Cluster Autoscaler (with its expander strategies and PDB awareness) and Karpenter (with NodePool-based just-in-time instance selection and consolidation).',
+  topics: [
+    {
+      title: 'HPA v2: Algorithm, Behavior Block, and Custom Metrics',
+      content: `The Horizontal Pod Autoscaler has been on the v2 API (autoscaling/v2) since Kubernetes 1.23 and is the right version to use in all current clusters. The v1 API only supported CPU percentage; v2 supports multiple metric sources simultaneously.
+
+The core scaling algorithm is: desiredReplicas = ceil(currentReplicas × currentMetricValue / desiredMetricValue). For CPU, currentMetricValue is the sum of CPU usage across all pods in the target divided by the number of pods; desiredMetricValue is the target CPU millicore or utilization percentage you set. If the ratio is greater than 1, replicas increase; if less than 1, they decrease. The ceil ensures you never round down to fewer replicas than needed to service current load.
+
+The HPA supports five metric source types. Resource metrics (CPU, memory) come from the metrics-server aggregation layer. ContainerResource metrics target a specific named container within pods. Pods metrics are custom per-pod metrics from the Custom Metrics API (e.g., requests-per-second per pod). Object metrics are a single metric from a Kubernetes object (e.g., an Ingress's current RPS). External metrics come from systems outside the cluster (queue depth, cloud API metrics) through the External Metrics API.
+
+The behavior block is essential for controlling scaling dynamics. scaleUp.stabilizationWindowSeconds controls how long the HPA waits after a scale-up trigger before considering another scale-up (default 0 — scale up immediately and aggressively). scaleDown.stabilizationWindowSeconds is the flap-prevention window: the HPA looks back this many seconds at metric history and uses the highest replica count seen in that window as the desired value (default 300 seconds — 5 minutes of hysteresis before scaling down). Policies further constrain the rate: type: Percent with value: 50 means scale up by at most 50% of current replicas per periodSeconds window; type: Pods with value: 4 means add at most 4 pods per window. selectPolicy: Max picks the most aggressive policy; Min is most conservative; Disabled prevents scaling in that direction entirely.
+
+Custom metrics require the Prometheus Adapter: a deployment that implements the custom.metrics.k8s.io API server, querying Prometheus for metric values and translating them into the API format the HPA expects. Configuring the Adapter's seriesQuery, metricsQuery, and naming rules is the main setup work. KEDA provides an easier path by deploying its own ExternalMetrics API server (described in the KEDA section).
+
+A critical operational note: HPA conflicts with GitOps tools like Argo CD. If Argo CD manages a Deployment with spec.replicas set in Git, it sees the HPA's replica adjustments as drift and attempts to reconcile back to the Git value. The fix is to add ignoreDifferences on spec.replicas in the Argo CD Application manifest, or to omit spec.replicas from the Deployment YAML entirely (which makes Argo CD leave it alone). Native HPA cannot set minReplicas to 0 — there is no way to get a replica count from which to compute the scaling ratio. Scale-to-zero requires KEDA.`,
+      codeExample: `# HPA v2 with CPU + custom Prometheus metric + careful behavior block
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-server-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 2
+  maxReplicas: 50
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60        # scale up if avg CPU > 60% across all pods
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second  # custom metric from Prometheus Adapter
+        target:
+          type: AverageValue
+          averageValue: "100"           # 100 RPS per pod target
+    - type: External
+      external:
+        metric:
+          name: sqs_queue_depth         # External metric (queue length)
+          selector:
+            matchLabels:
+              queue: api-work-queue
+        target:
+          type: AverageValue
+          averageValue: "30"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0     # react immediately to load spikes
+      policies:
+        - type: Percent
+          value: 100                    # allow doubling every 15s
+          periodSeconds: 15
+        - type: Pods
+          value: 10                     # or add at most 10 pods per 15s
+          periodSeconds: 15
+      selectPolicy: Max                 # use whichever policy allows more pods
+    scaleDown:
+      stabilizationWindowSeconds: 300   # require 5 min of low load before scaling down
+      policies:
+        - type: Percent
+          value: 10                     # remove at most 10% per minute
+          periodSeconds: 60
+      selectPolicy: Min                 # most conservative — slowest scale-down
+---
+# Argo CD Application: ignore HPA-managed replica drift
+# (add to Application spec.ignoreDifferences)
+# ignoreDifferences:
+#   - group: apps
+#     kind: Deployment
+#     jsonPointers:
+#       - /spec/replicas`,
+    },
+    {
+      title: 'VPA: Recommender, Updater, Admission Plugin, and Update Modes',
+      content: `The Vertical Pod Autoscaler adjusts CPU requests and memory requests (and limits) of running pods rather than their count. It is particularly valuable for right-sizing workloads whose resource needs vary over time or whose initial resource requests were guessed rather than measured.
+
+VPA has three separate controller components. The Recommender watches actual pod CPU and memory consumption from the metrics API and computes percentile-based recommendations: it tracks histogram data over a configurable window (default 8 days) and emits p50, p90, p95, and p99 estimates for CPU and memory. The target recommendation used by default is p90 for memory (to avoid OOMKills on tail usage spikes) and a lower percentile for CPU (where throttling is less catastrophic than a kill). The Updater checks all VPA objects and their target pods; if a pod's current requests fall outside the VPA's lower or upper bound, the Updater marks it for eviction. The Admission Plugin is a mutating webhook that intercepts pod creation requests and patches the resource requests and limits to the VPA's current recommendation before the pod is scheduled. This is why VPA only fully takes effect on pod restart — it cannot modify requests on running pods (except in the alpha in-place resize feature in v1.33).
+
+The updateMode field controls how aggressive VPA is. Off: the VPA computes recommendations (visible in kubectl describe vpa) and does nothing else. This is the safest starting point for right-sizing — observe for 1-2 weeks and then apply recommendations manually. Initial: the Admission Plugin patches new pods at creation time, but the Updater never evicts running pods. Existing pods keep their old requests until they naturally restart. Recreate: the Updater actively evicts out-of-bounds pods; the Admission Plugin patches the replacement pod. This is the production mode for steady workloads. Auto: currently identical to Recreate on standard Kubernetes; it is the placeholder for future in-place resizing (no restart needed) once that feature stabilizes.
+
+ResourcePolicy provides per-container guardrails: minAllowed prevents VPA from recommending requests so small the container is constantly throttled; maxAllowed prevents VPA from recommending requests so large the pod cannot schedule. Set maxAllowed to something reasonable — a memory recommendation can occasionally spike to values that exceed node capacity.
+
+The VPA + HPA conflict rule is critical: never use VPA and HPA targeting the same metric on the same pods. If both target CPU, VPA reduces CPU requests (making HPA's utilization metric look higher), HPA adds more replicas (making per-pod CPU drop), VPA reduces further — an oscillation loop. The safe combinations are: HPA on custom metrics (queue depth, RPS) while VPA manages CPU/memory; or VPA in Off mode purely for recommendations while HPA handles scaling.
+
+In-place pod resource resize (v1.33 alpha, 1.32 beta for containers) allows changing CPU requests/limits without restarting the pod. Memory changes may still require a restart depending on the resize policy. This feature, when it stabilizes, will make VPA's Recreate mode unnecessary for CPU adjustments.`,
+      codeExample: `# VPA in Off mode for right-sizing recommendations — safe first step
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: api-server-vpa
+  namespace: production
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  updatePolicy:
+    updateMode: "Off"             # recommendations only, no eviction or patching
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api-server
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: "4"                # prevent scheduling failure from huge recommendation
+          memory: 8Gi
+        controlledResources:      # VPA manages only these resources
+          - cpu
+          - memory
+        controlledValues: RequestsAndLimits   # adjust both requests and limits
+
+---
+# View VPA recommendations (after running Off mode for a few days)
+# kubectl describe vpa api-server-vpa -n production
+# Look for:
+# Recommendation:
+#   Container Recommendations:
+#     Container Name: api-server
+#     Lower Bound: cpu: 150m, memory: 200Mi
+#     Target:      cpu: 350m, memory: 512Mi    ← use this in your Deployment
+#     Upper Bound: cpu: 2, memory: 2Gi
+
+---
+# VPA in Recreate mode for auto right-sizing (once you trust the recommendations)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: worker-vpa
+  namespace: production
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker
+  updatePolicy:
+    updateMode: "Recreate"        # Updater evicts pods; Admission Plugin patches replacements
+  resourcePolicy:
+    containerPolicies:
+      - containerName: worker
+        minAllowed:
+          cpu: 200m
+          memory: 256Mi
+        maxAllowed:
+          cpu: "8"
+          memory: 16Gi
+---
+# Safe combination: HPA on custom RPS metric + VPA on CPU/memory
+# HPA handles replica count based on requests-per-second
+# VPA handles per-pod CPU/memory allocation
+# Neither conflicts because they target different dimensions`,
+    },
+    {
+      title: 'KEDA v2: Event-Driven Scale-to-Zero',
+      content: `KEDA (Kubernetes Event-Driven Autoscaling) is a CNCF Graduated project that extends the native HPA rather than replacing it. When you create a KEDA ScaledObject, KEDA creates and manages an HPA object under the hood and also deploys an ExternalMetrics API server that exposes the scaler's current metric value as an external metric. The HPA reads this metric and adjusts replicas accordingly. This architecture means KEDA scales are standard Kubernetes HPA scales — they are visible in kubectl get hpa, they respect PodDisruptionBudgets, and they integrate with all existing tooling.
+
+The key capability KEDA adds over native HPA is scale-to-zero. Setting minReplicaCount: 0 on a ScaledObject enables this. When all scalers report a metric value at or below their activationThreshold, KEDA bypasses the HPA (which cannot operate at 0 replicas) and directly patches the Deployment to 0 replicas. When any scaler reports a value above the threshold, KEDA patches the Deployment to minReplicaCount (or 1 if minReplicaCount is 0) to wake it up, then hands control back to the HPA. The cooldownPeriod (default 300 seconds) controls how long after the metric drops to zero before KEDA actually scales down — prevents scale-to-zero during brief quiet periods.
+
+KEDA ships with 60+ built-in scalers covering nearly every message queue and event source: Kafka (consumer group lag), SQS (queue depth and in-flight messages), Azure Service Bus, GCP Pub/Sub, RabbitMQ (vhost queue depth), Redis List/Stream, Prometheus (arbitrary promQL), HTTP (via http-add-on measuring in-flight requests), Cron (time-based scaling — e.g., always keep 3 replicas during business hours), GitHub Actions (pending workflow runs), and many more.
+
+TriggerAuthentication and ClusterTriggerAuthentication decouple scaler credentials from the ScaledObject definition. Instead of embedding credentials in the ScaledObject, you reference a TriggerAuthentication that references a Kubernetes Secret, AWS IRSA, Azure Pod Identity, or GCP Workload Identity. ClusterTriggerAuthentication is namespace-agnostic and can be shared across ScaledObjects in any namespace.
+
+ScaledJob (distinct from ScaledObject) is designed for batch processing where each trigger event should create a new Job rather than scaling replicas of a long-running Deployment. Each SQS message could trigger a Job that processes that message to completion. completionMode controls whether KEDA counts completion success before scaling again. ScaledJob pairs naturally with Karpenter or Cluster Autoscaler because the Jobs create pods that demand node resources, triggering node scale-up.
+
+The pollingInterval (default 30 seconds) controls how often KEDA queries each scaler for the current metric value. This is the minimum latency between a metric change and a scaling action. For latency-sensitive workloads, reduce pollingInterval to 5-10 seconds — at the cost of more scaler API calls.`,
+      codeExample: `# KEDA ScaledObject with Prometheus scaler + TriggerAuthentication + scale-to-zero
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prometheus-auth
+  namespace: production
+type: Opaque
+stringData:
+  username: prometheus-reader
+  password: "supersecret"
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: prometheus-trigger-auth
+  namespace: production
+spec:
+  secretTargetRef:
+    - parameter: username
+      name: prometheus-auth
+      key: username
+    - parameter: password
+      name: prometheus-auth
+      key: password
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: api-server-scaledobject
+  namespace: production
+spec:
+  scaleTargetRef:
+    name: api-server
+  minReplicaCount: 0              # scale to zero when no load
+  maxReplicaCount: 100
+  cooldownPeriod: 300             # 5 min quiet before scaling to zero
+  pollingInterval: 15             # check metric every 15 seconds
+  triggers:
+    - type: prometheus
+      authenticationRef:
+        name: prometheus-trigger-auth
+      metadata:
+        serverAddress: http://prometheus.monitoring.svc.cluster.local:9090
+        metricName: http_requests_total
+        query: sum(rate(http_requests_total{namespace="production",deployment="api-server"}[2m]))
+        threshold: "50"           # scale up when > 50 RPS
+        activationThreshold: "5"  # wake from zero when > 5 RPS (avoid premature wake)
+---
+# KEDA ScaledJob for SQS batch processing — one Job per batch of messages
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: sqs-processor
+  namespace: production
+spec:
+  jobTargetRef:
+    template:
+      spec:
+        containers:
+          - name: processor
+            image: myapp/sqs-worker:latest
+            env:
+              - name: QUEUE_URL
+                value: https://sqs.us-east-1.amazonaws.com/123456789012/work-queue
+        restartPolicy: Never
+  triggers:
+    - type: aws-sqs-queue
+      authenticationRef:
+        name: aws-trigger-auth          # TriggerAuthentication referencing IRSA or secret
+      metadata:
+        queueURL: https://sqs.us-east-1.amazonaws.com/123456789012/work-queue
+        queueLength: "5"                # one Job per 5 messages in queue
+        awsRegion: us-east-1
+  maxReplicaCount: 20
+  scalingStrategy:
+    strategy: "accurate"               # count exact outstanding messages, not avg`,
+    },
+    {
+      title: 'Cluster Autoscaler and Karpenter: Node-Level Scaling',
+      content: `Cluster Autoscaler (CA) watches for pods in the Pending state due to insufficient cluster resources. When it finds pending pods, it evaluates all configured node groups (ASGs on AWS, MIGs on GCP, VMSS on Azure) to determine which group, if scaled up by one node, would allow the pending pods to schedule. It then triggers the scale-up of that node group and waits for the node to join and the pods to schedule.
+
+The expander setting controls which node group CA selects when multiple could fit the pending pods. least-waste (default) selects the group whose new node would leave the smallest amount of unused CPU and memory after scheduling the pending pods — efficient but may not minimize cost when spot pricing is involved. priority uses a user-defined priority list. random is useful when you want uniform distribution across equivalent node groups.
+
+CA scale-down requires multiple conditions to be true simultaneously for a node to be removed: the node must be underutilized (by default, the sum of requested resources of all non-DaemonSet pods is under 50% of the node's allocatable CPU and memory), and all pods on the node must be safely evictable. A pod blocks eviction (and blocks scale-down of its node) if it has a PodDisruptionBudget that would be violated, if it is a static pod (created by the kubelet directly), if it uses local storage (emptyDir or hostPath), or if it has the annotation cluster-autoscaler.kubernetes.io/safe-to-evict: "false". This last annotation is critical: apply it to any pod that runs long-running stateful work where an unexpected eviction would cause data loss or require expensive reprocessing.
+
+Karpenter (AWS, now donated to CNCF) takes a fundamentally different approach. Rather than managing fixed node group sizes, Karpenter watches for pending pods and provisions individual EC2 instances that exactly match the requirements of those pods. The NodePool CRD defines what is acceptable: instance families (c6i, r6i, m6i, g4dn), architectures (amd64, arm64), capacity types (on-demand, spot). The EC2NodeClass configures AWS specifics: AMI family, subnet selectors, security group selectors. When pods are pending, Karpenter selects the smallest EC2 instance type from the allowed set that fits all pending pods, provisions it directly via EC2 API (no ASG required for core operation), and labels it for Kubernetes to use.
+
+Karpenter's consolidation feature runs continuously: it identifies nodes that are underutilized and replaces multiple small nodes with one larger node (or simply removes nodes with only reschedulable pods). This active consolidation is more aggressive than CA's scale-down — CA removes nodes one at a time after a quiet period; Karpenter can simultaneously replace a fleet of small nodes with a fewer, larger nodes in one operation.
+
+Drift detection is another Karpenter differentiator: when the NodePool requirements change (e.g., you update the AMI version or add an instance type requirement), Karpenter marks existing nodes as drifted and replaces them progressively, respecting PodDisruptionBudgets during the replacement. This turns node AMI updates from a manual rolling drain into a declarative operation.`,
+      codeExample: `# Cluster Autoscaler: safe-to-evict annotation to protect stateful pods
+apiVersion: v1
+kind: Pod
+metadata:
+  name: long-running-job
+  annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"   # blocks node scale-down
+spec:
+  containers:
+    - name: worker
+      image: myapp/long-running:latest
+
+---
+# Karpenter NodePool: allow c/m/r instances, prefer spot, arm64 + amd64
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: general-purpose
+spec:
+  template:
+    metadata:
+      labels:
+        node-pool: general-purpose
+    spec:
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1
+        kind: EC2NodeClass
+        name: general-purpose
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64", "arm64"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]       # prefer spot, fall back to on-demand
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values: ["c6i", "c6a", "m6i", "m6a", "r6i", "r6a"]
+        - key: karpenter.k8s.aws/instance-size
+          operator: NotIn
+          values: ["nano", "micro", "small"]  # minimum useful instance size
+      expireAfter: 720h                       # replace nodes after 30 days (AMI drift)
+  disruption:
+    consolidationPolicy: WhenUnderutilized    # active consolidation
+    consolidateAfter: 1m                      # wait 1 min of underutilization before consolidating
+    budgets:
+      - nodes: "20%"                          # never disrupt more than 20% of nodes at once
+  limits:
+    cpu: "1000"                               # cluster-wide CPU cap for this NodePool
+    memory: 4000Gi
+---
+# EC2NodeClass: AWS-specific configuration
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: general-purpose
+spec:
+  amiFamily: AL2023                           # Amazon Linux 2023 (EKS-optimized)
+  role: KarpenterNodeRole                     # IAM role for the node
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: my-cluster    # tag your subnets
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: my-cluster
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 100Gi
+        volumeType: gp3
+        iops: 3000
+        throughput: 125`,
+    },
+  ],
+  quickFire: [
+    { q: 'What is the HPA v2 scaling algorithm formula?', a: 'desiredReplicas = ceil(currentReplicas × currentMetricValue / desiredMetricValue). The ceil ensures you round up to cover demand.' },
+    { q: 'Why does HPA have a default 300-second scaleDown stabilization window?', a: 'To prevent replica flapping. The HPA looks back 300 seconds and uses the highest desired replica count in that window, ensuring sustained low load (not a brief dip) is required before scaling down.' },
+    { q: 'Why must you not use VPA and HPA targeting the same metric on the same pods?', a: 'They create an oscillation loop: VPA reduces CPU requests (raising HPA utilization), HPA adds replicas (reducing per-pod CPU), VPA reduces further. Use HPA on custom metrics and VPA on CPU/memory, or use VPA in Off mode only.' },
+    { q: 'What triggers Cluster Autoscaler to add a node?', a: 'One or more pods remain in Pending state because no existing node has sufficient resources to schedule them. CA evaluates node groups and scales the one that would accommodate the pending pods.' },
+    { q: 'How does KEDA differ from native HPA?', a: 'KEDA wraps native HPA — it creates and manages an HPA under the hood and deploys an ExternalMetrics API server exposing scaler metrics. KEDA adds scale-to-zero (minReplicas: 0), 60+ built-in scalers, and TriggerAuthentication for credential management.' },
+    { q: 'Can native HPA scale a Deployment to 0 replicas?', a: 'No. Native HPA requires at least minReplicas: 1 because it needs existing pods to measure the current metric value. KEDA enables scale-to-zero by directly patching the Deployment to 0 and polling the scaler independently.' },
+    { q: 'What is the key difference between Karpenter and Cluster Autoscaler?', a: 'CA manages fixed node groups (ASG/MIG/VMSS) with pre-defined instance types and scales counts up/down. Karpenter provisions exact EC2 instances that fit pending pods on demand, consolidates nodes actively, and replaces drifted nodes declaratively.' },
+    { q: 'What are the four VPA updateMode values?', a: 'Off (recommendations only, no action), Initial (patch at pod creation, no evictions), Recreate (Updater evicts out-of-bounds pods; Admission Plugin patches replacements), Auto (currently same as Recreate, placeholder for future in-place resize).' },
+    { q: 'How does a PodDisruptionBudget affect Cluster Autoscaler scale-down?', a: 'CA will not evict a pod if doing so would violate the pod\'s PDB (i.e., bring available replicas below minAvailable or above maxUnavailable). This blocks scale-down of the node where that pod runs.' },
+    { q: 'What is KEDA TriggerAuthentication and why is it useful?', a: 'A CRD that decouples scaler credentials (AWS keys, connection strings, tokens) from the ScaledObject definition. It references a Kubernetes Secret or pod identity (IRSA, Workload Identity) so credentials are not embedded in the ScaledObject YAML.' },
+    { q: 'How does KEDA implement scale-to-zero if native HPA cannot do it?', a: 'When all scalers report metric values below activationThreshold, KEDA directly patches the Deployment.spec.replicas to 0, bypassing the HPA. When a scaler reports activity above the threshold, KEDA patches to minReplicaCount (or 1) to wake the workload, then hands control back to the HPA.' },
+    { q: 'What is the HPA cooldown equivalent in the behavior block?', a: 'scaleDown.stabilizationWindowSeconds (default 300s). There is no separate cooldown — the stabilization window acts as the hysteresis period by requiring sustained low load for that duration.' },
+    { q: 'What happens if metrics-server is unavailable and the HPA cannot get current metrics?', a: 'The HPA enters a degraded state and does not scale in or out. It logs a warning but preserves the current replica count rather than defaulting to min or max.' },
+    { q: 'What is the difference between Prometheus Adapter and KEDA for custom metrics?', a: 'Prometheus Adapter implements the custom.metrics.k8s.io API and is tightly coupled to Prometheus with complex seriesQuery configuration. KEDA implements the external.metrics.k8s.io API, supports 60+ sources beyond Prometheus, requires less configuration, and natively supports scale-to-zero.' },
+    { q: 'What role does the ExternalMetrics API play in the HPA + KEDA architecture?', a: 'KEDA deploys an API server implementing external.metrics.k8s.io. The HPA that KEDA creates references this API for metric values. The kube-apiserver proxies HPA metric queries to the KEDA metrics server, which in turn queries the actual scaler (Kafka, SQS, Prometheus, etc.).' },
+  ],
+  references: [
+    'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/',
+    'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/',
+    'https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler',
+    'https://keda.sh/docs/latest/concepts/scaling-deployments/',
+    'https://keda.sh/docs/latest/concepts/scaling-jobs/',
+    'https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md',
+    'https://karpenter.sh/docs/concepts/',
+    'https://karpenter.sh/docs/concepts/nodepools/',
+    'https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/',
+  ],
+  },
+
+
+  {
+    id: 'kubernetes-security',
+    title: 'Kubernetes Security: Pod Security and Runtime Hardening',
+    icon: 'shield',
+    color: '#7c3aed',
+    questions: 20,
+    description: 'Kubernetes security is a layered discipline spanning admission control, container-level isolation, supply chain integrity, and runtime threat detection. Pod Security Standards (PSS) replaced the deprecated PodSecurityPolicy in v1.25 with a built-in admission plugin requiring no webhook. The SecurityContext API enforces per-container and per-pod isolation constraints such as runAsNonRoot, capability dropping, and seccomp profiles. Supply chain security uses Sigstore and cosign for image signing, Trivy for CVE scanning, and distroless base images to minimize attack surface. Runtime monitoring via Falco uses eBPF to catch live container threats, while etcd encryption-at-rest with KMS envelope encryption protects secrets even if backup media is compromised. Together these controls address the full threat surface from build time to runtime.',
+    topics: [
+      {
+        title: 'Pod Security Standards (PSS)',
+        content: `Pod Security Standards replaced PodSecurityPolicy (PSP), which was deprecated in v1.21 and removed in v1.25. PSS is a built-in Kubernetes admission plugin — no external webhook is required. It ships three immutable levels. Privileged imposes no restrictions and is equivalent to having no policy at all; it is intended only for trusted system workloads like CNI plugins and CSI drivers that genuinely need host-level access. Baseline prevents known privilege escalation techniques: pods may not set hostPID, hostIPC, or hostNetwork to true; containers may not run in privileged mode; dangerous capabilities such as NET_ADMIN, SYS_ADMIN, SYS_PTRACE, and SYS_MODULE are forbidden; allowed volume types exclude hostPath to sensitive paths; and AppArmor profiles must be runtime/default or unconfined. Restricted is a superset of Baseline and adds: runAsNonRoot must be true; allowPrivilegeEscalation must be false (preventing setuid/setgid binary abuse); all capabilities must be dropped with drop: [ALL]; seccompProfile must be RuntimeDefault or Localhost (never Unconfined); and the container must run as a non-root UID.
+
+PSS is enforced via namespace labels using the form pod-security.kubernetes.io/MODE: LEVEL. The three modes are enforce (policy violation blocks the pod), warn (pod is admitted but a user-visible warning is returned), and audit (violation is recorded in the audit log but admission proceeds). Modes can be combined: a namespace might enforce Baseline while simultaneously auditing Restricted to measure what would fail before tightening. Version pinning locks evaluation to a specific Kubernetes version's semantics using pod-security.kubernetes.io/enforce-version: v1.30, preventing surprises when upgrading the cluster.
+
+Migration from PSP to PSS: PSS covers the vast majority of real-world policy needs. For custom policies — denying specific image registries, enforcing label schemas, requiring resource limits — OPA Gatekeeper (constraint framework with ConstraintTemplate CRDs and Rego policies) or Kyverno (Kubernetes-native, YAML-based rules, supports generate/mutate/verify/validate) are the standard choices. Kyverno is generally preferred for Kubernetes-specific policy because its rules are expressed as native Kubernetes YAML rather than Rego. Gatekeeper is preferred when Rego expertise already exists or cross-platform policy reuse is needed.`,
+        codeExample: `# Namespace enforcing the Restricted PSS level (blocks non-compliant pods)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    # enforce: block the pod creation if it violates Restricted
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.30
+    # warn: also emit a warning for Restricted violations (belt + suspenders)
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.30
+    # audit: record to API audit log for SOC2 evidence
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.30
+---
+# Verify PSS is active on the namespace
+# kubectl describe ns production | grep pod-security`,
+      },
+      {
+        title: 'SecurityContext — Container and Pod Isolation',
+        content: `SecurityContext is the primary per-pod and per-container API for enforcing isolation at runtime. Settings at the pod level apply to all containers in the pod; container-level settings override pod-level settings for that specific container. Understanding the scope distinction matters because fsGroup, supplementalGroups, and sysctls are pod-only fields, while allowPrivilegeEscalation, capabilities, and seccompProfile can be set at either level.
+
+The most commonly misunderstood field is allowPrivilegeEscalation, whose default is TRUE in Kubernetes. This means any container can escalate privileges via setuid/setgid binaries (classic example: sudo, ping) unless explicitly set to false. Every production container should set allowPrivilegeEscalation: false. The runAsNonRoot: true field instructs the kubelet to reject the container at start time if the image's ENTRYPOINT resolves to UID 0 — it does not change the UID, it rejects the pod. Pair it with runAsUser: 1000 and runAsGroup: 3000 to set a deterministic non-root UID/GID that overrides the image's USER directive.
+
+fsGroup: 2000 sets an additional supplemental GID applied to all mounted volumes. The kubelet recursively chowns the volume mount point to this GID before handing the volume to the container — essential when multiple containers in a pod share a PVC and need a common group for file access. For large volumes with many files, fsGroupChangePolicy: OnRootMismatch (Kubernetes v1.20+) only chowns the top-level directory if needed, avoiding recursive chown overhead on every pod start.
+
+Linux capabilities: drop: [ALL] removes all default capabilities (a default container has ~15 capabilities including NET_RAW, CHOWN, SETUID). Then add only what is needed: NET_BIND_SERVICE allows binding to ports below 1024 without root. Most web services need zero additional capabilities. The seccompProfile: type: RuntimeDefault (GA in v1.27) applies the container runtime's default seccomp filter, which blocks over 300 potentially dangerous syscalls including ptrace, kexec_load, unshare, open_by_handle_at, and perf_event_open. readOnlyRootFilesystem: true instructs the container runtime to mount the container root FS as read-only; any write attempt to the root FS returns EROFS. Applications must write to explicitly declared emptyDir or PVC volumes — this prevents runtime code injection into the container file system. privileged: true grants the full Linux capability set plus raw device access and bypasses all seccomp/AppArmor profiles — it is equivalent to running as root on the host and must never appear in production workloads.`,
+        codeExample: `# Production-hardened SecurityContext — all fields explained
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      # Pod-level SecurityContext
+      securityContext:
+        runAsNonRoot: true          # kubelet rejects if entrypoint is UID 0
+        runAsUser: 1000             # override image USER directive
+        runAsGroup: 3000
+        fsGroup: 2000               # volume files owned by GID 2000
+        fsGroupChangePolicy: OnRootMismatch  # skip recursive chown if top dir matches
+        seccompProfile:
+          type: RuntimeDefault      # GA v1.27 — blocks 300+ dangerous syscalls
+        sysctls: []                 # unsafe sysctls require PSS Baseline+ allowlist
+      containers:
+      - name: api-server
+        image: ghcr.io/myorg/api-server:v1.4.2  # pinned digest preferred
+        ports:
+        - containerPort: 8080
+        # Container-level SecurityContext (overrides pod-level where applicable)
+        securityContext:
+          allowPrivilegeEscalation: false  # DEFAULT IS TRUE — must set false
+          privileged: false                # never true in production
+          readOnlyRootFilesystem: true     # prevents runtime file injection
+          capabilities:
+            drop: [ALL]                    # drop all 15 default capabilities
+            add: []                        # add NET_BIND_SERVICE only if port < 1024
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp               # writable scratch space for readOnlyRootFS
+        - name: cache
+          mountPath: /app/cache
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}`,
+      },
+      {
+        title: 'Supply Chain Security — Image Signing and Scanning',
+        content: `Supply chain attacks (SolarWinds, codecov, Log4Shell) have made image provenance a first-class concern. The Kubernetes supply chain security model covers four phases: build, distribute, deploy, and runtime. At the build phase: use multi-stage Dockerfiles where the builder stage contains the full SDK and the final stage copies only the compiled artifact into a distroless base image. Distroless images (gcr.io/distroless/base, gcr.io/distroless/java21, etc.) contain only the application and its language runtime — no shell (/bin/sh), no package manager, no coreutils. An attacker who achieves remote code execution in a distroless container has no available tooling to pivot, exfiltrate, or persist.
+
+At the distribute phase, cosign (part of Sigstore, CNCF Incubating) signs container images. Keyed signing: cosign sign --key cosign.key ghcr.io/myorg/api:v1.4.2 attaches an OCI artifact (signature) to the image in the registry. Keyless signing (preferred in CI/CD): cosign sign --oidc-issuer https://token.actions.githubusercontent.com --identity-token $(cat /tmp/oidc-token) ghcr.io/myorg/api:v1.4.2 uses an OIDC token from GitHub Actions/GitLab CI to obtain a short-lived certificate from Fulcio (Sigstore's certificate authority), then records the signing event in Rekor (Sigstore's append-only transparency log). The certificate expires in 10 minutes; long-term trust is via the Rekor entry, not the certificate. Verification: cosign verify --certificate-identity-regexp 'https://github.com/myorg/.*' --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/myorg/api:v1.4.2.
+
+At the deploy phase, Kyverno ClusterPolicy with verifyImages enforces that all pods running images from the org's registry must have a valid cosign signature. Sigstore policy-controller (Helm chart) provides the same via ClusterImagePolicy CRDs and integrates with Fulcio/Rekor. At the vulnerability scanning phase, Trivy (Aqua Security, CNCF Adopter) scans OS packages (Alpine, Debian, Ubuntu, RHEL) and language packages (Go modules, npm, pip, Maven, Cargo) for known CVEs. Run trivy image in CI gates to block builds with Critical/High CVEs. Trivy Operator (runs inside the cluster) scans running workloads on schedule and exposes results as VulnerabilityReport and ConfigAuditReport CRDs — queryable via kubectl. SBOM (Software Bill of Materials): Syft generates SBOMs in SPDX or CycloneDX format; cosign attach sbom attaches it to the image in the registry. In-toto attestation framework provides a signed chain of custody from source to image covering build reproducibility claims.`,
+        codeExample: `# Kyverno ClusterPolicy: block pods with unsigned images
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-image-signature
+spec:
+  validationFailureAction: Enforce  # Audit = log only, Enforce = block
+  background: false
+  rules:
+  - name: check-image-signature
+    match:
+      any:
+      - resources:
+          kinds: [Pod]
+          namespaces: [production, staging]
+    verifyImages:
+    - imageReferences:
+      - "ghcr.io/myorg/*"          # scope to your org's registry
+      attestors:
+      - entries:
+        - keyless:
+            subject: "https://github.com/myorg/*"    # GitHub Actions identity
+            issuer: "https://token.actions.githubusercontent.com"
+            rekor:
+              url: https://rekor.sigstore.dev        # public Rekor instance
+      # Optional: also verify SBOM attestation exists
+      attestations:
+      - predicateType: https://spdx.dev/Document
+        attestors:
+        - entries:
+          - keyless:
+              subject: "https://github.com/myorg/*"
+              issuer: "https://token.actions.githubusercontent.com"
+---
+# cosign keyless sign in GitHub Actions (no long-lived keys)
+# - uses: sigstore/cosign-installer@v3
+# cosign sign --yes ghcr.io/myorg/api:$\{{ github.sha }}
+
+# cosign verify from local machine
+# cosign verify \
+#   --certificate-identity-regexp 'https://github.com/myorg/.*' \
+#   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#   ghcr.io/myorg/api:v1.4.2
+
+# Trivy scan in CI (block Critical + High)
+# trivy image --exit-code 1 --severity CRITICAL,HIGH ghcr.io/myorg/api:v1.4.2
+
+# Trivy scan running workloads in cluster
+# kubectl get vulnerabilityreports -A`,
+      },
+      {
+        title: 'Runtime Security and etcd Encryption',
+        content: `Runtime security addresses threats that bypass admission controls — compromised dependencies that trigger post-deploy, insider threats, zero-days in application code, and container escape attempts. Falco (CNCF Graduated) is the standard runtime security engine. It instruments the Linux kernel via eBPF (in modern kernels) or a kernel module to trace every syscall from every container on the node. Falco rules are YAML conditions evaluated against syscall events. Key rule fields: condition (filter expression using evt.type, proc.name, container.id, fd.name, user.name), desc (human description), output (templated string emitted on match), priority (DEBUG/INFO/NOTICE/WARNING/ERROR/CRITICAL/ALERT/EMERGENCY). Example conditions: detect shell spawn (evt.type = execve and proc.name in (sh, bash, zsh) and container.id != host), detect sensitive file read (open_read and fd.name pmatch (/etc/shadow, /etc/kubernetes/admin.conf, /run/secrets/kubernetes.io/serviceaccount/token)), detect privilege escalation (evt.type = setuid and user.uid != 0). Falco Sidekick fans out Falco alerts to Slack, PagerDuty, Datadog, Elasticsearch, AWS CloudWatch, and OpsGenie. The Falco Operator manages Falco DaemonSets and FalcoRule/FalcoPolicies as CRDs.
+
+Kubernetes audit logging captures every request to the API server. The audit policy (audit-policy.yaml, passed to kube-apiserver as --audit-policy-file) defines per-resource, per-verb rules: level None (drop), Metadata (log request metadata but not body), Request (log metadata + request body), RequestResponse (log metadata + request body + response body). Best practice: log secrets at RequestResponse level, pods and deployments at Request, everything else at Metadata or None to control log volume. kube-bench runs the CIS Kubernetes Benchmark automated checks against the cluster — it checks API server flags, RBAC configurations, network policies, etcd settings, and kubelet flags. Run kube-bench on control plane nodes and each worker node type.
+
+etcd encryption at rest is configured via EncryptionConfiguration (apiVersion: apiserver.config.k8s.io/v1) passed to kube-apiserver via --encryption-provider-config. The resources list specifies which API resources to encrypt (usually secrets and configmaps). The providers list is ordered: the first provider encrypts new writes; all providers can decrypt (enabling key rotation). Providers: identity (plaintext — disables encryption), secretbox (XSalsa20-Poly1305, fast, 32-byte key, symmetric), aescbc (AES-256-CBC + HMAC-SHA256, NIST-compliant, 32-byte key), aesgcm (AES-256-GCM, authenticated encryption, 32-byte key — key rotation recommended every 200k writes), kms (envelope encryption, best practice for production). KMS providers (kms v2, GA v1.29): each secret gets a fresh DEK (data encryption key) encrypted by a KEK (key encryption key) managed by AWS KMS / GCP Cloud KMS / Azure Key Vault. The DEK is stored alongside the ciphertext in etcd; only the KEK lives in the cloud KMS. Key rotation: promote new KMS key as top provider, restart kube-apiserver, run kubectl get secrets -A -o json | kubectl replace -f - to force re-encryption of all existing secrets with the new key.`,
+        codeExample: `# etcd EncryptionConfiguration with KMS v2 (AWS KMS example)
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+- resources:
+  - secrets
+  - configmaps          # optional, encrypt configmaps too
+  providers:
+  - kms:
+      apiVersion: v2    # kms v2 GA since v1.29 — better performance + health checks
+      name: aws-kms
+      endpoint: unix:///var/run/kmsplugin/socket.sock  # KMS plugin sidecar socket
+      timeout: 3s
+  - identity: {}        # fallback: allows decrypting pre-encryption secrets during migration
+---
+# Falco rule: detect shell spawned inside a container
+# /etc/falco/rules.d/custom-rules.yaml
+- rule: Shell Spawned in Container
+  desc: Detect any shell process started inside a container
+  condition: >
+    spawned_process
+    and container
+    and proc.name in (sh, bash, zsh, dash, fish, tcsh, csh)
+    and not proc.pname in (java, python3, node)  # exclude known shell launchers
+  output: >
+    Shell spawned in container
+    (user=%user.name container=%container.name image=%container.image.repository:%container.image.tag
+     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pid=%proc.pid)
+  priority: WARNING
+  tags: [container, shell, mitre_execution]
+
+- rule: Read Sensitive File in Container
+  desc: Detect reads of Kubernetes service account tokens or /etc/shadow
+  condition: >
+    open_read
+    and container
+    and fd.name in (/run/secrets/kubernetes.io/serviceaccount/token,
+                   /etc/shadow, /etc/kubernetes/admin.conf)
+    and not proc.name in (kubelet, containerd)
+  output: >
+    Sensitive file read (file=%fd.name proc=%proc.name container=%container.name)
+  priority: ERROR
+  tags: [container, credential_access]
+---
+# Kubernetes audit policy — log secrets at RequestResponse
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: None
+  users: ["system:kube-proxy"]
+  verbs: ["watch"]
+  resources: [{group: "", resources: ["endpoints", "services"]}]
+- level: RequestResponse
+  resources: [{group: "", resources: ["secrets"]}]  # full body for secrets
+- level: Request
+  resources: [{group: "", resources: ["pods", "deployments"]}]
+- level: Metadata
+  omitStages: [RequestReceived]`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three Pod Security Standards levels?', a: 'Privileged (no restrictions), Baseline (blocks known privilege escalation — no hostPID/hostIPC/hostNetwork, no dangerous caps), Restricted (all Baseline + runAsNonRoot, allowPrivilegeEscalation: false, drop ALL caps, seccomp RuntimeDefault).' },
+      { q: 'What is the difference between the enforce and warn PSS label modes?', a: 'enforce blocks the pod admission if it violates the policy; warn allows the pod but returns a user-visible warning; audit allows the pod and records the violation in the API audit log.' },
+      { q: 'What is the default value of allowPrivilegeEscalation in Kubernetes?', a: 'TRUE — this is a common gotcha. Unless explicitly set to false, any container can escalate privileges via setuid/setgid binaries. Always set allowPrivilegeEscalation: false in production.' },
+      { q: 'What does fsGroup do in a pod SecurityContext?', a: 'It sets a supplemental GID applied to all mounted volumes. The kubelet chowns the volume mount point to that GID before handing it to containers, enabling shared group file access across containers in a pod.' },
+      { q: 'When would you add the NET_BIND_SERVICE Linux capability?', a: 'When a container needs to bind to a port below 1024 (like 80 or 443) without running as root. After dropping ALL capabilities, add only NET_BIND_SERVICE.' },
+      { q: 'What does seccompProfile RuntimeDefault block?', a: 'The container runtime\'s default seccomp filter, which blocks 300+ dangerous syscalls including ptrace, kexec_load, unshare, open_by_handle_at, and perf_event_open. It has been GA since v1.27.' },
+      { q: 'What is the benefit of readOnlyRootFilesystem: true?', a: 'The container runtime mounts the root FS read-only; writes to the root FS return EROFS. This prevents runtime code injection — an attacker cannot drop files into /tmp or /usr/bin inside the container root.' },
+      { q: 'Why use distroless images over a minimal Alpine image?', a: 'Distroless images have no shell, no package manager, and no coreutils. An attacker with remote code execution has no available tooling to pivot, exfiltrate data, or persist. Alpine still has /bin/sh and apk.' },
+      { q: 'In which Kubernetes version was PodSecurityPolicy removed?', a: 'v1.25. PSP was deprecated in v1.21 and fully removed in v1.25. Pod Security Standards (built-in admission plugin) is the replacement.' },
+      { q: 'What is the difference between Kyverno and OPA Gatekeeper for K8s policy?', a: 'Kyverno uses native Kubernetes YAML for policy rules (validate/mutate/generate/verifyImages) — no new language required. OPA Gatekeeper uses Rego (Open Policy Agent language) and ConstraintTemplate CRDs — more powerful but requires learning Rego.' },
+      { q: 'How does cosign keyless signing work?', a: 'The CI job gets an OIDC token from the CI provider (GitHub Actions, GitLab). cosign exchanges it with Fulcio (Sigstore CA) for a short-lived certificate, signs the image, and records the signing event in Rekor (append-only transparency log). No long-lived private key is needed.' },
+      { q: 'How does Falco detect runtime threats in containers?', a: 'Falco uses eBPF (or a kernel module) to hook into Linux syscall tracing at the kernel level. It evaluates YAML rules against each syscall event (evt.type, proc.name, fd.name, container.id) and fires alerts on matching conditions.' },
+      { q: 'What is the difference between secretbox and kms encryption providers in etcd EncryptionConfiguration?', a: 'secretbox uses XSalsa20-Poly1305 symmetric encryption with a 32-byte key stored in the EncryptionConfiguration file — fast but the key is on disk. kms (envelope encryption) uses a cloud KMS (AWS KMS, GCP KMS) to encrypt a per-secret DEK — key material never leaves the cloud KMS, enabling key rotation without re-deploying the apiserver.' },
+      { q: 'What tool runs CIS Kubernetes Benchmark checks?', a: 'kube-bench — it checks API server flags, RBAC, etcd settings, kubelet configuration, and network policies against the CIS Kubernetes Benchmark recommendations. Run it on each control plane node and each worker node class.' },
+      { q: 'What is the purpose of an SBOM in container supply chain security?', a: 'A Software Bill of Materials lists every dependency (OS packages, language libraries) and their versions in an image. It enables rapid CVE impact assessment when a new vulnerability is disclosed — you query the SBOM to find which images contain the vulnerable package.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/security/pod-security-standards/',
+      'https://kubernetes.io/docs/tasks/configure-pod-container/security-context/',
+      'https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/',
+      'https://kubernetes.io/docs/reference/config-api/apiserver-audit.v1/',
+      'https://falco.org/docs/rules/',
+      'https://docs.sigstore.dev/cosign/overview/',
+      'https://kyverno.io/docs/writing-policies/verify-images/',
+      'https://aquasecurity.github.io/trivy/',
+      'https://github.com/aquasecurity/kube-bench',
+    ],
+  },
+
+  {
+    id: 'kubernetes-observability',
+    title: 'Kubernetes Observability: Metrics, Logs, and Traces',
+    icon: 'eye',
+    color: '#10b981',
+    questions: 18,
+    description: 'Kubernetes observability is built on three pillars — metrics, logs, and distributed traces — but the platform introduces a fourth dimension: the health of Kubernetes objects themselves (desired vs. actual state). Two separate metrics pipelines coexist: the resource metrics pipeline (kubelet cAdvisor → metrics-server → kubectl top and HPA) and the monitoring metrics pipeline (Prometheus scraping kubelet, kube-state-metrics, and node-exporter). Logs flow from container stdout/stderr through the container runtime to DaemonSet shippers (Fluent Bit, Fluentd, Vector) and on to Loki or Elasticsearch. Distributed tracing with OpenTelemetry and the OTel Collector provides cross-service request flow visibility. Exemplars stitch these three pillars together, embedding trace IDs directly in Prometheus metrics so a p99 latency spike links to the exact distributed trace that caused it.',
+    topics: [
+      {
+        title: 'The Kubernetes Metrics Pipeline',
+        content: `Kubernetes has two separate and parallel metrics pipelines that are frequently confused. The resource metrics pipeline serves kubectl top, HPA, and VPA. It flows from kubelet's /metrics/resource endpoint (powered by the embedded cAdvisor) through the metrics-server — a cluster-scoped aggregator that stores only the most recent data point in memory (no persistent storage, no historical data). The metrics-server exposes the Metrics API (metrics.k8s.io/v1beta1) which kubectl top nodes and kubectl top pods call. HPA (Horizontal Pod Autoscaler) queries this API every 15 seconds (--horizontal-pod-autoscaler-sync-period) to compute scale decisions. VPA (Vertical Pod Autoscaler) also uses this pipeline for its recommender.
+
+The monitoring metrics pipeline is independent. Prometheus scrapes three primary targets: kubelet's /metrics endpoint (raw cAdvisor metrics — container_cpu_usage_seconds_total, container_memory_working_set_bytes, container_network_receive_bytes_total), kube-state-metrics, and node-exporter. kube-state-metrics is a separate deployment that watches the Kubernetes API and generates metrics representing the desired and observed state of K8s objects — it is not a resource usage exporter. Key kube-state-metrics metrics: kube_deployment_status_replicas_ready (ready replicas), kube_deployment_spec_replicas (desired replicas), kube_pod_status_phase (Pending/Running/Succeeded/Failed/Unknown), kube_pod_container_status_restarts_total (restart count), kube_node_status_condition (Ready/MemoryPressure/DiskPressure), kube_persistentvolumeclaim_status_phase (Bound/Pending/Lost), kube_job_status_failed. node-exporter runs as a DaemonSet on every node and exports OS-level metrics: node_cpu_seconds_total (per-CPU, per-mode — idle/user/system/iowait), node_memory_MemAvailable_bytes (memory actually available for new processes), node_disk_io_time_seconds_total (I/O saturation proxy), node_filesystem_avail_bytes (disk space), node_network_transmit_bytes_total and node_network_receive_bytes_total.
+
+The four golden signals (Google SRE) applied to Kubernetes: Traffic (container_network_receive_bytes_total or application-level request rate), Errors (HTTP 5xx rate or kube_pod_container_status_restarts_total rate), Latency (application-level p50/p95/p99 from instrumented code or ingress controller), Saturation (container CPU throttling via container_cpu_cfs_throttled_seconds_total, memory pressure via container_memory_working_set_bytes vs limits). The USE method for infrastructure: Utilization (CPU %, memory % of limit), Saturation (CPU throttling rate, memory OOM events), Errors (node disk errors, network errors). Essential production alerts: KubePodCrashLooping (increase(kube_pod_container_status_restarts_total[15m]) > 5), KubeDeploymentReplicasMismatch (kube_deployment_status_replicas_ready != kube_deployment_spec_replicas for 15m), KubeNodeNotReady (kube_node_status_condition{condition=Ready, status=true} == 0 for 15m), KubePersistentVolumeUsageCritical (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes < 0.20).`,
+        codeExample: `# kubectl top — uses the resource metrics pipeline (metrics-server)
+kubectl top nodes
+kubectl top pods -n production --sort-by=memory
+kubectl top pods -n production --containers   # per-container breakdown
+
+# kube-state-metrics PromQL examples (monitoring pipeline)
+# Deployments where desired != ready replicas
+kube_deployment_spec_replicas{namespace="production"}
+  != kube_deployment_status_replicas_ready{namespace="production"}
+
+# Pods not in Running phase
+count by (namespace, phase) (kube_pod_status_phase != 1)
+
+# Container restart rate over 15m (alert: > 3 restarts)
+rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15
+
+# node-exporter: CPU utilization per node (excluding idle)
+100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+# node-exporter: memory available %
+node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100
+
+# CPU throttling: % of CPU quota time that was throttled
+rate(container_cpu_cfs_throttled_seconds_total[5m])
+  / rate(container_cpu_cfs_periods_total[5m])`,
+      },
+      {
+        title: 'Prometheus Operator and kube-prometheus-stack',
+        content: `The Prometheus Operator extends Kubernetes with CRDs that allow Prometheus configuration to be managed declaratively as Kubernetes resources. The core CRDs are: Prometheus (defines a Prometheus instance — replicas, storage, retention, remote write targets, which ServiceMonitors to select), Alertmanager (defines an Alertmanager cluster — receivers, routes, inhibit rules), ServiceMonitor (instructs Prometheus which Services to scrape and how), PodMonitor (same as ServiceMonitor but targets pods directly when no Service selector is available), PrometheusRule (alerting rules and recording rules), and ThanosRuler (recording/alerting rules evaluated by Thanos Ruler for global multi-cluster queries).
+
+ServiceMonitor is the most commonly authored CRD. It has a namespaceSelector (which namespaces to look in), a selector (matchLabels on the Service), and endpoints (list of scrape configurations: port by name (not number), path defaulting to /metrics, interval defaulting to 30s, scheme http or https, tlsConfig for mTLS, metricRelabelings to drop high-cardinality metrics before storage). PodMonitor is needed when pods have no associated Service or when pod label selectors differ from Service selectors. PrometheusRule contains groups of alerting rules (expr: PromQL expression, for: minimum duration before firing, labels: severity/team, annotations: summary/description/runbook_url) and recording rules (record: metric_name, expr: PromQL — pre-computed expensive queries).
+
+kube-prometheus-stack is the official Helm chart (maintained by the prometheus-community organization) that installs the complete monitoring stack in a single release: Prometheus Operator, Prometheus instance, Alertmanager, Grafana with pre-built dashboards, kube-state-metrics, node-exporter, default PrometheusRules for the Kubernetes cluster (the Kubernetes Mixin alert rules), and default Grafana dashboards (K8s cluster overview, node resources, deployment status, PVC usage, API server latency). Remote write: Prometheus can ship metrics to Grafana Cloud, Datadog, New Relic, Cortex, or Thanos Receive via remoteWrite configuration in the Prometheus CRD.
+
+Thanos provides long-term Prometheus storage and multi-cluster query. Components: Sidecar (runs alongside Prometheus, uploads compacted TSDB blocks to object storage — S3/GCS/Azure Blob every 2h), Query (fan-out query across multiple Sidecars and Stores, deduplicates replicas), Store Gateway (reads historical blocks from object storage), Compactor (downsamples blocks at 5m and 1h resolution, applies retention), Ruler (evaluates recording and alerting rules against the global view). VictoriaMetrics is a Prometheus-compatible alternative: single binary (no Thanos sidecar needed), handles 100M+ active time series without cardinality issues, vmagent as a lightweight scraper (replace Prometheus entirely), vmrule for alerts. VictoriaMetrics is preferred in large-scale clusters where Prometheus cardinality limits are hit.`,
+        codeExample: `# ServiceMonitor for a web API service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-server
+  namespace: monitoring           # namespace of the ServiceMonitor
+  labels:
+    release: kube-prometheus-stack  # must match Prometheus.spec.serviceMonitorSelector
+spec:
+  namespaceSelector:
+    matchNames: [production]      # scrape Services in the production namespace
+  selector:
+    matchLabels:
+      app: api-server             # Service must have this label
+  endpoints:
+  - port: metrics                 # port NAME on the Service (not number)
+    path: /metrics
+    interval: 30s
+    scheme: http
+    metricRelabelings:
+    # Drop high-cardinality per-URL metrics before storage
+    - sourceLabels: [__name__]
+      regex: 'http_request_duration_seconds_bucket'
+      action: drop
+---
+# PrometheusRule — KubePodCrashLooping alert
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: k8s-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: kubernetes.alerts
+    interval: 30s
+    rules:
+    - alert: KubePodCrashLooping
+      expr: |
+        increase(kube_pod_container_status_restarts_total[15m]) > 3
+      for: 5m
+      labels:
+        severity: warning
+        team: platform
+      annotations:
+        summary: "Pod {{ $labels.pod }} in {{ $labels.namespace }} is crash looping"
+        description: "Container {{ $labels.container }} has restarted {{ $value }} times in 15m"
+        runbook_url: "https://runbooks.myorg.com/k8s/crashlooping"
+    - alert: KubeDeploymentReplicasMismatch
+      expr: |
+        kube_deployment_spec_replicas != kube_deployment_status_replicas_ready
+      for: 15m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has mismatched replicas"`,
+      },
+      {
+        title: 'Logging Architecture — Fluent Bit, Fluentd, and Loki',
+        content: `Container logs flow from application stdout/stderr to the container runtime (containerd writes logs as JSON to /var/log/containers/ symlinking to /var/log/pods/), where the kubelet applies log rotation via containerLogMaxSize (default 10Mi) and containerLogMaxFiles (default 5). kubectl logs reads from the running kubelet log API — once a pod is deleted, its logs are gone unless shipped to external storage.
+
+DaemonSet-based log shippers collect from all nodes simultaneously. Fluent Bit (written in C, ~450KB memory footprint, 10x less CPU than Fluentd) is preferred for resource-constrained clusters. Fluentd (written in Ruby, 40MB+ memory, 400+ plugin ecosystem) is preferred when complex filtering, transformation, or routing logic is needed. Vector (written in Rust, CNCF Sandbox) handles high-throughput pipelines and natively supports OpenTelemetry log format. Fluent Bit architecture: [SERVICE] (global settings — flush interval 1s, log level info), [INPUT] tail plugin (path /var/log/containers/*.log, multiline support, tag kubernetes.*), [FILTER] kubernetes (enriches each log line with pod metadata from the kubelet API — kubernetes.namespace_name, kubernetes.pod_name, kubernetes.container_name, kubernetes.labels), [OUTPUT] (Loki, Elasticsearch, CloudWatch Logs, Kinesis, S3).
+
+Loki (Grafana Labs, CNCF Incubating) is designed for K8s: it stores log streams indexed only by label set (namespace, pod_name, container_name, app label) with no full-text indexing of log content. This makes ingestion cheap (10x less storage than Elasticsearch for the same logs). LogQL is Loki's query language: stream selectors filter by label ({namespace="production", app="api-server"}), then pipe operators filter/parse content (|= "error" keeps lines containing "error", != "health" drops health check lines, | json parses JSON log lines extracting fields, | line_format "{{.msg}}" reformats output). LogQL also supports metric queries: rate({namespace="production"} |= "error" [5m]) computes error rate as a Prometheus-compatible metric. Grafana dashboards can combine Prometheus metrics and Loki logs in a single panel using data source chaining.
+
+Elasticsearch/OpenSearch: full-text inverted index on all log content — supports complex full-text search and faceted filtering. Higher storage cost (5-10x Loki), higher operational complexity (JVM tuning, shard management, ILM policy). Preferred when compliance requirements demand powerful search (PCI-DSS, SOC2 log review), or when analysts need ad-hoc text queries that Loki LogQL cannot express. Structured JSON logging is critical for both backends: one log line per event, machine-parseable key-value pairs, enables Loki label extraction and Elasticsearch field mapping. Log retention tiers: 7-30 days hot (SSD-backed), compress + object storage (S3 Glacier, GCS Nearline) for 90-day to 1-year compliance retention. Multiline logs (Java stack traces, Python tracebacks): Fluent Bit multiline parser (multiline.parser: java, go, python) or Docker log driver --log-opt mode=non-blocking to merge multiline before shipping.`,
+        codeExample: `# Fluent Bit DaemonSet ConfigMap — collect K8s logs → Loki
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Parsers_File  parsers.conf
+
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        multiline.parser  docker, cri   # handle both Docker and containerd log formats
+        Tag               kube.*
+        Refresh_Interval  5
+        Mem_Buf_Limit     50MB
+        Skip_Long_Lines   On
+
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Merge_Log           On      # merge JSON app logs into top-level fields
+        Keep_Log            Off     # drop raw "log" field after merging
+        K8S-Logging.Parser  On      # honor pod annotation: fluentbit.io/parser
+        K8S-Logging.Exclude On      # honor pod annotation: fluentbit.io/exclude: "true"
+
+    [OUTPUT]
+        Name            loki
+        Match           kube.*
+        Host            loki.logging.svc.cluster.local
+        Port            3100
+        Labels          job=fluent-bit, namespace=$kubernetes['namespace_name'], pod=$kubernetes['pod_name']
+        Remove_Keys     kubernetes, stream
+        Auto_Kubernetes_Labels On   # automatically add all k8s labels
+
+  parsers.conf: |
+    [PARSER]
+        Name        json
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+---
+# LogQL examples — query Loki from Grafana or logcli
+# All error logs from production namespace
+# {namespace="production"} |= "error"
+
+# Error rate per app (metric query)
+# rate({namespace="production"} |= "ERROR" [5m])
+
+# Parse JSON logs and filter by status code
+# {namespace="production", app="api-server"} | json | status_code >= 500`,
+      },
+      {
+        title: 'Distributed Tracing with OpenTelemetry',
+        content: `OpenTelemetry (OTel, CNCF Graduated) is the vendor-neutral standard for distributed observability data — traces, metrics, and logs. It supersedes OpenTracing and OpenCensus, both of which have been archived. OTLP (OpenTelemetry Protocol) is the wire format: gRPC on port 4317, HTTP/protobuf on port 4318. All major observability backends (Grafana Tempo, Jaeger, Zipkin, Datadog, New Relic, Honeycomb, Dynatrace) accept OTLP natively or via the OTel Collector.
+
+Auto-instrumentation by language: Java (javaagent: -javaagent:/otel-javaagent.jar — instruments Spring, JDBC, gRPC, HTTP clients without code changes), Python (opentelemetry-instrument python app.py — instruments Flask, Django, requests, SQLAlchemy), Node.js (NodeSDK from @opentelemetry/sdk-node, auto-instruments express, http, grpc), Go (manual instrumentation via otel-go SDK — no auto-instrumentation for Go). W3C TraceContext (traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01 header format) is the standard propagation format — supported by all OTel SDKs and most service meshes (Istio, Linkerd).
+
+The OTel Collector is a critical component for production deployments. It runs as a DaemonSet (one per node, low latency) or Deployment (centralized, for cluster-wide processing). Collector pipeline has three stages: receivers (accept data — OTLP receiver listens on 4317/4318, Jaeger receiver for legacy, Prometheus receiver to scrape metrics), processors (transform data — batch processor groups spans into batches of 8192 before export reducing network calls, memory_limiter processor rejects data if Collector memory exceeds 80% to prevent OOM, resource processor adds static attributes like environment=production, k8sattributes processor queries K8s API to add k8s.pod.name, k8s.namespace.name, k8s.node.name, k8s.deployment.name by looking up the pod sending the data via its IP), exporters (send data — otlp exporter to Grafana Tempo, Datadog exporter, logging exporter for debugging).
+
+The k8sattributes processor is the most valuable K8s-specific component: it intercepts spans from application pods and enriches them with Kubernetes metadata by querying the K8s API using the pod's source IP. This means application code does not need to inject K8s labels into spans manually — the Collector adds them centrally. Grafana Tempo stores traces in object storage (S3, GCS) with no indexing (traces retrieved by trace ID only) or via TraceQL queries (Tempo 2.0+). Exemplars link the three pillars: a Prometheus histogram can include a trace_id label on individual observations. When Grafana displays a p99 spike, clicking the exemplar point opens the exact distributed trace from that time window — no manual correlation needed. To emit exemplars, application code must use the Prometheus exemplar API when recording histograms (available in Go, Java, Python Prometheus clients).`,
+        codeExample: `# OTel Collector DaemonSet configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: observability
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317   # apps send traces/metrics here
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 400              # reject data if Collector exceeds 400MB
+        spike_limit_mib: 100
+      batch:
+        timeout: 5s
+        send_batch_size: 1024       # group spans before exporting
+      k8sattributes:                # enrich spans with K8s metadata
+        auth_type: serviceAccount
+        passthrough: false
+        extract:
+          metadata:
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.namespace.name
+          - k8s.node.name
+          - k8s.deployment.name
+          - k8s.container.name
+        pod_association:
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.ip
+        - sources:
+          - from: connection         # use source IP of the gRPC connection
+      resource:
+        attributes:
+        - key: environment
+          value: production
+          action: upsert
+
+    exporters:
+      otlp:
+        endpoint: tempo.observability.svc.cluster.local:4317
+        tls:
+          insecure: true            # use TLS in production
+      prometheusremotewrite:        # send OTel metrics to Prometheus/Thanos
+        endpoint: http://prometheus.observability.svc.cluster.local:9090/api/v1/write
+      logging:
+        verbosity: detailed         # debug only — remove in production
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, resource, batch]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, resource, batch]
+          exporters: [prometheusremotewrite]
+---
+# Java auto-instrumentation via OTel operator (no code changes)
+# kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: java-instrumentation
+  namespace: production
+spec:
+  exporter:
+    endpoint: http://otel-collector.observability.svc.cluster.local:4317
+  propagators: [tracecontext, baggage]
+  sampler:
+    type: parentbased_traceidratio
+    argument: "0.1"               # sample 10% of traces in production
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:latest`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between metrics-server and kube-state-metrics?', a: 'metrics-server aggregates real-time resource usage (CPU/memory) from kubelet cAdvisor and serves it via the Metrics API for kubectl top, HPA, and VPA. kube-state-metrics reads the Kubernetes API and generates metrics about object state (desired vs. actual replicas, pod phase, node conditions) — it does not measure resource usage.' },
+      { q: 'What does node-exporter expose?', a: 'OS-level per-node hardware and kernel metrics: CPU usage per mode (idle/user/system/iowait), available memory, disk I/O saturation, filesystem availability, and network bytes transmitted/received. It runs as a DaemonSet on every node.' },
+      { q: 'What are the four golden signals applied to Kubernetes?', a: 'Traffic (request rate or network bytes), Errors (HTTP 5xx rate or pod restart rate), Latency (p50/p95/p99 response time), Saturation (CPU throttling rate, memory vs. limit %). These come from Google SRE Book and apply at both service and infrastructure levels.' },
+      { q: 'What is the difference between a ServiceMonitor and a PodMonitor?', a: 'ServiceMonitor selects Services by label and scrapes the pods behind them — the Service selector determines which pods are scraped. PodMonitor selects pods directly by label, useful when pods have no Service or when pod and Service labels differ.' },
+      { q: 'Why is Fluent Bit preferred over Fluentd in most Kubernetes deployments?', a: 'Fluent Bit is written in C and uses ~450KB of memory with lower CPU overhead. Fluentd is written in Ruby and uses 40MB+ of memory with higher CPU usage. Fluentd has a larger plugin ecosystem (400+ plugins) and is preferred when complex transformation logic is needed.' },
+      { q: 'What is the key architectural difference between Loki and Elasticsearch for log storage?', a: 'Loki indexes only log stream labels (namespace, pod, app) and stores log content compressed without a full-text index. Elasticsearch builds a full inverted index on all log content. Loki costs 10x less storage; Elasticsearch enables complex full-text search and ad-hoc queries.' },
+      { q: 'How do you get logs for a pod that has already been deleted?', a: 'kubectl logs only works for running pods via the kubelet API — deleted pods lose their logs. You must use an external log shipper (Fluent Bit, Fluentd) that ships logs to Loki, Elasticsearch, or CloudWatch before the pod is deleted.' },
+      { q: 'What is the purpose of the OTel Collector in a Kubernetes cluster?', a: 'The OTel Collector receives traces/metrics/logs from applications, enriches them (k8sattributes processor adds K8s metadata), batches them for efficiency, applies sampling and filtering, and exports to multiple backends. It decouples app instrumentation from backend choice.' },
+      { q: 'What are exemplars in Prometheus and why are they useful?', a: 'Exemplars are trace IDs embedded in individual Prometheus histogram observations. When Grafana displays a p99 latency spike, you can click the exemplar to jump directly to the distributed trace that caused that spike — linking metrics and traces without manual correlation.' },
+      { q: 'What does kube-prometheus-stack install?', a: 'A Helm chart that installs: Prometheus Operator, Prometheus instance, Alertmanager, Grafana with pre-built dashboards, kube-state-metrics, node-exporter, default PrometheusRules (K8s mixin alerts), and default Grafana dashboards for cluster/node/deployment/PVC monitoring.' },
+      { q: 'What does a PrometheusRule CRD define?', a: 'Alerting rules (expr: PromQL condition, for: minimum fire duration, labels: severity/team, annotations: summary/runbook_url) and recording rules (pre-computed expensive PromQL queries stored as new metric names). The Prometheus Operator loads these rules into Prometheus automatically.' },
+      { q: 'What is the difference between Thanos and VictoriaMetrics?', a: 'Thanos adds long-term storage to Prometheus via a Sidecar that ships TSDB blocks to object storage, plus a Query component for multi-cluster fan-out. VictoriaMetrics is a Prometheus-compatible single binary that handles 100M+ series natively without cardinality issues, replacing Prometheus entirely without a sidecar architecture.' },
+      { q: 'How do you correlate a log entry with a distributed trace?', a: 'Inject the W3C TraceContext trace ID into each log line (e.g., trace_id field in structured JSON logging). Loki can then link log streams to Grafana Tempo traces — clicking the trace ID in a log panel opens the full distributed trace in Tempo.' },
+      { q: 'What does the k8sattributes processor in the OTel Collector do?', a: 'It intercepts spans from application pods and enriches them with Kubernetes metadata (k8s.pod.name, k8s.namespace.name, k8s.node.name, k8s.deployment.name) by looking up the pod in the K8s API using the source IP of the gRPC connection. Apps do not need to inject K8s labels manually.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/',
+      'https://prometheus-operator.dev/docs/user-guides/getting-started/',
+      'https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack',
+      'https://grafana.com/docs/loki/latest/query/',
+      'https://opentelemetry.io/docs/collector/',
+      'https://grafana.com/docs/tempo/latest/',
+      'https://docs.fluentbit.io/manual/pipeline/filters/kubernetes',
+      'https://thanos.io/tip/thanos/quick-tutorial.md/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-secrets-management',
+    title: 'Kubernetes Secrets Management',
+    icon: 'database',
+    color: '#f43f5e',
+    questions: 15,
+    description: 'Kubernetes Secrets are widely misunderstood. The built-in Secret resource stores values as base64 — encoding, not encryption — and by default lands in etcd as plaintext. Anyone with etcd read access or an etcd backup can read every Secret in the cluster. The three production strategies for hardening secrets are: etcd encryption-at-rest (EncryptionConfiguration with KMS envelope encryption), External Secrets Operator (pull secrets from AWS Secrets Manager, GCP Secret Manager, Vault, or Azure Key Vault into K8s Secrets at sync time), and CSI/Vault Agent injection (secrets never enter etcd at all, mounted directly into pods as files). GitOps-safe patterns include Sealed Secrets (asymmetrically encrypted blobs safe to commit) and SOPS (Mozilla, in-place encrypted YAML values). Understanding which pattern fits which threat model is a core platform engineering competency.',
+    topics: [
+      {
+        title: 'Native Secrets Limitations and etcd Encryption',
+        content: `Kubernetes Secrets store values as base64 encoding, which is trivially reversible: echo "cGFzc3dvcmQ=" | base64 -d outputs "password" with no key, no secret, no ceremony. base64 is not encryption and provides zero confidentiality. By default, the Kubernetes API server writes Secrets to etcd as plaintext (the identity provider in EncryptionConfiguration). Any party with direct etcd access (etcdctl --endpoints= --cert= --key= --cacert= get /registry/secrets/default/my-secret), access to an etcd backup, or access to an etcd snapshot has full read access to every Secret in every namespace. RBAC provides the only built-in access control layer, and it is only effective against API server requests — it does not protect the etcd data files.
+
+On nodes, container runtimes (containerd, CRI-O) write environment variables and volume-mounted secrets to the node's memory (tmpfs — not persisted to disk). However, secrets are still visible via crictl inspect <container-id> on the node, or in /proc/<pid>/environ for any process running inside the container. This means node-level access (SSH, physical) exposes secrets.
+
+EncryptionConfiguration (apiVersion: apiserver.config.k8s.io/v1, kind: EncryptionConfiguration) is passed to kube-apiserver via --encryption-provider-config=/etc/kubernetes/encryption-config.yaml. The resources field lists which Kubernetes resource types to encrypt — at minimum, secrets; optionally configmaps. The providers list is ordered: the first provider is used to encrypt all new writes; providers below it are tried in order for decryption (this enables zero-downtime key rotation). Provider types: identity (no-op, plaintext — required at end of list to decrypt pre-encryption data during migration), secretbox (XSalsa20-Poly1305, fast symmetric cipher, 32-byte key stored in the EncryptionConfiguration — secure but key is on the apiserver node), aescbc (AES-256-CBC + HMAC-SHA256, NIST-approved, 32-byte key), aesgcm (AES-256-GCM, authenticated encryption, 32-byte key, key should be rotated every 200,000 writes), kms v2 (envelope encryption, GA in v1.29).
+
+KMS envelope encryption is the production best practice. Each Secret gets a fresh DEK (data encryption key, AES-256-GCM) generated by the apiserver, encrypts the secret payload, then encrypts the DEK using the KEK (key encryption key) managed by a cloud KMS (AWS KMS, GCP Cloud KMS, Azure Key Vault). Only the encrypted DEK is stored in etcd alongside the ciphertext — the KEK never leaves the cloud KMS hardware. This means etcd backups are useless without the cloud KMS key. Key rotation: create a new KMS key version, add it as the first provider in EncryptionConfiguration, restart kube-apiserver, then run kubectl get secrets -A -o json | kubectl replace -f - to force a re-encrypt cycle. After this, all Secrets are encrypted under the new key; remove the old key provider after confirming. Audit secret access: set RequestResponse level in audit-policy.yaml for the secrets resource to log every read and write body. Never store credentials in ConfigMaps (not RBAC-protected like Secrets), never embed them in Dockerfiles (baked into image layers), never commit them to git repositories.`,
+        codeExample: `# EncryptionConfiguration — KMS v2 (AWS KMS) as primary + identity fallback
+# Place at /etc/kubernetes/encryption-config.yaml on control plane nodes
+# Pass to kube-apiserver: --encryption-provider-config=/etc/kubernetes/encryption-config.yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+- resources:
+  - secrets      # encrypt all Secrets
+  - configmaps   # optional: also encrypt ConfigMaps
+  providers:
+  - kms:
+      apiVersion: v2           # kms v2 GA since Kubernetes v1.29
+      name: aws-kms-production
+      endpoint: unix:///var/run/kmsplugin/socket.sock  # KMS plugin Unix socket
+      timeout: 3s              # fail fast if KMS is unreachable
+  - identity: {}               # fallback: decrypt pre-existing plaintext secrets
+                               # remove after re-encrypting all secrets
+---
+# After applying EncryptionConfiguration, force re-encrypt all existing secrets:
+# kubectl get secrets -A -o json | kubectl replace -f -
+
+# Verify a secret is encrypted in etcd (run on control plane node):
+# ETCDCTL_API=3 etcdctl \
+#   --endpoints=https://127.0.0.1:2379 \
+#   --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+#   --cert=/etc/kubernetes/pki/etcd/server.crt \
+#   --key=/etc/kubernetes/pki/etcd/server.key \
+#   get /registry/secrets/default/my-secret | hexdump -C | head
+# Output should start with k8s:enc:kms:v2: (not plaintext values)`,
+      },
+      {
+        title: 'External Secrets Operator (ESO)',
+        content: `The External Secrets Operator (ESO, CNCF Sandbox) is the de-facto standard for synchronizing secrets from external secret stores (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, 1Password, Doppler, GitLab Variables, IBM Secrets Manager, Bitwarden) into Kubernetes Secrets. It solves the fundamental problem: secrets should have a single authoritative source of truth in a managed secrets store, not in Kubernetes (which is not a secrets management system). ESO watches ExternalSecret CRDs and creates/updates Kubernetes Secrets by pulling from the configured external store.
+
+Architecture: ESO is deployed as a Deployment with RBAC to create/update Kubernetes Secrets. It uses two types of store configurations: SecretStore (namespace-scoped — can only create Secrets in the same namespace as the SecretStore), and ClusterSecretStore (cluster-scoped — any ExternalSecret in any namespace can reference it). ClusterSecretStore is preferred for platform-managed credentials (database passwords, API keys) shared across namespaces.
+
+ExternalSecret spec fields: refreshInterval (how often ESO polls the external store — 1m for frequently rotated credentials, 1h for stable values), secretStoreRef (name and kind of the SecretStore/ClusterSecretStore), target (name of the resulting Kubernetes Secret, optional template for adding labels/annotations/type, optional template.data for transforming values e.g. constructing a JSON string from multiple ESO fields), data (explicit list of remote refs — remoteRef.key is the secret path in the external store, remoteRef.property is the JSON key within the secret value for stores that return JSON objects), dataFrom (pull all key-value pairs from a secret path — extracts every field of a JSON secret as separate Kubernetes Secret keys, or extracts a whole secret).
+
+creationPolicy controls what ESO does with the target Kubernetes Secret: Owner (ESO owns it — adds ownerReference, deletes the K8s Secret when the ExternalSecret is deleted), Merge (merges into an existing Secret without taking ownership, does not delete), None (create only, don't update or delete). deletionPolicy controls behavior when the ExternalSecret is deleted: Delete (delete the K8s Secret), Retain (leave K8s Secret in place), Merge (remove only the keys ESO manages, leave others). PushSecret is the reverse operation: push a Kubernetes Secret's data to an external store — useful when a Kubernetes controller generates a credential that needs to be shared with other systems. ESO also supports secret generation (ClusterGenerator/Generator CRDs) for generating random passwords, UUIDs, EC2 instance metadata, and ECR credentials directly without an external store.`,
+        codeExample: `# ClusterSecretStore — AWS Secrets Manager via IRSA (IAM Role for Service Account)
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: aws-secrets-manager
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: us-east-1
+      auth:
+        jwt:                        # IRSA: pod gets IAM role via projected service account token
+          serviceAccountRef:
+            name: external-secrets-sa
+            namespace: external-secrets
+---
+# ExternalSecret — pull database credentials from AWS Secrets Manager
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-credentials
+  namespace: production
+spec:
+  refreshInterval: 1h               # re-sync every hour
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore        # cluster-scoped store
+  target:
+    name: database-credentials      # resulting Kubernetes Secret name
+    creationPolicy: Owner           # ESO owns this Secret; deletes it if ExternalSecret is deleted
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          managed-by: external-secrets
+  data:
+  - secretKey: DB_HOST              # key in the resulting K8s Secret
+    remoteRef:
+      key: production/database      # AWS Secrets Manager secret name
+      property: host                # JSON field within the secret value
+  - secretKey: DB_PASSWORD
+    remoteRef:
+      key: production/database
+      property: password
+  - secretKey: DB_USER
+    remoteRef:
+      key: production/database
+      property: username
+  # Alternative: pull all fields at once with dataFrom
+  # dataFrom:
+  # - extract:
+  #     key: production/database    # extracts host, password, username as separate keys`,
+      },
+      {
+        title: 'HashiCorp Vault Integration',
+        content: `HashiCorp Vault is the most feature-rich secrets management platform available for Kubernetes. It provides static secret storage (KV secrets engine v2 — versioned key-value store), dynamic secret generation (database credentials, AWS IAM credentials, TLS certificates generated on-demand per request with TTLs), and fine-grained access policies (Vault policies using path-based ACLs). Two primary Kubernetes integration patterns exist: Vault Agent Injector and Vault CSI Provider.
+
+Vault Agent Injector uses a mutating admission webhook. Annotate a pod with vault.hashicorp.com/agent-inject: "true", vault.hashicorp.com/agent-inject-secret-FILENAME: "secret/path/in/vault", vault.hashicorp.com/role: "my-k8s-role". The webhook injects an init container (vault-agent-init) that authenticates with Vault and writes secrets to a shared emptyDir volume at /vault/secrets/FILENAME before the application container starts, plus a sidecar container (vault-agent) that renews the Vault token lease and re-fetches rotating credentials (database dynamic credentials). The application reads secrets from /vault/secrets/ files. Secrets still land in Kubernetes pod memory (emptyDir) but never in etcd as Kubernetes Secrets.
+
+Vault CSI Provider pairs with the Secrets Store CSI Driver (CNCF Graduated). Define a SecretProviderClass CRD specifying the Vault address, role, and secret paths. Mount it as a CSI volume in the pod: volumeMounts reference the CSI volume, and files appear at the mount path. With syncSecret.enabled: true, the CSI driver also creates a Kubernetes Secret (useful for consuming secrets as environment variables via envFrom). Without syncSecret, secrets never appear in etcd at all — the CSI driver fetches directly from Vault on pod start and writes to an in-memory (tmpfs) node-local path.
+
+Kubernetes Auth Method: the pod presents its projected ServiceAccount token to Vault's /auth/kubernetes/login endpoint. Vault validates the token via the Kubernetes TokenReview API (or by checking the public key), verifies the pod's service account and namespace are bound to the requested Vault role, and returns a Vault token scoped to that role's policy. No long-lived credentials or shared secrets are needed — the pod's own ServiceAccount token is the credential. Dynamic secrets are Vault's most powerful feature: the Database secrets engine generates a new PostgreSQL/MySQL/MongoDB user with a TTL (e.g., 1 hour). The credentials are unique per Vault lease, automatically revoked on expiry, and never stored anywhere permanently. This eliminates long-lived database passwords entirely. The PKI secrets engine issues TLS certificates on-demand: cert-manager (CNCF Graduated) integrates via the Vault Issuer/ClusterIssuer, creating Certificate CRDs that trigger Vault to sign a CSR and return a cert. cert-manager also handles ACME (Let's Encrypt) for public TLS and self-signed certificates for internal dev.`,
+        codeExample: `# SecretProviderClass — Vault CSI Provider (secrets as pod volume, not K8s Secret)
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: vault-database-creds
+  namespace: production
+spec:
+  provider: vault
+  parameters:
+    vaultAddress: "https://vault.vault.svc.cluster.local:8200"
+    role: "production-db-role"      # Vault Kubernetes auth role
+    objects: |
+      - objectName: "db-password"
+        secretPath: "database/creds/production-role"  # dynamic secret path
+        secretKey: "password"
+      - objectName: "db-username"
+        secretPath: "database/creds/production-role"
+        secretKey: "username"
+      - objectName: "api-key"
+        secretPath: "secret/data/production/api-key"  # KV v2 static secret
+        secretKey: "value"
+  secretObjects:                    # optional: also create a K8s Secret for envFrom
+  - secretName: vault-db-secret
+    type: Opaque
+    data:
+    - objectName: db-password
+      key: DB_PASSWORD
+---
+# Pod using the Vault CSI SecretProviderClass
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-server
+  namespace: production
+  # Vault Agent Injector alternative — use annotations instead of CSI:
+  # annotations:
+  #   vault.hashicorp.com/agent-inject: "true"
+  #   vault.hashicorp.com/agent-inject-secret-db-creds: "database/creds/production-role"
+  #   vault.hashicorp.com/role: "production-db-role"
+  #   vault.hashicorp.com/agent-inject-template-db-creds: |
+  #     {{- with secret "database/creds/production-role" -}}
+  #     DB_PASSWORD={{ .Data.password }}
+  #     DB_USERNAME={{ .Data.username }}
+  #     {{- end }}
+spec:
+  serviceAccountName: api-server-sa  # SA must be bound to Vault K8s auth role
+  containers:
+  - name: api-server
+    image: ghcr.io/myorg/api:v1.4.2
+    volumeMounts:
+    - name: vault-secrets
+      mountPath: /vault/secrets
+      readOnly: true
+    env:
+    - name: SECRET_PATH
+      value: /vault/secrets         # app reads files from here
+  volumes:
+  - name: vault-secrets
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: vault-database-creds`,
+      },
+      {
+        title: 'GitOps Secret Patterns — Sealed Secrets and SOPS',
+        content: `GitOps requires every cluster resource to be declaratively defined in a git repository, but committing plaintext Kubernetes Secrets to git exposes credentials to anyone with repo access, in git history forever. Two dominant patterns solve this without requiring out-of-band secret injection: Sealed Secrets (encrypts at cluster level, stored in git) and SOPS (encrypts at file level using cloud KMS, stored in git).
+
+Sealed Secrets (Bitnami/Kubernetes SIG-based) installs a controller in the cluster that holds a private RSA key (2048-bit or 4096-bit). The kubeseal CLI fetches the controller's public key and asymmetrically encrypts a Kubernetes Secret manifest into a SealedSecret CRD manifest. The encrypted blob is safe to commit to git — only the controller with the private key can decrypt it. When applied to the cluster (kubectl apply or ArgoCD/Flux GitOps sync), the controller decrypts the SealedSecret and creates the corresponding Kubernetes Secret. SealedSecrets are namespace-scoped by default (encrypted for a specific namespace + name combination, cannot be used in a different namespace) unless scope: cluster-wide is set. Limitations: controller private key loss means re-sealing everything; key rotation requires re-sealing all SealedSecrets; the private key itself must be backed up separately (kubectl get secret -n kube-system sealed-secrets-key -o yaml).
+
+SOPS (Secrets Operations, Mozilla) encrypts individual YAML/JSON values in-place, leaving the structure readable. The encrypted file is valid YAML with ciphertext values — diffable, reviewable in pull requests (reviewers can see which keys changed, not their values). SOPS supports multiple KMS backends: AWS KMS (kms ARN), GCP Cloud KMS (resource ID), Azure Key Vault, age (modern curve25519 encryption, good for local dev), PGP (legacy, not recommended). The .sops.yaml configuration file in the repository root specifies which KMS key to use for which file path patterns. Flux (CNCF Graduated) has native SOPS support: the kustomize-controller decrypts SOPS-encrypted files using a Kubernetes Secret containing the decryption key (AWS credentials, age private key, GCP workload identity) before applying them. ArgoCD requires argocd-vault-plugin or helm-secrets plugin for SOPS integration.
+
+Comparison framework: Sealed Secrets is simpler (one kubectl plugin, controller, done) and entirely Kubernetes-specific. SOPS is provider-agnostic (works with Terraform, Ansible, Helm, any tooling), supports multiple encryption backends, and gives finer-grained control. ESO/Vault (external store pattern) vs git-encrypted pattern (SealedSecrets/SOPS): the external store pattern treats the secrets management system (AWS SM, Vault) as the single source of truth — secrets are rotated there and synced automatically to K8s, enabling rotation without any git commit. The git-encrypted pattern keeps secrets in git (good for GitOps auditability and disaster recovery — the repo contains everything needed to restore the cluster) but rotation requires a new git commit and re-encryption. Production clusters typically use both: ESO for application credentials (rotation without git commits) and SOPS/SealedSecrets for bootstrap credentials (kubeconfig, initial Vault tokens needed before ESO is running).`,
+        codeExample: `# Sealed Secrets workflow
+# 1. Install kubeseal CLI and Sealed Secrets controller
+# helm install sealed-secrets sealed-secrets/sealed-secrets -n kube-system
+
+# 2. Create a regular Kubernetes Secret manifest (DO NOT apply to cluster)
+kubectl create secret generic database-credentials \
+  --from-literal=DB_PASSWORD=supersecret123 \
+  --from-literal=DB_USER=produser \
+  --namespace production \
+  --dry-run=client -o yaml > /tmp/secret.yaml
+
+# 3. Seal it (fetches public key from controller automatically)
+kubeseal --controller-namespace kube-system \
+         --controller-name sealed-secrets \
+         --format yaml < /tmp/secret.yaml > sealed-secret.yaml
+
+# 4. Commit sealed-secret.yaml to git — safe, encrypted with cluster public key
+# git add sealed-secret.yaml && git commit -m "add: sealed database credentials"
+
+# The resulting SealedSecret (safe to commit):
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: database-credentials
+  namespace: production
+spec:
+  encryptedData:
+    DB_PASSWORD: AgBv3...  # asymmetrically encrypted, 4096-bit RSA
+    DB_USER: AgC9k...
+  template:
+    metadata:
+      name: database-credentials
+      namespace: production
+---
+# SOPS — encrypt a Kubernetes Secret in-place for git storage
+# .sops.yaml in repo root:
+# creation_rules:
+#   - path_regex: k8s/secrets/.*\.yaml
+#     kms: arn:aws:kms:us-east-1:123456789:key/abc-def-ghi
+#     aws_profile: production
+
+# Encrypt: sops --encrypt --in-place k8s/secrets/database-credentials.yaml
+# Decrypt: sops --decrypt k8s/secrets/database-credentials.yaml
+# Edit:    sops k8s/secrets/database-credentials.yaml (opens decrypted in $EDITOR)
+
+# Flux SOPS decryption secret (age key or AWS credentials for kustomize-controller)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sops-age
+  namespace: flux-system
+type: Opaque
+stringData:
+  age.agekey: |
+    # created: 2024-01-01
+    # public key: age1ql3z7...
+    AGE-SECRET-KEY-1...`,
+      },
+    ],
+    quickFire: [
+      { q: 'Why is base64 not encryption for Kubernetes Secrets?', a: 'base64 is a reversible encoding scheme with no key — echo "cGFzc3dvcmQ=" | base64 -d instantly reveals "password". By default, Kubernetes stores Secrets as base64-encoded plaintext in etcd. Anyone with etcd access reads every secret.' },
+      { q: 'What is KMS envelope encryption and what are DEK and KEK?', a: 'Envelope encryption generates a per-secret DEK (data encryption key, AES-256-GCM) that encrypts the secret payload. The DEK is then encrypted by a KEK (key encryption key) managed by a cloud KMS (AWS KMS, GCP KMS). Only the encrypted DEK is stored in etcd; the KEK never leaves the cloud KMS hardware.' },
+      { q: 'What is the difference between ClusterSecretStore and SecretStore in ESO?', a: 'SecretStore is namespace-scoped — only ExternalSecrets in the same namespace can reference it, and it can only create Secrets in that namespace. ClusterSecretStore is cluster-scoped — ExternalSecrets in any namespace can reference it, useful for platform-managed shared credentials.' },
+      { q: 'What is the key difference between Vault Agent Injector and Vault CSI Provider?', a: 'Vault Agent Injector uses a mutating webhook to inject init + sidecar containers that write secrets to a shared emptyDir volume at /vault/secrets/ — secrets are in pod memory. Vault CSI Provider uses the Secrets Store CSI Driver to mount secrets as a CSI volume; without syncSecret, secrets never enter etcd at all.' },
+      { q: 'What is a dynamic secret in Vault and why is it better than a static password?', a: 'Vault\'s database secrets engine generates a unique database user with a short TTL (e.g., 1 hour) per Vault lease request. The credentials are never stored permanently and are automatically revoked on expiry. This eliminates long-lived shared database passwords entirely.' },
+      { q: 'How does the Vault Kubernetes Auth Method work?', a: 'The pod presents its projected Kubernetes ServiceAccount token to Vault\'s /auth/kubernetes/login endpoint. Vault validates the token via the Kubernetes TokenReview API, verifies the service account and namespace match a bound Vault role, and returns a scoped Vault token. No shared secrets or long-lived credentials are needed.' },
+      { q: 'Why is a Sealed Secret safe to commit to a public git repository?', a: 'The SealedSecret controller holds an RSA private key in the cluster. kubeseal encrypts the secret using the controller\'s public key. Only the controller can decrypt it — git history exposure is harmless without the cluster private key.' },
+      { q: 'How does SOPS differ from Sealed Secrets for GitOps secret management?', a: 'SOPS encrypts individual values in-place in any YAML/JSON file using cloud KMS (AWS KMS, GCP KMS, age, PGP) — provider-agnostic, diffable in PRs, works with any tooling. Sealed Secrets is Kubernetes-specific (SealedSecret CRD), simpler to set up, but requires the Sealed Secrets controller in every cluster.' },
+      { q: 'How do you audit which users or services read a Kubernetes Secret?', a: 'Configure audit-policy.yaml to set level: RequestResponse for the secrets resource, then enable kube-apiserver audit logging (--audit-policy-file, --audit-log-path). Every GET/LIST/WATCH on secrets will be logged with the requesting user identity, timestamp, and response body.' },
+      { q: 'What is the difference between creationPolicy Owner and Merge in ESO ExternalSecret?', a: 'Owner: ESO adds ownerReference to the created K8s Secret and deletes it when the ExternalSecret is deleted — ESO fully controls the secret. Merge: ESO merges its keys into an existing Secret without taking ownership and does not delete the Secret when the ExternalSecret is removed.' },
+      { q: 'How do you rotate a secret managed by ESO without downtime?', a: 'Update the secret value in the external store (AWS Secrets Manager, Vault, etc.). ESO automatically re-fetches and updates the Kubernetes Secret on the next refreshInterval cycle (or force immediate sync by deleting/recreating the ExternalSecret). Applications reading from environment variables need a pod restart; applications reading from mounted files may pick up the change live.' },
+      { q: 'What is cert-manager used for in Kubernetes?', a: 'cert-manager (CNCF Graduated) automates TLS certificate lifecycle management. It defines Issuer/ClusterIssuer (ACME/Let\'s Encrypt for public certs, Vault PKI for internal certs, self-signed for dev) and Certificate CRDs that trigger certificate issuance and automatic renewal before expiry. Certificates are stored as Kubernetes Secrets.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/',
+      'https://external-secrets.io/latest/introduction/overview/',
+      'https://developer.hashicorp.com/vault/docs/auth/kubernetes',
+      'https://developer.hashicorp.com/vault/docs/secrets/databases',
+      'https://secrets-store-csi-driver.sigs.k8s.io/introduction',
+      'https://github.com/bitnami-labs/sealed-secrets',
+      'https://github.com/getsops/sops',
+      'https://fluxcd.io/flux/guides/mozilla-sops/',
+      'https://cert-manager.io/docs/',
+    ],
+  },
+
+  {
+    id: 'kubernetes-upgrades',
+    title: 'Kubernetes Cluster Upgrades and Version Management',
+    icon: 'layers',
+    color: '#6366f1',
+    questions: 15,
+    description: 'Version skew policy, kubeadm upgrade procedures, worker node drain and replace patterns, and managed K8s upgrade flows on EKS, GKE, and AKS.',
+    topics: [
+      {
+        title: 'Version Skew Policy and Release Cadence',
+        content: `The Kubernetes version skew policy defines which component versions can coexist safely during a rolling upgrade. Understanding it precisely is essential because upgrading out of order corrupts cluster state or causes API failures.
+
+kube-apiserver is the reference point: it must always be the most up-to-date component in the cluster. No other component may run a newer minor version than the apiserver. kube-controller-manager and kube-scheduler must run within 1 minor version older than the apiserver — so if the apiserver is v1.31, these can be v1.31 or v1.30, but not v1.29. kubelet is the most permissive: it may run up to 3 minor versions older than the apiserver, but it may never run newer than the apiserver. So an apiserver at v1.31 supports kubelets at v1.31, v1.30, v1.29, and v1.28 — the 3-version skew is what enables you to upgrade the control plane first and then upgrade worker nodes gradually. kubectl is bidirectional within 1 minor version: kubectl v1.30 works against an apiserver at v1.29, v1.30, or v1.31.
+
+etcd does not have a Kubernetes-defined skew limit, but in practice etcd must be upgraded to the version tested with the corresponding apiserver. The etcd versions tested per K8s release are listed in the release notes — e.g., Kubernetes v1.31 was tested with etcd 3.5.x.
+
+Release cadence: Kubernetes releases a new minor version approximately every 4 months. Recent releases: v1.28 (August 2023), v1.29 (December 2023), v1.30 (April 2024), v1.31 (August 2024). Patch releases (v1.31.1, v1.31.2) ship every 2-4 weeks. The project maintains 3 active minor versions (N, N-1, N-2), each receiving patch updates. A minor version reaches end-of-life approximately 14 months after its initial release — roughly 3 release cycles plus a 2-month grace period.
+
+Version increment rule: you must upgrade one minor version at a time. Jumping from v1.28 directly to v1.30 is unsupported and likely to fail or produce undefined behavior. Always upgrade v1.28 → v1.29 → v1.30.
+
+API stability matters during upgrades. Alpha features (v1alpha1) may break or disappear between any two releases with no warning. Beta features (v1beta1) carry a compatibility guarantee of at least 2 releases after deprecation before removal. GA (v1) APIs are stable and removals require at minimum 3 releases of deprecation. API removals happen in minor releases — for example, PodDisruptionBudget v1beta1 was removed in v1.25 after being deprecated in v1.21. Before upgrading, check which APIs your manifests use with kubectl api-resources --verbs=list -o wide, and use kubectl-convert (a separate plugin from kubernetes.io/docs/tasks/tools/install-kubectl-linux/) to migrate manifests from deprecated to current API versions automatically.`,
+        codeExample: `# Check current cluster version and component skew
+kubectl version
+kubectl get nodes -o wide  # see kubelet versions per node
+
+# Check what API groups and versions are available on current cluster
+kubectl api-resources --verbs=list -o wide | grep -E 'APIVERSION|batch|policy'
+
+# Find deprecated/removed API usage in manifests before upgrading
+# kubectl-convert must be installed separately:
+# curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
+kubectl convert -f old-manifest.yaml --output-version apps/v1
+
+# Verify version skew: apiserver at v1.31, kubelets must be >= v1.28
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.nodeInfo.kubeletVersion}{"\n"}{end}'`,
+      },
+      {
+        title: 'Control Plane Upgrade with kubeadm',
+        content: `The kubeadm upgrade workflow handles the control plane components (kube-apiserver, kube-controller-manager, kube-scheduler) plus the CoreDNS and kube-proxy addons. etcd is a separate concern — kubeadm upgrade apply does not touch etcd, which must be upgraded manually following the etcd cluster upgrade documentation.
+
+Preparation before any upgrade: First, take an etcd snapshot. The command requires ETCDCTL_API=3, and the endpoint and certificates are specific to your cluster config, typically found at /etc/kubernetes/pki/etcd/. Use ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-$(date +%Y%m%d).db --endpoints=https://127.0.0.1:2379 --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt. Verify the snapshot: ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-$(date +%Y%m%d).db. Second, read the release notes for the target version — specifically the Known Issues, Urgent Upgrade Notes, and Deprecation sections. Third, test on a staging cluster with identical config. Fourth, run kubectl get nodes and kubectl get pods -A to establish a baseline.
+
+The upgrade itself on the first control plane node: upgrade the kubeadm binary first (e.g., apt-get install -y kubeadm=1.31.0-1.1 on Debian/Ubuntu, or yum install -y kubeadm-1.31.0 on RHEL). Then run kubeadm upgrade plan v1.31.0 — this prints the target version, lists API deprecation warnings, shows the current and after-upgrade component versions, and confirms that your kubeadm config is compatible. If plan succeeds, run kubeadm upgrade apply v1.31.0 — this upgrades kube-apiserver, kube-controller-manager, kube-scheduler, CoreDNS, and kube-proxy in-place. The apiserver is briefly unavailable (~30 seconds) while it restarts.
+
+After kubeadm upgrade apply on the first control plane node, upgrade the kubelet and kubectl binaries on that same node: apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1, then systemctl daemon-reload && systemctl restart kubelet.
+
+For additional control plane nodes (HA setup with 3 control plane nodes): the process uses kubeadm upgrade node (not upgrade apply) on each subsequent control plane. The load balancer in front of the control plane nodes keeps traffic on the nodes that are already upgraded, so the cluster remains available throughout the rolling control plane upgrade.
+
+Caution: kubeadm does not upgrade etcd. If your cluster uses an externally managed etcd, follow the etcd documentation. If etcd is stacked (running as a static pod managed by kubeadm), kubeadm upgrade apply will update the etcd static pod manifest to point to the new etcd image — but you must have pre-validated compatibility.`,
+        codeExample: `# --- Step 1: etcd backup (run on control plane node) ---
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-$(date +%Y%m%d-%H%M).db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt
+
+ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-$(date +%Y%m%d-%H%M).db \
+  --write-out=table
+# Output: Hash, Revision, Total Keys, Total Size
+
+# --- Step 2: Upgrade kubeadm binary (Debian/Ubuntu) ---
+apt-get update && apt-get install -y kubeadm=1.31.0-1.1
+kubeadm version  # confirm new version
+
+# --- Step 3: Preview the upgrade (shows API removals, component versions) ---
+kubeadm upgrade plan v1.31.0
+
+# --- Step 4: Apply upgrade (upgrades apiserver, controller-manager, scheduler, CoreDNS, kube-proxy) ---
+kubeadm upgrade apply v1.31.0 --yes
+
+# --- Step 5: Upgrade kubelet + kubectl on this control plane node ---
+apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1
+systemctl daemon-reload && systemctl restart kubelet
+
+# Verify control plane node is upgraded
+kubectl get node control-plane-01  # should show v1.31.0
+
+# --- Step 6: Additional control plane nodes (run on each) ---
+apt-get install -y kubeadm=1.31.0-1.1
+kubeadm upgrade node                 # NOT 'upgrade apply' on secondary nodes
+apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1
+systemctl daemon-reload && systemctl restart kubelet`,
+      },
+      {
+        title: 'Worker Node Upgrade Procedure',
+        content: `Worker node upgrades follow a drain-upgrade-uncordon cycle. The drain step is critical and has several nuances around DaemonSets, emptyDir data, and PodDisruptionBudgets.
+
+kubectl drain node-01 --ignore-daemonsets --delete-emptydir-data --grace-period=60 does the following: it marks the node Unschedulable (SchedulingDisabled in kubectl get nodes output), then evicts all pods from the node. The --ignore-daemonsets flag is required because DaemonSet pods cannot be rescheduled elsewhere — drain would fail without this flag. These DaemonSet pods will be re-created on the node after it comes back up. The --delete-emptydir-data flag is required for pods using emptyDir volumes — drain blocks without it because emptyDir data is local to the node and will be permanently lost when the pod evicts. --grace-period=60 gives pods 60 seconds to shut down cleanly before being force-terminated; the default honors the pod's terminationGracePeriodSeconds.
+
+PodDisruptionBudget (PDB) enforcement is the most common cause of drain blocking in production. If a deployment has a PDB with minAvailable: 2 and currently 2 replicas (both healthy), draining would bring available replicas to 1, violating the PDB. kubectl drain will wait indefinitely (or until --timeout if set) for the condition to resolve. To diagnose: kubectl get pdb -A lists all PDBs and shows ALLOWED DISRUPTIONS column — a 0 means no pods can be evicted right now. Fix: scale the deployment to more replicas, or temporarily update the PDB (with team awareness), or proceed after verifying the risk is acceptable.
+
+After drain completes: upgrade the kubelet package on the node (apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1), reload systemd, and restart kubelet. Then uncordon: kubectl uncordon node-01 marks the node schedulable again and the scheduler begins placing pods on it.
+
+Blue-green node replacement is the recommended approach for cloud environments. Rather than upgrading nodes in place, provision new nodes with the target K8s version and updated OS image, then cordon old nodes one at a time, drain them, and delete them from the cluster. This is safer: the old nodes remain available as rollback capacity if the new nodes exhibit issues. EKS, GKE, and AKS managed node groups all implement this pattern automatically. In EKS, the eksctl upgrade nodegroup command creates a surge node, moves workloads, and terminates the old node. In GKE, node pool upgrades add surge nodes (configurable via --max-surge-upgrade and --max-unavailable-upgrade) and roll through nodes sequentially, respecting PDBs.`,
+        codeExample: `# --- Drain node (evict all pods, ready for upgrade) ---
+kubectl drain node-01 \
+  --ignore-daemonsets \      # required: DaemonSet pods can't be rescheduled
+  --delete-emptydir-data \  # required: emptyDir data will be lost
+  --grace-period=60 \       # seconds for pods to shut down gracefully
+  --timeout=300s            # fail drain if not complete in 5 minutes
+
+# --- Diagnose if drain is blocked by PDB ---
+kubectl get pdb -A           # check ALLOWED DISRUPTIONS column
+kubectl describe pdb my-app-pdb -n production   # see min/maxAvailable and current state
+
+# --- Upgrade kubelet on the node (SSH into node-01) ---
+apt-get update && apt-get install -y kubelet=1.31.0-1.1 kubectl=1.31.0-1.1
+systemctl daemon-reload
+systemctl restart kubelet
+kubelet --version  # confirm: Kubernetes v1.31.0
+
+# --- Uncordon: allow scheduler to place pods on this node again ---
+kubectl uncordon node-01
+kubectl get nodes  # STATUS should return to Ready (not SchedulingDisabled)
+
+# --- Verify node upgraded ---
+kubectl get node node-01 -o jsonpath='{.status.nodeInfo.kubeletVersion}'
+# Output: v1.31.0
+
+# --- Blue-green node replacement (preferred in cloud) ---
+# Add new node group at target version, then drain + delete old nodes one by one
+kubectl cordon old-node-01    # prevent new scheduling
+kubectl drain old-node-01 --ignore-daemonsets --delete-emptydir-data
+kubectl delete node old-node-01   # remove from cluster (cloud provider terminates instance)`,
+      },
+      {
+        title: 'Managed Kubernetes Upgrades (EKS, GKE, AKS)',
+        content: `Managed Kubernetes providers abstract the control plane upgrade but still require explicit action to upgrade the node groups, and they have their own add-on lifecycles that must be managed separately.
+
+EKS upgrade sequence: Check the current version with aws eks describe-cluster --name my-cluster --query 'cluster.version'. Upgrade the control plane: aws eks update-cluster-version --name my-cluster --kubernetes-version 1.31. This is async — poll with aws eks describe-cluster --name my-cluster --query 'cluster.status' until it returns ACTIVE (typically 15-25 minutes). The EKS control plane upgrade updates the kube-apiserver, scheduler, and controller-manager. EKS add-ons (CoreDNS, kube-proxy, Amazon VPC CNI, EBS CSI driver) are not upgraded automatically — each must be upgraded separately: aws eks update-addon --cluster-name my-cluster --addon-name coredns --addon-version v1.11.1-eksbuild.9 (check compatible versions with aws eks describe-addon-versions). After the control plane is ACTIVE, upgrade the managed node groups: aws eks update-nodegroup-version --cluster-name my-cluster --nodegroup-name ng-standard. EKS uses the blue-green node replacement pattern with surge nodes. eksctl upgrade cluster --name my-cluster --approve is a shortcut that handles control plane upgrade but still requires manual node group steps. EKS enforces upgrades: if a cluster is on an EOL version, AWS will force-upgrade it within approximately 60 days of EOL notification.
+
+GKE upgrade approach: GKE release channels (Rapid, Regular, Stable) auto-manage upgrades with maintenance windows. Rapid: fastest access to new features, least stability testing. Regular: 2-3 months behind Rapid, recommended for most workloads. Stable: most conservative, 2-3 months behind Regular. Maintenance windows define when auto-upgrades happen (e.g., weekends only, 03:00-07:00). For manual upgrade of the control plane: gcloud container clusters upgrade my-cluster --master --cluster-version 1.31.0-gke.100 --region us-central1. Worker node pool upgrade: gcloud container clusters upgrade my-cluster --node-pool default-pool --cluster-version 1.31.0-gke.100 --region us-central1. GKE Autopilot clusters have fully managed upgrades with no user action required. Configure max-surge and max-unavailable per node pool for upgrade behavior.
+
+AKS upgrade: az aks get-upgrades --resource-group my-rg --name my-cluster --output table lists available upgrade paths. az aks upgrade --resource-group my-rg --name my-cluster --kubernetes-version 1.31.0 upgrades both control plane and node pools in one command by default. Node image upgrades (OS patches without K8s version change) are separate: az aks nodepool upgrade --resource-group my-rg --cluster-name my-cluster --name nodepool1 --node-image-only. AKS also supports auto-upgrade channels: patch (auto patch), stable (auto minor stable version), rapid (latest), and node-image only.
+
+Rollback reality: none of the managed providers support trivial rollback of a control plane upgrade. The safest rollback is an etcd restore from pre-upgrade snapshot — which requires a maintenance window. This is why testing on staging first is non-negotiable.`,
+        codeExample: `# === EKS Upgrade Sequence ===
+
+# 1. Check current cluster version
+aws eks describe-cluster --name my-cluster --query 'cluster.{Version:version,Status:status}'
+
+# 2. Upgrade control plane (async — takes 15-25 min)
+aws eks update-cluster-version --name my-cluster --kubernetes-version 1.31
+
+# 3. Poll until ACTIVE
+aws eks describe-cluster --name my-cluster --query 'cluster.status'
+
+# 4. Upgrade EKS add-ons (must be done separately after control plane)
+aws eks update-addon --cluster-name my-cluster --addon-name coredns \
+  --addon-version v1.11.1-eksbuild.9
+
+aws eks update-addon --cluster-name my-cluster --addon-name kube-proxy \
+  --addon-version v1.31.0-eksbuild.5
+
+# 5. Upgrade managed node group (triggers rolling blue-green node replacement)
+aws eks update-nodegroup-version \
+  --cluster-name my-cluster \
+  --nodegroup-name ng-standard
+
+# === GKE Upgrade Sequence ===
+
+# Set a maintenance window (upgrades only happen in this window)
+gcloud container clusters update my-cluster \
+  --maintenance-window-start "2024-01-06T03:00:00Z" \
+  --maintenance-window-end "2024-01-06T07:00:00Z" \
+  --maintenance-window-recurrence "FREQ=WEEKLY;BYDAY=SA,SU" \
+  --region us-central1
+
+# Manual control plane upgrade
+gcloud container clusters upgrade my-cluster \
+  --master \
+  --cluster-version 1.31.0-gke.100 \
+  --region us-central1
+
+# Manual node pool upgrade (after control plane)
+gcloud container clusters upgrade my-cluster \
+  --node-pool default-pool \
+  --cluster-version 1.31.0-gke.100 \
+  --num-nodes 3 \
+  --region us-central1
+
+# === AKS Upgrade Sequence ===
+
+# List available upgrade versions
+az aks get-upgrades --resource-group my-rg --name my-cluster --output table
+
+# Upgrade cluster (control plane + node pools)
+az aks upgrade --resource-group my-rg --name my-cluster --kubernetes-version 1.31.0
+
+# Node image only (OS patches, no K8s version change)
+az aks nodepool upgrade \
+  --resource-group my-rg \
+  --cluster-name my-cluster \
+  --name nodepool1 \
+  --node-image-only`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the maximum kubelet version skew allowed behind the apiserver?', a: '3 minor versions — kubelet can be up to 3 minor versions older than kube-apiserver, but never newer.' },
+      { q: 'What is the correct order for upgrading cluster components?', a: 'Control plane first (apiserver, controller-manager, scheduler), then worker node kubelets — never upgrade kubelets before the apiserver.' },
+      { q: 'What does kubeadm upgrade plan show you?', a: 'The target version, current vs after-upgrade component versions, any API deprecation warnings, and confirmation that your kubeadm config is compatible.' },
+      { q: 'What is the etcd snapshot save command prefix required?', a: 'ETCDCTL_API=3 — the etcdctl tool defaults to API v2 without this; snapshot commands require the v3 API.' },
+      { q: 'Why does kubectl drain require --ignore-daemonsets?', a: 'DaemonSet pods cannot be rescheduled to another node — drain would fail without this flag since it cannot evict those pods elsewhere.' },
+      { q: 'What happens when kubectl drain is blocked by a PodDisruptionBudget?', a: 'Drain waits indefinitely (or until --timeout) — it will not evict pods that would violate the PDB minimum available count. Check with kubectl get pdb -A.' },
+      { q: 'What tool converts manifests from deprecated to current API versions?', a: 'kubectl-convert — a separate plugin that rewrites manifests to a target API version, e.g., converting policy/v1beta1 PodDisruptionBudget to policy/v1.' },
+      { q: 'What EKS command upgrades a managed node group?', a: 'aws eks update-nodegroup-version --cluster-name my-cluster --nodegroup-name ng-name — triggers a blue-green rolling replacement of nodes.' },
+      { q: 'What are the three GKE release channels?', a: 'Rapid (fastest new features), Regular (recommended, 2-3 months behind Rapid), and Stable (most conservative, 2-3 months behind Regular).' },
+      { q: 'Can you skip a minor version when upgrading Kubernetes?', a: 'No — you must upgrade one minor version at a time. v1.28 to v1.30 requires going v1.28 → v1.29 → v1.30.' },
+      { q: 'How many minor versions does the Kubernetes project actively support?', a: '3 active minor versions — the current release (N), and the two prior (N-1, N-2). Each version is supported for approximately 14 months.' },
+      { q: 'How do you check which deprecated APIs are used in your manifests before upgrading?', a: 'Use kubectl-convert on manifests, check kubectl api-resources output, and review the Urgent Upgrade Notes in the K8s release notes for the target version.' },
+      { q: 'What is the recommended node upgrade strategy in cloud environments?', a: 'Blue-green replacement — add new nodes at the target version, cordon and drain old nodes, delete them. Old nodes serve as rollback capacity if new nodes have issues.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/',
+      'https://kubernetes.io/docs/reference/using-api/deprecation-policy/',
+      'https://kubernetes.io/docs/setup/release/version-skew-policy/',
+      'https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-convert-plugin',
+    ],
+  },
+  {
+    id: 'kubernetes-multitenancy',
+    title: 'Kubernetes Multi-tenancy Patterns',
+    icon: 'layers',
+    color: '#14b8a6',
+    questions: 14,
+    description: 'Namespace-based soft tenancy, OPA/Gatekeeper and Kyverno policy enforcement, hard tenancy with vCluster and Capsule, and cost allocation with OpenCost.',
+    topics: [
+      {
+        title: 'Namespace-based Soft Tenancy',
+        content: `The most common Kubernetes multi-tenancy model uses namespaces to create logical boundaries between teams or applications sharing a single cluster. This is called soft tenancy because the isolation is enforced at the API level, not the kernel level.
+
+The typical setup: one or more namespaces per team, a RoleBinding in each namespace that grants the team's group access (e.g., edit or a custom Role), a NetworkPolicy with a default-deny-all ingress rule plus explicit allows for intra-namespace traffic and cross-namespace traffic to kube-dns (UDP/TCP port 53 to the kube-system namespace where CoreDNS runs). Without the DNS egress rule, pods cannot resolve service names and all network calls fail silently.
+
+ResourceQuota per namespace limits aggregate resource consumption. The most important fields: requests.cpu (sum of all container CPU requests), limits.cpu, requests.memory, limits.memory, count/pods (maximum pod count), count/services, count/persistentvolumeclaims, requests.storage (total PVC storage). ResourceQuota enforcement means new pods are rejected with a 403 if they would exceed the quota. This prevents one team from accidentally consuming all cluster resources.
+
+LimitRange per namespace is equally important and often overlooked. It sets defaults and constraints at the container level. Without a LimitRange, a pod with no resource requests or limits is scheduled with BestEffort QoS class — it gets evicted first under node pressure, and its resource usage is invisible to the scheduler. LimitRange fields: default (the limit assigned if none specified), defaultRequest (the request assigned if none specified), max (the ceiling), min (the floor). With both ResourceQuota and LimitRange, every pod in the namespace gets predictable QoS (Burstable at minimum) and the quota system works as intended.
+
+Why it is called soft tenancy: all namespaces share the same etcd — a pathological workload that issues millions of LIST requests per second can degrade etcd response times for all other tenants simultaneously. All namespaces share the same kube-apiserver, controller-manager, and scheduler. If one team writes a controller with a reconcile loop bug that calls the API 10,000 times per second, it can trigger apiserver rate limiting that affects everyone. Most critically: all pods share the same Linux kernel on each node. A container escape exploit (CVE class) that gains kernel access can access pod memory from other namespaces on the same node. CPU steal is real — a noisy neighbor with no CPU limits can starve other pods on the same node. For these reasons, namespace-based tenancy is appropriate only for trusted workloads from the same organization. Untrusted code from external customers requires hard tenancy.`,
+        codeExample: `# Complete namespace setup for one team
+# 1. Namespace
+kubectl create namespace team-alpha
+
+# 2. ResourceQuota
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: team-alpha-quota
+  namespace: team-alpha
+spec:
+  hard:
+    requests.cpu: "8"
+    limits.cpu: "16"
+    requests.memory: 16Gi
+    limits.memory: 32Gi
+    count/pods: "50"
+    count/services: "20"
+    count/persistentvolumeclaims: "10"
+    requests.storage: 100Gi
+EOF
+
+# 3. LimitRange (prevents BestEffort QoS, sets sane defaults)
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: team-alpha-limits
+  namespace: team-alpha
+spec:
+  limits:
+  - type: Container
+    default:          # limits applied if not specified
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest:   # requests applied if not specified
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "4"
+      memory: 4Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+EOF
+
+# 4. Default-deny NetworkPolicy + allow intra-namespace + allow DNS
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-with-dns
+  namespace: team-alpha
+spec:
+  podSelector: {}     # applies to ALL pods in namespace
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {} # allow from any pod in SAME namespace
+  egress:
+  - to:
+    - podSelector: {} # allow to any pod in SAME namespace
+  - to:               # allow DNS queries to CoreDNS
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+EOF
+
+# 5. RBAC: give team-alpha group edit access to their namespace
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: team-alpha-edit
+  namespace: team-alpha
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit
+subjects:
+- kind: Group
+  name: team-alpha
+  apiGroup: rbac.authorization.k8s.io
+EOF`,
+      },
+      {
+        title: 'Policy-as-Code: OPA/Gatekeeper and Kyverno',
+        content: `Policy-as-code tools enforce organizational rules on Kubernetes resources at admission time — they intercept every CREATE and UPDATE request and can reject or mutate resources before they are persisted to etcd. The two dominant options are OPA/Gatekeeper (Rego-based, CNCF Graduated) and Kyverno (YAML-native, CNCF Graduated).
+
+OPA/Gatekeeper architecture: the Gatekeeper webhook is a ValidatingAdmissionWebhook registered with the apiserver. It forwards admission requests to the OPA engine. Policies are defined as ConstraintTemplate resources, which contain the Rego policy logic and a JSON Schema defining the parameters the policy accepts. A Constraint instantiates a ConstraintTemplate with specific parameters and specifies which resource kinds it applies to. Example: a K8sRequiredLabels ConstraintTemplate defines Rego that checks for the presence of specified label keys. A Constraint using that template with parameters labels: [team, cost-center] enforces that every Pod must have those two labels. Common built-in constraints from the Gatekeeper library: K8sAllowedRepos restricts images to approved registries, K8sContainerLimits requires resource limits on all containers, K8sPSPPrivilegedContainer blocks privileged: true, K8sBlockNodePort denies NodePort Services. Gatekeeper also has an audit controller that retroactively checks existing resources against constraints and reports violations — useful when you add a new policy and want to see what is already non-compliant without rejecting new ones yet.
+
+Kyverno architecture: also a ValidatingAdmissionWebhook, but policies are defined as ClusterPolicy (cluster-wide) or Policy (namespaced) resources using YAML syntax that mirrors K8s resource structure. Kyverno rule types: validate (reject non-conforming resources — show message to operator on rejection), mutate (modify incoming resources before they are stored — e.g., inject default labels, add imagePullPolicy: Always, set resource requests if missing), generate (create new resources when a trigger resource is created or updated). The generate capability is Kyverno's unique advantage: a ClusterPolicy can watch for Namespace creation and automatically generate a default NetworkPolicy, LimitRange, and RoleBinding in every new namespace — no operator manual action required. This is the standard way to enforce that every new namespace gets proper guardrails.
+
+Choosing between them: OPA/Gatekeeper uses Rego, a purpose-built query language that is Turing-complete and can express arbitrarily complex policies — but has a steeper learning curve, especially for data correlation across resources. Kyverno's YAML syntax is approachable for anyone who knows Kubernetes and has the generate capability that OPA lacks natively. Large enterprises with security teams often prefer OPA for its power and auditability. Platform teams who want self-service namespace onboarding often prefer Kyverno for generate. Both can coexist in the same cluster.`,
+        codeExample: `# === Kyverno: auto-create NetworkPolicy + LimitRange when new namespace created ===
+cat <<EOF | kubectl apply -f -
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: add-namespace-defaults
+spec:
+  rules:
+  - name: generate-network-policy
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+    generate:
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      name: default-deny
+      namespace: "{{request.object.metadata.name}}"
+      synchronize: true     # Kyverno will re-create if deleted
+      data:
+        spec:
+          podSelector: {}
+          policyTypes: [Ingress, Egress]
+  - name: generate-limit-range
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+    generate:
+      apiVersion: v1
+      kind: LimitRange
+      name: default-limits
+      namespace: "{{request.object.metadata.name}}"
+      synchronize: true
+      data:
+        spec:
+          limits:
+          - type: Container
+            default: { cpu: 500m, memory: 512Mi }
+            defaultRequest: { cpu: 100m, memory: 128Mi }
+EOF
+
+# === OPA Gatekeeper: ConstraintTemplate requiring team + cost-center labels ===
+cat <<EOF | kubectl apply -f -
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            labels:
+              type: array
+              items: { type: string }
+  targets:
+  - target: admission.k8s.gatekeeper.sh
+    rego: |
+      package k8srequiredlabels
+      violation[{"msg": msg}] {
+        provided := {label | input.review.object.metadata.labels[label]}
+        required := {label | label := input.parameters.labels[_]}
+        missing := required - provided
+        count(missing) > 0
+        msg := sprintf("Missing required labels: %v", [missing])
+      }
+EOF
+
+# Instantiate the constraint — enforce on all Pods
+cat <<EOF | kubectl apply -f -
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredLabels
+metadata:
+  name: pods-must-have-team-labels
+spec:
+  match:
+    kinds:
+    - apiGroups: [""]
+      kinds: ["Pod"]
+  parameters:
+    labels: ["team", "cost-center"]
+EOF
+
+# Check audit violations on existing resources
+kubectl get k8srequiredlabels pods-must-have-team-labels -o jsonpath='{.status.violations}'`,
+      },
+      {
+        title: 'Hard Tenancy: vCluster, Capsule, and Kamaji',
+        content: `Hard tenancy provides stronger isolation than namespace-based soft tenancy. It is appropriate when tenants run untrusted code, belong to different organizations, or need independent Kubernetes API access (their own CRDs, RBAC policies, webhooks) without interfering with other tenants.
+
+vCluster (Loft Labs, CNCF Sandbox): a virtual Kubernetes cluster runs as a StatefulSet inside a namespace of the host cluster. Each vCluster has its own kube-apiserver (powered by k3s or k0s lightweight distributions), its own etcd or SQLite data store, and its own full Kubernetes object model. Developers interact with the vCluster via its own kubeconfig and see a completely isolated Kubernetes API — they can create CRDs, Roles, ClusterRoles, webhooks, and other cluster-scoped resources without affecting the host cluster or other vClusters. The syncer component is the key innovation: it translates vCluster workload resources (Pods, Services, ConfigMaps, Secrets) into real resources on the host cluster, so actual workloads run on host cluster nodes under the host cluster's scheduling and CNI. The host cluster administrator sees only namespaced resources; the vCluster tenant sees a full cluster. Use cases: dev environment isolation (each developer gets their own cluster with no blast radius), CI/CD ephemeral clusters (spin up a fresh vCluster for each PR, delete it when merged), and SaaS multi-tenancy where customers need Kubernetes API access.
+
+Capsule (Clastix, CNCF Sandbox): rather than a virtual cluster, Capsule aggregates multiple namespaces into a logical Tenant. The Tenant CRD defines: owner subjects (the team members who own the tenant), allowed namespace labels, resource quota across all tenant namespaces combined, allowed storage classes and ingress classes, network policies. Tenant owners can create namespaces themselves within their Capsule tenant without cluster-admin access — self-service namespace creation. Capsule Proxy is an optional component that proxies kubectl calls and filters responses to show only the tenant's resources when a tenant user runs kubectl get pods --all-namespaces. This provides a scoped cluster view without giving them read access to other tenants.
+
+HNC (Hierarchical Namespace Controller, sig-multitenancy): creates parent-child namespace relationships. RBAC policies and ResourceQuotas defined in a parent namespace automatically propagate to all child namespaces. A team gets a root namespace and can create sub-namespaces (for different environments or services) that inherit the parent's policies. The subnamespaceanchor CRD creates child namespaces.
+
+Kamaji (CNCF Sandbox): provision full dedicated Kubernetes control planes (apiserver + etcd) for each tenant, but with worker nodes shared across tenants. This is closer to a managed K8s service (like GKE/EKS) but self-hosted. Each tenant gets their own API endpoint with full isolation; the infrastructure team manages the underlying nodes as a shared pool. Ideal for internal platform teams building Kubernetes-as-a-Service.`,
+        codeExample: `# === vCluster: install and connect to a virtual cluster ===
+
+# Install vCluster CLI (macOS)
+brew install loft-sh/tap/vcluster
+
+# Create a vCluster named "dev-alice" in namespace "vc-alice"
+vcluster create dev-alice \
+  --namespace vc-alice \
+  --chart-version 0.20.0 \
+  --connect=false
+
+# Check status
+kubectl get pods -n vc-alice  # shows vcluster-0 StatefulSet pod
+
+# Connect to the vCluster (sets KUBECONFIG to the vCluster)
+vcluster connect dev-alice --namespace vc-alice
+# Now all kubectl commands go to the vCluster's API server
+kubectl get nodes     # shows host nodes synced into vCluster view
+kubectl create namespace my-tenant-ns   # isolated inside vCluster
+
+# Disconnect
+vcluster disconnect
+
+# === Capsule: Tenant CRD ===
+cat <<EOF | kubectl apply -f -
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-alpha
+spec:
+  owners:
+  - name: alice
+    kind: User
+  - name: team-alpha-group
+    kind: Group
+  namespaceOptions:
+    quota: 5         # tenant can create up to 5 namespaces
+    additionalMetadata:
+      labels:
+        tenant: team-alpha
+  resourceQuotas:
+    scope: Tenant    # quota applies ACROSS all tenant namespaces combined
+    items:
+    - hard:
+        requests.cpu: "20"
+        requests.memory: 40Gi
+        count/pods: "100"
+  networkPolicies:
+    items:
+    - ingress:
+      - from:
+        - podSelector: {}  # allow intra-tenant
+  storageClasses:
+    allowed:
+    - standard
+    - fast-ssd
+EOF
+
+# Alice can now create namespaces without cluster-admin:
+# kubectl create namespace team-alpha-prod   # Capsule webhook allows this`,
+      },
+      {
+        title: 'Cost Allocation and FinOps for Multi-tenant Clusters',
+        content: `Cost allocation in shared Kubernetes clusters is difficult because costs attach to nodes, not pods. A node running 10 pods from 3 different teams has one AWS/GCP/Azure bill line. Attributing that cost fairly requires tooling that understands pod resource requests and applies cloud pricing rates.
+
+OpenCost (CNCF Incubating): the open-source standard for Kubernetes cost monitoring. Deployed as a pod in the cluster, it reads pod resource requests (CPU requests, memory requests, GPU requests), node instance pricing from cloud provider pricing APIs (or configured on-premises rates), and PVC storage costs. It attributes costs per pod, per namespace, per label, per deployment, and per cluster. The UI is built on Prometheus metrics. Key cost metrics exposed: container_cpu_allocation (CPU hours allocated), container_memory_allocation_bytes (memory byte-hours), node_total_hourly_cost (node cost per hour from pricing API). Queries: kubectl cost namespace --show-cpu --show-memory --show-efficiency (from the kubectl cost plugin). Kubecost is the commercial product built on OpenCost with additional features like Savings Insights, Anomaly Detection, and cluster right-sizing recommendations.
+
+Labels as cost metadata: enforcing team/product/cost-center/environment labels on all workloads (via Kyverno mutate or OPA) is the prerequisite for cost attribution. Without consistent labels, cost reports show costs per namespace but cannot break down by product line or feature team within a namespace. The label taxonomy should be agreed on before deploying the cluster, not retrofitted later.
+
+Showback vs chargeback: showback means reporting costs to teams for awareness — teams see their usage but are not financially charged. Chargeback means the platform team actually bills internal departments (via internal transfer pricing, P&L allocation, or cloud cost reallocation). Showback is far more common and easier to implement; chargeback requires organizational buy-in and finance system integration.
+
+FinOps optimization practices: right-sizing using VPA recommendations in Off mode (VPA records recommendations without applying them, so you can review before acting), idle resource detection (pods where actual CPU utilization is below 10% of requests for 7+ consecutive days are candidates for request reduction), Spot/Preemptible node pools for non-critical workloads (batch jobs, dev environments) achieve 60-80% cost savings, committed use discounts (AWS Reserved Instances, GCP CUDs, Azure Reserved VMs) for predictable baseline node count. GPU cost attribution is particularly important because GPU nodes ($3-10/hour per GPU on A100 instances) dominate ML cluster costs. OpenCost GPU attribution uses DCGM metrics when NVIDIA GPU Operator is installed. Namespace ResourceQuota acts as a cost cap — a team cannot exceed their CPU/memory quota, which bounds their maximum contribution to the cluster bill.`,
+        codeExample: `# === OpenCost: install and query costs ===
+
+# Install OpenCost (requires Prometheus already deployed)
+kubectl apply --server-side -f https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml
+
+# Install kubectl cost plugin
+kubectl krew install cost
+
+# Cost breakdown by namespace (last 7 days)
+kubectl cost namespace \
+  --show-cpu \
+  --show-memory \
+  --show-efficiency \
+  --window 7d
+
+# Cost per deployment in a specific namespace
+kubectl cost deployment -n team-alpha --window 30d --show-cpu
+
+# Cost per label (requires labels on pods)
+kubectl cost label app --window 7d
+
+# === Kyverno: enforce cost labels on all Pods ===
+cat <<EOF | kubectl apply -f -
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-cost-labels
+spec:
+  validationFailureAction: Enforce
+  rules:
+  - name: check-cost-labels
+    match:
+      any:
+      - resources:
+          kinds: [Pod]
+    validate:
+      message: "Pods must have 'team', 'cost-center', and 'environment' labels."
+      pattern:
+        metadata:
+          labels:
+            team: "?*"
+            cost-center: "?*"
+            environment: "?*"
+EOF
+
+# === VPA: right-sizing recommendations without auto-apply ===
+cat <<EOF | kubectl apply -f -
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-app-vpa
+  namespace: team-alpha
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+  updatePolicy:
+    updateMode: "Off"    # recommendations only, no auto-apply
+EOF
+
+# Read VPA recommendations
+kubectl get vpa my-app-vpa -n team-alpha -o jsonpath='{.status.recommendation}'`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the key difference between soft and hard Kubernetes tenancy?', a: 'Soft tenancy (namespaces) shares the kernel, control plane, and etcd — a container escape or noisy apiserver affects all tenants. Hard tenancy (vCluster, Kamaji) provides isolated API servers with no shared K8s control path.' },
+      { q: 'What is the unique capability that Kyverno has over OPA/Gatekeeper?', a: 'The generate rule type — Kyverno can automatically create new resources (NetworkPolicy, LimitRange, RoleBinding) when a trigger resource like a Namespace is created. OPA cannot generate resources natively.' },
+      { q: 'How does vCluster isolate tenants from each other?', a: 'Each vCluster runs its own kube-apiserver and etcd as a StatefulSet inside a namespace. Tenants interact with a fully isolated Kubernetes API; the syncer translates vCluster pods into host cluster pods for actual execution.' },
+      { q: 'When would you choose Capsule over vCluster?', a: 'Capsule is for namespace aggregation with self-service creation inside one real cluster — lightweight, no virtual apiserver. vCluster is for full API isolation (own CRDs, webhooks, ClusterRoles) or when tenants need a full independent K8s experience.' },
+      { q: 'Why is namespace-based tenancy called soft tenancy?', a: 'Because namespaces share the Linux kernel on each node — a container escape exploit, a kernel resource exhaustion, or noisy etcd load from one namespace can impact all other tenants on the same physical node or control plane.' },
+      { q: 'When should you prefer OPA/Gatekeeper over Kyverno?', a: 'OPA when policies require complex logic, cross-resource data correlation, or when you have a security team comfortable with Rego and want Kubernetes-agnostic policy reuse. Kyverno when you want simpler YAML-native policies and need the generate capability.' },
+      { q: 'How do you auto-enforce guardrails on every new namespace without manual steps?', a: 'Kyverno ClusterPolicy with a generate rule that matches on Namespace creation and generates NetworkPolicy, LimitRange, and RoleBinding automatically in the new namespace.' },
+      { q: 'What is HNC (Hierarchical Namespace Controller)?', a: 'A sig-multitenancy project that creates parent-child namespace trees where RBAC policies and ResourceQuotas defined in a parent namespace automatically propagate to all child namespaces.' },
+      { q: 'What tool provides real-time Kubernetes cost attribution per namespace and label?', a: 'OpenCost (CNCF Incubating) — it maps pod resource requests to cloud pricing APIs and exposes costs per namespace, deployment, label, and cluster. Kubecost is the commercial product built on it.' },
+      { q: 'What is the difference between ResourceQuota and LimitRange?', a: 'ResourceQuota sets aggregate limits for an entire namespace (total CPU, total pods, total storage). LimitRange sets per-container defaults and min/max constraints — it ensures every container gets resource requests/limits assigned even if not specified.' },
+      { q: 'Why must you enforce team/cost-center labels on all workloads?', a: 'Without consistent labels, cost attribution tools like OpenCost can report costs per namespace but cannot break down by product line or feature team. Labels are the metadata that enables meaningful cost showback and chargeback.' },
+      { q: 'What is Kamaji and when is it used?', a: 'Kamaji provisions dedicated full Kubernetes control planes (apiserver + etcd) per tenant while sharing worker nodes — enabling internal Kubernetes-as-a-Service where each tenant gets a real isolated API endpoint, not a virtual one.' },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/security/multi-tenancy/',
+      'https://github.com/loft-sh/vcluster',
+      'https://capsule.clastix.io',
+      'https://kyverno.io/docs/',
+      'https://open-policy-agent.github.io/gatekeeper/',
+      'https://www.opencost.io/docs/',
+    ],
+  },
+  {
+    id: 'kubernetes-multicloud',
+    title: 'Kubernetes Multi-cloud and Hybrid Cluster Patterns',
+    icon: 'globe',
+    color: '#6366f1',
+    questions: 14,
+    description: 'Multi-cloud Kubernetes drivers and challenges, fleet management with Cluster API and Rancher, service mesh for cross-cluster networking, and GitOps patterns for managing clusters at scale.',
+    topics: [
+      {
+        title: 'Why Multi-cloud Kubernetes and the Portability Reality',
+        content: `Organizations run Kubernetes across multiple clouds for several distinct reasons, each with different architectural implications. Understanding the real portability limits of Kubernetes is essential before designing a multi-cloud strategy.
+
+Vendor lock-in avoidance: the most commonly cited motivation. The Kubernetes API itself is consistent across EKS, GKE, AKS, and self-managed clusters — a Deployment or Service manifest works the same everywhere. However, everything around the core API is cloud-specific. Cloud redundancy / active-active: running workloads simultaneously in two or more cloud regions (or two clouds) for maximum availability. This requires cross-cloud networking (latency, cost), active-active database replication (complex), and global load balancing (Route 53 Geolocation, Cloudflare, GCP Cloud Armor). Regulatory data residency: EU data must stay in EU, patient health data must stay in specific regions, financial data must stay in-country. Multi-cloud can satisfy conflicting jurisdictional requirements. Best-of-breed services: GCP for Vertex AI and BigQuery, AWS for breadth and Lambda, Azure for Microsoft integration and Entra ID. M&A scenarios: an acquired company runs on Azure; the parent runs on AWS — multi-cloud is the reality before full migration can happen.
+
+The K8s portability reality: the Kubernetes API surface is standardized, but the surrounding ecosystem is deeply cloud-specific. Load balancer provisioning: AWS uses annotations like service.beta.kubernetes.io/aws-load-balancer-type: nlb; GCP uses networking.gke.io/load-balancer-type: External; AKS uses service.beta.kubernetes.io/azure-load-balancer-sku: standard. You cannot share the same Service manifest across clouds without cloud-specific values files. Storage classes: AWS has gp2, gp3; GCP has standard-rwo, premium-rwo; AKS has default (Azure Disk), azurefile. PVCs that reference a StorageClass name must reference the correct name per cloud. CNI implementations: EKS uses Amazon VPC CNI (pod IPs are real VPC IPs), GKE uses its own VPC-native CNI, AKS uses Azure CNI or kubenet. IRSA vs Workload Identity vs Pod Identity: AWS uses IAM Roles for Service Accounts (IRSA with OIDC federation), GKE uses Workload Identity, AKS uses Azure Workload Identity (pod identity). The pod annotation approach differs. Managed K8s version lag: EKS is often 1-2 minor versions behind the latest K8s release; GKE Regular channel is also typically 1 minor version behind. Manifests must be version-aware.
+
+Tooling that reduces cloud-specific lock-in: Crossplane (K8s-native infrastructure provisioning) defines cloud resources as K8s CRDs and abstracts the cloud-specific API — one Composition can create an RDS instance on AWS or a Cloud SQL instance on GCP depending on the environment. Terraform manages infrastructure with cloud-specific providers but a consistent workflow. Helm charts with per-environment values files separate cloud-specific parameters from cloud-agnostic app logic.`,
+        codeExample: `# === Helm values files per cloud (separate cloud-specific config from app logic) ===
+
+# values-aws.yaml
+service:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+storage:
+  className: gp3
+nodeSelector:
+  eks.amazonaws.com/nodegroup: app-nodes
+
+# values-gcp.yaml
+service:
+  type: LoadBalancer
+  annotations:
+    networking.gke.io/load-balancer-type: External
+    cloud.google.com/neg: '{"ingress": true}'
+storage:
+  className: premium-rwo
+nodeSelector:
+  cloud.google.com/gke-nodepool: app-nodes
+
+# Deploy to AWS cluster
+helm upgrade --install my-app ./charts/my-app -f values-aws.yaml
+
+# Deploy to GCP cluster
+helm upgrade --install my-app ./charts/my-app -f values-gcp.yaml
+
+# === Crossplane: cloud-agnostic S3-compatible bucket ===
+# aws-composition.yaml defines the AWS-specific resource; the XRD is shared
+cat <<EOF | kubectl apply -f -
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  name: my-team-bucket
+  annotations:
+    crossplane.io/external-name: my-team-data-bucket-prod
+spec:
+  forProvider:
+    region: us-east-1
+    acl: private
+  providerConfigRef:
+    name: aws-provider
+EOF`,
+      },
+      {
+        title: 'Fleet Management: Cluster API, Rancher, and Fleet',
+        content: `Managing many Kubernetes clusters requires tooling for cluster lifecycle (create, upgrade, delete), configuration consistency, and multi-cluster visibility. The three major tools are Cluster API (declarative lifecycle), Rancher (unified management UI), and Fleet (large-scale GitOps).
+
+Cluster API (CAPI, CNCF Graduated): CAPI turns cluster lifecycle into Kubernetes-native declarative management. It introduces CRDs — Cluster (top-level cluster spec), Machine (a single node), MachineDeployment (declarative node group, analogous to Deployment for pods), MachineSet (like ReplicaSet for nodes), MachineHealthCheck (auto-replace unhealthy nodes). Infrastructure providers translate these CRDs into cloud resources: CAPA (AWS), CAPG (GCP), CAPZ (Azure), CAPV (vSphere), CAPO (OpenStack), CAPI-K3s, and more. The management cluster is a dedicated K8s cluster that runs CAPI controllers and manages workload clusters. The clusterctl CLI bootstraps the management cluster and creates new workload clusters from CAPI manifests. Key capability: use git push to upgrade 50 clusters — update the MachineDeployment version, apply it, and CAPI rolls nodes. This is the same GitOps workflow as application deployments but for infrastructure.
+
+Rancher (SUSE, Apache 2.0): a multi-cluster management platform with a web UI, API, and CLI. Rancher can import existing clusters (EKS, GKE, AKS, K3s, RKE2, or custom kubeconfig). Once imported, Rancher provides unified RBAC across all clusters, centralized logging and monitoring (Rancher Logging Operator, integrated Prometheus), policy management via OPA Gatekeeper, cluster-level backup via Velero integration, and an app catalog (Helm charts deployable from the UI). Rancher is opinionated and provides a turnkey experience; the tradeoff is significant operational overhead running the Rancher management plane itself. Fleet (built into Rancher but also standalone): a GitOps engine designed for scale — it can manage 1000s of clusters from a single git repository. Fleet's Bundle CRD defines Helm charts or Kustomize configurations and uses cluster label selectors to target which clusters get which configuration. fleet-agent runs on each managed cluster and reconciles the target state.
+
+ArgoCD for multi-cluster: ArgoCD ApplicationSet with the cluster generator automatically creates an Application per registered cluster — deploy the same app to all clusters with 10 lines of YAML. The cluster generator iterates all clusters registered as ArgoCD cluster secrets. The matrix generator takes the cross-product of clusters × apps. The list generator targets an explicit list of clusters with per-cluster parameters. Hub-spoke: one ArgoCD instance on a management cluster manages applications on spoke clusters. Each spoke cluster is registered via a cluster secret containing its kubeconfig. This is simpler than Rancher but requires separate management of visibility, RBAC, and cluster health.`,
+        codeExample: `# === Cluster API: provision a cluster on AWS ===
+
+# Bootstrap management cluster (using kind for local dev)
+kind create cluster
+clusterctl init --infrastructure aws
+
+# Generate workload cluster manifests
+clusterctl generate cluster my-workload-cluster \
+  --kubernetes-version v1.31.0 \
+  --control-plane-machine-count 3 \
+  --worker-machine-count 5 \
+  > my-cluster.yaml
+
+kubectl apply -f my-cluster.yaml  # CAPI creates EC2 instances, K8s cluster
+
+# Get kubeconfig for the new cluster
+clusterctl get kubeconfig my-workload-cluster > ~/.kube/my-workload-cluster.kubeconfig
+
+# === ArgoCD ApplicationSet: deploy to all registered clusters ===
+cat <<EOF | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: my-app-all-clusters
+  namespace: argocd
+spec:
+  generators:
+  - clusters: {}   # iterate ALL clusters registered in ArgoCD
+  template:
+    metadata:
+      name: 'my-app-{{name}}'   # {{name}} = cluster name
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/my-org/k8s-manifests
+        targetRevision: main
+        path: apps/my-app/overlays/{{metadata.labels.environment}}
+      destination:
+        server: '{{server}}'    # {{server}} = cluster API endpoint
+        namespace: my-app
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+EOF
+
+# === Rancher Fleet: Bundle targeting clusters by label ===
+cat <<EOF | kubectl apply -f -
+apiVersion: fleet.cattle.io/v1alpha1
+kind: Bundle
+metadata:
+  name: monitoring-stack
+  namespace: fleet-default
+spec:
+  helm:
+    repo: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    version: "55.5.0"
+    values:
+      grafana:
+        enabled: true
+  targets:
+  - name: production-clusters
+    clusterSelector:
+      matchLabels:
+        environment: production
+  - name: staging-clusters
+    clusterSelector:
+      matchLabels:
+        environment: staging
+    helm:
+      values:
+        grafana:
+          replicas: 1   # fewer resources on staging
+EOF`,
+      },
+      {
+        title: 'Service Mesh for Multi-cluster Networking',
+        content: `Cross-cluster service discovery and traffic management require either a service mesh with multi-cluster support or a dedicated cross-cluster networking layer. The right choice depends on whether you need L7 traffic management or just L3 connectivity.
+
+Istio multi-cluster: two deployment models. Primary-remote: one Istio control plane (istiod) on the primary cluster; remote clusters join it via the Istio remote control plane. Simpler to operate but control plane is a single point of failure for all clusters. Multi-primary: each cluster runs its own istiod, all sharing the same root CA so mTLS certificates are trusted across clusters. More resilient. In both models, cross-cluster service traffic flows through the east-west gateway — an Istio IngressGateway dedicated to cluster-to-cluster traffic, exposed via LoadBalancer. ServiceEntry resources define external services, including services in remote clusters, making them reachable via the service mesh as if they were local. Flat network (pod IPs routable across clusters) is optional; the gateway model works over public or private networks.
+
+Linkerd multicluster: simpler model than Istio. The ServiceMirror controller on each cluster watches for Services in remote clusters that have the mirror.linkerd.io/exported: "true" annotation, and creates mirrored Service objects locally. Applications call the mirrored service name; Linkerd transparently forwards traffic to the remote cluster over a Linkerd gateway. mTLS is end-to-end (Linkerd's mTLS is always on). Linkerd multicluster is significantly simpler to operate than Istio multi-cluster; tradeoff is fewer L7 traffic features.
+
+Submariner (CNCF Sandbox): provides L3 cross-cluster connectivity without requiring a service mesh. Submariner's broker mediates cluster registration, and the gateway node in each cluster establishes IPsec tunnels (or WireGuard tunnels) to the gateway nodes of other clusters. This makes pod CIDRs and Service CIDRs from remote clusters directly routable — pods can connect to other pods by IP across clusters. Submariner also syncs Services across clusters so DNS works. Use case: when you need pod-to-pod connectivity for applications that cannot use a service mesh (e.g., UDP-heavy protocols, database replication, legacy apps).
+
+Cilium ClusterMesh: Cilium's native multi-cluster capability using a shared KV store (etcd) or the ClusterMesh API server for endpoint synchronization. Global services are defined by adding the annotation io.cilium/global-service: "true" to a Service — Cilium automatically load-balances across endpoints in all mesh clusters. Cilium can also route pod traffic directly between clusters if the underlying network supports it (same VPC or VPC peering), bypassing any gateway — lowest latency option. Used by large-scale platforms like Datadog for multi-cluster Kubernetes.`,
+        codeExample: `# === Istio multi-primary setup (shared root CA, east-west gateway) ===
+
+# Install Istio on cluster 1 (primary)
+istioctl install --set profile=default \
+  --set values.pilot.env.EXTERNAL_ISTIOD=false \
+  --set meshConfig.trustDomain=cluster1 \
+  -y
+
+# Install east-west gateway on cluster 1
+istioctl install --set profile=empty \
+  -f eastwest-gateway.yaml \
+  -y
+
+# Expose services via east-west gateway (allows remote cluster to reach them)
+kubectl apply -n istio-system -f \
+  https://raw.githubusercontent.com/istio/istio/release-1.21/samples/multicluster/expose-services.yaml
+
+# === ServiceEntry: reference a service in a remote cluster ===
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: remote-payments-service
+  namespace: billing
+spec:
+  hosts:
+  - payments.billing.global
+  location: MESH_INTERNAL
+  ports:
+  - name: http
+    number: 8080
+    protocol: HTTP
+  resolution: DNS
+  addresses:
+  - 240.0.0.1        # synthetic IP for DNS resolution
+  endpoints:
+  - address: EAST_WEST_GATEWAY_IP_CLUSTER2
+    ports:
+      http: 15443    # Istio east-west gateway port
+EOF
+
+# === Cilium ClusterMesh: global service ===
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-api
+  namespace: production
+  annotations:
+    io.cilium/global-service: "true"            # load-balance across all mesh clusters
+    io.cilium/shared-service: "true"            # allow remote clusters to use endpoints
+spec:
+  selector:
+    app: my-api
+  ports:
+  - port: 8080
+    targetPort: 8080
+EOF
+
+# Enable Cilium ClusterMesh
+cilium clustermesh enable --service-type LoadBalancer
+cilium clustermesh connect --destination-context cluster2-kubeconfig
+
+# === Submariner: connect two clusters ===
+subctl deploy-broker --kubeconfig cluster1.kubeconfig
+subctl join broker-info.subm --kubeconfig cluster1.kubeconfig --clusterid cluster1
+subctl join broker-info.subm --kubeconfig cluster2.kubeconfig --clusterid cluster2
+subctl verify cluster1.kubeconfig cluster2.kubeconfig --only connectivity`,
+      },
+      {
+        title: 'GitOps for Multi-cluster at Scale',
+        content: `GitOps scales naturally to multi-cluster environments because the git repository becomes the single source of truth for all cluster configurations. The key tooling choices are ArgoCD ApplicationSet generators, Flux with remote kubeconfig, and integration with Cluster API for automated bootstrapping.
+
+ArgoCD ApplicationSet generators enable declarative multi-cluster deployment without copy-pasting Application resources. The cluster generator creates one Application per ArgoCD-registered cluster automatically — when a new cluster is registered (via cluster secret in argocd namespace), the ApplicationSet controller creates a new Application for it immediately. The matrix generator takes the cross-product of two generators — e.g., clusters × apps — to deploy a set of apps to a set of clusters. The list generator defines an explicit list with per-cluster parameter overrides, useful when clusters have meaningful differences (different ingress controllers, different Vault endpoints). Each spoke cluster is registered in ArgoCD as a secret containing its kubeconfig or in-cluster credentials (for in-cluster mode where ArgoCD runs on the spoke). The ArgoCD hub model: one ArgoCD on a management cluster manages all spokes; simpler but requires the management cluster to reach all spoke API servers.
+
+Flux multi-cluster: the Kustomization CRD accepts a kubeConfig field pointing to a Secret containing a remote cluster's kubeconfig. Flux running on a management cluster can thus apply manifests to many remote clusters without running Flux on each spoke. For large fleets, running Flux on each cluster (hub-spoke bootstrap model) is more resilient — each cluster reconciles independently even if the management cluster is down. Flux + Cluster API integration: when CAPI provisions a new cluster, a CAPI provider reconciler can automatically create the Flux Kustomization resources to bootstrap the new cluster with its baseline configuration. This enables fully automated cluster provisioning where a git push to create a CAPI cluster manifest results in a fully configured, application-running cluster within minutes.
+
+Environment promotion patterns: dev → staging → prod uses Kustomize overlays where each environment directory applies patches on top of base. Flux Image Automation watches container registries for new image tags, creates commits to update the image tag in git, and Flux reconciles the change. ArgoCD Image Updater has similar functionality. Promotion gates (staging must pass health checks before prod gets the new image) can be implemented via Argo Rollouts analysis runs or Flagger (Flux-native canary controller).
+
+Secret management across clusters: External Secrets Operator (ESO) with ClusterSecretStore enables a single Vault instance or AWS Secrets Manager to serve secrets to all clusters. Each cluster runs an ESO instance with a ClusterSecretStore pointing to the central secret store. ExternalSecret resources in each cluster reference keys from the store. Cluster-specific secrets (kubeconfig, cloud credentials) stay in the management cluster; application secrets come from the central store. Policy consistency: OPA Gatekeeper or Kyverno as Helm charts deployed via fleet-wide ArgoCD ApplicationSet ensures every cluster gets the same admission policies.`,
+        codeExample: `# === ArgoCD ApplicationSet: matrix generator (clusters × apps) ===
+cat <<EOF | kubectl apply -f -
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-apps
+  namespace: argocd
+spec:
+  generators:
+  - matrix:
+      generators:
+      - clusters:
+          selector:
+            matchLabels:
+              environment: production   # only prod clusters
+      - list:
+          elements:
+          - app: monitoring
+            path: platform/monitoring
+          - app: logging
+            path: platform/logging
+          - app: policy-enforcement
+            path: platform/kyverno
+  template:
+    metadata:
+      name: '{{app}}-{{name}}'
+    spec:
+      project: platform
+      source:
+        repoURL: https://github.com/my-org/platform-configs
+        targetRevision: main
+        path: '{{path}}/overlays/{{metadata.labels.region}}'
+      destination:
+        server: '{{server}}'
+        namespace: '{{app}}'
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true]
+EOF
+
+# === Flux Kustomization targeting a remote cluster ===
+cat <<EOF | kubectl apply -f -
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prod-cluster-apps
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./clusters/prod-us-east
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: platform-configs
+  kubeConfig:                         # apply to remote cluster, not local
+    secretRef:
+      name: prod-us-east-kubeconfig  # Secret with .value.kubeconfig
+EOF
+
+# === ESO ClusterSecretStore: single Vault for all clusters ===
+cat <<EOF | kubectl apply -f -
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: "https://vault.internal.mycompany.com"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "k8s-app-role"
+          serviceAccountRef:
+            name: external-secrets-sa
+            namespace: external-secrets
+EOF
+
+# ExternalSecret in any cluster namespace can now reference Vault
+cat <<EOF | kubectl apply -f -
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: app-db-credentials
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: db-credentials
+  data:
+  - secretKey: password
+    remoteRef:
+      key: production/db
+      property: password
+EOF`,
+      },
+    ],
+    quickFire: [
+      { q: 'What makes Kubernetes multi-cloud genuinely hard despite the standardized API?', a: 'Everything around the K8s API is cloud-specific: load balancer provisioning annotations, storage class names, CNI implementations, IAM integration (IRSA vs Workload Identity vs Pod Identity), and managed K8s version lag.' },
+      { q: 'What is Cluster API (CAPI) and what problem does it solve?', a: 'CAPI manages Kubernetes cluster lifecycle (create, upgrade, delete) declaratively using K8s CRDs — Cluster, MachineDeployment, MachineSet — with infrastructure providers translating them to cloud-specific resources.' },
+      { q: 'How does ArgoCD ApplicationSet cluster generator work?', a: 'It iterates all clusters registered as ArgoCD cluster secrets and creates one Application per cluster automatically — any newly registered cluster gets the application deployed without manual intervention.' },
+      { q: 'What is Cilium ClusterMesh and how does it enable cross-cluster services?', a: 'Cilium uses a shared KV store to sync endpoint information across clusters. Services annotated with io.cilium/global-service: "true" are automatically load-balanced across endpoints in all mesh clusters.' },
+      { q: 'What are the two Istio multi-cluster deployment models?', a: 'Primary-remote (one shared istiod control plane, simpler but single point of failure) and multi-primary (each cluster has its own istiod with a shared root CA for mutual mTLS trust).' },
+      { q: 'When would you choose Rancher Fleet over ArgoCD for multi-cluster GitOps?', a: 'Fleet scales to thousands of clusters with minimal overhead and is native to the Rancher management plane. ArgoCD is better when you need richer L7 progressive delivery features (Argo Rollouts, ApplicationSet generators) and don\'t use Rancher.' },
+      { q: 'What does Submariner provide and when is it the right choice?', a: 'Submariner creates L3 cross-cluster connectivity via IPsec/WireGuard tunnels, making pod CIDRs directly routable across clusters — right choice when applications need pod-to-pod IP connectivity without a service mesh.' },
+      { q: 'What advantage does Cluster API have over Terraform for K8s cluster lifecycle?', a: 'CAPI is K8s-native (GitOps compatible, same tooling as apps) and integrates directly with Flux/ArgoCD for automated bootstrap. Terraform requires a separate workflow and state management.' },
+      { q: 'How does ESO (External Secrets Operator) serve secrets to multiple clusters?', a: 'Each cluster runs an ESO instance with a ClusterSecretStore pointing to a central secret backend (Vault, AWS Secrets Manager). ExternalSecret resources on each cluster pull specific keys from the shared store into local K8s Secrets.' },
+      { q: 'How does Flux integrate with Cluster API to auto-bootstrap new clusters?', a: 'When CAPI creates a new cluster, a Flux Kustomization with a kubeConfig field pointing to the new cluster is created in the management cluster — Flux automatically applies baseline platform configs to the new cluster.' },
+      { q: 'What is the hub-spoke model for ArgoCD multi-cluster management?', a: 'One ArgoCD instance on a management (hub) cluster manages applications on spoke clusters registered via cluster secrets containing their kubeconfig. All sync operations originate from the hub.' },
+      { q: 'What is the biggest operational challenge of active-active multi-cloud Kubernetes?', a: 'Cross-cloud database replication and consistency — stateful workloads require active-active replication strategies, conflict resolution, and cross-cloud network latency management that significantly complicate the architecture.' },
+    ],
+    references: [
+      'https://cluster-api.sigs.k8s.io/',
+      'https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/',
+      'https://docs.cilium.io/en/stable/network/clustermesh/',
+      'https://istio.io/latest/docs/setup/install/multicluster/',
+      'https://fleet.rancher.io/',
+      'https://external-secrets.io/latest/',
+    ],
+  },
+  {
+    id: 'kubernetes-ai-ml-workloads',
+    title: 'Running AI/ML Workloads on Kubernetes',
+    icon: 'cpu',
+    color: '#8b5cf6',
+    questions: 18,
+    description: 'GPU workload taxonomy, distributed training patterns with NCCL and gang scheduling, inference serving with vLLM and KServe, and MLOps platforms including Kubeflow and KubeRay.',
+    topics: [
+      {
+        title: 'AI/ML Workload Taxonomy on Kubernetes',
+        content: `AI and ML workloads on Kubernetes fall into three distinct categories that have fundamentally different resource profiles and scheduling requirements. Conflating them leads to misconfigured clusters, GPU waste, and SLA violations.
+
+Training jobs: GPU-intensive, long-running (hours to weeks for large models), require all GPUs to be allocated simultaneously (gang scheduling), need checkpointing to persistent storage for fault tolerance, and have an all-or-nothing resource model — if you cannot get all N GPUs at the same time, the job cannot start (starting with fewer GPUs and adding more later is generally not supported by the training framework). Training jobs are typically batch workloads run as Kubernetes Job resources with parallelism = N workers. Inference serving: latency-sensitive (p99 SLA often under 100ms), persistent services (Deployment), may use GPU sharing via NVIDIA MIG (Multi-Instance GPU) or time-slicing for smaller models, and scale horizontally via HPA based on GPU utilization metrics from DCGM or on queue depth. Model warm-up delay is significant — a vLLM server loading a 70B model takes 2-5 minutes to become ready; readiness probes must account for this. Data pipelines: CPU-intensive batch processing (feature engineering, preprocessing, evaluation), parallelizable, naturally expressed as Kubernetes Job/CronJob or Argo Workflows DAGs.
+
+Model size scaling in 2026: small models (1-7B parameters, ~2-14GB in FP16 — 2 bytes per parameter, 1 A100 40GB or H100 80GB), medium (13-34B parameters, 26-68GB, 1-2 GPUs with quantization), large (70B+ parameters, 140GB+ in FP16, requires 2-4 A100 80GB or H100 80GB), frontier training scale (GPT-4 class, thousands of GPUs for weeks). The KV cache for attention inference adds 10-30% additional GPU memory beyond the model weights at production batch sizes. Memory formula for FP16 inference: GPU memory required ≈ parameters × 2 bytes. For training: 16-20 bytes per parameter total (model weights in FP16 + Adam optimizer states in FP32 = 8× weights + gradients + activations). A 7B model needs ~14GB for inference but ~112-140GB for full-precision training — requiring model parallelism or parameter-efficient fine-tuning (LoRA) on smaller hardware.
+
+Kubernetes scheduling for ML: the default scheduler places pods independently, which breaks gang scheduling requirements — if pod 1 of 8 lands on a node without GPUs, the entire job stalls (gang deadlock). Volcano and Koordinator solve this with PodGroup CRD and gang-aware scheduling. GPU node selection: use nodeSelector or nodeAffinity with the kubernetes.io/accelerator: nvidia-tesla-a100 or cloud-specific labels (cloud.google.com/gke-accelerator: nvidia-tesla-a100, eks.amazonaws.com/nodegroup: gpu-nodes). NVIDIA GPU Operator installs the device plugin, DCGM exporter (Prometheus metrics), and MIG manager as DaemonSets — all required for GPU workloads.`,
+        codeExample: `# Check GPU nodes available in the cluster
+kubectl get nodes -l accelerator=nvidia-tesla-a100 -o wide
+kubectl top nodes --show-labels  # see GPU node resource usage
+
+# NVIDIA GPU resource request in a Pod spec
+# resources must be specified under limits (not just requests) for GPU
+cat <<EOF
+spec:
+  containers:
+  - name: training
+    image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+    resources:
+      limits:
+        nvidia.com/gpu: "4"   # request 4 GPUs; GPU is a limit-only resource
+      requests:
+        cpu: "8"
+        memory: 64Gi
+  nodeSelector:
+    cloud.google.com/gke-accelerator: nvidia-tesla-a100
+EOF
+
+# Check GPU allocation on a node (from NVIDIA device plugin)
+kubectl describe node gpu-node-01 | grep -A5 "Capacity:"
+# nvidia.com/gpu: 8
+# Allocatable: nvidia.com/gpu: 8
+
+# DCGM Exporter: check GPU utilization per pod
+kubectl port-forward -n gpu-operator svc/dcgm-exporter 9400:9400
+curl -s http://localhost:9400/metrics | grep DCGM_FI_DEV_GPU_UTIL
+
+# Memory formula checks (example: Llama-3-70B)
+# FP16 inference: 70B * 2 bytes = 140GB → need 2x H100 80GB (160GB total)
+# FP16 training:  70B * 16 bytes = 1120GB → need 14+ H100 80GB with ZeRO-3`,
+      },
+      {
+        title: 'Distributed Training Patterns',
+        content: `Distributed deep learning training on Kubernetes requires understanding both the parallelism strategy and the collective communication primitives, as these determine hardware topology requirements and Kubernetes scheduling constraints.
+
+PyTorch Distributed Data Parallel (DDP): the simplest distributed training strategy. Each GPU runs a complete copy of the model. A forward pass and backward pass happen on each GPU with its own mini-batch. After the backward pass, gradients are averaged across all GPUs using the AllReduce collective operation (each GPU ends up with the same averaged gradient) before the optimizer step. NCCL (NVIDIA Collective Communications Library) implements AllReduce over NVLink (intra-node, ~600 GB/s on A100 NVSwitch connected nodes) and InfiniBand or RoCE (inter-node, 200-400 Gb/s with HDR InfiniBand). DDP is limited by the GPU memory of a single GPU — the entire model must fit in one GPU. Model size limit with DDP: approximately 40GB on an A100 40GB, less with activation checkpointing and mixed precision.
+
+FSDP (Fully Sharded Data Parallel, PyTorch native): shards the model parameters, optimizer states, and gradients across all GPUs. Each GPU holds only 1/N of the model at any time; parameters are gathered via AllGather before the forward pass and resharded after. This enables models larger than a single GPU's memory. A 70B parameter model that needs 140GB in FP16 can be trained on 8x A100 80GB cards with FSDP (640GB total, with headroom for optimizer states). DeepSpeed (Microsoft) implements the ZeRO (Zero Redundancy Optimizer) optimization in three stages: Stage 1 shards optimizer states only (4× memory reduction), Stage 2 also shards gradients (8× reduction), Stage 3 also shards model parameters (same as FSDP, 16-64× reduction depending on batch size). DeepSpeed ZeRO-3 with CPU offload can train very large models on consumer GPUs by offloading parameters to CPU RAM between forward and backward passes.
+
+On Kubernetes, the standard distributed training pattern: create a Job with parallelism = world_size (total GPU count). Each pod gets RANK (global rank), LOCAL_RANK (rank within the node), WORLD_SIZE, MASTER_ADDR (pod IP of rank 0), and MASTER_PORT (typically 29500) as environment variables. torch.distributed.init_process_group(backend="nccl") initializes the NCCL process group using these env vars. Gang scheduling via Volcano: create a PodGroup before the Job; the Volcano scheduler holds all job pods until all N can be scheduled simultaneously, preventing partial allocation deadlock. Critical NCCL environment variables: NCCL_SOCKET_IFNAME=eth0 (must match the actual network interface name or NCCL uses the wrong NIC), NCCL_IB_DISABLE=0 (enable InfiniBand if available), NCCL_DEBUG=INFO (verbose logging for debugging communication hangs). Checkpointing: save model state to a shared PVC or object storage (S3/GCS) every N steps using torch.save(checkpoint, path). If a pod crashes and the job restarts, training resumes from the last checkpoint. Without checkpointing, a multi-day training run that crashes after 23 hours loses all work.`,
+        codeExample: `# PyTorchJob CRD (Kubeflow Training Operator): 1 master + 3 workers, 1 GPU each
+cat <<EOF | kubectl apply -f -
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: llm-finetune-job
+  namespace: ml-team
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+          - name: pytorch
+            image: my-registry/training:v1.2
+            command:
+            - python
+            - -m
+            - torch.distributed.run
+            - --nproc_per_node=1
+            - train.py
+            - --checkpoint-dir=/checkpoints
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                cpu: "8"
+                memory: 64Gi
+            volumeMounts:
+            - name: checkpoints
+              mountPath: /checkpoints
+            env:
+            - name: NCCL_DEBUG
+              value: "INFO"
+            - name: NCCL_SOCKET_IFNAME
+              value: "eth0"
+          volumes:
+          - name: checkpoints
+            persistentVolumeClaim:
+              claimName: training-checkpoints-pvc
+    Worker:
+      replicas: 3            # 3 additional workers (4 total processes)
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+          - name: pytorch
+            image: my-registry/training:v1.2
+            command:
+            - python
+            - -m
+            - torch.distributed.run
+            - --nproc_per_node=1
+            - train.py
+            - --checkpoint-dir=/checkpoints
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                cpu: "8"
+                memory: 64Gi
+            volumeMounts:
+            - name: checkpoints
+              mountPath: /checkpoints
+          volumes:
+          - name: checkpoints
+            persistentVolumeClaim:
+              claimName: training-checkpoints-pvc
+EOF
+
+# Volcano PodGroup for gang scheduling (all 4 pods or none)
+cat <<EOF | kubectl apply -f -
+apiVersion: scheduling.volcano.sh/v1beta1
+kind: PodGroup
+metadata:
+  name: llm-finetune-gang
+  namespace: ml-team
+spec:
+  minMember: 4         # all 4 pods must be schedulable simultaneously
+  queue: ml-training
+EOF`,
+      },
+      {
+        title: 'Inference Serving Infrastructure',
+        content: `Serving LLMs and ML models in production on Kubernetes requires purpose-built serving runtimes — general-purpose web servers lack the batching, GPU memory management, and model-specific optimizations needed for sub-100ms p99 latency at scale.
+
+vLLM (CNCF project, open source): the dominant LLM inference server in 2026. The key innovation is PagedAttention, which manages GPU memory for the KV cache using a paging mechanism inspired by virtual memory in operating systems. Traditional servers pre-allocate contiguous KV cache memory per request, causing 60-80% GPU memory fragmentation. PagedAttention stores KV cache in non-contiguous pages and tracks them via a block table, nearly eliminating fragmentation. Continuous batching: vLLM dynamically batches incoming requests at each token generation step rather than waiting for all requests in a batch to complete — new requests join the batch mid-flight when other requests complete, maximizing GPU utilization. vLLM exposes an OpenAI-compatible REST API (/v1/completions, /v1/chat/completions), making it a drop-in replacement for OpenAI API calls. Deploy as a Kubernetes Deployment with 1 GPU per replica (or multiple GPUs with tensor parallelism: --tensor-parallel-size 2 for 2 GPUs).
+
+NVIDIA Triton Inference Server: multi-framework (PyTorch TorchScript, TensorFlow SavedModel, ONNX Runtime, TensorRT, Python backend), dynamic batching (accumulates requests up to a configurable max batch size or timeout), concurrent model execution (multiple models on same GPU with isolated GPU memory contexts), model ensemble pipelines (chain preprocessing → model → postprocessing as a single Triton request). Triton exposes gRPC and HTTP/REST APIs with Prometheus metrics. Best for: multi-model serving, non-LLM models (vision, audio, tabular), and scenarios requiring TensorRT optimization.
+
+KServe (formerly KFServing, CNCF Incubating): a Kubernetes-native model serving platform with the InferenceService CRD. InferenceService defines the predictor (the model runtime), optional transformer (preprocessing), and optional explainer. KServe supports multiple runtimes: vLLM (via ServingRuntime CRD), Triton, MLServer, TorchServe, SKLearn. Scale-to-zero using Knative Serving — inference pods scale to zero when idle and cold-start on first request (with ~30-60 second cold start for large models). Built-in canary: InferenceService supports traffic split between model versions (canaryTrafficPercent: 20). Seldon Core is the commercial-friendly alternative with similar features.
+
+Model storage pattern: serving pods should not bake large model weights into the container image (a 140GB model in a Docker image is impractical). Instead: store models in S3 or GCS, use an init container to download the model on pod startup, mount a shared PVC with ReadWriteMany or ReadOnlyMany where multiple inference pods mount the same model. For frequent pod restarts, a model cache PVC shared across pods avoids redundant downloads. Hugging Face Hub models can be loaded directly with --model meta-llama/Meta-Llama-3-70B-Instruct if HUGGING_FACE_HUB_TOKEN is set. For production, mirror to a private registry (ECR, GCS, Artifactory) for reliability and to avoid rate limits.`,
+        codeExample: `# === KServe InferenceService for vLLM model serving ===
+cat <<EOF | kubectl apply -f -
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-runtime
+  namespace: inference
+spec:
+  annotations:
+    prometheus.kserve.io/port: "8080"
+    prometheus.kserve.io/path: "/metrics"
+  supportedModelFormats:
+  - name: vLLM
+    version: "1"
+    autoSelect: true
+  containers:
+  - name: kserve-container
+    image: vllm/vllm-openai:v0.5.0
+    args:
+    - --model=/mnt/models
+    - --tensor-parallel-size=1
+    - --max-model-len=4096
+    resources:
+      limits:
+        nvidia.com/gpu: "1"
+        cpu: "4"
+        memory: 32Gi
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: llama3-70b
+  namespace: inference
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: vLLM
+      storageUri: s3://my-models/llama3-70b-instruct
+      runtime: vllm-runtime
+      resources:
+        limits:
+          nvidia.com/gpu: "2"
+    canaryTrafficPercent: 20     # 20% traffic to this version for canary
+EOF
+
+# === KEDA ScaledObject: autoscale inference pods on GPU utilization (DCGM metric) ===
+cat <<EOF | kubectl apply -f -
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: inference-gpu-scaler
+  namespace: inference
+spec:
+  scaleTargetRef:
+    name: llama3-inference
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  cooldownPeriod: 300            # seconds before scaling down
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus.monitoring:9090
+      metricName: dcgm_gpu_utilization
+      query: avg(DCGM_FI_DEV_GPU_UTIL{pod=~"llama3-inference-.*"})
+      threshold: "70"            # scale up when avg GPU util > 70%
+EOF
+
+# === Init container: download model from S3 on pod start ===
+cat <<EOF
+spec:
+  initContainers:
+  - name: model-downloader
+    image: amazon/aws-cli:latest
+    command:
+    - aws
+    - s3
+    - sync
+    - s3://my-models/llama3-70b-instruct/
+    - /mnt/models/
+    - --no-progress
+    env:
+    - name: AWS_DEFAULT_REGION
+      value: us-east-1
+    volumeMounts:
+    - name: model-storage
+      mountPath: /mnt/models
+  containers:
+  - name: vllm-server
+    image: vllm/vllm-openai:v0.5.0
+    args: [--model, /mnt/models, --tensor-parallel-size, "1"]
+    resources:
+      limits:
+        nvidia.com/gpu: "1"
+    volumeMounts:
+    - name: model-storage
+      mountPath: /mnt/models
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 180   # allow time for model to load (2-5 min for 70B)
+      periodSeconds: 10
+  volumes:
+  - name: model-storage
+    persistentVolumeClaim:
+      claimName: model-cache-pvc    # ReadOnlyMany: shared across multiple inference pods
+EOF`,
+      },
+      {
+        title: 'MLOps Platforms on Kubernetes',
+        content: `ML platforms on Kubernetes provide workflow orchestration, experiment tracking, model registries, and distributed compute management. The right platform choice depends on the primary bottleneck: workflow complexity, training scale, or serving sophistication.
+
+Kubeflow (CNCF Graduated project, Google-originated): the most comprehensive ML platform for Kubernetes. Key components: Kubeflow Pipelines (KFP) implements ML workflow DAGs — each step is a containerized component, steps pass artifacts (datasets, models, metrics) via a metadata store (ML Metadata, MLMD). KFP SDK allows defining pipelines in Python and compiling them to YAML. The Training Operator watches Training CRDs and manages distributed training jobs: PyTorchJob (PyTorch DDP/FSDP), TFJob (TensorFlow distributed), MPIJob (MPI-based training like Horovod), XGBoostJob, JAXJob, PaddlePaddle. The operator handles MASTER/WORKER role assignment, injects MASTER_ADDR and WORLD_SIZE env vars, and cleans up all pods on job completion or failure. Katib performs automated hyperparameter tuning using Bayesian optimization, grid search, or random search — it runs N parallel trials and identifies optimal hyperparameter combinations. KFP + Training Operator is the standard stack for production ML training pipelines on K8s.
+
+Argo Workflows (CNCF Graduated): a general-purpose DAG workflow engine for Kubernetes. Each step is a container. Supports parallel steps, conditionals, loops, artifact passing via S3/GCS, and retries. Widely used for data pipelines (ETL, feature engineering) and ML pipelines as a lighter-weight alternative to KFP when Kubeflow's full feature set is not needed.
+
+KubeRay (CNCF Incubating): Kubernetes operator for Ray, the distributed computing framework that has become the default for large-scale LLM training (Anyscale, Mistral, Cohere all use Ray). CRDs: RayCluster (head node + worker groups, heterogeneous GPU types possible), RayJob (submit a Ray job that creates a transient cluster, runs, and terminates), RayService (long-running Ray Serve deployment for inference serving with zero-downtime upgrades — the operator handles head node failover and rolling worker restarts). Ray's advantages over raw PyTorch distributed: dynamic resource allocation (workers can join/leave cluster), actor model for stateful services, Ray Tune for distributed hyperparameter search, Ray Serve for model serving with batching and routing. RayService uniquely enables zero-downtime updates to serving configurations — the operator creates a new head node, gradually shifts traffic, and terminates the old head, without a cold restart.
+
+MLflow (Databricks, open source) is the standard experiment tracking layer regardless of the training platform. It tracks: parameters (hyperparameters logged per run), metrics (loss/accuracy per step), artifacts (model weights, evaluation results, plots), and model versions (MLflow Model Registry). MLflow can be deployed on Kubernetes as a server with PostgreSQL backend and S3 artifact store. Most training code adds 4-5 lines: mlflow.start_run(), mlflow.log_param(), mlflow.log_metric(), mlflow.pytorch.log_model(). Feature stores (Feast, Tecton) provide low-latency point-in-time correct feature retrieval for training and serving — preventing training-serving skew where features are computed differently at training time vs. inference time.`,
+        codeExample: `# === RayCluster CRD: head + worker groups ===
+cat <<EOF | kubectl apply -f -
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: llm-training-cluster
+  namespace: ml-team
+spec:
+  rayVersion: "2.23.0"
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-cpus: "0"         # head node does not run tasks — coordination only
+    template:
+      spec:
+        containers:
+        - name: ray-head
+          image: rayproject/ray-ml:2.23.0-gpu
+          resources:
+            limits:
+              cpu: "4"
+              memory: 16Gi
+  workerGroupSpecs:
+  - groupName: gpu-workers
+    replicas: 4             # 4 worker pods
+    minReplicas: 1
+    maxReplicas: 8          # autoscale up to 8
+    rayStartParams: {}
+    template:
+      spec:
+        containers:
+        - name: ray-worker
+          image: rayproject/ray-ml:2.23.0-gpu
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              cpu: "8"
+              memory: 64Gi
+        nodeSelector:
+          accelerator: nvidia-tesla-a100
+EOF
+
+# === RayService: zero-downtime LLM serving upgrade ===
+cat <<EOF | kubectl apply -f -
+apiVersion: ray.io/v1
+kind: RayService
+metadata:
+  name: llm-serving
+  namespace: ml-inference
+spec:
+  serviceUnhealthySecondThreshold: 300
+  deploymentUnhealthySecondThreshold: 300
+  rayClusterConfig:
+    rayVersion: "2.23.0"
+    headGroupSpec:
+      template:
+        spec:
+          containers:
+          - name: ray-head
+            image: my-registry/ray-serve:v2.0
+            resources:
+              limits:
+                cpu: "4"
+                memory: 16Gi
+    workerGroupSpecs:
+    - groupName: inference-workers
+      replicas: 2
+      template:
+        spec:
+          containers:
+          - name: ray-worker
+            image: my-registry/ray-serve:v2.0
+            resources:
+              limits:
+                nvidia.com/gpu: "1"
+                memory: 80Gi
+  serveConfigV2: |
+    applications:
+    - name: llm-app
+      import_path: serve_app:deployment
+      route_prefix: /
+      deployments:
+      - name: LLMDeployment
+        num_replicas: 2
+        ray_actor_options:
+          num_gpus: 1
+EOF
+
+# Check Training Operator managed PyTorchJob status
+kubectl get pytorchjob -n ml-team
+kubectl describe pytorchjob llm-finetune-job -n ml-team
+# Events show: Created master pod, Created worker pods, All workers running, Job succeeded`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three AI/ML workload types on K8s and their key difference?', a: 'Training jobs (GPU-intensive, gang-scheduled, long-running, need checkpointing), inference serving (latency-sensitive, persistent Deployment, HPA on GPU metrics), and data pipelines (CPU batch processing, Job/CronJob or Argo Workflows).' },
+      { q: 'Why do distributed training jobs require gang scheduling?', a: 'All N worker pods must start simultaneously and communicate via AllReduce — if some pods land on nodes without GPUs, the entire job deadlocks waiting for peers that will never join. Gang scheduling (Volcano, Koordinator) prevents partial allocation.' },
+      { q: 'What does NCCL AllReduce do in distributed training?', a: 'AllReduce averages gradients across all GPUs after the backward pass — each GPU sends its local gradient and receives the averaged gradient, so all GPUs can take identical optimizer steps and stay in sync.' },
+      { q: 'Why is checkpointing essential for distributed training jobs?', a: 'GPU node preemption, hardware failures, or spot instance termination can kill any pod at any time. Without checkpointing every N steps to a PVC or object storage, a multi-day training run that fails at hour 23 loses all progress.' },
+      { q: 'What is the difference between DDP, FSDP, and DeepSpeed?', a: 'DDP replicates the full model on each GPU — limited by single GPU memory. FSDP shards parameters, optimizer states, and gradients across GPUs — enables larger models. DeepSpeed ZeRO adds CPU offload and further optimizations; ZeRO-3 is equivalent to FSDP but with more flexibility.' },
+      { q: 'What is vLLM PagedAttention and why does it matter?', a: 'PagedAttention manages KV cache in non-contiguous memory pages (like OS virtual memory), eliminating the 60-80% GPU memory fragmentation from contiguous pre-allocation. Result: 2-4x higher throughput at the same GPU count.' },
+      { q: 'How does KServe differ from Seldon Core for model serving?', a: 'KServe is built on Knative Serving and supports scale-to-zero with cold start, integrates directly with Istio, and is CNCF Incubating. Seldon Core is more commercially focused with stronger enterprise support and A/B testing features. Both use CRDs for model lifecycle.' },
+      { q: 'What does the Kubeflow Training Operator do for a PyTorchJob?', a: 'It watches the PyTorchJob CRD, creates the master and worker pods with correct env vars (MASTER_ADDR, WORLD_SIZE, RANK), manages restarts on failure up to backoffLimit, and deletes all pods on job completion.' },
+      { q: 'What KEDA trigger is used to autoscale inference pods based on GPU load?', a: 'The Prometheus trigger querying DCGM_FI_DEV_GPU_UTIL (from NVIDIA DCGM Exporter) with a threshold (e.g., 70%) — KEDA scales out replicas when average GPU utilization exceeds the threshold.' },
+      { q: 'What is RayService zero-downtime upgrade and how does KubeRay enable it?', a: 'When a RayService spec is updated, KubeRay creates a new Ray head node, shifts traffic gradually to it, and terminates the old head — no cold restart of inference servers. Eliminates the downtime window of a standard Deployment rollout for large models.' },
+      { q: 'What is the recommended model storage pattern for multiple inference pods?', a: 'Store models in S3/GCS; use an init container to download on pod start. For shared access, use a PVC with ReadOnlyMany — multiple inference pods mount the same cached model volume without redundant downloads.' },
+      { q: 'What is the init container pattern for model loading and what readiness probe adjustment is needed?', a: 'An init container runs aws s3 sync or gsutil rsync to download the model to a shared volume before the inference container starts. The readiness probe initialDelaySeconds must be set to 120-300 seconds for large models (70B+ take 2-5 minutes to load).' },
+      { q: 'Why should Spot/Preemptible nodes be used for training but not inference?', a: 'Training is batch and fault-tolerant via checkpointing (restart from last checkpoint after preemption), achieving 60-80% cost savings. Inference has latency SLAs — sudden pod termination from spot preemption violates p99 guarantees.' },
+      { q: 'What are the Kubeflow Training Operator CRDs for different frameworks?', a: 'PyTorchJob (PyTorch DDP/FSDP), TFJob (TensorFlow), MPIJob (Horovod/MPI), XGBoostJob (XGBoost), JAXJob (JAX), PaddlePaddleJob (PaddlePaddle) — each CRD handles framework-specific process group initialization and env var injection.' },
+      { q: 'What is the purpose of Kubeflow Pipelines (KFP) in an ML platform?', a: 'KFP orchestrates ML workflows as DAGs where each step is a containerized function — data preprocessing, training, evaluation, and model registration run as separate pods with artifact handoffs tracked in ML Metadata (MLMD), enabling pipeline versioning, caching, and reproducibility.' },
+    ],
+    references: [
+      'https://www.kubeflow.org/docs/',
+      'https://kserve.github.io/website/',
+      'https://ray-project.github.io/kuberay/',
+      'https://docs.vllm.ai/',
+      'https://volcano.sh/en/docs/',
+      'https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html',
+    ],
+  },
+
   {
     id: 'devops-coding-challenges',
     title: 'DevOps Coding Challenges',
