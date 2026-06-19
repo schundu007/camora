@@ -17,6 +17,13 @@ async function apiFetch(endpoint, options = {}) {
   return res;
 }
 
+async function savesFetch(endpoint, options = {}) {
+  const token = getStoredToken();
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(`${API_URL}${endpoint}`, { credentials: 'include', ...options, headers });
+}
+
 function saveSession(sessionId, environment, expiresAt) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ sessionId, environment, expiresAt }));
@@ -48,6 +55,10 @@ export function usePlaygroundSession() {
   const [error, setError] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [bootSteps, setBootSteps] = useState([]);      // SSE events array
+  const [saves, setSaves] = useState([]);
+  const [savesLoading, setSavesLoading] = useState(false);
+  const [slotsUsed, setSlotsUsed] = useState(0);
+  const [slotsMax, setSlotsMax] = useState(0);
 
   const pollRef = useRef(null);
   const tickRef = useRef(null);
@@ -202,6 +213,22 @@ export function usePlaygroundSession() {
     })();
   }, [startTick, startPolling]);
 
+  const loadSaves = useCallback(async () => {
+    setSavesLoading(true);
+    try {
+      const res = await savesFetch('/api/v1/playground/saves');
+      if (res.ok) {
+        const data = await res.json();
+        setSaves(data.saves || []);
+        setSlotsUsed(data.slots?.used ?? 0);
+        setSlotsMax(data.slots?.max ?? 0);
+      }
+    } catch {}
+    setSavesLoading(false);
+  }, []);
+
+  useEffect(() => { loadSaves(); }, [loadSaves]);
+
   // Destroy session if user logs out
   useEffect(() => {
     const unsub = subscribeToken((token) => {
@@ -301,6 +328,34 @@ export function usePlaygroundSession() {
     ? `${API_URL}/pg-ide/?_s=${session.sessionId}&_t=${encodeURIComponent(getStoredToken() || '')}`
     : null;
 
+  const saveVm = useCallback(async (sessionId, name) => {
+    const res = await savesFetch('/api/v1/playground/saves', { method: 'POST', body: JSON.stringify({ sessionId, name }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Save failed');
+    await loadSaves();
+    return data;
+  }, [loadSaves]);
+
+  const restoreVm = useCallback(async (saveId) => {
+    const res = await savesFetch(`/api/v1/playground/saves/${saveId}/restore`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Restore failed');
+    const newSession = { sessionId: data.sessionId, environment: data.environment, expiresAt: data.expiresAt };
+    setSession(newSession);
+    setStatus('ready');
+    saveSession(data.sessionId, data.environment, data.expiresAt);
+    const remaining = Math.max(0, Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000));
+    setTimeRemaining(remaining);
+    startTick(data.expiresAt);
+    startPolling(data.sessionId, data.expiresAt);
+  }, [loadSaves, startTick, startPolling]);
+
+  const deleteSave = useCallback(async (saveId) => {
+    const res = await savesFetch(`/api/v1/playground/saves/${saveId}`, { method: 'DELETE' });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Delete failed'); }
+    await loadSaves();
+  }, [loadSaves]);
+
   return {
     session,
     status,
@@ -313,5 +368,12 @@ export function usePlaygroundSession() {
     createSession,
     destroySession,
     extendSession,
+    saves,
+    savesLoading,
+    slotsUsed,
+    slotsMax,
+    saveVm,
+    restoreVm,
+    deleteSave,
   };
 }
