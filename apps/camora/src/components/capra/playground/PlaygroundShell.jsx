@@ -60,7 +60,7 @@ export default function PlaygroundShell() {
 
   const handleEnd = useCallback(async () => {
     const ok = await confirm({ message: 'End session? The container will be destroyed.', tone: 'danger' });
-    if (ok) destroySession(); // destroySession navigates to /capra/playground automatically
+    if (ok) destroySession(); // destroySession navigates to /playground?tab=vm automatically
   }, [confirm, destroySession]);
 
   const handleFontInc = useCallback(() => {
@@ -105,7 +105,7 @@ export default function PlaygroundShell() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', overflow: 'hidden', background: '#0d1117' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: '#0d1117' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
 
       {/* ── BOOTING / CREATING state ── */}

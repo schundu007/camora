@@ -476,7 +476,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
       </div>
 
       {/* ── Main Content — side by side ─────────────────────────────── */}
-      <div className="flex flex-col md:flex-row" style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+      <div className="flex flex-col md:flex-row" style={{ height: '100%', minHeight: '500px' }}>
         {/* ── Left: Problem Description ────────────────────────────── */}
         <div className="w-full md:w-[42%] md:border-r border-b md:border-b-0 overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
           <div className="p-3">
