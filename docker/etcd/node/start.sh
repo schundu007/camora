@@ -101,4 +101,4 @@ exec ttyd \
   --port 7681 \
   --interface 0.0.0.0 \
   --writable \
-  bash
+  su - learner

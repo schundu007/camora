@@ -9,7 +9,7 @@ if [ "${K3S_ROLE}" = "agent" ]; then
   echo '__PROGRESS__:{"step":"env_setup","status":"done"}'
   echo '__PROGRESS__:{"step":"ide_start","status":"done"}'
   echo '__PROGRESS__:{"step":"terminal_ready","status":"done"}'
-  exec ttyd --port 7681 --writable --max-clients 1 bash
+  exec ttyd --port 7681 --writable --max-clients 1 su - learner
 fi
 
 # Server node: start k3s with embedded etcd
@@ -55,4 +55,4 @@ code-server --bind-addr 0.0.0.0:8080 --auth none /home/learner &>/var/log/code-s
 echo '__PROGRESS__:{"step":"ide_start","status":"done"}'
 echo '__PROGRESS__:{"step":"terminal_ready","status":"done"}'
 
-exec ttyd --port 7681 --writable --max-clients 1 bash
+exec ttyd --port 7681 --writable --max-clients 1 su - learner
