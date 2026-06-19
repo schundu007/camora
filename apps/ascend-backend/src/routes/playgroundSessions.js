@@ -7,7 +7,8 @@ import {
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
 import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
-import { execScriptInContainerStream } from '../services/playground/nomadClient.js';
+import { execScriptInContainerStream, execInContainer } from '../services/playground/nomadClient.js';
+import { parseClusterList, getExecContainer } from '../services/playground/clusterState.js';
 import { query } from '../config/database.js';
 
 function isOwner(email) {
@@ -301,4 +302,39 @@ playgroundSessionsRouter.delete('/:id', async (req, res) => {
     console.error('[PlaygroundSessions] destroySession error:', err.message);
     return res.status(500).json({ error: 'Failed to destroy session' });
   }
+});
+
+const K8S_CLUSTER_ENVS = new Set(['k8s-single', 'k8s-multi']);
+
+playgroundSessionsRouter.get('/:id/cluster-state', async (req, res) => {
+  const session = await getSession(req.params.id);
+  if (!session || session.user_id !== req.user.id) return res.status(404).end();
+  if (!K8S_CLUSTER_ENVS.has(session.environment)) {
+    return res.status(400).json({ error: 'cluster-state only available for k8s environments' });
+  }
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  let closed = false;
+  req.on('close', () => { closed = true; });
+
+  const containerId = getExecContainer(session);
+  if (!containerId) { res.end(); return; }
+
+  const CMD = 'KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get pods,nodes,events,services -A -o json 2>/dev/null';
+
+  const tick = async () => {
+    if (closed) return;
+    try {
+      const raw = await execInContainer(containerId, CMD);
+      const data = parseClusterList(JSON.parse(raw));
+      if (!closed) res.write(`data: ${JSON.stringify(data)}\n\n`);
+    } catch { /* cluster not ready yet */ }
+    if (!closed) setTimeout(tick, 5000);
+  };
+
+  tick();
 });

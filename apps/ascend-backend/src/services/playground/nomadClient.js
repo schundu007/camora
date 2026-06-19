@@ -184,6 +184,10 @@ export async function execScriptInContainerStream(containerId, scriptContent, on
   });
 }
 
+export async function execInContainer(containerId, command) {
+  return sshExec(`docker exec ${containerId} sh -c ${JSON.stringify(command)}`);
+}
+
 export async function getAllocations() { return []; }
 export async function execInAlloc() { return { stdout: '', exitCode: 0 }; }
 

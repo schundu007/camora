@@ -11,6 +11,7 @@ import IdePane from './IdePane';
 import ToolPickerPanel from './ToolPickerPanel';
 import SavedVmsPanel from './SavedVmsPanel';
 import ClusterView from './ClusterView';
+import ClusterPanel from './ClusterPanel';
 
 
 function formatTime(seconds) {
@@ -70,6 +71,7 @@ export default function PlaygroundShell() {
     terminal_ready:  'Cluster ready — 3 nodes online',
   };
 
+  const isK8sEnv = session?.environment === 'k8s-single' || session?.environment === 'k8s-multi';
   const isClusterEnv = !!session?.isCluster;
   const displaySteps = isClusterEnv
     ? bootSteps.map(s =>
@@ -198,6 +200,9 @@ export default function PlaygroundShell() {
               label="Stats"
               icon="▦"
             />
+            {isK8sEnv && !isClusterSession && (
+              <TabButton active={activeTab === 'cluster'} onClick={() => setActiveTab('cluster')} label="Cluster" icon="⎈" />
+            )}
             <div style={{ flex: 1 }} />
             {/* Controls */}
             {activeTab === 'terminal' && [['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
@@ -245,6 +250,12 @@ export default function PlaygroundShell() {
                     />
                   )}
                 </div>
+                {/* Cluster pane */}
+                {isK8sEnv && !isClusterSession && (
+                  <div style={{ position: 'absolute', inset: 0, display: activeTab === 'cluster' ? 'block' : 'none' }}>
+                    <ClusterPanel sessionId={session?.sessionId} enabled={activeTab === 'cluster'} />
+                  </div>
+                )}
                 {/* Stats pane */}
                 <div style={{ position: 'absolute', inset: 0, display: activeTab === 'stats' ? 'block' : 'none', overflowY: 'auto', background: '#0d1117', padding: 24 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', margin: '0 0 20px' }}>Your Session Stats</p>
