@@ -163,73 +163,49 @@ export default function PlaygroundShell() {
       {/* ── ACTIVE state ── */}
       {showTerminal && (
         <>
-          {/* Row 1: Title bar */}
+          {/* Single compact bar: env + tabs + controls */}
           <div style={{
             flexShrink: 0, height: 32,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 10px', background: '#0d1117',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', alignItems: 'center',
+            padding: '0 8px', gap: 6,
+            background: '#0d1117',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '1px 5px', borderRadius: 3 }}>⌨</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>Camora Playground</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>›</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontFamily: '"IBM Plex Mono", monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {activeEnv.label}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981' }} />
-              <span style={{
-                fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 700, color: timerColor,
-                animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
-              }}>{timerStr}</span>
-              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
-              {activeTab === 'terminal' && [['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
-                <button key={label} type="button" onClick={fn} style={iconBtn}>{label}</button>
-              ))}
-              <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', margin: '0 2px' }} />
-              {extendAvailable && (
-                <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }}>+15m</button>
-              )}
-              <button type="button" onClick={() => setMinimized(true)} style={{ ...iconBtn }} title="Exit to playground home">← Exit</button>
-              {slotsMax > 0 && (
-                <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }} title="Save VM snapshot">
-                  Save VM
-                </button>
-              )}
-              <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#f87171', fontSize: 18, lineHeight: 1, padding: '2px 10px' }} title="End session">⏻</button>
-            </div>
-          </div>
-
-          {/* Row 2: Tab bar */}
-          <div style={{
-            flexShrink: 0, height: 36,
-            display: 'flex', alignItems: 'center', padding: '0 8px', gap: 3,
-            background: '#161b22', borderBottom: '1px solid rgba(255,255,255,0.07)',
-          }}>
-            {/* IDE tab */}
-            <TabButton
-              active={activeTab === 'ide'}
-              onClick={() => setActiveTab('ide')}
-              label="IDE"
-              icon="🖥"
-            />
-            {/* Terminal tab */}
+            {/* Env label */}
+            <span style={{ fontSize: 10, fontFamily: '"IBM Plex Mono", monospace', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {activeEnv.label}
+            </span>
+            <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+            {/* Tabs */}
+            <TabButton active={activeTab === 'ide'} onClick={() => setActiveTab('ide')} label="IDE" icon="⌥" />
             <TabButton
               active={activeTab === 'terminal'}
               onClick={() => setActiveTab('terminal')}
-              label={activeEnv.id === 'ubuntu' ? 'ubuntu-01' : activeEnv.id === 'docker' ? 'docker-01' : activeEnv.id === 'agent-sandbox' ? 'agent-01' : activeEnv.id === 'etcd-single' ? 'etcd-01' : activeEnv.id === 'etcd-cluster' ? 'etcd-cluster' : 'shell-01'}
+              label={activeEnv.id === 'ubuntu' ? 'ubuntu-01' : activeEnv.id === 'docker' ? 'docker-01' : activeEnv.id === 'agent-sandbox' ? 'agent-01' : activeEnv.id === 'k8s-etcd' ? 'etcd-01' : 'shell-01'}
               icon="$"
               mono
               onReconnect={activeTab === 'terminal' ? () => setTermKey(k => k + 1) : null}
             />
             <div style={{ flex: 1 }} />
-            {/* Env badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px' }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>{activeEnv.label}</span>
-            </div>
+            {/* Controls */}
+            {activeTab === 'terminal' && [['A−', handleFontDec], ['A+', handleFontInc]].map(([label, fn]) => (
+              <button key={label} type="button" onClick={fn} style={iconBtn}>{label}</button>
+            ))}
+            {extendAvailable && (
+              <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }}>+15m</button>
+            )}
+            <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 4px #10b981', flexShrink: 0 }} />
+            <span style={{
+              fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 700, color: timerColor, flexShrink: 0,
+              animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
+            }}>{timerStr}</span>
+            <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+            <button type="button" onClick={() => setMinimized(true)} style={iconBtn} title="Back to picker">‹ Exit</button>
+            {slotsMax > 0 && (
+              <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }}>Save VM</button>
+            )}
+            <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#ef4444', padding: '3px 8px' }} title="End session">■</button>
           </div>
 
           {/* Content pane */}
