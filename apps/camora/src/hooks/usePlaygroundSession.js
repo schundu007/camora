@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getStoredToken, subscribeToken } from '@/utils/tokenStore';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
+const API_URL = import.meta.env.VITE_PLAYGROUND_API_URL || import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3010';
 const STORAGE_KEY = 'camora_pg_session';
 
 async function apiFetch(endpoint, options = {}) {
