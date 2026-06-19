@@ -21,8 +21,9 @@ cat > /home/camora/.code-server/User/settings.json << 'VSCODE_SETTINGS'
   "workbench.startupEditor": "none"
 }
 VSCODE_SETTINGS
+chown -R camora:camora /home/camora/.code-server
 
-code-server \
+sudo -u camora code-server \
   --port 8080 \
   --auth none \
   --bind-addr 0.0.0.0 \
