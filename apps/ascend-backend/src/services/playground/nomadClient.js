@@ -15,6 +15,7 @@ const IMAGES = {
   'agent-sandbox': 'chundubabu/pg-agent-sandbox:latest',
   'k8s-single': 'chundubabu/pg-k8s-single:latest',
   'k8s-multi': 'chundubabu/pg-k8s-multi:latest',
+  'k8s-etcd': 'chundubabu/pg-k8s-single:latest',
   'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
 };
 
@@ -24,6 +25,7 @@ const MEMORY_MB = {
   'agent-sandbox': 1536,
   'k8s-single': 2048,
   'k8s-multi': 4096,
+  'k8s-etcd': 2048,
   'cloud-cli': 1536,
 };
 
