@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { dialogConfirm } from '../../shared/Dialog';
+import CodeBlock from '../shared/CodeBlock.jsx';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
@@ -159,10 +160,8 @@ function renderMarkdown(text) {
       const block = codeBlocks[parseInt(codeMatch[1])];
       if (block) {
         elements.push(
-          <div key={elementKey++} className="my-1 rounded-lg overflow-hidden border border-[var(--border)]/40">
-            <pre className="p-2 bg-[var(--bg-elevated)]/80 overflow-x-auto">
-              <code className="text-xs text-[var(--text-primary)] font-mono whitespace-pre">{block.content}</code>
-            </pre>
+          <div key={elementKey++} className="my-1">
+            <CodeBlock code={block.content} lang={block.language} />
           </div>
         );
       }
