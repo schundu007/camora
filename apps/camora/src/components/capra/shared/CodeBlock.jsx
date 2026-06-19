@@ -25,7 +25,24 @@ const LANG_MAP = {
   php: 'php',
   kotlin: 'kotlin',
   swift: 'swift',
-  code: 'text', text: 'text',
+};
+
+const detectLang = (code) => {
+  if (!code || !code.trim()) return 'bash';
+  const head = code.split('\n').slice(0, 8).join('\n');
+  if (/^apiVersion:|^kind:\s|^metadata:|^\s+spec:|^spec:/.test(head)) return 'yaml';
+  if (/^[\s\n]*[{\[][\s\n]*"/.test(head)) return 'json';
+  if (/^(FROM |RUN |CMD |EXPOSE |ENV |COPY |ENTRYPOINT |WORKDIR )/m.test(head)) return 'docker';
+  if (/^(SELECT|INSERT|UPDATE|DELETE|CREATE TABLE|DROP|ALTER TABLE)\b/im.test(head)) return 'sql';
+  if (/^(package |import \(|func |type \w+ struct)/.test(head)) return 'go';
+  if (/^(pub |fn |use |struct |enum |impl |mod )\b/.test(head)) return 'rust';
+  if (/^(def |class \w|import \w|from \w+ import|if __name__)/.test(head)) return 'python';
+  if (/^(function |const |let |var |import |export |class \w.*\{)/.test(head)) return 'javascript';
+  if (/^(interface |type \w+ =|export (type|interface)|import type)/.test(head)) return 'typescript';
+  if (/^(resource |variable |output |provider |terraform)\s+["\w]/.test(head)) return 'hcl';
+  if (/^(\$\s|#!\s*\/|sudo |kubectl |docker |helm |apt |yum |brew |npm |pip3? |git )/.test(head)) return 'bash';
+  if (/^\s*[-*]\s+\w+:|^\w[\w-]+:\s+\S/.test(head)) return 'yaml';
+  return 'bash';
 };
 
 const codeTheme = {
@@ -53,7 +70,8 @@ export default function CodeBlock({ code, lang, bare = false }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const prismLang = LANG_MAP[(lang || '').toLowerCase()] || 'text';
+  const mapped = LANG_MAP[(lang || '').toLowerCase()];
+  const prismLang = mapped ?? detectLang(code);
   return (
     <div className="prep-code-block">
       {!bare && (
