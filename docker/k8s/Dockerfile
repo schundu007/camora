@@ -22,8 +22,13 @@ COPY labs/etcd/ /home/learner/labs/etcd/
 RUN chmod +x /home/learner/labs/etcd/*.sh && \
     chown -R learner:learner /home/learner
 
+# Install Radar observability binary
+RUN curl -fsSL https://github.com/skyhook-io/radar/releases/download/v1.7.9/radar_v1.7.9_linux_amd64.tar.gz \
+    | tar xz -C /usr/local/bin radar && \
+    chmod +x /usr/local/bin/radar
+
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-EXPOSE 7681 8080
+EXPOSE 7681 8080 9280
 CMD ["/start.sh"]
