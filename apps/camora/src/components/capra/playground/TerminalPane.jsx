@@ -8,7 +8,7 @@ import { useTerminalResize } from '@/hooks/useTerminalResize';
 //   Send input:   binary, byte[0]=0x30, rest=keystrokes
 //   Send resize:  binary, byte[0]=0x31, rest=JSON {"columns":N,"rows":N}
 
-const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, initialFontSize = 13 }, ref) {
+const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, onExit, initialFontSize = 13 }, ref) {
   const containerRef = useRef(null);
   const termRef = useRef(null);
   const fitAddonRef = useRef(null);
@@ -90,11 +90,15 @@ const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, initial
       };
 
       ws.onclose = (e) => {
-        if (!disposed) {
-          const reason = e.reason ? ` (${e.reason})` : '';
-          term.write(`\r\n\x1b[33m[Disconnected: code ${e.code}${reason}]\x1b[0m\r\n`);
-          console.warn('[TerminalPane] ws closed', e.code, e.reason);
+        if (disposed) return;
+        console.warn('[TerminalPane] ws closed', e.code, e.reason);
+        // Code 1000 = clean shell exit (user typed `exit`/`logout`)
+        if (e.code === 1000) {
+          onExit?.();
+          return;
         }
+        const reason = e.reason ? ` (${e.reason})` : '';
+        term.write(`\r\n\x1b[33m[Disconnected: code ${e.code}${reason}]\x1b[0m\r\n`);
       };
 
       term.onData((data) => {
