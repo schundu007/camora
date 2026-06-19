@@ -2,6 +2,45 @@ import CodeBlock from '../shared/CodeBlock';
 import DocsCallout from '../../shared/docs/DocsCallout';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter';
 
+const INLINE_TOOLS = new Set([
+  'docker','kubectl','helm','k9s','aws','gcloud','az','terraform','tofu',
+  'git','npm','yarn','pnpm','pip','pip3','apt','apt-get','yum','dnf','brew','apk','cargo',
+  'systemctl','journalctl','service','curl','wget','ssh','scp','sftp','rsync',
+  'make','cmake','python','python3','node','deno','bun','java','mvn','gradle','ruby','php',
+  'ansible','ansible-playbook','ansible-vault','vault','consul','nomad','nginx','apache2',
+  'jq','yq','openssl','kubeadm','kind','minikube','k3s','eksctl',
+  'istioctl','kustomize','skaffold','flux','argocd',
+  'crictl','ctr','nerdctl','podman','buildah','ko','skopeo',
+  'trivy','snyk','grype','etcdctl','redis-cli','psql','mysql','mongosh',
+  'stern','kubectx','kubens','velero','oc',
+  'chmod','chown','tar','find','grep','awk','sed',
+  'ping','dig','nslookup','nmap','ss','ip','netstat',
+]);
+
+const renderCmdCode = (text, key) => {
+  const toks = text.split(/(\s+)/);
+  const cmd = toks[0];
+  if (!INLINE_TOOLS.has(cmd)) {
+    return (
+      <code key={key} className="px-1.5 py-0.5 rounded text-[13px] landing-mono text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border)]">
+        {text}
+      </code>
+    );
+  }
+  let subcmdDone = false;
+  return (
+    <code key={key} className="px-1.5 py-0.5 rounded text-[13px] landing-mono bg-[var(--bg-elevated)] border border-[var(--border)]">
+      {toks.map((tok, i) => {
+        if (/^\s+$/.test(tok)) return tok;
+        if (i === 0) return <span key={i} style={{ color: '#61aeee', fontWeight: 600 }}>{tok}</span>;
+        if (/^--?\w/.test(tok)) return <span key={i} style={{ color: '#d19a66' }}>{tok}</span>;
+        if (!subcmdDone) { subcmdDone = true; return <span key={i} style={{ color: '#98c379' }}>{tok}</span>; }
+        return <span key={i} style={{ color: '#abb2bf' }}>{tok}</span>;
+      })}
+    </code>
+  );
+};
+
 // Common English sentence starters excluded from the "Term. Definition" detector.
 // Technical terms (Pod, Deployment, ConfigMap, etc.) are intentionally absent.
 const TERM_DEF_STARTERS_EXCLUDED = new Set([
@@ -106,14 +145,7 @@ export default function FormattedContent({ content, inline = false }) {
             </strong>,
           );
         } else if (matchType === 'code') {
-          parts.push(
-            <code
-              key={keyCounter++}
-              className="px-1.5 py-0.5 rounded text-[13px] landing-mono text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border)]"
-            >
-              {nextMatch[1]}
-            </code>,
-          );
+          parts.push(renderCmdCode(nextMatch[1], keyCounter++));
         } else if (matchType === 'quote') {
           parts.push(
             <em key={keyCounter++} className="text-[var(--text-primary)] italic">
