@@ -95,7 +95,7 @@ export const ENVIRONMENTS = [
   },
   {
     id: 'custom',
-    label: 'Custom Setup',
+    label: 'Deploy Your Container',
     icon: { emoji: '⚙️' },
     plan: 'free',
     desc: 'Pick languages, DevOps tools, cloud CLIs',
