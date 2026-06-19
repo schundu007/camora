@@ -6,6 +6,7 @@ import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
 import TerminalPane from './TerminalPane';
 import BootProgress from './BootProgress';
 import IdePane from './IdePane';
+import ToolPickerPanel from './ToolPickerPanel';
 
 function formatTime(seconds) {
   if (!seconds && seconds !== 0) return '60:00';
@@ -28,6 +29,7 @@ export default function PlaygroundShell() {
   const [activeTab, setActiveTab] = useState('terminal');
   const [termKey, setTermKey] = useState(0);
   const [minimized, setMinimized] = useState(false);
+  const [toolPickerOpen, setToolPickerOpen] = useState(false);
   const termRef = useRef(null);
 
   const isActive = status === 'ready' && !!session;
@@ -198,6 +200,16 @@ export default function PlaygroundShell() {
       )}
 
       {/* ── IDLE / MINIMIZED state ── */}
+      <ToolPickerPanel
+        open={toolPickerOpen}
+        onClose={() => setToolPickerOpen(false)}
+        disabled={isLoading}
+        onStart={(setupScript) => {
+          setToolPickerOpen(false);
+          createSession('ubuntu', null, setupScript);
+        }}
+      />
+
       {showIdle && (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left panel */}
@@ -299,7 +311,11 @@ export default function PlaygroundShell() {
               <button
                 type="button"
                 disabled={isLoading}
-                onClick={() => isActive && minimized ? setMinimized(false) : createSession(environment)}
+                onClick={() => {
+                  if (isActive && minimized) { setMinimized(false); return; }
+                  if (environment === 'custom') { setToolPickerOpen(true); return; }
+                  createSession(environment);
+                }}
                 style={{
                   width: '100%', maxWidth: 380, padding: '13px 0', borderRadius: 8,
                   fontSize: 13, fontWeight: 800, letterSpacing: '0.04em',

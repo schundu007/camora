@@ -7,20 +7,22 @@ import {
   checkSessionOwner,
 } from '../services/playground/sessionManager.js';
 import { getSession, getSessionHistory, updateSessionStatus } from '../services/playground/sessionStore.js';
+import { execScriptInContainer } from '../services/playground/nomadClient.js';
 
 export const playgroundSessionsRouter = Router();
 
 playgroundSessionsRouter.post('/', async (req, res) => {
-  const { environment, scenarioId } = req.body;
+  const { environment, scenarioId, setupScript } = req.body;
   if (!environment) return res.status(400).json({ error: 'environment is required' });
 
   try {
     const result = await createSession({
       userId: req.user.id,
       userEmail: req.user.email,
-      environment,
+      environment: environment === 'custom' ? 'ubuntu' : environment,
       scenarioId: scenarioId || null,
       plan: req.user.plan_type || null,
+      setupScript: setupScript || null,
     });
     return res.status(201).json({
       sessionId: result.sessionId,
@@ -93,24 +95,34 @@ playgroundSessionsRouter.get('/:id/events', async (req, res) => {
     const host = session.ttyd_host;
     const ttydPort = session.ttyd_port;
     const idePort = session.code_server_port;
+    const hasScript = !!session.setup_script;
+    const total = hasScript ? 5 : 4;
 
-    // Step 1: container is running (we have a live session record with port mappings)
-    sendEvent({ step: 'container_ready', label: 'Container started', status: 'done', phase: 'SYSTEM CHECKS', progress: 1, total: 4 });
-    sendEvent({ step: 'env_setup', label: 'Environment starting', status: 'running', phase: 'SYSTEM CHECKS', progress: 2, total: 4 });
+    sendEvent({ step: 'container_ready', label: 'Container started', status: 'done', phase: 'SYSTEM CHECKS', progress: 1, total });
+    sendEvent({ step: 'env_setup', label: 'Environment starting', status: 'running', phase: 'SYSTEM CHECKS', progress: 2, total });
 
-    // Step 2: IDE (code-server on 8080) ready — implies dockerd finished and code-server is up
     await pollUntilReady(host, idePort, ac.signal, deadlineMs);
     if (ac.signal.aborted || res.writableEnded) return;
 
-    sendEvent({ step: 'env_setup', label: 'Environment ready', status: 'done', phase: 'SYSTEM CHECKS', progress: 2, total: 4 });
-    sendEvent({ step: 'ide_start', label: 'Starting IDE', status: 'running', phase: 'TOOLS', progress: 3, total: 4 });
+    sendEvent({ step: 'env_setup', label: 'Environment ready', status: 'done', phase: 'SYSTEM CHECKS', progress: 2, total });
+    sendEvent({ step: 'ide_start', label: 'Starting IDE', status: 'running', phase: 'TOOLS', progress: 3, total });
 
-    // Step 3: terminal (ttyd on 7681) ready — starts last in the boot script
     await pollUntilReady(host, ttydPort, ac.signal, deadlineMs);
     if (ac.signal.aborted || res.writableEnded) return;
 
-    sendEvent({ step: 'ide_start', label: 'IDE ready', status: 'done', phase: 'TOOLS', progress: 3, total: 4 });
-    sendEvent({ step: 'terminal_ready', label: 'Terminal ready', status: 'done', phase: 'TOOLS', progress: 4, total: 4 });
+    sendEvent({ step: 'ide_start', label: 'IDE ready', status: 'done', phase: 'TOOLS', progress: 3, total });
+    sendEvent({ step: 'terminal_ready', label: 'Terminal ready', status: 'done', phase: 'TOOLS', progress: 4, total });
+
+    if (hasScript) {
+      sendEvent({ step: 'custom_tools', label: 'Installing your tools...', status: 'running', phase: 'CUSTOM', progress: 5, total: 5 });
+      try {
+        await execScriptInContainer(session.nomad_job_id, session.setup_script);
+        sendEvent({ step: 'custom_tools', label: 'Tools installed', status: 'done', phase: 'CUSTOM', progress: 5, total: 5 });
+      } catch (err) {
+        console.warn('[PlaygroundSessions] setup script failed:', err.message);
+        sendEvent({ step: 'custom_tools', label: 'Setup finished (some tools may have failed)', status: 'done', phase: 'CUSTOM', progress: 5, total: 5 });
+      }
+    }
 
     await updateSessionStatus(req.params.id, 'ready').catch(() => {});
     sendEvent({ type: 'ready' });

@@ -5,6 +5,9 @@ const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 
 export function EnvIcon({ icon }) {
   if (!icon) return null;
+  if (icon.emoji) {
+    return <span style={{ fontSize: 22, lineHeight: 1 }}>{icon.emoji}</span>;
+  }
   if (icon.logos) {
     return (
       <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -89,6 +92,15 @@ export const ENVIRONMENTS = [
     desc: 'AWS · GCP · Azure · Terraform · K8s',
     category: 'Cloud',
     color: '#f59e0b',
+  },
+  {
+    id: 'custom',
+    label: 'Custom Setup',
+    icon: { emoji: '⚙️' },
+    plan: 'free',
+    desc: 'Pick languages, DevOps tools, cloud CLIs',
+    category: 'Custom',
+    color: '#8b5cf6',
   },
 ];
 
