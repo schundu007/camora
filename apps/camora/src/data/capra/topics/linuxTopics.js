@@ -1163,4 +1163,3199 @@ export const linuxTopics = [
       'https://www.freedesktop.org/software/systemd/man/systemd.service.html',
     ],
   },
+
+  // ─── FUNDAMENTALS (additional) ─────────────────────────────────────────────
+  {
+    id: 'linux-permissions',
+    title: 'File Permissions & ACLs',
+    icon: 'cpu',
+    color: '#3b82f6',
+    category: 'fundamentals',
+    questions: 7,
+    description: 'chmod, chown, umask, SUID/SGID/sticky bit, and POSIX ACLs for fine-grained access control.',
+    introduction: `File permissions are the foundation of Linux security. Every file and directory has an owner (user), an owning group, and permission bits split into three sets: owner, group, and others.
+
+**Octal vs symbolic chmod notation**: chmod 755 is identical to chmod u=rwx,g=rx,o=rx. Octal maps directly: 4=read, 2=write, 1=execute, so 7=rwx, 6=rw-, 5=r-x, 4=r--.
+
+**umask**: The user file-creation mask subtracts permissions from the default. Default umask 022 means new files get 644 (666 minus 022) and directories get 755 (777 minus 022). Change with umask 027 to give group read-only and no other access.
+
+**SUID bit (4000)**: When set on an executable, the process runs as the file's owner, not the calling user. /usr/bin/passwd uses SUID to let any user write to /etc/shadow (owned by root). Set with chmod u+s or chmod 4755.
+
+**SGID bit (2000)**: On executables, runs as the file's group. On directories, new files created inside inherit the directory's group rather than the creator's primary group — essential for shared project directories. Set with chmod g+s.
+
+**Sticky bit (1000)**: On directories like /tmp, only the file owner (or root) can delete files even if the directory is world-writable. Set with chmod +t.
+
+**POSIX ACLs**: Standard permissions support only one user and one group. getfacl shows ACLs, setfacl -m u:alice:rw file grants alice read/write without changing the owning group. setfacl -m d:u:alice:rw dir sets default ACL for new files in a directory. ACL entries are stored as extended attributes.`,
+    whenToUse: [
+      'Hardening file access on multi-user systems',
+      'Setting up shared directories with SGID for consistent group ownership',
+      'Granting fine-grained access without creating new groups (ACLs)',
+      'Security audits — finding world-writable or SUID files',
+    ],
+    keyConcepts: [
+      {
+        term: 'chmod octal vs symbolic',
+        definition: 'chmod 755 == chmod u=rwx,g=rx,o=rx. Octal: 4=r, 2=w, 1=x. Symbolic: u/g/o/a and +/-/= operators.',
+      },
+      {
+        term: 'umask',
+        definition: 'Mask subtracted from default permissions on creation. umask 022 → files 644, dirs 755. umask 027 → files 640, dirs 750.',
+      },
+      {
+        term: 'SUID/SGID/sticky bit',
+        definition: 'SUID (4xxx): execute as file owner. SGID (2xxx): execute as file group; on dirs, new files inherit group. Sticky (1xxx): on dirs, only owner can delete.',
+      },
+      {
+        term: 'POSIX ACL (getfacl/setfacl)',
+        definition: 'Extends standard ugo model to grant per-user and per-group permissions. setfacl -m u:alice:rw file; getfacl shows current ACL. Default ACLs apply to new files inside directories.',
+      },
+    ],
+    pitfalls: [
+      'World-writable files (o+w) are a security risk — find them with: find / -perm -002 -not -type l',
+      'SUID on shell scripts does not work — Linux ignores SUID on interpreted scripts for security reasons',
+      'chmod -R without care can remove execute bit from directories, making them inaccessible',
+      'setfacl mask limits effective group/named-user ACL permissions — check with getfacl after setting',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain the difference between octal permissions 755 and 700, and when you would use each.',
+        answer: `## 755 vs 700
+
+\`\`\`bash
+# 755: rwxr-xr-x
+# Owner: read, write, execute
+# Group: read, execute (can enter directory, can run executable)
+# Others: read, execute
+
+# 700: rwx------
+# Owner: full access
+# Group: no access
+# Others: no access
+\`\`\`
+
+**Use 755 for**:
+- Web server document roots that need to be readable by the web server process (www-data group or other)
+- System binaries like /usr/bin/* that all users need to execute
+- Project directories where team members need read access
+
+**Use 700 for**:
+- ~/.ssh directory (SSH will refuse to work if permissions are too open)
+- Private key files — actually use 600 (no execute needed)
+- Personal script directories with sensitive logic
+
+\`\`\`bash
+# Find files with insecure world-readable permissions in home dirs
+find /home -maxdepth 3 -perm -o+r -name "*.key" -o -name "*.pem"
+
+# Check SSH directory permissions (SSH requires this)
+ls -la ~/.ssh
+# Should be: drwx------ (700)
+# Private keys: -rw------- (600)
+\`\`\``,
+      },
+      {
+        question: 'What is the SUID bit, where is it legitimately used, and what security risk does it pose?',
+        answer: `## SUID Bit
+
+When the SUID bit is set on an executable, the process runs with the **file owner's privileges** instead of the calling user's privileges.
+
+\`\`\`bash
+# Find all SUID executables on the system
+find / -perm -4000 -type f 2>/dev/null
+
+# Common legitimate SUID binaries
+ls -la /usr/bin/passwd    # -rwsr-xr-x (s = SUID set)
+ls -la /usr/bin/sudo      # -rwsr-xr-x
+ls -la /usr/bin/ping      # May have SUID or capabilities
+
+# The 's' in the owner execute position = SUID
+# If it were 'S' (capital), it means SUID set but no execute — likely a mistake
+\`\`\`
+
+**Legitimate uses**:
+- /usr/bin/passwd — must write to /etc/shadow (owned by root) so any user can change their password
+- /usr/bin/sudo — needs root to elevate privileges
+- /usr/bin/mount — historically needed root to mount filesystems
+
+**Security risks**:
+- Any SUID binary with a vulnerability can be exploited to gain root
+- Custom SUID programs are high-value attack targets
+- SUID shell scripts are ignored by the kernel, but this is a common misconception that leads to false confidence
+
+\`\`\`bash
+# Remove SUID from a file
+chmod u-s /path/to/binary
+
+# Never do this — SUID on a shell is an immediate root backdoor
+chmod u+s /bin/bash  # DO NOT DO THIS
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man1/chmod.1.html',
+      'https://man7.org/linux/man-pages/man5/acl.5.html',
+    ],
+  },
+  {
+    id: 'linux-users-groups',
+    title: 'Users, Groups & Authentication',
+    icon: 'cpu',
+    color: '#3b82f6',
+    category: 'fundamentals',
+    questions: 6,
+    description: '/etc/passwd, /etc/shadow, useradd/usermod, and the distinction between su and sudo.',
+    introduction: `Linux user management is built around two core files and a set of commands that modify them.
+
+**/etc/passwd format** — seven colon-delimited fields: username:x:UID:GID:GECOS:home_directory:shell. The 'x' in the password field means the actual hash is in /etc/shadow. UID 0 is root; UIDs 1-999 are typically system accounts; UIDs 1000+ are regular users. The GECOS field holds the full name and other info (visible in finger command). The shell field determines the login shell — /sbin/nologin or /bin/false blocks interactive login for service accounts.
+
+**/etc/shadow** stores the actual password hashes, readable only by root. Format: username:hash:last_change:min_days:max_days:warn_days:inactive_days:expiry. Hash format: $id$salt$hash where id identifies the algorithm (6=SHA-512, 5=SHA-256, 1=MD5-deprecated).
+
+**useradd vs adduser**: useradd is the low-level tool (requires explicit flags for home dir, shell, etc.). adduser (Debian/Ubuntu) is a higher-level script with interactive prompts and sensible defaults. In RHEL/CentOS, useradd is configured via /etc/login.defs and /etc/default/useradd.
+
+**Group management**: Each user has a primary group (set at login, files created with this GID) and supplementary groups (additional access). id command shows all. usermod -aG groupname username adds to a supplementary group without removing existing ones — the -a flag is critical.
+
+**su vs sudo**: su switches to another user entirely (needs that user's password; switches environment). sudo runs a single command as another user (needs your own password; logged to syslog; controlled by /etc/sudoers). For system administration, sudo is preferred because it provides accountability.`,
+    whenToUse: [
+      'Provisioning new user accounts on a server',
+      'Managing service accounts for applications',
+      'Auditing who has access to what groups',
+      'Troubleshooting permission denied errors related to group membership',
+    ],
+    keyConcepts: [
+      {
+        term: '/etc/passwd 7-field format',
+        definition: 'username:x:UID:GID:GECOS:home:shell — the x means password hash is in /etc/shadow. UID 0=root, 1-999=system, 1000+=users.',
+      },
+      {
+        term: '/etc/shadow',
+        definition: 'Stores password hashes readable only by root. Format: user:$alg$salt$hash:last_change:min:max:warn:inactive:expiry. $6$=SHA-512.',
+      },
+      {
+        term: 'useradd vs adduser',
+        definition: 'useradd is low-level (requires flags). adduser (Debian) is a friendlier wrapper. useradd -m -s /bin/bash -G sudo username is a typical invocation.',
+      },
+      {
+        term: 'su vs sudo',
+        definition: 'su switches full user context (needs target password). sudo runs one command elevated (needs your password, logs to syslog, controlled by /etc/sudoers). sudo is preferred for auditability.',
+      },
+    ],
+    pitfalls: [
+      'usermod -G group user REPLACES all supplementary groups — always use -aG to append',
+      'Not locking disabled accounts: usermod -L username locks the password, but the account can still authenticate via SSH keys unless also setting the shell to /sbin/nologin',
+      'UID 0 accounts other than root are a security red flag — find with: awk -F: \'$3==0\' /etc/passwd',
+      'getent passwd/group instead of reading files directly — works with LDAP and NIS, not just local files',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through the /etc/passwd and /etc/shadow file formats. Why are they separate?',
+        answer: `## /etc/passwd
+
+\`\`\`bash
+cat /etc/passwd | head -3
+# root:x:0:0:root:/root:/bin/bash
+# daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+# alice:x:1001:1001:Alice Smith:/home/alice:/bin/bash
+
+# Fields: username:password:UID:GID:GECOS:home:shell
+# 'x' means password hash is in /etc/shadow
+\`\`\`
+
+## /etc/shadow
+
+\`\`\`bash
+sudo cat /etc/shadow | grep alice
+# alice:$6$salt$longhash...:19800:0:99999:7:::
+
+# Fields: username:hash:last_change:min_days:max_days:warn_days:inactive:expiry:reserved
+# $6$ = SHA-512 algorithm
+# last_change: days since epoch (Jan 1 1970) when password was last changed
+\`\`\`
+
+## Why Separate?
+
+/etc/passwd must be **world-readable** because many programs (ls, ps) need to map UIDs to usernames. If password hashes were in passwd, anyone could run offline dictionary attacks.
+
+/etc/shadow is readable **only by root** (mode 000 or 640 with shadow group), protecting the hashes from offline cracking.
+
+\`\`\`bash
+ls -la /etc/passwd /etc/shadow
+# -rw-r--r-- 1 root root   /etc/passwd   (world-readable)
+# -rw-r----- 1 root shadow /etc/shadow   (root + shadow group only)
+\`\`\``,
+      },
+      {
+        question: 'What is the difference between su and sudo? When would you use each?',
+        answer: `## su (Switch User)
+
+\`\`\`bash
+su alice          # Switch to alice — prompts for ALICE's password
+su -              # Switch to root as login shell — prompts for root's password
+su - alice        # Switch to alice with full login environment
+su -c "command"   # Run single command as root
+\`\`\`
+
+- Requires the **target user's password**
+- Switches full session context (environment, groups)
+- No audit trail beyond PAM logs
+- Root login via su requires knowing the root password
+
+## sudo (Superuser Do)
+
+\`\`\`bash
+sudo command           # Run as root — prompts for YOUR password
+sudo -u alice command  # Run as alice
+sudo -i                # Interactive root shell
+sudo -l                # List what you're allowed to run
+sudo !!                # Re-run last command with sudo
+\`\`\`
+
+- Requires **your own password** (or NOPASSWD in sudoers)
+- Every command logged to /var/log/auth.log or journald
+- Controlled per-command by /etc/sudoers
+- Root password can remain unknown/disabled
+
+## When to Use Each
+
+| Use su when... | Use sudo when... |
+|---|---|
+| You need a full root shell session | You need one or a few commands as root |
+| On minimal systems without sudo | On any properly administered server |
+| Switching to service accounts locally | You need auditability of elevated commands |`,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man5/passwd.5.html',
+      'https://man7.org/linux/man-pages/man8/useradd.8.html',
+    ],
+  },
+  {
+    id: 'linux-package-management',
+    title: 'Package Management',
+    icon: 'cpu',
+    color: '#3b82f6',
+    category: 'fundamentals',
+    questions: 6,
+    description: 'apt/dpkg, yum/dnf/rpm, snap, and compiling from source — the full software installation stack.',
+    introduction: `Linux package management splits into two major ecosystems: Debian-based (apt/dpkg) and RHEL-based (yum/dnf/rpm). Understanding both is essential for working across distributions.
+
+**Debian ecosystem (Ubuntu/Debian)**:
+apt is the high-level tool that handles dependency resolution and downloads from repositories. dpkg is the low-level backend that actually installs .deb files. apt update refreshes the package index from sources. apt upgrade installs newer versions of currently installed packages. apt dist-upgrade additionally resolves dependency changes (may add or remove packages). apt full-upgrade is the modern equivalent of dist-upgrade. Repositories are defined in /etc/apt/sources.list and files under /etc/apt/sources.list.d/.
+
+**RHEL ecosystem (CentOS/Fedora/RHEL)**:
+dnf (Dandified YUM) replaced yum in Fedora 22+ and RHEL 8+. dnf is faster with better dependency resolution and memory usage. rpm is the low-level tool. rpm -qa queries all installed packages, rpm -qi package shows info, rpm -ql package lists files, rpm -qf /path/to/file identifies which package owns a file.
+
+**Finding package ownership**: On Debian: dpkg -S /path/to/file. On RHEL: rpm -qf /path/to/file.
+
+**snap**: Canonical's universal package format — self-contained with dependencies bundled. Confinement levels: strict (sandboxed), classic (full system access like traditional packages), devmode (for development). snap list shows installed snaps.
+
+**Compiling from source**: ./configure --prefix=/usr/local checks dependencies and generates Makefile, make compiles, sudo make install installs. Use checkinstall instead of make install to create a proper package for later removal.`,
+    whenToUse: [
+      'Installing or removing software on Linux servers',
+      'Auditing installed packages for security vulnerabilities',
+      'Setting up reproducible server environments',
+      'Troubleshooting missing library errors',
+    ],
+    keyConcepts: [
+      {
+        term: 'apt vs dpkg',
+        definition: 'apt is the high-level frontend (handles dependencies, downloads). dpkg is the low-level backend (installs .deb files directly). apt uses dpkg under the hood.',
+      },
+      {
+        term: 'dnf vs rpm',
+        definition: 'dnf (next-gen yum) handles dependency resolution and repo downloads. rpm operates on local .rpm files. dnf install package vs rpm -ivh package.rpm.',
+      },
+      {
+        term: '/etc/apt/sources.list format',
+        definition: 'deb http://archive.ubuntu.com/ubuntu focal main restricted universe — fields: type, URL, suite (codename), components. deb-src for source packages.',
+      },
+      {
+        term: 'snap confinement levels',
+        definition: 'strict: sandboxed, limited system access. classic: full system access like traditional packages. devmode: debugging, all access, logs warnings.',
+      },
+    ],
+    pitfalls: [
+      'apt upgrade vs dist-upgrade: upgrade never removes packages; dist-upgrade will remove packages to resolve dependency conflicts — always review what dist-upgrade plans to remove',
+      'Mixing apt and pip/gem/npm without virtual environments causes system Python/Ruby breakage',
+      'Not pinning package versions in production: apt-mark hold packagename prevents accidental upgrades',
+      'After adding a new repository, always run apt update before trying to install from it',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between apt update, apt upgrade, and apt dist-upgrade?',
+        answer: `## apt update
+
+\`\`\`bash
+apt update
+# Downloads the package index from all configured repositories
+# Does NOT install or upgrade anything
+# Must run before apt upgrade or apt install to see current versions
+\`\`\`
+
+## apt upgrade
+
+\`\`\`bash
+apt upgrade
+# Installs newer versions of all currently installed packages
+# WILL NOT remove any packages
+# WILL NOT install new packages as dependencies if that would require removing others
+# Safest for production — no packages removed
+\`\`\`
+
+## apt dist-upgrade (apt full-upgrade)
+
+\`\`\`bash
+apt dist-upgrade
+# Same as upgrade but also handles changing dependencies
+# WILL remove packages if necessary to resolve conflicts
+# WILL install new packages to satisfy dependencies
+# Used for major system upgrades and kernel updates
+
+# Always preview what will happen:
+apt dist-upgrade --simulate
+apt dist-upgrade -s
+\`\`\`
+
+## Recommended Production Workflow
+
+\`\`\`bash
+apt update                          # Refresh index
+apt upgrade --dry-run               # Preview changes
+apt upgrade                         # Apply safe upgrades
+# Then separately review and apply dist-upgrade changes
+\`\`\``,
+      },
+      {
+        question: 'How would you find which package owns a specific file on a Debian/Ubuntu system?',
+        answer: `## Finding Package Ownership
+
+\`\`\`bash
+# Method 1: dpkg -S (searches installed packages)
+dpkg -S /usr/bin/curl
+# curl: /usr/bin/curl
+
+dpkg -S /lib/x86_64-linux-gnu/libc.so.6
+# libc6: /lib/x86_64-linux-gnu/libc.so.6
+
+# Method 2: apt-file (searches ALL packages, even uninstalled)
+apt install apt-file
+apt-file update
+apt-file search libssl.so.1.1
+# libssl1.1: /usr/lib/x86_64-linux-gnu/libssl.so.1.1
+
+# List all files owned by a package
+dpkg -L curl
+dpkg-query -L nginx
+
+# On RHEL/CentOS:
+rpm -qf /usr/bin/curl
+# curl-7.76.1-14.el9.x86_64
+
+# List all files in an rpm package
+rpm -ql curl
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://manpages.ubuntu.com/manpages/focal/man8/apt.8.html',
+      'https://dnf.readthedocs.io/',
+    ],
+  },
+  {
+    id: 'linux-boot-process',
+    title: 'Linux Boot Process',
+    icon: 'cpu',
+    color: '#3b82f6',
+    category: 'fundamentals',
+    questions: 7,
+    description: 'BIOS/UEFI → GRUB2 → kernel → initramfs → systemd: understanding every stage of boot.',
+    introduction: `Understanding the Linux boot process helps diagnose startup failures and tune boot performance.
+
+**Stage 1 — POST and firmware**: Power-On Self Test runs, then BIOS or UEFI firmware takes over. BIOS uses MBR (Master Boot Record, first 512 bytes of disk), limited to 4 primary partitions and 2TB disks. UEFI supports GPT (GUID Partition Table), Secure Boot (cryptographic signature verification of bootloader), and reads the EFI System Partition (ESP, typically /boot/efi, FAT32 formatted).
+
+**Stage 2 — GRUB2**: The bootloader. In BIOS mode, GRUB stage 1 lives in the MBR and loads stage 1.5 from the gap after MBR, which loads stage 2 from /boot/grub/. In UEFI mode, GRUB lives on the ESP as a .efi file. GRUB reads /boot/grub/grub.cfg (generated by update-grub or grub2-mkconfig, never edited directly) to display the boot menu. Kernel parameters are passed here (root=UUID=..., ro, quiet, splash, init=/path for alternative init).
+
+**Stage 3 — Kernel initialization**: GRUB decompresses the kernel image (vmlinuz) into RAM and passes control. The kernel initializes CPU, memory management, and devices. It mounts the initramfs (initial RAM filesystem) as a temporary root.
+
+**Stage 4 — initramfs**: A small, compressed cpio archive containing just enough tools and drivers to mount the real root filesystem (drivers for disk controllers, LVM, RAID, crypto). After mounting real root, it performs pivot_root to switch over.
+
+**Stage 5 — systemd**: PID 1 takes over, reads unit files, starts services in dependency order to reach the default target (usually multi-user.target or graphical.target). systemd-analyze blame shows which services are slowest to start.`,
+    whenToUse: [
+      'Diagnosing servers that fail to boot',
+      'Adding kernel parameters for debugging (single user mode, no module loading)',
+      'Understanding initramfs rebuild requirements after kernel module changes',
+      'Performance tuning boot time with systemd-analyze',
+    ],
+    keyConcepts: [
+      {
+        term: 'UEFI vs BIOS',
+        definition: 'BIOS: MBR, max 2TB, 4 primary partitions, no Secure Boot. UEFI: GPT, no practical size limit, 128 partitions, Secure Boot support, reads ESP partition.',
+      },
+      {
+        term: 'GRUB2',
+        definition: 'Bootloader that loads the kernel. Config in /boot/grub/grub.cfg (auto-generated). Kernel parameters passed here. GRUB rescue shell for recovery when config is broken.',
+      },
+      {
+        term: 'initramfs',
+        definition: 'Compressed cpio archive containing minimal drivers and tools needed to mount the real root filesystem. Lives at /boot/initrd.img-VERSION. Rebuilt with update-initramfs -u.',
+      },
+      {
+        term: 'systemd targets vs runlevels',
+        definition: 'multi-user.target = runlevel 3 (text multi-user), graphical.target = runlevel 5 (GUI), rescue.target = runlevel 1 (single user), emergency.target (minimal). systemctl get-default shows current.',
+      },
+    ],
+    pitfalls: [
+      'Editing /boot/grub/grub.cfg directly — it gets overwritten by update-grub. Edit /etc/grub.d/ scripts or /etc/default/grub instead',
+      'Not rebuilding initramfs after adding kernel modules or changing dracut/initramfs-tools config — boot may fail',
+      'UEFI Secure Boot blocking custom or third-party kernel modules (DKMS, NVIDIA drivers) — needs MOK enrollment',
+      'Forgetting that GRUB timeout=0 makes recovery impossible without external boot media',
+    ],
+    keyQuestions: [
+      {
+        question: 'Describe every step from pressing the power button to the login prompt appearing.',
+        answer: `## Complete Linux Boot Sequence
+
+**1. Power On & POST**
+\`\`\`
+CPU resets → BIOS/UEFI firmware runs POST
+→ Checks RAM, CPU, storage devices
+→ BIOS: reads MBR from boot disk
+→ UEFI: reads ESP partition, finds .efi bootloader
+\`\`\`
+
+**2. GRUB2 Bootloader**
+\`\`\`bash
+# GRUB displays menu from /boot/grub/grub.cfg
+# User selects kernel entry (or timeout picks default)
+# GRUB loads kernel image (vmlinuz) and initramfs into RAM
+# Passes kernel command line: root=UUID=abc123 ro quiet splash
+\`\`\`
+
+**3. Kernel Initialization**
+\`\`\`
+vmlinuz decompresses itself into RAM
+→ Initializes memory management (MMU, page tables)
+→ Detects and initializes CPUs
+→ Mounts initramfs as initial root filesystem
+→ Runs /init script inside initramfs
+\`\`\`
+
+**4. initramfs**
+\`\`\`bash
+# initramfs /init script:
+# - Loads storage drivers (SCSI, RAID, LVM, crypto)
+# - Mounts real root filesystem
+# - pivot_root: switches root to real filesystem
+# - Execs /sbin/init (systemd) on real root
+\`\`\`
+
+**5. systemd (PID 1)**
+\`\`\`bash
+systemd-analyze                    # Total boot time
+systemd-analyze blame              # Per-service startup time
+systemd-analyze critical-chain     # Dependency bottleneck
+journalctl -b                      # All logs from current boot
+\`\`\``,
+      },
+      {
+        question: 'What is initramfs and why does Linux need it?',
+        answer: `## initramfs: Initial RAM Filesystem
+
+initramfs (or initrd) is a **compressed cpio archive** loaded into RAM during boot before the real root filesystem is mounted.
+
+## Why It's Needed
+
+The kernel is modular — drivers for disk controllers, RAID, LVM, encryption are often loadable modules, not compiled in. But to load modules, you need to read from disk. To read from disk, you need the driver. This is the **chicken-and-egg problem**.
+
+initramfs breaks the cycle by providing a minimal environment with just enough to get to the real disk:
+
+\`\`\`bash
+# What's inside initramfs
+lsinitramfs /boot/initrd.img-$(uname -r) | head -30
+# Contains: /bin/sh, /lib/modules/..., /usr/bin/lvm, udev rules, etc.
+
+# Rebuild after module changes:
+update-initramfs -u -k $(uname -r)    # Debian/Ubuntu
+dracut -f                               # RHEL/Fedora
+\`\`\`
+
+## Without initramfs You Would Need
+
+- All storage drivers compiled into the kernel (bloated, one-size-fits-all)
+- No LVM, RAID, or disk encryption support at boot
+- No flexibility for different hardware configurations
+
+## The Handoff
+
+\`\`\`
+initramfs mounts real root at /sysroot
+→ chroot or pivot_root to /sysroot
+→ exec /sbin/init (systemd)
+→ initramfs RAM is freed
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/grub/manual/grub/',
+      'https://www.freedesktop.org/software/systemd/man/bootup.html',
+    ],
+  },
+  {
+    id: 'linux-kernel-basics',
+    title: 'Linux Kernel & /proc',
+    icon: 'cpu',
+    color: '#3b82f6',
+    category: 'fundamentals',
+    questions: 6,
+    description: 'Monolithic kernel design, loadable modules, /proc and /sys filesystems, and sysctl tunables.',
+    introduction: `The Linux kernel is monolithic: all core subsystems (memory management, process scheduling, filesystems, networking, device drivers) run in kernel space at the same privilege level. Unlike microkernels (where subsystems run as separate processes), this gives better performance at the cost of isolation — a kernel bug can crash the entire system.
+
+**Loadable Kernel Modules (LKM)**: Despite being monolithic, Linux supports dynamically loading and unloading code (modules) without rebooting. lsmod lists loaded modules (from /proc/modules), modinfo shows module details (description, parameters, dependencies), modprobe loads a module and all its dependencies (reads /lib/modules/$(uname -r)/modules.dep), rmmod unloads (fails if module is in use), insmod loads a specific .ko file without dependency handling.
+
+**/proc filesystem**: A virtual filesystem exposing kernel internal state as files. Nothing is stored on disk — files are generated on-the-fly when read. Key files: /proc/cpuinfo (CPU details including flags for virtualization support), /proc/meminfo (memory breakdown), /proc/loadavg (load averages and process counts), /proc/PID/ (per-process info: /proc/PID/cmdline, /proc/PID/maps for memory map, /proc/PID/fd/ for open file descriptors, /proc/PID/status), /proc/net/tcp for TCP connections (used by ss/netstat), /proc/sys/ for tunables.
+
+**/sys filesystem (sysfs)**: Exposes device and driver information in a structured hierarchy. /sys/class/net/ for network interfaces, /sys/block/ for block devices.
+
+**sysctl**: Reads and writes kernel parameters in /proc/sys/. sysctl -a shows all, sysctl net.ipv4.ip_forward reads one, sysctl -w net.ipv4.ip_forward=1 sets it (not persistent). Persistent in /etc/sysctl.conf or /etc/sysctl.d/*.conf, applied with sysctl -p.`,
+    whenToUse: [
+      'Tuning kernel parameters for performance or networking',
+      'Debugging module loading failures',
+      'Inspecting per-process memory maps and file descriptors',
+      'Understanding what hardware capabilities a system has',
+    ],
+    keyConcepts: [
+      {
+        term: 'Monolithic kernel',
+        definition: 'All subsystems run in kernel space (ring 0). Fast due to no IPC overhead between subsystems. LKMs extend functionality at runtime without recompiling.',
+      },
+      {
+        term: 'Kernel modules (lsmod/modprobe)',
+        definition: 'lsmod: list loaded modules. modprobe name: load module + dependencies. rmmod: unload. modinfo: show module details. Persistent loading via /etc/modules.',
+      },
+      {
+        term: '/proc filesystem',
+        definition: 'Virtual filesystem — files are kernel data structures exposed as files. /proc/PID/ per-process. /proc/sys/ for sysctl tunables. /proc/meminfo, /proc/cpuinfo for system info.',
+      },
+      {
+        term: 'sysctl',
+        definition: 'Tool to read/write kernel parameters in /proc/sys/. sysctl -w key=value for runtime changes. /etc/sysctl.d/*.conf for persistence. Common: net.ipv4.ip_forward, vm.swappiness, net.core.somaxconn.',
+      },
+    ],
+    pitfalls: [
+      'modprobe handles dependencies; insmod does not — use modprobe unless you know all deps are loaded',
+      'sysctl changes are not persistent without adding to /etc/sysctl.d/ — they reset on reboot',
+      'Not pinning kernel version in production — kernel upgrades can break out-of-tree modules (DKMS helps but is not guaranteed)',
+      '/proc/sys changes made by Docker/containers can affect the host if the container runs privileged',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between lsmod, modprobe, and insmod? When would you use each?',
+        answer: `## lsmod — List Loaded Modules
+
+\`\`\`bash
+lsmod
+# Module                  Size  Used by
+# ext4                  737280  2
+# mbcache                16384  1 ext4
+# jbd2                  122880  1 ext4
+
+# Shows: module name, size in bytes, use count, dependent modules
+# Used by column: count=0 means safe to unload
+\`\`\`
+
+## modprobe — Load with Dependencies
+
+\`\`\`bash
+modprobe dm_crypt        # Load dm-crypt + all dependencies automatically
+modprobe -r dm_crypt     # Remove module and unused dependencies
+modprobe --show-depends dm_crypt  # Show what would be loaded
+
+# Module config in:
+cat /etc/modules          # Modules to load at boot (Ubuntu/Debian)
+ls /etc/modules-load.d/  # systemd-based loading
+ls /etc/modprobe.d/       # Module options and aliases (blacklisting)
+\`\`\`
+
+## insmod — Insert Single Module
+
+\`\`\`bash
+insmod /lib/modules/$(uname -r)/kernel/drivers/net/dummy.ko
+# Direct file path, no dependency handling
+# Fails if dependencies are not already loaded
+# Use case: loading a specific .ko file not in the standard tree
+\`\`\`
+
+## When to Use Each
+
+| Tool | Use When |
+|------|----------|
+| lsmod | Checking what's currently loaded, verifying a module loaded successfully |
+| modprobe | Normal module management — handles deps automatically |
+| insmod | Loading a custom out-of-tree .ko file explicitly |`,
+      },
+      {
+        question: 'How would you tune the kernel to allow a server to handle more concurrent TCP connections?',
+        answer: `## Kernel TCP Tuning
+
+\`\`\`bash
+# View current values
+sysctl net.core.somaxconn
+sysctl net.ipv4.tcp_max_syn_backlog
+sysctl net.ipv4.ip_local_port_range
+sysctl fs.file-max
+
+# Apply tuning (runtime, not persistent)
+sysctl -w net.core.somaxconn=65535           # Max listen() backlog
+sysctl -w net.ipv4.tcp_max_syn_backlog=65535 # SYN queue size
+sysctl -w net.ipv4.ip_local_port_range="1024 65535"  # Ephemeral ports
+sysctl -w fs.file-max=2097152                # Max open files kernel-wide
+\`\`\`
+
+## Persistent in /etc/sysctl.d/
+
+\`\`\`bash
+cat > /etc/sysctl.d/99-tcp-tuning.conf << 'EOF'
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 65535
+net.ipv4.ip_local_port_range = 1024 65535
+net.ipv4.tcp_tw_reuse = 1
+net.core.netdev_max_backlog = 65535
+fs.file-max = 2097152
+EOF
+
+sysctl -p /etc/sysctl.d/99-tcp-tuning.conf
+\`\`\`
+
+## Also Check Application-Level Limits
+
+\`\`\`bash
+ulimit -n              # Current process file descriptor limit
+# Edit /etc/security/limits.conf for persistent user limits
+# Or LimitNOFILE= in systemd unit files
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/admin-guide/sysctl/',
+      'https://man7.org/linux/man-pages/man5/proc.5.html',
+    ],
+  },
+
+  // ─── SHELL (additional) ────────────────────────────────────────────────────
+  {
+    id: 'bash-variables-env',
+    title: 'Variables & Environment',
+    icon: 'terminal',
+    color: '#22c55e',
+    category: 'shell',
+    questions: 6,
+    description: 'Variable scoping, export, environment inspection, $PATH, $IFS, and Bash special variables.',
+    introduction: `Bash variables and the environment are fundamental to shell scripting and interactive use. Getting them wrong causes subtle, hard-to-debug bugs.
+
+**Variable assignment and types**: In bash, no type declaration is needed. var=value (no spaces around =). To use, prefix with $: echo $var or echo "\${var}". Curly braces are required for \${var}suffix to disambiguate from $varsuffix.
+
+**Local vs global scope**: Variables set in a script are global within that script. Variables set inside a function are global within the script unless declared with local. local var=value restricts the variable to the function scope and its children.
+
+**export**: Makes a variable available to child processes (subshells, commands run from the script). Without export, child processes cannot see the variable. export VAR=value sets and exports. env or printenv shows exported variables. set shows all variables including unexported shell variables (much more output).
+
+**$PATH**: The colon-separated list of directories searched for commands. Order matters — the first match is used. Add to PATH safely: export PATH="$HOME/.local/bin:$PATH" (prepend — takes priority) or PATH="$PATH:/opt/myapp/bin" (append). Never overwrite PATH entirely.
+
+**$IFS (Internal Field Separator)**: Controls word splitting. Default is space/tab/newline. Changing IFS affects for loop iteration and read. Set IFS=$'\n' to iterate over lines with spaces without splitting. Always restore: old_IFS="$IFS"; IFS=$'\n'; ...; IFS="$old_IFS".
+
+**Special variables**: $? (exit code of last command), $$ (current shell PID), $! (PID of last background job), $0 (script name), $1-$9 (positional parameters), $@ (all args, preserves quoting), $* (all args as one string), $# (argument count), $RANDOM (0-32767), $LINENO (current line number).`,
+    whenToUse: [
+      'Writing robust shell scripts that pass data between functions',
+      'Debugging PATH and command-not-found issues',
+      'Setting up environments for deployment scripts',
+      'Understanding why a script works interactively but fails in cron',
+    ],
+    keyConcepts: [
+      {
+        term: 'export keyword',
+        definition: 'export VAR=value makes VAR visible to child processes. Without export, child processes (commands, subshells) cannot see the variable. env shows all exported variables.',
+      },
+      {
+        term: '$PATH order',
+        definition: 'Shell searches directories left-to-right, uses first match. Prepend to take priority: PATH="$HOME/bin:$PATH". Never overwrite PATH entirely — you lose all system commands.',
+      },
+      {
+        term: '$IFS word splitting',
+        definition: 'IFS (Internal Field Separator) controls how bash splits words. Default: space/tab/newline. Set IFS=$\'\\n\' to iterate over newline-separated data without splitting on spaces.',
+      },
+      {
+        term: '$? and $@ vs $*',
+        definition: '$? is last exit code. "$@" expands to separate quoted args (preserves spacing). "$*" expands to one string with args joined by IFS. Always use "$@" in scripts.',
+      },
+    ],
+    pitfalls: [
+      'Forgetting export — child processes cannot see unexported variables, causing silent failures in scripts calling subcommands',
+      'Using unquoted $@ — it behaves like $* (word splitting) unless double-quoted: "$@"',
+      'Modifying PATH without including existing $PATH — wipes all system commands',
+      'Changing IFS without restoring it — causes unexpected word splitting in subsequent loops',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between $@ and $* in bash? When does it matter?',
+        answer: `## $@ vs $*
+
+Both expand to all positional parameters, but they differ critically when **double-quoted**.
+
+\`\`\`bash
+#!/bin/bash
+show_args() {
+    echo "Using \\$@:"
+    for arg in "$@"; do
+        echo "  [$arg]"
+    done
+
+    echo "Using \\$*:"
+    for arg in "$*"; do
+        echo "  [$arg]"
+    done
+}
+
+show_args "hello world" "foo bar" "baz"
+\`\`\`
+
+**Output with "$@"**:
+\`\`\`
+Using $@:
+  [hello world]
+  [foo bar]
+  [baz]
+\`\`\`
+
+**Output with "$*"**:
+\`\`\`
+Using $*:
+  [hello world foo bar baz]
+\`\`\`
+
+"$@" preserves each argument as a separate word.
+"$*" joins all arguments into one string (separated by first char of $IFS).
+
+## Always Use "$@" in Scripts
+
+\`\`\`bash
+# CORRECT: passes arguments to another command preserving quoting
+exec mycommand "$@"
+
+# WRONG: args with spaces get split
+exec mycommand $@
+exec mycommand $*
+\`\`\``,
+      },
+      {
+        question: 'How does the export keyword work, and what happens to variables without it in subshells?',
+        answer: `## export and Variable Inheritance
+
+\`\`\`bash
+# Without export:
+MY_VAR="hello"
+bash -c 'echo $MY_VAR'    # Prints nothing — child process can't see it
+
+# With export:
+export MY_VAR="hello"
+bash -c 'echo $MY_VAR'    # Prints: hello
+
+# Check if a variable is exported:
+export -p | grep MY_VAR
+# declare -x MY_VAR="hello"   (-x means exported)
+\`\`\`
+
+## env vs set vs printenv
+
+\`\`\`bash
+env           # Shows exported (environment) variables + their values
+printenv      # Same as env, slightly different format
+printenv PATH # Print specific variable
+
+set           # Shows ALL shell variables — exported + local shell vars
+              # Much more output, includes shell functions
+\`\`\`
+
+## Practical Pattern: Script Environment Setup
+
+\`\`\`bash
+#!/bin/bash
+# These are just shell variables (not exported)
+LOCAL_WORK_DIR="/tmp/work"
+TEMP_FILE="data.tmp"
+
+# This is exported to all child processes (python, node, etc.)
+export DATABASE_URL="postgres://localhost/mydb"
+export API_KEY="secret123"
+
+# Subshell inherits exported vars but not local vars
+(
+    echo $DATABASE_URL  # works: exported
+    echo $LOCAL_WORK_DIR  # empty: not exported
+)
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/bash/manual/bash.html#Shell-Variables',
+      'https://tldp.org/LDP/abs/html/',
+    ],
+  },
+  {
+    id: 'bash-conditionals-loops',
+    title: 'Conditionals & Loops',
+    icon: 'terminal',
+    color: '#22c55e',
+    category: 'shell',
+    questions: 6,
+    description: 'if/case/for/while/until, the [ vs [[ vs (( )) test distinctions, and break/continue.',
+    introduction: `Bash provides multiple conditional constructs, and choosing the right one is critical for correctness and portability.
+
+**[ ] (test command)**: The POSIX-compatible test command. It is actually an external command (though bash has a builtin). It does not support regex, and unquoted variables with spaces cause word splitting bugs. Always quote variables: [ "$var" = "value" ].
+
+**[[ ]] (bash keyword)**: Extended test construct — bash-specific. Supports: pattern matching with =~ (regex), = for string comparison with glob patterns, no word splitting so quoting is less critical (though still good practice), && and || inside the brackets. Preferred for bash scripts.
+
+**((  )) (arithmetic evaluation)**: For numeric comparisons and math. (( i++ )), (( count > 5 )), (( result = a * b )). Returns exit code 0 if result is nonzero (truthy), 1 if zero.
+
+**File tests**: -f (regular file), -d (directory), -r/-w/-x (permissions), -s (nonzero size), -e (exists), -L (symlink), -z (string is empty), -n (string is nonzero length), -nt/-ot (newer/older than).
+
+**for loop forms**: for item in list (word-split list), for item in "$@" (all script args), for ((i=0; i<10; i++)) (C-style), for file in *.log (glob expansion).
+
+**while read pattern**: The canonical way to process files line by line. while IFS= read -r line; do ... done < file.txt. IFS= prevents trimming leading/trailing whitespace. -r prevents backslash interpretation.
+
+**case statement**: Cleaner than chained elif for string pattern matching. Supports wildcards: *, ?, [abc]. Multiple patterns per case with |.`,
+    whenToUse: [
+      'Writing conditional logic in shell scripts',
+      'Processing files line by line',
+      'Input validation in scripts',
+      'Building menus or option parsers',
+    ],
+    keyConcepts: [
+      {
+        term: '[ ] vs [[ ]] vs (( ))',
+        definition: '[ ]: POSIX test — no regex, word splitting on unquoted vars. [[ ]]: bash keyword — supports =~, glob, safer quoting. (( )): arithmetic — numeric comparisons and math, C-like syntax.',
+      },
+      {
+        term: 'Numeric vs string comparison operators',
+        definition: 'Numeric: -eq -ne -lt -le -gt -ge (only in [ ] or [[ ]]). String: = != < > (in [[ ]]). Arithmetic: == != < > <= >= (in (( ))). Mixing them causes bugs.',
+      },
+      {
+        term: 'while read for file processing',
+        definition: 'while IFS= read -r line; do ... done < file — IFS= preserves leading spaces, -r prevents backslash escape, < file redirects without subshell (variables persist after loop).',
+      },
+      {
+        term: 'case pattern matching',
+        definition: 'case $var in pattern) commands ;; esac. Patterns support *, ?, [abc]. Multiple patterns: pattern1|pattern2). Cleaner than long elif chains for fixed string matching.',
+      },
+    ],
+    pitfalls: [
+      'Using = in [ ] for numeric comparison — [ $a = $b ] does string comparison; use -eq for numbers',
+      'Unquoted variables in [ ] — [ $file = "foo" ] fails if file has spaces or is empty; use [ "$file" = "foo" ]',
+      'Loop variable scope after while read piped input — while IFS= read -r line; done <<< "$output" (herestring) or < <(command) keeps vars in scope; piping creates a subshell',
+      'Not using break with a loop depth number in nested loops: break 2 exits two levels',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between [ ], [[ ]], and (( )) in bash conditionals?',
+        answer: `## [ ] — POSIX Test
+
+\`\`\`bash
+# String comparison
+[ "$name" = "alice" ]    # CORRECT: quoted
+[ $name = "alice" ]      # BUG: unquoted, fails if name has spaces
+
+# Numeric comparison — must use -eq, -lt, etc.
+[ "$count" -gt 5 ]
+
+# File tests
+[ -f "$file" ] && echo "exists"
+[ -d "$dir" ] || mkdir "$dir"
+\`\`\`
+
+## [[ ]] — Bash Extended Test
+
+\`\`\`bash
+# Regex matching (=~)
+[[ "$email" =~ ^[a-zA-Z0-9.]+@[a-zA-Z0-9.]+$ ]] && echo "valid"
+
+# Glob pattern matching
+[[ "$file" == *.log ]] && echo "is a log file"
+
+# No word splitting — safer with unquoted vars
+[[ $name == "alice" ]]  # Safe even unquoted
+
+# Logical operators inside (no need for -a/-o)
+[[ -f "$file" && -r "$file" ]] && cat "$file"
+\`\`\`
+
+## (( )) — Arithmetic Evaluation
+
+\`\`\`bash
+# Numeric comparison with natural operators
+count=10
+(( count > 5 )) && echo "more than 5"
+(( count++ ))        # Increment
+(( result = a * b )) # Arithmetic
+i=0
+while (( i < 10 )); do
+    (( i++ ))
+done
+\`\`\``,
+      },
+      {
+        question: 'Write a bash script that reads a file line by line and processes each line safely, including lines with spaces.',
+        answer: `## Safe Line-by-Line File Processing
+
+\`\`\`bash
+#!/bin/bash
+
+process_file() {
+    local filename="$1"
+
+    if [[ ! -f "$filename" ]]; then
+        echo "Error: file not found: $filename" >&2
+        return 1
+    fi
+
+    local line_count=0
+
+    # IFS= prevents trimming leading/trailing whitespace
+    # -r prevents backslash from being treated as escape
+    # Redirect < avoids a subshell (variables survive the loop)
+    while IFS= read -r line; do
+        (( line_count++ ))
+
+        # Skip empty lines
+        [[ -z "$line" ]] && continue
+
+        # Skip comment lines
+        [[ "$line" == \#* ]] && continue
+
+        echo "Line $line_count: $line"
+
+    done < "$filename"
+
+    echo "Processed $line_count lines"
+}
+
+process_file "$1"
+\`\`\`
+
+## Common Mistake: Piping to while (subshell issue)
+
+\`\`\`bash
+# WRONG: line_count is in a subshell, lost after loop
+cat file.txt | while IFS= read -r line; do
+    (( line_count++ ))
+done
+echo $line_count  # Always 0!
+
+# CORRECT: use process substitution to avoid subshell
+while IFS= read -r line; do
+    (( line_count++ ))
+done < <(grep "pattern" file.txt)
+echo $line_count  # Correct value
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/bash/manual/bash.html#Conditional-Constructs',
+      'https://mywiki.wooledge.org/BashFAQ',
+    ],
+  },
+  {
+    id: 'bash-functions',
+    title: 'Bash Functions',
+    icon: 'terminal',
+    color: '#22c55e',
+    category: 'shell',
+    questions: 5,
+    description: 'Function declaration, local variables, return codes, argument handling, and function libraries.',
+    introduction: `Bash functions allow code reuse and organization within scripts. They behave like mini-scripts within your script, with their own positional parameters but sharing the script's variable scope by default.
+
+**Declaration syntax**: Two equivalent forms exist: function name { body; } and name() { body; }. The name() form is slightly more POSIX-compatible. Functions must be defined before they are called (bash is interpreted top-to-bottom).
+
+**local keyword**: Critical for preventing variable pollution. Without local, any variable set inside a function is global within the script. local var=value creates a variable that only exists within the function and its children. Always use local for function-internal variables.
+
+**Arguments**: Inside a function, $1 $2 $@ $# refer to the function's arguments, shadowing the script's positional params. $0 still refers to the script name.
+
+**Return values — the key concept**: The return statement in bash only returns an exit code (0-255 integer). It cannot return strings or complex data. To "return" a string, use echo inside the function and capture with command substitution: result=$(my_function). For large data, write to a file or use a global variable (named explicitly, not local).
+
+**$FUNCNAME**: An array containing the call stack. \${FUNCNAME[0]} is the current function, \${FUNCNAME[1]} is the caller. Useful for error messages: echo "Error in \${FUNCNAME[0]}: message" >&2.
+
+**Sourcing libraries**: source /path/to/lib.sh or . /path/to/lib.sh loads functions and variables from another file into the current shell. Use this to build reusable function libraries. Source relative paths: source "$(dirname "$0")/lib.sh".`,
+    whenToUse: [
+      'Organizing complex scripts into reusable components',
+      'Building shared function libraries sourced by multiple scripts',
+      'Reducing duplication in deployment and automation scripts',
+      'Creating wrapper functions for common operations with error handling',
+    ],
+    keyConcepts: [
+      {
+        term: 'local keyword',
+        definition: 'local var=value restricts variable to the function scope. Without local, variables set inside a function are globally visible in the script. Always use local for internal function variables.',
+      },
+      {
+        term: 'return vs echo for values',
+        definition: 'return N only returns an exit code 0-255. To "return" a string, echo it and capture: result=$(my_func). For large data, write to a temp file or use a named global.',
+      },
+      {
+        term: '$FUNCNAME array',
+        definition: '\${FUNCNAME[0]} = current function name. \${FUNCNAME[1]} = caller. Useful for error messages and call stack tracing. Array automatically maintained by bash.',
+      },
+      {
+        term: 'Sourcing function libraries',
+        definition: 'source /path/lib.sh or . /path/lib.sh loads functions into current shell. Use "$(dirname "$0")/lib.sh" for relative paths. All sourced functions share the current shell environment.',
+      },
+    ],
+    pitfalls: [
+      'Forgetting local — a function that sets var=value modifies the global scope and affects callers',
+      'Using return to send a string — return can only send an integer 0-255; use echo + command substitution',
+      'Defining functions after calling them — bash reads top-to-bottom; function must be defined before the call',
+      'Recursive functions without a base case — bash has no stack overflow protection, will hit resource limits',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you return a string value from a bash function? Why can\'t you use the return statement?',
+        answer: `## Why return Doesn't Work for Strings
+
+\`\`\`bash
+# return only accepts integers 0-255 (exit codes)
+get_greeting() {
+    return "Hello, World!"  # SYNTAX ERROR or truncated to number
+}
+\`\`\`
+
+## Correct Pattern: echo + Command Substitution
+
+\`\`\`bash
+get_greeting() {
+    local name="$1"
+    echo "Hello, $name!"   # Write to stdout
+}
+
+# Capture the output with $()
+greeting=$(get_greeting "Alice")
+echo "$greeting"
+# Hello, Alice!
+\`\`\`
+
+## For Multiple Values: Use a Nameref or Global
+
+\`\`\`bash
+# Pattern: write result to a caller-specified variable name
+get_stats() {
+    local -n _result="$1"   # nameref: _result is an alias for the variable named in $1
+    _result="count=42 size=1024"
+}
+
+declare stats
+get_stats stats
+echo "$stats"
+# count=42 size=1024
+
+# Or use a well-named global (document it clearly)
+_LAST_RESULT=""
+compute() {
+    # ... computation ...
+    _LAST_RESULT="computed_value"
+}
+compute
+echo "$_LAST_RESULT"
+\`\`\`
+
+## Return for Error Signaling (Correct Use)
+
+\`\`\`bash
+validate_input() {
+    [[ -z "$1" ]] && return 1   # Error: empty input
+    [[ "$1" =~ ^[0-9]+$ ]] || return 2  # Error: not numeric
+    return 0  # Success
+}
+
+if ! validate_input "$user_input"; then
+    echo "Invalid input" >&2
+    exit 1
+fi
+\`\`\``,
+      },
+      {
+        question: 'Explain the difference between local and global variables in bash functions with an example.',
+        answer: `## Global Variable Bug (no local)
+
+\`\`\`bash
+#!/bin/bash
+counter=0
+
+increment() {
+    counter=$(( counter + 1 ))   # Modifies global counter — intentional here
+    temp=$(( counter * 2 ))      # BUG: temp is global! Caller might use 'temp' too
+}
+
+process() {
+    local temp="original"   # This local 'temp' is separate from increment's 'temp'
+    increment
+    echo "temp after increment: $temp"  # Shows "original" because of local
+}
+
+process
+echo "counter: $counter"   # counter modified as intended
+\`\`\`
+
+## Correct Pattern with local
+
+\`\`\`bash
+#!/bin/bash
+
+calculate_size() {
+    local directory="$1"          # local — doesn't pollute caller's $directory
+    local total=0                  # local — doesn't affect caller's $total
+    local file                     # Declare loop var as local
+
+    for file in "$directory"/*; do
+        [[ -f "$file" ]] && (( total += $(stat -c%s "$file") ))
+    done
+
+    echo "$total"   # "return" value via stdout
+}
+
+# Caller's variables are safe
+directory="/home/user"
+total="previous_calculation"
+
+result=$(calculate_size "/var/log")
+echo "Log dir size: $result bytes"
+echo "directory still: $directory"   # Still /home/user
+echo "total still: $total"           # Still previous_calculation
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/bash/manual/bash.html#Shell-Functions',
+      'https://www.shellcheck.net/',
+    ],
+  },
+  {
+    id: 'bash-text-processing',
+    title: 'Text Processing Tools',
+    icon: 'terminal',
+    color: '#22c55e',
+    category: 'shell',
+    questions: 7,
+    description: 'grep, sed, awk, cut, sort, uniq, tr, wc, head/tail, and xargs for command-line data processing.',
+    introduction: `The Unix text processing toolkit is a core skill for Linux administration and DevOps. These tools are composable via pipes and form the basis of shell-based data processing pipelines.
+
+**grep family**: grep searches for patterns. -E (or egrep) enables extended regex (|, +, ?, {n,m}, ()). -F (or fgrep) does fixed-string matching (faster, no regex). Key flags: -v (invert, print non-matching), -r (recursive directory search), -l (print filenames only), -n (line numbers), -c (count matches), -i (case-insensitive), -o (print only matching part), -A/-B/-C N (after/before/context lines).
+
+**sed (stream editor)**: Processes text line by line. The s command is most common: sed 's/pattern/replacement/g'. Flags on s: g (global, all occurrences on line), i (case insensitive), p (print, use with -n). -i for in-place editing (use -i.bak on macOS for backup). Address ranges: sed '3,10d' (delete lines 3-10), sed '/start/,/end/d'.
+
+**awk**: A full programming language for field-based text processing. Field separator: -F ':' or FS=":" inside. Fields: $1 $2 ... $NF (last field). NR=line number, NF=number of fields. BEGIN{} runs before input, END{} runs after. printf for formatted output. Ideal for summing columns, filtering on conditions, and reformatting structured text.
+
+**Supporting tools**: cut -d: -f1,3 (extract specific fields by delimiter), sort -k2 -n (numeric sort on field 2), sort -u (unique), uniq -c (count duplicates — requires sorted input), tr -d '\\r' (delete carriage returns), tr -s ' ' (squeeze repeated spaces), wc -l (line count), head -n 20, tail -n 20, tail -f (follow), xargs -I{} command {} (pipe list to command arguments).`,
+    whenToUse: [
+      'Analyzing log files for errors and patterns',
+      'Extracting specific fields from structured text (CSV, colon-delimited)',
+      'Finding and replacing text across many files',
+      'Building reporting pipelines from command output',
+    ],
+    keyConcepts: [
+      {
+        term: 'grep -E extended regex',
+        definition: 'grep -E "pattern1|pattern2" — enables |, +, ?, (), {n,m}. Equivalent to egrep. grep -F for literal string (no regex), much faster for fixed patterns.',
+      },
+      {
+        term: 'sed s/pattern/replace/',
+        definition: 'sed s/old/new/g — global replace. -i for in-place. Address ranges: /regex/s/old/new/. sed -n p with -n suppresses default print. d deletes lines. p prints matched lines.',
+      },
+      {
+        term: 'awk field processing',
+        definition: 'awk -F: \'{print $1, $3}\' — print fields. BEGIN{}/END{} for setup/teardown. $NF=last field. sum+=$1 in body, print sum in END for column sums. printf for formatted output.',
+      },
+      {
+        term: 'xargs for parallelism',
+        definition: 'xargs -I{} command {} for substitution. xargs -P4 for 4 parallel processes. xargs -n1 for one arg per invocation. find ... | xargs grep is much faster than grep -r for large trees.',
+      },
+    ],
+    pitfalls: [
+      'grep -r without --include="*.log" searches ALL files including binaries — slow and noisy',
+      'sed -i without .bak on macOS requires an empty string: sed -i \'\' (GNU sed does not need this)',
+      'uniq without sort first — uniq only removes adjacent duplicates; always sort | uniq',
+      'awk print vs printf — print adds newline automatically; printf requires \\n explicitly',
+    ],
+    keyQuestions: [
+      {
+        question: 'You have a log file where each line is an Apache access log entry. Write a one-liner to find the top 10 IP addresses by request count.',
+        answer: `## Top 10 IPs from Apache Access Log
+
+\`\`\`bash
+# Apache Combined Log Format:
+# 192.168.1.1 - alice [01/Jan/2024:12:00:00 +0000] "GET /page HTTP/1.1" 200 1234
+
+# Solution: extract field 1 (IP), count, sort descending, take top 10
+awk '{print $1}' /var/log/apache2/access.log | sort | uniq -c | sort -rn | head -10
+
+# Breakdown:
+# awk '{print $1}'  — extract the first whitespace-delimited field (IP)
+# sort              — sort IPs alphabetically (required before uniq)
+# uniq -c           — count consecutive identical lines, prepend count
+# sort -rn          — sort numerically (-n) in reverse (-r) order (highest first)
+# head -10          — show only the top 10
+\`\`\`
+
+## Alternative with grep and cut
+
+\`\`\`bash
+# Using cut (faster than awk for simple field extraction)
+cut -d' ' -f1 /var/log/apache2/access.log | sort | uniq -c | sort -rn | head -10
+\`\`\`
+
+## Extended: Top 10 IPs hitting 404 errors
+
+\`\`\`bash
+grep '" 404 ' /var/log/apache2/access.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -10
+\`\`\`
+
+## Extended: Requests per hour
+
+\`\`\`bash
+awk '{print substr($4, 2, 14)}' /var/log/apache2/access.log | sort | uniq -c
+# substr extracts "[01/Jan/2024:12" — date + hour
+\`\`\``,
+      },
+      {
+        question: 'Explain the difference between grep, egrep, and fgrep. When would you use each?',
+        answer: `## grep (Basic Regular Expressions)
+
+\`\`\`bash
+grep 'error' logfile             # Literal string
+grep 'err[oa]r' logfile          # Character class
+grep 'error\\|warning' logfile   # Alternation (must escape | in BRE)
+grep 'err.*log' logfile          # .* wildcard
+\`\`\`
+
+BRE (Basic Regular Expressions): +, ?, |, (, ) must be escaped with backslash.
+
+## egrep / grep -E (Extended Regular Expressions)
+
+\`\`\`bash
+grep -E 'error|warning' logfile  # Alternation without escaping
+egrep 'error|warning' logfile    # Equivalent
+
+grep -E '(ERROR|WARN): .{10,}' logfile  # Groups, length quantifiers
+grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}' logfile  # Date at line start
+\`\`\`
+
+ERE: +, ?, |, (, ) work without escaping — simpler and more readable.
+
+## fgrep / grep -F (Fixed Strings)
+
+\`\`\`bash
+fgrep 'config.error_handler()' logfile   # Literal dots, parens — no regex
+grep -F '$PATH variable' logfile         # Dollar sign — no variable expansion
+grep -F 'user[admin]' logfile            # Brackets — no character class
+\`\`\`
+
+Much faster than regex for fixed patterns — no regex engine overhead.
+
+## When to Use Each
+
+| Tool | Use When |
+|------|----------|
+| grep | Simple patterns with basic regex |
+| grep -E | Complex patterns with alternation, groups |
+| grep -F | Fixed strings — performance, or when pattern has regex metacharacters |`,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/grep/manual/',
+      'https://www.gnu.org/software/gawk/manual/gawk.html',
+    ],
+  },
+  {
+    id: 'bash-job-control',
+    title: 'Job Control & Process Management',
+    icon: 'terminal',
+    color: '#22c55e',
+    category: 'shell',
+    questions: 5,
+    description: 'fg/bg, jobs, disown, nohup, Ctrl+C/Z signals, process substitution, and pipeline control.',
+    introduction: `Bash job control allows managing multiple processes from a single terminal session. Understanding it is essential for running background tasks, keeping processes alive after logout, and debugging pipeline behavior.
+
+**Terminal signals**: Ctrl+C sends SIGINT (signal 2) to the foreground process group — typically terminates the process. Ctrl+Z sends SIGTSTP (signal 20) — suspends the process (pauses it, doesn't terminate). Ctrl+\\ sends SIGQUIT — terminates with core dump.
+
+**Job control commands**: After Ctrl+Z suspends a process, jobs -l lists all jobs with their PIDs and states. fg %1 brings job 1 to foreground. bg %1 resumes job 1 in background (as if it were started with &). & at end of command starts directly in background. Job specs: %1 is first job, %% or %+ is most recent job, %- is previous job.
+
+**disown vs nohup**: disown removes a job from the shell's job table — the process continues running but the shell won't send SIGHUP when the terminal closes. However, the process's stdin/stdout still point to the terminal. nohup makes a process immune to SIGHUP before starting — output goes to nohup.out by default. For long-running processes, use nohup command > output.log 2>&1 & and then optionally disown.
+
+**Process substitution** <(command): Creates a named pipe (FIFO) and substitutes its path. Allows commands that expect files to receive command output: diff <(sort file1.txt) <(sort file2.txt). The command runs in a subshell.
+
+**pipefail**: By default, a pipeline's exit code is the last command's exit code. set -o pipefail makes the pipeline fail if any command fails. Critical for reliable scripts.`,
+    whenToUse: [
+      'Running long operations in background while continuing work',
+      'Keeping processes alive after SSH session disconnect',
+      'Debugging pipeline failures where intermediate commands fail silently',
+      'Process substitution to avoid temp files',
+    ],
+    keyConcepts: [
+      {
+        term: 'SIGINT vs SIGTSTP',
+        definition: 'Ctrl+C sends SIGINT (terminate). Ctrl+Z sends SIGTSTP (suspend/pause). Suspended jobs can be resumed with fg or bg. SIGSTOP cannot be caught; SIGTSTP can.',
+      },
+      {
+        term: 'disown vs nohup',
+        definition: 'disown: removes job from shell table after it starts — SIGHUP not sent on shell exit, but stdout still points to terminal. nohup: before starting — immune to SIGHUP, stdout redirected to nohup.out.',
+      },
+      {
+        term: 'Process substitution <()',
+        definition: '<(command) creates a named pipe with command output. diff <(sort a) <(sort b) compares sorted versions. >(command) pipes output into command. Avoids temp files.',
+      },
+      {
+        term: 'pipefail option',
+        definition: 'set -o pipefail makes pipeline exit code the rightmost non-zero exit code. Without it: cmd1 | cmd2 exit code is only cmd2\'s. Critical for catching errors in pipelines.',
+      },
+    ],
+    pitfalls: [
+      'nohup without output redirection — output goes to nohup.out in current directory, which can fill up',
+      'Not using set -o pipefail — grep "pattern" file | wc -l returns 0 even if grep fails (file not found)',
+      'disown without redirecting output — process output still writes to closed terminal, may cause SIGPIPE',
+      'Backgrounding interactive commands (programs that read from stdin) — they stop immediately waiting for terminal input',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between disown and nohup? When would you use each?',
+        answer: `## nohup — Before the Process Starts
+
+\`\`\`bash
+# nohup makes the process immune to SIGHUP before it starts
+nohup ./long_running_script.sh > output.log 2>&1 &
+echo $!  # PID of background process
+
+# What nohup does:
+# 1. Redirects stdin from /dev/null
+# 2. Redirects stdout to nohup.out (or your redirect)
+# 3. Process ignores SIGHUP signal
+
+# The job appears in jobs list initially
+jobs
+# [1]+ Running  nohup ./long_running_script.sh > output.log 2>&1 &
+\`\`\`
+
+## disown — After the Process is Running
+
+\`\`\`bash
+# Start a process (forgot nohup)
+./long_running_script.sh > output.log 2>&1 &
+# [1] 12345
+
+# Realize you need to disconnect — remove from job table
+disown %1        # Remove by job number
+disown 12345     # Remove by PID
+disown -a        # Remove all jobs
+
+# Shell won't send SIGHUP when you exit
+# But: process stdout/stderr still point to the terminal
+# If terminal closes, writes to stdout will get SIGPIPE
+\`\`\`
+
+## Best Practice: Use Both
+
+\`\`\`bash
+# Start correctly from the beginning
+nohup ./script.sh > /var/log/script.log 2>&1 &
+disown
+
+# Or use a proper process manager:
+# systemd, supervisord, tmux, screen
+\`\`\``,
+      },
+      {
+        question: 'Explain set -o pipefail. Why is it important for reliable shell scripts?',
+        answer: `## The Problem Without pipefail
+
+\`\`\`bash
+#!/bin/bash
+# Without pipefail, this script appears to succeed
+
+grep "CRITICAL" /nonexistent/file.log | wc -l
+echo "Exit code: $?"  # 0 — because wc -l succeeded!
+# grep failed (exit 1) but its failure is masked by wc -l
+\`\`\`
+
+## With pipefail
+
+\`\`\`bash
+#!/bin/bash
+set -o pipefail
+
+grep "CRITICAL" /nonexistent/file.log | wc -l
+echo "Exit code: $?"  # 1 — grep's failure propagates
+# Output: grep: /nonexistent/file.log: No such file or directory
+\`\`\`
+
+## Real-World Script Pattern
+
+\`\`\`bash
+#!/bin/bash
+set -euo pipefail
+# -e: exit on any error
+# -u: treat unset variables as errors
+# -o pipefail: pipeline fails if any component fails
+
+# Now pipeline errors are caught:
+data=$(curl -s "https://api.example.com/data" | jq '.results[].name')
+# If curl fails OR jq fails, the script exits immediately
+
+# Process data safely
+while IFS= read -r name; do
+    process_item "$name"
+done <<< "$data"
+\`\`\`
+
+## When pipefail Is Too Strict
+
+\`\`\`bash
+# grep returns exit 1 when no matches found (not an error in this context)
+# Use || true to suppress
+grep "optional_pattern" file.txt | process_matches || true
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.gnu.org/software/bash/manual/bash.html#Job-Control',
+      'https://man7.org/linux/man-pages/man1/nohup.1.html',
+    ],
+  },
+
+  // ─── NETWORKING (additional) ───────────────────────────────────────────────
+  {
+    id: 'linux-ip-routing',
+    title: 'IP Routing & Policy Routing',
+    icon: 'globe',
+    color: '#06b6d4',
+    category: 'networking',
+    questions: 6,
+    description: 'ip route, routing tables, default gateway, policy routing with ip rule, and ECMP load balancing.',
+    introduction: `Linux kernel routing determines where outgoing packets are sent. Every packet consults the routing table, and the kernel applies longest prefix match to select the best route.
+
+**The routing table**: ip route show (the modern replacement for the obsolete route command) displays the main routing table. Output fields: destination network, via (gateway IP), dev (outgoing interface), src (preferred source IP), metric (preference — lower is preferred). The default route (0.0.0.0/0) matches all destinations not covered by more specific routes.
+
+**Longest prefix match**: When multiple routes match a destination, the most specific (longest prefix) wins. A /32 host route beats a /24 subnet route which beats the default /0 route.
+
+**Adding and removing routes**:
+\`\`\`
+ip route add 10.0.0.0/8 via 192.168.1.1 dev eth0
+ip route del 10.0.0.0/8
+ip route add default via 192.168.1.254
+\`\`\`
+
+**Policy routing (ip rule)**: Linux supports multiple routing tables (0-252) plus main (253), default (254), and local (255). ip rule list shows policy rules ordered by priority. When a rule matches (by source IP, mark, interface, etc.), the kernel consults that rule's table. This enables source-based routing — essential for multi-homed servers where reply traffic must exit the same interface it arrived on.
+
+**ECMP (Equal-Cost Multi-Path)**: Multiple gateways with equal cost: ip route add default nexthop via 10.0.0.1 weight 1 nexthop via 10.0.0.2 weight 1. Kernel hashes the packet's 5-tuple to select the path.
+
+**ip route get IP**: Test which route and source IP would be used for a specific destination — invaluable for debugging routing issues.`,
+    whenToUse: [
+      'Multi-homed servers (multiple network interfaces/ISPs)',
+      'VPN and overlay network configuration',
+      'Debugging "traffic going out wrong interface" issues',
+      'Container networking and Kubernetes node networking',
+    ],
+    keyConcepts: [
+      {
+        term: 'Longest prefix match',
+        definition: 'When multiple routes match, the most specific (longest prefix) wins. /32 > /24 > /16 > /8 > /0 (default). This is the fundamental rule of IP routing.',
+      },
+      {
+        term: 'ip route show/add/del',
+        definition: 'ip route show: view table. ip route add NET via GW dev IF: add route. ip route del NET: remove. ip route get IP: test which route applies. Replaces obsolete route command.',
+      },
+      {
+        term: 'Policy routing with ip rule',
+        definition: 'ip rule add from 192.168.2.0/24 table 200 — route traffic from specific source through table 200. ip route add default via GW table 200. Enables source-based routing for multi-homed servers.',
+      },
+      {
+        term: 'ECMP',
+        definition: 'Equal-Cost Multi-Path: multiple nexthop entries for same destination. Kernel uses 5-tuple hash for consistent per-flow selection. ip route add default nexthop via GW1 nexthop via GW2.',
+      },
+    ],
+    pitfalls: [
+      'Routes added with ip route are not persistent — add to /etc/network/interfaces or NetworkManager config for persistence',
+      'Wrong metric causing unexpected path selection when multiple default routes exist (ip route add default via X metric 100)',
+      'ECMP load balancing is per-flow (hash-based), not per-packet — TCP sessions always use the same path',
+      'Asymmetric routing causing stateful firewall (conntrack) to drop return traffic — must use policy routing for multi-homed setups',
+    ],
+    keyQuestions: [
+      {
+        question: 'A server has two network interfaces. HTTP requests come in on eth0 but replies go out eth1. How do you fix this with policy routing?',
+        answer: `## The Asymmetric Routing Problem
+
+When a server has two interfaces with default routes, responses may exit via a different interface than requests arrived on. Stateful firewalls drop these "asymmetric" flows.
+
+## Solution: Policy Routing (Source-Based Routing)
+
+\`\`\`bash
+# Scenario:
+# eth0: 192.168.1.10/24, gateway 192.168.1.1  (ISP1, public traffic)
+# eth1: 10.0.0.10/24, gateway 10.0.0.1        (ISP2, backup)
+
+# Step 1: Create two routing tables (edit /etc/iproute2/rt_tables)
+echo "100 isp1" >> /etc/iproute2/rt_tables
+echo "200 isp2" >> /etc/iproute2/rt_tables
+
+# Step 2: Add routes for each ISP in their own table
+ip route add default via 192.168.1.1 table isp1
+ip route add 192.168.1.0/24 dev eth0 src 192.168.1.10 table isp1
+
+ip route add default via 10.0.0.1 table isp2
+ip route add 10.0.0.0/24 dev eth1 src 10.0.0.10 table isp2
+
+# Step 3: Add policy rules — route based on SOURCE IP
+# Traffic FROM eth0's IP uses isp1 table (replies go back via eth0)
+ip rule add from 192.168.1.10 table isp1 priority 100
+# Traffic FROM eth1's IP uses isp2 table
+ip rule add from 10.0.0.10 table isp2 priority 200
+
+# Verify
+ip rule list
+ip route show table isp1
+ip route get 8.8.8.8 from 192.168.1.10
+\`\`\``,
+      },
+      {
+        question: 'How does the Linux kernel select a route when multiple routes match? Walk through the algorithm.',
+        answer: `## Linux Route Selection Algorithm
+
+\`\`\`bash
+# View the routing table
+ip route show
+# 10.0.0.0/8 via 172.16.0.1 dev eth1
+# 192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.10
+# 192.168.1.100/32 via 192.168.1.254 dev eth0    (host route)
+# default via 192.168.1.1 dev eth0
+\`\`\`
+
+## Selection Steps
+
+**1. Policy rules first (ip rule list)**
+\`\`\`bash
+ip rule list
+# 0:  from all lookup local    (always checked first — local addresses)
+# 32766: from all lookup main  (main table, where user routes live)
+# 32767: from all lookup default
+\`\`\`
+
+**2. Within a table: longest prefix match**
+\`\`\`
+Destination: 192.168.1.100
+Matches: 192.168.1.0/24 (/24) AND 192.168.1.100/32 (/32)
+Winner: 192.168.1.100/32 (longer prefix = more specific)
+\`\`\`
+
+**3. Tie-breaking (same prefix length)**
+\`\`\`
+Same prefix → compare metric (lower wins)
+Same metric → ECMP if multiple nexthops configured
+\`\`\`
+
+**4. Test a specific lookup**
+\`\`\`bash
+ip route get 192.168.1.100
+# 192.168.1.100 via 192.168.1.254 dev eth0 src 192.168.1.10
+
+ip route get 8.8.8.8
+# 8.8.8.8 via 192.168.1.1 dev eth0 src 192.168.1.10
+# (matched default route)
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man8/ip-route.8.html',
+      'https://lartc.org/howto/',
+    ],
+  },
+  {
+    id: 'linux-ss-netstat',
+    title: 'Socket Statistics: ss & netstat',
+    icon: 'globe',
+    color: '#06b6d4',
+    category: 'networking',
+    questions: 5,
+    description: 'ss -tulnp vs netstat, TCP socket state machine, TIME_WAIT, and CLOSE_WAIT diagnosis.',
+    introduction: `ss (socket statistics) is the modern replacement for netstat. It reads socket information directly from the kernel via netlink socket rather than parsing /proc/net/tcp, making it significantly faster on systems with many connections.
+
+**ss -tulnp decoded**:
+- t: TCP sockets
+- u: UDP sockets
+- l: listening sockets only (omit to see established connections too)
+- n: numeric — show IP addresses and port numbers instead of resolving to hostnames and service names (much faster)
+- p: show process name and PID
+
+**Reading ss output**: Netid (tcp/udp/unix), State, Recv-Q (bytes received but not read by application — high value means app can't keep up), Send-Q (bytes in send buffer not yet acknowledged by remote), Local Address:Port, Peer Address:Port, Process.
+
+**TCP state machine**: The full TCP handshake and teardown creates distinct connection states. LISTEN (server waiting), SYN_SENT (client sent SYN, waiting for SYN-ACK), SYN_RECV (server received SYN, sent SYN-ACK), ESTABLISHED (connected), FIN_WAIT_1/2 (initiator closing), TIME_WAIT (initiator waiting for delayed packets), CLOSE_WAIT (receiver's side acknowledged FIN, application hasn't called close()), LAST_ACK, CLOSED.
+
+**TIME_WAIT**: After TCP connection closes, the initiating side enters TIME_WAIT for 2×MSL (Maximum Segment Lifetime, typically 30-60 seconds, so TIME_WAIT lasts 60-120 seconds). Purpose: ensure delayed/duplicate packets from the old connection don't corrupt a new connection with the same 4-tuple. Thousands of TIME_WAIT connections are normal on a busy server — the kernel manages them automatically.
+
+**CLOSE_WAIT**: The remote sent FIN (wants to close) and the local acknowledged it, but the local application hasn't called close() yet. CLOSE_WAIT connections accumulate when there's an application bug (not calling close() on HTTP keep-alive connections, unclosed sockets in code). This is almost always an application bug, not a kernel issue.`,
+    whenToUse: [
+      'Checking what ports are listening on a server',
+      'Diagnosing "address already in use" errors',
+      'Investigating connection leaks (CLOSE_WAIT buildup)',
+      'Monitoring connection counts and queue depths under load',
+    ],
+    keyConcepts: [
+      {
+        term: 'ss vs netstat speed',
+        definition: 'ss reads from kernel netlink socket directly. netstat parses /proc/net/tcp (reads entire file). On systems with 100k+ connections, netstat is ~100x slower than ss.',
+      },
+      {
+        term: '-tulnp flags',
+        definition: 't=TCP, u=UDP, l=listening only, n=numeric (no DNS), p=show process. ss -tulnp is the standard "what\'s listening" command. Add -a to also show established.',
+      },
+      {
+        term: 'TIME_WAIT 2MSL',
+        definition: 'Normal after TCP close. Duration 60-120s. Prevents old duplicate packets corrupting new connections. High count on busy servers is expected. Tune net.ipv4.tcp_tw_reuse if needed.',
+      },
+      {
+        term: 'CLOSE_WAIT as app bug',
+        definition: 'CLOSE_WAIT means remote sent FIN but local app hasn\'t called close(). Unlike TIME_WAIT (kernel-managed), CLOSE_WAIT grows until the app is fixed or restarted. Check with: ss -tnp state close-wait.',
+      },
+    ],
+    pitfalls: [
+      'Panicking about TIME_WAIT — it is normal, kernel-managed, and does not cause connection failures',
+      'Confusing CLOSE_WAIT (app bug) with TIME_WAIT (normal) — they require very different responses',
+      'High Recv-Q means the application cannot keep up reading data — may indicate CPU or processing bottleneck in the app',
+      'ss without -n on a busy server — DNS resolution for each IP is very slow with thousands of connections',
+    ],
+    keyQuestions: [
+      {
+        question: 'You see thousands of TIME_WAIT connections on a server. Is this a problem? How do you tune it?',
+        answer: `## TIME_WAIT: Normal, Not a Problem
+
+\`\`\`bash
+# Count TIME_WAIT connections
+ss -tn state time-wait | wc -l
+# 15000 — this is fine on a busy HTTP server
+
+# These are normal: each HTTP/1.1 connection that closes enters TIME_WAIT
+# Duration: 60 seconds (2 × 30s MSL)
+# 15000 connections × 60s = 250 new connections/second closing
+# Completely manageable for the kernel
+\`\`\`
+
+## When TIME_WAIT Is Actually a Problem
+
+TIME_WAIT prevents reusing the same 4-tuple (src IP:port + dst IP:port + protocol) for 60s. On a server making many outbound connections to the same IP:port (e.g., a proxy hitting one backend), ephemeral ports can run out.
+
+\`\`\`bash
+# Check ephemeral port range
+sysctl net.ipv4.ip_local_port_range
+# 32768 61000 — about 28,000 ports
+
+# Enable TIME_WAIT socket reuse for outgoing connections
+sysctl -w net.ipv4.tcp_tw_reuse=1
+# Safe: only reuses for NEW outgoing connections to different remote endpoint
+\`\`\`
+
+## What NOT to Do
+
+\`\`\`bash
+# DEPRECATED and dangerous — can cause data corruption
+# sysctl -w net.ipv4.tcp_tw_recycle=1  # Removed in kernel 4.12
+
+# Better approach: use persistent HTTP connections (Connection: keep-alive)
+# This prevents TIME_WAIT entirely by reusing connections
+\`\`\``,
+      },
+      {
+        question: 'What does CLOSE_WAIT mean in the TCP state machine? What usually causes it?',
+        answer: `## TCP Teardown States
+
+\`\`\`
+Client (active close)          Server (passive close)
+─────────────────────────────────────────────────────
+     FIN →
+                               ← ACK
+                               (Server enters CLOSE_WAIT here)
+
+                               ← FIN  (server calls close())
+     ACK →
+     (Client enters TIME_WAIT)
+\`\`\`
+
+## CLOSE_WAIT Means the App Hasn't Called close()
+
+\`\`\`bash
+# Find CLOSE_WAIT connections and which process owns them
+ss -tnp state close-wait
+
+# How many CLOSE_WAIT connections exist?
+ss -tn | grep CLOSE-WAIT | wc -l
+
+# If this number grows over time = application bug
+\`\`\`
+
+## Common Causes
+
+**1. HTTP connection not closed in code**
+\`\`\`python
+# Bug: response body not fully read / connection not closed
+conn = http.client.HTTPConnection("example.com")
+conn.request("GET", "/")
+resp = conn.getresponse()
+# Missing: resp.read() and conn.close()
+\`\`\`
+
+**2. Database connection pool leak**
+- Connection acquired but not returned to pool after exception
+- try/finally or context managers prevent this
+
+**3. File descriptor leak**
+- Sockets opened but never closed when function exits abnormally
+
+## Fix
+
+CLOSE_WAIT connections cannot be fixed by kernel tuning. The application must be fixed to call close() on connections when done. Workaround: restart the app (clears all sockets). Permanent fix: add proper connection cleanup in error paths.`,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man8/ss.8.html',
+      'https://vincent.bernat.ch/en/blog/2014-tcp-time-wait-state-linux',
+    ],
+  },
+  {
+    id: 'linux-tcpdump',
+    title: 'Packet Capture with tcpdump',
+    icon: 'globe',
+    color: '#06b6d4',
+    category: 'networking',
+    questions: 5,
+    description: 'tcpdump capture syntax, BPF filters, writing pcap files, and tshark for terminal analysis.',
+    introduction: `tcpdump is the essential command-line packet capture tool. It uses libpcap and BPF (Berkeley Packet Filter) to capture and filter network packets at the kernel level, minimizing the data sent to userspace.
+
+**Basic usage**: tcpdump -i eth0 captures on eth0. tcpdump -i any captures on all interfaces (useful when you're not sure which interface traffic uses, but misses some VLAN information). tcpdump with no filter prints all packets — typically too much data.
+
+**BPF filter expressions**: The filter language is concise and powerful. Primitives: host 1.2.3.4 (source or destination), src host 1.2.3.4 (source only), dst host, port 80 (source or destination port), src port, dst port, tcp (TCP only), udp, net 10.0.0.0/8 (network). Combinations: and (&&), or (||), not (!). Parentheses for grouping: 'tcp and (port 80 or port 443)'.
+
+**Key flags**:
+- -n: no DNS resolution (essential on busy servers)
+- -nn: no DNS and no service name resolution
+- -v/-vv/-vvv: increasing verbosity (protocol details)
+- -s 0: full packet capture (default in modern tcpdump is already 262144 bytes)
+- -e: include ethernet header (MAC addresses)
+- -A: print packet data as ASCII
+- -X: print as hex + ASCII
+- -w file.pcap: write raw packets to file (for Wireshark analysis)
+- -r file.pcap: read from file
+- -c N: stop after N packets
+
+**tshark**: Terminal-based Wireshark. tshark -r file.pcap for reading captures, -Y 'display filter' for Wireshark display filters (more expressive than BPF), -T fields -e field for extracting specific fields.`,
+    whenToUse: [
+      'Debugging application connectivity issues (can the server receive the packets?)',
+      'Verifying TLS certificate presentation during HTTPS handshake',
+      'Capturing traffic for offline analysis in Wireshark',
+      'Confirming DNS queries and responses are as expected',
+    ],
+    keyConcepts: [
+      {
+        term: 'BPF filter syntax',
+        definition: 'host IP, port N, tcp/udp, net CIDR, src/dst modifiers. Combine with and/or/not. Quote complex expressions. Applied in kernel — efficient filtering before data reaches userspace.',
+      },
+      {
+        term: '-i any capture',
+        definition: 'Capture on all interfaces simultaneously. Useful when unsure which interface carries traffic. -i lo for loopback (inter-process communication on same host).',
+      },
+      {
+        term: 'snaplen with -s',
+        definition: '-s 0 captures full packet. Default snaplen is 262144 bytes (effectively full). Older systems defaulted to 68 bytes (just headers). Use -s 0 to ensure full payload capture.',
+      },
+      {
+        term: '-w/-r for pcap files',
+        definition: '-w output.pcap saves raw binary capture. -r input.pcap reads back. Share pcap files with tshark or Wireshark for rich protocol analysis. Rotate files: -W N -G seconds for rolling.',
+      },
+    ],
+    pitfalls: [
+      'tcpdump without -n on a busy server — DNS lookup for each IP address adds huge overhead and slow output',
+      'Capturing to disk with -w without a size limit — can quickly fill filesystem; use -C 100 (100MB files) with -W 10 (keep 10 files)',
+      'Not capturing on the right interface — use tcpdump -i any first to identify which interface carries the traffic',
+      'tcpdump shows the packet was sent but the app still fails — check the reply packets too, and check for RST or ICMP unreachable',
+    ],
+    keyQuestions: [
+      {
+        question: 'Write a tcpdump command to capture all HTTP traffic to/from port 80, excluding your SSH session, and save to a file.',
+        answer: `## tcpdump HTTP Capture Excluding SSH
+
+\`\`\`bash
+# Capture HTTP (port 80) traffic, exclude SSH (port 22), save to file
+tcpdump -i eth0 -n -s 0 -w /tmp/http_capture.pcap \
+    'tcp port 80 and not tcp port 22'
+
+# Breakdown:
+# -i eth0       : capture on eth0 (change to your interface)
+# -n            : no DNS resolution (faster, cleaner output)
+# -s 0          : full packet capture
+# -w /tmp/...   : write to pcap file for Wireshark analysis
+# 'tcp port 80' : only TCP port 80 traffic
+# not tcp port 22 : exclude SSH (your remote admin connection)
+\`\`\`
+
+## More Specific: Only HTTP to a Specific Server
+
+\`\`\`bash
+# Traffic between this host and specific destination on port 80
+tcpdump -i any -nn -s 0 -w /tmp/capture.pcap \
+    'host 10.0.0.50 and tcp port 80'
+
+# Capture first 1000 packets then stop
+tcpdump -i eth0 -c 1000 -w /tmp/capture.pcap 'tcp port 80'
+\`\`\`
+
+## Quick Terminal Analysis (without saving file)
+
+\`\`\`bash
+# Print HTTP request line (first line of HTTP request)
+tcpdump -i eth0 -nn -A 'tcp port 80 and tcp[tcpflags] & tcp-push != 0' | grep -E "^(GET|POST|HTTP)"
+
+# Show just src/dst for port 80 traffic
+tcpdump -i eth0 -nn 'tcp port 80' | awk '{print $3, $5}'
+\`\`\``,
+      },
+      {
+        question: 'How would you capture and analyze a TLS handshake to debug a certificate issue?',
+        answer: `## Capturing TLS Handshakes
+
+\`\`\`bash
+# Capture HTTPS traffic (port 443)
+tcpdump -i eth0 -nn -s 0 -w /tmp/tls_capture.pcap 'tcp port 443'
+
+# Or capture TLS on non-standard port
+tcpdump -i eth0 -nn -s 0 -w /tmp/tls_capture.pcap 'tcp port 8443'
+
+# After capturing (or for live analysis):
+# -v shows TLS handshake version info in terminal
+tcpdump -i eth0 -nn -v 'tcp port 443 and host target-server.com'
+\`\`\`
+
+## Analyzing with tshark
+
+\`\`\`bash
+# Show TLS handshake details
+tshark -r /tmp/tls_capture.pcap -Y 'tls.handshake'
+
+# Show certificate subject and issuer
+tshark -r /tmp/tls_capture.pcap \
+    -Y 'tls.handshake.type == 11' \
+    -T fields \
+    -e tls.handshake.certificate
+
+# Check TLS version negotiated
+tshark -r /tmp/tls_capture.pcap \
+    -Y 'tls.handshake.type == 2' \
+    -T fields \
+    -e tls.record.version \
+    -e tls.handshake.version
+\`\`\`
+
+## What to Look For
+
+- ClientHello: client sends supported cipher suites and TLS versions
+- ServerHello: server picks cipher suite and TLS version
+- Certificate: server sends its certificate chain — check for expiry/wrong hostname
+- Alert (fatal): look for certificate_unknown, handshake_failure, etc.
+- Connection RST after Certificate: client rejected the cert`,
+      },
+    ],
+    references: [
+      'https://www.tcpdump.org/manpages/tcpdump.1.html',
+      'https://danielmiessler.com/study/tcpdump/',
+    ],
+  },
+  {
+    id: 'linux-dns-tools',
+    title: 'DNS Debugging Tools',
+    icon: 'globe',
+    color: '#06b6d4',
+    category: 'networking',
+    questions: 5,
+    description: 'dig, nslookup, host, /etc/resolv.conf, /etc/nsswitch.conf, and systemd-resolved.',
+    introduction: `DNS debugging is a critical skill — many service failures are ultimately DNS failures. The tools and configuration files involved form a layered system.
+
+**dig (Domain Information Groper)**: The preferred DNS debugging tool for its structured, unambiguous output. dig @server name type queries a specific nameserver. Without @server, uses the system resolver from /etc/resolv.conf. Common types: A (IPv4), AAAA (IPv6), CNAME (canonical name), MX (mail), TXT (text records, SPF/DKIM/verification), NS (nameservers), SOA (Start of Authority), PTR (reverse DNS). Key options: +short (just the answer), +trace (full delegation from root servers), +norecurse (non-recursive query), +time=2 (short timeout).
+
+**Reading dig output**: QUESTION SECTION shows what was asked. ANSWER SECTION shows the records. AUTHORITY SECTION shows the authoritative nameservers for the domain. ADDITIONAL SECTION shows IP addresses for nameservers. ;; MSG SIZE shows query/response sizes. The TTL in the ANSWER shows how long the answer is cached.
+
+**/etc/resolv.conf**: The system DNS configuration. nameserver IP specifies DNS servers (up to 3). search domain1 domain2 appends these domains to unqualified names (myservice resolves as myservice.domain1, then myservice.domain2). options ndots:5 means names with fewer than 5 dots get the search domains appended first (Kubernetes sets this to cause issues with external DNS).
+
+**/etc/nsswitch.conf**: Controls the order of name resolution mechanisms. The hosts line: files dns — means check /etc/hosts first, then DNS. With just dns, /etc/hosts is ignored. compat includes NIS.
+
+**systemd-resolved**: A caching stub resolver at 127.0.0.53. Modern Ubuntu/Debian use it by default. /etc/resolv.conf is a symlink to /run/systemd/resolve/stub-resolv.conf. resolvectl status shows configuration per interface. resolvectl query hostname shows resolution path. Flush cache: resolvectl flush-caches.`,
+    whenToUse: [
+      'Diagnosing DNS resolution failures in applications',
+      'Verifying DNS propagation after DNS record changes',
+      'Debugging Kubernetes pod DNS resolution issues',
+      'Understanding split-horizon DNS and resolver configuration',
+    ],
+    keyConcepts: [
+      {
+        term: 'dig @server type',
+        definition: 'dig @8.8.8.8 example.com A — query specific nameserver. +short for just the answer. +trace to follow delegation from root. dig MX domain for mail records.',
+      },
+      {
+        term: '+trace for delegation chain',
+        definition: 'dig +trace example.com follows the entire resolution path: root servers → TLD nameservers → authoritative nameservers. Shows exactly where delegation happens.',
+      },
+      {
+        term: '/etc/resolv.conf search',
+        definition: 'search domain1 domain2 appends domains to short names. options ndots:N controls threshold. In Kubernetes, ndots:5 causes 5 DNS lookups before trying the bare name.',
+      },
+      {
+        term: 'systemd-resolved stub',
+        definition: 'Caching stub resolver at 127.0.0.53. resolvectl status shows per-interface DNS. resolvectl flush-caches clears stale entries. /etc/resolv.conf → symlink to stub-resolv.conf.',
+      },
+    ],
+    pitfalls: [
+      'nsswitch.conf files before dns means /etc/hosts takes priority over DNS — useful for testing but can mask real DNS issues',
+      'systemd-resolved caching stale entries — flush with resolvectl flush-caches after DNS record changes',
+      'ndots:5 in Kubernetes causing 5 extra DNS lookups per external domain (6 total attempts) — impacts latency at scale',
+      'dig and the application getting different answers — dig uses its own resolver, not systemd-resolved; use resolvectl query or dig @127.0.0.53 to match application behavior',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you trace a complete DNS resolution from root servers to final answer using dig?',
+        answer: `## Full DNS Trace with dig +trace
+
+\`\`\`bash
+dig +trace example.com A
+
+# Output shows each delegation step:
+
+# Step 1: Query root servers (.)
+# . 518400 IN NS a.root-servers.net.
+# ... (13 root servers listed)
+# ;; Received from 198.41.0.4 (a.root-servers.net)
+
+# Step 2: Root refers to .com TLD servers
+# com. 172800 IN NS a.gtld-servers.net.
+# ...
+# ;; Received from a.root-servers.net
+
+# Step 3: TLD refers to authoritative nameservers for example.com
+# example.com. 172800 IN NS a.iana-servers.net.
+# ;; Received from a.gtld-servers.net
+
+# Step 4: Authoritative server provides final answer
+# example.com. 86400 IN A 93.184.216.34
+# ;; Received from a.iana-servers.net
+\`\`\`
+
+## Find Authoritative Nameservers (Without Recursion)
+
+\`\`\`bash
+# Query authoritative server directly (bypass cache)
+dig +norecurse @a.iana-servers.net example.com A
+
+# Find who is authoritative for a domain
+dig NS example.com
+dig SOA example.com  # Serial number useful for checking propagation
+
+# Compare cached answer vs fresh from authoritative
+dig example.com A                        # Cached (via resolver)
+dig @$(dig NS example.com +short | head -1) example.com A  # Direct from authoritative
+\`\`\``,
+      },
+      {
+        question: 'A Kubernetes pod can\'t resolve external DNS. Walk through your debugging process.',
+        answer: `## Kubernetes Pod DNS Debugging
+
+\`\`\`bash
+# Step 1: Get a shell in the pod
+kubectl exec -it mypod -- /bin/sh
+
+# Step 2: Check /etc/resolv.conf inside pod
+cat /etc/resolv.conf
+# nameserver 10.96.0.10       (CoreDNS ClusterIP)
+# search myns.svc.cluster.local svc.cluster.local cluster.local
+# options ndots:5
+
+# Step 3: Test DNS from inside pod
+# First test CoreDNS is reachable
+nslookup kubernetes.default  # Should work — internal service
+
+# Then test external
+nslookup google.com 10.96.0.10    # Direct CoreDNS query
+nslookup google.com 8.8.8.8       # Direct external query
+
+# Step 4: Check CoreDNS logs
+kubectl logs -n kube-system -l k8s-app=kube-dns
+
+# Step 5: Check CoreDNS ConfigMap for forwarder config
+kubectl get configmap -n kube-system coredns -o yaml
+# Look for: forward . /etc/resolv.conf (CoreDNS uses node DNS)
+
+# Step 6: Check node DNS resolution
+# SSH to the node
+cat /etc/resolv.conf  # Node's upstream DNS
+resolvectl status     # If using systemd-resolved
+
+# Common causes:
+# - NetworkPolicy blocking pod → CoreDNS (port 53)
+# - CoreDNS not running (kubectl get pods -n kube-system)
+# - Node DNS broken (CoreDNS can't forward)
+# - ndots:5 causing timeout on external names with few dots
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://linux.die.net/man/1/dig',
+      'https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html',
+    ],
+  },
+  {
+    id: 'linux-curl-wget',
+    title: 'curl & wget for HTTP Debugging',
+    icon: 'globe',
+    color: '#06b6d4',
+    category: 'networking',
+    questions: 5,
+    description: 'curl -v for HTTP debugging, custom headers, authentication, TLS inspection, and REST API calls.',
+    introduction: `curl is the Swiss Army knife for HTTP debugging and API testing. It supports nearly every HTTP feature and provides detailed output of the full request/response cycle.
+
+**curl -v (verbose mode)**: Shows the entire conversation — TCP connection, TLS handshake details, request headers (lines starting with >), and response headers (lines starting with <). Lines starting with * are informational (connecting, TLS version, SSL certificate details, connection reuse).
+
+**Request construction flags**:
+- -X METHOD: HTTP method (GET is default, POST/PUT/DELETE/PATCH/HEAD)
+- -H "Header: Value": add request header
+- -d "body": request body (implies POST if -X not given)
+- --data-raw "body": like -d but no @ file interpretation
+- --data-binary @file: send file contents as-is
+- -F "field=value": multipart/form-data
+- -u user:pass: HTTP Basic authentication
+- -H "Authorization: Bearer token": JWT/OAuth authentication
+
+**Response and output flags**:
+- -o file: save response body to file
+- -O: save with server filename
+- -s: silent (no progress meter)
+- -S: show errors even with -s
+- -I or --head: HEAD request only
+- -L: follow redirects
+- -w "%{time_total}\n": write-out format string for timing metrics
+
+**TLS debugging**:
+- --cacert ca.pem: custom CA certificate
+- --cert client.pem: client certificate
+- -k/--insecure: skip certificate verification (debugging only — never in scripts)
+- --resolve host:port:IP: override DNS without changing /etc/hosts
+
+**wget vs curl**: wget is optimized for downloading files (recursive site download with -r, resume with -c). curl is better for API debugging, supports more protocols, and provides more output detail.`,
+    whenToUse: [
+      'Testing API endpoints during development and debugging',
+      'Verifying HTTPS certificate and TLS configuration',
+      'Debugging authentication and authorization issues',
+      'Measuring endpoint response times',
+    ],
+    keyConcepts: [
+      {
+        term: 'curl -v request anatomy',
+        definition: '* lines: informational (TLS, connection). > lines: request headers sent. < lines: response headers received. Response body follows. -v is the first flag to add when debugging.',
+      },
+      {
+        term: '-H custom headers',
+        definition: 'curl -H "Content-Type: application/json" -H "Authorization: Bearer token" URL. Multiple -H flags for multiple headers. -H "header;" removes a default header.',
+      },
+      {
+        term: '-X HTTP methods',
+        definition: '-X POST, -X PUT, -X DELETE, -X PATCH. Combine with -d for body. -X HEAD (or -I) for HEAD requests. Without -X, GET is default unless -d is given (implies POST).',
+      },
+      {
+        term: '-k TLS skip (insecure)',
+        definition: '-k skips TLS certificate verification. Use ONLY for debugging — never in scripts or production. For proper debugging, use --cacert to specify the correct CA.',
+      },
+    ],
+    pitfalls: [
+      '-k (--insecure) in production or automation scripts — disables certificate validation, enabling MITM attacks',
+      'Not quoting URLs with query strings in shell — & is interpreted as background operator: always quote with single or double quotes',
+      'curl exit code vs HTTP status: curl exits 0 even for 404/500 responses. Use -f/--fail to make curl exit non-zero on HTTP errors',
+      'Forgetting Content-Type header with JSON body — APIs return 415 Unsupported Media Type without it',
+    ],
+    keyQuestions: [
+      {
+        question: 'Use curl to debug a failing HTTPS API call. What flags do you use and what do you look for in the output?',
+        answer: `## Systematic HTTPS API Debugging with curl
+
+\`\`\`bash
+# Step 1: Basic verbose call
+curl -v https://api.example.com/endpoint
+# Look for:
+# * Connected to api.example.com — confirms DNS and TCP work
+# * SSL certificate verify — TLS handshake success/failure
+# * TLSv1.3 / cipher — what was negotiated
+# < HTTP/2 200 — response status code
+# < content-type: application/json — response headers
+\`\`\`
+
+## What Each Section Tells You
+
+\`\`\`bash
+*   Trying 1.2.3.4:443...       # DNS resolved, TCP connecting
+* Connected to api.example.com  # TCP connection established
+* SSL certificate verify ok      # TLS handshake succeeded
+*   Subject: CN=api.example.com  # Cert details
+> GET /endpoint HTTP/2           # Request sent
+> Host: api.example.com
+> Authorization: Bearer token    # Headers sent
+< HTTP/2 403                     # Response status — 403 = auth issue
+< x-error: invalid-token         # Response headers — check for clues
+{"error": "token expired"}       # Response body
+\`\`\`
+
+## Common Debugging Scenarios
+
+\`\`\`bash
+# TLS certificate issue?
+curl -v https://api.example.com 2>&1 | grep "SSL\\|certificate\\|verify"
+
+# Wrong CA? Use custom CA
+curl --cacert /path/to/corporate-ca.pem https://internal-api.company.com
+
+# Test without TLS verification (debug only!)
+curl -vk https://api.example.com
+
+# Timing breakdown
+curl -w "\\nDNS: %{time_namelookup}s\\nConnect: %{time_connect}s\\nTTFB: %{time_starttransfer}s\\nTotal: %{time_total}s\\n" \
+     -o /dev/null -s https://api.example.com
+\`\`\``,
+      },
+      {
+        question: 'How would you test a REST API endpoint that requires JWT authentication and a JSON body?',
+        answer: `## JWT-Authenticated REST API Call
+
+\`\`\`bash
+# POST with JWT and JSON body
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+curl -X POST https://api.example.com/v1/users \
+     -H "Authorization: Bearer \${TOKEN}" \
+     -H "Content-Type: application/json" \
+     -H "Accept: application/json" \
+     -d '{
+       "name": "Alice Smith",
+       "email": "alice@example.com",
+       "role": "admin"
+     }' \
+     -v
+
+# Common response codes to diagnose:
+# 201 Created — success
+# 400 Bad Request — check JSON body format
+# 401 Unauthorized — token invalid or expired
+# 403 Forbidden — token valid but insufficient permissions
+# 422 Unprocessable Entity — validation failed (check response body)
+\`\`\`
+
+## Reusable Pattern with Variables
+
+\`\`\`bash
+#!/bin/bash
+API_BASE="https://api.example.com"
+TOKEN=$(cat ~/.api-token)  # Store token in file, not in script
+
+# Function for authenticated API calls
+api_call() {
+    local method="$1"
+    local endpoint="$2"
+    local data="$3"
+
+    curl -sS \
+         -X "$method" \
+         -H "Authorization: Bearer $TOKEN" \
+         -H "Content-Type: application/json" \
+         -H "Accept: application/json" \
+         \${data:+--data-raw "$data"} \
+         -w "\\nHTTP Status: %{http_code}\\n" \
+         "$API_BASE$endpoint"
+}
+
+# Usage
+api_call GET /v1/users ""
+api_call POST /v1/users '{"name":"Alice"}'
+api_call DELETE /v1/users/123 ""
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://curl.se/docs/manpage.html',
+      'https://everything.curl.dev/',
+    ],
+  },
+
+  // ─── PERFORMANCE (additional) ──────────────────────────────────────────────
+  {
+    id: 'linux-top-htop',
+    title: 'top & htop: Process Monitoring',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 6,
+    description: 'Load average interpretation, CPU time breakdown columns, interactive commands, and htop advantages.',
+    introduction: `top and htop are the first tools you reach for when investigating system performance. Understanding what you're looking at is critical — the numbers can be misleading without context.
+
+**Load average**: The three numbers (e.g., 2.50 0.80 0.40) represent the average number of runnable or uninterruptible-sleep processes over the last 1, 5, and 15 minutes. A process in either state contributes 1.0 to the load. Rule of thumb: divide by CPU count. On a 4-core system, load 4.0 means fully loaded, 8.0 means severely overloaded (processes waiting for CPU). A rising trend (15-min higher than 1-min) means load is increasing.
+
+**CPU time columns** (in top header): %us = user space (application code), %sy = system/kernel (time spent in kernel on behalf of processes), %ni = niced processes, %id = idle (available headroom), %wa = I/O wait (CPU idle while waiting for disk or network I/O — high value is a disk bottleneck indicator), %hi = hardware interrupts, %si = software interrupts, %st = steal time (CPU stolen by hypervisor for other VMs — on cloud instances, high %st means noisy neighbor).
+
+**Process table columns**: PID, USER, PR (priority, lower=higher priority), NI (nice value -20 to 19), VIRT (virtual memory allocated), RES (resident set — actual RAM in use), SHR (shared memory), S (state: R=running, S=sleeping, D=uninterruptible, Z=zombie, T=stopped), %CPU, %MEM, TIME+, COMMAND.
+
+**Interactive top commands**: k = kill by PID, r = renice, P = sort by CPU, M = sort by memory, T = sort by CPU time, u = filter by user, 1 = toggle per-CPU breakdown (shows all cores individually), H = show threads, q = quit.
+
+**htop advantages over top**: Color-coded display, mouse support, visual CPU/memory bars, tree view (F5) for parent/child relationships, easier kill (F9 + signal selection), filter by string (F4), and sorting by column click. htop also shows CPU numbers rather than aggregate.
+
+**Zombie processes**: Shown as Z in state column. Child process has exited but parent hasn't called wait() to collect its exit status. The zombie holds a PID but no resources. Fix: fix the parent process code or restart the parent.`,
+    whenToUse: [
+      'First-pass investigation of a slow or unresponsive system',
+      'Identifying which process is consuming unexpected CPU or memory',
+      'Monitoring CPU distribution across cores (top 1 key)',
+      'Finding zombie processes and high load average root causes',
+    ],
+    keyConcepts: [
+      {
+        term: 'Load average vs CPU count',
+        definition: 'Load = runnable + uninterruptible processes. Divide by CPU count for % saturation. Load 8 on 8-core = 100% loaded. Trend matters: 15min > 5min > 1min = increasing load.',
+      },
+      {
+        term: '%wa for I/O wait',
+        definition: '%wa shows CPU idle while waiting for I/O. High %wa indicates disk or network bottleneck — the CPU has work to do but is blocked on I/O. Check with iostat -x for disk details.',
+      },
+      {
+        term: '%st steal time',
+        definition: 'On VMs/cloud: time the hypervisor gave this VM\'s CPU to another VM. High %st (>5%) indicates noisy neighbor or VM undersizing. Not tunable by the guest — escalate to cloud provider.',
+      },
+      {
+        term: 'Zombie processes',
+        definition: 'State Z: process exited but parent hasn\'t called wait(). Holds PID only — no CPU or memory. Not a problem unless thousands accumulate (PID exhaustion). Fix: restart the parent.',
+      },
+    ],
+    pitfalls: [
+      'Load average alone doesn\'t indicate whether bottleneck is CPU or I/O — 8.0 load could be CPU-bound or I/O-bound (check %wa)',
+      '%wa can be 0 even with heavy I/O if using async I/O (io_uring) where the kernel handles I/O without blocking the CPU in wait state',
+      'High %sy (>20%) could indicate too many system calls (chatty apps), excessive context switching, or kernel bugs — investigate with strace or perf',
+      'VIRT (virtual) is usually much larger than RES (resident) due to memory-mapped files and reserved-but-not-used memory — use RES for actual memory usage',
+    ],
+    keyQuestions: [
+      {
+        question: 'A server shows load average of 8.0 on a 4-CPU system. Walk through how you\'d diagnose what\'s causing it.',
+        answer: `## Diagnosing Load Average 8.0 on 4-CPU System
+
+Load 8.0 / 4 CPUs = 200% loaded — two CPU-worth of processes waiting at all times.
+
+**Step 1: Check if it's CPU or I/O bound**
+
+\`\`\`bash
+top
+# Look at the CPU row:
+# %Cpu(s): 90.0 us, 5.0 sy, 0.0 ni, 0.0 id, 4.0 wa, 0.0 hi, 1.0 si
+
+# id=0.0 (no idle) + wa=4.0 = mostly CPU bound
+# If wa were 40.0+ = I/O bound, not CPU
+\`\`\`
+
+**Step 2: Find which processes are using CPU**
+
+\`\`\`bash
+# In top: press P to sort by CPU
+# Or use ps:
+ps aux --sort=-%cpu | head -10
+\`\`\`
+
+**Step 3: If I/O bound, investigate disk**
+
+\`\`\`bash
+iostat -x 1
+# %util approaching 100% = disk saturated
+# await >> svctm = queuing (too many I/O requests)
+
+# Which process is doing I/O?
+iotop -o  # Only show processes actively doing I/O
+\`\`\`
+
+**Step 4: Check for D-state (uninterruptible sleep)**
+
+\`\`\`bash
+# D-state processes contribute to load average but don't consume CPU
+ps aux | grep " D "
+
+# Large number of D-state processes = I/O or kernel wait problem
+# Common cause: NFS hang, stuck disk I/O, kernel bug
+\`\`\`
+
+**Step 5: Historical trend**
+
+\`\`\`bash
+sar -q 1 10       # Load average history
+uptime            # Current + quick comparison
+\`\`\``,
+      },
+      {
+        question: 'What does high %wa (I/O wait) in top indicate, and how is it different from high %us?',
+        answer: `## %wa (I/O Wait) vs %us (User)
+
+\`\`\`
+%Cpu(s): 5.0 us, 2.0 sy, 0.0 ni, 15.0 id, 78.0 wa, 0.0 hi, 0.0 si
+\`\`\`
+
+**%wa = 78%**: CPU is mostly idle, waiting for I/O to complete. The disk (or network) is the bottleneck. Adding more CPUs won't help — the work is waiting on I/O.
+
+**%us = 5%**: Application code running. If this were 95%, the bottleneck is CPU computation — more CPUs would help.
+
+## How to Investigate High %wa
+
+\`\`\`bash
+# Identify which disk is bottlenecked
+iostat -x 1
+# DEVICE  r/s  w/s  rkB/s  wkB/s  await  %util
+# sda     0.0  500  0.0    64000  120ms  98%
+# High await + %util near 100% = disk saturated
+
+# Which process is doing the I/O?
+iotop -o         # Shows only active I/O processes
+iotop -o -b -n 5 # Batch mode, 5 samples
+
+# What files are being written?
+strace -p PID -e trace=write,read
+lsof -p PID | grep -v REG  # Non-regular files (pipes, sockets)
+\`\`\`
+
+## Key Distinction
+
+| High %wa | High %us |
+|----------|----------|
+| Disk/network bottleneck | CPU computation bottleneck |
+| More CPU won't help | More CPU will help (if parallelizable) |
+| Investigate with iostat, iotop | Investigate with perf, flame graphs |
+| Fix: faster disk, I/O optimization | Fix: profile hot code, optimize algorithm |`,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man1/top.1.html',
+      'https://scoutapm.com/blog/understanding-load-averages',
+    ],
+  },
+  {
+    id: 'linux-vmstat-iostat',
+    title: 'vmstat & iostat',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 5,
+    description: 'vmstat fields for system-level stats, iostat -x for disk I/O deep-dive, and await vs svctm.',
+    introduction: `vmstat and iostat provide system-wide and per-device performance statistics at a level of detail that top doesn't offer.
+
+**vmstat 1** (run every 1 second): The first row after the header is averages since boot — ignore it. Subsequent rows are 1-second samples.
+
+Column groups and key fields:
+- **procs**: r = processes in run queue (waiting for CPU), b = processes in uninterruptible sleep (D state, blocked on I/O)
+- **memory**: swpd = swap used, free = free RAM, buff = buffer cache (block I/O), cache = page cache (file data). In Linux, free RAM is intentionally low — the OS uses it for cache
+- **swap**: si = swap in (KB/s, pages being read FROM swap TO RAM), so = swap out (KB/s, pages being WRITTEN TO swap). Any nonzero si/so means active swapping — serious performance problem
+- **io**: bi = blocks in (from disk), bo = blocks out (to disk), in 512-byte blocks/second
+- **system**: in = interrupts/sec, cs = context switches/sec. Very high cs (>100,000/sec) with low CPU can indicate excessive threading or system calls
+- **cpu**: identical to top's CPU columns — us sy id wa st
+
+**iostat -x 1** (extended I/O statistics per device):
+- r/s, w/s: read/write operations per second (IOPS)
+- rMB/s, wMB/s: throughput
+- rrqm/s, wrqm/s: merged requests (OS combining adjacent requests before sending to device)
+- r_await, w_await: average time (ms) for read/write I/O to complete including queue wait time
+- aqu-sz (or avgqu-sz): average queue length (requests waiting + being serviced)
+- %util: percentage of time the device is busy. Approaches 100% when the device is saturated
+
+**The critical insight**: await is the total time from I/O request submission to completion. svctm (deprecated but historically present) was device service time. A large gap between await and svctm indicates queuing — the device can service I/O quickly but requests are piling up. With modern SSDs, %util can be 100% but the device is not truly saturated (SSDs queue internally).`,
+    whenToUse: [
+      'Confirming whether swapping is occurring before it becomes critical',
+      'Identifying disk I/O bottlenecks during database or file system issues',
+      'Checking context switch rate for heavily threaded applications',
+      'Baselining system behavior to detect anomalies',
+    ],
+    keyConcepts: [
+      {
+        term: 'vmstat r/b columns',
+        definition: 'r = run queue length (processes waiting for CPU — sustained >CPU_count means CPU bottleneck). b = blocked (uninterruptible D-state processes — sustained >0 means I/O bottleneck).',
+      },
+      {
+        term: 'si/so for swap activity',
+        definition: 'si (swap in) and so (swap out) measured in KB/s. Any nonzero si/so means active swapping — RAM is full, OS is paging. Severe performance impact. Tune vm.swappiness to reduce.',
+      },
+      {
+        term: 'iostat await vs %util',
+        definition: 'await: total I/O latency (ms) including queue wait. %util: device busy percentage. High await + high %util = disk saturated. High await + low %util = possible firmware or driver issue.',
+      },
+      {
+        term: 'aqu-sz queue length',
+        definition: 'Average number of I/O requests in flight (queued + being serviced). Greater than 1 on HDDs indicates queuing. SSDs handle deeper queues efficiently (NVMe queue depth 64+).',
+      },
+    ],
+    pitfalls: [
+      'vmstat first row is boot-time averages — always skip it, start reading from the second row',
+      'si/so in vmstat are in 512-byte blocks on some kernel versions, not KB — check with free -m and monitor swpd',
+      '%util 100% on NVMe SSDs does NOT mean saturated — SSDs have deep hardware queues and can sustain much more with %util=100%',
+      'High cs (context switches) is normal for highly concurrent servers — only a problem if cs is unexpectedly high relative to throughput',
+    ],
+    keyQuestions: [
+      {
+        question: 'You see vmstat showing si and so values consistently above 0. What does this mean and how urgent is it?',
+        answer: `## Interpreting Non-Zero si/so
+
+\`\`\`bash
+vmstat 1
+# procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+# r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+# 4  2 524288  45000  12000 890000  120  250  1200  1800  800 1200 65 20  0 15  0
+#                                   ^^^  ^^^
+# si=120, so=250 KB/s -- ACTIVE SWAPPING
+\`\`\`
+
+## What si/so Mean
+
+**si (swap in)**: Pages being read FROM swap device TO RAM. This happens when a process needs memory that was previously swapped out. Every si causes a disk read.
+
+**so (swap out)**: Pages being written FROM RAM TO swap device. Kernel is pushing memory to disk to free up RAM for other processes.
+
+## Urgency Assessment
+
+| si/so value | Urgency | Action |
+|-------------|---------|--------|
+| 0, 0 | Normal | None |
+| < 10 KB/s | Watch | Monitor trend |
+| 10-100 KB/s | Concerning | Investigate memory usage |
+| > 100 KB/s | Critical | Immediate action needed |
+
+\`\`\`bash
+# Find what's consuming memory
+ps aux --sort=-%mem | head -20
+
+# Check total memory picture
+free -m
+cat /proc/meminfo | grep -E "MemTotal|MemFree|SwapTotal|SwapFree|Cached"
+
+# Reduce swappiness (default 60, lower = less aggressive swapping)
+sysctl -w vm.swappiness=10
+echo "vm.swappiness=10" >> /etc/sysctl.d/99-memory.conf
+\`\`\``,
+      },
+      {
+        question: 'Explain the difference between await and svctm in iostat -x output. What does a large gap between them indicate?',
+        answer: `## iostat -x Output
+
+\`\`\`bash
+iostat -x 1
+# Device    r/s  w/s  rkB/s  wkB/s  rrqm/s  wrqm/s  r_await  w_await  aqu-sz  %util
+# sda       0.0  800  0.0    102400   0.0     50.0     85.0    120.0    8.5     98.0
+\`\`\`
+
+## await — Total I/O Latency
+
+await includes ALL time from when the application submitted the I/O to when the device completed it:
+- Time waiting in the OS I/O queue (if device is busy)
+- Time the device physically processed the request
+
+## svctm — Device Service Time (deprecated)
+
+svctm was an estimate of just the device processing time, excluding queue wait. Removed in newer iostat because it was calculated inaccurately.
+
+## The Gap = Queuing
+
+\`\`\`
+await = queue_wait_time + device_service_time
+                          ^^^^^^^^^^^^^^^^^^^
+                          (what svctm approximated)
+\`\`\`
+
+**Example analysis**:
+\`\`\`
+r_await = 85ms   (total read latency including wait)
+HDD typical service time ≈ 8-10ms
+Queue wait ≈ 75ms  -- I/O requests are waiting 7.5x longer than actual service time!
+
+aqu-sz = 8.5  -- 8.5 requests in queue on average
+%util = 98%   -- device is almost always busy
+\`\`\`
+
+**Interpretation**: The disk can physically service I/O in ~10ms, but requests wait 75ms in queue. Solution: reduce I/O rate, use faster storage, add I/O scheduling tuning, or investigate application for unnecessary I/O.
+
+\`\`\`bash
+# For SSDs: high await but low aqu-sz is unusual — check for driver issues
+# For HDDs: await > 20ms under load is concerning
+# For NVMe: await > 1ms under load is concerning
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man8/vmstat.8.html',
+      'https://man7.org/linux/man-pages/man1/iostat.1.html',
+    ],
+  },
+  {
+    id: 'linux-perf-profiling',
+    title: 'perf & Flame Graphs',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 5,
+    description: 'perf stat, perf record/report, generating flame graphs, and off-CPU analysis for I/O bottlenecks.',
+    introduction: `perf is the Linux performance profiling Swiss Army knife, built directly into the kernel subsystem. It uses hardware performance counters and software events to profile at near-zero overhead.
+
+**perf stat**: Collects hardware counter statistics for a command run. Key metrics: task-clock (milliseconds of CPU time), cycles (CPU clock cycles), instructions (retired instructions), IPC = instructions/cycles (efficiency measure — 1.0+ is good, below 0.5 suggests memory-bound workload), cache-misses (LLC misses indicate memory access pattern problems), branch-misses (mispredicted branches cause pipeline stalls).
+
+**perf record**: Samples the call stack at a configurable rate (default 4000 Hz, often set to 99 Hz with -F 99 to avoid frequency aliasing). Records to perf.data. Flags: -g (call graph/stack traces), -p PID (attach to running process), -a (system-wide), --call-graph fp (frame pointer unwinding — fastest), --call-graph dwarf (DWARF unwinding — works without frame pointers but more overhead).
+
+**perf report**: Interactive TUI for analyzing perf.data. Shows functions sorted by CPU time with caller/callee breakdown.
+
+**Flame Graphs** (invented by Brendan Gregg): A visualization where the x-axis represents alphabetically sorted stack frames (width = proportion of time), y-axis is call stack depth (bottom = root, top = leaf function). The key insight: **wide frames at the top** are where time is actually spent. Color is irrelevant. Look for wide plateaus that indicate hot code paths.
+
+**Generating flame graphs**:
+1. perf record -F 99 -g -p PID -- sleep 30
+2. perf script | stackcollapse-perf.pl | flamegraph.pl > flame.svg
+
+**Off-CPU analysis**: Regular CPU profiling misses time spent waiting (I/O, locks, sleep). Off-CPU flame graphs show where threads block, not just where they compute.`,
+    whenToUse: [
+      'Identifying CPU hotspots in production services',
+      'Investigating high CPU usage with no obvious cause',
+      'Comparing performance before and after optimization (differential flame graphs)',
+      'Finding lock contention in multithreaded applications',
+    ],
+    keyConcepts: [
+      {
+        term: 'perf stat hardware counters',
+        definition: 'perf stat cmd — shows cycles, instructions, IPC, cache-misses. IPC < 0.5 suggests memory-bound. High cache-misses suggest poor data locality. Branch-misses suggest unpredictable conditions.',
+      },
+      {
+        term: 'IPC (instructions per cycle)',
+        definition: 'IPC = instructions / cycles. > 1.0: CPU well utilized, efficient code. 0.5-1.0: moderate efficiency. < 0.5: memory-bound or poor branch prediction. Modern CPUs can achieve IPC 3-4 with ideal workloads.',
+      },
+      {
+        term: 'Flame graph width=time',
+        definition: 'Wider frames = more CPU time. Look for wide plateaus at the top of the flame (leaf functions). Alphabetical x-axis — position is irrelevant. Merge identical stacks for accurate width.',
+      },
+      {
+        term: 'Off-CPU analysis',
+        definition: 'CPU profiling shows where CPU runs. Off-CPU profiling shows where threads wait (I/O, locks, sleep). Use perf trace or bpftrace offcputime.bt for blocking time analysis.',
+      },
+    ],
+    pitfalls: [
+      'Frame pointers not compiled in (gcc -fomit-frame-pointer default) — use --call-graph dwarf but with higher overhead, or request frame pointers with -fno-omit-frame-pointer in build',
+      'perf requires root or /proc/sys/kernel/perf_event_paranoid <= 1 — set sysctl -w kernel.perf_event_paranoid=1',
+      'JIT-compiled code (Java, Node.js) needs special agents to expose symbols — use async-profiler for JVM or --perf-basic-prof for Node.js',
+      'Profiling at too high a frequency (e.g., 10000 Hz) introduces observer effect — use 99 Hz to avoid aliasing with system timer at 100 Hz',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you generate a CPU flame graph on Linux? Walk through the entire process from profiling to visualization.',
+        answer: `## Complete Flame Graph Generation
+
+**Step 1: Get Brendan Gregg's FlameGraph tools**
+
+\`\`\`bash
+git clone https://github.com/brendangregg/FlameGraph
+cd FlameGraph
+\`\`\`
+
+**Step 2: Record stack samples**
+
+\`\`\`bash
+# Profile a specific PID for 30 seconds at 99 samples/sec
+sudo perf record -F 99 -p $(pgrep myapp) -g -- sleep 30
+
+# Profile system-wide (all processes, all CPUs)
+sudo perf record -F 99 -a -g -- sleep 30
+
+# For Java/JVM (needs perf-map-agent or async-profiler instead):
+# perf cannot resolve JIT symbols natively
+\`\`\`
+
+**Step 3: Convert to flame graph**
+
+\`\`\`bash
+# Generate the perf script output
+sudo perf script > perf.output
+
+# Collapse stack traces (combine identical stacks)
+./stackcollapse-perf.pl perf.output > perf.folded
+
+# Generate SVG flame graph
+./flamegraph.pl perf.folded > flame.svg
+
+# Open in browser
+xdg-open flame.svg
+\`\`\`
+
+**Step 4: Interpret**
+
+\`\`\`
+- Widest frames at TOP = hottest code paths (most CPU time)
+- Tall stacks = deep call chains
+- Flat tops = CPU time in leaf function (likely the bottleneck)
+- Plateaus that span many stacks = common code path
+\`\`\`
+
+**One-liner** (combining all steps):
+
+\`\`\`bash
+sudo perf record -F 99 -p $(pgrep myapp) -g -- sleep 30 && \
+sudo perf script | ~/FlameGraph/stackcollapse-perf.pl | \
+~/FlameGraph/flamegraph.pl > /tmp/flame.svg
+\`\`\``,
+      },
+      {
+        question: 'A service has high CPU usage but flame graphs show no obvious hotspot — it\'s spread thin. What techniques would you use next?',
+        answer: `## Diagnosing Diffuse CPU Usage
+
+When CPU is spread thin (no single function using >5% each), the problem is usually architectural.
+
+**1. Check the system call profile**
+
+\`\`\`bash
+# What syscalls is the app making?
+strace -c -p $(pgrep myapp)
+# Counts and time per syscall type
+# High futex count = lock contention
+# High read/write count = too many small I/O ops
+# High mmap/mprotect = memory allocation churn
+\`\`\`
+
+**2. Check context switch rate**
+
+\`\`\`bash
+vmstat 1 | awk '{print $12}'  # cs column
+# High cs (>100k/sec per CPU) with threads = lock contention or too many threads
+
+# Per-process context switches:
+cat /proc/$(pgrep myapp)/status | grep ctxt
+# voluntary_ctxt_switches   -- thread waiting (I/O, lock, sleep)
+# nonvoluntary_ctxt_switches -- preempted by scheduler (CPU-bound)
+\`\`\`
+
+**3. Lock contention profiling**
+
+\`\`\`bash
+# Using perf lock (if available)
+sudo perf lock record -p $(pgrep myapp) -- sleep 10
+sudo perf lock report
+
+# Or use bpftrace for futex analysis
+sudo bpftrace -e 'tracepoint:syscalls:sys_enter_futex { @[ustack] = count(); } interval:s:10 { print(@); exit(); }'
+\`\`\`
+
+**4. Differential flame graph**
+
+\`\`\`bash
+# Profile before optimization
+perf record -F 99 -p PID -g -- sleep 30
+perf script > before.perf
+
+# After making a change, profile again
+perf script > after.perf
+
+# Generate differential graph (shows increase/decrease)
+./stackcollapse-perf.pl before.perf > before.folded
+./stackcollapse-perf.pl after.perf > after.folded
+./difffolded.pl before.folded after.folded | ./flamegraph.pl > diff.svg
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.brendangregg.com/flamegraphs.html',
+      'https://perf.wiki.kernel.org/index.php/Main_Page',
+    ],
+  },
+  {
+    id: 'linux-strace-ltrace',
+    title: 'strace & ltrace',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 5,
+    description: 'Tracing system calls and library calls to debug mysterious application behavior.',
+    introduction: `strace intercepts every interaction between a process and the Linux kernel. Since all I/O, file access, memory allocation (ultimately), and process management goes through system calls, strace reveals exactly what a program is doing at the lowest level.
+
+**How strace works**: strace uses the ptrace() system call to attach to a process and intercept each syscall entry and exit. This introduces significant overhead (typically 10-100x slowdown) — use on production with caution, and use -c for summary first.
+
+**Basic usage**:
+- strace command: traces from process start
+- strace -p PID: attach to a running process
+- strace -f: follow child processes created by fork()
+- strace -ff: follow forks and write each to a separate file (for threaded apps)
+
+**Output format**: syscall_name(arguments) = return_value. On error: syscall_name(arguments) = -1 ERRNO (error description). Common errno: ENOENT (No such file or directory), EACCES (Permission denied), EAGAIN (Resource temporarily unavailable / try again), ECONNREFUSED (Connection refused), ETIMEDOUT (Connection timed out).
+
+**Filtering**:
+- -e trace=file: only file-related syscalls
+- -e trace=network: only network syscalls (socket, connect, recv, send)
+- -e trace=process: process management (fork, execve, wait)
+- -e trace=memory: memory operations (mmap, brk, mprotect)
+- -e trace=open,read,write: specific syscalls
+
+**Performance analysis**:
+- -c: count syscalls and show summary with time, calls, errors — great first step
+- -T: show time spent in each syscall
+- -tt: absolute timestamps with microseconds
+
+**ltrace**: Similar to strace but for library function calls. ltrace command shows calls to shared library functions (malloc, free, fopen, strcmp, pthread_mutex_lock, etc.). Less overhead than strace for I/O-heavy workloads.`,
+    whenToUse: [
+      'Debugging "file not found" when the file seems to exist',
+      'Understanding why an application is slow (where is it spending time?)',
+      'Finding which network connections an application is making',
+      'Diagnosing permission denied errors with complex file paths',
+    ],
+    keyConcepts: [
+      {
+        term: 'strace -p attach',
+        definition: 'strace -p PID attaches to a running process without restarting it. -f follows forks. Output shows syscall(args) = return or ERRNO. Ctrl+C detaches without killing the process.',
+      },
+      {
+        term: '-e trace categories',
+        definition: '-e trace=file for filesystem ops, =network for sockets, =process for fork/exec, =memory for mmap. Combine: -e trace=file,network. Dramatically reduces output volume.',
+      },
+      {
+        term: '-c for summary stats',
+        definition: 'strace -c p PID sleeps N — shows count, time, and errors per syscall after detaching. Find where most time goes without reading thousands of lines of output.',
+      },
+      {
+        term: 'ENOENT/EACCES/EAGAIN',
+        definition: 'ENOENT: file/dir not found at exact path shown. EACCES: permission denied (check ownership and mode). EAGAIN: non-blocking resource not ready (normal in event loops). ECONNREFUSED: port not listening.',
+      },
+    ],
+    pitfalls: [
+      'strace overhead (10-100x) can make a slow app appear to hang — use -c for summary first, then targeted -e filters',
+      'strace -f needed for multithreaded or multi-process apps — without -f you only see the parent',
+      'Some syscalls replaced by vDSO (clock_gettime, gettimeofday) — these are invisible to strace because they execute in userspace via kernel-mapped memory',
+      'strace shows the syscall path but not why — for why, you need ltrace (library calls) or a proper debugger (gdb)',
+    ],
+    keyQuestions: [
+      {
+        question: 'An application is mysteriously slow. How would you use strace to find where it\'s spending time?',
+        answer: `## Using strace to Find Performance Bottlenecks
+
+**Step 1: Get a summary (lowest overhead)**
+
+\`\`\`bash
+# Attach to running process, collect 30 seconds of data
+strace -c -p $(pgrep myapp) sleep 30
+
+# Output example:
+# % time     seconds  usecs/call     calls    errors syscall
+# ------ ----------- ----------- --------- --------- ----------------
+#  78.50    0.785000        1000       785           read
+#  15.20    0.152000         500       304           write
+#   3.10    0.031000          10      3100           futex
+#   2.30    0.023000           8      2875           poll
+\`\`\`
+
+**Step 2: Interpret the summary**
+
+- High time in read: lots of small reads? Use -e trace=read to see sizes
+- High time in futex: lock contention between threads
+- High time in poll/select/epoll_wait: I/O bound (waiting for network/disk)
+- High count but low time in any syscall: chatty but not bottlenecked
+
+**Step 3: Drill into specific syscalls**
+
+\`\`\`bash
+# Show timing for each individual read call
+strace -T -e trace=read -p $(pgrep myapp) 2>&1 | head -50
+
+# Output:
+# read(5, "data...", 4096) = 1024 <0.025000>
+# read(5, "data...", 4096) = 1024 <0.024000>
+# Lots of 1KB reads from fd 5 taking 25ms each!
+
+# What is fd 5?
+ls -la /proc/$(pgrep myapp)/fd/5
+# -> /var/log/app.log  (reading log file 1KB at a time — needs buffering)
+\`\`\`
+
+**Step 4: Network-specific debugging**
+
+\`\`\`bash
+strace -T -e trace=network -p $(pgrep myapp) 2>&1 | grep connect
+# connect(8, {sa_family=AF_INET, sin_port=htons(5432), ...}, 16) = 0 <0.150000>
+# 150ms to connect to database! (every request connecting fresh)
+\`\`\``,
+      },
+      {
+        question: 'A program fails with "No such file or directory" but the file exists. How does strace help you debug this?',
+        answer: `## Diagnosing ENOENT with strace
+
+\`\`\`bash
+# Run the failing command under strace, filter to file ops
+strace -e trace=openat,stat,access,open ./myprogram 2>&1 | grep ENOENT
+
+# Output reveals the EXACT path being tried:
+# openat(AT_FDCWD, "/usr/lib/libssl.so.3", O_RDONLY) = -1 ENOENT (No such file or directory)
+# openat(AT_FDCWD, "/usr/local/lib/libssl.so.3", O_RDONLY) = -1 ENOENT (No such file or directory)
+# The error is about a library, not the file you thought!
+\`\`\`
+
+## Common Causes Revealed by strace
+
+**Wrong path (typo, relative vs absolute)**:
+\`\`\`bash
+openat(AT_FDCWD, "/etc/myapp/conifg.json", ...) = -1 ENOENT
+# Note: "conifg" not "config" — typo in the application
+\`\`\`
+
+**Missing shared library**:
+\`\`\`bash
+# Check library loading
+strace -e trace=openat ./myprogram 2>&1 | grep ".so"
+# Fix: ldconfig, LD_LIBRARY_PATH, or install the missing lib package
+\`\`\`
+
+**Wrong working directory**:
+\`\`\`bash
+openat(AT_FDCWD, "data/config.json", ...) = -1 ENOENT
+# Relative path — the program expects to run from /opt/myapp
+# but was started from /home/user
+getcwd(buf) = "/home/user"  # Revealed by strace
+\`\`\`
+
+**Permissions, not existence**:
+\`\`\`bash
+openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
+# The message says "no such file" but strace shows it's EACCES
+# Some apps mask the error type — strace shows the truth
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man1/strace.1.html',
+      'https://www.brendangregg.com/blog/2014-05-11/strace-wow-much-syscall.html',
+    ],
+  },
+  {
+    id: 'linux-lsof',
+    title: 'lsof: List Open Files',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 5,
+    description: 'lsof for open files, network connections, process file descriptors, and recovering deleted files.',
+    introduction: `lsof (List Open Files) is uniquely powerful on Linux because "everything is a file" — regular files, directories, sockets, pipes, devices, and more all appear in lsof output. It's an essential tool for diagnosing resource leaks, connection issues, and deleted-file problems.
+
+**Basic usage and filtering**:
+- lsof (no args): lists ALL open files for ALL processes — massive output, always filter
+- lsof -i :80: files related to port 80 (TCP and UDP listeners and connections)
+- lsof -i TCP:22: specifically TCP port 22
+- lsof -i 4: IPv4 only, lsof -i 6: IPv6 only
+- lsof -p PID: all files opened by a specific process
+- lsof +D /var/log: all files open in a directory tree (+ means recursive)
+- lsof /path/to/file: which processes have a specific file open
+- lsof -u username: files opened by a user
+- lsof -c nginx: files opened by processes with name matching "nginx"
+
+**FD column meanings**: cwd (current working directory), txt (program executable), mem (memory-mapped file), DEL (deleted but still open), 0 (stdin), 1 (stdout), 2 (stderr), numbers (regular file descriptors). Suffix u=read+write, r=read, w=write.
+
+**TYPE column**: REG (regular file), DIR (directory), CHR (character device), BLK (block device), FIFO (named pipe), IPv4/IPv6 (network socket), unix (Unix domain socket), PIPE (anonymous pipe).
+
+**Recovering deleted files**: When a process has a file open that has been deleted (unlinked), the file's inode and data remain on disk until all references are closed. The FD column shows "DEL" and the TYPE is REG. Access via /proc/PID/fd/N: cat /proc/$(pgrep myapp)/fd/5 > /tmp/recovered_file.
+
+**Performance**: lsof with no filters is slow (iterates /proc for every process). Always filter: lsof -n (no DNS) -P (no port names) for speed.`,
+    whenToUse: [
+      'Finding which process is listening on a specific port',
+      'Diagnosing "device busy" errors when unmounting',
+      'Recovering accidentally deleted files that are still open by a process',
+      'Investigating file descriptor leaks',
+    ],
+    keyConcepts: [
+      {
+        term: 'lsof -i for network',
+        definition: 'lsof -i :8080 shows all processes with port 8080 open. lsof -i TCP shows all TCP sockets. lsof -i @host shows connections to/from specific host.',
+      },
+      {
+        term: '-p for process',
+        definition: 'lsof -p PID shows all files/sockets a process has open. Useful for investigating file descriptor leaks (many open files) or unexpected connections.',
+      },
+      {
+        term: 'FD column meaning',
+        definition: 'cwd=current dir, txt=executable, mem=mmap, 0-2=stdin/out/err, numbers=file descriptors. Suffix: r=read, w=write, u=read+write. DEL=deleted but still open.',
+      },
+      {
+        term: '/proc/PID/fd recovery',
+        definition: 'Deleted files still open by a process remain accessible via /proc/PID/fd/N. cat /proc/PID/fd/5 > recovered. The inode is kept until all file descriptors are closed.',
+      },
+    ],
+    pitfalls: [
+      'lsof without -n and -P is slow on busy servers — DNS lookups for every IP and port name resolution add significant delay',
+      'lsof -i without root shows only your own processes — use sudo lsof -i to see all processes',
+      'lsof +D on large directory trees is very slow — it recursively opens every file entry',
+      'A deleted file shown by lsof does not mean disk space is freed — it won\'t be freed until the process closes it or exits',
+    ],
+    keyQuestions: [
+      {
+        question: 'A process deleted a large log file but disk space didn\'t free up. How do you find and recover it?',
+        answer: `## Finding and Recovering Deleted Open Files
+
+**Step 1: Confirm the problem**
+
+\`\`\`bash
+df -h /var/log
+# /dev/sda1  100G   95G  5G  95% /
+
+# But "deleted" files still take space:
+du -sh /var/log
+# 12G  /var/log  (less than df shows!)
+\`\`\`
+
+**Step 2: Find the deleted file**
+
+\`\`\`bash
+# Find files marked as deleted (DEL) that are still open
+lsof | grep deleted
+# Or more specifically:
+lsof +L1  # Files with link count < 1 (deleted from directory)
+
+# Output:
+# nginx  12345  root  7w  REG  8,1  45000000000  12345 /var/log/nginx/access.log (deleted)
+# ^PID   ^FD                        ^45GB!
+\`\`\`
+
+**Step 3: Recover the file if needed**
+
+\`\`\`bash
+# Access the deleted file via /proc
+PID=12345
+FD=7
+
+# Copy the deleted file contents
+cp /proc/$PID/fd/$FD /var/log/nginx/access.log.recovered
+
+# Or just truncate it to free space (if you don't need the content)
+> /proc/$PID/fd/$FD
+# This truncates the file through the open file descriptor — space freed immediately!
+\`\`\`
+
+**Step 4: Permanent fix**
+
+\`\`\`bash
+# The real fix: send SIGUSR1 to nginx to reopen log files after rotation
+kill -USR1 $(cat /run/nginx.pid)
+
+# Or use logrotate with postrotate script
+# logrotate already does this for properly configured services
+\`\`\``,
+      },
+      {
+        question: 'How would you find which process is listening on port 8080 without using netstat or ss?',
+        answer: `## Finding Port 8080 Listener Without netstat/ss
+
+**Method 1: lsof**
+
+\`\`\`bash
+sudo lsof -i :8080 -n -P
+# COMMAND   PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+# java     1234     app   47u  IPv6  12345      0t0  TCP *:8080 (LISTEN)
+
+# The process is Java with PID 1234
+# More detail:
+sudo lsof -i TCP:8080 -n -P -s TCP:LISTEN
+\`\`\`
+
+**Method 2: /proc filesystem directly**
+
+\`\`\`bash
+# Port 8080 in hex
+printf '%04X\n' 8080
+# 1F90
+
+# Search /proc/net/tcp for this hex port in local address
+grep -i "1F90" /proc/net/tcp
+# sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode
+# 42: 00000000:1F90 00000000:0000 0A ...                                      1000       0  34567
+
+# st=0A means LISTEN, inode=34567
+# Find which PID owns this inode
+find /proc/*/fd -lname 'socket:\[34567\]' 2>/dev/null
+# /proc/1234/fd/47
+
+# PID is 1234
+\`\`\`
+
+**Method 3: fuser**
+
+\`\`\`bash
+fuser 8080/tcp
+# 8080/tcp:  1234  (PID)
+
+fuser -v 8080/tcp
+# Shows USER, PID, ACCESS, COMMAND
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man8/lsof.8.html',
+      'https://www.thegeekstuff.com/2012/08/lsof-command-examples/',
+    ],
+  },
+  {
+    id: 'linux-cpu-scheduling',
+    title: 'CPU Scheduling & Affinity',
+    icon: 'activity',
+    color: '#f97316',
+    category: 'performance',
+    questions: 5,
+    description: 'CFS scheduler, nice/renice, ionice, taskset for CPU affinity, numactl, and real-time priorities.',
+    introduction: `The Linux CPU scheduler determines which process runs on which CPU at any given moment. Understanding the scheduler helps optimize performance for both latency-sensitive and throughput-oriented workloads.
+
+**CFS (Completely Fair Scheduler)**: The default scheduler since kernel 2.6.23. CFS tracks "virtual runtime" (vruntime) for each runnable process — how much CPU time it has received, weighted by its nice value. At each scheduling decision, the process with the lowest vruntime runs next. This ensures fairness: every process gets proportional CPU time relative to its weight.
+
+**Nice values**: Range from -20 (highest priority, gets more CPU time) to +19 (lowest priority, "background" process). Default is 0. Each nice level changes weight by about 10%. nice -n 10 ./command starts a command with nice 10. renice -n 5 -p PID changes a running process. Non-root users can only increase nice (lower priority), not decrease below their starting value.
+
+**ionice — I/O scheduling**: Linux's I/O scheduler also supports priority classes. Class 1 (real-time): gets I/O first, time-slice based. Class 2 (best-effort): default, priority levels 0-7. Class 3 (idle): only gets I/O when no other class wants disk access — perfect for background backups and indexing. ionice -c 3 -p PID changes a running process.
+
+**taskset — CPU affinity**: Bind a process to specific CPUs using a CPU mask or list. taskset -c 0,1 command runs on CPUs 0 and 1 only. taskset -c 0 -p PID sets affinity of running process. Reduces cache misses by keeping process on same core (hot cache). Essential for latency-sensitive applications.
+
+**numactl**: On multi-socket servers, memory access to a remote NUMA node is slower. numactl --cpunodebind=0 --membind=0 command keeps process and its memory on NUMA node 0. numactl --hardware shows NUMA topology. numastat shows per-node memory statistics.
+
+**Real-time scheduling**: chrt -f 99 command uses FIFO scheduling at priority 99 (highest). chrt -r 50 command uses Round-Robin at priority 50. Real-time processes preempt all normal processes. Dangerous if a bug causes a busy loop — can lock up the system. Requires CAP_SYS_NICE or root.`,
+    whenToUse: [
+      'Protecting latency-sensitive services from noisy neighbor processes',
+      'Running background jobs (backups, reindexing) without impacting production',
+      'Optimizing cache performance for CPU-intensive applications',
+      'NUMA-aware placement on multi-socket servers',
+    ],
+    keyConcepts: [
+      {
+        term: 'CFS vruntime fairness',
+        definition: 'CFS tracks vruntime (weighted CPU time) per process. Lowest vruntime runs next. Nice value multiplies the weight: nice -20 gets 1024 weight units, nice +19 gets 15. Proportional fair scheduling.',
+      },
+      {
+        term: 'nice -20 to +19',
+        definition: 'nice -20 = highest priority (more CPU weight). nice +19 = lowest. nice -n N cmd starts with nice N. renice -n N -p PID changes running process. Only root can go negative.',
+      },
+      {
+        term: 'ionice classes',
+        definition: 'ionice -c 1 = real-time I/O (gets disk first). ionice -c 2 = best-effort (default, priority 0-7). ionice -c 3 = idle (only when nothing else wants I/O). Use class 3 for backups.',
+      },
+      {
+        term: 'taskset CPU affinity',
+        definition: 'taskset -c 0,1 cmd — bind to CPUs 0 and 1. taskset -c 0 -p PID — change running process. Keeps hot cache on same core. Use numactl for full NUMA-aware placement.',
+      },
+    ],
+    pitfalls: [
+      'ionice class 1 (real-time I/O) can starve other processes of disk access — use class 3 (idle) for background work, not class 1',
+      'taskset without NUMA awareness: binding to CPUs on a different NUMA node from the memory causes high memory latency — use numactl instead',
+      'Real-time scheduling (chrt -f) with a buggy busy loop can lock up the entire system — always test in controlled environment',
+      'nice only affects scheduling relative to other processes at the same real-time priority — nice has no effect on real-time scheduled processes',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does the CFS scheduler ensure fairness? What role does the nice value play?',
+        answer: `## CFS: Completely Fair Scheduler
+
+**Core Mechanism: Virtual Runtime (vruntime)**
+
+\`\`\`
+Every runnable process has a vruntime counter:
+vruntime increases as process consumes CPU time
+vruntime is weighted by nice value
+Process with LOWEST vruntime runs next
+\`\`\`
+
+**The Red-Black Tree**:
+
+\`\`\`
+CFS stores runnable processes in a red-black tree ordered by vruntime.
+Leftmost node (lowest vruntime) = next to run.
+O(log N) insert/delete for scheduling operations.
+\`\`\`
+
+**Nice Value and Weights**:
+
+\`\`\`bash
+# Nice values map to weights:
+# nice  -20 → weight 88761 (highest)
+# nice    0 → weight  1024 (default)
+# nice  +19 → weight    15 (lowest)
+
+# vruntime_delta = actual_time * (NICE_0_WEIGHT / process_weight)
+# High-priority process: smaller vruntime delta per ns → runs more
+# Low-priority process: larger vruntime delta per ns → runs less
+
+# Check a process's scheduler info:
+cat /proc/$(pgrep myprocess)/sched
+# nr_switches    (how many times scheduled)
+# se.vruntime    (current virtual runtime)
+# se.load.weight (derived from nice value)
+\`\`\`
+
+**Practical Impact**:
+
+\`\`\`bash
+# Start a CPU-intensive background job at low priority
+nice -n 19 ./heavy_computation.sh &
+
+# The foreground service (nice 0) gets proportionally more CPU
+# Weight ratio: 1024 / 15 ≈ 68x more CPU weight than nice +19
+
+# Real-time work? Use chrt (bypasses CFS entirely):
+chrt -f 99 ./latency-critical-service
+\`\`\``,
+      },
+      {
+        question: 'You have a latency-sensitive service and a batch job on the same server. How do you configure scheduling to protect the service?',
+        answer: `## Protecting Latency-Sensitive Service from Batch Job
+
+**Scenario**: API server (must respond < 10ms) + nightly report generation (CPU and I/O intensive)
+
+**CPU Scheduling**:
+
+\`\`\`bash
+# Give batch job lowest CPU priority
+renice -n 19 -p $(pgrep report_generator)
+
+# Pin API server to specific CPUs (avoid interference)
+# Reserve CPUs 0-3 for API server
+taskset -c 0-3 -p $(pgrep api_server)
+
+# Pin batch job to remaining CPUs
+taskset -c 4-7 -p $(pgrep report_generator)
+
+# For absolute CPU isolation (Linux kernel feature):
+# Add isolcpus=4-7 to kernel cmdline to reserve CPUs from scheduler
+# Then use taskset to explicitly assign processes
+\`\`\`
+
+**I/O Priority**:
+
+\`\`\`bash
+# Batch job gets I/O only when API server doesn't need it
+ionice -c 3 -p $(pgrep report_generator)   # Idle class
+
+# Ensure API server gets priority I/O
+ionice -c 2 -n 0 -p $(pgrep api_server)    # Best-effort, highest priority
+\`\`\`
+
+**systemd Unit Configuration** (persistent):
+
+\`\`\`ini
+# /etc/systemd/system/report-generator.service
+[Service]
+Nice=19
+IOSchedulingClass=idle
+CPUAffinity=4-7
+
+# /etc/systemd/system/api-server.service
+[Service]
+Nice=-5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=0
+CPUAffinity=0-3
+CPUWeight=800   # cgroup weight, default 100
+\`\`\`
+
+\`\`\`bash
+systemctl daemon-reload
+systemctl restart api-server report-generator
+\`\`\``,
+      },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/scheduler/sched-design-CFS.html',
+      'https://man7.org/linux/man-pages/man1/taskset.1.html',
+    ],
+  },
 ];
