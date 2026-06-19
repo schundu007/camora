@@ -17368,11 +17368,11 @@ ARG APP_VERSION=1.0.0     # global ARG (before any FROM)
 
 FROM golang:1.23 AS build
 ARG APP_VERSION            # re-declare to use in this stage
-RUN go build -ldflags="-X main.version=${APP_VERSION}" .
+RUN go build -ldflags="-X main.version=\${APP_VERSION}" .
 
 FROM scratch AS runtime
 ARG APP_VERSION            # re-declare again
-LABEL version="${APP_VERSION}"
+LABEL version="\${APP_VERSION}"
 COPY --from=build /app /app
 \`\`\`
 
