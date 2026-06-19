@@ -4,6 +4,7 @@ import { usePlaygroundSession } from '@/hooks/usePlaygroundSession';
 import { usePlaygroundMetrics } from '@/hooks/usePlaygroundMetrics';
 import { useDialog } from '@/components/shared/Dialog';
 import EnvironmentPicker, { ENVIRONMENTS, EnvIcon } from './EnvironmentPicker';
+import EnvironmentConfigPanel from './EnvironmentConfigPanel';
 import TerminalPane from './TerminalPane';
 import BootProgress from './BootProgress';
 import IdePane from './IdePane';
