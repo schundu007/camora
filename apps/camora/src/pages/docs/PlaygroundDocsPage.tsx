@@ -83,7 +83,7 @@ export default function PlaygroundDocsPage() {
             { env: 'Cloud CLI', plan: 'Pro', memory: '1.5 GB', desc: 'AWS CLI, Azure CLI, gcloud, Terraform, kubectl, helm pre-installed.' },
           ]}
         />
-        <DocsCallout variant="info">
+        <DocsCallout variant="note">
           Free-tier users can start one container session per day. Pro users have no daily session
           limit.
         </DocsCallout>
@@ -181,7 +181,7 @@ export default function PlaygroundDocsPage() {
           The IDE and terminal share the same container filesystem. Files you create in the terminal
           appear immediately in the IDE file explorer, and vice versa.
         </p>
-        <DocsCallout variant="info">
+        <DocsCallout variant="note">
           The IDE stays mounted when you switch back to the terminal tab — it does not reload. You
           can freely switch between terminal and IDE without losing unsaved work.
         </DocsCallout>
@@ -244,7 +244,7 @@ export default function PlaygroundDocsPage() {
           <li>No boot progress wait — the terminal opens as soon as the container is running.</li>
         </ol>
 
-        <DocsCallout variant="info">
+        <DocsCallout variant="note">
           Snapshots save filesystem state only — running processes, open terminals, and in-memory
           state are not preserved.
         </DocsCallout>

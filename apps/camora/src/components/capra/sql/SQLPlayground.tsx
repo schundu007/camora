@@ -758,7 +758,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 language="sql"
                 code={code}
                 onChange={setCode}
-                theme={isDark ? 'vs-dark' : 'vs-light'}
+                theme={isDark ? 'vs-dark' : 'vs'}
                 fontSize={13}
                 height="100%"
                 showLineNumbers
