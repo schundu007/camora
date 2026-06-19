@@ -2813,7 +2813,6 @@ export default function TopicDetail({
               <div className="pt-3 space-y-4">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="viz-figure">
-                    {/* Diagram first — visually anchors the section before the reference text */}
                     {viz.image && (
                       <ZoomableImage
                         src={viz.image}
@@ -2827,6 +2826,19 @@ export default function TopicDetail({
                         }}
                         imgStyle={{ width: '100%', height: 'auto' }}
                       />
+                    )}
+                    {viz.video && (
+                      <div className="w-full" style={{ borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                          <iframe
+                            src={`https://www.youtube.com/embed/${new URL(viz.video).searchParams.get('v') || viz.video.split('/').pop()}`}
+                            title={viz.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                          />
+                        </div>
+                      </div>
                     )}
                     <figcaption className="viz-caption">
                       <h4 className="viz-caption-title">{viz.title}</h4>

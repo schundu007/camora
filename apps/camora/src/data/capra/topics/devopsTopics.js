@@ -15252,6 +15252,11 @@ Dashed arrows = pull operations (daemon fetches image layers from registry as ne
         image: '/diagrams/devops/docker-architecture-official.webp',
       },
       {
+        title: 'Docker explained — full architecture walkthrough (video)',
+        video: 'https://www.youtube.com/watch?v=QEzbZKtLi-g',
+        description: 'End-to-end walkthrough of Docker architecture: how the client, daemon, containerd, runc, and registry fit together.',
+      },
+      {
         title: 'Docker architecture — client, daemon, images, containers, registry',
         description: `Docker uses a client-server architecture. The three main pieces:
 
