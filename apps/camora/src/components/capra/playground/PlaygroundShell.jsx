@@ -256,20 +256,20 @@ export default function PlaygroundShell() {
                 )}
                 {/* Stats pane */}
                 <div style={{ position: 'absolute', inset: 0, display: activeTab === 'stats' ? 'block' : 'none', overflowY: 'auto', background: '#0d1117', padding: 24 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Your Session Stats</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', margin: '0 0 20px' }}>Your Session Stats</p>
                   {statsLoading && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Loading stats…</p>}
                   {!statsLoading && stats && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
                       {[
-                        { label: 'Total Sessions', value: stats.totalSessions ?? '—' },
-                        { label: 'Total Time', value: stats.totalMinutes != null ? `${stats.totalMinutes}m` : '—' },
+                        { label: 'Sessions', value: stats.totalSessions ?? '—' },
+                        { label: 'Total Time', value: stats.totalMinutes != null ? (stats.totalMinutes >= 60 ? `${Math.round(stats.totalMinutes / 60)}h` : `${stats.totalMinutes}m`) : '—' },
                         { label: 'Favorite Env', value: stats.favoriteEnvironment ?? '—' },
                         { label: 'Success Rate', value: stats.successRate != null ? `${Math.round(stats.successRate * 100)}%` : '—' },
                         { label: 'Last Active', value: stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : '—' },
                       ].map(({ label, value }) => (
-                        <div key={label} className="chip" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-                          <span style={{ fontSize: 15, fontWeight: 600 }}>{String(value)}</span>
+                        <div key={label} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{String(value)}</span>
                         </div>
                       ))}
                     </div>

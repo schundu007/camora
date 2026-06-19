@@ -99,7 +99,7 @@ playgroundSessionsRouter.get('/metrics', async (req, res) => {
 playgroundSessionsRouter.get('/my-stats', async (req, res) => {
   try {
     const [totalsRow, favRow] = await Promise.all([
-      query(`SELECT COUNT(*) AS total_sessions, ROUND(SUM(EXTRACT(EPOCH FROM (COALESCE(destroyed_at, NOW()) - created_at)) / 60)::numeric, 0) AS total_minutes, COUNT(*) FILTER (WHERE became_ready_at IS NOT NULL)::float / NULLIF(COUNT(*), 0) AS success_rate, MAX(created_at) AS last_active FROM playground_sessions WHERE user_id = $1`, [req.user.id]),
+      query(`SELECT COUNT(*) AS total_sessions, ROUND(SUM(LEAST(EXTRACT(EPOCH FROM (COALESCE(destroyed_at, NOW()) - created_at)), 28800)) / 60)::numeric AS total_minutes, COUNT(*) FILTER (WHERE became_ready_at IS NOT NULL OR status IN ('ready','active','destroyed'))::float / NULLIF(COUNT(*), 0) AS success_rate, MAX(created_at) AS last_active FROM playground_sessions WHERE user_id = $1`, [req.user.id]),
       query(`SELECT environment, COUNT(*) AS count FROM playground_sessions WHERE user_id = $1 GROUP BY environment ORDER BY count DESC LIMIT 1`, [req.user.id]),
     ]);
     const row = totalsRow.rows[0] || {};
