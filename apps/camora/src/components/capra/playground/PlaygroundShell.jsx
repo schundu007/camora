@@ -10,6 +10,7 @@ import ToolPickerPanel from './ToolPickerPanel';
 import SavedVmsPanel from './SavedVmsPanel';
 import ClusterView from './ClusterView';
 
+
 function formatTime(seconds) {
   if (!seconds && seconds !== 0) return '60:00';
   const m = Math.floor(seconds / 60);
@@ -66,7 +67,7 @@ export default function PlaygroundShell() {
     terminal_ready:  'Cluster ready — 3 nodes online',
   };
 
-  const isClusterEnv = activeEnv.id === 'etcd-cluster';
+  const isClusterEnv = !!session?.isCluster;
   const displaySteps = isClusterEnv
     ? bootSteps.map(s =>
         CLUSTER_STEP_LABELS[s.step]

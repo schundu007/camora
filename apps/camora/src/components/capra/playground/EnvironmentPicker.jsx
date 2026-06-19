@@ -85,6 +85,15 @@ export const ENVIRONMENTS = [
     color: '#0ea5e9',
   },
   {
+    id: 'k8s-etcd',
+    label: 'etcd Practice',
+    icon: { logo: 'etcd.io' },
+    plan: 'pro',
+    desc: 'Practice etcd using the real K8s control plane store — watch, leases, transactions',
+    category: 'Kubernetes',
+    color: '#419EDA',
+  },
+  {
     id: 'cloud-cli',
     label: 'Cloud CLI',
     icon: { logos: ['amazon.com', 'google.com', 'microsoft.com'] },

@@ -16,8 +16,7 @@ const IMAGES = {
   'k8s-single': 'chundubabu/pg-k8s-single:latest',
   'k8s-multi': 'chundubabu/pg-k8s-multi:latest',
   'cloud-cli': 'chundubabu/pg-cloud-cli:latest',
-  'etcd-single': 'chundubabu/pg-etcd-single:latest',
-  'etcd-cluster': 'chundubabu/pg-etcd-node:latest',
+  'k8s-etcd': 'chundubabu/pg-etcd:latest',
 };
 
 const MEMORY_MB = {
@@ -27,8 +26,7 @@ const MEMORY_MB = {
   'k8s-single': 2048,
   'k8s-multi': 4096,
   'cloud-cli': 1536,
-  'etcd-single': 512,
-  'etcd-cluster': 512,
+  'k8s-etcd': 1024,
 };
 
 function sshExec(command) {
@@ -137,7 +135,7 @@ export async function createClusterNetwork(sessionId) {
 }
 
 export async function scheduleClusterNode(sessionId, nodeIndex, nodeName, networkName) {
-  const image = IMAGES['etcd-cluster'];
+  const image = IMAGES['k8s-multi'];
   const containerName = `pg-${sessionId.slice(0, 8)}-${nodeName}`;
   const allNodes = 'etcd1,etcd2,etcd3';
   const cmd = [
