@@ -99,6 +99,11 @@ RUN chmod +x /home/learner/labs/*.sh && \
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
+RUN mkdir -p /home/learner/.local/share/code-server/User && \
+    printf '{\n  "workbench.startupEditor": "none",\n  "workbench.colorTheme": "Default Dark+"\n}\n' \
+    > /home/learner/.local/share/code-server/User/settings.json && \
+    chown -R learner:learner /home/learner/.local
+
 # ---------------------------------------------------------------------------
 # code-server config for learner (no auth, 0.0.0.0:8080)
 # ---------------------------------------------------------------------------
