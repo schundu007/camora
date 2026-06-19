@@ -15,7 +15,7 @@ import {
 const FREE_ENVIRONMENTS = new Set(['ubuntu', 'docker']);
 const FREE_DAILY_LIMIT = 1;
 const PAID_PLAN_TYPES = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
-const CLUSTER_ENVIRONMENTS = new Set(['etcd-cluster']);
+const CLUSTER_ENVIRONMENTS = new Set([]);
 const CLUSTER_NODE_NAMES = ['etcd1', 'etcd2', 'etcd3'];
 
 function isClusterEnvironment(env) {
