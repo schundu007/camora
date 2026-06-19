@@ -70,9 +70,9 @@ async function jwtAuth(req, res, next) {
   next();
 }
 
-app.use('/api/v1/playground', jwtAuth, playgroundLimiter, playgroundRouter);
 app.use('/api/v1/playground/sessions', jwtAuth, playgroundSessionsRouter);
 app.use('/api/v1/playground/saves', jwtAuth, playgroundSavesRouter);
+app.use('/api/v1/playground', jwtAuth, playgroundLimiter, playgroundRouter);
 
 function tryParseToken(token) {
   try { return verifyToken(token); } catch { return null; }
