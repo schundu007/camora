@@ -3563,6 +3563,63 @@ export default function DocsPage({ onBack }) {
                 </>
               )}
 
+              {activePage === 'challenges' && (
+                <>
+                  <div className="mb-6">
+                    <div className="space-y-3">
+                    {challengesCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => challengesTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('challenges', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200 ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                                >
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: `${topic.color}1A`, border: `1px solid ${topic.color}40`, color: topic.color }}>
+                                      <Icon name={topic.icon || 'code'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Chip>{topic.questions} questions</Chip>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {activePage === 'aiops' && (
                 <>
                   <div className="mb-6">
