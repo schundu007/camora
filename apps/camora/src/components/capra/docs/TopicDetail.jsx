@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
+import YamlBreakdown from './YamlBreakdown.jsx';
 import CodeBlock from '../shared/CodeBlock.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
 import { ContentDiagram } from './ContentDiagram';
@@ -2803,14 +2804,14 @@ export default function TopicDetail({
                       <ZoomableImage
                         src={viz.image}
                         alt={viz.title}
-                        maxHeight={9999}
+                        maxHeight={520}
                         frameStyle={{
                           background: 'white',
                           border: 'none',
                           borderRadius: 0,
                           borderBottom: '1px solid var(--border)',
                         }}
-                        imgStyle={{ width: '100%', height: 'auto' }}
+                        imgStyle={{ maxWidth: '100%', width: 'auto', height: 'auto', margin: '0 auto' }}
                       />
                     )}
                     {viz.video && (
@@ -2876,6 +2877,8 @@ export default function TopicDetail({
                   const prose = codeIdx > 0 ? kcDef.slice(0, codeIdx).trim() : null;
                   const code  = codeIdx > 0 ? kcDef.slice(codeIdx).trim() : null;
                   const splitLayout = !!(prose && code);
+                  const proseLines = (prose || '').split('\n').filter(l => l.trim() && !l.trim().endsWith(':'));
+                  const proseThin = proseLines.length < 4;
                   return (
                     <div
                       key={i}
@@ -2898,6 +2901,7 @@ export default function TopicDetail({
                         <div className="flex divide-x divide-[var(--border)] min-h-0">
                           <div className="flex-1 min-w-0 px-4 py-3 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
                             <FormattedContent content={prose} color="amber" />
+                            {proseThin && <YamlBreakdown code={code} />}
                           </div>
                           <div className="w-[52%] shrink-0 min-w-0 overflow-x-auto">
                             <FormattedContent content={code} color="amber" />
