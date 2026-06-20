@@ -116,17 +116,27 @@ Step 2 — Network layer (2 min):
 - VPC Flow Logs: can I see ACCEPT or REJECT for my source IP on port 22?
 
 Step 3 — Instance system log (1 min):
-Actions > Get system log. Look for:
+\`Actions > Get system log\`. Look for:
 - "PANIC: VFS: Unable to mount root fs" → disk/filesystem issue
 - "Kernel panic" → OS crash, may need to rescue
 - "No space left on device" → disk full, sshd can't start
 - "Out of memory: Kill process [sshd]" → OOM killed sshd
 
 Step 4 — Serial console (if enabled):
-Connect and log in. Check: df -h (disk full?), systemctl status sshd, journalctl -u sshd -n 50.
+Connect and log in. Run:
+\`\`\`bash
+df -h                        # disk full?
+systemctl status sshd
+journalctl -u sshd -n 50
+\`\`\`
 
 Step 5 — Rescue mode (if serial console unavailable):
-Stop the instance. Detach root EBS volume. Attach it to a rescue instance as /dev/xvdf. Mount it: mount /dev/xvdf1 /mnt. Investigate and fix (delete large files, fix /etc/fstab, re-enable sshd). Unmount, re-attach, start the original instance.
+Stop the instance. Detach root EBS volume. Attach it to a rescue instance as \`/dev/xvdf\`.
+\`\`\`bash
+mount /dev/xvdf1 /mnt
+# Fix the issue (delete large files, repair /etc/fstab, re-enable sshd)
+# Then: umount /mnt → re-attach volume → start original instance
+\`\`\`
 
 Step 6 — Hardware issue (system check failing):
 Stop the instance (not reboot). Start it. This migrates to a new host.`,
@@ -176,31 +186,40 @@ Connection storms: when hundreds of connections all retry simultaneously (expone
       {
         question: 'Your RDS CPU is at 100%. Walk through how you identify and fix the root cause.',
         answer: `Step 1 — Identify the offending query with Performance Insights:
-RDS Console > Performance Insights > Top SQL tab. Look for the query with the highest DB Load (average active sessions). Note the query text and its wait event (CPU = compute-bound, locks = contention, io = I/O bound).
+\`RDS Console > Performance Insights > Top SQL tab\`. Look for the query with the highest DB Load. Note the wait event (CPU = compute-bound, locks = contention, io = I/O bound).
 
 Step 2 — Get the execution plan:
+\`\`\`sql
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
 SELECT ... [the slow query from Performance Insights];
-
+\`\`\`
 Look for:
 - Seq Scan on a large table → add an index on the filtered column
-- Rows estimated: 1000 vs actual: 5000000 → run ANALYZE tablename to update statistics
+- Rows estimated: 1000 vs actual: 5000000 → run \`ANALYZE tablename\` to update statistics
 - Hash Join with large intermediate sets → consider a query rewrite or partial index
 - Nested Loop with a large outer set → check for Cartesian product (missing join condition)
 
 Step 3 — Add the index (carefully):
+\`\`\`sql
 CREATE INDEX CONCURRENTLY idx_orders_user_id ON orders(user_id);
-CONCURRENTLY builds the index without locking the table. Monitor CPU during index build — it will spike. In production, do this during low-traffic hours.
+\`\`\`
+\`CONCURRENTLY\` builds the index without locking the table. Monitor CPU during index build — it will spike. Do this during low-traffic hours.
 
 Step 4 — If it is autovacuum:
+\`\`\`sql
 SELECT schemaname, relname, n_dead_tup, n_live_tup, last_autovacuum
 FROM pg_stat_user_tables
 ORDER BY n_dead_tup DESC LIMIT 10;
-If n_dead_tup is very high (millions), autovacuum is doing a lot of work. Tune autovacuum per-table:
+\`\`\`
+If \`n_dead_tup\` is very high (millions), autovacuum is doing significant work. Tune per-table:
+\`\`\`sql
 ALTER TABLE hot_table SET (autovacuum_vacuum_scale_factor = 0.01, autovacuum_vacuum_cost_delay = 2);
+\`\`\`
 
 Step 5 — If it is a connection storm:
+\`\`\`sql
 SELECT count(*), state FROM pg_stat_activity GROUP BY state;
+\`\`\`
 If hundreds are in "idle" or "idle in transaction", deploy RDS Proxy to pool connections. Implement connection pooling at the application layer (PgBouncer, HikariCP).`,
       },
     ],
@@ -249,29 +268,40 @@ ALB access logs are the authoritative source. They show: request processing time
       {
         question: 'Users are seeing 502 errors from your ALB. How do you find the root cause?',
         answer: `Step 1 — Distinguish ALB-generated vs backend-generated 502:
-AWS ALB access logs have two status codes: elb_status_code and target_status_code.
-- elb_status_code=502, target_status_code=502: backend returned a 502 to the ALB. Application bug.
-- elb_status_code=502, target_status_code=-: the ALB could not reach the backend or the backend closed the connection before responding. Keep-Alive issue or application crash.
+AWS ALB access logs have two status codes: \`elb_status_code\` and \`target_status_code\`.
+- \`elb_status_code=502, target_status_code=502\`: backend returned a 502. Application bug.
+- \`elb_status_code=502, target_status_code=-\`: ALB could not reach the backend or backend closed the connection early. Keep-Alive issue or application crash.
 
 Query access logs with Athena:
+\`\`\`sql
 SELECT count(*), target_status_code, elb_status_code
 FROM alb_logs
 WHERE elb_status_code = 502
 GROUP BY target_status_code, elb_status_code;
+\`\`\`
 
 Step 2 — If target_status_code is - (dash), check Keep-Alive timeout:
-ALB keeps connections to backends alive (Keep-Alive). If the backend closes an idle connection before ALB does, ALB may try to reuse it and get a TCP RST → 502.
-Fix: set the backend Keep-Alive timeout higher than the ALB's idle timeout (default 60s). For nginx: keepalive_timeout 75; For Node.js: server.keepAliveTimeout = 65000.
+ALB reuses backend connections (Keep-Alive). If the backend closes an idle connection before ALB does, ALB tries to reuse it and gets a TCP RST → 502. Fix: set the backend Keep-Alive timeout higher than the ALB's idle timeout (default 60s).
+\`\`\`bash
+# nginx:
+keepalive_timeout 75;
+# Node.js:
+server.keepAliveTimeout = 65000;
+\`\`\`
 
 Step 3 — If application is crashing mid-request:
-Check backend application logs for OOM kills, exceptions, or crashes correlated with the 502 timestamps.
-kubectl logs -n prod pod-name --previous   # If container restarted
-journalctl -u myapp --since "2024-01-15 14:30:00"   # systemd service
+Check backend logs for OOM kills, exceptions, or crashes correlated with the 502 timestamps.
+\`\`\`bash
+kubectl logs -n prod pod-name --previous        # if container restarted
+journalctl -u myapp --since "2024-01-15 14:30:00"  # systemd service
+\`\`\`
 
 Step 4 — Check security groups and connection limits:
-Are backend instances hitting connection limits (ELB connection limits)?
-Are backend instances reaching their file descriptor limits (ulimit -n)?
-ss -s on backend instances shows total TCP connections.`,
+Are backend instances hitting file descriptor limits?
+\`\`\`bash
+ss -s           # shows total TCP connection counts per state
+ulimit -n       # check open file descriptor limit
+\`\`\``,
       },
     ],
     references: [
@@ -318,22 +348,22 @@ Kubernetes CoreDNS failure is a frequent cause of widespread pod connectivity lo
     keyQuestions: [
       {
         question: 'After updating a DNS record, some services are working and some are not. Why and how do you fix it?',
-        answer: `This is DNS propagation lag. Different resolvers around the world have cached the old record with different amounts of remaining TTL. Some resolvers have already fetched the new record; others are still serving the cached old one.
+        answer: `This is DNS propagation lag. Different resolvers worldwide have cached the old record with different amounts of remaining TTL. Some resolvers have already fetched the new record; others are still serving the cached old one.
 
 Understanding the timeline:
-The old record had a TTL of, say, 3600 seconds (1 hour). At the moment you made the change, resolvers that cached the record 5 minutes ago have 55 minutes of remaining TTL. They will continue serving the old record for 55 more minutes. Resolvers that cached it 59 minutes ago have 1 minute left and will refresh soon.
-
-This is why TTL reduction before a change is critical: if you had set TTL to 60 seconds 24 hours before the change, the maximum propagation time after the change is 60 seconds.
+The old record had a TTL of, say, 3600 seconds (1 hour). Resolvers that cached it 5 minutes ago have 55 minutes of remaining TTL. This is why TTL reduction before a change is critical: if you had set TTL to 60 seconds 24 hours before the change, the maximum propagation time after the change is only 60 seconds.
 
 Diagnosis:
-dig @8.8.8.8 api.example.com   # Google's resolver — has it propagated?
-dig @1.1.1.1 api.example.com   # Cloudflare — different cache
-dig @<ns1.example.com> api.example.com   # Authoritative — the ground truth
-whatsmydns.net                  # Web tool showing resolution from global vantage points
+\`\`\`bash
+dig @8.8.8.8 api.example.com          # Google's resolver — has it propagated?
+dig @1.1.1.1 api.example.com          # Cloudflare — different cache
+dig @ns1.example.com api.example.com  # Authoritative — the ground truth
+\`\`\`
+Also use \`whatsmydns.net\` to check resolution from global vantage points simultaneously.
 
-The authoritative nameserver always returns the new record immediately. If dig @authoritative shows the new record but clients see the old one, the issue is resolver caching.
+The authoritative nameserver always returns the new record immediately. If \`dig @authoritative\` shows the new record but clients see the old one, the issue is resolver caching — you must wait for the TTL to expire.
 
-Fix for the current incident: wait for TTL to expire (maximum = old record's TTL). For future: implement a TTL reduction procedure in your deployment runbook — lower TTL to 60 seconds 24h before any planned DNS change, perform the change, then restore TTL after propagation.`,
+Fix for the current incident: wait for TTL to expire (maximum = old record's TTL). For future: implement a TTL reduction procedure — lower TTL to 60 seconds 24h before any planned DNS change, perform the change, then restore TTL after propagation.`,
       },
     ],
     references: [
@@ -452,38 +482,55 @@ Feature flags introduce another source of parity loss: if a feature flag is enab
     keyQuestions: [
       {
         question: 'A new database query works fine in staging but causes prod to time out. How do you diagnose and fix it without rolling back?',
-        answer: `The most common cause is a difference in data volume causing the query optimizer to choose a different execution plan (often sequential scan on prod vs index scan on staging due to different row counts triggering different optimizer decisions).
+        answer: `The most common cause is data volume: the query optimizer chooses a different execution plan on prod (sequential scan on 100M rows) vs staging (index scan on 10K rows). Statistics may also be stale.
 
 Immediate mitigation (buy time):
-Kill the slow query if it is locking tables: SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE query LIKE '%your_query%';
-If the query is causing table locks, you may need to kill it to unblock other operations.
+\`\`\`sql
+SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE query LIKE '%your_query%';
+\`\`\`
+If the query is holding locks, cancel it to unblock other operations.
 
 Diagnosis:
-1. Run EXPLAIN ANALYZE on production (read replica if available) with the actual production data:
-   EXPLAIN (ANALYZE, BUFFERS) SELECT ... [problematic query];
-   Look for Seq Scan on large tables, actual vs estimated rows wildly different.
 
-2. Check pg_stat_statements for the query:
-   SELECT query, mean_exec_time, calls FROM pg_stat_statements WHERE query LIKE '%table_name%' ORDER BY mean_exec_time DESC;
+1. Run EXPLAIN ANALYZE on production (use a read replica if available):
+\`\`\`sql
+EXPLAIN (ANALYZE, BUFFERS) SELECT ... [problematic query];
+\`\`\`
+Look for Seq Scan on large tables, or actual rows wildly different from estimated rows.
 
-3. If the plan differs from staging: statistics may be out of date on prod.
-   ANALYZE table_name;   -- Refresh statistics without locking
+2. Check pg_stat_statements for aggregate timing:
+\`\`\`sql
+SELECT query, mean_exec_time, calls
+FROM pg_stat_statements
+WHERE query LIKE '%table_name%'
+ORDER BY mean_exec_time DESC;
+\`\`\`
+
+3. If plan differs from staging, statistics may be stale on prod:
+\`\`\`sql
+ANALYZE table_name;   -- Refreshes statistics without locking
+\`\`\`
 
 Fix without rollback:
-Option A — Add an index:
-   CREATE INDEX CONCURRENTLY idx_name ON table(column);
-   Non-blocking. Takes minutes for large tables. Query should immediately use it.
 
-Option B — Rewrite the query behind a feature flag:
-   If the old query is deployed, deploy a hotfix with the optimized query behind a flag, enable it for a small percentage, verify, then 100%.
+**Option A — Add an index (non-blocking):**
+\`\`\`sql
+CREATE INDEX CONCURRENTLY idx_name ON table(column);
+\`\`\`
+Takes minutes for large tables. Query will immediately use it once built.
 
-Option C — Query hint (PostgreSQL):
-   SET enable_seqscan = OFF;   -- Forces planner to prefer index scan (dangerous globally, useful for diagnosis)
+**Option B — Rewrite behind a feature flag:**
+Deploy hotfix with optimized query behind a flag, enable it for 5%, verify latency, then roll to 100%.
+
+**Option C — Force index usage for diagnosis:**
+\`\`\`sql
+SET enable_seqscan = OFF;   -- Forces planner to prefer index (diagnostic only, do not leave on)
+\`\`\`
 
 Prevent recurrence:
 - Add query performance tests to CI using a dataset representative of production volume.
-- Run EXPLAIN ANALYZE as part of the staging migration validation.
-- Use pg_stat_statements in staging with production-like data.`,
+- Run \`EXPLAIN ANALYZE\` as part of staging migration validation.
+- Use \`pg_stat_statements\` in staging with production-like data.`,
       },
     ],
     references: [
@@ -531,31 +578,42 @@ Column rename is one of the most dangerous migrations: there is no way to rename
     keyQuestions: [
       {
         question: 'How do you safely rename a column in a production PostgreSQL table with 500 million rows without downtime?',
-        answer: `Column rename cannot be done atomically in PostgreSQL without locking. The safe path requires four deployments spanning several days.
+        answer: `Column rename cannot be done atomically in PostgreSQL without locking. The safe path requires five phases across several days.
 
 Phase 1 (Deploy v1) — Add the new column:
+\`\`\`sql
 ALTER TABLE orders ADD COLUMN customer_id BIGINT;
-This is instant — adding a nullable column without a default requires no table rewrite.
+\`\`\`
+Instant — adding a nullable column without a default requires no table rewrite.
 
 Phase 2 — Backfill the new column from the old:
+\`\`\`sql
 UPDATE orders SET customer_id = user_id WHERE id >= :start AND id < :end;
-Run in batches of 10,000 rows with sleep(10ms) between batches to avoid locking and I/O saturation. Takes hours for 500M rows — run as a background job.
+\`\`\`
+Run in batches of 10,000 rows with \`sleep(10ms)\` between batches to avoid I/O saturation. Takes hours for 500M rows — run as a background job.
 
-Add a trigger to keep new column in sync during backfill:
+Add a trigger to keep columns in sync during backfill:
+\`\`\`sql
 CREATE TRIGGER sync_customer_id BEFORE INSERT OR UPDATE ON orders
 FOR EACH ROW EXECUTE FUNCTION fn_sync_customer_id();
+\`\`\`
 
-Phase 3 (Deploy v2) — Update application to write to both columns, read from new:
-Application writes both user_id and customer_id on insert/update. Reads from customer_id. Verify the new column has correct data.
+Phase 3 (Deploy v2) — Update application to write both columns, read from new:
+Application writes both \`user_id\` and \`customer_id\` on insert/update. Reads from \`customer_id\`. Verify the new column has correct data.
 
 Phase 4 — Add NOT NULL constraint (once backfill is complete):
-ALTER TABLE orders ADD CONSTRAINT orders_customer_id_not_null CHECK (customer_id IS NOT NULL) NOT VALID;
+\`\`\`sql
+ALTER TABLE orders ADD CONSTRAINT orders_customer_id_not_null
+  CHECK (customer_id IS NOT NULL) NOT VALID;
 ALTER TABLE orders VALIDATE CONSTRAINT orders_customer_id_not_null;
-NOT VALID + VALIDATE scans the table without locking (PostgreSQL 9.2+).
+\`\`\`
+\`NOT VALID\` + \`VALIDATE\` scans the table without a full lock (PostgreSQL 9.2+).
 
 Phase 5 (Deploy v3) — Remove the old column:
+\`\`\`sql
 DROP TRIGGER sync_customer_id ON orders;
 ALTER TABLE orders DROP COLUMN user_id;   -- Safe — no code uses it
+\`\`\`
 
 This five-phase process takes 3-5 deploys over several days but maintains zero downtime throughout.`,
       },
@@ -613,32 +671,35 @@ Dead man's switch (Watchdog alert): an always-firing alert that confirms the ent
         answer: `I work through each stage of the alerting pipeline backwards:
 
 Stage 1 — Was the alert rule evaluating correctly?
-Check Prometheus UI > Alerts. Find the alert. Look at its state at the incident time (use the query with an offset or look at TSDB retention).
-Run the alert's PromQL query in the Prometheus UI with a past timestamp:
-  my_metric{job="api"} @ 2024-01-15T14:30:00Z
+Check \`Prometheus UI > Alerts\`. Find the alert and look at its state at the incident time. Run the alert's PromQL query with a past timestamp:
+\`\`\`promql
+my_metric{job="api"} @ 2024-01-15T14:30:00Z
+\`\`\`
 Was the metric above the threshold at that time?
 
 Stage 2 — Was the metric being scraped?
-Check prometheus target status (Status > Targets). Was the target UP at the incident time?
+Check \`Status > Targets\`. Was the target UP at the incident time?
+\`\`\`promql
 up{job="api"} @ 2024-01-15T14:30:00Z
-If 0, Prometheus was not scraping the target — no data, no alert.
+\`\`\`
+If 0, Prometheus was not scraping the target — no data means no alert.
 
 Stage 3 — Did the alert reach Alertmanager?
-Check Alertmanager UI > Alerts. Was the alert in firing state there?
-If not: the for clause may have prevented it. If the alert condition was true for only 2 of the required 5 minutes, it never transitioned to firing.
+Check \`Alertmanager UI > Alerts\`. Was the alert in firing state there? If not: the \`for\` clause may have prevented it. If the alert condition was true for only 2 of the required 5 minutes, it never transitioned to firing.
 
 Stage 4 — Was there an active silence or inhibition?
-Alertmanager UI > Silences. Were any silences active that matched the alert's labels?
-Alertmanager UI > Inhibitions. Was an inhibition rule suppressing this alert?
+Check \`Alertmanager UI > Silences\` for active silences matching the alert's labels. Check \`Inhibitions\` for any suppression rule that matched.
 
 Stage 5 — Did the notification send?
-Alertmanager logs: kubectl logs -n monitoring alertmanager-0
+\`\`\`bash
+kubectl logs -n monitoring alertmanager-0
+\`\`\`
 Look for the alert name. Did it attempt delivery? Did the receiver (PagerDuty/Slack) confirm receipt?
 
 Remediation based on finding:
-- Metric missing: add absent() rule as a separate alert
-- for clause too long: reduce it
-- Silence left active: add a process to review and clean up silences after maintenance
+- Metric missing: add \`absent()\` rule as a separate alert
+- \`for\` clause too long: reduce it for critical alerts (0 or 1-2 minutes)
+- Silence left active: add a process to review and clean up silences after maintenance windows
 - Notification failure: check receiver credentials, webhook URL health
 - Add a Watchdog/dead man's switch alert routed to a dedicated "always notify" receiver`,
       },
@@ -689,60 +750,78 @@ N+1 detection: if your application logs show 1000 database queries for a page th
       {
         question: 'How do you find and fix an N+1 query problem in a production application?',
         answer: `Detection:
-1. Enable slow query logging with a low threshold: log_min_duration_statement = 10 (log queries > 10ms).
-2. Look for repeating query patterns in the logs — the same query executed hundreds or thousands of times per second with slightly different parameter values (different ID each time).
-3. In application performance monitoring (Datadog APM, New Relic, Sentry), look for traces where a single request makes 100+ database queries.
-4. In code, search for ORM calls inside loops: for order in orders: order.customer.name (fetches each customer individually).
+1. Enable slow query logging with a low threshold: \`log_min_duration_statement = 10\` (log queries > 10ms).
+2. Look for repeating query patterns — the same query executed hundreds of times per second with slightly different parameter values (different ID each time).
+3. In APM (Datadog, New Relic, Sentry), look for traces where a single request makes 100+ database queries.
+4. In code, search for ORM calls inside loops: \`for order in orders: order.customer.name\` — fetches each customer individually.
 
 Example N+1 in Python SQLAlchemy:
+\`\`\`python
 orders = session.query(Order).all()
 for order in orders:
     print(order.customer.name)   # Issues one SELECT per order!
+\`\`\`
 
-Fix — eager loading:
+Fix — eager loading with JOIN:
+\`\`\`python
 orders = session.query(Order).options(joinedload(Order.customer)).all()
 for order in orders:
-    print(order.customer.name)   # No additional queries!
+    print(order.customer.name)   # No additional queries — already loaded
+\`\`\`
 
-The eager load generates a JOIN:
-SELECT orders.*, customers.* FROM orders LEFT JOIN customers ON orders.customer_id = customers.id;
+The eager load generates:
+\`\`\`sql
+SELECT orders.*, customers.*
+FROM orders LEFT JOIN customers ON orders.customer_id = customers.id;
+\`\`\`
 
-For cases where a JOIN is too expensive (large result sets), use a batch load:
+For cases where a JOIN is too expensive (very large result sets), use a batch load instead:
+\`\`\`python
 order_ids = [o.id for o in orders]
 customers = {c.id: c for c in session.query(Customer).filter(Customer.id.in_(order_ids)).all()}
 for order in orders:
     print(customers[order.customer_id].name)
+\`\`\`
+This generates exactly two queries: one for orders, one batched customers query.
 
-Generates two queries: one for orders, one batched customers query.
-
-Prevention: set up query count assertions in integration tests (assert db.query_count < 5 for a page load), and use a SQL query analyzer in CI that flags N+1 patterns.`,
+Prevention: add query count assertions in integration tests (\`assert db.query_count < 5\` for a page load), and use a SQL analyzer in CI that flags N+1 patterns.`,
       },
       {
         question: 'A query that used to take 10ms now takes 30 seconds. Nothing changed in the code. What happened?',
-        answer: `Queries that were fast and become slow without code changes are almost always caused by one of three things: data volume crossed a threshold that changed the optimizer's plan, statistics became stale causing the optimizer to choose a wrong plan, or a lock is blocking the query.
+        answer: `Queries that were fast and become slow without code changes are caused by one of three things: data volume crossed a threshold that changed the optimizer's plan, statistics became stale, or a lock is blocking the query.
 
 Check 1 — Is it blocked by a lock?
+\`\`\`sql
 SELECT pid, query, wait_event_type, wait_event, state
 FROM pg_stat_activity
 WHERE wait_event_type = 'Lock';
-If your query is waiting on a Lock, find who holds it: SELECT pg_blocking_pids(<your_pid>).
+\`\`\`
+If your query is waiting on a Lock, find who holds it:
+\`\`\`sql
+SELECT pg_blocking_pids(<your_pid>);
+\`\`\`
 
 Check 2 — Get the current execution plan:
+\`\`\`sql
 EXPLAIN (ANALYZE, BUFFERS) SELECT ... [the slow query];
-Compare with the old plan (if you have historical EXPLAIN output or a query planner log).
-Look for: Seq Scan where you expect Index Scan, rows estimated: 100 vs actual: 10,000,000.
+\`\`\`
+Look for: Seq Scan where you expect Index Scan, or rows estimated: 100 vs actual: 10,000,000 (stale statistics).
 
 Check 3 — Update statistics:
-ANALYZE tablename;   -- Refresh per-table statistics
-If statistics are stale (last collected when the table had 100K rows, now has 50M), the optimizer makes wrong decisions. PostgreSQL autovacuum normally handles this, but heavily written tables may outpace autovacuum.
+\`\`\`sql
+ANALYZE tablename;   -- Refreshes per-table statistics without locking
+\`\`\`
+If statistics were collected when the table had 100K rows but now has 50M, the optimizer makes wrong plan choices. PostgreSQL autovacuum normally handles this, but heavily written tables can outpace it.
 
 Check 4 — Data volume threshold:
-The PostgreSQL optimizer uses a cost model. For small tables, sequential scans are cheaper than index scans. As tables grow, the crossover point is crossed and the optimizer should switch to index scans. If statistics are not updated, it may still use the old plan.
+The optimizer uses a cost model. For small tables, sequential scans are cheaper than index scans. As tables grow past the crossover point, the optimizer should switch to index scans — but only if statistics are current.
 
-Force the correct plan temporarily while you fix statistics:
-SET enable_seqscan = OFF;   -- Force index usage (diagnostic only, do not leave on)
+Force index usage temporarily while you fix statistics:
+\`\`\`sql
+SET enable_seqscan = OFF;   -- Diagnostic only — do not leave on in production
+\`\`\`
 
-Permanent fix: increase autovacuum frequency for hot tables, add BRIN or partial indexes for range-based queries, consider table partitioning for extremely large tables (>100M rows) to keep partition sizes manageable.`,
+Permanent fix: increase autovacuum frequency for hot tables, add BRIN or partial indexes for range-based queries, and consider table partitioning for tables exceeding 100M rows.`,
       },
     ],
     references: [
@@ -790,31 +869,43 @@ Connection leaks occur when application code forgets to close a connection (or r
       {
         question: 'Your application is getting "too many connections" errors during a traffic spike. How do you resolve it immediately and prevent it long-term?',
         answer: `Immediate triage:
+
 1. Identify how many connections are in use:
-   SELECT count(*), state FROM pg_stat_activity GROUP BY state;
-   If count(*) equals or exceeds max_connections, the database is full.
+\`\`\`sql
+SELECT count(*), state FROM pg_stat_activity GROUP BY state;
+\`\`\`
+If \`count(*)\` equals or exceeds \`max_connections\`, the database is full.
 
 2. Find idle connections that could be reclaimed:
-   SELECT pid, usename, application_name, state, query_start
-   FROM pg_stat_activity WHERE state = 'idle' ORDER BY query_start;
-   Kill long-idle connections: SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle' AND query_start < now() - interval '5 minutes';
+\`\`\`sql
+SELECT pid, usename, application_name, state, query_start
+FROM pg_stat_activity WHERE state = 'idle' ORDER BY query_start;
+\`\`\`
+Kill long-idle connections:
+\`\`\`sql
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+WHERE state = 'idle' AND query_start < now() - interval '5 minutes';
+\`\`\`
 
-3. Find connection leaks — application code with idle in transaction connections that have been open too long:
-   SELECT pid, usename, state, query, now() - state_change AS age
-   FROM pg_stat_activity WHERE state = 'idle in transaction' AND state_change < now() - interval '2 minutes';
-   These are transactions that were opened but not committed or rolled back — a bug in the application.
+3. Find connection leaks — idle in transaction connections open too long:
+\`\`\`sql
+SELECT pid, usename, state, query, now() - state_change AS age
+FROM pg_stat_activity
+WHERE state = 'idle in transaction' AND state_change < now() - interval '2 minutes';
+\`\`\`
+These are transactions that were opened but never committed or rolled back — a bug in the application.
 
-4. Temporarily increase max_connections (requires restart on RDS):
-   This is a last resort and has RAM implications. Better to route around the problem.
+4. Temporarily increase \`max_connections\` (requires restart on RDS):
+This is a last resort and has RAM implications. Better to route around the problem.
 
 5. Route traffic to a read replica for read-heavy queries immediately to reduce primary load.
 
 Long-term fix:
 - Deploy PgBouncer in transaction mode between application and RDS. This multiplexes application connections onto fewer database connections.
 - For Lambda/serverless: use RDS Proxy which is designed for ephemeral client connection patterns.
-- Tune connection pool settings: pool size per instance should not exceed (max_connections - reserved_connections) / number_of_app_instances.
-- Add idle connection timeout in the pool configuration so idle connections are released: idleTimeoutMillis: 30000 (HikariCP, node-postgres, etc.).
-- Fix connection leaks: ensure connections are always closed in finally blocks or use context managers (with statements).`,
+- Tune connection pool settings: pool size per instance should not exceed \`(max_connections - reserved_connections) / number_of_app_instances\`.
+- Add idle connection timeout in the pool configuration: \`idleTimeoutMillis: 30000\` (HikariCP, node-postgres, etc.).
+- Fix connection leaks: ensure connections are always closed in \`finally\` blocks or use context managers (\`with\` statements).`,
       },
     ],
     references: [
@@ -865,36 +956,37 @@ Go pprof: import _ "net/http/pprof" to expose /debug/pprof/ endpoint. go tool pp
       {
         question: 'A Node.js service\'s memory usage grows 50 MB per hour and restarts every 8 hours. How do you find the leak?',
         answer: `Step 1 — Confirm it is a leak, not a cache:
-Plot container_memory_working_set_bytes{pod=~"myservice.*"} in Grafana over 24 hours. If it grows linearly without plateauing, it is a leak.
+\`\`\`promql
+container_memory_working_set_bytes{pod=~"myservice.*"}
+\`\`\`
+Plot this in Grafana over 24 hours. A true leak grows linearly without plateauing; a cache fills and stabilizes.
 
-Step 2 — Take heap snapshots at intervals using v8-heap-profiler or node --inspect:
-# Add to your service startup:
+Step 2 — Add a heap snapshot endpoint to the service:
+\`\`\`js
 const v8 = require('v8');
-// Endpoint to trigger heap snapshot:
 app.get('/debug/heap', (req, res) => {
   const snapshot = v8.writeHeapSnapshot('/tmp/heap.heapsnapshot');
   res.json({ file: snapshot });
 });
-
-Take snapshot1, wait 30 minutes, take snapshot2.
+\`\`\`
+Take snapshot1, wait 30 minutes under load, take snapshot2.
 
 Step 3 — Compare snapshots in Chrome DevTools:
-Open Chrome DevTools > Memory tab > Load snapshot2. Switch view to "Comparison" and load snapshot1 as the baseline. Sort by "# Delta" to see objects that grew between snapshots.
+Open \`Chrome DevTools > Memory tab\` → load snapshot2 → switch view to "Comparison" → load snapshot1 as baseline → sort by "# Delta" to see objects that grew between snapshots.
 
 Common findings:
-- EventEmitter listener leak: adding listeners inside a loop or on every request without removing them. Check for "EventEmitter memory leak detected" warnings in logs.
-- Closure capturing outer scope: callbacks holding references to request objects or large arrays.
-- Map/Set accumulating entries: a global cache Map that never evicts old entries.
-- Timer without clearInterval: setInterval that captures a large object in its closure.
+- **EventEmitter listener leak:** listeners added inside a loop or on every request without removal. Check logs for "EventEmitter memory leak detected" warnings.
+- **Closure capturing outer scope:** callbacks holding references to request objects or large arrays.
+- **Map/Set accumulating entries:** a global cache \`Map\` that never evicts old entries.
+- **Timer without clearInterval:** \`setInterval\` that captures a large object in its closure.
 
 Step 4 — Fix and verify:
-Common patterns:
-- emitter.removeListener() or emitter.off() when the listener is no longer needed
-- WeakMap/WeakRef for caches where keys should be garbage-collected
+- \`emitter.removeListener()\` or \`emitter.off()\` when the listener is no longer needed
+- \`WeakMap\`/\`WeakRef\` for caches where keys should be garbage-collected
 - LRU cache with max size for global caches
-- clearInterval/clearTimeout when a component unmounts
+- \`clearInterval\`/\`clearTimeout\` when a component unmounts
 
-Verify fix: deploy, monitor memory growth curve. Should flatten within the first hour.`,
+Deploy the fix and monitor the memory growth curve — it should flatten within the first hour.`,
       },
     ],
     references: [
@@ -943,37 +1035,46 @@ Init containers run to completion before the main container starts. If an init c
       {
         question: 'A pod is in CrashLoopBackOff. Walk through your complete diagnosis.',
         answer: `Step 1 — Get basic information:
-kubectl get pod <pod-name> -o wide   # Node, IP, age, restarts
+\`\`\`bash
+kubectl get pod <pod-name> -o wide   # Node, IP, age, restart count
 kubectl describe pod <pod-name>       # Events, resource limits, probe config, exit codes
-
+\`\`\`
 In describe output, look for:
 - Last State: "OOMKilled" → memory limit too low
 - Exit Code: 137 → SIGKILL (OOM or forced), 1 → app error, 143 → SIGTERM
 - Events section at the bottom → image pull errors, volume mount failures, node issues
 
 Step 2 — Get the crash logs:
-kubectl logs <pod-name> --previous   # Logs from the crashed container
-kubectl logs <pod-name> --previous --tail=100   # Last 100 lines
-
+\`\`\`bash
+kubectl logs <pod-name> --previous           # Logs from the crashed container
+kubectl logs <pod-name> --previous --tail=100  # Last 100 lines
+\`\`\`
 Look for: exception stack traces, "cannot open config file", "connection refused", "permission denied", "out of memory".
 
 Step 3 — If it is an init container:
+\`\`\`bash
 kubectl get pod <pod-name> -o jsonpath='{.status.initContainerStatuses}'
 kubectl logs <pod-name> -c <init-container-name> --previous
+\`\`\`
 
 Step 4 — If exit code is 137 (OOM):
-kubectl top pod <pod-name>   # Current memory usage
-Check resources.limits.memory in the pod spec.
-Check events: grep -i oom from kubectl describe pod.
-Fix: increase memory limit or find the memory leak.
+\`\`\`bash
+kubectl top pod <pod-name>        # Current memory usage
+kubectl describe pod <pod-name> | grep -i oom
+\`\`\`
+Check \`resources.limits.memory\` in the pod spec. Fix: increase memory limit or find the memory leak.
 
 Step 5 — If liveness probe failure:
-kubectl describe pod | grep -A 10 "Liveness"
-Temporarily disable the liveness probe (edit the deployment) to confirm it is the probe causing restarts. Increase initialDelaySeconds to match actual startup time.
+\`\`\`bash
+kubectl describe pod <pod-name> | grep -A 10 "Liveness"
+\`\`\`
+Temporarily disable the liveness probe (edit the Deployment) to confirm it is causing restarts. Increase \`initialDelaySeconds\` to match actual startup time.
 
 Step 6 — Run an interactive debug session:
+\`\`\`bash
 kubectl run debug --image=<same-image> --rm -it -- /bin/sh
-Try to start the application manually and observe the error. This works when the error happens before any logs are emitted.`,
+\`\`\`
+Start the application manually and observe the error. Useful when the crash happens before any logs are emitted.`,
       },
     ],
     references: [
@@ -1025,33 +1126,40 @@ PVC in Pending: if a pod requires a PersistentVolumeClaim that is also in Pendin
         answer: `This means all three nodes have less allocatable memory remaining than the pod's memory request.
 
 Step 1 — Understand current allocation:
+\`\`\`bash
 kubectl describe nodes | grep -A 5 "Allocated resources"
-# Shows CPU requests, memory requests, and limits per node
-# Look at "Memory Requests" row: if it shows 95% or 100%, the node is fully allocated
+# Look at "Memory Requests" row: 95-100% means the node is fully allocated on paper
+\`\`\`
 
-Step 2 — Identify what is consuming the allocatable memory:
-kubectl top nodes   # Actual memory usage
-kubectl get pods -A --field-selector=spec.nodeName=<node> -o wide   # Pods on each node
-kubectl top pods -A   # Actual pod memory usage
+Step 2 — Identify what is consuming allocatable memory:
+\`\`\`bash
+kubectl top nodes                                                     # Actual memory usage
+kubectl get pods -A --field-selector=spec.nodeName=<node> -o wide   # Pods on the full node
+kubectl top pods -A                                                   # Actual pod memory usage
+\`\`\`
 
-Step 3 — Determine if the requests are accurate:
+Step 3 — Determine if requests are oversized:
+\`\`\`bash
 kubectl get pods -A -o custom-columns="NAME:.metadata.name,NS:.metadata.namespace,MEM_REQ:.spec.containers[*].resources.requests.memory"
-Are there pods with very high requests but low actual usage? If memory request is 4Gi but actual use is 500Mi, requests are oversized.
+\`\`\`
+If memory request is 4Gi but actual use is 500Mi, requests are oversized — this is a common cause of phantom node fullness.
 
 Options to resolve:
 
-Option A — Reduce memory requests on existing pods:
-If pods have conservative requests, right-size them: requests.memory: 256Mi instead of 1Gi. Update the Deployment and pods are replaced with lower-request pods.
+**Option A — Reduce memory requests on existing pods:**
+Right-size requests (\`requests.memory: 256Mi\` instead of 1Gi). Update the Deployment and pods are replaced with lower-request pods.
 
-Option B — Add nodes (Cluster Autoscaler):
-If CA is enabled, it should have scaled up. Check CA logs: kubectl logs -n kube-system -l app=cluster-autoscaler
-If CA is not enabled: add a node group in EKS/GKE or scale the node group manually.
+**Option B — Add nodes via Cluster Autoscaler:**
+\`\`\`bash
+kubectl logs -n kube-system -l app=cluster-autoscaler
+\`\`\`
+If CA is not enabled: scale the node group manually in EKS/GKE console.
 
-Option C — Reduce requests on the Pending pod:
-If the pod's request is higher than it needs: edit resources.requests.memory to a lower value.
+**Option C — Reduce requests on the Pending pod:**
+Edit \`resources.requests.memory\` to a value the existing nodes can satisfy.
 
-Option D — Use a node with more memory:
-Add nodeSelector or nodeAffinity to schedule the pod on a larger node instance type. Cluster Autoscaler will provision a larger instance if configured.
+**Option D — Use a node with more memory:**
+Add \`nodeSelector\` or \`nodeAffinity\` to schedule the pod on a larger instance type. Cluster Autoscaler will provision a larger instance if configured.
 
 Root cause prevention: use VPA (Vertical Pod Autoscaler) in recommendation mode to right-size requests based on actual usage patterns.`,
       },
@@ -1102,36 +1210,46 @@ Scale-down: HPA reduces replicas when metrics drop below target. The default sca
         question: 'Your HPA is configured but the TARGETS column shows unknown/unknown. How do you fix it?',
         answer: `"unknown" means the HPA controller cannot retrieve the metric. The most common causes:
 
-Cause 1 — Metrics Server not installed or not working:
-kubectl top nodes   # If this fails, Metrics Server is broken
+**Cause 1 — Metrics Server not installed or not working:**
+\`\`\`bash
+kubectl top nodes                                     # If this fails, Metrics Server is broken
 kubectl get pods -n kube-system | grep metrics-server
 kubectl logs -n kube-system deploy/metrics-server
+\`\`\`
+Common Metrics Server fixes:
+\`\`\`bash
+# Not installed:
+helm install metrics-server metrics-server/metrics-server -n kube-system
+# TLS error (dev clusters): add --kubelet-insecure-tls to Metrics Server args
+# Network policy blocking: metrics-server needs to reach kubelet on port 10250
+\`\`\`
 
-Common Metrics Server issues:
-- Not installed: helm install metrics-server metrics-server/metrics-server -n kube-system
-- TLS error: add --kubelet-insecure-tls to the Metrics Server args (for dev clusters without proper TLS)
-- Network policy blocking: metrics-server needs to reach kubelet on each node (port 10250)
-
-Cause 2 — Resource requests not set on the target pods:
+**Cause 2 — Resource requests not set on the target pods:**
+\`\`\`bash
 kubectl describe hpa <hpa-name>   # Shows "missing request for containers"
 kubectl get pods -o jsonpath='{.items[*].spec.containers[*].resources.requests}'
+\`\`\`
 Add requests to the pod spec:
+\`\`\`yaml
 resources:
   requests:
     cpu: "250m"
     memory: "128Mi"
+\`\`\`
 
-Cause 3 — Custom metrics not configured (for non-CPU/memory HPA):
-If using custom metrics (Prometheus Adapter), check:
+**Cause 3 — Custom metrics not configured (for non-CPU/memory HPA):**
+\`\`\`bash
 kubectl get apiservices | grep custom.metrics
 kubectl describe apiservice v1beta1.custom.metrics.k8s.io
-Prometheus Adapter must be running and configured to expose the metric.
+\`\`\`
+Prometheus Adapter must be running and configured to expose the metric to the API server.
 
 After fixing, verify:
-kubectl get hpa <name> -w   # Watch TARGETS update
-kubectl describe hpa <name>   # Shows full condition including error messages
-
-The describe output shows "FailedGetScale" or "AbleToScale" conditions with detailed messages about why metrics are unavailable.`,
+\`\`\`bash
+kubectl get hpa <name> -w        # Watch TARGETS update live
+kubectl describe hpa <name>      # Full conditions including error messages
+\`\`\`
+The describe output shows \`FailedGetScale\` or \`AbleToScale\` conditions with detailed messages about why metrics are unavailable.`,
       },
     ],
     references: [
