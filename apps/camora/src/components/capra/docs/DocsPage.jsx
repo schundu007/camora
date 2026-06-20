@@ -1217,48 +1217,48 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Study Cheatsheet — Before / During / After */}
+                      {/* Interview Checklist — unified phase card */}
                       <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
+                        <div className="flex items-center gap-2 px-3 py-2 mb-4" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Checklist</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Interview Checklist</span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {[
-                            { title: 'Before Your Session', items: interviewCheatsheet.before, icon: 'clipboard', hexColor: 'navy',    step: 'Prep' },
-                            { title: 'During the Interview', items: interviewCheatsheet.during, icon: 'play',      hexColor: 'gold',    step: 'Execute' },
-                            { title: 'After the Interview',  items: interviewCheatsheet.after,  icon: 'check',     hexColor: 'navy-dk', step: 'Follow up' },
-                          ].map((card) => (
-                            <div
-                              key={card.title}
-                              className="rounded overflow-hidden"
-                              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                            >
-                              <div className="p-5">
-                              <div className="flex items-center gap-3 mb-4">
-                                <DatabricksThumb
-                                  color={card.hexColor}
-                                  size={40}
-                                  icon={<Icon name={card.icon} size={20} style={{ color: '#FFFFFF' }} />}
-                                  title={card.title}
-                                />
-                                <div>
-                                  <h3 className="landing-display text-sm font-bold text-[var(--text-primary)]">{card.title}</h3>
-                                  <Chip>{card.step}</Chip>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2.5">
-                                {card.items.map((item, idx) => (
-                                  <label key={idx} className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)] landing-body cursor-pointer group/item hover:text-[var(--text-primary)] transition-colors">
-                                    <input type="checkbox" className="mt-0.5 shrink-0 w-3.5 h-3.5 rounded" style={{ accentColor: 'var(--accent)' }} />
-                                    <span>{item}</span>
-                                  </label>
+                        {(() => {
+                          const phases = [
+                            { label: 'Before the Interview', step: '01', icon: 'clipboard', hexColor: 'navy',    items: interviewCheatsheet.before },
+                            { label: 'During the Interview', step: '02', icon: 'play',      hexColor: 'gold',    items: interviewCheatsheet.during },
+                            { label: 'After the Interview',  step: '03', icon: 'check',     hexColor: 'navy-dk', items: interviewCheatsheet.after  },
+                          ];
+                          return (
+                            <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                              {/* Phase header bar */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+                                {phases.map((ph, i) => (
+                                  <div key={ph.step} className="flex items-center gap-3 px-4 py-3" style={{ borderRight: i < 2 ? '1px solid var(--border)' : 'none', borderBottom: i < phases.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                                    <DatabricksThumb color={ph.hexColor} size={36} icon={<Icon name={ph.icon} size={17} style={{ color: '#fff' }} />} />
+                                    <div>
+                                      <div className="text-[9px] font-bold tracking-[0.14em] uppercase landing-mono mb-0.5" style={{ color: 'var(--text-muted)' }}>{ph.step} · {ph.items.length} steps</div>
+                                      <div className="text-[13px] font-bold leading-tight landing-display" style={{ color: 'var(--text-primary)' }}>{ph.label}</div>
+                                    </div>
+                                  </div>
                                 ))}
                               </div>
+                              {/* Checklist columns */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ background: 'var(--bg-surface)' }}>
+                                {phases.map((ph, ci) => (
+                                  <div key={ph.step} className="flex flex-col gap-2 p-4" style={{ borderRight: ci < 2 ? '1px solid var(--border)' : 'none' }}>
+                                    {ph.items.map((item, i) => (
+                                      <label key={i} className="flex items-start gap-2 cursor-pointer group">
+                                        <input type="checkbox" className="mt-0.5 shrink-0" style={{ accentColor: 'var(--cam-gold-leaf)', width: 13, height: 13 }} />
+                                        <span className="text-[11.5px] leading-snug landing-body group-hover:text-[var(--text-primary)] transition-colors" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Recently Completed / Starred */}
