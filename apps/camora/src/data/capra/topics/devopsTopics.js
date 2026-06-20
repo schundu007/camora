@@ -26,6 +26,7 @@ export const devopsCategories = [
   { id: 'mlops',            name: 'MLOps & LLMOps',                    icon: 'cpu',           color: '#84cc16' },
   { id: 'aiops',            name: 'AIOps',                             icon: 'zap',           color: '#d946ef' },
   { id: 'challenges',      name: 'Coding Challenges',                 icon: 'code',          color: '#f59e0b' },
+  { id: 'helm',           name: 'Helm — Kubernetes Package Management', icon: 'package',       color: '#7c3aed' },
 ];
 
 export const devopsTopicCategoryMap = {
@@ -234,6 +235,19 @@ export const devopsTopicCategoryMap = {
   'linux-host-security-devsecops':  'devsecops',
   'bash-system-monitoring-scripts': 'foundations',
   'ansible-rhel-rh294':             'config',
+  // Helm — Kubernetes Package Management
+  'helm-why':                       'helm',
+  'helm-cli-fundamentals':          'helm',
+  'helm-chart-anatomy':             'helm',
+  'helm-go-templating':             'helm',
+  'helm-values-overrides':          'helm',
+  'helm-chart-dependencies':        'helm',
+  'helm-repositories-oci':          'helm',
+  'helm-hooks-tests':               'helm',
+  'helm-cicd-gitops':               'helm',
+  'helm-security-supply-chain':     'helm',
+  'helm-4-migration':               'helm',
+  'helm-production-patterns':       'helm',
 };
 
 // Topic content lives below — each topic uses the same schema as SRE topics:
