@@ -117,6 +117,28 @@ export const HEAVY_TOPIC_LOADERS = {
     };
   },
 
+  // MLOps & LLMOps — ML lifecycle, feature stores, model serving, LLM ops.
+  // Lives at /capra/prepare?page=mlops.
+  mlops: async () => {
+    const mod = await import('./mlopsTopics.js');
+    return {
+      mlopsCategories: mod.mlopsCategories,
+      mlopsTopicCategoryMap: mod.mlopsTopicCategoryMap,
+      mlopsTopics: mod.mlopsTopics,
+    };
+  },
+
+  // AIOps — ML-driven ops: anomaly detection, alert correlation, RCA, capacity.
+  // Lives at /capra/prepare?page=aiops.
+  aiops: async () => {
+    const mod = await import('./aiopsTopics.js');
+    return {
+      aiopsCategories: mod.aiopsCategories,
+      aiopsTopicCategoryMap: mod.aiopsTopicCategoryMap,
+      aiopsTopics: mod.aiopsTopics,
+    };
+  },
+
   // Cloud / AWS — interview prep for cloud engineers.
   // 11 sub-categories: compute, storage, networking, databases, security,
   // serverless, containers, monitoring, AI/ML, devtools, migration.
