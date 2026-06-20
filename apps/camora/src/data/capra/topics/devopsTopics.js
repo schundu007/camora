@@ -10535,7 +10535,7 @@ Traffic management integrations:
   SMI TrafficSplit — service mesh traffic splitting spec
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Rollouts install manifest.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-rollouts.png`,
+        image: '/diagrams/devops/ct6-argo-rollouts-arch.png',
       },
       {
         title: 'Metric-driven canary analysis — what to measure and how',
@@ -11866,7 +11866,7 @@ RBAC objects: argocd-application-controller ClusterRole grants read access to al
 ConfigMaps: argocd-cm (main config — OIDC, repos, plugins), argocd-rbac-cm (RBAC policies in policy.csv format), argocd-ssh-known-hosts-cm (SSH host keys for git), argocd-tls-certs-cm (custom TLS CA certs for private registries/git).
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from the official argocd-install-ha.yaml manifest.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-cd-manifests-ha-install.png`,
+        image: '/diagrams/devops/g2-argocd-ha.png',
       },
       {
         title: `Argo CD Blue-Green Deployment via ApplicationSet`,
@@ -11891,7 +11891,7 @@ ApplicationSet generators most used for this pattern:
   cluster — one Application per registered Argo CD cluster
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from argocd-example-apps blue-green example.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argoproj-argocd-example-apps-blue-green.png`,
+        image: '/diagrams/devops/g2-argocd-blue-green.png',
       },
     ],
     introduction: `Argo CD is the dominant Kubernetes GitOps tool in 2026. Originated at Intuit; CNCF Graduated December 2022. Production-deployed at Intuit, IBM, Adobe, Tesla, BMW, JPMorgan, Red Hat (the engine behind OpenShift GitOps), and thousands of other organizations.
@@ -12879,7 +12879,7 @@ Image update automation:
   Flux CD: image-reflector-controller + image-automation-controller (built-in; writes back to git)
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from Bank of Anthos manifests.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/bank-of-anthos/diagrams/bank-of-anthos.png`,
+        image: '/diagrams/devops/g5-bank-of-anthos.png',
       },
     ],
     introduction: `Flux v2 is the K8s-native GitOps tool from Weaveworks (the originators of the term GitOps in 2017). v1 was the original implementation; v2 (released 2021) is a complete rewrite into the GitOps Toolkit (GOTK) — a set of composable Kubernetes controllers. CNCF Graduated November 2022, the same month as Argo CD.
@@ -14119,7 +14119,7 @@ Argo CD multi-cluster ApplicationSet pattern:
   Health status per cluster visible in the Argo CD UI
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from Gateway API multicluster examples.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/multicluster.png`,
+        image: '/diagrams/devops/g6-gateway-multicluster.png',
       },
     ],
     references: [
@@ -21426,7 +21426,7 @@ Key fields in each object:
   HTTPRoute: spec.parentRefs[].name + namespace (the Gateway to attach to), spec.rules[].matches (path/header/method), spec.rules[].backendRefs (Service + port + weight)
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API conformance examples.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/simple-gateway.png`,
+        image: '/diagrams/devops/g6-gateway-simple.png',
       },
       {
         title: `Gateway API: HTTP Routing Rules — path, header, method matchers`,
@@ -21449,7 +21449,7 @@ Filters available per rule:
   ExtensionRef — reference controller-specific filter CRDs
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API HTTP routing examples.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/http-routing.png`,
+        image: '/diagrams/devops/g6-gateway-http-routing.png',
       },
       {
         title: `Gateway API: Cross-Namespace Routing + ReferenceGrant`,
@@ -21468,7 +21468,7 @@ This model is much safer than Ingress where any Ingress in any namespace could r
 Traffic splitting: HTTPRoute backendRefs support weight fields for weighted load balancing between multiple backends — enabling canary deployments (95% to stable, 5% to canary) declaratively without separate Ingress controllers or service mesh.
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API cross-namespace routing examples.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/cross-namespace-routing.png`,
+        image: '/diagrams/devops/g6-gateway-cross-ns.png',
       },
       {
         title: `Gateway API: Traffic Splitting + TLS Termination`,
@@ -21489,7 +21489,7 @@ Traffic splitting (weighted backendRefs):
 Combined with Argo Rollouts or Flagger: the rollout controller updates the weights in the HTTPRoute object as it progresses the canary analysis, giving progressive delivery with Gateway API as the traffic layer.
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway API traffic splitting examples.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/gateway-api/diagrams/traffic-splitting.png`,
+        image: '/diagrams/devops/g6-gateway-traffic-split.png',
       },
     ],
     references: [
