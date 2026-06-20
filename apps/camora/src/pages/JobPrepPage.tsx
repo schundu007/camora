@@ -755,7 +755,7 @@ export default function JobPrepPage() {
             {/* Generate button */}
             {Object.keys(generatedSections).length === 0 && !generating && (
               <button
-                onClick={generatePrep}
+                onClick={() => job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`)}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -840,7 +840,7 @@ export default function JobPrepPage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => { setPrepError(null); generatePrep(); }}
+                  onClick={() => { setPrepError(null); job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`); }}
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
@@ -989,7 +989,7 @@ export default function JobPrepPage() {
                 {/* Regenerate button after generation is complete */}
                 {!generating && Object.keys(generatedSections).length > 0 && (
                   <button
-                    onClick={generatePrep}
+                    onClick={() => job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1027,7 +1027,7 @@ export default function JobPrepPage() {
             </h2>
             <div className="flex flex-wrap gap-3">
               <Link
-                to={`/lumora?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`}
+                to="/capra/practice"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',

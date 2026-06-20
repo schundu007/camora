@@ -3,6 +3,7 @@
  * Sidebar sections + upload zones + Generate button.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { JSX } from 'react';
 import hljs from '@/lib/hljs';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -2367,6 +2368,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   // write-through after hydration so we don't overwrite the server with
   // an empty/stale local state on first render.
   const hydratedRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [syncError, setSyncError] = useState<string | null>(null);
   const writeTimerRef = useRef<number | null>(null);
@@ -2446,6 +2448,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         console.warn('[prep] hydrate failed, using localStorage', err);
       } finally {
         hydratedRef.current = true;
+        setHydrated(true);
       }
     })();
     return () => { cancelled = true; };
@@ -2476,6 +2479,27 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
       }
     }, 1500);
   }, [prepData, token]);
+
+  const [searchParams] = useSearchParams();
+
+  // When arriving from /jobs/:id/prepare with ?company=X&role=Y, auto-create
+  // or switch to that company once backend hydration completes.
+  useEffect(() => {
+    const urlCompany = searchParams.get('company');
+    if (!urlCompany) return;
+    setPrepData(prev => {
+      if (prev.companies.includes(urlCompany)) {
+        return { ...prev, activeCompany: urlCompany };
+      }
+      return {
+        ...prev,
+        companies: [...prev.companies, urlCompany],
+        activeCompany: urlCompany,
+        data: { ...prev.data, [urlCompany]: { ...EMPTY_DOC } },
+      };
+    });
+    setActiveSection('input');
+  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-create default company if none exists
   useEffect(() => {
