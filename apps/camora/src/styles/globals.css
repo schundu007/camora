@@ -2943,6 +2943,35 @@ figure:has(> .viz-caption) {
   .cara-answer-in { animation: none; }
 }
 
+/* ── Prepare page category cards ─────────────────────────────────────────
+   All theme-sensitive properties are driven by [data-theme] so the cards
+   respond to theme changes instantly via CSS — no React re-render needed.
+   ──────────────────────────────────────────────────────────────────────── */
+.cat-card {
+  height: 120px;
+  display: block;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+[data-theme="light"] .cat-card { border: 1px solid var(--border); }
+.cat-card-overlay {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(3,10,25,0.55) 40%, rgba(3,10,25,0.88) 100%);
+}
+[data-theme="light"] .cat-card-overlay { background: #ffffff; }
+.cat-card-title { font-size: 15px; color: #ffffff; margin: 8px 0 3px; }
+[data-theme="light"] .cat-card-title { font-size: 13px; color: var(--text-primary); }
+.cat-card-count-dark { display: block; font-size: 11px; color: rgba(255,255,255,0.6); }
+[data-theme="light"] .cat-card-count-dark { display: none; }
+.cat-card-count-light { display: none; font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+[data-theme="light"] .cat-card-count-light { display: block; }
+.cat-card-bar { flex: 1; height: 2px; border-radius: 9999px; background: rgba(255,255,255,0.15); }
+[data-theme="light"] .cat-card-bar { height: 3px; background: var(--bg-elevated); }
+.cat-card-bar-fill { height: 100%; border-radius: 9999px; background: var(--cam-gold-leaf); transition: width 1s; }
+[data-theme="light"] .cat-card-bar-fill { background: var(--accent); }
+.cat-card-pct { font-size: 9px; color: rgba(255,255,255,0.45); }
+.cat-card-pct.cat-card-pct--active { color: var(--cam-gold-leaf); }
+[data-theme="light"] .cat-card-pct { font-size: 10px; color: var(--text-muted); }
+[data-theme="light"] .cat-card-pct.cat-card-pct--active { color: var(--accent); }
+
 /* ── Allotment sash — navy accent for CoFix split pane ── */
 .split-view-view > .sash-container > .sash {
   background: var(--accent) !important;
