@@ -855,7 +855,7 @@ export default function JobPrepPage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => { setPrepError(null); job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`); }}
+                  onClick={() => { setPrepError(null); if (job) { navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`); } }}
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
