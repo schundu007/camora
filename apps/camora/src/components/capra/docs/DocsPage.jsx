@@ -1189,17 +1189,17 @@ export default function DocsPage({ onBack }) {
                                   <div>
                                     <div className="text-[10px] font-bold tracking-[0.18em] uppercase landing-mono mb-1" style={{ color: 'var(--cam-gold-leaf)' }}>Interview Playbook</div>
                                     <h3 className="text-xl font-extrabold landing-display" style={{ color: 'var(--cam-strip-heading)' }}>Your end-to-end interview checklist</h3>
-                                    <p className="text-[12px] mt-1 landing-body" style={{ color: 'rgba(255,255,255,0.55)' }}>{interviewCheatsheet.before.length + interviewCheatsheet.during.length + interviewCheatsheet.after.length} steps across 3 phases · tick off as you go</p>
+                                    <p className="text-[12px] mt-1 landing-body" style={{ color: 'var(--cam-strip-text-muted)' }}>{interviewCheatsheet.before.length + interviewCheatsheet.during.length + interviewCheatsheet.after.length} steps across 3 phases · tick off as you go</p>
                                   </div>
                                   {/* Phase pills */}
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {phases.map((ph, i) => (
                                       <div key={ph.step} className="flex items-center gap-1.5">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold landing-mono" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}>
-                                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold" style={{ background: ph.color }}>{ph.step}</span>
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold landing-mono" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-heading)' }}>
+                                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
                                           {ph.label}
                                         </span>
-                                        {i < phases.length - 1 && <Icon name="chevronRight" size={10} style={{ color: 'rgba(255,255,255,0.3)' }} />}
+                                        {i < phases.length - 1 && <Icon name="chevronRight" size={10} style={{ color: 'var(--cam-strip-text-muted)' }} />}
                                       </div>
                                     ))}
                                   </div>
@@ -1208,22 +1208,22 @@ export default function DocsPage({ onBack }) {
                               {/* Phase columns */}
                               <div className="grid grid-cols-1 sm:grid-cols-3" style={{ borderTop: '1px solid var(--cam-gold-leaf)' }}>
                                 {phases.map((ph, ci) => (
-                                  <div key={ph.step} style={{ borderRight: ci < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none', background: ci === 1 ? 'rgba(212,160,67,0.04)' : 'transparent' }}>
+                                  <div key={ph.step} style={{ borderRight: ci < 2 ? '1px solid var(--border)' : 'none', background: ci === 1 ? 'var(--cam-gold-leaf-50)' : 'transparent' }}>
                                     {/* Column header */}
-                                    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.15)' }}>
+                                    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'var(--cam-strip-icon-bg)' }}>
                                       <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold flex-shrink-0" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
                                       <div>
-                                        <div className="text-[13px] font-bold leading-tight" style={{ color: '#fff', fontFamily: 'var(--font-display)' }}>{ph.label}</div>
-                                        <div className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>{ph.sub}</div>
+                                        <div className="text-[13px] font-bold leading-tight" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>{ph.label}</div>
+                                        <div className="text-[10px] leading-tight" style={{ color: 'var(--cam-strip-text-muted)' }}>{ph.sub}</div>
                                       </div>
-                                      <span className="ml-auto text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>{ph.items.length}</span>
+                                      <span className="ml-auto text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text-muted)' }}>{ph.items.length}</span>
                                     </div>
                                     {/* Steps */}
                                     <div className="flex flex-col px-4 py-3 gap-2.5">
                                       {ph.items.map((item, i) => (
                                         <label key={i} className="flex items-start gap-2.5 cursor-pointer group">
-                                          <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
-                                          <span className="text-[11.5px] leading-snug landing-body transition-colors group-hover:text-white" style={{ color: 'rgba(255,255,255,0.6)' }}>{item}</span>
+                                          <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'var(--border)', color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                                          <span className="text-[11.5px] leading-snug landing-body transition-colors" style={{ color: 'var(--cam-strip-text)' }}>{item}</span>
                                         </label>
                                       ))}
                                     </div>
