@@ -1073,17 +1073,17 @@ export default function DocsPage({ onBack }) {
                               className="card-lift group rounded-lg flex flex-col active:scale-[0.98]"
                               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
                             >
-                              <div className="flex items-center gap-3 mb-3">
+                              <div className="flex flex-col items-center text-center mb-3 gap-2">
                                 <DatabricksThumb
                                   color={CATEGORY_HEX[cat.id] || 'navy'}
                                   size={32}
                                   icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
                                   title={cat.title}
                                 />
-                                <h3 className="font-bold leading-tight tracking-tight" style={{ fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                <h3 className="font-bold leading-tight tracking-tight text-center" style={{ fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
                               </div>
                               <div className="mt-auto">
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center justify-center gap-2 mb-1.5">
                                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                                   <span style={{ fontSize: '10px', fontWeight: 700, color: cat.progress > 0 ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                                 </div>
