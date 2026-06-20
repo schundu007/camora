@@ -237,6 +237,7 @@ Performance  | High  |  Med   | V.High|  Med
 
     dataModel: {
       description: 'API Gateway architecture and request flow',
+      diagramSrc: '/diagrams/microservices/data-model-api-gateway-pattern.png',
       schema: `API Gateway Request Flow:
 
   Client (Web/Mobile/IoT)
@@ -534,6 +535,7 @@ Each region runs its own discovery independently. Global DNS routes clients to t
 
     dataModel: {
       description: 'Service discovery architecture',
+      diagramSrc: '/diagrams/microservices/data-model-service-discovery.png',
       schema: `Service Discovery Architecture:
 
   +-------------------+
@@ -839,6 +841,7 @@ Composition     | HystrixCommand| Decorator chaining
 
     dataModel: {
       description: 'Circuit breaker state machine and metrics',
+      diagramSrc: '/diagrams/microservices/data-model-circuit-breaker.png',
       schema: `Circuit Breaker State Machine:
 
   CLOSED --> (failure threshold met) --> OPEN
@@ -1142,6 +1145,7 @@ saga-123 |  1c  | order-svc   | COMPENSATED | 10:00:09 | 10:00:10
 
     dataModel: {
       description: 'Saga orchestration architecture and state flow',
+      diagramSrc: '/diagrams/microservices/data-model-saga-pattern.png',
       schema: `Saga Orchestrator Architecture:
 
   Client
@@ -1465,6 +1469,7 @@ Alert rules:
 
     dataModel: {
       description: 'Bulkhead isolation architecture',
+      diagramSrc: '/diagrams/microservices/data-model-bulkhead-pattern.png',
       schema: `Bulkhead Architecture (Multi-Layer):
 
   +-------------------------------------------+
@@ -1790,6 +1795,7 @@ Track retry success rate by error type. If retrying 500s never succeeds, stop re
 
     dataModel: {
       description: 'Retry pattern with backoff and jitter',
+      diagramSrc: '/diagrams/microservices/data-model-retry-pattern.png',
       schema: `Retry Flow with Exponential Backoff + Jitter:
 
   Request --> Attempt 1 --> Success? --> Return
@@ -2103,6 +2109,7 @@ spec:
 
     dataModel: {
       description: 'Sidecar and service mesh architecture',
+      diagramSrc: '/diagrams/microservices/data-model-sidecar-pattern.png',
       schema: `Service Mesh Architecture:
 
   +-------------------------------+
@@ -2460,6 +2467,7 @@ Prevention:
 
     dataModel: {
       description: 'Strangler fig migration architecture',
+      diagramSrc: '/diagrams/microservices/data-model-strangler-fig.png',
       schema: `Strangler Fig Migration Architecture:
 
   Phase: Partial Migration (60% new, 40% legacy)
@@ -2788,6 +2796,7 @@ Frontend --> BFF contract:
 
     dataModel: {
       description: 'BFF architecture and data flow',
+      diagramSrc: '/diagrams/microservices/data-model-bff-pattern.png',
       schema: `BFF Architecture:
 
   Web Browser       Mobile App        Smart TV
@@ -3172,6 +3181,7 @@ New reporting requirement: "Orders by region"
 
     dataModel: {
       description: 'Event-driven architecture and event store',
+      diagramSrc: '/diagrams/microservices/data-model-event-driven-architecture.png',
       schema: `Event-Driven Architecture:
 
   Producers              Event Broker            Consumers
@@ -3560,6 +3570,7 @@ Track projection status:
 
     dataModel: {
       description: 'CQRS architecture with read and write separation',
+      diagramSrc: '/diagrams/microservices/data-model-cqrs.png',
       schema: `CQRS Architecture:
 
   Commands (Writes)              Queries (Reads)
@@ -3997,6 +4008,7 @@ Features:
 
     dataModel: {
       description: 'Configuration externalization architecture',
+      diagramSrc: '/diagrams/microservices/data-model-configuration-externalization.png',
       schema: `Configuration Architecture:
 
   +------------------+     +------------------+
