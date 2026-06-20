@@ -6,7 +6,7 @@ import os
 
 OUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
 
-COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.55', ranksep='0.65', splines='spline')
+COMMON = dict(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.45', splines='spline')
 NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.5', margin='0.18,0.1')
 EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
 

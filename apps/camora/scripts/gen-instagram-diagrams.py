@@ -19,7 +19,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 # 1. Photo Upload Flow
 def upload_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Photo Upload Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'user', 'User uploads\nphoto', 'blue')
     n(g, 'api', 'API Gateway', 'gray')
@@ -43,7 +43,7 @@ def upload_flow():
 # 2. Feed Generation
 def feed_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Feed Generation (Push + Pull Hybrid)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'user', 'User opens\nfeed', 'blue')
     n(g, 'feed', 'Feed Service', 'green')
@@ -64,7 +64,7 @@ def feed_flow():
 # 3. Key Decisions
 def key_decisions():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45', splines='spline',
            rankdir='LR', label='  Instagram — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'client', 'Mobile App\n(iOS/Android)', 'blue')
     n(g, 'api', 'API Gateway\n+ CDN', 'gray')

@@ -20,7 +20,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 # 1. Video Upload + Transcoding Pipeline
 def transcode_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Video Upload + Transcoding Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'studio', 'Content\nStudio', 'blue')
     n(g, 'upload', 'Upload Service\n(chunked)', 'green')
@@ -40,7 +40,7 @@ def transcode_flow():
 # 2. Streaming Playback Flow
 def playback_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Video Streaming Playback  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'user', 'User clicks\nPlay', 'blue')
     n(g, 'api', 'Playback\nService', 'green')
@@ -60,7 +60,7 @@ def playback_flow():
 # 3. Key Decisions
 def key_decisions():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45', splines='spline',
            rankdir='LR', label='  Netflix — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'client', 'Client Device\n(Smart TV, Mobile,\nBrowser)', 'blue')
     n(g, 'api', 'API Gateway\n(Zuul)', 'gray')

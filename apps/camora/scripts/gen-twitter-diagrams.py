@@ -20,7 +20,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 # 1. Tweet Post Flow
 def tweet_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Tweet Post Flow  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'user', 'User\nposts tweet', 'blue')
     n(g, 'api', 'API Gateway\n(rate limit)', 'gray')
@@ -42,7 +42,7 @@ def tweet_flow():
 # 2. Feed Generation Flow
 def feed_flow():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            rankdir='LR', label='  Home Feed Generation  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'user', 'User opens\nhome feed', 'blue')
     n(g, 'api', 'Feed Service', 'green')
@@ -63,7 +63,7 @@ def feed_flow():
 # 3. Key Decisions
 def key_decisions():
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45', splines='spline',
            rankdir='TB', label='  Twitter — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
     n(g, 'client', 'Mobile/Web\nClient', 'blue')
     n(g, 'api', 'API Gateway\n(rate limiting)', 'gray')

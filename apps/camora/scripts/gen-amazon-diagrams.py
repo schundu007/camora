@@ -29,7 +29,7 @@ def e(g, a, b, label='', color='#475569', style='solid'):
     g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def mk(title, direction='LR'):
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.8',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.55',
            splines='spline', rankdir=direction,
            label=f'  {title}  ', labelloc='t',
            fontsize='15', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
@@ -121,7 +121,7 @@ def dd_inventory():
 # ═══════════════════════════════════════════════════════════════════
 def dd_order_states():
     g = mk('Order State Machine', 'TB')
-    g.attr(nodesep='0.5', ranksep='0.6')
+    g.attr(nodesep='0.5', ranksep='0.45')
 
     n(g, 'created', 'CREATED\n(TTL: 15 min)', 'gray')
     n(g, 'reserved', 'RESERVED\n(stock held)', 'service')

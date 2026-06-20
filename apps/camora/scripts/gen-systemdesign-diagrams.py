@@ -41,7 +41,7 @@ def e(g, a, b, label='', color='#475569', style='solid'):
 
 def base_graph(name, title, rankdir='LR'):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
            fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')

@@ -41,7 +41,7 @@ def e(g, a, b, label='', color='#475569', style='solid'):
 
 def base_graph(name, title):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9',
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir='LR',
            label=f'  {title}  ', labelloc='t',
            fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
@@ -1192,7 +1192,7 @@ def diag_argo_workflows():
 
 def diag_argo_workflows_arch():
     g = base_graph('ct6_argo_wf_arch', 'Argo Workflows — Control Plane Architecture')
-    g.attr(rankdir='TB', ranksep='1.0', nodesep='0.9')
+    g.attr(rankdir='TB', ranksep='0.45', nodesep='0.4')
 
     # Row 1: Triggers
     with g.subgraph() as s:
@@ -1254,7 +1254,7 @@ def diag_argo_workflows_arch():
 
 def diag_argo_rollouts_arch():
     g = base_graph('ct6_argo_rollouts', 'Argo Rollouts — Progressive Delivery Controller')
-    g.attr(rankdir='TB', ranksep='0.9', nodesep='0.8')
+    g.attr(rankdir='TB', ranksep='0.45', nodesep='0.4')
     with g.subgraph() as s:
         s.attr(rank='same')
         n(s, 'newver', 'New image / spec\npushed to Rollout\n(replaces Deployment)', 'gray')
@@ -1346,7 +1346,7 @@ def diag_argocd():
 
 def diag_argocd_ha():
     g = base_graph('g2_argocd_ha', 'Argo CD — HA Install (production)')
-    g.attr(rankdir='TB', ranksep='0.9', nodesep='0.8')
+    g.attr(rankdir='TB', ranksep='0.45', nodesep='0.4')
     with g.subgraph() as s:
         s.attr(rank='same')
         n(s, 'user', 'Users + CI/CD\nHTTPS + kubectl', 'gray')
