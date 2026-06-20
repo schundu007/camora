@@ -17,7 +17,7 @@ def n(g, name, label, c): g.node(name, label, fillcolor=C[c][0], color=C[c][1], 
 def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def mk(**kw):
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline', **kw)
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline', **kw)
     return g
 
 # Deep Dive 1: Image Processing Pipeline

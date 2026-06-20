@@ -47,7 +47,7 @@ export default function TopicDiagram({
           }
           setFailed(true);
         }}
-        style={{ display: 'block', width: '100%', height: 'auto', maxWidth: '100%' }}
+        style={{ display: 'block', maxWidth: '100%', width: 'auto', height: 'auto', margin: '0 auto' }}
       />
       {caption && (
         <figcaption

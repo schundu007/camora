@@ -9,7 +9,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 g = graphviz.Digraph('decisions', format='png')
 g.attr(
-    bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.9',
+    bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.45',
     splines='spline', rankdir='LR',
     label='  WhatsApp — Key Design Decisions  ', labelloc='t',
     fontsize='16', fontname='Helvetica Neue Bold', fontcolor='#1e293b',

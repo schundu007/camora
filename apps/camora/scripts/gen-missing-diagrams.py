@@ -15,7 +15,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def mk(out_dir, **kw):
     os.makedirs(out_dir, exist_ok=True)
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.7', splines='spline', **kw)
+    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline', **kw)
     return g
 
 BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
