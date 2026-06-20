@@ -1092,20 +1092,88 @@ def diag_tekton():
 
 
 def diag_argo_workflows():
-    g = base_graph('ct6_argo_wf', 'Argo Workflows — DAG / steps for K8s')
-    n(g, 'wf',   'Workflow CRD\ntemplates\ninputs/outputs', 'navy')
-    n(g, 'dag',  'DAG template\ndependencies\nfan-out/fan-in', 'green')
-    n(g, 'art',  'Artifacts\nS3 / GCS / Minio\npass between steps', 'gold')
-    n(g, 'param','Parameters\nworkflow inputs\nstep results', 'cyan')
-    n(g, 'cron', 'CronWorkflow\nscheduled batch', 'purple')
-    n(g, 'evt',  'EventSource\n(Argo Events)\ntrigger on webhook', 'red')
-    e(g, 'wf',   'dag')
-    e(g, 'dag',  'art')
-    e(g, 'dag',  'param')
-    e(g, 'cron', 'wf')
-    e(g, 'evt',  'wf')
+    g = base_graph('ct6_argo_wf', 'Argo Workflows — DAG template fan-out / fan-in')
+    n(g, 'cron', 'CronWorkflow\nscheduled batch\ncron expression', 'purple')
+    n(g, 'evt',  'Argo Events\nSensor + EventSource\nKafka / webhook / S3', 'red')
+    n(g, 'user', 'kubectl / REST API\nCI/CD system\nmanual submit', 'gray')
+    n(g, 'wf',   'Workflow CRD\nentrypoint + arguments\ntemplates + state', 'navy')
+    n(g, 'wft',  'WorkflowTemplate\nreusable definitions\nnamespace-scoped', 'sky')
+    n(g, 'dag',  'DAG template\ndeclared dependencies\nwithSequence fan-out', 'green')
+    n(g, 'art',  'Artifact Repository\nS3 / GCS / MinIO\nstep outputs → next inputs', 'gold')
+    n(g, 'param','Parameters\ninputs.parameters\noutputs.parameters', 'cyan')
+    n(g, 'exit', 'Exit Handler\nonExit: notify-team\nalways runs', 'amber')
+    e(g, 'cron', 'wf',   'creates')
+    e(g, 'evt',  'wf',   'creates')
+    e(g, 'user', 'wf',   'kubectl apply')
+    e(g, 'wf',   'wft',  'templateRef', '#94a3b8', 'dashed')
+    e(g, 'wf',   'dag',  'entrypoint')
+    e(g, 'dag',  'art',  'upload / download')
+    e(g, 'dag',  'param','outputs.parameters')
+    e(g, 'dag',  'exit', 'on completion')
     g.render(os.path.join(OUT, 'ct6-argo-wf'), cleanup=True)
     print('Generated: ct6-argo-wf')
+
+
+def diag_argo_workflows_arch():
+    g = base_graph('ct6_argo_wf_arch', 'Argo Workflows — Control Plane Architecture')
+    g.attr(rankdir='TB', ranksep='1.0', nodesep='0.9')
+
+    # Row 1: Triggers
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'cron',  'CronWorkflow\nscheduled batch\ncron expression', 'purple')
+        n(s, 'evt',   'Argo Events\nSensor + EventSource\nKafka / webhook / S3', 'red')
+        n(s, 'user',  'kubectl / REST API\nCI/CD systems\nmanual submit', 'gray')
+
+    # Row 2: CRDs
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'wf',    'Workflow CRD\nruntime state + template\nentrypoint / arguments', 'navy')
+        n(s, 'wft',   'WorkflowTemplate\nreusable definitions\nnamespace-scoped', 'sky')
+        n(s, 'cwft',  'ClusterWorkflowTemplate\ncluster-wide reuse\nno namespace limit', 'sky')
+
+    # Row 3: Control plane
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'ctrl',  'workflow-controller\nwatches Workflow CRDs\ncreates Pods · retries · timeout', 'green')
+        n(s, 'srv',   'argo-server\nREST + gRPC + UI\nlog stream · auth · RBAC', 'teal')
+
+    # Row 4: Execution + RBAC
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'pod',   'Worker Pods\n+ argoexec sidecar\nemissary / pns / k8sapi', 'sky')
+        n(s, 'sa',    'ServiceAccount\nargo-workflows-sa\n+ ClusterRoleBinding', 'cyan')
+
+    # Row 5: Artifact storage
+    n(g, 'art',   'Artifact Repository\nS3 / GCS / MinIO / Azure Blob\nstep outputs → next step inputs', 'gold')
+
+    # Triggers → Workflow CRD
+    e(g, 'cron',  'wf',   'creates')
+    e(g, 'evt',   'wf',   'creates')
+    e(g, 'user',  'wf',   'kubectl apply')
+
+    # CRD cross-references
+    e(g, 'wf',    'wft',  'templateRef', '#94a3b8', 'dashed')
+    e(g, 'wf',    'cwft', 'templateRef', '#94a3b8', 'dashed')
+
+    # Controller watches & acts
+    e(g, 'ctrl',  'wf',   'watches', '#22c55e', 'dashed')
+    e(g, 'ctrl',  'pod',  'creates Pods')
+
+    # Pod ↔ controller feedback loop
+    e(g, 'pod',   'ctrl', 'status updates', '#0ea5e9', 'dashed')
+    e(g, 'pod',   'art',  'upload / download')
+
+    # Server reads
+    e(g, 'srv',   'wf',   'reads status', '#14b8a6', 'dashed')
+    e(g, 'srv',   'pod',  'streams logs', '#14b8a6', 'dashed')
+
+    # RBAC
+    e(g, 'ctrl',  'sa',   'runs as')
+    e(g, 'srv',   'sa',   'runs as')
+
+    g.render(os.path.join(OUT, 'ct6-argo-wf-arch'), cleanup=True)
+    print('Generated: ct6-argo-wf-arch')
 
 
 def diag_buildkite():
@@ -2176,7 +2244,7 @@ if __name__ == '__main__':
     # CI/CD
     diag_ci(); diag_cd_vs_deploy(); diag_pipeline_as_code(); diag_test_pyramid(); diag_monorepo_build(); diag_trunk()
     # CI/CD Tools (NEW)
-    diag_gha(); diag_gha_workflow(); diag_jenkins(); diag_gitlab_ci(); diag_circleci(); diag_tekton(); diag_argo_workflows(); diag_buildkite()
+    diag_gha(); diag_gha_workflow(); diag_jenkins(); diag_gitlab_ci(); diag_circleci(); diag_tekton(); diag_argo_workflows(); diag_argo_workflows_arch(); diag_buildkite()
     # Continuous Delivery
     diag_progressive_delivery(); diag_feature_flags(); diag_deployment_strategies(); diag_db_migrations_cicd(); diag_release_engineering()
     # GitOps (NEW)

@@ -9088,7 +9088,7 @@ Artifact storage: S3, GCS, Azure Blob, OSS, or HDFS. Artifacts pass between step
 DAG vs Steps templates: Steps runs linearly with parallelism control. DAG declares task dependencies explicitly and executes all tasks with no upstream dependencies in parallel. DAG is preferred for complex workflows.
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Workflows manifest.`,
-        image: `https://raw.githubusercontent.com/philippemerle/KubeDiagrams/main/examples/argo/diagrams/argo-workflows.png`,
+        image: '/diagrams/devops/ct6-argo-wf-arch.png',
       },
     ],
     introduction: `Argo Workflows is the Kubernetes-native general-purpose workflow engine. CNCF Graduated (graduated November 2022). Originated at Applatix → Intuit (2017+), now broadly adopted at BlackRock, NVIDIA, GitHub, Adobe, NASA JPL.
