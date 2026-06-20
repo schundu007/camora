@@ -1074,37 +1074,36 @@ export default function DocsPage({ onBack }) {
                               : _isLast && _len % 2 === 1
                               ? 'sm:col-span-full sm:justify-self-center sm:w-1/2'
                               : '';
-                            const isLight = theme === 'light';
                             return (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className={`card-lift group relative rounded-lg overflow-hidden active:scale-[0.98] ${_orphanClass}`}
-                              style={{ height: '120px', display: 'block', border: isLight ? '1px solid var(--border)' : '1px solid rgba(255,255,255,0.08)' }}
+                              className={`cat-card card-lift group relative rounded-lg overflow-hidden active:scale-[0.98] ${_orphanClass}`}
                             >
-                              {/* Photo always mounted — browser caches it on first load so theme
-                                  switching never triggers a reload. Hidden by white overlay in light mode. */}
+                              {/* Photo always mounted — stays in browser memory so theme
+                                  switching never reloads it. CSS .cat-card-overlay blankets
+                                  it in light mode without any JS re-render. */}
                               <TopicIllustration
                                 name={cat.id}
                                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
                               />
-                              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: isLight ? '#ffffff' : 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(3,10,25,0.55) 40%, rgba(3,10,25,0.88) 100%)' }} />
+                              <div aria-hidden="true" className="cat-card-overlay" style={{ position: 'absolute', inset: 0 }} />
                               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 12px 24px' }}>
                                 <DatabricksThumb
                                   color={CATEGORY_HEX[cat.id] || 'navy'}
-                                  size={isLight ? 32 : 30}
+                                  size={32}
                                   icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
                                   title={cat.title}
                                 />
-                                <h3 className="font-bold leading-tight tracking-tight text-center" style={{ fontSize: isLight ? '13px' : '15px', color: isLight ? 'var(--text-primary)' : '#fff', margin: '8px 0 3px', fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
-                                {!isLight && <span className="font-semibold tabular-nums text-center" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>}
+                                <h3 className="cat-card-title font-bold leading-tight tracking-tight text-center" style={{ fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                <span className="cat-card-count-dark font-semibold tabular-nums text-center" style={{ fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                               </div>
                               <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                {isLight && <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count}</span>}
-                                <div style={{ flex: 1, height: isLight ? '3px' : '2px', borderRadius: '9999px', background: isLight ? 'var(--bg-elevated)' : 'rgba(255,255,255,0.15)' }}>
-                                  <div style={{ width: `${Math.max(cat.progress, 2)}%`, height: '100%', borderRadius: '9999px', background: isLight ? 'var(--accent)' : 'var(--cam-gold-leaf)', transition: 'width 1s' }} />
+                                <span className="cat-card-count-light" style={{ fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count}</span>
+                                <div className="cat-card-bar">
+                                  <div className="cat-card-bar-fill" style={{ width: `${Math.max(cat.progress, 2)}%` }} />
                                 </div>
-                                <span className="font-bold tabular-nums shrink-0" style={{ fontSize: isLight ? '10px' : '9px', color: cat.progress > 0 ? (isLight ? 'var(--accent)' : 'var(--cam-gold-leaf)') : (isLight ? 'var(--text-muted)' : 'rgba(255,255,255,0.45)'), fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
+                                <span className={`cat-card-pct font-bold tabular-nums shrink-0${cat.progress > 0 ? ' cat-card-pct--active' : ''}`} style={{ fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                               </div>
                             </Link>
                             );
