@@ -2313,14 +2313,14 @@ export default function TopicDetail({
               )}
 
               {topicDetails.tradeoffs && (
-                <div id="tradeoffs" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-surface)] border border-[var(--border)]">
+                <div id="tradeoffs" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-elevated)] border border-[var(--border)]">
                   <ContentHeading
                     title="Tradeoffs"
                     actions={<GlassPill>{topicDetails.tradeoffs.length} decisions</GlassPill>}
                   />
                   <div className="p-2.5 space-y-2">
                     {topicDetails.tradeoffs.map((t, i) => (
-                      <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border)] transition-colors overflow-hidden">
+                      <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-colors overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-2">
                             <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-500/20">
@@ -2352,14 +2352,14 @@ export default function TopicDetail({
               )}
 
               {topicDetails.edgeCases && (
-                <div id="edge-cases" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-surface)] border border-[var(--border)]">
+                <div id="edge-cases" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-elevated)] border border-[var(--border)]">
                   <ContentHeading
                     title="Edge Cases"
                     actions={<GlassPill>{topicDetails.edgeCases.length} cases</GlassPill>}
                   />
                   <div className="p-2.5 space-y-2">
                     {topicDetails.edgeCases.map((ec, i) => (
-                      <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-surface)] transition-colors overflow-hidden">
+                      <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] transition-colors overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-1.5">
                             <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -2383,7 +2383,7 @@ export default function TopicDetail({
               {topicDetails.discussionPoints && (() => {
                 const TOPIC_COLORS = ['var(--accent)'];
                 return (
-                <div id="discussion" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-surface)] border border-[var(--border)]">
+                <div id="discussion" className="rounded overflow-hidden scroll-mt-24 bg-[var(--bg-elevated)] border border-[var(--border)]">
                   <ContentHeading
                     title="Discussion Points"
                     actions={<GlassPill>{topicDetails.discussionPoints.length} topics</GlassPill>}
@@ -2395,7 +2395,7 @@ export default function TopicDetail({
                       const visiblePoints = point.points;
                       const hasMore = false;
                       return (
-                        <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--border-hover,var(--border))] transition-colors overflow-hidden">
+                        <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border-hover,var(--border))] transition-colors overflow-hidden">
                           <div className="px-4 py-3">
                             <div className="flex items-center gap-2.5 mb-2.5">
                               <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${dotColor}15` }}>
@@ -2670,7 +2670,7 @@ export default function TopicDetail({
                   <ContentHeading title="Concurrent Data Structures" />
                   <div className="p-4 grid gap-2">
                     {topicDetails.structures.map((struct, i) => (
-                      <div key={i} className="flex items-start gap-2 p-3 rounded bg-[var(--bg-surface)] border border-[var(--border)]">
+                      <div key={i} className="flex items-start gap-2 p-3 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
                         <code className="text-[var(--text-primary)] landing-mono text-sm font-semibold whitespace-nowrap">{struct.name}</code>
                         <span className="text-[var(--text-muted)] text-sm landing-body">{fmtCloud(struct.description)}</span>
                       </div>
@@ -2919,7 +2919,7 @@ export default function TopicDetail({
               <ContentHeading title="Step-by-Step Approach" />
               <div className="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {topicDetails.approach.map((step, i) => (
-                  <div key={i} className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div key={i} className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
                     <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 landing-mono">{i + 1}</div>
                     <div className="flex-1 pt-0.5 text-[14px] text-[var(--text-secondary)] leading-relaxed landing-body">
                       {typeof step === 'string' ? (
