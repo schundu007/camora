@@ -56,7 +56,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
   // Hardcode high-contrast values so the username/email read clearly on
   // any surface — bypassing data-theme cascade that was occasionally
   // flipping --text-primary to a light value on the white nav.
-  const textColor = isDark ? 'var(--cam-strip-heading)' : 'var(--text-primary)';
+  const textColor = isDark ? 'rgba(255,255,255,0.92)' : 'var(--text-primary)';
   const hoverBg = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(2,6,23,0.06)';
   // Glass-pill capsule treatment when the trigger sits on a navy strip
   // (rail bottom). Matches GlassPill / PillToggle grammar so the trigger
