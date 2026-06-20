@@ -10,7 +10,7 @@ export interface ZoomableImageProps {
    * frame instead of pushing the page. Click-to-zoom opens the full image
    * in a modal regardless. Default 600px.
    */
-  maxHeight?: number;
+  maxHeight?: number | string;
   /** Tailwind classes on the wrapper. */
   className?: string;
   /** Inline style overrides on the wrapper frame. */
@@ -39,7 +39,7 @@ export interface ZoomableImageProps {
 export default function ZoomableImage({
   src,
   alt,
-  maxHeight = 600,
+  maxHeight = 'calc(100vh - 300px)',
   className = '',
   frameStyle,
   imgStyle,
@@ -85,7 +85,7 @@ export default function ZoomableImage({
   return (
     <>
       <div
-        className={`relative group cursor-zoom-in rounded-xl overflow-auto ${className}`}
+        className={`relative group cursor-zoom-in rounded-xl overflow-hidden ${className}`}
         role="button"
         tabIndex={0}
         aria-label={`${alt} — click to view full size`}
@@ -126,8 +126,10 @@ export default function ZoomableImage({
           style={{
             display: 'block',
             maxWidth: '100%',
-            width: 'auto',
+            maxHeight: 'inherit',
+            width: '100%',
             height: 'auto',
+            objectFit: 'contain',
             margin: '0 auto',
             ...imgStyle,
           }}
