@@ -104,16 +104,49 @@ export const HEAVY_TOPIC_LOADERS = {
   // CNCF Platform Whitepaper, SLSA, Sigstore). 11 sub-categories, ~56 topics.
   // Diagrams at /diagrams/devops/*.png from gen-devops-diagrams.py.
   devops: async () => {
-    const [mod, challenges, helmMod] = await Promise.all([
+    const [mod, helmMod] = await Promise.all([
       import('./devopsTopics.js'),
-      import('./devopsChallengesData.js'),
       import('./helmTopics.js'),
     ]);
     return {
       devopsCategories: mod.devopsCategories,
       devopsTopicCategoryMap: mod.devopsTopicCategoryMap,
       devopsTopics: [...mod.devopsTopics, ...helmMod.helmTopics],
-      devopsChallenges: challenges.devopsChallenges,
+    };
+  },
+
+  // Coding Challenges — DevOps challenges now, with AIOps/MLOps/IaC sub-categories coming.
+  // Lives at /capra/prepare?page=challenges.
+  challenges: async () => {
+    const [mod, challengeData] = await Promise.all([
+      import('./challengesTopics.js'),
+      import('./devopsChallengesData.js'),
+    ]);
+    return {
+      challengesCategories: mod.challengesCategories,
+      challengesTopicCategoryMap: mod.challengesTopicCategoryMap,
+      challengesTopics: mod.challengesTopics,
+      devopsChallenges: challengeData.devopsChallenges,
+    };
+  },
+
+  // Observability & Telemetry — promoted from DevOps sub-category.
+  observability: async () => {
+    const mod = await import('./devopsTopics.js');
+    return {
+      observabilityCategories: mod.observabilityCategories,
+      observabilityTopicCategoryMap: mod.observabilityTopicCategoryMap,
+      observabilityTopics: mod.observabilityTopics,
+    };
+  },
+
+  // Platform Engineering — promoted from DevOps sub-category.
+  platform: async () => {
+    const mod = await import('./devopsTopics.js');
+    return {
+      platformCategories: mod.platformCategories,
+      platformTopicCategoryMap: mod.platformTopicCategoryMap,
+      platformTopics: mod.platformTopics,
     };
   },
 
