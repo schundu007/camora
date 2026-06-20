@@ -199,7 +199,7 @@ function CapacityPlanningGrid({ estimation }) {
  * Structured data model rendering — parses SQL-like schema text into table cards.
  * Falls back to enhanced code block with line numbers and copy button.
  */
-function DataModelSection({ schema, examples }) {
+function DataModelSection({ schema, examples, diagramSrc }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
@@ -285,6 +285,7 @@ function DataModelSection({ schema, examples }) {
     return (
       <div id="data-model" className="scroll-mt-24 mt-14 first:mt-0">
         <ContentHeading title="Data Model" actions={<GlassPill>{tables.length} tables</GlassPill>} />
+        {diagramSrc && <ContentDiagram src={diagramSrc} alt="Data model architecture" className="mb-3" />}
         <div className="p-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
           {tables.map((table, ti) => (
             <div key={ti} className="rounded border border-[var(--border)] overflow-hidden">
@@ -352,6 +353,7 @@ function DataModelSection({ schema, examples }) {
   const schemaLines = (schema || '').split('\n');
   return (
     <div id="data-model" className="scroll-mt-24 mt-14 first:mt-0">
+      {diagramSrc && <ContentDiagram src={diagramSrc} alt="Data model architecture" className="mb-3" />}
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon name="database" size={14} className="text-[var(--text-muted)]" />
@@ -2169,7 +2171,7 @@ export default function TopicDetail({
 
                   {/* Data Model — structured schema presentation */}
                   {topicDetails.dataModel && (
-                    <DataModelSection schema={topicDetails.dataModel.schema} examples={topicDetails.dataModel.examples} />
+                    <DataModelSection schema={topicDetails.dataModel.schema} examples={topicDetails.dataModel.examples} diagramSrc={topicDetails.dataModel.diagramSrc} />
                   )}
                 </div>
               )}
