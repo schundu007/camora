@@ -83,6 +83,28 @@ export default function FormattedContent({ content, inline = false }) {
     return false;
   };
 
+  // Detect whether a "diagram" block is actually a markdown pipe-table.
+  // Box-drawing art (┌─┐ │ └─┘) is excluded so genuine ASCII diagrams
+  // still render as <pre>. A valid table needs header + separator + 1+ rows.
+  const isMarkdownTable = (lines) => {
+    const nonEmpty = lines.filter(l => l.trim());
+    if (nonEmpty.length < 2) return false;
+    if (/[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬]/.test(nonEmpty.join(''))) return false;
+    const pipeRow = /^\s*\|.+\|\s*$/;
+    const sepRow  = /^\s*\|[\s|:?-]+\|\s*$/;
+    return pipeRow.test(nonEmpty[0]) && nonEmpty.some(l => sepRow.test(l));
+  };
+
+  const parseMarkdownTable = (lines) => {
+    const nonEmpty = lines.filter(l => l.trim());
+    const sepRow  = /^\s*\|[\s|:?-]+\|\s*$/;
+    const sepIdx  = nonEmpty.findIndex(l => sepRow.test(l));
+    const cells   = (line) => line.split('|').slice(1, -1).map(c => c.trim());
+    const headers = sepIdx === 1 ? cells(nonEmpty[0]) : [];
+    const body    = nonEmpty.filter((_, i) => i !== sepIdx && (sepIdx === 1 ? i > 0 : true));
+    return { headers, rows: body.map(cells) };
+  };
+
   const isStarKey = (s) => /^(Situation|Task|Action|Result)$/i.test(s);
 
   const renderStarEyebrow = (keyword, key) => (
@@ -237,19 +259,72 @@ export default function FormattedContent({ content, inline = false }) {
         <CodeBlock key={`code-${blockIdx}`} code={block.lines.join('\n')} lang={block.lang || 'code'} />,
       );
     } else if (block.type === 'diagram') {
-      pushBody(
-        <div
-          key={`diagram-${blockIdx}`}
-          className="my-2 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
-        >
-          <pre
-            className="p-4 text-sm leading-7 landing-mono text-[var(--text-secondary)]"
-            style={{ whiteSpace: 'pre', tabSize: 4, margin: 0, overflow: 'visible' }}
+      if (isMarkdownTable(block.lines)) {
+        const { headers, rows } = parseMarkdownTable(block.lines);
+        pushBody(
+          <div
+            key={`table-${blockIdx}`}
+            className="my-3 rounded-lg overflow-hidden"
+            style={{ border: '1px solid var(--border)' }}
           >
-            {block.lines.join('\n')}
-          </pre>
-        </div>,
-      );
+            <table className="w-full border-collapse">
+              {headers.length > 0 && (
+                <thead>
+                  <tr>
+                    {headers.map((h, ci) => (
+                      <th
+                        key={ci}
+                        className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] landing-mono whitespace-nowrap"
+                        style={{
+                          background: 'var(--bg-elevated)',
+                          color: 'var(--cam-gold-leaf, var(--accent))',
+                          borderBottom: '1px solid var(--border)',
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {rows.map((row, ri) => (
+                  <tr key={ri}>
+                    {row.map((cell, ci) => (
+                      <td
+                        key={ci}
+                        className="px-3 py-2.5 text-[13px] landing-body"
+                        style={{
+                          background: ri % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-elevated)',
+                          color: ci === 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
+                          fontWeight: ci === 0 ? 600 : 400,
+                          borderBottom: ri < rows.length - 1 ? '1px solid var(--border)' : 'none',
+                        }}
+                      >
+                        {formatInlineText(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        );
+      } else {
+        pushBody(
+          <div
+            key={`diagram-${blockIdx}`}
+            className="my-2 rounded border border-[var(--border)] overflow-x-auto bg-[var(--bg-elevated)]"
+          >
+            <pre
+              className="p-4 text-sm leading-7 landing-mono text-[var(--text-secondary)]"
+              style={{ whiteSpace: 'pre', tabSize: 4, margin: 0, overflow: 'visible' }}
+            >
+              {block.lines.join('\n')}
+            </pre>
+          </div>,
+        );
+      }
     } else {
       let currentList = [];
       let currentNumberedList = [];
