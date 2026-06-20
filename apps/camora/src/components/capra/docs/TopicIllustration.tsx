@@ -32,7 +32,17 @@ const MANIFEST = manifestJson as Record<string, ManifestEntry>;
 export type IllustrationName =
   | 'coding' | 'system-design' | 'microservices' | 'databases'
   | 'low-level' | 'projects' | 'roadmaps' | 'eng-blogs' | 'behavioral'
-  | 'sre' | 'devops';
+  | 'sre' | 'devops' | 'cloud' | 'linux' | 'networking'
+  | 'troubleshooting' | 'war-stories' | 'comparisons';
+
+const FALLBACK_GRADIENTS: Partial<Record<IllustrationName, string>> = {
+  'cloud':          'linear-gradient(135deg, #0d1b3e 0%, #1a3a6e 50%, #0d2554 100%)',
+  'linux':          'linear-gradient(135deg, #0f1923 0%, #1c3547 50%, #0d2232 100%)',
+  'networking':     'linear-gradient(135deg, #0a1628 0%, #162a50 50%, #0a1f3d 100%)',
+  'troubleshooting':'linear-gradient(135deg, #1a0f0f 0%, #3d1a1a 50%, #2a0d0d 100%)',
+  'war-stories':    'linear-gradient(135deg, #1a1205 0%, #3d2e10 50%, #241908 100%)',
+  'comparisons':    'linear-gradient(135deg, #0d1a2e 0%, #1a2e50 50%, #0d1f3c 100%)',
+};
 
 interface TopicIllustrationProps {
   name: IllustrationName;
@@ -41,16 +51,13 @@ interface TopicIllustrationProps {
 }
 
 export default function TopicIllustration({ name, className = '', style }: TopicIllustrationProps) {
-  const photo = MANIFEST[name];
-  if (!photo) return null;
-  const credit = photo.photographer ? `Photo: ${photo.photographer} on Unsplash` : '';
+  const photo = MANIFEST[name as keyof typeof MANIFEST];
+  const credit = photo?.photographer ? `Photo: ${photo.photographer} on Unsplash` : '';
+  const fallback = FALLBACK_GRADIENTS[name];
 
   const wrapperStyle: CSSProperties = {
-    // 3:1 cinematic strip — about 130px tall on a 400px card. Tall
-    // enough to read as a hero accent, short enough that the title /
-    // bullets / progress bar below stay the visual focus of the card.
     aspectRatio: '3 / 1',
-    background: 'var(--cam-primary-dk)',
+    background: photo ? 'var(--cam-primary-dk)' : (fallback ?? 'var(--cam-primary-dk)'),
     ...style,
   };
 
@@ -60,15 +67,15 @@ export default function TopicIllustration({ name, className = '', style }: Topic
       style={wrapperStyle}
       title={credit}
     >
-      <img
-        src={photo.file}
-        alt=""
-        loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ filter: 'contrast(1.05) brightness(0.9)' }}
-      />
-      {/* 4. Subtle bottom gradient so the card title below has a soft
-              transition rather than a hard horizontal line. */}
+      {photo && (
+        <img
+          src={photo.file}
+          alt=""
+          loading="eager"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'contrast(1.05) brightness(0.9)' }}
+        />
+      )}
       <div
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
