@@ -1217,47 +1217,6 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Learning Resources */}
-                      <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
-                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Learning Resources</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {(() => {
-                            const ct = codingTopics.length || 57;
-                            const qs = ct > 57 ? codingTopics.reduce((s, t) => s + (t.questions || 0), 0) : 50;
-                            return [
-                              { href: '/capra/prepare?page=coding', illustration: 'coding', icon: 'list', hexColor: 'navy',    title: 'Study Cheatsheet', desc: `${ct} topics covering ${qs > 50 ? qs : 'curated'} problems from top tech companies`, badge: `${ct} topics` },
-                              { href: '/handbook', icon: 'code', illustration: 'low-level',                    hexColor: 'navy-dk', title: 'Blind 75', desc: 'The 75 essential LeetCode problems every engineer should master', badge: '75 problems' },
-                              { href: '/capra/practice', icon: 'behavioral', illustration: 'behavioral',       hexColor: 'gold',    title: 'Behavioral Questions', desc: 'Practice STAR-method answers for behavioral and leadership challenges', badge: 'Practice' },
-                            ];
-                          })().map(resource => (
-                            <a
-                              key={resource.title}
-                              href={resource.href}
-                              className="card-lift group rounded-lg overflow-hidden flex flex-col"
-                              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                            >
-                              <TopicIllustration name={resource.illustration} style={{ aspectRatio: '10 / 1' }} />
-                              <div className="p-3">
-                                <div className="flex items-start justify-between mb-2">
-                                  <DatabricksThumb
-                                    color={resource.hexColor}
-                                    size={28}
-                                    icon={<Icon name={resource.icon} size={13} style={{ color: '#FFFFFF' }} />}
-                                    title={resource.title}
-                                  />
-                                  <Chip>{resource.badge}</Chip>
-                                </div>
-                                <h3 className="text-[13px] font-bold mb-0.5" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{resource.title}</h3>
-                                <p className="text-[11px] leading-snug" style={{ color: 'var(--text-muted)' }}>{resource.desc}</p>
-                              </div>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-
                       {/* Study Cheatsheet — Before / During / After */}
                       <div className="mb-8">
                         <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
