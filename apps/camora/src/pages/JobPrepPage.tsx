@@ -82,7 +82,7 @@ interface StudyPathItem {
 
 interface StudyRound {
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   color: string;
   estimate: string;
   items: StudyPathItem[];
@@ -149,7 +149,7 @@ function buildStudyPath(job: any): StudyRound[] {
   if (codingItems.length > 0) {
     rounds.push({
       title: 'Coding Round',
-      icon: '\u{1F4BB}',
+      icon: <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
       color: 'var(--success)',
       estimate: `estimated ${Math.min(codingItems.length, 3)} problems`,
       items: codingItems.slice(0, 5),
@@ -200,7 +200,7 @@ function buildStudyPath(job: any): StudyRound[] {
   if (designItems.length > 0) {
     rounds.push({
       title: 'System Design Round',
-      icon: '\u{1F3D7}',
+      icon: <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>,
       color: 'var(--accent)',
       estimate: `${Math.min(designItems.length, 3)} scenarios`,
       items: [...new Map(designItems.map(i => [i.label, i])).values()].slice(0, 5),
@@ -231,7 +231,7 @@ function buildStudyPath(job: any): StudyRound[] {
 
   rounds.push({
     title: 'Behavioral Round',
-    icon: '\u2B50',
+    icon: <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
     color: 'var(--warning)',
     estimate: '4-6 questions',
     items: behavioralItems.slice(0, 5),
@@ -709,33 +709,48 @@ export default function JobPrepPage() {
               Personalized for <strong style={{ color: 'var(--text-secondary)' }}>{job.title}</strong> at <strong style={{ color: 'var(--text-secondary)' }}>{job.company_name}</strong>
             </p>
 
-            {studyRounds.map((round, roundIdx) => (
-              <div key={round.title} style={{ marginBottom: roundIdx < studyRounds.length - 1 ? '28px' : 0 }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div style={{
-                    width: '28px',
-                    height: '28px',
-                    background: `${round.color}18`,
-                    borderRadius: '8px',
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+              {studyRounds.map((round) => (
+                <div
+                  key={round.title}
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                  }}>
-                    {round.icon}
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--border)',
+                      borderLeft: '3px solid var(--accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      background: 'var(--bg-surface)',
+                    }}
+                  >
+                    <span style={{ color: 'var(--accent)', display: 'flex', flexShrink: 0 }}>
+                      {round.icon}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', flex: 1, fontFamily: 'var(--font-sans)' }}>
+                      {round.title}
+                    </span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--cam-gold-leaf, #b8902a)', background: 'rgba(184,144,42,0.12)', border: '1px solid rgba(184,144,42,0.25)', borderRadius: '20px', padding: '2px 8px', whiteSpace: 'nowrap' }}>
+                      {round.estimate}
+                    </span>
                   </div>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, fontFamily: "var(--font-sans)" }}>
-                    {round.title}
-                  </h3>
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>({round.estimate})</span>
+                  <div style={{ padding: '10px 14px', flex: 1 }}>
+                    {round.items.map((item) => (
+                      <StudyItem key={item.label} label={item.label} href={item.href} reason={item.reason} />
+                    ))}
+                  </div>
                 </div>
-                <div style={{ marginLeft: '14px', borderLeft: `2px solid ${round.color}40`, paddingLeft: '20px' }}>
-                  {round.items.map((item) => (
-                    <StudyItem key={item.label} label={item.label} href={item.href} reason={item.reason} />
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
 
           {/* ── JD based Prep ── */}
