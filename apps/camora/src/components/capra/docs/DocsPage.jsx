@@ -1172,87 +1172,61 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Learning Path */}
+                      {/* Interview Playbook — presentation mode */}
                       <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
-                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Learning Path</span>
-                        </div>
-                        <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-                            {[
-                              { step: 1, title: 'Coding',         desc: 'Arrays, strings, trees, graphs',  href: '/capra/prepare/coding',        icon: 'cpu',         img: 'coding' },
-                              { step: 2, title: 'System Design',  desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design',  icon: 'systemDesign',img: 'system-design' },
-                              { step: 3, title: 'Low-Level Design',desc: 'OOP, SOLID, design patterns',    href: '/capra/prepare/low-level-design',icon: 'layers',      img: 'low-level' },
-                              { step: 4, title: 'Behavioral',     desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral',     icon: 'users',       img: 'behavioral' },
-                            ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative overflow-hidden flex flex-col items-center text-center p-4 transition-colors" style={{ borderRight: idx < 3 ? '1px solid rgba(255,255,255,0.08)' : 'none', minHeight: 148 }}>
-                                {/* Background photo */}
-                                <TopicIllustration
-                                  name={phase.img}
-                                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
-                                />
-                                {/* Dark scrim — visible in both themes so image shows through */}
-                                <div aria-hidden="true" className="absolute inset-0 transition-opacity group-hover:opacity-80" style={{ background: 'rgba(8,18,48,0.62)' }} />
-                                {/* Arrow connector */}
-                                {idx < 3 && (
-                                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 w-6 h-6 rounded-full items-center justify-center" style={{ background: 'rgba(8,18,48,0.85)', border: '1px solid rgba(255,255,255,0.18)' }}>
-                                    <Icon name="chevronRight" size={12} style={{ color: 'rgba(255,255,255,0.8)' }} />
-                                  </div>
-                                )}
-                                {/* Content */}
-                                <div className="relative z-10 flex flex-col items-center">
-                                  <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
-                                    <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
-                                  </div>
-                                  <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
-                                    <Icon name={phase.icon} size={14} style={{ color: 'rgba(255,255,255,0.9)' }} />
-                                  </div>
-                                  <div className="text-sm font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
-                                  <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>{phase.desc}</div>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Interview Checklist — unified phase card */}
-                      <div className="mb-8">
-                        <div className="flex items-center gap-2 px-3 py-2 mb-4" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', borderRadius: '12px 12px 0 0' }}>
-                          <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-                          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Interview Checklist</span>
-                        </div>
                         {(() => {
                           const phases = [
-                            { label: 'Before the Interview', step: '01', icon: 'clipboard', hexColor: 'navy',    items: interviewCheatsheet.before },
-                            { label: 'During the Interview', step: '02', icon: 'play',      hexColor: 'gold',    items: interviewCheatsheet.during },
-                            { label: 'After the Interview',  step: '03', icon: 'check',     hexColor: 'navy-dk', items: interviewCheatsheet.after  },
+                            { label: 'Before',  sub: 'Prep & Research',      step: '01', icon: 'clipboard', color: 'var(--cam-primary)',    border: 'rgba(0,71,171,0.35)',  items: interviewCheatsheet.before },
+                            { label: 'During',  sub: 'Execute & Communicate', step: '02', icon: 'play',      color: 'var(--cam-gold-leaf)',  border: 'rgba(212,160,67,0.35)', items: interviewCheatsheet.during },
+                            { label: 'After',   sub: 'Reflect & Follow Up',   step: '03', icon: 'check',     color: 'var(--cam-primary-dk)', border: 'rgba(0,36,90,0.35)',   items: interviewCheatsheet.after  },
                           ];
                           return (
-                            <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                              {/* Phase header bar */}
-                              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-                                {phases.map((ph, i) => (
-                                  <div key={ph.step} className="flex items-center gap-3 px-4 py-3" style={{ borderRight: i < 2 ? '1px solid var(--border)' : 'none', borderBottom: i < phases.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                                    <DatabricksThumb color={ph.hexColor} size={36} icon={<Icon name={ph.icon} size={17} style={{ color: '#fff' }} />} />
-                                    <div>
-                                      <div className="text-[9px] font-bold tracking-[0.14em] uppercase landing-mono mb-0.5" style={{ color: 'var(--text-muted)' }}>{ph.step} · {ph.items.length} steps</div>
-                                      <div className="text-[13px] font-bold leading-tight landing-display" style={{ color: 'var(--text-primary)' }}>{ph.label}</div>
-                                    </div>
+                            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'var(--cam-hero-strip)' }}>
+                              {/* Hero header */}
+                              <div className="relative px-6 pt-6 pb-5 overflow-hidden">
+                                <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 80% at 0% 50%, rgba(0,71,171,0.18), transparent 70%)' }} />
+                                <div className="relative flex items-center justify-between flex-wrap gap-4">
+                                  <div>
+                                    <div className="text-[10px] font-bold tracking-[0.18em] uppercase landing-mono mb-1" style={{ color: 'var(--cam-gold-leaf)' }}>Interview Playbook</div>
+                                    <h3 className="text-xl font-extrabold landing-display" style={{ color: 'var(--cam-strip-heading)' }}>Your end-to-end interview checklist</h3>
+                                    <p className="text-[12px] mt-1 landing-body" style={{ color: 'rgba(255,255,255,0.55)' }}>{interviewCheatsheet.before.length + interviewCheatsheet.during.length + interviewCheatsheet.after.length} steps across 3 phases · tick off as you go</p>
                                   </div>
-                                ))}
-                              </div>
-                              {/* Checklist columns */}
-                              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ background: 'var(--bg-surface)' }}>
-                                {phases.map((ph, ci) => (
-                                  <div key={ph.step} className="flex flex-col gap-2 p-4" style={{ borderRight: ci < 2 ? '1px solid var(--border)' : 'none' }}>
-                                    {ph.items.map((item, i) => (
-                                      <label key={i} className="flex items-start gap-2 cursor-pointer group">
-                                        <input type="checkbox" className="mt-0.5 shrink-0" style={{ accentColor: 'var(--cam-gold-leaf)', width: 13, height: 13 }} />
-                                        <span className="text-[11.5px] leading-snug landing-body group-hover:text-[var(--text-primary)] transition-colors" style={{ color: 'var(--text-secondary)' }}>{item}</span>
-                                      </label>
+                                  {/* Phase pills */}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {phases.map((ph, i) => (
+                                      <div key={ph.step} className="flex items-center gap-1.5">
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold landing-mono" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: '#fff' }}>
+                                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold" style={{ background: ph.color }}>{ph.step}</span>
+                                          {ph.label}
+                                        </span>
+                                        {i < phases.length - 1 && <Icon name="chevronRight" size={10} style={{ color: 'rgba(255,255,255,0.3)' }} />}
+                                      </div>
                                     ))}
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Phase columns */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3" style={{ borderTop: '1px solid var(--cam-gold-leaf)' }}>
+                                {phases.map((ph, ci) => (
+                                  <div key={ph.step} style={{ borderRight: ci < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none', background: ci === 1 ? 'rgba(212,160,67,0.04)' : 'transparent' }}>
+                                    {/* Column header */}
+                                    <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.15)' }}>
+                                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold flex-shrink-0" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
+                                      <div>
+                                        <div className="text-[13px] font-bold leading-tight" style={{ color: '#fff', fontFamily: 'var(--font-display)' }}>{ph.label}</div>
+                                        <div className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.45)' }}>{ph.sub}</div>
+                                      </div>
+                                      <span className="ml-auto text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>{ph.items.length}</span>
+                                    </div>
+                                    {/* Steps */}
+                                    <div className="flex flex-col px-4 py-3 gap-2.5">
+                                      {ph.items.map((item, i) => (
+                                        <label key={i} className="flex items-start gap-2.5 cursor-pointer group">
+                                          <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                                          <span className="text-[11.5px] leading-snug landing-body transition-colors group-hover:text-white" style={{ color: 'rgba(255,255,255,0.6)' }}>{item}</span>
+                                        </label>
+                                      ))}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
