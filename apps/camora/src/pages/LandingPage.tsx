@@ -431,27 +431,29 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ LOGO STRIP ═══════════ */}
-      <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-10 overflow-hidden">
-        <p className="text-center font-mono text-[10.5px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-          Trusted by engineers at
-        </p>
-        <div className="relative mt-6">
-          <div className="absolute left-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-r from-[var(--bg-surface)] to-transparent" />
-          <div className="absolute right-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-l from-[var(--bg-surface)] to-transparent" />
-          <div className="flex" style={{ animation: 'scroll-logos 36s linear infinite', width: 'max-content' }}>
-            {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
-              <img
-                key={`${c}-${i}`}
-                src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
-                alt={c}
-                className="h-6 mx-7 shrink-0 object-contain"
-                loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-            ))}
+      <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-10">
+        <Container>
+          <p className="text-center font-mono text-[10.5px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+            Trusted by engineers at
+          </p>
+          <div className="relative mt-6 overflow-hidden">
+            <div className="absolute left-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-r from-[var(--bg-surface)] to-transparent" />
+            <div className="absolute right-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-l from-[var(--bg-surface)] to-transparent" />
+            <div className="flex" style={{ animation: 'scroll-logos 36s linear infinite', width: 'max-content' }}>
+              {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
+                <img
+                  key={`${c}-${i}`}
+                  src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
+                  alt={c}
+                  className="h-6 mx-7 shrink-0 object-contain"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-        <style>{`@keyframes scroll-logos { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          <style>{`@keyframes scroll-logos { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+        </Container>
       </section>
 
       {/* ═══════════ APPA — THE PROCESS ═══════════ */}
