@@ -60,6 +60,10 @@ export const sreTopicCategoryMap = {
   'gamedays-chaos':            'incidents',
   'ace-sre-troubleshooting-multi-region-latency': 'incidents',
   'ace-sre-zero-downtime-schema-migration': 'incidents',
+  'ace-sre-error-budget-exhausted':          'incidents',
+  'ace-sre-cascading-failure-3am':           'incidents',
+  'ace-sre-postmortem-facilitation':         'incidents',
+  'ace-sre-capacity-planning-interview':     'capacity',
   // Automation
   'toil-quantified':           'automation',
   'iac-terraform-pulumi':      'automation',
@@ -173,6 +177,15 @@ The SRE response is error budgets — convert the dev/SRE tension into a math pr
 
 …you have a renamed ops team that will collapse under the same operational load it had before. The Workbook flags "rename-and-shame" as one of the two top patterns that kill SRE adoption (the other is hiring "a DevOp" to fix culture).`,
       },
+    ],
+    quickFire: [
+      { q: 'What is Ben Treynor Sloss\'s one-line SRE definition?', a: '"What happens when you ask a software engineer to design an operations team." This frames SRE as engineering discipline, not ops with scripts.' },
+      { q: 'What percentage of SRE time should be spent on toil?', a: 'At most 50%. The other 50% must be engineering work that permanently reduces future toil. If toil exceeds 50%, escalate.' },
+      { q: 'How does SRE differ from DevOps?', a: 'DevOps is a philosophy and culture shift. SRE is a specific opinionated implementation of DevOps principles using software engineering practices.' },
+      { q: 'What is an error budget and why does it matter for SRE?', a: 'The time or requests a service is allowed to be unreliable (1 - SLO). It converts the reliability conversation from binary to quantitative, enabling data-driven launch decisions.' },
+      { q: 'What are the two primary SRE mandates?', a: 'Availability and reliability of services, and engineering work to improve them. SRE teams run the services they own, giving them direct skin in the game.' },
+      { q: 'What happens when a service\'s error budget is exhausted?', a: 'The error-budget policy kicks in: feature releases halt, the team focuses exclusively on reliability work until the SLO is restored over the measurement window.' },
+      { q: 'What is the SRE capacity planning rule of thumb?', a: 'Provision N+2 redundancy for services where N instances handle peak load. Two redundant instances cover one planned outage and one unplanned failure simultaneously.' },
     ],
     references: [
       'https://sre.google/sre-book/introduction/',
@@ -325,6 +338,16 @@ The pragmatic answer: pick the lowest 9-count that satisfies the user, then use 
 
 The SRE runs the measurement; the SRE does not unilaterally set the target. If only SRE owns it, dev resents the freezes; if only dev owns it, the SLO drifts toward "whatever we already do." Three-way ownership is the structural reason error-budget policy survives organisational pressure.`,
       },
+    ],
+    quickFire: [
+      { q: 'What is the canonical SLI formula?', a: 'good_events / valid_events over a rolling window. "Valid" excludes requests outside your responsibility (e.g. 404s for nonexistent paths).' },
+      { q: 'What is the differentiator test between SLO and SLA?', a: 'Ask "what happens if the SLO is missed?" No explicit consequence = SLO. Customer gets a refund or you breach a contract = SLA.' },
+      { q: 'Why is the SLA almost always looser than the internal SLO?', a: 'So engineering has a headroom buffer before external penalties trigger. A 99.95% SLO gives room before a 99.9% SLA fires.' },
+      { q: 'What percentile should latency SLIs use — and why not the mean?', a: 'p99 or p99.9. The mean hides the tail. SRE Book Ch 6: even at 100ms mean, 1% of requests can take 5 seconds.' },
+      { q: 'How many SLOs should a service have?', a: 'The Workbook explicitly says fewer is better. 2-4 SLIs covering different failure modes beats a comprehensive list. One SLI is rarely sufficient.' },
+      { q: 'Who owns the SLO?', a: 'Three-way sign-off: Product (user satisfaction), Dev (accept the velocity tradeoff), SRE (defensible without excessive toil). SRE runs the measurement but does not set the target unilaterally.' },
+      { q: 'What window does the Workbook recommend for SLO measurement?', a: '4-week rolling window. Weekly summaries for ops prioritisation, quarterly for strategy review.' },
+      { q: 'Can you set an SLO of 100%?', a: 'No. SRE Book: "100% reliability is the wrong target for basically everything." Without an error budget you cannot ship safely; every change requires near-zero risk tolerance.' },
     ],
     references: [
       'https://sre.google/sre-book/service-level-objectives/',
@@ -484,6 +507,16 @@ Alerts fire when both the long-window AND short-window thresholds are exceeded. 
 
 Ties to budget: a 14.4× sustained burn would eat the whole 30-day budget in just over 2 days. That\'s why it pages immediately — at that rate the freeze trigger isn\'t weeks away, it\'s days. A 1× burn is the steady-state level the SLO expects; only sustained over 3 days does it justify a ticket.`,
       },
+    ],
+    quickFire: [
+      { q: 'What is the one-line error budget formula?', a: 'error_budget = 1 - SLO, applied over the measurement window. A 99.9% SLO over 30 days = 43.2 minutes of allowed downtime.' },
+      { q: 'What burn rate means the budget is gone in 2 hours?', a: '14.4x. Derived as: 0.02 x 30 x 24 / 1 = 14.4. At that rate, 2% of the 30-day budget burns in 1 hour.' },
+      { q: 'What is the four-week halt rule?', a: 'Verbatim from Workbook Ch 3: if the service has exceeded its error budget for the preceding four-week window, halt all changes except P0 issues and security fixes until back within SLO.' },
+      { q: 'What single-incident size triggers a mandatory postmortem?', a: 'Any incident consuming more than 20% of the quarterly error budget, per the Workbook Ch 3 template.' },
+      { q: 'What does it mean when a team consistently under-spends its error budget?', a: 'The SLO is too conservative. The team is leaving feature velocity on the table and should either tighten the SLO or accelerate launches.' },
+      { q: 'Is an error-budget policy punishment for missing SLOs?', a: 'No. The Workbook is explicit: it gives teams permission to focus exclusively on reliability when data shows reliability matters more than velocity.' },
+      { q: 'What three stakeholders must sign the error-budget policy?', a: 'SRE lead, dev lead, and product lead. Without signatures, the policy has no authority when freeze-time politics hit.' },
+      { q: 'What is a multi-window multi-burn-rate alert?', a: 'Alert at 14.4x / 1-hour + 5-min confirmation (critical page), 6x / 6-hour + 30-min (warning page), 1x / 3-day + 6-hour (ticket). Both windows must fire together.' },
     ],
     references: [
       'https://sre.google/sre-book/embracing-risk/',
@@ -3171,6 +3204,15 @@ The cultural risk: declaring resolved too early. The symptom blip back, customer
 Quote from SRE Book Ch 14: "The first priority is incident resolution... root-cause analysis should not block incident resolution." Mitigate first, understand later.`,
       },
     ],
+    quickFire: [
+      { q: 'What is the incident commander\'s primary job?', a: 'Coordinate — not fix. The IC owns communication, role assignment, escalation, and decision authority. Hands-on debugging is delegated to the operations lead.' },
+      { q: 'What is the "five-minute rule" during incidents?', a: 'If you have not made progress on a hypothesis in five minutes, abandon it and try the next one. Prevents sunk-cost debugging during high-pressure outages.' },
+      { q: 'What roles are in the ICS (Incident Command System)?', a: 'Incident Commander, Operations Lead (hands-on fix), Comms Lead (external status updates), and Scribe (running log). Large incidents may add a Planning Lead.' },
+      { q: 'When do you escalate a SEV-2 to SEV-1?', a: 'When user-facing impact exceeds the SEV-2 threshold (commonly >5% error rate or >15min duration), when the fix ETA is unknown, or when additional expertise is needed outside current responders.' },
+      { q: 'What is a war room and when should you open one?', a: 'A dedicated communication channel (Zoom/Slack) for the incident response team. Open at SEV-1 or when more than 3 people need coordinated action. Prevents parallel chat fragmentation.' },
+      { q: 'How long should the all-clear hold before declaring incident resolved?', a: 'At least 10-15 minutes of clean metrics at or above SLO after applying the fix. Declaring too early risks a bounce-back incident within minutes.' },
+      { q: 'What is the Comms Lead\'s cadence during a SEV-1?', a: 'External status page update every 15 minutes minimum. Internal stakeholder update every 30 minutes. Message format: current impact, what is being done, next update time.' },
+    ],
     references: [
       'https://sre.google/sre-book/managing-incidents/',
       'https://response.pagerduty.com/training/incident_commander/',
@@ -3700,6 +3742,15 @@ When postmortems ARE needed even though they feel unnecessary:
 
 The general rule: when in doubt, do the postmortem. The cost of writing one for a non-event is small; the cost of NOT writing one for a real learning is large.`,
       },
+    ],
+    quickFire: [
+      { q: 'What makes a postmortem "blameless"?', a: 'Focusing on system and process failures rather than individual errors. Assumes people acted with the best information available at the time. The SRE Book: "postmortems are not about finding someone to blame."' },
+      { q: 'What is the 5-day postmortem rule?', a: 'Draft must be shared within 5 business days of incident close to preserve memory accuracy and keep context fresh for action items.' },
+      { q: 'What is "where we got lucky" in a postmortem?', a: 'A section documenting near-misses — things that could have made the incident worse but did not. Identifies fragility before it becomes a future incident.' },
+      { q: 'Who should write the postmortem?', a: 'The incident commander or primary responder, not a manager or outside observer. Those who were in the incident have the ground-truth timeline.' },
+      { q: 'What is the difference between a contributing factor and a root cause?', a: 'Root cause implies a single fixable source; complex systems rarely have one. Contributing factors is the preferred framing — each factor removed reduces incident probability.' },
+      { q: 'What are the required postmortem action item properties?', a: 'Owner (named individual), deadline (specific date), and priority (P0/P1/P2). Action items without owners and deadlines are never completed.' },
+      { q: 'How do you prevent postmortem fatigue?', a: 'Time-box writing to 2 hours, cap action items at 5 per incident, track in the same tool as engineering work (JIRA/Linear), and review completion rates in quarterly SRE reviews.' },
     ],
     references: [
       'https://sre.google/sre-book/postmortem-culture/',
@@ -11708,6 +11759,198 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
       'https://github.com/reorg/pg_repack',
       'https://flywaydb.org/documentation/',
       'https://www.liquibase.org/documentation/',
+    ],
+  },
+
+  {
+    id: 'ace-sre-error-budget-exhausted',
+    title: 'Error Budget Exhausted — Mid-Sprint',
+    icon: 'alertTriangle',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'Your service hits zero error budget with 2 weeks left in the sprint. Walk through the policy activation, stakeholder conversation, and recovery steps.',
+    introduction: 'The moment the error budget hits zero is the highest-stakes SRE conversation. The policy is clear on paper; the hard part is the product conversation, correctly attributing what burned the budget, and not restarting the clock prematurely.',
+    keyQuestions: [
+      {
+        question: 'Your checkout service SLO is 99.95% over 30 days. On day 16, a 45-minute partial outage exhausts the remaining error budget. What do you do?',
+        answer: `First, confirm the measurement. Pull the 30-day rolling SLI from your monitoring system — burn events, not just uptime. Verify no double-counting (retries, health-check traffic, client-side errors that should be excluded from valid events). A 45-minute outage at 10K RPS with 60% error rate is roughly 1.62M failed requests; at 99.95% SLO over 30 days the budget is approximately 25.9M requests, so this alone is 6.3% — confirm arithmetic before declaring the budget gone.
+
+Second, activate the error-budget policy. The policy is pre-agreed — this is not a new negotiation. Notify the dev lead and product lead that the EBP halt condition has triggered. No new feature releases until the service is back within SLO over a four-week rolling window. Only P0 issues and security fixes are exempt.
+
+Third, identify what burned the budget. Categorize each burn event: planned (load test, intentional maintenance), unplanned (bugs, dependency failures), and attribution (infrastructure vs. application vs. external). The ratio matters — if 80% is infrastructure-owned, the SRE team drives the fix; if 80% is application-owned, the dev team does. This conversation is easier when the data is in front of everyone.
+
+Fourth, create a reliability sprint. Convert the top contributing factors into engineering work items with owners and deadlines. Common actions: improve alerting to reduce MTTD, add circuit breakers for the dependency that failed, run a game day to validate the runbook. These go into the team sprint alongside any approved P0 work.
+
+Fifth, communicate clearly. Status page: incident resolved, post-incident review in progress. Internal: the EBP is in effect, feature release resumption criteria (SLO must be met over a full 4-week window), and a weekly check-in to track recovery. Do not set a calendar date for resumption — it depends on the rolling window clearing, not a fixed date.`,
+      },
+      {
+        question: 'The product team pushes back on the feature freeze. They have a high-priority customer delivery due in 3 days. How do you handle it?',
+        answer: `The answer is: escalate per the pre-agreed policy, not resist unilaterally.
+
+The error-budget policy exists precisely for this situation. If the policy was signed by the product lead (which it must be to be valid), then the product lead already agreed to this outcome when the budget is exhausted. Remind them of the signed policy and the agreed escalation path — typically to an engineering director or CTO if product and SRE disagree.
+
+Present the risk quantitatively. At zero budget, the next release that causes even a minor outage will immediately breach the SLA, potentially triggering customer credits. The customer delivery they want to protect is more at risk if you ship features into an already-exhausted budget than if you hold for a few days.
+
+Offer a controlled alternative. A single low-risk change with an explicit rollback plan and a 24-hour canary at 1% traffic could be accepted as an exception if the IC and both leads agree in writing. This is not the default — it is an exception, logged as such.
+
+If the product lead overrides the policy without the escalation path: document it, note it in the postmortem, and use it as evidence in the next EBP review cycle to either tighten the policy or get clearer executive alignment. The policy loses credibility if it can be overridden informally — that is the core issue to fix.`,
+      },
+      {
+        question: 'How do you prevent the same budget exhaustion from happening next quarter?',
+        answer: `Three structural changes matter most.
+
+First, multi-window burn-rate alerting. If the budget was exhausted by a 45-minute outage, the alerting fired too late or MTTD was too high. Implement the Workbook Ch 5 multi-window multi-burn-rate pattern: 14.4x burn rate over a 1-hour window (confirmed by a 5-minute short window) pages the on-call immediately, before the outage can consume more than 2% of the monthly budget. An alert that fires at 14.4x gives you 55 minutes to mitigate before the budget is materially damaged.
+
+Second, budget burn attribution in every sprint review. Track which fraction of budget burned came from planned vs. unplanned events, and which system was responsible. If 70% of burns come from a single dependency, that dependency gets reliability investment regardless of product priority. Make this a standing agenda item in the sprint retrospective so the pattern is visible before it becomes a crisis.
+
+Third, aspirational SLO calibration. If the service consistently exhausts budget by day 16-20, the SLO might be too tight for current reliability maturity. Revisit whether 99.95% is the right target or whether 99.9% (which gives 4x the budget) is acceptable to users. The Workbook describes the cycle: set aspirational SLO, measure for two quarters, graduate to enforced SLO once the service demonstrates it can sustain it.`,
+      },
+    ],
+    references: [
+      'https://sre.google/workbook/error-budget-policy/',
+      'https://sre.google/workbook/implementing-slos/',
+      'https://sre.google/sre-book/embracing-risk/',
+    ],
+  },
+
+  {
+    id: 'ace-sre-cascading-failure-3am',
+    title: 'Cascading Failure at 3am',
+    icon: 'zap',
+    color: '#ef4444',
+    questions: 3,
+    description: 'Walk through diagnosing and stopping a cascading failure spreading across services at 3am with incomplete information.',
+    introduction: 'Cascading failures are the hardest incident class because symptoms are misleading — multiple services are degraded, but fixing the wrong one first makes things worse. The SRE Book Ch 22 names four patterns: server overload, resource exhaustion, retry storms, and metastable failure. Identifying which pattern you are in determines the correct first action.',
+    keyQuestions: [
+      {
+        question: 'At 3am, your monitoring fires alerts on 6 services simultaneously. All show high latency and elevated error rates. What do you do in the first 10 minutes?',
+        answer: `First 2 minutes: scope, do not fix. Open the incident channel, assign an IC, assign a scribe. Pull the dependency graph for the 6 alerting services — who calls whom. Cascading failures propagate upstream from the source; the first service to alert is often not the origin.
+
+Minutes 2-5: find the time-zero event. Check your deployment log for any push in the last 60 minutes. Check your infrastructure event log for autoscaling events, instance replacements, network changes, certificate renewals. Most cascading failures start with a single event — a traffic spike, a bad deploy, or resource exhaustion on one node. Your job at this stage is to find that event, not fix 6 services.
+
+Minutes 5-8: identify the failure pattern. Is error rate climbing monotonically (resource exhaustion — a service is dying)? Or is it oscillating (retry storm — services recover then get hammered again)? Oscillating error rates with no single service fully down usually means a retry storm. Check retry config on upstream callers. SRE Book Ch 22: exponential backoff with jitter is mandatory; linear or constant-interval retries will sustain the storm indefinitely.
+
+Minutes 8-10: make one intervention and hold. If you identified a bad deploy as time-zero: roll it back. Do not simultaneously roll back AND increase resources AND disable retries — multi-variable changes make the situation undiagnosable. One change, 3 minutes observation, then the next action. The biggest mistake in cascading failures is taking too many actions too fast and losing causal clarity.`,
+      },
+      {
+        question: 'Five minutes in, you find that Service A (a payment processor) is receiving 10x normal traffic from Service B (checkout). Service B has no recent deploy. What is the most likely cause and what do you do?',
+        answer: `10x traffic from B to A with no deploy on B is almost certainly a retry storm.
+
+Check: what is B's timeout on A? What is B's retry count and backoff? If B has a 30-second timeout and retries 3 times with no backoff, a single slow response from A triggers 3 additional requests — each of which also times out and retries. The load on A multiplies geometrically until A falls over, which makes B's responses slower, which triggers more retries.
+
+Immediate mitigation: enable load shedding on A. Most services can be configured to return 503 immediately when above a load threshold rather than queuing. A fast 503 is better than a slow success — the caller can back off. A caller sitting on a 30-second timeout is not backing off. Check if A has a circuit breaker configured; if yes, lower the error threshold to trip faster and give A time to recover.
+
+On B's side: if you can deploy a config change to add exponential backoff with full jitter (AWS architecture blog: jitter reduces thundering herd better than capped exponential alone), do it. If you cannot deploy, shed load at B's entry point — reject a percentage of incoming requests at the API gateway so B sends fewer requests to A.
+
+Simultaneously: check whether other services call A directly. In a microservices system, multiple services may be retrying against the same downstream independently. Pull the full caller graph for A, not just B. Brief each team on the mitigation plan to avoid uncoordinated interventions.
+
+Recovery signal: A's error rate drops below 1%, B's checkout success rate rises above 90%, retry volume falls below 2x normal. Hold for 10 minutes before declaring recovery.`,
+      },
+      {
+        question: 'The cascade is resolved. What does the postmortem need to cover to prevent recurrence?',
+        answer: `The postmortem for a cascading failure has one mandatory structural requirement: trace the failure from time-zero trigger through each hop of the cascade, with timestamps. Without the causal chain documented, action items target symptoms instead of the origin.
+
+Retry configuration. Every service-to-service call in the blast radius needs its timeout, retry count, and backoff policy documented and reviewed. Action item: audit all internal HTTP clients for exponential backoff with full jitter compliance. Services without it are cascading failure multipliers waiting for a trigger.
+
+Circuit breaker coverage. Which services had circuit breakers configured? Which tripped? Which were absent? SRE Book Ch 22 names circuit breakers as the primary defense against cascading failures in service meshes. Action item: add circuit breakers to the A-B connection and any others found absent, with appropriate error thresholds.
+
+Load shedding. Did A have a max-concurrency limit configured? Without it, A accepts every request until it runs out of threads or memory. Action item: add a concurrency limit and fast-fail behavior on A.
+
+Alerting lead time. How much budget burned before the IC was paged? If the cascade ran for 8 minutes before the alert fired, multi-window burn-rate alerting is misconfigured. Action item: verify 14.4x burn-rate alert fires within 3 minutes of cascade onset.
+
+Runbook quality. Could the on-call diagnose this without escalating? If not, the runbook for this scenario is missing or incorrect. Action item: update runbooks with the actual decision tree used, including load-shedding commands and the dependency graph for A.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/addressing-cascading-failures/',
+      'https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/',
+      'https://sre.google/workbook/incident-response/',
+    ],
+  },
+
+  {
+    id: 'ace-sre-capacity-planning-interview',
+    title: 'Live Capacity Planning Scenario',
+    icon: 'trendingUp',
+    color: '#8b5cf6',
+    questions: 2,
+    description: 'An interviewer asks you to size a new service from scratch. Walk through demand forecasting, headroom calculation, and autoscaling design.',
+    introduction: 'Capacity planning interviews test whether you can translate a vague business requirement into concrete infrastructure decisions. The NALSD framework from the SRE Book (Non-Abstract Large System Design) gives the correct sequence: calculate first, design second.',
+    keyQuestions: [
+      {
+        question: 'An interviewer says: "We expect 10 million daily active users on a new social feed service. Size the service." Walk through your approach.',
+        answer: `Start with demand decomposition, not instance counts. 10 million DAU is a useless number until you know the request pattern.
+
+Step 1: establish RPS. Social feeds are not uniformly distributed. Assume 80% of activity in 8 peak hours, and peak-hour rate is 3x the daily average. DAU of 10M, 5 requests per session, 2 sessions per day = 100M requests/day. Daily average RPS = 100M / 86400 = 1,157 RPS. Peak RPS = 1157 times (0.8 times 24 / 8) times 3 = roughly 8,300 RPS. Round to 10K RPS for headroom.
+
+Step 2: profile each request. A feed read fetches posts via a user graph query (20ms), timeline ranking (50ms), and CDN asset redirect (0ms server-side). Assume p99 latency target of 200ms. CPU cost per request: benchmark at 5ms CPU = 10,000 times 0.005 = 50 CPU cores at peak. Add 25% for GC and overhead = 63 cores. Add 50% safety headroom = 95 cores.
+
+Step 3: size for N+2 redundancy. 95 cores at 8 vCPUs per instance = 12 instances. N+2 means provision 14 so you can lose 2 simultaneously (one AZ failure plus one unplanned) and still serve peak.
+
+Step 4: storage tier. 10M DAU, 1% create a post per day = 100K posts/day at 2KB each = 200MB/day. Over 2 years = 146GB. Fits in a single PostgreSQL instance; shard at 500GB. Cache top 100 posts per user in Redis: 1KB times 100 times 10M = 1TB Redis cluster, 3x replication = 3TB provisioned.
+
+Step 5: state the assumptions explicitly. Reads are 95% of traffic. Cache hit rate 85%. CDN absorbs all static assets. No video — that changes the storage tier dramatically. Always state assumptions before the interviewer asks.`,
+      },
+      {
+        question: 'The interviewer follows up: "Traffic grows 3x in 6 months due to a viral feature. How do you handle it without rewriting the service?"',
+        answer: `3x growth means 30K peak RPS instead of 10K. The question is whether the current architecture absorbs it gracefully or hits a cliff.
+
+Compute: 14 instances at 8 vCPUs handles 10K RPS with N+2. At 30K RPS you need 42 instances. If horizontal autoscaling is configured with target CPU at 60%, the cluster scales from 14 to 42 automatically — provided your cloud account has instance capacity and the autoscaling policy has headroom to add instances before the spike hits.
+
+The key failure mode is autoscaling lag. EC2/GKE autoscaling takes 2-4 minutes to provision and register instances. At 3x traffic from a viral event, you can exhaust the current cluster before new instances are healthy. Mitigation: pre-scale based on leading indicators (social media trending signals, push notification delivery rates) before traffic arrives. This is predictive autoscaling — Karpenter and KEDA both support it.
+
+Database: at 3x reads, the PostgreSQL primary is probably fine since reads go to replicas. Check replica lag — at 30K RPS a single replica may lag on high-write bursts. Add a second read replica and confirm the connection pool distributes correctly across them (PgBouncer or RDS Proxy handles this).
+
+Cache: Redis at 85% hit rate means 15% of reads reach the database. At 30K RPS that is 4,500 database RPS — within single-instance capacity for simple queries. Hold the cache tier as-is; monitor Redis CPU and memory. If memory approaches 80%, switch to allkeys-lru eviction and accept a slightly lower hit rate rather than sharding mid-event.
+
+The architectural cliff at 10x, not 3x: the relational write path for post creation and like counts does not scale horizontally without sharding or moving counters to a dedicated counting service (Redis INCR instead of PostgreSQL UPDATE). Plan that migration proactively. At 3x you still have runway; at 10x you do not.`,
+      },
+    ],
+    references: [
+      'https://sre.google/workbook/non-abstract-design/',
+      'https://sre.google/sre-book/software-engineering-in-sre/',
+      'https://karpenter.sh/docs/concepts/',
+    ],
+  },
+
+  {
+    id: 'ace-sre-postmortem-facilitation',
+    title: 'Facilitating a Blameless Postmortem',
+    icon: 'fileText',
+    color: '#14b8a6',
+    questions: 2,
+    description: 'You are facilitating a postmortem for a SEV-1 that caused 2 hours of customer-facing downtime. Walk through running it without blame.',
+    introduction: 'The postmortem facilitator\'s job is to guide the room to system-level causes without letting the conversation drift toward individual blame. Most postmortems fail not because the facts are wrong but because psychological safety breaks down — engineers get defensive, root-cause analysis gets shallow, and action items become symbolic rather than structural.',
+    keyQuestions: [
+      {
+        question: 'You are facilitating a postmortem for a 2-hour outage caused when an engineer deleted a production Kubernetes namespace by mistake. Three product managers are demanding accountability. How do you run the session?',
+        answer: `First, set the frame before anyone speaks. Open with the blameless postmortem contract: "We are here to understand what conditions in our system made this mistake possible, not to determine who is responsible for a disciplinary action. Every finding goes to the system, the process, or the tooling." If a PM challenges this, name it directly: "Accountability for individuals is handled separately by management. This meeting produces engineering action items. If we conflate them, we produce worse action items and a less honest account of what happened."
+
+Build the timeline collaboratively. Ask the engineer who made the deletion to walk through their actions chronologically from the beginning of the task. The key question at each step is not "why did you do that" but "what did you see, and what did you expect to happen?" This is the Cognitive Systems Engineering approach: operators make decisions based on the information available to them, not omniscience. When the engineer says "I thought I was in staging," the follow-up is "what in the environment indicated that was staging?" — not "why didn't you check?"
+
+Surface the system failures. A namespace deletion that takes down production reveals at minimum three absent controls: no guard against namespace deletion in production (admission controller or RBAC restriction), no immediate alert that a production namespace was deleted, no automated namespace backup or restoration path. These are the action items. The engineer's action is a trigger, not a root cause.
+
+Handle the PM demand for accountability separately. Brief product leadership after the session: the postmortem identified three missing system controls. Those controls are now being added. The next engineer who makes the same mistake in the same context will be stopped by the system, not by individual vigilance. If leadership still wants individual accountability, that is a people-management process — not a postmortem output.`,
+      },
+      {
+        question: 'The postmortem surfaces 14 action items. How do you prioritize and ensure they actually get done?',
+        answer: `14 action items is too many. The first facilitation task after drafting them is ruthless triage.
+
+Classify each item by impact tier. P0: would have prevented the incident or stopped it within 5 minutes. Examples: production namespace deletion guard via OPA/Gatekeeper, alert for namespace deletion on production cluster. These go into the next sprint, owner assigned in the room, no negotiation. P1: would have significantly reduced MTTD or MTTR. Examples: namespace-level backup with 15-minute RPO, improved kubectl context display showing environment clearly. P2: good hygiene reducing future blast radius. Examples: quarterly audit of production RBAC roles, pre-command confirmation prompt for destructive kubectl operations. Everything below P2 goes to a reliability backlog, not a committed sprint item.
+
+Target 3-5 action items that will actually complete. Research on postmortem completion rates shows that more than 5 items per postmortem correlates with near-zero completion. Cut the list before leaving the room — deferred items that never ship are worse than not identifying them, because they create false confidence.
+
+Assign owners, not teams. "The platform team" will not do the action item. "Priya, by June 27" will. Each P0 and P1 item needs a named individual and a calendar date. The IC adds these to the project management system before closing the postmortem doc.
+
+Track at the weekly SRE review. Postmortem action items are a standing agenda item. Any item that slips its deadline without a revised date and written justification gets escalated to the engineering director. This is the accountability mechanism — not blame in the postmortem room, but follow-through on engineering commitments.
+
+Measure completion rate as an SRE metric. Action item completion rate (items closed on time / items committed) should be tracked quarterly. A rate below 70% indicates action items are too large, sprint capacity is not being protected, or the prioritization process is broken.`,
+      },
+    ],
+    references: [
+      'https://sre.google/sre-book/postmortem-culture/',
+      'https://sre.google/workbook/postmortem-analysis/',
+      'https://how.complexsystems.fail/',
     ],
   },
 ];
