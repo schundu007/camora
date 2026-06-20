@@ -1267,7 +1267,7 @@ A: helm install, helm upgrade, helm lint, and helm template all validate values 
 
 The key insight is that values merge, not replace. When you provide multiple -f files, Helm deep-merges them left to right. The result is a single merged values map that templates render against. This means your base values.yaml defines safe defaults for every environment, and environment-specific files contain only what differs — reducing drift and making diffs meaningful.
 
-The four override mechanisms have a strict precedence order: chart defaults (values.yaml) are the lowest precedence. Parent chart values for sub-charts come next. Then -f files in left-to-right order. Then CLI --set flags at the highest precedence. In CI/CD, the standard pattern is: -f values.yaml -f values-${ENV}.yaml with --set image.tag=${BUILD_SHA} to pin the exact image at deploy time.
+The four override mechanisms have a strict precedence order: chart defaults (values.yaml) are the lowest precedence. Parent chart values for sub-charts come next. Then -f files in left-to-right order. Then CLI --set flags at the highest precedence. In CI/CD, the standard pattern is: -f values.yaml -f values-\${ENV}.yaml with --set image.tag=\${BUILD_SHA} to pin the exact image at deploy time.
 
 Schema validation via values.schema.json (JSON Schema draft-07) is a feature many charts omit but all public charts should use. It shifts configuration errors from runtime (misconfigured Pod crashes 5 minutes after deploy) to install time (helm install fails immediately with a clear message). For platform teams distributing internal charts, schema validation prevents the class of "wrong values applied to wrong environment" incidents that are otherwise difficult to detect.`,
     whenToUse: [
@@ -2550,7 +2550,7 @@ helm template in CI diff workflow:
       {
         title: 'Quick-fire interview answers — CI/CD and GitOps',
         description: `Q: What is the standard Helm command in a production CI deploy step?
-A: helm upgrade --install <release> <chart> -f values.yaml -f values-${ENV}.yaml --set image.tag=$SHA --namespace $NS --create-namespace --atomic --wait --timeout 5m. The --atomic --wait combination ensures the pipeline only reports success when the deployment is fully healthy, and auto-rolls back on failure.
+A: helm upgrade --install <release> <chart> -f values.yaml -f values-\${ENV}.yaml --set image.tag=$SHA --namespace $NS --create-namespace --atomic --wait --timeout 5m. The --atomic --wait combination ensures the pipeline only reports success when the deployment is fully healthy, and auto-rolls back on failure.
 
 Q: What is the difference between push-based and pull-based Helm deployment?
 A: Push-based: a CI pipeline runs helm upgrade directly against the cluster. Simple but provides no continuous reconciliation — if someone manually changes a resource, the pipeline doesn't know. Pull-based (GitOps): Argo CD or Flux watches a Git repo containing the desired state (chart reference + values). The controller continuously reconciles the cluster to match the declared state. Drift is automatically corrected.
