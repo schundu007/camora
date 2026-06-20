@@ -127,7 +127,7 @@ export default function ZoomableImage({
             display: 'block',
             maxWidth: '100%',
             maxHeight: 'inherit',
-            width: '100%',
+            width: 'auto',
             height: 'auto',
             objectFit: 'contain',
             margin: '0 auto',

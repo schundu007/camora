@@ -1380,7 +1380,7 @@ export default function TopicDetail({
                       <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
                       {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
                     </div>
-                    <div className="p-3 flex justify-center items-center bg-[var(--bg-surface)]" dangerouslySetInnerHTML={{ __html: viz.svg.replace('style="background:white"', 'style="background:white;width:100%;height:auto;display:block"') }} />
+                    <div className="p-3 flex justify-center items-center bg-[var(--bg-surface)]" dangerouslySetInnerHTML={{ __html: viz.svg.replace('style="background:white"', 'style="background:white;max-width:100%;width:auto;height:auto;display:block;margin:0 auto"') }} />
                   </div>
                 ))}
               </div>
