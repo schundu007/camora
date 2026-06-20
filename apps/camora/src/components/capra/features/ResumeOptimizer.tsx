@@ -18,13 +18,25 @@ const COMPANIES = [
   'Other',
 ] as const;
 
-export default function ResumeOptimizer() {
+interface Props {
+  initialCompany?: string;
+  initialRole?: string;
+  initialJobDescription?: string;
+  initialJobUrl?: string;
+}
+
+export default function ResumeOptimizer({
+  initialCompany,
+  initialRole,
+  initialJobDescription,
+  initialJobUrl,
+}: Props = {}) {
   // Input state
-  const [jobDescription, setJobDescription] = useState('');
-  const [jobUrl, setJobUrl] = useState('');
+  const [jobDescription, setJobDescription] = useState(initialJobDescription || '');
+  const [jobUrl, setJobUrl] = useState(initialJobUrl || '');
   const [resume, setResume] = useState('');
-  const [company, setCompany] = useState<string>('Google');
-  const [role, setRole] = useState('');
+  const [company, setCompany] = useState<string>(initialCompany || 'Google');
+  const [role, setRole] = useState(initialRole || '');
 
   // Output state
   const [activeTab, setActiveTab] = useState<OutputTab>('resume');
@@ -41,6 +53,10 @@ export default function ResumeOptimizer() {
 
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const didAutoInit = useRef(false);
+  const [autoStatus, setAutoStatus] = useState<string | null>(
+    initialJobUrl ? 'Loading your resume and job description…' : null,
+  );
 
   // Generate inline PDF preview once streaming finishes
   useEffect(() => {
@@ -95,11 +111,16 @@ export default function ResumeOptimizer() {
   async function streamResponse(
     endpoint: string,
     setter: React.Dispatch<React.SetStateAction<string>>,
+    opts?: {
+      overrides?: { resume?: string; jobDescription?: string; company?: string; role?: string };
+      onComplete?: (fullText: string) => void;
+    },
   ) {
     setLoading(true);
     setError(null);
     setter('');
     setPreviewUrl(null);
+    let fullText = '';
 
     // Abort any in-flight request
     if (abortRef.current) {
@@ -117,10 +138,10 @@ export default function ResumeOptimizer() {
           ...getAuthHeaders(),
         },
         body: JSON.stringify({
-          resume,
-          jobDescription: jobDescription || jobUrl,
-          company,
-          role,
+          resume: opts?.overrides?.resume ?? resume,
+          jobDescription: opts?.overrides?.jobDescription ?? (jobDescription || jobUrl),
+          company: opts?.overrides?.company ?? company,
+          role: opts?.overrides?.role ?? role,
         }),
         signal: controller.signal,
       });
@@ -158,6 +179,7 @@ export default function ResumeOptimizer() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.text) {
+                fullText += data.text;
                 setter((prev) => prev + data.text);
               }
               if (data.error) {
@@ -187,6 +209,9 @@ export default function ResumeOptimizer() {
     } finally {
       setLoading(false);
       abortRef.current = null;
+    }
+    if (opts?.onComplete && fullText) {
+      opts.onComplete(fullText);
     }
   }
 
@@ -269,6 +294,85 @@ export default function ResumeOptimizer() {
       setError('Failed to read file. Please paste your resume instead.');
     }
   }
+
+  async function handleSaveToDocuments(jdText: string, optimizedText: string, co: string, ro: string) {
+    const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+    const slug = (s: string) => s.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 40);
+    const date = new Date().toISOString().slice(0, 10);
+    const uploads = [
+      { name: `JD_${slug(co)}_${slug(ro)}_${date}.txt`, content: jdText },
+      { name: `TailoredResume_${slug(co)}_${slug(ro)}_${date}.txt`, content: optimizedText },
+    ];
+    await Promise.allSettled(
+      uploads.map(async ({ name, content }) => {
+        const form = new FormData();
+        form.append('file', new Blob([content], { type: 'text/plain' }), name);
+        await fetch(`${LUMORA}/api/v1/documents/upload`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: getAuthHeaders(),
+          body: form,
+        });
+      }),
+    );
+  }
+
+  useEffect(() => {
+    if (!initialJobUrl || didAutoInit.current) return;
+    didAutoInit.current = true;
+
+    (async () => {
+      try {
+        setAutoStatus('Loading your base resume…');
+        const profileRes = await fetch(`${API_URL}/api/v1/auth/profile/resume`, {
+          credentials: 'include',
+          headers: getAuthHeaders(),
+        });
+        let resumeText = '';
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          resumeText = profileData.resume_text || '';
+          if (resumeText) setResume(resumeText);
+        }
+
+        setAutoStatus('Fetching job description from listing…');
+        setFetchingJd(true);
+        const jdRes = await fetch(`${API_URL}/api/v1/resume/fetch-jd`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ url: initialJobUrl }),
+        });
+        const jdData = await jdRes.json();
+        if (!jdRes.ok) throw new Error(jdData.error || 'Failed to fetch job description');
+        const jdText = jdData.text as string;
+        setJobDescription(jdText);
+        setJobUrl('');
+        setFetchingJd(false);
+
+        if (!resumeText) {
+          setAutoStatus('Job description loaded — paste or upload your resume to continue.');
+          return;
+        }
+
+        const co = initialCompany || 'Google';
+        const ro = initialRole || '';
+        setActiveTab('resume');
+        setAutoStatus('Preparing your tailored resume…');
+        await streamResponse('/api/v1/resume/optimize', setOptimizedResume, {
+          overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
+          onComplete: (optimizedText) => {
+            setAutoStatus(null);
+            handleSaveToDocuments(jdText, optimizedText, co, ro);
+          },
+        });
+      } catch (err) {
+        setFetchingJd(false);
+        setAutoStatus(null);
+        if (err instanceof Error) setError(err.message);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleCopy() {
     const content = getOutputContent();
@@ -369,6 +473,37 @@ export default function ResumeOptimizer() {
             Resume Optimizer
           </h2>
         </div>
+
+        {/* Auto-prepare status banner */}
+        {autoStatus && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 14px',
+              background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+              border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)',
+              borderRadius: '8px',
+              fontSize: '13px',
+              color: 'var(--accent)',
+              fontWeight: 500,
+            }}
+          >
+            <div
+              style={{
+                width: '13px',
+                height: '13px',
+                border: '2px solid color-mix(in oklab, var(--accent) 30%, transparent)',
+                borderTopColor: 'var(--accent)',
+                borderRadius: '50%',
+                animation: 'resumeOptimizerSpin 0.8s linear infinite',
+                flexShrink: 0,
+              }}
+            />
+            {autoStatus}
+          </div>
+        )}
 
         {/* Job Description */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
