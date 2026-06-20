@@ -41497,7 +41497,7 @@ Also set timeoutSeconds: 5 (maximum recommended). The default is 10 seconds, and
   {
     id: 'kubernetes-runtime-class',
     title: 'Kubernetes Runtime Classes',
-    icon: 'container',
+    icon: 'layers',
     color: '#0891b2',
     questions: 3,
     description: `RuntimeClass lets you select the container runtime for individual pods. Different workloads have different security and performance requirements — high-security workloads can use kernel-isolated runtimes like gVisor or kata-containers while standard workloads continue using containerd with runc. RuntimeClass makes this selection explicit in the pod spec rather than requiring node selector hacks.`,
@@ -41645,7 +41645,7 @@ The handler name in the RuntimeClass spec must exactly match the key in the cont
   {
     id: 'kubernetes-native-sidecars',
     title: 'Kubernetes Native Sidecar Containers',
-    icon: 'container',
+    icon: 'package',
     color: '#059669',
     questions: 3,
     description: `Native sidecar containers (stable in Kubernetes 1.29) solve a long-standing lifecycle problem: regular sidecar containers in the main containers list start and stop in an arbitrary order, causing proxy sidecars like Envoy to not be ready when the app starts, or log collectors to die before flushing the last batch. Native sidecars are init containers with restartPolicy: Always — they start before main containers and are guaranteed to terminate after them.`,
