@@ -1218,11 +1218,11 @@ export default function TopicDetail({
 
       {/* Project Detail */}
       {!isLocked && activePage === 'projects' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Header: Difficulty + Tech Stack + Time */}
-          <div id="overview" className="scroll-mt-24 mt-14 first:mt-0">
+          <div id="overview" className="scroll-mt-24 rounded-lg overflow-hidden border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
             <ContentHeading title="Project Overview" />
-            <div className="pt-2">
+            <div className="px-4 pb-4">
               {/* Difficulty + Time badges */}
               <div className="flex items-center gap-2 flex-wrap mb-3">
                 <Chip variant={
@@ -1254,9 +1254,9 @@ export default function TopicDetail({
 
           {/* Learning Objectives */}
           {topicDetails.learningObjectives && topicDetails.learningObjectives.length > 0 && (
-            <div id="learning-objectives" className="scroll-mt-24 mt-14 first:mt-0">
+            <div id="learning-objectives" className="scroll-mt-24 rounded-lg overflow-hidden border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
               <ContentHeading title="What You'll Learn" />
-              <div className="pt-2">
+              <div className="px-4 pb-4">
                 <ul className="space-y-2.5">
                   {topicDetails.learningObjectives.map((obj, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -1273,9 +1273,9 @@ export default function TopicDetail({
 
           {/* Interview Relevance */}
           {topicDetails.interviewRelevance && (
-            <div id="relevance" className="rounded overflow-hidden scroll-mt-24 border border-[var(--accent)]/20 bg-[var(--accent)]/10/50">
+            <div id="relevance" className="rounded-lg overflow-hidden scroll-mt-24 border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
               <ContentHeading title="Why It Matters" />
-              <div className="pt-2">
+              <div className="px-4 pb-4">
                 <p className="text-sm text-[var(--text-secondary)] landing-body leading-relaxed">{topicDetails.interviewRelevance}</p>
               </div>
             </div>
@@ -1283,7 +1283,7 @@ export default function TopicDetail({
 
           {/* Key Questions */}
           {topicDetails.keyQuestions && topicDetails.keyQuestions.length > 0 && (
-            <div id="key-questions" className="scroll-mt-24 mt-14 first:mt-0">
+            <div id="key-questions" className="scroll-mt-24 rounded-lg overflow-hidden border border-[var(--border)]" style={{ background: 'var(--bg-elevated)' }}>
               <ContentHeading title="Key Questions" pills={[topicDetails.keyQuestions.length]} />
               <div className="divide-y divide-[var(--border)]">
                 {topicDetails.keyQuestions.map((qa, i) => (
