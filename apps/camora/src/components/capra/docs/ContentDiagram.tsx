@@ -72,7 +72,7 @@ export function ContentDiagram({
           height: 'auto',
           maxHeight: maxHeight !== undefined
             ? (typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight)
-            : undefined,
+            : 'calc(100vh - 300px)',
           objectFit: 'contain',
           margin: '0 auto',
           background: 'var(--bg-surface)',
