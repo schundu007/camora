@@ -945,7 +945,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
-                    <>
+                    <div className="max-w-screen-xl mx-auto w-full">
                       {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
                       <div className="relative mb-4 rounded-lg overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
@@ -1066,11 +1066,19 @@ export default function DocsPage({ onBack }) {
                           <Chip className="ml-auto">Browse</Chip>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                          {overviewCategories.map((cat) => theme === 'light' ? (
+                          {overviewCategories.map((cat, idx) => {
+                            const _len = overviewCategories.length;
+                            const _isLast = idx === _len - 1;
+                            const _orphanClass = _isLast && _len % 4 === 1
+                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2 lg:w-1/4'
+                              : _isLast && _len % 2 === 1
+                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2'
+                              : '';
+                            return theme === 'light' ? (
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="card-lift group rounded-lg flex flex-col active:scale-[0.98]"
+                              className={`card-lift group rounded-lg flex flex-col active:scale-[0.98] ${_orphanClass}`}
                               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
                             >
                               <div className="flex flex-col items-center text-center mb-3 gap-2">
@@ -1096,7 +1104,7 @@ export default function DocsPage({ onBack }) {
                             <Link
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
-                              className="card-lift group relative rounded-lg overflow-hidden active:scale-[0.98]"
+                              className={`card-lift group relative rounded-lg overflow-hidden active:scale-[0.98] ${_orphanClass}`}
                               style={{ height: '120px', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }}
                             >
                               <TopicIllustration
@@ -1121,7 +1129,8 @@ export default function DocsPage({ onBack }) {
                                 <span className="font-bold tabular-nums shrink-0" style={{ fontSize: '9px', color: cat.progress > 0 ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)' }}>{cat.progress}%</span>
                               </div>
                             </Link>
-                          ))}
+                          );
+                          })}
                         </div>
                       </div>
 
@@ -1292,7 +1301,7 @@ export default function DocsPage({ onBack }) {
                           </div>
                         );
                       })()}
-                    </>
+                    </div>
                   )}
 
                   {/* Page Hero (non-overview pages) — compact single row */}
