@@ -163,7 +163,7 @@ function parseYamlEntries(rawCode) {
     const m = stripped.match(/^([a-zA-Z][a-zA-Z0-9_-]*):\s*(.*)/);
     if (!m) continue;
     const key = m[1];
-    const valPreview = m[2].trim().slice(0, 40);
+    const valPreview = m[2].trim();
     const desc = KEY_DESCRIPTIONS[key] || (valPreview ? `Value: ${valPreview}` : null);
     if (!entries.find(e => e.key === key)) entries.push({ key, desc });
   }
