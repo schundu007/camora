@@ -26,6 +26,8 @@ const CATEGORY_HEX = {
   'behavioral':     'gold',
   'sre':            'navy-dk',
   'devops':         'gold',
+  'observability':  'amber',
+  'platform':       'purple',
   'cloud':          'navy',
   'linux':          'navy-lt',
   'networking':     'navy-dk',
@@ -34,6 +36,7 @@ const CATEGORY_HEX = {
   'comparisons':    'navy-lt',
   'mlops':          'navy',
   'aiops':          'navy-lt',
+  'challenges':     'gold',
 };
 
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
@@ -126,7 +129,7 @@ export default function DocsPage({ onBack }) {
   // (coding, system-design, behavioral, low-level, sre, devops, projects)
   // report 0 topics until the user explicitly visits each page.
   const [heavyData, setHeavyData] = useState(() => {
-    const CACHE_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'mlops', 'aiops'];
+    const CACHE_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'mlops', 'aiops', 'challenges'];
     const initial = {};
     for (const page of CACHE_PAGES) {
       const cached = getCachedTopicsForPage(page);
@@ -138,7 +141,7 @@ export default function DocsPage({ onBack }) {
     let cancelled = false;
 
     if (activePage === 'overview') {
-      const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'mlops', 'aiops'];
+      const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'mlops', 'aiops', 'challenges'];
       Promise.all(HEAVY_PAGES.map(loadTopicsForPage)).then((results) => {
         if (cancelled) return;
         const merged = {};
@@ -194,6 +197,14 @@ export default function DocsPage({ onBack }) {
   const devopsTopics = heavyData.devopsTopics || [];
   const devopsChallenges = heavyData.devopsChallenges || [];
 
+  const observabilityCategories = heavyData.observabilityCategories || [];
+  const observabilityTopicCategoryMap = heavyData.observabilityTopicCategoryMap || {};
+  const observabilityTopics = heavyData.observabilityTopics || [];
+
+  const platformCategories = heavyData.platformCategories || [];
+  const platformTopicCategoryMap = heavyData.platformTopicCategoryMap || {};
+  const platformTopics = heavyData.platformTopics || [];
+
   // MLOps & LLMOps — ML lifecycle, feature stores, model serving, LLM ops.
   const mlopsCategories = heavyData.mlopsCategories || [];
   const mlopsTopicCategoryMap = heavyData.mlopsTopicCategoryMap || {};
@@ -203,6 +214,11 @@ export default function DocsPage({ onBack }) {
   const aiopsCategories = heavyData.aiopsCategories || [];
   const aiopsTopicCategoryMap = heavyData.aiopsTopicCategoryMap || {};
   const aiopsTopics = heavyData.aiopsTopics || [];
+
+  // Coding Challenges — DevOps now; AIOps/MLOps/IaC sub-categories coming.
+  const challengesCategories = heavyData.challengesCategories || [];
+  const challengesTopicCategoryMap = heavyData.challengesTopicCategoryMap || {};
+  const challengesTopics = heavyData.challengesTopics || [];
 
   // Cloud / AWS — AceCloudInterviews content: 130+ AWS services, tutorials, Q&As.
   const cloudCategories = heavyData.cloudCategories || [];
@@ -518,8 +534,11 @@ export default function DocsPage({ onBack }) {
       activePage === 'eng-blogs' ? engBlogTopics :
       activePage === 'sre' ? sreTopics :
       activePage === 'devops' ? devopsTopics :
+      activePage === 'observability' ? observabilityTopics :
+      activePage === 'platform' ? platformTopics :
       activePage === 'mlops' ? mlopsTopics :
       activePage === 'aiops' ? aiopsTopics :
+      activePage === 'challenges' ? challengesTopics :
       activePage === 'cloud' ? cloudTopics :
       activePage === 'linux' ? linuxTopics :
       activePage === 'networking' ? networkingTopics :
@@ -644,6 +663,8 @@ export default function DocsPage({ onBack }) {
       'databases': 'databases',
       'sql': 'databases',
       'devops': 'devops',
+      'observability': 'observability',
+      'platform': 'platform',
       'mlops': 'mlops',
       'aiops': 'aiops',
       'sre': 'sre',
@@ -683,8 +704,11 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'eng-blogs') topics = engBlogTopics;
     else if (activePage === 'sre') topics = sreTopics;
     else if (activePage === 'devops') topics = devopsTopics;
+    else if (activePage === 'observability') topics = observabilityTopics;
+    else if (activePage === 'platform') topics = platformTopics;
     else if (activePage === 'mlops') topics = mlopsTopics;
     else if (activePage === 'aiops') topics = aiopsTopics;
+    else if (activePage === 'challenges') topics = challengesTopics;
     else if (activePage === 'cloud') topics = cloudTopics;
     else if (activePage === 'linux') topics = linuxTopics;
     else if (activePage === 'networking') topics = networkingTopics;
@@ -739,6 +763,7 @@ export default function DocsPage({ onBack }) {
       case 'devops': return { title: 'DevOps', color: 'var(--text-primary)' };
       case 'mlops': return { title: 'MLOps & LLMOps', color: 'var(--text-primary)' };
       case 'aiops': return { title: 'AIOps', color: 'var(--text-primary)' };
+      case 'challenges': return { title: 'Coding Challenges', color: 'var(--text-primary)' };
       case 'cloud': return { title: 'Cloud / AWS', color: 'var(--text-primary)' };
       case 'linux': return { title: 'Linux', color: 'var(--text-primary)' };
       case 'networking': return { title: 'Networking', color: 'var(--text-primary)' };
@@ -840,8 +865,11 @@ export default function DocsPage({ onBack }) {
       { id: 'low-level', href: 'low-level-design', title: 'Low Level Design', icon: 'layers', color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems], description: 'OOP, SOLID, design patterns — parking lot, LRU cache, vending machine, chess engine.' },
       { id: 'sre', href: 'sre', title: 'Site Reliability Engineering', icon: 'shield', color: 'var(--text-primary)', topics: sreTopics, description: 'SLOs, error budgets, incident response, observability — the reliability + on-call track.' },
       { id: 'devops', href: 'devops', title: 'DevOps', icon: 'gitMerge', color: 'var(--text-primary)', topics: devopsTopics, description: 'CI/CD, infrastructure as code, containers, GitOps, progressive delivery — platform engineer essentials.' },
+      { id: 'observability', href: 'observability', title: 'Observability & Telemetry', icon: 'activity', color: 'var(--text-primary)', topics: observabilityTopics, description: 'OpenTelemetry, Prometheus, distributed tracing, log aggregation, APM, eBPF — the full observability stack.' },
+      { id: 'platform', href: 'platform', title: 'Platform Engineering', icon: 'layers', color: 'var(--text-primary)', topics: platformTopics, description: 'Internal developer platforms, golden paths, Backstage, developer experience metrics — building the paved road.' },
       { id: 'mlops', href: 'mlops', title: 'MLOps & LLMOps', icon: 'cpu', color: 'var(--text-primary)', topics: mlopsTopics, description: 'ML lifecycle, feature stores, model registry, serving, drift detection, LLM ops and evals.' },
       { id: 'aiops', href: 'aiops', title: 'AIOps', icon: 'zap', color: 'var(--text-primary)', topics: aiopsTopics, description: 'ML-driven operations: anomaly detection, alert correlation, root-cause analysis, capacity forecasting.' },
+      { id: 'challenges', href: 'challenges', title: 'Coding Challenges', icon: 'code', color: 'var(--text-primary)', topics: challengesTopics, description: 'Hands-on coding problems — DevOps, AIOps, MLOps/LLMOps, and IaC challenges from HackerRank and beyond.' },
       { id: 'databases', href: 'databases', title: 'Databases & SQL', icon: 'database', color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics], description: 'Indexes, transactions, isolation levels, query plans — relational + NoSQL with hands-on SQL practice.' },
       { id: 'microservices', href: 'microservices', title: 'Microservices', icon: 'grid', color: 'var(--text-primary)', topics: microservicesPatterns, description: 'Service decomposition, API gateways, saga + outbox, service mesh — patterns for splitting the monolith.' },
       { id: 'projects', href: 'projects', title: 'Projects', icon: 'code', color: 'var(--text-primary)', topics: projectTopics, description: 'Build-from-zero portfolio projects with architecture diagrams and deployment guides.' },
@@ -1662,6 +1690,48 @@ export default function DocsPage({ onBack }) {
                     </div>
                   )}
 
+                  {activePage === 'observability' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="activity" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Observability & Telemetry</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {['OpenTelemetry', 'Prometheus & Grafana', 'Distributed Tracing', 'Log Aggregation', 'APM', 'eBPF'].map(tag => (
+                                <Chip key={tag}>{tag}</Chip>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'platform' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Platform Engineering</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {['Internal Developer Platforms', 'Golden Paths', 'Backstage', 'Developer Experience', 'Self-Service'].map(tag => (
+                                <Chip key={tag}>{tag}</Chip>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {activePage === 'mlops' && !selectedTopic && (
                     <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
@@ -1695,6 +1765,27 @@ export default function DocsPage({ onBack }) {
                             <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>AIOps</h2>
                             <div className="flex flex-wrap gap-2">
                               {['Anomaly Detection', 'Alert Correlation', 'Incident RCA', 'LLM SRE Agents', 'Capacity Forecasting', 'Chaos Engineering'].map(tag => (
+                                <Chip key={tag}>{tag}</Chip>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activePage === 'challenges' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Coding Challenges</h2>
+                            <div className="flex flex-wrap gap-2">
+                              {['DevOps', 'Docker', 'Kubernetes', 'Ansible', 'Terraform', 'AWS'].map(tag => (
                                 <Chip key={tag}>{tag}</Chip>
                               ))}
                             </div>
@@ -3286,6 +3377,104 @@ export default function DocsPage({ onBack }) {
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
                                         )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activePage === 'observability' && (
+                <>
+                  <div className="mb-6">
+                    <div className="space-y-3">
+                    {observabilityCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => observabilityTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader icon={category.icon} title={category.name} count={categoryTopics.length} />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('observability', topic.id);
+                              return (
+                                <div key={topic.id} onClick={() => !isLocked && setSelectedTopic(topic.id)} className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200 ${isLocked ? 'opacity-60' : ''}`} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: `${topic.color}1A`, border: `1px solid ${topic.color}40`, color: topic.color }}>
+                                      <Icon name={topic.icon || 'activity'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Chip>{topic.questions} questions</Chip>
+                                        {topic.visualizations?.length > 0 && <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activePage === 'platform' && (
+                <>
+                  <div className="mb-6">
+                    <div className="space-y-3">
+                    {platformCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => platformTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader icon={category.icon} title={category.name} count={categoryTopics.length} />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('platform', topic.id);
+                              return (
+                                <div key={topic.id} onClick={() => !isLocked && setSelectedTopic(topic.id)} className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200 ${isLocked ? 'opacity-60' : ''}`} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: `${topic.color}1A`, border: `1px solid ${topic.color}40`, color: topic.color }}>
+                                      <Icon name={topic.icon || 'layers'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Chip>{topic.questions} questions</Chip>
+                                        {topic.visualizations?.length > 0 && <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">

@@ -18,12 +18,9 @@ export const devopsCategories = [
   { id: 'config',           name: 'Configuration Management',          icon: 'settings',      color: '#8b5cf6' },
   { id: 'containers',       name: 'Containers & Images',               icon: 'package',       color: '#ec4899' },
   { id: 'orchestration',    name: 'Orchestration & Kubernetes',        icon: 'gitBranch',     color: '#14b8a6' },
-  { id: 'observability',    name: 'Observability & Telemetry',         icon: 'activity',      color: '#f97316' },
-  { id: 'platform',         name: 'Platform Engineering',              icon: 'layers',        color: '#6366f1' },
   { id: 'devsecops',        name: 'DevSecOps',                         icon: 'shield',        color: '#ef4444' },
   { id: 'cloudnative',      name: 'Cloud Native Patterns',             icon: 'cloud',         color: '#0ea5e9' },
   { id: 'datadevops',       name: 'Database & Data DevOps',            icon: 'database',      color: '#a855f7' },
-  { id: 'challenges',      name: 'Coding Challenges',                 icon: 'code',          color: '#f59e0b' },
   { id: 'helm',           name: 'Helm — Kubernetes Package Management', icon: 'package',       color: '#7c3aed' },
 ];
 
@@ -45,7 +42,6 @@ export const devopsTopicCategoryMap = {
   'ace-cicd-tbd-cd-adoption':       'cicd',
   'ace-cicd-cost-optimized-runner-fleet': 'cicd',
   'ace-cicd-software-supply-chain-security': 'devsecops',
-  'ace-observability-alerting-pipeline-debug': 'observability',
   // CI/CD Tools — most common first, then cloud-native / advanced
   'github-actions-deep-dive':       'cicdtools',
   'gitlab-ci-deep-dive':            'cicdtools',
@@ -151,20 +147,6 @@ export const devopsTopicCategoryMap = {
   'kubernetes-multitenancy':        'orchestration',
   'kubernetes-multicloud':          'orchestration',
   'kubernetes-ai-ml-workloads':     'orchestration',
-  // Observability — foundation → metrics → logs → traces → APM → SLOs → advanced
-  'opentelemetry-fundamentals':     'observability',
-  'prometheus-grafana-stack':       'observability',
-  'log-aggregation-stacks':         'observability',
-  'distributed-tracing':            'observability',
-  'apm-platforms':                  'observability',
-  'slo-error-budgets-dashboards':   'observability',
-  'ebpf-observability':             'observability',
-  // Platform Engineering — principles → IDP → golden paths → tooling → metrics
-  'platform-engineering-principles':'platform',
-  'internal-developer-platforms':   'platform',
-  'golden-paths':                   'platform',
-  'backstage-and-alternatives':     'platform',
-  'developer-experience-metrics':   'platform',
   // DevSecOps — shift-left concept → code scanning → supply chain → policy → runtime
   'shift-left-security':            'devsecops',
   'sast-dast-sca':                  'devsecops',
@@ -184,8 +166,6 @@ export const devopsTopicCategoryMap = {
   'db-schema-migrations':           'datadevops',
   'gitops-for-databases':           'datadevops',
   'data-observability-lineage':     'datadevops',
-  // Coding Challenges
-  'devops-coding-challenges':       'challenges',
   // Linux fundamentals (labex.io gaps)
   'linux-user-group-management':    'foundations',
   'linux-file-permissions':         'foundations',
@@ -44190,13 +44170,49 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     ],
   },
 
-  {
-    id: 'devops-coding-challenges',
-    title: 'DevOps Coding Challenges',
-    icon: 'code',
-    color: '#f59e0b',
-    questions: 366,
-    description: '366 hands-on DevOps coding problems from HackerRank — Docker, Kubernetes, Ansible, Terraform, Linux, Git, AWS, Puppet, and Chef.',
-    isChallengesHub: true,
-  },
 ];
+
+// ─── Standalone exports for top-level Prepare pages ───────────────────────
+
+export const observabilityCategories = [
+  { id: 'foundations', name: 'Observability Foundations',     icon: 'eye',       color: '#f97316' },
+  { id: 'metrics',     name: 'Metrics & Alerting',            icon: 'activity',  color: '#ef4444' },
+  { id: 'logs',        name: 'Logging & Log Management',      icon: 'fileText',  color: '#22c55e' },
+  { id: 'traces',      name: 'Distributed Tracing',           icon: 'gitBranch', color: '#8b5cf6' },
+  { id: 'platforms',   name: 'APM & Observability Platforms', icon: 'monitor',   color: '#06b6d4' },
+  { id: 'advanced',    name: 'Advanced & eBPF',               icon: 'zap',       color: '#f59e0b' },
+];
+
+export const observabilityTopicCategoryMap = {
+  'opentelemetry-fundamentals':              'foundations',
+  'slo-error-budgets-dashboards':            'metrics',
+  'prometheus-grafana-stack':                'metrics',
+  'log-aggregation-stacks':                  'logs',
+  'distributed-tracing':                     'traces',
+  'apm-platforms':                           'platforms',
+  'ebpf-observability':                      'advanced',
+  'ace-observability-alerting-pipeline-debug': 'advanced',
+};
+
+export const observabilityTopics = devopsTopics.filter(t =>
+  Object.prototype.hasOwnProperty.call(observabilityTopicCategoryMap, t.id)
+);
+
+export const platformCategories = [
+  { id: 'foundations', name: 'Platform Engineering Foundations', icon: 'book',   color: '#6366f1' },
+  { id: 'idp',         name: 'Internal Developer Platforms',     icon: 'layers', color: '#8b5cf6' },
+  { id: 'dx',          name: 'Developer Experience',             icon: 'users',  color: '#a855f7' },
+  { id: 'tooling',     name: 'Platform Tooling & Frameworks',    icon: 'tool',   color: '#7c3aed' },
+];
+
+export const platformTopicCategoryMap = {
+  'platform-engineering-principles': 'foundations',
+  'internal-developer-platforms':    'idp',
+  'golden-paths':                    'idp',
+  'backstage-and-alternatives':      'tooling',
+  'developer-experience-metrics':    'dx',
+};
+
+export const platformTopics = devopsTopics.filter(t =>
+  Object.prototype.hasOwnProperty.call(platformTopicCategoryMap, t.id)
+);
