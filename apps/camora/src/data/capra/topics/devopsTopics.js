@@ -23024,7 +23024,6 @@ Cost comparison (100k samples/sec ingest, 1 year retention):
 - Datadog metrics at this volume: $30k-100k/month.
 
 OSS long-term storage is 10-50x cheaper than Datadog/New Relic for metrics at scale.`,
-        image: '/diagrams/devops/o3-prom-grafana.png',
       },
     ],
     introduction: `Prometheus is the dominant metrics monitoring system in cloud-native. CNCF Graduated 2018 (second project after Kubernetes). Originated at SoundCloud (2012); inspired by Google's Borgmon. Pull-based model, time-series database, PromQL query language.
