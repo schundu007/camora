@@ -30,6 +30,14 @@ interface RoleTopics {
   databases: string[];
   sql: string[];
   microservices: string[];
+  devops?: string[];
+  sre?: string[];
+  cloud?: string[];
+  linux?: string[];
+  networking?: string[];
+  troubleshooting?: string[];
+  warStories?: string[];
+  comparisons?: string[];
 }
 
 /**
@@ -91,6 +99,37 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'api-gateway-pattern', 'service-discovery', 'circuit-breaker',
       'sidecar-pattern', 'configuration-externalization', 'event-driven-architecture',
     ],
+    devops: [
+      // CI/CD core
+      'continuous-integration', 'continuous-delivery-vs-deploy', 'trunk-based-development',
+      'pipeline-as-code', 'github-actions-deep-dive', 'gitlab-ci-deep-dive',
+      'deployment-strategies', 'feature-flags-platforms', 'progressive-delivery',
+      // GitOps
+      'gitops-principles', 'argocd-architecture', 'fluxcd-architecture',
+      // IaC
+      'iac-fundamentals', 'terraform-internals', 'ansible-essentials', 'immutable-infrastructure',
+      // Containers
+      'container-fundamentals', 'docker-overview', 'docker-buildkit', 'docker-compose',
+      'docker-daemon', 'container-security', 'image-hardening',
+      // Kubernetes
+      'kubernetes-architecture', 'k8s-core-resources', 'kubernetes-services',
+      'ingress-gateway-api', 'operators-and-crds', 'service-mesh',
+      'kubernetes-rbac', 'kubernetes-networking', 'kubernetes-autoscaling',
+      'kubernetes-security', 'kubernetes-secrets-management',
+      // Helm
+      'helm-why', 'helm-cli-fundamentals', 'helm-chart-anatomy', 'helm-go-templating',
+      'helm-values-overrides', 'helm-cicd-gitops', 'helm-production-patterns',
+      // Observability
+      'opentelemetry-fundamentals', 'prometheus-grafana-stack', 'log-aggregation-stacks',
+      'slo-error-budgets-dashboards', 'distributed-tracing',
+      // Security
+      'shift-left-security', 'supply-chain-slsa', 'policy-as-code',
+    ],
+    sre: [
+      'sli-slo-sla', 'error-budgets', 'toil-50-percent-cap', 'high-availability',
+      'three-pillars', 'red-use-golden-signals', 'incident-command', 'blameless-postmortems',
+      'gamedays-chaos', 'self-healing-systems',
+    ],
   },
 
   sre: {
@@ -125,6 +164,15 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
     microservices: [
       'circuit-breaker', 'bulkhead-pattern', 'retry-pattern',
       'sidecar-pattern', 'service-discovery', 'api-gateway-pattern',
+    ],
+    sre: [], // empty = show all SRE topics
+    devops: [
+      'opentelemetry-fundamentals', 'prometheus-grafana-stack', 'log-aggregation-stacks',
+      'distributed-tracing', 'slo-error-budgets-dashboards', 'ebpf-observability',
+      'chaos-engineering-observability', 'kubernetes-architecture', 'k8s-core-resources',
+      'kubernetes-services', 'kubernetes-observability', 'kubernetes-autoscaling',
+      'kubernetes-secrets-management', 'gitops-principles', 'argocd-architecture',
+      'iac-fundamentals', 'container-fundamentals', 'deployment-strategies', 'progressive-delivery',
     ],
   },
 
@@ -353,6 +401,15 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'api-gateway-pattern', 'service-discovery', 'circuit-breaker',
       'sidecar-pattern', 'configuration-externalization',
     ],
+    cloud: [], // empty = show all cloud topics
+    devops: [
+      'iac-fundamentals', 'terraform-internals', 'cloud-native-iac', 'immutable-infrastructure',
+      'kubernetes-architecture', 'kubernetes-services', 'kubernetes-autoscaling',
+      'container-fundamentals', 'docker-overview', 'docker-compose', 'container-security',
+      'github-actions-deep-dive', 'gitops-principles', 'argocd-architecture',
+      'opentelemetry-fundamentals', 'prometheus-grafana-stack', 'slo-error-budgets-dashboards',
+      'shift-left-security', 'supply-chain-slsa',
+    ],
   },
 
   platform: {
@@ -389,6 +446,19 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'sidecar-pattern', 'configuration-externalization',
       'event-driven-architecture', 'strangler-fig',
     ],
+    devops: [
+      'platform-engineering-principles', 'internal-developer-platforms', 'golden-paths',
+      'backstage-and-alternatives', 'developer-experience-metrics',
+      'kubernetes-architecture', 'k8s-core-resources', 'kubernetes-services',
+      'operators-and-crds', 'ingress-gateway-api', 'kubernetes-autoscaling',
+      'kubernetes-security', 'kubernetes-secrets-management', 'kubernetes-multitenancy',
+      'gitops-principles', 'argocd-architecture', 'fluxcd-architecture', 'multi-cluster-gitops',
+      'iac-fundamentals', 'terraform-internals', 'iac-governance',
+      'helm-why', 'helm-cli-fundamentals', 'helm-chart-anatomy', 'helm-values-overrides',
+      'helm-chart-dependencies', 'helm-production-patterns',
+      'opentelemetry-fundamentals', 'prometheus-grafana-stack', 'slo-error-budgets-dashboards',
+    ],
+    cloud: [], // empty = show all cloud topics
   },
 
   mobile: {
@@ -449,6 +519,12 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
     sql: ['sql-fundamentals', 'sql-joins'],
     microservices: [
       'api-gateway-pattern', 'circuit-breaker', 'sidecar-pattern',
+    ],
+    devops: [
+      'shift-left-security', 'sast-dast-sca', 'supply-chain-slsa', 'policy-as-code',
+      'runtime-security', 'container-security', 'image-hardening', 'kubescape-runtime-security',
+      'kubernetes-security', 'kubernetes-secrets-management', 'kubernetes-rbac',
+      'docker-security', 'iac-governance',
     ],
   },
 

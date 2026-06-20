@@ -629,6 +629,14 @@ export default function DocsPage({ onBack }) {
       'microservices': 'microservices',
       'databases': 'databases',
       'sql': 'databases',
+      'devops': 'devops',
+      'sre': 'sre',
+      'cloud': 'cloud',
+      'linux': 'linux',
+      'networking': 'networking',
+      'troubleshooting': 'troubleshooting',
+      'war-stories': 'warStories',
+      'comparisons': 'comparisons',
     };
     const key = pageToKey[page];
     if (!key) return null;
