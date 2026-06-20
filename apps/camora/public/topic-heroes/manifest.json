@@ -86,5 +86,93 @@
     "unsplashUrl": null,
     "query": "infinity loop devops continuous flow cyan",
     "bytes": 252642
+  },
+  "cloud": {
+    "file": "/topic-heroes/cloud.jpg",
+    "photographer": "Taylor Vick",
+    "photographerUrl": "https://unsplash.com/@tvick?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1558494949-ef010cbdcc31?utm_source=camora&utm_medium=referral",
+    "query": "server room blue led lights dark",
+    "bytes": 89350
+  },
+  "linux": {
+    "file": "/topic-heroes/linux.jpg",
+    "photographer": "Florian Olivo",
+    "photographerUrl": "https://unsplash.com/@florianolv?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1629654297299-c8506221ca97?utm_source=camora&utm_medium=referral",
+    "query": "computer terminal dark command line",
+    "bytes": 35944
+  },
+  "networking": {
+    "file": "/topic-heroes/networking.jpg",
+    "photographer": "Umberto",
+    "photographerUrl": "https://unsplash.com/@umby?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1544197150-b99a580bb7a8?utm_source=camora&utm_medium=referral",
+    "query": "fiber optic cables glowing dark",
+    "bytes": 63023
+  },
+  "troubleshooting": {
+    "file": "/topic-heroes/troubleshooting.jpg",
+    "photographer": "agence olloweb",
+    "photographerUrl": "https://unsplash.com/@olloweb?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1516321318423-f06f85e504b3?utm_source=camora&utm_medium=referral",
+    "query": "magnifying glass abstract dark",
+    "bytes": 57984
+  },
+  "comparisons": {
+    "file": "/topic-heroes/comparisons.jpg",
+    "photographer": "Viktor Forgacs",
+    "photographerUrl": "https://unsplash.com/@sonance?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1480714378408-67cf0d13bc1b?utm_source=camora&utm_medium=referral",
+    "query": "split road two paths abstract night",
+    "bytes": 98900
+  },
+  "mlops": {
+    "file": "/topic-heroes/mlops.jpg",
+    "photographer": "Steve Johnson",
+    "photographerUrl": "https://unsplash.com/@steve_j?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1677442136019-21780ecad995?utm_source=camora&utm_medium=referral",
+    "query": "neural network nodes glowing abstract",
+    "bytes": 111746
+  },
+  "aiops": {
+    "file": "/topic-heroes/aiops.jpg",
+    "photographer": "Michael Dziedzic",
+    "photographerUrl": "https://unsplash.com/@lazycreekimages?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1620712943543-bcc4688e7485?utm_source=camora&utm_medium=referral",
+    "query": "artificial intelligence circuit brain dark",
+    "bytes": 234512
+  },
+  "observability": {
+    "file": "/topic-heroes/observability.jpg",
+    "photographer": "Luke Chesser",
+    "photographerUrl": "https://unsplash.com/@lukechesser?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1551288049-bebda4e38f71?utm_source=camora&utm_medium=referral",
+    "query": "multiple screens data dashboard dark",
+    "bytes": 65370
+  },
+  "platform": {
+    "file": "/topic-heroes/platform.jpg",
+    "photographer": "Danist Soh",
+    "photographerUrl": "https://unsplash.com/@danist07?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1486325212027-8081e485255e?utm_source=camora&utm_medium=referral",
+    "query": "scaffolding construction abstract dark",
+    "bytes": 107086
+  },
+  "war-stories": {
+    "file": "/topic-heroes/war-stories.jpg",
+    "photographer": "Isai Ramos",
+    "photographerUrl": "https://unsplash.com/@isairamos?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1558618666-fcd25c85cd64?utm_source=camora&utm_medium=referral",
+    "query": "server room dramatic glow dark",
+    "bytes": 53686
+  },
+  "challenges": {
+    "file": "/topic-heroes/challenges.jpg",
+    "photographer": "Piotr Makowski",
+    "photographerUrl": "https://unsplash.com/@squarelynx?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/1528819622765-d6bcf132f793?utm_source=camora&utm_medium=referral",
+    "query": "chess board strategy dark moody",
+    "bytes": 55377
   }
 }
