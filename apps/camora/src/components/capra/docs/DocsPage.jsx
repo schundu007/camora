@@ -1176,29 +1176,39 @@ export default function DocsPage({ onBack }) {
                           <span className="w-1 h-3.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Learning Path</span>
                         </div>
-                        <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <div className="rounded overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                             {[
-                              { step: 1, title: 'Coding', desc: 'Arrays, strings, trees, graphs', href: '/capra/prepare/coding', icon: 'cpu' },
-                              { step: 2, title: 'System Design', desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design', icon: 'systemDesign' },
-                              { step: 3, title: 'Low-Level Design', desc: 'OOP, SOLID, design patterns', href: '/capra/prepare/low-level-design', icon: 'layers' },
-                              { step: 4, title: 'Behavioral', desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral', icon: 'users' },
+                              { step: 1, title: 'Coding',         desc: 'Arrays, strings, trees, graphs',  href: '/capra/prepare/coding',        icon: 'cpu',         img: 'coding' },
+                              { step: 2, title: 'System Design',  desc: 'Scalability, databases, caching', href: '/capra/prepare/system-design',  icon: 'systemDesign',img: 'system-design' },
+                              { step: 3, title: 'Low-Level Design',desc: 'OOP, SOLID, design patterns',    href: '/capra/prepare/low-level-design',icon: 'layers',      img: 'low-level' },
+                              { step: 4, title: 'Behavioral',     desc: 'STAR method, leadership stories', href: '/capra/prepare/behavioral',     icon: 'users',       img: 'behavioral' },
                             ].map((phase, idx) => (
-                              <Link key={phase.step} to={phase.href} className="group relative flex flex-col items-center text-center p-4 transition-colors hover:bg-[var(--bg-surface)]/50" style={{ borderRight: idx < 3 ? '1px solid var(--border)' : 'none' }}>
-                                <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
-                                  <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
-                                </div>
-                                {/* Arrow connector between steps */}
+                              <Link key={phase.step} to={phase.href} className="group relative overflow-hidden flex flex-col items-center text-center p-4 transition-colors" style={{ borderRight: idx < 3 ? '1px solid rgba(255,255,255,0.08)' : 'none', minHeight: 148 }}>
+                                {/* Background photo */}
+                                <TopicIllustration
+                                  name={phase.img}
+                                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'unset' }}
+                                />
+                                {/* Dark scrim — visible in both themes so image shows through */}
+                                <div aria-hidden="true" className="absolute inset-0 transition-opacity group-hover:opacity-80" style={{ background: 'rgba(8,18,48,0.62)' }} />
+                                {/* Arrow connector */}
                                 {idx < 3 && (
-                                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-6 h-6 rounded-full items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                                    <Icon name="chevronRight" size={12} style={{ color: 'var(--accent)' }} />
+                                  <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 w-6 h-6 rounded-full items-center justify-center" style={{ background: 'rgba(8,18,48,0.85)', border: '1px solid rgba(255,255,255,0.18)' }}>
+                                    <Icon name="chevronRight" size={12} style={{ color: 'rgba(255,255,255,0.8)' }} />
                                   </div>
                                 )}
-                                <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'var(--accent-subtle)' }}>
-                                  <Icon name={phase.icon} size={14} style={{ color: 'var(--accent)' }} />
+                                {/* Content */}
+                                <div className="relative z-10 flex flex-col items-center">
+                                  <div className="w-10 h-10 rounded flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform" style={{ background: 'var(--accent)' }}>
+                                    <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{phase.step}</span>
+                                  </div>
+                                  <div className="w-7 h-7 rounded flex items-center justify-center mb-2" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)' }}>
+                                    <Icon name={phase.icon} size={14} style={{ color: 'rgba(255,255,255,0.9)' }} />
+                                  </div>
+                                  <div className="text-sm font-bold mb-1" style={{ color: '#ffffff', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
+                                  <div className="text-[11px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>{phase.desc}</div>
                                 </div>
-                                <div className="text-sm font-bold mb-1 transition-colors" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{phase.title}</div>
-                                <div className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{phase.desc}</div>
                               </Link>
                             ))}
                           </div>
