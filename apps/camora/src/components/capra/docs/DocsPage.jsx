@@ -1076,7 +1076,7 @@ export default function DocsPage({ onBack }) {
                               : '';
                             return theme === 'light' ? (
                             <Link
-                              key={cat.id}
+                              key={cat.id + '-light'}
                               to={`/capra/prepare/${cat.href}`}
                               className={`card-lift group rounded-lg flex flex-col active:scale-[0.98] ${_orphanClass}`}
                               style={{ background: '#ffffff', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
@@ -1102,7 +1102,7 @@ export default function DocsPage({ onBack }) {
                             </Link>
                           ) : (
                             <Link
-                              key={cat.id}
+                              key={cat.id + '-dark'}
                               to={`/capra/prepare/${cat.href}`}
                               className={`card-lift group relative rounded-lg overflow-hidden active:scale-[0.98] ${_orphanClass}`}
                               style={{ height: '120px', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }}
