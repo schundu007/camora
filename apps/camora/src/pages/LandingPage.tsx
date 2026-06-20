@@ -359,12 +359,12 @@ export default function LandingPage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 max-w-[600px] text-[18px] md:text-[20px] leading-relaxed text-[#9CA3AF]"
+              className="mt-6 text-[14px] sm:text-[16px] md:text-[18px] leading-relaxed text-[#9CA3AF] whitespace-nowrap"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles · 978+ study topics · 9,500+ problems · Live AI in the room.
+              1,000+ matched roles · 600+ study topics · 9,500+ problems · Live AI in the room.
             </motion.p>
 
             <motion.div
