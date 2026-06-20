@@ -956,7 +956,12 @@ export default function DocsPage({ onBack }) {
             {/* Content */}
             <div className="pt-4">
               {/* Show topic detail or list */}
-              {selectedTopic && !topicDetails ? (
+              {selectedTopic === 'devops-coding-challenges' ? (
+                <DevopsChallengesPage
+                  challenges={devopsChallenges}
+                  onBack={() => setSelectedTopic(null)}
+                />
+              ) : selectedTopic && !topicDetails ? (
                 /* Topic not found state */
                 <div className="landing-root animate-fade-in">
                   <button
@@ -982,11 +987,6 @@ export default function DocsPage({ onBack }) {
                     </button>
                   </div>
                 </div>
-              ) : selectedTopic === 'devops-coding-challenges' ? (
-                <DevopsChallengesPage
-                  challenges={devopsChallenges}
-                  onBack={() => setSelectedTopic(null)}
-                />
               ) : selectedTopic ? (
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-16">
@@ -1004,7 +1004,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
-                    <div className="max-w-screen-xl mx-auto w-full">
+                    <div className="max-w-5xl mx-auto w-full">
                       {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
                       <div className="relative mb-4 rounded-lg overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
