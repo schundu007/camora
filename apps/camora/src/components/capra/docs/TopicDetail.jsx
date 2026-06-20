@@ -1038,7 +1038,7 @@ export default function TopicDetail({
           {/* Overview */}
           {topicDetails.introduction && (
             <div id="overview" className="scroll-mt-24 mt-14 first:mt-0">
-              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-surface)] flex items-center gap-2">
+              <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
                 <Icon name="bookOpen" size={14} className="text-[var(--text-muted)]" />
                 <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{topicDetails.title}</h3>
                 <Chip>{topicDetails.articles?.length || topicDetails.questions} articles</Chip>
@@ -1171,7 +1171,7 @@ export default function TopicDetail({
                       <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display flex-1">{phase.title}</h4>
                       <span className="text-[10px] landing-mono text-[var(--text-muted)]">{phase.topics.length} topics</span>
                     </div>
-                    <div className="px-4 py-3 bg-[var(--bg-surface)] flex flex-wrap gap-2">
+                    <div className="px-4 py-3 bg-[var(--bg-elevated)] flex flex-wrap gap-2">
                       {phase.topics.map((topic, tIdx) => (
                         <span key={tIdx} className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium landing-body" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
                           <span className="w-1.5 h-1.5 rounded-full" style={{ background: phase.color }} />
@@ -1829,7 +1829,7 @@ export default function TopicDetail({
                 <div id="architecture" className="scroll-mt-24">
                   <button
                     onClick={() => setDiagramPanelOpen(true)}
-                    className="w-full flex items-center justify-between px-5 py-4 rounded border border-[var(--border)] bg-[var(--bg-surface)] transition-colors hover:border-[var(--accent)] group"
+                    className="w-full flex items-center justify-between px-5 py-4 rounded border border-[var(--border)] bg-[var(--bg-elevated)] transition-colors hover:border-[var(--accent)] group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-11 h-11 rounded flex items-center justify-center bg-[var(--bg-elevated)] border border-[var(--border)]">
@@ -2192,7 +2192,7 @@ export default function TopicDetail({
                           </div>
                         </div>
                         {item.diagramSrc && (
-                          <div className="border-t border-[var(--border)] p-3 bg-[var(--bg-surface)]">
+                          <div className="border-t border-[var(--border)] p-3 bg-[var(--bg-elevated)]">
                             <ContentDiagram src={item.diagramSrc} alt={item.topic} />
                           </div>
                         )}
