@@ -28,7 +28,7 @@ export default function SectionCard({
 }) {
   return (
     <div
-      className={`rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] shadow-sm overflow-hidden ${className}`}
+      className={`rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] shadow-sm overflow-hidden ${className}`}
     >
       <div
         className="flex items-center justify-between px-3 py-2"
