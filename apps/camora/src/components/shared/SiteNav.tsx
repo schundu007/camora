@@ -111,7 +111,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 aria-label="Ask Cara (⌘K)"
                 title="Ask Cara (⌘K)"
               >
-                <Chip variant="gold" className="gap-1.5 cursor-pointer">
+                <Chip variant="gold" className={`gap-1.5 cursor-pointer${theme === 'light' ? ' !bg-white !text-[#0047AB] !border-[#0047AB]/40' : ''}`}>
                   <span>✦</span>
                   <span>Cara</span>
                 </Chip>
@@ -119,7 +119,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             )}
             {isAuthenticated && (
               <Link to="/playground" className="no-underline" aria-label="Playground">
-                <Chip variant="gold" className="gap-1.5">
+                <Chip variant="gold" className={`gap-1.5${theme === 'light' ? ' !bg-white !text-[#0047AB] !border-[#0047AB]/40' : ''}`}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="4 17 10 11 4 5" />
                     <line x1="12" y1="19" x2="20" y2="19" />

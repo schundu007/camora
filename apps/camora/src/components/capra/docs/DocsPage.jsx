@@ -1079,7 +1079,7 @@ export default function DocsPage({ onBack }) {
                               key={cat.id}
                               to={`/capra/prepare/${cat.href}`}
                               className={`card-lift group rounded-lg flex flex-col active:scale-[0.98] ${_orphanClass}`}
-                              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
+                              style={{ background: '#ffffff', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', minHeight: '100px', padding: '14px' }}
                             >
                               <div className="flex flex-col items-center text-center mb-3 gap-2">
                                 <DatabricksThumb
