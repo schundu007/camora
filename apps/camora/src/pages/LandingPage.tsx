@@ -359,7 +359,8 @@ export default function LandingPage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 text-[14px] sm:text-[16px] md:text-[18px] leading-relaxed text-[#9CA3AF] whitespace-nowrap"
+              className="mt-6 leading-relaxed text-[#9CA3AF] whitespace-nowrap"
+              style={{ fontSize: 'clamp(11px, 1.55vw, 18px)' }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
