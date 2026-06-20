@@ -672,6 +672,82 @@ def diag_gateway_api():
     print('Generated: g6-gateway-api')
 
 
+def diag_gateway_simple():
+    g = base_graph('g6_gw_simple', 'Gateway API — Simple Gateway + HTTPRoute')
+    n(g, 'user',  'Client\nbrowser / curl', 'gray')
+    n(g, 'gwc',   'GatewayClass (cluster-scoped)\nspec.controllerName:\nenvoyproxy.io/controller', 'purple')
+    n(g, 'gw',    'Gateway (gateway-infra ns)\nlistener: HTTP :80\nallowedRoutes: All', 'navy')
+    n(g, 'rt',    'HTTPRoute (app ns)\nparentRefs: my-gateway\nrules: /api/* → app-svc:8080', 'green')
+    n(g, 'svc',   'Service: app-svc\nport 8080 · ClusterIP', 'teal')
+    n(g, 'pods',  'Pods\napp=my-app\nport 8080', 'sky')
+    e(g, 'user',  'gw',   'HTTP :80')
+    e(g, 'gwc',   'gw',   'implements', '#94a3b8', 'dashed')
+    e(g, 'gw',    'rt',   'route attached')
+    e(g, 'rt',    'svc',  'backendRef')
+    e(g, 'svc',   'pods', 'selects')
+    g.render(os.path.join(OUT, 'g6-gateway-simple'), cleanup=True)
+    print('Generated: g6-gateway-simple')
+
+
+def diag_gateway_http_routing():
+    g = base_graph('g6_gw_http', 'Gateway API — HTTPRoute matching rules')
+    n(g, 'user',  'Client requests', 'gray')
+    n(g, 'gw',    'Gateway\nshared entrypoint\nport 80', 'navy')
+    n(g, 'rta',   'HTTPRoute A\npath: PathPrefix /api\nGET + POST', 'green')
+    n(g, 'rtb',   'HTTPRoute B\nheader: x-tenant: premium\nany path', 'teal')
+    n(g, 'rtc',   'HTTPRoute C\nmethod: POST\npath: Exact /upload', 'purple')
+    n(g, 'svca',  'Service: api-svc\nstandard tier', 'sky')
+    n(g, 'svcb',  'Service: premium-svc\npremium tier', 'sky')
+    n(g, 'svcc',  'Service: upload-svc\nbulk upload', 'sky')
+    n(g, 'filt',  'Filters:\nURLRewrite\nRequestHeaderModifier\nRequestMirror', 'gold')
+    e(g, 'user',  'gw',   'HTTP')
+    e(g, 'gw',    'rta',  'path match')
+    e(g, 'gw',    'rtb',  'header match')
+    e(g, 'gw',    'rtc',  'method + path')
+    e(g, 'rta',   'svca', 'backendRef')
+    e(g, 'rtb',   'svcb', 'backendRef')
+    e(g, 'rtc',   'svcc', 'backendRef')
+    e(g, 'rta',   'filt', 'applies', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'g6-gateway-http-routing'), cleanup=True)
+    print('Generated: g6-gateway-http-routing')
+
+
+def diag_gateway_cross_ns():
+    g = base_graph('g6_gw_cross_ns', 'Gateway API — Cross-Namespace Routing + ReferenceGrant')
+    n(g, 'user',  'Client', 'gray')
+    n(g, 'gw',    'Gateway (platform-ns)\nlistener HTTPS :443\nallowedRoutes: All', 'navy')
+    n(g, 'rg',    'ReferenceGrant (platform-ns)\nfrom: HTTPRoute in tenant-ns\nto: Gateway my-gateway', 'red')
+    n(g, 'rt',    'HTTPRoute (tenant-ns)\nparentRefs: platform-ns/my-gateway\nrules: /app → app-svc', 'green')
+    n(g, 'svc',   'Service: app-svc\n(tenant-ns) port 8080', 'teal')
+    n(g, 'deny',  'Without ReferenceGrant:\nstatus: NotAllowedByListeners\nrequest silently dropped', 'red')
+    e(g, 'user',  'gw',   'HTTPS :443')
+    e(g, 'rg',    'rt',   'permits cross-ns ref')
+    e(g, 'gw',    'rg',   'grants checked', '#94a3b8', 'dashed')
+    e(g, 'rt',    'svc',  'backendRef')
+    e(g, 'rt',    'deny', 'without RG →', '#ef4444', 'dashed')
+    g.render(os.path.join(OUT, 'g6-gateway-cross-ns'), cleanup=True)
+    print('Generated: g6-gateway-cross-ns')
+
+
+def diag_gateway_traffic_split():
+    g = base_graph('g6_gw_traffic', 'Gateway API — Traffic Splitting + TLS Termination')
+    n(g, 'user',   'Client\nHTTPS requests', 'gray')
+    n(g, 'cert',   'TLS Secret\ncertificateRef\ncert + private key', 'purple')
+    n(g, 'gw',     'Gateway\nlistener: HTTPS :443\ntls.mode: Terminate', 'navy')
+    n(g, 'rt',     'HTTPRoute\nbackendRefs with weights\n90 stable + 10 canary', 'green')
+    n(g, 'stable', 'stable Service\nweight: 90\ncurrent production', 'teal')
+    n(g, 'canary', 'canary Service\nweight: 10\nnew version', 'gold')
+    n(g, 'ctrl',   'Argo Rollouts / Flagger\nupdates HTTPRoute weights\nas canary analysis passes', 'purple')
+    e(g, 'user',   'gw',     'HTTPS :443')
+    e(g, 'cert',   'gw',     'tls.certificateRef', '#94a3b8', 'dashed')
+    e(g, 'gw',     'rt',     'terminates TLS')
+    e(g, 'rt',     'stable', 'weight 90%')
+    e(g, 'rt',     'canary', 'weight 10%')
+    e(g, 'ctrl',   'rt',     'updates weights', '#7c3aed')
+    g.render(os.path.join(OUT, 'g6-gateway-traffic-split'), cleanup=True)
+    print('Generated: g6-gateway-traffic-split')
+
+
 # ─────────────────────────────────────────────────────────────────────
 # H — Platform Engineering
 # ─────────────────────────────────────────────────────────────────────
@@ -1176,6 +1252,43 @@ def diag_argo_workflows_arch():
     print('Generated: ct6-argo-wf-arch')
 
 
+def diag_argo_rollouts_arch():
+    g = base_graph('ct6_argo_rollouts', 'Argo Rollouts — Progressive Delivery Controller')
+    g.attr(rankdir='TB', ranksep='0.9', nodesep='0.8')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'newver', 'New image / spec\npushed to Rollout\n(replaces Deployment)', 'gray')
+        n(s, 'atpl',   'AnalysisTemplate\nPrometheus / Datadog\nNewRelic / Kayenta', 'purple')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'rollout','Rollout CRD\nstrategy: canary | blue-green\nsteps + analysisRun refs', 'navy')
+        n(s, 'arun',   'AnalysisRun\nauto-created per step\nquery + pass/fail threshold', 'purple')
+    n(g, 'ctrl',  'rollouts-controller\nwatches Rollout CRDs\npromotes or aborts steps', 'green')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'stable', 'stable ReplicaSet\ncurrent prod\nscales to 0% on full promote', 'teal')
+        n(s, 'canary', 'canary ReplicaSet\nnew version\nscales 0% → 100%', 'gold')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'gw',    'Gateway API\nHTTPRoute weights', 'sky')
+        n(s, 'istio', 'Istio VirtualService\nsubsets', 'sky')
+        n(s, 'nginx', 'NGINX Ingress\ncanary annotation', 'sky')
+        n(s, 'alb',   'AWS ALB\nweighted target groups', 'sky')
+    e(g, 'newver',  'rollout', 'spec update')
+    e(g, 'atpl',    'arun',   'template ref', '#94a3b8', 'dashed')
+    e(g, 'rollout', 'arun',   'creates', '#94a3b8', 'dashed')
+    e(g, 'arun',    'ctrl',   'pass/fail signal', '#7c3aed', 'dashed')
+    e(g, 'ctrl',    'rollout','watches', '#22c55e', 'dashed')
+    e(g, 'ctrl',    'stable', 'manages')
+    e(g, 'ctrl',    'canary', 'manages')
+    e(g, 'ctrl',    'gw',     'updates weight')
+    e(g, 'ctrl',    'istio',  'updates weight')
+    e(g, 'ctrl',    'nginx',  'updates annotation')
+    e(g, 'ctrl',    'alb',    'updates weight')
+    g.render(os.path.join(OUT, 'ct6-argo-rollouts-arch'), cleanup=True)
+    print('Generated: ct6-argo-rollouts-arch')
+
+
 def diag_buildkite():
     g = base_graph('ct7_buildkite', 'Buildkite — hybrid SaaS + self-hosted agents')
     n(g, 'bk',   'Buildkite SaaS\norchestrator + UI\n(no code runs)', 'navy')
@@ -1231,6 +1344,62 @@ def diag_argocd():
     print('Generated: g2-argocd')
 
 
+def diag_argocd_ha():
+    g = base_graph('g2_argocd_ha', 'Argo CD — HA Install (production)')
+    g.attr(rankdir='TB', ranksep='0.9', nodesep='0.8')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'user', 'Users + CI/CD\nHTTPS + kubectl', 'gray')
+        n(s, 'git',  'Git repo\nHelm / Kustomize / plain\nmanifests', 'navy')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'srv',  'argocd-server\nREST + UI + gRPC\nHPA ≥2 replicas', 'green')
+        n(s, 'dex',  'argocd-dex-server\nOIDC / SAML / SSO\nfederation', 'purple')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'ctrl', 'argocd-application-controller\nStatefulSet (HA sharded)\nreconciles + drift detection', 'teal')
+        n(s, 'repo', 'argocd-repo-server\nclones + renders\nHelm / Kustomize / plain', 'sky')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'redis','argocd-redis-ha\nStatefulSet · Sentinel mode\n3 replicas · leader election', 'red')
+        n(s, 'cm',   'ConfigMaps:\nargocd-cm · argocd-rbac-cm\nargocd-ssh-known-hosts-cm', 'gold')
+    n(g, 'tgt',  'Target clusters\nin-cluster + remote\nkubeconfig Secrets', 'cyan')
+    e(g, 'user',  'srv',  'HTTPS')
+    e(g, 'srv',   'dex',  'SSO auth')
+    e(g, 'git',   'repo', 'clone / fetch')
+    e(g, 'repo',  'redis','cache rendered manifests', '#94a3b8', 'dashed')
+    e(g, 'repo',  'ctrl', 'rendered manifests')
+    e(g, 'ctrl',  'redis','shard coordination', '#94a3b8', 'dashed')
+    e(g, 'ctrl',  'cm',   'reads config', '#94a3b8', 'dashed')
+    e(g, 'srv',   'redis','status cache', '#94a3b8', 'dashed')
+    e(g, 'ctrl',  'tgt',  'apply + reconcile')
+    g.render(os.path.join(OUT, 'g2-argocd-ha'), cleanup=True)
+    print('Generated: g2-argocd-ha')
+
+
+def diag_argocd_blue_green():
+    g = base_graph('g2_argocd_bg', 'Argo CD — Blue-Green via ApplicationSet')
+    n(g, 'git',    'Git repo\nenvs/blue.json\nenvs/green.json', 'navy')
+    n(g, 'as',     'ApplicationSet\ngit-files generator\nreads env JSON files', 'green')
+    n(g, 'ctrl',   'argocd-application-controller\nreconciles both apps', 'teal')
+    n(g, 'appb',   'Application: blue\ntarget: blue-env ns\nvalues: blue-values.yaml', 'sky')
+    n(g, 'appg',   'Application: green\ntarget: green-env ns\nvalues: green-values.yaml', 'gold')
+    n(g, 'blueenv','blue-env namespace\nDeployment (stable v1.2)\nService: app-blue', 'sky')
+    n(g, 'grenv',  'green-env namespace\nDeployment (new v1.3)\nService: app-green', 'gold')
+    n(g, 'gw',     'HTTPRoute / Ingress\nweight 100 → blue\nweight   0 → green', 'teal')
+    e(g, 'git',    'as',      'watches for files')
+    e(g, 'as',     'appb',    'generates')
+    e(g, 'as',     'appg',    'generates')
+    e(g, 'ctrl',   'appb',    'reconciles')
+    e(g, 'ctrl',   'appg',    'reconciles')
+    e(g, 'appb',   'blueenv', 'syncs to')
+    e(g, 'appg',   'grenv',   'syncs to')
+    e(g, 'gw',     'blueenv', 'prod traffic', '#0ea5e9')
+    e(g, 'gw',     'grenv',   'staging only', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'g2-argocd-blue-green'), cleanup=True)
+    print('Generated: g2-argocd-blue-green')
+
+
 def diag_fluxcd():
     g = base_graph('g3_fluxcd', 'Flux v2 — GOTK controllers')
     n(g, 'sc',   'source-controller\nGitRepository\nHelmRepository\nOCIRepository', 'green')
@@ -1249,6 +1418,34 @@ def diag_fluxcd():
     e(g, 'ic',   'git', 'PRs')
     g.render(os.path.join(OUT, 'g3-fluxcd'), cleanup=True)
     print('Generated: g3-fluxcd')
+
+
+def diag_bank_of_anthos():
+    g = base_graph('g5_bank_of_anthos', 'Bank of Anthos — GitOps-managed microservices on K8s')
+    n(g, 'user', 'User / browser', 'gray')
+    n(g, 'lg',   'loadgenerator\nsynthetic Locust\ntraffic', 'red')
+    n(g, 'fe',   'frontend\nReact UI\nport 80', 'green')
+    n(g, 'us',   'userservice\nlogin / signup\nJWT auth', 'navy')
+    n(g, 'ct',   'contacts\naddress book\naccount lookup', 'navy')
+    n(g, 'lw',   'ledgerwriter\nsubmit transactions\ndebit / credit', 'purple')
+    n(g, 'th',   'transactionhistory\npast transactions\nread-only', 'purple')
+    n(g, 'br',   'balancereader\ncurrent balance\ncached', 'teal')
+    n(g, 'adb',  'accounts-db\nPostgreSQL\nusers + accounts', 'gold')
+    n(g, 'ldb',  'ledger-db\nPostgreSQL\ntransaction log', 'gold')
+    e(g, 'user', 'fe',  'HTTPS')
+    e(g, 'lg',   'fe',  'synthetic')
+    e(g, 'fe',   'us',  'auth')
+    e(g, 'fe',   'ct',  'contacts')
+    e(g, 'fe',   'lw',  'submit txn')
+    e(g, 'fe',   'th',  'history')
+    e(g, 'fe',   'br',  'balance')
+    e(g, 'us',   'adb', 'reads/writes')
+    e(g, 'ct',   'adb', 'reads')
+    e(g, 'lw',   'ldb', 'appends')
+    e(g, 'th',   'ldb', 'reads')
+    e(g, 'br',   'ldb', 'reads')
+    g.render(os.path.join(OUT, 'g5-bank-of-anthos'), cleanup=True)
+    print('Generated: g5-bank-of-anthos')
 
 
 def diag_app_of_apps():
@@ -1285,6 +1482,27 @@ def diag_multi_cluster_gitops():
     e(g, 'hub', 'c3',   'kubeconfig')
     g.render(os.path.join(OUT, 'g5-multi-cluster'), cleanup=True)
     print('Generated: g5-multi-cluster')
+
+
+def diag_gateway_multicluster():
+    g = base_graph('g6_gw_multicluster', 'Gateway API — Multi-Cluster Routing (MCS API)')
+    n(g, 'dns',  'Global DNS\nRoute 53 / Cloud DNS\nroutes to nearest gateway', 'gray')
+    n(g, 'gwc',  'GatewayClass\nmulti-cluster controller\nGKE Hub / Cilium Mesh', 'green')
+    n(g, 'gw',   'Gateway (hub cluster)\ncentral entrypoint\nHTTPS + HTTP listeners', 'navy')
+    n(g, 'rt',   'HTTPRoute\ncross-cluster backendRefs\nServiceImport names', 'teal')
+    n(g, 'si_a', 'ServiceImport (cluster-a)\nauto-created by MCS\nresolved to pod IPs', 'sky')
+    n(g, 'si_b', 'ServiceImport (cluster-b)\nauto-created by MCS\nresolved to pod IPs', 'sky')
+    n(g, 'ca',   'Cluster A\nServiceExport → pods\nprod-us-east', 'gold')
+    n(g, 'cb',   'Cluster B\nServiceExport → pods\nprod-eu-west', 'gold')
+    e(g, 'dns',  'gw',   'resolves to')
+    e(g, 'gwc',  'gw',   'realizes', '#94a3b8', 'dashed')
+    e(g, 'gw',   'rt',   'attaches')
+    e(g, 'rt',   'si_a', 'backendRef')
+    e(g, 'rt',   'si_b', 'backendRef')
+    e(g, 'si_a', 'ca',   'endpoints from')
+    e(g, 'si_b', 'cb',   'endpoints from')
+    g.render(os.path.join(OUT, 'g6-gateway-multicluster'), cleanup=True)
+    print('Generated: g6-gateway-multicluster')
 
 
 def diag_gitops_drift_recon():
@@ -2244,11 +2462,11 @@ if __name__ == '__main__':
     # CI/CD
     diag_ci(); diag_cd_vs_deploy(); diag_pipeline_as_code(); diag_test_pyramid(); diag_monorepo_build(); diag_trunk()
     # CI/CD Tools (NEW)
-    diag_gha(); diag_gha_workflow(); diag_jenkins(); diag_gitlab_ci(); diag_circleci(); diag_tekton(); diag_argo_workflows(); diag_argo_workflows_arch(); diag_buildkite()
+    diag_gha(); diag_gha_workflow(); diag_jenkins(); diag_gitlab_ci(); diag_circleci(); diag_tekton(); diag_argo_workflows(); diag_argo_workflows_arch(); diag_argo_rollouts_arch(); diag_buildkite()
     # Continuous Delivery
     diag_progressive_delivery(); diag_feature_flags(); diag_deployment_strategies(); diag_db_migrations_cicd(); diag_release_engineering()
     # GitOps (NEW)
-    diag_gitops_principles(); diag_argocd(); diag_fluxcd(); diag_app_of_apps(); diag_multi_cluster_gitops(); diag_gitops_drift_recon()
+    diag_gitops_principles(); diag_argocd(); diag_argocd_ha(); diag_argocd_blue_green(); diag_fluxcd(); diag_bank_of_anthos(); diag_app_of_apps(); diag_multi_cluster_gitops(); diag_gateway_multicluster(); diag_gitops_drift_recon()
     # IaC
     diag_iac_fundamentals(); diag_terraform_internals(); diag_pulumi(); diag_cloud_native_iac(); diag_iac_state(); diag_iac_governance()
     # Configuration Management
@@ -2256,7 +2474,7 @@ if __name__ == '__main__':
     # Containers
     diag_container_fundamentals(); diag_docker_buildkit(); diag_image_hardening(); diag_buildpacks(); diag_container_security()
     # Orchestration
-    diag_k8s_arch(); diag_k8s_resources(); diag_helm_kustomize(); diag_operators(); diag_service_mesh(); diag_gateway_api()
+    diag_k8s_arch(); diag_k8s_resources(); diag_helm_kustomize(); diag_operators(); diag_service_mesh(); diag_gateway_api(); diag_gateway_simple(); diag_gateway_http_routing(); diag_gateway_cross_ns(); diag_gateway_traffic_split()
     # Observability (NEW)
     diag_otel(); diag_distributed_tracing(); diag_prom_grafana(); diag_log_aggregation(); diag_apm(); diag_ebpf_obs(); diag_slo_dashboards()
     # Platform
