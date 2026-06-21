@@ -270,6 +270,36 @@ function DataModelSection({ schema, examples, diagramSrc }) {
     return parsed;
   }, [schema]);
 
+  // Parse ASCII pipe-table schemas into renderable blocks
+  const asciiBlocks = useMemo(() => {
+    if (!schema) return null;
+    const lines = schema.split('\n');
+    if (lines.filter(l => l.trim().startsWith('|')).length < 2) return null;
+    const blocks = [];
+    let i = 0;
+    while (i < lines.length) {
+      const raw = lines[i]; const trimmed = raw.trim();
+      if (!trimmed) { i++; continue; }
+      if (trimmed.startsWith('|')) {
+        const tLines = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) { tLines.push(lines[i]); i++; }
+        const rows = tLines.map(line => {
+          const parts = line.split('|').slice(1, -1);
+          const mid = parts.findIndex(p => p.trim() === '');
+          return mid >= 0
+            ? { left: parts.slice(0, mid).map(p => p.trim()), right: parts.slice(mid + 1).map(p => p.trim()) }
+            : { left: parts.map(p => p.trim()), right: null };
+        });
+        blocks.push({ type: 'table', rows });
+        continue;
+      }
+      if (trimmed.endsWith(':') && trimmed.length < 80) { blocks.push({ type: 'heading', text: trimmed.slice(0, -1) }); i++; continue; }
+      blocks.push({ type: 'prose', text: trimmed });
+      i++;
+    }
+    return blocks.length > 0 ? blocks : null;
+  }, [schema]);
+
   const typeColor = (type) => {
     const t = type.toLowerCase();
     if (t.includes('uuid')) return 'text-[var(--text-secondary)] bg-[var(--bg-elevated)]';
@@ -346,6 +376,56 @@ function DataModelSection({ schema, examples, diagramSrc }) {
             </div>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // ASCII pipe-table path: convert | col | col | rows into HTML tables
+  if (asciiBlocks) {
+    const renderTable = (rows, side) => {
+      const cells = rows.map(r => side === 'right' ? r.right : r.left).filter(Boolean);
+      if (!cells.length) return null;
+      const [head, ...body] = cells;
+      return (
+        <div className="overflow-x-auto rounded border border-[var(--border)] flex-1 min-w-0">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-[var(--bg-elevated)] border-b border-[var(--border)]">
+              {head.map((h, j) => <th key={j} className="px-3 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono whitespace-nowrap">{h}</th>)}
+            </tr></thead>
+            <tbody>{body.map((row, ri) => (
+              <tr key={ri} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--bg-elevated)]/30">
+                {row.map((cell, ci) => <td key={ci} className="px-3 py-2 text-[var(--text-secondary)] landing-mono whitespace-nowrap">{cell}</td>)}
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      );
+    };
+    return (
+      <div id="data-model" className="scroll-mt-24 mt-14 first:mt-0">
+        <ContentHeading title="Data Model" />
+        {diagramSrc && <ContentDiagram src={diagramSrc} alt="Data model architecture" className="mb-3" />}
+        <div className="p-4 space-y-4">
+          {asciiBlocks.map((block, bi) => {
+            if (block.type === 'heading') return (
+              <h4 key={bi} className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest landing-mono border-b border-[var(--border)] pb-2 pt-2 first:pt-0">{block.text}</h4>
+            );
+            if (block.type === 'prose') return (
+              <p key={bi} className="text-sm text-[var(--text-secondary)] landing-body">{block.text}</p>
+            );
+            if (block.type === 'table') {
+              const hasSideBySide = block.rows.some(r => r.right);
+              if (hasSideBySide) return (
+                <div key={bi} className="flex gap-3 flex-wrap">
+                  {renderTable(block.rows, 'left')}
+                  {renderTable(block.rows, 'right')}
+                </div>
+              );
+              return <div key={bi}>{renderTable(block.rows, 'left')}</div>;
+            }
+            return null;
+          })}
+        </div>
       </div>
     );
   }
