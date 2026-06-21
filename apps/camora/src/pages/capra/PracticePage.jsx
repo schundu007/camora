@@ -596,6 +596,50 @@ function scoreBg(s) {
   return 'var(--bg-elevated)';
 }
 
+function formatSolutionToMarkdown(result) {
+  if (!result) return '';
+  if (typeof result === 'string') {
+    try { return formatSolutionToMarkdown(JSON.parse(result)); } catch { return result; }
+  }
+  if (typeof result !== 'object') return String(result);
+
+  // Structured coding solution with approaches array
+  if (result.approaches?.length) {
+    const lines = [];
+    result.approaches.forEach((a, i) => {
+      lines.push(`## ${i + 1}. ${a.name || 'Approach'}`);
+      const p = a.pitch || {};
+      if (p.opener) lines.push('\n' + p.opener);
+      if (p.approach) lines.push('\n' + p.approach);
+      if (p.keyPoints?.length) {
+        lines.push('\n**Key Points:**');
+        p.keyPoints.forEach(pt => lines.push(`- ${pt}`));
+      }
+      if (a.code) {
+        const lang = result.language || 'python';
+        const code = a.code.replace(/\\n/g, '\n');
+        lines.push(`\n\`\`\`${lang}\n${code}\n\`\`\``);
+      }
+      if (a.complexity) lines.push(`\n**Complexity:** ${a.complexity}`);
+      if (a.tradeoffs?.length) {
+        lines.push('\n**Trade-offs:**');
+        a.tradeoffs.forEach(t => lines.push(`- ${t}`));
+      }
+      if (a.edgeCases?.length) {
+        lines.push('\n**Edge Cases:**');
+        a.edgeCases.forEach(e => lines.push(`- ${e}`));
+      }
+      lines.push('');
+    });
+    const c = result.complexity;
+    if (c) lines.push(`**Complexity:** Time ${c.time || '—'}, Space ${c.space || '—'}`);
+    return lines.join('\n');
+  }
+
+  // Flat fields
+  return result.code || result.text || result.explanation || result.pitch || result.answer || '';
+}
+
 function diffColor(d) {
   if (d === 'easy') return { bg: 'var(--accent-subtle)', text: 'var(--accent)' };
   if (d === 'medium') return { bg: 'var(--bg-elevated)', text: 'var(--warning-text)' };
@@ -1000,14 +1044,22 @@ export default function PracticePage() {
           if (!line.startsWith('data: ')) continue;
           try {
             const d = JSON.parse(line.slice(6));
-            if (d.chunk) { accumulated += d.chunk; setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: accumulated })); }
+            if (d.chunk) { accumulated += d.chunk; }
             if (d.done && d.result) {
-              const finalText = d.result.code || d.result.pitch || d.result.explanation || d.result.text || accumulated;
-              setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: finalText }));
-              accumulated = finalText;
+              const formatted = formatSolutionToMarkdown(d.result);
+              setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: formatted }));
+              accumulated = formatted;
             }
           } catch { /* ignore parse errors */ }
         }
+      }
+      // Fallback: if d.done never fired but chunks accumulated, format what we have
+      if (accumulated) {
+        setGeneratedSolutions(prev => {
+          if (prev[currentIdx]) return prev;
+          const formatted = formatSolutionToMarkdown(accumulated);
+          return { ...prev, [currentIdx]: formatted || accumulated };
+        });
       }
       if (accumulated) {
         fetch(`${API_URL}/api/v1/practice/solution`, {
