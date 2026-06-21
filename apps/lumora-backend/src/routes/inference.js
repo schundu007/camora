@@ -391,9 +391,13 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // streamResponse call on a cache miss; it is populated only on a
     // miss to avoid burning an OpenAI embedding + 250ms on hits.
     let retrievedContext = '';
+    // systemContext (resume + JD) intentionally excluded: design/behavioral
+    // answers for "Design Twitter Feed" or "Tell me about yourself" are
+    // structurally the same across users. Including it made every user's
+    // key unique → zero cross-user hits. Prompt still receives context
+    // for personalization; cache is keyed on the question itself.
     const cacheKey = buildAnswerCacheKey({
       question,
-      systemContext,
       detailLevel,
       plan: userPlan,
       mode,
