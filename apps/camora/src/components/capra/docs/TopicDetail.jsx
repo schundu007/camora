@@ -879,16 +879,6 @@ export default function TopicDetail({
             <Icon name="sparkles" size={16} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
-          {/* Course Roadmap — hide on tabs that ARE roadmaps/projects/blogs */}
-          {activePage !== 'roadmaps' && activePage !== 'projects' && activePage !== 'eng-blogs' && (
-            <button
-              onClick={() => setShowRoadmap(!showRoadmap)}
-              className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border)] transition-colors landing-body"
-            >
-              <Icon name="compass" size={16} />
-              <span className="hidden sm:inline">Roadmap</span>
-            </button>
-          )}
         </div>
       </div>
 

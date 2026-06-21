@@ -391,6 +391,14 @@ export default function DocsPage({ onBack }) {
 
   const setSelectedTopic = useCallback((topic) => {
     setSelectedTopicState(topic);
+    if (topic) {
+      setVisitedTopics(prev => {
+        if (prev[topic]) return prev;
+        const next = { ...prev, [topic]: true };
+        try { localStorage.setItem('ascend_visited_topics', JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
     // Reset Ask AI state when switching topics
     setAiQuestion('');
     setAiAnswer('');
@@ -428,6 +436,9 @@ export default function DocsPage({ onBack }) {
   });
   const [starredTopics, setStarredTopics] = useState(() => {
     try { return JSON.parse(localStorage.getItem('ascend_starred_topics') || '{}'); } catch { return {}; }
+  });
+  const [visitedTopics, setVisitedTopics] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ascend_visited_topics') || '{}'); } catch { return {}; }
   });
   const [showAskAI, setShowAskAI] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
@@ -1818,10 +1829,10 @@ export default function DocsPage({ onBack }) {
                             style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                              <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
-                              <span className={`text-[14px] landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
+                              <span className={`text-[14px] landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               {topic.commonProblems && (() => {
@@ -1951,11 +1962,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
@@ -2407,11 +2418,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
@@ -2635,11 +2646,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
@@ -2766,11 +2777,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium group-hover:text-[var(--accent-hover)] transition-colors ${completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)]'}`}>{topic.title}</span>
+                                    <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
@@ -2816,11 +2827,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
@@ -2861,11 +2872,11 @@ export default function DocsPage({ onBack }) {
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'var(--accent-subtle)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <Icon name="check" size={12} className="text-[var(--success)]" /> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span title="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span title="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : completedTopics[topic.id] ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
+                                    <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
                                     {starredTopics[topic.id] && <Icon name="star5" size={10} className="text-[var(--accent)]" />}
                                   </div>
                                 </div>
