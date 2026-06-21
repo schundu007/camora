@@ -45,6 +45,7 @@ function normalizeUser(u: any): AuthUser | null {
 interface SubscriptionInfo {
   plan: string;
   status?: string;
+  trialEndsAt?: string;
 }
 
 interface TeamInfo {
@@ -299,7 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           || data.subscription?.plan
           || 'free';
         const status = data.status || data.subscription?.status;
-        setSubscription({ plan, status });
+        const trialEndsAt = data.trial_ends_at || data.subscription?.trial_ends_at;
+        setSubscription({ plan, status, trialEndsAt });
       } else {
         setSubscription({ plan: 'free' });
       }
