@@ -7,10 +7,13 @@
  * USAGE:
  *   node apps/camora/scripts/gen-eraser-browser.mjs [--limit=N] [--slug=<slug>] [--provider=aws|azure|gcp] [--force] [--dry-run]
  *
- * CREDENTIALS (required env vars — store in GitHub Secrets or .env.local):
- *   ERASER_COOKIE      Full document.cookie string from app.eraser.io DevTools (refresh every ~55 min)
- *   ERASER_CFUVID      Value of _cfuvid httpOnly cookie (DevTools → Application → Cookies)
- *   ERASER_DEVICE_ID   Value of eraser_device_id httpOnly cookie
+ * CREDENTIALS:
+ *   ERASER_COOKIE      Required. Full document.cookie string from app.eraser.io DevTools.
+ *   ERASER_CFUVID      Optional. Cloudflare bot-protection cookie — improves reliability.
+ *   ERASER_DEVICE_ID   Optional. Device identifier cookie — improves reliability.
+ *
+ * NOTE: Eraser GitHub App on this repo handles checkout + commit-back automatically.
+ * Only ERASER_COOKIE is required as a GitHub Secret for diagram generation API auth.
  *
  * PROMPTS:
  *   One prompt file per slug at apps/camora/scripts/eraser-prompts/{slug}.txt
@@ -27,9 +30,8 @@ const ERASER_COOKIE = process.env.ERASER_COOKIE;
 const CFUVID        = process.env.ERASER_CFUVID;
 const ERASER_DEVICE_ID = process.env.ERASER_DEVICE_ID;
 
-if (!ERASER_COOKIE || !CFUVID || !ERASER_DEVICE_ID) {
-  console.error('Missing required env vars. Set ERASER_COOKIE, ERASER_CFUVID, ERASER_DEVICE_ID.');
-  console.error('Get them from app.eraser.io DevTools → Application → Cookies.');
+if (!ERASER_COOKIE) {
+  console.error('Missing ERASER_COOKIE env var. Get it from app.eraser.io DevTools → Application → Cookies.');
   process.exit(1);
 }
 

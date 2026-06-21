@@ -49,6 +49,9 @@ jobs:
           if [ "${{ inputs.force }}" = "true" ]; then FLAGS="$FLAGS --force"; fi
           echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"
 
+      # ERASER_COOKIE is the only required secret — contains the __session JWT.
+      # ERASER_CFUVID + ERASER_DEVICE_ID are optional (Cloudflare/device extras, improve reliability).
+      # Eraser GitHub App installed on this repo handles checkout and commit-back repo auth.
       - name: Generate diagrams
         env:
           ERASER_COOKIE: ${{ secrets.ERASER_COOKIE }}
