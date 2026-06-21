@@ -17,8 +17,6 @@ interface TopicDiagramProps {
   kind: string;
   alt?: string;
   className?: string;
-  /** Optional caption rendered under the image (e.g., "Layered Design"). */
-  caption?: string;
 }
 
 export default function TopicDiagram({
@@ -26,7 +24,6 @@ export default function TopicDiagram({
   kind,
   alt,
   className = '',
-  caption,
 }: TopicDiagramProps) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
@@ -58,17 +55,6 @@ export default function TopicDiagram({
         }}
         style={{ display: 'block', width: '100%', height: 'auto' }}
       />
-      {caption && (
-        <figcaption
-          className="px-4 py-2 text-[11px] font-mono uppercase tracking-[0.16em]"
-          style={{
-            color: 'var(--text-muted)',
-            borderTop: '1px solid var(--border)',
-          }}
-        >
-          {caption}
-        </figcaption>
-      )}
     </figure>
   );
 }

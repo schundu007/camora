@@ -1897,16 +1897,10 @@ export default function TopicDetail({
 
               {effectiveLayeredDesign && (
                 <div className="">
-                  <ContentHeading
-                    title="Layered Design"
-                    actions={<GlassPill>{effectiveLayeredDesign.length} layers</GlassPill>}
-                    
-                  />
                   <TopicDiagram
                     topicId={topicDetails.id || selectedTopic}
                     kind="layered"
                     alt="Layered Design"
-                    caption="Layered Design"
                     className="mb-3"
                   />
                   <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 mt-1 landing-mono uppercase tracking-widest">Layer Breakdown</p>
@@ -1957,7 +1951,6 @@ export default function TopicDetail({
                             topicId={topicDetails.id || selectedTopic}
                             kind={`deep-dive-${d.id}`}
                             alt={d.title}
-                            caption={d.title}
                             className=""
                           />
                         </div>
@@ -1985,7 +1978,6 @@ export default function TopicDetail({
                             topicId={topicDetails.id || selectedTopic}
                             kind={`tradeoff-${t.id}`}
                             alt={t.title}
-                            caption={t.title}
                             className=""
                           />
                         </div>
@@ -2011,7 +2003,7 @@ export default function TopicDetail({
                             topicId={topicDetails.id || selectedTopic}
                             kind="architecture-basic"
                             alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
-                            caption={topicDetails.basicImplementation.title || 'Basic Architecture'}
+
                             className="mb-3"
                           />
                         ) : (
@@ -2051,7 +2043,6 @@ export default function TopicDetail({
                             topicId={topicDetails.id || selectedTopic}
                             kind="architecture-advanced"
                             alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
-                            caption={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
                             className="mb-3"
                           />
                         ) : (
@@ -2098,7 +2089,6 @@ export default function TopicDetail({
                               topicId={topicDetails.id || selectedTopic}
                               kind="flow-createFlow"
                               alt={topicDetails.createFlow.title}
-                              caption={topicDetails.createFlow.title}
                               className="mb-3"
                             />
                           )}
@@ -2128,7 +2118,6 @@ export default function TopicDetail({
                               topicId={topicDetails.id || selectedTopic}
                               kind="flow-redirectFlow"
                               alt={topicDetails.redirectFlow.title}
-                              caption={topicDetails.redirectFlow.title}
                               className="mb-3"
                             />
                           )}
@@ -3142,7 +3131,6 @@ export default function TopicDetail({
                         topicId={topicDetails.id || selectedTopic}
                         kind={`deep-dive-${d.id}`}
                         alt={d.title}
-                        caption={d.title}
                         className=""
                       />
                     </div>
@@ -3167,7 +3155,6 @@ export default function TopicDetail({
                         topicId={topicDetails.id || selectedTopic}
                         kind={`tradeoff-${t.id}`}
                         alt={t.title}
-                        caption={t.title}
                         className=""
                       />
                     </div>
