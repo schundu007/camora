@@ -438,6 +438,15 @@ const MODES = [
 
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const CATEGORIES = ['coding', 'system-design', 'behavioral'];
+const CODING_LANGUAGES = [
+  { id: 'python', label: 'Python' },
+  { id: 'javascript', label: 'JavaScript' },
+  { id: 'typescript', label: 'TypeScript' },
+  { id: 'java', label: 'Java' },
+  { id: 'cpp', label: 'C++' },
+  { id: 'go', label: 'Go' },
+  { id: 'rust', label: 'Rust' },
+];
 const COMPANIES = [
   { id: 'all', label: 'All', color: 'var(--text-muted)' },
   { id: 'google', label: 'Google', color: '#4285f4', logo: '/logos/google.png' },
@@ -784,6 +793,7 @@ export default function PracticePage() {
   const [hintCounts, setHintCounts] = useState({});
   const [generatedSolutions, setGeneratedSolutions] = useState({});
   const [generatingSolution, setGeneratingSolution] = useState(false);
+  const [codingLanguage, setCodingLanguage] = useState('python');
   const [resultDimensions, setResultDimensions] = useState(null);
   const timerRef = useRef(null);
   const textareaRef = useRef(null);
@@ -954,8 +964,19 @@ export default function PracticePage() {
     const q = questions[currentIdx];
     if (!q || generatingSolution) return;
     setGeneratingSolution(true);
+    const problemKey = `${category}:${q.q.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    try {
+      const cacheResp = await fetch(`${API_URL}/api/v1/practice/solution?key=${encodeURIComponent(problemKey)}`, { credentials: 'include' });
+      if (cacheResp.ok) {
+        const { solution } = await cacheResp.json();
+        setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: solution }));
+        setGeneratingSolution(false);
+        return;
+      }
+    } catch { /* cache miss — fall through to LLM */ }
+    const langLabel = CODING_LANGUAGES.find(l => l.id === codingLanguage)?.label || 'Python';
     const prompt = category === 'coding'
-      ? `Solve this coding problem:\n\nProblem: ${q.q}\n${q.fullDesc || q.desc}\n\nProvide:\n1. Approach / key insight (2-3 sentences)\n2. Complete working solution with code\n3. Time and space complexity\n\nUse markdown with code blocks.`
+      ? `Solve this coding problem in ${langLabel}:\n\nProblem: ${q.q}\n${q.fullDesc || q.desc}\n\nProvide:\n1. Approach / key insight (2-3 sentences)\n2. Complete working solution in ${langLabel}\n3. Time and space complexity\n\nUse markdown with a \`\`\`${codingLanguage} code block.`
       : category === 'system-design'
       ? `Provide a concise system design for: ${q.q}\n\n${q.desc}\n\nCover: key components, data flow, scalability decisions, and major trade-offs. Use markdown with clear sections.`
       : `Provide a strong model answer for this behavioral interview question: "${q.q}"\n\n${q.desc}\n\nUse the STAR format (Situation, Task, Action, Result). Be specific and quantify the impact. Keep it under 3 minutes spoken. Use markdown.`;
@@ -978,16 +999,27 @@ export default function PracticePage() {
           try {
             const d = JSON.parse(line.slice(6));
             if (d.chunk) { accumulated += d.chunk; setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: accumulated })); }
-            if (d.done && d.result) { accumulated = d.result; setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: accumulated })); }
+            if (d.done && d.result) {
+              const finalText = d.result.code || d.result.pitch || d.result.explanation || d.result.text || accumulated;
+              setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: finalText }));
+              accumulated = finalText;
+            }
           } catch { /* ignore parse errors */ }
         }
+      }
+      if (accumulated) {
+        fetch(`${API_URL}/api/v1/practice/solution`, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: problemKey, category, solution: accumulated }),
+        }).catch(() => {});
       }
     } catch {
       setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: 'Failed to generate solution. Please try again.' }));
     } finally {
       setGeneratingSolution(false);
     }
-  }, [currentIdx, questions, category, generatingSolution]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentIdx, questions, category, codingLanguage, generatingSolution]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const endChallenge = useCallback((finalScores) => {
     clearInterval(timerRef.current);
@@ -1524,6 +1556,28 @@ export default function PracticePage() {
                 )}
               </div>
 
+              {/* Language selector — coding only */}
+              {!inlineEval && category === 'coding' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Language:</span>
+                  {CODING_LANGUAGES.map(lang => (
+                    <button
+                      key={lang.id}
+                      onClick={() => setCodingLanguage(lang.id)}
+                      style={{
+                        padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                        border: codingLanguage === lang.id ? '1.5px solid var(--accent)' : '1px solid var(--border)',
+                        background: codingLanguage === lang.id ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
+                        color: codingLanguage === lang.id ? 'var(--accent)' : 'var(--text-muted)',
+                        transition: 'all 0.12s',
+                      }}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Hints + Generate Solution */}
               {!inlineEval && (
                 <div style={{ marginBottom: 14 }}>
@@ -1542,13 +1596,21 @@ export default function PracticePage() {
                         </button>
                       );
                     })()}
-                    <button
-                      onClick={generateSolution}
-                      disabled={generatingSolution || !!generatedSolutions[currentIdx]}
-                      style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid var(--cam-gold-leaf, #c9a84c)', background: 'rgba(201,168,76,0.1)', color: 'var(--cam-gold-leaf, #c9a84c)', fontSize: 12, fontWeight: 600, cursor: (generatingSolution || generatedSolutions[currentIdx]) ? 'default' : 'pointer', opacity: generatedSolutions[currentIdx] ? 0.5 : 1 }}
-                    >
-                      {generatingSolution ? 'Generating...' : generatedSolutions[currentIdx] ? 'Solution Generated' : 'Generate Solution'}
-                    </button>
+                    {(() => {
+                      const hasAttempt = (answers[currentIdx] || '').replace(/---SECTION---|---STAR---/g, '').trim().length > 0;
+                      const alreadyGenerated = !!generatedSolutions[currentIdx];
+                      const disabled = generatingSolution || alreadyGenerated || !hasAttempt;
+                      return (
+                        <button
+                          onClick={generateSolution}
+                          disabled={disabled}
+                          title={!hasAttempt ? 'Try writing something first to unlock the solution' : ''}
+                          style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid var(--cam-gold-leaf, #c9a84c)', background: 'rgba(201,168,76,0.1)', color: 'var(--cam-gold-leaf, #c9a84c)', fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}
+                        >
+                          {generatingSolution ? 'Generating...' : alreadyGenerated ? 'Solution Generated' : !hasAttempt ? 'Try first, then Generate Solution' : 'Generate Solution'}
+                        </button>
+                      );
+                    })()}
                   </div>
                   {(hintCounts[currentIdx] || 0) > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
