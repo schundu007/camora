@@ -35,7 +35,7 @@ export default function ResumeOptimizer({
   const [jobDescription, setJobDescription] = useState(initialJobDescription || '');
   const [jobUrl, setJobUrl] = useState(initialJobUrl || '');
   const [resume, setResume] = useState('');
-  const [company, setCompany] = useState<string>(initialCompany || 'Google');
+  const [company, setCompany] = useState<string>(initialCompany || '');
   const [role, setRole] = useState(initialRole || '');
 
   // Output state
@@ -64,8 +64,10 @@ export default function ResumeOptimizer({
   const [autoStatus, setAutoStatus] = useState<string | null>(
     initialJobUrl ? 'Loading your resume and job description…' : null,
   );
-  const [jdMode, setJdMode] = useState<'paste' | 'url'>(initialJobUrl ? 'url' : 'paste');
-  const [resumeMode, setResumeMode] = useState<'paste' | 'upload'>('paste');
+  const [jdMode, setJdMode] = useState<'paste' | 'url'>('url');
+  const [resumeMode, setResumeMode] = useState<'paste' | 'upload'>('upload');
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const getOutputContent = useCallback(() => {
     switch (activeTab) {
@@ -274,7 +276,6 @@ export default function ResumeOptimizer({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch job description');
       setJobDescription(data.text);
-      setJobUrl('');
       setJdMode('paste');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch URL');
@@ -286,6 +287,7 @@ export default function ResumeOptimizer({
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadedFileName(file.name);
     e.target.value = '';
 
     try {
@@ -497,6 +499,45 @@ export default function ResumeOptimizer({
   const outputContent = getOutputContent();
   const hasOutput = Boolean(outputContent);
 
+  function cleanMd(s: string): string {
+    return s
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/\*(.+?)\*/g, '$1')
+      .replace(/^#{1,6}\s+/, '');
+  }
+
+  function renderDocumentLine(line: string, i: number, isFirst: boolean): React.ReactNode {
+    const raw = line.trim();
+    if (!raw) return <div key={i} style={{ height: '8px' }} />;
+    const isMarkdownHeader = /^#{1,6}\s/.test(raw);
+    const headerText = isMarkdownHeader ? raw.replace(/^#{1,6}\s+/, '') : raw;
+    const clean = cleanMd(headerText);
+    const isSection = isMarkdownHeader || (
+      clean.length > 2 && clean.length < 60 &&
+      clean === clean.toUpperCase() &&
+      /[A-Z]{2}/.test(clean) &&
+      !clean.startsWith('•') && !clean.startsWith('-') &&
+      !clean.includes('@') && !/^\d/.test(clean)
+    );
+    const isBullet = /^[•\-*]\s/.test(raw);
+    const bulletContent = isBullet ? cleanMd(raw.replace(/^[•\-*]\s*/, '')) : '';
+    if (isFirst) return (
+      <div key={i} style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '2px', fontFamily: 'Arial, Helvetica, sans-serif', letterSpacing: '-0.01em' }}>{clean}</div>
+    );
+    if (isSection) return (
+      <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#0f172a', borderBottom: '1.5px solid #94a3b8', paddingBottom: '4px', marginTop: '20px', marginBottom: '7px', letterSpacing: '0.12em', fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'uppercase' as const }}>{clean.toUpperCase()}</div>
+    );
+    if (isBullet) return (
+      <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#1e293b', lineHeight: '1.65', marginBottom: '3px', fontFamily: 'Arial, Helvetica, sans-serif', paddingLeft: '4px' }}>
+        <span style={{ flexShrink: 0, marginTop: '2px' }}>•</span>
+        <span>{bulletContent}</span>
+      </div>
+    );
+    return (
+      <div key={i} style={{ fontSize: '11.5px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: 'Arial, Helvetica, sans-serif' }}>{clean}</div>
+    );
+  }
+
   const chipStyle = (active: boolean): React.CSSProperties => ({
     padding: '3px 12px',
     borderRadius: '20px',
@@ -657,7 +698,9 @@ export default function ResumeOptimizer({
         {resumeMode === 'upload' && resume && (
           <div style={{ padding: '12px 14px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.22)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 500, flex: 1 }}>Resume loaded — {resume.split('\n').filter(Boolean).length} lines</span>
+            <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 500, flex: 1 }}>
+              {uploadedFileName ? `✓ ${uploadedFileName}` : `Resume loaded — ${resume.split('\n').filter(Boolean).length} lines`}
+            </span>
             <button type="button" onClick={() => setResume('')} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}>Remove</button>
             <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>Replace</button>
           </div>
@@ -711,7 +754,11 @@ export default function ResumeOptimizer({
             <h3 style={{ fontFamily: "'Clash Display', Satoshi, sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.016em' }}>Document Preview</h3>
           </div>
           {hasOutput && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => setShowPreviewModal(true)} style={{ padding: '6px 14px', border: '1px solid var(--accent)', borderRadius: '8px', background: 'var(--accent-subtle, rgba(0,71,171,0.08))', fontSize: '12px', fontWeight: 600, color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Preview
+              </button>
               <button type="button" onClick={handleCopy} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                 {copied ? 'Copied!' : 'Copy'}
@@ -753,23 +800,15 @@ export default function ResumeOptimizer({
               <style>{`@keyframes resumeOptimizerSpin { to { transform: rotate(360deg); } }`}</style>
             </div>
           ) : (activeTab === 'resume' || activeTab === 'coverLetter') && outputContent ? (
-            <div style={{ overflowY: 'auto', flex: 1, padding: '28px 32px', background: '#ffffff', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
-              {outputContent.split('\n').map((line, i) => {
-                const t = line.trim();
-                if (!t) return <div key={i} style={{ height: '10px' }} />;
-                const isHeader = t === t.toUpperCase() && t.length > 2 && /[A-Z]/.test(t) && !t.startsWith('•') && !t.startsWith('-');
-                const isBullet = /^[•\-*]\s/.test(t);
-                if (isHeader) return (
-                  <div key={i} style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', borderBottom: '1.5px solid #cbd5e1', paddingBottom: '3px', marginTop: '18px', marginBottom: '7px', letterSpacing: '0.06em', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>
-                );
-                if (isBullet) return (
-                  <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-                    <span style={{ flexShrink: 0, marginTop: '1px' }}>•</span>
-                    <span>{t.replace(/^[•\-*]\s*/, '')}</span>
-                  </div>
-                );
-                return <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '1px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>;
-              })}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '32px 36px', background: '#ffffff' }}>
+              {(() => {
+                const lines = outputContent.split('\n');
+                let firstNonEmpty = -1;
+                return lines.map((line, i) => {
+                  const isFirst = !!(line.trim() && firstNonEmpty === -1 && activeTab === 'resume' && (firstNonEmpty = i) >= 0);
+                  return renderDocumentLine(line, i, isFirst);
+                });
+              })()}
             </div>
           ) : activeTab === 'atsScore' && atsData ? (
             <div style={{ overflowY: 'auto', flex: 1, padding: '24px 28px' }}>
@@ -850,6 +889,53 @@ export default function ResumeOptimizer({
           )}
         </div>
       </div>
+      {showPreviewModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
+        >
+          <div style={{ background: '#f8fafc', borderRadius: '14px', width: '100%', maxWidth: '820px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.4)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: '#fff', flexShrink: 0 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                {activeTab === 'coverLetter' ? 'Cover Letter' : activeTab === 'atsScore' ? 'ATS Analysis' : 'Optimized Resume'} — Preview
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button type="button" onClick={handleDownloadDocx} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '7px', background: '#fff', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  DOCX
+                </button>
+                <button type="button" onClick={handleDownloadPdf} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: '7px', background: '#fff', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  PDF
+                </button>
+                <button type="button" onClick={() => setShowPreviewModal(false)} style={{ width: '28px', height: '28px', border: '1px solid #e2e8f0', borderRadius: '7px', background: '#fff', fontSize: '16px', fontWeight: 700, color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>×</button>
+              </div>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: '32px', background: '#f8fafc' }}>
+              <div style={{ background: '#ffffff', maxWidth: '700px', margin: '0 auto', padding: '52px 56px', boxShadow: '0 2px 24px rgba(0,0,0,0.1)', minHeight: '900px', borderRadius: '4px' }}>
+                {(activeTab === 'resume' || activeTab === 'coverLetter') && outputContent ? (
+                  (() => {
+                    const lines = outputContent.split('\n');
+                    let firstNonEmpty = -1;
+                    return lines.map((line, i) => {
+                      const isFirst = !!(line.trim() && firstNonEmpty === -1 && activeTab === 'resume' && (firstNonEmpty = i) >= 0);
+                      return renderDocumentLine(line, i, isFirst);
+                    });
+                  })()
+                ) : activeTab === 'atsScore' && atsData ? (
+                  <div style={{ fontSize: '13px', color: '#1e293b', lineHeight: 1.7 }}>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: atsData.score && atsData.score >= 75 ? '#16a34a' : atsData.score && atsData.score >= 50 ? '#d97706' : '#dc2626', marginBottom: '8px' }}>{atsData.score}/100</div>
+                    <div style={{ marginBottom: '16px', color: '#64748b' }}>ATS Match Score</div>
+                    {(atsData.suggestions || []).map((s: string, i: number) => <div key={i} style={{ marginBottom: '8px', paddingLeft: '12px', borderLeft: '3px solid #3b82f6' }}>{s}</div>)}
+                  </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', textAlign: 'center', paddingTop: '80px', fontSize: '14px' }}>No content yet — generate first.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
