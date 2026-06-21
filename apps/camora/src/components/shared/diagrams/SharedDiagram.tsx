@@ -153,9 +153,9 @@ export default function SharedDiagram({
 
       {imageUrl && !loading && !generating && (
         <div className="rounded-lg overflow-auto"
-          style={{ minHeight: 300, maxHeight: '80vh', border: '1px solid var(--border)' }}>
+          style={{ minHeight: 300, maxHeight: '80vh', border: '1px solid var(--border)', background: '#ffffff' }}>
           <img src={imageUrl} alt="Architecture diagram" draggable={false}
-            style={{ display: 'block', width: `${zoom}%`, minWidth: `${zoom}%`, height: 'auto' }} />
+            style={{ display: 'block', width: `${zoom}%`, minWidth: `${zoom}%`, height: 'auto', filter: 'invert(1) hue-rotate(180deg)' }} />
         </div>
       )}
     </div>
