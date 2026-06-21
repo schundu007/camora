@@ -33,7 +33,10 @@ export function useContentAccess() {
     if (subscriptionLoading) return false;
     if (!subscription) return false;
     const plan = subscription.plan;
-    return plan !== 'free' && plan !== null && plan !== undefined && plan !== '';
+    if (plan !== 'free' && plan !== null && plan !== undefined && plan !== '') return true;
+    // Active trial gets full content access
+    if (subscription.trialEndsAt && new Date(subscription.trialEndsAt) > new Date()) return true;
+    return false;
   }, [subscription, subscriptionLoading]);
 
   /** Fetch read topics for a category from server */
