@@ -22,6 +22,8 @@ interface Job {
   posted_at?: string;
   ai_tech_stack?: string[];
   description?: string;
+  job_description?: string;
+  ai_summary?: string;
 }
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
