@@ -8,7 +8,7 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'uber')
 os.makedirs(OUT, exist_ok=True)
 
-COMMON = dict(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline')
+COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline')
 NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.45', margin='0.15,0.08')
 EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
 

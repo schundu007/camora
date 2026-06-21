@@ -46,7 +46,7 @@ def make_dot(title, nodes, edges, same_ranks=None):
 
 def render(dot_src, out_path):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    r = subprocess.run(["dot", "-Tpng", "-Gdpi=120", "-o", out_path],
+    r = subprocess.run(["dot", "-Tpng", "-Gdpi=200", "-o", out_path],
                        input=dot_src.encode(), capture_output=True, timeout=15)
     if r.returncode != 0:
         print(f"ERROR {out_path}: {r.stderr.decode()[:200]}")

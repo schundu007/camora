@@ -29,7 +29,7 @@ def e(g, a, b, label='', color='#475569', style='solid'):
     g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def mk(title, direction='LR'):
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='120', pad='0.25', nodesep='0.5', ranksep='0.55',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.55',
            splines='spline', rankdir=direction,
            label=f'  {title}  ', labelloc='t',
            fontsize='15', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
