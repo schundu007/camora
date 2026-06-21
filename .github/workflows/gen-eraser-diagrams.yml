@@ -46,9 +46,11 @@ jobs:
           if [ "${{ inputs.force }}" = "true" ]; then FLAGS="$FLAGS --force"; fi
           echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"
 
+      # Uses Firebase refresh token (permanent) to auto-refresh the session token.
+      # Consumes Eraser AI credits — no paid API calls, no cookie expiry.
       - name: Generate diagrams
         env:
-          ERASER_API_KEY: ${{ secrets.ERASER_API_KEY }}
+          ERASER_REFRESH_TOKEN: ${{ secrets.ERASER_REFRESH_TOKEN }}
         run: node apps/camora/scripts/gen-eraser-diagrams.mjs ${{ steps.flags.outputs.flags }}
 
       - name: Commit generated PNGs
