@@ -456,18 +456,35 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [jsonSolution, activeSolutionIdx, code, token, resolveLanguage]);
 
-  // Regenerate — re-submit the same problem with bypass_cache=true so
-  // the backend skips the answer cache lookup and produces a fresh
-  // solution. The fresh result still writes to the cache so the next
-  // plain solve hits. Only enabled when we have a problem and aren't
-  // already streaming.
+  // Restore last coding answer from sessionStorage on mount (refresh or chip-switch back)
+  useEffect(() => {
+    if (parsedBlocks.length === 0 && !isStreaming && !initialProblem) {
+      try {
+        const raw = sessionStorage.getItem('lumora:lastCodingAnswer');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.ts && Date.now() - saved.ts < 4 * 60 * 60 * 1000 && saved.parsed) {
+            const store = useSessionStore.getState();
+            store.setParsedBlocks(saved.parsed);
+            if (saved.question) store.setQuestion(saved.question);
+            store.setIsCodingQuestion(true);
+            store.setIsDesignQuestion(false);
+          }
+        }
+      } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Regenerate — re-submit the same problem. Backend will serve from
+  // cache (Redis → DB) so no LLM call unless this is a genuinely new problem.
   const handleRegenerate = useCallback(() => {
     const text = problemText.trim();
     if (!text || isLoading || isStreaming) return;
     setAnalysisCache({});
     setAnalysisTab('code');
     const effectiveStarterCode = starterCode || (isCodeTemplate(text) ? text : null);
-    onSubmit(text, resolveLanguage(text), { bypassCache: true, ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
+    onSubmit(text, resolveLanguage(text), { ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
   }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
@@ -1573,7 +1590,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true);
     setProblemTab('solution');
-    onSubmit(combined, language, { bypassCache: true });
+    onSubmit(combined, language, {});
   }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
 
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {

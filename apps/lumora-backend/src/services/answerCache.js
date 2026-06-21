@@ -19,6 +19,7 @@
  */
 import Redis from 'ioredis';
 import crypto from 'crypto';
+import { query } from '../lib/shared-db.js';
 
 const REDIS_URL = process.env.REDIS_URL || process.env.REDIS_PRIVATE_URL || null;
 const DEFAULT_TTL_SECONDS = parseInt(process.env.ANSWER_CACHE_TTL_SECONDS || String(30 * 24 * 60 * 60), 10);
@@ -112,31 +113,60 @@ export function buildAnswerCacheKey(parts) {
   return `lumora:answer:v7:${h}`;
 }
 
-export async function cacheGet(key) {
-  const c = getClient();
-  if (!c) return null;
+async function cacheGetFromDb(key) {
   try {
-    const raw = await c.get(key);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (err) {
-    console.warn('[answerCache] get failed:', err.message);
+    const result = await query(
+      'SELECT answer_json FROM lumora_answer_cache WHERE cache_key = $1',
+      [key],
+    );
+    return result.rows.length > 0 ? result.rows[0].answer_json : null;
+  } catch {
     return null;
   }
 }
 
-export async function cacheSet(key, value, ttlSeconds = DEFAULT_TTL_SECONDS) {
-  const c = getClient();
-  if (!c) return;
+async function cacheSetToDb(key, value) {
   try {
-    const payload = JSON.stringify(value);
-    // Don't cache absurdly large answers; safety-rail for misbehaving
-    // generations that would bloat Redis memory.
-    if (payload.length > 256 * 1024) return;
-    await c.set(key, payload, 'EX', ttlSeconds);
+    await query(
+      `INSERT INTO lumora_answer_cache (cache_key, answer_json)
+       VALUES ($1, $2)
+       ON CONFLICT (cache_key) DO NOTHING`,
+      [key, JSON.stringify(value)],
+    );
   } catch (err) {
-    console.warn('[answerCache] set failed:', err.message);
+    console.warn('[answerCache] DB write failed:', err.message);
   }
+}
+
+export async function cacheGet(key) {
+  const c = getClient();
+  if (c) {
+    try {
+      const raw = await c.get(key);
+      if (raw) return JSON.parse(raw);
+    } catch (err) {
+      console.warn('[answerCache] Redis get failed:', err.message);
+    }
+  }
+  // DB fallback — permanent storage, survives Redis restarts and TTL expiry
+  return cacheGetFromDb(key);
+}
+
+export async function cacheSet(key, value, ttlSeconds = DEFAULT_TTL_SECONDS) {
+  const payload = JSON.stringify(value);
+  // Don't cache absurdly large answers; safety-rail for misbehaving
+  // generations that would bloat Redis memory.
+  if (payload.length > 256 * 1024) return;
+  const c = getClient();
+  if (c) {
+    try {
+      await c.set(key, payload, 'EX', ttlSeconds);
+    } catch (err) {
+      console.warn('[answerCache] Redis set failed:', err.message);
+    }
+  }
+  // Always write to DB for permanent persistence (fire-and-forget)
+  cacheSetToDb(key, value).catch(() => {});
 }
 
 /**
