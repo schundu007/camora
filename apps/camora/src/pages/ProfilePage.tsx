@@ -59,7 +59,10 @@ function PreferencesTab() {
   const [primaryRole, setPrimaryRole] = useState<string>('');
   const [savingRoles, setSavingRoles] = useState(false);
   const [rolesSaved, setRolesSaved] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const rolesInitialized = useRef(false);
+  const rolesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -78,10 +81,37 @@ function PreferencesTab() {
         setSelectedRoles(roles);
         setPrimaryRole(roles[0] || '');
         setResumes(resumesData);
+        rolesInitialized.current = true;
       })
       .catch(console.error)
       .finally(() => setLoadingStatus(false));
   }, [token]);
+
+  // Auto-save roles whenever selection or primary changes (debounced, skip initial load)
+  useEffect(() => {
+    if (!rolesInitialized.current) return;
+    if (rolesDebounceRef.current) clearTimeout(rolesDebounceRef.current);
+    rolesDebounceRef.current = setTimeout(async () => {
+      if (selectedRoles.length === 0) return;
+      setSavingRoles(true);
+      const ordered = primaryRole && selectedRoles.includes(primaryRole)
+        ? [primaryRole, ...selectedRoles.filter(r => r !== primaryRole)]
+        : selectedRoles;
+      try {
+        const res = await fetch(`${CAPRA_API}/api/onboarding/update-roles`, {
+          method: 'POST', credentials: 'include',
+          headers: { ...(getAuthHeaders() as object), 'Content-Type': 'application/json' } as Record<string, string>,
+          body: JSON.stringify({ job_roles: ordered }),
+        });
+        if (res.ok) {
+          setStatus(prev => prev ? { ...prev, job_roles: ordered } : prev);
+          setRolesSaved(true);
+          setTimeout(() => setRolesSaved(false), 2500);
+        }
+      } finally { setSavingRoles(false); }
+    }, 700);
+    return () => { if (rolesDebounceRef.current) clearTimeout(rolesDebounceRef.current); };
+  }, [selectedRoles, primaryRole]);
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
@@ -164,35 +194,22 @@ function PreferencesTab() {
     } finally { setDeletingId(null); }
   };
 
-  const handleSaveRoles = async () => {
-    if (selectedRoles.length === 0) return;
-    setSavingRoles(true);
-    const ordered = primaryRole && selectedRoles.includes(primaryRole)
-      ? [primaryRole, ...selectedRoles.filter(r => r !== primaryRole)]
-      : selectedRoles;
-    try {
-      const res = await fetch(`${CAPRA_API}/api/onboarding/update-roles`, {
-        method: 'POST', credentials: 'include',
-        headers: { ...(getAuthHeaders() as object), 'Content-Type': 'application/json' } as Record<string, string>,
-        body: JSON.stringify({ job_roles: ordered }),
-      });
-      if (res.ok) {
-        setSelectedRoles(ordered);
-        setStatus(prev => prev ? { ...prev, job_roles: ordered } : prev);
-        setRolesSaved(true);
-        setTimeout(() => setRolesSaved(false), 3000);
-      }
-    } finally { setSavingRoles(false); }
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileUpload(file);
   };
 
-  const cardHeader = (title: string, badge?: React.ReactNode, saved?: boolean) => (
+  const cardHeader = (title: string, badge?: React.ReactNode, saving?: boolean, saved?: boolean) => (
     <div className="px-5 py-3 flex items-center justify-between"
       style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
       <div className="flex items-center gap-3">
         <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{title}</h3>
         {badge}
       </div>
-      {saved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+      {saving && <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Saving…</span>}
+      {!saving && saved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
     </div>
   );
 
@@ -206,7 +223,7 @@ function PreferencesTab() {
     <div className="space-y-6">
       {/* ── Job Roles ─────────────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        {cardHeader('Job Roles', undefined, rolesSaved)}
+        {cardHeader('Job Roles', undefined, savingRoles, rolesSaved)}
         <div className="px-5 py-4">
           <p className="text-[13px] mb-4" style={{ color: 'var(--text-secondary)' }}>
             Select the roles you're actively interviewing for. Camora tailors AI coaching and practice questions to these tracks.
@@ -245,7 +262,7 @@ function PreferencesTab() {
 
           {/* Primary role picker — only shown when 2+ roles selected */}
           {selectedRoles.length > 1 && (
-            <div className="mb-5 p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+            <div className="p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-muted)' }}>Primary Role</p>
               <div className="flex flex-wrap gap-2">
                 {selectedRoles.map(r => (
@@ -268,16 +285,9 @@ function PreferencesTab() {
             </div>
           )}
 
-          <div className="flex items-center gap-3">
-            <button onClick={handleSaveRoles} disabled={savingRoles || selectedRoles.length === 0}
-              className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-              style={{ background: 'var(--cam-primary)' }}>
-              {savingRoles ? 'Saving…' : 'Save Roles'}
-            </button>
-            {selectedRoles.length > 0 && (
-              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{selectedRoles.length} selected · <strong style={{ color: 'var(--cam-gold-leaf-dk)' }}>{primaryRole}</strong> is primary</span>
-            )}
-          </div>
+          {selectedRoles.length === 0 && (
+            <p className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>Select at least one role to get personalized coaching.</p>
+          )}
         </div>
       </div>
 
@@ -332,13 +342,12 @@ function PreferencesTab() {
                       {new Date(resume.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
-                  {resume.is_active && (
+                  {resume.is_active ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
                       style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>
                       Active
                     </span>
-                  )}
-                  {!resume.is_active && (
+                  ) : (
                     <button
                       onClick={() => handleActivateResume(resume.id)}
                       disabled={activatingId === resume.id}
@@ -386,11 +395,36 @@ function PreferencesTab() {
               </div>
               {resumeTab === 'upload' ? (
                 <label
-                  className={`w-full py-8 rounded-xl text-[13px] font-medium transition-colors flex items-center justify-center cursor-pointer${uploading ? ' opacity-50 pointer-events-none' : ''}`}
-                  style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)', background: 'var(--bg-surface)' }}>
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  className={`w-full rounded-xl text-[13px] font-medium transition-all flex flex-col items-center justify-center gap-3 cursor-pointer select-none${uploading ? ' opacity-50 pointer-events-none' : ''}`}
+                  style={{
+                    border: `2px dashed ${dragOver ? 'var(--cam-primary)' : 'var(--border)'}`,
+                    background: dragOver ? 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))' : 'var(--bg-surface)',
+                    color: 'var(--text-muted)',
+                    padding: '2.5rem 1rem',
+                  }}>
                   <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) { handleFileUpload(f); e.target.value = ''; } }} />
-                  {uploading ? 'Uploading…' : '↑  Click to upload PDF, DOCX, or TXT  ·  max 5 MB'}
+                  {uploading ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
+                      <span>Uploading…</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                      <div className="text-center">
+                        <p className="font-semibold text-[14px]" style={{ color: 'var(--text-primary)' }}>
+                          {dragOver ? 'Drop to upload' : 'Click to upload or drag & drop'}
+                        </p>
+                        <p className="text-[12px] mt-0.5">PDF, DOCX, or TXT · max 5 MB</p>
+                      </div>
+                    </>
+                  )}
                 </label>
               ) : (
                 <>
@@ -398,11 +432,14 @@ function PreferencesTab() {
                     placeholder="Paste your full resume here…" rows={9}
                     className="w-full p-3 rounded-lg text-[13px] resize-none outline-none"
                     style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
-                  <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
-                    className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
-                    style={{ background: 'var(--cam-primary)' }}>
-                    {savingText ? 'Saving…' : 'Save Resume'}
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : 'Paste plain text or copy from a doc'}</span>
+                    <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
+                      className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
+                      style={{ background: 'var(--cam-primary)' }}>
+                      {savingText ? 'Saving…' : 'Save Resume'}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
