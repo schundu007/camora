@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
+import mammoth from 'mammoth';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 
@@ -42,9 +43,16 @@ router.post('/upload-resume', authenticate, upload.single('resume'), async (req,
 
     if (mimetype === 'text/plain' || originalname.endsWith('.txt')) {
       text = buffer.toString('utf-8');
+    } else if (
+      mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      originalname.endsWith('.docx')
+    ) {
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value.trim();
+      if (text.length < 50) text = `[Could not extract text from ${originalname}]`;
     } else if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
       text = buffer.toString('utf-8').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
-      if (text.length < 50) text = `[PDF uploaded: ${originalname}]`;
+      if (text.length < 50) text = `[PDF uploaded: ${originalname} — paste text directly for best results]`;
     } else {
       text = `[Document uploaded: ${originalname}]`;
     }
