@@ -137,8 +137,10 @@ export default function DocsPage({ onBack }) {
     }
     return initial;
   });
+  const [topicsLoading, setTopicsLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
+    setTopicsLoading(true);
 
     if (activePage === 'overview') {
       const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'mlops', 'aiops', 'challenges'];
@@ -147,12 +149,14 @@ export default function DocsPage({ onBack }) {
         const merged = {};
         results.forEach((data) => { if (Object.keys(data).length > 0) Object.assign(merged, data); });
         if (Object.keys(merged).length > 0) setHeavyData((prev) => ({ ...prev, ...merged }));
-      }).catch(() => {});
+        setTopicsLoading(false);
+      }).catch(() => { if (!cancelled) setTopicsLoading(false); });
     } else {
       loadTopicsForPage(activePage).then((data) => {
-        if (cancelled || Object.keys(data).length === 0) return;
-        setHeavyData((prev) => ({ ...prev, ...data }));
-      }).catch(() => { /* network error — leave previous state in place */ });
+        if (cancelled) return;
+        if (Object.keys(data).length > 0) setHeavyData((prev) => ({ ...prev, ...data }));
+        setTopicsLoading(false);
+      }).catch(() => { if (!cancelled) setTopicsLoading(false); });
     }
 
     return () => { cancelled = true; };
@@ -963,6 +967,10 @@ export default function DocsPage({ onBack }) {
                   challenges={devopsChallenges}
                   onBack={() => setSelectedTopic(null)}
                 />
+              ) : selectedTopic && !topicDetails && topicsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} aria-label="Loading topic" />
+                </div>
               ) : selectedTopic && !topicDetails ? (
                 /* Topic not found state */
                 <div className="landing-root animate-fade-in">
