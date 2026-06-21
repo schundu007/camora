@@ -57,9 +57,6 @@ export default function ResumeOptimizer({
 
   const [fetchingJd, setFetchingJd] = useState(false);
   const [generationStep, setGenerationStep] = useState<string | null>(null);
-  type PreviewMap = Partial<Record<OutputTab, string>>;
-  const [previews, setPreviews] = useState<PreviewMap>({});
-  const previewsRef = useRef<PreviewMap>({});
 
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -68,42 +65,6 @@ export default function ResumeOptimizer({
     initialJobUrl ? 'Loading your resume and job description…' : null,
   );
 
-  // Generate per-tab PDF preview once streaming finishes
-  useEffect(() => {
-    if (loading) return;
-    const text = activeTab === 'resume' ? optimizedResume : activeTab === 'coverLetter' ? coverLetter : '';
-    if (!text) return;
-
-    const tab = activeTab;
-    let cancelled = false;
-    (async () => {
-      const { default: jsPDF } = await import('jspdf');
-      if (cancelled) return;
-      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      const pageLines = doc.splitTextToSize(text, 180);
-      let y = 20;
-      for (const line of pageLines as string[]) {
-        if (y > 280) { doc.addPage(); y = 20; }
-        doc.text(line, 15, y);
-        y += 6;
-      }
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      if (cancelled) { URL.revokeObjectURL(url); return; }
-      if (previewsRef.current[tab]) URL.revokeObjectURL(previewsRef.current[tab]!);
-      previewsRef.current = { ...previewsRef.current, [tab]: url };
-      setPreviews({ ...previewsRef.current });
-    })();
-
-    return () => { cancelled = true; };
-  }, [loading, activeTab]);
-
-  // Revoke all blob URLs on unmount
-  useEffect(() => {
-    return () => { Object.values(previewsRef.current).forEach(u => u && URL.revokeObjectURL(u)); };
-  }, []);
 
   const getOutputContent = useCallback(() => {
     switch (activeTab) {
@@ -272,8 +233,6 @@ export default function ResumeOptimizer({
       setError('Please provide a job description or URL.');
       return;
     }
-    previewsRef.current = {};
-    setPreviews({});
     setOptimizedResume('');
     setCoverLetter('');
     setAtsScore('');
@@ -341,7 +300,22 @@ export default function ResumeOptimizer({
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          pages.push(content.items.map((item: any) => item.str ?? '').join(' '));
+          const viewport = page.getViewport({ scale: 1 });
+          const pageHeight = viewport.height;
+          let lastY: number | null = null;
+          let line = '';
+          const lines: string[] = [];
+          for (const item of content.items as any[]) {
+            const y = pageHeight - (item.transform?.[5] ?? 0);
+            if (lastY !== null && Math.abs(y - lastY) > 2) {
+              if (line.trim()) lines.push(line.trim());
+              line = '';
+            }
+            line += (item.str ?? '');
+            lastY = y;
+          }
+          if (line.trim()) lines.push(line.trim());
+          pages.push(lines.join('\n'));
         }
         setResume(pages.join('\n\n'));
       } else {
@@ -428,9 +402,6 @@ export default function ResumeOptimizer({
 
         const co = initialCompany || 'Google';
         const ro = initialRole || '';
-        previewsRef.current = {};
-        setPreviews({});
-
         let optimizedText = '';
         setAutoStatus('Preparing your tailored resume…');
         setActiveTab('resume');
@@ -1104,12 +1075,31 @@ export default function ResumeOptimizer({
               </span>
               <style>{`@keyframes resumeOptimizerSpin { to { transform: rotate(360deg); } }`}</style>
             </div>
-          ) : previews[activeTab] && (activeTab === 'resume' || activeTab === 'coverLetter') ? (
-            <iframe
-              src={previews[activeTab]}
-              title="Document preview"
-              style={{ flex: 1, width: '100%', border: 'none', minHeight: '600px' }}
-            />
+          ) : (activeTab === 'resume' || activeTab === 'coverLetter') && outputContent ? (
+            <div style={{ overflowY: 'auto', flex: 1, padding: '32px 36px', background: '#ffffff', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+              {outputContent.split('\n').map((line, i) => {
+                const t = line.trim();
+                if (!t) return <div key={i} style={{ height: '10px' }} />;
+                const isHeader = t === t.toUpperCase() && t.length > 2 && /[A-Z]/.test(t) && !t.startsWith('•') && !t.startsWith('-');
+                const isBullet = /^[•\-\*]\s/.test(t);
+                if (isHeader) return (
+                  <div key={i} style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', borderBottom: '1.5px solid #cbd5e1', paddingBottom: '3px', marginTop: '18px', marginBottom: '7px', letterSpacing: '0.06em', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                    {t}
+                  </div>
+                );
+                if (isBullet) return (
+                  <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                    <span style={{ flexShrink: 0, marginTop: '1px' }}>•</span>
+                    <span>{t.replace(/^[•\-\*]\s*/, '')}</span>
+                  </div>
+                );
+                return (
+                  <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '1px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+                    {t}
+                  </div>
+                );
+              })}
+            </div>
           ) : activeTab === 'atsScore' && atsData ? (
             <div style={{ overflowY: 'auto', flex: 1, padding: '24px 28px' }}>
               {/* Score ring */}
