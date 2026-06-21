@@ -693,6 +693,23 @@ export default function ResumeOptimizer({
           </div>
         </div>
 
+        {/* Error */}
+        {error && (
+          <div
+            style={{
+              padding: '10px 14px',
+              background: 'color-mix(in oklab, var(--danger) 10%, transparent)',
+              border: '1px solid color-mix(in oklab, var(--danger) 35%, transparent)',
+              borderRadius: '8px',
+              fontSize: '13px',
+              color: 'var(--danger)',
+              fontWeight: 500,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         {/* Resume */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label
@@ -863,23 +880,6 @@ export default function ResumeOptimizer({
             />
           </div>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              padding: '10px 14px',
-              background: 'color-mix(in oklab, var(--danger) 10%, transparent)',
-              border: '1px solid color-mix(in oklab, var(--danger) 35%, transparent)',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: 'var(--danger)',
-              fontWeight: 500,
-            }}
-          >
-            {error}
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { authenticate } from '../middleware/authenticate.js';
+import { fetchJobViaAPI } from './jobAnalyze.js';
 
 const router = Router();
 const client = new Anthropic();
@@ -208,6 +209,14 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
   try {
+    // Try platform-specific API extraction first (Workday, Greenhouse, Lever, Ashby, etc.)
+    // These APIs return clean text directly, no scraping needed.
+    const apiResult = await fetchJobViaAPI(url).catch(() => null);
+    if (apiResult && apiResult.text && apiResult.text.length > 100) {
+      return res.json({ text: apiResult.text });
+    }
+
+    // Fall back to plain HTML scraping for generic pages
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     let response;
@@ -230,11 +239,9 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
 
     let html = await response.text();
 
-    // Strip scripts, styles, and HTML tags with regex (no cheerio dependency)
     html = html.replace(/<script[\s\S]*?<\/script>/gi, ' ');
     html = html.replace(/<style[\s\S]*?<\/style>/gi, ' ');
     html = html.replace(/<[^>]+>/g, ' ');
-    // Decode common HTML entities
     html = html
       .replace(/&amp;/g, '&')
       .replace(/&lt;/g, '<')
@@ -242,14 +249,12 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&nbsp;/g, ' ');
-    // Collapse whitespace — take first 12k chars as raw input for Claude
     const rawText = html.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim().substring(0, 12000);
 
     if (rawText.length < 100) {
       return res.status(400).json({ error: 'Could not extract job description from that URL. Try pasting it directly.' });
     }
 
-    // Use Claude Haiku to extract only the relevant JD content, stripping nav/footer/ads
     const extraction = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1500,

@@ -699,3 +699,4 @@ router.post('/text', async (req, res) => {
 });
 
 export default router;
+export { fetchJobViaAPI };
