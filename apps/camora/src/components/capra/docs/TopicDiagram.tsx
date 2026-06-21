@@ -39,7 +39,6 @@ export default function TopicDiagram({
         border: '1px solid var(--border)',
         display: 'block',
         width: '100%',
-        padding: '16px',
       }}
     >
       <img
