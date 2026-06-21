@@ -3099,7 +3099,7 @@ Quick quality first: 360p available in minutes, 4K later`
           outOfScope: ['Voice/video calling', 'Payment features', 'Status/Stories', 'WhatsApp Business API', 'Sticker marketplace'],
         },
         keyChallenge: 'Delivering 100 billion messages per day with sub-second latency while maintaining end-to-end encryption — the server itself cannot read any message content.',
-        screenshotUrl: '/diagrams/whatsapp/whatsapp-ui-mockup.png',
+        screenshotUrl: '/logos/whatsapp.png',
       },
 
       introduction: `WhatsApp is the world's most widely used messaging application, connecting over **2 billion** monthly active users across **180+ countries**. At its peak, the system delivers over **100 billion messages per day** with sub-second latency, making it one of the most demanding distributed systems ever built.
