@@ -18,7 +18,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def mk(out, name, title, **kw):
     os.makedirs(out, exist_ok=True)
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='120', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
            label=f'  {title}  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b', **kw)
     return g, os.path.join(out, name)
 
