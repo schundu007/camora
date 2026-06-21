@@ -831,24 +831,11 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── Interactive Toolbar with Progress ── */}
+      {/* ── Interactive Toolbar ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 py-3 mb-5 border-b border-[var(--border)]">
+        {/* Left — primary actions */}
         <div className="flex items-center gap-2">
-          {/* Progress */}
-          {progressInfo && (
-            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded bg-[var(--bg-surface)] border border-[var(--border)]">
-              <svg className="w-5 h-5 -rotate-90" viewBox="0 0 20 20">
-                <circle cx="10" cy="10" r="8" fill="none" stroke="var(--bg-elevated)" strokeWidth="2.5" />
-                <circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 8}`}
-                  strokeDashoffset={`${2 * Math.PI * 8 * (1 - progressInfo.percent / 100)}`}
-                />
-              </svg>
-              <span className="text-[11px] font-bold text-[var(--text-secondary)] landing-mono">{progressInfo.percent}%</span>
-              <span className="text-[10px] text-[var(--text-muted)] landing-mono hidden sm:inline">{progressInfo.completed}/{progressInfo.total}</span>
-            </div>
-          )}
-          {/* Mark as Complete */}
+          {/* Mark as Complete — solid primary CTA */}
           <button
             onClick={() => {
               const wasComplete = !!completedTopics[selectedTopic];
@@ -857,26 +844,56 @@ export default function TopicDetail({
                 celebrate({ title: `${topicDetails.title} complete`, subtitle: 'Nice work — keep the streak going.' });
               }
             }}
-            className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded text-sm font-medium transition-colors landing-body ${completedTopics[selectedTopic] ? 'bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20' : 'text-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border)]'}`}
+            className="flex items-center gap-2 px-3 py-2 rounded text-sm font-semibold transition-all landing-body"
+            style={completedTopics[selectedTopic]
+              ? { background: 'rgba(22,163,74,0.12)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.3)' }
+              : { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }}
           >
-            <Icon name={completedTopics[selectedTopic] ? 'checkCircle' : 'check'} size={16} />
+            <Icon name={completedTopics[selectedTopic] ? 'checkCircle' : 'check'} size={15} />
             <span className="hidden sm:inline">{completedTopics[selectedTopic] ? 'Completed' : 'Mark as Complete'}</span>
           </button>
-          {/* Star */}
+          {/* Bookmark */}
           <button
             onClick={() => toggleStar(selectedTopic)}
-            className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded text-sm transition-colors ${starredTopics[selectedTopic] ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)] hover:text-[var(--text-primary)]'}`}
+            title={starredTopics[selectedTopic] ? 'Bookmarked' : 'Bookmark this topic'}
+            className="flex items-center justify-center w-9 h-9 rounded transition-colors border"
+            style={starredTopics[selectedTopic]
+              ? { color: '#ca8a04', borderColor: 'rgba(202,138,4,0.35)', background: 'rgba(202,138,4,0.08)' }
+              : { color: 'var(--text-muted)', borderColor: 'var(--border)', background: 'transparent' }}
           >
             <Icon name={starredTopics[selectedTopic] ? 'star5' : 'star'} size={16} />
           </button>
         </div>
+
+        {/* Right — context + AI */}
         <div className="flex items-center gap-2">
+          {/* Section progress — clearly labeled */}
+          {progressInfo && (
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+              <svg className="w-4 h-4 flex-shrink-0 -rotate-90" viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="5.5" fill="none" stroke="var(--bg-elevated)" strokeWidth="2.5" />
+                <circle cx="8" cy="8" r="5.5" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 5.5}`}
+                  strokeDashoffset={`${2 * Math.PI * 5.5 * (1 - progressInfo.percent / 100)}`}
+                />
+              </svg>
+              <div className="flex flex-col leading-none gap-px">
+                <span className="text-[9px] font-bold uppercase tracking-widest landing-mono" style={{ color: 'var(--text-muted)' }}>Section</span>
+                <span className="text-[11px] font-bold landing-mono" style={{ color: 'var(--text-primary)' }}>
+                  {progressInfo.completed}<span style={{ color: 'var(--text-muted)' }}>/{progressInfo.total} done</span>
+                </span>
+              </div>
+            </div>
+          )}
           {/* Ask AI */}
           <button
             onClick={() => setShowAskAI(!showAskAI)}
-            className={`flex items-center gap-2 px-2 sm:px-3 py-2 rounded text-sm font-medium transition-colors landing-body ${showAskAI ? 'bg-[var(--accent)]/10 text-[var(--text-primary)] border border-[var(--border)]' : 'text-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] border border-[var(--border)]'}`}
+            className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors landing-body border"
+            style={showAskAI
+              ? { background: 'color-mix(in oklab, var(--accent) 10%, transparent)', color: 'var(--text-primary)', borderColor: 'var(--border)' }
+              : { background: 'transparent', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
           >
-            <Icon name="sparkles" size={16} />
+            <Icon name="sparkles" size={15} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
         </div>
