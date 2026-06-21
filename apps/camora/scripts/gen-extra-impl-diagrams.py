@@ -13,7 +13,7 @@ C = {
     'red': ('#fee2e2','#ef4444','#991b1b'), 'cyan': ('#cffafe','#06b6d4','#155e75'),
 }
 def n(g, nm, label, c): g.node(nm, label, fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2], **NODE)
-def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
+def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color='#94a3b8', fontcolor='#64748b', style=style, **EDGE)
 def mk(out, name, title):
     os.makedirs(out, exist_ok=True)
     g = graphviz.Digraph(format='png')
