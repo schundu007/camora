@@ -42,14 +42,16 @@ export default function ResumeOptimizer({
   const [activeTab, setActiveTab] = useState<OutputTab>('resume');
   const [optimizedResume, setOptimizedResume] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
-  const [atsScore, _setAtsScore] = useState('');
+  const [atsScore, setAtsScore] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [fetchingJd, setFetchingJd] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const previewUrlRef = useRef<string | null>(null);
+  const [generationStep, setGenerationStep] = useState<string | null>(null);
+  type PreviewMap = Partial<Record<OutputTab, string>>;
+  const [previews, setPreviews] = useState<PreviewMap>({});
+  const previewsRef = useRef<PreviewMap>({});
 
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -58,12 +60,13 @@ export default function ResumeOptimizer({
     initialJobUrl ? 'Loading your resume and job description…' : null,
   );
 
-  // Generate inline PDF preview once streaming finishes
+  // Generate per-tab PDF preview once streaming finishes
   useEffect(() => {
     if (loading) return;
     const text = activeTab === 'resume' ? optimizedResume : activeTab === 'coverLetter' ? coverLetter : '';
     if (!text) return;
 
+    const tab = activeTab;
     let cancelled = false;
     (async () => {
       const { default: jsPDF } = await import('jspdf');
@@ -81,17 +84,17 @@ export default function ResumeOptimizer({
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
       if (cancelled) { URL.revokeObjectURL(url); return; }
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-      previewUrlRef.current = url;
-      setPreviewUrl(url);
+      if (previewsRef.current[tab]) URL.revokeObjectURL(previewsRef.current[tab]!);
+      previewsRef.current = { ...previewsRef.current, [tab]: url };
+      setPreviews({ ...previewsRef.current });
     })();
 
     return () => { cancelled = true; };
   }, [loading, activeTab]);
 
-  // Revoke blob URL on unmount
+  // Revoke all blob URLs on unmount
   useEffect(() => {
-    return () => { if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current); };
+    return () => { Object.values(previewsRef.current).forEach(u => u && URL.revokeObjectURL(u)); };
   }, []);
 
   const getOutputContent = useCallback(() => {
@@ -119,7 +122,6 @@ export default function ResumeOptimizer({
     setLoading(true);
     setError(null);
     setter('');
-    setPreviewUrl(null);
     let fullText = '';
 
     // Abort any in-flight request
@@ -215,7 +217,7 @@ export default function ResumeOptimizer({
     }
   }
 
-  function handleOptimizeResume() {
+  async function handleGenerateAll() {
     if (!resume.trim()) {
       setError('Please paste your resume first.');
       return;
@@ -224,21 +226,26 @@ export default function ResumeOptimizer({
       setError('Please provide a job description or URL.');
       return;
     }
-    setActiveTab('resume');
-    streamResponse('/api/v1/resume/optimize', setOptimizedResume);
-  }
+    previewsRef.current = {};
+    setPreviews({});
+    setOptimizedResume('');
+    setCoverLetter('');
+    setAtsScore('');
 
-  function handleGenerateCoverLetter() {
-    if (!resume.trim()) {
-      setError('Please paste your resume first.');
-      return;
-    }
-    if (!jobDescription.trim() && !jobUrl.trim()) {
-      setError('Please provide a job description or URL.');
-      return;
-    }
+    setGenerationStep('Resume');
+    setActiveTab('resume');
+    await streamResponse('/api/v1/resume/optimize', setOptimizedResume);
+
+    setGenerationStep('Cover Letter');
     setActiveTab('coverLetter');
-    streamResponse('/api/v1/resume/cover-letter', setCoverLetter);
+    await streamResponse('/api/v1/resume/cover-letter', setCoverLetter);
+
+    setGenerationStep('ATS Score');
+    setActiveTab('atsScore');
+    await streamResponse('/api/v1/resume/ats-score', setAtsScore);
+
+    setGenerationStep(null);
+    setActiveTab('resume');
   }
 
   async function handleFetchJd() {
@@ -324,7 +331,8 @@ export default function ResumeOptimizer({
     (async () => {
       try {
         setAutoStatus('Loading your base resume…');
-        const profileRes = await fetch(`${API_URL}/api/v1/auth/profile/resume`, {
+        const LUMORA = import.meta.env.VITE_LUMORA_API_URL || 'http://localhost:8000';
+        const profileRes = await fetch(`${LUMORA}/api/v1/auth/profile/resume`, {
           credentials: 'include',
           headers: getAuthHeaders(),
         });
@@ -357,15 +365,32 @@ export default function ResumeOptimizer({
 
         const co = initialCompany || 'Google';
         const ro = initialRole || '';
-        setActiveTab('resume');
+        previewsRef.current = {};
+        setPreviews({});
+
+        let optimizedText = '';
         setAutoStatus('Preparing your tailored resume…');
+        setActiveTab('resume');
         await streamResponse('/api/v1/resume/optimize', setOptimizedResume, {
           overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
-          onComplete: (optimizedText) => {
-            setAutoStatus(null);
-            handleSaveToDocuments(jdText, optimizedText, co, ro);
-          },
+          onComplete: (text) => { optimizedText = text; },
         });
+
+        setAutoStatus('Generating cover letter…');
+        setActiveTab('coverLetter');
+        await streamResponse('/api/v1/resume/cover-letter', setCoverLetter, {
+          overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
+        });
+
+        setAutoStatus('Calculating ATS score…');
+        setActiveTab('atsScore');
+        await streamResponse('/api/v1/resume/ats-score', setAtsScore, {
+          overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
+        });
+
+        setAutoStatus(null);
+        setActiveTab('resume');
+        if (optimizedText) handleSaveToDocuments(jdText, optimizedText, co, ro);
       } catch (err) {
         setFetchingJd(false);
         setAutoStatus(null);
@@ -788,7 +813,7 @@ export default function ResumeOptimizer({
         <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
           <button
             type="button"
-            onClick={handleOptimizeResume}
+            onClick={handleGenerateAll}
             disabled={loading}
             style={{
               flex: 1,
@@ -807,30 +832,7 @@ export default function ResumeOptimizer({
               opacity: loading ? 0.65 : 1,
             }}
           >
-            Optimize Resume
-          </button>
-          <button
-            type="button"
-            onClick={handleGenerateCoverLetter}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '12px 20px',
-              border: '1px solid var(--border)',
-              borderRadius: '10px',
-              background: loading ? 'var(--bg-elevated)' : 'var(--accent)',
-              color: '#ffffff',
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
-              opacity: loading ? 0.65 : 1,
-            }}
-          >
-            Generate Cover Letter
+            {generationStep ? `Generating ${generationStep}…` : 'Generate Resume + Cover Letter + ATS'}
           </button>
         </div>
       </div>
@@ -1026,17 +1028,13 @@ export default function ResumeOptimizer({
                 }}
               />
               <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                {activeTab === 'resume'
-                  ? 'Optimizing your resume...'
-                  : activeTab === 'coverLetter'
-                    ? 'Generating cover letter...'
-                    : 'Calculating ATS score...'}
+                {generationStep ? `Generating ${generationStep}…` : 'Generating…'}
               </span>
               <style>{`@keyframes resumeOptimizerSpin { to { transform: rotate(360deg); } }`}</style>
             </div>
-          ) : previewUrl && (activeTab === 'resume' || activeTab === 'coverLetter') ? (
+          ) : previews[activeTab] && (activeTab === 'resume' || activeTab === 'coverLetter') ? (
             <iframe
-              src={previewUrl}
+              src={previews[activeTab]}
               title="Document preview"
               style={{ flex: 1, width: '100%', border: 'none', minHeight: '600px' }}
             />
