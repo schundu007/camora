@@ -1900,14 +1900,14 @@ export default function TopicDetail({
                   <ContentHeading
                     title="Layered Design"
                     actions={<GlassPill>{effectiveLayeredDesign.length} layers</GlassPill>}
+                    
                   />
                   <TopicDiagram
                     topicId={topicDetails.id || selectedTopic}
                     kind="layered"
                     alt="Layered Design"
                     caption="Layered Design"
-                    fullBleed
-                    className="-mx-4 sm:-mx-6 lg:-mx-8 mb-3"
+                    className="mb-3"
                   />
                   <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 mt-1 landing-mono uppercase tracking-widest">Layer Breakdown</p>
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -1958,8 +1958,7 @@ export default function TopicDetail({
                             kind={`deep-dive-${d.id}`}
                             alt={d.title}
                             caption={d.title}
-                            fullBleed
-                            className="-mx-4 sm:-mx-6 lg:-mx-8"
+                            className=""
                           />
                         </div>
                       ))}
@@ -1987,8 +1986,7 @@ export default function TopicDetail({
                             kind={`tradeoff-${t.id}`}
                             alt={t.title}
                             caption={t.title}
-                            fullBleed
-                            className="-mx-4 sm:-mx-6 lg:-mx-8"
+                            className=""
                           />
                         </div>
                       ))}
@@ -2014,8 +2012,7 @@ export default function TopicDetail({
                             kind="architecture-basic"
                             alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
                             caption={topicDetails.basicImplementation.title || 'Basic Architecture'}
-                            fullBleed
-                            className="-mx-4 sm:-mx-6 lg:-mx-8 mb-3"
+                            className="mb-3"
                           />
                         ) : (
                           <ContentDiagram
@@ -2055,8 +2052,7 @@ export default function TopicDetail({
                             kind="architecture-advanced"
                             alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
                             caption={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
-                            fullBleed
-                            className="-mx-4 sm:-mx-6 lg:-mx-8 mb-3"
+                            className="mb-3"
                           />
                         ) : (
                           <ContentDiagram
@@ -2103,8 +2099,7 @@ export default function TopicDetail({
                               kind="flow-createFlow"
                               alt={topicDetails.createFlow.title}
                               caption={topicDetails.createFlow.title}
-                              fullBleed
-                              className="-mx-4 sm:-mx-6 lg:-mx-8 mb-3"
+                              className="mb-3"
                             />
                           )}
                           <ol className="space-y-1">
@@ -2134,8 +2129,7 @@ export default function TopicDetail({
                               kind="flow-redirectFlow"
                               alt={topicDetails.redirectFlow.title}
                               caption={topicDetails.redirectFlow.title}
-                              fullBleed
-                              className="-mx-4 sm:-mx-6 lg:-mx-8 mb-3"
+                              className="mb-3"
                             />
                           )}
                           <ol className="space-y-1">
@@ -3149,8 +3143,7 @@ export default function TopicDetail({
                         kind={`deep-dive-${d.id}`}
                         alt={d.title}
                         caption={d.title}
-                        fullBleed
-                        className="-mx-4 sm:-mx-6 lg:-mx-8"
+                        className=""
                       />
                     </div>
                   ))}
@@ -3175,8 +3168,7 @@ export default function TopicDetail({
                         kind={`tradeoff-${t.id}`}
                         alt={t.title}
                         caption={t.title}
-                        fullBleed
-                        className="-mx-4 sm:-mx-6 lg:-mx-8"
+                        className=""
                       />
                     </div>
                   ))}
