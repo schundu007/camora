@@ -88,14 +88,13 @@ def render_layered(spec: dict, out_path: Path) -> None:
     if not layers:
         raise SystemExit("layered: empty layers")
 
+    max_comps = max((len(layer.get("components") or []) for layer in layers), default=1)
+    max_comps = max(max_comps, 1)
+
     g = graphviz.Digraph(format="png")
     g.attr(
         "graph",
         bgcolor=BG_GRAPH,
-        rankdir="TB",
-        splines="ortho",
-        nodesep="0.40",
-        ranksep="0.65",
         pad="0.85,0.85",
         fontname=FONT_HEADING,
         fontcolor="#0f172a",
@@ -106,24 +105,44 @@ def render_layered(spec: dict, out_path: Path) -> None:
         ),
         labelloc="t",
         size="16,40",
-        dpi="180",
+        dpi="200",
     )
     g.attr("node", shape="none", margin="0")
-    g.attr("edge", color=ARROW_COLOR, penwidth="2.5",
-           arrowsize="1.0", arrowhead="vee")
+
+    # Build all layers as rows in a SINGLE HTML table so every row is
+    # automatically the same width — the only reliable way in Graphviz.
+    rows: list[str] = []
 
     for i, layer in enumerate(layers):
         pal   = _LAYER_PALETTES[i % len(_LAYER_PALETTES)]
         name  = _esc(layer.get("name", f"Layer {i + 1}"))
         purp  = layer.get("purpose", "")
         comps = layer.get("components") or []
-        n     = max(len(comps), 1)
 
-        # ── Row 1: colored header band ────────────────────────────────────
-        header = (
+        # Thin gap + arrow separator between layers
+        if i > 0:
+            rows.append(
+                f'<TR><TD COLSPAN="{max_comps}" BORDER="0" HEIGHT="4"'
+                f' BGCOLOR="{BG_GRAPH}"></TD></TR>'
+            )
+            rows.append(
+                f'<TR><TD COLSPAN="{max_comps}" BORDER="0" ALIGN="CENTER"'
+                f' CELLPADDING="2" BGCOLOR="{BG_GRAPH}">'
+                f'<FONT FACE="{FONT_BODY}" POINT-SIZE="18" COLOR="{ARROW_COLOR}">'
+                f'&#8595;'
+                f'</FONT></TD></TR>'
+            )
+            rows.append(
+                f'<TR><TD COLSPAN="{max_comps}" BORDER="0" HEIGHT="4"'
+                f' BGCOLOR="{BG_GRAPH}"></TD></TR>'
+            )
+
+        # ── Header band ───────────────────────────────────────────────────
+        rows.append(
             f'<TR>'
-            f'<TD COLSPAN="{n}" BGCOLOR="{pal["band_bg"]}" BORDER="0" '
-            f'    CELLPADDING="11" ALIGN="LEFT">'
+            f'<TD COLSPAN="{max_comps}" BGCOLOR="{pal["band_bg"]}" BORDER="0"'
+            f' CELLPADDING="11" ALIGN="LEFT"'
+            f' STYLE="ROUNDED">'
             f'<FONT FACE="{FONT_HEADING}" POINT-SIZE="14" COLOR="{pal["band_fg"]}">'
             f'&#160;&#160;{name}'
             f'</FONT>'
@@ -131,14 +150,13 @@ def render_layered(spec: dict, out_path: Path) -> None:
             f'</TR>'
         )
 
-        # ── Row 2: purpose text (optional, italic, wrapped) ───────────────
-        purpose_row = ""
+        # ── Purpose text ──────────────────────────────────────────────────
         if purp:
-            wrapped = _br_wrap(purp, width=80)
-            purpose_row = (
+            wrapped = _br_wrap(purp, width=90)
+            rows.append(
                 f'<TR>'
-                f'<TD COLSPAN="{n}" BGCOLOR="{pal["layer_bg"]}" BORDER="0" '
-                f'    CELLPADDING="8" ALIGN="LEFT">'
+                f'<TD COLSPAN="{max_comps}" BGCOLOR="{pal["layer_bg"]}" BORDER="0"'
+                f' CELLPADDING="8" ALIGN="LEFT">'
                 f'<FONT FACE="{FONT_BODY}" POINT-SIZE="10.5" COLOR="{pal["purpose_fg"]}">'
                 f'<I>{wrapped}</I>'
                 f'</FONT>'
@@ -146,39 +164,45 @@ def render_layered(spec: dict, out_path: Path) -> None:
                 f'</TR>'
             )
 
-        # ── Row 3: spacer ─────────────────────────────────────────────────
-        spacer = f'<TR><TD COLSPAN="{n}" BORDER="0" HEIGHT="6"></TD></TR>'
+        # ── Spacer before chips ───────────────────────────────────────────
+        rows.append(
+            f'<TR><TD COLSPAN="{max_comps}" BGCOLOR="{pal["layer_bg"]}"'
+            f' BORDER="0" HEIGHT="6"></TD></TR>'
+        )
 
-        # ── Row 4: component chips ────────────────────────────────────────
+        # ── Component chips ───────────────────────────────────────────────
         if comps:
             cells = "".join(
-                f'<TD BGCOLOR="{pal["comp_bg"]}" STYLE="ROUNDED" BORDER="1" '
-                f'   COLOR="{pal["comp_bd"]}" CELLPADDING="9" WIDTH="{_COMP_CELL_W}">'
+                f'<TD BGCOLOR="{pal["comp_bg"]}" STYLE="ROUNDED" BORDER="1"'
+                f' COLOR="{pal["comp_bd"]}" CELLPADDING="9" WIDTH="{_COMP_CELL_W}">'
                 f'<FONT FACE="{FONT_BODY}" POINT-SIZE="11" COLOR="{pal["comp_fg"]}">'
                 f'<B>{_esc(c)}</B>'
                 f'</FONT>'
                 f'</TD>'
                 for c in comps
             )
-            comp_row = f'<TR>{cells}</TR>'
+            rows.append(f'<TR BGCOLOR="{pal["layer_bg"]}">{cells}</TR>')
         else:
-            comp_row = (
-                f'<TR><TD BORDER="0" CELLPADDING="6">'
-                f'<FONT COLOR="#94a3b8">(no components)</FONT></TD></TR>'
+            rows.append(
+                f'<TR><TD COLSPAN="{max_comps}" BGCOLOR="{pal["layer_bg"]}"'
+                f' BORDER="0" CELLPADDING="6">'
+                f'<FONT COLOR="#94a3b8">(no components)</FONT>'
+                f'</TD></TR>'
             )
 
-        label = (
-            f'<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="6"'
-            f' BGCOLOR="{pal["layer_bg"]}" COLOR="{pal["layer_bd"]}"'
-            f' CELLPADDING="0" STYLE="ROUNDED">'
-            + header + purpose_row + spacer + comp_row + spacer +
-            f'</TABLE>>'
+        # ── Bottom spacer ─────────────────────────────────────────────────
+        rows.append(
+            f'<TR><TD COLSPAN="{max_comps}" BGCOLOR="{pal["layer_bg"]}"'
+            f' BORDER="0" HEIGHT="8"></TD></TR>'
         )
-        g.node(f"layer_{i}", label=label)
 
-    for i in range(len(layers) - 1):
-        g.edge(f"layer_{i}", f"layer_{i + 1}")
-
+    label = (
+        f'<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="0"'
+        f' BGCOLOR="{BG_GRAPH}">'
+        + "".join(rows) +
+        f'</TABLE>>'
+    )
+    g.node("layers", label=label)
     _render_to_file(g, out_path)
 
 
