@@ -675,7 +675,7 @@ function RadarChart({ values, labels, size = 200 }) {
 
 /* ══════════════════════════════ Score Ring ══════════════════════════════ */
 
-function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
+function ScoreRing({ value, size = 140, strokeW = 10, animated = false, showLabel = true }) {
   const r = (size - strokeW) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (Math.min(value, 100) / 100) * circ;
@@ -684,9 +684,11 @@ function ScoreRing({ value, size = 140, strokeW = 10, animated = false }) {
     <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--bg-elevated)" strokeWidth={strokeW} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={strokeW} strokeDasharray={circ} strokeDashoffset={animated ? offset : offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }} />
-      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="var(--text-primary)" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "var(--font-sans)" }}>
-        {value}%
-      </text>
+      {showLabel && (
+        <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central" fill="var(--text-primary)" fontSize={size * 0.22} fontWeight={800} style={{ transform: 'rotate(90deg)', transformOrigin: 'center', fontFamily: "var(--font-sans)" }}>
+          {value}%
+        </text>
+      )}
     </svg>
   );
 }
@@ -2015,7 +2017,7 @@ export default function PracticePage() {
                   {/* Score ring + grade */}
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <ScoreRing value={finalAvgScore} size={160} strokeW={12} animated />
+                      <ScoreRing value={finalAvgScore} size={160} strokeW={12} animated showLabel={false} />
                       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <span style={{ fontSize: 36, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{finalAvgScore}%</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: gradeColor, marginTop: 2 }}>Grade {grade}</span>
