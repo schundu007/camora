@@ -253,6 +253,7 @@ export default function ResumeOptimizer({
       if (!res.ok) throw new Error(data.error || 'ATS analysis failed');
       setAtsData(data);
       setAtsScore('ats-rendered');
+      return data;
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'ATS analysis failed');
@@ -374,6 +375,18 @@ export default function ResumeOptimizer({
     if (!initialJobUrl || didAutoInit.current) return;
     didAutoInit.current = true;
 
+    const cacheKey = `camora_resume_cache_${initialJobUrl}`;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (cached?.optimizedResume && cached?.coverLetter) {
+        setOptimizedResume(cached.optimizedResume);
+        setCoverLetter(cached.coverLetter);
+        if (cached.atsData) { setAtsData(cached.atsData); setAtsScore('ats-rendered'); }
+        if (cached.jobDescription) setJobDescription(cached.jobDescription);
+        return;
+      }
+    } catch { /* ignore corrupt cache */ }
+
     (async () => {
       try {
         setAutoStatus('Loading your base resume…');
@@ -422,15 +435,26 @@ export default function ResumeOptimizer({
           onComplete: (text) => { optimizedText = text; },
         });
 
+        let clText = '';
         setAutoStatus('Generating cover letter…');
         setActiveTab('coverLetter');
         await streamResponse('/api/v1/resume/cover-letter', setCoverLetter, {
           overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
+          onComplete: (text) => { clText = text; },
         });
 
         setAutoStatus('Calculating ATS score…');
         setActiveTab('atsScore');
-        await fetchAtsScore({ overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro } });
+        const atsDataResult = await fetchAtsScore({ overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro } });
+
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            optimizedResume: optimizedText,
+            coverLetter: clText,
+            atsData: atsDataResult || null,
+            jobDescription: jdText,
+          }));
+        } catch { /* quota exceeded — ignore */ }
 
         setAutoStatus(null);
         setActiveTab('resume');
