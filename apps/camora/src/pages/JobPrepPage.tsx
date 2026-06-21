@@ -475,6 +475,17 @@ export default function JobPrepPage() {
   /* ── Main render ── */
   const techStack = job.ai_tech_stack || [];
   const studyRounds = buildStudyPath(job);
+  const jobRole = detectRoleFromTitle(job.title || '');
+  const ROLE_PRIMARY_PAGE: Record<string, string> = {
+    sre: 'sre', devops: 'devops', platform: 'platform', cloud: 'cloud',
+    ml: 'mlops', security: 'devops', data: 'system-design',
+    mobile: 'coding', frontend: 'coding', fullstack: 'system-design',
+    backend: 'system-design', general: 'system-design',
+  };
+  const startPracticingUrl = buildPrepUrl(
+    ROLE_PRIMARY_PAGE[jobRole] ?? 'system-design',
+    jobRole, undefined, job.title, job.company_name
+  );
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -1042,7 +1053,7 @@ export default function JobPrepPage() {
             </h2>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/capra/practice"
+                to={startPracticingUrl}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
