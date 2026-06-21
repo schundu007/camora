@@ -215,6 +215,7 @@ export default function ResumeOptimizer({
     if (opts?.onComplete && fullText) {
       opts.onComplete(fullText);
     }
+    return fullText;
   }
 
   async function fetchAtsScore(opts?: {
@@ -284,7 +285,7 @@ export default function ResumeOptimizer({
 
     setGenerationStep('Resume');
     setActiveTab('resume');
-    await streamResponse('/api/v1/resume/optimize', setOptimizedResume);
+    const optimizedText = await streamResponse('/api/v1/resume/optimize', setOptimizedResume);
 
     setGenerationStep('Cover Letter');
     setActiveTab('coverLetter');
@@ -292,7 +293,7 @@ export default function ResumeOptimizer({
 
     setGenerationStep('ATS Score');
     setActiveTab('atsScore');
-    await fetchAtsScore();
+    await fetchAtsScore({ overrides: { resume: optimizedText || resume } });
 
     setGenerationStep(null);
     setActiveTab('resume');
