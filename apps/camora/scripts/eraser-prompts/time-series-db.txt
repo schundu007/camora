@@ -1,0 +1,1 @@
+Design a time-series database: write-optimized columnar ingestion, automatic downsampling, retention and tiering policies, PromQL-style query engine, and HA replication. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

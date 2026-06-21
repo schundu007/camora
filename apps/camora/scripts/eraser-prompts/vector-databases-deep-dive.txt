@@ -1,0 +1,1 @@
+Design a vector database: embedding storage, ANN index (HNSW/IVF), similarity search, and filtering. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

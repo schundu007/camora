@@ -1,0 +1,1 @@
+Design a large-language-model serving platform: prompt routing, model inference cluster, token streaming, conversation context storage, and token billing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

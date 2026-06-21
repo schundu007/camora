@@ -1,0 +1,1 @@
+Design a real-time leaderboard: sorted-set data structure, score ingestion pipeline, rank computation, pagination, and periodic snapshot to durable storage. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

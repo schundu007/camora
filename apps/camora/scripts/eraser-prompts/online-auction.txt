@@ -1,0 +1,1 @@
+Design an online auction like eBay: real-time bidding, auction state, anti-fraud, payment, and notifications. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a multi-tier cache: browser cache, CDN, application cache, distributed cache, database query cache. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

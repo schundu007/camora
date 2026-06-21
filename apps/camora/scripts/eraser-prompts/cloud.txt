@@ -1,0 +1,1 @@
+Design a multi-cloud architecture: AWS, Azure, and GCP core services, hybrid connectivity, and disaster recovery. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a Bloom filter system: hash functions, bit array, false positives, and membership testing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

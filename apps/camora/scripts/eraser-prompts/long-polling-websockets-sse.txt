@@ -1,0 +1,1 @@
+Compare long polling, WebSockets, and Server-Sent Events for real-time communication. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

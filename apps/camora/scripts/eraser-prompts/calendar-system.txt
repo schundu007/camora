@@ -1,0 +1,1 @@
+Design a distributed calendar system: event storage, recurring event expansion, invite/RSVP flow, conflict detection, CalDAV sync, and push notifications. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a distributed task scheduler: job queue with priorities, worker pool, cron triggers, at-least-once retry with exponential backoff, and dead-letter queue. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

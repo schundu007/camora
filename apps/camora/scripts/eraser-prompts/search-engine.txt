@@ -1,0 +1,1 @@
+Design a web search engine: distributed crawler, URL frontier, inverted index construction, PageRank, query parsing, spell correction, and ranked result caching. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

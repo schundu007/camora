@@ -1,0 +1,1 @@
+Design Tinder: geohash-based profile discovery, swipe event processing, mutual-match detection, push notification, in-app chat, and boost/super-like mechanics. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a blob/object storage system: content-addressed storage, metadata index, chunk sharding, multi-region replication, CDN delivery, and lifecycle policies. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

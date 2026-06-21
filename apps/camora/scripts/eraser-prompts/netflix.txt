@@ -1,0 +1,1 @@
+Design Netflix: content ingestion and transcoding pipeline, CDN delivery with Open Connect, recommendation engine, adaptive streaming, A/B testing platform. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

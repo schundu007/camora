@@ -1,0 +1,69 @@
+name: Generate Eraser Diagrams
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Single topic slug to generate (leave empty for all missing)'
+        required: false
+        default: ''
+      provider:
+        description: 'Cloud provider'
+        required: false
+        default: 'all'
+        type: choice
+        options: [all, aws, azure, gcp]
+      force:
+        description: 'Regenerate even if PNG already exists'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Build flags
+        id: flags
+        run: |
+          FLAGS=""
+          if [ -n "${{ inputs.slug }}" ]; then FLAGS="$FLAGS --slug=${{ inputs.slug }}"; fi
+          if [ "${{ inputs.provider }}" != "all" ]; then FLAGS="$FLAGS --provider=${{ inputs.provider }}"; fi
+          if [ "${{ inputs.force }}" = "true" ]; then FLAGS="$FLAGS --force"; fi
+          echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"
+
+      - name: Generate diagrams
+        env:
+          ERASER_COOKIE: ${{ secrets.ERASER_COOKIE }}
+          ERASER_CFUVID: ${{ secrets.ERASER_CFUVID }}
+          ERASER_DEVICE_ID: ${{ secrets.ERASER_DEVICE_ID }}
+        run: node apps/camora/scripts/gen-eraser-browser.mjs ${{ steps.flags.outputs.flags }}
+
+      - name: Commit generated PNGs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/camora/public/diagrams/
+          if git diff --cached --quiet; then
+            echo "No new diagrams generated."
+          else
+            git commit -m "chore(diagrams): auto-generate eraser PNGs [skip ci]"
+            git push
+          fi

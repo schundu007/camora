@@ -1,0 +1,1 @@
+Compare REST and RPC: HTTP semantics, gRPC, GraphQL, and use cases for each. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a DevOps pipeline: CI/CD, Docker/K8s, infrastructure as code, monitoring, and blue-green deploys. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

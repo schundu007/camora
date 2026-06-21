@@ -1,0 +1,1 @@
+Design a distributed file system like HDFS: name nodes, data nodes, replication, and chunk servers. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

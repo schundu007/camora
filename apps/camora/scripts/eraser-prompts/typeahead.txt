@@ -1,0 +1,1 @@
+Design a typeahead search system: prefix trie or Ternary Search Tree, top-K completion ranking by query frequency, distributed caching layer, and incremental index updates. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

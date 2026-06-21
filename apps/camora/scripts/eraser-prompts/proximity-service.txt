@@ -1,0 +1,1 @@
+Design a proximity/location service: geospatial indexing with geohash or quadtree, real-time location update ingestion, radius search, and result caching. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

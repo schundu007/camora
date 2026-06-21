@@ -1,0 +1,1 @@
+Design Zoom: WebRTC-based video conferencing, media server selective forwarding unit (SFU), screen sharing pipeline, cloud recording, breakout rooms, and scalable signaling. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

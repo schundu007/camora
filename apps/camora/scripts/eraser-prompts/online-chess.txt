@@ -1,0 +1,1 @@
+Design an online chess platform: real-time game-state sync via WebSockets, matchmaking with ELO, server-side move validation, clock management, and replay storage. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

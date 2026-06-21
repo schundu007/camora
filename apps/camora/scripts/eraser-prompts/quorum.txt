@@ -1,0 +1,1 @@
+Visualize quorum consistency: read quorum R, write quorum W, N replicas with R+W>N for strong consistency. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

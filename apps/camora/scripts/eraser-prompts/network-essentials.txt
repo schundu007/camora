@@ -1,0 +1,1 @@
+Visualize network essentials: TCP/IP, OSI layers, DNS, HTTP/HTTPS, load balancers, and firewalls. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

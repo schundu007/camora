@@ -1,0 +1,1 @@
+Design a database indexing system: B-tree, hash index, secondary index, and composite index structures. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

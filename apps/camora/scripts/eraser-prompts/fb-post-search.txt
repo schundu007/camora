@@ -1,0 +1,1 @@
+Design Facebook post search: inverted index, sharding by user/timestamp, ranking, and caching. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

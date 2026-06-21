@@ -1,0 +1,1 @@
+Design Google Docs: real-time collaborative editing with OT/CRDT, presence awareness, document storage, revision history, and fine-grained sharing permissions. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

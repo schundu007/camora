@@ -1,0 +1,1 @@
+Design SRE practices: SLI/SLO/SLA, error budgets, toil reduction, incident management, chaos engineering. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

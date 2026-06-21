@@ -1,0 +1,1 @@
+Show data partitioning strategies: range-based, hash-based, geographic, and consistent hashing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

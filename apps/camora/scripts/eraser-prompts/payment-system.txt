@@ -1,0 +1,1 @@
+Design a payment system: idempotent transfer ledger, multi-currency conversion, reconciliation pipeline, regulatory reporting, and fraud detection. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

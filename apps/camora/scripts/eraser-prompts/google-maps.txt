@@ -1,0 +1,1 @@
+Design Google Maps: geospatial tile server, routing engine with Dijkstra/A*, real-time traffic data ingestion, place search, and ETA prediction. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

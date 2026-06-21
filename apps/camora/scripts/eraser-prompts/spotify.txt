@@ -1,0 +1,1 @@
+Design Spotify: audio encoding and CDN delivery, playlist management, recommendation with collaborative filtering, playback state sync, podcast ingestion, and social features. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

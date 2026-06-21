@@ -1,0 +1,1 @@
+Design Twitter: tweet write path, social graph service, hybrid fanout-on-write/read timeline, trending topics, full-text search, and push notification delivery. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

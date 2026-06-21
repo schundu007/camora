@@ -1,0 +1,1 @@
+Visualize CAP theorem and PACELC: consistency, availability, partition tolerance, and latency tradeoffs. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design Apache Cassandra: consistent hashing ring, SSTables, compaction, gossip protocol, read/write paths. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

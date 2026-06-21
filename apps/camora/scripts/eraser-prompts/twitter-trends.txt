@@ -1,0 +1,1 @@
+Design Twitter Trending Topics: sliding-window event stream counting, distributed heavy-hitter detection with Count-Min Sketch, geo-filtering, and real-time ranking API. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

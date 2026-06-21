@@ -1,0 +1,1 @@
+Design Dropbox: file chunking and deduplication, block storage, sync client with delta uploads, conflict resolution, sharing with ACLs, and version history. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

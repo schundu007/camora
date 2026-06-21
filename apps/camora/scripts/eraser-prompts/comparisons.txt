@@ -1,0 +1,1 @@
+Compare distributed systems tradeoffs: SQL vs NoSQL, sync vs async, monolith vs microservices, push vs pull. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

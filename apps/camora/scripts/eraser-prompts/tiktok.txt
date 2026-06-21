@@ -1,0 +1,1 @@
+Design TikTok: video upload and transcoding pipeline, CDN delivery, For-You-Page personalized ranking, creator analytics, live streaming ingestion, and content moderation. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

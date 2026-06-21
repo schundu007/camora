@@ -1,0 +1,1 @@
+Design a CDN: origin servers, edge servers, request routing, cache invalidation, and SSL termination. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

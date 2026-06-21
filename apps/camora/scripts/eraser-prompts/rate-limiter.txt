@@ -1,0 +1,1 @@
+Design a distributed rate limiter: token bucket and sliding-window counter algorithms, Redis-backed distributed state, per-user/IP/API-key limits, and burst allowance. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

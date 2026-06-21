@@ -1,0 +1,1 @@
+Design a rate limiter: token bucket, leaky bucket, fixed window, sliding window, distributed rate limiting. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

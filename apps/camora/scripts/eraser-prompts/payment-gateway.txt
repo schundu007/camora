@@ -1,0 +1,1 @@
+Design a payment gateway: card tokenization, PCI-DSS compliant processing, fraud scoring, multi-acquirer routing, settlement batching, and chargeback handling. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

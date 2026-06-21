@@ -1,0 +1,1 @@
+Visualize networking fundamentals: TCP/IP stack, routing, switching, VLANs, NAT, and firewall rules. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

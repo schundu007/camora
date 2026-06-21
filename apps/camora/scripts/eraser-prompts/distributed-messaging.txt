@@ -1,0 +1,1 @@
+Design a distributed messaging system: pub/sub, topics, partitions, consumer groups, at-least-once delivery. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

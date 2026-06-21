@@ -1,0 +1,1 @@
+Design a digital wallet: account ledger, idempotent transaction processing, fraud scoring, balance reconciliation, payment rails integration, and regulatory compliance. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.
