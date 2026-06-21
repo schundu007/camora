@@ -64,7 +64,8 @@ export default function ResumeOptimizer({
   const [autoStatus, setAutoStatus] = useState<string | null>(
     initialJobUrl ? 'Loading your resume and job description…' : null,
   );
-
+  const [jdMode, setJdMode] = useState<'paste' | 'url'>(initialJobUrl ? 'url' : 'paste');
+  const [resumeMode, setResumeMode] = useState<'paste' | 'upload'>('paste');
 
   const getOutputContent = useCallback(() => {
     switch (activeTab) {
@@ -274,6 +275,7 @@ export default function ResumeOptimizer({
       if (!res.ok) throw new Error(data.error || 'Failed to fetch job description');
       setJobDescription(data.text);
       setJobUrl('');
+      setJdMode('paste');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch URL');
     } finally {
@@ -495,539 +497,228 @@ export default function ResumeOptimizer({
   const outputContent = getOutputContent();
   const hasOutput = Boolean(outputContent);
 
+  const chipStyle = (active: boolean): React.CSSProperties => ({
+    padding: '3px 12px',
+    borderRadius: '20px',
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '0.02em',
+    cursor: 'pointer',
+    border: active ? '1px solid var(--cam-gold-leaf, #d4af37)' : '1px solid var(--border)',
+    background: active ? 'var(--cam-gold-leaf, #d4af37)' : 'transparent',
+    color: active ? '#020617' : 'var(--text-muted)',
+    transition: 'all 0.12s',
+    lineHeight: '1',
+  });
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
+    fontSize: '10px',
+    fontWeight: 700,
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.18em',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '11px 14px',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    fontSize: '13px',
+    fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
+    color: 'var(--text-primary)',
+    background: 'var(--bg-elevated)',
+    resize: 'vertical' as const,
+    outline: 'none',
+    lineHeight: '1.6',
+    boxSizing: 'border-box' as const,
+  };
+
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '24px',
-        minHeight: '600px',
-        fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-      }}
-    >
-      {/* ───────── Left: Input Panel ───────── */}
-      <div
-        style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-        }}
-      >
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px' }}>
-          <span style={{
-            display: 'block',
-            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-            fontSize: '10px',
-            fontWeight: 700,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--cam-gold-leaf)',
-            marginBottom: '6px',
-          }}>
-            AI-Powered
-          </span>
-          <h2 style={{
-            fontFamily: "'Clash Display', Satoshi, sans-serif",
-            fontSize: '22px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            margin: 0,
-            letterSpacing: '-0.02em',
-          }}>
-            Resume Optimizer
-          </h2>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif" }}>
+
+      {/* ── Header ── */}
+      <div>
+        <span style={{ display: 'block', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '4px' }}>
+          AI-Powered
+        </span>
+        <h2 style={{ fontFamily: "'Clash Display', Satoshi, sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          Resume Optimizer
+        </h2>
+      </div>
+
+      {/* ── Auto-status banner ── */}
+      {autoStatus && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'color-mix(in oklab, var(--accent) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)', borderRadius: '8px', fontSize: '13px', color: 'var(--accent)', fontWeight: 500 }}>
+          <div style={{ width: '13px', height: '13px', border: '2px solid color-mix(in oklab, var(--accent) 30%, transparent)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'resumeOptimizerSpin 0.8s linear infinite', flexShrink: 0 }} />
+          {autoStatus}
+        </div>
+      )}
+
+      {/* ── Error ── */}
+      {error && (
+        <div style={{ padding: '10px 14px', background: 'color-mix(in oklab, var(--danger) 10%, transparent)', border: '1px solid color-mix(in oklab, var(--danger) 35%, transparent)', borderRadius: '8px', fontSize: '13px', color: 'var(--danger)', fontWeight: 500 }}>
+          {error}
+        </div>
+      )}
+
+      {/* ── Job Description ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={labelStyle}>Job Description</span>
+          <button type="button" style={chipStyle(jdMode === 'paste')} onClick={() => setJdMode('paste')}>Paste JD</button>
+          <button type="button" style={chipStyle(jdMode === 'url')} onClick={() => setJdMode('url')}>Fetch URL</button>
         </div>
 
-        {/* Auto-prepare status banner */}
-        {autoStatus && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              padding: '10px 14px',
-              background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
-              border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: 'var(--accent)',
-              fontWeight: 500,
-            }}
-          >
-            <div
-              style={{
-                width: '13px',
-                height: '13px',
-                border: '2px solid color-mix(in oklab, var(--accent) 30%, transparent)',
-                borderTopColor: 'var(--accent)',
-                borderRadius: '50%',
-                animation: 'resumeOptimizerSpin 0.8s linear infinite',
-                flexShrink: 0,
-              }}
-            />
-            {autoStatus}
-          </div>
-        )}
-
-        {/* Job Description */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label
-            style={{
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-              fontSize: '10px',
-              fontWeight: 700,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.18em',
-            }}
-          >
-            Job Description
-          </label>
+        {jdMode === 'paste' && (
           <textarea
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste the full job description here..."
-            rows={6}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              border: '1px solid var(--border)',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-              color: 'var(--text-primary)',
-              background: 'var(--bg-elevated)',
-              resize: 'vertical',
-              outline: 'none',
-              lineHeight: '1.6',
-              boxSizing: 'border-box',
-            }}
+            rows={5}
+            style={inputStyle}
           />
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
-          >
-            <span
-              style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}
-            >
-              Or paste a URL:
-            </span>
+        )}
+
+        {jdMode === 'url' && (
+          <div style={{ display: 'flex', gap: '8px' }}>
             <input
               type="url"
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleFetchJd(); }}
               placeholder="https://jobs.example.com/posting/123"
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontFamily: "'Source Code Pro', monospace",
-                color: 'var(--text-primary)',
-                background: 'var(--bg-elevated)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
+              style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "'Source Code Pro', monospace", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const }}
             />
             <button
               type="button"
               onClick={handleFetchJd}
               disabled={fetchingJd || !jobUrl.trim()}
-              style={{
-                padding: '8px 14px',
-                borderRadius: '8px',
-                background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)',
-                color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff',
-                border: fetchingJd || !jobUrl.trim() ? '1px solid var(--border)' : '1px solid var(--accent)',
-                fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'background-color 0.15s ease-out, border-color 0.15s ease-out',
-                opacity: fetchingJd ? 0.65 : 1,
-              }}
+              style={{ padding: '10px 16px', borderRadius: '8px', background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)', color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border)', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const, opacity: fetchingJd ? 0.65 : 1, transition: 'all 0.15s' }}
             >
               {fetchingJd ? 'Fetching…' : 'Fetch'}
             </button>
           </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              padding: '10px 14px',
-              background: 'color-mix(in oklab, var(--danger) 10%, transparent)',
-              border: '1px solid color-mix(in oklab, var(--danger) 35%, transparent)',
-              borderRadius: '8px',
-              fontSize: '13px',
-              color: 'var(--danger)',
-              fontWeight: 500,
-            }}
-          >
-            {error}
-          </div>
         )}
 
-        {/* Resume */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label
-            style={{
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-              fontSize: '10px',
-              fontWeight: 700,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.18em',
-            }}
-          >
-            Your Resume
-          </label>
+        {jdMode === 'url' && jobDescription && (
+          <div style={{ padding: '8px 12px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '8px', fontSize: '12px', color: '#22c55e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Job description fetched — switch to "Paste JD" to review or edit
+          </div>
+        )}
+      </div>
+
+      {/* ── Your Resume ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={labelStyle}>Your Resume</span>
+          <button type="button" style={chipStyle(resumeMode === 'paste')} onClick={() => setResumeMode('paste')}>Paste Resume</button>
+          <button type="button" style={chipStyle(resumeMode === 'upload')} onClick={() => setResumeMode('upload')}>Upload File</button>
+        </div>
+
+        {resumeMode === 'paste' && (
           <textarea
             value={resume}
             onChange={(e) => setResume(e.target.value)}
             placeholder="Paste your existing resume text here..."
             rows={6}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              border: '1px solid var(--border)',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-              color: 'var(--text-primary)',
-              background: 'var(--bg-elevated)',
-              resize: 'vertical',
-              outline: 'none',
-              lineHeight: '1.6',
-              boxSizing: 'border-box',
-            }}
+            style={inputStyle}
           />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".txt,.pdf,.docx"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
-          <button
-            type="button"
+        )}
+
+        {resumeMode === 'upload' && !resume && (
+          <div
             onClick={() => fileInputRef.current?.click()}
-            style={{
-              alignSelf: 'flex-start',
-              padding: '7px 16px',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              background: 'var(--bg-surface)',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'border-color 0.15s',
+            onDragOver={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'; }}
+            onDragLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
+            onDrop={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+              const file = e.dataTransfer.files?.[0];
+              if (file) {
+                const synth = { target: { files: [file], value: '' } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                handleFileUpload(synth);
+              }
             }}
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                'var(--accent)')
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                'var(--border)')
-            }
+            style={{ border: '2px dashed var(--border)', borderRadius: '10px', padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'var(--bg-elevated)', transition: 'border-color 0.15s' }}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            Upload file (.txt, .pdf, .docx)
-          </button>
-        </div>
-
-        {/* Target Company + Role */}
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-            }}
-          >
-            <label
-              style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              Target Company
-            </label>
-            <input
-              list="company-suggestions"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="e.g. Google, Zscaler…"
-              style={{
-                padding: '10px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-                color: 'var(--text-primary)',
-                background: 'var(--bg-elevated)',
-                outline: 'none',
-                boxSizing: 'border-box',
-                width: '100%',
-              }}
-            />
-            <datalist id="company-suggestions">
-              {COMPANIES.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Click to upload or drag & drop</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>.txt · .pdf · .docx</span>
           </div>
+        )}
 
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-            }}
-          >
-            <label
-              style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-              }}
-            >
-              Target Role
-            </label>
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Senior Software Engineer"
-              style={{
-                padding: '10px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-                color: 'var(--text-primary)',
-                background: 'var(--bg-elevated)',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
+        {resumeMode === 'upload' && resume && (
+          <div style={{ padding: '12px 14px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.22)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 500, flex: 1 }}>Resume loaded — {resume.split('\n').filter(Boolean).length} lines</span>
+            <button type="button" onClick={() => setResume('')} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}>Remove</button>
+            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>Replace</button>
           </div>
-        </div>
+        )}
 
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
-          <button
-            type="button"
-            onClick={handleGenerateAll}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '12px 20px',
-              border: '1px solid var(--border)',
-              borderRadius: '10px',
-              background: loading ? 'var(--bg-elevated)' : 'var(--accent)',
-              color: '#ffffff',
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.15s ease-out, opacity 0.15s ease-out',
-              opacity: loading ? 0.65 : 1,
-            }}
-          >
-            {generationStep ? `Generating ${generationStep}…` : 'Generate Resume + Cover Letter + ATS'}
-          </button>
+        <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} style={{ display: 'none' }} />
+      </div>
+
+      {/* ── Target Company + Role ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace" }}>Target Company</label>
+          <input
+            list="company-suggestions"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            placeholder="e.g. Google, Zscaler…"
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
+          />
+          <datalist id="company-suggestions">
+            {COMPANIES.map((c) => <option key={c} value={c} />)}
+          </datalist>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace" }}>Target Role</label>
+          <input
+            type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="e.g. Senior Software Engineer"
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
+          />
         </div>
       </div>
 
-      {/* ───────── Right: Output Panel ───────── */}
-      <div
-        style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          borderRadius: '16px',
-          padding: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          minHeight: 0,
-        }}
+      {/* ── Generate Button ── */}
+      <button
+        type="button"
+        onClick={handleGenerateAll}
+        disabled={loading}
+        style={{ width: '100%', padding: '12px 20px', border: '1px solid var(--border)', borderRadius: '10px', background: loading ? 'var(--bg-elevated)' : 'var(--accent)', color: '#ffffff', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.65 : 1, transition: 'all 0.15s' }}
       >
-        {/* Panel header */}
-        <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        {generationStep ? `Generating ${generationStep}…` : 'Generate Resume + Cover Letter + ATS'}
+      </button>
+
+      {/* ── Document Preview ── */}
+      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <span style={{
-              display: 'block',
-              fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-              fontSize: '10px',
-              fontWeight: 700,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: 'var(--cam-gold-leaf)',
-              marginBottom: '6px',
-            }}>Output</span>
-            <h3 style={{
-              fontFamily: "'Clash Display', Satoshi, sans-serif",
-              fontSize: '18px',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              margin: 0,
-              letterSpacing: '-0.016em',
-            }}>Document Preview</h3>
+            <span style={{ display: 'block', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '2px' }}>Output</span>
+            <h3 style={{ fontFamily: "'Clash Display', Satoshi, sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.016em' }}>Document Preview</h3>
           </div>
-        </div>
-
-        {/* Tab switcher + action buttons row */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-          }}
-        >
-          {/* Tabs */}
-          <div className="tab-group">
-            {(
-              [
-                { key: 'resume' as OutputTab, label: 'Resume' },
-                { key: 'coverLetter' as OutputTab, label: 'Cover Letter' },
-                { key: 'atsScore' as OutputTab, label: 'ATS Score' },
-              ] as const
-            ).map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`tab-group-item${isActive ? ' tab-group-item-active' : ''}`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Copy + Download */}
           {hasOutput && (
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={handleCopy}
-                style={{
-                  padding: '6px 14px',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  background: 'var(--bg-surface)',
-                  fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  transition: 'border-color 0.15s ease-out, color 0.15s ease-out',
-                }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    'var(--accent)')
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.borderColor =
-                    'var(--border)')
-                }
-              >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
+              <button type="button" onClick={handleCopy} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               {(['docx', 'pdf'] as const).map((fmt) => (
-                <button
-                  key={fmt}
-                  type="button"
-                  onClick={fmt === 'docx' ? handleDownloadDocx : handleDownloadPdf}
-                  style={{
-                    padding: '6px 14px',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    background: 'var(--bg-surface)',
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
-                    transition: 'border-color 0.15s',
-                  }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)')
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)')
-                  }
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
+                <button key={fmt} type="button" onClick={fmt === 'docx' ? handleDownloadDocx : handleDownloadPdf} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   .{fmt}
                 </button>
               ))}
@@ -1035,57 +726,41 @@ export default function ResumeOptimizer({
           )}
         </div>
 
-        {/* Content area */}
-        <div
-          style={{
-            flex: 1,
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
-            borderRadius: '10px',
-            overflow: 'hidden',
-            minHeight: '400px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {loading ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flex: 1,
-                gap: '16px',
-                padding: '20px',
-              }}
+        <div className="tab-group">
+          {([
+            { key: 'resume' as OutputTab, label: 'Resume' },
+            { key: 'coverLetter' as OutputTab, label: 'Cover Letter' },
+            { key: 'atsScore' as OutputTab, label: 'ATS Score' },
+          ] as const).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`tab-group-item${activeTab === tab.key ? ' tab-group-item-active' : ''}`}
             >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  border: '3px solid var(--border)',
-                  borderTopColor: 'var(--accent)',
-                  borderRadius: '50%',
-                  animation: 'resumeOptimizerSpin 0.8s linear infinite',
-                }}
-              />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', minHeight: '360px', display: 'flex', flexDirection: 'column' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '16px', padding: '40px 20px' }}>
+              <div style={{ width: '36px', height: '36px', border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'resumeOptimizerSpin 0.8s linear infinite' }} />
               <span style={{ fontSize: '14px', color: 'var(--text-muted)', fontWeight: 500 }}>
                 {generationStep ? `Generating ${generationStep}…` : 'Generating…'}
               </span>
               <style>{`@keyframes resumeOptimizerSpin { to { transform: rotate(360deg); } }`}</style>
             </div>
           ) : (activeTab === 'resume' || activeTab === 'coverLetter') && outputContent ? (
-            <div style={{ overflowY: 'auto', flex: 1, padding: '32px 36px', background: '#ffffff', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+            <div style={{ overflowY: 'auto', flex: 1, padding: '28px 32px', background: '#ffffff', fontFamily: "'Georgia', 'Times New Roman', serif" }}>
               {outputContent.split('\n').map((line, i) => {
                 const t = line.trim();
                 if (!t) return <div key={i} style={{ height: '10px' }} />;
                 const isHeader = t === t.toUpperCase() && t.length > 2 && /[A-Z]/.test(t) && !t.startsWith('•') && !t.startsWith('-');
                 const isBullet = /^[•\-\*]\s/.test(t);
                 if (isHeader) return (
-                  <div key={i} style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', borderBottom: '1.5px solid #cbd5e1', paddingBottom: '3px', marginTop: '18px', marginBottom: '7px', letterSpacing: '0.06em', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-                    {t}
-                  </div>
+                  <div key={i} style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', borderBottom: '1.5px solid #cbd5e1', paddingBottom: '3px', marginTop: '18px', marginBottom: '7px', letterSpacing: '0.06em', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>
                 );
                 if (isBullet) return (
                   <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
@@ -1093,16 +768,11 @@ export default function ResumeOptimizer({
                     <span>{t.replace(/^[•\-\*]\s*/, '')}</span>
                   </div>
                 );
-                return (
-                  <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '1px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-                    {t}
-                  </div>
-                );
+                return <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '1px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>;
               })}
             </div>
           ) : activeTab === 'atsScore' && atsData ? (
             <div style={{ overflowY: 'auto', flex: 1, padding: '24px 28px' }}>
-              {/* Score ring */}
               {(() => {
                 const score = atsData.score ?? 0;
                 const color = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
@@ -1113,53 +783,43 @@ export default function ResumeOptimizer({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 28 }}>
                     <svg width={104} height={104} style={{ flexShrink: 0 }}>
                       <circle cx={52} cy={52} r={r} fill="none" stroke="var(--border)" strokeWidth={10} />
-                      <circle cx={52} cy={52} r={r} fill="none" stroke={color} strokeWidth={10}
-                        strokeDasharray={`${dash} ${circ - dash}`}
-                        strokeLinecap="round"
-                        style={{ transform: 'rotate(-90deg)', transformOrigin: '52px 52px', transition: 'stroke-dasharray .6s ease' }} />
+                      <circle cx={52} cy={52} r={r} fill="none" stroke={color} strokeWidth={10} strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '52px 52px', transition: 'stroke-dasharray .6s ease' }} />
                       <text x={52} y={48} textAnchor="middle" fill={color} fontSize={22} fontWeight={700} fontFamily="inherit">{score}</text>
                       <text x={52} y={64} textAnchor="middle" fill="var(--text-muted)" fontSize={11} fontFamily="inherit">/100</text>
                     </svg>
                     <div>
                       <div style={{ fontSize: 22, fontWeight: 700, color, marginBottom: 4 }}>{label} ATS Match</div>
                       <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                        {score >= 75 ? 'Your resume is well-optimized for this role.' :
-                          score >= 50 ? 'Some gaps — review missing keywords below.' :
-                            'Significant gaps found. Tailor your resume using the suggestions.'}
+                        {score >= 75 ? 'Your resume is well-optimized for this role.' : score >= 50 ? 'Some gaps — review missing keywords below.' : 'Significant gaps found. Tailor your resume using the suggestions.'}
                       </div>
                     </div>
                   </div>
                 );
               })()}
-
-              {/* Keywords */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                 {[
                   { title: 'Keywords Matched', items: atsData.keywordsMatched || [], pill: '#16a34a', pillBg: 'rgba(22,163,74,.12)' },
                   { title: 'Keywords Missing', items: atsData.keywordsMissing || [], pill: '#dc2626', pillBg: 'rgba(220,38,38,.12)' },
                 ].map(({ title, items, pill, pillBg }) => (
                   <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
-                    {items.length === 0
-                      ? <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>None</span>
-                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {items.map((k: string) => (
-                            <span key={k} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, color: pill, background: pillBg, border: `1px solid ${pill}33` }}>{k}</span>
-                          ))}
-                        </div>
-                    }
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                    {items.length === 0 ? <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>None</span> : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {items.map((k: string) => (
+                          <span key={k} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, color: pill, background: pillBg, border: `1px solid ${pill}33` }}>{k}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-
-              {/* Strengths / Weaknesses / Suggestions */}
               {[
                 { title: 'Strengths', items: atsData.strengths || [], icon: '✓', iconColor: '#22c55e', iconBg: 'rgba(34,197,94,.12)' },
                 { title: 'Weaknesses', items: atsData.weaknesses || [], icon: '✗', iconColor: '#ef4444', iconBg: 'rgba(239,68,68,.12)' },
                 { title: 'Suggestions', items: atsData.suggestions || [], icon: '→', iconColor: '#3b82f6', iconBg: 'rgba(59,130,246,.12)' },
               ].map(({ title, items, icon, iconColor, iconBg }) => items.length > 0 && (
                 <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {items.map((item: string, i: number) => (
                       <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -1172,58 +832,20 @@ export default function ResumeOptimizer({
               ))}
             </div>
           ) : outputContent && outputContent !== 'ats-rendered' ? (
-            <pre
-              style={{
-                margin: 0,
-                padding: '20px',
-                fontFamily: "'Source Code Pro', monospace",
-                fontSize: '13px',
-                lineHeight: '1.7',
-                color: 'var(--text-primary)',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                overflowY: 'auto',
-                flex: 1,
-              }}
-            >
+            <pre style={{ margin: 0, padding: '20px', fontFamily: "'Source Code Pro', monospace", fontSize: '13px', lineHeight: '1.7', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowY: 'auto', flex: 1 }}>
               {outputContent}
             </pre>
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flex: 1,
-                padding: '20px',
-                gap: '12px',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <svg
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '40px 20px', gap: '12px', color: 'var(--text-muted)' }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
                 <line x1="16" y1="13" x2="8" y2="13" />
                 <line x1="16" y1="17" x2="8" y2="17" />
                 <polyline points="10 9 9 9 8 9" />
               </svg>
-              <span style={{ fontSize: '14px', fontWeight: 500 }}>
-                Output will appear here
-              </span>
-              <span style={{ fontSize: '12px' }}>
-                Paste your resume and a job description, then click an action
-                button.
-              </span>
+              <span style={{ fontSize: '14px', fontWeight: 500 }}>Output will appear here</span>
+              <span style={{ fontSize: '12px', textAlign: 'center' }}>Paste your resume and a job description, then click Generate.</span>
             </div>
           )}
         </div>
