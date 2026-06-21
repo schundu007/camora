@@ -623,7 +623,7 @@ export default function JobPrepPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                   >
-                    Tailor resume
+                    Role Fit
                   </Link>
                 </div>
               </div>
