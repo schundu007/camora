@@ -125,6 +125,9 @@ export function useStreamingSession() {
           setIsDesignQuestion(data.isDesign ?? data.is_design ?? false);
           setIsCodingQuestion(data.isCoding ?? data.is_coding ?? false);
           setParsedBlocks(data.parsed || []);
+          if (data.isDesign ?? data.is_design) {
+            try { sessionStorage.setItem('lumora:lastDesignAnswer', JSON.stringify({ parsed: data.parsed || [], question: trimmedQuestion, ts: Date.now() })); } catch {}
+          }
           setLastFromCache(Boolean(data.fromCache));
           addHistoryEntry({
             question: data.question || trimmedQuestion,
@@ -212,6 +215,7 @@ export function useStreamingSession() {
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
           setParsedBlocks(data.parsed || []);
+          try { sessionStorage.setItem('lumora:lastCodingAnswer', JSON.stringify({ parsed: data.parsed, question: displayTitle, ts: Date.now() })); } catch {}
           setLastFromCache(Boolean(data.fromCache));
           // Coding backend returns parsed as { json: {...}, format: 'ascend_json' } —
           // not a ParsedBlock[]. Flatten the JSON into a real block array so the

@@ -142,6 +142,11 @@ async function runMigrations() {
         data JSONB NOT NULL DEFAULT '{}'::jsonb,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS lumora_answer_cache (
+        cache_key TEXT PRIMARY KEY,
+        answer_json JSONB NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
       // ai_hour_topups + its ALTER/INDEX migrations are owned by
       // ascend-backend (see comment above re: billing-owned tables).
       // Indexes

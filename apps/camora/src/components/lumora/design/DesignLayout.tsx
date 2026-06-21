@@ -247,7 +247,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const source = snapChipCode || problemText;
     if (!source?.trim()) return;
     if (snapChipCode) setSnapChipCode(null);
-    handleSubmit(`${prompt}\n\n${source}`, { bypassCache: true });
+    handleSubmit(`${prompt}\n\n${source}`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapChipCode, problemText]);
 
@@ -609,13 +609,31 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     useSessionStore.getState().setLiveSolveContext(null);
   }, []);
 
-  // Regenerate — re-runs the same design problem with bypass_cache=true
-  // so the backend produces a fresh response instead of replaying a
-  // cached one. The new response is also cached so subsequent solves
-  // hit until invalidation.
+  // Restore last design answer from sessionStorage on mount (refresh or chip-switch back)
+  useEffect(() => {
+    if (!isLoading) {
+      try {
+        const raw = sessionStorage.getItem('lumora:lastDesignAnswer');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved.ts && Date.now() - saved.ts < 4 * 60 * 60 * 1000 && saved.parsed?.length > 0) {
+            const store = useSessionStore.getState();
+            store.setParsedBlocks(saved.parsed);
+            if (saved.question) store.setQuestion(saved.question);
+            store.setIsDesignQuestion(true);
+            store.setIsCodingQuestion(false);
+          }
+        }
+      } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Regenerate — re-submits the same problem. Backend serves from cache
+  // (Redis → DB) so no LLM call unless this is a genuinely new problem.
   const handleRegenerate = useCallback(() => {
     if (!problemText.trim() || isLoading) return;
-    handleSubmit(problemText, { bypassCache: true });
+    handleSubmit(problemText);
   }, [problemText, isLoading, handleSubmit]);
 
   // Keyboard shortcut: Cmd+Enter to submit
