@@ -230,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!cancelled) setIsLoading(false);
 
             // Fetch onboarding status from Capra backend using the fresh token
+            let onboardingDone = true; // optimistic — only redirect on confirmed false
             try {
               const onboardingRes = await fetch(`${CAPRA_API_URL}/api/onboarding/status`, {
                 headers: { Authorization: `Bearer ${bearerToken}` },
@@ -237,8 +238,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (onboardingRes.ok) {
                 const o = await onboardingRes.json();
+                onboardingDone = o.onboarding_completed ?? false;
                 if (!cancelled) {
-                  setOnboardingCompleted(o.onboarding_completed);
+                  setOnboardingCompleted(onboardingDone);
                   setHasResume(o.has_resume ?? false);
                 }
               }
@@ -261,6 +263,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${bearerToken}` },
                   body: JSON.stringify({ code: referralCode }),
                 }).then(() => localStorage.removeItem('camora_referral_code')).catch(() => {});
+              }
+              // New users (onboarding not done) land on / after OAuth — the
+              // ProtectedRoute gate only watches /capra/* so they'd bypass it.
+              // Force-redirect here so they always see resume+role selection.
+              if (!onboardingDone && !window.location.pathname.startsWith('/capra/onboarding')) {
+                window.location.replace('/capra/onboarding');
+                return;
               }
             }
           }
