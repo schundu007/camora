@@ -31,11 +31,10 @@ export default function TopicDiagram({
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   const src = `/diagrams/${topicId}/${kind}.png`;
-  const isLayered = kind === 'layered';
   return (
     <figure
       className={`rounded-xl ${className}`}
-      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', maxWidth: isLayered ? '80%' : '100%', margin: '0 auto' }}
+      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', width: '100%' }}
     >
       <img
         src={src}
@@ -47,7 +46,7 @@ export default function TopicDiagram({
           }
           setFailed(true);
         }}
-        style={{ display: 'block', maxWidth: '100%', width: 'auto', height: 'auto', margin: '0 auto' }}
+        style={{ display: 'block', width: '100%', height: 'auto' }}
       />
       {caption && (
         <figcaption

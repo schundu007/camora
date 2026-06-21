@@ -125,12 +125,9 @@ export default function ZoomableImage({
           onError={() => setBroken(true)}
           style={{
             display: 'block',
-            maxWidth: '100%',
-            maxHeight: 'inherit',
-            width: 'auto',
+            width: '100%',
             height: 'auto',
             objectFit: 'contain',
-            margin: '0 auto',
             ...imgStyle,
           }}
         />
