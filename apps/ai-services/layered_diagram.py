@@ -98,11 +98,7 @@ def render_layered(spec: dict, out_path: Path) -> None:
         pad="0.85,0.85",
         fontname=FONT_HEADING,
         fontcolor="#0f172a",
-        label=(
-            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="24" COLOR="#0f172a">'
-            f'{_esc(title)}</FONT>>'
-            if title else ""
-        ),
+        label="",
         labelloc="t",
         size="16,40",
         dpi="200",
@@ -223,11 +219,7 @@ def render_flow(spec: dict, out_path: Path) -> None:
         pad="0.6",
         fontname=FONT_BODY,
         fontcolor="#0f172a",
-        label=(
-            f'<<FONT FACE="{FONT_HEADING}" POINT-SIZE="20" COLOR="#0f172a">'
-            f'{_esc(title)}</FONT>>'
-            if title else ""
-        ),
+        label="",
         labelloc="t",
         size="16,!",
         dpi="150",
