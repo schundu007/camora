@@ -24,54 +24,409 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 
 const CHALLENGES = {
   coding: [
-    { q: 'Two Sum', desc: 'Given an array of integers and a target, return indices of two numbers that add up to the target.', difficulty: 'easy', companies: ['google','amazon','meta'], topics: ['arrays','hash-map'] },
-    { q: 'Valid Parentheses', desc: 'Given a string containing just (){}[], determine if the input string is valid.', difficulty: 'easy', companies: ['amazon','microsoft'], topics: ['stack','strings'] },
-    { q: 'Merge Two Sorted Lists', desc: 'Merge two sorted linked lists into one sorted list.', difficulty: 'easy', companies: ['amazon','apple'], topics: ['linked-list','recursion'] },
-    { q: 'Best Time to Buy and Sell Stock', desc: 'Find the maximum profit from buying and selling a stock once.', difficulty: 'easy', companies: ['amazon','meta','google'], topics: ['arrays','dynamic-programming'] },
-    { q: 'Climbing Stairs', desc: 'You are climbing a staircase. It takes n steps. Each time you can climb 1 or 2 steps. How many distinct ways can you climb?', difficulty: 'easy', companies: ['apple','google'], topics: ['dynamic-programming'] },
-    { q: 'Maximum Subarray', desc: 'Find the contiguous subarray with the largest sum.', difficulty: 'easy', companies: ['microsoft','amazon'], topics: ['arrays','dynamic-programming'] },
-    { q: 'Reverse Linked List', desc: 'Reverse a singly linked list iteratively and recursively.', difficulty: 'easy', companies: ['google','apple','meta'], topics: ['linked-list'] },
-    { q: 'LRU Cache', desc: 'Design a data structure that follows the Least Recently Used (LRU) cache eviction policy.', difficulty: 'medium', companies: ['amazon','google','meta','microsoft'], topics: ['hash-map','linked-list','design'] },
-    { q: 'Merge Intervals', desc: 'Given an array of intervals, merge all overlapping intervals.', difficulty: 'medium', companies: ['google','meta','amazon'], topics: ['arrays','sorting'] },
-    { q: 'Group Anagrams', desc: 'Group strings that are anagrams of each other.', difficulty: 'medium', companies: ['amazon','meta'], topics: ['hash-map','strings','sorting'] },
-    { q: 'Binary Tree Level Order Traversal', desc: 'Return the level order traversal of a binary tree\'s nodes.', difficulty: 'medium', companies: ['amazon','microsoft'], topics: ['trees','bfs'] },
-    { q: 'Word Search', desc: 'Given an m x n board and a word, find if the word exists in the grid.', difficulty: 'medium', companies: ['amazon','microsoft'], topics: ['backtracking','matrix'] },
-    { q: 'Number of Islands', desc: 'Given a 2D grid map of 1s and 0s, count the number of islands.', difficulty: 'medium', companies: ['amazon','google','meta'], topics: ['bfs','dfs','matrix'] },
-    { q: '3Sum', desc: 'Find all unique triplets in the array which give the sum of zero.', difficulty: 'medium', companies: ['meta','google','amazon'], topics: ['arrays','two-pointers','sorting'] },
-    { q: 'Longest Substring Without Repeating Characters', desc: 'Find the length of the longest substring without repeating characters.', difficulty: 'medium', companies: ['amazon','google','netflix'], topics: ['strings','sliding-window','hash-map'] },
-    { q: 'Course Schedule', desc: 'Determine if you can finish all courses given prerequisite pairs.', difficulty: 'medium', companies: ['amazon','google'], topics: ['graphs','topological-sort'] },
-    { q: 'Product of Array Except Self', desc: 'Return an array where each element is the product of all elements except itself, without division.', difficulty: 'medium', companies: ['amazon','meta','apple'], topics: ['arrays'] },
-    { q: 'Trapping Rain Water', desc: 'Given n non-negative integers representing an elevation map, compute how much water it can trap.', difficulty: 'hard', companies: ['google','amazon','meta'], topics: ['arrays','two-pointers','stack'] },
-    { q: 'Median of Two Sorted Arrays', desc: 'Find the median of two sorted arrays in O(log(m+n)) time.', difficulty: 'hard', companies: ['google','amazon','apple'], topics: ['binary-search','arrays'] },
-    { q: 'Serialize and Deserialize Binary Tree', desc: 'Design an algorithm to serialize and deserialize a binary tree.', difficulty: 'hard', companies: ['meta','google','microsoft'], topics: ['trees','design','bfs'] },
+    {
+      q: 'Two Sum',
+      desc: 'Given an array of integers and a target, return indices of two numbers that add up to the target.',
+      fullDesc: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.',
+      examples: [
+        { input: 'nums = [2,7,11,15], target = 9', output: '[0, 1]', note: 'nums[0] + nums[1] = 2 + 7 = 9' },
+        { input: 'nums = [3,2,4], target = 6', output: '[1, 2]' },
+      ],
+      constraints: ['2 ≤ nums.length ≤ 10⁴', '-10⁹ ≤ nums[i] ≤ 10⁹', 'Only one valid answer exists.'],
+      hints: [
+        'A brute-force O(n²) approach checks every pair — can you do it in one pass?',
+        'Use a hash map to store each number\'s index as you iterate through the array.',
+        'For each number x, check if (target − x) already exists in the hash map before inserting x.',
+      ],
+      difficulty: 'easy', companies: ['google','amazon','meta'], topics: ['arrays','hash-map'],
+    },
+    {
+      q: 'Valid Parentheses',
+      desc: 'Given a string containing just (){}[], determine if the input string is valid.',
+      fullDesc: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.\n\nAn input string is valid if:\n- Open brackets must be closed by the same type of brackets.\n- Open brackets must be closed in the correct order.\n- Every close bracket has a corresponding open bracket of the same type.',
+      examples: [
+        { input: 's = "()"', output: 'true' },
+        { input: 's = "()[]{}"', output: 'true' },
+        { input: 's = "(]"', output: 'false' },
+      ],
+      constraints: ['1 ≤ s.length ≤ 10⁴', 's consists of parentheses only: \'()[]{}\'.'],
+      hints: [
+        'Think about what data structure naturally handles "last in, first out" ordering.',
+        'Use a stack: push opening brackets onto it, and pop when you see a closing bracket.',
+        'At the end, the stack must be empty for the string to be valid.',
+      ],
+      difficulty: 'easy', companies: ['amazon','microsoft'], topics: ['stack','strings'],
+    },
+    {
+      q: 'Merge Two Sorted Lists',
+      desc: 'Merge two sorted linked lists into one sorted list.',
+      fullDesc: 'You are given the heads of two sorted linked lists list1 and list2.\n\nMerge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.\n\nReturn the head of the merged linked list.',
+      examples: [
+        { input: 'list1 = [1,2,4], list2 = [1,3,4]', output: '[1,1,2,3,4,4]' },
+        { input: 'list1 = [], list2 = []', output: '[]' },
+        { input: 'list1 = [], list2 = [0]', output: '[0]' },
+      ],
+      constraints: ['The number of nodes in both lists is in [0, 50].', '-100 ≤ Node.val ≤ 100', 'Both lists are sorted in non-decreasing order.'],
+      hints: [
+        'Use a dummy head node to simplify edge cases at the start of the merged list.',
+        'Compare the values at the heads of both lists and advance the pointer of the smaller one.',
+        'After one list is exhausted, append the remaining nodes of the other list directly.',
+      ],
+      difficulty: 'easy', companies: ['amazon','apple'], topics: ['linked-list','recursion'],
+    },
+    {
+      q: 'Best Time to Buy and Sell Stock',
+      desc: 'Find the maximum profit from buying and selling a stock once.',
+      fullDesc: 'You are given an array prices where prices[i] is the price of a given stock on the i-th day.\n\nYou want to maximize your profit by choosing a single day to buy one stock and a different day in the future to sell that stock.\n\nReturn the maximum profit you can achieve. If you cannot achieve any profit, return 0.',
+      examples: [
+        { input: 'prices = [7,1,5,3,6,4]', output: '5', note: 'Buy on day 2 (price=1) and sell on day 5 (price=6), profit = 6−1 = 5.' },
+        { input: 'prices = [7,6,4,3,1]', output: '0', note: 'No profitable transaction is possible.' },
+      ],
+      constraints: ['1 ≤ prices.length ≤ 10⁵', '0 ≤ prices[i] ≤ 10⁴'],
+      hints: [
+        'You must buy before you sell, so track the minimum price seen so far as you iterate.',
+        'At each step, compute the profit if you sold today (current price − min so far).',
+        'Track the maximum of all such profits.',
+      ],
+      difficulty: 'easy', companies: ['amazon','meta','google'], topics: ['arrays','dynamic-programming'],
+    },
+    {
+      q: 'Climbing Stairs',
+      desc: 'You are climbing a staircase. It takes n steps. Each time you can climb 1 or 2 steps. How many distinct ways can you climb?',
+      fullDesc: 'You are climbing a staircase. It takes n steps to reach the top.\n\nEach time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?',
+      examples: [
+        { input: 'n = 2', output: '2', note: '1 step + 1 step, or 2 steps' },
+        { input: 'n = 3', output: '3', note: '1+1+1, 1+2, or 2+1' },
+      ],
+      constraints: ['1 ≤ n ≤ 45'],
+      hints: [
+        'The number of ways to reach step n depends on reaching step n−1 and n−2.',
+        'This is equivalent to computing the n-th Fibonacci number.',
+        'Optimize to O(1) space — you only need the last two values, not a full array.',
+      ],
+      difficulty: 'easy', companies: ['apple','google'], topics: ['dynamic-programming'],
+    },
+    {
+      q: 'Maximum Subarray',
+      desc: 'Find the contiguous subarray with the largest sum.',
+      fullDesc: 'Given an integer array nums, find the subarray with the largest sum, and return its sum.\n\nA subarray is a contiguous part of an array.',
+      examples: [
+        { input: 'nums = [-2,1,-3,4,-1,2,1,-5,4]', output: '6', note: 'The subarray [4,−1,2,1] has the largest sum = 6.' },
+        { input: 'nums = [1]', output: '1' },
+        { input: 'nums = [5,4,-1,7,8]', output: '23' },
+      ],
+      constraints: ['1 ≤ nums.length ≤ 10⁵', '-10⁴ ≤ nums[i] ≤ 10⁴'],
+      hints: [
+        'Kadane\'s algorithm: at each element, decide whether to extend the current subarray or start fresh.',
+        'If the running sum drops below 0, reset it to 0 (start a new subarray from the current element).',
+        'Track the maximum sum seen so far as you iterate.',
+      ],
+      difficulty: 'easy', companies: ['microsoft','amazon'], topics: ['arrays','dynamic-programming'],
+    },
+    {
+      q: 'Reverse Linked List',
+      desc: 'Reverse a singly linked list iteratively and recursively.',
+      fullDesc: 'Given the head of a singly linked list, reverse the list, and return the reversed list.',
+      examples: [
+        { input: 'head = [1,2,3,4,5]', output: '[5,4,3,2,1]' },
+        { input: 'head = [1,2]', output: '[2,1]' },
+        { input: 'head = []', output: '[]' },
+      ],
+      constraints: ['The number of nodes in the list is in [0, 5000].', '-5000 ≤ Node.val ≤ 5000'],
+      hints: [
+        'For iterative: use three pointers — prev (null), current (head), and next.',
+        'At each step: save next, point current.next to prev, then advance prev and current.',
+        'For recursive: the base case is when head is null or head.next is null.',
+      ],
+      difficulty: 'easy', companies: ['google','apple','meta'], topics: ['linked-list'],
+    },
+    {
+      q: 'LRU Cache',
+      desc: 'Design a data structure that follows the Least Recently Used (LRU) cache eviction policy.',
+      fullDesc: 'Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) — Initialize the LRU cache with positive size capacity.\n- int get(int key) — Return the value of the key if it exists, otherwise return -1.\n- void put(int key, int value) — Update the value if the key exists. Otherwise, add the key-value pair. If the cache reached its capacity, evict the least recently used key first.',
+      examples: [
+        { input: 'LRUCache(2); put(1,1); put(2,2); get(1) → 1; put(3,3); get(2) → -1', output: 'See note', note: 'After put(3,3), key 2 was evicted (LRU). After put(4,4), key 3 was evicted.' },
+      ],
+      constraints: ['1 ≤ capacity ≤ 3000', '0 ≤ key ≤ 10⁴', '0 ≤ value ≤ 10⁵', 'get and put must each run in O(1) average time.'],
+      hints: [
+        'O(1) get and put suggest using a hash map for fast lookup by key.',
+        'Tracking "least recently used" order requires a doubly linked list (O(1) insert/delete at both ends).',
+        'Combine both: the hash map stores keys → linked list nodes; move accessed nodes to the front (most recent).',
+      ],
+      difficulty: 'medium', companies: ['amazon','google','meta','microsoft'], topics: ['hash-map','linked-list','design'],
+    },
+    {
+      q: 'Merge Intervals',
+      desc: 'Given an array of intervals, merge all overlapping intervals.',
+      fullDesc: 'Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.',
+      examples: [
+        { input: 'intervals = [[1,3],[2,6],[8,10],[15,18]]', output: '[[1,6],[8,10],[15,18]]', note: 'Intervals [1,3] and [2,6] overlap → merged to [1,6].' },
+        { input: 'intervals = [[1,4],[4,5]]', output: '[[1,5]]', note: 'Intervals [1,4] and [4,5] are considered overlapping.' },
+      ],
+      constraints: ['1 ≤ intervals.length ≤ 10⁴', 'intervals[i].length == 2', '0 ≤ starti ≤ endi ≤ 10⁴'],
+      hints: [
+        'Sort the intervals by their start time first — this makes overlaps adjacent.',
+        'After sorting, two intervals overlap if the start of the next ≤ end of the current.',
+        'When merging, extend the current interval\'s end to max(current.end, next.end).',
+      ],
+      difficulty: 'medium', companies: ['google','meta','amazon'], topics: ['arrays','sorting'],
+    },
+    {
+      q: 'Group Anagrams',
+      desc: 'Group strings that are anagrams of each other.',
+      fullDesc: 'Given an array of strings strs, group the anagrams together. You can return the answer in any order.\n\nAn Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.',
+      examples: [
+        { input: 'strs = ["eat","tea","tan","ate","nat","bat"]', output: '[["bat"],["nat","tan"],["ate","eat","tea"]]' },
+        { input: 'strs = [""]', output: '[[""]]' },
+        { input: 'strs = ["a"]', output: '[["a"]]' },
+      ],
+      constraints: ['1 ≤ strs.length ≤ 10⁴', '0 ≤ strs[i].length ≤ 100', 'strs[i] consists of lowercase English letters.'],
+      hints: [
+        'Anagrams share the same characters — find a canonical key that all anagrams in a group produce.',
+        'Approach 1: sort each string alphabetically to use as the hash map key.',
+        'Approach 2: use a character frequency count (array of 26 ints) as the key.',
+      ],
+      difficulty: 'medium', companies: ['amazon','meta'], topics: ['hash-map','strings','sorting'],
+    },
+    {
+      q: 'Binary Tree Level Order Traversal',
+      desc: "Return the level order traversal of a binary tree's nodes.",
+      fullDesc: "Given the root of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).",
+      examples: [
+        { input: 'root = [3,9,20,null,null,15,7]', output: '[[3],[9,20],[15,7]]' },
+        { input: 'root = [1]', output: '[[1]]' },
+        { input: 'root = []', output: '[]' },
+      ],
+      constraints: ['The number of nodes in the tree is in [0, 2000].', '-1000 ≤ Node.val ≤ 1000'],
+      hints: [
+        'BFS naturally visits nodes level by level.',
+        'Use a queue. At each level, process exactly all the nodes currently in the queue.',
+        'Snapshot the queue size at the start of each level to know how many nodes belong to it.',
+      ],
+      difficulty: 'medium', companies: ['amazon','microsoft'], topics: ['trees','bfs'],
+    },
+    {
+      q: 'Word Search',
+      desc: 'Given an m x n board and a word, find if the word exists in the grid.',
+      fullDesc: 'Given an m x n grid of characters board and a string word, return true if word exists in the grid.\n\nThe word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.',
+      examples: [
+        { input: 'board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"', output: 'true' },
+        { input: 'board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"', output: 'false' },
+      ],
+      constraints: ['m == board.length', 'n == board[i].length', '1 ≤ m, n ≤ 6', '1 ≤ word.length ≤ 15'],
+      hints: [
+        'Use DFS/backtracking starting from each cell that matches the first letter of the word.',
+        'Mark a cell as visited while exploring (e.g., replace with \'#\'), then restore it on backtrack.',
+        'Prune branches early: if the current character does not match, return false immediately.',
+      ],
+      difficulty: 'medium', companies: ['amazon','microsoft'], topics: ['backtracking','matrix'],
+    },
+    {
+      q: 'Number of Islands',
+      desc: 'Given a 2D grid map of 1s and 0s, count the number of islands.',
+      fullDesc: "Given an m x n 2D binary grid which represents a map of '1's (land) and '0's (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically.",
+      examples: [
+        { input: 'grid = [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]', output: '1' },
+        { input: 'grid = [["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]', output: '3' },
+      ],
+      constraints: ['m == grid.length', 'n == grid[i].length', '1 ≤ m, n ≤ 300', "grid[i][j] is '0' or '1'."],
+      hints: [
+        "Iterate through each cell. When you find a '1', that's a new island — increment the count.",
+        "Use BFS or DFS to mark all connected '1's as visited (set to '0') so you don't count them again.",
+        'Union-Find is an alternative: union adjacent land cells, then count unique components.',
+      ],
+      difficulty: 'medium', companies: ['amazon','google','meta'], topics: ['bfs','dfs','matrix'],
+    },
+    {
+      q: '3Sum',
+      desc: 'Find all unique triplets in the array which give the sum of zero.',
+      fullDesc: 'Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, j != k, and nums[i] + nums[j] + nums[k] == 0.\n\nNotice that the solution set must not contain duplicate triplets.',
+      examples: [
+        { input: 'nums = [-1,0,1,2,-1,-4]', output: '[[-1,-1,2],[-1,0,1]]' },
+        { input: 'nums = [0,1,1]', output: '[]' },
+        { input: 'nums = [0,0,0]', output: '[[0,0,0]]' },
+      ],
+      constraints: ['3 ≤ nums.length ≤ 3000', '-10⁵ ≤ nums[i] ≤ 10⁵'],
+      hints: [
+        'Sort the array first — this enables the two-pointer technique and easy duplicate skipping.',
+        'Fix one element with an outer loop, then use two pointers to find the pair that sums to its negative.',
+        'Skip duplicates by checking if the current element equals the previous one before processing.',
+      ],
+      difficulty: 'medium', companies: ['meta','google','amazon'], topics: ['arrays','two-pointers','sorting'],
+    },
+    {
+      q: 'Longest Substring Without Repeating Characters',
+      desc: 'Find the length of the longest substring without repeating characters.',
+      fullDesc: 'Given a string s, find the length of the longest substring without repeating characters.',
+      examples: [
+        { input: 's = "abcabcbb"', output: '3', note: 'The answer is "abc", with length 3.' },
+        { input: 's = "bbbbb"', output: '1', note: 'The answer is "b", with length 1.' },
+        { input: 's = "pwwkew"', output: '3', note: 'The answer is "wke", with length 3.' },
+      ],
+      constraints: ['0 ≤ s.length ≤ 5 × 10⁴', 's consists of English letters, digits, symbols, and spaces.'],
+      hints: [
+        'Use the sliding window technique: maintain a window [left, right] with no repeated characters.',
+        'Use a set or hash map to track which characters are in the current window.',
+        'When a duplicate is found, shrink the window from the left until the duplicate is removed.',
+      ],
+      difficulty: 'medium', companies: ['amazon','google','netflix'], topics: ['strings','sliding-window','hash-map'],
+    },
+    {
+      q: 'Course Schedule',
+      desc: 'Determine if you can finish all courses given prerequisite pairs.',
+      fullDesc: 'There are a total of numCourses courses you have to take, labeled from 0 to numCourses - 1. You are given an array prerequisites where prerequisites[i] = [ai, bi] indicates that you must take course bi first if you want to take course ai.\n\nReturn true if you can finish all courses. Otherwise, return false.',
+      examples: [
+        { input: 'numCourses = 2, prerequisites = [[1,0]]', output: 'true', note: 'Take course 0 first, then course 1.' },
+        { input: 'numCourses = 2, prerequisites = [[1,0],[0,1]]', output: 'false', note: 'Cycle: course 0 requires 1 and vice versa.' },
+      ],
+      constraints: ['1 ≤ numCourses ≤ 2000', '0 ≤ prerequisites.length ≤ 5000', 'All prerequisite pairs are unique.'],
+      hints: [
+        'Model this as a directed graph: courses are nodes, prerequisites are directed edges.',
+        'The problem reduces to: does the directed graph contain a cycle?',
+        'Use DFS with three states (unvisited / visiting / visited) to detect back edges (cycles).',
+      ],
+      difficulty: 'medium', companies: ['amazon','google'], topics: ['graphs','topological-sort'],
+    },
+    {
+      q: 'Product of Array Except Self',
+      desc: 'Return an array where each element is the product of all elements except itself, without division.',
+      fullDesc: 'Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i].\n\nThe product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in O(n) time and without using the division operation.',
+      examples: [
+        { input: 'nums = [1,2,3,4]', output: '[24,12,8,6]' },
+        { input: 'nums = [-1,1,0,-3,3]', output: '[0,0,9,0,0]' },
+      ],
+      constraints: ['2 ≤ nums.length ≤ 10⁵', '-30 ≤ nums[i] ≤ 30', 'The product fits in a 32-bit integer.'],
+      hints: [
+        'For each index i, the result is: (product of everything left of i) × (product of everything right of i).',
+        'First pass left→right: compute prefix products and store them in the result array.',
+        'Second pass right→left: multiply each result entry by a running suffix product variable.',
+      ],
+      difficulty: 'medium', companies: ['amazon','meta','apple'], topics: ['arrays'],
+    },
+    {
+      q: 'Trapping Rain Water',
+      desc: 'Given n non-negative integers representing an elevation map, compute how much water it can trap.',
+      fullDesc: 'Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.',
+      examples: [
+        { input: 'height = [0,1,0,2,1,0,1,3,2,1,2,1]', output: '6' },
+        { input: 'height = [4,2,0,3,2,5]', output: '9' },
+      ],
+      constraints: ['n == height.length', '1 ≤ n ≤ 2 × 10⁴', '0 ≤ height[i] ≤ 10⁵'],
+      hints: [
+        'Water trapped at index i = min(maxLeft[i], maxRight[i]) − height[i].',
+        'Precompute maxLeft and maxRight arrays in two passes, then compute water in a third pass.',
+        'Optimize to O(1) space with two pointers: always process from the side with the smaller max.',
+      ],
+      difficulty: 'hard', companies: ['google','amazon','meta'], topics: ['arrays','two-pointers','stack'],
+    },
+    {
+      q: 'Median of Two Sorted Arrays',
+      desc: 'Find the median of two sorted arrays in O(log(m+n)) time.',
+      fullDesc: 'Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.\n\nThe overall run time complexity should be O(log(m+n)).',
+      examples: [
+        { input: 'nums1 = [1,3], nums2 = [2]', output: '2.00000', note: 'Merged = [1,2,3], median = 2.' },
+        { input: 'nums1 = [1,2], nums2 = [3,4]', output: '2.50000', note: 'Merged = [1,2,3,4], median = (2+3)/2 = 2.5.' },
+      ],
+      constraints: ['nums1.length == m', 'nums2.length == n', '0 ≤ m, n ≤ 1000', '0 ≤ m + n ≤ 2000'],
+      hints: [
+        'Merging and finding median is O(m+n) — achieving O(log(m+n)) requires binary search.',
+        'Binary search on the partition point of the smaller array, simultaneously partitioning the larger.',
+        'A valid partition means all elements on the left ≤ all elements on the right across both arrays.',
+      ],
+      difficulty: 'hard', companies: ['google','amazon','apple'], topics: ['binary-search','arrays'],
+    },
+    {
+      q: 'Serialize and Deserialize Binary Tree',
+      desc: 'Design an algorithm to serialize and deserialize a binary tree.',
+      fullDesc: 'Design an algorithm to serialize and deserialize a binary tree. Serialization is converting a data structure to a sequence of bits so it can be stored/transmitted and reconstructed later.\n\nThere is no restriction on how your algorithm should work — just ensure the tree can round-trip through a string.',
+      examples: [
+        { input: 'root = [1,2,3,null,null,4,5]', output: '[1,2,3,null,null,4,5]', note: 'The tree must serialize and deserialize back to the same structure.' },
+        { input: 'root = []', output: '[]' },
+      ],
+      constraints: ['The number of nodes in the tree is in [0, 10⁴].', '-1000 ≤ Node.val ≤ 1000'],
+      hints: [
+        'Use pre-order traversal (root, left, right) with null markers for missing nodes.',
+        'Serialize: DFS — append "null" for absent children, join with commas.',
+        'Deserialize: split the string, use a queue or index pointer, recursively build left then right subtree.',
+      ],
+      difficulty: 'hard', companies: ['meta','google','microsoft'], topics: ['trees','design','bfs'],
+    },
   ],
   'system-design': [
-    { q: 'Design a URL Shortener', desc: 'Design a service like bit.ly that shortens URLs and redirects.', difficulty: 'easy', companies: ['google','meta'], topics: ['hashing','database'] },
-    { q: 'Design a Rate Limiter', desc: 'Design a distributed rate limiting system for an API.', difficulty: 'medium', companies: ['google','amazon'], topics: ['distributed-systems','caching'] },
-    { q: 'Design a Chat Application', desc: 'Design a real-time messaging system like WhatsApp or Slack.', difficulty: 'medium', companies: ['meta','microsoft'], topics: ['websockets','messaging'] },
-    { q: 'Design a Notification System', desc: 'Design a multi-channel notification service (push, email, SMS).', difficulty: 'medium', companies: ['amazon','apple'], topics: ['pub-sub','queues'] },
-    { q: 'Design an API Gateway', desc: 'Design a centralized API gateway with routing, auth, and rate limiting.', difficulty: 'medium', companies: ['amazon','netflix'], topics: ['networking','load-balancing'] },
-    { q: 'Design a File Storage Service', desc: 'Design a cloud file storage system like Google Drive or Dropbox.', difficulty: 'medium', companies: ['google','microsoft'], topics: ['storage','sync'] },
-    { q: 'Design Twitter/X', desc: 'Design a social media feed with follow, post, and timeline features.', difficulty: 'hard', companies: ['meta','google'], topics: ['fan-out','caching','feeds'] },
-    { q: 'Design YouTube', desc: 'Design a video streaming platform with upload, transcode, and playback.', difficulty: 'hard', companies: ['google','netflix'], topics: ['cdn','transcoding','storage'] },
-    { q: 'Design a Distributed Cache', desc: 'Design a high-throughput caching layer like Redis or Memcached.', difficulty: 'hard', companies: ['amazon','meta'], topics: ['caching','distributed-systems'] },
-    { q: 'Design a Payment Gateway', desc: 'Design a reliable payment processing system with idempotency.', difficulty: 'hard', companies: ['amazon','apple'], topics: ['transactions','reliability'] },
-    { q: 'Design a Search Engine', desc: 'Design a web-scale search engine with indexing, ranking, and autocomplete.', difficulty: 'hard', companies: ['google','microsoft'], topics: ['indexing','ranking'] },
-    { q: 'Design a Ride-Sharing Service', desc: 'Design a system like Uber with real-time matching, routing, and pricing.', difficulty: 'hard', companies: ['amazon','google'], topics: ['geospatial','matching','real-time'] },
+    { q: 'Design a URL Shortener', desc: 'Design a service like bit.ly that shortens URLs and redirects.',
+      hints: ['Start with requirements: read-heavy, global scale. What are the core APIs (shorten, redirect)?', 'How do you generate a unique short code? Consider base62 encoding, hash functions, or auto-increment ID.', 'Think about the redirect flow and caching — most reads hit the same popular URLs.'],
+      difficulty: 'easy', companies: ['google','meta'], topics: ['hashing','database'] },
+    { q: 'Design a Rate Limiter', desc: 'Design a distributed rate limiting system for an API.',
+      hints: ['What algorithm will you use? Fixed window, sliding window, token bucket, or leaky bucket — each has trade-offs.', 'Where do you store the counters? Redis is common for distributed rate limiting with atomic operations.', 'Think about edge cases: race conditions, clock skew across nodes, and behavior when the rate limit store is down.'],
+      difficulty: 'medium', companies: ['google','amazon'], topics: ['distributed-systems','caching'] },
+    { q: 'Design a Chat Application', desc: 'Design a real-time messaging system like WhatsApp or Slack.',
+      hints: ['How do users receive messages in real-time? Compare WebSockets, long polling, and SSE.', 'What is the DB schema for messages? How do you query conversation history efficiently?', 'Consider fan-out for group messages: fan-out on write (push to each member) vs. fan-out on read (pull on open).'],
+      difficulty: 'medium', companies: ['meta','microsoft'], topics: ['websockets','messaging'] },
+    { q: 'Design a Notification System', desc: 'Design a multi-channel notification service (push, email, SMS).',
+      hints: ['Start with the producer side: what events trigger notifications, and how are they ingested into the system?', 'Fan-out: one event can create millions of notifications. Message queues decouple production from delivery.', 'Consider deduplication, retry logic, and per-user preferences (opt-outs per channel).'],
+      difficulty: 'medium', companies: ['amazon','apple'], topics: ['pub-sub','queues'] },
+    { q: 'Design an API Gateway', desc: 'Design a centralized API gateway with routing, auth, and rate limiting.',
+      hints: ['Identify cross-cutting concerns: auth, rate limiting, logging, and tracing all belong here.', 'How do you route requests to the right microservice? Service registry or static configuration?', 'Consider circuit breakers — what happens when a downstream service is slow or down?'],
+      difficulty: 'medium', companies: ['amazon','netflix'], topics: ['networking','load-balancing'] },
+    { q: 'Design a File Storage Service', desc: 'Design a cloud file storage system like Google Drive or Dropbox.',
+      hints: ['How do you handle large files efficiently? Chunking allows resumable uploads and deduplication (same chunk hash = same bytes).', 'Metadata (name, size, permissions) and content (bytes) are typically stored in separate systems.', 'Sync across devices requires a change notification mechanism and a conflict resolution strategy.'],
+      difficulty: 'medium', companies: ['google','microsoft'], topics: ['storage','sync'] },
+    { q: 'Design Twitter/X', desc: 'Design a social media feed with follow, post, and timeline features.',
+      hints: ['The hardest part is the timeline: fan-out on write (precompute feeds) vs. fan-out on read (merge at query time).', 'Pure fan-out on write is too expensive for celebrity accounts with millions of followers.', 'Consider a hybrid: precompute feeds for normal users, merge celebrity tweets at read time.'],
+      difficulty: 'hard', companies: ['meta','google'], topics: ['fan-out','caching','feeds'] },
+    { q: 'Design YouTube', desc: 'Design a video streaming platform with upload, transcode, and playback.',
+      hints: ['Video upload is async: upload raw → queue for transcoding → store multiple resolutions → distribute via CDN.', 'Adaptive bitrate streaming (HLS/DASH) adjusts quality based on the client\'s bandwidth in real time.', 'Metadata (title, views, comments) and content (video bytes) live in completely separate systems.'],
+      difficulty: 'hard', companies: ['google','netflix'], topics: ['cdn','transcoding','storage'] },
+    { q: 'Design a Distributed Cache', desc: 'Design a high-throughput caching layer like Redis or Memcached.',
+      hints: ['How do you partition data across cache nodes? Consistent hashing minimizes key remapping when nodes change.', 'Think about eviction policies (LRU, LFU, TTL) and when each is appropriate.', 'Consider replication for high availability — what read/write consistency model do you guarantee?'],
+      difficulty: 'hard', companies: ['amazon','meta'], topics: ['caching','distributed-systems'] },
+    { q: 'Design a Payment Gateway', desc: 'Design a reliable payment processing system with idempotency.',
+      hints: ['Idempotency keys prevent double charges if a request is retried — store them with the transaction record.', 'The payment flow involves multiple parties (user, gateway, bank) — think about compensating transactions if any step fails.', 'Consider PCI DSS compliance: never store raw card numbers; always use tokenization.'],
+      difficulty: 'hard', companies: ['amazon','apple'], topics: ['transactions','reliability'] },
+    { q: 'Design a Search Engine', desc: 'Design a web-scale search engine with indexing, ranking, and autocomplete.',
+      hints: ['The inverted index maps words to document lists — how is it built, partitioned, and queried?', 'Ranking involves hundreds of signals (PageRank, freshness, relevance) — describe a few key ones.', 'Autocomplete needs a trie or prefix index with fast lookups, usually cached in memory (Redis sorted sets work well).'],
+      difficulty: 'hard', companies: ['google','microsoft'], topics: ['indexing','ranking'] },
+    { q: 'Design a Ride-Sharing Service', desc: 'Design a system like Uber with real-time matching, routing, and pricing.',
+      hints: ['The core challenge: geospatial matching — finding available drivers near a rider in real time.', 'Use geohashing or a quadtree to partition the map, enabling fast proximity queries.', 'Surge pricing requires real-time supply/demand calculation per geospatial region.'],
+      difficulty: 'hard', companies: ['amazon','google'], topics: ['geospatial','matching','real-time'] },
   ],
   behavioral: [
-    { q: 'Tell me about yourself', desc: 'Craft a compelling 2-minute personal narrative for an engineering role.', difficulty: 'easy', companies: ['google','meta','amazon','apple','microsoft','netflix'], topics: ['intro'] },
-    { q: 'Why this company?', desc: 'Explain your motivation for applying and what excites you about the role.', difficulty: 'easy', companies: ['google','meta','amazon','apple','microsoft','netflix'], topics: ['motivation'] },
-    { q: 'Describe a technical challenge', desc: 'Walk through a difficult engineering problem you solved.', difficulty: 'medium', companies: ['google','amazon','meta'], topics: ['problem-solving'] },
-    { q: 'Conflict with a teammate', desc: 'Describe a time you had a disagreement with a colleague and how you resolved it.', difficulty: 'medium', companies: ['amazon','meta','google'], topics: ['teamwork','conflict-resolution'] },
-    { q: 'Failed project', desc: 'Tell me about a project that didn\'t go as planned and what you learned.', difficulty: 'medium', companies: ['amazon','google','meta'], topics: ['growth','failure'] },
-    { q: 'Leadership example', desc: 'Describe a time you led a team or initiative without formal authority.', difficulty: 'medium', companies: ['amazon','apple','google'], topics: ['leadership'] },
-    { q: 'Describe a time you influenced without authority', desc: 'How did you drive alignment across teams or stakeholders?', difficulty: 'medium', companies: ['google','meta','microsoft'], topics: ['influence','communication'] },
-    { q: 'Tell me about a time you mentored someone', desc: 'How did you help a peer or junior grow technically or professionally?', difficulty: 'medium', companies: ['google','meta','amazon'], topics: ['mentoring','leadership'] },
-    { q: 'Handling ambiguity', desc: 'Tell me about a time you had to make a decision with incomplete information.', difficulty: 'hard', companies: ['amazon','google','meta','apple'], topics: ['decision-making'] },
-    { q: 'Production incident', desc: 'Walk through a critical production incident and how you handled it.', difficulty: 'hard', companies: ['amazon','netflix','google'], topics: ['incident-response','pressure'] },
-    { q: 'Prioritization under pressure', desc: 'Describe how you prioritize when everything is urgent.', difficulty: 'hard', companies: ['amazon','meta','google'], topics: ['prioritization','time-management'] },
-    { q: 'Biggest impact project', desc: 'Describe the project you\'re most proud of and quantify its business impact.', difficulty: 'hard', companies: ['google','meta','amazon','apple','microsoft'], topics: ['impact','storytelling'] },
+    { q: 'Tell me about yourself', desc: 'Craft a compelling 2-minute personal narrative for an engineering role.',
+      hints: ['Structure: current role/impact → past experience → why this specific role. Keep it under 2 minutes.', 'Lead with your current impact, not your education or career start.', "End with why you're excited about this specific opportunity — make it feel researched, not rehearsed."],
+      difficulty: 'easy', companies: ['google','meta','amazon','apple','microsoft','netflix'], topics: ['intro'] },
+    { q: 'Why this company?', desc: 'Explain your motivation for applying and what excites you about the role.',
+      hints: ["Avoid generic answers like 'you're a great company.' Cite something specific you researched.", 'Connect your skills or interests to a specific challenge or product the company is working on.', 'Show alignment between your career goals and what this role uniquely offers.'],
+      difficulty: 'easy', companies: ['google','meta','amazon','apple','microsoft','netflix'], topics: ['motivation'] },
+    { q: 'Describe a technical challenge', desc: 'Walk through a difficult engineering problem you solved.',
+      hints: ['Use STAR: set up Situation and Task briefly, spend the majority of time on Action and Result.', 'Be specific about what made it technically hard — what did you try that failed before you found the solution?', 'Quantify the result: "reduced latency by 40%", "unblocked 5 engineers", "shipped 2 weeks early".'],
+      difficulty: 'medium', companies: ['google','amazon','meta'], topics: ['problem-solving'] },
+    { q: 'Conflict with a teammate', desc: 'Describe a time you had a disagreement with a colleague and how you resolved it.',
+      hints: ['Pick a real conflict — avoid a story where there was no genuine disagreement.', 'Show that you listened and tried to understand their perspective before advocating for your view.', 'Emphasize the resolution and what both parties learned — interviewers look for maturity, not "winning".'],
+      difficulty: 'medium', companies: ['amazon','meta','google'], topics: ['teamwork','conflict-resolution'] },
+    { q: 'Failed project', desc: "Tell me about a project that didn't go as planned and what you learned.",
+      hints: ["Choose a real failure — not something trivially small. This demonstrates self-awareness.", "Own your part in the failure clearly — don't deflect blame onto others or circumstances.", 'The "what you learned" portion is weighted most heavily. Make it concrete and show how you applied it.'],
+      difficulty: 'medium', companies: ['amazon','google','meta'], topics: ['growth','failure'] },
+    { q: 'Leadership example', desc: 'Describe a time you led a team or initiative without formal authority.',
+      hints: ['Leadership without authority means influencing by earning trust, not by mandate or title.', 'How did you align people with competing priorities? What happened when someone pushed back?', 'Quantify the scope: team size, project timeline, business impact.'],
+      difficulty: 'medium', companies: ['amazon','apple','google'], topics: ['leadership'] },
+    { q: 'Describe a time you influenced without authority', desc: 'How did you drive alignment across teams or stakeholders?',
+      hints: ["Identify whose buy-in you needed and what their objections or competing priorities were.", 'Show how you addressed concerns — data, demos, incremental wins that built credibility.', 'Distinguish between getting people to agree vs. actually getting them to change their behavior.'],
+      difficulty: 'medium', companies: ['google','meta','microsoft'], topics: ['influence','communication'] },
+    { q: 'Tell me about a time you mentored someone', desc: 'How did you help a peer or junior grow technically or professionally?',
+      hints: ["Be specific: what was the person's starting point, and where did they end up?", 'Describe your mentoring approach — paired coding, design reviews, weekly 1:1s, code review feedback.', 'Include a measurable result: promotion, independent project delivery, overcoming a specific weakness.'],
+      difficulty: 'medium', companies: ['google','meta','amazon'], topics: ['mentoring','leadership'] },
+    { q: 'Handling ambiguity', desc: 'Tell me about a time you had to make a decision with incomplete information.',
+      hints: ['Describe what was unknown and why waiting for more information was not an option.', 'Explain how you framed the decision: what assumptions did you make, and how did you validate them quickly?', 'Show that you made a reversible decision where possible and built in checkpoints to course-correct.'],
+      difficulty: 'hard', companies: ['amazon','google','meta','apple'], topics: ['decision-making'] },
+    { q: 'Production incident', desc: 'Walk through a critical production incident and how you handled it.',
+      hints: ['Walk through the timeline: detection → diagnosis → mitigation → root cause → prevention.', 'Show how you communicated during the incident — to the on-call team, to stakeholders, to leadership.', 'Emphasize the retrospective: what specific process or system change prevented recurrence?'],
+      difficulty: 'hard', companies: ['amazon','netflix','google'], topics: ['incident-response','pressure'] },
+    { q: 'Prioritization under pressure', desc: 'Describe how you prioritize when everything is urgent.',
+      hints: ['Show a framework: impact vs. effort matrix, P0/P1/P2 tiers, or explicit stakeholder alignment.', 'Describe how you communicated the deprioritization to those whose items were bumped.', 'Give a concrete example where you had to say no to something important and explain the outcome.'],
+      difficulty: 'hard', companies: ['amazon','meta','google'], topics: ['prioritization','time-management'] },
+    { q: 'Biggest impact project', desc: "Describe the project you're most proud of and quantify its business impact.",
+      hints: ['Choose a project where you can be specific and quantitative about business impact.', 'Be clear about your individual contribution vs. what the team did collectively.', 'Cover the technical depth, the business outcome, and optionally what you would do differently today.'],
+      difficulty: 'hard', companies: ['google','meta','amazon','apple','microsoft'], topics: ['impact','storytelling'] },
   ],
 };
 
@@ -426,6 +781,9 @@ export default function PracticePage() {
   const [showModelAnswer, setShowModelAnswer] = useState(null);
   const [inlineEval, setInlineEval] = useState(null); // current question's eval before moving on
   const [expandedHistory, setExpandedHistory] = useState(null);
+  const [hintCounts, setHintCounts] = useState({});
+  const [generatedSolutions, setGeneratedSolutions] = useState({});
+  const [generatingSolution, setGeneratingSolution] = useState(false);
   const [resultDimensions, setResultDimensions] = useState(null);
   const timerRef = useRef(null);
   const textareaRef = useRef(null);
@@ -466,6 +824,9 @@ export default function PracticePage() {
     setQuestionStartTime(Date.now());
     challengeStartRef.current = Date.now();
     whiteboardState.clearAll();
+    setHintCounts({});
+    setGeneratedSolutions({});
+    setGeneratingSolution(false);
     setPhase('active');
     window.scrollTo(0, 0);
   }, [mode, category, difficulty, company, whiteboardState]);
@@ -517,8 +878,13 @@ export default function PracticePage() {
       }
 
       if (result) {
-        const text = result.code || result.pitch || '';
-        const jsonMatch = text.match(/\{[\s\S]*?"score"[\s\S]*?\}/);
+        const text = result.code || result.pitch || result.explanation || result.text || '';
+        // Strip markdown code block if AI wrapped the JSON
+        let evalText = text.trim();
+        const cbMatch = evalText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (cbMatch) evalText = cbMatch[1].trim();
+        // Greedy match to capture the full JSON object (including nested objects like "dimensions")
+        const jsonMatch = evalText.match(/\{[\s\S]*"score"[\s\S]*\}/);
         if (jsonMatch) {
           try {
             const parsed = JSON.parse(jsonMatch[0]);
@@ -583,6 +949,45 @@ export default function PracticePage() {
       endChallenge([...scores, 0]);
     }
   }, [currentIdx, questions, scores]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const generateSolution = useCallback(async () => {
+    const q = questions[currentIdx];
+    if (!q || generatingSolution) return;
+    setGeneratingSolution(true);
+    const prompt = category === 'coding'
+      ? `Solve this coding problem:\n\nProblem: ${q.q}\n${q.fullDesc || q.desc}\n\nProvide:\n1. Approach / key insight (2-3 sentences)\n2. Complete working solution with code\n3. Time and space complexity\n\nUse markdown with code blocks.`
+      : category === 'system-design'
+      ? `Provide a concise system design for: ${q.q}\n\n${q.desc}\n\nCover: key components, data flow, scalability decisions, and major trade-offs. Use markdown with clear sections.`
+      : `Provide a strong model answer for this behavioral interview question: "${q.q}"\n\n${q.desc}\n\nUse the STAR format (Situation, Task, Action, Result). Be specific and quantify the impact. Keep it under 3 minutes spoken. Use markdown.`;
+    try {
+      const resp = await fetch(API_URL + '/api/solve/stream', {
+        credentials: 'include', method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ problem: prompt, provider: 'claude', language: 'auto', detailLevel: 'detailed', ascendMode: category === 'coding' ? 'coding' : 'system-design' }),
+      });
+      if (!resp.ok) throw new Error('stream error');
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value, { stream: true }).split('\n');
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const d = JSON.parse(line.slice(6));
+            if (d.chunk) { accumulated += d.chunk; setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: accumulated })); }
+            if (d.done && d.result) { accumulated = d.result; setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: accumulated })); }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+    } catch {
+      setGeneratedSolutions(prev => ({ ...prev, [currentIdx]: 'Failed to generate solution. Please try again.' }));
+    } finally {
+      setGeneratingSolution(false);
+    }
+  }, [currentIdx, questions, category, generatingSolution]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const endChallenge = useCallback((finalScores) => {
     clearInterval(timerRef.current);
@@ -1093,11 +1498,75 @@ export default function PracticePage() {
                                     <Chip key={t}>{t}</Chip>
                                   ))}
                 </div>
-                <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>
+                <h2 className="practice-display" style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>
                   {questions[currentIdx].q}
                 </h2>
-                <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>{questions[currentIdx].desc}</p>
+                <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.7 }}>{questions[currentIdx].fullDesc || questions[currentIdx].desc}</p>
+                {questions[currentIdx].examples?.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                    {questions[currentIdx].examples.map((ex, ei) => (
+                      <div key={ei} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4, fontFamily: 'var(--font-sans)' }}>Example {ei + 1}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}><span style={{ color: 'var(--text-muted)' }}>Input:</span> {ex.input}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}><span style={{ color: 'var(--text-muted)' }}>Output:</span> {ex.output}</div>
+                        {ex.note && <div style={{ color: 'var(--text-dimmed)', marginTop: 2 }}>{ex.note}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {questions[currentIdx].constraints?.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Constraints</div>
+                    {questions[currentIdx].constraints.map((c, ci) => (
+                      <div key={ci} style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>• {c}</div>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Hints + Generate Solution */}
+              {!inlineEval && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                    {questions[currentIdx].hints?.length > 0 && (() => {
+                      const shown = hintCounts[currentIdx] || 0;
+                      const total = questions[currentIdx].hints.length;
+                      const allShown = shown >= total;
+                      return (
+                        <button
+                          onClick={() => !allShown && setHintCounts(prev => ({ ...prev, [currentIdx]: Math.min((prev[currentIdx] || 0) + 1, total) }))}
+                          disabled={allShown}
+                          style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #d97706', background: allShown ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.12)', color: allShown ? '#92400e' : '#b45309', fontSize: 12, fontWeight: 600, cursor: allShown ? 'default' : 'pointer' }}
+                        >
+                          {allShown ? 'All Hints Shown' : shown === 0 ? 'Hint' : `Hint ${shown + 1}/${total}`}
+                        </button>
+                      );
+                    })()}
+                    <button
+                      onClick={generateSolution}
+                      disabled={generatingSolution || !!generatedSolutions[currentIdx]}
+                      style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid var(--cam-gold-leaf, #c9a84c)', background: 'rgba(201,168,76,0.1)', color: 'var(--cam-gold-leaf, #c9a84c)', fontSize: 12, fontWeight: 600, cursor: (generatingSolution || generatedSolutions[currentIdx]) ? 'default' : 'pointer', opacity: generatedSolutions[currentIdx] ? 0.5 : 1 }}
+                    >
+                      {generatingSolution ? 'Generating...' : generatedSolutions[currentIdx] ? 'Solution Generated' : 'Generate Solution'}
+                    </button>
+                  </div>
+                  {(hintCounts[currentIdx] || 0) > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                      {questions[currentIdx].hints.slice(0, hintCounts[currentIdx]).map((hint, hi) => (
+                        <div key={hi} style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--text-secondary)' }}>
+                          <span style={{ fontWeight: 600, color: '#b45309', marginRight: 6 }}>Hint {hi + 1}:</span>{hint}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {generatedSolutions[currentIdx] && (
+                    <div style={{ border: '1px solid var(--cam-gold-leaf, #c9a84c)', borderRadius: 10, padding: '14px 16px', background: 'rgba(201,168,76,0.04)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--cam-gold-leaf, #c9a84c)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Generated Solution</div>
+                      {renderMd(generatedSolutions[currentIdx])}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Answer area — different for each category */}
               {category === 'coding' && (
@@ -1472,7 +1941,7 @@ export default function PracticePage() {
           {phase === 'results' && (() => {
             const passed = scores.filter(s => s >= 60).length;
             const total = scores.length;
-            const grade = finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
+            const grade = total === 0 ? '—' : finalAvgScore >= 90 ? 'A+' : finalAvgScore >= 80 ? 'A' : finalAvgScore >= 70 ? 'B' : finalAvgScore >= 60 ? 'C' : finalAvgScore >= 40 ? 'D' : 'F';
             const gradeColor = finalAvgScore >= 70 ? 'var(--success)' : finalAvgScore >= 50 ? 'var(--warning)' : 'var(--danger)';
             return (
             <div>
@@ -1492,8 +1961,8 @@ export default function PracticePage() {
                     </div>
                     <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{passed}/{total}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>Passed</div>
+                        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{total === 0 ? '—' : `${passed}/${total}`}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{total === 0 ? 'No submissions' : 'Passed'}</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
                       <div style={{ textAlign: 'center' }}>
