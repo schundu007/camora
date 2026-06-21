@@ -402,6 +402,8 @@ export default function DocsPage({ onBack }) {
     // Reset Ask AI state when switching topics
     setAiQuestion('');
     setAiAnswer('');
+    setAiHistory([]);
+    setAiCurrentQ('');
     setShowAskAI(false);
     if (topic) {
       /* sidebar close handled by AppShell */;
@@ -444,6 +446,8 @@ export default function DocsPage({ onBack }) {
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiHistory, setAiHistory] = useState([]);
+  const [aiCurrentQ, setAiCurrentQ] = useState('');
   const [showRoadmap, setShowRoadmap] = useState(false);
 
   const toggleComplete = (topicId) => {
@@ -466,10 +470,8 @@ export default function DocsPage({ onBack }) {
   const handleAskAI = async (promptOverride) => {
     const question = promptOverride || aiQuestion;
     if (!question.trim()) return;
-    if (promptOverride) setAiQuestion(promptOverride);
-    // Abort any previous in-flight stream so a quick second click
-    // doesn't end up with two concurrent setAiAnswer writers and the
-    // SSE reader from the older fetch is released.
+    setAiQuestion('');
+    setAiCurrentQ(question);
     askAiAbortRef.current?.abort();
     const controller = new AbortController();
     askAiAbortRef.current = controller;
@@ -519,11 +521,19 @@ export default function DocsPage({ onBack }) {
             }
           }
         }
-        if (!fullText && !controller.signal.aborted) setAiAnswer('No answer available.');
+        if (!controller.signal.aborted) {
+          const final = fullText || 'No answer available.';
+          setAiHistory(prev => [...prev, { q: question, a: final }]);
+          setAiCurrentQ('');
+          setAiAnswer('');
+        }
       } else {
         // JSON response (error or simple)
         const data = await res.json();
-        setAiAnswer(data.answer || data.result || data.error || 'No answer available.');
+        const answer = data.answer || data.result || data.error || 'No answer available.';
+        setAiHistory(prev => [...prev, { q: question, a: answer }]);
+        setAiCurrentQ('');
+        setAiAnswer('');
       }
     } catch (err) {
       if (err?.name === 'AbortError') return; // user navigated away or restarted
@@ -1014,7 +1024,7 @@ export default function DocsPage({ onBack }) {
                     <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} aria-label="Loading topic detail" />
                   </div>
                 }>
-                  <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={progressInfo} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
+                  <TopicDetail activePage={activePage} selectedTopic={selectedTopic} topicDetails={topicDetails} pageConfig={pageConfig} completedTopics={completedTopics} starredTopics={starredTopics} toggleComplete={toggleComplete} toggleStar={toggleStar} showAskAI={showAskAI} setShowAskAI={setShowAskAI} aiQuestion={aiQuestion} setAiQuestion={setAiQuestion} aiAnswer={aiAnswer} aiLoading={aiLoading} handleAskAI={handleAskAI} aiHistory={aiHistory} aiCurrentQ={aiCurrentQ} showRoadmap={showRoadmap} setShowRoadmap={setShowRoadmap} expandedTheoryQuestions={expandedTheoryQuestions} setExpandedTheoryQuestions={setExpandedTheoryQuestions} setSelectedTopic={setSelectedTopic} generatingDiagram={generatingDiagram} diagramData={diagramData} diagramError={diagramError} diagramDetailLevel={diagramDetailLevel} setDiagramDetailLevel={setDiagramDetailLevel} diagramCloudProvider={diagramCloudProvider} setDiagramCloudProvider={setDiagramCloudProvider} generateDiagram={handleGenerateDiagram} codingTopics={codingTopics} systemDesignTopics={systemDesignTopics} systemDesigns={systemDesigns} behavioralTopics={behavioralTopics} filteredTopics={filteredTopics} progressInfo={progressInfo} isLocked={contentAccess.isTopicLocked(activePage, selectedTopic)} contentAccess={contentAccess} />
                 </Suspense>
               ) : (
                 <>
