@@ -27,7 +27,7 @@ export async function initUser(userId) {
     await query(
       `INSERT INTO ai_hour_topups
          (user_id, team_id, hours, amount_cents, expires_at, source)
-       VALUES ($1, NULL, 1, 0, NOW() + INTERVAL '7 days', 'trial')
+       VALUES ($1, NULL, 1, 0, NOW() + INTERVAL '30 days', 'trial')
        ON CONFLICT DO NOTHING`,
       [userId],
     );
