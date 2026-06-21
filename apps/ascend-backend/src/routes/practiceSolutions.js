@@ -1,5 +1,5 @@
 import express from 'express';
-import { query } from '@camora/shared-db';
+import { query } from '../config/database.js';
 import { cacheGet, cacheSet } from '../services/redis.js';
 
 const router = express.Router();
