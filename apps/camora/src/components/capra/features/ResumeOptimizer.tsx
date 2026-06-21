@@ -281,6 +281,10 @@ export default function ResumeOptimizer({
 
     setGenerationStep('Resume');
     setActiveTab('resume');
+    if (initialJobUrl) {
+      try { sessionStorage.removeItem(`camora_resume_cache_${initialJobUrl}`); } catch { /* ignore */ }
+    }
+
     const optimizedText = await streamResponse('/api/v1/resume/optimize', setOptimizedResume);
 
     setGenerationStep('Cover Letter');
@@ -289,7 +293,7 @@ export default function ResumeOptimizer({
 
     setGenerationStep('ATS Score');
     setActiveTab('atsScore');
-    await fetchAtsScore({ overrides: { resume: optimizedText || resume } });
+    await fetchAtsScore();
 
     setGenerationStep(null);
     setActiveTab('resume');

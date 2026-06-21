@@ -148,26 +148,41 @@ router.post('/ats-score', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Resume and job description are required' });
     }
 
+    const isPlaceholder = !resume.trim() || resume.trim().startsWith('[Document uploaded:');
+    const resumeSection = isPlaceholder
+      ? '(No resume text provided — resume was uploaded as a binary file and could not be read. Treat all JD requirements as unmet.)'
+      : resume;
+
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: `Analyze this resume against the job description for ATS compatibility. Return ONLY valid JSON.
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: `You are an ATS (Applicant Tracking System) analyzer. Compare the BASE resume against the job description requirements.
+
+STEP 1 — Extract from the JD: every required skill, tool, technology, certification, and qualification mentioned.
+STEP 2 — Check each one against the resume. Classify as matched (explicitly present) or missing.
+STEP 3 — Score 0-100: (matched keywords / total JD keywords) × 100, rounded. If no resume text, score is 0.
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-RESUME:
-${resume}
+BASE RESUME:
+${resumeSection}
 
-Return this exact JSON format:
+Return ONLY valid JSON in this exact format — no markdown, no explanation:
 {
-  "score": <number 0-100>,
-  "keywordsMatched": ["keyword1", "keyword2"],
-  "keywordsMissing": ["keyword1", "keyword2"],
-  "suggestions": ["suggestion1", "suggestion2", "suggestion3"],
-  "strengths": ["strength1", "strength2"],
-  "weaknesses": ["weakness1", "weakness2"]
-}` }],
+  "score": <integer 0-100>,
+  "keywordsMatched": ["exact keyword from JD that appears in resume", ...],
+  "keywordsMissing": ["exact keyword from JD that is absent from resume", ...],
+  "strengths": ["specific strength of this resume for this role", ...],
+  "weaknesses": ["specific gap or missing requirement", ...],
+  "suggestions": ["actionable: add X to resume", "quantify Y experience", ...]
+}
+
+Rules:
+- keywordsMatched + keywordsMissing must together cover ALL significant JD requirements (aim for 10-20 total keywords)
+- If resume is empty or unreadable, keywordsMatched=[], keywordsMissing=<all JD requirements>, score=0
+- Never return empty keywordsMissing if the JD has requirements
+- suggestions must be concrete and reference specific JD terms` }],
     });
 
     const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
