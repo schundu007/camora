@@ -20,7 +20,7 @@ function readInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
   const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === 'dark' || stored === 'light') return stored;
-  return 'light';
+  return 'dark';
 }
 
 function applyTheme(theme: Theme): void {

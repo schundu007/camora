@@ -333,7 +333,7 @@ export default function OnboardingPage() {
       markOnboardingComplete();
       markResumeUploaded(); // "Complete Setup" always clears the resume gate — resume is optional
       celebrate({ title: 'Profile complete', subtitle: 'Welcome to Camora — your dashboard is ready.' });
-      setTimeout(() => navigate(safeIntended || '/capra/prepare'), 600);
+      setTimeout(() => navigate(safeIntended || '/'), 600);
     } catch (err) {
       setError(err.message || 'Something went wrong');
       setSubmitting(false);
@@ -365,7 +365,7 @@ export default function OnboardingPage() {
       intended && intended.startsWith('/') && !intended.startsWith('//')
         ? intended
         : null;
-    navigate(safeIntended || '/capra/prepare');
+    navigate(safeIntended || '/');
   }, [accessToken, selectedRoles, searchParams, navigate]);
 
   const progressPercent = step === 1 ? 50 : 100;

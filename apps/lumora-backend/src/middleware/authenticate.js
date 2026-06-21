@@ -72,25 +72,11 @@ export async function authenticate(req, res, next) {
     );
     let user = userResult.rows[0];
 
-    // --- Auto-provision from Ascend SSO ----------------------------------
     if (!user) {
-      const name = payload.name || email.split('@')[0];
-      const image = payload.picture || null;
-      const providerId = String(payload.sub);
-
-      const insertResult = await query(
-        `INSERT INTO users (email, name, image, provider, provider_id, is_active)
-         VALUES ($1, $2, $3, 'ascend_sso', $4, true)
-         ON CONFLICT (email) DO UPDATE SET
-           name = COALESCE(EXCLUDED.name, users.name),
-           image = COALESCE(EXCLUDED.image, users.image)
-         RETURNING *`,
-        [email, name, image, providerId],
-      );
-      user = insertResult.rows[0];
+      return res.status(401).json({ error: 'Account not found' });
     }
 
-    if (!user || user.is_active === false) {
+    if (user.is_active === false) {
       return res.status(401).json({ error: 'User account inactive' });
     }
 

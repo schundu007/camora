@@ -106,6 +106,12 @@ export async function jwtAuth(req, res, next) {
           'SELECT token_generation FROM users WHERE id = $1',
           [userId],
         );
+        if (userRow.rows.length === 0) {
+          return res.status(401).json({
+            error: 'Account not found',
+            code: 'ACCOUNT_NOT_FOUND',
+          });
+        }
         const dbGen = userRow.rows[0]?.token_generation;
         if (dbGen !== undefined && dbGen !== null && Number(dbGen) !== Number(payload.gen)) {
           return res.status(401).json({
