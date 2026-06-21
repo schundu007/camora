@@ -158,14 +158,14 @@ export default function SharedDiagram({
       )}
 
       {imageUrl && !loading && !generating && (
-        <div className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: 600, border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+        <div className="rounded-lg select-none overflow-auto"
+          style={{ cursor: dragging ? 'grabbing' : 'grab', minHeight: 300, maxHeight: '80vh', border: '1px solid var(--border)', background: '#ffffff' }}
           onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)), 4)); }}
           onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
           onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
           onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
           <img src={imageUrl} alt="Architecture diagram" draggable={false}
-            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', height: 'auto' }} />
+            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'top left', display: 'block', width: '100%', height: 'auto' }} />
         </div>
       )}
     </div>
