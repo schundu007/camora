@@ -43,6 +43,14 @@ export default function ResumeOptimizer({
   const [optimizedResume, setOptimizedResume] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [atsScore, setAtsScore] = useState('');
+  const [atsData, setAtsData] = useState<{
+    score?: number;
+    keywordsMatched?: string[];
+    keywordsMissing?: string[];
+    strengths?: string[];
+    weaknesses?: string[];
+    suggestions?: string[];
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -224,6 +232,7 @@ export default function ResumeOptimizer({
     setLoading(true);
     setError(null);
     setAtsScore('');
+    setAtsData(null);
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -242,23 +251,8 @@ export default function ResumeOptimizer({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'ATS analysis failed');
-      const lines = [
-        `ATS Score: ${data.score ?? 'N/A'} / 100`,
-        '',
-        `Keywords Matched: ${(data.keywordsMatched || []).join(', ') || 'None'}`,
-        '',
-        `Keywords Missing: ${(data.keywordsMissing || []).join(', ') || 'None'}`,
-        '',
-        'Strengths:',
-        ...(data.strengths || []).map((s: string) => `  • ${s}`),
-        '',
-        'Weaknesses:',
-        ...(data.weaknesses || []).map((w: string) => `  • ${w}`),
-        '',
-        'Suggestions:',
-        ...(data.suggestions || []).map((s: string) => `  • ${s}`),
-      ];
-      setAtsScore(lines.join('\n'));
+      setAtsData(data);
+      setAtsScore('ats-rendered');
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'ATS analysis failed');
@@ -282,6 +276,7 @@ export default function ResumeOptimizer({
     setOptimizedResume('');
     setCoverLetter('');
     setAtsScore('');
+    setAtsData(null);
 
     setGenerationStep('Resume');
     setActiveTab('resume');
@@ -1087,7 +1082,78 @@ export default function ResumeOptimizer({
               title="Document preview"
               style={{ flex: 1, width: '100%', border: 'none', minHeight: '600px' }}
             />
-          ) : outputContent ? (
+          ) : activeTab === 'atsScore' && atsData ? (
+            <div style={{ overflowY: 'auto', flex: 1, padding: '24px 28px' }}>
+              {/* Score ring */}
+              {(() => {
+                const score = atsData.score ?? 0;
+                const color = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+                const label = score >= 75 ? 'Strong' : score >= 50 ? 'Fair' : 'Weak';
+                const r = 42, circ = 2 * Math.PI * r;
+                const dash = (score / 100) * circ;
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 28 }}>
+                    <svg width={104} height={104} style={{ flexShrink: 0 }}>
+                      <circle cx={52} cy={52} r={r} fill="none" stroke="var(--border)" strokeWidth={10} />
+                      <circle cx={52} cy={52} r={r} fill="none" stroke={color} strokeWidth={10}
+                        strokeDasharray={`${dash} ${circ - dash}`}
+                        strokeLinecap="round"
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: '52px 52px', transition: 'stroke-dasharray .6s ease' }} />
+                      <text x={52} y={48} textAnchor="middle" fill={color} fontSize={22} fontWeight={700} fontFamily="inherit">{score}</text>
+                      <text x={52} y={64} textAnchor="middle" fill="var(--text-muted)" fontSize={11} fontFamily="inherit">/100</text>
+                    </svg>
+                    <div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color, marginBottom: 4 }}>{label} ATS Match</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                        {score >= 75 ? 'Your resume is well-optimized for this role.' :
+                          score >= 50 ? 'Some gaps — review missing keywords below.' :
+                            'Significant gaps found. Tailor your resume using the suggestions.'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Keywords */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                {[
+                  { title: 'Keywords Matched', items: atsData.keywordsMatched || [], pill: '#16a34a', pillBg: 'rgba(22,163,74,.12)' },
+                  { title: 'Keywords Missing', items: atsData.keywordsMissing || [], pill: '#dc2626', pillBg: 'rgba(220,38,38,.12)' },
+                ].map(({ title, items, pill, pillBg }) => (
+                  <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                    {items.length === 0
+                      ? <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>None</span>
+                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {items.map((k: string) => (
+                            <span key={k} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, color: pill, background: pillBg, border: `1px solid ${pill}33` }}>{k}</span>
+                          ))}
+                        </div>
+                    }
+                  </div>
+                ))}
+              </div>
+
+              {/* Strengths / Weaknesses / Suggestions */}
+              {[
+                { title: 'Strengths', items: atsData.strengths || [], icon: '✓', iconColor: '#22c55e', iconBg: 'rgba(34,197,94,.12)' },
+                { title: 'Weaknesses', items: atsData.weaknesses || [], icon: '✗', iconColor: '#ef4444', iconBg: 'rgba(239,68,68,.12)' },
+                { title: 'Suggestions', items: atsData.suggestions || [], icon: '→', iconColor: '#3b82f6', iconBg: 'rgba(59,130,246,.12)' },
+              ].map(({ title, items, icon, iconColor, iconBg }) => items.length > 0 && (
+                <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {items.map((item: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, marginTop: 1 }}>{icon}</span>
+                        <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.55 }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : outputContent && outputContent !== 'ats-rendered' ? (
             <pre
               style={{
                 margin: 0,
