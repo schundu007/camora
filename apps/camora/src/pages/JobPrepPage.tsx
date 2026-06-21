@@ -487,6 +487,15 @@ export default function JobPrepPage() {
     jobRole, undefined, job.title, job.company_name
   );
 
+  const goToPrepkit = () => {
+    if (!job) return;
+    sessionStorage.setItem('camora_job_prep_ctx', JSON.stringify({
+      jd: job.job_description || job.ai_summary || job.description || '',
+      techStack: (job.ai_tech_stack || []).join(', '),
+    }));
+    navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}&autoprep=1`);
+  };
+
   return (
     <div style={{ minHeight: '100vh' }}>
       <SiteNav variant="light" />
@@ -781,7 +790,7 @@ export default function JobPrepPage() {
             {/* Generate button */}
             {Object.keys(generatedSections).length === 0 && !generating && (
               <button
-                onClick={() => job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`)}
+                onClick={goToPrepkit}
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -866,7 +875,7 @@ export default function JobPrepPage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => { setPrepError(null); if (job) { navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`); } }}
+                  onClick={() => { setPrepError(null); goToPrepkit(); }}
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
@@ -1015,7 +1024,7 @@ export default function JobPrepPage() {
                 {/* Regenerate button after generation is complete */}
                 {!generating && Object.keys(generatedSections).length > 0 && (
                   <button
-                    onClick={() => job && navigate(`/lumora/prepkit?company=${encodeURIComponent(job.company_name)}&role=${encodeURIComponent(job.title)}`)}
+                    onClick={goToPrepkit}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
