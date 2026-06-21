@@ -52,6 +52,7 @@ import libraryRouter from './routes/library.js';
 // the frontend's /jobs page. Falls back to 503 if JOBS_DATABASE_URL is unset.
 import jobsRouter from './routes/jobs.js';
 import mcqRouter from './routes/mcq.js';
+import practiceSolutionsRouter from './routes/practiceSolutions.js';
 import http from 'http';
 import net from 'net';
 import { verifyToken } from './lib/shared-auth.js';
@@ -722,6 +723,14 @@ async function runMigrations() {
     exercise_id INTEGER NOT NULL REFERENCES k8s_exercises(id) ON DELETE CASCADE,
     passed_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, exercise_id)
+  )`);
+
+  await query(`CREATE TABLE IF NOT EXISTS practice_solutions (
+    id SERIAL PRIMARY KEY,
+    problem_key TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL,
+    solution_text TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
   )`);
 
   } catch (err) {
@@ -1464,6 +1473,9 @@ app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
 // MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
 app.use('/api/v1/mcq', authenticate, aiLimiter, mcqRouter);
+
+// Practice page solution cache — generated once, served forever from DB+Redis
+app.use('/api/v1/practice', apiLimiter, practiceSolutionsRouter);
 
 // Cara — platform-wide AI guide (⌘K command bar)
 app.use('/api/v1/cara', authenticate, aiLimiter, caraRouter);
