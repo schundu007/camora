@@ -931,7 +931,7 @@ export default function DocsPage({ onBack }) {
               in pixels so a 1920px monitor gets ~320px of comfortable
               margin per side rather than edge-to-edge stretch. Below
               1280px the cap is inert and content fills the column. */}
-          <div className={`flex-1 min-w-0 w-full ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`}>
+          <div className={`flex-1 min-w-0 w-full ${isMobile ? 'px-3' : 'px-4 sm:px-6 lg:px-8'}`} style={{ overflowX: 'clip' }}>
             {/* Breadcrumb Bar — secondary bar below TopBar */}
             <div className="sticky z-20 px-3 sm:px-4 py-1.5 sm:py-3 flex items-center justify-between gap-2 bg-[var(--bg-surface)] border-b border-[var(--border)]" style={{ top: 0 }}>
               {/* Back — desktop + mobile. When a topic is selected, returns
