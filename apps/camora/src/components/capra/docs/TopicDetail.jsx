@@ -475,7 +475,7 @@ function PricingCards() {
 export default function TopicDetail({
   activePage, selectedTopic, topicDetails, pageConfig,
   completedTopics, starredTopics, toggleComplete, toggleStar,
-  showAskAI, setShowAskAI, aiQuestion, setAiQuestion, aiAnswer, aiLoading, handleAskAI,
+  showAskAI, setShowAskAI, aiQuestion, setAiQuestion, aiAnswer, aiLoading, handleAskAI, aiHistory = [], aiCurrentQ = '',
   showRoadmap, setShowRoadmap, expandedTheoryQuestions, setExpandedTheoryQuestions,
   setSelectedTopic, generatingDiagram, diagramData, diagramError,
   diagramDetailLevel, setDiagramDetailLevel, diagramCloudProvider, setDiagramCloudProvider,
@@ -970,33 +970,63 @@ export default function TopicDetail({
 
       {/* ── UNLOCKED CONTENT ── */}
       {!isLocked && showAskAI && (
-        <div className="p-3 rounded mb-2 bg-[var(--accent)]/10/50 border border-[var(--accent)]/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Icon name="sparkles" size={16} className="text-[var(--text-primary)]" />
-            <span className="text-[var(--text-primary)] font-semibold text-sm landing-display">Ask AI about {topicDetails.title}</span>
+        <div className="rounded mb-2 overflow-hidden border" style={{ borderColor: 'color-mix(in oklab, var(--accent) 25%, var(--border))' }}>
+          {/* Header */}
+          <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'color-mix(in oklab, var(--accent) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--accent) 15%, var(--border))' }}>
+            <Icon name="sparkles" size={14} style={{ color: 'var(--accent)' }} />
+            <span className="text-sm font-semibold landing-display" style={{ color: 'var(--text-primary)' }}>Ask AI about {topicDetails.title}</span>
           </div>
-          <div className="flex gap-2 mb-2">
+          {/* Chat thread */}
+          {(aiHistory.length > 0 || aiCurrentQ || aiLoading) && (
+            <div className="px-3 py-3 space-y-4 max-h-80 overflow-y-auto" style={{ background: 'var(--bg-elevated)' }}>
+              {aiHistory.map((item, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-3 py-2 rounded-lg text-sm landing-body" style={{ background: 'var(--accent)', color: '#fff' }}>{item.q}</div>
+                  </div>
+                  <div className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
+                    <FormattedContent content={item.a} color="purple" />
+                  </div>
+                </div>
+              ))}
+              {aiCurrentQ && (
+                <div className="space-y-2">
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-3 py-2 rounded-lg text-sm landing-body" style={{ background: 'var(--accent)', color: '#fff' }}>{aiCurrentQ}</div>
+                  </div>
+                  {aiAnswer ? (
+                    <div className="text-sm landing-body" style={{ color: 'var(--text-secondary)' }}>
+                      <FormattedContent content={aiAnswer} color="purple" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <Icon name="loader" size={13} className="animate-spin" /><span>Thinking…</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Input */}
+          <div className="flex gap-2 p-3" style={{ borderTop: (aiHistory.length > 0 || aiCurrentQ) ? '1px solid var(--border)' : 'none', background: 'var(--bg-surface)' }}>
             <input
               type="text"
               value={aiQuestion}
               onChange={(e) => setAiQuestion(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAskAI()}
-              placeholder={`Ask anything about ${topicDetails.title}...`}
-              className="flex-1 px-3 py-2.5 rounded text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none border border-[var(--border)] bg-[var(--bg-surface)] focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)]/50 landing-body"
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAskAI()}
+              placeholder={aiHistory.length > 0 ? 'Ask a follow-up…' : `Ask anything about ${topicDetails.title}…`}
+              className="flex-1 px-3 py-2 rounded text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none border border-[var(--border)] bg-[var(--bg-elevated)] focus:ring-2 focus:border-[var(--accent)]/50 landing-body"
+              autoFocus
             />
             <button
               onClick={() => handleAskAI()}
               disabled={aiLoading || !aiQuestion.trim()}
-              className="px-3 py-2.5 rounded text-sm font-semibold bg-[var(--accent)]/100 text-white hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors landing-body"
+              className="px-3 py-2 rounded text-sm font-semibold text-white disabled:opacity-50 transition-colors landing-body"
+              style={{ background: 'var(--accent)' }}
             >
-              {aiLoading ? <Icon name="loader" size={16} className="animate-spin" /> : 'Ask'}
+              {aiLoading ? <Icon name="loader" size={14} className="animate-spin" /> : 'Send'}
             </button>
           </div>
-          {aiAnswer && (
-            <div className="p-4 rounded bg-[var(--bg-elevated)]">
-              <FormattedContent content={aiAnswer} color="purple" />
-            </div>
-          )}
         </div>
       )}
 
