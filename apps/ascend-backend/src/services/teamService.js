@@ -340,6 +340,26 @@ export async function checkPersonalHourBudget(userId) {
 
     const topupHours = await sumUnexpiredTopups({ userId });
     const usedHours = usedSeconds / 3600;
+
+    // Free users whose trial expired before they ever used AI get blocked
+    // (0 budget + 0 usage = remaining 0 → false). Re-grant a 30-day trial.
+    if (planType === 'free' && topupHours === 0 && usedHours === 0) {
+      try {
+        await query(
+          `UPDATE ai_hour_topups SET expires_at = NOW() + INTERVAL '30 days'
+           WHERE user_id = $1 AND source = 'trial'`,
+          [userId],
+        );
+        await query(
+          `INSERT INTO ai_hour_topups (user_id, team_id, hours, amount_cents, expires_at, source)
+           VALUES ($1, NULL, 1, 0, NOW() + INTERVAL '30 days', 'trial')
+           ON CONFLICT DO NOTHING`,
+          [userId],
+        );
+      } catch { /* best-effort */ }
+      return { ok: true, pool_hours: 1, used_hours: 0, remaining_hours: 1, plan_type: planType, period: budget.period, topup_hours: 1, reason: null };
+    }
+
     const totalBudget = budget.hours + topupHours;
     const remaining = totalBudget - usedHours;
 
