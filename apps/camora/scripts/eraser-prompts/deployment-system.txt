@@ -1,0 +1,1 @@
+Design a deployment system: build pipeline, container registry, blue-green and canary rollout strategies, health checking, traffic shifting, and automated rollback. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

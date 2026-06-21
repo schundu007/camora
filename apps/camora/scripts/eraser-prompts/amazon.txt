@@ -1,0 +1,1 @@
+Design Amazon's e-commerce platform: product catalog, search, cart, order management, fulfillment center routing, and recommendation engine. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

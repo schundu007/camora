@@ -1,0 +1,1 @@
+Design YouTube: video upload and adaptive transcoding pipeline, CDN delivery with edge caching, recommendation engine, comment system, search, and ad serving. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

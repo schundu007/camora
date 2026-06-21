@@ -1,0 +1,1 @@
+Design a unique ID generator: Snowflake-style IDs with timestamp epoch, datacenter, worker, and sequence bits; clock-skew handling and throughput of 1M+ IDs/sec. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

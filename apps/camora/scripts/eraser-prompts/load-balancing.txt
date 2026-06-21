@@ -1,0 +1,1 @@
+Design a load balancer: L4 vs L7, round-robin, least connections, weighted, and consistent hashing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

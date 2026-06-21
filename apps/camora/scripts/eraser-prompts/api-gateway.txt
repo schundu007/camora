@@ -1,0 +1,1 @@
+Design an API gateway: request routing, JWT authentication, rate limiting, load balancing, request/response transformation, circuit breaking, and observability. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

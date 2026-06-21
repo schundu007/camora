@@ -1,0 +1,1 @@
+Design Ticketmaster: event and venue catalog, seat-map rendering, distributed inventory hold with Redis locks, checkout flow, payment, and anti-scalping queuing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

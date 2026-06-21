@@ -1,0 +1,1 @@
+Design a microservices architecture: service discovery, API gateway, inter-service communication, circuit breakers, distributed tracing, and service mesh sidecar. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

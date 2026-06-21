@@ -1,0 +1,1 @@
+Design a web crawler: distributed URL frontier with politeness scheduling, HTML parser, link extractor, distributed deduplication via Bloom filter, and content store. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

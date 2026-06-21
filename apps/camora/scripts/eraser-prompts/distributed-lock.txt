@@ -1,0 +1,1 @@
+Design a distributed lock service: lease-based locking with fencing tokens, leader election via Raft/ZooKeeper, deadlock prevention, and fault-tolerant renewal. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

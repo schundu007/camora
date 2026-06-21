@@ -1,0 +1,1 @@
+Visualize Git branching strategies: feature branches, GitFlow, trunk-based development, and merge strategies. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

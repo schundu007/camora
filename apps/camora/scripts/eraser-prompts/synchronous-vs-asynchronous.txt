@@ -1,0 +1,1 @@
+Visualize sync vs async: blocking calls, message queues, callbacks, futures, and event-driven architectures. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

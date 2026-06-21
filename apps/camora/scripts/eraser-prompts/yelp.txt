@@ -1,0 +1,1 @@
+Design Yelp: business listing storage, user review ingestion, full-text and geospatial search, photo CDN delivery, ranking algorithm, and spam/review-gating. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

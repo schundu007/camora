@@ -1,0 +1,1 @@
+Design DynamoDB internals: partition keys, sort keys, GSI/LSI, DynamoDB Streams, and adaptive capacity. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

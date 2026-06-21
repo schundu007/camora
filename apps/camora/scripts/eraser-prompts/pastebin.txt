@@ -1,0 +1,1 @@
+Design Pastebin: unique short-URL generation with base62, content storage in object store, syntax highlighting, expiry/TTL, access control, and view counting. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

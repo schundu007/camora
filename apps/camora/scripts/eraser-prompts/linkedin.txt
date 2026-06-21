@@ -1,0 +1,1 @@
+Design LinkedIn: profile and connection graph, 2nd-degree recommendation, activity feed aggregation, job search index, messaging, and endorsement system. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

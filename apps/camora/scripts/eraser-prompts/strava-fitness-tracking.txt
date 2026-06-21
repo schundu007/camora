@@ -1,0 +1,1 @@
+Design Strava: GPS ingestion, segment matching, activity feed, leaderboards, and social graph. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

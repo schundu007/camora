@@ -1,0 +1,1 @@
+Design Facebook News Feed: post ingestion, feed ranking model, fanout-on-write vs fanout-on-read, privacy enforcement, CDN-cached assets, and real-time updates. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

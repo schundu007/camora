@@ -1,0 +1,1 @@
+Design a stock exchange: high-throughput order-book matching engine, price-time priority, market data feed, trade settlement, pre-trade risk checks, and regulatory reporting. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

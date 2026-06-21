@@ -1,0 +1,1 @@
+Design Google Drive: chunked file upload/download, metadata store, folder hierarchy, sharing with ACL propagation, desktop sync client, and full-text search. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

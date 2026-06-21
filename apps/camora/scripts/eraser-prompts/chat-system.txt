@@ -1,0 +1,1 @@
+Design a real-time chat system: WebSocket servers, message persistence, presence service, message fan-out, conversation history, and push notifications. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

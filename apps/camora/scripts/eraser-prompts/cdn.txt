@@ -1,0 +1,1 @@
+Design a CDN: origin pull/push, edge PoP nodes, anycast routing, cache invalidation, SSL termination, and geo-distribution. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

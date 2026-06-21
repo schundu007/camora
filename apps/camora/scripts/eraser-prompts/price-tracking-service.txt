@@ -1,0 +1,1 @@
+Design a price tracking service: scraper fleet, change detection, notification queue, and historical price DB. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

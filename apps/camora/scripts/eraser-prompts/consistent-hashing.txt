@@ -1,0 +1,1 @@
+Visualize consistent hashing: hash ring, virtual nodes, server addition/removal, and load distribution. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a typeahead/autocomplete system: trie index, prefix matching, top-K ranking by frequency, distributed caching, and real-time suggestion serving. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a generic scalable system: clients, CDN, load balancer, API gateway, microservices, cache, database. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

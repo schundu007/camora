@@ -1,0 +1,1 @@
+Design a URL shortener: base62 unique key generation, key-value redirect store, analytics event stream, custom aliases, expiry/TTL, and abuse prevention. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

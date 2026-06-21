@@ -1,0 +1,1 @@
+Visualize strong vs eventual consistency: linearizability, sequential, causal, read-your-writes. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

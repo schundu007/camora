@@ -1,0 +1,1 @@
+Design an ad click aggregation pipeline: event ingestion, deduplication, real-time counting, batch reconciliation, and reporting dashboards. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

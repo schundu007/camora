@@ -1,0 +1,1 @@
+Design DoorDash's delivery platform: restaurant catalog, order placement, driver dispatch with geospatial matching, real-time tracking, and payout calculation. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

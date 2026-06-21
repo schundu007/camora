@@ -1,0 +1,1 @@
+Design Uber: driver/rider matching with geospatial quadtree, real-time location update ingestion, dynamic surge pricing engine, trip state machine, and payment processing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design an object storage system like S3: bucket management, multipart upload, content-addressed blocks, versioning, lifecycle tiering, and access control policies. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

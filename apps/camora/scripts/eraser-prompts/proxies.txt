@@ -1,0 +1,1 @@
+Visualize proxy types: forward proxy, reverse proxy, transparent proxy, use cases (caching, security, anonymity). Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

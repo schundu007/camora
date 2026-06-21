@@ -1,0 +1,1 @@
+Design a messaging app: end-to-end encryption with Signal protocol, group chat fan-out, offline message queuing, read receipts, push notifications, and media upload. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

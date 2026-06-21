@@ -1,0 +1,1 @@
+Design Gmail: SMTP ingest, thread storage with label indexing, full-text search with inverted index, spam filtering pipeline, and push delivery via FCM. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

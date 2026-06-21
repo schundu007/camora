@@ -1,0 +1,1 @@
+Design WhatsApp: end-to-end encrypted messaging with Signal protocol, offline message queuing, group chat fan-out, media upload via separate CDN, and delivery receipts. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Visualize Linux architecture: kernel space, user space, system calls, file system hierarchy, and process management. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

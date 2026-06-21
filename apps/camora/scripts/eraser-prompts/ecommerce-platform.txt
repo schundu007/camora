@@ -1,0 +1,1 @@
+Design a scalable e-commerce platform: product catalog, inventory management, cart/checkout, payment gateway integration, order fulfillment, and personalized recommendations. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

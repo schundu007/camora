@@ -1,0 +1,1 @@
+Design Shopify's e-commerce platform: multi-tenant merchant stores, product catalog, cart/checkout, payment processing, inventory sync, and app marketplace. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

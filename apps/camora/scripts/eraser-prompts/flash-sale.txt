@@ -1,0 +1,1 @@
+Design a flash-sale system: pre-registration queue, distributed inventory reservation with Redis, rate limiting, order queue, and oversell prevention. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

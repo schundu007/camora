@@ -1,0 +1,1 @@
+Visualize real-world system failures: cascading failures, thundering herd, split-brain, and recovery patterns. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

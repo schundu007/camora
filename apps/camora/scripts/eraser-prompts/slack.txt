@@ -1,0 +1,1 @@
+Design Slack: workspace and channel hierarchy, real-time messaging with WebSockets, message history search, file sharing, notification routing, and bot integrations. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

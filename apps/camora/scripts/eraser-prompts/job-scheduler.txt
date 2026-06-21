@@ -1,0 +1,1 @@
+Design a job scheduler: cron trigger engine, distributed worker pool with task leasing, dependency DAG execution, retry policy, monitoring, and result persistence. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design Apache Flink architecture: JobManager, TaskManager, checkpointing, watermarks, stateful stream processing. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

@@ -1,0 +1,1 @@
+Design a metrics monitoring system: agent-based collection, push/pull ingestion, time-series storage, downsampling, anomaly detection, and alerting with dashboards. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

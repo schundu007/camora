@@ -1,0 +1,1 @@
+Design a CI/CD pipeline: source code triggers, build workers, test runners, artifact registry, staging environment gates, and production deployment with rollback. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

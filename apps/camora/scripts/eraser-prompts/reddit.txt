@@ -1,0 +1,1 @@
+Design Reddit: post and comment storage, upvote counter aggregation, hot/new/top feed ranking, subreddit subscriptions, content moderation, and full-text search. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

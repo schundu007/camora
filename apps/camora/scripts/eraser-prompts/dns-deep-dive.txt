@@ -1,0 +1,1 @@
+Design DNS: root servers, TLD servers, authoritative servers, recursive resolvers, caching, and DNSSEC. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

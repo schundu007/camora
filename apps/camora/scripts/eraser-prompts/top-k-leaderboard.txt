@@ -1,0 +1,1 @@
+Design a top-K trending items system: event stream, Count-Min Sketch, heavy hitters, and ranking. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

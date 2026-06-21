@@ -1,0 +1,1 @@
+Visualize ACID vs BASE database tradeoffs with consistency, availability, and partition tolerance. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

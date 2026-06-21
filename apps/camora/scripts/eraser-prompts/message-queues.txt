@@ -1,0 +1,1 @@
+Design a message queue: producer-consumer, queues vs topics, broker cluster, persistence, and DLQ. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

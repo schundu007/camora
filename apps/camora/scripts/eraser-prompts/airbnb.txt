@@ -1,0 +1,1 @@
+Design Airbnb's core platform: property listings, search with geo-filtering, booking flow, payments, host/guest messaging, reviews, and trust/safety. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

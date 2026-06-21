@@ -1,0 +1,1 @@
+Design a hotel booking system: property search with availability calendar, rate management, reservation creation, payment processing, and confirmation notifications. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

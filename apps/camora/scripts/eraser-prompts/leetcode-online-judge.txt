@@ -1,0 +1,1 @@
+Design an online code judge: code submission queue, sandbox executor, test runners, and verdict cache. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

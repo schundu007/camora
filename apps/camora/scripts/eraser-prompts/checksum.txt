@@ -1,0 +1,1 @@
+Visualize checksum verification: data integrity, hash functions (MD5/SHA), end-to-end checks across storage and transit. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.

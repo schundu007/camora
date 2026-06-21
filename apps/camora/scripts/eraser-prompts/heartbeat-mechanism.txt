@@ -1,0 +1,1 @@
+Visualize heartbeat mechanism: gossip protocol, failure detection, phi accrual detector, leader election. Use {PROVIDER} managed services exclusively. Show key components, data flows, and connections. Design for production scale.
