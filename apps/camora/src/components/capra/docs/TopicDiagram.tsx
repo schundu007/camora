@@ -38,7 +38,9 @@ export default function TopicDiagram({
         background: '#ffffff',
         border: '1px solid var(--border)',
         display: 'block',
-        width: '100%',
+        width: '90%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
       }}
     >
       <img
