@@ -1,5 +1,5 @@
 /**
- * Tests for buildInterviewDesignPrompt's archetype branching.
+ * Tests for buildDesignPrompt's archetype branching.
  *
  * Doesn't test that Claude generates a "correct" answer — that's an
  * eval problem. Tests that the prompt CONTAINS the right per-archetype
@@ -7,13 +7,13 @@
  * generic answer for every problem (which is the bug we're fixing).
  */
 import { describe, it, expect } from 'vitest';
-import { buildInterviewDesignPrompt } from '../src/services/claude.js';
+import { buildDesignPrompt } from '../src/services/claude.js';
 
 const RESUME = 'I led the platform team at Stripe.';
 const TECH = 'Postgres, Kafka, K8s.';
 
-describe('buildInterviewDesignPrompt — system (default, current behavior)', () => {
-  const p = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
+describe('buildDesignPrompt — system (default, current behavior)', () => {
+  const p = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
 
   it('includes the core distributed-system layers', () => {
     expect(p).toMatch(/CDN.*LB.*App.*Cache.*DB|6-8 layers/i);
@@ -29,8 +29,8 @@ describe('buildInterviewDesignPrompt — system (default, current behavior)', ()
   });
 });
 
-describe('buildInterviewDesignPrompt — application (LLD/OOP)', () => {
-  const p = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'application');
+describe('buildDesignPrompt — application (LLD/OOP)', () => {
+  const p = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'application');
 
   it('omits SCALEMATH/SCALECALC (no capacity math for OOP design)', () => {
     expect(p).not.toContain('[SCALEMATH]');
@@ -56,8 +56,8 @@ describe('buildInterviewDesignPrompt — application (LLD/OOP)', () => {
   });
 });
 
-describe('buildInterviewDesignPrompt — infrastructure (component design)', () => {
-  const p = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'infrastructure');
+describe('buildDesignPrompt — infrastructure (component design)', () => {
+  const p = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'infrastructure');
 
   it('keeps SCALEMATH (throughput/latency are first-class for infra)', () => {
     expect(p).toContain('[SCALEMATH]');
@@ -73,16 +73,16 @@ describe('buildInterviewDesignPrompt — infrastructure (component design)', () 
   });
 });
 
-describe('buildInterviewDesignPrompt — backward compat', () => {
+describe('buildDesignPrompt — backward compat', () => {
   it('treats undefined designKind as system (no regression on existing callers)', () => {
-    const oldCall = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws');
-    const explicitSystem = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
+    const oldCall = buildDesignPrompt(RESUME, TECH, 'standard', 'aws');
+    const explicitSystem = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
     expect(oldCall).toBe(explicitSystem);
   });
 
   it('treats unknown designKind as system (fail-open)', () => {
-    const fallback = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'made-up');
-    const explicitSystem = buildInterviewDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
+    const fallback = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'made-up');
+    const explicitSystem = buildDesignPrompt(RESUME, TECH, 'standard', 'aws', 'system');
     expect(fallback).toBe(explicitSystem);
   });
 });

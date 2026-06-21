@@ -758,14 +758,14 @@ export default function ResumeOptimizer({
                 const t = line.trim();
                 if (!t) return <div key={i} style={{ height: '10px' }} />;
                 const isHeader = t === t.toUpperCase() && t.length > 2 && /[A-Z]/.test(t) && !t.startsWith('•') && !t.startsWith('-');
-                const isBullet = /^[•\-\*]\s/.test(t);
+                const isBullet = /^[•\-*]\s/.test(t);
                 if (isHeader) return (
                   <div key={i} style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', borderBottom: '1.5px solid #cbd5e1', paddingBottom: '3px', marginTop: '18px', marginBottom: '7px', letterSpacing: '0.06em', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>
                 );
                 if (isBullet) return (
                   <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                     <span style={{ flexShrink: 0, marginTop: '1px' }}>•</span>
-                    <span>{t.replace(/^[•\-\*]\s*/, '')}</span>
+                    <span>{t.replace(/^[•\-*]\s*/, '')}</span>
                   </div>
                 );
                 return <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '1px', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>{t}</div>;
