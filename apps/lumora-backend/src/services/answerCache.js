@@ -109,8 +109,9 @@ export function buildAnswerCacheKey(parts) {
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v7: busts v6 entries cached before full-section design prompt fix (2026-06-06).
-  return `lumora:answer:v7:${h}`;
+  // v8: systemContext removed from key (2026-06-21) — keys are now question-scoped,
+  // not user-scoped, enabling cross-user cache hits for coding/design solutions.
+  return `lumora:answer:v8:${h}`;
 }
 
 async function cacheGetFromDb(key) {

@@ -456,9 +456,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [jsonSolution, activeSolutionIdx, code, token, resolveLanguage]);
 
-  // Restore last coding answer from sessionStorage on mount (refresh or chip-switch back)
+  // Restore last coding answer from sessionStorage on mount (refresh or chip-switch back).
+  // Intentionally runs even when initialProblem is set — if the user refreshes a
+  // ?problem= URL we still want to show the sessionStorage answer instantly rather
+  // than re-triggering the LLM. The server-side cache will hit anyway (v8 keys are
+  // question-scoped), so worst case is a no-op duplicate render.
   useEffect(() => {
-    if (parsedBlocks.length === 0 && !isStreaming && !initialProblem) {
+    if (parsedBlocks.length === 0 && !isStreaming) {
       try {
         const raw = sessionStorage.getItem('lumora:lastCodingAnswer');
         if (raw) {

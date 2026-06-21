@@ -833,9 +833,13 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // Repeated coding problems (Two Sum, Tiny URL, etc.) used to fire
   // the model every time. Skip the LLM entirely on a hit — replay the
   // structured answer we cached on the first solve.
+  // systemContext (resume + JD) intentionally excluded: the algorithm for
+  // "Two Sum" or "Design Tiny URL" is the same for every user. Including
+  // it made every user's key unique → zero cross-user hits. The prompt
+  // still receives systemContext for personalization; only the lookup key
+  // is question-scoped so the first solver primes the cache for everyone.
   const cacheKey = buildAnswerCacheKey({
     question: problem,
-    systemContext,
     plan: planType,
     route: 'solve',
     language: lang,
