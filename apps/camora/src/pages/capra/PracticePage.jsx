@@ -2064,7 +2064,7 @@ export default function PracticePage() {
               {/* ── Hero Result Card ── */}
               <div style={{ background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(38,97,156,0.15)' }}>
                 {/* Decorative grid */}
-                <div style={{ position: 'absolute', inset: 0, opacity: 0.35, backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.35, backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {/* Score ring + grade */}
                   <div style={{ textAlign: 'center' }}>
