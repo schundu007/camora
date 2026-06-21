@@ -778,20 +778,6 @@ export default function TopicDetail({
                 {topicDetails.difficulty && (
                   <Chip>{topicDetails.difficulty}</Chip>
                 )}
-                {(() => {
-                  // Derive the count from the content actually rendered so
-                  // the pill never lies. Static `questions: 6` fields lag
-                  // behind real keyQuestions/sampleQuestions arrays as
-                  // content gets added or removed.
-                  const actual = (Array.isArray(topicDetails.keyQuestions) ? topicDetails.keyQuestions.length : 0)
-                    + (Array.isArray(topicDetails.sampleQuestions) ? topicDetails.sampleQuestions.length : 0)
-                    + (Array.isArray(topicDetails.problems) ? topicDetails.problems.length : 0);
-                  const count = actual || (typeof topicDetails.questions === 'number' ? topicDetails.questions : 0);
-                  if (!count) return null;
-                  return (
-                    <Chip>{count} {count === 1 ? 'problem' : 'problems'}</Chip>
-                  );
-                })()}
                 {isSDStyle && <CloudProviderSelector variant="compact" className="ml-1" />}
                 {isSDStyle && (
                   <Link
