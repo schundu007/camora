@@ -61,7 +61,7 @@ export default function SignupPage() {
 
           {/* What you get */}
           <div className="mt-6 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
-            <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Free account includes</p>
+            <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-secondary)' }}>Free account includes</p>
             <div className="space-y-2">
               {['3 live sessions', 'Browse all 415+ prep topics', 'Practice sessions'].map(item => (
                 <div key={item} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
