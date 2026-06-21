@@ -227,13 +227,24 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&nbsp;/g, ' ');
-    // Collapse whitespace
-    const text = html.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim().substring(0, 10000);
+    // Collapse whitespace — take first 12k chars as raw input for Claude
+    const rawText = html.replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim().substring(0, 12000);
 
-    if (text.length < 100) {
+    if (rawText.length < 100) {
       return res.status(400).json({ error: 'Could not extract job description from that URL. Try pasting it directly.' });
     }
 
+    // Use Claude Haiku to extract only the relevant JD content, stripping nav/footer/ads
+    const extraction = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: `Extract the job description from the following scraped web page text. Return ONLY the structured job posting content — job title, company, location, role summary, responsibilities, required qualifications, and nice-to-have skills. Remove all navigation, headers, footers, cookie notices, ads, and unrelated page content. Format clearly with section headings.\n\nSCRAPED TEXT:\n${rawText}`,
+      }],
+    });
+
+    const text = extraction.content[0]?.text?.trim() || rawText.substring(0, 4000);
     res.json({ text });
   } catch (err) {
     if (err.name === 'AbortError') {
