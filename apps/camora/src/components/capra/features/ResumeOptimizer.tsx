@@ -217,6 +217,56 @@ export default function ResumeOptimizer({
     }
   }
 
+  async function fetchAtsScore(opts?: {
+    overrides?: { resume?: string; jobDescription?: string; company?: string; role?: string };
+  }) {
+    setLoading(true);
+    setError(null);
+    setAtsScore('');
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try {
+      const res = await fetch(`${API_URL}/api/v1/resume/ats-score`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          resume: opts?.overrides?.resume ?? resume,
+          jobDescription: opts?.overrides?.jobDescription ?? (jobDescription || jobUrl),
+          company: opts?.overrides?.company ?? company,
+          role: opts?.overrides?.role ?? role,
+        }),
+        signal: controller.signal,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'ATS analysis failed');
+      const lines = [
+        `ATS Score: ${data.score ?? 'N/A'} / 100`,
+        '',
+        `Keywords Matched: ${(data.keywordsMatched || []).join(', ') || 'None'}`,
+        '',
+        `Keywords Missing: ${(data.keywordsMissing || []).join(', ') || 'None'}`,
+        '',
+        'Strengths:',
+        ...(data.strengths || []).map((s: string) => `  • ${s}`),
+        '',
+        'Weaknesses:',
+        ...(data.weaknesses || []).map((w: string) => `  • ${w}`),
+        '',
+        'Suggestions:',
+        ...(data.suggestions || []).map((s: string) => `  • ${s}`),
+      ];
+      setAtsScore(lines.join('\n'));
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      setError(err instanceof Error ? err.message : 'ATS analysis failed');
+    } finally {
+      setLoading(false);
+      abortRef.current = null;
+    }
+  }
+
   async function handleGenerateAll() {
     if (!resume.trim()) {
       setError('Please paste your resume first.');
@@ -242,7 +292,7 @@ export default function ResumeOptimizer({
 
     setGenerationStep('ATS Score');
     setActiveTab('atsScore');
-    await streamResponse('/api/v1/resume/ats-score', setAtsScore);
+    await fetchAtsScore();
 
     setGenerationStep(null);
     setActiveTab('resume');
@@ -384,9 +434,7 @@ export default function ResumeOptimizer({
 
         setAutoStatus('Calculating ATS score…');
         setActiveTab('atsScore');
-        await streamResponse('/api/v1/resume/ats-score', setAtsScore, {
-          overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro },
-        });
+        await fetchAtsScore({ overrides: { resume: resumeText, jobDescription: jdText, company: co, role: ro } });
 
         setAutoStatus(null);
         setActiveTab('resume');
