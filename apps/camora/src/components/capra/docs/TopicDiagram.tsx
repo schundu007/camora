@@ -35,10 +35,11 @@ export default function TopicDiagram({
     <figure
       className={`overflow-hidden ${className}`}
       style={{
-        background: 'var(--bg-app)',
+        background: '#ffffff',
         border: '1px solid var(--border)',
         display: 'block',
         width: '100%',
+        padding: '16px',
       }}
     >
       <img
