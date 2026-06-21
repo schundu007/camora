@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDiagramCache, setDiagramCache } from '@/hooks/useDiagramCache';
 import { useCloudProvider } from '@/hooks/useCloudProvider';
@@ -40,20 +40,14 @@ export default function SharedDiagram({
   const [error, setError] = useState<string | null>(null);
   const [provider, setProvider] = useCloudProvider();
 
-  // Pan & zoom
-  const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const transStart = useRef({ x: 0, y: 0 });
-  const resetView = useCallback(() => { setScale(1); setTranslate({ x: 0, y: 0 }); }, []);
+  const [zoom, setZoom] = useState(150);
 
   // Cache lookup
   useEffect(() => {
     if (!question || !token) return;
     const key = `${question}::${provider}::${DIRECTION}::${DETAIL}`;
     const mem = getDiagramCache(key);
-    if (mem) { setImageUrl(mem.data); setNoCache(false); setLoading(false); resetView(); return; }
+    if (mem) { setImageUrl(mem.data); setNoCache(false); setLoading(false); setZoom(150); return; }
 
     let cancelled = false;
     setLoading(true); setNoCache(false); setError(null);
@@ -72,14 +66,14 @@ export default function SharedDiagram({
             const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
             setImageUrl(url);
             setDiagramCache(key, { type: 'png', data: url, timestamp: Date.now() });
-            resetView();
+            setZoom(150);
           } else { setNoCache(true); }
           setLoading(false);
         }
       } catch { if (!cancelled) { setNoCache(true); setLoading(false); } }
     })();
     return () => { cancelled = true; };
-  }, [question, token, provider, resetView]);
+  }, [question, token, provider]);
 
   // Generate
   const handleGenerate = async () => {
@@ -97,7 +91,7 @@ export default function SharedDiagram({
         const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
         setImageUrl(url);
         setDiagramCache(`${question}::${provider}::${DIRECTION}::${DETAIL}`, { type: 'png', data: url, timestamp: Date.now() });
-        resetView();
+        setZoom(150);
       } else { setError(data.error || 'Generation failed'); }
     } catch (e: any) { setError(e.message); }
     setGenerating(false);
@@ -118,10 +112,10 @@ export default function SharedDiagram({
           </div>
           {imageUrl && (
             <div className="flex items-center gap-1">
-              <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)]">+</button>
-              <span className="text-xs text-[var(--text-muted)] min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-              <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)]">-</button>
-              <button onClick={resetView} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)] ml-1">Fit</button>
+              <button onClick={() => setZoom(z => Math.min(z + 25, 400))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)]">+</button>
+              <span className="text-xs text-[var(--text-muted)] min-w-[4ch] text-center">{zoom}%</span>
+              <button onClick={() => setZoom(z => Math.max(z - 25, 50))} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)]">-</button>
+              <button onClick={() => setZoom(100)} className="px-2.5 py-1.5 min-h-[36px] text-xs border rounded text-[var(--text-secondary)] ml-1">Fit</button>
             </div>
           )}
         </div>
@@ -158,14 +152,10 @@ export default function SharedDiagram({
       )}
 
       {imageUrl && !loading && !generating && (
-        <div className="rounded-lg select-none overflow-auto"
-          style={{ cursor: dragging ? 'grabbing' : 'grab', minHeight: 300, maxHeight: '80vh', border: '1px solid var(--border)', background: '#ffffff' }}
-          onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.1 : 0.1)), 4)); }}
-          onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
-          onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
-          onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
+        <div className="rounded-lg overflow-auto"
+          style={{ minHeight: 300, maxHeight: '80vh', border: '1px solid var(--border)' }}>
           <img src={imageUrl} alt="Architecture diagram" draggable={false}
-            style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'top left', display: 'block', width: '100%', height: 'auto' }} />
+            style={{ display: 'block', width: `${zoom}%`, minWidth: `${zoom}%`, height: 'auto' }} />
         </div>
       )}
     </div>
