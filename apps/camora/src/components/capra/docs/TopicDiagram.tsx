@@ -19,6 +19,12 @@ interface TopicDiagramProps {
   className?: string;
   /** Optional caption rendered under the image (e.g., "Layered Design"). */
   caption?: string;
+  /**
+   * Removes rounded corners and border so the diagram bleeds edge-to-edge.
+   * Callers must pass negative-margin classes matching the column padding
+   * (e.g. className="-mx-4 sm:-mx-6 lg:-mx-8") to actually fill the width.
+   */
+  fullBleed?: boolean;
 }
 
 export default function TopicDiagram({
@@ -27,14 +33,20 @@ export default function TopicDiagram({
   alt,
   className = '',
   caption,
+  fullBleed = false,
 }: TopicDiagramProps) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   const src = `/diagrams/${topicId}/${kind}.png`;
   return (
     <figure
-      className={`rounded-xl ${className}`}
-      style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', display: 'block', width: '100%' }}
+      className={`${fullBleed ? '' : 'rounded-xl'} ${className}`}
+      style={{
+        background: 'var(--bg-app)',
+        border: fullBleed ? 'none' : '1px solid var(--border)',
+        display: 'block',
+        width: 'auto',
+      }}
     >
       <img
         src={src}
