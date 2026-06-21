@@ -2372,6 +2372,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [syncError, setSyncError] = useState<string | null>(null);
   const writeTimerRef = useRef<number | null>(null);
+  const autoGenerateRef = useRef(false);
 
   const formatSyncError = (err: unknown): string => {
     if (err && typeof err === 'object') {
@@ -2482,23 +2483,37 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
 
   const [searchParams] = useSearchParams();
 
-  // When arriving from /jobs/:id/prepare with ?company=X&role=Y, auto-create
-  // or switch to that company once backend hydration completes.
+  // When arriving from /jobs/:id/prepare with ?company=X&role=Y&autoprep=1,
+  // auto-create or switch to that company and seed JD + resume from sessionStorage.
   useEffect(() => {
     const urlCompany = searchParams.get('company');
     if (!urlCompany) return;
+    const autoprep = searchParams.get('autoprep') === '1';
+    let seedJd = '';
+    if (autoprep) {
+      try {
+        const ctx = JSON.parse(sessionStorage.getItem('camora_job_prep_ctx') || '{}');
+        seedJd = ctx.jd || '';
+      } catch { /* ignore */ }
+      sessionStorage.removeItem('camora_job_prep_ctx');
+    }
     setPrepData(prev => {
-      if (prev.companies.includes(urlCompany)) {
-        return { ...prev, activeCompany: urlCompany };
-      }
+      const existing = prev.companies.includes(urlCompany);
+      const baseDoc = existing ? (prev.data[urlCompany] || EMPTY_DOC) : { ...EMPTY_DOC };
+      const jd = baseDoc.jd.trim() ? baseDoc.jd : seedJd;
+      // Carry over resume from any existing company that already has one
+      const borrowedResume = (Object.values(prev.data) as DocState[]).find(d => d?.resume?.trim())?.resume || '';
+      const resume = baseDoc.resume.trim() ? baseDoc.resume : borrowedResume;
+      const newDoc = seedJd ? { ...baseDoc, jd, resume } : baseDoc;
       return {
         ...prev,
-        companies: [...prev.companies, urlCompany],
+        companies: existing ? prev.companies : [...prev.companies, urlCompany],
         activeCompany: urlCompany,
-        data: { ...prev.data, [urlCompany]: { ...EMPTY_DOC } },
+        data: { ...prev.data, [urlCompany]: existing ? (seedJd ? newDoc : baseDoc) : newDoc },
       };
     });
     setActiveSection('input');
+    if (seedJd) autoGenerateRef.current = true;
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-create default company if none exists
@@ -2742,6 +2757,15 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   const generatedCount = SIDEBAR_SECTIONS.filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id]).length;
 
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
+
+  // Auto-trigger generation when arriving from a job page with JD pre-seeded
+  // and resume is available (either carried over or already saved).
+  useEffect(() => {
+    if (autoGenerateRef.current && hasRequiredDocs && !generating) {
+      autoGenerateRef.current = false;
+      handleGenerate();
+    }
+  }, [hasRequiredDocs, generating, handleGenerate]);
 
   // Active section's display name — used for the mobile collapsed
   // chip so the user can tell what they're reading without expanding
