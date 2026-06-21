@@ -379,7 +379,7 @@ export default function OnboardingPage() {
           {/* Progress bar */}
           <div className="h-1 bg-[var(--bg-elevated)]">
             <div
-              className="h-full bg-[var(--accent-subtle)]0 transition-all duration-500 ease-out"
+              className="h-full bg-[var(--accent)] transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -388,11 +388,11 @@ export default function OnboardingPage() {
             {/* Step indicator dots */}
             <div className="flex items-center justify-center gap-3 mb-8">
               <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-                step >= 1 ? 'bg-[var(--accent-subtle)]0' : 'bg-[var(--border)]'
+                step >= 1 ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
               }`} />
               <div className="w-8 h-px bg-[var(--border)]" />
               <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
-                step >= 2 ? 'bg-[var(--accent-subtle)]0' : 'bg-[var(--border)]'
+                step >= 2 ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'
               }`} />
             </div>
 
@@ -480,7 +480,7 @@ export default function OnboardingPage() {
                   disabled={selectedRoles.length === 0}
                   className={`w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-200
                     ${selectedRoles.length > 0
-                      ? 'bg-[var(--accent-subtle)]0 text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md'
+                      ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md'
                       : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] cursor-not-allowed'
                     }`}
                 >
@@ -594,7 +594,7 @@ export default function OnboardingPage() {
                       onChange={(e) => setResumeText(e.target.value)}
                       placeholder="Paste your resume text here..."
                       rows={8}
-                      className="w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] focus:border-[var(--accent)] focus:ring-0 outline-none text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] bg-[var(--bg-elevated)] focus:border-[var(--accent)] focus:ring-0 outline-none text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none transition-colors"
                     />
                   </div>
                 )}
@@ -611,7 +611,7 @@ export default function OnboardingPage() {
                   <button
                     onClick={handleComplete}
                     disabled={submitting}
-                    className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-[var(--accent-subtle)]0 text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {submitting && (
                       <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

@@ -189,7 +189,7 @@ const LoginPage = () => {
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 }}>{s.value}</p>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -213,7 +213,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <p className="text-[11px]" style={{ color: 'var(--text-dimmed)' }}>
+        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
           Used by engineers interviewing at Google, Meta, Amazon &amp; more.
         </p>
       </div>
@@ -268,7 +268,7 @@ const LoginPage = () => {
 
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-[11px] font-medium" style={{ color: 'var(--text-dimmed)' }}>or</span>
+            <span className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>or</span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
           </div>
 
@@ -276,7 +276,7 @@ const LoginPage = () => {
             Don't have an account?{' '}
             <Link to="/signup" className="font-semibold hover:underline" style={{ color: 'var(--cam-primary-lt)' }}>Create one</Link>
           </p>
-          <p className="mt-4 text-[11px] text-center" style={{ color: 'var(--text-dimmed)' }}>
+          <p className="mt-4 text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
             By continuing you agree to our{' '}
             <Link to="/docs/terms" className="underline">Terms</Link>{' '}and{' '}
             <Link to="/docs/privacy" className="underline">Privacy Policy</Link>.
