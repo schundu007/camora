@@ -1448,9 +1448,8 @@ export default function JobsPage() {
                       );
                     })()}
 
-                    {/* Footer CTA — outlined "Learn more" pill button +
-                        secondary text links for Apply / Resume. Mirrors
-                        Google Careers' single-pill CTA pattern. */}
+                    {/* Footer CTA — outlined "Auto Apply" pill button +
+                        secondary text links for Apply / Resume. */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                       <Link
                         to={`/jobs/${job.id}/prepare`}
@@ -1470,7 +1469,7 @@ export default function JobsPage() {
                           transition: 'background 0.15s, border-color 0.15s',
                         }}
                       >
-                        Learn more
+                        Auto Apply
                         <Icon name="arrowRight" size={14} />
                       </Link>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
