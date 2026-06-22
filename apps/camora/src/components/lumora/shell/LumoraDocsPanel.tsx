@@ -2617,6 +2617,15 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     }).catch(() => {});
   }, [prepData.activeCompany]);
 
+  // Reset generation visual state when the user switches companies so that
+  // an in-progress generation for Company A doesn't bleed its spinner/status
+  // into Company B's sidebar. The actual async work for Company A continues
+  // writing to Company A's section data (closed over at call time).
+  useEffect(() => {
+    setGenerating(false);
+    setSectionStatus({});
+  }, [prepData.activeCompany]);
+
   const extractFile = useCallback(async (file: File): Promise<string> => {
     if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
       return await file.text();
