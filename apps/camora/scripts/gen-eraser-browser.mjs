@@ -46,6 +46,7 @@ const PUBLIC_DIAGRAMS = path.resolve(__dirname, '../public/diagrams');
 const argv = process.argv.slice(2);
 const flag = (name, fb) => { const h = argv.find(a => a.startsWith(`--${name}=`)); return h ? h.split('=').slice(1).join('=') : fb; };
 const LIMIT         = parseInt(flag('limit', '0'), 10) || Infinity;
+const SKIP          = parseInt(flag('skip', '0'), 10) || 0;
 const ONLY_SLUG     = flag('slug', '');
 const ONLY_PROVIDER = flag('provider', '');
 const DRY_RUN       = argv.includes('--dry-run');
@@ -53,23 +54,21 @@ const FORCE         = argv.includes('--force');
 
 const providers = ONLY_PROVIDER ? [ONLY_PROVIDER] : ['aws', 'azure', 'gcp'];
 
-const tasks = [];
+const allTasks = [];
 for (const slug of fs.readdirSync(PUBLIC_DIAGRAMS, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)) {
   if (ONLY_SLUG && slug !== ONLY_SLUG) continue;
   const promptFile = path.join(PROMPTS_DIR, `${slug}.txt`);
   if (!fs.existsSync(promptFile)) continue;
   const basePrompt = fs.readFileSync(promptFile, 'utf8').trim();
-
   for (const provider of providers) {
     const filePath = path.join(PUBLIC_DIAGRAMS, slug, `eraser-${provider}.png`);
     if (fs.existsSync(filePath) && !FORCE) continue;
     if (FORCE && fs.existsSync(filePath)) fs.unlinkSync(filePath);
     const prompt = basePrompt.replace(/\{PROVIDER\}/g, provider.toUpperCase());
-    tasks.push({ slug, provider, filePath, prompt });
-    if (tasks.length >= LIMIT) break;
+    allTasks.push({ slug, provider, filePath, prompt });
   }
-  if (tasks.length >= LIMIT) break;
 }
+const tasks = allTasks.slice(SKIP, SKIP + LIMIT);
 
 console.log(`\n=== Eraser diagram backfill (individual AI credits + canvas renderer) ===`);
 console.log(`Pending: ${tasks.length} diagrams${FORCE ? ' (--force: overwriting existing)' : ''}\n`);
@@ -133,8 +132,8 @@ const RENDERER = async ({ elements, iconBase }) => {
   }
   if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 800; maxY = 500; }
   const pad = 32;
-  const canvasW = Math.min(Math.max(maxX - minX + pad * 2, 600), 1600);
-  const canvasH = Math.min(Math.max(maxY - minY + pad * 2, 400), 1200);
+  const canvasW = Math.min(Math.max(maxX - minX + pad * 2, 600), 4096);
+  const canvasH = Math.min(Math.max(maxY - minY + pad * 2, 400), 3072);
   const ox = -minX + pad, oy = -minY + pad;
 
   const canvas = document.createElement('canvas');
@@ -152,6 +151,8 @@ const RENDERER = async ({ elements, iconBase }) => {
     img.onerror = () => res(null);
     img.src = url;
   });
+
+  const stripMd = s => (s || '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/^#+\s*/, '');
 
   const groups = elements.filter(e => e.tag === 'Group');
   const icons  = elements.filter(e => e.tag === 'Icon');
@@ -173,7 +174,7 @@ const RENDERER = async ({ elements, iconBase }) => {
     if (el.title?.text) {
       ctx.fillStyle = '#111827';
       ctx.font = `bold 13px -apple-system, system-ui, sans-serif`;
-      ctx.fillText(el.title.text, x + 10, y + 18);
+      ctx.fillText(stripMd(el.title.text), x + 10, y + 18);
     }
     ctx.restore();
   }
@@ -199,7 +200,7 @@ const RENDERER = async ({ elements, iconBase }) => {
         ctx.restore();
       }
     }
-    const label = (el.texts?.[0]?.text || el.label || '').trim();
+    const label = stripMd((el.texts?.[0]?.text || el.label || '').trim());
     if (label) {
       ctx.save();
       ctx.fillStyle = '#374151';
@@ -213,7 +214,7 @@ const RENDERER = async ({ elements, iconBase }) => {
 
   for (const el of texts) {
     const x = (el.x ?? 0) + ox, y = (el.y ?? 0) + oy;
-    const rawText = (el.text || '').replace(/^#+\s*/, '');
+    const rawText = stripMd(el.text || '');
     const isHeading = /^#/.test(el.text || '');
     const sz = el.fontSize === 'large' ? 20 : el.fontSize === 'small' ? 11 : 13;
     ctx.save();
@@ -298,14 +299,15 @@ for (let i = 0; i < tasks.length; i++) {
       });
       if (!r.ok) { const t = await r.text(); return { error: `toolExecute ${r.status}: ${t.slice(0, 200)}` }; }
       const text = await r.text();
-      let freeformElements = null;
+      const allElements = [];
       for (const line of text.split('\n')) {
         if (!line.trim()) continue;
         try {
           const ev = JSON.parse(line.trim());
-          if (ev.type === 'progress' && ev.data?.freeformElements) freeformElements = ev.data.freeformElements;
+          if (ev.type === 'progress' && ev.data?.freeformElements) allElements.push(...ev.data.freeformElements);
         } catch {}
       }
+      const freeformElements = allElements.length ? allElements : null;
       return { freeformElements, lineCount: text.split('\n').filter(l => l.trim()).length };
     }, { toolCallIds: planResult.toolCallIds, interactionId: planResult.interactionId, token: jwt });
 
