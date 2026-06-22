@@ -187,7 +187,13 @@ async function directExecute(code, runtime) {
         }
         result = await runCommand(cmd, [srcPath], runOpts);
       }
-      if (result.exitCode !== 0) return { direct_output: result.stderr ? `Error:\n${result.stderr}` : 'Execution failed' };
+      if (result.exitCode !== 0) {
+        const err = result.stderr || '';
+        if (err.includes('EOFError') || err.includes('NoSuchElementException') || err.includes('End of input')) {
+          return { direct_output: '(no stdin input) — this code reads from stdin. Add test cases in the Test Cases tab to run with input.' };
+        }
+        return { direct_output: err ? `Error:\n${err}` : 'Execution failed' };
+      }
       const out = result.stderr ? `${result.stdout}\n[stderr]: ${result.stderr}` : result.stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
     } finally {
