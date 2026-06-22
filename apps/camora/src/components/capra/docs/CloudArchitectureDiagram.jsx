@@ -16,7 +16,18 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
     if (!containerRef.current || !imgRef.current) return;
     const cw = containerRef.current.clientWidth;
     const iw = imgRef.current.naturalWidth;
-    const ch = containerRef.current.clientHeight || 500; const ih = imgRef.current.naturalHeight; if (iw > 0 && ih > 0) { setScale(Math.min(cw / iw, ch / ih) * 0.92); setTranslate({ x: 0, y: 0 }); }
+    const ch = containerRef.current.clientHeight || 500;
+    const ih = imgRef.current.naturalHeight;
+    if (iw > 0 && ih > 0) { setScale(Math.min(cw / iw, ch / ih) * 0.92); setTranslate({ x: 0, y: 0 }); }
+  }, []);
+
+  const fitToContainer = useCallback(() => {
+    if (!containerRef.current || !imgRef.current) return;
+    const cw = containerRef.current.clientWidth;
+    const ch = containerRef.current.clientHeight || 600;
+    const iw = imgRef.current.naturalWidth;
+    const ih = imgRef.current.naturalHeight;
+    if (iw > 0 && ih > 0) { setScale(Math.min(cw / iw, ch / ih) * 0.96); setTranslate({ x: 0, y: 0 }); }
   }, []);
 
   useEffect(() => { setImageError(false); resetView(); }, [imageUrl, resetView]);
@@ -71,18 +82,18 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
         <button onClick={() => setScale(s => Math.min(s + 0.3, 5))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
         <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[3.5ch] text-center">{Math.round(scale * 100)}%</span>
         <button onClick={() => setScale(s => Math.max(s - 0.3, 0.3))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">−</button>
-        <button onClick={fitToWidth} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
+        <button onClick={fitToContainer} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
         <button onClick={resetView} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">1:1</button>
       </div>
       <div ref={containerRef}
         className="rounded select-none flex items-center justify-center"
-        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', maxHeight: '70vh', minHeight: '300px', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+        style={{ cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden', height: '72vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         onWheel={e => { e.preventDefault(); setScale(s => Math.min(Math.max(0.3, s + (e.deltaY > 0 ? -0.15 : 0.15)), 5)); }}
         onMouseDown={e => { if (e.button !== 0) return; setDragging(true); dragStart.current = { x: e.clientX, y: e.clientY }; transStart.current = { ...translate }; }}
         onMouseMove={e => { if (!dragging) return; setTranslate({ x: transStart.current.x + (e.clientX - dragStart.current.x), y: transStart.current.y + (e.clientY - dragStart.current.y) }); }}
         onMouseUp={() => setDragging(false)} onMouseLeave={() => setDragging(false)}>
         <img ref={imgRef} src={imageUrl} alt="System Architecture Diagram" draggable={false}
-          onLoad={fitToWidth}
+          onLoad={fitToContainer}
           onError={() => setImageError(true)}
           style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: 'center center', maxWidth: 'none', height: 'auto' }} />
       </div>

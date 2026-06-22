@@ -228,8 +228,7 @@ function EraserDiagramSection({ topicId, count }) {
         <p className="text-[var(--text-muted)] text-sm py-4">Diagram unavailable for this topic.</p>
       ) : (
         <div
-          className="relative group cursor-zoom-in overflow-auto rounded-lg border border-[var(--border)] bg-white"
-          style={{ maxHeight: 540 }}
+          className="relative group cursor-zoom-in rounded-lg border border-[var(--border)] bg-white"
           onClick={() => setExpanded(true)}
         >
           <img
@@ -555,12 +554,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
  * Shows a pre-generated static diagram if available at /diagrams/{topicId}/eraser-{provider}.png,
  * otherwise falls back to the API-generated CloudArchitectureDiagram.
  */
-function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, diagramError, onGenerate }) {
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => { setImgError(false); }, [topicId, provider]);
-
-  // Loading state
+function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generatingDiagram, onGenerate }) {
   if (generatingDiagram) {
     return (
       <div className="flex items-center justify-center py-12 rounded bg-[var(--bg-surface)]">
@@ -572,52 +566,21 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
     );
   }
 
-  // API-generated PNG image (from admin regen or "Regenerate" button)
-  if (diagramData?.imageUrl) {
-    return (
-      <div>
-        <CloudArchitectureDiagram
-          imageUrl={diagramData.imageUrl}
-          cloudProvider={provider}
-          onRetry={onGenerate}
-        />
-        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
-          <span>{provider.toUpperCase()} Architecture</span>
-          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors">Regenerate →</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Static pre-generated PNG — ZoomableImage handles the
-  // scroll-inside + click-to-zoom pattern for tall portrait diagrams.
-  // Replaces the previous manual `expanded` state which inflated the
-  // image inline and forced page scroll past it.
-  if (!imgError) {
-    return (
-      <div>
-        <ZoomableImage
-          src={staticSrc}
-          alt={`${topicId} ${provider.toUpperCase()} architecture diagram`}
-          frameStyle={{ background: 'white' }}
-          imgStyle={{ width: '100%', height: 'auto', filter: 'contrast(1.4) saturate(1.15)' }}
-        />
-        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
-          <span>{provider.toUpperCase()} Architecture</span>
-          <div className="flex items-center gap-3">
-            <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
-            <a href={staticSrc} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // No static file — show generate button (no auto-generation)
+  const imageUrl = diagramData?.imageUrl || staticSrc;
   return (
-    <div className="text-center py-12 rounded bg-[var(--bg-surface)] border border-[var(--border)]">
-      <p className="text-sm text-[var(--text-muted)] mb-3">No diagram available for this topic</p>
-      <button onClick={onGenerate} className="px-4 py-2 text-xs bg-[var(--accent)] text-white rounded hover:opacity-90 font-medium">Generate Diagram</button>
+    <div>
+      <CloudArchitectureDiagram
+        imageUrl={imageUrl}
+        cloudProvider={provider}
+        onRetry={onGenerate}
+      />
+      <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
+        <span>{provider.toUpperCase()} Architecture</span>
+        <div className="flex items-center gap-3">
+          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
+          <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -3629,10 +3592,7 @@ export default function TopicDetail({
               ].map(p => (
                 <button
                   key={p.id}
-                  onClick={() => {
-                    setDiagramCloudProvider(p.id);
-                    generateDiagram(topicDetails.title || selectedTopic, diagramDetailLevel, p.id);
-                  }}
+                  onClick={() => setDiagramCloudProvider(p.id)}
                   className="px-3 py-1.5 text-xs font-semibold rounded transition-colors"
                   style={{
                     background: diagramCloudProvider === p.id ? `${p.color}15` : 'transparent',
