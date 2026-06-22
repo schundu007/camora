@@ -3,6 +3,7 @@ import { cacheSet, cacheDel } from '../redis.js';
 
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS setup_script TEXT').catch(() => {});
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS cluster_nodes JSONB').catch(() => {});
+query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS radar_ready BOOLEAN DEFAULT false').catch(() => {});
 query('ALTER TABLE playground_sessions ADD COLUMN IF NOT EXISTS became_ready_at TIMESTAMPTZ').catch(() => {});
 
 export async function createSessionRecord(userId, environment, scenarioId, nomadJobId, expiresAt, ttydHost, ttydPort, codeServerPort, setupScript, clusterNodes) {
@@ -84,6 +85,13 @@ export async function getUserDailyCount(userId) {
     [userId],
   );
   return parseInt(result.rows[0].count, 10);
+}
+
+export async function markRadarReady(sessionId) {
+  await query(
+    `UPDATE playground_sessions SET radar_ready = true WHERE id = $1`,
+    [sessionId],
+  );
 }
 
 export async function getSessionHistory(userId, limit = 20) {
