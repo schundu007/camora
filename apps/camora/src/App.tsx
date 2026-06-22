@@ -23,6 +23,7 @@ const LumoraShellPage = lazy(() => import('./pages/lumora/LumoraShellPage'));
 // ── Capra pages (preparation) ───────────────────────────
 const CapraDashboard = lazy(() => import('./pages/capra/DashboardPage'));
 const ResumePage = lazy(() => import('./pages/capra/ResumePage'));
+const ResumeGeneratorPage = lazy(() => import('./pages/capra/ResumeGeneratorPage'));
 const CapraPractice = lazy(() => import('./pages/capra/PracticePage'));
 const CapraPrepare = lazy(() => import('./pages/capra/PreparePage'));
 const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
@@ -574,6 +575,7 @@ export const App = () => {
               the sidebar nav uses /capra/prepare/resume. Both render the same page; the page reads
               ?company= / ?role= from query params to tailor the optimizer. Specific routes mounted
               before the /capra/prepare/* wildcard so they win on match. */}
+          <Route path="/capra/resume/generator" element={<ShellRoute><ResumeGeneratorPage /></ShellRoute>} />
           <Route path="/capra/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
           <Route path="/capra/prepare/resume" element={<ShellRoute><ResumePage /></ShellRoute>} />
           <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
