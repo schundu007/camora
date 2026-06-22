@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
+    "@napi-rs/canvas": "^0.1.68",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/file-saver": "^2.0.7",
