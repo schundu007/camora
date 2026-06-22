@@ -7,6 +7,7 @@
 import { verifyToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { initUser } from '../../config/database.js';
+import { PAID_PLAN_TYPES } from '../../lib/plans.js';
 
 /**
  * Authenticate request via Bearer token (or cariara_sso cookie).
@@ -92,11 +93,35 @@ export async function authenticate(req, res, next) {
       console.warn('initUser failed in lumora authenticate:', initErr?.message || initErr);
     }
 
-    // Set admin flag for usage bypass. Env-only — no source fallback
-    // (matches billing.js + ascendPrep.js so the bypass list stays
-    // consistent and a hardcoded address can't outlive a real change).
+    // Admin flag: env list (OWNER_EMAILS/ADMIN_EMAILS) takes precedence;
+    // fall back to the users.is_admin DB column so admin panel grants
+    // (POST /api/admin/users) also work without a Railway env redeploy.
     const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    user.is_admin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    user.is_admin = (ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email?.toLowerCase()))
+                  || (user.is_admin === true);
+
+    // Enrich plan_type from ascend_subscriptions (canonical billing source).
+    // users.plan_type is a legacy column not updated when trials or paid plans
+    // are granted — so trial users always appeared as 'free' here, blocking
+    // them from Lumora AI features even with an active trial.
+    try {
+      const subRes = await query(
+        'SELECT plan_type, status, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1',
+        [user.id],
+      );
+      const sub = subRes.rows[0];
+      if (sub) {
+        if (PAID_PLAN_TYPES.has(sub.plan_type) && sub.status === 'active') {
+          user.plan_type = sub.plan_type;
+        } else if (sub.trial_ends_at && new Date(sub.trial_ends_at) > new Date()) {
+          // Active trial — treat as pro_monthly so free-tier daily limits are skipped.
+          user.plan_type = 'pro_monthly';
+        }
+      }
+    } catch (subErr) {
+      // DB hiccup — fall through with users.plan_type as-is.
+      console.warn('lumora authenticate: ascend_subscriptions lookup failed:', subErr?.message);
+    }
 
     req.user = user;
     next();
