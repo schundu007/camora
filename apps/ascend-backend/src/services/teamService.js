@@ -313,13 +313,19 @@ async function sumUnexpiredTopups({ userId = null, teamId = null }) {
 export async function checkPersonalHourBudget(userId) {
   try {
     const sub = await query(
-      `SELECT plan_type, current_period_start
+      `SELECT plan_type, current_period_start, trial_ends_at
          FROM ascend_subscriptions WHERE user_id = $1`,
       [userId],
     );
-    const planType = sub.rows[0]?.plan_type || 'free';
+    const row = sub.rows[0];
+    // Treat active trials as pro_monthly — grant-trial sets trial_ends_at
+    // but leaves plan_type='free', so without this check trial users get 0hr budget.
+    let planType = row?.plan_type || 'free';
+    if (planType === 'free' && row?.trial_ends_at && new Date(row.trial_ends_at) > new Date()) {
+      planType = 'pro_monthly';
+    }
     const budget = PERSONAL_HOUR_BUDGETS[planType] || PERSONAL_HOUR_BUDGETS.free;
-    const periodStart = sub.rows[0]?.current_period_start || null;
+    const periodStart = row?.current_period_start || null;
 
     // Sum used seconds in the relevant window.
     let usedSeconds = 0;

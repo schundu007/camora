@@ -51,8 +51,10 @@ export async function hourBudgetGate(req, res, next) {
   if (!userId) return next(); // unauth requests handled elsewhere
 
   // Owner / admin bypass — they should never be gated by hour budgets
-  // on their own product. Same emails the rest of the app uses for admin.
-  if (isOwnerEmail(req.user?.email)) {
+  // on their own product. Checks env-var allowlist OR the is_admin DB
+  // column (enriched by authenticate.js from users.is_admin so admin-panel
+  // grants work without a Railway redeploy).
+  if (isOwnerEmail(req.user?.email) || req.user?.is_admin === true) {
     res.setHeader('X-Hour-Budget-Bypass', 'owner');
     return next();
   }
