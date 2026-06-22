@@ -130,8 +130,8 @@ function runCommand(cmd, args = [], opts = {}) {
         });
       }
     });
-    if (opts.stdin && child.stdin) {
-      child.stdin.write(opts.stdin);
+    if (child.stdin) {
+      if (opts.stdin) child.stdin.write(opts.stdin);
       child.stdin.end();
     }
   });
@@ -159,7 +159,13 @@ async function directExecute(code, runtime) {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
       const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
-      if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
+      if (exitCode !== 0) {
+        const err = stderr || '';
+        if (err.includes('EOFError') || err.includes('NoSuchElementException') || err.includes('End of input')) {
+          return { direct_output: '(no stdin input) — this code reads from stdin. Add test cases in the Test Cases tab to run with input.' };
+        }
+        return { direct_output: err ? `Error:\n${err}` : 'Execution failed' };
+      }
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
       return { direct_output: out.trim() || '(no output)' };
     } finally {
