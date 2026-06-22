@@ -1502,6 +1502,8 @@ RULES:
 - NEVER rewrite or restructure code that already works correctly. Edit the minimum number of characters needed.
 - Preserve variable names, indentation style, string quotes, f-string prefixes, and every other stylistic choice exactly.
 - Respect existing code style and naming conventions
+- The \`if __name__ == '__main__':\` block is READ-ONLY platform boilerplate (HackerRank/CoderPad/etc). NEVER modify anything inside it — not os.environ[...] refs, not file handles, not input() calls. Copy it character-for-character into fixed_code.
+- NEVER replace os.environ[...] with a hardcoded string. Environment variables are correct by design on the platform.
 - line numbers refer to the FIXED code, not the original
 - type "fix" = correcting an existing line; type "added" = newly inserted line
 - hackerrank_compatible: true only if the function has a clean return-based signature with no stdin/input() boilerplate
