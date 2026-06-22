@@ -79,6 +79,8 @@ function createWindow() {
   });
 
   mainWindow.loadURL(APP_URL);
+  // Match Zustand default — isStealthActive starts true, so protect on launch.
+  mainWindow.setContentProtection(true);
 
   mainWindow.on('close', (e) => {
     if (!isQuitting) saveWindowState(mainWindow);
