@@ -268,7 +268,7 @@ function buildPlatformContext(): string | undefined {
       parts.push(`Interview is conducted via ${meetingLabel[meeting] || meeting}.`);
     }
     const codingHint: Record<string, string> = {
-      hackerrank: 'HackerRank — code reads from stdin, writes to stdout; no extra debug prints',
+      hackerrank: 'HackerRank — code reads from stdin, writes to stdout; no extra debug prints. Use sys.stdin.read() to read all input at once and split into tokens, OR wrap the main I/O block in try/except EOFError so the code exits cleanly when no input is provided during local testing.',
       leetcode: 'LeetCode — implement the specified function/class signature; no main() or raw I/O',
       coderpad: 'CoderPad — collaborative live editor; write complete, runnable code with clear comments',
       codesignal: 'CodeSignal — automated test runner with strict input/output format; match expected types exactly',
