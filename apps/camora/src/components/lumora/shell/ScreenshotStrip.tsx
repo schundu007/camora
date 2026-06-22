@@ -186,7 +186,18 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
               <circle cx="17" cy="13" r="3" stroke="#6366f1" strokeWidth="2"/>
             </svg>
           )}
-          {!['hackerrank', 'leetcode', 'coderpad'].includes(codingPlatform) && (
+          {codingPlatform === 'codesignal' && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="CodeSignal">
+              <path d="M2 17 Q6 7 12 12 Q18 17 22 7" stroke="#5B6ED4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <circle cx="12" cy="12" r="2" fill="#5B6ED4"/>
+            </svg>
+          )}
+          {codingPlatform === 'glider' && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="Glider">
+              <path d="M3 20L21 4M21 4H13M21 4V12" stroke="#00b4d8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          {!['hackerrank', 'leetcode', 'coderpad', 'codesignal', 'glider'].includes(codingPlatform) && (
             <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
           )}
         </div>

@@ -1007,7 +1007,7 @@ end tell`);
       console.warn(`[stealth] ${browser} injection failed:`, msg);
     }
   }
-  return { ok: false, error: 'No supported browser found. Open Chrome or Brave with HackerRank active.' };
+  return { ok: false, error: 'No supported browser found. Open Chrome or Brave with the coding platform active.' };
 });
 
 // Renderer tells us which coding platform to watch.
