@@ -132,12 +132,15 @@ BOT_Y, BOT_H = 0.25, 7.3
 # ── RACE CONDITION  (left half) ──────────────────────────────────────
 RCX, RCW = 0.25, 7.9
 rbox(RCX, BOT_Y, RCW, BOT_H, PANEL, RED, lw=2)
-ax.text(RCX+0.28, BOT_Y+BOT_H-0.32,
-        'RACE CONDITION – counter++  (not atomic!)',
-        fontsize=10, fontfamily=MONO, fontweight='bold', color=RED, va='top', zorder=5)
+ax.text(RCX+0.28, BOT_Y+BOT_H-0.25,
+        'RACE CONDITION – counter++',
+        fontsize=9.5, fontfamily=MONO, fontweight='bold', color=RED, va='top', zorder=5)
+ax.text(RCX+0.28, BOT_Y+BOT_H-0.57,
+        '(not atomic!)',
+        fontsize=9.5, fontfamily=MONO, fontweight='bold', color=RED, va='top', zorder=5)
 
-# Thread 1 inner box
-T1X, T1Y, T1W, T1H = 0.55, 0.55, 3.05, 6.65
+# Inner boxes: top must stay below panel header line 2 (y≈6.70)
+T1X, T1Y, T1W, T1H = 0.55, 0.55, 3.05, 5.90
 rbox(T1X, T1Y, T1W, T1H, INNER_BLUE, BLUE, lw=1.5, radius=0.14)
 ax.text(T1X+T1W/2, T1Y+T1H-0.3, 'Thread 1',
         ha='center', fontsize=11, fontfamily=MONO,
@@ -177,7 +180,7 @@ ax.text(T1X+T1W/2, luy,
         linespacing=1.45, zorder=5)
 
 # Thread 2 inner box — positioned to show interleaving (shifted down & right)
-T2X, T2Y, T2W, T2H = 3.8, 1.45, 4.0, 5.75
+T2X, T2Y, T2W, T2H = 3.8, 1.45, 4.0, 5.20
 rbox(T2X, T2Y, T2W, T2H, INNER_PURPLE, PURPLE, lw=1.5, radius=0.14)
 ax.text(T2X+T2W/2, T2Y+T2H-0.3, 'Thread 2  (interleaved)',
         ha='center', fontsize=10.5, fontfamily=MONO,
@@ -202,12 +205,15 @@ ax.text(T2X+0.55, r3y, 'WRITE counter=6  WRONG!', va='center',
 # ── MUTEX / LOCK SOLUTION  (right half) ─────────────────────────────
 MLX, MLW = 8.4, 8.6
 rbox(MLX, BOT_Y, MLW, BOT_H, PANEL, TEAL, lw=2)
-ax.text(MLX+0.28, BOT_Y+BOT_H-0.32,
-        'MUTEX / LOCK SOLUTION – guaranteed atomicity',
-        fontsize=10, fontfamily=MONO, fontweight='bold', color=TEAL, va='top', zorder=5)
+ax.text(MLX+0.28, BOT_Y+BOT_H-0.25,
+        'MUTEX / LOCK SOLUTION –',
+        fontsize=9.5, fontfamily=MONO, fontweight='bold', color=TEAL, va='top', zorder=5)
+ax.text(MLX+0.28, BOT_Y+BOT_H-0.57,
+        'guaranteed atomicity',
+        fontsize=9.5, fontfamily=MONO, fontweight='bold', color=TEAL, va='top', zorder=5)
 
 # Thread 1 with lock inner box
-MX, MY, MW, MH = 8.65, 0.55, 3.3, 6.65
+MX, MY, MW, MH = 8.65, 0.55, 3.3, 5.90
 rbox(MX, MY, MW, MH, INNER_BLUE, BLUE, lw=1.5, radius=0.14)
 ax.text(MX+MW/2, MY+MH-0.3, 'Thread 1 – with lock',
         ha='center', fontsize=10.5, fontfamily=MONO,
