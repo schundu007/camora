@@ -741,16 +741,27 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
   let rawQuestions = data.questions;
   let questionsArr: any[] | null = null;
   // Heal stringified questions arrays — generation sometimes returns the
-  // entire `[{...}, {...}]` payload as a JSON string, which would otherwise
-  // dump as raw `[{"question":...}]` in the UI.
+  // entire `[{...}, {...}]` payload as a JSON string (with unescaped newlines
+  // in long suggestedAnswer strings), which would otherwise dump as raw JSON.
   if (typeof rawQuestions === 'string') {
     const trimmed = rawQuestions.trim();
     if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-      const parsed = tryParseJsonValue(trimmed);
+      let parsed: any = tryParseJsonValue(trimmed);
+      if (!parsed) {
+        // tryParseJsonValue only repairs {}-objects. For arrays, wrap in an
+        // object so repairJSON can close open delimiters, then unwrap.
+        const escaped = escapeJsonStringControls(trimmed);
+        try { parsed = JSON.parse(escaped); } catch {}
+        if (!parsed && trimmed.startsWith('[')) {
+          const asObj = repairJSON(`{"_q":${escaped}}`);
+          if (asObj && Array.isArray(asObj._q)) parsed = asObj._q;
+        }
+        if (!parsed) parsed = repairJSON(trimmed);
+      }
       if (Array.isArray(parsed)) {
         rawQuestions = parsed;
       } else if (parsed && typeof parsed === 'object') {
-        const wrapped = parsed.items ?? parsed.list ?? parsed.questions;
+        const wrapped = (parsed as any).items ?? (parsed as any).list ?? (parsed as any).questions;
         if (Array.isArray(wrapped)) rawQuestions = wrapped;
       }
     }
@@ -762,11 +773,18 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     if (Array.isArray(wrapped)) questionsArr = wrapped;
   }
   if (!questionsArr && typeof rawQuestions === 'string' && rawQuestions.trim()) {
+    const looksLikeJson = rawQuestions.trim().startsWith('[') || rawQuestions.trim().startsWith('{');
     mark('questions');
     els.push(
       <div key="questions" className="rounded-xl p-4" style={paperCard(LC.navy)}>
         <SectionHeading label="Questions" color={LC.navy} />
-        <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{rawQuestions}</p>
+        {looksLikeJson ? (
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            Questions could not be displayed. Click <strong style={{ color: LC.navy }}>Re-generate</strong> to retry.
+          </p>
+        ) : (
+          <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{rawQuestions}</p>
+        )}
       </div>
     );
   } else if (questionsArr && questionsArr.length > 0) {
