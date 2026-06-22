@@ -199,11 +199,13 @@ function CapacityPlanningGrid({ estimation }) {
 function EraserDiagramSection({ topicId, count }) {
   const [provider, setProvider] = useState('aws');
   const [failed, setFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => { setFailed(false); }, [topicId, provider]);
+  const src = `/diagrams/${topicId}/eraser-${provider}.png`;
   return (
     <div id="deep-dives" className="scroll-mt-24">
       <ContentHeading title="Deep Dives" actions={count ? <GlassPill>{count}</GlassPill> : null} />
-      <div className="flex gap-2 mt-3 mb-4">
+      <div className="flex items-center gap-2 mt-3 mb-4">
         {['aws', 'azure', 'gcp'].map(p => (
           <button
             key={p}
@@ -213,16 +215,58 @@ function EraserDiagramSection({ topicId, count }) {
             {p.toUpperCase()}
           </button>
         ))}
+        <button
+          onClick={() => setExpanded(true)}
+          className="ml-auto chip"
+          title="View full size"
+          style={{ fontSize: 11 }}
+        >
+          ⤢ Expand
+        </button>
       </div>
       {failed ? (
         <p className="text-[var(--text-muted)] text-sm py-4">Diagram unavailable for this topic.</p>
       ) : (
-        <img
-          src={`/diagrams/${topicId}/eraser-${provider}.png`}
-          alt={`${topicId} ${provider} architecture`}
-          className="w-full rounded-lg border border-[var(--border)] bg-white"
-          onError={() => setFailed(true)}
-        />
+        <div
+          className="relative group cursor-zoom-in overflow-auto rounded-lg border border-[var(--border)] bg-white"
+          style={{ maxHeight: 540 }}
+          onClick={() => setExpanded(true)}
+        >
+          <img
+            src={src}
+            alt={`${topicId} ${provider} architecture`}
+            className="w-full"
+            style={{ minWidth: 600 }}
+            onError={() => setFailed(true)}
+          />
+          <span className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[10px] rounded px-2 py-0.5 pointer-events-none">
+            click to expand
+          </span>
+        </div>
+      )}
+      {expanded && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setExpanded(false)}
+        >
+          <div
+            className="relative bg-white rounded-xl overflow-auto shadow-2xl"
+            style={{ maxWidth: '95vw', maxHeight: '92vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 z-10 text-gray-600 hover:text-black bg-white/80 rounded-full w-7 h-7 flex items-center justify-center text-lg leading-none shadow"
+              onClick={() => setExpanded(false)}
+            >
+              ×
+            </button>
+            <img
+              src={src}
+              alt={`${topicId} ${provider} architecture`}
+              style={{ display: 'block', maxWidth: 'none', height: 'auto', minWidth: 900 }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
