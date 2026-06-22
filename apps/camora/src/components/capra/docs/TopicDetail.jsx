@@ -235,8 +235,7 @@ function EraserDiagramSection({ topicId, count }) {
           <img
             src={src}
             alt={`${topicId} ${provider} architecture`}
-            className="w-full"
-            style={{ minWidth: 600 }}
+            className="block max-w-full h-auto mx-auto"
             onError={() => setFailed(true)}
           />
           <span className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[10px] rounded px-2 py-0.5 pointer-events-none">
