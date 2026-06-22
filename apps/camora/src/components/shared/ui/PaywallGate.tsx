@@ -30,14 +30,16 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
 
   // Access requires one of:
   //   1. Owner email (always allowed — defense in depth)
-  //   2. Active paid subscription — explicit plan type, NOT just "not free".
-  //      Trial users, admin-granted-free users, and expired subscribers blocked.
-  //   3. Active team membership with paid team plan
+  //   2. Admin flag (users.is_admin DB column, enriched by authenticate.js)
+  //   3. Active paid subscription
+  //   4. Active trial (trial_ends_at set via admin panel grant-trial)
+  //   5. Active team membership with paid team plan
   const PAID_PLANS = new Set(['pro_monthly', 'pro_yearly', 'team', 'lifetime']);
   const plan = subscription?.plan || 'free';
   const status = subscription?.status;
   const personalAccess = PAID_PLANS.has(plan) && status === 'active';
-  const hasAccess = isOwner(user) || personalAccess || hasTeamAccess;
+  const activeTrial = !!subscription?.trialEndsAt && new Date(subscription.trialEndsAt) > new Date();
+  const hasAccess = isOwner(user) || user?.is_admin === true || personalAccess || activeTrial || hasTeamAccess;
 
   // After checkout success, poll for subscription activation (webhook
   // may take a few seconds). hasAccessRef holds the latest hasAccess
