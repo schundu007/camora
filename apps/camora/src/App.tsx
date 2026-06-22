@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { lazy, Suspense, useEffect } from 'react';
 import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
@@ -472,6 +473,7 @@ const LumoraSessionSync = () => {
 
 export const App = () => {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <DialogProvider>
       <CelebrationProvider>
@@ -625,5 +627,6 @@ export const App = () => {
       </CelebrationProvider>
       </DialogProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
