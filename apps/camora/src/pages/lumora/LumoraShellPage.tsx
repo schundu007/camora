@@ -443,14 +443,14 @@ export const LumoraShellPage = () => {
             <div className="flex items-center gap-1 p-0.5 rounded-md"
               style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
             {/* Meeting platform */}
-            <div className="lumora-chrome-link flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
+            <div className="lumora-chrome-link flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-bold cursor-pointer transition-[background-color]"
               style={{ color: 'var(--lumora-chrome-text)' }}
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
               <select
                 value={meetingPlatform}
                 onChange={e => setMeetingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
+                className="bg-transparent border-none outline-none cursor-pointer text-[12px] font-bold"
                 style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
                 title="Meeting platform"
                 aria-label="Meeting platform"
@@ -460,18 +460,18 @@ export const LumoraShellPage = () => {
                 <option value="meet">Google Meet</option>
                 <option value="other">Other</option>
               </select>
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
             </div>
             {/* Coding platform */}
-            <div className="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold cursor-pointer transition-[background-color]"
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-bold cursor-pointer transition-[background-color]"
               style={codingPlatform !== 'none'
                 ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: '0.25rem', boxShadow: '0 0 0 2px rgba(201,162,39,0.30)' }
                 : { color: 'var(--lumora-chrome-text)' }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
               <select
                 value={codingPlatform}
                 onChange={e => setCodingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[11px] font-bold"
+                className="bg-transparent border-none outline-none cursor-pointer text-[12px] font-bold"
                 style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
                 title="Coding platform — Camora auto-detects this tab"
                 aria-label="Coding platform"
@@ -481,8 +481,10 @@ export const LumoraShellPage = () => {
                 <option value="hackerrank">HackerRank</option>
                 <option value="leetcode">LeetCode</option>
                 <option value="coderpad">CoderPad</option>
+                <option value="codesignal">CodeSignal</option>
+                <option value="glider">Glider</option>
               </select>
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
             </div>
             </div>{/* end tool chips pill */}
           </div>{/* end quick links + tool pickers */}

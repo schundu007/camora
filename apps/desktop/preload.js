@@ -91,4 +91,7 @@ contextBridge.exposeInMainWorld('camo', {
     if (handler) ipcRenderer.removeListener('screenshot-watcher-new', handler);
     else ipcRenderer.removeAllListeners('screenshot-watcher-new');
   },
+
+  // Open a file on disk with the system default app (Preview for images).
+  openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
 });

@@ -1555,14 +1555,30 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // When the user switches to URL mode, auto-detect Chrome's active tab URL (desktop only)
   // and immediately fetch the problem — same one-click-solve UX as IMAGE.
+  // Only fires for known coding platforms; ignores GitHub, YouTube, etc.
   useEffect(() => {
     if (inputMode !== 'url') return;
     const camo = (window as any).camo;
     if (!camo?.getActiveBrowserUrl) return;
+    const CODING_DOMAINS = ['hackerrank.com', 'leetcode.com', 'coderpad.io', 'codesignal.com', 'glider.ai'];
+    const platformDomain: Record<string, string> = {
+      hackerrank: 'hackerrank.com',
+      leetcode: 'leetcode.com',
+      coderpad: 'coderpad.io',
+      codesignal: 'codesignal.com',
+      glider: 'glider.ai',
+    };
     camo.getActiveBrowserUrl().then((result: any) => {
       if (!result?.ok || !result.url) return;
-      setProblemUrl(result.url);
-      handleFetchFromUrl(result.url);
+      const url: string = result.url;
+      const isCodingUrl = CODING_DOMAINS.some(d => url.includes(d));
+      if (!isCodingUrl) return;
+      if (codingPlatform && codingPlatform !== 'auto' && codingPlatform !== 'none') {
+        const expected = platformDomain[codingPlatform];
+        if (expected && !url.includes(expected)) return;
+      }
+      setProblemUrl(url);
+      handleFetchFromUrl(url);
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputMode]);
