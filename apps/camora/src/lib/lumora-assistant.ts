@@ -254,6 +254,39 @@ export function buildSystemContext(assistant: LumoraAssistant | null, opts?: { s
   return parts.join('\n\n') + '\n\nUse this context to personalize all answers. Reference the candidate\'s actual experience from their resume. Tailor technical depth to match the job requirements.';
 }
 
+function buildPlatformContext(): string | undefined {
+  try {
+    const meeting = localStorage.getItem('lumora_meeting_platform') || '';
+    const coding = localStorage.getItem('lumora_coding_platform') || '';
+    const parts: string[] = [];
+    const meetingLabel: Record<string, string> = {
+      teams: 'Microsoft Teams',
+      zoom: 'Zoom',
+      meet: 'Google Meet',
+    };
+    if (meeting && meeting !== 'other') {
+      parts.push(`Interview is conducted via ${meetingLabel[meeting] || meeting}.`);
+    }
+    const codingHint: Record<string, string> = {
+      hackerrank: 'HackerRank — code reads from stdin, writes to stdout; no extra debug prints',
+      leetcode: 'LeetCode — implement the specified function/class signature; no main() or raw I/O',
+      coderpad: 'CoderPad — collaborative live editor; write complete, runnable code with clear comments',
+      codesignal: 'CodeSignal — automated test runner with strict input/output format; match expected types exactly',
+      glider: 'Glider.ai — timed assessment platform; prioritize correctness first, then optimize',
+    };
+    if (coding && coding !== 'auto' && coding !== 'none' && codingHint[coding]) {
+      parts.push(`Coding platform: ${codingHint[coding]}.`);
+    }
+    if (parts.length === 0) return undefined;
+    return `INTERVIEW PLATFORM CONTEXT:\n${parts.join('\n')}`;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getSystemContext(): string | undefined {
-  return buildSystemContext(getActiveAssistant());
+  const assistantCtx = buildSystemContext(getActiveAssistant());
+  const platformCtx = buildPlatformContext();
+  if (!assistantCtx && !platformCtx) return undefined;
+  return [assistantCtx, platformCtx].filter(Boolean).join('\n\n');
 }
