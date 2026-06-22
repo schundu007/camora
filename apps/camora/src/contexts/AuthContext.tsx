@@ -22,6 +22,7 @@ interface AuthUser {
   picture?: string;
   onboarding_completed?: boolean;
   job_roles?: string[];
+  is_admin?: boolean;
 }
 
 // Lumora's /me returns `image`; Ascend's /me returns `picture` (Google's
@@ -39,6 +40,7 @@ function normalizeUser(u: any): AuthUser | null {
     picture: u.picture ?? undefined,
     onboarding_completed: u.onboarding_completed ?? undefined,
     job_roles: Array.isArray(u.job_roles) ? u.job_roles : undefined,
+    is_admin: u.is_admin === true,
   };
 }
 
