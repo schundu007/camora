@@ -18,7 +18,7 @@ import { useSpeakerAudio } from './SpeakerAudio';
  *     active session, it stays dismissed until the next reconnect.
  */
 
-const STALE_AFTER_MS = 5 * 60 * 1000;     // 5 minutes
+const STALE_AFTER_MS = 30 * 60 * 1000;    // 30 minutes
 const SPEECH_THRESHOLD = 0.012;
 const SAMPLE_INTERVAL_MS = 5000;          // sample the level every 5s — cheap
 
