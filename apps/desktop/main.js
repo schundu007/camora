@@ -336,6 +336,8 @@ async function getActiveBrowserInfo() {
     /leetcode\.com\/problems\//,
     /coderpad\.io\//,
     /codepair\./,
+    /codesignal\.com\//,
+    /glider\.ai\//,
   ];
 
   for (const browser of BROWSERS) {
@@ -400,6 +402,8 @@ const PLATFORM_URL_MATCH = {
     !/hackerrank\.com\/(dashboard|settings|profile|notifications|jobs|companies|login|signup)/.test(url),
   leetcode: (url) => url.includes('leetcode.com/problems/'),
   coderpad: (url) => url.includes('coderpad.io/'),
+  codesignal: (url) => url.includes('codesignal.com/'),
+  glider: (url) => url.includes('glider.ai/'),
 };
 
 // Injects JS to extract the starter/template code from the active platform's
@@ -408,21 +412,32 @@ const PLATFORM_URL_MATCH = {
 // generate a solution that fills in the function body without rewriting
 // the input-reading boilerplate (e.g. HackerRank's readarray + wrapper call).
 async function extractStarterCodeFromBrowser(browser, url) {
-  if (!url.includes('hackerrank.com') && !url.includes('leetcode.com') && !url.includes('coderpad.io')) return null;
+  if (!url.includes('hackerrank.com') && !url.includes('leetcode.com') && !url.includes('coderpad.io') && !url.includes('codesignal.com') && !url.includes('glider.ai')) return null;
   const js = `(function(){
     try{var cm=document.querySelector('.CodeMirror');if(cm&&cm.CodeMirror){var v=cm.CodeMirror.getValue();if(v&&v.trim().length>10)return v;}}catch(e){}
     try{if(window.monaco){var m=window.monaco.editor.getModels();if(m&&m.length>0){var v=m[0].getValue();if(v&&v.trim().length>10)return v;}}}catch(e){}
+    try{var iframes=document.querySelectorAll('iframe');for(var fi=0;fi<iframes.length;fi++){try{var fw=iframes[fi].contentWindow;if(fw&&fw.monaco){var fm=fw.monaco.editor.getModels();if(fm&&fm.length>0){var fv=fm[0].getValue();if(fv&&fv.trim().length>10)return fv;}}}catch(e){}}}catch(e){}
     try{var ls=document.querySelectorAll('.CodeMirror-line');if(ls.length>2){var t=Array.from(ls).map(function(l){return l.innerText||'';}).join('\\n');if(t.trim().length>10)return t;}}catch(e){}
     try{var ed=document.querySelector('[class*="editor"] textarea,[class*="Editor"] textarea');if(ed&&ed.value&&ed.value.trim().length>10)return ed.value;}catch(e){}
     return null;
   })()`;
   const escapedJs = js.replace(/"/g, '\\"');
+  const urlFragment = url.includes('hackerrank') ? 'hackerrank' : url.includes('leetcode') ? 'leetcode' : url.includes('codesignal') ? 'codesignal' : url.includes('glider') ? 'glider' : 'coderpad';
   try {
     const raw = await runAppleScript(`
 tell application "${browser}"
-  set r to execute active tab of front window javascript "${escapedJs}"
-  if r is missing value then return ""
-  return r as string
+  set winCount to count of windows
+  repeat with w from 1 to winCount
+    try
+      set tabUrl to URL of active tab of window w
+      if tabUrl contains "${urlFragment}" then
+        set r to execute active tab of window w javascript "${escapedJs}"
+        if r is missing value then return ""
+        return r as string
+      end if
+    end try
+  end repeat
+  return ""
 end tell`);
     const code = (raw || '').trim();
     return code.length > 10 ? code : null;
@@ -470,14 +485,18 @@ async function extractProblemTextFromBrowser(browser, url) {
     jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('coderpad.io')) {
     jsCode = `(function(){var ss=['.instructions-pane','[class*="instructions"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+  } else if (url.includes('codesignal.com')) {
+    jsCode = `(function(){var ss=['[class*="task-description"]','[class*="taskDescription"]','[class*="problem-description"]','[class*="problemDescription"]','[data-testid*="description"]','[class*="instructions"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+  } else if (url.includes('glider.ai')) {
+    jsCode = `(function(){var ss=['[class*="question-text"]','[class*="problem-statement"]','[class*="questionText"]','[class*="description"]','[class*="question"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else {
     return null;
   }
   // Escape for AppleScript string embedding: quotes AND newlines/tabs.
   const escapedJs = jsCode.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ');
-  // Search ALL windows of the browser for a tab whose URL contains hackerrank/leetcode/coderpad,
+  // Search ALL windows of the browser for a tab whose URL contains the platform,
   // then inject into THAT tab — not just the front window (which may be Camora after clicking URL chip).
-  const urlFragment = url.includes('hackerrank') ? 'hackerrank' : url.includes('leetcode') ? 'leetcode' : 'coderpad';
+  const urlFragment = url.includes('hackerrank') ? 'hackerrank' : url.includes('leetcode') ? 'leetcode' : url.includes('codesignal') ? 'codesignal' : url.includes('glider') ? 'glider' : 'coderpad';
   try {
     const raw = await runAppleScript(`
 tell application "${browser}"
@@ -1201,9 +1220,34 @@ ipcMain.handle('snap-active-browser', async () => {
     if (!info) return { ok: false, error: 'No browser window found. Make sure Chrome/Brave/Edge is open.' };
     const dataUrl = await captureExactBrowserWindow(info.windowTitle);
     if (!dataUrl) return { ok: false, error: 'Could not capture the browser window. Make sure it is visible and not minimised.' };
-    return { ok: true, dataUrl };
+    // Save to session folder (~/Documents/Camora/{company}/screenshots/) so
+    // the user can click the thumbnail to open it in Preview/Finder.
+    let filePath = null;
+    try {
+      const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
+      fs.mkdirSync(folder, { recursive: true });
+      const ext = dataUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
+      const filename = `snap-${Date.now()}.${ext}`;
+      filePath = path.join(folder, filename);
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+    } catch (saveErr) {
+      console.log('[snap] save to disk failed:', saveErr.message);
+    }
+    return { ok: true, dataUrl, filePath };
   } catch (err) {
     return { ok: false, error: err?.message || 'Capture failed' };
+  }
+});
+
+// Open a file on disk using the system default app (Preview for images).
+ipcMain.handle('open-file', async (_event, filePath) => {
+  if (!filePath || typeof filePath !== 'string') return { ok: false };
+  try {
+    await shell.openPath(filePath);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err?.message };
   }
 });
 

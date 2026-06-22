@@ -11,6 +11,7 @@ export interface ScreenshotEntry {
   id: string;
   dataUrl: string;
   text: string;
+  filePath?: string;
 }
 
 interface ScreenshotStripProps {
@@ -44,11 +45,12 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const sonaClose = useSessionStore(s => s.sonaClose);
   const sonaHasMessages = useSessionStore(s => s.sonaHasMessages);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
+  const [snapArmed, setSnapArmed] = useState(false);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
 
-  // Bug 3: stale closure ref for onSnapped callback
   const onSnappedRef = useRef(onSnapped);
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
+  const handleSnapRef = useRef<() => Promise<void>>(async () => {});
 
   const handleStealthMode = useCallback(async () => {
     const camo = (window as any).camo;
@@ -67,9 +69,11 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
     setSnapState('capturing');
     try {
       let dataUrl: string;
+      let filePath: string | undefined;
       if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
         if (!result?.ok || !result.dataUrl) throw new Error(result?.error || 'Snap failed');
+        filePath = result.filePath ?? undefined;
         const blob = await fetch(result.dataUrl).then(r => r.blob());
         dataUrl = await new Promise<string>(res => {
           const reader = new FileReader();
@@ -94,7 +98,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         }
       }
       // Show loading spinner for this snap
-      const tempEntry: ScreenshotEntry = { id, dataUrl, text: '' };
+      const tempEntry: ScreenshotEntry = { id, dataUrl, text: '', filePath };
       setPendingIds(prev => [...prev, id]);
       setSnapState('idle');
       // OCR
@@ -125,6 +129,21 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       setPendingIds(prev => prev.filter(pid => pid !== id));
     }
   }, [token, onSnapped]);
+
+  // Keep ref in sync so the blur handler never captures a stale handleSnap.
+  useEffect(() => { handleSnapRef.current = handleSnap; }, [handleSnap]);
+
+  // Armed mode: when armed, the first time the Camora window loses focus
+  // (user clicked another window) we fire the snap, then disarm.
+  useEffect(() => {
+    if (!snapArmed) return;
+    const onBlur = () => {
+      setSnapArmed(false);
+      setTimeout(() => handleSnapRef.current(), 200);
+    };
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, [snapArmed]);
 
   const showSnap = surface !== 'behavioral';
 
@@ -173,25 +192,34 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         </div>
       )}
 
-      {/* Snap button */}
+      {/* Snap button — click to arm, then click any other window to capture */}
       {showSnap && (
         <button
-          onClick={handleSnap}
+          onClick={snapState === 'capturing' ? undefined : snapArmed ? () => setSnapArmed(false) : () => setSnapArmed(true)}
           disabled={snapState === 'capturing'}
-          title={snapState === 'error' ? 'Snap failed — check Screen Recording permission' : 'Snap screen (append to problem)'}
+          title={
+            snapArmed ? 'Armed — click another window to capture (click here to cancel)'
+            : snapState === 'error' ? 'Snap failed — check Screen Recording permission'
+            : 'Click to arm, then click the window you want to capture'
+          }
           className={pillBase}
-          style={snapState === 'error'
-            ? { background: '#ef4444', color: '#fff' }
-            : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }
+          style={
+            snapArmed
+              ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }
+              : snapState === 'error'
+              ? { background: '#ef4444', color: '#fff' }
+              : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }
           }
         >
           {snapState === 'capturing'
             ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
             : snapState === 'error'
             ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            : snapArmed
+            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg>
             : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
           }
-          {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? 'Capturing…' : 'Snap'}
+          {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? 'Capturing…' : snapArmed ? 'Armed' : 'Snap'}
         </button>
       )}
 
@@ -208,12 +236,13 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* Completed screenshot thumbnails */}
       {showSnap && screenshots.map((s, i) => (
-        <div key={s.id} className="relative group shrink-0" title={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
+        <div key={s.id} className="relative group shrink-0" title={s.filePath ? `Click to open • Page ${i + 1}${s.text ? ': ' + s.text.slice(0, 60) + '…' : ''}` : s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
           <img
             src={s.dataUrl}
             alt={`Screenshot ${i + 1}`}
-            className="h-7 w-10 object-cover rounded"
+            className={`h-7 w-10 object-cover rounded${s.filePath ? ' cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
             style={{ border: '1px solid var(--cam-strip-icon-border)' }}
+            onClick={s.filePath ? () => (window as any).camo?.openFile?.(s.filePath) : undefined}
           />
           <span
             className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
