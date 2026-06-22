@@ -2,6 +2,10 @@ import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { authenticate } from '../middleware/authenticate.js';
 import { fetchJobViaAPI } from './jobAnalyze.js';
+import {
+  Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
+  BorderStyle, TabStopPosition, TabStopType, PageNumber, WidthType,
+} from 'docx';
 
 const router = Router();
 const client = new Anthropic();
@@ -271,6 +275,199 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
       return res.status(408).json({ error: 'URL took too long to respond. Try pasting the job description directly.' });
     }
     res.status(500).json({ error: 'Failed to fetch URL. Try pasting the job description directly.' });
+  }
+});
+
+/**
+ * POST /api/v1/resume/generate
+ * Full resume + cover letter generator:
+ *   1. Claude Sonnet generates structured JSON (gap analysis + tailored content)
+ *   2. docx renders two .docx files (resume + cover letter)
+ *   3. Both returned as base64 in a single JSON response
+ */
+router.post('/generate', authenticate, async (req, res) => {
+  try {
+    const { resume, jobDescription, company, role, candidateName, candidateEmail, candidatePhone, candidateLinkedIn } = req.body;
+    if (!resume || !jobDescription) {
+      return res.status(400).json({ error: 'Resume and job description are required' });
+    }
+
+    const targetCompany = company || 'the company';
+    const targetRole = role || 'the role';
+
+    const msg = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 6000,
+      messages: [{
+        role: 'user',
+        content: `You are an expert resume writer and career coach. Analyze the candidate's resume against the job description and produce a structured JSON output.
+
+TARGET COMPANY: ${targetCompany}
+TARGET ROLE: ${targetRole}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+CANDIDATE RESUME:
+${resume}
+
+Return ONLY valid JSON (no markdown fences) matching this exact schema:
+{
+  "candidate": {
+    "name": "<extract from resume or use 'Candidate'>",
+    "email": "<extract from resume or empty>",
+    "phone": "<extract from resume or empty>",
+    "linkedin": "<extract from resume or empty>",
+    "location": "<extract from resume or empty>"
+  },
+  "gapAnalysis": {
+    "matchScore": <0-100>,
+    "strengths": ["<strength specific to this JD>"],
+    "gaps": ["<specific gap vs JD requirement>"],
+    "quickWins": ["<add X to resume to close gap Y>"]
+  },
+  "optimizedResume": {
+    "summary": "<2-3 sentence professional summary tailored to this role>",
+    "experience": [
+      {
+        "title": "<job title>",
+        "company": "<company>",
+        "dates": "<dates>",
+        "bullets": ["<achievement bullet with metric if possible>"]
+      }
+    ],
+    "skills": ["<skill1>", "<skill2>"],
+    "education": [{ "degree": "<degree>", "school": "<school>", "year": "<year>" }],
+    "certifications": ["<cert if any>"],
+    "projects": [{ "name": "<project>", "description": "<1-line>", "tech": "<tech stack>" }]
+  },
+  "coverLetter": {
+    "opening": "<strong opening paragraph — specific to company and role>",
+    "body1": "<paragraph 2 — most relevant experience/achievement>",
+    "body2": "<paragraph 3 — cultural fit / motivation for this company>",
+    "closing": "<closing paragraph with call to action>"
+  }
+}`,
+      }],
+    });
+
+    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
+    let data;
+    try {
+      data = JSON.parse(raw.replace(/^```json?\n?/, '').replace(/```$/, '').trim());
+    } catch {
+      return res.status(500).json({ error: 'Failed to parse AI response', raw });
+    }
+
+    const cand = data.candidate || {};
+    const name = candidateName || cand.name || 'Candidate';
+    const email = candidateEmail || cand.email || '';
+    const phone = candidatePhone || cand.phone || '';
+    const linkedin = candidateLinkedIn || cand.linkedin || '';
+    const location = cand.location || '';
+    const r = data.optimizedResume || {};
+    const cl = data.coverLetter || {};
+
+    // --- Build Resume DOCX ---
+    const contactParts = [email, phone, linkedin, location].filter(Boolean).join('  |  ');
+    const resumeDoc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: name, bold: true, size: 32 })],
+          }),
+          contactParts ? new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: contactParts, size: 20, color: '444444' })],
+            spacing: { after: 200 },
+          }) : null,
+
+          new Paragraph({ text: 'PROFESSIONAL SUMMARY', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: r.summary || '' })], spacing: { after: 160 } }),
+
+          new Paragraph({ text: 'EXPERIENCE', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+          ...(r.experience || []).flatMap(exp => [
+            new Paragraph({
+              children: [
+                new TextRun({ text: `${exp.title} — ${exp.company}`, bold: true }),
+                new TextRun({ text: `\t${exp.dates}`, color: '666666' }),
+              ],
+              tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+              spacing: { before: 120 },
+            }),
+            ...(exp.bullets || []).map(b => new Paragraph({
+              children: [new TextRun({ text: `• ${b}` })],
+              indent: { left: 360 },
+            })),
+          ]),
+
+          new Paragraph({ text: 'SKILLS', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+          new Paragraph({ children: [new TextRun({ text: (r.skills || []).join(' · ') })] }),
+
+          new Paragraph({ text: 'EDUCATION', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+          ...(r.education || []).map(e => new Paragraph({
+            children: [
+              new TextRun({ text: `${e.degree} — ${e.school}`, bold: true }),
+              new TextRun({ text: e.year ? `  (${e.year})` : '', color: '666666' }),
+            ],
+          })),
+
+          ...(r.certifications?.length ? [
+            new Paragraph({ text: 'CERTIFICATIONS', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+            ...(r.certifications || []).map(c => new Paragraph({ children: [new TextRun({ text: `• ${c}` })] })),
+          ] : []),
+
+          ...(r.projects?.length ? [
+            new Paragraph({ text: 'PROJECTS', heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 } }),
+            ...(r.projects || []).map(p => new Paragraph({
+              children: [
+                new TextRun({ text: `${p.name}: `, bold: true }),
+                new TextRun({ text: `${p.description}  [${p.tech}]` }),
+              ],
+            })),
+          ] : []),
+        ].filter(Boolean),
+      }],
+    });
+
+    // --- Build Cover Letter DOCX ---
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const coverDoc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({ children: [new TextRun({ text: name, bold: true, size: 28 })], spacing: { after: 60 } }),
+          contactParts ? new Paragraph({ children: [new TextRun({ text: contactParts, color: '444444' })], spacing: { after: 60 } }) : null,
+          new Paragraph({ children: [new TextRun({ text: today, color: '666666' })], spacing: { after: 300 } }),
+          new Paragraph({ children: [new TextRun({ text: `Hiring Team`, bold: true })], spacing: { after: 40 } }),
+          new Paragraph({ children: [new TextRun({ text: targetCompany })], spacing: { after: 300 } }),
+          new Paragraph({ children: [new TextRun({ text: `Dear Hiring Manager,` })], spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: cl.opening || '' })], spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: cl.body1 || '' })], spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: cl.body2 || '' })], spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: cl.closing || '' })], spacing: { after: 300 } }),
+          new Paragraph({ children: [new TextRun({ text: 'Sincerely,' })], spacing: { after: 100 } }),
+          new Paragraph({ children: [new TextRun({ text: name, bold: true })] }),
+        ].filter(Boolean),
+      }],
+    });
+
+    const [resumeBuf, coverBuf] = await Promise.all([
+      Packer.toBuffer(resumeDoc),
+      Packer.toBuffer(coverDoc),
+    ]);
+
+    const slug = `${targetCompany}_${targetRole}`.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+    res.json({
+      gapAnalysis: data.gapAnalysis || {},
+      resume: { base64: resumeBuf.toString('base64'), filename: `Resume_${slug}.docx` },
+      coverLetter: { base64: coverBuf.toString('base64'), filename: `CoverLetter_${slug}.docx` },
+    });
+  } catch (err) {
+    console.error('[Resume] Generate error:', err);
+    res.status(500).json({ error: 'Resume generation failed' });
   }
 });
 
