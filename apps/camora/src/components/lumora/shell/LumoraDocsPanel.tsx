@@ -1690,7 +1690,7 @@ const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPa
           <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <span className="text-xs font-semibold" style={{ color: 'var(--cam-primary)' }}>{fileName || 'Content added'}</span>
+          <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} title={fileName}>{fileName || 'Content added'}</span>
           <span className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
         </>
       ) : (
