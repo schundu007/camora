@@ -827,20 +827,25 @@ router.post('/solve', authenticate, checkUsage('questions'), async (req, res) =>
 // ---------------------------------------------------------------------------
 
 router.post('/execute', authenticate, async (req, res) => {
-  const { executeCode } = await import('../services/codeRunner.js');
-
   const { code, language, test_cases: testCases } = req.body;
 
   if (!code || !language) {
     return res.status(400).json({ error: 'Missing code or language' });
   }
 
+  const codeRunnerUrl = process.env.CODE_RUNNER_URL || 'http://localhost:4000';
   try {
-    const result = await executeCode(code, language, testCases || []);
+    const response = await fetch(`${codeRunnerUrl}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, language, test_cases: testCases || [] }),
+    });
+    const result = await response.json();
+    if (!response.ok) return res.status(400).json({ error: result.error || 'Code execution failed' });
     return res.json(result);
   } catch (err) {
     console.error('Code execution error:', err);
-    return res.status(400).json({ error: err.message });
+    return res.status(502).json({ error: 'Code runner service unavailable' });
   }
 });
 
