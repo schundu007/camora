@@ -8,7 +8,6 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
-import OpenAI from 'openai';
 import { getAnthropicClient } from '../lib/_shared/llm.js';
 import dns from 'node:dns/promises';
 import { query } from '../lib/shared-db.js';
@@ -17,9 +16,8 @@ import { checkUsage } from '../middleware/usageLimits.js';
 
 const router = Router();
 
-// Process-wide singletons — one per provider.
+// Process-wide singleton — Anthropic only.
 const anthropicClient = getAnthropicClient();
-const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -88,25 +86,6 @@ function fallbackFor({ provider, model }) {
 
 // Streaming completion — yields tokens via onToken(), returns { rawAnswer, inputTokens, outputTokens }.
 async function streamTokens({ provider, model }, systemPrompt, messages, abortSignal, onToken) {
-  if (provider === 'openai') {
-    const oaiMessages = [{ role: 'system', content: systemPrompt }, ...messages];
-    const stream = await openaiClient.chat.completions.create(
-      { model, messages: oaiMessages, max_completion_tokens: MAX_TOKENS, stream: true },
-      { signal: abortSignal },
-    );
-    const chunks = [];
-    let promptTokens = 0, completionTokens = 0;
-    for await (const chunk of stream) {
-      const tok = chunk.choices[0]?.delta?.content || '';
-      if (tok) { chunks.push(tok); onToken(tok); }
-      if (chunk.usage) {
-        promptTokens = chunk.usage.prompt_tokens || 0;
-        completionTokens = chunk.usage.completion_tokens || 0;
-      }
-    }
-    return { rawAnswer: chunks.join(''), inputTokens: promptTokens, outputTokens: completionTokens };
-  }
-  // Anthropic
   const stream = await anthropicClient.messages.stream(
     { model, max_tokens: MAX_TOKENS, system: systemPrompt, messages },
     { signal: abortSignal },
@@ -129,18 +108,6 @@ async function streamTokens({ provider, model }, systemPrompt, messages, abortSi
 
 // Non-streaming completion — returns { rawAnswer, inputTokens, outputTokens }.
 async function completeOnce({ provider, model }, systemPrompt, messages) {
-  if (provider === 'openai') {
-    const oaiMessages = [{ role: 'system', content: systemPrompt }, ...messages];
-    const resp = await openaiClient.chat.completions.create(
-      { model, messages: oaiMessages, max_completion_tokens: MAX_TOKENS },
-    );
-    return {
-      rawAnswer: resp.choices[0]?.message?.content || '',
-      inputTokens: resp.usage?.prompt_tokens || 0,
-      outputTokens: resp.usage?.completion_tokens || 0,
-    };
-  }
-  // Anthropic
   const resp = await anthropicClient.messages.create(
     { model, max_tokens: MAX_TOKENS, system: systemPrompt, messages },
   );

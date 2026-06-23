@@ -2,7 +2,7 @@
  * Multi-provider streaming dispatcher with automatic fallback.
  *
  * Provider chain (primary = user's selected model, then fallbacks in order):
- *   Gemini 2.0 Flash → DeepSeek-V3 (direct) → Claude → Qwen-2.5-72B (OpenRouter) → GPT-4o-mini
+ *   Gemini 2.0 Flash → DeepSeek-V3 (direct) → Claude → Qwen-2.5-72B (OpenRouter)
  *
  * If a provider yields an `error` event before any `token` has been streamed,
  * the error is suppressed and the next provider is tried transparently.
@@ -48,7 +48,6 @@ export function resolveProvider(modelId) {
   const id = modelId.toLowerCase();
   if (id.startsWith('gemini-')) return 'gemini';
   if (id.startsWith('deepseek-')) return 'deepseek';
-  if (id.startsWith('gpt-')) return 'openai';
   if (id.startsWith('claude-')) return 'claude';
   return 'gemini';
 }
@@ -84,12 +83,6 @@ function buildProviderChain(primaryProvider, options) {
       label: 'Qwen-2.5-72B',
       fn: streamResponseOpenAI,
       opts: { ...options, model: 'qwen/qwen-2.5-72b-instruct', client: openrouterClient },
-    },
-    {
-      key: 'openai',
-      label: 'GPT-4o-mini',
-      fn: streamResponseOpenAI,
-      opts: { ...options, model: 'gpt-4o-mini' },
     },
   ].filter(Boolean);
 

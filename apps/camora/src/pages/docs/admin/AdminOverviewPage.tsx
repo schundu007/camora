@@ -82,8 +82,8 @@ export default function AdminOverviewPage() {
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Browser &rarr; ascend-backend <code>/api/v1/transcribe</code> with audio chunk + auth.</li>
           <li>ascend-backend &rarr; ai-services FastAPI for speaker diarization (drops user voice).</li>
-          <li>ascend-backend &rarr; OpenAI Whisper for speech-to-text. Deepgram is a configured
-            alternative provider when <code>DEEPGRAM_API_KEY</code> is set.</li>
+          <li>ascend-backend &rarr; Deepgram (or Whisper-compatible provider) for speech-to-text.
+            The transcription provider is selected by which API key is configured.</li>
           <li>Frontend posts the resulting question to <code>/api/v1/stream</code> (or
             <code>/api/v1/inference/conversations/:id/stream</code> for follow-ups in the same
             conversation).</li>

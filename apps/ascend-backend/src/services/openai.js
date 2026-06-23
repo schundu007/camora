@@ -1,15 +1,19 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { buildCloudHint } from './cloudHint.js';
 
 export function getApiKey() {
-  return process.env.OPENAI_API_KEY;
+  return process.env.ANTHROPIC_API_KEY;
 }
 
 function getClient() {
-  return new OpenAI({
-    apiKey: getApiKey(),
-  });
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY not configured');
+  }
+  return new Anthropic({ apiKey });
 }
+
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 // CODING ONLY - No system design, pure code generation
 const CODING_PROMPT = `You are an expert coding interview assistant. Generate CODE ONLY - no system design.
@@ -63,18 +67,9 @@ WHEN YOU DETECT PARTIAL CODE:
 - Do NOT remove or modify the decorator pattern if one exists
 - Your output code must be COPY-PASTE READY into the platform's code editor
 
-Example - If problem contains partial code:
-  def person_lister(f):
-      def inner(people):
-          # complete the function
-      return inner
-  @person_lister
-
-Complete it by ONLY filling in the inner function, keeping the exact structure!
-
 Supported languages: Python, JavaScript, TypeScript, C, C++, Java, Go, Rust, SQL, Bash, Terraform, Jenkins, YAML
 
-IMPORTANT: Respond with valid JSON. You MUST provide 3 DIFFERENT approaches:
+IMPORTANT: Respond with valid JSON only (no markdown fences, no prose). You MUST provide 3 DIFFERENT approaches:
 {
   "language": "python|javascript|bash|etc",
   "approaches": [
@@ -190,7 +185,7 @@ IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
 *** NEVER EVER use "flowchart TB" or "flowchart TD" (top-bottom/top-down) ***
 *** TOP-BOTTOM DIAGRAMS ARE STRICTLY FORBIDDEN - ALWAYS HORIZONTAL LR ***
 
-For TYPE B (full system design) ONLY, respond with valid JSON in exactly this format:
+For TYPE B (full system design) ONLY, respond with valid JSON only (no markdown fences, no prose) in exactly this format:
 {
   "language": "text",
   "code": "",
@@ -316,7 +311,7 @@ IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
 *** NEVER EVER use "flowchart TB" or "flowchart TD" (top-bottom/top-down) ***
 *** TOP-BOTTOM DIAGRAMS ARE STRICTLY FORBIDDEN - ALWAYS HORIZONTAL LR ***
 
-For TYPE B (full system design) ONLY, respond with valid JSON in exactly this format:
+For TYPE B (full system design) ONLY, respond with valid JSON only (no markdown fences, no prose) in exactly this format:
 {
   "language": "text",
   "code": "",
@@ -391,7 +386,7 @@ EXAMPLE - GOOD (minimal):
 print(' '.join(str(x*2) for x in map(int, input().split()) if x > 0))
 
 OUTPUT FORMAT:
-- Output ONLY valid JSON: {"language": "python", "code": "the code"}
+- Output ONLY valid JSON (no markdown fences, no prose): {"language": "python", "code": "the code"}
 - NO comments, NO explanations, NO pitch
 - Output MUST match expected format EXACTLY
 
@@ -399,27 +394,24 @@ INTEGRITY:
 - NEVER hardcode outputs or fake data
 - Solution must be genuinely correct`;
 
-const DEFAULT_MODEL = 'gpt-4o';
-
 export async function solveProblem(problemText, language = 'auto', fast = true, model = DEFAULT_MODEL) {
   const languageInstruction = language === 'auto'
     ? 'Detect the appropriate language from the problem context.'
     : `Write the solution in ${language.toUpperCase()}.`;
 
-  const response = await getClient().chat.completions.create({
-    model,
+  const response = await getClient().messages.create({
+    model: model || DEFAULT_MODEL,
     messages: [
-      { role: 'system', content: CODING_PROMPT },
       {
         role: 'user',
-        content: `${languageInstruction}\n\nSolve this problem and return the response as JSON:\n\n${problemText}`,
+        content: `${languageInstruction}\n\nSolve this problem and return the response as valid JSON only (no markdown fences, no prose):\n\n${problemText}`,
       },
     ],
+    system: CODING_PROMPT,
     max_tokens: 4096,
-    response_format: { type: 'json_object' },
   });
 
-  const content = response.choices[0].message.content;
+  const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
 
   try {
     return JSON.parse(content);
@@ -439,60 +431,54 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
 
   const isBrief = detailLevel === 'brief' || detailLevel === 'high-level';
 
-  // Select appropriate prompt based on interview mode
   let systemPrompt;
   let userMessage;
 
   if (ascendMode === 'system-design') {
-    // DESIGN MODE - System design only, no code
     systemPrompt = designDetailLevel === 'full' ? SYSTEM_DESIGN_FULL_PROMPT : SYSTEM_DESIGN_BASIC_PROMPT;
-    userMessage = `Design the following system and return the response as JSON:\n\n${problemText}`;
+    userMessage = `Design the following system and return the response as valid JSON only (no markdown fences, no prose):\n\n${problemText}`;
   } else {
-    // CODING MODE - Code only, no system design
     systemPrompt = isBrief ? BRIEF_PROMPT : CODING_PROMPT;
-    userMessage = `${languageInstruction}\n\nSolve this coding problem and return the response as JSON:\n\n${problemText}`;
+    userMessage = `${languageInstruction}\n\nSolve this coding problem and return the response as valid JSON only (no markdown fences, no prose):\n\n${problemText}`;
   }
 
-  // Cloud-platform constraint — hard-frame service naming for Azure/GCP.
-  // Only matters for system-design (coding problems are platform-agnostic).
   if (ascendMode === 'system-design') {
     const cloudHint = buildCloudHint(cloudProvider);
     if (cloudHint) systemPrompt = `${cloudHint}\n\n${systemPrompt}`;
   }
 
-  const stream = await getClient().chat.completions.create({
-    model,
+  const stream = await getClient().messages.stream({
+    model: model || DEFAULT_MODEL,
     messages: [
-      { role: 'system', content: systemPrompt },
       {
         role: 'user',
         content: userMessage,
       },
     ],
+    system: systemPrompt,
     max_tokens: ascendMode === 'system-design' ? 6144 : (isBrief ? 1024 : 6144),
-    response_format: { type: 'json_object' },
-    stream: true,
   });
 
-  for await (const chunk of stream) {
-    const content = chunk.choices[0]?.delta?.content;
-    if (content) {
-      yield content;
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
     }
   }
 }
 
 export async function extractText(base64Image, mimeType, model = DEFAULT_MODEL) {
-  const response = await getClient().chat.completions.create({
-    model,
+  const response = await getClient().messages.create({
+    model: model || DEFAULT_MODEL,
     messages: [
       {
         role: 'user',
         content: [
           {
-            type: 'image_url',
-            image_url: {
-              url: `data:${mimeType};base64,${base64Image}`,
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mimeType,
+              data: base64Image,
             },
           },
           {
@@ -513,10 +499,10 @@ Return ONLY the formatted problem text, nothing else.`,
         ],
       },
     ],
-    max_completion_tokens: 2048,
+    max_tokens: 2048,
   });
 
-  return { text: response.choices[0].message.content };
+  return { text: response.content[0]?.type === 'text' ? response.content[0].text : '' };
 }
 
 export async function fixCode(code, error, language, problem = '', model = DEFAULT_MODEL) {
@@ -524,8 +510,8 @@ export async function fixCode(code, error, language, problem = '', model = DEFAU
     ? `\nORIGINAL PROBLEM:\n${problem}\n`
     : '';
 
-  const response = await getClient().chat.completions.create({
-    model,
+  const response = await getClient().messages.create({
+    model: model || DEFAULT_MODEL,
     messages: [
       {
         role: 'user',
@@ -539,7 +525,7 @@ ${code}
 FEEDBACK/ERROR:
 ${error}
 
-Return a JSON object with:
+Return a JSON object (no markdown fences, no prose) with:
 {
   "code": "the complete fixed code as a string",
   "explanations": [
@@ -555,11 +541,10 @@ IMPORTANT:
 - Keep explanations concise`,
       },
     ],
-    max_completion_tokens: 2048,
-    response_format: { type: 'json_object' },
+    max_tokens: 2048,
   });
 
-  const content = response.choices[0].message.content;
+  const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
   try {
     return JSON.parse(content);
   } catch {
@@ -585,27 +570,9 @@ IMPORTANT GUIDELINES:
 - If asked "how would you...", give a specific approach, not generic advice
 - Update ONLY the relevant parts of the system design
 - Keep the answer conversational - suitable for verbal delivery
-
-Respond with valid JSON:
-{
-  "answer": "Your direct, specific answer to the interviewer's question. This should be 2-4 paragraphs, conversational, and exactly match what was asked. Include specific technical details.",
-  "updatedDesign": {
-    // The COMPLETE updated system design object with any modifications
-    // Include ALL fields from the original design, updating only what changed
-    "included": true,
-    "overview": "...",
-    "requirements": {...},
-    "apiDesign": [...],
-    "dataModel": [...],
-    "architecture": {...},
-    "diagram": "...",
-    "scalability": [...]
-  },
-  "changesApplied": ["List of specific changes made to the design based on this question"]
-}`;
+- Do NOT use markdown formatting or code blocks - just plain text`;
 
 export async function* answerFollowUpQuestion(question, context, model = DEFAULT_MODEL) {
-  // Build context string based on what's available
   let contextStr = '';
 
   if (context.problem) {
@@ -621,20 +588,9 @@ export async function* answerFollowUpQuestion(question, context, model = DEFAULT
     contextStr += `SYSTEM DESIGN:\n${JSON.stringify(context.systemDesign, null, 2)}\n\n`;
   }
 
-  // Use gpt-4o-mini for faster responses (Q&A doesn't need the smartest model)
-  const fastModel = 'gpt-4o-mini';
-
-  const stream = await getClient().chat.completions.create({
-    model: fastModel,
+  const stream = await getClient().messages.stream({
+    model: model || DEFAULT_MODEL,
     messages: [
-      {
-        role: 'system',
-        content: `You are helping a candidate answer follow-up questions during a technical interview.
-Give clear, concise answers that demonstrate understanding.
-Speak naturally as if explaining to an interviewer.
-Keep answers focused - typically 2-4 sentences unless more detail is needed.
-Do NOT use markdown formatting or code blocks - just plain text.`
-      },
       {
         role: 'user',
         content: `${contextStr}INTERVIEWER'S QUESTION: "${question}"
@@ -642,43 +598,44 @@ Do NOT use markdown formatting or code blocks - just plain text.`
 Answer this interview follow-up question directly and concisely. Explain your reasoning clearly as if speaking to an interviewer.`,
       },
     ],
+    system: FOLLOW_UP_PROMPT,
     max_tokens: 1024,
-    stream: true,
   });
 
-  for await (const chunk of stream) {
-    const content = chunk.choices[0]?.delta?.content;
-    if (content) {
-      yield content;
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
     }
   }
 }
 
 export async function analyzeImage(base64Image, mimeType, model = DEFAULT_MODEL) {
-  const response = await getClient().chat.completions.create({
-    model,
+  const response = await getClient().messages.create({
+    model: model || DEFAULT_MODEL,
     messages: [
-      { role: 'system', content: CODING_PROMPT },
       {
         role: 'user',
         content: [
           {
-            type: 'image_url',
-            image_url: {
-              url: `data:${mimeType};base64,${base64Image}`,
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mimeType,
+              data: base64Image,
             },
           },
           {
             type: 'text',
-            text: 'This is a screenshot of a coding problem. Extract the problem description, then solve it and return the response as JSON with code, explanations, and complexity.',
+            text: 'This is a screenshot of a coding problem. Extract the problem description, then solve it and return the response as valid JSON only (no markdown fences, no prose) with code, explanations, and complexity.',
           },
         ],
       },
     ],
-    max_completion_tokens: 2048,
+    system: CODING_PROMPT,
+    max_tokens: 2048,
   });
 
-  const content = response.choices[0].message.content;
+  const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
 
   try {
     const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||

@@ -317,13 +317,11 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                 AI Model
               </h3>
               <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-                Choose which AI powers Sona. Claude is default; GPT-4o and Gemini are alternatives.
+                Choose which AI powers Sona. Claude is default; Gemini is an alternative.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {([
                   { id: '', label: 'Claude (Default)', sub: 'Sonnet 4.6 · Anthropic' },
-                  { id: 'gpt-4o', label: 'GPT-4o', sub: 'OpenAI · Flagship' },
-                  { id: 'gpt-4o-mini', label: 'GPT-4o Mini', sub: 'OpenAI · Fast & cheap' },
                   { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', sub: 'Google · Fastest' },
                 ] as { id: string; label: string; sub: string }[]).map(m => (
                   <button

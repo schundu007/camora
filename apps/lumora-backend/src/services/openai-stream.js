@@ -83,6 +83,10 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
   const chunks = [];
 
   try {
+    if (!clientOverride && !process.env.OPENAI_API_KEY) {
+      yield { event: 'error', data: { msg: 'No OpenAI-compatible client provided and OPENAI_API_KEY is not set' } };
+      return;
+    }
     const client = clientOverride || getOpenAIClient();
     const stream = await client.chat.completions.create({
       model,

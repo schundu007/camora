@@ -51,7 +51,6 @@ export default function AdminEnvVarsPage() {
             is read as a fallback for backward compat.</li>
           <li><code>JWT_ALGORITHM</code> &mdash; defaults to HS256.</li>
           <li><code>ANTHROPIC_API_KEY</code> &mdash; Claude.</li>
-          <li><code>OPENAI_API_KEY</code> &mdash; Whisper + GPT fallback.</li>
           <li><code>DEEPGRAM_API_KEY</code> &mdash; alternative transcription provider, used by
             <code className="mx-1">services/deepgram.js</code> when set.</li>
           <li><code>AI_SERVICES_URL</code> &mdash; FastAPI service base URL. Default
@@ -136,7 +135,7 @@ export default function AdminEnvVarsPage() {
           The standalone Lumora deployment is now legacy &mdash; production frontends call
           ascend-backend for the Lumora data plane. The Lumora-backend env vars are largely a
           subset of ascend-backend&apos;s: <code>DATABASE_URL</code>, <code>REDIS_URL</code>,
-          <code>JWT_SECRET</code>, <code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>,
+          <code>JWT_SECRET</code>, <code>ANTHROPIC_API_KEY</code>,
           <code>DEEPGRAM_API_KEY</code>, <code>AI_SERVICES_URL</code>,
           <code>AI_SERVICES_API_KEY</code>, <code>JOBS_DATABASE_URL</code>,
           <code>GITHUB_TOKEN</code>, <code>ALLOWED_ORIGINS</code>, <code>LOG_LEVEL</code>, plus the

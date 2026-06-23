@@ -7,7 +7,6 @@ export const config = {
 
   // AI
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-  openaiApiKey: process.env.OPENAI_API_KEY,
   claudeModel: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
   maxTokensQuick: parseInt(process.env.MAX_TOKENS_QUICK || '2000'),
   maxTokensDesign: parseInt(process.env.MAX_TOKENS_DESIGN || '8192'),
