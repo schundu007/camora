@@ -11,7 +11,6 @@ import {
   ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
-import LiveSessionPreview from '../components/landing/LiveSessionPreview';
 import VisitorCountLine from '../components/landing/VisitorCountLine';
 import SkillDrift from '../components/landing/SkillDrift';
 import MagneticCTA from '../components/landing/MagneticCTA';
@@ -336,19 +335,6 @@ export default function LandingPage() {
         </Container>
       </section>
 
-      {/* ═══════════ SONA PREVIEW ═══════════ */}
-      <section className="bg-[var(--bg-surface)] py-12">
-        <Container>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.40, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <LiveSessionPreview />
-          </motion.div>
-        </Container>
-      </section>
-
       {/* ═══════════ LOGO STRIP ═══════════ */}
       <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-10">
         <Container>
@@ -639,7 +625,7 @@ export default function LandingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="surface" spacing="md">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl bg-[#0A0E1A] px-8 py-14 md:px-14 md:py-16 text-white">
+          <div className="relative overflow-hidden rounded-3xl px-8 py-14 md:px-14 md:py-16" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {/* Animated aurora gradient */}
             <div
               aria-hidden="true"
@@ -695,18 +681,18 @@ export default function LandingPage() {
                   Start free.<br />
                   <span className="text-[var(--cam-gold-leaf-lt)]">Win the offer.</span>
                 </h2>
-                <p className="mt-3 max-w-md text-[14px] leading-relaxed text-white/70">
+                <p className="mt-3 max-w-md text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   One free hour, no card required. Pick a plan when you're ready; top-ups never expire.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <MagneticCTA strength={6}>
-                  <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                  <CTAButton to={heroCtaHref} variant="primary" size="lg" trailingArrow>
                     {heroCta}
                   </CTAButton>
                 </MagneticCTA>
                 <MagneticCTA strength={4}>
-                  <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                  <CTAButton to="/pricing" variant="secondary" size="lg">
                     See pricing
                   </CTAButton>
                 </MagneticCTA>
@@ -747,37 +733,19 @@ function AudienceCard({
       <div
         className={cn(
           'relative h-full overflow-hidden rounded-3xl border p-8 md:p-10',
-          dark
-            ? 'bg-[#0A0E1A] border-white/10 text-white'
-            : 'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-primary)] shadow-[0_2px_4px_rgba(0,0,0,0.25),0_12px_32px_-16px_rgba(0,0,0,0.35)]',
+          'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-primary)]',
         )}
       >
-        {dark && (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 opacity-[0.14]"
-            style={{
-              background:
-                'radial-gradient(ellipse 60% 70% at 100% 0%, rgba(201,162,39,0.45), transparent 60%)',
-            }}
-          />
-        )}
         <div className="relative">
-          <Eyebrow tone={dark ? 'inverse' : 'accent'}>{eyebrow}</Eyebrow>
-          <h3 className={cn(
-            'mt-3 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-tight',
-            dark ? 'text-white' : 'text-[var(--text-primary)]',
-          )}>
+          <Eyebrow tone="accent">{eyebrow}</Eyebrow>
+          <h3 className="mt-3 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-tight text-[var(--text-primary)]">
             {title}
           </h3>
-          <p className={cn(
-            'mt-4 max-w-prose text-[14.5px] leading-relaxed',
-            dark ? 'text-white/72' : 'text-[var(--text-secondary)]',
-          )}>
+          <p className="mt-4 max-w-prose text-[14.5px] leading-relaxed text-[var(--text-secondary)]">
             {body}
           </p>
           <div className="mt-7">
-            <CTAButton to={ctaHref} variant={dark ? 'inverse-primary' : 'primary'} trailingArrow>
+            <CTAButton to={ctaHref} variant="primary" trailingArrow>
               {ctaLabel}
             </CTAButton>
           </div>
