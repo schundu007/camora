@@ -314,30 +314,38 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
       {/* ── Hero — compact, clean command-center ── */}
       <div className="relative overflow-hidden" style={{
-        background: 'var(--lumora-hero-gradient)',
+        background: theme === 'light' ? 'var(--bg-elevated)' : 'var(--lumora-hero-gradient)',
+        borderBottom: theme === 'light' ? '1px solid var(--border)' : 'none',
         minHeight: 160,
       }}>
-        <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
-          <div style={{ position:'absolute', width:340, height:340, borderRadius:'50%', top:'-100px', left:'-60px', background:'radial-gradient(circle,rgba(54,131,220,.13) 0%,transparent 65%)' }} />
-          <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', top:'0', right:'-30px', background:'radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 65%)' }} />
-        </div>
-        <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:0, right:0, height:48, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
+        {theme !== 'light' && (
+          <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+            <div style={{ position:'absolute', width:340, height:340, borderRadius:'50%', top:'-100px', left:'-60px', background:'radial-gradient(circle,rgba(54,131,220,.13) 0%,transparent 65%)' }} />
+            <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', top:'0', right:'-30px', background:'radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 65%)' }} />
+          </div>
+        )}
+        {theme !== 'light' && (
+          <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:0, right:0, height:48, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
+        )}
 
         <div className="relative px-4 md:px-6 pt-7 pb-10 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
-            style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.10)', backdropFilter:'blur(8px)' }}>
+            style={{
+              background: theme === 'light' ? 'var(--accent-subtle)' : 'rgba(255,255,255,.05)',
+              border: theme === 'light' ? '1px solid var(--border-focus)' : '1px solid rgba(255,255,255,.10)',
+            }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', flexShrink:0, animation:'sona-ready 2s ease-in-out infinite' }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', color:'rgba(255,255,255,.72)', textTransform:'uppercase' }}>Sona · Ready</span>
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', color: theme === 'light' ? 'var(--accent)' : 'rgba(255,255,255,.72)', textTransform:'uppercase' }}>Sona · Ready</span>
           </div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color:'#fff', margin:0, lineHeight:1.2 }}>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color: theme === 'light' ? 'var(--text-primary)' : '#fff', margin:0, lineHeight:1.2 }}>
             {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}.
           </h2>
           <div className="flex items-center justify-center gap-3 mt-2">
-            <span style={{ fontFamily:'var(--font-code)', fontSize:13, fontWeight:600, color:'rgba(255,255,255,.5)', letterSpacing:'0.06em' }}>
-              {hh12}:{mm} <span style={{ color:'var(--cam-gold-leaf-lt)' }}>{ampm}</span>
+            <span style={{ fontFamily:'var(--font-code)', fontSize:13, fontWeight:600, color: theme === 'light' ? 'var(--text-secondary)' : 'rgba(255,255,255,.5)', letterSpacing:'0.06em' }}>
+              {hh12}:{mm} <span style={{ color:'var(--accent)' }}>{ampm}</span>
             </span>
-            <span style={{ display:'inline-block', width:1, height:12, background:'rgba(255,255,255,.18)' }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:11, color:'rgba(255,255,255,.35)', letterSpacing:'0.06em' }}>{dateStr}</span>
+            <span style={{ display:'inline-block', width:1, height:12, background: theme === 'light' ? 'var(--border)' : 'rgba(255,255,255,.18)' }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:11, color: theme === 'light' ? 'var(--text-muted)' : 'rgba(255,255,255,.35)', letterSpacing:'0.06em' }}>{dateStr}</span>
           </div>
         </div>
       </div>
