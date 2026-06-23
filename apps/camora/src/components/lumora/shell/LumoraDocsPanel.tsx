@@ -3047,29 +3047,21 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   const checked = selectedSections.includes(s.id);
                   return (
                     <span
-                      role="switch"
+                      role="checkbox"
                       aria-checked={checked}
                       onClick={(e) => { e.stopPropagation(); setSelectedSections(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id]); }}
-                      className="shrink-0"
+                      className="shrink-0 flex items-center justify-center transition-all"
                       style={{
-                        display: 'inline-flex', alignItems: 'center',
-                        width: 28, height: 16, borderRadius: 8, cursor: 'pointer',
-                        padding: '2px',
-                        background: checked
-                          ? 'linear-gradient(135deg, var(--cam-primary), color-mix(in srgb, var(--cam-primary) 75%, #7c3aed))'
-                          : 'color-mix(in srgb, var(--border) 80%, transparent)',
-                        boxShadow: checked ? 'inset 0 1px 3px rgba(0,0,0,0.2)' : 'inset 0 1px 3px rgba(0,0,0,0.3)',
-                        transition: 'background 0.2s ease',
-                        flexShrink: 0,
+                        width: 15, height: 15, borderRadius: 4, cursor: 'pointer', flexShrink: 0,
+                        background: checked ? 'var(--cam-primary)' : 'var(--bg-surface)',
+                        border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'color-mix(in srgb, var(--border) 100%, transparent)'}`,
+                        boxShadow: checked ? '0 0 0 2px color-mix(in srgb, var(--cam-primary) 20%, transparent)' : 'none',
                       }}>
-                      <span style={{
-                        width: 12, height: 12, borderRadius: '50%',
-                        background: '#fff',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                        transform: checked ? 'translateX(12px)' : 'translateX(0)',
-                        transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
-                        display: 'block', flexShrink: 0,
-                      }} />
+                      {checked && (
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                          <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
                     </span>
                   );
                 })()}
@@ -3107,17 +3099,17 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <button
               onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
               disabled={selectedSections.length === GENERATE_SECTIONS.length}
-              className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-[0.97] disabled:opacity-35"
+              className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-35"
               style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 30%, transparent)' }}>
-              <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Select All
             </button>
             <button
               onClick={() => setSelectedSections([])}
               disabled={selectedSections.length === 0}
-              className="flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-[0.97] disabled:opacity-35"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-              <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3.5 5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-35"
+              style={{ background: 'color-mix(in srgb, var(--cam-primary) 6%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 20%, transparent)', opacity: 0.8 }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3.5 5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               Deselect All
             </button>
           </div>
