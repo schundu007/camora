@@ -634,23 +634,20 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPS
 }
 
 // Main generator function that handles provider selection
-export async function* generateSection(section, inputs, provider = 'openrouter', model) {
-  // Fall back to claude when openrouter key is absent
-  const effectiveProvider = (provider === 'openrouter' && !process.env.OPENROUTER_API_KEY) ? 'claude' : provider;
-  if (effectiveProvider === 'openai') {
-    yield* generateSectionOpenAI(section, inputs, model || DEFAULT_OPENAI_MODEL);
-  } else if (effectiveProvider === 'claude') {
+export async function* generateSection(section, inputs, provider = 'openai', model) {
+  if (provider === 'claude') {
     const selectedModel = model || getModelForSection(section);
     console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
     yield* generateSectionClaude(section, inputs, selectedModel);
   } else {
-    // DeepSeek-V3 direct — high quality, ~10x cheaper than Claude Sonnet
-    yield* generateSectionOpenRouter(section, inputs, model || DEFAULT_DEEPSEEK_MODEL);
+    // Default: gpt-4o-mini — cheap, reliable, OPENAI_API_KEY already configured
+    console.log(`[AscendPrep] Section "${section}" → openai gpt-4o-mini`);
+    yield* generateSectionOpenAI(section, inputs, model || 'gpt-4o-mini');
   }
 }
 
 // Generate all sections sequentially
-export async function* generateAllSections(inputs, sections, provider = 'claude', model) {
+export async function* generateAllSections(inputs, sections, provider = 'openai', model) {
   for (const section of sections) {
     yield { section, status: 'started' };
 
