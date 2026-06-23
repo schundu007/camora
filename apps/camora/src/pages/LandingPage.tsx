@@ -361,9 +361,12 @@ export default function LandingPage() {
                   key={`${c}-${i}`}
                   src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
                   alt={c}
-                  className="h-6 mx-7 shrink-0 object-contain"
+                  className="h-6 mx-7 shrink-0 object-contain transition-opacity duration-150"
                   loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  style={{ filter: 'grayscale(1)', opacity: 0.5 }}
+                  onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = '0.8'; }}
+                  onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = '0.5'; }}
+                  onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               ))}
             </div>
@@ -456,7 +459,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ CAPABILITY DECK ═══════════ */}
-      <Section tone="muted" spacing="lg">
+      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-5">
@@ -485,7 +488,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ FEATURES — Bento grid ═══════════ */}
-      <Section tone="muted" spacing="lg">
+      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -540,7 +543,7 @@ export default function LandingPage() {
 
 
       {/* ═══════════ JOB URL ANALYSIS ═══════════ */}
-      <Section tone="muted" spacing="lg">
+      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 w-full">
@@ -565,7 +568,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ TWO AUDIENCES ═══════════ */}
-      <Section tone="surface" spacing="lg">
+      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -593,7 +596,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ TESTIMONIALS ═══════════ */}
-      <Section tone="surface" spacing="lg">
+      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -623,7 +626,7 @@ export default function LandingPage() {
                       style={{ background: 'var(--bg-base)', border: '1px solid var(--border)' }}
                     >
                       {t.logoDomain ? (
-                        <img src={`https://img.logo.dev/${t.logoDomain}?token=${LOGO_TOKEN}&size=32&format=png`} alt="" width={22} height={22} style={{ objectFit: 'contain' }} />
+                        <img src={`https://img.logo.dev/${t.logoDomain}?token=${LOGO_TOKEN}&size=32&format=png`} alt="" width={22} height={22} style={{ objectFit: 'contain', filter: 'grayscale(1)', opacity: 0.6 }} />
                       ) : (
                         <span className="text-[11px] font-bold text-white" style={{ background: t.accent }}>{t.initials}</span>
                       )}
