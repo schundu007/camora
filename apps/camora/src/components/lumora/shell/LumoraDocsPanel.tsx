@@ -3127,30 +3127,6 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <CloudProviderSelector variant="compact" />
           </div>
 
-          {/* Select / Deselect row with count */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium tabular-nums shrink-0" style={{ color: 'var(--text-secondary)' }}>
-              {selectedSections.length}/{GENERATE_SECTIONS.length} selected
-            </span>
-            <div className="flex-1 grid grid-cols-2 gap-1.5">
-              <button
-                onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
-                disabled={selectedSections.length === GENERATE_SECTIONS.length}
-                className="flex items-center justify-center gap-1 py-1.5 rounded-md text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-30"
-                style={{ background: 'color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 40%, transparent)' }}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                All
-              </button>
-              <button
-                onClick={() => setSelectedSections([])}
-                disabled={selectedSections.length === 0}
-                className="flex items-center justify-center gap-1 py-1.5 rounded-md text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-30"
-                style={{ background: 'color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 40%, transparent)' }}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3.5 5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                None
-              </button>
-            </div>
-          </div>
 
           {/* Generate CTA */}
           <button
