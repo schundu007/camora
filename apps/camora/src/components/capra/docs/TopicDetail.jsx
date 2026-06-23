@@ -1514,17 +1514,45 @@ export default function TopicDetail({
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <div id="visual" className="scroll-mt-24 mt-14 first:mt-0">
               <ContentHeading title="Visual Explanation" pills={[topicDetails.visualizations.length]} />
-              <div className={`p-4 grid gap-4 items-start ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-                {topicDetails.visualizations.map((viz, vi) => (
-                  <div key={vi} className="rounded border border-[var(--border)] overflow-hidden">
-                    <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
-                      <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
-                      {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
-                    </div>
-                    <div className="p-3 flex justify-center items-center bg-[var(--bg-surface)]" dangerouslySetInnerHTML={{ __html: viz.svg.replace('style="background:white"', 'style="background:white;max-width:100%;width:auto;height:auto;display:block;margin:0 auto"') }} />
+              {(() => {
+                const vizsWithRatio = topicDetails.visualizations.map(viz => {
+                  const vbMatch = viz.svg.match(/viewBox="([^"]+)"/i);
+                  let ar = 1;
+                  if (vbMatch) {
+                    const parts = vbMatch[1].trim().split(/[\s,]+/).map(Number);
+                    if (parts.length === 4 && parts[3]) ar = parts[2] / parts[3];
+                  } else {
+                    const w = parseFloat((viz.svg.match(/\bwidth="([^"%]+)"/) || [])[1] || 0);
+                    const h = parseFloat((viz.svg.match(/\bheight="([^"%]+)"/) || [])[1] || 0);
+                    if (w && h) ar = w / h;
+                  }
+                  return { ...viz, isWide: ar > 2.0 };
+                });
+                const allWide = vizsWithRatio.every(v => v.isWide);
+                const useGrid = vizsWithRatio.length > 1 && !allWide;
+                return (
+                  <div className={`p-4 grid gap-4 items-start ${useGrid ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+                    {vizsWithRatio.map((viz, vi) => {
+                      const svgHtml = viz.svg.replace(/<svg\b([^>]*)>/i, (_, attrs) => {
+                        const cleaned = attrs
+                          .replace(/\s*\bwidth="[^"]*"/, '')
+                          .replace(/\s*\bheight="[^"]*"/, '')
+                          .replace(/\s*\bstyle="[^"]*"/, '');
+                        return `<svg${cleaned} style="width:100%;height:auto;display:block;background:white">`;
+                      });
+                      return (
+                        <div key={vi} className={`rounded border border-[var(--border)] overflow-hidden${useGrid && viz.isWide ? ' md:col-span-2' : ''}`}>
+                          <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
+                            <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
+                            {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
+                          </div>
+                          <div className="bg-[var(--bg-surface)]" dangerouslySetInnerHTML={{ __html: svgHtml }} />
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
           )}
 
