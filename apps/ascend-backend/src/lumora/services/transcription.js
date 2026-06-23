@@ -28,14 +28,19 @@ CAP theorem, ACID, BASE, eventual consistency, sharding, replication,
 load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 `.trim();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getTranscriptionClient() {
+  if (process.env.GROQ_API_KEY) {
+    return {
+      client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
+      model: 'whisper-large-v3-turbo',
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return { client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: 'whisper-1' };
+  }
+  throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
+}
 
-/**
- * Convert an audio file to 16 kHz mono WAV using ffmpeg.
- *
- * @param {string} inputPath  - Path to the source audio file.
- * @param {string} outputPath - Destination path for the WAV file.
- */
 async function convertToWav(inputPath, outputPath) {
   await execFileAsync('ffmpeg', [
     '-y', '-i', inputPath,
@@ -74,9 +79,9 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
       // ffmpeg failed — send original format
     }
 
-    // Send to OpenAI Whisper
-    const response = await openai.audio.transcriptions.create({
-      model: 'whisper-1',
+    const { client, model } = getTranscriptionClient();
+    const response = await client.audio.transcriptions.create({
+      model,
       file: fs.createReadStream(audioFile),
       language: 'en',
       prompt: TECHNICAL_PROMPT,
