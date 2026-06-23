@@ -2668,7 +2668,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           const parsed = JSON.parse(t.slice(6));
           if (parsed.done && parsed.result) result = parsed.result;
           else if (parsed.chunk) chunks += parsed.chunk;
-          else if (parsed.error) chunks = `Error: ${parsed.error}`;
+          else if (parsed.error) throw new Error(parsed.error);
         } catch {}
       }
     }
