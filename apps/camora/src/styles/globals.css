@@ -71,10 +71,11 @@
     --cat-primary:    #2563EB;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
-    /* Fonts — Satoshi (all UI) + JetBrains Mono (code) */
+    /* Fonts — Plus Jakarta Sans (display/headings) + Inter (body) + IBM Plex Mono (code) */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Inter', sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-code: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     --font-brand: 'Satoshi', sans-serif;
     --font-answer: var(--font-sans);
     --font-answer-heading: var(--font-sans);
