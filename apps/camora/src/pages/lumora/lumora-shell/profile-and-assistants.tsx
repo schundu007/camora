@@ -250,9 +250,7 @@ interface Assistant {
 const AI_MODELS = [
   { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', color: '#2B6394' },
   { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', color: '#1E4D78' },
-  { value: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', color: '#D4A043' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'OpenAI', color: '#D4A043' },
-  { value: 'o3-mini', label: 'o3-mini', provider: 'OpenAI', color: '#D4A043' },
+  { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'Google', color: '#4285F4' },
 ];
 
 export const AssistantsPage = () => {

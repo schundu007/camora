@@ -1,23 +1,23 @@
 /**
- * OpenAI text embedding service for Lumora RAG.
+ * Cohere text embedding service for Lumora RAG.
  *
- * - Model: text-embedding-3-small (1536-dim, cosine similarity)
+ * - Model: embed-english-v3.0 (1024-dim, cosine similarity)
  * - In-memory LRU cache keyed by SHA-256 of the input string.
  *   Interview sessions repeat questions heavily; cache hit ratio is
  *   typically >70% within a single session.
- * - Batch API calls capped at 100 inputs per request (OpenAI limit).
+ * - Batch API calls capped at 96 inputs per request (Cohere limit).
  */
-import OpenAI from 'openai';
+import { CohereClient } from 'cohere-ai';
 import { createHash } from 'node:crypto';
 
-const MODEL = 'text-embedding-3-small';
-const DIM = 1536;
-const BATCH_SIZE = 100;
+const MODEL = 'embed-english-v3.0';
+const DIM = 1024;
+const BATCH_SIZE = 96;
 const CACHE_MAX = 2000;
 
 let _client = null;
 function client() {
-  if (!_client) _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  if (!_client) _client = new CohereClient({ token: process.env.COHERE_API_KEY });
   return _client;
 }
 
@@ -49,9 +49,9 @@ export async function embedQuery(text) {
   const cached = cacheGet(key);
   if (cached) return cached;
   if (inflight.has(key)) return inflight.get(key);
-  const promise = client().embeddings.create({ model: MODEL, input: text })
+  const promise = client().embed({ texts: [text], model: MODEL, inputType: 'search_query' })
     .then((r) => {
-      const v = r.data[0].embedding;
+      const v = r.embeddings[0];
       if (v.length !== DIM) {
         throw new Error(`embedding dim mismatch: got ${v.length}, expected ${DIM}`);
       }
@@ -63,7 +63,7 @@ export async function embedQuery(text) {
   return promise;
 }
 
-export async function embedBatch(texts) {
+export async function embedBatch(texts, inputType = 'search_document') {
   if (texts.length === 0) return [];
   const out = new Array(texts.length);
   const missIdxs = [];
@@ -75,9 +75,9 @@ export async function embedBatch(texts) {
   }
   for (let start = 0; start < missTexts.length; start += BATCH_SIZE) {
     const slice = missTexts.slice(start, start + BATCH_SIZE);
-    const r = await client().embeddings.create({ model: MODEL, input: slice });
+    const r = await client().embed({ texts: slice, model: MODEL, inputType });
     for (let j = 0; j < slice.length; j++) {
-      const v = r.data[j].embedding;
+      const v = r.embeddings[j];
       const targetIdx = missIdxs[start + j];
       out[targetIdx] = v;
       cacheSet(hash(slice[j]), v);
@@ -85,4 +85,3 @@ export async function embedBatch(texts) {
   }
   return out;
 }
-

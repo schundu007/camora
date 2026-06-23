@@ -1,19 +1,10 @@
 // apps/ascend-backend/src/routes/ask.js
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
 import { query } from '../config/database.js';
 
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-let _openai = null;
-function getOpenAI() {
-  if (!_openai && process.env.OPENAI_API_KEY) {
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return _openai;
-}
 
 const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
 
@@ -303,37 +294,11 @@ router.post('/stream', async (req, res) => {
         full = '';
       }
 
-      // OpenAI fallback when Claude fails (non-streaming for reliability)
       if (!claudeOk || !full) {
-        full = '';
-        const oai = getOpenAI();
-        if (oai) {
-          try {
-            const oaiResp = await oai.chat.completions.create({
-              model: 'gpt-4o-mini',
-              max_tokens: 8000,
-              stream: false,
-              messages: [
-                { role: 'system', content: claudeSystem },
-                ...msgs.map(m => ({ role: m.role, content: m.content })),
-              ],
-            });
-            full = oaiResp.choices?.[0]?.message?.content || '';
-            if (full) res.write(`data: ${JSON.stringify({ text: full })}\n\n`);
-          } catch (oaiErr) {
-            console.error('[Ask/OpenAI] error:', oaiErr.message);
-            const errMsg = `AI unavailable: ${oaiErr.message?.slice(0, 120) || 'unknown error'}`;
-            res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
-            res.write('data: [DONE]\n\n');
-            res.end();
-            return;
-          }
-        } else {
-          res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
-          res.write('data: [DONE]\n\n');
-          res.end();
-          return;
-        }
+        res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+        return;
       }
     }
 

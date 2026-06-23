@@ -10,7 +10,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import OpenAI from 'openai';
-import { getAnthropicClient, getOpenAIClient } from '../lib/_shared/llm.js';
+import { getAnthropicClient } from '../lib/_shared/llm.js';
 import dns from 'node:dns/promises';
 
 // Lazy-load sharp. The native binary fails to resolve on some Railway
@@ -91,7 +91,6 @@ const router = Router();
 // Anthropic()` pattern that would otherwise re-initialize connection pools
 // + rate-limit state on every request.
 const anthropicClient = getAnthropicClient();
-const openaiClient = getOpenAIClient();
 
 // OpenRouter client — OpenAI-SDK compatible, routes to Qwen/DeepSeek/etc.
 // Preferred fallback over OpenAI direct because it's significantly cheaper.
@@ -106,11 +105,9 @@ const openrouterClient = process.env.OPENROUTER_API_KEY
 // Fallback model priority when Anthropic is exhausted:
 //   1. DeepSeek-V3 via OpenRouter (excellent code quality, very cheap)
 //   2. Qwen2.5-Coder-32B via OpenRouter (strong alternative)
-//   3. GPT-4o via OpenAI direct (last resort)
 const FALLBACK_PROVIDERS = [
   openrouterClient && { client: openrouterClient, model: 'deepseek/deepseek-chat-v3-0324',     label: 'DeepSeek-V3' },
   openrouterClient && { client: openrouterClient, model: 'qwen/qwen-2.5-coder-32b-instruct',   label: 'Qwen2.5-Coder' },
-  process.env.OPENAI_API_KEY && { client: openaiClient, model: 'gpt-4o',                       label: 'GPT-4o' },
 ].filter(Boolean);
 
 // Detects Anthropic "spending limit reached" errors (returned as 400
@@ -1873,23 +1870,7 @@ Critical rules:
       });
       rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
     } catch (claudeErr) {
-      if (isApiExhaustedError(claudeErr) && process.env.OPENAI_API_KEY) {
-        console.warn('[extract-from-image] Claude exhausted — falling back to GPT-4o vision');
-        const oaiMsg = await openaiClient.chat.completions.create({
-          model: 'gpt-4o',
-          max_tokens: 2000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: `data:${mediaType};base64,${data}` } },
-              { type: 'text', text: prompt },
-            ],
-          }],
-        });
-        rawText = (oaiMsg.choices?.[0]?.message?.content || '').trim();
-      } else {
-        throw claudeErr;
-      }
+      throw claudeErr;
     }
     console.log(`[extract-from-image] imgBytes=${req.file.buffer.length} rawText=${rawText.slice(0, 400)}`);
 

@@ -85,14 +85,14 @@ export default function AdminLumoraLivePage() {
           Lumora backend (Express 5, Node 20) terminates auth, persists conversations, fronts
           transcription, and streams Sona's answer tokens over Server-Sent Events. A Python
           FastAPI service (<em>ai-services</em>) hosts speaker verification and architecture-diagram
-          generation. External providers — Anthropic for answer streaming, OpenAI for Whisper
+          generation. External providers — Anthropic for answer streaming, Deepgram for
           transcription — sit behind the Lumora backend.
         </p>
         <DocsDiagram
           src="/diagrams/docs/lumora-live/system-context.png"
-          alt="System context diagram showing the candidate's browser connecting to the Lumora frontend on Vercel and the Lumora backend on Railway, which calls AI services, Postgres, Anthropic, OpenAI, Stripe, and Google OAuth."
+          alt="System context diagram showing the candidate's browser connecting to the Lumora frontend on Vercel and the Lumora backend on Railway, which calls AI services, Postgres, Anthropic, Deepgram, Stripe, and Google OAuth."
           label="Figure 1 — System context"
-          caption="Camora-owned services (blue) sit inside the solid rounded boundary; external providers (Anthropic, OpenAI, Stripe, Google OAuth) sit in the dashed boundary. Each edge is labeled with the concrete protocol or route that crosses it."
+          caption="Camora-owned services (blue) sit inside the solid rounded boundary; external providers (Anthropic, Deepgram, Stripe, Google OAuth) sit in the dashed boundary. Each edge is labeled with the concrete protocol or route that crosses it."
         />
         <p className={bodyP} style={bodyColor}>
           Auth is shared with the Capra prep platform via the <code style={inlineCodeStyle}>cariara_sso</code> cookie
@@ -132,8 +132,8 @@ export default function AdminLumoraLivePage() {
               role: 'Streaming answer generation. System prompt sent with cache_control: ephemeral so the 5-minute Anthropic prompt cache reduces TTFT on repeat questions.',
             },
             {
-              name: 'OpenAI API',
-              tech: 'whisper-1',
+              name: 'Deepgram API',
+              tech: 'nova-2 / whisper-compatible',
               role: 'Audio chunk → text transcription. Seeded with a technical-vocabulary prompt to reduce errors on terms like Kafka, Kubernetes, BFS.',
             },
             {
@@ -305,8 +305,8 @@ export default function AdminLumoraLivePage() {
             <code style={inlineCodeStyle}>transcribe(file.buffer, filename)</code> — writes the buffer to{' '}
             <code style={inlineCodeStyle}>tempfile</code>, runs{' '}
             <code style={inlineCodeStyle}>ffmpeg -ar 16000 -ac 1 -f wav</code>, then calls{' '}
-            <code style={inlineCodeStyle}>openai.audio.transcriptions.create(&#123; model: &apos;whisper-1&apos;, language: &apos;en&apos;, prompt: TECHNICAL_PROMPT &#125;)</code>.
-            The technical prompt seeds Whisper with vocabulary like Kafka, Kubernetes, BFS, p99 to
+            <code style={inlineCodeStyle}>deepgram.listen.prerecorded.transcribeFile(buffer, &#123; model: &apos;nova-2&apos;, language: &apos;en&apos;, keywords: TECHNICAL_KEYWORDS &#125;)</code>.
+            The technical keyword list seeds the model with vocabulary like Kafka, Kubernetes, BFS, p99 to
             reduce errors on technical terms.
           </li>
           <li>

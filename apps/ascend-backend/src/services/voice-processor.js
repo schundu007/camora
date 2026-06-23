@@ -7,7 +7,6 @@
 
 import { voiceBroadcaster } from './sse-broadcaster.js';
 import * as claudeService from './claude.js';
-import * as openaiService from './openai.js';
 import * as deepgramService from './deepgram.js';
 import { safeLog } from './utils.js';
 import fetch from 'node-fetch';
@@ -462,11 +461,7 @@ class VoiceSession {
     try {
       let fullAnswer = '';
 
-      if (this.provider === 'openai') {
-        fullAnswer = await this._streamOpenAI(systemPrompt, messages);
-      } else {
-        fullAnswer = await this._streamClaude(systemPrompt, messages);
-      }
+      fullAnswer = await this._streamClaude(systemPrompt, messages);
 
       if (fullAnswer.trim()) {
         this.history.append('user', question);
@@ -623,69 +618,6 @@ RULES:
             }
           } catch (e) {
             // Ignore parse errors for incomplete JSON
-          }
-        }
-      }
-    }
-
-    return fullAnswer;
-  }
-
-  /**
-   * Stream answer from OpenAI
-   */
-  async _streamOpenAI(systemPrompt, messages) {
-    const apiKey = this.openaiKey || openaiService.getApiKey();
-    if (!apiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.model || 'gpt-4o',
-        max_tokens: CONFIG.MAX_ANSWER_TOKENS,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.map(m => ({ role: m.role, content: m.content })),
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${error}`);
-    }
-
-    let fullAnswer = '';
-    const reader = response.body;
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    for await (const chunk of reader) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            const token = parsed.choices?.[0]?.delta?.content;
-            if (token) {
-              fullAnswer += token;
-              this.push('token', { t: token });
-            }
-          } catch (e) {
-            // Ignore parse errors
           }
         }
       }

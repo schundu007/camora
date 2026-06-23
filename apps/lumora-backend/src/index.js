@@ -163,7 +163,7 @@ async function runMigrations() {
       // schema).
 
       // ── RAG: pgvector extension ────────────────────────────────────
-      // text-embedding-3-small is 1536-dim. HNSW indexes give us ~10ms
+      // embed-english-v3.0 (Cohere) is 1024-dim. HNSW indexes give us ~10ms
       // top-k cosine search at our scale (low five-figures of chunks).
       `CREATE EXTENSION IF NOT EXISTS vector`,
 
@@ -180,7 +180,7 @@ async function runMigrations() {
         section TEXT NOT NULL,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1536) NOT NULL,
+        embedding vector(1024) NOT NULL,
         metadata JSONB DEFAULT '{}'::jsonb,
         content_hash VARCHAR(64) NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -204,7 +204,7 @@ async function runMigrations() {
         section TEXT,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1536) NOT NULL,
+        embedding vector(1024) NOT NULL,
         metadata JSONB DEFAULT '{}'::jsonb,
         prep_state_version BIGINT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -253,7 +253,7 @@ async function runMigrations() {
         section TEXT NOT NULL,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1536) NOT NULL,
+        embedding vector(1024) NOT NULL,
         success BOOLEAN NOT NULL DEFAULT TRUE,
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -324,6 +324,38 @@ async function runMigrations() {
 
       `ALTER TABLE lumora_user_doc_chunks ADD COLUMN IF NOT EXISTS source_key TEXT`,
       `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_source_key ON lumora_user_doc_chunks(source_key)`,
+
+      // ── Embedding dimension migration: 1536 → 1024 (Cohere) ───────────
+      // Switched from OpenAI text-embedding-3-small (1536-dim) to
+      // Cohere embed-english-v3.0 (1024-dim). Existing 1536-dim vectors
+      // are incompatible with the new model; NULL them so the new inserts
+      // succeed. The KB and user doc chunks will re-index on next use.
+      // Using IF EXISTS guards so this is a no-op on fresh installs where
+      // the column was already created as vector(1024).
+      `DO $$ BEGIN
+         IF EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_name = 'lumora_kb_chunks' AND column_name = 'embedding'
+         ) THEN
+           ALTER TABLE lumora_kb_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
+         END IF;
+       END $$`,
+      `DO $$ BEGIN
+         IF EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_name = 'lumora_user_doc_chunks' AND column_name = 'embedding'
+         ) THEN
+           ALTER TABLE lumora_user_doc_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
+         END IF;
+       END $$`,
+      `DO $$ BEGIN
+         IF EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_name = 'lumora_user_code_chunks' AND column_name = 'embedding'
+         ) THEN
+           ALTER TABLE lumora_user_code_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
+         END IF;
+       END $$`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
