@@ -50,7 +50,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
     <>
       <nav
         className="fixed top-0 inset-x-0 z-50"
-        style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+        style={{ background: 'var(--cam-hero-strip)', borderBottom: '3px solid var(--cam-gold-leaf)', boxShadow: '0 6px 22px rgba(0,0,0,0.28)' }}
         aria-label="Primary"
       >
         <div className="mx-auto flex h-[60px] items-center px-4 sm:px-6 lg:px-8 max-w-7xl">

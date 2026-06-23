@@ -94,7 +94,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           band of chrome instead of staggered boxes. */}
       <Link
         to="/"
-        className={`h-12 flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
+        className={`h-[60px] flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
@@ -193,7 +193,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           trigger glass-pill reads on the navy strip regardless of the
           page theme. */}
       <div
-        className={`h-12 flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
+        className={`h-[60px] flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderTop: '1px solid var(--cam-gold-leaf)',
