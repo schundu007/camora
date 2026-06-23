@@ -3043,6 +3043,17 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 {sectionStatus[s.id] === 'pending' && generating && (
                   <Chip variant="default" className="text-[8px]">queued</Chip>
                 )}
+                {GENERATE_SECTIONS.includes(s.id) && !generating && (() => {
+                  const checked = selectedSections.includes(s.id);
+                  return (
+                    <span
+                      onClick={(e) => { e.stopPropagation(); setSelectedSections(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id]); }}
+                      className="shrink-0 flex items-center justify-center"
+                      style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`, background: checked ? 'var(--cam-primary)' : 'transparent', cursor: 'pointer' }}>
+                      {checked && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </span>
+                  );
+                })()}
               </button>
             );
           })}
@@ -3073,39 +3084,21 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           <div className="mb-2 flex items-center justify-center">
             <CloudProviderSelector variant="compact" />
           </div>
-          {/* Section selector — pick which sections to generate */}
-          <div className="mb-2 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            <div className="flex items-center justify-between px-2 py-1" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Sections</span>
-              <button
-                onClick={() => setSelectedSections(selectedSections.length === GENERATE_SECTIONS.length ? [] : [...GENERATE_SECTIONS])}
-                className="text-[9px] font-bold"
-                style={{ color: 'var(--cam-primary)' }}>
-                {selectedSections.length === GENERATE_SECTIONS.length ? 'Deselect All' : 'Select All'}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-px p-1" style={{ background: 'var(--border)' }}>
-              {GENERATE_SECTIONS.map(id => {
-                const label = SIDEBAR_SECTIONS.find(s => s.id === id)?.label || id;
-                const checked = selectedSections.includes(id);
-                return (
-                  <button key={id}
-                    onClick={() => setSelectedSections(prev => checked ? prev.filter(s => s !== id) : [...prev, id])}
-                    className="flex items-center gap-1 px-1.5 py-1 text-[9px] text-left transition-colors"
-                    style={{ background: checked ? 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-surface))' : 'var(--bg-surface)', color: checked ? 'var(--cam-primary)' : 'var(--text-muted)' }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, flexShrink: 0, border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`, background: checked ? 'var(--cam-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {checked && <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M1 3l1.5 1.5L5 1.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                    </span>
-                    <span className="truncate">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+              {selectedSections.length}/{GENERATE_SECTIONS.length} selected
+            </span>
+            <button
+              onClick={() => setSelectedSections(selectedSections.length === GENERATE_SECTIONS.length ? [] : [...GENERATE_SECTIONS])}
+              className="text-[9px] font-bold"
+              style={{ color: 'var(--cam-primary)' }}>
+              {selectedSections.length === GENERATE_SECTIONS.length ? 'Deselect All' : 'Select All'}
+            </button>
           </div>
           <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
             style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
-            {generating ? 'Generating...' : `Generate (${selectedSections.length || GENERATE_SECTIONS.length})`}
+            {generating ? 'Generating...' : `Generate (${selectedSections.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}
           {/* Persistent Download All — visible from every view (JD, input,
