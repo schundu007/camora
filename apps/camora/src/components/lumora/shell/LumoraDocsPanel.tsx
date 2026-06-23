@@ -2927,23 +2927,31 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               {showDropdown && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
-                  <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg shadow-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                  <div
+                    className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl overflow-hidden"
+                    style={{
+                      background: 'color-mix(in srgb, var(--bg-surface) 96%, var(--cam-primary) 4%)',
+                      border: '1px solid var(--cam-gold-leaf)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3)',
+                    }}
+                  >
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors"
-                        style={{ color: c === prepData.activeCompany ? 'var(--cam-primary)' : 'var(--text-muted)', background: c === prepData.activeCompany ? 'var(--accent-subtle)' : 'transparent' }}>
-                        <span className="truncate">{c}</span>
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors hover:bg-white/5"
+                        style={{ color: c === prepData.activeCompany ? 'var(--cam-gold-leaf-text)' : 'var(--text-primary)', background: c === prepData.activeCompany ? 'color-mix(in srgb, var(--cam-gold-leaf) 15%, transparent)' : 'transparent' }}>
+                        <span className="truncate font-medium">{c}</span>
                         {prepData.companies.length > 1 && (
                           <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
-                            className="p-0.5 rounded" style={{ color: 'var(--text-muted)' }}>
+                            className="p-0.5 rounded opacity-50 hover:opacity-100" style={{ color: 'var(--text-muted)' }}>
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                         )}
                       </button>
                     ))}
                     <button onClick={() => { setShowDropdown(false); setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-                      className="w-full px-3 py-2 text-xs font-medium text-left" style={{ color: 'var(--cam-primary)', borderTop: '1px solid var(--border)' }}>
-                      + Add Company
+                      className="w-full px-3 py-2 text-xs font-bold text-left flex items-center gap-1.5"
+                      style={{ color: 'var(--cam-gold-leaf-text)', borderTop: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent)', background: 'color-mix(in srgb, var(--cam-gold-leaf) 8%, transparent)' }}>
+                      <span style={{ fontSize: 14, lineHeight: 1 }}>+</span> Add Company
                     </button>
                   </div>
                 </>
