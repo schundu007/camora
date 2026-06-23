@@ -3047,18 +3047,29 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   const checked = selectedSections.includes(s.id);
                   return (
                     <span
+                      role="switch"
+                      aria-checked={checked}
                       onClick={(e) => { e.stopPropagation(); setSelectedSections(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id]); }}
-                      className="shrink-0 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full transition-all"
+                      className="shrink-0"
                       style={{
-                        fontSize: 9, fontWeight: 700, cursor: 'pointer', lineHeight: 1.4,
-                        background: checked ? 'var(--cam-primary)' : 'transparent',
-                        color: checked ? '#fff' : 'var(--text-muted)',
-                        border: `1px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`,
+                        display: 'inline-flex', alignItems: 'center',
+                        width: 28, height: 16, borderRadius: 8, cursor: 'pointer',
+                        padding: '2px',
+                        background: checked
+                          ? 'linear-gradient(135deg, var(--cam-primary), color-mix(in srgb, var(--cam-primary) 75%, #7c3aed))'
+                          : 'color-mix(in srgb, var(--border) 80%, transparent)',
+                        boxShadow: checked ? 'inset 0 1px 3px rgba(0,0,0,0.2)' : 'inset 0 1px 3px rgba(0,0,0,0.3)',
+                        transition: 'background 0.2s ease',
+                        flexShrink: 0,
                       }}>
-                      {checked
-                        ? <><svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>ON</>
-                        : <span style={{ opacity: 0.5 }}>OFF</span>
-                      }
+                      <span style={{
+                        width: 12, height: 12, borderRadius: '50%',
+                        background: '#fff',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        transform: checked ? 'translateX(12px)' : 'translateX(0)',
+                        transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+                        display: 'block', flexShrink: 0,
+                      }} />
                     </span>
                   );
                 })()}
