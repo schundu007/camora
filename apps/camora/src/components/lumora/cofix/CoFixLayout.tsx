@@ -3,7 +3,7 @@ import AnsiToHtml from 'ansi-to-html';
 const _ansi = new AnsiToHtml({ escapeXML: true, newline: false });
 const ansiHtml = (s: string) => _ansi.toHtml(s);
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Allotment } from 'allotment';
 import 'allotment/dist/style.css';
 import { Editor, useMonaco } from '@monaco-editor/react';
@@ -99,6 +99,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const onSnappedRef = useRef(onSnapped);
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Pick up code injected from the Coding tab via navigate state
+  useEffect(() => {
+    const state = location.state as { injectCode?: string; injectLang?: string } | null;
+    if (state?.injectCode) {
+      setInputCode(state.injectCode);
+      if (state.injectLang) setLanguage(state.injectLang);
+      // Clear so it doesn't re-apply on future re-renders
+      window.history.replaceState(null, '');
+    }
+  }, [location.state]);
   const monaco = useMonaco();
   useEffect(() => { if (monaco) monaco.editor.setTheme(monacoTheme); }, [monaco, monacoTheme]);
 
