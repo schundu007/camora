@@ -39,7 +39,6 @@ const ReferralLandingPage = lazy(() => import('./pages/ReferralLandingPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const PublicScoreCardPage = lazy(() => import('./pages/PublicScoreCardPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
-const BrandPage = lazy(() => import('./pages/BrandPage'));
 const Blind75Page = lazy(() => import('./pages/Blind75Page'));
 const Blind75PracticePage = lazy(() => import('./pages/Blind75PracticePage'));
 const CompanyQuestionsPage = lazy(() => import('./pages/CompanyQuestionsPage'));
@@ -606,8 +605,6 @@ export const App = () => {
           {/* ── Referral ────────────────────────────── */}
           <Route path="/r/:code" element={<ReferralLandingPage />} />
 
-          {/* ── Brand ────────────────────────────────── */}
-          <Route path="/brand" element={<BrandPage />} />
 
           {/* ── Profile ──────────────────────────────── */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

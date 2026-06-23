@@ -17,7 +17,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
       className="mt-auto border-t"
       style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', borderTopColor: 'var(--border)' }}
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-16">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4">
@@ -25,10 +25,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
               <CamoraLogo size={32} />
               <span className="font-display text-[18px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>Camora</span>
             </Link>
-            <p className="mt-4 max-w-xs text-[13.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              The career platform for engineers. Apply, prepare, practice and attend — with live AI in the room when it counts.
-            </p>
-            <div className="mt-5 flex items-center gap-2">
+            <div className="mt-4 flex items-center gap-2">
               <SocialIcon href="https://www.linkedin.com/company/cariara" label="LinkedIn">
                 <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 1 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
                 <rect x="2" y="9" width="4" height="12" />
@@ -47,7 +44,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.heading} className="md:col-span-2">
               <h3 className="font-mono text-[10.5px] font-bold uppercase tracking-[0.2em]" style={{ color: 'var(--text-secondary)' }}>{col.heading}</h3>
-              <ul className="mt-4 space-y-2.5">
+              <ul className="mt-3 space-y-1.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
                     {l.external ? (
@@ -109,7 +106,6 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     heading: 'Resources',
     links: [
       { label: 'Docs', href: '/docs' },
-      { label: 'Brand', href: '/brand' },
       { label: 'Download', href: '/download' },
     ],
   },
@@ -117,9 +113,6 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     heading: 'Company',
     links: [
       { label: 'Careers', href: 'https://jobs.cariara.com', external: true },
-      { label: 'Contact', href: 'mailto:hello@cariara.com', external: true },
-      { label: 'Brand', href: '/brand' },
-      { label: 'Download', href: '/download' },
     ],
   },
 ];
