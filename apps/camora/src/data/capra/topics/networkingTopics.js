@@ -23,6 +23,7 @@ export const networkingTopicCategoryMap = {
   'websockets':                 'fundamentals',
   'ip-addressing-cidr':         'fundamentals',
   'nat-pat':                    'fundamentals',
+  'router-vs-switch':           'fundamentals',
   // DNS
   'dns-resolution':             'dns',
   'dns-record-types':           'dns',
@@ -53,6 +54,7 @@ export const networkingTopicCategoryMap = {
   'sd-wan':                     'protocols',
   'mpls':                       'protocols',
   'grpc-vs-rest':               'protocols',
+  'overlay-underlay-network':   'protocols',
   // Cloud Networking
   'aws-vpc-design':             'cloud-networking',
   'vpc-peering':                'cloud-networking',
@@ -7313,6 +7315,233 @@ spec:
       'https://docs.tigera.io/calico/latest/network-policy/',
       'https://docs.cilium.io/en/latest/network/kubernetes/policy/',
       'https://github.com/ahmetb/kubernetes-network-policy-recipes',
+    ],
+  },
+
+  {
+    id: 'router-vs-switch',
+    title: 'Router vs Switch',
+    icon: 'share2',
+    color: '#3b82f6',
+    questions: 4,
+    description: 'Router operates at Layer 3 (Network) using IP addresses to connect DIFFERENT networks. Switch operates at Layer 2 (Data Link) using MAC addresses to connect devices within the SAME network.',
+    visualizations: [
+      {
+        title: 'Router vs Switch — Layer Comparison',
+        caption: 'Router (Layer 3) connecting Network A 192.168.1.0/24 to Network B 192.168.2.0/24 via IP routing, vs Switch (Layer 2) connecting devices within the same 192.168.1.0/24 network via MAC addresses.',
+        image: '/diagrams/linkdiags/router-vs-switch.png',
+      },
+    ],
+    introduction: `**Router** and **Switch** are both network devices but operate at different OSI layers and serve different purposes.
+
+## Router — Layer 3 (Network Layer)
+- Operates at **Layer 3 (Network Layer)**
+- Uses **IP addresses** to make forwarding decisions
+- Connects **DIFFERENT networks** together
+- Routes packets between Network A and Network B
+- Example: home router connecting your LAN (192.168.1.0/24) to the internet
+- Maintains a **routing table** of known networks and next-hop paths
+
+## Switch — Layer 2 (Data Link Layer)
+- Operates at **Layer 2 (Data Link Layer)**
+- Uses **MAC addresses** to make forwarding decisions
+- Connects devices within the **SAME network**
+- Forwards Ethernet frames between devices on the same subnet
+- Example: office switch connecting desktops, printers, servers on 192.168.1.0/24
+- Maintains a **MAC address table** (CAM table) mapping MAC → port
+
+## Key Difference Table
+
+| Feature | Router | Switch |
+|---------|--------|--------|
+| OSI Layer | Layer 3 (Network) | Layer 2 (Data Link) |
+| Connects | Different Networks | Same Network |
+| Address Used | IP Address | MAC Address |
+| Function | Routing | Switching |
+| Device | Packet | Frame |
+
+## Quick Tip
+- **Router** = go OUTSIDE the network (between networks)
+- **Switch** = connect INSIDE the network (within a network)
+
+## Modern L3 Switches
+Modern **Layer 3 switches** combine both capabilities — switching (L2) within VLANs and routing (L3) between VLANs. They are common in enterprise data centers for inter-VLAN routing without a dedicated router.`,
+    whenToUse: [
+      'Explaining why a home router connects you to the internet (different networks) but a switch just connects your local devices',
+      'Designing a network topology — routers at the perimeter/between subnets, switches within each subnet',
+      'Troubleshooting connectivity: Layer 2 (MAC/ARP) issues go to the switch, Layer 3 (IP/routing) issues go to the router',
+      'Justifying L3 switch use in a data center for inter-VLAN routing',
+    ],
+    keyConcepts: [
+      { term: 'Router', definition: 'Layer 3 device using IP addresses to route packets between different networks. Maintains a routing table. Example: AWS VPC route table, home router, border router.' },
+      { term: 'Switch', definition: 'Layer 2 device using MAC addresses to forward frames within the same network. Maintains a MAC address table (CAM table). Example: office Ethernet switch, AWS VPC at the subnet level.' },
+      { term: 'MAC Address Table (CAM Table)', definition: 'Switch\'s internal table mapping MAC addresses to physical ports. Learned dynamically as frames arrive. Used to forward frames only to the correct port rather than flooding.' },
+      { term: 'Routing Table', definition: 'Router\'s table of known network prefixes and their next-hop addresses. Used to forward packets toward the destination network. Can be populated statically or via routing protocols (BGP, OSPF).' },
+      { term: 'L3 Switch', definition: 'A switch with built-in Layer 3 routing capability. Can route between VLANs without a separate router. Common in enterprise data center top-of-rack designs.' },
+    ],
+    pitfalls: [
+      'Confusing a home "router" with a pure Layer 3 device — home routers typically combine a router, switch, NAT, DHCP server, and Wi-Fi access point in one box.',
+      'Thinking switches only do Layer 2 — modern managed switches support VLANs (still L2) and L3 switches do inter-VLAN routing.',
+      'Using a switch to connect two different subnets — switches do not route between subnets; you need a router or L3 switch for inter-subnet traffic.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between a router and a switch?',
+        answer: `A **router** operates at Layer 3 (Network Layer) and uses IP addresses to route packets between different networks. It connects Network A to Network B — for example, connecting your home LAN (192.168.1.0/24) to the internet. Routers maintain a routing table of known network prefixes and next-hop paths.
+
+A **switch** operates at Layer 2 (Data Link Layer) and uses MAC addresses to forward Ethernet frames between devices within the same network. It connects multiple devices on the same subnet — for example, desktops and servers on 192.168.1.0/24. Switches maintain a MAC address table mapping MAC addresses to ports.
+
+Quick memory rule: Router = go outside the network (between networks). Switch = connect inside the network (within a network).`,
+      },
+      {
+        question: 'When would you use a Layer 3 switch instead of a router?',
+        answer: `A **Layer 3 switch** is used for **inter-VLAN routing** within a data center or campus network. When you have multiple VLANs (e.g., VLAN 10 for servers, VLAN 20 for workstations) and need traffic to flow between them, an L3 switch routes between VLANs at wire speed using dedicated ASICs — much faster than a general-purpose router for this use case.
+
+Choose an L3 switch when:
+- You need high-speed inter-VLAN routing within a single data center
+- You want to eliminate a separate router for internal routing
+- You are building a collapsed-core or spine-leaf architecture
+
+Keep a dedicated router when:
+- You need to connect to the internet or external networks (BGP peering, WAN links)
+- You need advanced firewall, NAT, or VPN features
+- Connecting geographically separate networks`,
+      },
+      {
+        question: 'How does a switch learn which MAC address is on which port?',
+        answer: `Switches use **MAC learning** to build their CAM (Content Addressable Memory) table dynamically:
+
+1. When a frame arrives on a port, the switch reads the **source MAC address** and records it in the CAM table mapped to that port.
+2. When the switch needs to forward a frame to a destination MAC, it looks up the CAM table.
+3. If the destination MAC is known, it forwards only to that port (**unicast forwarding**).
+4. If the destination MAC is unknown, it **floods** the frame to all ports except the source port.
+5. CAM table entries age out after an inactivity timeout (typically 300 seconds) to handle devices that move ports.
+
+This is why a new device on the network causes a brief flood until the switch learns its MAC address.`,
+      },
+      {
+        question: 'In AWS, what plays the role of a router and what plays the role of a switch?',
+        answer: `In AWS VPC networking:
+
+**Router equivalent**: The **VPC route table** acts as the router. Each subnet is associated with a route table that determines where traffic is sent — to the internet gateway, NAT gateway, VPC peering connection, Transit Gateway, or local within the VPC. The implicit local route (e.g., 10.0.0.0/16 → local) routes traffic between subnets.
+
+**Switch equivalent**: Within a single subnet, AWS handles the Layer 2 switching transparently. Instances in the same subnet communicate directly via the VPC's underlying fabric without explicit routing — similar to being on the same switch.
+
+**Security Groups** are stateful L3/L4 filters attached to instances (like per-host ACLs), while **NACLs** are stateless L4 filters at the subnet boundary.`,
+      },
+    ],
+    references: [
+      'https://www.cisco.com/c/en/us/solutions/small-business/resource-center/networking/what-is-a-network-switch.html',
+      'https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html',
+    ],
+  },
+
+  {
+    id: 'overlay-underlay-network',
+    title: 'Overlay vs Underlay Networking',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'Underlay is the real physical network. Overlay is a virtual network built on top using encapsulation (VXLAN, GRE, Geneve). VXLAN most widely used in Kubernetes CNI, SDN, and cloud.',
+    visualizations: [
+      {
+        title: 'Overlay vs Underlay — Encapsulation Flow',
+        caption: 'Physical underlay network (IP fabric) with VXLAN overlay tunnels connecting virtual networks across physical nodes. Shows encapsulation adding UDP/VXLAN headers around the original L2 frame.',
+        image: '/diagrams/linkdiags/overlay-underlay.png',
+      },
+    ],
+    introduction: `## Underlay Network
+The **underlay** is the real physical network infrastructure — the actual switches, routers, cables, and IP addressing that physically exists. It provides basic IP connectivity between nodes. The underlay only needs to route IP packets between endpoints; it has no knowledge of the virtual networks running on top.
+
+## Overlay Network
+An **overlay** is a virtual network built on top of the underlay using **encapsulation**. Overlay protocols wrap (encapsulate) original network frames inside another protocol's packets, creating logical tunnels across the physical network.
+
+## Encapsulation Protocols
+
+| Protocol | Encapsulation | Port | Use Case |
+|----------|--------------|------|----------|
+| VXLAN | L2 frame in UDP | 4789/UDP | Kubernetes CNI, SDN, cloud |
+| GRE | IP in GRE header | Protocol 47 | Point-to-point tunnels |
+| Geneve | L2 frame in UDP | 6081/UDP | Extensible, SDN controllers |
+| IP-in-IP | IP packet in IP | Protocol 4 | Simple tunneling |
+
+## VXLAN — Most Widely Used
+**VXLAN (Virtual Extensible LAN)** is the dominant overlay protocol:
+- Encapsulates L2 Ethernet frames inside UDP packets
+- Adds **50-byte overhead** (14 VXLAN + 8 UDP + 20 IP + 14 Ethernet outer)
+- Default UDP port **4789**
+- Uses 24-bit **VNI (VXLAN Network Identifier)** — supports 16 million virtual networks vs VLAN's 4096
+
+## Kubernetes Use
+Kubernetes CNI plugins use overlay networking to connect pods across nodes:
+- **Flannel**: simple VXLAN overlay, all pods in one flat network
+- **Calico**: can use VXLAN or IP-in-IP overlay, or pure BGP underlay routing
+- **Weave**: VXLAN or encrypted overlay
+- **Cilium**: eBPF-based, supports VXLAN overlay or native routing`,
+    whenToUse: [
+      'Designing Kubernetes pod networking — choosing between VXLAN overlay (simpler) vs BGP underlay (better performance)',
+      'Building multi-tenant cloud networks where different customers need isolated L2 segments across shared physical infrastructure',
+      'Explaining how AWS VPC, Azure VNet, and GCP VPC isolate tenant traffic on shared hardware (all use VXLAN-like encapsulation)',
+      'Troubleshooting MTU issues — VXLAN\'s 50-byte overhead requires MTU 1550 on the underlay if VMs use MTU 1500',
+    ],
+    keyConcepts: [
+      { term: 'Underlay', definition: 'The physical IP network providing basic connectivity between nodes. Routers and switches form the underlay. It only needs to forward IP packets between endpoints — no knowledge of virtual networks.' },
+      { term: 'Overlay', definition: 'A virtual network built on top of the underlay using encapsulation. Creates logical tunnels that appear as direct connections between endpoints even when they are physically distant.' },
+      { term: 'VXLAN', definition: 'Virtual Extensible LAN. Encapsulates L2 Ethernet frames in UDP (port 4789). Adds 50-byte overhead. Supports 16M virtual networks via 24-bit VNI. Most common overlay in Kubernetes and cloud.' },
+      { term: 'VTEP (VXLAN Tunnel Endpoint)', definition: 'The endpoint that performs VXLAN encapsulation and decapsulation. In Kubernetes, each node runs a VTEP. The VTEP encapsulates outgoing frames and decapsulates incoming VXLAN packets.' },
+      { term: 'VNI (VXLAN Network Identifier)', definition: '24-bit field in the VXLAN header identifying the virtual network segment. Allows 16,777,216 distinct virtual networks on the same underlay — vs VLAN\'s 12-bit 4096 limit.' },
+      { term: 'MTU considerations', definition: 'VXLAN adds 50 bytes of overhead. If the underlay MTU is 1500, the overlay effective MTU is 1450. Mismatched MTU causes silent packet drops for large frames. Always set underlay MTU to 1550+ or configure overlay MTU to 1450.' },
+    ],
+    pitfalls: [
+      'MTU mismatch — VXLAN 50-byte overhead causes fragmentation or drops when underlay MTU is 1500 and overlay also uses 1500. Always verify MTU end-to-end and configure the CNI plugin\'s MTU setting.',
+      'Performance overhead — encapsulation and decapsulation consume CPU. On high-throughput nodes, overlay networking can become a bottleneck. Consider native routing (BGP underlay with Calico) for performance-sensitive workloads.',
+      'Debugging complexity — packet captures look different inside vs outside the overlay. A problem visible at the overlay may be an underlay routing issue. Use tools that understand overlay protocols (e.g., cilium monitor for Cilium, weave status for Weave).',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between overlay and underlay networking?',
+        answer: `The **underlay** is the physical network — real routers, switches, cables, and IP addresses. It provides basic IP connectivity between physical or virtual machines. The underlay has no knowledge of virtual networks running on top of it.
+
+The **overlay** is a virtual network built on top of the underlay using encapsulation. Overlay protocols (VXLAN, GRE, Geneve) wrap original network packets inside new packet headers, creating logical tunnels that make physically distant endpoints appear directly connected.
+
+Analogy: the underlay is the road system; the overlay is a dedicated private lane painted on top of the same roads. Traffic on the private lane follows the road system but appears isolated from other traffic.`,
+      },
+      {
+        question: 'How does VXLAN work and why is it used in Kubernetes?',
+        answer: `**VXLAN (Virtual Extensible LAN)** encapsulates an entire L2 Ethernet frame inside a UDP packet. Each VXLAN packet has:
+- Outer Ethernet + IP + UDP headers (routing across the underlay)
+- VXLAN header with a 24-bit VNI (identifies the virtual network)
+- Inner Ethernet frame (the original L2 traffic)
+
+Total overhead: 50 bytes. Default UDP port: 4789.
+
+Kubernetes uses VXLAN because pods need a flat L2 network where any pod can reach any other pod by IP, regardless of which physical node they run on. Without overlay networking, pods on different nodes would be on different L2 segments. VXLAN creates the illusion of a single flat L2 network across all nodes.
+
+CNI plugins like **Flannel** deploy a VTEP (VXLAN Tunnel Endpoint) on each node. When Pod A on Node 1 sends a packet to Pod B on Node 2, the VTEP on Node 1 encapsulates it in VXLAN/UDP and sends it to Node 2's VTEP, which decapsulates and delivers it to Pod B.`,
+      },
+      {
+        question: 'What are the tradeoffs between VXLAN overlay and BGP-based underlay routing for Kubernetes?',
+        answer: `**VXLAN overlay** (Flannel, Calico in VXLAN mode):
+- Simpler to set up — works on any IP network without router configuration
+- No dependency on the physical network — works in clouds where you cannot configure BGP
+- Overhead: 50-byte encapsulation per packet, CPU cost for encap/decap
+- Best for: most Kubernetes deployments, cloud environments, teams without network team access
+
+**BGP underlay routing** (Calico in BGP mode, Cilium with native routing):
+- No encapsulation overhead — pods use real routable IPs
+- Better performance for high-throughput, low-latency workloads
+- Requires the physical network to support BGP and advertise pod CIDRs
+- Pods are directly reachable from outside the cluster without NAT
+- Best for: on-premises data centers, bare-metal clusters, performance-critical workloads
+
+Choose overlay for simplicity and portability. Choose underlay routing when performance matters and you have control over the physical network.`,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc7348',
+      'https://kubernetes.io/docs/concepts/cluster-administration/networking/',
+      'https://docs.tigera.io/calico/latest/networking/configuring/vxlan-ipip',
+      'https://docs.cilium.io/en/latest/network/concepts/routing/',
     ],
   },
 ];
