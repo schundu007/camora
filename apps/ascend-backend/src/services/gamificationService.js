@@ -15,15 +15,32 @@ const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 10000]
 // metaphors. Stays neutral so copy stays current as the brand evolves and
 // translations don't have to deal with climate-specific idioms.
 const BADGE_DEFINITIONS = [
+  // Solve milestones
   { key: 'first_solve', title: 'First Solve', desc: 'Solve your first practice problem', icon: 'snowflake', check: (s) => s.problems_solved >= 1 },
   { key: 'ten_solves', title: 'Ten Solved', desc: 'Crack 10 practice problems', icon: 'compass', check: (s) => s.problems_solved >= 10 },
   { key: 'fifty_solves', title: 'Fifty Strong', desc: 'Solve 50 problems across topics', icon: 'trophy', check: (s) => s.problems_solved >= 50 },
+  { key: 'hundred_solves', title: 'Centurion', desc: 'Solve 100 practice problems', icon: 'shield', check: (s) => s.problems_solved >= 100 },
+  { key: 'twofifty_solves', title: 'Problem Crusher', desc: 'Solve 250 practice problems', icon: 'bolt', check: (s) => s.problems_solved >= 250 },
+  // Streak milestones
+  { key: 'three_day_streak', title: 'Hot Start', desc: '3-day unbroken practice streak', icon: 'spark', check: (s) => s.current_streak >= 3 },
   { key: 'week_streak', title: 'Week Streak', desc: '7-day unbroken practice streak', icon: 'flame', check: (s) => s.current_streak >= 7 },
   { key: 'month_streak', title: 'Month Streak', desc: '30-day unbroken practice streak', icon: 'mountain', check: (s) => s.current_streak >= 30 },
+  // System design
+  { key: 'first_design', title: 'Blueprint', desc: 'Create your first system diagram', icon: 'pen', check: (s) => s.designs >= 1 },
   { key: 'system_design_5', title: 'System Designer', desc: 'Design 5 system blueprints', icon: 'layers', check: (s) => s.designs >= 5 },
   { key: 'system_design_master', title: 'Architecture Master', desc: 'Master 20 system architectures', icon: 'aurora', check: (s) => s.designs >= 20 },
+  { key: 'design_fifty', title: 'Master Architect', desc: 'Design 50 system blueprints', icon: 'cpu', check: (s) => s.designs >= 50 },
+  // Mock interviews
+  { key: 'first_mock', title: 'First Step', desc: 'Complete your first mock interview', icon: 'headphones', check: (s) => s.mocks >= 1 },
   { key: 'mock_interview_3', title: 'Mock Veteran', desc: 'Complete 3 mock interviews', icon: 'mic', check: (s) => s.mocks >= 3 },
+  { key: 'mock_pro', title: 'Interview Pro', desc: 'Complete 10 mock interviews', icon: 'broadcast', check: (s) => s.mocks >= 10 },
+  // Company prep
+  { key: 'first_prep', title: 'Company Curious', desc: 'Research your first target company', icon: 'search', check: (s) => s.preps >= 1 },
   { key: 'company_prep_5', title: 'Company Scout', desc: 'Prepare for 5 target companies', icon: 'flag', check: (s) => s.preps >= 5 },
+  // Level milestones
+  { key: 'level_5', title: 'Rising Star', desc: 'Reach level 5', icon: 'star', check: (s) => s.level >= 5 },
+  { key: 'level_10', title: 'Elite', desc: 'Reach level 10', icon: 'rocket', check: (s) => s.level >= 10 },
+  // Social
   { key: 'referral_3', title: 'Referral Champion', desc: 'Recruit 3 fellow candidates', icon: 'users', check: (s) => s.referrals >= 3 },
 ];
 
@@ -90,7 +107,7 @@ function getWeekStart() {
 async function checkAndAwardBadges(userId) {
   try {
     const profileResult = await query(
-      'SELECT problems_solved, current_streak FROM user_profiles WHERE user_id = $1',
+      'SELECT problems_solved, current_streak, level FROM user_profiles WHERE user_id = $1',
       [userId]
     );
     const profile = profileResult.rows[0] || {};
@@ -106,6 +123,7 @@ async function checkAndAwardBadges(userId) {
     const stats = {
       problems_solved: profile.problems_solved || 0,
       current_streak: profile.current_streak || 0,
+      level: profile.level || 1,
       designs: parseInt(designsR.rows[0]?.cnt || 0),
       mocks: parseInt(mocksR.rows[0]?.cnt || 0),
       preps: parseInt(prepsR.rows[0]?.cnt || 0),
