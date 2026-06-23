@@ -3127,28 +3127,30 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <CloudProviderSelector variant="compact" />
           </div>
 
-          {/* Select all / Deselect all — two equal chips */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
-              disabled={selectedSections.length === GENERATE_SECTIONS.length}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-35"
-              style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 30%, transparent)' }}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Select All
-            </button>
-            <button
-              onClick={() => setSelectedSections([])}
-              disabled={selectedSections.length === 0}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-35"
-              style={{ background: 'color-mix(in srgb, var(--cam-primary) 6%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 20%, transparent)', opacity: 0.8 }}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3.5 5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              Deselect All
-            </button>
+          {/* Select / Deselect row with count */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium tabular-nums shrink-0" style={{ color: 'var(--text-secondary)' }}>
+              {selectedSections.length}/{GENERATE_SECTIONS.length} selected
+            </span>
+            <div className="flex-1 grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
+                disabled={selectedSections.length === GENERATE_SECTIONS.length}
+                className="flex items-center justify-center gap-1 py-1.5 rounded-md text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-30"
+                style={{ background: 'color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 40%, transparent)' }}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                All
+              </button>
+              <button
+                onClick={() => setSelectedSections([])}
+                disabled={selectedSections.length === 0}
+                className="flex items-center justify-center gap-1 py-1.5 rounded-md text-[11px] font-semibold transition-all active:scale-[0.97] disabled:opacity-30"
+                style={{ background: 'color-mix(in srgb, var(--cam-primary) 15%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid color-mix(in srgb, var(--cam-primary) 40%, transparent)' }}>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3.5 5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                None
+              </button>
+            </div>
           </div>
-          <p className="text-[9px] text-center tabular-nums -mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {selectedSections.length} of {GENERATE_SECTIONS.length} sections selected
-          </p>
 
           {/* Generate CTA */}
           <button
@@ -3212,9 +3214,9 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           {/* Clear */}
           <button
             onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
-            className="w-full py-1.5 text-[10px] font-medium rounded-lg transition-colors hover:bg-white/5"
-            style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}>
-            Clear
+            className="w-full py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90"
+            style={{ color: 'color-mix(in srgb, #ef4444 70%, var(--text-secondary))', background: 'color-mix(in srgb, #ef4444 8%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, #ef4444 25%, transparent)' }}>
+            Clear All
           </button>
         </div>
       </div>
