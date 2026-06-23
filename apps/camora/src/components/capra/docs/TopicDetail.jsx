@@ -2919,18 +2919,14 @@ export default function TopicDetail({
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="viz-figure">
                     {viz.image && (
-                      <ZoomableImage
-                        src={viz.image}
-                        alt={viz.title}
-                        maxHeight={340}
-                        frameStyle={{
-                          background: 'white',
-                          border: 'none',
-                          borderRadius: 0,
-                          borderBottom: '1px solid var(--border)',
-                        }}
-                        imgStyle={{ maxWidth: '100%', width: 'auto', height: 'auto', margin: '0 auto' }}
-                      />
+                      <div style={{ background: 'white', borderBottom: '1px solid var(--border)' }}>
+                        <img
+                          src={viz.image}
+                          alt={viz.title}
+                          loading="lazy"
+                          style={{ display: 'block', width: '100%', height: 'auto' }}
+                        />
+                      </div>
                     )}
                     {viz.video && (
                       <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
