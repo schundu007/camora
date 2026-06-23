@@ -636,14 +636,16 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_OPENR
 
 // Main generator function that handles provider selection
 export async function* generateSection(section, inputs, provider = 'openrouter', model) {
-  if (provider === 'openai') {
+  // Fall back to claude when openrouter key is absent
+  const effectiveProvider = (provider === 'openrouter' && !process.env.OPENROUTER_API_KEY) ? 'claude' : provider;
+  if (effectiveProvider === 'openai') {
     yield* generateSectionOpenAI(section, inputs, model || DEFAULT_OPENAI_MODEL);
-  } else if (provider === 'claude') {
+  } else if (effectiveProvider === 'claude') {
     const selectedModel = model || getModelForSection(section);
     console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
     yield* generateSectionClaude(section, inputs, selectedModel);
   } else {
-    // Default: openrouter (DeepSeek-V3) — high quality, ~10x cheaper than Claude Sonnet
+    // openrouter (DeepSeek-V3) — high quality, ~10x cheaper than Claude Sonnet
     yield* generateSectionOpenRouter(section, inputs, model || DEFAULT_OPENROUTER_MODEL);
   }
 }
