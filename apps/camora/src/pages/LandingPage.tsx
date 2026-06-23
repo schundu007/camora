@@ -379,24 +379,21 @@ export default function LandingPage() {
       <Section tone="surface" spacing="lg">
         <Container>
           <Reveal>
-            {/* Always-dark card — immune to light/dark theme */}
             <div
               className="relative rounded-2xl overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #0B1221 0%, #0E1628 50%, #111827 100%)',
-                boxShadow: '0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 64px rgba(0,0,0,0.36)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'var(--bg-elevated)',
+                boxShadow: 'var(--shadow-lg)',
+                border: '1px solid var(--border)',
               }}
             >
-              {/* Per-step color accent line rendered inside each card */}
-
               <div className="px-8 pt-8 pb-10 md:px-12 md:pt-10">
                 {/* Header */}
                 <div className="mb-8">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'rgba(212,160,67,0.8)', fontFamily: 'var(--font-mono)' }}>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-code)' }}>
                     The process
                   </p>
-                  <h2 className="text-[22px] md:text-[26px] font-bold tracking-tight leading-tight" style={{ color: '#F0EEE9', fontFamily: 'var(--font-display)' }}>
+                  <h2 className="text-[26px] md:text-[32px] font-bold tracking-tight leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
                     First application to final offer.
                   </h2>
                 </div>
@@ -409,39 +406,35 @@ export default function LandingPage() {
                       to={step.href}
                       className="group relative flex flex-col gap-3 px-5 py-6 transition-colors duration-200"
                       style={{
-                        borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                        borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
                         borderTop: `3px solid ${step.color}`,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-subtle)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      {/* Step number — large watermark in step color */}
                       <span
-                        className="text-[48px] font-bold leading-none select-none"
-                        style={{ color: `${step.color}30`, fontFamily: 'var(--font-mono)', letterSpacing: '-0.04em' }}
+                        className="text-[52px] font-bold leading-none select-none"
+                        style={{ color: `${step.color}28`, fontFamily: 'var(--font-code)', letterSpacing: '-0.04em' }}
                       >
                         0{i + 1}
                       </span>
 
-                      {/* Step name */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: step.color, fontFamily: 'var(--font-mono)' }}>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: step.color, fontFamily: 'var(--font-code)' }}>
                           {step.label}
                         </p>
-                        <p className="text-[16px] font-semibold leading-snug" style={{ color: 'rgba(240,238,233,0.92)' }}>
+                        <p className="text-[17px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
                           {step.headline}
                         </p>
                       </div>
 
-                      {/* Description */}
-                      <p className="text-[14px] leading-relaxed" style={{ color: 'rgba(240,238,233,0.68)' }}>
+                      <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                         {step.desc}
                       </p>
 
-                      {/* Arrow link */}
                       <span
-                        className="text-[12px] font-semibold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
-                        style={{ color: step.color, fontFamily: 'var(--font-mono)' }}
+                        className="text-[12px] font-bold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
+                        style={{ color: step.color, fontFamily: 'var(--font-code)', letterSpacing: '0.04em' }}
                       >
                         Explore
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">

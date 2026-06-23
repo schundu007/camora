@@ -156,6 +156,9 @@
       radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
       linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
 
+    /* Lumora hero gradient — dark: near-black navy. Light: overridden below. */
+    --lumora-hero-gradient: linear-gradient(160deg, #050f22 0%, #091829 55%, #0d1f3c 100%);
+
     /* Lumora topbar chrome — dark immersive, blue accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
     --lumora-chrome-border: rgba(37,99,235,0.30);
@@ -271,6 +274,7 @@
 
     --cam-on-accent: #ffffff;
 
+    --lumora-hero-gradient: linear-gradient(160deg, #0C2B8A 0%, #1545C8 55%, #0E3399 100%);
     --lumora-chrome-bg:     var(--cam-hero-strip);
     --lumora-chrome-border: rgba(37,99,235,0.12);
     --lumora-chrome-shadow: 0 1px 0 var(--border);

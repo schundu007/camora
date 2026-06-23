@@ -314,7 +314,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
 
       {/* ── Hero — compact, clean command-center ── */}
       <div className="relative overflow-hidden" style={{
-        background: 'linear-gradient(160deg, #050f22 0%, #091829 55%, #0d1f3c 100%)',
+        background: 'var(--lumora-hero-gradient)',
         minHeight: 160,
       }}>
         <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
