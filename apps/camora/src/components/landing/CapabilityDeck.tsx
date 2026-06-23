@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 
 const ACCENT = 'var(--cam-primary)';
 const GOLD = 'var(--cam-gold-leaf)';
@@ -25,6 +26,9 @@ export default function CapabilityDeck() {
   const [sceneIdx, setSceneIdx] = useState(0);
   const [pulse, setPulse] = useState(0);
   const scene = SCENES[sceneIdx];
+  const { theme } = useTheme();
+  const lt = theme === 'light';
+  const tx = (light: string, dark: string) => lt ? light : dark;
 
   useEffect(() => {
     const t = setInterval(() => setSceneIdx((i) => (i + 1) % SCENES.length), SCENE_MS);
@@ -38,9 +42,9 @@ export default function CapabilityDeck() {
     <div
       className="rounded-xl overflow-hidden relative"
       style={{
-        background: 'linear-gradient(180deg, #0A0A0C 0%, #0D1117 100%)',
-        border: '1px solid rgba(201,162,39,0.35)',
-        boxShadow: '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)',
+        background: tx('var(--bg-elevated)', 'linear-gradient(180deg, #0A0A0C 0%, #0D1117 100%)'),
+        border: tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.35)'),
+        boxShadow: tx('var(--shadow-lg)', '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)'),
         minHeight: 560,
       }}
     >
@@ -62,26 +66,32 @@ export default function CapabilityDeck() {
       `}</style>
 
       {/* Grid background */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)`,
-          backgroundSize: '24px 24px',
-          animation: 'cd-grid-drift 32s linear infinite',
-          pointerEvents: 'none',
-        }}
-      />
+      {!lt && (
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: `radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+            animation: 'cd-grid-drift 32s linear infinite',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
 
       {/* Top chrome */}
       <div
         className="relative flex items-center gap-3 px-6 py-4"
-        style={{ borderBottom: '1px solid var(--cam-primary-dk)', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(12px)' }}
+        style={{
+          borderBottom: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'),
+          background: tx('var(--bg-surface)', 'rgba(15,23,42,0.6)'),
+          backdropFilter: lt ? undefined : 'blur(12px)',
+        }}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
         <span style={{ fontSize: 10, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.2em' }}>LIVE</span>
-        <div className="w-px h-4" style={{ background: 'var(--cam-primary-dk)' }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
+        <div className="w-px h-4" style={{ background: tx('var(--border)', 'var(--cam-primary-dk)') }} />
+        <span style={{ fontSize: 10, fontWeight: 800, color: tx('var(--text-muted)', 'var(--text-dimmed)'), fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
         <div className="flex-1" />
         <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO }}>
           latency&nbsp;<span style={{ color: ACCENT, fontWeight: 700 }}>0.3s</span>
@@ -93,26 +103,29 @@ export default function CapabilityDeck() {
         <div key={`eyebrow-${pulse}`} style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.22em', textTransform: 'uppercase', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
           {meta.eyebrow}
         </div>
-        <h3 key={`title-${pulse}`} style={{ marginTop: 6, fontSize: 24, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1.15, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.08s forwards' }}>
+        <h3 key={`title-${pulse}`} style={{ marginTop: 6, fontSize: 24, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1.15, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.08s forwards' }}>
           {meta.title}
         </h3>
-        <p key={`hint-${pulse}`} style={{ marginTop: 6, fontSize: 13, color: 'var(--text-dimmed)', fontFamily: DISPLAY, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.16s forwards' }}>
+        <p key={`hint-${pulse}`} style={{ marginTop: 6, fontSize: 13, color: 'var(--text-secondary)', fontFamily: DISPLAY, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.16s forwards' }}>
           {meta.hint}
         </p>
       </div>
 
       {/* Stage */}
       <div className="relative px-6 pb-5" style={{ minHeight: 320 }}>
-        {scene === 'live'    && <SceneLive    key={`live-${pulse}`} />}
-        {scene === 'company' && <SceneCompany key={`company-${pulse}`} />}
-        {scene === 'code'    && <SceneCode    key={`code-${pulse}`} />}
-        {scene === 'design'  && <SceneDesign  key={`design-${pulse}`} />}
-        {scene === 'prep'    && <ScenePrep    key={`prep-${pulse}`} />}
-        {scene === 'score'   && <SceneScore   key={`score-${pulse}`} />}
+        {scene === 'live'    && <SceneLive    key={`live-${pulse}`} lt={lt} />}
+        {scene === 'company' && <SceneCompany key={`company-${pulse}`} lt={lt} />}
+        {scene === 'code'    && <SceneCode    key={`code-${pulse}`} lt={lt} />}
+        {scene === 'design'  && <SceneDesign  key={`design-${pulse}`} lt={lt} />}
+        {scene === 'prep'    && <ScenePrep    key={`prep-${pulse}`} lt={lt} />}
+        {scene === 'score'   && <SceneScore   key={`score-${pulse}`} lt={lt} />}
       </div>
 
       {/* Bottom chrome */}
-      <div className="relative flex items-center gap-4 px-6 py-4" style={{ borderTop: '1px solid var(--cam-primary-dk)', background: 'rgba(15,23,42,0.6)' }}>
+      <div className="relative flex items-center gap-4 px-6 py-4" style={{
+        borderTop: lt ? '1px solid var(--border)' : '1px solid var(--cam-primary-dk)',
+        background: lt ? 'var(--bg-surface)' : 'rgba(15,23,42,0.6)',
+      }}>
         <div className="flex items-center gap-2">
           {SCENES.map((s, i) => (
             <span
@@ -139,7 +152,7 @@ export default function CapabilityDeck() {
 }
 
 /* ──────────────────────── 1. LIVE ──────────────────────── */
-function SceneLive() {
+function SceneLive({ lt }: { lt: boolean }) {
   const [typed, setTyped] = useState(0);
   const Q = 'Design a distributed rate limiter for 10M RPS.';
   useEffect(() => {
@@ -148,9 +161,10 @@ function SceneLive() {
     return () => clearTimeout(t);
   }, [typed]);
   const chips = ['Redis Cluster', 'Token Bucket', 'Sliding Window', 'Consistent Hashing'];
+  const tx = (light: string, dark: string) => lt ? light : dark;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-[1fr,1fr] gap-3 sm:gap-5" style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(15,23,42,0.5)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 14 }}>
+      <div style={{ background: tx('var(--bg-surface)', 'rgba(15,23,42,0.5)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, padding: 14 }}>
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
           <span style={{ fontSize: 9, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.18em' }}>TRANSCRIBING</span>
@@ -160,13 +174,13 @@ function SceneLive() {
             ))}
           </div>
         </div>
-        <p style={{ fontSize: 13, color: 'var(--border)', fontFamily: DISPLAY, lineHeight: 1.6, minHeight: 84 }}>
+        <p style={{ fontSize: 13, color: tx('var(--text-secondary)', 'var(--border)'), fontFamily: DISPLAY, lineHeight: 1.6, minHeight: 84 }}>
           &ldquo;{Q.slice(0, typed)}
           {typed < Q.length && <span className="cd-cursor" />}
-          {typed >= Q.length && '”'}
+          {typed >= Q.length && '"'}
         </p>
       </div>
-      <div style={{ background: 'linear-gradient(180deg, rgba(38,97,156,0.08), rgba(38,97,156,0.02))', border: '1px solid rgba(38,97,156,0.20)', borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: tx('var(--accent-subtle)', 'linear-gradient(180deg, rgba(38,97,156,0.08), rgba(38,97,156,0.02))'), border: tx('1px solid var(--border-focus)', '1px solid rgba(38,97,156,0.20)'), borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
         <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: 'linear-gradient(180deg, transparent, rgba(38,97,156,0.15), transparent)', animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
@@ -180,7 +194,7 @@ function SceneLive() {
             </span>
           ))}
         </div>
-        <div style={{ marginTop: 14, fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
+        <div style={{ marginTop: 14, fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
           Use a <span style={{ color: ACCENT, fontWeight: 700 }}>sliding-window counter</span> in Redis for bursty traffic; fall back to token bucket at gateway for baseline limits.
         </div>
       </div>
@@ -188,8 +202,8 @@ function SceneLive() {
   );
 }
 
-/* ──────────────────────── 2. COMPANY — full-loop per company ──────────────────────── */
-function SceneCompany() {
+/* ──────────────────────── 2. COMPANY ──────────────────────── */
+function SceneCompany({ lt }: { lt: boolean }) {
   type Co = 'GOOGLE' | 'META' | 'AMAZON' | 'APPLE' | 'MICROSOFT' | 'NETFLIX';
   const COS: Co[] = ['GOOGLE', 'META', 'AMAZON', 'APPLE', 'MICROSOFT', 'NETFLIX'];
   const [coIdx, setCoIdx] = useState(0);
@@ -198,8 +212,8 @@ function SceneCompany() {
     return () => clearInterval(t);
   }, []);
   const co = COS[coIdx];
+  const tx = (light: string, dark: string) => lt ? light : dark;
 
-  // Flavor text per company — one distinctive detail each
   const FLAVOR: Record<Co, string> = {
     GOOGLE:    'Googleyness · Leadership · Navigating Ambiguity',
     META:      'Execution Speed · Disagree & Commit · Move Fast',
@@ -219,7 +233,6 @@ function SceneCompany() {
 
   return (
     <div style={{ marginTop: 8 }}>
-      {/* Company tabs */}
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         {COS.map((c, i) => (
           <span key={c} style={{
@@ -235,18 +248,16 @@ function SceneCompany() {
         ))}
       </div>
 
-      {/* Flavor line */}
-      <div key={co} style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
+      <div key={co} style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
         <span style={{ color: GOLD, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 10 }}>{co} LOOP · </span>
         {FLAVOR[co]}
       </div>
 
-      {/* 5 stages stacked */}
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,162,39,0.2)', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ background: tx('var(--bg-surface)', 'rgba(255,255,255,0.03)'), border: tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.2)'), borderRadius: 10, overflow: 'hidden' }}>
         {STAGES.map((s, i) => (
           <div key={s.n} style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px',
-            borderBottom: i < STAGES.length - 1 ? '1px solid rgba(201,162,39,0.12)' : 'none',
+            borderBottom: i < STAGES.length - 1 ? tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.12)') : 'none',
             opacity: 0, animation: `cd-fade-up 0.35s ease-out ${0.15 + i * 0.12}s forwards`,
           }}>
             <span style={{
@@ -256,13 +267,13 @@ function SceneCompany() {
             }}>
               {s.n}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 800, color: '#FFFFFF', fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
               {s.label}
             </span>
             <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.08em', minWidth: 54 }}>
               {s.dur}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
+            <span style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
               {s.detail}
             </span>
           </div>
@@ -272,30 +283,31 @@ function SceneCompany() {
   );
 }
 
-/* ──────────────────────── 3. CODE — 3 APPROACHES + FOLLOW-UP ──────────────────────── */
-function SceneCode() {
+/* ──────────────────────── 3. CODE ──────────────────────── */
+function SceneCode({ lt }: { lt: boolean }) {
+  const tx = (light: string, dark: string) => lt ? light : dark;
   const APPROACHES = [
     { label: 'Brute Force',   cx: 'O(n²)',  lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  for i in range(len(nums)):', c: 'var(--border)' },
-      { t: '    for j in range(i+1, len(nums)):', c: 'var(--border)' },
+      { t: '  for i in range(len(nums)):', c: tx('var(--text-secondary)', 'var(--border)') },
+      { t: '    for j in range(i+1, len(nums)):', c: tx('var(--text-secondary)', 'var(--border)') },
       { t: '      if nums[i] + nums[j] == target:', c: 'var(--text-muted)' },
       { t: '        return [i, j]', c: SUCCESS },
     ]},
     { label: 'Optimal · Hash', cx: 'O(n)',  lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  seen = {}', c: 'var(--border)' },
-      { t: '  for i, n in enumerate(nums):', c: 'var(--border)' },
+      { t: '  seen = {}', c: tx('var(--text-secondary)', 'var(--border)') },
+      { t: '  for i, n in enumerate(nums):', c: tx('var(--text-secondary)', 'var(--border)') },
       { t: '    if target - n in seen:', c: 'var(--text-muted)' },
       { t: '      return [seen[target - n], i]', c: SUCCESS },
-      { t: '    seen[n] = i', c: 'var(--border)' },
+      { t: '    seen[n] = i', c: tx('var(--text-secondary)', 'var(--border)') },
     ]},
     { label: 'Space-Tight',    cx: 'O(n log n)', lines: [
       { t: 'def two_sum(nums, target):', c: 'var(--accent)' },
-      { t: '  idx = sorted(range(len(nums)), key=lambda i: nums[i])', c: 'var(--border)' },
-      { t: '  l, r = 0, len(nums) - 1', c: 'var(--border)' },
+      { t: '  idx = sorted(range(len(nums)), key=lambda i: nums[i])', c: tx('var(--text-secondary)', 'var(--border)') },
+      { t: '  l, r = 0, len(nums) - 1', c: tx('var(--text-secondary)', 'var(--border)') },
       { t: '  while l < r:', c: 'var(--text-muted)' },
-      { t: '    s = nums[idx[l]] + nums[idx[r]]', c: 'var(--border)' },
+      { t: '    s = nums[idx[l]] + nums[idx[r]]', c: tx('var(--text-secondary)', 'var(--border)') },
       { t: '    if s == target: return [idx[l], idx[r]]', c: SUCCESS },
     ]},
   ];
@@ -309,7 +321,6 @@ function SceneCode() {
 
   return (
     <div style={{ marginTop: 8 }}>
-      {/* Approach tabs */}
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         {APPROACHES.map((a, i) => (
           <span key={a.label} style={{
@@ -325,9 +336,8 @@ function SceneCode() {
         ))}
       </div>
 
-      {/* Editor */}
-      <div style={{ background: 'var(--cam-void)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, overflow: 'hidden', fontFamily: MONO }}>
-        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderBottom: '1px solid var(--cam-primary-dk)' }}>
+      <div style={{ background: tx('var(--bg-surface)', 'var(--cam-void)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, overflow: 'hidden', fontFamily: MONO }}>
+        <div className="flex items-center gap-1.5 px-3 py-2" style={{ borderBottom: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)') }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
@@ -346,13 +356,12 @@ function SceneCode() {
         </div>
       </div>
 
-      {/* Follow-up question chip */}
       <div style={{ marginTop: 10, opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.9s forwards' }}>
         <div className="flex items-start gap-2">
           <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.16em', marginTop: 2 }}>
             FOLLOW-UP
           </span>
-          <p style={{ fontSize: 12, color: 'var(--text-dimmed)', fontFamily: DISPLAY, lineHeight: 1.55, flex: 1 }}>
+          <p style={{ fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.55, flex: 1 }}>
             &ldquo;How would you extend this to return <em>all</em> pairs that sum to the target, not just the first?&rdquo;
           </p>
         </div>
@@ -361,8 +370,8 @@ function SceneCode() {
   );
 }
 
-/* ──────────────────────── 3. DESIGN — AWS/GCP/Azure cycling ──────────────────────── */
-function SceneDesign() {
+/* ──────────────────────── 4. DESIGN ──────────────────────── */
+function SceneDesign({ lt }: { lt: boolean }) {
   type Cloud = 'AWS' | 'GCP' | 'AZURE';
   const PROVIDERS: Cloud[] = ['AWS', 'GCP', 'AZURE'];
   const [provIdx, setProvIdx] = useState(0);
@@ -371,8 +380,8 @@ function SceneDesign() {
     return () => clearInterval(t);
   }, []);
   const prov = PROVIDERS[provIdx];
+  const tx = (light: string, dark: string) => lt ? light : dark;
 
-  // Same design, different provider node labels
   const LABELS: Record<Cloud, { lb: string; api: string; cache: string; db: string; queue: string; blob: string }> = {
     AWS:   { lb: 'ALB',     api: 'LAMBDA', cache: 'ELASTICACHE', db: 'RDS',       queue: 'SQS',      blob: 'S3' },
     GCP:   { lb: 'GLB',     api: 'CLOUD RUN', cache: 'MEMORYSTORE', db: 'CLOUD SQL', queue: 'PUB/SUB', blob: 'GCS' },
@@ -398,16 +407,20 @@ function SceneDesign() {
     { x1: 366, y1: 193, x2: 422, y2: 193, d: 1.45 },
   ];
 
+  const svgBg = lt ? 'var(--bg-surface)' : 'rgba(15,23,42,0.35)';
+  const nodeStroke = lt ? 'var(--text-secondary)' : 'var(--text-dimmed)';
+  const nodeText = lt ? 'var(--text-primary)' : 'var(--text-dimmed)';
+  const nodeFill = lt ? 'var(--bg-elevated)' : 'var(--cam-void)';
+
   return (
     <div style={{ marginTop: 8 }}>
-      {/* Provider tabs */}
       <div className="relative flex items-center gap-1.5 mb-3">
         {PROVIDERS.map((p, i) => (
           <span key={p} style={{
             fontSize: 10, fontWeight: 800,
-            color: i === provIdx ? '#FFFFFF' : 'var(--text-dimmed)',
+            color: i === provIdx ? '#FFFFFF' : tx('var(--text-secondary)', 'var(--text-dimmed)'),
             background: i === provIdx ? ACCENT : 'transparent',
-            border: `1px solid ${i === provIdx ? ACCENT : 'var(--cam-primary-dk)'}`,
+            border: `1px solid ${i === provIdx ? ACCENT : tx('var(--border)', 'var(--cam-primary-dk)')}`,
             padding: '4px 14px', borderRadius: 6, fontFamily: MONO, letterSpacing: '0.18em',
             transition: 'all 0.35s',
           }}>
@@ -419,7 +432,7 @@ function SceneDesign() {
         </span>
       </div>
 
-      <svg viewBox="0 0 560 230" width="100%" height="230" style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10 }} key={prov}>
+      <svg viewBox="0 0 560 230" width="100%" height="230" style={{ background: svgBg, border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10 }} key={prov}>
         <defs>
           <marker id={`cd-arr-${prov}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill={ACCENT} />
@@ -437,10 +450,10 @@ function SceneDesign() {
         {nodes.map((n) => (
           <g key={n.id} style={{ opacity: 0, animation: `cd-pop 0.35s ease-out ${n.delay}s forwards` }}>
             <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="5"
-              fill={n.filled ? ACCENT : 'var(--cam-void)'}
-              stroke={n.filled ? ACCENT : 'var(--text-dimmed)'} strokeWidth="1.3" />
+              fill={n.filled ? ACCENT : nodeFill}
+              stroke={n.filled ? ACCENT : nodeStroke} strokeWidth="1.3" />
             <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 4} textAnchor="middle" fontSize="9.5" fontWeight="800"
-              fill={n.filled ? '#FFFFFF' : 'var(--text-dimmed)'} fontFamily={MONO} letterSpacing="0.5">
+              fill={n.filled ? '#FFFFFF' : nodeText} fontFamily={MONO} letterSpacing="0.5">
               {n.label}
             </text>
           </g>
@@ -450,40 +463,33 @@ function SceneDesign() {
   );
 }
 
-/* ──────────────────────── 4. PREP — complete design problem card ──────────────────────── */
-function ScenePrep() {
+/* ──────────────────────── 5. PREP ──────────────────────── */
+function ScenePrep({ lt }: { lt: boolean }) {
+  const tx = (light: string, dark: string) => lt ? light : dark;
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 14 }}>
-        {/* Problem header */}
-        <div className="flex items-baseline gap-3 pb-3 mb-4" style={{ borderBottom: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
+      <div style={{ background: tx('var(--bg-surface)', 'rgba(15,23,42,0.35)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, padding: 14 }}>
+        <div className="flex items-baseline gap-3 pb-3 mb-4" style={{ borderBottom: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
           <span style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>SYSTEM DESIGN</span>
-          <span style={{ fontSize: 14, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.01em' }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.01em' }}>
             Design a URL Shortener
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-dimmed)', fontFamily: MONO }}>Medium · 14 sections</span>
+          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-muted)', fontFamily: MONO }}>Medium · 14 sections</span>
         </div>
 
-        {/* 2×2 mini cards */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Functional Reqs */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.15s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
-              FUNCTIONAL REQS
-            </div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>FUNCTIONAL REQS</div>
             {['Shorten long URL', 'Redirect 301/302', 'Custom aliases', 'Analytics'].map((r, i) => (
-              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 11, color: 'var(--text-dimmed)', fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
+              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }} />
                 {r}
               </div>
             ))}
           </div>
 
-          {/* Capacity Planning */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.25s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
-              CAPACITY PLANNING
-            </div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>CAPACITY PLANNING</div>
             {[
               { k: 'DAU',        v: '100M' },
               { k: 'Writes/s',   v: '1.2K' },
@@ -492,35 +498,29 @@ function ScenePrep() {
             ].map((m, i) => (
               <div key={m.k} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '3px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.45 + i * 0.09}s forwards` }}>
                 <span style={{ color: 'var(--text-muted)' }}>{m.k}</span>
-                <span style={{ color: '#FFFFFF', fontWeight: 700 }}>{m.v}</span>
+                <span style={{ color: tx('var(--text-primary)', '#FFFFFF'), fontWeight: 700 }}>{m.v}</span>
               </div>
             ))}
           </div>
 
-          {/* API Design */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.45s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
-              API DESIGN
-            </div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>API DESIGN</div>
             {[
               { m: 'POST', p: '/shorten' },
               { m: 'GET',  p: '/{code}' },
               { m: 'GET',  p: '/{code}/stats' },
             ].map((e, i) => (
               <div key={e.p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.6 + i * 0.1}s forwards` }}>
-                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-dimmed)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(38,97,156,0.33)' : 'var(--text-dimmed)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-muted)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(38,97,156,0.33)' : 'var(--border)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
                   {e.m}
                 </span>
-                <code style={{ fontSize: 11, color: 'var(--text-dimmed)', fontFamily: MONO }}>{e.p}</code>
+                <code style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: MONO }}>{e.p}</code>
               </div>
             ))}
           </div>
 
-          {/* Data Model */}
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.55s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>
-              DATA MODEL · urls
-            </div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>DATA MODEL · urls</div>
             {[
               { f: 'id',         t: 'BIGINT PK' },
               { f: 'short_code', t: 'VARCHAR(8)' },
@@ -528,15 +528,14 @@ function ScenePrep() {
               { f: 'created_at', t: 'TIMESTAMP' },
             ].map((f, i) => (
               <div key={f.f} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '2.5px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.7 + i * 0.09}s forwards` }}>
-                <span style={{ color: 'var(--text-dimmed)' }}>{f.f}</span>
+                <span style={{ color: tx('var(--text-secondary)', 'var(--text-dimmed)') }}>{f.f}</span>
                 <span style={{ color: 'var(--text-muted)' }}>{f.t}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer stats */}
-        <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
+        <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
           <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.1em' }}>
             Requirements · Capacity · Architecture · API · Data · Trade-offs · Edge Cases · Follow-ups
           </span>
@@ -547,8 +546,9 @@ function ScenePrep() {
   );
 }
 
-/* ──────────────────────── 5. SCORE ──────────────────────── */
-function SceneScore() {
+/* ──────────────────────── 6. SCORE ──────────────────────── */
+function SceneScore({ lt }: { lt: boolean }) {
+  const tx = (light: string, dark: string) => lt ? light : dark;
   const R = 26;
   const C = 2 * Math.PI * R;
   const gauges = [
@@ -558,7 +558,7 @@ function SceneScore() {
   ];
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ background: 'rgba(15,23,42,0.35)', border: '1px solid var(--cam-primary-dk)', borderRadius: 10, padding: 20 }}>
+      <div style={{ background: tx('var(--bg-surface)', 'rgba(15,23,42,0.35)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, padding: 20 }}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {gauges.map((g) => {
             const offset = C - (C * g.score) / 100;
@@ -570,22 +570,22 @@ function SceneScore() {
                     strokeDasharray={C} transform="rotate(-90 36 36)"
                     style={{ strokeDashoffset: C, animation: `cd-gauge 1.1s cubic-bezier(0.22,1,0.36,1) ${g.delay}s forwards`, ['--cd-offset' as any]: offset } as React.CSSProperties}
                   />
-                  <text x="36" y="40" textAnchor="middle" fontSize="16" fontWeight="800" fill="#FFFFFF" fontFamily={MONO}
+                  <text x="36" y="40" textAnchor="middle" fontSize="16" fontWeight="800" fill={tx('var(--text-primary)', '#FFFFFF')} fontFamily={MONO}
                     style={{ opacity: 0, animation: `cd-count-up 0.4s ease-out ${g.delay + 0.25}s forwards` }}>
                     {g.score}
                   </text>
                 </svg>
-                <span style={{ marginTop: 8, fontSize: 9, fontWeight: 800, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
+                <span style={{ marginTop: 8, fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
                   {g.label}
                 </span>
               </div>
             );
           })}
         </div>
-        <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid var(--cam-primary-dk)', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.7s forwards' }}>
+        <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.7s forwards' }}>
           <div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.18em' }}>OVERALL</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#FFFFFF', fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1, marginTop: 4 }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1, marginTop: 4 }}>
               92<span style={{ color: 'var(--text-muted)', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
             </div>
           </div>
