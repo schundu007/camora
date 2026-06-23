@@ -456,30 +456,31 @@ const resolveHljsLanguage = (input?: string): { id: string | null; label: string
 }
 
 /** Code block — VSCode-dark editor look with a file-tab header + hljs highlighting. */
-const CodeBlock = ({ code, language = 'code' }: { code: string; language?: string }) => {
+const CodeBlock = ({ code, language = 'code', maxLines = 10 }: { code: string; language?: string; maxLines?: number }) => {
   const codeRef = useRef<HTMLElement>(null);
   const { id: hljsLang, label } = resolveHljsLanguage(language);
+  const lines = code.split('\n');
+  const totalLines = lines.length;
+  const shouldTruncate = totalLines > maxLines + 2;
+  const [expanded, setExpanded] = useState(false);
+  const displayCode = shouldTruncate && !expanded ? lines.slice(0, maxLines).join('\n') : code;
 
   useEffect(() => {
     if (!codeRef.current) return;
-    // Reset any prior hljs decoration before re-highlighting (handles stream
-    // updates where the code text grows token-by-token).
     codeRef.current.removeAttribute('data-highlighted');
     try {
       if (hljsLang) {
-        const html = hljs.highlight(code, { language: hljsLang, ignoreIllegals: true }).value;
+        const html = hljs.highlight(displayCode, { language: hljsLang, ignoreIllegals: true }).value;
         codeRef.current.innerHTML = html;
       } else {
-        const html = hljs.highlightAuto(code).value;
+        const html = hljs.highlightAuto(displayCode).value;
         codeRef.current.innerHTML = html;
       }
       codeRef.current.setAttribute('data-highlighted', 'yes');
     } catch {
-      // hljs.highlight throws if the language is unregistered after our
-      // resolveHljsLanguage check — fall back to the raw text.
-      codeRef.current.textContent = code;
+      codeRef.current.textContent = displayCode;
     }
-  }, [code, hljsLang]);
+  }, [displayCode, hljsLang]);
 
   return (
     <div className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LC.codeHdr}` }}>
@@ -490,16 +491,29 @@ const CodeBlock = ({ code, language = 'code' }: { code: string; language?: strin
         <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
           {label}
         </span>
-        <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{code.split('\n').length} LOC</span>
+        <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{totalLines} LOC</span>
       </div>
       <pre
         className="px-4 py-3 text-[12.5px] leading-relaxed overflow-x-auto"
         style={{ background: LC.codeBg, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}
       >
         <code ref={codeRef} className={hljsLang ? `language-${hljsLang} hljs` : 'hljs'} style={{ background: 'transparent' }}>
-          {code}
+          {displayCode}
         </code>
       </pre>
+      {shouldTruncate && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="w-full py-1.5 flex items-center justify-center gap-1 text-[10px] font-medium transition-opacity hover:opacity-80"
+          style={{ background: LC.codeHdr, color: LC.codeMuted, borderTop: `1px solid var(--cam-strip-icon-border)` }}
+        >
+          {expanded ? (
+            <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 7L5 4L8 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Collapse</>
+          ) : (
+            <><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3L5 6L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>+{totalLines - maxLines} more lines</>
+          )}
+        </button>
+      )}
     </div>
   );
 }
@@ -1471,39 +1485,58 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 </div>
               )}
 
-              {/* Best Practices vs Anti-Patterns side-by-side */}
-              {(Array.isArray(tech.bestPractices) && tech.bestPractices.length > 0) || (Array.isArray(tech.antiPatterns) && tech.antiPatterns.length > 0) ? (
-                <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-                  {Array.isArray(tech.bestPractices) && tech.bestPractices.length > 0 && (
-                    <div>
-                      <SectionHeading label="Best Practices" color={LC.api} />
-                      <div className="space-y-2">
-                        {tech.bestPractices.filter((bp: any) => bp && typeof bp === 'object').map((bp: any, bi: number) => (
-                          <div key={bi} className="rounded-lg p-3" style={paperCard(LC.api)}>
+              {/* Best Practices vs Anti-Patterns — masonry columns */}
+              {(Array.isArray(tech.bestPractices) && tech.bestPractices.length > 0) || (Array.isArray(tech.antiPatterns) && tech.antiPatterns.length > 0) ? (() => {
+                const bps = (tech.bestPractices || []).filter((bp: any) => bp && typeof bp === 'object');
+                const aps = (tech.antiPatterns || []).filter((ap: any) => ap && typeof ap === 'object');
+                type CardItem = { type: 'bp'; item: any } | { type: 'ap'; item: any };
+                const cards: CardItem[] = [];
+                const max = Math.max(bps.length, aps.length);
+                for (let i = 0; i < max; i++) {
+                  if (i < bps.length) cards.push({ type: 'bp', item: bps[i] });
+                  if (i < aps.length) cards.push({ type: 'ap', item: aps[i] });
+                }
+                return (
+                  <div style={{ columns: '2 280px', columnGap: '12px' }}>
+                    {bps.length > 0 && aps.length > 0 ? (
+                      cards.map((c, idx) =>
+                        c.type === 'bp' ? (
+                          <div key={`bp-${idx}`} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.api), breakInside: 'avoid' }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.api }}>Best Practice</div>
+                            {c.item.practice && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✓ {safeText(c.item.practice)}</div>}
+                            {c.item.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(c.item.when)}</p>}
+                            {c.item.codeExample && <div className="mt-2"><CodeBlock code={String(c.item.codeExample)} language="code" /></div>}
+                          </div>
+                        ) : (
+                          <div key={`ap-${idx}`} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.edge), breakInside: 'avoid' }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.edge }}>Anti-Pattern</div>
+                            {c.item.pattern && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✗ {safeText(c.item.pattern)}</div>}
+                            {c.item.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(c.item.problem)}</p>}
+                            {c.item.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(c.item.solution)}</p>}
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <>
+                        {bps.map((bp: any, bi: number) => (
+                          <div key={bi} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.api), breakInside: 'avoid' }}>
                             {bp.practice && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✓ {safeText(bp.practice)}</div>}
                             {bp.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(bp.when)}</p>}
                             {bp.codeExample && <div className="mt-2"><CodeBlock code={String(bp.codeExample)} language="code" /></div>}
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  )}
-                  {Array.isArray(tech.antiPatterns) && tech.antiPatterns.length > 0 && (
-                    <div>
-                      <SectionHeading label="Anti-Patterns" color={LC.edge} />
-                      <div className="space-y-2">
-                        {tech.antiPatterns.filter((ap: any) => ap && typeof ap === 'object').map((ap: any, ai: number) => (
-                          <div key={ai} className="rounded-lg p-3" style={paperCard(LC.edge)}>
+                        {aps.map((ap: any, ai: number) => (
+                          <div key={ai} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.edge), breakInside: 'avoid' }}>
                             {ap.pattern && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✗ {safeText(ap.pattern)}</div>}
                             {ap.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(ap.problem)}</p>}
                             {ap.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(ap.solution)}</p>}
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : null}
+                      </>
+                    )}
+                  </div>
+                );
+              })() : null}
 
               {/* Performance Topics — chip strip */}
               {Array.isArray(tech.performanceTopics) && tech.performanceTopics.length > 0 && (
