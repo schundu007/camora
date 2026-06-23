@@ -203,6 +203,8 @@ interface CodingLayoutProps {
   initialStarterCode?: string | null;
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
+  /** Called when user clicks "→ CoFix" chip; receives current editor code + language */
+  onSendToCofix?: (code: string, lang: string) => void;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
   /** DataURL from F9 auto-capture of HackerRank window. Processed via OCR. */
@@ -267,7 +269,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -2897,6 +2899,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               )}
             </div>
             <div className="flex items-center gap-1">
+              {onSendToCofix && (
+                <button
+                  onClick={() => onSendToCofix(code, language)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  style={{ color: 'var(--cam-gold-leaf-lt)', background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent)' }}
+                  title="Send solution to CoFix"
+                >
+                  → CoFix
+                </button>
+              )}
               <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: t.textMuted }} title="Reset">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

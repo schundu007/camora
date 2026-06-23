@@ -77,6 +77,8 @@ const LANGUAGES = [
 
 interface CoFixLayoutProps {
   onScreenshotAppendRef?: { current: ((text: string) => void) | null };
+  /** Parent sets this ref; calling it injects code into the left editor and optionally sets the language. */
+  onInjectCodeRef?: { current: ((code: string, lang?: string) => void) | null };
   screenshots?: ScreenshotEntry[];
   onSnapped?: (entry: ScreenshotEntry) => void;
   onRemove?: (id: string) => void;
@@ -86,7 +88,7 @@ interface CoFixLayoutProps {
 
 const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
-export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
+export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
   const { theme } = useTheme();
   const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
@@ -99,6 +101,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, screenshots = [], onSnapped
   const navigate = useNavigate();
   const monaco = useMonaco();
   useEffect(() => { if (monaco) monaco.editor.setTheme(monacoTheme); }, [monaco, monacoTheme]);
+
+  useEffect(() => {
+    if (!onInjectCodeRef) return;
+    onInjectCodeRef.current = (code: string, lang?: string) => {
+      setInputCode(code);
+      if (lang) setLanguage(lang);
+    };
+    return () => { onInjectCodeRef.current = null; };
+  }, [onInjectCodeRef]);
 
   const [inputCode, setInputCode] = useState('');
   const [language, setLanguage] = useState('python');
