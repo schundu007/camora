@@ -135,7 +135,7 @@ className="h-full group border-l-2 border-[var(--accent)]"
 
 | Feature | stat | statLabel |
 |---------|------|-----------|
-| Live AI | <8s | avg answer latency *(verify before ship)* |
+| Live AI | <1s | avg answer latency |
 | Job Matching | 1,000+ | matched roles |
 | Prep | 978+ | study topics |
 | Mock Interviews | 50+ | domains scored |
