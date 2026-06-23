@@ -645,7 +645,7 @@ export const LumoraShellPage = () => {
                         onNewProblemCallback={() => setScreenshots([])}
                         externalInputMode={codingInputMode}
                         onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
-                        onSendToCofix={(code, lang) => { cofixInjectRef.current?.(code, lang); navigate('/lumora/fix'); }}
+                        onSendToCofix={(code, lang) => { cofixInjectRef.current?.(code, lang); navigate('/lumora/fix', { state: { injectCode: code, injectLang: lang } }); }}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
