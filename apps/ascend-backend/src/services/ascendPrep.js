@@ -32,27 +32,23 @@ function getOpenAIClient() {
   return getOpenAIClientFromShared(apiKey);
 }
 
-// DeepSeek client — direct API, OpenAI-compatible. ~10x cheaper than Claude Sonnet.
-// Falls back to OpenRouter if DEEPSEEK_API_KEY is absent.
-let _deepseekClient = null;
+// Gemini client — OpenAI-compatible endpoint, free tier + very cheap paid.
+let _geminiClient = null;
 function getDeepSeekClient() {
-  if (!_deepseekClient) {
-    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('No AI provider key configured (DEEPSEEK_API_KEY or OPENROUTER_API_KEY required)');
-    const baseURL = process.env.DEEPSEEK_API_KEY
-      ? 'https://api.deepseek.com'
-      : 'https://openrouter.ai/api/v1';
-    _deepseekClient = new OpenAI({ apiKey, baseURL });
+  if (!_geminiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+    _geminiClient = new OpenAI({ apiKey, baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/' });
   }
-  return _deepseekClient;
+  return _geminiClient;
 }
 
 const CLAUDE_SONNET = 'claude-sonnet-4-6';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
-// DeepSeek-V3: excellent quality, ~$0.27/M input vs Claude Sonnet's $3/M
-const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
+// Gemini 2.0 Flash: fast, cheap, excellent structured JSON output
+const DEFAULT_DEEPSEEK_MODEL = 'gemini-2.0-flash';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
 const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
 const MAX_TOKENS_HAIKU_SECTION = 12000; // Non-technical sections — behavioral STAR format needs 8-10K
