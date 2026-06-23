@@ -32,16 +32,19 @@ function getOpenAIClient() {
   return getOpenAIClientFromShared(apiKey);
 }
 
-// OpenRouter client — OpenAI-compatible endpoint, used for DeepSeek-V3 by default.
-// ~10x cheaper than Claude Sonnet for interview prep generation.
-let _openrouterClient = null;
-function getOpenRouterClient() {
-  if (!_openrouterClient) {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
-    _openrouterClient = new OpenAI({ apiKey, baseURL: 'https://openrouter.ai/api/v1' });
+// DeepSeek client — direct API, OpenAI-compatible. ~10x cheaper than Claude Sonnet.
+// Falls back to OpenRouter if DEEPSEEK_API_KEY is absent.
+let _deepseekClient = null;
+function getDeepSeekClient() {
+  if (!_deepseekClient) {
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error('No AI provider key configured (DEEPSEEK_API_KEY or OPENROUTER_API_KEY required)');
+    const baseURL = process.env.DEEPSEEK_API_KEY
+      ? 'https://api.deepseek.com'
+      : 'https://openrouter.ai/api/v1';
+    _deepseekClient = new OpenAI({ apiKey, baseURL });
   }
-  return _openrouterClient;
+  return _deepseekClient;
 }
 
 const CLAUDE_SONNET = 'claude-sonnet-4-6';
@@ -49,7 +52,7 @@ const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
 // DeepSeek-V3: excellent quality, ~$0.27/M input vs Claude Sonnet's $3/M
-const DEFAULT_OPENROUTER_MODEL = 'deepseek/deepseek-chat';
+const DEFAULT_DEEPSEEK_MODEL = 'deepseek-chat';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
 const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
 const MAX_TOKENS_HAIKU_SECTION = 12000; // Non-technical sections — behavioral STAR format needs 8-10K
@@ -582,9 +585,9 @@ Return valid JSON.`;
   }
 }
 
-// OpenRouter generator — mirrors generateSectionOpenAI but uses OpenRouter client.
-// Default model is DeepSeek-V3 which handles structured JSON well at low cost.
-async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_OPENROUTER_MODEL) {
+// DeepSeek generator — uses DeepSeek direct API (OpenAI-compatible).
+// Handles structured JSON well at low cost (~$0.27/M input).
+async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPSEEK_MODEL) {
   const enrichedInputs = await enrichWithWebSearch(inputs, section);
   const context = buildContext(enrichedInputs, section);
   const sectionPrompt = SECTION_PROMPTS[section];
@@ -604,9 +607,9 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_OPENR
   const isNonTechnical = !['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'].some(t => section?.toLowerCase().includes(t));
   const maxTokens = section.startsWith('custom') ? MAX_TOKENS_CUSTOM_SECTION : isNonTechnical ? MAX_TOKENS_HAIKU_SECTION : MAX_TOKENS_PER_SECTION;
 
-  console.log(`[AscendPrep] OpenRouter section "${section}" → model: ${model}`);
+  console.log(`[AscendPrep] DeepSeek section "${section}" → model: ${model}`);
 
-  const stream = await getOpenRouterClient().chat.completions.create({
+  const stream = await getDeepSeekClient().chat.completions.create({
     model,
     max_tokens: maxTokens,
     stream: true,
@@ -626,7 +629,7 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_OPENR
     if (choice?.finish_reason) finishReason = choice.finish_reason;
   }
   if (finishReason === 'length') console.warn(`[AscendPrep] OpenRouter response truncated for section: ${section}`);
-  console.log(`[AscendPrep] OpenRouter done. finish=${finishReason} len=${fullText.length}`);
+  console.log(`[AscendPrep] DeepSeek done. finish=${finishReason} len=${fullText.length}`);
   try {
     yield { done: true, result: cleanupResult(JSON.parse(fullText)) };
   } catch {
@@ -645,8 +648,8 @@ export async function* generateSection(section, inputs, provider = 'openrouter',
     console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
     yield* generateSectionClaude(section, inputs, selectedModel);
   } else {
-    // openrouter (DeepSeek-V3) — high quality, ~10x cheaper than Claude Sonnet
-    yield* generateSectionOpenRouter(section, inputs, model || DEFAULT_OPENROUTER_MODEL);
+    // DeepSeek-V3 direct — high quality, ~10x cheaper than Claude Sonnet
+    yield* generateSectionOpenRouter(section, inputs, model || DEFAULT_DEEPSEEK_MODEL);
   }
 }
 
