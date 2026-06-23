@@ -3048,9 +3048,17 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   return (
                     <span
                       onClick={(e) => { e.stopPropagation(); setSelectedSections(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id]); }}
-                      className="shrink-0 flex items-center justify-center"
-                      style={{ width: 14, height: 14, borderRadius: 3, border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`, background: checked ? 'var(--cam-primary)' : 'transparent', cursor: 'pointer' }}>
-                      {checked && <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      className="shrink-0 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full transition-all"
+                      style={{
+                        fontSize: 9, fontWeight: 700, cursor: 'pointer', lineHeight: 1.4,
+                        background: checked ? 'var(--cam-primary)' : 'transparent',
+                        color: checked ? '#fff' : 'var(--text-muted)',
+                        border: `1px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`,
+                      }}>
+                      {checked
+                        ? <><svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l2 2L6.5 2" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>ON</>
+                        : <span style={{ opacity: 0.5 }}>OFF</span>
+                      }
                     </span>
                   );
                 })()}
