@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
 import OpenAI from 'openai';
-import { getApiKey as getOpenAIKey } from '../services/openai.js';
 import { getApiKey as getDeepgramKey } from '../services/deepgram.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import fs from 'fs';
@@ -102,11 +101,11 @@ async function transcribeWithDeepgram(buffer, mimetype) {
   return transcript;
 }
 
-// Transcribe using OpenAI Whisper
-async function transcribeWithWhisper(buffer, mimetype, originalname) {
-  const apiKey = getOpenAIKey();
+// Transcribe using Groq Whisper (free, fast, OpenAI-API-compatible)
+async function transcribeWithGroq(buffer, mimetype, originalname) {
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new AppError('OpenAI API key not configured', ErrorCode.UNAUTHORIZED);
+    throw new AppError('GROQ_API_KEY not configured', ErrorCode.UNAUTHORIZED);
   }
 
   const extension = getFileExtension(mimetype, originalname);
@@ -117,10 +116,10 @@ async function transcribeWithWhisper(buffer, mimetype, originalname) {
     fs.writeFileSync(tempFilePath, buffer);
     console.log('[Transcribe] Wrote temp file:', tempFilePath, 'size:', buffer.length);
 
-    const openai = new OpenAI({ apiKey });
-    const transcription = await openai.audio.transcriptions.create({
+    const groq = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' });
+    const transcription = await groq.audio.transcriptions.create({
       file: fs.createReadStream(tempFilePath),
-      model: 'whisper-1',
+      model: 'whisper-large-v3-turbo',
       language: 'en',
       response_format: 'text',
     });
@@ -135,15 +134,15 @@ async function transcribeWithWhisper(buffer, mimetype, originalname) {
   }
 }
 
-// POST /api/transcribe - Transcribe audio using Whisper or Deepgram
-// Query param: provider=openai (default) or provider=deepgram
+// POST /api/transcribe - Transcribe audio using Groq Whisper or Deepgram
+// Query param: provider=groq (default) or provider=deepgram
 router.post('/', upload.single('audio'), async (req, res, next) => {
   try {
     if (!req.file) {
       throw new AppError('No audio file provided', ErrorCode.VALIDATION_ERROR);
     }
 
-    const provider = req.query.provider || req.body.provider || 'openai';
+    const provider = req.query.provider || req.body.provider || 'groq';
 
     console.log('[Transcribe] Received file:', {
       originalname: req.file.originalname,
@@ -158,10 +157,10 @@ router.post('/', upload.single('audio'), async (req, res, next) => {
       console.log('[Transcribe] Using Deepgram Nova-2');
       transcription = await transcribeWithDeepgram(req.file.buffer, req.file.mimetype);
     } else {
-      console.log('[Transcribe] Using OpenAI Whisper');
+      console.log('[Transcribe] Using Groq Whisper');
       const extension = getFileExtension(req.file.mimetype, req.file.originalname);
       console.log('[Transcribe] Detected extension:', extension, 'from mimetype:', req.file.mimetype, 'originalname:', req.file.originalname);
-      transcription = await transcribeWithWhisper(req.file.buffer, req.file.mimetype, req.file.originalname);
+      transcription = await transcribeWithGroq(req.file.buffer, req.file.mimetype, req.file.originalname);
     }
 
     console.log('[Transcribe] Success, text length:', transcription?.length);
