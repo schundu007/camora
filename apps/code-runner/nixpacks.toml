@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = [
+  "nodejs_20",
+  "python3",
+  "gcc",
+  "openjdk17",
+  "go",
+  "rustc",
+  "cargo",
+  "ruby",
+  "perl",
+]
+
+[start]
+cmd = "node src/index.js"
