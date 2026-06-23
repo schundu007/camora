@@ -8,8 +8,7 @@ import SEO from '../components/shared/SEO';
 import SiteFooter from '../components/shared/SiteFooter';
 import JobUrlAnalysisDemo from '../components/shared/JobUrlAnalysisDemo';
 import {
-  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles, FeaturePlaygroundAnim, FeaturePracticeAnim,
-  FeatureLiveAIAnim, FeatureJobMatchAnim, FeaturePrepAnim, FeatureMockSessionAnim,
+  ApplyAnim, PrepareAnim, PracticeAnim, AttendAnim, CardAnimationStyles,
 } from '../components/landing/CardAnimations';
 import CapabilityDeck from '../components/landing/CapabilityDeck';
 import LiveSessionPreview from '../components/landing/LiveSessionPreview';
@@ -95,37 +94,43 @@ const FEATURES = [
     label: 'Live AI',
     title: 'Real-time AI during sessions',
     bullets: ['Live voice capture + instant answers', 'Architecture diagrams in seconds', 'Works during actual interviews'],
-    Anim: FeatureLiveAIAnim,
+    stat: '<1s',
+    statLabel: 'avg answer latency',
   },
   {
     label: 'Job Matching',
     title: 'AI-powered job discovery',
     bullets: ['1,000+ roles matched to your skills', 'Auto-generate resume + cover letter', 'One-click application tracking'],
-    Anim: FeatureJobMatchAnim,
+    stat: '1,000+',
+    statLabel: 'matched roles',
   },
   {
     label: 'Prep',
     title: '978+ topics with diagrams',
     bullets: ['System design, DSA, behavioral, databases', 'AI explanations + architecture diagrams', 'Company-specific study paths'],
-    Anim: FeaturePrepAnim,
+    stat: '978+',
+    statLabel: 'study topics',
   },
   {
     label: 'Mock Interviews',
     title: 'AI-scored practice sessions',
     bullets: ['Timed sessions with instant feedback', 'Scored: communication, code, design', 'Pinpoints exactly where you lost points'],
-    Anim: FeatureMockSessionAnim,
+    stat: '50+',
+    statLabel: 'domains scored',
   },
   {
     label: 'Playground',
     title: 'Real terminals. Real Docker. Real Kubernetes.',
     bullets: ['Ubuntu, Docker, Kubernetes — live in browser', 'No VM, no setup, ready in 5 seconds', 'Build real muscle memory before the screen'],
-    Anim: FeaturePlaygroundAnim,
+    stat: '<5s',
+    statLabel: 'env ready time',
   },
   {
     label: 'Practice',
     title: '9,500+ problems with AI feedback',
     bullets: ['DSA, SQL, MCQ, system design, coding', 'AI explains why your approach was wrong', '50+ domains, difficulty-graduated'],
-    Anim: FeaturePracticeAnim,
+    stat: '9,500+',
+    statLabel: 'problems',
   },
 ];
 
@@ -500,7 +505,7 @@ export default function LandingPage() {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
                 <Reveal key={f.title} delay={i * 0.06}>
-                  <SurfaceCard interactive padding="lg" className="h-full group">
+                  <SurfaceCard interactive padding="lg" className="h-full group border-l-2 border-[var(--accent)]">
                     <Eyebrow tone="accent">{f.label}</Eyebrow>
                     <h3 className="mt-2 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {f.title}
@@ -508,13 +513,14 @@ export default function LandingPage() {
                     <ul className="mt-3 space-y-1.5">
                       {f.bullets.map((b) => (
                         <li key={b} className="flex items-start gap-2 text-[15px] text-[var(--text-secondary)]">
-                          <span className="mt-[3px] shrink-0 w-1 h-1 rounded-full bg-[var(--accent)] opacity-70" />
+                          <span className="mt-[3px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                           {b}
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-5 -mx-2 h-32 md:h-36 overflow-hidden rounded-xl relative bg-[var(--bg-elevated)] transition-all duration-300">
-                      <f.Anim />
+                    <div className="mt-5 pt-5 border-t border-[var(--border)] flex items-baseline gap-2">
+                      <span className="font-mono text-[22px] font-bold text-[var(--accent)]">{f.stat}</span>
+                      <span className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--text-muted)]">{f.statLabel}</span>
                     </div>
                   </SurfaceCard>
                 </Reveal>
