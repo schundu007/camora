@@ -384,11 +384,11 @@ export const LumoraShellPage = () => {
             Gradient + shadow give the header a high-fidelity modern
             feel in both themes via design tokens. */}
         <div
-          className="flex items-center h-12 px-4 shrink-0 lumora-shell-topbar gap-3"
+          className="flex items-center h-[60px] px-4 shrink-0 lumora-shell-topbar gap-3"
           style={{
-            borderBottom: '1px solid var(--border)',
-            background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)',
-            boxShadow: 'var(--shadow-primary-xs)',
+            borderBottom: '3px solid var(--cam-gold-leaf)',
+            background: 'var(--cam-hero-strip)',
+            boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
           }}
         >
           {/* Mobile-only Camora logo — the desktop LumoraIconRail (which
