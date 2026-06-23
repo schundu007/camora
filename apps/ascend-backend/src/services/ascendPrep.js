@@ -632,25 +632,10 @@ async function* generateSectionGroq(section, inputs, model = DEFAULT_GROQ_MODEL)
   }
 }
 
-// Main generator function — Groq (free) first, OpenAI fallback.
-export async function* generateSection(section, inputs, provider = 'groq', model) {
-  if (provider === 'claude') {
-    const selectedModel = model || getModelForSection(section);
-    console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
-    yield* generateSectionClaude(section, inputs, selectedModel);
-    return;
-  }
-  if (process.env.GROQ_API_KEY) {
-    try {
-      console.log(`[AscendPrep] Section "${section}" → groq ${DEFAULT_GROQ_MODEL}`);
-      yield* generateSectionGroq(section, inputs, model || DEFAULT_GROQ_MODEL);
-      return;
-    } catch (err) {
-      console.warn(`[AscendPrep] Groq failed for "${section}", falling back to OpenAI: ${err.message?.slice(0, 120)}`);
-    }
-  }
-  console.log(`[AscendPrep] Section "${section}" → openai gpt-4o-mini`);
-  yield* generateSectionOpenAI(section, inputs, model || 'gpt-4o-mini');
+export async function* generateSection(section, inputs, provider = 'claude', model) {
+  const selectedModel = model || getModelForSection(section);
+  console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
+  yield* generateSectionClaude(section, inputs, selectedModel);
 }
 
 // Generate all sections sequentially
