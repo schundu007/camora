@@ -306,125 +306,88 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
   return (
     <div className="flex-1 overflow-auto flex flex-col" style={{ background: 'var(--bg-surface)' }}>
       <style>{`
-        @keyframes sona-orb-a {
-          0%,100%{transform:translateY(0) scale(1);opacity:.5}
-          50%{transform:translateY(-14px) scale(1.07);opacity:.72}
-        }
-        @keyframes sona-orb-b {
-          0%,100%{transform:translateY(0) scale(1);opacity:.35}
-          50%{transform:translateY(11px) scale(.93);opacity:.55}
-        }
         @keyframes sona-ready {
-          0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.6)}
-          50%{opacity:.7;box-shadow:0 0 0 5px rgba(74,222,128,0)}
-        }
-        @keyframes sona-scan {
-          0%{transform:translateY(-100%);opacity:0}
-          10%{opacity:.55}
-          90%{opacity:.55}
-          100%{transform:translateY(100%);opacity:0}
-        }
-        @keyframes sona-dots {
-          0%,100%{opacity:.04}50%{opacity:.08}
-        }
-        @keyframes sona-clock {
-          0%,100%{text-shadow:0 0 20px rgba(54,131,220,.4),0 0 60px rgba(54,131,220,.12),0 0 100px rgba(54,131,220,.04)}
-          50%{text-shadow:0 0 35px rgba(54,131,220,.65),0 0 90px rgba(54,131,220,.22),0 0 140px rgba(54,131,220,.08)}
-        }
-        @keyframes sona-aurora {
-          0%,100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        @keyframes sona-beam {
-          0%,100%{opacity:.3}
-          50%{opacity:.65}
+          0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.55)}
+          50%{opacity:.75;box-shadow:0 0 0 6px rgba(74,222,128,0)}
         }
       `}</style>
 
-      {/* ── Hero ── */}
-      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #07142b 0%, #0d1f3c 25%, #091829 50%, #0d1f3c 75%, #07142b 100%)', backgroundSize: '400% 400%', animation: 'sona-aurora 14s ease infinite', minHeight: 192 }}>
-        {/* Neural orbs */}
+      {/* ── Hero — compact, clean command-center ── */}
+      <div className="relative overflow-hidden" style={{
+        background: 'linear-gradient(160deg, #050f22 0%, #091829 55%, #0d1f3c 100%)',
+        minHeight: 160,
+      }}>
         <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
-          <div style={{ position:'absolute', width:300, height:300, borderRadius:'50%', top:'-50px', left:'-50px', background:'radial-gradient(circle,rgba(54,131,220,.18) 0%,transparent 70%)', animation:'sona-orb-a 7s ease-in-out infinite' }} />
-          <div style={{ position:'absolute', width:240, height:240, borderRadius:'50%', top:'5px', right:'-30px', background:'radial-gradient(circle,rgba(91,155,213,.14) 0%,transparent 70%)', animation:'sona-orb-b 9s ease-in-out infinite' }} />
-          <div style={{ position:'absolute', width:160, height:160, borderRadius:'50%', bottom:'-20px', left:'42%', background:'radial-gradient(circle,rgba(201,162,39,.10) 0%,transparent 70%)', animation:'sona-orb-a 11s ease-in-out infinite 2s' }} />
-          <div style={{ position:'absolute', width:200, height:200, borderRadius:'50%', top:'30%', right:'20%', background:'radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 70%)', animation:'sona-orb-b 13s ease-in-out infinite 3s' }} />
-          <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(255,255,255,.22) 1px,transparent 1px)', backgroundSize:'28px 28px', animation:'sona-dots 6s ease-in-out infinite' }} />
-          <div style={{ position:'absolute', left:0, right:0, height:'2px', background:'linear-gradient(90deg,transparent,rgba(54,131,220,.5),rgba(201,162,39,.4),transparent)', animation:'sona-scan 8s linear infinite 1s' }} />
-          <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:'10%', right:'10%', height:1, background:'linear-gradient(90deg,transparent,rgba(54,131,220,.6),rgba(201,162,39,.5),transparent)', animation:'sona-beam 3s ease-in-out infinite' }} />
+          <div style={{ position:'absolute', width:340, height:340, borderRadius:'50%', top:'-100px', left:'-60px', background:'radial-gradient(circle,rgba(54,131,220,.13) 0%,transparent 65%)' }} />
+          <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', top:'0', right:'-30px', background:'radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 65%)' }} />
         </div>
+        <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:0, right:0, height:48, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
 
-        <div className="relative px-4 md:px-6 pt-5 pb-9">
-          <div className="max-w-3xl mx-auto text-center">
-            {/* Status badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
-              style={{ background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', backdropFilter:'blur(8px)' }}>
-              <span style={{ width:7, height:7, borderRadius:'50%', background:'#4ADE80', display:'inline-block', flexShrink:0, animation:'sona-ready 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', color:'rgba(255,255,255,.8)', textTransform:'uppercase' }}>Sona · Ready</span>
-            </div>
-            {/* Clock */}
-            <div className="flex items-baseline justify-center gap-2 leading-none" style={{ fontFamily:'var(--font-code)' }}>
-              <span className="font-bold tabular-nums" style={{ fontSize:62, letterSpacing:'-0.03em', color:'#fff', animation:'sona-clock 4s ease-in-out infinite' }}>
-                {hh12}:{mm}
-              </span>
-              <span className="font-bold tabular-nums" style={{ fontSize:21, color:'var(--cam-gold-leaf-lt)', textShadow:'0 0 14px rgba(217,181,67,.5)' }}>
-                {ampm}
-              </span>
-            </div>
-            <div className="mt-1.5 text-sm" style={{ color:'rgba(255,255,255,.5)', fontFamily:'var(--font-code)', letterSpacing:'0.04em' }}>{dateStr}</div>
-            <p className="mt-3 text-[15px] font-semibold" style={{ color:'rgba(255,255,255,.88)' }}>
-              {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}. <span style={{ color:'var(--cam-gold-leaf-lt)' }}>Sona is ready.</span>
-            </p>
+        <div className="relative px-4 md:px-6 pt-7 pb-10 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
+            style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.10)', backdropFilter:'blur(8px)' }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', flexShrink:0, animation:'sona-ready 2s ease-in-out infinite' }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', color:'rgba(255,255,255,.72)', textTransform:'uppercase' }}>Sona · Ready</span>
+          </div>
+          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color:'#fff', margin:0, lineHeight:1.2 }}>
+            {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}.
+          </h2>
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <span style={{ fontFamily:'var(--font-code)', fontSize:13, fontWeight:600, color:'rgba(255,255,255,.5)', letterSpacing:'0.06em' }}>
+              {hh12}:{mm} <span style={{ color:'var(--cam-gold-leaf-lt)' }}>{ampm}</span>
+            </span>
+            <span style={{ display:'inline-block', width:1, height:12, background:'rgba(255,255,255,.18)' }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:11, color:'rgba(255,255,255,.35)', letterSpacing:'0.06em' }}>{dateStr}</span>
           </div>
         </div>
-        <div aria-hidden="true" style={{ position:'absolute', inset:'auto 0 0', height:40, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
       </div>
 
       {/* ── Body ── */}
-      <div className="px-3 sm:px-4 md:px-6 pt-3 pb-6 max-w-5xl mx-auto w-full">
+      <div className="px-4 md:px-6 pt-4 pb-8 max-w-5xl mx-auto w-full flex flex-col gap-6">
 
-        {/* Co-pilot launch */}
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Launch Co-pilot</span>
+        {/* Session cards */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ display:'inline-block', width:2, height:14, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--text-muted)' }}>Start a session</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {COPILOTS.map(cp => (
               <button
                 key={cp.name}
                 onClick={cp.onClick}
-                className="group text-left rounded-xl p-4 relative overflow-hidden"
-                style={{ background:'var(--cam-strip-icon-bg)', border:'1px solid var(--cam-strip-icon-border)', transition:'border-color .18s,box-shadow .18s,transform .18s' }}
+                className="group text-left rounded-2xl p-5 relative overflow-hidden"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderTop: `3px solid ${cp.accent}`,
+                  transition: 'box-shadow .18s, transform .18s',
+                }}
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = `${cp.accent}55`;
-                  el.style.boxShadow = `0 4px 22px ${cp.accent}22,inset 0 0 0 1px ${cp.accent}18`;
+                  el.style.boxShadow = `0 8px 32px ${cp.accent}1E, 0 2px 8px rgba(0,0,0,.10)`;
                   el.style.transform = 'translateY(-2px)';
-                  el.style.background = `linear-gradient(135deg, var(--cam-strip-icon-bg) 0%, ${cp.accent}08 100%)`;
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = 'var(--cam-strip-icon-border)';
                   el.style.boxShadow = 'none';
                   el.style.transform = 'none';
-                  el.style.background = 'var(--cam-strip-icon-bg)';
                 }}
               >
-                <div aria-hidden="true" style={{ position:'absolute', top:0, left:0, width:80, height:80, borderRadius:'50%', background:`radial-gradient(circle,${cp.accent}18 0%,transparent 70%)`, pointerEvents:'none' }} />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center justify-center rounded-lg" style={{ width:36, height:36, background:`${cp.accent}18`, color:cp.accent, border:`1px solid ${cp.accent}30` }}>
-                    {cp.icon}
-                  </div>
-                  <span style={{ fontFamily:'var(--font-code)', fontSize:9, fontWeight:700, letterSpacing:'0.16em', color:cp.accent, background:`${cp.accent}15`, padding:'2px 7px', borderRadius:4, border:`1px solid ${cp.accent}25` }}>
-                    CO-PILOT
-                  </span>
+                <div style={{ width:40, height:40, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, marginBottom:14 }}>
+                  {cp.icon}
                 </div>
-                <div className="text-[13px] font-bold mb-1" style={{ color:'var(--text-primary)' }}>{cp.name}</div>
-                <div className="text-[11px] leading-snug" style={{ color:'var(--text-muted)' }}>{cp.desc}</div>
-                <div className="flex items-center gap-1 mt-3 text-[11px] font-semibold" style={{ color:cp.accent }}>
-                  <span>Start session</span>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                <div style={{ fontFamily:'var(--font-display)', fontSize:15, fontWeight:700, color:'var(--text-primary)', marginBottom:5 }}>
+                  {cp.name}
+                </div>
+                <div style={{ fontSize:12, lineHeight:1.6, color:'var(--text-muted)', marginBottom:16 }}>
+                  {cp.desc}
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, fontFamily:'var(--font-code)', color:cp.accent, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                  Launch
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
+                    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                  </svg>
                 </div>
               </button>
             ))}
@@ -432,43 +395,43 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
 
         {/* Suggested prompts */}
-        <div className="mb-5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span style={{ display:'inline-block', width:3, height:11, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--text-muted)' }}>Suggested Prompts</span>
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span style={{ display:'inline-block', width:2, height:14, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
+            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--text-muted)' }}>Suggested prompts</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
             {QUICK_PROMPTS.map(p => {
               const accent = PROMPT_ACCENT[p.type];
               return (
                 <button
                   key={p.text}
                   onClick={() => handlePromptClick(p)}
-                  className="group text-left rounded-xl px-4 py-3.5 flex items-start gap-3 relative overflow-hidden"
-                  style={{ background:'var(--cam-strip-icon-bg)', border:'1px solid var(--cam-strip-icon-border)', minHeight:76, transition:'border-color .18s,box-shadow .18s,background .18s,transform .18s' }}
+                  className="group text-left rounded-xl px-4 py-3.5 flex flex-col gap-1.5"
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderTop: `2px solid ${accent}`,
+                    minHeight: 80,
+                    transition: 'box-shadow .15s, transform .15s',
+                  }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLButtonElement;
-                    el.style.borderColor = `${accent}45`;
                     el.style.boxShadow = `0 4px 16px ${accent}18`;
-                    el.style.background = `${accent}09`;
                     el.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={e => {
                     const el = e.currentTarget as HTMLButtonElement;
-                    el.style.borderColor = 'var(--cam-strip-icon-border)';
                     el.style.boxShadow = 'none';
-                    el.style.background = 'var(--cam-strip-icon-bg)';
                     el.style.transform = 'none';
                   }}
                 >
-                  <span style={{ display:'inline-block', width:3, borderRadius:2, background:accent, flexShrink:0, alignSelf:'stretch', minHeight:12 }} />
-                  <div className="flex-1 min-w-0">
-                    <span style={{ fontFamily:'var(--font-code)', fontSize:9, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:accent, display:'block', marginBottom:4 }}>{p.type}</span>
-                    <span className="text-[12px] leading-snug" style={{ color:'var(--text-secondary)' }}>{p.text}</span>
-                  </div>
-                  <svg className="w-3 h-3 shrink-0 mt-0.5 opacity-0 group-hover:opacity-50 transition-opacity" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color:accent }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
+                  <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:accent }}>
+                    {p.type}
+                  </span>
+                  <span style={{ fontFamily:'var(--font-sans)', fontSize:13, lineHeight:1.55, color:'var(--text-secondary)', fontWeight:450 }}>
+                    {p.text}
+                  </span>
                 </button>
               );
             })}
@@ -476,16 +439,16 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
         </div>
 
         {/* Keyboard hints */}
-        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid var(--cam-strip-icon-border)' }}>
+        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid var(--border)' }}>
           <div className="flex items-center gap-4" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
             {([['⌘K','focus'],['⌘M','mic'],['⌘B','blank screen']] as const).map(([k,v]) => (
               <span key={k} className="flex items-center gap-1.5">
-                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid var(--cam-strip-icon-border)', background:'var(--cam-strip-icon-bg)', fontSize:10 }}>{k}</kbd>
+                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid var(--border)', background:'var(--bg-surface)', fontSize:10 }}>{k}</kbd>
                 {v}
               </span>
             ))}
           </div>
-          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--cam-strip-text-muted)' }}>
+          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', animation:'sona-ready 2s ease-in-out infinite' }} />
             Sona ready
           </div>
