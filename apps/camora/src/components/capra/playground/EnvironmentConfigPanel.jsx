@@ -1,10 +1,5 @@
 import { EnvIcon } from './EnvironmentPicker';
 
-const TOOL_COLORS = {
-  Terminal: '#10b981',
-  IDE: '#0ea5e9',
-  Radar: '#8b5cf6',
-};
 
 const TERMINAL_PREVIEWS = {
   ubuntu: '$ ls -la',
@@ -32,7 +27,7 @@ const EnvironmentConfigPanel = ({ env }) => {
       <div style={{ margin: '0 16px 14px', flexShrink: 0 }}>
         <div style={{
           height: 78, borderRadius: 8, background: '#0a0a0a',
-          border: `1px solid ${env.color}44`, borderTop: `3px solid ${env.color}`,
+          border: '1px solid var(--border)', borderTop: '3px solid var(--cam-gold-leaf)',
           overflow: 'hidden', padding: '7px 10px',
           fontFamily: '"IBM Plex Mono", monospace', fontSize: 10, color: '#e4e4e4',
         }}>
@@ -58,20 +53,24 @@ const EnvironmentConfigPanel = ({ env }) => {
           {env.category.split(' · ').map((cat) => (
             <span key={cat} style={{
               fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
-              background: `${env.color}22`, color: env.color,
+              background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
             }}>{cat}</span>
           ))}
           <span style={{
             fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
-            background: env.plan === 'free' ? 'rgba(16,185,129,0.12)' : 'rgba(212,160,67,0.15)',
-            color: env.plan === 'free' ? '#10b981' : '#d4a043',
+            background: env.plan === 'free'
+              ? 'color-mix(in oklab, var(--accent) 10%, transparent)'
+              : 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
+            color: env.plan === 'free' ? 'var(--accent)' : 'var(--cam-gold-leaf-lt)',
           }}>
             {env.plan === 'free' ? 'Free' : 'Pro'}
           </span>
           {env.badge && (
             <span style={{
               fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
-              background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981',
+              background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
+              border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
+              color: 'var(--cam-gold-leaf-lt)',
             }}>{env.badge}</span>
           )}
         </div>
@@ -94,7 +93,7 @@ const EnvironmentConfigPanel = ({ env }) => {
               padding: '6px 8px', borderRadius: 6,
               background: 'var(--bg-base)', border: '1px solid var(--border)',
             }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: env.color, flexShrink: 0 }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
                   <span style={{
@@ -103,16 +102,14 @@ const EnvironmentConfigPanel = ({ env }) => {
                   }}>{node.name}</span>
                   <span style={{
                     fontSize: 8, padding: '1px 4px', borderRadius: 2,
-                    background: `${env.color}22`, color: env.color, fontWeight: 600,
+                    background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 600,
                   }}>{node.role}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {node.tools.map((t) => (
                     <span key={t} style={{
                       fontSize: 8, padding: '1px 4px', borderRadius: 2, fontWeight: 600,
-                      background: `${TOOL_COLORS[t] || '#888'}18`,
-                      color: TOOL_COLORS[t] || '#888',
-                      border: `1px solid ${TOOL_COLORS[t] || '#888'}30`,
+                      background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                     }}>{t}</span>
                   ))}
                 </div>

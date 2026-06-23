@@ -157,8 +157,8 @@ export default function PlaygroundShell() {
           <div style={{
             flexShrink: 0, height: 32,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 10px', background: '#0d1117',
-            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            padding: '0 10px', background: 'var(--cam-hero-strip)',
+            borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: 3 }}>⌨</span>
@@ -190,8 +190,8 @@ export default function PlaygroundShell() {
             flexShrink: 0, height: 32,
             display: 'flex', alignItems: 'center',
             padding: '0 8px', gap: 6,
-            background: '#0d1117',
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))',
           }}>
             {/* Env label */}
             <span style={{ fontSize: 10, fontFamily: '"IBM Plex Mono", monospace', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -283,9 +283,9 @@ export default function PlaygroundShell() {
                   </div>
                 )}
                 {/* Stats pane */}
-                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'stats' ? 'block' : 'none', overflowY: 'auto', background: '#0d1117', padding: 24 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', margin: '0 0 20px' }}>Your Session Stats</p>
-                  {statsLoading && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Loading stats…</p>}
+                <div style={{ position: 'absolute', inset: 0, display: activeTab === 'stats' ? 'block' : 'none', overflowY: 'auto', background: 'var(--bg-surface)', padding: 24 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 20px' }}>Your Session Stats</p>
+                  {statsLoading && <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>Loading stats…</p>}
                   {!statsLoading && stats && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
                       {[
@@ -295,15 +295,15 @@ export default function PlaygroundShell() {
                         { label: 'Success Rate', value: stats.successRate != null ? `${Math.round(stats.successRate * 100)}%` : '—' },
                         { label: 'Last Active', value: stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : '—' },
                       ].map(({ label, value }) => (
-                        <div key={label} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
-                          <span style={{ fontSize: 18, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{String(value)}</span>
+                        <div key={label} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{String(value)}</span>
                         </div>
                       ))}
                     </div>
                   )}
                   {!statsLoading && !stats && (
-                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>No stats available yet.</p>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>No stats available yet.</p>
                   )}
                 </div>
               </>
@@ -311,21 +311,21 @@ export default function PlaygroundShell() {
           </div>
           {saveDialogOpen && (
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-              <div style={{ width: 360, background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: 24 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Save VM Snapshot</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>
+              <div style={{ width: 360, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Save VM Snapshot</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
                   Saves your container state to cloud storage. Takes 1–3 minutes. Restore any time to continue where you left off.
                 </div>
                 <input
                   autoFocus type="text" placeholder="e.g. My Python setup"
                   value={saveName} onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveVm(); if (e.key === 'Escape') setSaveDialogOpen(false); }}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, fontSize: 13, boxSizing: 'border-box', marginBottom: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', outline: 'none' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, fontSize: 13, boxSizing: 'border-box', marginBottom: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none' }}
                 />
                 {saveError && <div style={{ fontSize: 11, color: '#fca5a5', marginBottom: 8 }}>{saveError}</div>}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                   <button type="button" onClick={() => { setSaveDialogOpen(false); setSaveName(''); setSaveError(null); }} style={iconBtn}>Cancel</button>
-                  <button type="button" disabled={saving || !saveName.trim()} onClick={handleSaveVm} style={{ padding: '4px 14px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: saving ? 'rgba(212,160,67,0.4)' : '#d4a043', color: '#1a1200', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                  <button type="button" disabled={saving || !saveName.trim()} onClick={handleSaveVm} style={{ padding: '4px 14px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: saving ? 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)' : 'var(--cam-gold-leaf)', color: 'var(--cam-hero-strip)', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}>
                     {saving ? 'Saving...' : 'Save VM'}
                   </button>
                 </div>
@@ -357,7 +357,7 @@ export default function PlaygroundShell() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span style={{ fontSize: 18 }}>⌨️</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Playground</span>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.35)', color: '#10b981' }}>BETA</span>
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)', color: 'var(--cam-gold-leaf-lt)' }}>BETA</span>
               </div>
               <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                 Disposable Linux VMs with VS Code IDE — start in seconds.
@@ -419,7 +419,7 @@ export default function PlaygroundShell() {
                   width: '100%', maxWidth: 380, padding: '13px 0', borderRadius: 8,
                   fontSize: 13, fontWeight: 800, letterSpacing: '0.04em',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                  background: isLoading ? 'rgba(212,160,67,0.5)' : '#d4a043', color: '#1a1200',
+                  background: isLoading ? 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)' : 'var(--cam-gold-leaf)', color: 'var(--cam-hero-strip)',
                   border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer',
                   opacity: isLoading ? 0.85 : 1, textTransform: 'uppercase',
                   boxShadow: isLoading ? 'none' : '0 0 24px rgba(212,160,67,0.25)',
