@@ -240,55 +240,14 @@ export default function LandingPage() {
       <SiteNav />
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[#080B14] text-white">
-        {/* Animated aurora gradient orbs */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 90% 70% at 5% 40%, rgba(54,131,220,0.24), transparent 55%),' +
-              'radial-gradient(ellipse 60% 80% at 12% 25%, rgba(139,92,246,0.22), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 92% 65%, rgba(54,131,220,0.30), transparent 60%),' +
-              'radial-gradient(ellipse 35% 45% at 72% 15%, rgba(34,211,238,0.12), transparent 50%),' +
-              'radial-gradient(ellipse 40% 50% at 50% 85%, rgba(139,92,246,0.08), transparent 55%),' +
-              'linear-gradient(135deg, #080B14 0%, #0C1120 50%, #10172E 100%)',
-            animation: 'heroOrbs 18s ease-in-out infinite alternate',
-          }}
-        />
-        {/* Drifting accent orb 1 */}
-        <div aria-hidden="true" className="absolute pointer-events-none opacity-20"
-          style={{
-            width: 500, height: 500, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(54,131,220,0.38) 0%, transparent 70%)',
-            top: '-10%', left: '-5%',
-            animation: 'heroDrift1 25s ease-in-out infinite alternate',
-          }}
-        />
-        {/* Drifting accent orb 2 */}
-        <div aria-hidden="true" className="absolute pointer-events-none opacity-15"
-          style={{
-            width: 400, height: 400, borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.22) 0%, transparent 70%)',
-            bottom: '-8%', right: '10%',
-            animation: 'heroDrift2 20s ease-in-out infinite alternate',
-          }}
-        />
-        {/* Floating decorative tech nodes */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-          {['top-[12%] left-[8%] w-3 h-3 delay-0', 'top-[30%] right-[15%] w-2 h-2 delay-[2s]',
-            'bottom-[20%] left-[20%] w-2.5 h-2.5 delay-[4s]', 'top-[60%] right-[8%] w-1.5 h-1.5 delay-[1s]',
-            'bottom-[35%] right-[35%] w-2 h-2 delay-[3s]', 'top-[8%] right-[30%] w-1.5 h-1.5 delay-[5s]',
-          ].map((pos, i) => (
-            <span key={i} className={`absolute rounded-full ${pos}`}
-              style={{
-                background: i % 2 === 0 ? 'rgba(54,131,220,0.70)' : 'rgba(139,92,246,0.60)',
-                boxShadow: i % 2 === 0 ? '0 0 18px rgba(54,131,220,0.55)' : '0 0 18px rgba(139,92,246,0.45)',
-                animation: `heroFloat ${4 + (i % 3) * 2}s ease-in-out ${i * 0.5}s infinite`,
-              }}
-            />
-          ))}
-        </div>
+      <section
+        className="relative overflow-hidden text-white"
+        style={{
+          background:
+            'radial-gradient(ellipse 55% 70% at 18% 40%, rgba(54,131,220,0.18), transparent 60%),' +
+            'linear-gradient(160deg, #080B14 0%, #0C1120 60%, #10172E 100%)',
+        }}
+      >
         {/* Grid overlay */}
         <div
           aria-hidden="true"
@@ -298,27 +257,6 @@ export default function LandingPage() {
               'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
             maskImage: 'radial-gradient(ellipse 60% 70% at 20% 30%, black, transparent 80%)',
-          }}
-        />
-        {/* Noise texture for premium AI depth */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            opacity: 0.035,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-            backgroundSize: '200px 200px',
-          }}
-        />
-        {/* Diagonal light beam */}
-        <div
-          aria-hidden="true"
-          className="absolute pointer-events-none"
-          style={{
-            top: '-20%', left: '38%', width: 90, height: '140%',
-            background: 'linear-gradient(to bottom, transparent, rgba(54,131,220,0.12) 30%, rgba(139,92,246,0.08) 65%, transparent)',
-            transform: 'rotate(-18deg)',
-            filter: 'blur(32px)',
           }}
         />
         {/* Bottom accent glow line */}
@@ -392,29 +330,6 @@ export default function LandingPage() {
           </div>
 
         </Container>
-
-        <style>{`
-          @keyframes heroOrbs {
-            0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-            33%  { transform: translate(3%, -2%) rotate(1.5deg) scale(1.03); }
-            66%  { transform: translate(-2%, 3%) rotate(-1deg) scale(0.97); }
-            100% { transform: translate(2%, -2%) rotate(0.5deg) scale(1.02); }
-          }
-          @keyframes heroDrift1 {
-            0%   { transform: translate(0, 0) scale(1); }
-            50%  { transform: translate(8%, 6%) scale(1.12); }
-            100% { transform: translate(-4%, -3%) scale(0.95); }
-          }
-          @keyframes heroDrift2 {
-            0%   { transform: translate(0, 0) scale(1); }
-            50%  { transform: translate(-6%, -8%) scale(1.08); }
-            100% { transform: translate(5%, 4%) scale(0.92); }
-          }
-          @keyframes heroFloat {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
-            50%      { transform: translateY(-18px) scale(1.15); opacity: 0.7; }
-          }
-        `}</style>
       </section>
 
       {/* ═══════════ SONA PREVIEW ═══════════ */}
