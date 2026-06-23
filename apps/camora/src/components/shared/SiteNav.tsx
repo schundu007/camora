@@ -49,13 +49,14 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
   return (
     <>
       <nav
-        className="fixed top-0 inset-x-0 z-50 bg-[#1D2126] text-white border-b border-[rgba(255,255,255,0.07)] shadow-[0_2px_8px_rgba(0,0,0,0.28)]"
+        className="fixed top-0 inset-x-0 z-50"
+        style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
         aria-label="Primary"
       >
         <div className="mx-auto flex h-[60px] items-center px-4 sm:px-6 lg:px-8 max-w-7xl">
           <Link to="/" aria-label="Camora — home" className="flex items-center gap-2.5 flex-shrink-0">
             <CamoraLogo size={30} />
-            <span className="hidden sm:inline-block font-display text-[17px] font-semibold tracking-tight text-white">
+            <span className="hidden sm:inline-block font-display text-[17px] font-semibold tracking-tight" style={{ color: 'var(--cam-strip-heading)' }}>
               Camora
             </span>
           </Link>
@@ -92,8 +93,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                   className="flex items-center px-3 text-[13px] font-semibold transition-colors no-underline"
                   style={{
                     height: 60,
-                    color: active ? '#ffffff' : 'rgba(255,255,255,0.60)',
-                    borderBottom: active ? '2px solid #3683DC' : '2px solid transparent',
+                    color: active ? 'var(--cam-strip-heading)' : 'color-mix(in oklab, var(--cam-strip-heading) 65%, transparent)',
+                    borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent',
                   }}
                 >
                   {link.label}
@@ -131,16 +132,17 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3683DC]"
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              style={{ border: '1px solid var(--cam-gold-leaf)', background: 'rgba(0,0,0,0.08)', color: 'var(--cam-strip-heading)' }}
               aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            {isAuthenticated && <HourMeterChip variant="dark" />}
+            {isAuthenticated && <HourMeterChip variant={theme === 'dark' ? 'dark' : 'light'} />}
 
             {isAuthenticated ? (
-              <UserDropdown variant="dark" />
+              <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} />
             ) : (
               <>
                 <Link
@@ -163,7 +165,8 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="md:hidden ml-auto flex h-10 w-10 items-center justify-center rounded-md text-white"
+            className="md:hidden ml-auto flex h-10 w-10 items-center justify-center rounded-md"
+            style={{ color: 'var(--cam-strip-heading)' }}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
           >
