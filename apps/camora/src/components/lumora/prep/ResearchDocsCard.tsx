@@ -182,12 +182,6 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
           </p>
         )}
 
-        {docs.length === 0 && !error && (
-          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-            No research docs uploaded yet. Upload PDFs or notes to give Sona extra context.
-          </p>
-        )}
-
         {docs.length > 0 && (
           <ul className="space-y-1.5">
             {docs.map(doc => (

@@ -55,6 +55,7 @@ export const LumoraShellPage = () => {
   const codingScreenshotRef = useRef<((text: string) => void) | null>(null);
   const designScreenshotRef = useRef<((text: string) => void) | null>(null);
   const cofixScreenshotRef = useRef<((text: string) => void) | null>(null);
+  const cofixInjectRef = useRef<((code: string, lang?: string) => void) | null>(null);
 
   // Input mode state lifted to shell so the global strip can own the pills
   const [codingInputMode, setCodingInputMode] = useState<'paste' | 'url' | 'image'>('paste');
@@ -644,6 +645,7 @@ export const LumoraShellPage = () => {
                         onNewProblemCallback={() => setScreenshots([])}
                         externalInputMode={codingInputMode}
                         onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
+                        onSendToCofix={(code, lang) => { cofixInjectRef.current?.(code, lang); navigate('/lumora/fix'); }}
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up
@@ -699,6 +701,7 @@ export const LumoraShellPage = () => {
                 <Suspense fallback={<TabLoading label="CoFix" />}>
                   <CoFixLayout
                     onScreenshotAppendRef={cofixScreenshotRef}
+                    onInjectCodeRef={cofixInjectRef}
                     screenshots={screenshots}
                     onSnapped={handleSnapped}
                     onRemove={handleRemoveScreenshot}
