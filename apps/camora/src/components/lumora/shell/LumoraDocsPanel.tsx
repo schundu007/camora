@@ -44,6 +44,7 @@ interface DocState {
 
 interface PrepData {
   companies: string[];
+  archivedCompanies?: string[];
   activeCompany: string | null;
   data: Record<string, DocState>;
 }
@@ -66,6 +67,7 @@ const migrateStudyDocs = (doc: any): DocState  => {
 
 const INITIAL_STATE: PrepData = {
   companies: [],
+  archivedCompanies: [],
   activeCompany: null,
   data: {},
 };
@@ -2307,6 +2309,8 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
+  const [selectedSections, setSelectedSections] = useState<string[]>(() => ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']);
+  const [showArchived, setShowArchived] = useState(false);
   const [showNewCompany, setShowNewCompany] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -2584,6 +2588,25 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     setActiveSection('input');
   };
 
+  const archiveCompany = (name: string) => {
+    setPrepData(prev => {
+      const newCompanies = prev.companies.filter(c => c !== name);
+      const archived = [...(prev.archivedCompanies || []), name];
+      const next = { ...prev, companies: newCompanies, archivedCompanies: archived, activeCompany: newCompanies[0] || null };
+      if (token) prepAPI.putState(token, next).catch(() => {});
+      return next;
+    });
+  };
+
+  const unarchiveCompany = (name: string) => {
+    setPrepData(prev => {
+      const archived = (prev.archivedCompanies || []).filter(c => c !== name);
+      const next = { ...prev, companies: [...prev.companies, name], archivedCompanies: archived, activeCompany: name };
+      if (token) prepAPI.putState(token, next).catch(() => {});
+      return next;
+    });
+  };
+
   const deleteCompany = (name: string) => {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     setPrepData(prev => {
@@ -2734,14 +2757,15 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   /** Generate ALL sections in parallel — each runs independently */
   const handleGenerate = useCallback(async () => {
     if (!state.jd.trim() || !state.resume.trim() || !token) return;
+    const toGenerate = selectedSections.length > 0 ? selectedSections : GENERATE_SECTIONS;
     setGenerating(true);
     const initStatus: Record<string, 'pending' | 'generating' | 'done' | 'error'> = {};
-    GENERATE_SECTIONS.forEach(s => { initStatus[s] = 'generating'; });
-    setSectionStatus(initStatus);
+    toGenerate.forEach(s => { initStatus[s] = 'generating'; });
+    setSectionStatus(prev => ({ ...prev, ...initStatus }));
 
-    await Promise.allSettled(GENERATE_SECTIONS.map(s => generateOneSection(s)));
+    await Promise.allSettled(toGenerate.map(s => generateOneSection(s)));
     setGenerating(false);
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, generateOneSection]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, generateOneSection, selectedSections]);
 
   /** Re-generate a single section */
   const regenerateSection = useCallback(async (section: string) => {
@@ -2940,14 +2964,31 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                         className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors hover:bg-white/5"
                         style={{ color: c === prepData.activeCompany ? 'var(--cam-gold-leaf-text)' : 'var(--text-primary)', background: c === prepData.activeCompany ? 'color-mix(in srgb, var(--cam-gold-leaf) 15%, transparent)' : 'transparent' }}>
                         <span className="truncate font-medium">{c}</span>
-                        {prepData.companies.length > 1 && (
-                          <button onClick={(e) => { e.stopPropagation(); deleteCompany(c); }}
-                            className="p-0.5 rounded opacity-50 hover:opacity-100" style={{ color: 'var(--text-muted)' }}>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        )}
+                        <button onClick={(e) => { e.stopPropagation(); archiveCompany(c); }}
+                          className="p-0.5 rounded opacity-40 hover:opacity-100" title="Archive" style={{ color: 'var(--text-muted)' }}>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" /></svg>
+                        </button>
                       </button>
                     ))}
+                    {(prepData.archivedCompanies || []).length > 0 && (
+                      <div style={{ borderTop: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setShowArchived(v => !v); }}
+                          className="w-full px-3 py-1.5 text-[10px] text-left flex items-center gap-1 opacity-60 hover:opacity-100"
+                          style={{ color: 'var(--text-muted)' }}>
+                          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" /></svg>
+                          Archived ({(prepData.archivedCompanies || []).length})
+                          <span style={{ marginLeft: 'auto' }}>{showArchived ? '▲' : '▼'}</span>
+                        </button>
+                        {showArchived && (prepData.archivedCompanies || []).map(c => (
+                          <button key={c} onClick={(e) => { e.stopPropagation(); unarchiveCompany(c); }}
+                            className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] text-left hover:bg-white/5"
+                            style={{ color: 'var(--text-muted)' }} title="Click to restore">
+                            <span className="truncate italic">{c}</span>
+                            <span className="text-[9px] opacity-60">Restore</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <button onClick={() => { setShowDropdown(false); setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
                       className="w-full px-3 py-2 text-xs font-bold text-left flex items-center gap-1.5"
                       style={{ color: 'var(--cam-gold-leaf-text)', borderTop: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent)', background: 'color-mix(in srgb, var(--cam-gold-leaf) 8%, transparent)' }}>
@@ -3032,10 +3073,39 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           <div className="mb-2 flex items-center justify-center">
             <CloudProviderSelector variant="compact" />
           </div>
-          <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating}
+          {/* Section selector — pick which sections to generate */}
+          <div className="mb-2 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between px-2 py-1" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
+              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Sections</span>
+              <button
+                onClick={() => setSelectedSections(selectedSections.length === GENERATE_SECTIONS.length ? [] : [...GENERATE_SECTIONS])}
+                className="text-[9px] font-bold"
+                style={{ color: 'var(--cam-primary)' }}>
+                {selectedSections.length === GENERATE_SECTIONS.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-px p-1" style={{ background: 'var(--border)' }}>
+              {GENERATE_SECTIONS.map(id => {
+                const label = SIDEBAR_SECTIONS.find(s => s.id === id)?.label || id;
+                const checked = selectedSections.includes(id);
+                return (
+                  <button key={id}
+                    onClick={() => setSelectedSections(prev => checked ? prev.filter(s => s !== id) : [...prev, id])}
+                    className="flex items-center gap-1 px-1.5 py-1 text-[9px] text-left transition-colors"
+                    style={{ background: checked ? 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-surface))' : 'var(--bg-surface)', color: checked ? 'var(--cam-primary)' : 'var(--text-muted)' }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 2, flexShrink: 0, border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`, background: checked ? 'var(--cam-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {checked && <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M1 3l1.5 1.5L5 1.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </span>
+                    <span className="truncate">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
             className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
             style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
-            {generating ? 'Generating...' : `Generate (${GENERATE_SECTIONS.length})`}
+            {generating ? 'Generating...' : `Generate (${selectedSections.length || GENERATE_SECTIONS.length})`}
           </button>
           {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}
           {/* Persistent Download All — visible from every view (JD, input,
