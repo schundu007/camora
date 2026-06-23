@@ -3059,98 +3059,109 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           })}
         </div>
 
-        {/* Generate button + progress */}
-        <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
+        {/* Bottom action panel */}
+        <div className="p-3 flex flex-col gap-2" style={{ borderTop: '1px solid var(--border)' }}>
+
+          {/* Progress bar — only while generating */}
           {generating && (
-            <div className="mb-2">
+            <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating all sections...</span>
-                <span className="text-[9px] font-bold" style={{ color: 'var(--cam-primary)' }}>
-                  {Object.values(sectionStatus).filter(s => s === 'done').length}/{GENERATE_SECTIONS.length}
+                <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
+                <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
+                  {Object.values(sectionStatus).filter(s => s === 'done').length}/{selectedSections.length}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                <div className="h-full rounded-full transition-all duration-500" style={{
-                  width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / GENERATE_SECTIONS.length) * 100}%`,
-                  background: 'var(--cam-primary)',
-                }} />
+              <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / selectedSections.length) * 100}%`, background: 'var(--cam-primary)' }} />
               </div>
             </div>
           )}
-          {/* Cloud-platform selector — drives service naming for the
-              generated system-design / coding / techstack sections. The
-              same useCloudProvider state is shared with every diagram
-              and topic surface, so picking once is enough. */}
-          <div className="mb-2 flex items-center justify-center">
+
+          {/* Cloud provider */}
+          <div className="flex justify-center">
             <CloudProviderSelector variant="compact" />
           </div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+
+          {/* Select all / count row */}
+          <div className="flex items-center justify-between px-0.5">
+            <span className="text-[9px] font-medium tabular-nums" style={{ color: 'var(--text-muted)' }}>
               {selectedSections.length}/{GENERATE_SECTIONS.length} selected
             </span>
             <button
               onClick={() => setSelectedSections(selectedSections.length === GENERATE_SECTIONS.length ? [] : [...GENERATE_SECTIONS])}
-              className="text-[9px] font-bold"
-              style={{ color: 'var(--cam-primary)' }}>
+              className="text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+              style={{ color: 'var(--cam-primary)', background: 'color-mix(in srgb, var(--cam-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--cam-primary) 25%, transparent)' }}>
               {selectedSections.length === GENERATE_SECTIONS.length ? 'Deselect All' : 'Select All'}
             </button>
           </div>
-          <button onClick={handleGenerate} disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
-            className="w-full py-2.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
-            {generating ? 'Generating...' : `Generate (${selectedSections.length})`}
+
+          {/* Generate CTA */}
+          <button
+            onClick={handleGenerate}
+            disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
+            className="w-full py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
+            style={{
+              background: 'linear-gradient(135deg, var(--cam-primary) 0%, color-mix(in srgb, var(--cam-primary) 80%, #7c3aed) 100%)',
+              color: '#fff',
+              boxShadow: hasRequiredDocs && !generating && selectedSections.length > 0 ? '0 2px 12px color-mix(in srgb, var(--cam-primary) 40%, transparent)' : 'none',
+            }}>
+            {generating
+              ? <span className="flex items-center justify-center gap-2"><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />Generating…</span>
+              : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
           </button>
-          {!hasRequiredDocs && <p className="text-[9px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>}
-          {/* Persistent Download All — visible from every view (JD, input,
-              any generated section). Disabled until at least one section
-              has been generated. One click = single combined PDF or DOCX
-              with every generated section. */}
+          {!hasRequiredDocs && (
+            <p className="text-[9px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
+          )}
+
+          {/* Download row */}
           <div
-            className="mt-2 pt-2 flex flex-col gap-1.5"
-            style={{ borderTop: '1px dashed var(--border)' }}
-            title={generatedCount === 0 ? 'Generate at least one section to enable downloads' : `Download all ${generatedCount} generated section${generatedCount === 1 ? '' : 's'} as one file`}
+            className="rounded-xl overflow-hidden"
+            style={{ border: '1px solid var(--border)', opacity: generatedCount === 0 ? 0.45 : 1 }}
+            title={generatedCount === 0 ? 'Generate at least one section first' : `Download all ${generatedCount} generated sections`}
           >
-            <span className="text-[9px] font-bold uppercase tracking-wider text-center" style={{ color: 'var(--text-muted)' }}>
-              Download All {generatedCount > 0 ? `(${generatedCount})` : ''}
-            </span>
-            <div className="flex gap-1.5">
+            <div className="flex items-center justify-between px-2.5 py-1.5" style={{ background: 'var(--bg-elevated)' }}>
+              <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Download All</span>
+              {generatedCount > 0 && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>{generatedCount}</span>
+              )}
+            </div>
+            <div className="flex" style={{ borderTop: '1px solid var(--border)' }}>
               <button
                 onClick={() => handleDownload('pdf')}
                 disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--cam-primary)', color: '#fff', border: '1px solid var(--cam-primary)' }}
-              >
-                {downloading === 'pdf' ? (
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                )}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed"
+                style={{ color: 'var(--cam-primary)', background: 'transparent', borderRight: '1px solid var(--border)' }}>
+                {downloading === 'pdf'
+                  ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                }
                 PDF
               </button>
               <button
                 onClick={() => handleDownload('docx')}
                 disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-              >
-                {downloading === 'docx' ? (
-                  <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                )}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed"
+                style={{ color: 'var(--text-primary)', background: 'transparent' }}>
+                {downloading === 'docx'
+                  ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                }
                 Word
               </button>
             </div>
             {downloadMsg && (
-              <span className="text-[9px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</span>
+              <div className="px-2.5 py-1 text-[9px] text-center" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>{downloadMsg}</div>
             )}
           </div>
-          <button onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
-            className="w-full py-1.5 mt-1.5 text-[10px] font-medium rounded-lg" style={{ color: 'var(--text-muted)' }}>Clear</button>
+
+          {/* Clear */}
+          <button
+            onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
+            className="w-full py-1.5 text-[10px] font-medium rounded-lg transition-colors hover:bg-white/5"
+            style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}>
+            Clear
+          </button>
         </div>
       </div>
 
