@@ -532,9 +532,18 @@ async function* generateSectionGroq(section, inputs, model = DEFAULT_GROQ_MODEL)
 }
 
 export async function* generateSection(section, inputs, provider = 'claude', model) {
-  const selectedModel = model || getModelForSection(section);
-  console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
-  yield* generateSectionClaude(section, inputs, selectedModel);
+  try {
+    const selectedModel = model || getModelForSection(section);
+    console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
+    yield* generateSectionClaude(section, inputs, selectedModel);
+  } catch (err) {
+    if (process.env.GROQ_API_KEY) {
+      console.warn(`[AscendPrep] Claude failed for "${section}", falling back to Groq: ${err.message?.slice(0, 120)}`);
+      yield* generateSectionGroq(section, inputs, model || DEFAULT_GROQ_MODEL);
+    } else {
+      throw err;
+    }
+  }
 }
 
 // Generate all sections sequentially
