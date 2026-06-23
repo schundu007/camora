@@ -3101,6 +3101,34 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               </button>
             );
           })}
+
+          {/* Select All / Deselect All — icon-only row below Tech Stack */}
+          {!generating && (
+            <div className="flex gap-1.5 px-3 pt-1 pb-0.5">
+              <button
+                title="Select all sections"
+                onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
+                disabled={selectedSections.length === GENERATE_SECTIONS.length}
+                className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
+                style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
+                  <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M3.5 6.5L5.5 8.5L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              <button
+                title="Deselect all sections"
+                onClick={() => setSelectedSections([])}
+                disabled={selectedSections.length === 0}
+                className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
+                style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
+                  <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M4 6.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom action panel */}
@@ -3146,46 +3174,6 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <p className="text-[9px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
           )}
 
-          {/* Download row */}
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ border: '1px solid var(--border)', opacity: generatedCount === 0 ? 0.45 : 1 }}
-            title={generatedCount === 0 ? 'Generate at least one section first' : `Download all ${generatedCount} generated sections`}
-          >
-            <div className="flex items-center justify-between px-2.5 py-1.5" style={{ background: 'var(--bg-elevated)' }}>
-              <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Download All</span>
-              {generatedCount > 0 && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>{generatedCount}</span>
-              )}
-            </div>
-            <div className="flex" style={{ borderTop: '1px solid var(--border)' }}>
-              <button
-                onClick={() => handleDownload('pdf')}
-                disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed"
-                style={{ color: 'var(--cam-primary)', background: 'transparent', borderRight: '1px solid var(--border)' }}>
-                {downloading === 'pdf'
-                  ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                }
-                PDF
-              </button>
-              <button
-                onClick={() => handleDownload('docx')}
-                disabled={downloading !== null || generatedCount === 0}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold transition-all active:scale-[0.97] disabled:cursor-not-allowed"
-                style={{ color: 'var(--text-primary)', background: 'transparent' }}>
-                {downloading === 'docx'
-                  ? <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                }
-                Word
-              </button>
-            </div>
-            {downloadMsg && (
-              <div className="px-2.5 py-1 text-[9px] text-center" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>{downloadMsg}</div>
-            )}
-          </div>
 
           {/* Clear */}
           <button
