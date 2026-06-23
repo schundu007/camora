@@ -359,7 +359,7 @@ export default function PlaygroundShell() {
                 <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Playground</span>
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)', color: 'var(--cam-gold-leaf-lt)' }}>BETA</span>
               </div>
-              <p style={{ fontSize: 10, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
                 Disposable Linux VMs with VS Code IDE — start in seconds.
               </p>
             </div>
