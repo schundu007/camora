@@ -340,7 +340,6 @@ export default function LandingPage() {
       <section className="bg-[var(--bg-surface)] py-12">
         <Container>
           <motion.div
-            className="max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.40, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
