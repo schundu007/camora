@@ -1,3 +1,4 @@
+import OpenAI from 'openai';
 import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from '../lib/_shared/llm.js';
 import { getApiKey as getClaudeApiKey } from './claude.js';
 import { getApiKey as getOpenAIApiKey } from './openai.js';
@@ -31,10 +32,24 @@ function getOpenAIClient() {
   return getOpenAIClientFromShared(apiKey);
 }
 
+// OpenRouter client — OpenAI-compatible endpoint, used for DeepSeek-V3 by default.
+// ~10x cheaper than Claude Sonnet for interview prep generation.
+let _openrouterClient = null;
+function getOpenRouterClient() {
+  if (!_openrouterClient) {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
+    _openrouterClient = new OpenAI({ apiKey, baseURL: 'https://openrouter.ai/api/v1' });
+  }
+  return _openrouterClient;
+}
+
 const CLAUDE_SONNET = 'claude-sonnet-4-6';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
+// DeepSeek-V3: excellent quality, ~$0.27/M input vs Claude Sonnet's $3/M
+const DEFAULT_OPENROUTER_MODEL = 'deepseek/deepseek-chat';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
 const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
 const MAX_TOKENS_HAIKU_SECTION = 12000; // Non-technical sections — behavioral STAR format needs 8-10K
@@ -567,15 +582,69 @@ Return valid JSON.`;
   }
 }
 
+// OpenRouter generator — mirrors generateSectionOpenAI but uses OpenRouter client.
+// Default model is DeepSeek-V3 which handles structured JSON well at low cost.
+async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_OPENROUTER_MODEL) {
+  const enrichedInputs = await enrichWithWebSearch(inputs, section);
+  const context = buildContext(enrichedInputs, section);
+  const sectionPrompt = SECTION_PROMPTS[section];
+  if (!sectionPrompt) throw new Error(`Unknown section: ${section}`);
+
+  const companyName = inputs.companyName || inputs.resolvedCompanyName || extractCompanyName(inputs.jobDescription || '');
+  const isDetailedSection = ['coding', 'system-design', 'techstack', 'rrk'].includes(section);
+  const companyContext = companyName
+    ? `\n\nCRITICAL: Prepare content SPECIFICALLY for ${companyName}. Use their actual interview format, real products, tech stack, and known questions. Every question must be tailored to ${companyName}.`
+    : '';
+
+  const systemPrompt = isDetailedSection
+    ? `You are an expert interview coach. Provide COMPREHENSIVE, DETAILED preparation materials. For coding: include complete working code with line-by-line explanations and edge cases. For system design: include ASCII diagrams, capacity calculations, and detailed component breakdowns. Reference any prep materials provided.${companyContext}\nReturn valid JSON.`
+    : `You are a concise interview coach. Give specific, actionable advice based on the resume and job description.${companyContext}\nReturn valid JSON.`;
+
+  const userMessage = buildUserMessage(context, sectionPrompt, section, enrichedInputs);
+  const isNonTechnical = !['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'].some(t => section?.toLowerCase().includes(t));
+  const maxTokens = section.startsWith('custom') ? MAX_TOKENS_CUSTOM_SECTION : isNonTechnical ? MAX_TOKENS_HAIKU_SECTION : MAX_TOKENS_PER_SECTION;
+
+  console.log(`[AscendPrep] OpenRouter section "${section}" → model: ${model}`);
+
+  const stream = await getOpenRouterClient().chat.completions.create({
+    model,
+    max_tokens: maxTokens,
+    stream: true,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    response_format: { type: 'json_object' },
+  });
+
+  let fullText = '';
+  let finishReason = null;
+  for await (const chunk of stream) {
+    const choice = chunk.choices[0];
+    const text = choice?.delta?.content || '';
+    if (text) { fullText += text; yield { chunk: text }; }
+    if (choice?.finish_reason) finishReason = choice.finish_reason;
+  }
+  if (finishReason === 'length') console.warn(`[AscendPrep] OpenRouter response truncated for section: ${section}`);
+  console.log(`[AscendPrep] OpenRouter done. finish=${finishReason} len=${fullText.length}`);
+  try {
+    yield { done: true, result: cleanupResult(JSON.parse(fullText)) };
+  } catch {
+    yield { done: true, result: { rawContent: cleanupText(fullText) } };
+  }
+}
+
 // Main generator function that handles provider selection
-export async function* generateSection(section, inputs, provider = 'claude', model) {
+export async function* generateSection(section, inputs, provider = 'openrouter', model) {
   if (provider === 'openai') {
     yield* generateSectionOpenAI(section, inputs, model || DEFAULT_OPENAI_MODEL);
-  } else {
-    // Use smart model selection: Sonnet for technical sections, Haiku for non-technical
+  } else if (provider === 'claude') {
     const selectedModel = model || getModelForSection(section);
-    console.log(`[AscendPrep] Section "${section}" → model: ${selectedModel}`);
+    console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
     yield* generateSectionClaude(section, inputs, selectedModel);
+  } else {
+    // Default: openrouter (DeepSeek-V3) — high quality, ~10x cheaper than Claude Sonnet
+    yield* generateSectionOpenRouter(section, inputs, model || DEFAULT_OPENROUTER_MODEL);
   }
 }
 

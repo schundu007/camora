@@ -210,7 +210,7 @@ router.post('/stream', async (req, res) => {
     return;
   }
 
-  let { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'claude', model, cloudProvider = 'aws' } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, sections, provider = 'openrouter', model, cloudProvider = 'aws' } = req.body;
 
   if (!jobDescription) {
     return res.status(400).json({ error: 'Job description is required' });
@@ -292,7 +292,7 @@ router.post('/section', async (req, res) => {
     return;
   }
 
-  let { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'claude', model, cloudProvider = 'aws' } = req.body;
+  let { jobDescription, resume, coverLetter, prepMaterials, documentation, section, customDocumentContent, customDocumentName, companyName, provider = 'openrouter', model, cloudProvider = 'aws' } = req.body;
 
   if (!jobDescription) {
     return res.status(400).json({ error: 'Job description is required' });
