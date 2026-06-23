@@ -30,6 +30,7 @@ type Step = {
   desc: string;
   Anim: () => JSX.Element;
   icon: JSX.Element;
+  color: string;
 };
 
 const Glyph = (path: JSX.Element) => (
@@ -43,6 +44,7 @@ const APPA: Step[] = [
     key: 'apply', label: 'Apply', href: '/jobs',
     headline: 'Roles matched to your skills',
     desc: '1,000+ matched roles · tailored resume + cover letter',
+    color: '#3B82F6',
     Anim: ApplyAnim,
     icon: Glyph(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></>),
   },
@@ -50,6 +52,7 @@ const APPA: Step[] = [
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
     headline: '978+ curated study topics',
     desc: 'System design, DSA, behavioral, databases · diagrams included',
+    color: '#10B981',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
@@ -57,6 +60,7 @@ const APPA: Step[] = [
     key: 'practice', label: 'Practice', href: '/capra/practice',
     headline: '9,500+ problems with AI feedback',
     desc: 'Coding, DSA, MCQ, SQL · 50+ domains · AI scoring',
+    color: '#F59E0B',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -64,6 +68,7 @@ const APPA: Step[] = [
     key: 'attend', label: 'Attend', href: '/lumora',
     headline: 'Real-time AI in the room',
     desc: 'Voice → instant AI answers · diagrams, code, STAR',
+    color: '#8B5CF6',
     Anim: AttendAnim,
     icon: Glyph(<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>),
   },
@@ -246,29 +251,24 @@ export default function LandingPage() {
 
       {/* ═══════════ HERO ═══════════ */}
       <section
-        className="relative overflow-hidden text-white"
-        style={{
-          background:
-            'radial-gradient(ellipse 55% 70% at 18% 40%, rgba(54,131,220,0.18), transparent 60%),' +
-            'linear-gradient(160deg, #080B14 0%, #0C1120 60%, #10172E 100%)',
-        }}
+        className="relative overflow-hidden"
+        style={{ background: '#FAFBFF' }}
       >
-        {/* Grid overlay */}
+        {/* Topographic grid overlay — subtle blue */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 opacity-[0.15]"
+          className="absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+              'linear-gradient(rgba(54,131,220,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(54,131,220,0.07) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
-            maskImage: 'radial-gradient(ellipse 60% 70% at 20% 30%, black, transparent 80%)',
           }}
         />
-        {/* Bottom accent glow line */}
+        {/* Bottom border */}
         <div
           aria-hidden="true"
           className="absolute bottom-0 inset-x-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.55) 35%, rgba(139,92,246,0.45) 65%, transparent 95%)' }}
+          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.25) 35%, rgba(99,102,241,0.2) 65%, transparent 95%)' }}
         />
 
         <Container className="relative pt-16 pb-16 md:pt-24 md:pb-20">
@@ -276,7 +276,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
-              <Pill tone="inverse" withDot>
+              <Pill tone="accent" withDot>
                 The career platform for engineers
               </Pill>
             </motion.div>
@@ -287,11 +287,11 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
             >
-              <span className="block text-[#F0EEE9]">All your prep.</span>
+              <span className="block text-[var(--text-primary)]">All your prep.</span>
               <span
                 className="block"
                 style={{
-                  background: 'linear-gradient(120deg, #60A5FA 0%, #3683DC 30%, #A855F7 70%, #818CF8 100%)',
+                  background: 'linear-gradient(120deg, #3683DC 0%, #1E56B5 40%, #6366F1 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -302,7 +302,7 @@ export default function LandingPage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 leading-relaxed text-[#9CA3AF] whitespace-nowrap"
+              className="mt-6 leading-relaxed text-[var(--text-secondary)] whitespace-nowrap"
               style={{ fontSize: 'clamp(11px, 1.55vw, 18px)' }}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -318,12 +318,12 @@ export default function LandingPage() {
               transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
             >
               <MagneticCTA strength={6}>
-                <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
+                <CTAButton to={heroCtaHref} variant="primary" size="lg" trailingArrow>
                   {heroCta}
                 </CTAButton>
               </MagneticCTA>
               <MagneticCTA strength={4}>
-                <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
+                <CTAButton to="/pricing" variant="secondary" size="lg">
                   View pricing
                 </CTAButton>
               </MagneticCTA>
@@ -390,8 +390,7 @@ export default function LandingPage() {
                 border: '1px solid rgba(255,255,255,0.07)',
               }}
             >
-              {/* Gold top accent line */}
-              <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, rgba(212,160,67,0.7) 30%, rgba(212,160,67,0.7) 70%, transparent)', marginBottom: 0 }} />
+              {/* Per-step color accent line rendered inside each card */}
 
               <div className="px-8 pt-8 pb-10 md:px-12 md:pt-10">
                 {/* Header */}
@@ -413,22 +412,22 @@ export default function LandingPage() {
                       className="group relative flex flex-col gap-3 px-5 py-6 transition-colors duration-200"
                       style={{
                         borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none',
-                        borderTop: i >= 2 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                        borderTop: `3px solid ${step.color}`,
                       }}
                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
                       onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
-                      {/* Step number — large watermark */}
+                      {/* Step number — large watermark in step color */}
                       <span
                         className="text-[48px] font-bold leading-none select-none"
-                        style={{ color: 'rgba(212,160,67,0.18)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.04em' }}
+                        style={{ color: `${step.color}30`, fontFamily: 'var(--font-mono)', letterSpacing: '-0.04em' }}
                       >
                         0{i + 1}
                       </span>
 
                       {/* Step name */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: 'rgba(212,160,67,0.75)', fontFamily: 'var(--font-mono)' }}>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: step.color, fontFamily: 'var(--font-mono)' }}>
                           {step.label}
                         </p>
                         <p className="text-[16px] font-semibold leading-snug" style={{ color: 'rgba(240,238,233,0.92)' }}>
@@ -444,7 +443,7 @@ export default function LandingPage() {
                       {/* Arrow link */}
                       <span
                         className="text-[12px] font-semibold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
-                        style={{ color: 'rgba(212,160,67,0.88)', fontFamily: 'var(--font-mono)' }}
+                        style={{ color: step.color, fontFamily: 'var(--font-mono)' }}
                       >
                         Explore
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
