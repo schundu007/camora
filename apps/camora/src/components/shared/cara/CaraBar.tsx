@@ -21,7 +21,42 @@ const VALID_PATHS = new Set([
   '/capra/resume', '/capra/company-prep', '/capra/plan', '/capra/library',
   '/capra/achievements', '/capra/hr-library', '/lumora', '/pricing',
   '/profile', '/docs', '/jobs',
+  '/capra/prepare/coding', '/capra/prepare/system-design', '/capra/prepare/behavioral',
+  '/capra/prepare/devops', '/capra/prepare/linux', '/capra/prepare/sre',
+  '/capra/prepare/cloud', '/capra/prepare/networking', '/capra/prepare/low-level',
+  '/capra/prepare/mlops', '/capra/prepare/aiops', '/capra/prepare/observability',
+  '/capra/prepare/platform', '/capra/prepare/projects', '/capra/prepare/challenges',
 ]);
+
+type LocalIntent = { answer: string; action: CaraAction };
+
+const LOCAL_INTENTS: Array<{ pattern: RegExp; result: LocalIntent }> = [
+  { pattern: /\b(linux|shell script)\b/i,          result: { answer: 'Opening Linux topics.', action: { type: 'navigate', path: '/capra/prepare/linux', label: 'Open Linux' } } },
+  { pattern: /\bdevops\b/i,                         result: { answer: 'Opening DevOps topics.', action: { type: 'navigate', path: '/capra/prepare/devops', label: 'Open DevOps' } } },
+  { pattern: /\b(dsa|coding|algorithm|data str)/i,  result: { answer: 'Opening DSA topics.', action: { type: 'navigate', path: '/capra/prepare/coding', label: 'Open DSA' } } },
+  { pattern: /\bsystem.?design\b/i,                 result: { answer: 'Opening System Design topics.', action: { type: 'navigate', path: '/capra/prepare/system-design', label: 'Open System Design' } } },
+  { pattern: /\bbehavioral\b/i,                     result: { answer: 'Opening Behavioral topics.', action: { type: 'navigate', path: '/capra/prepare/behavioral', label: 'Open Behavioral' } } },
+  { pattern: /\bsre\b/i,                            result: { answer: 'Opening SRE topics.', action: { type: 'navigate', path: '/capra/prepare/sre', label: 'Open SRE' } } },
+  { pattern: /\bcloud\b/i,                          result: { answer: 'Opening Cloud topics.', action: { type: 'navigate', path: '/capra/prepare/cloud', label: 'Open Cloud' } } },
+  { pattern: /\bnetwork/i,                          result: { answer: 'Opening Networking topics.', action: { type: 'navigate', path: '/capra/prepare/networking', label: 'Open Networking' } } },
+  { pattern: /\bmlops\b/i,                          result: { answer: 'Opening MLOps topics.', action: { type: 'navigate', path: '/capra/prepare/mlops', label: 'Open MLOps' } } },
+  { pattern: /\b(practice|problems?)\b/i,           result: { answer: 'Opening Practice problems.', action: { type: 'navigate', path: '/capra/practice', label: 'Go to Practice' } } },
+  { pattern: /\b(lumora|live interview|attend)\b/i, result: { answer: 'Opening Lumora live interview assistant.', action: { type: 'navigate', path: '/lumora', label: 'Open Lumora' } } },
+  { pattern: /\bpricing\b/i,                        result: { answer: 'Opening pricing plans.', action: { type: 'navigate', path: '/pricing', label: 'View Pricing' } } },
+  { pattern: /\bdocs?\b/i,                          result: { answer: 'Opening documentation.', action: { type: 'navigate', path: '/docs', label: 'Open Docs' } } },
+  { pattern: /\b(playground|run code)\b/i,          result: { answer: 'Opening the code playground.', action: { type: 'navigate', path: '/playground', label: 'Open Playground' } } },
+  { pattern: /\bresume\b/i,                         result: { answer: 'Opening Resume analyzer.', action: { type: 'navigate', path: '/capra/prepare/resume', label: 'Open Resume' } } },
+];
+
+function matchLocalIntent(msg: string): LocalIntent | null {
+  const isNav = /\b(go|take|open|show|navigate|bring|find|jump|switch|get|view|see)\b/i.test(msg)
+    || /^(linux|devops|dsa|sre|cloud|mlops|coding|network|behavioral)\b/i.test(msg);
+  if (!isNav) return null;
+  for (const { pattern, result } of LOCAL_INTENTS) {
+    if (pattern.test(msg)) return result;
+  }
+  return null;
+}
 
 export default function CaraBar() {
   const [open, setOpen] = useState(false);
@@ -60,6 +95,10 @@ export default function CaraBar() {
   const handleSubmit = async () => {
     const msg = input.trim();
     if (!msg || loading) return;
+
+    const local = matchLocalIntent(msg);
+    if (local) { setResponse(local); return; }
+
     setLoading(true);
     setResponse(null);
     try {

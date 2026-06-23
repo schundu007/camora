@@ -3,21 +3,31 @@ import Anthropic from '@anthropic-ai/sdk';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const CAMORA_ROUTES = `
-/capra/prepare          → Prep dashboard — topics overview and study plan
-/capra/practice         → DSA practice problems — coding challenges
-/capra/playground       → Code playground — run code in the browser
-/capra/mcq              → Multiple choice quizzes — test knowledge
-/capra/resume           → Resume analysis and feedback
-/capra/company-prep     → Company-specific prep — Google, Meta, Amazon, etc.
-/capra/plan             → Study plan — set goals and timeline
-/capra/library          → Problem library — curated DSA problem sets
-/capra/achievements     → Achievements and progress badges
-/capra/hr-library       → Behavioral / HR questions library
-/lumora                 → Live interview assistant — Sona helps in real-time
-/pricing                → Subscription plans and pricing
-/profile                → Account settings and preferences
-/docs                   → Documentation and guides
-/jobs                   → Job listings and applications
+/capra/prepare                  → Prep dashboard — all topic categories
+/capra/prepare/coding           → Data Structures & Algorithms topics
+/capra/prepare/system-design    → System Design topics
+/capra/prepare/behavioral       → Behavioral / STAR interview topics
+/capra/prepare/devops           → DevOps — CI/CD, containers, Kubernetes, IaC
+/capra/prepare/linux            → Linux fundamentals — shell, permissions, systemd
+/capra/prepare/sre              → Site Reliability Engineering topics
+/capra/prepare/cloud            → Cloud (AWS, GCP, Azure) topics
+/capra/prepare/networking       → Networking — TCP/IP, DNS, HTTP, TLS
+/capra/prepare/low-level        → Low-level design and system internals
+/capra/prepare/mlops            → MLOps — training pipelines, model serving
+/capra/prepare/observability    → Observability — metrics, logs, traces
+/capra/prepare/challenges       → Coding challenges and exercises
+/capra/practice                 → DSA practice problems — coding challenges
+/capra/playground               → Code playground — run code in the browser
+/capra/resume                   → Resume analysis and feedback
+/capra/company-prep             → Company-specific prep — Google, Meta, Amazon, etc.
+/capra/plan                     → Study plan — set goals and timeline
+/capra/achievements             → Achievements and progress badges
+/capra/hr-library               → Behavioral / HR questions library
+/lumora                         → Live interview assistant — Sona helps in real-time
+/pricing                        → Subscription plans and pricing
+/profile                        → Account settings and preferences
+/docs                           → Documentation and guides
+/jobs                           → Job listings and applications
 `.trim();
 
 function buildSystemPrompt(ctx) {
