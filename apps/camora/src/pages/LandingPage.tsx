@@ -251,8 +251,7 @@ export default function LandingPage() {
 
       {/* ═══════════ HERO ═══════════ */}
       <section
-        className="relative overflow-hidden"
-        style={{ background: '#FAFBFF' }}
+        className="relative overflow-hidden bg-[var(--bg-surface)]"
       >
         {/* Topographic grid overlay — subtle blue */}
         <div
