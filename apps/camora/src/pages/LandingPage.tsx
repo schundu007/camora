@@ -366,11 +366,8 @@ export default function LandingPage() {
                   key={`${c}-${i}`}
                   src={`https://img.logo.dev/${c}.com?token=${LOGO_TOKEN}&size=40&format=png`}
                   alt={c}
-                  className="h-6 mx-7 shrink-0 object-contain transition-opacity duration-150"
+                  className="h-6 mx-7 shrink-0 object-contain"
                   loading="lazy"
-                  style={{ filter: 'grayscale(1)', opacity: 0.5 }}
-                  onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = '0.8'; }}
-                  onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = '0.5'; }}
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               ))}
@@ -632,7 +629,7 @@ export default function LandingPage() {
                       style={{ background: 'var(--bg-base)', border: '1px solid var(--border)' }}
                     >
                       {t.logoDomain ? (
-                        <img src={`https://img.logo.dev/${t.logoDomain}?token=${LOGO_TOKEN}&size=32&format=png`} alt="" width={22} height={22} style={{ objectFit: 'contain', filter: 'grayscale(1)', opacity: 0.6 }} />
+                        <img src={`https://img.logo.dev/${t.logoDomain}?token=${LOGO_TOKEN}&size=32&format=png`} alt="" width={22} height={22} style={{ objectFit: 'contain' }} />
                       ) : (
                         <span className="text-[11px] font-bold text-white" style={{ background: t.accent }}>{t.initials}</span>
                       )}
