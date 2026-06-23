@@ -608,7 +608,10 @@ export const linuxTopics = [
     color: '#8b5cf6',
     questions: 7,
     description: 'fdisk, gdisk, parted, mkfs, fsck, blkid, and smartctl for partitioning, formatting, and drive health.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Partition Table Layout', description: 'MBR vs GPT partition structures and field breakdown', svg: '<img src="/diagrams/linux/linux-disk-partition-table.png" style="background:white">' },
+      { title: 'Disk Tool Workflow', description: 'lsblk → fdisk/parted → mkfs → mount decision flow', svg: '<img src="/diagrams/linux/linux-disk-tools-workflow.png" style="background:white">' },
+    ],
     introduction: `Disk management is a foundational SRE skill. Whether you are adding a data volume to a database server, replacing a failed drive, or setting up a new host, you need to understand partitioning schemes, filesystem creation, integrity checking, and drive health monitoring.\n\n## MBR vs GPT\n\n**MBR (Master Boot Record)** is the legacy scheme stored in the first 512 bytes of a disk. It supports at most **4 primary partitions** (or 3 primary + 1 extended with logical partitions inside) and disks up to **2 TiB**. Use \`fdisk\` to work with MBR disks.\n\n**GPT (GUID Partition Table)** is the modern standard. It supports up to **128 partitions** per disk and disks beyond 2 TiB. GPT stores a backup partition table at the end of the disk for recovery. Use \`gdisk\` or \`parted\` for GPT disks. All disks over 2 TiB must use GPT.\n\n## Key Tools\n\n- **\`lsblk -f\`** — list block devices with filesystem type, UUID, and mount point in a tree view\n- **\`blkid\`** — print UUID and TYPE for all block devices; used in \`/etc/fstab\`\n- **\`fdisk\` / \`gdisk\`** — interactive partition editors for MBR and GPT respectively\n- **\`parted\`** — non-interactive partitioning, scriptable, supports both MBR and GPT\n- **\`mkfs.ext4\`** / **\`mkfs.xfs\`** — create filesystems\n- **\`fsck\`** — filesystem consistency checker; never run on mounted filesystems\n- **\`smartctl\`** — query SMART (Self-Monitoring Analysis and Reporting Technology) data from drive firmware\n\n## Why UUID Over Device Name\n\nDevice names like \`/dev/sdb\` can change between reboots depending on probe order, PCI slot changes, or adding new disks. **UUIDs are stable** and assigned at filesystem creation. Always reference disks by UUID in \`/etc/fstab\` and bootloader configs.`,
     whenToUse: [
       'Adding a new data disk to a database server — partition with parted, format with mkfs.xfs, add UUID to fstab',
@@ -658,7 +661,10 @@ export const linuxTopics = [
     color: '#8b5cf6',
     questions: 6,
     description: 'mdadm RAID levels 0/1/5/6/10, degraded arrays, rebuild monitoring, and replacing failed drives.',
-    visualizations: [],
+    visualizations: [
+      { title: 'RAID Levels Comparison', description: 'RAID 0/1/5/6/10 redundancy, performance, and usable space', svg: '<img src="/diagrams/linux/linux-raid-levels.png" style="background:white">' },
+      { title: 'mdadm State Machine', description: 'clean → active → degraded → resyncing state transitions', svg: '<img src="/diagrams/linux/linux-raid-mdadm-states.png" style="background:white">' },
+    ],
     introduction: `**Software RAID** uses the Linux kernel's \`md\` (multiple devices) subsystem to combine physical disks into a logical array with redundancy, performance, or both. Unlike hardware RAID controllers, software RAID is transparent, portable, and doesn't tie you to proprietary firmware.\n\n## RAID Levels\n\n**RAID 0 — Striping.** Data is split across all disks in stripes. Delivers maximum throughput (reads and writes scale with disk count) but **zero redundancy** — one disk failure loses everything. Use for scratch/temp storage where speed matters and data is ephemeral.\n\n**RAID 1 — Mirroring.** Each disk is an exact copy of the other. Tolerates **one disk failure**. Read throughput doubles (each disk can serve reads independently); write throughput is limited to the slowest disk. Minimum 2 disks.\n\n**RAID 5 — Distributed Parity.** Data and parity are striped across all disks. Can survive **one disk failure**. Minimum 3 disks; usable capacity is (N-1) disks. Parity computation adds write overhead — beware write hole on unclean shutdown (mitigated by write-intent bitmaps).\n\n**RAID 6 — Dual Parity.** Like RAID 5 but with two independent parity blocks per stripe. Survives **two simultaneous disk failures**. Minimum 4 disks. Rebuild of a RAID 5 array can itself fail during the rebuild (URE on a second disk) — RAID 6 is safer for large arrays.\n\n**RAID 10 — Striped Mirrors.** RAID 1 arrays striped together. Combines mirroring redundancy with striping throughput. Minimum 4 disks. Can survive multiple failures as long as no mirror loses both disks.\n\n## Key Files\n\n- **\`/proc/mdstat\`** — live rebuild progress, array state, and per-device status\n- **\`/etc/mdadm/mdadm.conf\`** — array configuration for boot-time assembly`,
     whenToUse: [
       'Replacing a failed disk in a production RAID 1 or RAID 5 array — mdadm --remove then --add',
@@ -702,7 +708,10 @@ export const linuxTopics = [
     color: '#8b5cf6',
     questions: 6,
     description: 'mount command, /etc/fstab format, bind mounts, tmpfs, noatime optimization, and autofs lazy mounting.',
-    visualizations: [],
+    visualizations: [
+      { title: 'fstab Fields Anatomy', description: 'All 6 /etc/fstab fields explained with examples', svg: '<img src="/diagrams/linux/linux-mount-fstab-fields.png" style="background:white">' },
+      { title: 'Mount Namespace Layers', description: 'VFS → host NS → bind mounts → container NS hierarchy', svg: '<img src="/diagrams/linux/linux-mount-namespace-layers.png" style="background:white">' },
+    ],
     introduction: `Mounting is the act of attaching a filesystem to a directory in the Linux VFS tree. The kernel's mount table tracks every mounted filesystem, its options, and its relationship to other mounts. Understanding mount options and \`/etc/fstab\` is essential for building reliable, performant storage configurations.\n\n## The mount Command\n\n\`mount -t <fstype> <device> <mountpoint>\` is the basic form. Common examples:\n\n\`\`\`bash\nmount -t ext4 /dev/sdb1 /mnt/data\nmount -t nfs 10.0.0.5:/exports/data /mnt/nfs\nmount -t tmpfs -o size=512m tmpfs /tmp/ramdisk\n\`\`\`\n\n## /etc/fstab Format\n\nEach line has **6 whitespace-separated fields**:\n\n1. **Device** — UUID=xxx, LABEL=xxx, or /dev/sdX\n2. **Mount point** — absolute path\n3. **Filesystem type** — ext4, xfs, nfs, tmpfs, etc.\n4. **Mount options** — comma-separated (defaults, noatime, ro, ...)\n5. **dump** — 0 (most modern systems) or 1 (back up with dump utility)\n6. **pass** — fsck order at boot: 0 = skip, 1 = root fs first, 2 = other fs\n\nExample:\n\`\`\`\nUUID=abc123  /data  xfs  defaults,noatime  0  2\n\`\`\`\n\n## Key Mount Options\n\n- **\`noatime\`** — do not update access time on reads. Eliminates a write for every read; significant I/O saving on busy filesystems. Use on all data volumes.\n- **\`ro\`** — mount read-only. Use for rescue operations or read-only bind mounts.\n- **\`noexec\`** — prevent execution of binaries. Use on \`/tmp\` and \`/var/tmp\` for security hardening.\n- **\`nosuid\`** — ignore setuid/setgid bits. Prevents privilege escalation via setuid binaries on mounted volumes.\n- **\`relatime\`** — update atime only when mtime is newer (a middle ground between atime and noatime).`,
     whenToUse: [
       'Adding a persistent data volume to a server — write UUID-based fstab entry and test with mount -a',
@@ -747,7 +756,10 @@ export const linuxTopics = [
     color: '#8b5cf6',
     questions: 6,
     description: 'Inode structure, stat output, hard links vs symlinks, inode exhaustion diagnosis, and df -i.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Inode Structure', description: 'Inode metadata and direct/indirect block pointer layout', svg: '<img src="/diagrams/linux/linux-inodes-structure.png" style="background:white">' },
+      { title: 'Hard vs Symbolic Links', description: 'How hard links share inodes vs symlinks store path strings', svg: '<img src="/diagrams/linux/linux-inodes-links.png" style="background:white">' },
+    ],
     introduction: `Every file and directory in a Linux filesystem is represented by an **inode** — a data structure stored in the filesystem's inode table. Understanding inodes is critical for diagnosing a range of subtle production issues, from "disk full" errors when the disk has free space, to files that persist on disk after deletion.\n\n## What an Inode Contains\n\nAn inode stores all file metadata **except the filename**:\n\n- **File type** — regular file, directory, symlink, device, socket, FIFO\n- **Permissions** — owner, group, and other read/write/execute bits\n- **Owner UID and GID**\n- **File size** in bytes\n- **Three timestamps**: \`atime\` (last access), \`mtime\` (last data modification), \`ctime\` (last inode/metadata change)\n- **Link count** — number of directory entries pointing to this inode\n- **Block pointers** — direct, indirect, double-indirect pointers to data blocks\n\n## Filenames Live in Directories\n\nThe filename itself is stored in the **directory entry**, which maps a name string to an inode number. This design enables **hard links** — multiple filenames pointing to the same inode.\n\n## Hard Links vs Symbolic Links\n\n**Hard link** (\`ln source hardlink\`): creates a new directory entry pointing to the **same inode**. The inode's link count increments. The file data is only freed when link count reaches zero **and** no process holds the file open. Hard links cannot cross filesystem boundaries and cannot link to directories.\n\n**Symbolic link** (\`ln -s target symlink\`): a special file whose **data is the target path string**. The symlink has its own inode. Can cross filesystem boundaries, can point to directories. Breaks if the target is moved or deleted (dangling symlink).\n\n## Inode Exhaustion\n\nFilesystems have a **fixed number of inodes** allocated at creation time (ext4) or dynamic allocation (XFS). When inodes are exhausted, new files cannot be created even if gigabytes of block space remain. The symptom is \`No space left on device\` from \`df -h\` showing free space — check \`df -i\` instead.`,
     whenToUse: [
       '"No space left on device" but df -h shows free space — immediately check df -i for inode exhaustion',
@@ -792,7 +804,10 @@ export const linuxTopics = [
     color: '#8b5cf6',
     questions: 6,
     description: 'ext4 journal modes, XFS advantages, tune2fs, xfs_repair, btrfs copy-on-write, and filesystem selection.',
-    visualizations: [],
+    visualizations: [
+      { title: 'ext4 Journal Write Flow', description: 'JBD2 transaction lifecycle from write() to checkpoint', svg: '<img src="/diagrams/linux/linux-ext4-journal-flow.png" style="background:white">' },
+      { title: 'XFS Allocation Groups', description: 'Per-AG B-trees enabling parallel concurrent writes', svg: '<img src="/diagrams/linux/linux-xfs-allocation-groups.png" style="background:white">' },
+    ],
     introduction: `Choosing the right filesystem has significant implications for performance, data integrity, and operational complexity. Linux ships three mature general-purpose filesystems — **ext4**, **XFS**, and **btrfs** — each with distinct trade-offs.\n\n## ext4\n\n**ext4** is the evolution of ext2/ext3 and the default on most Debian/Ubuntu/RHEL systems. Key features: **extents** (contiguous block ranges replacing block maps), **dir_index** (htree-indexed directories for large dirs), **journal** for crash consistency, delayed allocation, and online defragmentation.\n\n**Journal modes** control what the journal protects:\n- **\`writeback\`** — only metadata is journaled, data may be written before or after metadata. Fastest, least safe — can expose stale data in files after a crash.\n- **\`ordered\`** (default) — data written to disk before metadata journaled. Prevents stale data exposure. Good balance of safety and performance.\n- **\`journal\`** — both data and metadata are journaled. Safest, but doubles write I/O. Only useful for high-integrity requirements.\n\n## XFS\n\n**XFS** is a high-performance 64-bit journaling filesystem originally from SGI. It excels at **parallel I/O** (multiple allocation groups enable concurrent writes), **large files**, and workloads with millions of files. It uses **dynamic inode allocation** — no fixed inode limit. \`xfs_repair\` replaces fsck; online defrag with \`xfs_fsr\`.\n\n## btrfs\n\n**btrfs** is a **copy-on-write (COW)** filesystem with built-in RAID, snapshots, deduplication, and checksums. COW means writes never overwrite existing blocks — new data is written to free blocks, then the metadata updated atomically. This enables instant snapshots at zero cost.`,
     whenToUse: [
       'New database server — XFS for parallel I/O, no fixed inode limit, and excellent large-file performance',
@@ -888,7 +903,10 @@ export const linuxTopics = [
     color: '#ef4444',
     questions: 6,
     description: 'AppArmor profiles, complain vs enforce mode, aa-genprof, aa-logprof, and path-based MAC.',
-    visualizations: [],
+    visualizations: [
+      { title: 'AppArmor Enforcement Modes', description: 'Unconfined → Complain → Enforce mode transitions', svg: '<img src="/diagrams/linux/linux-apparmor-modes.png" style="background:white">' },
+      { title: 'Rule Matching Flow', description: 'How LSM hooks check profile rules on every operation', svg: '<img src="/diagrams/linux/linux-apparmor-rule-match.png" style="background:white">' },
+    ],
     introduction: `**AppArmor** is a Mandatory Access Control (MAC) system for Linux that confines programs to a limited set of resources. Unlike SELinux which labels every file with a security context, AppArmor uses **path-based profiles** — rules that reference filesystem paths directly. This makes AppArmor significantly easier to write and audit than SELinux, at the cost of some flexibility.\n\nAppArmor is the default MAC system on **Ubuntu**, **Debian**, and **SUSE** distributions, while RHEL/Fedora use SELinux.\n\n## Profile Anatomy\n\nA profile lives in \`/etc/apparmor.d/\` and has this general structure:\n\n\`\`\`\n#include <tunables/global>\n\nprofile nginx /usr/sbin/nginx {\n  #include <abstractions/base>\n  #include <abstractions/nameservice>\n\n  capability net_bind_service,\n  capability setgid,\n  capability setuid,\n\n  /var/www/html/** r,\n  /var/log/nginx/** w,\n  /etc/nginx/** r,\n  /run/nginx.pid rw,\n  network tcp,\n}\n\`\`\`\n\n## File Permission Letters\n\n- **\`r\`** — read\n- **\`w\`** — write\n- **\`x\`** — execute\n- **\`k\`** — lock\n- **\`m\`** — mmap\n- **\`l\`** — link\n\n## Two Enforcement Modes\n\n**Enforce** — violations are blocked and logged. The profile is fully active.\n\n**Complain** — violations are logged but **not blocked**. Use for profile development and auditing. Equivalent to SELinux permissive mode for that specific profile.\n\nProfiles can be in different modes simultaneously — you can put a new custom app profile in complain while leaving all system profiles in enforce.`,
     whenToUse: [
       'Confining a third-party application to only the paths it legitimately needs — aa-genprof to build an initial profile',
@@ -934,7 +952,10 @@ export const linuxTopics = [
     color: '#ef4444',
     questions: 6,
     description: 'sudoers syntax, NOPASSWD, visudo, PAM modules, pam_faillock, and /etc/pam.d structure.',
-    visualizations: [],
+    visualizations: [
+      { title: 'PAM Authentication Stack', description: 'auth → account → session phases and control flags', svg: '<img src="/diagrams/linux/linux-sudo-pam-stack.png" style="background:white">' },
+      { title: 'sudo Privilege Flow', description: 'sudoers parse → PAM auth → exec as target user', svg: '<img src="/diagrams/linux/linux-sudo-privilege-flow.png" style="background:white">' },
+    ],
     introduction: `**sudo** and **PAM** are the two central pillars of privilege management and authentication on Linux systems. \`sudo\` controls **who can run what commands as which user**, while PAM (Pluggable Authentication Modules) controls **how users authenticate**.\n\n## sudo\n\n\`sudo\` allows permitted users to run commands with elevated (or different-user) privileges. The policy is defined in \`/etc/sudoers\` and files in \`/etc/sudoers.d/\`.\n\n**Always edit sudoers with \`visudo\`** — it locks the file, validates syntax before saving, and prevents saving a broken sudoers that would lock you out of sudo entirely.\n\nSudoers rule syntax:\n\n\`\`\`\nUSER HOST=(RUNAS) COMMAND\n%GROUP HOST=(RUNAS) COMMAND\n\`\`\`\n\nExamples:\n- \`alice ALL=(ALL) ALL\` — alice can run any command as any user on any host\n- \`%ops ALL=(ALL) NOPASSWD: /bin/systemctl\` — ops group can run systemctl without password\n- \`deploy ALL=(www-data) NOPASSWD: /usr/bin/git\` — deploy user can run git as www-data only\n\n## PAM — Pluggable Authentication Modules\n\nPAM is a **framework that decouples authentication logic from applications**. Instead of every application implementing its own authentication, they call PAM, which delegates to a stack of modules defined in \`/etc/pam.d/\`.\n\nPAM module types:\n- **\`auth\`** — authenticate the user (verify password, check TOTP, etc.)\n- **\`account\`** — check account validity (expired? locked? time restrictions?)\n- **\`session\`** — set up/tear down the session (mount home dir, set limits, logging)\n- **\`password\`** — handle password changes\n\nPAM control flags: **\`required\`** (must pass, continue stack), **\`requisite\`** (must pass, stop on failure), **\`sufficient\`** (if passes, stop stack), **\`optional\`** (result ignored unless only module).`,
     whenToUse: [
       'Granting a deployment user permission to restart a service without a password — sudoers NOPASSWD rule',
@@ -980,7 +1001,10 @@ export const linuxTopics = [
     color: '#ef4444',
     questions: 6,
     description: 'auditd, auditctl rules, ausearch, aureport, and using audit logs for forensic investigation.',
-    visualizations: [],
+    visualizations: [
+      { title: 'auditd Event Pipeline', description: 'Syscall → kernel hook → ring buffer → auditd → audit.log', svg: '<img src="/diagrams/linux/linux-audit-pipeline.png" style="background:white">' },
+      { title: 'Audit Rule Types', description: 'Control, filesystem watch, and syscall exit rule examples', svg: '<img src="/diagrams/linux/linux-audit-rule-types.png" style="background:white">' },
+    ],
     introduction: `The **Linux Audit System** is a kernel-level event logging framework that records security-relevant events with high fidelity — far beyond what traditional application logs capture. Every syscall, file access, user authentication event, and privilege escalation can be recorded with full context: who did it (UID, PID, process name), what they did, and when.\n\n## Architecture\n\nThe audit system has two layers:\n\n**Kernel audit subsystem** — intercepts system calls and file accesses according to rules. Events are written to an in-kernel ring buffer.\n\n**\`auditd\`** daemon — reads from the kernel ring buffer and writes events to \`/var/log/audit/audit.log\` (default) or forwards to a remote audit server via \`audisp\`.\n\n## Audit Rules\n\nRules are loaded with \`auditctl\` or persistently via files in \`/etc/audit/rules.d/\`:\n\n**File watch** (\`-w\`): generates events when a file or directory is accessed in the specified way:\n\`\`\`bash\nauditctl -w /etc/passwd -p wa -k passwd-changes\n# -w = path to watch\n# -p = permissions to watch: r(read) w(write) x(execute) a(attribute change)\n# -k = key name for searching\n\`\`\`\n\n**Syscall audit** (\`-a\`): generates events when a specific syscall is called:\n\`\`\`bash\nauditctl -a always,exit -F arch=b64 -S execve -k exec-tracking\n# -a = action (always/never), list (exit/entry/task)\n# -F = filter field\n# -S = syscall name\n\`\`\`\n\n## Log Format\n\nAudit events are structured records with key=value pairs:\n\n\`\`\`\ntype=SYSCALL msg=audit(1704067200.123:456): arch=c000003e syscall=59\n  success=yes exit=0 a0=... a1=... a2=... a3=...\n  pid=12345 ppid=12344 uid=1000 gid=1000 euid=0\n  exe="/usr/bin/sudo" key="privilege-escalation"\n\`\`\``,
     whenToUse: [
       'Post-incident forensics — who deleted this critical file? ausearch -k file-deletion -ts 2024-01-15',
@@ -1026,7 +1050,10 @@ export const linuxTopics = [
     color: '#ef4444',
     questions: 6,
     description: 'Linux capabilities subdivide root privileges — getcap, setcap, capsh, and Docker cap-drop patterns.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Capability Sets Model', description: 'Permitted/effective/inheritable/ambient/bounding set relationships', svg: '<img src="/diagrams/linux/linux-capabilities-sets.png" style="background:white">' },
+      { title: 'Capability Drop Flow', description: 'Secure service: bind port → drop root → minimal caps → seccomp', svg: '<img src="/diagrams/linux/linux-capabilities-drop-flow.png" style="background:white">' },
+    ],
     introduction: `Traditionally, Linux privilege was binary: you either had root (UID 0) and could do anything, or you were an unprivileged user. **Linux capabilities** break this model by dividing root's omnipotent authority into **~40 distinct privilege units** that can be independently granted or revoked.\n\n## Why Capabilities Matter\n\nRunning a process as root to bind port 80 is a massive security over-grant. With capabilities, you grant only \`CAP_NET_BIND_SERVICE\` and nothing else. A vulnerability in the service cannot be exploited to write to /etc/passwd or load kernel modules.\n\n## Key Capabilities\n\n| Capability | What It Allows |\n|---|---|\n| \`CAP_NET_BIND_SERVICE\` | Bind to ports below 1024 |\n| \`CAP_NET_RAW\` | Raw socket access (ping, tcpdump) |\n| \`CAP_SYS_PTRACE\` | Trace other processes (strace, gdb) |\n| \`CAP_SYS_ADMIN\` | Broad system administration — mount, namespace creation. Often called "almost root". |\n| \`CAP_CHOWN\` | Change file ownership |\n| \`CAP_SETUID\` / \`CAP_SETGID\` | Change process UID/GID |\n| \`CAP_DAC_OVERRIDE\` | Bypass DAC permission checks |\n| \`CAP_KILL\` | Send signals to any process |\n\n## Capability Sets\n\nEach thread has **five capability sets**:\n- **Permitted** — the maximum set a thread can ever have\n- **Effective** — the capabilities currently active for privilege checks\n- **Inheritable** — capabilities inherited across \`execve()\`\n- **Ambient** — inheritable even by unprivileged executables (Linux 4.3+)\n- **Bounding** — an upper bound; capabilities in permitted cannot exceed bounding\n\n## File Capabilities\n\nExecutable files can have capabilities attached, replacing setuid root:\n- **Permitted** — added to thread's permitted set on exec\n- **Inheritable** — ANDed with thread's inheritable\n- **Effective bit** — if set, permitted file capabilities are also effective`,
     whenToUse: [
       'Allowing a non-root service to bind to port 443 — setcap cap_net_bind_service+ep /usr/bin/myapp',
@@ -1073,7 +1100,10 @@ export const linuxTopics = [
     color: '#f59e0b',
     questions: 6,
     description: 'journalctl filtering, persistent logs, vacuum, priority levels, and journald.conf tuning.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Journal Storage Paths', description: 'Sources → journald → volatile /run vs persistent /var/log/journal', svg: '<img src="/diagrams/linux/systemd-journalctl-storage.png" style="background:white">' },
+      { title: 'journalctl Filter Options', description: '-u unit, -p priority, -b boot, -k kernel, field matches', svg: '<img src="/diagrams/linux/systemd-journalctl-filters.png" style="background:white">' },
+    ],
     introduction: `**journald** is systemd's logging daemon. It collects log entries from the kernel, systemd units, and any process that writes to \`stdout\`/\`stderr\` or calls \`syslog()\`. Unlike traditional text-based syslog, journald stores logs in a **structured binary format** that supports efficient filtering by time, unit, priority, PID, UID, and arbitrary fields.\n\n## Storage Locations\n\n**Volatile (default on many distros)**: \`/run/log/journal/\` — lost on reboot. Kernel events still survive if the machine reboots cleanly because the EFI pstore or pmsg captures crash logs.\n\n**Persistent**: \`/var/log/journal/\` — survives reboots. Enabled by setting \`Storage=persistent\` in \`/etc/systemd/journald.conf\` or by creating the directory: \`mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal\`.\n\n## Priority Levels\n\nJournald uses syslog priority numbers:\n\n| Level | Number | Meaning |\n|---|---|---|\n| emerg | 0 | System is unusable |\n| alert | 1 | Action must be taken immediately |\n| crit | 2 | Critical conditions |\n| err | 3 | Error conditions |\n| warning | 4 | Warning conditions |\n| notice | 5 | Normal but significant |\n| info | 6 | Informational |\n| debug | 7 | Debug-level messages |\n\n\`journalctl -p err\` shows messages at level 3 (err) and above — everything more severe.\n\n## Output Formats\n\n\`journalctl -o FORMAT\` supports: \`short\` (default), \`verbose\` (all fields), \`json\` (one JSON object per line), \`json-pretty\`, \`cat\` (message only), \`export\` (for piping to another journal).`,
     whenToUse: [
       'Tailing a specific service log — journalctl -u nginx.service -f',
@@ -1118,7 +1148,9 @@ export const linuxTopics = [
     color: '#f59e0b',
     questions: 6,
     description: 'PrivateTmp, PrivateNetwork, ProtectSystem, NoNewPrivileges, and systemd-analyze security.',
-    visualizations: [],
+    visualizations: [
+      { title: 'Linux Namespace Types', description: 'PID, NET, MNT, UTS, IPC, USER, CGROUP, TIME isolation domains', svg: '<img src="/diagrams/linux/systemd-namespaces-types.png" style="background:white">' },
+    ],
     introduction: `systemd provides a rich set of **sandboxing directives** that restrict what a service can access — without writing custom seccomp profiles or AppArmor rules. These directives leverage the same Linux kernel primitives (namespaces, seccomp, cgroups, capabilities) used by containers, but are configured declaratively in unit files.\n\nEffective sandboxing follows **least privilege**: each service should have exactly the access it needs and nothing more. A compromised web server that cannot access /home/, /root, or the network (if it only serves static files) has severely limited blast radius.\n\n## Core Sandboxing Directives\n\n**Filesystem isolation:**\n- \`PrivateTmp=yes\` — the service gets its own private \`/tmp\` and \`/var/tmp\`. Other services cannot access its temp files.\n- \`ProtectSystem=strict\` — mounts \`/usr\`, \`/boot\`, and \`/etc\` **read-only**. The service cannot modify system files.\n- \`ProtectHome=yes\` — makes \`/home\`, \`/root\`, and \`/run/user\` **inaccessible**.\n- \`ReadOnlyPaths=\` — make specific paths read-only.\n- \`ReadWritePaths=\` — re-grant write access to specific paths (used together with ProtectSystem=strict).\n\n**Privilege isolation:**\n- \`NoNewPrivileges=yes\` — the service **cannot gain new privileges** via setuid binaries or file capabilities. This single directive blocks a large class of privilege escalation attacks.\n- \`User=\` / \`Group=\` — run the service as a non-root user.\n- \`CapabilityBoundingSet=\` — restrict which capabilities the service can ever hold.\n\n**Network isolation:**\n- \`PrivateNetwork=yes\` — the service gets its own network namespace with only a loopback interface. Cannot make outbound connections or listen on ports.\n\n## Auditing Security Score\n\n\`systemd-analyze security <service>\` prints a security score and lists which sandboxing directives are missing. A score of 10 (worst) means no sandboxing at all; 0.0 (best) is fully sandboxed.`,
     whenToUse: [
       'Hardening a third-party service unit — add PrivateTmp, NoNewPrivileges, ProtectSystem=strict as a baseline',
@@ -1764,6 +1796,10 @@ initramfs mounts real root at /sysroot
     category: 'fundamentals',
     questions: 6,
     description: 'Monolithic kernel design, loadable modules, /proc and /sys filesystems, and sysctl tunables.',
+    visualizations: [
+      { title: '/proc Filesystem Tree', description: 'Key /proc entries: cpuinfo, meminfo, net, sys, PID dirs', svg: '<img src="/diagrams/linux/linux-kernel-proc-tree.png" style="background:white">' },
+      { title: 'Kernel Module Loading', description: 'modprobe → depmod → insmod → verify → module_init flow', svg: '<img src="/diagrams/linux/linux-kernel-module-loading.png" style="background:white">' },
+    ],
     introduction: `The Linux kernel is monolithic: all core subsystems (memory management, process scheduling, filesystems, networking, device drivers) run in kernel space at the same privilege level. Unlike microkernels (where subsystems run as separate processes), this gives better performance at the cost of isolation — a kernel bug can crash the entire system.
 
 **Loadable Kernel Modules (LKM)**: Despite being monolithic, Linux supports dynamically loading and unloading code (modules) without rebooting. lsmod lists loaded modules (from /proc/modules), modinfo shows module details (description, parameters, dependencies), modprobe loads a module and all its dependencies (reads /lib/modules/$(uname -r)/modules.dep), rmmod unloads (fails if module is in use), insmod loads a specific .ko file without dependency handling.
@@ -1906,6 +1942,10 @@ ulimit -n              # Current process file descriptor limit
     category: 'shell',
     questions: 6,
     description: 'Variable scoping, export, environment inspection, $PATH, $IFS, and Bash special variables.',
+    visualizations: [
+      { title: 'Variable Scoping', description: 'shell vs export vs local — what child processes inherit', svg: '<img src="/diagrams/linux/bash-variables-scoping.png" style="background:white">' },
+      { title: 'Environment Inheritance Chain', description: 'kernel → init → login shell → script → subshell env flow', svg: '<img src="/diagrams/linux/bash-variables-env-chain.png" style="background:white">' },
+    ],
     introduction: `Bash variables and the environment are fundamental to shell scripting and interactive use. Getting them wrong causes subtle, hard-to-debug bugs.
 
 **Variable assignment and types**: In bash, no type declaration is needed. var=value (no spaces around =). To use, prefix with $: echo $var or echo "\${var}". Curly braces are required for \${var}suffix to disambiguate from $varsuffix.
@@ -2063,6 +2103,9 @@ export API_KEY="secret123"
     category: 'shell',
     questions: 6,
     description: 'if/case/for/while/until, the [ vs [[ vs (( )) test distinctions, and break/continue.',
+    visualizations: [
+      { title: 'Control Flow & Exit Codes', description: 'if/case/while/for/until with $? exit code semantics', svg: '<img src="/diagrams/linux/bash-control-flow.png" style="background:white">' },
+    ],
     introduction: `Bash provides multiple conditional constructs, and choosing the right one is critical for correctness and portability.
 
 **[ ] (test command)**: The POSIX-compatible test command. It is actually an external command (though bash has a builtin). It does not support regex, and unquoted variables with spaces cause word splitting bugs. Always quote variables: [ "$var" = "value" ].
@@ -2225,6 +2268,9 @@ echo $line_count  # Correct value
     category: 'shell',
     questions: 5,
     description: 'Function declaration, local variables, return codes, argument handling, and function libraries.',
+    visualizations: [
+      { title: 'Function Patterns', description: 'Declaration styles, argument handling, return vs stdout value', svg: '<img src="/diagrams/linux/bash-functions-patterns.png" style="background:white">' },
+    ],
     introduction: `Bash functions allow code reuse and organization within scripts. They behave like mini-scripts within your script, with their own positional parameters but sharing the script's variable scope by default.
 
 **Declaration syntax**: Two equivalent forms exist: function name { body; } and name() { body; }. The name() form is slightly more POSIX-compatible. Functions must be defined before they are called (bash is interpreted top-to-bottom).
@@ -2536,6 +2582,9 @@ Much faster than regex for fixed patterns — no regex engine overhead.
     category: 'shell',
     questions: 5,
     description: 'fg/bg, jobs, disown, nohup, Ctrl+C/Z signals, process substitution, and pipeline control.',
+    visualizations: [
+      { title: 'Job Control States', description: 'Foreground ↔ suspended ↔ background state transitions', svg: '<img src="/diagrams/linux/bash-job-control-states.png" style="background:white">' },
+    ],
     introduction: `Bash job control allows managing multiple processes from a single terminal session. Understanding it is essential for running background tasks, keeping processes alive after logout, and debugging pipeline behavior.
 
 **Terminal signals**: Ctrl+C sends SIGINT (signal 2) to the foreground process group — typically terminates the process. Ctrl+Z sends SIGTSTP (signal 20) — suspends the process (pauses it, doesn't terminate). Ctrl+\\ sends SIGQUIT — terminates with core dump.
@@ -2692,6 +2741,9 @@ grep "optional_pattern" file.txt | process_matches || true
     category: 'networking',
     questions: 6,
     description: 'ip route, routing tables, default gateway, policy routing with ip rule, and ECMP load balancing.',
+    visualizations: [
+      { title: 'Routing Table Decision Flow', description: 'Longest-prefix match: host /32 → network → default → unreachable', svg: '<img src="/diagrams/linux/linux-ip-routing-decision.png" style="background:white">' },
+    ],
     introduction: `Linux kernel routing determines where outgoing packets are sent. Every packet consults the routing table, and the kernel applies longest prefix match to select the best route.
 
 **The routing table**: ip route show (the modern replacement for the obsolete route command) displays the main routing table. Output fields: destination network, via (gateway IP), dev (outgoing interface), src (preferred source IP), metric (preference — lower is preferred). The default route (0.0.0.0/0) matches all destinations not covered by more specific routes.
@@ -2837,6 +2889,9 @@ ip route get 8.8.8.8
     category: 'networking',
     questions: 5,
     description: 'ss -tulnp vs netstat, TCP socket state machine, TIME_WAIT, and CLOSE_WAIT diagnosis.',
+    visualizations: [
+      { title: 'TCP Socket State Machine', description: 'LISTEN → SYN_RECV → ESTABLISHED → FIN_WAIT → TIME_WAIT', svg: '<img src="/diagrams/linux/linux-ss-socket-states.png" style="background:white">' },
+    ],
     introduction: `ss (socket statistics) is the modern replacement for netstat. It reads socket information directly from the kernel via netlink socket rather than parsing /proc/net/tcp, making it significantly faster on systems with many connections.
 
 **ss -tulnp decoded**:
@@ -2987,6 +3042,9 @@ CLOSE_WAIT connections cannot be fixed by kernel tuning. The application must be
     category: 'networking',
     questions: 5,
     description: 'tcpdump capture syntax, BPF filters, writing pcap files, and tshark for terminal analysis.',
+    visualizations: [
+      { title: 'BPF Filter Syntax', description: 'host, port, proto filters and logic combinators', svg: '<img src="/diagrams/linux/linux-tcpdump-filters.png" style="background:white">' },
+    ],
     introduction: `tcpdump is the essential command-line packet capture tool. It uses libpcap and BPF (Berkeley Packet Filter) to capture and filter network packets at the kernel level, minimizing the data sent to userspace.
 
 **Basic usage**: tcpdump -i eth0 captures on eth0. tcpdump -i any captures on all interfaces (useful when you're not sure which interface traffic uses, but misses some VLAN information). tcpdump with no filter prints all packets — typically too much data.
@@ -3134,6 +3192,9 @@ tshark -r /tmp/tls_capture.pcap \
     category: 'networking',
     questions: 5,
     description: 'dig, nslookup, host, /etc/resolv.conf, /etc/nsswitch.conf, and systemd-resolved.',
+    visualizations: [
+      { title: 'Common Network Ports', description: 'Well-known ports: DNS 53, HTTP 80, HTTPS 443, SSH 22...', svg: '<img src="/diagrams/linux/linux-common-ports.png" style="background:white">' },
+    ],
     introduction: `DNS debugging is a critical skill — many service failures are ultimately DNS failures. The tools and configuration files involved form a layered system.
 
 **dig (Domain Information Groper)**: The preferred DNS debugging tool for its structured, unambiguous output. dig @server name type queries a specific nameserver. Without @server, uses the system resolver from /etc/resolv.conf. Common types: A (IPv4), AAAA (IPv6), CNAME (canonical name), MX (mail), TXT (text records, SPF/DKIM/verification), NS (nameservers), SOA (Start of Authority), PTR (reverse DNS). Key options: +short (just the answer), +trace (full delegation from root servers), +norecurse (non-recursive query), +time=2 (short timeout).
@@ -3274,6 +3335,9 @@ resolvectl status     # If using systemd-resolved
     category: 'networking',
     questions: 5,
     description: 'curl -v for HTTP debugging, custom headers, authentication, TLS inspection, and REST API calls.',
+    visualizations: [
+      { title: 'curl HTTP Request Lifecycle', description: 'DNS → TCP → TLS → request → response → redirect flow', svg: '<img src="/diagrams/linux/linux-curl-http-lifecycle.png" style="background:white">' },
+    ],
     introduction: `curl is the Swiss Army knife for HTTP debugging and API testing. It supports nearly every HTTP feature and provides detailed output of the full request/response cycle.
 
 **curl -v (verbose mode)**: Shows the entire conversation — TCP connection, TLS handshake details, request headers (lines starting with >), and response headers (lines starting with <). Lines starting with * are informational (connecting, TLS version, SSL certificate details, connection reuse).
@@ -3454,6 +3518,9 @@ api_call DELETE /v1/users/123 ""
     category: 'performance',
     questions: 6,
     description: 'Load average interpretation, CPU time breakdown columns, interactive commands, and htop advantages.',
+    visualizations: [
+      { title: 'top/htop Metric Breakdown', description: 'CPU us/sy/id/wa, memory VIRT/RES/SHR, load average explained', svg: '<img src="/diagrams/linux/linux-top-metrics.png" style="background:white">' },
+    ],
     introduction: `top and htop are the first tools you reach for when investigating system performance. Understanding what you're looking at is critical — the numbers can be misleading without context.
 
 **Load average**: The three numbers (e.g., 2.50 0.80 0.40) represent the average number of runnable or uninterruptible-sleep processes over the last 1, 5, and 15 minutes. A process in either state contributes 1.0 to the load. Rule of thumb: divide by CPU count. On a 4-core system, load 4.0 means fully loaded, 8.0 means severely overloaded (processes waiting for CPU). A rising trend (15-min higher than 1-min) means load is increasing.
@@ -3604,6 +3671,9 @@ lsof -p PID | grep -v REG  # Non-regular files (pipes, sockets)
     category: 'performance',
     questions: 5,
     description: 'vmstat fields for system-level stats, iostat -x for disk I/O deep-dive, and await vs svctm.',
+    visualizations: [
+      { title: 'vmstat Fields Explained', description: 'procs r/b, memory swpd/free/cache, swap si/so, CPU wa% bottleneck', svg: '<img src="/diagrams/linux/linux-vmstat-fields.png" style="background:white">' },
+    ],
     introduction: `vmstat and iostat provide system-wide and per-device performance statistics at a level of detail that top doesn't offer.
 
 **vmstat 1** (run every 1 second): The first row after the header is averages since boot — ignore it. Subsequent rows are 1-second samples.
@@ -3757,6 +3827,9 @@ aqu-sz = 8.5  -- 8.5 requests in queue on average
     category: 'performance',
     questions: 5,
     description: 'perf stat, perf record/report, generating flame graphs, and off-CPU analysis for I/O bottlenecks.',
+    visualizations: [
+      { title: 'perf Event Types', description: 'Hardware (cycles/cache-miss), software, tracepoints, perf stat vs record', svg: '<img src="/diagrams/linux/linux-perf-events.png" style="background:white">' },
+    ],
     introduction: `perf is the Linux performance profiling Swiss Army knife, built directly into the kernel subsystem. It uses hardware performance counters and software events to profile at near-zero overhead.
 
 **perf stat**: Collects hardware counter statistics for a command run. Key metrics: task-clock (milliseconds of CPU time), cycles (CPU clock cycles), instructions (retired instructions), IPC = instructions/cycles (efficiency measure — 1.0+ is good, below 0.5 suggests memory-bound workload), cache-misses (LLC misses indicate memory access pattern problems), branch-misses (mispredicted branches cause pipeline stalls).
@@ -3930,6 +4003,9 @@ perf script > after.perf
     category: 'performance',
     questions: 5,
     description: 'Tracing system calls and library calls to debug mysterious application behavior.',
+    visualizations: [
+      { title: 'Troubleshooting Playbook', description: 'System call tracing workflow: symptoms → strace/ltrace → root cause', svg: '<img src="/diagrams/linux/linux-troubleshooting-playbook.png" style="background:white">' },
+    ],
     introduction: `strace intercepts every interaction between a process and the Linux kernel. Since all I/O, file access, memory allocation (ultimately), and process management goes through system calls, strace reveals exactly what a program is doing at the lowest level.
 
 **How strace works**: strace uses the ptrace() system call to attach to a process and intercept each syscall entry and exit. This introduces significant overhead (typically 10-100x slowdown) — use on production with caution, and use -c for summary first.
@@ -4094,6 +4170,9 @@ openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
     category: 'performance',
     questions: 5,
     description: 'lsof for open files, network connections, process file descriptors, and recovering deleted files.',
+    visualizations: [
+      { title: 'lsof Columns & FD Types', description: 'FD types (cwd/txt/mem/0r/1w/3u), TYPE column, deleted-but-open', svg: '<img src="/diagrams/linux/linux-lsof-columns.png" style="background:white">' },
+    ],
     introduction: `lsof (List Open Files) is uniquely powerful on Linux because "everything is a file" — regular files, directories, sockets, pipes, devices, and more all appear in lsof output. It's an essential tool for diagnosing resource leaks, connection issues, and deleted-file problems.
 
 **Basic usage and filtering**:
@@ -4258,6 +4337,9 @@ fuser -v 8080/tcp
     category: 'performance',
     questions: 5,
     description: 'CFS scheduler, nice/renice, ionice, taskset for CPU affinity, numactl, and real-time priorities.',
+    visualizations: [
+      { title: 'DevOps Roadmap', description: '10-day Linux for DevOps learning progression and skill areas', svg: '<img src="/diagrams/linux/linux-devops-roadmap.png" style="background:white">' },
+    ],
     introduction: `The Linux CPU scheduler determines which process runs on which CPU at any given moment. Understanding the scheduler helps optimize performance for both latency-sensitive and throughput-oriented workloads.
 
 **CFS (Completely Fair Scheduler)**: The default scheduler since kernel 2.6.23. CFS tracks "virtual runtime" (vruntime) for each runnable process — how much CPU time it has received, weighted by its nice value. At each scheduling decision, the process with the lowest vruntime runs next. This ensures fairness: every process gets proportional CPU time relative to its weight.
