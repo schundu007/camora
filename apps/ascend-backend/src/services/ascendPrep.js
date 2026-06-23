@@ -32,23 +32,23 @@ function getOpenAIClient() {
   return getOpenAIClientFromShared(apiKey);
 }
 
-// Gemini client — OpenAI-compatible endpoint, free tier + very cheap paid.
-let _geminiClient = null;
-function getDeepSeekClient() {
-  if (!_geminiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
-    _geminiClient = new OpenAI({ apiKey, baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/' });
+// Groq client — OpenAI-compatible, free tier with generous limits (llama-3.3-70b).
+let _groqClient = null;
+function getGroqClient() {
+  if (!_groqClient) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error('GROQ_API_KEY not configured');
+    _groqClient = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' });
   }
-  return _geminiClient;
+  return _groqClient;
 }
 
 const CLAUDE_SONNET = 'claude-sonnet-4-6';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
-// Gemini 2.0 Flash: fast, cheap, excellent structured JSON output
-const DEFAULT_DEEPSEEK_MODEL = 'gemini-2.0-flash';
+// Groq free tier: llama-3.3-70b — fast, high-quality, generous free limits
+const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
 const MAX_TOKENS_CUSTOM_SECTION = 16000; // Custom sections with document parsing
 const MAX_TOKENS_HAIKU_SECTION = 12000; // Non-technical sections — behavioral STAR format needs 8-10K
@@ -581,9 +581,8 @@ Return valid JSON.`;
   }
 }
 
-// DeepSeek generator — uses DeepSeek direct API (OpenAI-compatible).
-// Handles structured JSON well at low cost (~$0.27/M input).
-async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPSEEK_MODEL) {
+// Groq generator — free tier llama-3.3-70b, OpenAI-compatible.
+async function* generateSectionGroq(section, inputs, model = DEFAULT_GROQ_MODEL) {
   const enrichedInputs = await enrichWithWebSearch(inputs, section);
   const context = buildContext(enrichedInputs, section);
   const sectionPrompt = SECTION_PROMPTS[section];
@@ -603,9 +602,9 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPS
   const isNonTechnical = !['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'].some(t => section?.toLowerCase().includes(t));
   const maxTokens = section.startsWith('custom') ? MAX_TOKENS_CUSTOM_SECTION : isNonTechnical ? MAX_TOKENS_HAIKU_SECTION : MAX_TOKENS_PER_SECTION;
 
-  console.log(`[AscendPrep] DeepSeek section "${section}" → model: ${model}`);
+  console.log(`[AscendPrep] Groq section "${section}" → model: ${model}`);
 
-  const stream = await getDeepSeekClient().chat.completions.create({
+  const stream = await getGroqClient().chat.completions.create({
     model,
     max_tokens: maxTokens,
     stream: true,
@@ -624,8 +623,8 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPS
     if (text) { fullText += text; yield { chunk: text }; }
     if (choice?.finish_reason) finishReason = choice.finish_reason;
   }
-  if (finishReason === 'length') console.warn(`[AscendPrep] OpenRouter response truncated for section: ${section}`);
-  console.log(`[AscendPrep] DeepSeek done. finish=${finishReason} len=${fullText.length}`);
+  if (finishReason === 'length') console.warn(`[AscendPrep] Groq response truncated for section: ${section}`);
+  console.log(`[AscendPrep] Groq done. finish=${finishReason} len=${fullText.length}`);
   try {
     yield { done: true, result: cleanupResult(JSON.parse(fullText)) };
   } catch {
@@ -633,17 +632,25 @@ async function* generateSectionOpenRouter(section, inputs, model = DEFAULT_DEEPS
   }
 }
 
-// Main generator function that handles provider selection
-export async function* generateSection(section, inputs, provider = 'openai', model) {
+// Main generator function — Groq (free) first, OpenAI fallback.
+export async function* generateSection(section, inputs, provider = 'groq', model) {
   if (provider === 'claude') {
     const selectedModel = model || getModelForSection(section);
     console.log(`[AscendPrep] Section "${section}" → claude model: ${selectedModel}`);
     yield* generateSectionClaude(section, inputs, selectedModel);
-  } else {
-    // Default: gpt-4o-mini — cheap, reliable, OPENAI_API_KEY already configured
-    console.log(`[AscendPrep] Section "${section}" → openai gpt-4o-mini`);
-    yield* generateSectionOpenAI(section, inputs, model || 'gpt-4o-mini');
+    return;
   }
+  if (process.env.GROQ_API_KEY) {
+    try {
+      console.log(`[AscendPrep] Section "${section}" → groq ${DEFAULT_GROQ_MODEL}`);
+      yield* generateSectionGroq(section, inputs, model || DEFAULT_GROQ_MODEL);
+      return;
+    } catch (err) {
+      console.warn(`[AscendPrep] Groq failed for "${section}", falling back to OpenAI: ${err.message?.slice(0, 120)}`);
+    }
+  }
+  console.log(`[AscendPrep] Section "${section}" → openai gpt-4o-mini`);
+  yield* generateSectionOpenAI(section, inputs, model || 'gpt-4o-mini');
 }
 
 // Generate all sections sequentially
