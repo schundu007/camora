@@ -307,7 +307,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles · 600+ study topics · 9,500+ problems · Live AI in the room.
+              1,000+ matched roles · 978+ study topics · 9,500+ problems · Live AI in the room.
             </motion.p>
 
             <motion.div
