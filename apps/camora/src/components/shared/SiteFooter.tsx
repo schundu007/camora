@@ -38,7 +38,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
         <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link to="/docs" className="footer-link text-[13px] font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>Docs</Link>
           <Link to="/download" className="footer-link text-[13px] font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>Download</Link>
-          <a href="https://jobs.cariara.com" target="_blank" rel="noopener noreferrer" className="footer-link text-[13px] font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>Careers</a>
+          <a href="https://jobs.cariara.com" target="_blank" rel="noopener noreferrer" className="footer-link text-[13px] font-medium transition-colors" style={{ color: 'var(--text-secondary)' }}>Jobs</a>
         </nav>
       </div>
 
