@@ -121,6 +121,11 @@ export const cloudTopicCategoryMap = {
   'aws-transfer-family':      'migration',
   'aws-datasync':             'migration',
   'aws-application-migration':'migration',
+  // Compute (new)
+  'iaas-paas-saas':            'compute',
+  'aws-architecture-3tier':    'compute',
+  // Containers (new)
+  'aws-ecs-vs-eks':            'containers',
 };
 
 export const cloudTopics = [
@@ -3651,6 +3656,126 @@ export const cloudTopics = [
   ],
   references: [
     'https://docs.aws.amazon.com/mgn/latest/ug/',
+  ],
+},
+
+{
+  id: 'iaas-paas-saas',
+  title: 'IaaS vs PaaS vs SaaS',
+  icon: 'cpu',
+  color: '#f97316',
+  description: 'Three cloud service models. IaaS = rent servers (you manage OS/runtime/app). PaaS = rent platform (you manage app/data). SaaS = use software (provider manages everything).',
+  introduction: '**IaaS**, **PaaS**, and **SaaS** are the three fundamental cloud service delivery models, differing in how much the provider manages vs how much the customer manages.\n\n- **IaaS (Infrastructure as a Service)**: Rent raw compute, storage, and networking. You manage everything from the OS up. Think: renting an empty apartment — you bring your own furniture.\n- **PaaS (Platform as a Service)**: Rent a development platform. You manage only the application and data. Think: renting a fully furnished workspace.\n- **SaaS (Software as a Service)**: Use complete software delivered over the internet. You manage nothing — just use the application. Think: staying in a hotel.',
+  whenToUse: 'Use IaaS when you need full OS-level control, custom runtimes, or lift-and-shift migrations. Use PaaS when you want to focus on application development without managing infrastructure — best for teams that want to deploy code without DevOps overhead. Use SaaS when you want to consume software as a service without any deployment concern — best for business tools like email, CRM, or collaboration.',
+  keyConcepts: [
+    { title: 'IaaS — Infrastructure as a Service', description: '**You manage**: OS, runtime, middleware, application, data. **Provider manages**: hardware, virtualization, networking, storage. Examples: **AWS EC2**, **GCP Compute Engine**, **Azure VMs**, **DigitalOcean Droplets**. Full control but full responsibility — you patch the OS, configure the runtime, and manage scaling.' },
+    { title: 'PaaS — Platform as a Service', description: '**You manage**: application code and data. **Provider manages**: OS, runtime, middleware, scaling, patching. Examples: **Heroku**, **AWS Elastic Beanstalk**, **Google App Engine**, **Render**, **Railway**. You deploy code; the platform handles the rest. Ideal for web apps and APIs where infrastructure management is not a differentiator.' },
+    { title: 'SaaS — Software as a Service', description: '**You manage**: nothing (just use it). **Provider manages**: everything including the application itself. Examples: **Gmail**, **Slack**, **Salesforce**, **Zoom**, **GitHub**, **ChatGPT**. Consumed over the internet, typically via a browser or API. No deployment, no patching, no scaling decisions.' },
+    { title: 'Responsibility Comparison', description: 'Layer ownership by model — Hardware/Virtualization/Networking/Storage: always provider. OS/Runtime/Middleware: IaaS=Customer, PaaS=Provider, SaaS=Provider. Application/Data: IaaS=Customer, PaaS=Customer, SaaS=Provider. The higher the model, the less the customer owns.' },
+  ],
+  approach: [
+    { step: 'Choose the right model for your workload', details: 'Start with the question: how much control do you need vs how much operational overhead can you tolerate? If the team has deep DevOps skills and needs a custom runtime — IaaS. If the team wants to ship code fast without managing servers — PaaS. If you just need business software — SaaS.' },
+    { step: 'Understand the shared responsibility model', details: 'Every cloud provider has a shared responsibility model. In IaaS, you are responsible for OS patching, runtime security, and application security. In PaaS, the provider handles OS and runtime security but you still own application code security and data protection. In SaaS, you are responsible only for data governance and access management (who has accounts).' },
+    { step: 'Evaluate total cost of ownership', details: 'IaaS appears cheapest per compute hour but has hidden costs: DevOps engineer time, OS licensing, patching windows, capacity planning. PaaS costs more per unit but eliminates most operational overhead. SaaS has the highest per-seat cost but zero infrastructure cost. Calculate the true TCO including engineering time.' },
+  ],
+  pitfalls: [
+    { title: 'Vendor lock-in increases up the stack', description: 'IaaS workloads are most portable (VMs run anywhere). PaaS adds some lock-in (Heroku buildpacks, Elastic Beanstalk config). SaaS creates the deepest lock-in — migrating from Salesforce or Workday is a multi-year project. Factor portability into long-term architecture decisions.' },
+    { title: 'Misclassifying serverless', description: 'AWS Lambda and Cloud Functions are sometimes called "serverless" and sometimes PaaS. They sit between PaaS and SaaS — you manage code but not runtime or scaling. In interviews, calling Lambda/Functions "serverless PaaS" or "FaaS (Function as a Service)" is more precise.' },
+    { title: 'Assuming PaaS removes all operational burden', description: 'PaaS still requires you to manage application configuration, secrets, environment variables, database connections, and application-level scaling settings. It removes OS-level ops, not all ops.' },
+  ],
+  keyQuestions: [
+    { q: 'What are IaaS, PaaS, and SaaS? Give examples of each.', a: '**IaaS (Infrastructure as a Service)**: Provider manages hardware, virtualization, networking, and storage. You manage OS, runtime, app, and data. Examples: AWS EC2, GCP Compute Engine, Azure VMs.\n\n**PaaS (Platform as a Service)**: Provider manages OS, runtime, and middleware. You manage only the application and data. Examples: Heroku, AWS Elastic Beanstalk, Google App Engine.\n\n**SaaS (Software as a Service)**: Provider manages everything including the application. You just use it. Examples: Gmail, Slack, Salesforce, Zoom.\n\nMemory trick: IaaS = "I rent servers", PaaS = "I build apps", SaaS = "I use software".' },
+    { q: 'Which cloud model gives you the most control? Which gives the least?', a: '**IaaS gives the most control** — you manage the OS, runtime, middleware, application, and data. You can install any software, use any runtime, and configure the system at the kernel level. This comes with the most operational responsibility.\n\n**SaaS gives the least control** — you consume the application as-is. You cannot change the runtime, OS, or infrastructure. You only control your own data and user access settings.\n\nPaaS sits in between — you control the application and data but accept the provider\'s choice of OS and runtime.' },
+    { q: 'How do you decide between IaaS and PaaS for a new web application?', a: 'Choose **PaaS** (Heroku, App Engine, Elastic Beanstalk) when:\n- The team is small and wants to focus on product code, not infrastructure\n- The application uses standard runtimes (Node.js, Python, Ruby, Java)\n- You want automatic scaling, managed patching, and built-in CI/CD\n- Time-to-market matters more than cost optimization\n\nChoose **IaaS** (EC2, GCP VMs, Azure VMs) when:\n- You need a specific OS version, kernel module, or custom runtime\n- The workload is stateful and requires persistent local storage\n- You need fine-grained control over networking, security groups, or placement\n- Cost at scale justifies the DevOps investment\n- You are doing a lift-and-shift migration of an existing application' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/whitepapers/latest/aws-overview/types-of-cloud-computing.html',
+    'https://cloud.google.com/learn/paas-vs-iaas-vs-saas',
+  ],
+  visualizations: [
+    { title: 'IaaS vs PaaS vs SaaS Responsibility Stack', caption: 'Vertical stack showing which layers (Hardware, Virtualization, Networking, Storage, OS, Runtime, Middleware, App, Data) are managed by Provider vs Customer in each service model.', image: '/diagrams/linkdiags/iaas-paas-saas.png' },
+  ],
+},
+
+{
+  id: 'aws-ecs-vs-eks',
+  title: 'AWS ECS vs EKS — When to Use Each',
+  icon: 'package',
+  color: '#ec4899',
+  description: 'ECS is AWS-native and simpler (Tasks/Services/Clusters). EKS is Kubernetes-standard and portable (Pods/Deployments/Services). ECS for AWS-specific teams, EKS for Kubernetes teams or multi-cloud needs.',
+  introduction: '**ECS (Elastic Container Service)** and **EKS (Elastic Kubernetes Service)** are both AWS container orchestration platforms, but they take fundamentally different approaches. ECS is an AWS-native service with its own API and abstractions — simpler to operate for AWS-focused teams. EKS runs upstream Kubernetes, giving you the full K8s ecosystem and portability across clouds and on-premises.',
+  whenToUse: 'Use ECS when your team is AWS-native, the workload is straightforward, and you want minimal operational complexity. Use EKS when your team has Kubernetes expertise, you need the full Kubernetes feature set (custom CRDs, Helm charts, service mesh), or you need portability across clouds. Some organizations run both — ECS for simple internal services, EKS for complex microservices platforms.',
+  keyConcepts: [
+    { title: 'ECS Core Concepts', description: '**Task Definition**: blueprint for a container (image, CPU, memory, env vars). **Task**: a running instance of a task definition (like a pod). **Service**: ensures N tasks are always running, integrates with ALB. **Cluster**: logical group of EC2 instances or Fargate capacity. ECS manages task placement and scheduling using its own proprietary scheduler.' },
+    { title: 'EKS Core Concepts', description: '**Pod**: smallest deployable unit, one or more containers. **Deployment**: manages pod replicas, rolling updates. **Service**: stable network endpoint for a set of pods. **ConfigMap/Secret**: configuration and secret management. **Ingress**: HTTP routing rules. **Namespace**: logical cluster partitioning. EKS runs upstream Kubernetes — all standard K8s tooling works.' },
+    { title: 'Operational Complexity', description: 'ECS has fewer concepts to learn — tasks, services, clusters, and task definitions cover most use cases. EKS requires understanding the full Kubernetes object model (Pods, Deployments, StatefulSets, DaemonSets, Services, Ingress, ConfigMaps, Secrets, RBAC, CRDs) and cluster components (kube-apiserver, etcd, CoreDNS, kube-proxy, CNI).' },
+    { title: 'Ecosystem and Tooling', description: 'ECS integrates deeply with AWS services — IAM task roles, CloudWatch, ALB, Service Discovery, Secrets Manager, ECR. EKS has a much larger ecosystem: Helm charts, Operators, ArgoCD, Istio, Prometheus/Grafana stack, Cert-Manager, External-DNS, Karpenter — most of which also work with EKS-specific AWS integrations via the AWS Load Balancer Controller, EBS CSI driver, and EFS CSI driver.' },
+  ],
+  approach: [
+    { step: 'Assess team expertise', details: 'If the team knows Kubernetes, EKS reduces friction. If the team is AWS-native with no K8s experience, ECS has a much shorter learning curve. Training a team on Kubernetes from scratch is a 2-3 month investment before they are productive.' },
+    { step: 'Evaluate workload complexity', details: 'Simple stateless web services, batch jobs, and lift-and-shift containers fit well in ECS. Complex microservices platforms with custom operators, service mesh, multi-tenancy, GitOps workflows, and cross-cloud portability requirements are better served by EKS.' },
+    { step: 'Consider portability requirements', details: 'If the organization runs workloads on-prem, GCP, or Azure as well as AWS, EKS workloads can be ported to GKE, AKS, or self-managed K8s. ECS workloads are AWS-only — migration requires a full rewrite of deployment configuration.' },
+    { step: 'Factor in cost and scaling needs', details: 'ECS control plane is free; you pay only for compute (EC2 or Fargate). EKS control plane costs $0.10/hour per cluster (~$73/month). For small workloads this is significant. For large clusters with many services, the operational savings of EKS (Helm, ArgoCD, Karpenter) can outweigh the control plane cost.' },
+  ],
+  pitfalls: [
+    { title: 'Choosing EKS for simplicity', description: 'EKS is not simpler than ECS — it has more moving parts, more concepts, more failure modes, and more operational overhead. If simplicity is the goal, ECS or even AWS App Runner is the right choice. Only choose EKS when the Kubernetes ecosystem is genuinely needed.' },
+    { title: 'Running small workloads on EKS', description: 'A single microservice or a small team does not need Kubernetes. The EKS control plane cost plus the operational complexity of managing node groups, CNI, CoreDNS, and cluster upgrades is not justified for low-scale workloads. ECS or Fargate with App Runner is a better fit.' },
+    { title: 'Not using Fargate with ECS', description: 'ECS on EC2 requires managing EC2 instances — patching, scaling, AMI updates. ECS on Fargate removes all node management. For most teams starting with ECS, Fargate is the right default until workload patterns justify EC2 for cost optimization.' },
+  ],
+  keyQuestions: [
+    { q: 'When would you choose ECS over EKS?', a: 'Choose **ECS** when:\n- The team is AWS-native with no Kubernetes experience\n- The workload is simple (stateless web services, batch jobs, lift-and-shift)\n- You want minimal operational complexity and fewer concepts to learn\n- You are using AWS Fargate for serverless containers — ECS+Fargate is the simplest path\n- You do not need the Kubernetes ecosystem (Helm, Operators, custom CRDs, service mesh)\n\nChoose **EKS** when:\n- The team already uses Kubernetes or has K8s expertise\n- You need portability across AWS, on-premises, GCP, or Azure\n- You need the full K8s ecosystem: Helm, ArgoCD, Istio, Prometheus, custom operators\n- You are building a platform for multiple teams and need multi-tenancy via namespaces and RBAC\n- Workload complexity justifies the operational investment' },
+    { q: 'What are the core differences in how ECS and EKS schedule containers?', a: '**ECS** uses its own proprietary scheduler. You define task definitions and services; ECS places tasks on EC2 instances (or Fargate) based on resource availability and placement strategies (spread, binpack, random). ECS integrates directly with ALB via target groups registered by the ECS service scheduler.\n\n**EKS** uses the Kubernetes scheduler (kube-scheduler), which places Pods on nodes based on resource requests, node affinity/anti-affinity rules, taints/tolerations, and topology spread constraints. EKS integrates with ALB via the AWS Load Balancer Controller, which watches Ingress and Service objects and creates ALB/NLB resources accordingly.\n\nKey operational difference: ECS services are managed via AWS Console/CLI/CloudFormation. EKS workloads are managed via kubectl/Helm/ArgoCD with Kubernetes manifests.' },
+    { q: 'How do you handle secrets in ECS vs EKS?', a: '**ECS**: Inject secrets using the `secrets` field in task definitions, referencing **AWS Secrets Manager** ARNs or **SSM Parameter Store** paths. ECS pulls the value at task launch and injects it as an environment variable or into a file. The ECS task role must have IAM permission to read the secret. This is the recommended approach — no secrets in task definition JSON.\n\n**EKS**: The native approach is Kubernetes Secrets (base64-encoded, stored in etcd — not truly secure by default). For production, use **AWS Secrets Manager** via the **Secrets Store CSI Driver** with the AWS provider, which mounts secrets as files or syncs them to K8s Secrets. Alternatively, use **External Secrets Operator** to sync Secrets Manager values into K8s Secrets automatically. Always enable **etcd encryption** for the EKS cluster to encrypt K8s Secrets at rest.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/AmazonECS/latest/developerguide/',
+    'https://docs.aws.amazon.com/eks/latest/userguide/',
+    'https://aws.amazon.com/blogs/containers/amazon-ecs-vs-amazon-eks-making-sense-of-aws-container-services/',
+  ],
+  visualizations: [
+    { title: 'ECS vs EKS Architecture', caption: 'Side-by-side: ECS cluster with tasks behind ALB, and EKS cluster with pods behind Ingress/ALB via AWS Load Balancer Controller. Shows component mapping between the two models.', image: '/diagrams/linkdiags/ecs-vs-eks.png' },
+  ],
+},
+
+{
+  id: 'aws-architecture-3tier',
+  title: 'AWS 3-Tier Web Application Architecture',
+  icon: 'server',
+  color: '#f97316',
+  description: 'Standard 3-tier web architecture on AWS: Route 53 → ALB → EC2 Auto Scaling Group → RDS + S3 + IAM. High availability, auto scaling, managed database.',
+  introduction: 'The **3-tier web application architecture** on AWS is the most common pattern for hosting web applications in the cloud. It separates concerns into three layers — presentation, application, and data — with each tier using AWS managed services for reliability and scalability.\n\nFlow: **User → Route 53 (DNS) → Application Load Balancer → EC2 Auto Scaling Group → Amazon RDS + S3**\n\nThis pattern provides high availability, automatic scaling, managed database operations, and clear security boundaries between tiers.',
+  whenToUse: 'Use the 3-tier architecture for standard web applications, REST APIs, and e-commerce platforms that need high availability and automatic scaling. It is the starting point for most AWS web workloads before evolving to microservices or serverless. It is also the canonical pattern for AWS Solutions Architect Associate exam questions.',
+  keyConcepts: [
+    { title: 'Route 53 — DNS Layer', description: '**Amazon Route 53** resolves the application domain name to the ALB\'s DNS name. It supports latency-based routing, health-check-based failover, and weighted routing for blue/green deployments. For multi-region architectures, Route 53 can route traffic to the nearest healthy region.' },
+    { title: 'Application Load Balancer — Presentation Tier', description: '**ALB** distributes incoming HTTP/HTTPS traffic across EC2 instances in the Auto Scaling Group. It performs health checks on targets, removing unhealthy instances from rotation. ALB terminates TLS, can route based on path or host, and integrates with WAF for DDoS and application-layer protection.' },
+    { title: 'EC2 Auto Scaling Group — Application Tier', description: '**Auto Scaling Group** maintains a fleet of EC2 instances running the application. It automatically adds instances when CPU/load increases and removes them when demand drops. Instances span multiple Availability Zones for fault tolerance. The ASG registers new instances with the ALB target group automatically.' },
+    { title: 'Amazon RDS — Data Tier', description: '**Amazon RDS** provides a managed relational database (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server). It handles automated backups, patching, Multi-AZ failover, and read replicas. EC2 instances connect to RDS via a private subnet — RDS is never exposed to the internet.' },
+    { title: 'S3 and IAM', description: '**S3** stores static assets (images, CSS, JavaScript files, user uploads) served directly or via CloudFront CDN. **IAM roles** attached to EC2 instances grant least-privilege access to S3, Secrets Manager, and other AWS services without embedding credentials in the application.' },
+  ],
+  approach: [
+    { step: 'Design the VPC and subnet layout', details: 'Create a VPC with public subnets (ALB) and private subnets (EC2, RDS) across at least two AZs. ALB sits in public subnets with internet-facing configuration. EC2 instances in private subnets use NAT Gateway for outbound internet access (software updates, API calls). RDS in isolated private subnets with no route to the internet.' },
+    { step: 'Configure the ALB and target group', details: 'Create an ALB in the public subnets. Create a target group for the EC2 instances with HTTP health check on the application\'s health endpoint. Configure listener rules for HTTP (redirect to HTTPS) and HTTPS (forward to target group). Attach an ACM certificate for TLS termination.' },
+    { step: 'Create the Auto Scaling Group', details: 'Define a launch template with the EC2 AMI, instance type, IAM role, security group, and user data script that installs the application on boot. Create the ASG referencing the launch template, private subnets across AZs, and the ALB target group. Set scaling policies based on ALB RequestCountPerTarget or CPU utilization.' },
+    { step: 'Set up RDS with Multi-AZ', details: 'Create an RDS instance in a DB subnet group spanning private subnets in multiple AZs. Enable Multi-AZ for automatic failover. Store the DB endpoint and credentials in Secrets Manager. Grant the EC2 IAM role permission to read the secret. Never hardcode database credentials in application code or environment files checked into source control.' },
+  ],
+  pitfalls: [
+    { title: 'Single AZ deployment', description: 'Deploying all EC2 instances or the RDS instance in a single AZ eliminates the high availability benefit. Always spread EC2 across at least two AZs and enable RDS Multi-AZ. An AZ outage (which does occur) will take down a single-AZ architecture completely.' },
+    { title: 'Placing RDS in a public subnet', description: 'RDS should always be in a private subnet with no internet gateway route. Placing it in a public subnet exposes the database port to the internet — even with security groups, this violates the principle of defense in depth and is a common security audit finding.' },
+    { title: 'Not using an IAM instance role', description: 'Hardcoding AWS credentials in the EC2 instance or application configuration is a critical security risk. Always use an IAM instance profile — the EC2 metadata service provides short-lived credentials automatically. No long-term credentials should ever appear in application code or config files.' },
+  ],
+  keyQuestions: [
+    { q: 'Walk me through a 3-tier AWS web architecture.', a: 'A standard 3-tier AWS architecture works as follows:\n\n1. **DNS**: User\'s browser queries **Route 53** which resolves the domain to the ALB\'s DNS name.\n2. **Load Balancer**: **Application Load Balancer** in public subnets receives the request, terminates TLS, and forwards it to a healthy EC2 instance based on the configured routing rules.\n3. **Application Tier**: **EC2 instances** in an Auto Scaling Group in private subnets process the request. They run the application code and connect to RDS for data and S3 for static assets.\n4. **Data Tier**: **Amazon RDS** (Multi-AZ) stores application data in private subnets. A standby replica in another AZ provides automatic failover.\n5. **Static Assets**: **S3** stores images, CSS, and JS, optionally served via **CloudFront** CDN.\n6. **Security**: EC2 instances use **IAM roles** to access S3 and Secrets Manager. **Security groups** restrict traffic: ALB accepts 443 from the internet; EC2 accepts traffic only from the ALB security group; RDS accepts traffic only from the EC2 security group.' },
+    { q: 'How does Auto Scaling know when to add or remove EC2 instances?', a: '**Auto Scaling** uses **scaling policies** triggered by **CloudWatch metrics**:\n\n- **Target Tracking**: maintains a target value for a metric — e.g., keep average CPU at 50%. ASG adds instances when CPU rises above 50% and removes them when it drops below. Simplest and recommended for most use cases.\n- **Step Scaling**: adds or removes a specific number of instances based on metric thresholds — e.g., add 2 instances when CPU > 70%, add 4 when CPU > 90%.\n- **Scheduled Scaling**: pre-scale at known traffic peaks — e.g., add 10 instances every weekday at 8am.\n\nFor web traffic, **ALB RequestCountPerTarget** is often a better metric than CPU — it scales based on actual request load rather than CPU utilization, which varies by instance type.' },
+    { q: 'How would you achieve zero-downtime deployments in this 3-tier architecture?', a: 'Two main patterns:\n\n**Rolling Deployment (simpler)**: Update the Auto Scaling Group\'s launch template with the new AMI or user data. Configure the ASG update policy to replace instances in batches — e.g., replace 25% at a time. ASG launches new instances, waits for them to pass ALB health checks, then terminates old ones. The ALB continues routing traffic to healthy instances throughout.\n\n**Blue/Green Deployment (safer)**: Create a second "green" Auto Scaling Group with the new version, registered to a separate target group. Shift traffic gradually via ALB weighted target group rules — e.g., 10% to green, monitor, then 50%, then 100%. On success, decommission the blue ASG. On failure, shift all traffic back to blue instantly.\n\nBlue/green is preferred for major changes because it allows instant rollback by shifting traffic back to the old ASG.' },
+    { q: 'How do you secure the 3-tier architecture?', a: '**Network security**:\n- ALB in public subnets; EC2 and RDS in private subnets\n- Security group chain: internet → ALB (443), ALB → EC2 (app port), EC2 → RDS (5432/3306)\n- NACLs as a secondary stateless L4 defense at subnet boundaries\n- WAF attached to ALB for SQL injection, XSS, and rate limiting\n\n**Identity and access**:\n- EC2 IAM role with least-privilege access to S3, Secrets Manager, SQS — no long-term credentials\n- RDS credentials stored in Secrets Manager, rotated automatically\n- S3 bucket policy blocks public access; CloudFront OAC for serving static assets\n\n**Data security**:\n- RDS encryption at rest (KMS), SSL in transit\n- S3 server-side encryption (SSE-S3 or SSE-KMS)\n- CloudTrail for API audit logging, VPC Flow Logs for network audit' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/whitepapers/latest/web-application-hosting-best-practices/',
+    'https://aws.amazon.com/architecture/web-hosting/',
+    'https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scale-based-on-demand.html',
+  ],
+  visualizations: [
+    { title: 'AWS 3-Tier Web Architecture', caption: 'Full architecture diagram: User → Route 53 → ALB (public subnets, 2 AZs) → EC2 Auto Scaling Group (private subnets) → RDS Multi-AZ + S3 + IAM. Shows security group boundaries and traffic flow.', image: '/diagrams/linkdiags/aws-concepts.png' },
   ],
 },
 ];
