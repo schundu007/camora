@@ -200,13 +200,13 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                 padding: '14px 14px 12px',
                 borderRadius: 10,
                 border: isSelected
-                  ? `1px solid ${env.color}`
+                  ? '1px solid var(--cam-gold-leaf)'
                   : '1px solid var(--border)',
                 borderTop: isSelected
-                  ? `4px solid ${env.color}`
-                  : `4px solid ${env.color}66`,
+                  ? '3px solid var(--cam-gold-leaf)'
+                  : '3px solid var(--border)',
                 background: isSelected
-                  ? `${env.color}14`
+                  ? 'color-mix(in oklab, var(--cam-gold-leaf) 7%, var(--bg-elevated))'
                   : 'var(--bg-elevated)',
                 cursor: disabled || locked ? 'not-allowed' : 'pointer',
                 opacity: locked ? 0.55 : 1,
@@ -224,7 +224,9 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                   {env.badge && (
                     <span style={{
                       fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
-                      background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', color: '#10b981',
+                      background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
+                      border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
+                      color: 'var(--cam-gold-leaf-lt)',
                     }}>
                       {env.badge}
                     </span>
@@ -248,12 +250,12 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                 <span style={{
                   fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
-                  background: `${env.color}22`, color: env.color,
+                  background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                 }}>
                   {env.category}
                 </span>
                 {isSelected && (
-                  <span style={{ fontSize: 9, fontWeight: 700, color: env.color }}>✓ Selected</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--cam-gold-leaf-lt)' }}>✓ Selected</span>
                 )}
                 {locked && (
                   <span style={{ fontSize: 10 }}>🔒</span>
