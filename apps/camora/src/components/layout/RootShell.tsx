@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 
@@ -48,6 +48,32 @@ export default function RootShell({ children }: RootShellProps) {
           {children}
         </main>
       </div>
+      <footer
+        className="shrink-0 flex items-center justify-center gap-6 px-4"
+        style={{ height: 36, background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}
+      >
+        {([
+          { label: 'Pricing', to: '/pricing' },
+          { label: 'Docs', to: '/docs' },
+          { label: 'Privacy', to: '/legal/privacy' },
+        ] as { label: string; to: string }[]).map(({ label, to }) => (
+          <Link
+            key={to}
+            to={to}
+            className="text-[10px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {label}
+          </Link>
+        ))}
+        <a
+          href="mailto:support@cariara.com"
+          className="text-[10px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Support
+        </a>
+      </footer>
     </div>
   );
 }
