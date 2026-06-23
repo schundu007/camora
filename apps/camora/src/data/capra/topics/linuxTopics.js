@@ -46,6 +46,10 @@ export const linuxTopicCategoryMap = {
   'linux-lsof':                 'performance',
   'linux-memory-management':    'performance',
   'linux-cpu-scheduling':       'performance',
+  // Storage deep dives
+  'linux-storage-deep-dive':     'storage',
+  // Networking deep dives
+  'linux-networking-l2l3':       'networking',
   // Storage
   'linux-disk-management':      'storage',
   'linux-lvm':                  'storage',
@@ -4414,4 +4418,955 @@ systemctl restart api-server report-generator
       'https://man7.org/linux/man-pages/man1/taskset.1.html',
     ],
   },
+
+  // ─── STORAGE DEEP DIVE ──────────────────────────────────────────────────
+{
+  id: 'linux-storage-deep-dive',
+  title: 'Linux Storage',
+  icon: 'hardDrive',
+  color: '#d97706',
+  questions: 5,
+  description: `Linux storage spans the full stack from physical block devices through partition tables, filesystems, and the Virtual Filesystem Switch (VFS) to application-level syscalls. Mastery of this stack is essential for tuning databases, container runtimes, and high-throughput services where I/O is the bottleneck.`,
+  visualizations: [
+    {
+      title: `Linux Storage Stack Architecture`,
+      description: `The Linux storage stack is a layered architecture where each tier provides a clean interface to the layer above it while abstracting the hardware below.
+
+At the top sits the application layer, where processes issue POSIX calls such as open, read, write, and fsync. These calls enter the kernel through the system call interface, where the Virtual Filesystem Switch (VFS) acts as a unified abstraction layer. VFS defines common in-memory structures: the superblock (filesystem metadata), the inode (per-file metadata), the dentry (directory-entry cache), and the file object (per-open-file state). Any conforming filesystem plugs into VFS by implementing the inode_operations and file_operations function pointer tables.
+
+Below VFS sits the concrete filesystem layer. ext4, XFS, btrfs, and tmpfs each implement the VFS contracts differently. ext4 uses a journal (the JBD2 layer) for crash consistency. XFS uses a separate log and allocation groups to achieve high parallelism. btrfs uses copy-on-write B-trees for everything.
+
+Below the filesystem is the block layer. The filesystem calls submit_bio to issue block I/O requests. The I/O scheduler (historically CFQ or deadline, now mq-deadline or none/kyber on NVMe) orders and merges these requests before dispatching to the device driver. Device mapper (used by LVM) and md (software RAID) insert themselves as virtual block devices at this layer, intercepting bio requests and redirecting or mirroring them.
+
+Finally the device driver communicates with the physical hardware via controller-specific protocols (SATA AHCI, NVMe, iSCSI). The path from application write to committed bits on a platter or NAND cell traverses every one of these layers.`,
+      image: `/diagrams/devops/linux-storage-deep-dive-arch.png`,
+    },
+    {
+      title: `Write Path: from write() to Disk`,
+      description: `Tracing a single write() call end-to-end reveals where latency accumulates, where data can be lost on a crash, and what each durability guarantee actually covers.
+
+When an application calls write(), the kernel first copies bytes from userspace into a page cache page marked dirty. Control returns to the application immediately — this is the source of "buffered I/O" performance. The dirty page sits in the page cache, visible to subsequent reads, but not yet on disk. The kernel's writeback threads (pdflush / bdi-writeback) flush dirty pages to disk according to two tunables: dirty_expire_centisecs (how old a dirty page can get, default 3000 = 30 s) and dirty_ratio / dirty_background_ratio (memory pressure thresholds).
+
+For filesystems with journaling (ext4, XFS), metadata changes are first written to the journal before being applied to the main filesystem area. In ext4 ordered mode (the default), data blocks are written to their final location before the metadata commit is written to the journal, preserving the invariant that journal-committed metadata always points to valid data. In writeback mode, metadata is journaled but data order is not guaranteed, giving higher throughput at the cost of stale-data exposure after a crash. In full journal mode, both data and metadata go through the journal, providing the strongest guarantee but roughly halving write bandwidth.
+
+An application that cannot tolerate data loss must call fsync() or fdatasync() after writing. fsync() triggers writeback of the file's dirty pages and then issues a FLUSH CACHE command to the storage device (or an FUA-tagged write on NVMe), ensuring data survives controller power loss. O_DIRECT bypasses the page cache entirely, issuing aligned DMA transfers straight to the device, which databases like PostgreSQL and MySQL use to manage their own caching and avoid double-buffering.
+
+The final step is the storage device itself. SSDs and NVMe drives have volatile write-back caches. Without power-loss protection (PLP) capacitors, a power failure after the kernel flushes but before the device commits to NAND can still lose data. Enterprise-grade drives carry PLP and can safely advertise completion without risk.`,
+      image: `/diagrams/devops/linux-storage-deep-dive-flow.png`,
+    },
+  ],
+  introduction: `Linux presents storage to applications through a deep software stack that begins at the physical block device and surfaces to userspace as familiar POSIX file operations. Understanding the full path — block device, partition, filesystem, VFS, page cache, syscall — is critical for any engineer who needs to reason about performance, durability, or capacity on Linux systems.
+
+The Virtual Filesystem Switch (VFS) is the kernel's unifying abstraction. It defines a common set of in-memory objects (superblock, inode, dentry, file) and function pointer tables (inode_operations, file_operations, address_space_operations) that every filesystem must implement. This design allows ext4, XFS, btrfs, tmpfs, and network filesystems to coexist and be mounted at different points in a single directory tree without the application caring which is which.
+
+ext4 is the default filesystem on most Linux distributions. It extended the original ext2/3 design with extents (contiguous block ranges that replace indirect-block trees, dramatically reducing metadata for large files), a journal for crash consistency via the JBD2 layer, and delayed allocation (also called allocate-on-flush) to improve contiguity. Its three journal modes trade durability for performance: ordered mode protects against metadata corruption after a crash; writeback mode maximises throughput; full data journaling provides the strongest guarantee.
+
+XFS was designed by SGI for high-concurrency, large-file workloads. It partitions the disk into allocation groups that each have their own inode allocator and free-space B-trees, allowing multiple threads to allocate simultaneously without a global lock. XFS pioneered delayed allocation and supports reflink (shared data extents, enabling instant CoW copies), sparse files, and direct I/O for database use cases. It does not support shrinking, and its lack of data journaling makes fsync-heavy workloads depend entirely on correct barrier ordering.
+
+btrfs brings copy-on-write semantics to the filesystem layer. Every write goes to a new location, so the old version remains intact until a transaction commits. This enables atomic snapshots (a snapshot captures the B-tree root at a point in time in microseconds), subvolumes (independent filesystem trees within one btrfs pool), online defragmentation, and checksumming of both data and metadata. The CoW design also means that fragmentation grows over time on update-heavy workloads, and the recommended use case today is read-heavy or snapshot-heavy environments rather than high-IOPS databases.
+
+LVM, md RAID, and overlay filesystems sit between raw block devices and the filesystem layer. LVM adds logical indirection: physical volumes are pooled into a volume group, and logical volumes are carved out on demand, with online resize, snapshots, thin provisioning, and live migration (pvmove) available. md provides software RAID, with RAID 1 for pure mirroring, RAID 5/6 for parity-based redundancy, and RAID 10 for the combined throughput and redundancy sweet spot. overlayfs layers two directory trees (lower read-only, upper read-write) into a unified mount, which is the mechanism Docker uses to implement image layers and container writable layers efficiently without copying.`,
+  whenToUse: [
+    `Sizing and partitioning new servers where choosing between ext4, XFS, or btrfs depends on workload (sequential vs random, file sizes, snapshot requirements)`,
+    `Tuning database servers (PostgreSQL, MySQL, Cassandra) to use XFS with noatime, direct I/O, and appropriate readahead settings`,
+    `Designing LVM layouts for production databases where online resize, thin provisioning, and pvmove (zero-downtime disk migration) are required`,
+    `Building storage-resilient clusters using mdadm RAID arrays combined with LVM on top for flexible logical volume management`,
+    `Diagnosing disk-full errors where df and du disagree due to deleted-but-open file handles, reserved blocks, or sparse file accounting`,
+    `Architecting Docker or Kubernetes node storage, selecting between overlayfs, devicemapper, and btrfs storage drivers and understanding their durability trade-offs`,
+    `Implementing backup strategies using btrfs or LVM snapshots to provide crash-consistent point-in-time copies without stopping the application`,
+    `Investigating write latency spikes on SSDs where the culprit might be journaling mode, write-back cache policies, or kernel I/O scheduler selection`,
+  ],
+  keyConcepts: [
+    {
+      term: `ext4 Journal Modes and Inode Structure`,
+      definition: `ext4 is the most widely deployed Linux filesystem. Its journaling layer (JBD2) operates in three modes selected at mount time with the data= option.
+
+In ordered mode (the default), ext4 guarantees that data blocks reach their final on-disk location before the metadata transaction that references them is committed to the journal. This prevents the post-crash scenario where metadata says a block belongs to a file but the block contains garbage from a previous file. Ordered mode does not journal data, so a crash between the data write and the metadata commit can leave the file with its old size and old data, but it cannot expose another file's data.
+
+In writeback mode, ext4 only journals metadata. Data writes and metadata commits are independent. This is the fastest mode but means a crash can expose stale data blocks through newly committed metadata — acceptable for databases that manage their own consistency but dangerous for general-purpose use.
+
+In journal mode (data=journal), both data and metadata are written to the journal before being applied to the main filesystem. This gives the strongest durability guarantee but roughly halves write throughput because every write goes to disk twice.
+
+ext4 stores file data location using extents rather than the block-pointer tree of ext2/3. An extent is a (logical_block, physical_block, length) triple. Up to four extents fit directly in the inode, covering contiguous files up to about 512 MB with zero indirection. Larger files use an extent tree. This design dramatically reduces metadata for large sequential files compared to the triple-indirect block maps of ext3.
+
+\`\`\`bash
+# check journal mode of a mounted ext4 filesystem
+tune2fs -l /dev/sda1 | grep "Default mount options"
+
+# mount with writeback mode for a database data directory
+mount -o data=writeback,noatime,barrier=0 /dev/sda1 /var/lib/mysql
+
+# inspect inode and extent info for a file
+debugfs -R "stat /var/lib/mysql/ibdata1" /dev/sda1
+
+# check inode usage (ext4 has a fixed inode table)
+df -i /var/lib/mysql
+\`\`\`
+
+A critical operational fact: ext4 reserves 5% of disk space for the root user by default. On a data volume this is wasted capacity. Set it to 1% or 0% with tune2fs -m.`,
+    },
+    {
+      term: `XFS Allocation Groups and Delayed Allocation`,
+      definition: `XFS divides the filesystem into allocation groups (AGs). Each AG is a self-contained region of the disk with its own inode B-tree, free-space B-trees (one indexed by offset, one by size), and free inode B-tree. Because each AG is independent, multiple threads can allocate files simultaneously without a global lock, making XFS scale linearly with CPU count on multi-threaded create-heavy workloads.
+
+Delayed allocation (also called allocate-on-flush or delalloc) means XFS does not assign real disk blocks to a write until writeback time. When an application writes, XFS marks the range as "delayed" and tracks it in an in-memory extent map. At writeback the allocator sees the full contiguous region to be written and can find the best physical placement, improving spatial locality compared to allocating one block at a time. The trade-off is that file size reported by stat may be larger than allocated space until flush.
+
+XFS supports reflink, which lets two files share the same underlying data extents (like hard links but at the block level). A copy operation using cp --reflink=always completes in milliseconds regardless of file size. The first write to a shared extent triggers a copy-on-write split. This is used by btrfs-style snapshot workflows on XFS (since Linux 4.9).
+
+Direct I/O bypasses the page cache and issues DMA transfers directly to/from user buffers. XFS handles direct I/O particularly well because its allocation group parallelism means concurrent O_DIRECT writes from multiple threads do not serialize on a single allocator lock. PostgreSQL, MySQL InnoDB, and Cassandra all default to or recommend direct I/O on XFS.
+
+\`\`\`bash
+# create an XFS filesystem with a specific allocation group size
+mkfs.xfs -d agcount=16 /dev/sdb
+
+# mount with noatime and allocsize hint for large sequential writes
+mount -o noatime,allocsize=256m /dev/sdb /data
+
+# show allocation group info
+xfs_info /data
+
+# defragment a file (XFS defrag rewrites extents for better locality)
+xfs_fsr /data/bigfile
+
+# reflink copy (instant, CoW)
+cp --reflink=always /data/src/large.tar /data/dst/large.tar
+
+# check fragmentation
+xfs_db -c frag -r /dev/sdb
+\`\`\`
+
+XFS cannot be shrunk online — plan the initial size carefully. It can be grown online with xfs_growfs after expanding the underlying block device.`,
+    },
+    {
+      term: `btrfs Copy-on-Write, Subvolumes, and Snapshots`,
+      definition: `btrfs uses copy-on-write (CoW) for all writes. Rather than overwriting an existing block, btrfs writes the new data to a free location and updates the B-tree that maps logical addresses to physical addresses. The old block is freed only after the transaction commits. This design makes every write atomic at the filesystem level and enables instant snapshots.
+
+A snapshot in btrfs is just a new subvolume whose root B-tree node is a reference to the same root as the source subvolume at the moment of the snapshot. No data is copied. The two subvolumes share extents; a write to either triggers CoW, allocating new space only for the changed blocks.
+
+Subvolumes are independently mountable filesystem subtrees within one btrfs pool. Common layouts use a top-level subvolume named @ for the root filesystem and a subvolume @home for /home, allowing the root to be rolled back (by making @ point to a snapshot) without touching home data.
+
+\`\`\`bash
+# create a btrfs filesystem spanning two devices (RAID 1 metadata, single data)
+mkfs.btrfs -m raid1 -d single /dev/sdb /dev/sdc
+
+# create a subvolume
+btrfs subvolume create /mnt/btrfs/@
+
+# create a read-only snapshot (useful for backups)
+btrfs subvolume snapshot -r /mnt/btrfs/@ /mnt/btrfs/@snapshots/2026-06-17
+
+# list subvolumes
+btrfs subvolume list /mnt/btrfs
+
+# send a snapshot incrementally to another host
+btrfs send -p /mnt/btrfs/@snapshots/2026-06-16 /mnt/btrfs/@snapshots/2026-06-17 \
+  | ssh backup-host btrfs receive /backup/btrfs
+
+# check filesystem usage (CoW means du and df diverge heavily)
+btrfs filesystem df /mnt/btrfs
+btrfs filesystem usage /mnt/btrfs
+\`\`\`
+
+The main operational hazard with btrfs is CoW fragmentation on database-style random-update workloads. Every small random write creates a new extent, scattering data across the disk. For databases, mount with nodatacow (disables checksumming and CoW for that file) or use a separate non-btrfs volume.`,
+    },
+    {
+      term: `LVM: Physical Volumes, Volume Groups, Logical Volumes, and Thin Provisioning`,
+      definition: `LVM inserts a logical indirection layer between block devices and filesystems. A physical volume (PV) is a block device (or partition) initialized for LVM use. Multiple PVs are pooled into a volume group (VG), which maintains a mapping of 4 MB physical extents (PEs) across all member PVs. Logical volumes (LVs) are carved from the VG's PE pool and appear to the OS as regular block devices on which you format a filesystem.
+
+Thin provisioning allows LVs to be created larger than the actual available storage. A thin pool LV holds the actual data; thin LVs are virtual volumes that allocate real space on demand. This enables over-commitment: a VG with 100 GB can host five 50 GB thin LVs if average utilization is low. The risk is that if thin LVs collectively write more data than the pool holds, the pool runs out of space and thin LVs go into error state.
+
+pvmove migrates extents from one PV to another while the filesystem remains mounted and the system stays online. This is used to drain a disk before replacement without downtime.
+
+\`\`\`bash
+# initialize disks as PVs and create a VG
+pvcreate /dev/sdb /dev/sdc
+vgcreate vg_data /dev/sdb /dev/sdc
+
+# create a standard LV and format it
+lvcreate -L 200G -n lv_pgdata vg_data
+mkfs.xfs /dev/vg_data/lv_pgdata
+
+# extend an LV and grow the filesystem online
+lvextend -L +50G /dev/vg_data/lv_pgdata
+xfs_growfs /var/lib/postgresql
+
+# create a thin pool and thin LVs
+lvcreate -L 100G --thinpool tp_pool vg_data
+lvcreate -V 50G --thin -n lv_app1 vg_data/tp_pool
+lvcreate -V 50G --thin -n lv_app2 vg_data/tp_pool
+
+# monitor thin pool usage (watch for >80% to avoid outage)
+lvs -o lv_name,lv_size,data_percent,metadata_percent vg_data
+
+# migrate extents off a failing disk (online, zero downtime)
+pvmove /dev/sdb /dev/sdd
+
+# create an LVM snapshot (CoW, traditional thick snapshot)
+lvcreate -L 10G -s -n lv_pgdata_snap /dev/vg_data/lv_pgdata
+\`\`\`
+
+A key pitfall is forgetting to set up automatic thin pool extension. Add thin_pool_autoextend_threshold = 80 and thin_pool_autoextend_percent = 20 in /etc/lvm/lvm.conf and enable lvm2-monitor.service so the pool grows automatically before hitting 100%.`,
+    },
+    {
+      term: `mdadm Software RAID`,
+      definition: `mdadm creates software RAID arrays from block devices managed by the Linux kernel's md (multiple devices) layer. The md layer sits below the filesystem and above device drivers, presenting a virtual block device to the filesystem. RAID is implemented entirely in kernel code, making it portable across hardware controllers.
+
+RAID 0 stripes data across N disks with no redundancy. Read and write throughput scale with N but a single disk failure destroys the array. RAID 1 mirrors data to N disks; reads can be parallelized across mirrors, but write throughput is limited by the slowest member. RAID 5 uses N-1 disks for data and one parity stripe distributed across all disks; it survives one disk failure. RAID 6 uses two independent parity schemes and survives two simultaneous disk failures at the cost of two disks' worth of overhead. RAID 10 (1+0) stripes across mirrored pairs, combining RAID 1 redundancy with RAID 0 throughput — the most common production choice for database servers.
+
+\`\`\`bash
+# create a RAID 10 array from four disks
+mdadm --create /dev/md0 --level=10 --raid-devices=4 /dev/sd{b,c,d,e}
+
+# check array status
+cat /proc/mdstat
+mdadm --detail /dev/md0
+
+# save the RAID config so it survives reboot
+mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+update-initramfs -u   # Debian/Ubuntu
+
+# simulate a disk failure and replace it
+mdadm --fail /dev/md0 /dev/sdb
+mdadm --remove /dev/md0 /dev/sdb
+mdadm --add /dev/md0 /dev/sdf   # new disk — resync starts automatically
+
+# set read policy (round-robin reads from mirrors)
+echo 2 > /sys/block/md0/md/stripe_cache_size   # adjust stripe cache
+mdadm --grow /dev/md0 --bitmap=internal         # add write-intent bitmap (faster resync)
+\`\`\`
+
+The write-intent bitmap (--bitmap=internal) records which stripes are being written. After a crash, only the stripes marked dirty need resyncing rather than the full array, dramatically reducing recovery time. Without it, a resync of a 4-disk RAID 10 array with 10 TB of data can take hours.`,
+    },
+    {
+      term: `overlayfs, bind mounts, and tmpfs`,
+      definition: `overlayfs is a union filesystem that merges two directory trees: a read-only lower layer and a read-write upper layer. Reads are served from upper if the file exists there, otherwise from lower. Writes create new files or modified copies in upper (the copy-up operation). A workdir directory (on the same filesystem as upper) is used for atomic copy-up staging. The merged view is presented at the mount point.
+
+Docker uses overlayfs2 as its default storage driver. Each image layer maps to a lower directory. The running container adds an upper directory and a workdir. When the container writes to a file that exists in a lower layer, overlayfs copies the entire file to upper first (copy-up), then applies the write. This means the first write to a large file has latency proportional to the file size. Volumes (bind mounts or named volumes) bypass overlayfs entirely by mounting real host paths into the container, making them suitable for databases and any state that must survive container restarts.
+
+A bind mount re-exposes a directory (or file) from one location in the VFS tree to another without creating a new filesystem. It is the mechanism behind Kubernetes hostPath volumes and Docker -v /host/path:/container/path.
+
+tmpfs is an in-memory filesystem backed by anonymous memory and swap. It is used for /dev/shm (POSIX shared memory), /tmp on many modern systemd distros, and Kubernetes emptyDir volumes with medium: Memory. Because tmpfs data lives in RAM, it disappears on umount or reboot.
+
+\`\`\`bash
+# manual overlayfs mount (useful for understanding Docker internals)
+mkdir -p /overlay/{lower,upper,work,merged}
+echo "base content" > /overlay/lower/file.txt
+mount -t overlay overlay \
+  -o lowerdir=/overlay/lower,upperdir=/overlay/upper,workdir=/overlay/work \
+  /overlay/merged
+
+# bind mount a host directory into a container path
+mount --bind /data/postgres /var/lib/postgresql/data
+
+# make a bind mount read-only
+mount --bind /etc/certs /run/secrets
+mount -o remount,ro,bind /run/secrets
+
+# tmpfs for shared memory with size limit
+mount -t tmpfs -o size=512m tmpfs /dev/shm
+
+# inspect what Docker overlayfs layers look like
+docker inspect <container_id> | grep -A 10 GraphDriver
+ls /var/lib/docker/overlay2/<layer_id>/diff
+\`\`\`
+
+overlayfs copy-up is a well-known performance gotcha for containers that modify large files (log rotation, SQLite databases, etc.). The solution is always to mount those paths as volumes, keeping hot write paths off the overlay stack.`,
+    },
+    {
+      term: `/etc/fstab Options, UUIDs, and Mount Flags`,
+      definition: `The /etc/fstab file defines how block devices are mounted at boot. Each line specifies the device, mount point, filesystem type, options, dump flag, and fsck pass order.
+
+Using UUIDs instead of device names (/dev/sdb1) prevents breakage when disk enumeration order changes after adding hardware or rebooting after a kernel update. The UUID is stable across renames.
+
+Key mount options that affect performance and durability:
+
+noatime disables updating the access-time inode field on every read. On spinning disks this eliminates an extra write per read. For most workloads (databases, web servers) access time is irrelevant and noatime is a safe default. relatime (the kernel default since 2.6.30) is a compromise that updates atime only when it is older than mtime, avoiding most writes while remaining POSIX-compliant for applications that depend on atime ordering.
+
+barrier controls whether the filesystem issues write barriers (cache flush commands) to enforce ordering between journal commit and data writes. On drives with reliable write-back caches and power-loss protection, barrier=0 can improve throughput. On consumer drives without PLP, disabling barriers risks corruption after a power failure.
+
+nofail tells the kernel to continue booting even if the device is absent — essential for secondary data disks that should not prevent the system from starting.
+
+\`\`\`bash
+# find UUID for a block device
+blkid /dev/sdb1
+lsblk -o NAME,UUID,FSTYPE,MOUNTPOINT
+
+# example /etc/fstab entries
+# system root with relatime (kernel default)
+UUID=a1b2c3d4-...  /              ext4  defaults,relatime     0 1
+
+# XFS data volume for a database, noatime, no barriers (enterprise SSD with PLP)
+UUID=e5f6a7b8-...  /var/lib/pgsql xfs   noatime,barrier=0     0 2
+
+# tmpfs for /tmp, limited to 1 GB
+tmpfs              /tmp           tmpfs size=1g,mode=1777    0 0
+
+# bind mount (must use bind option)
+/data/shared       /var/www/html  none  bind                  0 0
+
+# NFS with nofail so boot continues if NAS is unreachable
+nas:/exports/data  /mnt/nas       nfs   defaults,nofail,_netdev 0 0
+
+# verify fstab without rebooting (mount all entries not yet mounted)
+mount -a
+systemctl daemon-reload   # for systemd-aware mount units
+\`\`\`yaml
+
+Always run mount -a after editing fstab to catch syntax errors before the next reboot. A typo in fstab can drop a server into emergency mode.`,
+    },
+  ],
+  approach: [
+    `Choose the filesystem based on workload: XFS for large files, high-concurrency, or database servers; ext4 for general-purpose workloads where inode count is a concern; btrfs where snapshots and subvolumes are the primary requirement; tmpfs for ephemeral in-memory scratch space.`,
+    `Always mount database data directories with noatime and, on hardware with verified power-loss protection, barrier=0 to eliminate unnecessary cache-flush round-trips without sacrificing durability.`,
+    `Use UUIDs in /etc/fstab instead of device names to prevent mount failures after disk re-enumeration; verify with mount -a after every edit before relying on the next reboot.`,
+    `Place LVM thin pools under lvm2-monitor.service with autoextend thresholds configured at 80% so pools grow automatically before reaching 100% and pushing thin LVs into error state.`,
+    `Add a write-intent bitmap (mdadm --bitmap=internal) to all software RAID arrays so that post-crash resync reads and rewrites only the stripes that were in-flight at the time of the crash rather than rebuilding the full array.`,
+    `Reserve overlayfs (Docker storage driver) only for image layers and ephemeral container state; mount all database files, log directories, and any state that must survive container restart as named volumes or bind mounts to keep writes off the overlay stack and avoid copy-up latency.`,
+    `Monitor thin pool and RAID resync progress separately from filesystem-level capacity; use lvs -o data_percent for thin pools and cat /proc/mdstat for RAID so alerts fire before capacity or redundancy is lost.`,
+    `When using LVM over software RAID, put LVM on top of md (LVM PV on /dev/md0) rather than md on top of LVM; the md layer needs direct block device alignment information, and wrapping it in LVM first can misalign stripes.`,
+  ],
+  pitfalls: [
+    `Disabling barriers on consumer SSDs or HDDs without power-loss protection: barrier=0 tells the filesystem it can skip cache flush commands, but if the drive's write-back cache is volatile and power fails between a journal commit write and the subsequent data write, the filesystem can be left in an inconsistent state that requires fsck and may involve data loss.`,
+    `Letting LVM thin pools reach 100% utilization: when the pool is full, all thin LVs that depend on it transition to an error state simultaneously, causing every filesystem on those LVs to go read-only or emit I/O errors. Set autoextend at 80% and alert at 85%.`,
+    `Forgetting that ext4 reserves 5% of disk space for root by default on data volumes: a 2 TB database volume loses 100 GB to reserved blocks that the database process (running as postgres, not root) cannot use; set tune2fs -m 1 at format time.`,
+    `Using btrfs for write-intensive random-update workloads (databases, message queues): CoW means every random write allocates a new extent, fragments the free-space B-tree, and leaves dead extents until the background cleaner runs. Performance degrades over months and may require a filesystem balance operation that pauses write I/O.`,
+    `Confusing df output with actual file content size: df reports filesystem-level block allocation, which includes reserved blocks, sparse file holes counted as allocated, and blocks belonging to deleted files whose file descriptors are still open. du reports the disk usage of directory trees, which misses the open-descriptor case. A process holding an open file descriptor to a deleted multi-GB log file keeps the blocks allocated until the fd is closed.`,
+    `Running out of inodes on ext4 while disk space remains: ext4 pre-allocates a fixed inode table at format time (default one inode per 16 KB of capacity). Workloads that create millions of small files (email servers, object stores, package repositories) can exhaust inodes with gigabytes of disk still free. Set mkfs.ext4 -i 4096 (one inode per 4 KB) for small-file workloads, or use XFS which allocates inodes dynamically.`,
+    `Nested virtualization of storage layers adding latency without benefit: stacking LVM on top of LVM, or btrfs on top of LVM on top of md, multiplies the metadata write amplification and makes I/O paths harder to reason about. Keep the stack shallow: md (if RAID needed) then LVM (if LV management needed) then one filesystem.`,
+    `Not aligning partitions and RAID stripes to the underlying erase-block size: HDDs need 4K alignment; SSDs with 4 KB logical sectors need 4K alignment; RAID 5/6 with 256 KB chunk size benefits from volume-group alignment to 256 KB so RAID stripes land on chunk boundaries. Misalignment causes write amplification on SSDs and read-modify-write penalties on HDDs in parity RAID.`,
+  ],
+  keyQuestions: [
+    {
+      question: `Walk me through the full path of a write() system call from the application to the physical disk, including where data can be lost on a crash at each step.`,
+      answer: `The journey begins in userspace. The application calls write(fd, buf, len), which crosses into the kernel via the system call interface. The kernel's VFS layer looks up the file's address_space object and calls the filesystem's write_begin / write_end page-cache operations.
+
+The data is copied from the user buffer into one or more page cache pages, which are marked dirty. At this point write() returns to the application. The data is now in RAM but not on disk. A power failure here loses the write unless the application has been told otherwise.
+
+The kernel's writeback subsystem (bdi-writeback kthreads per block device) periodically walks the dirty page list and submits write bios to the block layer. Two tunables govern this: vm.dirty_expire_centisecs (default 3000 = 30 s, maximum age before a page must be flushed) and vm.dirty_background_ratio / vm.dirty_ratio (memory pressure thresholds). A crash during this window, before writeback, loses the write.
+
+For journaled filesystems (ext4 in ordered mode, which is the default): before the filesystem writes the metadata transaction (inode size update, extent map entry) to the journal, it first ensures all data blocks for that transaction have been written to their final on-disk locations. Once the metadata commit record lands in the journal, a crash and replay are safe — the journal commit is redone and metadata points to valid data. But the window between the application's write() return and the journal commit is still a loss window.
+
+If the application calls fsync(fd) after writing, the kernel flushes all dirty pages belonging to the file, then issues a write barrier or FLUSH CACHE command to the block device. This command forces the device's volatile write-back cache to commit to persistent media before signaling completion. After fsync() returns, the data survives a power failure assuming the storage device honors the barrier (which enterprise drives with power-loss protection capacitors do; consumer drives sometimes lie).
+
+O_DIRECT bypasses the page cache entirely. The application's buffer must be aligned to the logical block size. Reads and writes go directly to the device via DMA. There is no writeback delay, but there is also no read caching. Databases use O_DIRECT to manage their own buffer pool and ensure that fsync() semantics are predictable.
+
+\`\`\`bash
+# check current dirty page thresholds
+sysctl vm.dirty_expire_centisecs vm.dirty_background_ratio vm.dirty_ratio
+
+# open a file with O_DIRECT (application-level, shown in C-like pseudocode)
+# int fd = open("/data/pg/base/16384/1259", O_RDWR | O_DIRECT);
+
+# force all dirty pages for all files to disk
+sync
+
+# force journal commit on ext4 (flushes journal to disk, then checkpoints)
+# mount option: sync forces per-write sync; for testing:
+echo 3 > /proc/sys/vm/drop_caches   # not for production, educational only
+\`\`\`
+
+The short answer for an interview: write() puts data in the page cache and returns. Writeback moves it to the journal or directly to disk. fsync issues a device flush. Each step is a potential loss boundary.`,
+    },
+    {
+      question: `When would you choose XFS over ext4 for a database server, and what specific mount and filesystem options would you configure?`,
+      answer: `XFS is the better choice for a database server in several concrete scenarios:
+
+First, when the database creates many concurrent write streams. PostgreSQL WAL writes, checkpoint writes, and backend heap writes can all proceed simultaneously. XFS allocation groups each have an independent free-space allocator and inode table, so ten concurrent allocating threads can proceed in parallel. ext4 serializes allocation through a single journal transaction, so concurrent allocations queue behind each other.
+
+Second, for large databases with large files. XFS handles files in the tens or hundreds of gigabytes efficiently using its B-tree extent map. ext4 also uses extents, but XFS was designed from the ground up for large-file performance and shows measurably lower fragmentation on heavy-append workloads.
+
+Third, when online capacity growth is required. XFS supports online filesystem expansion (xfs_growfs after lvextend). It cannot shrink, but databases almost never need to shrink a live filesystem.
+
+Fourth, for workloads using direct I/O. PostgreSQL and MySQL InnoDB use O_DIRECT to bypass the page cache. XFS + direct I/O is a well-tested and recommended combination in production database deployments.
+
+Recommended configuration:
+
+\`\`\`bash
+# format with default (inode size 512, sunit/swidth matching RAID or LVM stripe)
+# assume LVM stripe size 512K across 4 disks (sunit=512K/512=1024, swidth=1024*4=4096)
+mkfs.xfs -d su=512k,sw=4 /dev/vg_data/lv_pgdata
+
+# /etc/fstab entry for a PostgreSQL data directory
+UUID=<uuid>  /var/lib/postgresql  xfs  noatime,nobarrier,allocsize=64m,inode64  0 2
+
+# noatime: skip access-time writes on every read
+# nobarrier: safe only on enterprise SSD with power-loss protection
+# allocsize=64m: hint the allocator to reserve 64 MB chunks for pre-allocation
+# inode64: allow inodes to be placed anywhere on disk (not just the first 1 TB)
+
+# after mounting, set readahead for the block device
+blockdev --setra 256 /dev/vg_data/lv_pgdata   # 128 KB readahead
+
+# PostgreSQL postgresql.conf for XFS + direct I/O
+# wal_sync_method = fdatasync
+# wal_level = replica
+# checkpoint_completion_target = 0.9
+\`\`\`
+
+The one trade-off: XFS has no data journaling. If the server loses power between a data write and the metadata commit, fsync-careful applications like PostgreSQL are safe because they control their own fsync discipline. For applications that do not use fsync consistently, ext4 in ordered mode provides an extra safety net at a small throughput cost.`,
+    },
+    {
+      question: `What are the risks of LVM thin provisioning in production, and how do you mitigate them?`,
+      answer: `LVM thin provisioning is powerful but carries three primary production risks that have caused real outages.
+
+The first and most serious risk is pool exhaustion. When a thin pool reaches 100% utilization, every thin LV backed by that pool simultaneously enters an error state. The kernel returns I/O errors to all filesystems on those LVs, causing databases to crash, applications to log-fail, and filesystems to remount read-only. Unlike running out of space on a regular LV (where only that LV's filesystem fills), a pool exhaustion event is a cascading failure affecting all tenants of the pool simultaneously.
+
+Mitigation: configure automatic pool extension in lvm.conf (thin_pool_autoextend_threshold = 80, thin_pool_autoextend_percent = 20), enable lvm2-monitor.service, and set up alerts at 75% pool usage so you have time to add capacity before autoextend triggers.
+
+\`\`\`bash
+# check thin pool usage
+lvs -o lv_name,lv_size,data_percent,metadata_percent vg_data
+
+# manually extend the thin pool if autoextend is not set up
+lvextend -L +50G /dev/vg_data/tp_pool
+
+# check lvm.conf thin pool settings
+grep -A 5 "thin_pool_autoextend" /etc/lvm/lvm.conf
+
+# enable and verify lvm2-monitor
+systemctl enable --now lvm2-monitor.service
+systemctl status lvm2-monitor.service
+\`\`\`
+
+The second risk is metadata exhaustion. The thin pool stores a metadata LV alongside the data LV. The metadata LV tracks the mapping of virtual extents to physical extents for every thin LV. Heavy snapshot churn or millions of small writes can exhaust metadata even when data space remains. The default metadata LV size is often too small. Specify it explicitly at creation.
+
+\`\`\`bash
+# create a thin pool with an explicit, generous metadata size
+lvcreate -L 200G --poolmetadatasize 2G --thinpool tp_pool vg_data
+\`\`\`
+
+The third risk is snapshot accumulation debt. Each thin LV snapshot holds divergent data separately from the origin. If many snapshots accumulate without being removed, the pool fills with snapshot delta data. A single large write to the origin LV may trigger copy-on-write for multiple snapshot extents simultaneously, causing write amplification proportional to the number of live snapshots.
+
+Mitigation: implement a snapshot rotation policy. Keep no more than 5-10 snapshots per thin LV and automate deletion. Monitor per-snapshot delta size with lvs -o snap_percent.
+
+In summary: never deploy thin provisioning without autoextend configured, metadata pre-sized generously, and active monitoring on data_percent. Treat a thin pool at 80% as an immediate on-call event.`,
+    },
+    {
+      question: `How does overlayfs work, and how does Docker use it to implement image layers and container storage?`,
+      answer: `overlayfs is a Linux union filesystem that presents a merged view of two or more directory trees without copying files. It works by stacking a read-write upper directory on top of one or more read-only lower directories. When the kernel resolves a path in the merged view, it checks upper first, then lower. Reads are transparent. Writes use a copy-up mechanism: the first time a process writes to a file that exists only in lower, overlayfs atomically copies the entire file to upper (using a staging workdir for atomicity), then applies the write to the upper copy. Subsequent writes to the same file go directly to upper without another copy-up.
+
+Docker's overlayfs2 driver maps this mechanism onto image and container storage as follows:
+
+An image is a stack of read-only layers. Each layer corresponds to a Dockerfile instruction that changed the filesystem (RUN, COPY, ADD). The layer is stored as a directory in /var/lib/docker/overlay2/<layer-id>/diff. When Docker constructs a merged view for a container, it passes all image layers as the lowerdir list (overlayfs supports multiple lower layers since Linux 4.0, which is what the "2" in overlayfs2 signifies).
+
+When a container is created, Docker adds one more directory as upperdir (the container's writable layer) and a workdir for copy-up staging. The merged mount is the root filesystem the container processes see.
+
+\`\`\`bash
+# inspect a running container's overlay configuration
+docker inspect <container_id> --format '{{json .GraphDriver}}' | python3 -m json.tool
+
+# output shows something like:
+# "Data": {
+#   "LowerDir": "/var/lib/docker/overlay2/<id-n>/diff:...:<id-1>/diff",
+#   "MergedDir": "/var/lib/docker/overlay2/<container-id>/merged",
+#   "UpperDir":  "/var/lib/docker/overlay2/<container-id>/diff",
+#   "WorkDir":   "/var/lib/docker/overlay2/<container-id>/work"
+# }
+
+# look at the upper (writable) layer contents for a running container
+ls /var/lib/docker/overlay2/<container-id>/diff/
+
+# understand copy-up cost: writing to a large file in a lower layer
+# copies the entire file to upper before the write proceeds
+# solution: mount the file as a volume to bypass overlayfs
+docker run -v /host/data:/var/lib/mysql mysql:8
+
+# kernel-level mount syntax (for understanding, not production)
+mount -t overlay overlay \
+  -o lowerdir=/layer3/diff:/layer2/diff:/layer1/diff,\
+upperdir=/container/diff,workdir=/container/work \
+  /container/merged
+\`\`\`
+
+Key performance implication: copy-up is triggered once per file per container lifetime. For small files the cost is negligible. For multi-GB files (database data files, large binaries), copy-up blocks the writing process for the duration of the file copy. This is why all database documentation for Docker instructs you to use named volumes or bind mounts — not because overlayfs cannot store the data, but because the first write to any file in a lower layer will cause a full-file copy before the write proceeds.
+
+Container layers also do not survive container removal by default. Named volumes, by contrast, are managed by Docker's volume subsystem and persist independently of container lifecycle.`,
+    },
+    {
+      question: `Why might df and du report different values for the same directory, and how do you diagnose and resolve each cause?`,
+      answer: `df and du measure fundamentally different things. df asks the filesystem how many blocks are allocated and how many are free, using the statfs() syscall. du walks the directory tree using stat() on each file and sums the block counts the kernel reports. The two can diverge for several distinct reasons.
+
+The most common production cause is deleted files with open file descriptors. When a process deletes a file (unlink()), the kernel removes the directory entry and marks the inode for reuse, but the blocks are not freed until every open file descriptor referring to that inode is closed. A log rotation script may delete a 10 GB log file that is still open by the application. df sees 10 GB of "used" space; du does not see the deleted file because it walks the directory tree and the file is no longer in any directory.
+
+\`\`\`bash
+# find processes holding open file descriptors to deleted files
+lsof +L1 /var/log
+# output shows files with link count 0 — these are deleted but still open
+
+# restart the process or truncate in place (> /var/log/app.log) to free blocks immediately
+# for systemd services:
+systemctl restart myapp
+
+# if you cannot restart, you can truncate the fd from outside the process
+# (only frees data, inode stays open — a workaround, not a fix)
+# find the fd path from lsof output, e.g. /proc/1234/fd/5
+truncate -s 0 /proc/1234/fd/5
+\`\`\`
+
+The second cause is filesystem reserved blocks. ext4 reserves 5% of total disk space for the root user by default. df reports these as "used" in the context of available space to non-root users, but du never counts them because they are not assigned to any file.
+
+\`\`\`bash
+# check reserved block percentage
+tune2fs -l /dev/sda1 | grep "Reserved block count"
+# reduce reserved blocks on a data volume (not the root filesystem)
+tune2fs -m 1 /dev/sda1
+\`\`\`
+
+The third cause is sparse files. A sparse file has "holes" — ranges of zeroes that are not actually stored on disk. du --apparent-size reports the logical size; du (without --apparent-size) reports actual disk blocks consumed. df reports allocated blocks.
+
+\`\`\`bash
+# create and inspect a sparse file
+dd if=/dev/zero of=/tmp/sparse.img bs=1 count=0 seek=1G
+ls -lh /tmp/sparse.img   # shows 1 GB apparent size
+du -h /tmp/sparse.img    # shows nearly 0 actual usage
+du --apparent-size -h /tmp/sparse.img  # shows 1 GB
+\`\`\`yaml
+
+The fourth cause is btrfs or snapshotted filesystems. btrfs filesystem df / btrfs filesystem usage shows actual CoW allocation including shared extents across subvolumes and snapshots, which can differ from both df and du significantly because shared extents are counted by both subvolumes but physically stored once.
+
+The diagnostic flowchart: first run lsof +L1 to rule out deleted open files (this is the cause in at least half of production disk-full mysteries). Then check tune2fs -l for reserved blocks. Then consider sparse files and snapshot overhead.`,
+    },
+  ],
+  references: [
+    'https://www.kernel.org/doc/html/latest/filesystems/ext4/index.html',
+    'https://xfs.wiki.kernel.org/',
+    'https://btrfs.readthedocs.io/en/latest/',
+    'https://www.sourceware.org/lvm2/',
+    'https://raid.wiki.kernel.org/index.php/Linux_Raid',
+    'https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html',
+    'https://www.kernel.org/doc/html/latest/admin-guide/devices.html',
+    'https://man7.org/linux/man-pages/man8/tune2fs.8.html',
+    'https://man7.org/linux/man-pages/man8/xfs_info.8.html',
+    'https://man7.org/linux/man-pages/man8/mdadm.8.html',
+    'https://www.postgresql.org/docs/current/storage.html',
+    'https://docs.docker.com/storage/storagedriver/overlayfs-driver/',
+  ],
+},
+
+  // ─── NETWORKING DEEP DIVE ───────────────────────────────────────────────
+{
+  id: 'linux-networking-l2l3',
+  title: 'Linux Networking L2 and L3',
+  icon: 'network',
+  color: '#0891b2',
+  questions: 5,
+  description: `Linux networking spans two foundational OSI layers: Layer 2 handles Ethernet framing, MAC addressing, ARP, and bridging, while Layer 3 handles IP routing, policy rules, and the netfilter subsystem that powers iptables and container networking.`,
+  visualizations: [
+    {
+      title: `Linux Network Stack: Layers, Namespaces, and Netfilter`,
+      description: `This diagram illustrates the full Linux networking stack from a containerized workload to the physical NIC. At the bottom sits the physical or virtual NIC, above which the kernel network device layer exposes named interfaces. The netfilter framework hooks into the kernel at five well-defined points: PREROUTING intercepts every inbound packet before the routing decision, INPUT delivers locally destined packets to socket buffers, FORWARD passes transit packets between interfaces, OUTPUT catches locally generated packets after the routing decision, and POSTROUTING runs on every outgoing packet just before it leaves an interface.
+
+Each hook is visited by four built-in tables in a fixed priority order. The raw table runs first and is used to exempt flows from connection tracking. The mangle table follows and allows packet field modification such as ToS and TTL changes. The nat table runs next and is responsible for DNAT in PREROUTING and SNAT or MASQUERADE in POSTROUTING. The filter table runs last and is the default location for ACCEPT and DROP rules.
+
+Container networking introduces Linux network namespaces. Each namespace owns its own routing table, interface list, ARP cache, and netfilter rule set. Docker creates a veth pair for each container: one end lives inside the container namespace as eth0, and the other end lives in the root namespace with a generated name such as vethXXXXXX. Both ends are connected at Layer 2. The host-side veth is enslaved to the docker0 Linux bridge, which acts as a virtual Layer 2 switch. The bridge has an IP address (typically 172.17.0.1) which is the default gateway for all containers on that bridge.
+
+Packets leaving a container travel from the container eth0, across the veth pair kernel boundary, onto the docker0 bridge, then through the root namespace routing table, through POSTROUTING where MASQUERADE rewrites the source IP to the host's outbound interface address, and finally onto the physical NIC. The return path reverses this sequence, with PREROUTING DNAT restoring the original destination and connection tracking matching replies to their originating flows.`,
+      image: `/diagrams/devops/linux-networking-l2l3-arch.png`,
+    },
+    {
+      title: `CNI Plugin Contract and Docker Bridge End-to-End Flow`,
+      description: `This diagram traces a single TCP SYN packet from a Kubernetes pod through the CNI bridge plugin, across a veth pair, through every netfilter chain in the host namespace, through NAT, and out to the internet, then maps the return path.
+
+The CNI interface is invoked by the container runtime (kubelet calling containerd or CRI-O) at pod creation time. The runtime executes the CNI binary found on disk (for example /opt/cni/bin/bridge), passes a JSON configuration blob on stdin, and sets environment variables: CNI_COMMAND is ADD, DEL, or CHECK; CNI_NETNS is the path to the network namespace file such as /proc/12345/ns/net; CNI_IFNAME is the desired interface name inside the namespace; CNI_CONTAINERID is an opaque identifier; and CNI_PATH lists directories to search for chained plugins.
+
+The bridge CNI plugin reads the stdin config, creates the veth pair, moves one end into the pod namespace and renames it to eth0, enslaves the host-side veth to the specified bridge, and calls the IPAM delegate plugin (commonly host-local) to allocate an IP from a subnet range stored on disk. The IPAM plugin writes results back to the bridge plugin as JSON, which in turn emits the full CNI result JSON to stdout. The runtime reads stdout to learn the assigned IP and routes.
+
+The packet flow on egress is: pod eth0 to veth peer in root namespace to bridge to ip_forward kernel flag to FORWARD chain filter rules to POSTROUTING MASQUERADE rule rewrites src IP to eth0 of host to physical NIC to internet. On ingress a reply arrives at the physical NIC, passes PREROUTING (no DNAT needed for established connections because conntrack handles it), matches the FORWARD chain, crosses the bridge, travels the veth pair into the pod namespace, and arrives at the application socket.
+
+In Kubernetes pod-to-pod traffic across nodes the CNI overlay (Flannel, Calico, Cilium) encapsulates or routes at Layer 3 so ARP is resolved either via proxy ARP at the node or via BGP-distributed routes depending on the CNI choice.`,
+      image: `/diagrams/devops/linux-networking-l2l3-flow.png`,
+    },
+  ],
+  introduction: `Linux networking is built on a layered model where Layer 2 and Layer 3 each have distinct responsibilities but cooperate tightly inside the kernel. Layer 2, the data link layer, concerns itself with how bytes travel between two directly connected devices: it defines the Ethernet frame format (destination MAC, source MAC, EtherType, payload, FCS), address resolution via ARP, and logical grouping of interfaces using Linux bridges and 802.1Q VLAN tagging. Layer 3, the network layer, introduces the concept of logical addressing with IP, autonomous routing decisions based on destination prefix lookups, and policy-based routing that can forward packets based on source IP, firewall mark, or DSCP bits.
+
+The netfilter framework is the kernel subsystem that ties these layers together with stateful packet inspection and manipulation. Every packet that enters, traverses, or leaves a Linux machine visits a sequence of netfilter hooks. Tables contain chains of rules, and iptables is the classical userspace tool for managing those rules. nftables is the modern replacement with a unified syntax, but iptables remains dominant in production environments, container runtimes, and Kubernetes data planes, so understanding both is essential for any DevOps or infrastructure engineer.
+
+Linux network namespaces virtualize the network stack itself. A namespace owns a private view of interfaces, routing tables, iptables rules, ARP caches, and sockets. This is the kernel primitive that makes containers possible: each container runs inside its own namespace, isolated from every other container and from the host. Veth pairs are the wire between namespaces: they behave like a crossed Ethernet cable at the kernel level, delivering frames from one end to the other with essentially zero latency and no intermediate switching logic.
+
+Docker and Kubernetes build their entire networking models on top of these primitives. Docker creates a Linux bridge (docker0), provisions veth pairs for each container, and installs iptables MASQUERADE rules so outbound traffic can reach the internet. Kubernetes delegates network setup entirely to CNI plugins, which are short-lived binaries invoked by the container runtime. The CNI specification defines a precise contract: the runtime passes configuration on stdin and reads a JSON result from stdout, allowing any conforming plugin to wire up pod networking without modifying the runtime.
+
+Understanding this stack end-to-end is required for debugging packet drops (ip route, ip neigh, conntrack, iptables -L -n -v), for designing multi-tenant network isolation (namespaces, VLAN tags, policy routing tables), and for reasoning about the performance characteristics and failure modes of container networking overlays. A candidate who can trace a packet from a containerized application through every kernel layer to the physical wire, and back, demonstrates the depth needed for senior infrastructure, SRE, and platform engineering roles.`,
+  whenToUse: [
+    `Debugging why a container cannot reach an external service when the host can, requiring inspection of iptables FORWARD and POSTROUTING rules and the docker0 bridge ARP table`,
+    `Designing multi-tenant isolation on a bare-metal host where different customer workloads must share a NIC but not see each other's traffic, using network namespaces, VLAN subinterfaces, and policy routing tables`,
+    `Tracing intermittent connection resets in a Kubernetes cluster that turn out to be conntrack table exhaustion causing SYN packets to be dropped by the stateful FORWARD chain`,
+    `Implementing a custom CNI plugin for a bare-metal environment where no existing plugin satisfies the required IP allocation or BGP peering model`,
+    `Tuning ECMP routing on a host with multiple uplinks to achieve per-flow load balancing without packet reordering, using ip route multipath and sysctl rp_filter settings`,
+    `Auditing iptables rules on a production node after a security incident to identify unauthorized DNAT or SNAT rules that redirect traffic to attacker-controlled endpoints`,
+    `Setting up a Linux router between two subnets using ip_forward, static routes, and NAT masquerade during a lab or interview live-coding exercise`,
+    `Diagnosing ARP thrashing on a host with bonded interfaces where gratuitous ARPs cause MAC table flapping on the upstream switch`,
+  ],
+  keyConcepts: [
+    {
+      term: `Ethernet Frame and ARP`,
+      definition: `An Ethernet frame is the fundamental unit of Layer 2 communication. Its structure is: 6-byte destination MAC, 6-byte source MAC, optional 4-byte 802.1Q VLAN tag (EtherType 0x8100 followed by PCP, DEI, and 12-bit VID), 2-byte EtherType (0x0800 for IPv4, 0x0806 for ARP, 0x86DD for IPv6), variable payload (46-1500 bytes for standard MTU), and 4-byte FCS. When a host needs to send an IP packet to a destination on the same subnet, it must resolve the destination IP to a MAC address. The Address Resolution Protocol handles this: the sender broadcasts an ARP request containing the target IP, and the owner of that IP replies with its MAC. Linux caches these mappings in the neighbor (ARP) table managed by the kernel's neighbour subsystem.
+
+\`\`\`bash
+# Show the ARP / neighbor table
+ip neigh show
+
+# Force an ARP request for a specific IP
+arping -I eth0 192.168.1.1
+
+# Show Layer 2 details of an interface
+ip link show eth0
+
+# Add a static ARP entry
+ip neigh add 192.168.1.50 lladdr de:ad:be:ef:00:01 dev eth0
+
+# Capture ARP traffic
+tcpdump -i eth0 arp
+\`\`\`
+
+ARP operates only within a broadcast domain. Routers do not forward ARP requests, so each subnet requires its own ARP resolution. In Kubernetes, each node is its own broadcast domain at Layer 2; pod-to-pod communication across nodes therefore relies on Layer 3 routing (or encapsulation) rather than ARP.`,
+    },
+    {
+      term: `Linux Bridge and 802.1Q VLAN Tagging`,
+      definition: `A Linux bridge is a software implementation of an Ethernet switch. It maintains a forwarding database (FDB) mapping MAC addresses to bridge ports. When a frame arrives on a port, the bridge looks up the destination MAC: if found, the frame is forwarded to the specific port; if not, it is flooded to all ports except the one it arrived on. The bridge learns source MACs from incoming frames and ages them out. Docker enslaves each container's host-side veth to the docker0 bridge, so containers on the same host communicate at Layer 2 without leaving the kernel.
+
+\`\`\`bash
+# Create a bridge
+ip link add name br0 type bridge
+ip link set br0 up
+
+# Enslave an interface to the bridge
+ip link set eth1 master br0
+
+# Show bridge forwarding database
+bridge fdb show br0
+
+# Create a VLAN subinterface (802.1Q tag 100)
+ip link add link eth0 name eth0.100 type vlan id 100
+ip link set eth0.100 up
+ip addr add 10.100.0.1/24 dev eth0.100
+
+# Show VLANs on bridge ports
+bridge vlan show
+\`\`\`
+
+802.1Q VLAN tagging inserts a 4-byte tag into the Ethernet frame between the source MAC and EtherType fields. The 12-bit VID field allows 4094 distinct VLANs. Linux VLAN subinterfaces strip the tag on ingress and insert it on egress, presenting a clean untagged interface to upper-layer protocols. Bridge VLAN filtering (bridge link set dev eth1 pvid 100 vid 100) can enforce VLAN membership at the port level, providing isolation equivalent to a managed switch.`,
+    },
+    {
+      term: `IP Routing Table and ECMP`,
+      definition: `The Linux routing table maps destination IP prefixes to nexthops. The kernel performs longest-prefix-match (LPM) lookup for every outbound packet. A route entry specifies the destination network, the nexthop (gateway IP or directly connected), the output interface, and metric. The main routing table (table 254) handles normal traffic; local (table 255) handles loopback and broadcast; policy routing adds user-defined tables (1-252) selected by ip rules.
+
+\`\`\`bash
+# Show the main routing table
+ip route show table main
+
+# Add a static route
+ip route add 10.10.0.0/16 via 192.168.1.1 dev eth0
+
+# Add a default route
+ip route add default via 192.168.1.1
+
+# ECMP: add two equal-cost nexthops for load balancing
+ip route add 10.20.0.0/24 \
+  nexthop via 192.168.1.1 dev eth0 weight 1 \
+  nexthop via 192.168.2.1 dev eth1 weight 1
+
+# Policy routing: route packets from 10.0.0.0/8 via table 100
+ip rule add from 10.0.0.0/8 table 100
+ip route add default via 10.0.0.254 table 100
+
+# Show all routing rules
+ip rule show
+\`\`\`
+
+ECMP (Equal-Cost Multi-Path) allows the kernel to distribute flows across multiple nexthops. Linux uses a hash of the 5-tuple (src IP, dst IP, protocol, src port, dst port) to select the nexthop, ensuring that all packets of a single TCP connection take the same path (preventing reordering). The sysctl net.ipv4.fib_multipath_hash_policy controls the hash inputs.`,
+    },
+    {
+      term: `Netfilter Tables and Chains`,
+      definition: `Netfilter is the kernel framework that processes packets at five hook points. iptables organizes rules into tables, each with a fixed set of chains. The raw table (chains: PREROUTING, OUTPUT) runs before connection tracking and is used to exempt specific flows via the NOTRACK target. The mangle table (all five chains) allows modification of packet fields like TTL, ToS, and firewall mark. The nat table (PREROUTING, INPUT, OUTPUT, POSTROUTING) performs address translation; DNAT rules appear in PREROUTING and SNAT/MASQUERADE appear in POSTROUTING. The filter table (INPUT, FORWARD, OUTPUT) is the default for allow/deny rules.
+
+\`\`\`bash
+# List all rules with counters in all chains of filter table
+iptables -t filter -L -n -v --line-numbers
+
+# Allow forwarding between two interfaces
+iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+
+# MASQUERADE outbound traffic on eth0
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# DNAT: redirect incoming port 80 to internal server
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 10.0.0.5:80
+
+# Show connection tracking table
+conntrack -L
+
+# Delete all rules in a table
+iptables -t nat -F
+\`\`\`
+
+Connection tracking (conntrack) is the kernel module that maintains state for each flow. States are NEW (first packet of a new connection), ESTABLISHED (bidirectional traffic seen), RELATED (new connection related to an existing one, such as FTP data), and INVALID (packets that do not match any connection). Most FORWARD chains use -m state --state RELATED,ESTABLISHED to pass return traffic without explicit rules.`,
+    },
+    {
+      term: `Linux Network Namespaces and Veth Pairs`,
+      definition: `A network namespace is a complete virtualization of the Linux network stack: it owns its own interfaces, routing tables, iptables rules, neighbor cache, and socket namespace. The root namespace (pid 1's namespace) is the default. New namespaces are created with ip netns add or unshare --net. Processes join a namespace by calling setns() on the namespace file descriptor.
+
+A veth pair is created as a single unit: two virtual Ethernet interfaces that are connected back-to-back in the kernel. A frame written to one end is immediately readable on the other end. They are the standard mechanism for connecting a network namespace to the root namespace or to a bridge.
+
+\`\`\`bash
+# Create a namespace
+ip netns add container1
+
+# Create a veth pair
+ip link add veth0 type veth peer name veth1
+
+# Move one end into the namespace
+ip link set veth1 netns container1
+
+# Configure addresses
+ip addr add 172.17.0.1/24 dev veth0
+ip link set veth0 up
+ip netns exec container1 ip addr add 172.17.0.2/24 dev veth1
+ip netns exec container1 ip link set veth1 up
+ip netns exec container1 ip link set lo up
+
+# Add a default route inside the namespace
+ip netns exec container1 ip route add default via 172.17.0.1
+
+# Run a command inside the namespace
+ip netns exec container1 ping 8.8.8.8
+
+# List all named namespaces
+ip netns list
+\`\`\`
+
+Named network namespaces appear as files under /var/run/netns/. Container runtimes create anonymous namespaces via clone() or unshare() and reference them through /proc/PID/ns/net. The CNI specification requires the runtime to pass this path in the CNI_NETNS environment variable so the CNI plugin can open and configure the namespace.`,
+    },
+    {
+      term: `CNI Plugin Contract`,
+      definition: `The Container Network Interface specification defines a binary interface between a container runtime and a network plugin. At pod creation, the runtime executes a CNI binary with these environment variables set: CNI_COMMAND (ADD, DEL, or CHECK), CNI_CONTAINERID (opaque unique ID), CNI_NETNS (path to the network namespace file, e.g. /proc/12345/ns/net), CNI_IFNAME (interface name inside the namespace, typically eth0), CNI_ARGS (optional semicolon-separated key=value pairs), and CNI_PATH (colon-separated list of directories to search for plugin binaries).
+
+The plugin reads a JSON network configuration from stdin. A typical bridge plugin config looks like this:
+
+\`\`\`json
+{
+  "cniVersion": "0.4.0",
+  "name": "mynet",
+  "type": "bridge",
+  "bridge": "cni0",
+  "isGateway": true,
+  "ipMasq": true,
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.244.0.0/24",
+    "routes": [{ "dst": "0.0.0.0/0" }]
+  }
+}
+\`\`\`
+
+On ADD the plugin must: create the bridge if absent, create a veth pair, move one end into the container namespace and rename it to CNI_IFNAME, enslave the host-side veth to the bridge, invoke the IPAM delegate to allocate an IP, assign the IP to the container interface, add routes inside the namespace, and write a JSON result to stdout containing the allocated IPs and routes. On DEL the plugin must tear down the veth pair and release the IP back to IPAM. On CHECK it must verify the configuration matches expectations and return an error if not.
+
+\`\`\`bash
+# Manually invoke a CNI plugin (useful for debugging)
+CNI_COMMAND=ADD \
+CNI_CONTAINERID=test123 \
+CNI_NETNS=/var/run/netns/test \
+CNI_IFNAME=eth0 \
+CNI_PATH=/opt/cni/bin \
+/opt/cni/bin/bridge < /etc/cni/net.d/10-bridge.conf
+
+# Inspect what the host-local IPAM has allocated
+cat /var/lib/cni/networks/mynet/*
+\`\`\`
+
+The host-local IPAM plugin stores allocations as files named by IP address under /var/lib/cni/networks/NETNAME/. Each file contains the container ID that owns the allocation, making it straightforward to audit or debug stale allocations after a crash.`,
+    },
+  ],
+  approach: [
+    `Always enable ip_forward before expecting the kernel to route packets between interfaces. Set net.ipv4.ip_forward=1 in /etc/sysctl.conf and apply with sysctl -p. Without this the kernel silently drops packets that arrive on one interface destined for a different subnet.`,
+    `Use conntrack -L to inspect the connection tracking table when debugging NAT or stateful firewall issues. Stale entries after a process crash can cause new connections to be incorrectly classified as INVALID and dropped by rules that match only RELATED,ESTABLISHED.`,
+    `When adding iptables rules for container networking, always use -m comment --comment to annotate rules with the container ID or workload name. Production nodes accumulate hundreds of rules; anonymous rules are impossible to audit.`,
+    `Test veth pair connectivity with ip netns exec NAMESPACE ping HOST_IP before adding application-layer complexity. This isolates Layer 3 reachability problems from application or DNS issues.`,
+    `Use tcpdump with -i any and -e (show Ethernet headers) to trace packets across all interfaces simultaneously. Packet captures on both ends of a veth pair confirm whether a frame is being delivered and whether VLAN tags or MACs are correct.`,
+    `Configure rp_filter (reverse path filtering) carefully when using policy routing or ECMP. A value of 1 (strict) drops packets whose source address would not be reachable via the same interface, which breaks asymmetric routing. Set to 2 (loose) or 0 when asymmetric paths are intentional.`,
+    `When writing a CNI plugin, always handle the DEL command idempotently. The runtime may call DEL multiple times after a crash or node failure. A plugin that returns an error on a second DEL (because the veth no longer exists) will block pod cleanup and leak namespace files.`,
+    `Use ip route get DST_IP to simulate a routing decision without sending a packet. This shows which interface and nexthop the kernel would select, including the effects of policy routing rules, and is the fastest way to diagnose routing misconfigurations.`,
+  ],
+  pitfalls: [
+    `Forgetting that iptables rules are stateless by default. A FORWARD rule that allows traffic from eth0 to eth1 does not automatically allow return traffic. Always pair forward rules with a RELATED,ESTABLISHED rule or use connection tracking explicitly, otherwise the first packet of a reply is dropped.`,
+    `Assuming MASQUERADE and SNAT are equivalent. MASQUERADE looks up the outbound interface's IP at packet time (correct for DHCP interfaces that change IP), while SNAT requires a fixed IP specified at rule creation time. Using MASQUERADE on a static-IP interface adds a small per-packet lookup overhead, but the more dangerous mistake is using SNAT on a dynamic interface that gets a new IP after a lease renewal, causing all NAT sessions to break silently.`,
+    `Creating a veth pair but forgetting to bring both ends up with ip link set up. A veth end that is DOWN will silently discard all frames. This is the most common cause of "container can ping the gateway but nothing else" bugs, often because the host-side veth is up but the bridge port is not.`,
+    `Exhausting the conntrack table under high connection rates. The default nf_conntrack_max is sized for modest workloads. When the table fills, new connections are dropped without any error visible to the application. Monitor /proc/sys/net/netfilter/nf_conntrack_count against nf_conntrack_max and tune with sysctl net.netfilter.nf_conntrack_max and net.netfilter.nf_conntrack_buckets.`,
+    `Relying on iptables -F to clear rules without also flushing the nat table. iptables -F flushes only the filter table by default. Use iptables -t nat -F, iptables -t mangle -F, and iptables -t raw -F separately, or wrap them in a loop over all tables to ensure a clean state.`,
+    `Mixing ip route and route commands. The legacy route tool does not support policy routing, ECMP, or the full feature set of iproute2. It also interprets arguments differently. Use only ip route, ip rule, and ip neigh in any script or runbook that may run on modern kernels.`,
+    `Ignoring MTU mismatches when using VLAN subinterfaces or overlay encapsulation. An 802.1Q VLAN tag adds 4 bytes, reducing the effective payload from 1500 to 1496 bytes if the parent interface MTU is 1500. VXLAN encapsulation adds 50 bytes. Failure to set the correct MTU on inner interfaces causes silent fragmentation or PMTUD blackholes, manifesting as connections that complete handshakes but stall when transferring large payloads.`,
+    `Assuming that CNI ADD success means the pod has full connectivity. The bridge plugin only wires the pod to the local bridge. Pod-to-pod traffic across nodes requires a separate mechanism: an overlay like VXLAN installed by flannel, BGP route distribution by Calico, or eBPF datapath by Cilium. Forgetting to install or configure the cross-node component produces intermittent failures that look like DNS or application bugs rather than networking gaps.`,
+  ],
+  keyQuestions: [
+    {
+      question: `Trace a TCP SYN packet from a Docker container to the internet through every iptables chain it visits.`,
+      answer: `A container on the docker0 bridge at 172.17.0.2 sends a SYN destined for 1.1.1.1:443. Here is the exact chain sequence in the root network namespace.
+
+The packet arrives at the docker0 bridge interface in the root namespace. The bridge forwards it at Layer 2 to the kernel IP stack via the bridge's own IP device. At this point netfilter sees an incoming packet on docker0.
+
+Chain 1: PREROUTING (raw table). The raw table runs first. If no rule exempts the flow, the packet enters connection tracking and is marked as a NEW connection. Docker does not normally add raw rules, so the packet continues.
+
+Chain 2: PREROUTING (mangle table). No-op in a default Docker setup. Packet continues.
+
+Chain 3: PREROUTING (nat table). Docker adds a DNAT rule here for published ports. Since this is outbound traffic from the container (not inbound to a published port), no DNAT rule matches. Packet continues.
+
+The kernel now makes a routing decision. The destination 1.1.1.1 matches the default route via eth0 (the host's uplink). Because the output interface (eth0) differs from the input interface (docker0), the packet is a transit packet and hits the FORWARD chain, not INPUT.
+
+Chain 4: FORWARD (mangle table). No-op default.
+
+Chain 5: FORWARD (filter table). Docker installs a rule: -A DOCKER-USER and then -A FORWARD -i docker0 ! -o docker0 -j ACCEPT (for outbound) and -A FORWARD -i docker0 -o docker0 -j ACCEPT (for intra-bridge). The SYN matches the outbound rule and is ACCEPTed.
+
+Chain 6: POSTROUTING (mangle table). No-op default.
+
+Chain 7: POSTROUTING (nat table). Docker installs: -A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE. The SYN source (172.17.0.2) matches the source range and the output interface is eth0 (not docker0), so MASQUERADE rewrites the source IP to the host's eth0 IP (say 203.0.113.5) and records the mapping in the conntrack table. The packet leaves eth0 with src=203.0.113.5 and dst=1.1.1.1.
+
+On the return path, the SYN-ACK arrives on eth0. It hits PREROUTING (nat), where conntrack identifies it as ESTABLISHED and automatically un-NATes the destination back to 172.17.0.2. The packet then hits FORWARD (filter) and matches the RELATED,ESTABLISHED rule. It exits via docker0 and crosses the veth pair into the container namespace.
+
+\`\`\`bash
+# Observe the conntrack entry for the flow
+conntrack -L -p tcp --dport 443
+
+# Watch iptables counters in real time
+watch -n1 'iptables -t nat -L POSTROUTING -n -v'
+
+# Trace a specific packet through all tables (kernel 4.11+)
+iptables -t raw -A OUTPUT -p tcp --dport 443 -j TRACE
+iptables -t raw -A PREROUTING -p tcp --sport 443 -j TRACE
+# then read: dmesg | grep TRACE
+\`\`\``,
+    },
+    {
+      question: `Explain veth pair mechanics at the kernel level. What happens when you write a byte to one end?`,
+      answer: `A veth pair is created by a single call to the veth driver's newlink function, which allocates two net_device structures and cross-links them: each end holds a pointer to its peer. Unlike a real NIC that passes frames through hardware, the veth driver's xmit function directly calls netif_rx() on the peer device, injecting the frame into the peer's receive queue in software. The entire transfer happens in the same CPU context if the peer is in the same namespace, or via a brief context switch if napi polling is involved.
+
+From a performance standpoint, veth pairs achieve nearly the same throughput as loopback and far exceed what a physical NIC can sustain, because there is no PCI DMA, no interrupt coalescing, and no serialization across a PCIe bus. The limiting factors are CPU cache pressure and lock contention on the sk_buff allocation pool.
+
+\`\`\`bash
+# Demonstrate veth pair: namespace A can reach namespace B
+ip netns add ns-a
+ip netns add ns-b
+ip link add veth-a type veth peer name veth-b
+ip link set veth-a netns ns-a
+ip link set veth-b netns ns-b
+ip netns exec ns-a ip addr add 192.168.99.1/24 dev veth-a
+ip netns exec ns-b ip addr add 192.168.99.2/24 dev veth-b
+ip netns exec ns-a ip link set veth-a up
+ip netns exec ns-b ip link set veth-b up
+ip netns exec ns-a ping -c3 192.168.99.2
+\`\`\`
+
+Key behaviors to understand in interviews: if the peer end is DOWN (ip link set veth-b down), the xmit on veth-a silently discards frames (returns NETDEV_TX_OK but increments the dropped counter). There is no error propagated to the sender. This is the most common cause of "container can start but has no connectivity" bugs. The fix is always to check both ends with ip link show and ensure both are UP.
+
+When a veth end is enslaved to a bridge, the bridge becomes the Layer 2 forwarder. Frames arriving on the bridge port are no longer delivered directly to the veth's net_device IP stack; instead the bridge makes the forwarding decision. The bridge then delivers frames to the correct port's peer, which in turn injects them into the target namespace via netif_rx.`,
+    },
+    {
+      question: `What is the difference between PREROUTING and POSTROUTING in iptables? When would you use each?`,
+      answer: `PREROUTING and POSTROUTING are netfilter hooks that run at opposite ends of the kernel's routing decision.
+
+PREROUTING fires on every packet that arrives at any interface before the kernel makes the routing decision. At this point the kernel has not yet decided whether the packet is destined for a local socket (INPUT path) or for forwarding to another interface (FORWARD path). Because the routing decision has not happened, PREROUTING rules can rewrite the destination IP and port (DNAT) and thereby redirect the packet to a different host or port. The kernel will then make its routing decision on the modified destination. This is how Docker port publishing works: an incoming packet for the host's port 8080 hits PREROUTING DNAT and is rewritten to 172.17.0.5:80, after which the routing decision forwards it to the container.
+
+POSTROUTING fires on every packet that is about to leave any interface, after the routing decision and after the FORWARD or OUTPUT chain. The source IP and port are still the original values at this point (unless a prior rule modified them). POSTROUTING is where SNAT and MASQUERADE live. The kernel uses the routing decision to determine the output interface, and POSTROUTING can rewrite the source to make the packet appear to originate from the host or from a specific IP.
+
+\`\`\`bash
+# DNAT: redirect packets arriving on port 443 to an internal TLS terminator
+iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination 10.0.0.10:8443
+
+# SNAT: make all traffic from the internal lab subnet appear to come from the host's public IP
+iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -o eth0 -j SNAT --to-source 203.0.113.5
+
+# MASQUERADE: same as above but learns the outbound IP dynamically (for DHCP interfaces)
+iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -o eth0 -j MASQUERADE
+\`\`\`
+
+The critical distinction: PREROUTING modifies where a packet goes (destination), POSTROUTING modifies who it appears to come from (source). You can combine them: a load balancer might DNAT in PREROUTING to select a backend, and the backend's reply travels the return path where SNAT in POSTROUTING ensures the client sees the load balancer's IP in the reply, not the backend's. Connection tracking makes this transparent by storing the original tuple and automatically reversing the NAT on reply packets.`,
+    },
+    {
+      question: `How does ARP work for pod-to-pod traffic across different Kubernetes nodes? Walk through the full resolution path.`,
+      answer: `The answer depends on the CNI plugin, because Kubernetes does not mandate a single Layer 2 topology. The two dominant approaches are overlay networks (VXLAN) and pure Layer 3 routing (BGP). Here is how each handles ARP for cross-node pod-to-pod traffic.
+
+Pure Layer 3 (Calico with BGP): Each node advertises its pod CIDR (/24 or /26) to the BGP fabric. The routing table on every node has a host route (/32) for every pod, with the nexthop being the node's IP. When pod A (10.244.1.2 on node 1) sends a packet to pod B (10.244.2.5 on node 2), the kernel on node 1 looks up 10.244.2.5, finds a route pointing to node 2's IP (192.168.0.2). It then ARPs for 192.168.0.2 on its eth0, which is a standard Layer 2 ARP on the physical network. Node 2 answers, and the packet travels as a normal IP packet between nodes. On node 2, a host route for 10.244.2.5 points to a veth that connects to pod B's namespace. There is no tunnel and no per-pod ARP across nodes.
+
+\`\`\`bash
+# On a Calico node, see per-pod host routes
+ip route show | grep cali
+
+# Example output:
+# 10.244.2.5 dev cali1234abcd scope link
+\`\`\`
+
+VXLAN overlay (Flannel in VXLAN mode): Each node has a VTEP (VXLAN Tunnel Endpoint) interface (flannel.1). Flannel populates the VTEP's FDB and ARP proxy tables with entries learned from etcd or the Kubernetes API. When pod A sends a packet to pod B, the kernel on node 1 looks up 10.244.2.5, finds a route via flannel.1 nexthop 10.244.2.0 (the pod's gateway). Before encapsulating, the kernel needs the MAC of the nexthop. Instead of broadcasting an ARP, the flannel VTEP has a static ARP entry for 10.244.2.0 pointing to the MAC of node 2's VTEP, populated by flannel via netlink. The kernel encapsulates the entire original frame in a UDP/VXLAN packet (UDP port 4789) addressed to node 2's IP. Node 2's kernel decapsulates and delivers to the pod.
+
+\`\`\`bash
+# See the ARP proxy entries on the flannel VTEP
+ip neigh show dev flannel.1
+
+# See the VTEP FDB (which remote VTEP owns which inner MAC)
+bridge fdb show dev flannel.1
+\`\`\`
+
+The key insight: in both cases, actual Layer 2 ARP between pods on different nodes is avoided. Pure L3 uses BGP routes so the kernel never broadcasts for remote pod IPs. Overlay uses pre-populated ARP and FDB tables in the VTEP so the kernel finds the answer locally. Broadcast ARP across nodes would be impossible anyway because each node is in a separate broadcast domain.`,
+    },
+    {
+      question: `Describe the CNI plugin contract precisely. What must a plugin do on ADD, and what guarantees must it make on DEL?`,
+      answer: `The CNI specification (currently 1.0.0, with 0.4.0 still widely deployed) defines a strict contract between the container runtime and the plugin binary.
+
+Runtime responsibilities before calling ADD: the runtime must have already created the network namespace, which exists at the path passed in CNI_NETNS. The runtime must not yet have set up any network interfaces inside the namespace. The runtime sets five environment variables (CNI_COMMAND, CNI_CONTAINERID, CNI_NETNS, CNI_IFNAME, CNI_PATH) and writes the plugin's configuration JSON to the binary's stdin.
+
+Plugin responsibilities on ADD:
+1. Read the config JSON from stdin and parse it.
+2. Create the requested network resources (bridge, veth pair, etc.).
+3. Move the container-side veth into the namespace at CNI_NETNS and rename it to CNI_IFNAME.
+4. Configure the interface: assign IP addresses, bring it UP, add routes inside the namespace.
+5. If the config references an IPAM plugin, delegate to it by re-executing the IPAM binary with CNI_COMMAND=ADD and the ipam section of the config as stdin. Parse its JSON result to obtain the allocated IP, gateway, and routes.
+6. Write a JSON result to stdout containing the CNI version, the list of IPs allocated, the DNS config, and the interface list. Return exit code 0 on success, nonzero on error.
+
+\`\`\`json
+{
+  "cniVersion": "0.4.0",
+  "interfaces": [
+    { "name": "cni0", "mac": "0a:58:0a:f4:00:01" },
+    { "name": "vethXXXXXX", "mac": "...", "sandbox": "" },
+    { "name": "eth0", "mac": "...", "sandbox": "/proc/12345/ns/net" }
+  ],
+  "ips": [
+    {
+      "version": "4",
+      "address": "10.244.0.5/24",
+      "gateway": "10.244.0.1",
+      "interface": 2
+    }
+  ],
+  "routes": [{ "dst": "0.0.0.0/0" }]
+}
+\`\`\`
+
+Plugin guarantees on DEL: the plugin must be idempotent. The runtime may call DEL multiple times (kubelet retry after crash, node draining, forced pod deletion). If the veth pair no longer exists, the plugin must not return an error that blocks the DEL from completing. The correct behavior is to attempt teardown, log a warning if resources are already gone, release the IP back to IPAM (also idempotent: host-local will silently succeed if the file is already absent), and return exit code 0. A plugin that returns an error on a missing veth will leak the pod namespace file and cause kubelet to retry indefinitely, eventually exhausting kernel namespace slots.
+
+\`\`\`bash
+# Invoke DEL manually for a stale container
+CNI_COMMAND=DEL \
+CNI_CONTAINERID=stale123 \
+CNI_NETNS=/proc/99999/ns/net \
+CNI_IFNAME=eth0 \
+CNI_PATH=/opt/cni/bin \
+/opt/cni/bin/bridge < /etc/cni/net.d/10-bridge.conf
+
+# Check for leaked IPAM allocations
+ls /var/lib/cni/networks/mynet/
+\`\`\``,
+    },
+  ],
+  references: [
+    'https://www.kernel.org/doc/html/latest/networking/netfilter.html',
+    'https://www.netfilter.org/documentation/HOWTO/netfilter-hacking-HOWTO.html',
+    'https://www.cni.dev/docs/spec/',
+    'https://www.cni.dev/plugins/current/main/bridge/',
+    'https://docs.docker.com/network/drivers/bridge/',
+    'https://linux.die.net/man/8/ip',
+    'https://man7.org/linux/man-pages/man8/iptables.8.html',
+    'https://man7.org/linux/man-pages/man8/conntrack.8.html',
+    'https://www.projectcalico.org/blog/why-bgp',
+    'https://github.com/flannel-io/flannel/blob/master/Documentation/backends.md',
+  ],
+},
 ];
