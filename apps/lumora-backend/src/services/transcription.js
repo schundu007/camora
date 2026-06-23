@@ -14,13 +14,25 @@ CAP theorem, ACID, BASE, eventual consistency, sharding, replication,
 load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 `.trim();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getTranscriptionClient() {
+  if (process.env.GROQ_API_KEY) {
+    return {
+      client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
+      model: 'whisper-large-v3-turbo',
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return { client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: 'whisper-1' };
+  }
+  throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
+}
 
 export async function transcribe(audioBuffer, filename = 'audio.webm') {
+  const { client, model } = getTranscriptionClient();
   const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
   const file = new File([audioBuffer], filename, { type: mime });
-  const response = await openai.audio.transcriptions.create({
-    model: 'whisper-1',
+  const response = await client.audio.transcriptions.create({
+    model,
     file,
     language: 'en',
     prompt: TECHNICAL_PROMPT,
