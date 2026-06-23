@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
-import { getAnthropicClient, getOpenAIClient as getOpenAIClientFromShared } from '../lib/_shared/llm.js';
+import { getAnthropicClient } from '../lib/_shared/llm.js';
 import { getApiKey as getClaudeApiKey } from './claude.js';
-import { getApiKey as getOpenAIApiKey } from './openai.js';
 import { SECTION_PROMPTS } from './ascend-prep/section-prompts.js';
 import { getSchemaForSection } from './ascend-prep/section-schemas.js';
 import { buildCloudHint } from './cloudHint.js';
@@ -24,14 +23,6 @@ function getClaudeClient() {
   return getAnthropicClient(apiKey);
 }
 
-function getOpenAIClient() {
-  const apiKey = getOpenAIApiKey();
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured. Please add your API key in Settings.');
-  }
-  return getOpenAIClientFromShared(apiKey);
-}
-
 // Groq client — OpenAI-compatible, free tier with generous limits (llama-3.3-70b).
 let _groqClient = null;
 function getGroqClient() {
@@ -46,7 +37,6 @@ function getGroqClient() {
 const CLAUDE_SONNET = 'claude-sonnet-4-6';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const DEFAULT_CLAUDE_MODEL = CLAUDE_SONNET;
-const DEFAULT_OPENAI_MODEL = 'gpt-4o';
 // Groq free tier: llama-3.3-70b — fast, high-quality, generous free limits
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile';
 const MAX_TOKENS_PER_SECTION = 12000; // Thorough section fits in 8-10K tokens
@@ -488,97 +478,6 @@ export async function* generateSectionClaude(section, inputs, model = DEFAULT_CL
 
   // Pass 3: legacy streaming path on the preferred model — last resort.
   yield* generateSectionClaudeStreaming(section, inputs, model);
-}
-
-// Generate a single section using OpenAI
-export async function* generateSectionOpenAI(section, inputs, model = DEFAULT_OPENAI_MODEL) {
-  // Enrich inputs with web search for relevant sections
-  const enrichedInputs = await enrichWithWebSearch(inputs, section);
-  const context = buildContext(enrichedInputs, section);
-  const sectionPrompt = SECTION_PROMPTS[section];
-
-  if (!sectionPrompt) {
-    throw new Error(`Unknown section: ${section}`);
-  }
-
-  // Get company name for prompts
-  const companyNameOAI = inputs.companyName || inputs.resolvedCompanyName || extractCompanyName(inputs.jobDescription || '');
-
-  // Use extended system prompt for coding/system-design sections
-  const isDetailedSection = ['coding', 'system-design', 'techstack', 'rrk'].includes(section);
-  const companyContextOAI = companyNameOAI
-    ? `\n\nCRITICAL: You are preparing content SPECIFICALLY for ${companyNameOAI}.
-- Use ${companyNameOAI}'s actual interview format, known questions, and company culture
-- Reference ${companyNameOAI}'s real products, tech stack, and business challenges
-- Generate questions that ${companyNameOAI} is ACTUALLY known to ask
-- DO NOT use generic questions - every question must be tailored to ${companyNameOAI}'s interview process`
-    : '';
-
-  const systemPrompt = isDetailedSection
-    ? `You are an expert interview coach with deep knowledge of technical interviews.
-Your task is to provide COMPREHENSIVE, DETAILED preparation materials.
-For coding questions: Include COMPLETE working code with LINE-BY-LINE explanations and ALL edge cases.
-For system design: Include ASCII architecture diagrams, capacity calculations, and detailed component breakdowns.
-You MUST reference any prep materials provided by the candidate.${companyContextOAI}
-Return valid JSON.`
-    : `You are a concise interview coach. Give specific, actionable advice based on the resume and job description. Be direct and practical.${companyContextOAI}
-Return valid JSON.`;
-
-  const userMessage = buildUserMessage(context, sectionPrompt, section, enrichedInputs);
-
-  // Token budget: custom sections need more room for document extraction,
-  // non-technical sections are shorter (match Haiku budget for parity)
-  const isNonTechnical = !['coding', 'system-design', 'system_design', 'techstack', 'rrk', 'custom'].some(
-    t => section?.toLowerCase().includes(t)
-  );
-  const maxTokens = section.startsWith('custom')
-    ? MAX_TOKENS_CUSTOM_SECTION
-    : isNonTechnical
-      ? MAX_TOKENS_HAIKU_SECTION
-      : MAX_TOKENS_PER_SECTION;
-
-  const stream = await getOpenAIClient().chat.completions.create({
-    model,
-    max_tokens: maxTokens,
-    stream: true,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
-    ],
-    response_format: { type: 'json_object' },
-  });
-
-  let fullText = '';
-  let finishReason = null;
-
-  for await (const chunk of stream) {
-    const choice = chunk.choices[0];
-    const text = choice?.delta?.content || '';
-    if (text) {
-      fullText += text;
-      yield { chunk: text };
-    }
-    if (choice?.finish_reason) {
-      finishReason = choice.finish_reason;
-    }
-  }
-
-  // Log completion info
-  if (finishReason === 'length') {
-    console.warn(`[AscendPrep] OpenAI response truncated by length for section: ${section}`);
-  }
-  console.log(`[AscendPrep] OpenAI response completed. Finish reason: ${finishReason}, Length: ${fullText.length}`);
-
-  // Parse final result
-  try {
-    const result = JSON.parse(fullText);
-    // Clean up all text content in the result
-    yield { done: true, result: cleanupResult(result) };
-  } catch (err) {
-    console.error(`[AscendPrep] OpenAI JSON parse failed for section ${section}:`, err.message);
-    // Return raw text if JSON parsing fails
-    yield { done: true, result: { rawContent: cleanupText(fullText) } };
-  }
 }
 
 // Groq generator — free tier llama-3.3-70b, OpenAI-compatible.
