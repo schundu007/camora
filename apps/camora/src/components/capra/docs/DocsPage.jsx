@@ -1397,14 +1397,6 @@ export default function DocsPage({ onBack }) {
                         ))}
                       </div>
                       {/* AI-detected focus areas from job analysis */}
-                      {focusTags && focusTags.length > 0 && (
-                        <div className="px-4 pb-3 flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] text-[var(--accent-hover)] font-semibold uppercase tracking-wider landing-mono mr-1">Focus areas:</span>
-                          {focusTags.map((tag) => (
-                            <Chip key={tag}>{tag}</Chip>
-                          ))}
-                        </div>
-                      )}
                       {/* Summary from AI analysis */}
                       {analysis?.summary && (
                         <div className="px-4 pb-3">
@@ -1425,12 +1417,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Arrays & Hashing', 'Trees & Graphs', 'Dynamic Programming', 'Sliding Window', 'Binary Search', 'Backtracking'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Data Structures & Algorithms</h2>
                           </div>
                         </div>
                       </div>
@@ -1446,12 +1433,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="systemDesign" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>System Design</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Scalability', 'Load Balancing', 'Caching', 'Database Sharding', 'Message Queues', 'CAP Theorem'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>System Design</h2>
                           </div>
                         </div>
                       </div>
@@ -1467,12 +1449,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="users" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['STAR Method', 'Leadership', 'Conflict Resolution', 'Teamwork', 'Failure Stories', 'Company Research'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Behavioral Questions</h2>
                           </div>
                         </div>
                       </div>
@@ -1488,12 +1465,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['OOP Principles', 'SOLID', 'Design Patterns', 'Class Diagrams', 'UML', 'Clean Architecture'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Low Level Design</h2>
                           </div>
                         </div>
                       </div>
@@ -1509,12 +1481,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="grid" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Service Mesh', 'Circuit Breakers', 'Event Sourcing', 'CQRS', 'API Gateway', 'Saga Pattern'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Microservices Architecture</h2>
                           </div>
                         </div>
                       </div>
@@ -1530,12 +1497,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="database" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Indexing', 'Replication', 'Sharding', 'ACID vs BASE', 'Window Functions', 'CTEs', 'Complex Joins', 'Query Optimization'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Databases & SQL</h2>
                           </div>
                         </div>
                       </div>
@@ -1551,12 +1513,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Full-Stack Apps', 'API Design', 'CI/CD', 'Testing', 'Documentation', 'Open Source'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Portfolio Projects</h2>
                           </div>
                         </div>
                       </div>
@@ -1572,12 +1529,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="trendingUp" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Frontend', 'Backend', 'Full-Stack', 'DevOps', 'ML Engineering', 'Staff Engineer'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Career Roadmaps</h2>
                           </div>
                         </div>
                       </div>
@@ -1593,12 +1545,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="bookOpen" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Netflix Tech', 'Uber Engineering', 'Stripe Blog', 'Meta Engineering', 'AWS Architecture', 'Google SRE'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Engineering Blogs</h2>
                           </div>
                         </div>
                       </div>
@@ -1614,12 +1561,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="shield" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['SLOs & SLAs', 'Error Budgets', 'Incident Response', 'Observability', 'On-Call', 'Capacity Planning'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Site Reliability Engineering</h2>
                           </div>
                         </div>
                       </div>
@@ -1635,12 +1577,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="gitMerge" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>DevOps</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['CI/CD', 'Infrastructure as Code', 'Containers & Kubernetes', 'Monitoring', 'Cloud Native', 'DevSecOps'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>DevOps</h2>
                           </div>
                         </div>
                       </div>
@@ -1656,12 +1593,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="activity" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Observability & Telemetry</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['OpenTelemetry', 'Prometheus & Grafana', 'Distributed Tracing', 'Log Aggregation', 'APM', 'eBPF'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Observability & Telemetry</h2>
                           </div>
                         </div>
                       </div>
@@ -1677,12 +1609,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="layers" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Platform Engineering</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Internal Developer Platforms', 'Golden Paths', 'Backstage', 'Developer Experience', 'Self-Service'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Platform Engineering</h2>
                           </div>
                         </div>
                       </div>
@@ -1698,12 +1625,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="cpu" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>MLOps & LLMOps</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['ML Lifecycle', 'Feature Stores', 'Model Registry', 'Model Serving', 'Drift Detection', 'LLM Ops'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>MLOps & LLMOps</h2>
                           </div>
                         </div>
                       </div>
@@ -1719,12 +1641,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="zap" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>AIOps</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['Anomaly Detection', 'Alert Correlation', 'Incident RCA', 'LLM SRE Agents', 'Capacity Forecasting', 'Chaos Engineering'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>AIOps</h2>
                           </div>
                         </div>
                       </div>
@@ -1740,12 +1657,7 @@ export default function DocsPage({ onBack }) {
                             <Icon name="code" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-3xl font-extrabold mb-4" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Coding Challenges</h2>
-                            <div className="flex flex-wrap gap-2">
-                              {['DevOps', 'Docker', 'Kubernetes', 'Ansible', 'Terraform', 'AWS'].map(tag => (
-                                <Chip key={tag}>{tag}</Chip>
-                              ))}
-                            </div>
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Coding Challenges</h2>
                           </div>
                         </div>
                       </div>
