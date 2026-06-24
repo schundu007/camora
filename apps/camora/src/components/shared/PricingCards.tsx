@@ -58,7 +58,7 @@ export const SOLO_PLANS: PlanCard[] = [
       'Live session AI co-pilot',
       'Coding solver + system design',
       'Voice filter + architecture diagrams',
-      'Prep — 1,400+ topics (unlimited)',
+      'Prep — 500+ topics (unlimited)',
       'Playground — live Docker & Kubernetes terminals',
       'Top-ups at $15/hr, never expire',
     ],

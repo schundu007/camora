@@ -50,7 +50,7 @@ const APPA: Step[] = [
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
-    headline: '1,400+ curated study topics',
+    headline: '500+ curated study topics',
     desc: 'System design, DSA, behavioral, databases · diagrams included',
     color: 'var(--cam-gold-leaf)',
     cta: 'Start studying',
@@ -104,9 +104,9 @@ const FEATURES = [
   },
   {
     label: 'Prep',
-    title: '1,400+ topics with diagrams',
+    title: '500+ topics with diagrams',
     bullets: ['System design, DSA, behavioral, databases', 'AI explanations + architecture diagrams', 'Company-specific study paths'],
-    stat: '1,400+',
+    stat: '500+',
     statLabel: 'study topics',
   },
   {
@@ -286,7 +286,7 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles · 1,400+ study topics · 9,500+ problems · Live AI in the room.
+              1,000+ matched roles · 500+ study topics · 9,500+ problems · Live AI in the room.
             </motion.p>
 
             <motion.div
