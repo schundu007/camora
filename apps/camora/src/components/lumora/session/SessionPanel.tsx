@@ -390,9 +390,6 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                     {cp.name}
                   </div>
                 </div>
-                <div style={{ fontSize:12, lineHeight:1.6, color:'var(--text-muted)', marginBottom:16 }}>
-                  {cp.desc}
-                </div>
                 <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, fontFamily:'var(--font-code)', color:cp.accent, letterSpacing:'0.06em', textTransform:'uppercase' }}>
                   Launch
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
