@@ -162,6 +162,18 @@ export const HEAVY_TOPIC_LOADERS = {
     };
   },
 
+  // AI Systems Performance Engineering — GPU hardware, CUDA, distributed training,
+  // LLM inference optimization. Grounded in "AI Systems Performance" by Chris Fregly
+  // (O'Reilly, Nov 2025). Lives at /capra/prepare?page=ai-systems-perf.
+  'ai-systems-perf': async () => {
+    const mod = await import('./aiSystemsPerfTopics.js');
+    return {
+      aiSystemsPerfCategories: mod.aiSystemsPerfCategories,
+      aiSystemsPerfTopicCategoryMap: mod.aiSystemsPerfTopicCategoryMap,
+      aiSystemsPerfTopics: mod.aiSystemsPerfTopics,
+    };
+  },
+
   // AIOps — ML-driven ops: anomaly detection, alert correlation, RCA, capacity.
   // Lives at /capra/prepare?page=aiops.
   aiops: async () => {
