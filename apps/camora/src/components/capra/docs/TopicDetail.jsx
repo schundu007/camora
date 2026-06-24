@@ -2943,7 +2943,7 @@ export default function TopicDetail({
           {/* ── 2 / Visual Explanation — PNG diagrams ── */}
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <section id="visual" className="scroll-mt-24">
-              <div className={`pt-3 grid gap-4 ${topicDetails.visualizations.length > 1 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+              <div className="pt-3 grid gap-4 grid-cols-1">
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="viz-figure">
                     {viz.image && (
@@ -2971,9 +2971,9 @@ export default function TopicDetail({
                     )}
                     <figcaption className="viz-caption">
                       <h4 className="viz-caption-title">{viz.title}</h4>
-                      {viz.description && (
+                      {(viz.description || viz.answer) && (
                         <div className="viz-caption-body">
-                          <FormattedContent content={viz.description} />
+                          <FormattedContent content={viz.description || viz.answer} />
                         </div>
                       )}
                     </figcaption>
