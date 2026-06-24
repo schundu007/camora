@@ -70,6 +70,17 @@ export const linuxTopicCategoryMap = {
   'systemd-cgroups':            'systemd',
   'systemd-namespaces':         'systemd',
   'linux-service-management':   'systemd',
+  // New topics
+  'linux-seccomp':              'security',
+  'linux-ebpf':                 'performance',
+  'linux-cgroup-v2':            'systemd',
+  'linux-luks-dmcrypt':         'storage',
+  'linux-vfs-overlayfs':        'storage',
+  'linux-use-method':           'performance',
+  'linux-ldap-sssd':            'security',
+  'linux-ftrace-bpftrace':      'performance',
+  'linux-numa':                 'performance',
+  'linux-swap':                 'storage',
 };
 
 export const linuxTopics = [
@@ -5974,4 +5985,482 @@ ls /var/lib/cni/networks/mynet/
     'https://github.com/flannel-io/flannel/blob/master/Documentation/backends.md',
   ],
 },
+  // ─── NEW TOPICS: Kernel Security, eBPF, Performance, Storage ────────────────
+  {
+    id: 'linux-seccomp',
+    title: 'seccomp Syscall Filtering',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 6,
+    description: 'seccomp and seccomp-BPF for syscall filtering in containers, Docker default profiles, and writing custom filters.',
+    visualizations: [
+      { title: 'seccomp Filter Chain', description: 'Process syscall → kernel → BPF filter → ALLOW/KILL/TRAP/ERRNO decision', image: '/diagrams/linux/linux-seccomp-chain.png' },
+    ],
+    introduction: `**seccomp** (Secure Computing Mode) is a Linux kernel feature that restricts which system calls a process can make. It is the primary attack-surface-reduction mechanism used by Docker, Kubernetes, and browsers (Chrome/Firefox sandbox).\n\n## Modes\n\n- **SECCOMP_MODE_STRICT** — allows only \`read\`, \`write\`, \`exit\`, and \`sigreturn\`. Rarely used directly.\n- **SECCOMP_MODE_FILTER** — attaches a BPF program that inspects each syscall and returns an action: **SECCOMP_RET_ALLOW**, **SECCOMP_RET_KILL_PROCESS**, **SECCOMP_RET_ERRNO**, or **SECCOMP_RET_TRAP**.\n\n## Docker Default Profile\n\nDocker ships a default seccomp profile that blocks ~44 dangerous syscalls including \`ptrace\`, \`kexec_load\`, \`create_module\`, and \`mount\`. Privileged containers (\`--privileged\`) disable seccomp entirely.\n\n## Kubernetes Integration\n\nPod-level: \`securityContext.seccompProfile.type: RuntimeDefault\` applies the container runtime's default. \`Localhost\` type loads a custom profile from the node's profile directory (\`/var/lib/kubelet/seccomp/\`).\n\n## Writing a Custom Filter\n\n\`\`\`json\n{\n  "defaultAction": "SCMP_ACT_ERRNO",\n  "syscalls": [\n    { "names": ["read","write","open","close","stat","mmap","exit_group"],\n      "action": "SCMP_ACT_ALLOW" }\n  ]\n}\n\`\`\`\n\nUse \`strace -c ./myapp\` to discover which syscalls your app actually needs before writing an allowlist.`,
+    whenToUse: [
+      'Explaining how Docker reduces container attack surface without full virtualization',
+      'Hardening a Kubernetes workload against kernel exploit escalation',
+      'Auditing what syscalls a binary needs before writing a restrictive profile',
+    ],
+    keyConcepts: [
+      { term: 'BPF filter', definition: 'A bytecode program evaluated in-kernel on every syscall. Returns an action (ALLOW/KILL/ERRNO). Cannot be removed once installed by a process without exec.' },
+      { term: 'SCMP_ACT_KILL_PROCESS', definition: 'Terminates the entire process (not just the thread) when a blocked syscall is attempted. More secure than ERRNO because it prevents the app from recovering.' },
+      { term: 'Docker default profile', definition: 'Blocks ~44 high-risk syscalls. Applied automatically unless --security-opt seccomp=unconfined or --privileged is set.' },
+      { term: 'RuntimeDefault', definition: 'Kubernetes seccompProfile type that delegates to the container runtime (containerd/cri-o) default profile.' },
+    ],
+    pitfalls: [
+      'Running containers with --privileged disables seccomp, AppArmor, and SELinux simultaneously — maximum privilege, zero confinement.',
+      'Allowlisting by syscall number is architecture-specific; use syscall names in JSON profiles for portability.',
+      'Forgetting that seccomp filters are inherited by children (fork/exec) unless the child exec-loads a new profile.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Docker use seccomp to reduce container attack surface, and what happens when you use --privileged?',
+        answer: `Docker attaches a **default seccomp BPF filter** to every container at start time. The filter blocks ~44 dangerous syscalls that are valid on the host but unnecessary for application containers: \`ptrace\`, \`kexec_load\`, \`create_module\`, \`mount\`, \`pivot_root\`, \`clone\` with certain flags, etc.\n\nWhen you run \`docker run --privileged\`, Docker disables seccomp entirely (\`--security-opt seccomp=unconfined\`), removes all capability drops, and turns off AppArmor/SELinux confinement. The container has near-root-equivalent access to the host kernel.\n\n**Hardening alternative to --privileged for specific needs:**\n\`\`\`bash\n# Add only the cap you need instead of full privileged\ndocker run --cap-add SYS_PTRACE --security-opt seccomp=unconfined myapp\n\`\`\`\n\nFor production, prefer a **custom seccomp profile** that allowlists only the syscalls your binary actually uses, discovered via:\n\`\`\`bash\nstrace -qcf ./myapp   # -f follows forks, -q quiet, -c summary\n\`\`\``,
+      },
+      {
+        question: 'A containerized application crashes with "Operation not permitted" only in production Kubernetes but works in dev Docker. What do you check?',
+        answer: `The crash is likely a **blocked syscall** difference between environments.\n\n**Steps:**\n\n1. Check Kubernetes seccomp profile:\n\`\`\`bash\nkubectl get pod mypod -o jsonpath='{.spec.securityContext.seccompProfile}'\n\`\`\`\n\n2. Check container runtime default vs Docker default — \`containerd\`'s RuntimeDefault may block different syscalls than Docker's default profile.\n\n3. Run with seccomp disabled temporarily to confirm:\n\`\`\`yaml\nsecurityContext:\n  seccompProfile:\n    type: Unconfined\n\`\`\`\n\n4. Identify the blocked syscall:\n\`\`\`bash\n# On the pod node\nauditd or dmesg | grep 'seccomp'\n# In container logs look for SIGKILL or errno EPERM on specific syscall\n\`\`\`\n\n5. Add only the needed syscall to a custom Localhost profile rather than disabling seccomp entirely.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What does SCMP_ACT_KILL_PROCESS do?', a: 'Terminates the entire process (not just the calling thread) when a blocked syscall is made. More secure than returning ERRNO because the process cannot handle the error.' },
+      { q: 'How do you discover which syscalls an application uses?', a: 'Run strace -qcf ./myapp — it traces all syscalls including in child processes (-f) and prints a count summary (-c).' },
+      { q: 'Does --privileged disable seccomp?', a: 'Yes. --privileged disables seccomp, AppArmor/SELinux confinement, and drops no capabilities. Avoid in production.' },
+      { q: 'What Kubernetes seccompProfile type applies the runtime default?', a: 'RuntimeDefault — delegates to containerd or cri-o default profile.' },
+      { q: 'Can a process remove its own seccomp filter?', a: 'No. Once a seccomp filter is installed it cannot be removed. An exec() can install a new (more restrictive) filter but cannot relax an existing one.' },
+      { q: 'What syscall installs a seccomp filter?', a: 'prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) or the newer seccomp() syscall directly.' },
+    ],
+    references: [
+      'https://man7.org/linux/man-pages/man2/seccomp.2.html',
+      'https://docs.docker.com/engine/security/seccomp/',
+      'https://kubernetes.io/docs/tutorials/security/seccomp/',
+    ],
+  },
+  {
+    id: 'linux-ebpf',
+    title: 'eBPF & bcc Toolset',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 7,
+    description: 'Extended BPF programs for tracing, networking, and security — bcc tools, bpftrace one-liners, and production use cases.',
+    visualizations: [
+      { title: 'eBPF Architecture', description: 'User-space program → LLVM → BPF bytecode → verifier → JIT → kernel hooks (kprobes/tracepoints/XDP)', image: '/diagrams/linux/linux-ebpf-arch.png' },
+    ],
+    introduction: `**eBPF** (extended Berkeley Packet Filter) lets you run sandboxed programs in the Linux kernel without changing kernel source or loading kernel modules. The kernel verifies all eBPF programs for safety (no infinite loops, no out-of-bounds access) before running them.\n\n## How It Works\n\n1. Write a C program using the BPF API\n2. Compile with **Clang/LLVM** to BPF bytecode\n3. Load via \`bpf()\` syscall — kernel **verifier** checks safety\n4. **JIT compiler** translates to native machine code\n5. Program runs at a **hook point**: kprobe, tracepoint, XDP, cgroup, LSM hook, etc.\n\n## Key Hook Points\n\n- **kprobes/kretprobes** — dynamic instrumentation of any kernel function\n- **tracepoints** — stable kernel tracing interfaces\n- **uprobes** — user-space function tracing\n- **XDP** — network packet processing at driver level (before netstack)\n- **TC (Traffic Control)** — packet processing at tc ingress/egress\n- **LSM hooks** — security policy enforcement\n\n## bcc Toolset\n\nThe **BCC** (BPF Compiler Collection) provides ready-made tools:\n\n| Tool | What it does |\n|------|-------------|\n| \`execsnoop\` | Traces all exec() calls system-wide |\n| \`tcpconnect\` | Traces TCP connect() calls |\n| \`biolatency\` | Block I/O latency histogram |\n| \`opensnoop\` | Traces open() syscalls |\n| \`runqlat\` | CPU run queue latency |\n| \`funccount\` | Counts kernel function calls |\n\n## bpftrace One-liners\n\n\`\`\`bash\n# Trace all exec calls\nbpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s\\n", str(args->filename)); }'\n\n# TCP connection latency\nbpftrace -e 'kprobe:tcp_v4_connect { @start[tid] = nsecs; }\n  kretprobe:tcp_v4_connect /@start[tid]/ {\n    @latency = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# Block I/O size histogram\nbpftrace -e 'tracepoint:block:block_rq_issue { @bytes = hist(args->bytes); }'\n\`\`\`\n\n## Cilium and eBPF Networking\n\nCilium replaces kube-proxy with eBPF programs that perform load balancing at XDP/TC layer, providing 10x lower latency for service-to-service traffic and enabling network policies without iptables rules.`,
+    whenToUse: [
+      'Profiling production systems with zero instrumentation overhead and no code changes',
+      'Explaining how Cilium achieves iptables-free Kubernetes networking',
+      'Security monitoring: detecting unusual exec or network patterns system-wide',
+      'Tracing application performance without adding application-level instrumentation',
+    ],
+    keyConcepts: [
+      { term: 'BPF verifier', definition: 'Statically analyzes every eBPF program before loading. Rejects: unbounded loops, out-of-bounds memory access, calling unsafe functions. Safety guarantee without kernel module risk.' },
+      { term: 'XDP (eXpress Data Path)', definition: 'eBPF hook at the network driver level — processes packets before they enter the kernel network stack. Enables line-rate packet filtering, DDoS mitigation, and load balancing.' },
+      { term: 'BPF maps', definition: 'Kernel data structures shared between eBPF programs and user-space. Types include hash, array, ring buffer, perf event array. Used to accumulate statistics and pass data out.' },
+      { term: 'kprobe', definition: 'Dynamic instrumentation point on any kernel function. Can inspect arguments (entry) or return value (kretprobe). Not stable across kernel versions — prefer tracepoints for long-term tools.' },
+    ],
+    pitfalls: [
+      'kprobes break across kernel versions — production observability tools should prefer stable tracepoints.',
+      'eBPF programs run in interrupt context at many hook points — no sleeping, no blocking, no memory allocation that can fail.',
+      'The verifier rejects programs with unbounded loops — use bounded loops with a compile-time limit or BPF_MAP_TYPE_PROG_ARRAY for tail calls.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does eBPF allow safe kernel instrumentation without kernel modules, and what does the verifier check?',
+        answer: `eBPF programs are loaded via the \`bpf()\` syscall. Before execution, the kernel **verifier** performs static analysis:\n\n1. **Control flow** — must terminate. No unbounded loops. All paths must end in BPF_EXIT.\n2. **Memory safety** — all pointer arithmetic must stay within bounds. Map accesses validated at compile time.\n3. **Stack size** — limited to 512 bytes.\n4. **Helper calls only** — eBPF can only call approved kernel helper functions (\`bpf_map_lookup_elem\`, \`bpf_probe_read\`, etc.), not arbitrary kernel functions.\n5. **Type safety** — BTF (BPF Type Format) enables CO-RE (Compile Once, Run Everywhere), allowing programs to adapt to kernel struct layouts at load time.\n\nAfter verification, the JIT compiler translates BPF bytecode to native machine code. The program runs in the same privilege as the kernel but with hard safety boundaries — a buggy eBPF program cannot crash the kernel (unlike a kernel module).`,
+      },
+      {
+        question: 'How does Cilium use eBPF to replace kube-proxy, and what are the performance benefits?',
+        answer: `**kube-proxy** implements Kubernetes service load balancing using iptables rules. Each service adds O(n) iptables rules; at 10k services, connection setup requires traversing thousands of rules.\n\n**Cilium** replaces kube-proxy with eBPF programs attached at:\n- **XDP** — for external traffic, drops/forwards at driver level\n- **TC ingress/egress** — for pod-to-pod and service traffic\n- **Socket-level** — rewrites destination at connect() time, bypassing netstack entirely\n\n**Benefits:**\n- O(1) service lookup via BPF hash maps instead of O(n) iptables chain traversal\n- No conntrack for pod-to-pod traffic (Cilium tracks state in BPF maps)\n- Direct pod-to-pod routing without SNAT in many topologies\n- Network policy enforcement in eBPF — no iptables rules\n\nBenchmarks show 10-100x lower p99 latency at high connection rates and 3-5x higher throughput compared to iptables kube-proxy.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What prevents an eBPF program from crashing the kernel?', a: 'The BPF verifier statically proves the program is safe before loading — no unbounded loops, no out-of-bounds memory access, only approved helper functions.' },
+      { q: 'What is XDP and why is it faster than iptables?', a: 'XDP (eXpress Data Path) processes packets at the network driver level before the kernel network stack. It avoids memory allocation, skb allocation, and iptables chain traversal — achieving near line-rate packet processing.' },
+      { q: 'What bcc tool shows which executables are being launched system-wide?', a: 'execsnoop — traces all exec() syscalls and prints the command, PID, and parent PID.' },
+      { q: 'What are BPF maps?', a: 'Kernel data structures accessible from both eBPF programs and user-space via file descriptors. Used to accumulate stats, pass results out, and share state between programs.' },
+      { q: 'What is CO-RE in eBPF?', a: 'Compile Once, Run Everywhere. Uses BTF type information to allow an eBPF binary to adapt to different kernel struct layouts at load time without recompilation.' },
+      { q: 'How does bpftrace differ from bcc?', a: 'bpftrace is a high-level scripting language for one-liners and short scripts. bcc provides a Python/C API for building production observability tools with more complex logic.' },
+      { q: 'What is the BPF stack size limit and why?', a: '512 bytes. BPF programs may run in interrupt context where there is no dynamic stack growth. Exceeding 512 bytes causes a verifier rejection.' },
+    ],
+    references: [
+      'https://ebpf.io/what-is-ebpf/',
+      'https://github.com/iovisor/bcc',
+      'https://github.com/iovisor/bpftrace',
+      'https://cilium.io/blog/2021/05/11/cni-benchmark/',
+      'https://www.brendangregg.com/ebpf.html',
+    ],
+  },
+  {
+    id: 'linux-cgroup-v2',
+    title: 'cgroup v2 Internals',
+    icon: 'layers',
+    color: '#f59e0b',
+    questions: 6,
+    description: 'cgroup v2 unified hierarchy, cpu/memory/io controllers, delegation for rootless containers, and Kubernetes integration.',
+    visualizations: [
+      { title: 'cgroup v2 Hierarchy', description: 'Single unified tree: /sys/fs/cgroup/ → systemd.slice → pod.scope → container cgroup with cpu/memory/io limits', image: '/diagrams/linux/linux-cgroup-v2-hierarchy.png' },
+    ],
+    introduction: `**cgroups v2** (control groups version 2) is the Linux mechanism for grouping processes and applying resource limits — CPU, memory, I/O, PIDs, and CPU sets. It supersedes cgroups v1 with a **unified hierarchy** (one tree instead of per-controller trees).\n\n## v1 vs v2\n\n| Feature | v1 | v2 |\n|---------|-----|-----|\n| Hierarchy | Per-controller (separate trees) | Single unified tree |\n| CPU accounting | cpuacct controller | Built into cpu controller |\n| I/O control | blkio controller | io controller (weight + BPS/IOPS limits) |\n| Memory OOM | Per-cgroup, inconsistent | Unified OOM, memory.oom.group |\n| Delegation | Complex, unsafe | Safe subtree delegation |\n\n## Key Controllers\n\n- **cpu** — \`cpu.weight\` (proportional shares 1-10000), \`cpu.max\` (hard limit: \`quota period\`)\n- **memory** — \`memory.max\` (hard limit), \`memory.high\` (soft limit that triggers throttling), \`memory.swap.max\`\n- **io** — \`io.weight\`, \`io.max\` (BPS and IOPS limits per device)\n- **pids** — \`pids.max\` (fork bomb protection)\n- **cpuset** — pin to specific CPUs and NUMA nodes\n\n## Kubernetes and cgroups v2\n\nKubernetes 1.25+ requires cgroups v2 for **memory QoS** (guaranteed/burstable distinction via \`memory.high\`) and for **rootless container support** (delegation chain from system cgroup to user session). Containerd and cri-o configure pod cgroups under \`/sys/fs/cgroup/kubepods/\`.\n\n## Delegation for Rootless Containers\n\nIn v2, a parent cgroup can delegate its subtree to a non-root user. The user can create sub-cgroups and apply limits without CAP_SYS_ADMIN on the root cgroup. This is how rootless Docker and Podman work: systemd delegates a user slice, and the container runtime manages sub-cgroups within it.`,
+    whenToUse: [
+      'Explaining how Kubernetes resource requests/limits translate to kernel cgroup settings',
+      'Debugging OOMKilled pods and memory.high throttling behavior',
+      'Explaining rootless container operation and delegation security model',
+    ],
+    keyConcepts: [
+      { term: 'cpu.max', definition: '"quota period" format — e.g., "50000 100000" means 50ms CPU time per 100ms period (50% of one core). "max 100000" means unlimited.' },
+      { term: 'memory.high', definition: 'Soft memory limit. When exceeded, the kernel throttles memory allocations and triggers reclaim before OOM. Burstable pods use this for QoS.' },
+      { term: 'memory.oom.group', definition: 'When set to 1, OOM killer kills the entire cgroup as a unit rather than individual processes. Set by container runtimes so the whole container dies, not just one thread.' },
+      { term: 'Delegation', definition: 'v2 allows a parent to grant a subtree to a non-root user. The user gets write access to cgroup.subtree_control and can manage their sub-hierarchy without root.' },
+    ],
+    pitfalls: [
+      'cpu.max is not a reservation — it is a hard cap. A container limited to 0.5 CPU cannot burst above 500ms/s even if the host has idle CPUs.',
+      'memory.max triggers OOM immediately; memory.high triggers throttling first. For burstable workloads, set memory.high < memory.max to get throttling behavior before OOM.',
+      'cgroups v1 and v2 cannot run simultaneously on the same resource. Check which your distro uses: stat -fc %T /sys/fs/cgroup/ — "cgroup2fs" means v2.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Kubernetes translate a pod resource request/limit into kernel cgroup settings?',
+        answer: `**Requests** and **limits** in a pod spec map directly to cgroup v2 settings applied by the container runtime (containerd/cri-o):\n\n| Pod spec | cgroup v2 file | Effect |\n|----------|----------------|--------|\n| \`resources.limits.cpu: "500m"\` | \`cpu.max = 50000 100000\` | Hard cap: 50ms CPU per 100ms |\n| \`resources.requests.cpu: "250m"\` | \`cpu.weight\` | Proportional share for scheduling |\n| \`resources.limits.memory: "256Mi"\` | \`memory.max = 268435456\` | Hard OOM limit |\n| \`resources.requests.memory: "128Mi"\` | \`memory.high = 134217728\` | Soft throttle limit (Burstable QoS) |\n\n**QoS classes:**\n- **Guaranteed** — requests == limits for all containers. Gets highest priority.\n- **Burstable** — limits > requests. \`memory.high\` = request, \`memory.max\` = limit.\n- **BestEffort** — no requests or limits. OOM-killed first.\n\n\`\`\`bash\n# Inspect cgroup settings for a pod\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/cpu.max\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/memory.max\n\`\`\``,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the main structural difference between cgroup v1 and v2?', a: 'v1 has a separate hierarchy (tree) per controller. v2 has a single unified hierarchy where all controllers coexist.' },
+      { q: 'What does cpu.max "50000 100000" mean?', a: '50ms of CPU time per 100ms period — 50% of one core. Hard cap regardless of host idle capacity.' },
+      { q: 'What is memory.high vs memory.max?', a: 'memory.high is a soft limit that triggers memory throttling and reclaim. memory.max is the hard limit that triggers OOM kill.' },
+      { q: 'How does rootless Docker use cgroup v2 delegation?', a: 'systemd delegates a user cgroup subtree to the user session without CAP_SYS_ADMIN. Docker/Podman manages container cgroups as sub-cgroups within that delegated subtree.' },
+      { q: 'What does pids.max protect against?', a: 'Fork bomb attacks. Limits the number of processes/threads in a cgroup, preventing a container from exhausting the system PID namespace.' },
+      { q: 'How do you check whether a system uses cgroup v1 or v2?', a: 'Run: stat -fc %T /sys/fs/cgroup/ — "cgroup2fs" means v2, "tmpfs" means v1.' },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html',
+      'https://kubernetes.io/docs/concepts/architecture/cgroups/',
+      'https://rootlesscontaine.rs/',
+    ],
+  },
+  {
+    id: 'linux-luks-dmcrypt',
+    title: 'LUKS & dm-crypt Encryption',
+    icon: 'lock',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'Full-disk and partition encryption with dm-crypt and LUKS2, key management, TPM2 unlocking, and Kubernetes encrypted volumes.',
+    visualizations: [
+      { title: 'LUKS2 Stack', description: 'Block device → dm-crypt (kernel) → virtual /dev/mapper/name → filesystem. LUKS header stores key slots.', image: '/diagrams/linux/linux-luks-stack.png' },
+    ],
+    introduction: `**dm-crypt** is the Linux kernel's transparent block device encryption layer, built on the Device Mapper framework. **LUKS** (Linux Unified Key Setup) is the metadata format layered on top that manages key slots, algorithm parameters, and header backup.\n\n## Architecture\n\n\`\`\`\n/dev/sdb (raw block device)\n  └─ LUKS2 header (key slots, algorithm, UUID)\n       └─ dm-crypt (kernel AES-XTS encryption)\n            └─ /dev/mapper/cryptdisk (plaintext virtual device)\n                 └─ ext4 / XFS filesystem\n\`\`\`\n\n## Key Operations\n\n\`\`\`bash\n# Create LUKS2 container\ncryptsetup luksFormat --type luks2 /dev/sdb\n\n# Open (decrypt) → creates /dev/mapper/cryptdisk\ncryptsetup open /dev/sdb cryptdisk\n\n# Format and mount\nmkfs.ext4 /dev/mapper/cryptdisk\nmount /dev/mapper/cryptdisk /mnt/data\n\n# Add a second key slot (backup passphrase or TPM)\ncryptsetup luksAddKey /dev/sdb\n\n# Close on unmount\numount /mnt/data\ncryptsetup close cryptdisk\n\`\`\`\n\n## LUKS2 Improvements over LUKS1\n\n- **Argon2id** KDF (key derivation function) — memory-hard, GPU-resistant (vs PBKDF2 in LUKS1)\n- **JSON metadata** — extensible header, supports labels and tokens\n- **32 key slots** (vs 8 in LUKS1)\n- **Token plugins** — TPM2, FIDO2, Clevis for automated unlocking\n\n## Automatic Unlocking with TPM2\n\n**Clevis** + **Tang** implement Network Bound Disk Encryption (NBDE): the encryption key is sealed in the TPM2 chip and only released if the system boots in a known-good state (PCR measurements match). Useful for auto-unlock after reboot without human intervention.\n\n\`\`\`bash\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\`\`\``,
+    whenToUse: [
+      'Designing at-rest encryption for cloud VM data disks and Kubernetes PVs',
+      'Explaining TPM2-based automated disk unlock for server reboots without human passphrase',
+      'Auditing storage security for compliance (PCI-DSS, HIPAA) requirements',
+    ],
+    keyConcepts: [
+      { term: 'Key slot', definition: 'LUKS stores the master key encrypted with up to 32 different passphrases/keys. Each is a separate key slot. Revoking a key slot does not require re-encrypting data.' },
+      { term: 'Argon2id', definition: 'Memory-hard KDF used in LUKS2. Increases GPU/ASIC brute-force cost by requiring large amounts of RAM. Configurable memory and iteration count.' },
+      { term: 'dm-crypt', definition: 'Kernel Device Mapper target that performs AES-XTS-256 encryption transparently. All reads/writes to the mapped device are automatically decrypted/encrypted.' },
+      { term: 'NBDE (Network Bound Disk Encryption)', definition: 'Clevis + Tang: disk auto-unlocks only when the server can reach a Tang key server on a trusted network, preventing decryption if a disk is stolen offline.' },
+    ],
+    pitfalls: [
+      'LUKS header is at the start of the device — a corrupted header means all data is unrecoverable. Always back up the header: cryptsetup luksHeaderBackup /dev/sdb --header-backup-file luks-header.bak',
+      'AES-XTS does not authenticate (no AEAD). An attacker with physical access can flip bits in ciphertext. Use dm-integrity or dm-verity alongside for tamper detection.',
+      'Wiping a LUKS volume only requires overwriting the header (the first 4MB for LUKS2) — the key material is gone, data is permanently inaccessible without decryption.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you set up full-disk encryption on a Linux data disk, and how would you enable automatic unlocking on reboot for a server?',
+        answer: `**Setup:**\n\`\`\`bash\n# 1. Format with LUKS2\ncryptsetup luksFormat --type luks2 --pbkdf argon2id /dev/sdb\n\n# 2. Open and format\ncryptsetup open /dev/sdb cryptdisk\nmkfs.xfs /dev/mapper/cryptdisk\n\n# 3. Add to /etc/crypttab for persistent mapping\necho "cryptdisk UUID=$(blkid -s UUID -o value /dev/sdb) none luks" >> /etc/crypttab\n\n# 4. Add to /etc/fstab\necho "/dev/mapper/cryptdisk /data xfs defaults 0 2" >> /etc/fstab\n\`\`\`\n\n**Automatic unlocking with TPM2 (Clevis):**\n\`\`\`bash\n# Bind LUKS slot to TPM2 PCR 7 (Secure Boot state)\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\n# Install dracut integration for initramfs\ndnf install clevis-dracut && dracut -f\n\`\`\`\n\nOn reboot, the initramfs runs Clevis which unseals the key from the TPM if PCR 7 matches (system booted with same Secure Boot keys). If the disk is removed or the boot chain changes, the TPM refuses to unseal — requiring manual passphrase entry.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between dm-crypt and LUKS?', a: 'dm-crypt is the kernel encryption layer. LUKS is a metadata format on top that manages key slots, algorithm parameters, and enables multiple passphrases for the same volume.' },
+      { q: 'How do you add a backup passphrase to a LUKS volume?', a: 'cryptsetup luksAddKey /dev/sdb — adds a new key slot. The volume can then be unlocked with either the original or the new passphrase.' },
+      { q: 'Why is Argon2id better than PBKDF2 for LUKS key derivation?', a: 'Argon2id is memory-hard — it requires large amounts of RAM, which limits GPU and ASIC brute-force speed. PBKDF2 is only compute-hard and fast to parallelize on GPUs.' },
+      { q: 'What happens if the LUKS header is corrupted?', a: 'All data is permanently unrecoverable — the encrypted master key is stored only in the header. Always back up the header with: cryptsetup luksHeaderBackup /dev/sdb --header-backup-file backup.bin' },
+      { q: 'What is dm-integrity and why use it with dm-crypt?', a: 'dm-integrity adds per-sector checksums for tamper detection. dm-crypt alone uses AES-XTS which encrypts but does not authenticate — an attacker can flip ciphertext bits without detection.' },
+    ],
+    references: [
+      'https://gitlab.com/cryptsetup/cryptsetup/-/wikis/LUKS-standard',
+      'https://man7.org/linux/man-pages/man8/cryptsetup.8.html',
+      'https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/security_hardening/configuring-automated-unlocking-of-encrypted-volumes-using-policy-based-decryption_security-hardening',
+    ],
+  },
+  {
+    id: 'linux-vfs-overlayfs',
+    title: 'VFS & OverlayFS',
+    icon: 'layers',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'Linux VFS abstraction, mount namespaces, bind mounts, OverlayFS layering for container images, and copy-on-write semantics.',
+    visualizations: [
+      { title: 'OverlayFS Layers', description: 'upperdir (writable) + lowerdir (read-only image layers) → merged view. Writes go to upper via copy-on-write.', image: '/diagrams/linux/linux-overlayfs-layers.png' },
+    ],
+    introduction: `The **Virtual File System (VFS)** is a kernel abstraction layer that provides a uniform file API (\`open\`, \`read\`, \`write\`, \`stat\`) across all filesystem types — ext4, XFS, NFS, procfs, tmpfs, and more. Every file operation passes through VFS before reaching the concrete filesystem driver.\n\n## VFS Key Concepts\n\n- **Superblock** — filesystem-wide metadata (block size, inode count)\n- **Inode** — file metadata (permissions, size, timestamps, block pointers) — no filename\n- **Dentry** — directory entry that maps a filename to an inode; cached in the dentry cache\n- **File object** — open file descriptor state (offset, flags)\n\n## Mount Namespaces\n\nMount namespaces isolate the filesystem tree. Each container gets its own mount namespace — changes to mounts inside are invisible outside. Created with \`clone(CLONE_NEWNS)\` or \`unshare --mount\`.\n\n## Bind Mounts\n\nBind mounts re-expose a directory at a second path:\n\`\`\`bash\nmount --bind /data /mnt/backup   # /mnt/backup now shows /data contents\nmount --bind --ro /etc /mnt/conf  # Read-only bind\n\`\`\`\nDocker \`-v /host/path:/container/path\` is a bind mount propagated into the container mount namespace.\n\n## OverlayFS — Container Image Layers\n\nOverlayFS stacks multiple directory trees into a unified view:\n\n\`\`\`bash\nmount -t overlay overlay \\\n  -o lowerdir=/layer2:/layer1,\\\n     upperdir=/writable,\\\n     workdir=/work \\\n  /merged\n\`\`\`\n\n- **lowerdir** — read-only base layers (Docker image layers, bottom to top separated by colons)\n- **upperdir** — read-write container layer (container writes go here)\n- **workdir** — internal kernel workspace (must be on same filesystem as upperdir)\n- **merged** — the unified view shown to the container process\n\n**Copy-on-write:** Reading a file from lowerdir is zero-copy. Writing a lower-layer file copies it to upperdir first (copy-up), then modifies it — the lower layer is unchanged.\n\n**Deletion:** A deleted lower-layer file creates a **whiteout** file in upperdir (\`char device 0,0\`) that masks the lower entry.`,
+    whenToUse: [
+      'Explaining how Docker image layers work and why containers share base layers efficiently',
+      'Debugging "no space left on device" inside a container when the overlay upperdir is full',
+      'Designing efficient CI build caches using overlayfs layer reuse',
+    ],
+    keyConcepts: [
+      { term: 'Copy-up', definition: 'When a container writes to a file that exists only in a lower (image) layer, OverlayFS copies the entire file to upperdir first, then applies the write. First write is expensive; subsequent writes are fast.' },
+      { term: 'Whiteout', definition: 'A special character device (0,0) created in upperdir to mask a deleted file in lowerdir. The merged view hides the lower file.' },
+      { term: 'Mount namespace', definition: 'A per-process isolation of the filesystem tree. Containers use separate mount namespaces so their mounts do not affect the host.' },
+      { term: 'Dentry cache', definition: 'Kernel cache of directory entries (name → inode mappings). High dentry cache usage indicates many small file operations or a large directory tree.' },
+    ],
+    pitfalls: [
+      'Copy-up happens on the first write and copies the entire file. Writing one byte to a 1GB file triggers a 1GB copy-up — avoid large files in image layers.',
+      'The upperdir filesystem determines available space for container writes. A full overlay device shows "no space" inside the container even if other disks have space.',
+      'Layers must be on the same filesystem type (OverlayFS restriction). Mounting upperdir on a different fs type than lowerdir requires native overlay2 support.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Docker use OverlayFS to share base image layers between containers, and what happens when a container writes to a file?',
+        answer: `Each Docker image layer is stored as a directory on disk (\`/var/lib/docker/overlay2/<layer-id>/diff/\`). When a container starts, Docker mounts an OverlayFS combining:\n\n- **lowerdir** — all image layers stacked (most recent on top)\n- **upperdir** — an empty per-container directory for writes\n- **workdir** — OverlayFS internal use\n- **merged** — the view shown to the container\n\n**Sharing:** Multiple containers using the same image share identical lowerdir layers (they are read-only). Only the upperdir is unique per container. A 1GB image layer stored once can be shared across 100 containers.\n\n**Write path:**\n1. Container process writes to \`/app/config.yaml\` (exists in an image layer)\n2. Kernel detects the file is in lowerdir\n3. **Copy-up**: copies entire \`config.yaml\` from lowerdir to upperdir\n4. Write applied to upperdir copy\n5. Subsequent reads/writes go directly to upperdir (fast path)\n\n**Inspection:**\n\`\`\`bash\n# See what a container has written\ndocker diff <container-id>\n\n# Inspect overlay mount\ncat /proc/$(docker inspect --format '{{.State.Pid}}' <id>)/mounts | grep overlay\n\`\`\``,
+      },
+    ],
+    quickFire: [
+      { q: 'What is a bind mount and how does Docker use it?', a: 'A bind mount exposes a host directory at a second path. Docker -v /host:/container creates a bind mount propagated into the container mount namespace.' },
+      { q: 'What is copy-up in OverlayFS?', a: 'When a container writes to a read-only lower-layer file, OverlayFS copies the entire file to the writable upperdir before applying the write. The lower layer is never modified.' },
+      { q: 'What is a whiteout file in OverlayFS?', a: 'A character device (major=0, minor=0) created in upperdir to mask a deleted file in lowerdir. The merged view hides the lower file as if it were deleted.' },
+      { q: 'Why do containers share Docker image layers efficiently?', a: 'Image layers are read-only lowerdirs shared across all containers using that image. Only the per-container upperdir is unique. A 1GB base layer is stored once regardless of container count.' },
+      { q: 'How do you inspect what a running container has written to its filesystem?', a: 'docker diff <container-id> — lists files added (A), changed (C), or deleted (D) in the container layer.' },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html',
+      'https://docs.docker.com/storage/storagedriver/overlayfs-driver/',
+      'https://man7.org/linux/man-pages/man8/mount.8.html',
+    ],
+  },
+  {
+    id: 'linux-use-method',
+    title: 'USE Method & Flame Graphs',
+    icon: 'activity',
+    color: '#f97316',
+    questions: 6,
+    description: 'Brendan Gregg USE Method for resource analysis, flame graph interpretation, off-CPU analysis, and production perf workflow.',
+    visualizations: [
+      { title: 'USE Method Checklist', description: 'CPU: utilization (top/mpstat) → saturation (runqlat) → errors (perf/dmesg). Memory, disk, network same pattern.', image: '/diagrams/linux/linux-use-method.png' },
+      { title: 'Flame Graph Anatomy', description: 'x-axis = time (stack samples), y-axis = stack depth, width = time in function. Flat tops = CPU bottleneck.', image: '/diagrams/linux/linux-flame-graph.png' },
+    ],
+    introduction: `## USE Method\n\nBrendan Gregg's **USE Method** provides a systematic checklist for resource performance analysis. For every resource, measure:\n\n- **U — Utilization** — time resource was busy (0-100%). High utilization doesn't always mean saturation.\n- **S — Saturation** — work queued that cannot be serviced (run queue depth, I/O queue depth). Saturation causes latency.\n- **E — Errors** — hardware or software errors (disk errors, dropped packets, CPU machine checks).\n\n**Resources to check:** CPU, memory, network interfaces, storage devices, controllers, interconnects.\n\n\`\`\`bash\n# CPU utilization\nmpstat -P ALL 1\n\n# CPU saturation (run queue latency)\nbpftrace -e 'tracepoint:sched:sched_stat_wait { @us = hist(args->delay/1000); }'\n\n# Memory utilization\nfree -m\n\n# Memory saturation (paging/swapping)\nvmstat 1 | awk '{print $7,$8}'  # si/so columns\n\n# Disk utilization and saturation\niostat -xz 1\n\n# Network errors\nip -s link\nnetstat -s | grep -i error\n\`\`\`\n\n## Flame Graphs\n\nFlame graphs visualize **stack traces over time**, showing where CPUs spend their time:\n\n- **x-axis** — alphabetical (not time). Width = proportion of CPU samples in that function.\n- **y-axis** — stack depth. Bottom = on-CPU, top = leaf function.\n- **Wide flat tops** — the function where CPU is spending time (the bottleneck).\n- **Wide bases** — a common code path.\n\n\`\`\`bash\n# Capture perf data\nperf record -F 99 -ag -- sleep 30\n\n# Generate flame graph\nperf script | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > flame.svg\n\n# eBPF-based (no perf overhead)\nbpftrace -e 'profile:hz:99 { @[kstack] = count(); }'\n\`\`\`\n\n## Off-CPU Analysis\n\nOn-CPU flame graphs miss time spent **blocked** (waiting for I/O, locks, sleep). Off-CPU analysis captures time processes spend not executing:\n\n\`\`\`bash\n# bpftrace off-CPU time per process\nbpftrace -e 'tracepoint:sched:sched_switch {\n  if (args->prev_state) @offcpu[args->prev_comm] = count(); }'\n\`\`\``,
+    whenToUse: [
+      'Systematically triaging a performance problem on an unfamiliar system',
+      'Identifying which function is consuming the most CPU time in a service',
+      'Explaining why a service has high latency despite low CPU utilization (off-CPU / I/O wait)',
+    ],
+    keyConcepts: [
+      { term: 'Utilization vs Saturation', definition: 'A disk at 70% utilization has headroom. The same disk with a queue depth of 32 (saturation) causes queuing latency even at 70% utilization. Both metrics are needed.' },
+      { term: 'Flame graph width', definition: 'Width of a frame represents the proportion of CPU samples where that function was on the call stack. The widest frames at the top of the y-axis are bottlenecks.' },
+      { term: 'Off-CPU time', definition: 'Time a thread is descheduled — waiting for I/O, sleeping, or blocked on a lock. Not visible in CPU flame graphs. Requires scheduler event tracing (sched_switch tracepoint).' },
+      { term: 'iowait (%wa)', definition: 'Time CPUs are idle but at least one process is blocked waiting for I/O. High iowait means storage is the bottleneck, not the CPU.' },
+    ],
+    pitfalls: [
+      'High CPU utilization alone is not a problem — a system at 95% CPU with no run queue latency is working efficiently. Check saturation (run queue length) for actual impact.',
+      'On-CPU flame graphs miss lock contention and I/O wait. Always run off-CPU analysis for latency problems that are not explained by on-CPU time.',
+      'perf record with frame pointers disabled (-fomit-frame-pointer) produces broken stacks. Use --call-graph dwarf or compile with -fno-omit-frame-pointer.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through how you would diagnose a production service with high latency but low CPU usage.',
+        answer: `Low CPU + high latency = the service is waiting for something, not computing. Follow the USE Method:\n\n**Step 1: CPU saturation check**\n\`\`\`bash\n# Run queue latency — are threads waiting to get on CPU?\nsar -q 1 5   # runq-sz > 1 indicates CPU saturation\nmpstat -P ALL 1\n\`\`\`\n\n**Step 2: Memory saturation**\n\`\`\`bash\nvmstat 1   # si/so > 0 means swapping — severe latency impact\nfree -m    # check available vs buff/cache\n\`\`\`\n\n**Step 3: Disk saturation**\n\`\`\`bash\niostat -xz 1   # await > 10ms = disk latency. %util near 100 = saturated.\n\`\`\`\n\n**Step 4: Network errors**\n\`\`\`bash\nip -s link show eth0   # RX/TX errors, drops\nnetstat -s | grep retransmit\n\`\`\`\n\n**Step 5: Off-CPU flame graph**\n\`\`\`bash\n# Find what the service threads are blocked on\npid=$(pgrep myservice)\noffcputime-bpfcc -p $pid 30 | flamegraph.pl > offcpu.svg\n\`\`\`\n\nCommon findings: database queries (off-CPU waiting on network), lock contention (off-CPU waiting on futex), GC pauses (off-CPU in GC thread), or slow NFS/EBS mount.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What do U, S, E stand for in the USE Method?', a: 'Utilization (how busy), Saturation (how much work is queued), Errors (hardware/software errors).' },
+      { q: 'In a flame graph, what does a wide flat top indicate?', a: 'The function where CPU time is being spent — it is the bottleneck. Wide = large proportion of total CPU samples.' },
+      { q: 'What is off-CPU analysis and why is it needed?', a: 'Off-CPU analysis captures time threads spend blocked (on I/O, locks, sleep). On-CPU flame graphs only show compute time, missing blocked latency entirely.' },
+      { q: 'A system has 80% iowait. What does that mean?', a: 'CPUs are idle 80% of the time because processes are blocked waiting for I/O. Storage is the bottleneck. Check iostat -xz for the saturated device.' },
+      { q: 'What perf option captures call stacks when frame pointers are missing?', a: 'perf record --call-graph dwarf — uses DWARF debug info for unwinding instead of frame pointers.' },
+      { q: 'What is the difference between disk utilization and disk saturation?', a: 'Utilization is % of time the disk is busy. Saturation is the queue depth — requests waiting. A disk can be 60% utilized but heavily saturated with a queue depth of 50, causing high latency.' },
+    ],
+    references: [
+      'https://www.brendangregg.com/usemethod.html',
+      'https://www.brendangregg.com/flamegraphs.html',
+      'https://www.brendangregg.com/offcpuanalysis.html',
+    ],
+  },
+  {
+    id: 'linux-ldap-sssd',
+    title: 'LDAP & sssd Integration',
+    icon: 'users',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Centralized authentication with LDAP/Active Directory via sssd, PAM integration, and Kerberos SSO for Linux hosts.',
+    visualizations: [
+      { title: 'sssd Authentication Stack', description: 'Login → PAM → sssd daemon → LDAP/AD/Kerberos → local cache. Offline mode serves from cache.', image: '/diagrams/linux/linux-sssd-stack.png' },
+    ],
+    introduction: `**sssd** (System Security Services Daemon) is the standard Linux daemon for integrating with centralized identity providers: LDAP, Active Directory, FreeIPA, and Kerberos. It caches identity and authentication data so Linux hosts can authenticate users even when the directory server is temporarily unreachable.\n\n## Components\n\n- **sssd** — main daemon. Spawns per-domain provider processes.\n- **PAM** — pluggable authentication modules. \`pam_sss.so\` hooks login, sudo, and SSH into sssd.\n- **NSS** — name service switch. \`nss_sss\` resolves usernames/groups via sssd.\n- **Kerberos** — sssd can obtain Kerberos tickets on login for SSO to other services.\n\n## Configuration\n\n\`\`\`ini\n# /etc/sssd/sssd.conf\n[sssd]\ndomains = corp.example.com\nservices = nss, pam\n\n[domain/corp.example.com]\nid_provider = ldap\nauth_provider = krb5\nldap_uri = ldap://dc1.corp.example.com\nldap_search_base = dc=corp,dc=example,dc=com\nkrb5_realm = CORP.EXAMPLE.COM\ncache_credentials = true\noffline_credentials_expiration = 7\n\`\`\`\n\n## Active Directory Integration\n\nFor AD, use \`id_provider = ad\` which automatically discovers DCs via DNS SRV records, handles Kerberos, and maps AD groups to Linux groups:\n\n\`\`\`bash\n# Join AD domain (requires kerberos ticket or admin password)\nrealm join --user=Administrator corp.example.com\n\n# Verify user lookup\nid user@corp.example.com\ngetent passwd user@corp.example.com\n\n# Test auth\nsss_client user@corp.example.com\n\`\`\`\n\n## Offline Caching\n\nWith \`cache_credentials = true\`, sssd stores hashed credentials. Users can authenticate for \`offline_credentials_expiration\` days without reaching the directory server. Cached credentials are stored in \`/var/lib/sss/db/\` (SQLite, root-only).`,
+    whenToUse: [
+      'Designing centralized Linux authentication for a fleet of servers joining Active Directory',
+      'Explaining how Kubernetes node authentication integrates with corporate LDAP',
+      'Debugging "user not found" or slow logins on Linux servers joined to AD',
+    ],
+    keyConcepts: [
+      { term: 'PAM (pam_sss.so)', definition: 'PAM module that delegates authentication decisions to sssd. Inserted in PAM stack for password, sudo, and SSH authentication.' },
+      { term: 'NSS (nss_sss)', definition: 'Name Service Switch plugin. Resolves getpwnam(), getgrnam() calls against sssd cache. Enables id user@domain to work.' },
+      { term: 'Credential caching', definition: 'sssd stores hashed credentials locally. Users can authenticate offline for a configurable number of days. Mitigates AD outages.' },
+      { term: 'realm join', definition: 'Discovers the AD domain via DNS, creates a computer account in AD, configures Kerberos (krb5.conf), and writes sssd.conf automatically.' },
+    ],
+    pitfalls: [
+      'sssd.conf must be chmod 600 and owned by root — sssd refuses to start with world-readable config.',
+      'Large LDAP groups (10k+ members) can cause slow group lookups. Use ldap_group_member_search_base to scope group lookups or enable enumerate = false.',
+      'Clock skew > 5 minutes causes Kerberos authentication failures. Ensure ntpd/chrony is running and synchronized to the domain time source.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain how sssd integrates Linux authentication with Active Directory and what happens when the AD server is unreachable.',
+        answer: `**Join flow:**\n1. \`realm join corp.example.com\` discovers DCs via DNS SRV: \`_ldap._tcp.corp.example.com\`\n2. Creates a **computer account** in AD for the Linux host\n3. Writes \`/etc/krb5.conf\` and \`/etc/sssd/sssd.conf\`\n4. Configures PAM (\`/etc/pam.d/\`) to include \`pam_sss.so\`\n5. Configures NSS (\`/etc/nsswitch.conf\`) to include \`sss\`\n\n**Authentication flow:**\n1. User types password at login\n2. PAM calls \`pam_sss.so\`\n3. sssd checks local cache — if cached and not expired, validates against hashed credential\n4. If not cached or expired, contacts AD via Kerberos (AS-REQ/AS-REP) or LDAP bind\n5. On success, sssd creates a local session and optionally obtains a TGT for SSO\n\n**Offline operation:**\nWith \`cache_credentials = true\`:\n- sssd stores a hash of the password in SQLite under \`/var/lib/sss/db/\`\n- Users can authenticate for \`offline_credentials_expiration\` days without AD\n- Group memberships are served from the last successful cache refresh\n- New users or users who have never logged in cannot authenticate offline\n\n\`\`\`bash\n# Check sssd cache status\nsss_cache -E   # expire all cache (force AD lookup)\nsssctl user-status user@corp.example.com\n\`\`\``,
+      },
+    ],
+    quickFire: [
+      { q: 'What does sssd cache and why?', a: 'Identity data (users, groups) and hashed credentials from LDAP/AD. Cached so authentication works offline and repeated lookups do not hammer the directory server.' },
+      { q: 'What file permissions does sssd.conf require?', a: '600 (rw-------) owned by root. sssd refuses to start if the config is group- or world-readable.' },
+      { q: 'What causes Kerberos auth failures after sssd is configured?', a: 'Clock skew > 5 minutes between the Linux host and the KDC. Ensure chrony or ntpd is synced to the domain time source.' },
+      { q: 'What command verifies a user is resolvable via sssd?', a: 'getent passwd user@domain — uses NSS (nss_sss) to query sssd. If this works, PAM authentication should also work.' },
+      { q: 'How do you force sssd to re-fetch user data from AD?', a: 'sss_cache -u username — expires the cache entry and forces a fresh lookup on next access. Or sss_cache -E to expire everything.' },
+    ],
+    references: [
+      'https://sssd.io/docs/',
+      'https://www.freedesktop.org/software/realmd/docs/',
+      'https://man7.org/linux/man-pages/man8/sssd.8.html',
+    ],
+  },
+  {
+    id: 'linux-ftrace-bpftrace',
+    title: 'ftrace & bpftrace Tracing',
+    icon: 'search',
+    color: '#f97316',
+    questions: 5,
+    description: 'Kernel function tracing with ftrace, event tracing, bpftrace one-liners for production observability without kernel modules.',
+    visualizations: [
+      { title: 'ftrace vs bpftrace Layers', description: 'ftrace: tracefs interface → ring buffer → trace_pipe output. bpftrace: BPF program → map → user-space aggregation.', image: '/diagrams/linux/linux-ftrace-layers.png' },
+    ],
+    introduction: `## ftrace\n\n**ftrace** is the Linux kernel's built-in tracing framework, accessible through the **tracefs** virtual filesystem at \`/sys/kernel/debug/tracing/\` (or \`/sys/kernel/tracing/\` on modern kernels).\n\n### Key ftrace Tracers\n\n| Tracer | Use |\n|--------|-----|\n| \`function\` | Traces every kernel function call — very high overhead |\n| \`function_graph\` | Traces entry and exit with call graph indentation |\n| \`nop\` | Disables tracing (default) |\n| \`blk\` | Block I/O events |\n\n### Basic ftrace Usage\n\n\`\`\`bash\n# Set tracer to function_graph, filter to tcp functions\ncd /sys/kernel/debug/tracing\necho function_graph > current_tracer\necho \"tcp_*\" > set_ftrace_filter\necho 1 > tracing_on\ncat trace_pipe   # live output\necho 0 > tracing_on\necho nop > current_tracer   # reset\n\`\`\`\n\n### trace-cmd (ftrace frontend)\n\n\`\`\`bash\n# Record for 5 seconds\ntrace-cmd record -p function_graph -g tcp_connect sleep 5\ntrace-cmd report   # analyze saved trace\n\`\`\`\n\n## bpftrace\n\n**bpftrace** is a high-level scripting language for eBPF tracing. Programs are compiled to BPF bytecode at runtime.\n\n### Probe Types\n\n| Type | Syntax | Use |\n|------|--------|-----|\n| kprobe | \`kprobe:tcp_connect\` | Kernel function entry |\n| kretprobe | \`kretprobe:tcp_connect\` | Kernel function return |\n| tracepoint | \`tracepoint:syscalls:sys_enter_read\` | Stable kernel events |\n| uprobe | \`uprobe:/bin/bash:readline\` | User-space function |\n| profile | \`profile:hz:99\` | CPU sampling |\n\n### Practical One-liners\n\n\`\`\`bash\n# System call counts by process\nbpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'\n\n# Read/write latency histogram\nbpftrace -e 'kprobe:vfs_read { @start[tid] = nsecs; }\n  kretprobe:vfs_read /@start[tid]/ {\n    @us = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# DNS query tracing (user-space probe)\nbpftrace -e 'uprobe:/lib/x86_64-linux-gnu/libc.so.6:getaddrinfo { printf(\"%s\\n\", str(arg0)); }'\n\n# TCP retransmits\nbpftrace -e 'kprobe:tcp_retransmit_skb { @[comm] = count(); }'\n\`\`\``,
+    whenToUse: [
+      'Tracing kernel function calls to debug an obscure I/O or networking issue without rebooting',
+      'Writing custom observability that captures exactly the event and data needed',
+      'Measuring syscall latency for a specific process in production without code changes',
+    ],
+    keyConcepts: [
+      { term: 'tracefs', definition: 'Virtual filesystem mounted at /sys/kernel/debug/tracing/. ftrace is controlled by reading/writing files: current_tracer, set_ftrace_filter, tracing_on, trace_pipe.' },
+      { term: 'function_graph tracer', definition: 'Traces kernel function entry and exit with indentation showing the call graph. Shows duration of each call. Use with set_graph_function to filter.' },
+      { term: 'kprobe vs tracepoint', definition: 'kprobes attach to arbitrary kernel functions (fragile — break across versions). Tracepoints are stable kernel interfaces with stable argument names — prefer tracepoints for long-lived scripts.' },
+      { term: 'bpftrace @maps', definition: 'BPF maps used to aggregate data. @[key] = count() builds a frequency map. @var = hist(value) builds a power-of-2 histogram. Printed on Ctrl+C.' },
+    ],
+    pitfalls: [
+      'Enabling the function tracer without a filter traces ALL kernel functions — this causes 10-100x overhead and can make the system unresponsive. Always set set_ftrace_filter first.',
+      'kprobe targets break silently across kernel versions — if the symbol is renamed, bpftrace reports "no probes". Check with: bpftrace -l "kprobe:tcp_*"',
+      'bpftrace scripts running as non-root need CAP_BPF and CAP_PERFMON since kernel 5.8. Earlier kernels require CAP_SYS_ADMIN.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you trace what system calls a specific process is making in production without using strace?',
+        answer: `**strace problem:** strace uses ptrace which serializes every syscall through the tracer — it adds significant overhead (2-10x slowdown for syscall-heavy processes). Avoid in production.\n\n**bpftrace alternative (near-zero overhead):**\n\`\`\`bash\n# Count syscalls by name for a specific PID\npid=$(pgrep myservice)\nbpftrace -e "tracepoint:raw_syscalls:sys_enter /pid == $pid/ { @[ksym(args->id)] = count(); }"\n\n# Trace with arguments (slower, use carefully)\nbpftrace -e "tracepoint:syscalls:sys_enter_openat /pid == $pid/ {\n  printf(\"%s\\n\", str(args->filename)); }"\n\`\`\`\n\n**ftrace alternative:**\n\`\`\`bash\n# Trace syscalls for a PID using perf trace (perf-based, lower overhead than strace)\nperf trace -p $pid --no-syscalls -e 'syscalls:*' -- sleep 10\n\`\`\`\n\n**Overhead comparison:**\n- strace: 2-10x CPU overhead per syscall (ptrace stops process)\n- bpftrace tracepoint: ~50ns per event, runs in kernel context\n- perf trace: similar to bpftrace, uses perf_event_open`,
+      },
+    ],
+    quickFire: [
+      { q: 'What file do you write to in tracefs to limit which functions ftrace instruments?', a: 'set_ftrace_filter — write a glob like "tcp_*" to instrument only matching functions. Without this, the function tracer instruments ALL kernel functions.' },
+      { q: 'Why prefer tracepoints over kprobes for production scripts?', a: 'Tracepoints are stable kernel interfaces with documented argument names. kprobes target internal function names that can change or disappear between kernel versions.' },
+      { q: 'What does bpftrace @[comm] = count() do?', a: 'Builds a frequency map keyed by process name (comm), counting how many times each process triggered the probe. Printed as a sorted table on Ctrl+C.' },
+      { q: 'Why is strace dangerous in production?', a: 'strace uses ptrace which serializes system calls through the tracer process, adding 2-10x overhead. bpftrace uses eBPF which runs in-kernel with nanosecond-level overhead.' },
+      { q: 'What is trace-cmd?', a: 'A userspace frontend for ftrace that simplifies record/report workflow. Reads/writes tracefs files and saves traces to binary files for offline analysis.' },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/trace/ftrace.html',
+      'https://github.com/iovisor/bpftrace/blob/master/docs/reference_guide.md',
+      'https://www.brendangregg.com/bpf-performance-tools-book.html',
+    ],
+  },
+  {
+    id: 'linux-numa',
+    title: 'NUMA Topology & Memory Policy',
+    icon: 'cpu',
+    color: '#f97316',
+    questions: 5,
+    description: 'NUMA architecture, memory node locality, numactl policies, and NUMA-aware tuning for latency-sensitive workloads.',
+    visualizations: [
+      { title: 'NUMA Topology', description: 'Two sockets → two NUMA nodes. Local memory access ~60ns, remote (cross-QPI) ~120ns. CPU-to-memory distance matrix.', image: '/diagrams/linux/linux-numa-topology.png' },
+    ],
+    introduction: `**NUMA** (Non-Uniform Memory Access) is the memory architecture of modern multi-socket servers. Each processor socket has local RAM — access to local memory is ~60ns, access to RAM on another socket (via QPI/UPI interconnect) is ~120ns or higher.\n\n## Why NUMA Matters\n\nA process pinned to CPU 0 that allocates memory on NUMA node 1 incurs remote memory latency on every access. At scale, this causes throughput degradation and latency spikes invisible to top/htop.\n\n## Viewing NUMA Topology\n\n\`\`\`bash\n# Show NUMA nodes and CPU assignments\nnumactl --hardware\n\n# Show memory distance matrix (100=local, 200=remote approx)\nnuma_maps or numactl -H\n\n# Which NUMA node is a process using?\ncat /proc/<pid>/numa_maps\n\n# Check NUMA statistics\nnumastat\n\n# See NUMA topology via lscpu\nlscpu | grep -i numa\n\`\`\`\n\n## Memory Allocation Policies\n\n| Policy | Behavior |\n|--------|----------|\n| \`local\` (default) | Allocate from the node where the requesting CPU runs |\n| \`preferred <node>\` | Prefer node N, fall back to others if full |\n| \`bind <node>\` | Allocate only from node N — fail if insufficient |\n| \`interleave\` | Round-robin across nodes — maximizes bandwidth |\n\n## numactl Usage\n\n\`\`\`bash\n# Run a process pinned to NUMA node 0 (CPUs + memory)\nnumactl --cpunodebind=0 --membind=0 ./myapp\n\n# Interleave memory for a database (max bandwidth)\nnumactl --interleave=all /usr/bin/mysqld\n\n# Check if existing process is NUMA-local\ncat /proc/$(pgrep redis)/numa_maps | grep anon\n\`\`\`\n\n## Kubernetes and NUMA\n\nKubernetes Topology Manager (\`--topology-manager-policy=single-numa-node\`) ensures CPU and memory allocations for Guaranteed QoS pods are colocated on a single NUMA node, critical for latency-sensitive HPC and telco workloads. Check with:\n\`\`\`bash\nkubectl describe node | grep -A5 Topology\n\`\`\``,
+    whenToUse: [
+      'Diagnosing unexpected latency on a multi-socket server despite low overall CPU/memory usage',
+      'Tuning database servers (Redis, PostgreSQL, MySQL) for maximum memory throughput',
+      'Explaining Kubernetes Topology Manager for latency-sensitive Guaranteed pods',
+    ],
+    keyConcepts: [
+      { term: 'NUMA node', definition: 'A group of CPUs and their directly attached memory. Access to local memory is ~2x faster than remote (cross-socket via QPI/UPI) memory.' },
+      { term: 'numastat', definition: 'Shows per-node memory allocations and NUMA miss counters. High numa_foreign or other_node counts indicate remote memory access.' },
+      { term: 'Topology Manager', definition: 'Kubernetes component that aligns CPU, memory, and device (RDMA/GPU) allocations to a single NUMA node for Guaranteed QoS pods.' },
+      { term: 'Interleave policy', definition: 'Distributes memory pages round-robin across NUMA nodes. Trades locality for aggregate bandwidth — good for large working sets that exceed one node.' },
+    ],
+    pitfalls: [
+      'Linux defaults to local allocation — but if the local node is full, it silently falls back to remote nodes. numastat shows if this is happening (numa_foreign counter).',
+      'Container runtimes do not set NUMA policy by default. A container can allocate remote memory even if the CPU is pinned. Use numactl in the entrypoint or Topology Manager.',
+      'Interleave policy reduces latency variance but does not reduce average latency for single-thread workloads. Use bind for low-latency, interleave for high-throughput.',
+    ],
+    keyQuestions: [
+      {
+        question: 'A Redis instance on a 2-socket server shows unexpectedly high latency at moderate load. How does NUMA factor in and how do you diagnose?',
+        answer: `**NUMA effect on Redis:** Redis is single-threaded for commands. If the Redis process runs on CPU socket 0 but its memory was allocated on socket 1 (remote), every memory access costs ~120ns instead of ~60ns — effectively halving memory bandwidth.\n\n**Diagnosis:**\n\`\`\`bash\n# 1. Check NUMA topology\nnumactl --hardware\n\n# 2. Check where Redis memory is allocated\ncat /proc/$(pgrep redis)/numa_maps | head -20\n# Look for: N0=X N1=Y — high N1 on a node-0 CPU = remote allocation\n\n# 3. Check NUMA miss counters\nnumastat -p redis\n# numa_foreign > 0 = remote allocations happening\n\n# 4. Check which CPUs Redis is using\npid=$(pgrep redis)\ncat /proc/$pid/status | grep Cpu\nls /sys/devices/system/cpu/cpu*/topology/core_id\n\`\`\`\n\n**Fix:**\n\`\`\`bash\n# Restart Redis pinned to NUMA node 0 (CPU + memory)\nnumactl --cpunodebind=0 --membind=0 redis-server /etc/redis/redis.conf\n\n# Verify: numa_foreign should now be 0\nnumastat -p redis\n\`\`\`\n\n**Alternative:** Use \`taskset\` to pin CPUs, but still need \`numactl --membind\` for memory locality. taskset alone does not set memory policy.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the typical latency difference between local and remote NUMA memory access?', a: 'Local: ~60-80ns. Remote (cross-QPI/UPI): ~120-160ns — roughly 2x slower. The exact ratio depends on socket interconnect speed.' },
+      { q: 'What does numastat show?', a: 'Per-NUMA-node memory allocation statistics including numa_hit (local), numa_miss (needed local but fell back to remote), and numa_foreign (allocated remotely).' },
+      { q: 'What is the Kubernetes Topology Manager?', a: 'A kubelet policy component that ensures CPU, memory, and devices (GPU/RDMA) for Guaranteed QoS pods are co-located on a single NUMA node to minimize remote access latency.' },
+      { q: 'When should you use interleave NUMA policy vs bind?', a: 'Interleave: large datasets where aggregate bandwidth matters more than individual access latency (e.g., large in-memory databases, analytics). Bind: latency-sensitive single-threaded apps (e.g., Redis, real-time processing).' },
+      { q: 'What command runs a process pinned to NUMA node 0 for both CPU and memory?', a: 'numactl --cpunodebind=0 --membind=0 ./myapp' },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/admin-guide/mm/numa_memory_policy.html',
+      'https://man7.org/linux/man-pages/man8/numactl.8.html',
+      'https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/',
+    ],
+  },
+  {
+    id: 'linux-swap',
+    title: 'Swap Management & Tuning',
+    icon: 'refresh-cw',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'Swap partitions vs swapfiles, swappiness tuning, zswap, and why swap matters even with large RAM on modern Linux systems.',
+    visualizations: [
+      { title: 'Linux Memory Hierarchy', description: 'Registers → L1/L2/L3 cache → RAM → swap (disk). Swappiness controls when Linux moves anonymous pages to swap vs reclaiming page cache.', image: '/diagrams/linux/linux-swap-hierarchy.png' },
+    ],
+    introduction: `**Swap** is disk space used as an overflow for RAM. Linux uses swap not only when RAM is exhausted but also proactively to free RAM for file cache — controlled by the **swappiness** kernel parameter.\n\n## Types of Swap\n\n- **Swap partition** — dedicated partition, kernel writes directly (slightly faster)\n- **Swap file** — regular file on any filesystem (on ext4/XFS; btrfs has restrictions). Flexible, resizable without partition tools.\n- **zswap** — a compressed in-RAM cache for swap pages. Compresses pages before writing to disk, reducing I/O. Transparent to applications.\n\n## Key Parameters\n\n### vm.swappiness (0-200, default 60)\n\n- **60** (default) — kernel proactively reclaims anonymous pages to swap when under memory pressure\n- **0** — avoid swap unless absolutely necessary (OOM risk increases)\n- **1** — minimal swap, use mostly for OOM prevention\n- **100** — swap anonymous memory as aggressively as page cache reclaim\n- **> 100** — cgroup v2 only: allows swapping anonymous pages before page cache reclaim\n\n### vm.vfs_cache_pressure (default 100)\n\nControls how aggressively the kernel reclaims dentry/inode cache vs anonymous memory. Higher = more aggressive inode cache reclaim (good for systems with millions of files).\n\n## Creating Swap\n\n\`\`\`bash\n# Swapfile\nfallocate -l 4G /swapfile   # or: dd if=/dev/zero of=/swapfile bs=1M count=4096\nchmod 600 /swapfile\nmkswap /swapfile\nswapon /swapfile\n\n# Persist in /etc/fstab\necho '/swapfile none swap sw 0 0' >> /etc/fstab\n\n# Check active swap\nswapon --show\nfree -h\n\`\`\`\n\n## zswap\n\n\`\`\`bash\n# Enable zswap (LZ4 compressor, z3fold allocator)\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\necho z3fold > /sys/module/zswap/parameters/zpool\n\n# Stats\ncat /sys/kernel/debug/zswap/pool_total_size\ngrep zswap /proc/vmstat\n\`\`\`\n\n## Monitoring Swap\n\n\`\`\`bash\nvmstat 1        # si= swap-in, so= swap-out (KB/s)\nsar -B 1        # pgscank/s, pgsteal/s\niostat -x 1    # high write to swap device = swapping\ncatt /proc/meminfo | grep -i swap\n\`\`\``,
+    whenToUse: [
+      'Explaining why swap is still needed on systems with large RAM (OOM prevention, memory overcommit)',
+      'Tuning swappiness for database workloads where swap latency is unacceptable',
+      'Designing a cloud VM disk layout that includes swap without a dedicated partition',
+    ],
+    keyConcepts: [
+      { term: 'swappiness', definition: 'Sysctl parameter (vm.swappiness, 0-200). Controls the trade-off between swapping anonymous memory and reclaiming page cache. Default 60. Set to 1-10 for latency-sensitive workloads.' },
+      { term: 'Anonymous memory', definition: 'Process heap, stack, and mmap(MAP_ANONYMOUS) allocations — not backed by a file. Can only be saved to swap. Unlike file-backed pages, cannot be simply dropped from RAM.' },
+      { term: 'zswap', definition: 'In-kernel compressed cache for swap pages. Compresses pages in RAM before writing to disk. Reduces swap I/O at the cost of CPU. Dramatically reduces latency compared to raw disk swap.' },
+      { term: 'Swap priority', definition: 'Multiple swap devices can be active with different priorities. Higher priority swap is used first. Set with swapon -p <priority>. Use SSD swap at higher priority than HDD.' },
+    ],
+    pitfalls: [
+      'Setting swappiness=0 on a system with no swap causes the OOM killer to fire more aggressively when memory is tight. Recommended: swappiness=1 (not 0) to retain OOM safety valve.',
+      'Kubernetes recommends disabling swap entirely (or using swap=LimitedSwap feature gate) because swap memory is not accounted in cgroup memory limits, causing OOM behavior to be unpredictable.',
+      'Swap on btrfs has restrictions — use swapfile only on single-device btrfs with no compression or CoW. The safer option is a separate ext4 partition or using a loop device.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Why should you have swap enabled even on a server with 256GB of RAM, and how do you tune it to minimize latency impact?',
+        answer: `**Reasons for swap on large-RAM servers:**\n\n1. **OOM safety valve** — without swap, the kernel OOM killer fires as soon as RAM is exhausted. With swap, it writes cold pages to disk first, buying time and preventing cascading kills.\n\n2. **Anonymous page migration** — even at 90% RAM utilization, some processes have cold heap pages that haven't been accessed in hours. Swapping these out frees RAM for hot data without OOM.\n\n3. **Memory overcommit** — Linux allows applications to allocate more virtual memory than physical RAM (overcommit). Swap backs overcommitted pages that are actually written.\n\n**Tuning for minimal latency impact:**\n\n\`\`\`bash\n# Set swappiness low — only swap under real pressure\nsysctl -w vm.swappiness=1\n\n# Enable zswap to compress before hitting disk\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\n\n# Use SSD/NVMe swap, not HDD\n# Verify: swapon --show -- check Type column\n\n# Monitor: if so (swap-out) in vmstat is consistently > 0, tune app memory\nvmstat 1 | awk '{print $7, $8}'   # si= in, so= out\n\`\`\`\n\n**Database servers specifically:** Set \`swappiness=1\` and use huge pages for the buffer pool (innodb_buffer_pool_size / shared_buffers locked in RAM with mlock). This ensures the DB working set never swaps while still having a swap safety net.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What does vm.swappiness=0 do?', a: 'Tells the kernel to avoid swapping unless absolutely necessary (OOM imminent). Does not disable swap entirely. Swappiness=1 is safer — retains swap as an OOM safety valve.' },
+      { q: 'What is zswap?', a: 'An in-kernel compressed cache for swap pages. Instead of writing directly to disk, pages are compressed in RAM. Reduces I/O significantly at the cost of a small CPU overhead.' },
+      { q: 'What does si and so mean in vmstat output?', a: 'si = swap-in (KB/s read from swap back to RAM). so = swap-out (KB/s written from RAM to swap). Persistent so > 0 indicates active swapping under memory pressure.' },
+      { q: 'Why does Kubernetes recommend disabling swap?', a: 'Cgroup memory limits do not account for swap usage, so a container can exceed its memory limit via swap without triggering OOM — making resource isolation unpredictable.' },
+      { q: 'How do you create a 4GB swapfile on Linux?', a: 'fallocate -l 4G /swapfile; chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile. Persist in /etc/fstab with: /swapfile none swap sw 0 0' },
+    ],
+    references: [
+      'https://www.kernel.org/doc/html/latest/admin-guide/sysctl/vm.html',
+      'https://www.kernel.org/doc/html/latest/mm/zswap.html',
+      'https://kubernetes.io/docs/concepts/architecture/nodes/#swap-memory',
+    ],
+  },
 ];
