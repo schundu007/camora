@@ -64,7 +64,7 @@ import { ROLE_TOPIC_MAP, ONBOARDING_ROLE_TO_TOPIC_KEY } from '../../../data/capr
 // Heavy data — coding (~830 kB), system-design (~4 MB), low-level (~790 kB),
 // behavioral (~280 kB), projects (~360 kB) — load on demand keyed off
 // activePage. See loader.js for the chunk boundaries.
-import { loadTopicsForPage, getCachedTopicsForPage } from '../../../data/capra/topics/loader.js';
+import { HEAVY_TOPIC_LOADERS, loadTopicsForPage, getCachedTopicsForPage } from '../../../data/capra/topics/loader.js';
 
 // REVERTED from lazy() — the lazy + Suspense boundary appeared to
 // interact with the scroll-spy + repeated React renders to trigger
