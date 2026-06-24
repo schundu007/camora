@@ -275,7 +275,7 @@ export default function PricingPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => window.open('mailto:hello@cariara.com?subject=Camora%20Team%20plan', '_blank')}
+                  onClick={() => { window.location.href = 'mailto:hello@cariara.com?subject=Camora%20Team%20plan'; }}
                   style={{ padding: '12px 24px', fontSize: 13, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)', background: 'transparent', cursor: 'pointer' }}
                 >
                   Talk to sales
