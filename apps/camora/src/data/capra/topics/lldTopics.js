@@ -7,6 +7,7 @@ export const lldCategories = [
   { id: 'patterns-creational', name: 'Creational Patterns', icon: 'puzzle', color: '#f59e0b' },
   { id: 'patterns-structural', name: 'Structural Patterns', icon: 'link', color: '#06b6d4' },
   { id: 'patterns-behavioral', name: 'Behavioral Patterns', icon: 'gitBranch', color: '#ef4444' },
+  { id: 'data-structures', name: 'Data Structure Design', icon: 'database', color: '#ec4899' },
 ];
 
 export const lldCategoryMap = {
@@ -74,6 +75,18 @@ export const lldCategoryMap = {
   'domain-driven-design': 'principles',
   'anti-patterns': 'principles',
   'concurrency-patterns': 'principles',
+  // Data Structure Design
+  'lru-cache': 'data-structures',
+  'bloom-filter': 'data-structures',
+  'trie-design': 'data-structures',
+  'consistent-hashing': 'data-structures',
+  'lsm-tree': 'data-structures',
+  // Advanced Patterns
+  'rate-limiter-design': 'patterns-behavioral',
+  'circuit-breaker': 'patterns-behavioral',
+  'saga-pattern': 'patterns-behavioral',
+  'connection-pooling': 'patterns-structural',
+  'thread-safe-queue': 'principles',
 };
 
 export const lldTopics = [
@@ -3221,6 +3234,1090 @@ Java's BlockingQueue interface provides the synchronization: put(item) blocks if
       'Explain the Read-Write Lock pattern and when it improves performance over a mutex',
       'What is a race condition? Give an example and explain how to prevent it',
       'How would you implement a Producer-Consumer system using BlockingQueue?'
+    ]
+  },
+  // ─────────────────────────────────────────
+  // Data Structure Design Topics
+  // ─────────────────────────────────────────
+  {
+    id: 'lru-cache',
+    title: 'LRU Cache Design',
+    icon: 'database',
+    color: '#ec4899',
+    questions: 6,
+    description: 'Design a Least Recently Used cache with O(1) get and put operations.',
+
+    introduction: `The LRU (Least Recently Used) cache is one of the most common low-level design interview questions. It asks: given a cache of fixed capacity, when the cache is full and a new item needs to be inserted, which existing item should be evicted? The LRU policy evicts the item that was accessed least recently.
+
+The elegance of the LRU cache problem is that it requires combining two data structures to achieve O(1) time complexity for both get and put operations. A HashMap alone gives O(1) lookup but doesn't track access order. A doubly linked list tracks order efficiently but gives O(n) lookup. Together — a HashMap pointing to nodes in a doubly linked list — you get O(1) for both.
+
+This pattern appears in CPU caches, operating system page replacement, database buffer pools, web browser history, and CDN edge caches. Understanding it deeply signals that you can think through data structure trade-offs and implement clean, correct concurrent code.`,
+
+    keyQuestions: [
+      {
+        question: 'Design an LRU cache with O(1) get and put. Walk through the data structure.',
+        answer: `The canonical implementation uses a HashMap + Doubly Linked List:
+
+HashMap<key, Node>: O(1) lookup to find any node.
+Doubly Linked List: maintains access order. Most recently used at head, least recently used at tail.
+
+class Node {
+  int key, val;
+  Node prev, next;
+}
+
+class LRUCache {
+  int capacity;
+  Map<Integer, Node> map = new HashMap<>();
+  Node head = new Node(0,0); // dummy head
+  Node tail = new Node(0,0); // dummy tail
+
+  LRUCache(int capacity) {
+    this.capacity = capacity;
+    head.next = tail;
+    tail.prev = head;
+  }
+
+  int get(int key) {
+    if (!map.containsKey(key)) return -1;
+    Node n = map.get(key);
+    remove(n);
+    insertFront(n); // mark as most recently used
+    return n.val;
+  }
+
+  void put(int key, int value) {
+    if (map.containsKey(key)) remove(map.get(key));
+    if (map.size() == capacity) {
+      Node lru = tail.prev;
+      remove(lru);
+      map.remove(lru.key);
+    }
+    Node n = new Node(key, value);
+    map.put(key, n);
+    insertFront(n);
+  }
+
+  void remove(Node n) {
+    n.prev.next = n.next;
+    n.next.prev = n.prev;
+  }
+
+  void insertFront(Node n) {
+    n.next = head.next;
+    n.prev = head;
+    head.next.prev = n;
+    head.next = n;
+  }
+}
+
+Dummy head/tail nodes eliminate edge-case null checks for empty list operations.`
+      },
+      {
+        question: 'How would you make the LRU cache thread-safe?',
+        answer: `Three approaches in order of sophistication:
+
+1. Coarse-grained locking (simplest):
+Add synchronized to get() and put(). Correct but low concurrency — all operations serialize.
+
+2. ReadWriteLock:
+get() acquires read lock (concurrent reads OK), put() acquires write lock (exclusive). Better for read-heavy workloads. But since get() promotes a node to MRU, it also writes the list — so get() needs a write lock too. Back to coarse-grained for standard LRU.
+
+3. Segmented LRU / ConcurrentHashMap sharding:
+Partition the cache into N segments, each with its own lock. Reduces contention by factor of N. Java's ConcurrentHashMap uses this approach internally.
+
+4. Lock-free with CAS:
+Replace the doubly linked list with a concurrent skip list or use an approximation (like a clock eviction algorithm) that avoids strict ordering. Trades accuracy for throughput.
+
+Production systems like Caffeine (Java) use Window TinyLFU — a probabilistic frequency sketch that approximates LRU/LFU with very low lock contention.
+
+For interviews: describe approach 1, then explain why approach 3 is better for high-concurrency production use.`
+      },
+      {
+        question: 'What is LFU and when would you prefer it over LRU?',
+        answer: `LFU (Least Frequently Used) evicts the item accessed fewest times total, breaking ties by recency.
+
+LRU: Good when recent access predicts future access. Cache thrashing occurs when working set slightly exceeds capacity — items cycle in and out.
+
+LFU: Good when access frequency is stable over time (hot items stay hot). Less vulnerable to one-time scans that flush the entire cache. More complex to implement: O(1) requires a frequency bucket structure (HashMap of doubly linked lists keyed by frequency).
+
+LFU design with O(1) get/put:
+- Map<key, (value, freq)>: key to value and current frequency
+- Map<freq, LinkedHashSet<key>>: frequency to ordered set of keys at that frequency
+- int minFreq: tracks current minimum frequency
+
+When evicting: remove from map[minFreq] (tail of that set).
+When accessing: move key from freq bucket to freq+1 bucket.
+
+Real-world choice: Redis uses approximated LRU (samples 5-10 random keys, evicts the oldest among them) for simplicity. Caffeine uses Window-TinyLFU for near-optimal hit rates.`
+      },
+      {
+        question: 'Design a distributed LRU cache (like Memcached).',
+        answer: `A distributed cache scales beyond single-node memory limits.
+
+Key design decisions:
+
+1. Sharding strategy:
+   - Consistent hashing: maps keys to nodes with minimal reshuffling on node addition/removal
+   - Each node owns a range of the hash ring
+   - Virtual nodes (vnodes) improve load balance
+
+2. Client-side vs. proxy-side routing:
+   - Client-side (Memcached): client hashes key, contacts correct node directly
+   - Proxy-side (Redis Cluster): any node can route; uses CLUSTER KEYSLOT gossip
+
+3. Replication for availability:
+   - Primary-replica: writes go to primary, reads can go to replicas
+   - Trade-off: read replicas may return stale data (eventual consistency)
+
+4. Eviction policy per node:
+   - Each node runs its own local LRU independently
+   - No global LRU across the cluster — global LRU would require too much coordination
+
+5. Cache invalidation:
+   - TTL-based: simplest, slight staleness window
+   - Write-through/write-around: update cache on write
+   - Delete-on-write: invalidate cache entry on DB write, re-populate on next read
+
+Interview expectation: sketch the consistent hashing ring, explain replication factor, and identify the strong vs. eventual consistency trade-off for your design.`
+      }
+    ],
+    interviewQuestions: [
+      'Implement LRU cache with O(1) operations',
+      'How do you handle cache invalidation in a distributed system?',
+      'Compare LRU vs LFU vs FIFO eviction policies',
+      'What is cache stampede and how do you prevent it?',
+      'How would you add TTL support to your LRU cache?',
+      'Design a multi-level cache (L1/L2) with different eviction policies'
+    ]
+  },
+  {
+    id: 'bloom-filter',
+    title: 'Bloom Filter',
+    icon: 'database',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Probabilistic data structure for fast membership testing with no false negatives.',
+
+    introduction: `A Bloom filter answers the question "is this element in the set?" with two possible answers: "definitely not" or "possibly yes." This makes it ideal for eliminating expensive lookups — if the Bloom filter says no, you skip the database entirely; if it says yes, you do the lookup (and occasionally find it was a false positive).
+
+The core structure is a bit array of m bits, initially all 0, and k independent hash functions. To insert an element, compute k hash values and set those k bit positions to 1. To query, check if all k positions are 1 — if any is 0, the element is definitely absent. If all are 1, it's probably present (might be a false positive from other insertions).
+
+Bloom filters are used everywhere space-efficiency matters: Google BigTable uses them to avoid disk lookups for non-existent rows; Cassandra uses them for SSTable membership testing; browsers use them for safe-browsing URL blocklists; Medium uses them to avoid re-recommending already-read posts. The trade-off is a tunable false positive rate with zero false negatives and O(k) time complexity for both insert and query.`,
+
+    keyQuestions: [
+      {
+        question: 'How does a Bloom filter work? Implement insert and query.',
+        answer: `class BloomFilter {
+  boolean[] bits;
+  int k; // number of hash functions
+  int m; // bit array size
+
+  BloomFilter(int m, int k) {
+    this.bits = new boolean[m];
+    this.m = m;
+    this.k = k;
+  }
+
+  void insert(String item) {
+    for (int i = 0; i < k; i++) {
+      int pos = hash(item, i) % m;
+      bits[pos] = true;
+    }
+  }
+
+  boolean mightContain(String item) {
+    for (int i = 0; i < k; i++) {
+      int pos = hash(item, i) % m;
+      if (!bits[pos]) return false; // definitely not present
+    }
+    return true; // possibly present
+  }
+
+  // Use different seeds to simulate independent hash functions
+  int hash(String item, int seed) {
+    return Math.abs((item.hashCode() ^ (seed * 2654435761)) );
+  }
+}
+
+Optimal parameters:
+- k = (m/n) * ln(2)  where n = expected elements
+- false positive rate p = (1 - e^(-kn/m))^k
+- For 1% FP rate with 1M elements: m ≈ 9.6M bits (1.2 MB), k ≈ 7 hash functions
+
+Space: 9.6 bits per element for 1% FP rate vs. 64 bits for a HashSet entry.`
+      },
+      {
+        question: 'What are the limitations of a standard Bloom filter?',
+        answer: `1. No deletions: Setting bits to 0 could falsely invalidate other elements sharing those bit positions. Solution: Counting Bloom filter (use integer counters instead of bits — increment on insert, decrement on delete).
+
+2. Fixed capacity: Standard Bloom filter is not resizable. Adding beyond the expected element count increases false positive rate. Solution: Scalable Bloom filter chains multiple filters together.
+
+3. No retrieval: You cannot retrieve the inserted values — only test membership.
+
+4. False positives (by design): Tunable but not eliminable. Higher FP rate acceptable if the cost of a false positive lookup is low.
+
+5. Multiple hash functions: Generating k truly independent hash functions is non-trivial. In practice, double hashing (gi(x) = h1(x) + i*h2(x)) approximates independence efficiently.
+
+6. Not suitable for: security-sensitive membership tests where false positives are dangerous, or situations where you need exact counts.
+
+Variants: Counting Bloom (deletions), Cuckoo filter (deletions + better cache performance), XOR filter (immutable but faster lookup).`
+      },
+      {
+        question: 'Where are Bloom filters used in real production systems?',
+        answer: `Google BigTable / HBase / Cassandra: Each SSTable has a Bloom filter. Before disk seek, check the filter — if negative, skip. Reduces disk I/O by 80-90% for missing keys.
+
+Chrome Safe Browsing: Client stores a Bloom filter of known malicious URLs locally. False positives trigger a real network lookup; false negatives are mitigated by periodic sync.
+
+Medium / Netflix recommendation: "Have you seen this?" — Bloom filter gives instant no for most items, database check only on positives.
+
+Redis: Implements Bloom filter as a module (RedisBloom). Common for rate limiting: "Has this user ID been seen in the last minute?"
+
+Ethereum / Bitcoin: Light clients use Bloom filters in block headers to quickly test "does this block contain transactions relevant to my wallet?"
+
+Databases (index existence check): Some query optimizers use Bloom filters to short-circuit joins when one side has no matching rows.
+
+Akamai CDN: Bloom filter for "one-hit wonders" — content accessed only once doesn't pollute the cache. Only items accessed twice get cached, dramatically improving cache efficiency.`
+      }
+    ],
+    interviewQuestions: [
+      'Implement a Bloom filter. What are the time and space complexities?',
+      'What is the false positive rate formula and how do you tune it?',
+      'How would you implement a Counting Bloom filter that supports deletions?',
+      'Where would you use a Bloom filter vs. a HashSet?',
+      'What is a Cuckoo filter and how does it compare to a Bloom filter?'
+    ]
+  },
+  {
+    id: 'trie-design',
+    title: 'Trie (Prefix Tree)',
+    icon: 'database',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Design and implement tries for prefix-based string operations.',
+
+    introduction: `A trie (derived from "retrieval") is a tree-based data structure optimized for string prefix operations. Each node represents a character, and the path from root to a node spells out a prefix. A trie of n strings enables O(m) lookup, insert, and delete where m is the string length — independent of n.
+
+Tries excel where prefix relationships matter: autocomplete (type "hel" → find "hello", "help", "herald"), spell checking, IP routing tables (longest prefix match), and word frequency analysis. They trade memory efficiency for time efficiency — a naive implementation stores a HashMap<char, TrieNode> at each node, which can be sparse for large character sets.
+
+Interview variants include: compressed tries (Patricia trie / radix tree) that merge single-child chains; suffix tries for substring searches; and bitwise tries used in IP routing (256-ary or binary). The core implementation is straightforward, but interviewers probe memory optimization, concurrent access, and extension to wildcard matching.`,
+
+    keyQuestions: [
+      {
+        question: 'Implement a trie with insert, search, and startsWith.',
+        answer: `class TrieNode {
+  Map<Character, TrieNode> children = new HashMap<>();
+  boolean isEnd = false;
+}
+
+class Trie {
+  TrieNode root = new TrieNode();
+
+  void insert(String word) {
+    TrieNode cur = root;
+    for (char c : word.toCharArray()) {
+      cur.children.putIfAbsent(c, new TrieNode());
+      cur = cur.children.get(c);
+    }
+    cur.isEnd = true;
+  }
+
+  boolean search(String word) {
+    TrieNode cur = traverse(word);
+    return cur != null && cur.isEnd;
+  }
+
+  boolean startsWith(String prefix) {
+    return traverse(prefix) != null;
+  }
+
+  private TrieNode traverse(String s) {
+    TrieNode cur = root;
+    for (char c : s.toCharArray()) {
+      if (!cur.children.containsKey(c)) return null;
+      cur = cur.children.get(c);
+    }
+    return cur;
+  }
+}
+
+Time: O(m) for all operations where m = string length.
+Space: O(ALPHABET_SIZE * m * n) worst case.
+
+For fixed alphabet (lowercase a-z), use TrieNode[26] instead of HashMap for better cache performance.`
+      },
+      {
+        question: 'How would you implement autocomplete using a trie?',
+        answer: `Autocomplete: given a prefix, return the top-k suggestions.
+
+Extension to base trie:
+1. At each node, store frequency count (number of times the complete word at this prefix was selected).
+2. startsWith returns an ordered list instead of boolean.
+
+DFS to collect all words under a prefix node:
+
+List<String> autocomplete(String prefix, int k) {
+  TrieNode node = traverse(prefix);
+  if (node == null) return Collections.emptyList();
+  List<String[]> results = new ArrayList<>(); // [word, freq]
+  dfs(node, new StringBuilder(prefix), results);
+  results.sort((a, b) -> Integer.compare(b[1], a[1])); // sort by freq desc
+  return results.stream().limit(k).map(r -> r[0]).collect(toList());
+}
+
+void dfs(TrieNode node, StringBuilder path, List<String[]> results) {
+  if (node.isEnd) results.add(new String[]{path.toString(), node.freq});
+  for (var entry : node.children.entrySet()) {
+    path.append(entry.getKey());
+    dfs(entry.getValue(), path, results);
+    path.deleteCharAt(path.length() - 1); // backtrack
+  }
+}
+
+For production autocomplete (Google Search), this basic DFS is too slow — instead precompute the top-k words per prefix node during build time, so lookup is O(m + k) rather than O(m + all_words_with_prefix).`
+      },
+      {
+        question: 'What is a compressed trie (Patricia trie / radix tree) and when do you use it?',
+        answer: `Problem with standard trie: long chains of single-child nodes waste memory. "interview" creates 9 nodes each with 1 child.
+
+Compressed trie: merge chains of single-child nodes into a single edge labeled with the multi-character string.
+
+Standard trie for "interview", "internet":
+root -> i -> n -> t -> e -> r -> v -> i -> e -> w (end)
+                              -> n -> e -> t (end)
+
+Compressed (radix tree):
+root -> "inter" -> "view" (end)
+               -> "net" (end)
+
+Benefits:
+- Memory: O(n) nodes instead of O(total characters)
+- Better cache locality (fewer pointer hops)
+
+Used in:
+- Linux kernel routing table (ip_rt_intern_hash uses radix tree)
+- Nginx URL routing (path matching)
+- Go's net/http ServeMux uses radix tree for route matching
+- DNS resolver caches
+
+Trade-off: slightly more complex insertion (may need to split an edge mid-string when a new word diverges from an existing prefix).`
+      }
+    ],
+    interviewQuestions: [
+      'Implement trie insert, search, and startsWith',
+      'How would you build an autocomplete system using a trie?',
+      'Implement wildcard search (dots match any character) in a trie',
+      'What is a radix tree and how does it improve memory usage?',
+      'How would you count all words with a given prefix?'
+    ]
+  },
+  {
+    id: 'consistent-hashing',
+    title: 'Consistent Hashing',
+    icon: 'database',
+    color: '#ec4899',
+    questions: 5,
+    description: 'Distribute keys across nodes minimizing reshuffling when topology changes.',
+
+    introduction: `Consistent hashing solves a fundamental distributed systems problem: how do you assign keys to nodes such that adding or removing a node only remaps k/n keys (where k = number of keys, n = number of nodes), rather than remapping all keys as simple modulo hashing would require?
+
+The intuition: imagine a circular hash ring from 0 to 2^32. Each server is placed on the ring by hashing its identifier. Each key is also hashed to a position on the ring, then assigned to the first server encountered clockwise. When a server is added, only the keys between it and its predecessor need to migrate. When a server is removed, its keys migrate to its successor.
+
+Consistent hashing is foundational to Memcached, Amazon Dynamo, Cassandra, Riak, Chord DHT, and many CDN edge routing systems. The core algorithm is simple, but production implementations add critical refinements: virtual nodes (vnodes) for load balance, replication for fault tolerance, and jump hash or rendezvous hashing as alternatives.`,
+
+    keyQuestions: [
+      {
+        question: 'Implement consistent hashing. How do virtual nodes help?',
+        answer: `class ConsistentHashing {
+  TreeMap<Integer, String> ring = new TreeMap<>();
+  int virtualNodes;
+
+  ConsistentHashing(int virtualNodes) {
+    this.virtualNodes = virtualNodes;
+  }
+
+  void addServer(String server) {
+    for (int i = 0; i < virtualNodes; i++) {
+      int hash = hash(server + "#" + i);
+      ring.put(hash, server);
+    }
+  }
+
+  void removeServer(String server) {
+    for (int i = 0; i < virtualNodes; i++) {
+      ring.remove(hash(server + "#" + i));
+    }
+  }
+
+  String getServer(String key) {
+    if (ring.isEmpty()) return null;
+    int hash = hash(key);
+    // Find first server clockwise from key's hash position
+    Map.Entry<Integer, String> entry = ring.ceilingEntry(hash);
+    if (entry == null) entry = ring.firstEntry(); // wrap around
+    return entry.getValue();
+  }
+
+  int hash(String s) {
+    // Use MurmurHash or FNV for better distribution
+    return Math.abs(s.hashCode());
+  }
+}
+
+Without virtual nodes: servers cluster unevenly on the ring, causing hotspots. One server might own 40% of keys, another 5%.
+With virtual nodes (e.g., 150 per server): each physical server has 150 positions on the ring — much more uniform distribution. Adding a server takes 150 small chunks from existing servers rather than one large chunk from one neighbor.`
+      },
+      {
+        question: 'What happens when a node fails in a consistent hashing ring?',
+        answer: `Failure scenario: Server B fails. Without replication:
+- All keys previously assigned to B now map to C (B's clockwise successor)
+- C suddenly handles 2x its previous load
+- All of B's data is lost
+
+Production solution — Replication factor R:
+Each key is stored on R consecutive nodes clockwise. Dynamo/Cassandra use R=3.
+
+On failure:
+- Read: contact the next R-1 live nodes (one already failed)
+- Write: with quorum consistency (W + R > N), requires majority of N nodes to acknowledge
+
+Read repair: When a node returns stale data during a read, update it with the latest version found across replicas.
+
+Hinted handoff: If the target node is down during a write, a neighboring node temporarily stores the update and "hints" it should be delivered to the target when it recovers.
+
+This gives availability (system keeps working) at the cost of consistency (you might read stale data briefly). This is the Dynamo model — AP in CAP theorem terms.`
+      },
+      {
+        question: 'Compare consistent hashing to rendezvous hashing and jump hash.',
+        answer: `Consistent Hashing (ring):
++ O(log n) key lookup via binary search on sorted ring
++ O(k/n) remapping when nodes change
++ Supports heterogeneous node weights via virtual node count
+- Memory: O(n * virtualNodes) for the ring
+
+Rendezvous Hashing (highest random weight):
+For each key, compute score(key, server_i) for all servers, pick the highest.
++ O(1) space (no ring to store)
++ Natural weighted assignment by scaling scores
+- O(n) lookup time per key (iterate all servers)
++ Minimally disruptive on node change (same O(k/n) remapping)
+Best for: small number of servers or when memory is constrained.
+
+Jump Hash:
+Deterministic, O(ln n) time, O(1) space. Maps key to a bucket 0..n-1 using a simple iterative formula.
++ Extremely fast (10x faster than ring-based)
++ Perfect distribution (exactly k/n remapping)
+- Only supports adding servers, not arbitrary removal (buckets are 0-indexed)
+Best for: stateless consistent routing where servers aren't removed mid-operation.
+
+Production use: Memcached clients use ring-based consistent hashing; Google's Maglev load balancer uses a variant of rendezvous hashing; Jump hash used in Google's internal systems.`
+      }
+    ],
+    interviewQuestions: [
+      'Implement consistent hashing with virtual nodes',
+      'How do you handle node failures in a consistent hashing ring?',
+      'What is the load imbalance problem without virtual nodes? How do you quantify it?',
+      'Compare consistent hashing vs. modulo hashing for a distributed cache',
+      'How does Cassandra use consistent hashing for data distribution?'
+    ]
+  },
+  {
+    id: 'lsm-tree',
+    title: 'LSM Tree Design',
+    icon: 'database',
+    color: '#ec4899',
+    questions: 4,
+    description: 'Log-Structured Merge tree — the storage engine behind Cassandra, RocksDB, LevelDB.',
+
+    introduction: `The Log-Structured Merge (LSM) tree is a write-optimized data structure powering most modern NoSQL databases. The core insight: sequential I/O is 100x-1000x faster than random I/O on spinning disks, and even on SSDs random writes create significant write amplification. LSM trees convert all random writes into sequential writes by buffering mutations in memory and periodically flushing them to disk in sorted order.
+
+The architecture: writes go to an in-memory MemTable (a sorted structure like a Red-Black tree). When the MemTable reaches a size threshold, it's flushed to disk as an immutable SSTable (Sorted String Table). SSTables are organized into levels, and background compaction merges and sorts SSTables, discarding deleted (tombstoned) entries. This design makes writes extremely fast (O(1) amortized) while reads become more expensive — potentially requiring a search across multiple SSTables per level.
+
+LSM trees power: RocksDB (used in MySQL, Cassandra, MongoDB WiredTiger storage), LevelDB, Apache Cassandra, ScyllaDB, TiKV (TiDB), InfluxDB, and many more. Understanding LSM trees is essential for understanding how modern databases achieve high write throughput.`,
+
+    keyQuestions: [
+      {
+        question: 'Explain the LSM tree write and read paths.',
+        answer: `Write path:
+1. Write to WAL (Write-Ahead Log) on disk — ensures durability on crash
+2. Write to MemTable (in-memory sorted structure, usually Red-Black tree or SkipList)
+3. Return success to client — O(1) amortized
+
+When MemTable exceeds threshold (e.g., 64MB):
+4. Flush MemTable to disk as Level-0 SSTable (immutable, sorted by key)
+5. Start new empty MemTable
+
+Read path:
+1. Check MemTable first — most recent writes
+2. Check L0 SSTables (newest to oldest) — L0 files can overlap key ranges
+3. Check L1 SSTables (binary search within file, key ranges non-overlapping within each level)
+4. Continue to L2, L3... until found or all levels exhausted
+
+Bloom filter at each SSTable: before reading an SSTable, check its Bloom filter. If negative, skip — eliminates most unnecessary disk seeks.
+
+Sparse index: each SSTable maintains a sparse in-memory index (e.g., every 16KB block). Binary search locates the right block, then sequential scan within block finds the key.
+
+Read amplification: worst case reads k files per level. Mitigated by Bloom filters (typically skips 99% of SSTables).`
+      },
+      {
+        question: 'What is compaction and why is it necessary?',
+        answer: `Problem without compaction:
+- L0 accumulates many overlapping SSTables
+- Reads must check every L0 file (read amplification grows unboundedly)
+- Deleted keys (tombstones) accumulate, wasting space
+- Stale versions of updated keys pile up
+
+Compaction: merge sort multiple SSTables into new, larger, fully sorted SSTables. During merge, discard obsolete versions (keep latest) and remove tombstoned keys if no earlier versions exist.
+
+Leveled compaction (LevelDB, RocksDB default):
+- L0: overlapping SSTables, bounded at ~4 files
+- L1: non-overlapping, total size ~10MB
+- L2: non-overlapping, total size ~100MB (10x each level)
+- When a level exceeds its size limit, merge a file with overlapping files in the next level
+
+Write amplification: each byte written by user may be rewritten 10-30x through compaction across levels. This is the LSM tree's main trade-off.
+
+Size-tiered compaction (Cassandra default):
+Group SSTables of similar size together, merge groups when 4+ exist. Less write amplification, more space amplification (stale data lives longer).
+
+TWCS (Time-Window Compaction): for time-series data, compact only within time windows — expired old data compacts cleanly with minimal overhead.`
+      },
+      {
+        question: 'How are deletions handled in an LSM tree?',
+        answer: `Problem: LSM trees are append-only. You cannot modify or delete a record in an existing SSTable.
+
+Solution: tombstones — a special sentinel record inserted to mark a key as deleted.
+
+Write path: insert tombstone(key) into MemTable, flush to SSTable like a normal write.
+
+Read path: if a tombstone for key X is found before finding any live value for X, return "not found."
+
+Compaction: when a tombstone and all older versions of the key meet during compaction, both are discarded (the key and its tombstone are dropped together). This reclaims space.
+
+Danger: tombstone accumulation
+- If compaction lags, reads for deleted keys still pay the cost of finding the tombstone across levels
+- Tombstones in deeply buried SSTables may persist if newer levels don't compact with them
+- Solution: compaction priority for tombstone-heavy SSTables
+
+TTL expiration: many LSM-based databases (Cassandra, RocksDB) support per-record TTL. An expired record is treated as tombstoned during compaction without requiring explicit deletion.
+
+Space reclamation guarantee: tombstones must propagate all the way through all levels before space is reclaimed. In a fully leveled design, a tombstone reaches the last level after O(levels) compaction cycles.`
+      }
+    ],
+    interviewQuestions: [
+      'Explain the write and read paths of an LSM tree',
+      'What is compaction? Compare leveled vs size-tiered compaction',
+      'How do LSM trees handle deletions? What is a tombstone?',
+      'Compare LSM trees to B+ trees for write-heavy vs read-heavy workloads',
+      'What is write amplification and how does it affect LSM tree performance?'
+    ]
+  },
+  // ─────────────────────────────────────────
+  // Advanced Pattern Topics
+  // ─────────────────────────────────────────
+  {
+    id: 'rate-limiter-design',
+    title: 'Rate Limiter Design',
+    icon: 'gitBranch',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Design rate limiting algorithms: token bucket, leaky bucket, sliding window.',
+
+    introduction: `Rate limiting is a foundational API design pattern that controls how many requests a user or service can make in a given time window. It protects backend systems from overload, prevents abuse, enforces fair usage across tenants, and provides a mechanism for tiered pricing. Every production API — from AWS to Stripe to Twitter — implements rate limiting.
+
+The challenge is implementing rate limiting at scale with low latency and distributed correctness. A naive counter in memory doesn't work when you have 100 API servers — the counter needs to be shared. But a round-trip to Redis on every request adds latency. The choice of algorithm determines accuracy, memory usage, and burst behavior, while the implementation architecture determines latency and consistency.
+
+There are four main algorithms: fixed window counter (simple but has boundary burst problem), sliding window log (accurate but memory-intensive), sliding window counter (good balance), and token bucket / leaky bucket (best for burst tolerance). Understanding the trade-offs between them — and how to implement them in a distributed context — is the core interview ask.`,
+
+    keyQuestions: [
+      {
+        question: 'Compare token bucket, leaky bucket, and sliding window rate limiting.',
+        answer: `Fixed Window Counter:
+Count requests in fixed time buckets (e.g., 0-59s = bucket 1, 60-119s = bucket 2).
++ Simple, O(1) time and space per key
+- Boundary burst: 100 req/min limit, user can send 100 at second 59 and 100 at second 61 (200 in 2 seconds)
+
+Sliding Window Log:
+Store timestamp of each request in a sorted set. On each request, remove timestamps older than the window, count remaining, reject if over limit.
++ Accurate — no boundary burst problem
+- Memory: O(max_requests_per_window) per user
+
+Sliding Window Counter (hybrid):
+current_count = prev_window_count * (1 - elapsed/window) + current_window_count
+Approximates sliding window with O(1) memory per key. Slight inaccuracy (~0.1%) but excellent in practice.
+
+Token Bucket:
+Bucket holds up to max_tokens. Refills at rate r tokens/sec. Each request consumes 1 token. Allows bursts up to max_tokens.
++ Natural burst handling (user can accumulate tokens during idle periods)
++ Simple distributed implementation (store tokens + last_refill_time in Redis)
+Used by: AWS API Gateway, Stripe, most CDNs
+
+Leaky Bucket:
+Queue requests, process at constant rate. Burst is absorbed by the queue.
++ Smooth outgoing traffic (important for protecting downstream services)
+- Queue adds latency; no burst service improvement for users
+
+Interview recommendation: Token bucket for user-facing APIs (allows natural bursts), leaky bucket for backend protection (smooths traffic to downstream).`
+      },
+      {
+        question: 'Implement a distributed rate limiter using Redis.',
+        answer: `Token bucket in Redis using atomic Lua script (prevents race conditions):
+
+local key = KEYS[1]
+local capacity = tonumber(ARGV[1])
+local rate = tonumber(ARGV[2])   -- tokens per second
+local now = tonumber(ARGV[3])    -- current timestamp (seconds)
+local requested = tonumber(ARGV[4])
+
+local tokens = tonumber(redis.call("hget", key, "tokens") or capacity)
+local last_refill = tonumber(redis.call("hget", key, "last_refill") or now)
+
+-- Refill tokens based on elapsed time
+local elapsed = now - last_refill
+tokens = math.min(capacity, tokens + elapsed * rate)
+
+local allowed = tokens >= requested
+if allowed then
+  tokens = tokens - requested
+end
+
+redis.call("hmset", key, "tokens", tokens, "last_refill", now)
+redis.call("expire", key, math.ceil(capacity / rate) + 1)
+
+return allowed
+
+Why Lua script: EVAL is atomic in Redis — no race condition between check and update.
+
+At scale:
+- Each API server calls Redis for every request: ~1ms added latency
+- Alternative: local token bucket per server with periodic Redis sync (lossy but faster)
+- For extreme scale: sliding window with Redis sorted sets (ZADD + ZRANGEBYSCORE + ZREMRANGEBYSCORE in a pipeline)
+
+Sliding window counter with Redis:
+MULTI
+ZREMRANGEBYSCORE user:123 0 (now-60)  -- remove old entries
+ZADD user:123 now request-uuid         -- add current request
+ZCARD user:123                          -- count requests in window
+EXEC
+If ZCARD > limit, reject.`
+      },
+      {
+        question: 'How do you handle rate limiting across multiple data centers?',
+        answer: `Challenge: a global rate limit of 1000 req/min, but requests arrive at 3 data centers.
+
+Option 1: Centralized rate limiter
+Single Redis cluster, all DCs route to it.
+- Adds cross-DC latency (50-200ms round trip)
+- Single point of failure
+- Not acceptable for low-latency APIs
+
+Option 2: Local rate limiting with global quota distribution
+Each DC gets 1/3 of the global quota (333 req/min). Rate limit locally.
++ Zero cross-DC latency
+- Uneven — if DC1 is idle and DC2 is busy, DC2 hits limit while DC1 has spare quota
+
+Option 3: Approximate global counting
+Each DC maintains local counter. Periodically (every 1-5s) sync to central store.
+Local limit = global_limit - sum(other_dcs_count)
++ Low latency (local check)
+- Slight inaccuracy during sync window (can over-admit by ~5-10%)
+Used by Stripe, Lyft Envoy
+
+Option 4: Centralized quota with local cache
+Pull quota from central store every N seconds. Use local copy between pulls.
+Window: 1000 tokens per minute distributed lazily across instances.
++Good balance of accuracy and latency
+
+Real systems often use option 3 with the acceptance that slight over-serving during sync windows is acceptable — better than adding 100ms to every API call.`
+      }
+    ],
+    interviewQuestions: [
+      'Design a rate limiter API: what interface do you expose?',
+      'Implement token bucket rate limiting in code',
+      'How do you implement rate limiting in a distributed system?',
+      'What is the boundary burst problem with fixed window counters? How do you fix it?',
+      'How do you rate limit based on different dimensions (user, IP, endpoint)?'
+    ]
+  },
+  {
+    id: 'circuit-breaker',
+    title: 'Circuit Breaker Pattern',
+    icon: 'gitBranch',
+    color: '#ef4444',
+    questions: 4,
+    description: 'Prevent cascading failures by detecting and isolating failing dependencies.',
+
+    introduction: `The Circuit Breaker pattern (named after electrical circuit breakers) prevents cascading failures in distributed systems. When a downstream service starts failing, calls to it pile up waiting for timeouts, consuming threads, connections, and memory. The circuit breaker detects the failure and fast-fails subsequent calls, giving the system a chance to recover.
+
+The pattern has three states: Closed (normal operation, all calls pass through), Open (failure threshold exceeded, all calls fast-fail without calling the service), and Half-Open (after a recovery timeout, allow a limited number of trial calls to test if the service has recovered). Netflix's Hystrix popularized this pattern; Resilience4j, the Go circuit breaker library, and AWS SDK all implement variants.
+
+Understanding circuit breakers is essential for resilient microservices design. A system without circuit breakers can fail completely when a single dependency degrades — timeouts at 30 seconds across hundreds of concurrent threads exhaust the thread pool, and the parent service becomes unavailable even though it has no direct issue. The circuit breaker converts "slow failure" into "fast failure," preserving system resources for healthy dependencies.`,
+
+    keyQuestions: [
+      {
+        question: 'Implement a circuit breaker with the three-state state machine.',
+        answer: `enum State { CLOSED, OPEN, HALF_OPEN }
+
+class CircuitBreaker {
+  State state = State.CLOSED;
+  int failureCount = 0;
+  int failureThreshold;      // open after N failures
+  int successThreshold;      // close after N successes in HALF_OPEN
+  long timeoutMs;            // how long to stay OPEN before trying HALF_OPEN
+  long openTimestamp;
+  int halfOpenSuccesses = 0;
+
+  CircuitBreaker(int failureThreshold, int successThreshold, long timeoutMs) {
+    this.failureThreshold = failureThreshold;
+    this.successThreshold = successThreshold;
+    this.timeoutMs = timeoutMs;
+  }
+
+  <T> T call(Supplier<T> service, Supplier<T> fallback) throws Exception {
+    if (state == State.OPEN) {
+      if (System.currentTimeMillis() - openTimestamp > timeoutMs) {
+        state = State.HALF_OPEN;
+        halfOpenSuccesses = 0;
+      } else {
+        return fallback.get(); // fast fail
+      }
+    }
+    try {
+      T result = service.get();
+      onSuccess();
+      return result;
+    } catch (Exception e) {
+      onFailure();
+      return fallback.get();
+    }
+  }
+
+  synchronized void onSuccess() {
+    if (state == State.HALF_OPEN) {
+      halfOpenSuccesses++;
+      if (halfOpenSuccesses >= successThreshold) {
+        state = State.CLOSED;
+        failureCount = 0;
+      }
+    } else {
+      failureCount = 0;
+    }
+  }
+
+  synchronized void onFailure() {
+    failureCount++;
+    if (state == State.HALF_OPEN || failureCount >= failureThreshold) {
+      state = State.OPEN;
+      openTimestamp = System.currentTimeMillis();
+    }
+  }
+}
+
+Production additions: sliding window (count failures in last N calls, not total), bulkhead isolation (separate thread pools per dependency), metrics export (open/close events for alerting).`
+      },
+      {
+        question: 'What is the difference between circuit breaker and retry with exponential backoff?',
+        answer: `Retry: when a request fails, try again after a delay (exponential backoff with jitter).
+Best for: transient failures (network blip, brief overload) that self-resolve quickly.
+Problem: if the downstream service is truly down, retries amplify load — 1000 failing requests become 3000 (3 retries each), worsening the outage.
+
+Circuit Breaker: detect persistent failure, stop sending requests entirely, let the system recover.
+Best for: sustained failures where retrying makes things worse.
+Does not retry — that's a separate concern.
+
+Combined pattern (retry + circuit breaker):
+Retry handles transient failures. Circuit breaker activates when retries consistently fail.
+
+The order matters:
+1. Request fails
+2. Retry (2-3 times with exponential backoff)
+3. If still failing, increment circuit breaker failure count
+4. If circuit opens, fast-fail immediately (no retries, no waiting)
+
+Timeouts: always set timeouts. A 30-second timeout on a dead service means each thread is stuck for 30 seconds. With 200 concurrent threads, you've lost 200 * 30s = 6000 thread-seconds. A 1-second timeout + circuit breaker limits this to 3 failure calls per thread pool exhaustion cycle.
+
+Fallback: circuit breaker should always have a fallback — cached data, degraded response, or explicit error. Never just fail silently.`
+      }
+    ],
+    interviewQuestions: [
+      'Implement a circuit breaker state machine',
+      'How do you tune circuit breaker thresholds for a production service?',
+      'What is the difference between a circuit breaker and a retry policy?',
+      'How does bulkhead pattern complement circuit breakers?',
+      'How do you monitor circuit breaker state in production?'
+    ]
+  },
+  {
+    id: 'connection-pooling',
+    title: 'Connection Pooling',
+    icon: 'link',
+    color: '#06b6d4',
+    questions: 4,
+    description: 'Reuse expensive connections to databases and services efficiently.',
+
+    introduction: `Creating a database connection is expensive: TCP handshake, TLS negotiation, database authentication, session setup — easily 50-500ms. If your web server creates a new connection for every query, a service handling 1000 requests/second would require 1000 new connections per second, each taking ~100ms. The database would be overwhelmed before handling a single query.
+
+Connection pooling solves this by maintaining a pool of pre-established connections that are checked out for the duration of a query and returned to the pool afterward. Connection creation cost is paid once at startup; query execution uses an idle connection (typically <1ms to acquire).
+
+HikariCP, PgBouncer, and c3p0 are popular connection pool implementations. Understanding connection pool sizing, leak detection, validation, and eviction is essential for any engineer building data-intensive applications — misconfigured pools are a frequent cause of production incidents: "connection pool exhaustion" is one of the most common database-related outages.`,
+
+    keyQuestions: [
+      {
+        question: 'Design a connection pool. What is the core data structure?',
+        answer: `class ConnectionPool {
+  BlockingQueue<Connection> available;  // idle connections ready to use
+  Set<Connection> inUse;                // connections checked out
+  int minSize;                          // connections always kept warm
+  int maxSize;                          // hard cap on total connections
+  long acquisitionTimeoutMs;
+  long maxIdleTimeMs;                   // evict idle connections older than this
+  long maxLifetimeMs;                   // evict connections older than this
+
+  ConnectionPool(Config config) {
+    available = new LinkedBlockingQueue<>();
+    inUse = ConcurrentHashMap.newKeySet();
+    // pre-create minSize connections
+    for (int i = 0; i < minSize; i++) available.add(createConnection());
+  }
+
+  Connection acquire() throws Exception {
+    Connection conn = available.poll(acquisitionTimeoutMs, MILLISECONDS);
+    if (conn == null) {
+      if (inUse.size() + available.size() < maxSize) {
+        conn = createConnection(); // pool can grow
+      } else {
+        throw new PoolExhaustedException("All connections in use");
+      }
+    }
+    if (!conn.isValid(1)) {  // test connection before handing out
+      conn.close();
+      conn = createConnection();
+    }
+    inUse.add(conn);
+    return conn;
+  }
+
+  void release(Connection conn) {
+    inUse.remove(conn);
+    if (shouldEvict(conn)) {
+      conn.close();
+    } else {
+      available.offer(conn);
+    }
+  }
+
+  boolean shouldEvict(Connection conn) {
+    return conn.age() > maxLifetimeMs || conn.idleTime() > maxIdleTimeMs;
+  }
+}
+
+HikariCP uses a FastList (array-based) instead of BlockingQueue for lower lock contention.`
+      },
+      {
+        question: 'How do you size a connection pool correctly?',
+        answer: `Wrong intuition: "more connections = better throughput." PostgreSQL recommends max 100 total connections per server (default max_connections = 100). Each connection uses ~5-10MB RAM, and more connections means more context switching overhead.
+
+The formula (from HikariCP docs / Percona research):
+connections = (core_count * 2) + effective_spindle_count
+
+For a 4-core server with 1 SSD: connections = 4 * 2 + 1 = 9 connections per application server.
+
+This seems low but is correct: a 4-core database can execute 8 queries in parallel. Additional connections just queue. Optimal pool size saturates the cores without context-switching overhead.
+
+For application servers (e.g., 10 app servers, each with pool=9):
+Total connections = 90 — well under PostgreSQL's limit of 100.
+
+Connection pool sizing anti-patterns:
+- pool_size = max_database_connections / app_servers: ignores that most connections are idle
+- pool_size = expected_concurrent_requests: requests are milliseconds, connections are seconds — massive over-provisioning
+- minIdle = 0: connection creation on demand adds latency spikes
+
+Monitoring: track pool acquisition wait time. If p99 > 5ms, the pool is too small or queries are too slow. Track active vs. idle vs. pending — idle connections are wasted; too many pending means increase pool size.`
+      }
+    ],
+    interviewQuestions: [
+      'Design a database connection pool',
+      'What is connection pool exhaustion and how do you detect and prevent it?',
+      'How do you size a connection pool for a database with 100 max connections?',
+      'What is the difference between connection pool and thread pool?',
+      'How do you handle stale connections (connections that have been broken by the database)?'
+    ]
+  },
+  {
+    id: 'thread-safe-queue',
+    title: 'Thread-Safe Queue Design',
+    icon: 'compass',
+    color: '#10b981',
+    questions: 4,
+    description: 'Design and implement concurrent queues: blocking, lock-free, and bounded.',
+
+    introduction: `Thread-safe queues are the backbone of concurrent programming: producer-consumer systems, work queues, event buses, and async task execution all rely on queues that are safe to access from multiple threads simultaneously. The challenge is that naively sharing a queue leads to race conditions — two threads dequeuing simultaneously might both read the same element, or two threads enqueueing might corrupt internal pointers.
+
+The tradeoff space is rich: mutex-based queues are simple but contended under load; lock-free queues using CAS (Compare-And-Swap) eliminate contention but are complex to implement correctly; bounded queues provide backpressure; unbounded queues can cause memory exhaustion. Java's BlockingQueue hierarchy (LinkedBlockingQueue, ArrayBlockingQueue, SynchronousQueue, ConcurrentLinkedQueue) each optimize for different scenarios.
+
+Understanding thread-safe queue design demonstrates mastery of concurrent programming fundamentals: the happens-before relationship, memory visibility, ABA problem in CAS, and practical Producer-Consumer patterns used in thread pools, request handling, and message passing.`,
+
+    keyQuestions: [
+      {
+        question: 'Implement a bounded blocking queue (producer blocks when full, consumer blocks when empty).',
+        answer: `class BoundedBlockingQueue<T> {
+  private final Object[] data;
+  private int head = 0, tail = 0, size = 0;
+  private final int capacity;
+  private final Lock lock = new ReentrantLock();
+  private final Condition notFull = lock.newCondition();
+  private final Condition notEmpty = lock.newCondition();
+
+  BoundedBlockingQueue(int capacity) {
+    this.capacity = capacity;
+    this.data = new Object[capacity];
+  }
+
+  void enqueue(T item) throws InterruptedException {
+    lock.lock();
+    try {
+      while (size == capacity) notFull.await(); // block if full
+      data[tail] = item;
+      tail = (tail + 1) % capacity;
+      size++;
+      notEmpty.signal(); // wake up a waiting consumer
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  T dequeue() throws InterruptedException {
+    lock.lock();
+    try {
+      while (size == 0) notEmpty.await(); // block if empty
+      T item = (T) data[head];
+      data[head] = null; // help GC
+      head = (head + 1) % capacity;
+      size--;
+      notFull.signal(); // wake up a waiting producer
+      return item;
+    } finally {
+      lock.unlock();
+    }
+  }
+}
+
+Key design choices:
+- Circular buffer for O(1) enqueue/dequeue without memory allocation
+- Separate notFull/notEmpty conditions: avoids waking the wrong thread (vs. using notify() which wakes arbitrary waiter)
+- while loop around await(): guards against spurious wakeups
+
+Java's ArrayBlockingQueue uses the same approach; LinkedBlockingQueue uses separate head/tail locks for higher throughput.`
+      },
+      {
+        question: 'What is the ABA problem in lock-free data structures?',
+        answer: `Lock-free queue using CAS (Compare-And-Swap):
+CAS(location, expected, new_value): atomically update location to new_value only if it currently equals expected.
+
+The ABA problem:
+Thread 1 reads value A from head pointer.
+Thread 1 is preempted.
+Thread 2 dequeues A (head now points to B).
+Thread 2 enqueues new node, and memory allocator reuses A's address.
+Thread 2 enqueues again (head now points back to A — same address, different node!).
+Thread 1 resumes: CAS(head, A, next) succeeds because head == A, but the "A" is a different node.
+Result: data structure corruption.
+
+Solutions:
+1. Tagged pointers: combine the pointer with a version counter in a single 64-bit word.
+   low 16 bits = version counter, high 48 bits = pointer.
+   CAS updates both together. Thread 2's reallocation increments the version, so Thread 1's CAS fails.
+
+2. Hazard pointers: before reading a pointer, publish it as "hazardous." Memory reclamation checks all hazard pointers before freeing — pointer cannot be reused while hazardous.
+
+3. RCU (Read-Copy-Update): Linux kernel technique. Readers access shared data lock-free; writers create a copy, modify it, then atomically swap the pointer. Old version freed only when no readers remain.
+
+4. GC languages (Java): GC manages memory — addresses can't be reused while referenced. ABA is not a problem. This is why Java's ConcurrentLinkedQueue implementation is simpler than C++ equivalents.`
+      }
+    ],
+    interviewQuestions: [
+      'Implement a bounded blocking queue with producer/consumer threads',
+      'What is the difference between LinkedBlockingQueue and ArrayBlockingQueue in Java?',
+      'How do you implement a lock-free queue using CAS?',
+      'What is the ABA problem and how do you solve it?',
+      'Design a work-stealing queue for a thread pool'
+    ]
+  },
+  {
+    id: 'saga-pattern',
+    title: 'Saga Pattern (Distributed Transactions)',
+    icon: 'gitBranch',
+    color: '#ef4444',
+    questions: 4,
+    description: 'Manage data consistency across microservices without distributed transactions.',
+
+    introduction: `Traditional ACID transactions work within a single database: atomicity guarantees all-or-nothing. But in a microservices architecture, a business transaction spans multiple services, each with its own database. A traditional 2-Phase Commit (2PC) protocol provides distributed atomicity, but it requires locking resources across services during the commit phase — blocking, low availability, and catastrophic when a coordinator fails.
+
+The Saga pattern solves this by breaking a distributed transaction into a sequence of local transactions, each with a corresponding compensating transaction (rollback). If step N fails, the saga executes compensating transactions for steps N-1 through 1, unwinding the changes. This provides eventual consistency without locking.
+
+Two implementations exist: choreography-based (each service publishes events and listens to others, no central coordinator) and orchestration-based (a central Saga Orchestrator sends commands to each service and handles compensation). Sagas are used in e-commerce order processing, financial transactions, travel booking, and anywhere a business operation spans multiple bounded contexts. Understanding sagas is essential for Staff-level system design interviews involving microservices.`,
+
+    keyQuestions: [
+      {
+        question: 'Explain the saga pattern with a concrete e-commerce order example.',
+        answer: `Order flow: create order → reserve inventory → charge payment → confirm shipment.
+
+Happy path (each step a local transaction):
+1. Order Service: createOrder(orderId) → state=PENDING
+2. Inventory Service: reserveItems(orderId) → inventory decremented
+3. Payment Service: chargeCard(orderId) → payment captured
+4. Shipping Service: scheduleShipment(orderId) → order=CONFIRMED
+
+Failure at step 3 (payment fails — card declined):
+Compensating transactions run in reverse:
+3'. Inventory Service: releaseReservation(orderId) → inventory restored
+2'. Order Service: cancelOrder(orderId) → state=CANCELLED
+
+Key properties:
+- Each step is committed immediately (not held in a transaction)
+- Compensation is the mechanism for "rollback"
+- No global locks — other orders can use inventory during steps
+
+Compensating transactions must be:
+- Idempotent: safe to execute multiple times (network retries)
+- Semantically reversible: "release reservation" must undo "reserve items"
+- Not always exact rollback: if payment was captured and immediately refunded, money moved twice — this is acceptable as an "approximation" not an exact inverse
+
+Data inconsistency window: between step 2 (inventory reserved) and step 3's compensation, inventory appears reserved to other users. This is the dirty read problem in sagas — unavoidable without locking.`
+      },
+      {
+        question: 'Compare choreography-based vs orchestration-based sagas.',
+        answer: `Choreography (event-driven):
+Each service publishes events when it completes its local transaction. Other services listen to events and trigger their own local transactions.
+
+Order Service publishes OrderCreated →
+Inventory Service listens, reserves items, publishes ItemsReserved →
+Payment Service listens, charges card, publishes PaymentCaptured →
+Shipping Service listens, schedules shipment
+
+Advantages: no single point of failure, loose coupling, easy to add new participants.
+Disadvantages: business logic is spread across services (hard to understand the whole flow), difficult to test end-to-end, compensating transaction chains can be hard to trace.
+
+Orchestration (centralized coordinator):
+A Saga Orchestrator service sends commands and listens to replies.
+
+Orchestrator → reserve(orderId) → Inventory Service
+Inventory Service → ItemsReserved → Orchestrator
+Orchestrator → charge(orderId) → Payment Service
+...
+
+Advantages: business logic centralized (easy to understand, test, monitor), compensation logic is explicit in the orchestrator.
+Disadvantages: orchestrator is a central point of failure (mitigated with durable execution engines like Temporal, Conductor, AWS Step Functions), services are coupled to the orchestrator.
+
+Production recommendation: use orchestration + a durable workflow engine (Temporal.io, AWS Step Functions) that handles retries, timeouts, and compensation automatically with strong delivery guarantees.`
+      }
+    ],
+    interviewQuestions: [
+      'Design an order processing system using the Saga pattern',
+      'What is a compensating transaction and what properties must it have?',
+      'Compare choreography vs orchestration sagas — when do you use each?',
+      'How does the Saga pattern handle partial failures and idempotency?',
+      'What is the difference between a Saga and 2-Phase Commit?'
     ]
   },
 ];
