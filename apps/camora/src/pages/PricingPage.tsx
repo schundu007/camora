@@ -269,13 +269,17 @@ export default function PricingPage() {
                 <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6, letterSpacing: '-0.02em' }}>Ready to start?</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.50)' }}>Free hour, no card required. Pick a plan whenever you're ready.</div>
               </div>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
                 <Link to={ctaHref} style={{ padding: '12px 28px', fontSize: 14, fontWeight: 700, borderRadius: 4, background: 'var(--cam-gold-leaf)', color: '#0B1B3F', textDecoration: 'none', display: 'inline-block', boxShadow: '0 2px 12px rgba(212,160,67,0.35)' }}>
                   {isAuthenticated ? 'Open Camora' : 'Create account — free'}
                 </Link>
-                <a href="mailto:hello@cariara.com?subject=Camora%20Team%20plan" style={{ padding: '12px 24px', fontSize: 13, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)', textDecoration: 'none', display: 'inline-block' }}>
+                <button
+                  type="button"
+                  onClick={() => window.open('mailto:hello@cariara.com?subject=Camora%20Team%20plan', '_blank')}
+                  style={{ padding: '12px 24px', fontSize: 13, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)', background: 'transparent', cursor: 'pointer' }}
+                >
                   Talk to sales
-                </a>
+                </button>
               </div>
             </div>
           </section>
