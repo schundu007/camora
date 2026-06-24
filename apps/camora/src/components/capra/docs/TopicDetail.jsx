@@ -692,6 +692,10 @@ export default function TopicDetail({
   const topicIsCodingShaped = !!topicDetails?.keyPatterns;
   // Pages that use system-design-style rendering (concepts, keyQuestions, dataModel, etc.)
   const isSDStyle = ['system-design', 'microservices', 'databases'].includes(activePage) && !topicIsCodingShaped;
+  // Pages that use SRE/slide-card-style rendering (introduction, keyQuestions, visualizations, quickFire).
+  // ADD NEW CATEGORIES HERE — that's the only change needed to wire up content rendering.
+  const isSREStyle = ['sre', 'devops', 'observability', 'platform', 'mlops', 'aiops', 'networking',
+    'cloud', 'linux', 'troubleshooting', 'war-stories', 'comparisons', 'ai-systems-perf', 'ddia'].includes(activePage);
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
   const isCodingStyle = activePage === 'coding' || activePage === 'sql' || (activePage === 'databases' && topicIsCodingShaped);
 
@@ -2840,7 +2844,7 @@ export default function TopicDetail({
           framed content card with comfortable max-width, generous gutters
           between sections. Two-column layouts where applicable.
           ────────────────────────────────────────────────────────────── */}
-      {!isLocked && (activePage === 'sre' || activePage === 'devops' || activePage === 'observability' || activePage === 'platform' || activePage === 'mlops' || activePage === 'aiops' || activePage === 'networking' || activePage === 'cloud' || activePage === 'linux' || activePage === 'troubleshooting' || activePage === 'war-stories' || activePage === 'comparisons' || activePage === 'ai-systems-perf') && (topicDetails.introduction || topicDetails.keyQuestions || topicDetails.visualizations?.length || topicDetails.topics?.length || topicDetails.quickFire?.length) && (() => {
+      {!isLocked && isSREStyle && (topicDetails.introduction || topicDetails.keyQuestions || topicDetails.visualizations?.length || topicDetails.topics?.length || topicDetails.quickFire?.length) && (() => {
         // Build the agenda — one entry per section that's actually present.
         const agenda = [];
         if (topicDetails.introduction)                                          agenda.push({ id: 'overview',       label: 'Overview' });
