@@ -81,6 +81,17 @@ export const topicCategoryMap = {
     'questions-to-ask-interviewer': 'fundamentals',
     // Problem Solving
     'managing-constraints': 'problem-solving',
+    // New: Amazon LP-aligned + FAANG gaps
+    'customer-obsession': 'leadership',
+    'ownership-accountability': 'leadership',
+    'think-big': 'leadership',
+    'frugality-doing-more-less': 'delivery',
+    'influencing-without-authority': 'leadership',
+    'navigating-ambiguity': 'problem-solving',
+    'handling-underperformers': 'conflict',
+    'prioritization-frameworks': 'delivery',
+    'ethics-integrity': 'conflict',
+    'technical-leadership': 'leadership',
   };
 
 export const behavioralTopics = [
