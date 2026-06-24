@@ -877,6 +877,16 @@ export default function DocsPage({ onBack }) {
   }, [selectedTopic, topicDetails?.title]);
 
   // ── Overview dashboard data ──
+  // Static counts used as fallback before heavyData async chunks load.
+  // Update when topic files add/remove entries.
+  const STATIC_TOPIC_COUNTS = {
+    'coding': 23, 'system-design': 765, 'behavioral': 57, 'low-level': 106,
+    'databases': 20, 'microservices': 12, 'cloud': 95, 'linux': 48,
+    'networking': 49, 'sre': 65, 'devops': 164, 'observability': 8,
+    'platform': 5, 'troubleshooting': 14, 'mlops': 7, 'aiops': 10,
+    'war-stories': 25, 'comparisons': 35, 'challenges': 1, 'projects': 25,
+    'roadmaps': 12, 'eng-blogs': 39,
+  };
   const overviewCategories = (() => {
     // Priority order: Tier 1 (universal — every SWE loop) → Tier 2 (backend
     // depth) → Tier 3 (platform/ops) → Tier 4 (emerging/specialized) →
@@ -911,7 +921,7 @@ export default function DocsPage({ onBack }) {
       { id: 'eng-blogs',    href: 'eng-blogs',     title: 'Eng Blogs',                 icon: 'bookOpen',    color: 'var(--text-primary)', topics: engBlogTopics,                                                                                                                                        description: 'Curated engineering posts from Netflix, Uber, Stripe, Meta — the architectures behind real products.' },
     ];
     return cats.map(c => {
-      const count = c.topics.length;
+      const count = c.topics.length || STATIC_TOPIC_COUNTS[c.id] || 0;
       const completed = c.topics.filter(t => completedTopics[t.id]).length;
       const progress = count > 0 ? Math.round((completed / count) * 100) : 0;
       return { ...c, count, completed, progress };
