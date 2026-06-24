@@ -142,6 +142,17 @@ Step 6 — Hardware issue (system check failing):
 Stop the instance (not reboot). Start it. This migrates to a new host.`,
       },
     ],
+    quickFire: [
+      { q: 'First thing you check when EC2 SSH fails?', a: 'Security group inbound rule for port 22, then NACL, then route table. These are the most common causes and require no SSH access to verify.' },
+      { q: 'What command shows EC2 boot logs without SSH?', a: 'AWS Console: Actions > Monitor and troubleshoot > Get system log. Shows kernel output, fsck errors, and OOM kills from the hypervisor.' },
+      { q: 'What does exit code 137 mean on an EC2 process?', a: 'The process received SIGKILL -- either the OOM killer terminated it, or it was forcibly killed. Check dmesg or /var/log/kern.log for the OOM event.' },
+      { q: 'Difference between EC2 reboot and stop/start?', a: 'Reboot stays on the same host. Stop/start migrates to a new host -- required when the System Status Check fails (underlying hardware issue).' },
+      { q: 'What does a failing System Status Check indicate?', a: 'A problem with the underlying AWS hardware (power, network, hardware). Fix: stop and start the instance to migrate to new hardware.' },
+      { q: 'How do you access an EC2 instance with a full disk and broken SSH?', a: 'Use EC2 Serial Console (if pre-enabled) or detach the root EBS volume, attach to a rescue instance, delete large files, re-attach, and restart.' },
+      { q: 'What prevents SSH from starting when disk is full?', a: 'sshd cannot write its PID file to /var/run/sshd.pid. Even a few KB of free space is enough to fix it -- find and delete large log files via rescue mode.' },
+      { q: 'How do you diagnose CPU credit exhaustion on a T3 instance?', a: 'Check CloudWatch CPUCreditBalance metric. When it reaches zero, CPU is hard-throttled to baseline. SSH handshakes timeout under heavy throttling.' },
+      { q: 'What is EC2 Serial Console and when is it useful?', a: 'An interactive terminal to the instance that bypasses all networking. Requires pre-enablement at account level. Essential for diagnosing OS-level issues when the network is broken.' },
+    ],
     references: [
       'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-troubleshoot.html',
     ],
@@ -222,6 +233,17 @@ SELECT count(*), state FROM pg_stat_activity GROUP BY state;
 \`\`\`
 If hundreds are in "idle" or "idle in transaction", deploy RDS Proxy to pool connections. Implement connection pooling at the application layer (PgBouncer, HikariCP).`,
       },
+    ],
+    quickFire: [
+      { q: 'First tool to open when RDS CPU is at 100%?', a: 'Performance Insights -- Top SQL tab shows which queries are consuming the most DB load, broken down by wait event (CPU, lock, I/O).' },
+      { q: 'What does a Seq Scan in EXPLAIN mean?', a: 'PostgreSQL is reading every row in the table. For large tables this is expensive -- add an index on the filtered column to get an Index Scan instead.' },
+      { q: 'How do you add an index without locking the table?', a: 'CREATE INDEX CONCURRENTLY idx_name ON table(column) -- builds the index without taking a table lock, allowing concurrent reads and writes.' },
+      { q: 'What causes periodic CPU spikes in PostgreSQL with no query change?', a: 'Autovacuum processing dead tuples from UPDATE/DELETE operations. Check pg_stat_user_tables for high n_dead_tup counts.' },
+      { q: 'What SQL shows the worst queries by total CPU time?', a: 'SELECT query, total_exec_time, calls FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10 -- requires pg_stat_statements extension.' },
+      { q: 'How do you distinguish lock contention from CPU-bound queries in Performance Insights?', a: 'Look at the wait event type. CPU wait = compute-bound query. Lock wait = contention. I/O wait = disk-bound. Each requires a different fix.' },
+      { q: 'What does EXPLAIN ANALYZE show that EXPLAIN alone does not?', a: 'Actual row counts and actual timing at each node. Estimated vs actual row discrepancies reveal stale statistics.' },
+      { q: 'What is RDS Proxy and when is it needed?', a: 'A connection multiplexer that pools connections to RDS. Reduces connection overhead and prevents connection storms -- especially valuable for Lambda workloads.' },
+      { q: 'Should you restart RDS to fix a CPU spike?', a: 'No -- it relieves the symptom temporarily but the slow query returns when traffic resumes. Always fix the root cause: add an index or rewrite the query.' },
     ],
     references: [
       'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html',
@@ -304,6 +326,17 @@ ulimit -n       # check open file descriptor limit
 \`\`\``,
       },
     ],
+    quickFire: [
+      { q: 'What does ALB HTTP 502 mean vs 504?', a: '502 = ALB got an invalid or reset response from the backend. 504 = backend is alive but did not respond within the idle timeout (default 60s).' },
+      { q: 'What does ALB HTTP 503 mean?', a: 'ALB has no healthy targets -- all targets in the target group are failing health checks. Check target group health in the console.' },
+      { q: 'How do you distinguish ALB-generated 502 from backend-generated 502?', a: 'Check ALB access logs: if target_status_code is "-" (dash) the backend never responded. If target_status_code is 502 the backend returned 502.' },
+      { q: 'What causes a Keep-Alive 502 on ALB?', a: 'Backend closes idle connections before ALB does. ALB tries to reuse the closed connection and gets a TCP RST. Fix: set backend Keep-Alive timeout higher than ALB idle timeout (65s vs 60s).' },
+      { q: 'What is the default ALB idle timeout?', a: '60 seconds. If a backend takes longer than 60s to respond, ALB closes the connection and returns a 504 to the client.' },
+      { q: 'Why would all ALB targets show unhealthy?', a: 'Health check path returning non-200, security group blocking health check traffic from ALB, application not started, or deployment in progress.' },
+      { q: 'What SQL query finds 502 patterns in ALB Athena logs?', a: 'SELECT count(*), target_status_code FROM alb_logs WHERE elb_status_code = 502 GROUP BY target_status_code -- distinguishes app 502 from connection errors.' },
+      { q: 'How do you enable ALB access logs?', a: 'ALB console > Attributes > Access logs > Enable, specify an S3 bucket. Logs are per-request and can be queried with Athena.' },
+      { q: 'What health check mistake causes 503 even when the app is running?', a: 'Using "/" as health check path when the app returns a 301 redirect there. Set health check path to /healthz or /health that returns a direct 200.' },
+    ],
     references: [
       'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-troubleshooting.html',
     ],
@@ -365,6 +398,17 @@ The authoritative nameserver always returns the new record immediately. If \`dig
 
 Fix for the current incident: wait for TTL to expire (maximum = old record's TTL). For future: implement a TTL reduction procedure — lower TTL to 60 seconds 24h before any planned DNS change, perform the change, then restore TTL after propagation.`,
       },
+    ],
+    quickFire: [
+      { q: 'Difference between NXDOMAIN and SERVFAIL?', a: 'NXDOMAIN = authoritative confirmation the name does not exist. SERVFAIL = resolver encountered an error (nameserver unreachable, DNSSEC failure, resolver broken).' },
+      { q: 'How long does DNS propagation take after a record change?', a: 'Up to the TTL of the old record. Resolvers that cached it keep the old value until their cache expires. Reduce TTL to 60s 24h before a planned change.' },
+      { q: 'What command checks a specific DNS resolver?', a: 'dig @8.8.8.8 api.example.com -- the @ flag specifies which resolver to query. Use the authoritative nameserver to get the ground truth.' },
+      { q: 'What is ndots in Kubernetes DNS?', a: '/etc/resolv.conf sets ndots:5. Names with fewer than 5 dots are treated as relative, triggering multiple search-domain queries before the absolute lookup -- heavy CoreDNS load.' },
+      { q: 'What Kubernetes component handles DNS resolution for pods?', a: 'CoreDNS -- runs as pods in kube-system. If CoreDNS pods crash or are overloaded, all .svc.cluster.local resolution fails for every pod.' },
+      { q: 'What does negative caching mean in DNS?', a: 'NXDOMAIN responses are cached for the SOA minimum TTL (often 300-3600s). New records are not visible until this cache expires even after the record is created.' },
+      { q: 'How do you flush DNS cache on a Linux host?', a: 'systemctl restart systemd-resolved (systemd) or service nscd restart (older). On Mac: sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder.' },
+      { q: 'How do you debug CoreDNS failures in Kubernetes?', a: 'kubectl logs -n kube-system -l k8s-app=kube-dns. Also: kubectl run debug --image=busybox --rm -it -- nslookup kubernetes.default to test resolution.' },
+      { q: 'What is split-horizon DNS?', a: 'Serving different DNS records to internal vs external clients for the same hostname -- typically internal clients get private IPs, external clients get public IPs.' },
     ],
     references: [
       'https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/',
@@ -434,6 +478,16 @@ REJECT at VPC-B ENI level → security group. REJECT at VPC-B subnet level (NACL
 6. Service binding:
 Is the new microservice listening on 0.0.0.0:<port> (all interfaces)? If it binds only to 127.0.0.1, it is not reachable from any network.`,
       },
+    ],
+    quickFire: [
+      { q: 'Key difference between security groups and NACLs?', a: 'Security groups are stateful (return traffic auto-allowed), instance-level, allow-only. NACLs are stateless (must allow return traffic explicitly), subnet-level, allow and deny.' },
+      { q: 'Connection timed out vs connection refused -- what does each mean?', a: 'Timed out = packets silently dropped (SG or NACL blocking). Refused = host reachable but port not open (service not listening or SG REJECT).' },
+      { q: 'What do VPC Flow Logs tell you?', a: 'Per-ENI log of network flows with ACCEPT or REJECT decision. REJECT confirms traffic is blocked -- helps pinpoint whether it is SG (instance) or NACL (subnet).' },
+      { q: 'What four things are required for VPC peering to work?', a: 'Peering connection accepted, route in VPC-A pointing to VPC-B CIDR via pcx, route in VPC-B pointing to VPC-A CIDR via pcx, and security groups allowing traffic from the peered CIDR.' },
+      { q: 'Why must NACLs allow ephemeral ports outbound?', a: 'NACLs are stateless. TCP return traffic uses ephemeral ports 1024-65535. Without an outbound allow rule for these ports, responses are dropped at the subnet.' },
+      { q: 'What is the most common VPC peering mistake?', a: 'Adding the peering connection but forgetting to add routes in both VPC route tables. Peering does not auto-add routes -- each VPC needs a manual route entry.' },
+      { q: 'How do you confirm traffic is reaching an EC2 instance from another VPC?', a: 'Enable VPC Flow Logs on the destination ENI. Look for the source IP. ACCEPT = traffic arrives. REJECT = blocked by SG or NACL. No entry = never reaches the instance.' },
+      { q: 'What breaks when a service binds only to 127.0.0.1?', a: 'It is only reachable from the same host. Remote clients and VPC peers get connection refused. Fix: bind to 0.0.0.0 to listen on all interfaces.' },
     ],
     references: [
       'https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html',
@@ -533,6 +587,16 @@ Prevent recurrence:
 - Use \`pg_stat_statements\` in staging with production-like data.`,
       },
     ],
+    quickFire: [
+      { q: 'Most common reason staging passes but prod fails?', a: 'Data volume -- queries that run in 100ms on 10K staging rows take 30s on 100M prod rows. Missing indexes are invisible at small scale.' },
+      { q: 'What is environment parity and why does it matter?', a: 'The degree to which staging matches production in config, data, infrastructure, and dependencies. Low parity means staging gives false confidence about prod behavior.' },
+      { q: 'How do you test with production-representative data without exposing PII?', a: 'Use anonymized production data dumps (mask emails, names, PII fields) or synthetic data generators that match production cardinality and distributions.' },
+      { q: 'What is a canary deployment and how does it help staging-prod gaps?', a: 'Routing a small percentage of real production traffic to the new version. Catches prod-specific failures (real data, real dependencies) before full rollout.' },
+      { q: 'How do feature flags cause staging-prod differences?', a: 'If a flag is on in staging but off in prod (or vice versa), testing staging gives false confidence. Audit flag states as part of deployment checklists.' },
+      { q: 'What is shadow testing?', a: 'Sending a copy of production traffic to the new version in parallel without returning its response to users. Compares responses for correctness with zero user impact.' },
+      { q: 'What infrastructure differences between staging and prod cause hidden bugs?', a: 'Staging often uses a single DB instance; prod uses Multi-AZ, replicas, connection poolers. Race conditions, replication lag, and distributed-state bugs only appear at prod scale.' },
+      { q: 'How do you add an index non-blocking to fix a prod-only slow query?', a: 'CREATE INDEX CONCURRENTLY -- builds without locking the table. Run during low traffic; the query will use the index immediately once built.' },
+    ],
     references: [
       'https://12factor.net/dev-prod-parity',
     ],
@@ -617,6 +681,16 @@ ALTER TABLE orders DROP COLUMN user_id;   -- Safe — no code uses it
 
 This five-phase process takes 3-5 deploys over several days but maintains zero downtime throughout.`,
       },
+    ],
+    quickFire: [
+      { q: 'What is the expand-contract pattern for schema changes?', a: 'Add the new structure alongside the old (expand), deploy code that uses the new structure, then remove the old structure (contract). Decouples migration from deploy.' },
+      { q: 'How do you add a NOT NULL column to a large table without downtime?', a: 'Add as NULLABLE first, backfill in batches with sleep between batches, then add NOT NULL constraint using NOT VALID + VALIDATE CONSTRAINT to avoid a full table lock.' },
+      { q: 'Why is renaming a column the most dangerous migration?', a: 'No atomic rename without a table lock or multi-phase expand-contract. Requires 3-5 deploys: add new column, write both, backfill, drop old column.' },
+      { q: 'What does CREATE INDEX CONCURRENTLY do differently?', a: 'Builds the index without a table lock, allowing concurrent reads and writes throughout. Takes longer but does not block production traffic.' },
+      { q: 'What is gh-ost and how does it differ from pt-osc?', a: 'Both are online MySQL schema change tools. gh-ost streams binary log (no triggers) for zero writes to the original table. pt-osc uses triggers which add write overhead.' },
+      { q: 'Why should you never drop a column in the same deploy as the code change?', a: 'If rollback is needed, the old code tries to read the deleted column and fails. Remove the column only after the new code is fully deployed and verified stable.' },
+      { q: 'What is pgroll?', a: 'A PostgreSQL online schema change tool using a multi-version schema approach -- both old and new schema are active simultaneously, enabling safe multi-version rollouts.' },
+      { q: 'How do you create a unique constraint without locking the table?', a: 'Use CREATE UNIQUE INDEX CONCURRENTLY then ADD CONSTRAINT USING INDEX -- never use ADD CONSTRAINT directly, which takes a full table lock.' },
     ],
     references: [
       'https://www.postgresql.org/docs/current/sql-createindex.html',
@@ -703,6 +777,17 @@ Remediation based on finding:
 - Notification failure: check receiver credentials, webhook URL health
 - Add a Watchdog/dead man's switch alert routed to a dedicated "always notify" receiver`,
       },
+    ],
+    quickFire: [
+      { q: 'First thing to check when an alert did not fire?', a: 'Prometheus Alerts UI -- was the alert ever in a pending or firing state? Then check if the target was being scraped (up{job="..."} metric).' },
+      { q: 'What is a dead man\'s switch alert?', a: 'An always-firing alert (expr: vector(1)) that continuously sends notifications. If it goes quiet, the alerting pipeline itself is broken.' },
+      { q: 'What causes an Alertmanager silence to suppress alerts unexpectedly?', a: 'A silence created during maintenance was never removed. Old silences with broad label matchers continue suppressing alerts long after the maintenance window.' },
+      { q: 'What does the "for" clause in an alerting rule do?', a: 'Delays the alert from firing until the condition is true for the specified duration. Prevents flapping but delays detection -- keep it short (0-2m) for critical alerts.' },
+      { q: 'What is Alertmanager inhibition?', a: 'A rule that suppresses target alerts when a source alert is firing -- e.g., suppress service alerts when the entire cluster is down. Can cause missing alerts if misconfigured.' },
+      { q: 'How do you alert on a metric that disappears entirely?', a: 'Use the absent() function: absent(up{job="api"}) returns 1 when no matching time series exist -- fires when a target stops being scraped.' },
+      { q: 'How do you test a PromQL alerting rule before deploying?', a: 'Run the query directly in the Prometheus UI. Use promtool check rules to validate syntax. Use @ timestamp modifier to evaluate against historical data.' },
+      { q: 'What is the Alertmanager routing tree?', a: 'A hierarchical set of routes that match alerts by label and send them to receivers. The first matching route wins. Misconfigured routes silently drop alerts.' },
+      { q: 'Why might an alert have wrong threshold after a metric rename?', a: 'If a service renames a label (env to environment), all rules matching the old label silently stop matching and never fire.' },
     ],
     references: [
       'https://prometheus.io/docs/alerting/latest/alertmanager/',
@@ -824,6 +909,16 @@ SET enable_seqscan = OFF;   -- Diagnostic only — do not leave on in production
 Permanent fix: increase autovacuum frequency for hot tables, add BRIN or partial indexes for range-based queries, and consider table partitioning for tables exceeding 100M rows.`,
       },
     ],
+    quickFire: [
+      { q: 'What is pg_stat_statements?', a: 'A PostgreSQL extension that aggregates per-query stats: total time, calls, mean time. SELECT * FROM pg_stat_statements ORDER BY total_exec_time DESC finds the worst offenders.' },
+      { q: 'Difference between EXPLAIN and EXPLAIN ANALYZE?', a: 'EXPLAIN shows the estimated plan. EXPLAIN ANALYZE actually executes the query and shows real row counts and timing. Always use ANALYZE to catch wrong optimizer estimates.' },
+      { q: 'What is the N+1 query problem?', a: 'An application issues one query for a list, then one query per item. Fix: use a JOIN or batch load (SELECT WHERE id IN (...)) to reduce N+1 queries to 1-2.' },
+      { q: 'How do you safely run EXPLAIN ANALYZE on an UPDATE in production?', a: 'Wrap it in a transaction: BEGIN; EXPLAIN ANALYZE UPDATE ...; ROLLBACK; -- this executes the mutation but rolls it back, showing the real plan without committing changes.' },
+      { q: 'What does log_min_duration_statement do?', a: 'Logs any query exceeding the threshold in milliseconds. Set to 1000 in production to catch slow queries without excessive log volume.' },
+      { q: 'What is a covering index?', a: 'An index that includes all columns needed by a query (WHERE + SELECT columns). The DB satisfies the query entirely from the index without accessing the table heap.' },
+      { q: 'Why is adding an index on a boolean column often useless?', a: 'Low selectivity -- a column that is 90% true means the optimizer returns a large fraction of rows and prefers a sequential scan over an index scan.' },
+      { q: 'A query was fast and now takes 30s with no code change. What happened?', a: 'Either data volume crossed a threshold changing the optimizer plan, statistics became stale, or a lock is blocking it. Check pg_stat_activity for wait_event_type = Lock first.' },
+    ],
     references: [
       'https://www.postgresql.org/docs/current/pgstatstatements.html',
       'https://use-the-index-luke.com/',
@@ -908,6 +1003,16 @@ Long-term fix:
 - Fix connection leaks: ensure connections are always closed in \`finally\` blocks or use context managers (\`with\` statements).`,
       },
     ],
+    quickFire: [
+      { q: 'What SQL shows current connection counts by state?', a: 'SELECT count(*), state FROM pg_stat_activity GROUP BY state -- idle in transaction connections are a leak signal.' },
+      { q: 'What is PgBouncer transaction mode?', a: 'Assigns a database connection only during an active transaction. Allows many app connections to share few DB connections. Incompatible with prepared statements and session-level settings.' },
+      { q: 'How do you calculate the right connection pool size?', a: 'Empirical rule: (core_count * 2) + spindle_count per DB server. Total across all app instances must stay below max_connections minus reserved admin connections.' },
+      { q: 'What is a connection leak and how do you detect it?', a: 'App opens connections but fails to close them on error paths. Detect with pg_stat_activity: count of idle or idle-in-transaction connections that grow over time.' },
+      { q: 'What is RDS Proxy and why use it with Lambda?', a: 'AWS-managed connection pooler. Lambda cannot maintain persistent connections between invocations -- RDS Proxy multiplexes thousands of Lambda connections onto a small DB connection pool.' },
+      { q: 'What is max_connections in PostgreSQL?', a: 'Hard limit on simultaneous DB connections. Exceeding it causes FATAL: sorry, too many clients already. Default is often 100 on smaller RDS instance types.' },
+      { q: 'How do you immediately free idle connections during a crisis?', a: 'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = \'idle\' AND query_start < now() - interval \'5 minutes\' -- terminates long-idle connections.' },
+      { q: 'What idle timeout settings prevent connection pool buildup?', a: 'Set idleTimeoutMillis in the app pool config (e.g., 30000ms) and idle_session_timeout in PostgreSQL. Both must be configured to reclaim idle connections.' },
+    ],
     references: [
       'https://wiki.postgresql.org/wiki/Number_Of_Database_Connections',
       'https://www.pgbouncer.org/config.html',
@@ -988,6 +1093,16 @@ Step 4 — Fix and verify:
 
 Deploy the fix and monitor the memory growth curve — it should flatten within the first hour.`,
       },
+    ],
+    quickFire: [
+      { q: 'How do you confirm a memory leak vs a large stable cache?', a: 'Plot RSS over 24+ hours. A true leak shows a steady non-plateauing slope. A cache fills and stabilizes.' },
+      { q: 'What does OOMKilled exit code 137 mean in Kubernetes?', a: 'The container exceeded its memory limit and was killed by SIGKILL. kubectl describe pod shows OOMKilled in Last State.' },
+      { q: 'How do you take a heap dump from a JVM in production?', a: 'Add -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof at JVM startup. Or: jcmd <pid> GC.heap_dump /tmp/dump.hprof at runtime.' },
+      { q: 'What Go tool diagnoses a heap memory leak?', a: 'go tool pprof http://service/debug/pprof/heap -- requires importing net/http/pprof. Compare two snapshots with -base flag to see which allocations grew.' },
+      { q: 'Common cause of memory leak in Node.js?', a: 'Event listener accumulation -- adding listeners to emitters without a matching removeListener call. Each listener holds a closure reference keeping objects alive.' },
+      { q: 'What is the difference between heap and RSS in JVM?', a: 'RSS includes heap plus metaspace, off-heap buffers, JIT code cache, thread stacks, and native libraries. Off-heap leaks (Netty direct buffers) do not appear in heap analysis.' },
+      { q: 'What is tracemalloc in Python?', a: 'A stdlib module that tracks memory allocations: tracemalloc.start(), take snapshots, compare with snapshot.compare_to() to find which allocation sites are growing.' },
+      { q: 'Wrong fix for a memory leak?', a: 'Increasing the container memory limit. This buys time but the leak eventually exhausts any limit. Always diagnose and fix the root allocation site.' },
     ],
     references: [
       'https://nodejs.org/en/docs/guides/diagnostics/memory/using-heap-profiler',
@@ -1077,6 +1192,16 @@ kubectl run debug --image=<same-image> --rm -it -- /bin/sh
 Start the application manually and observe the error. Useful when the crash happens before any logs are emitted.`,
       },
     ],
+    quickFire: [
+      { q: 'First command for a CrashLoopBackOff pod?', a: 'kubectl logs <pod> --previous -- shows logs from the crashed container. Without --previous you see the current (just-started) container which may have no logs yet.' },
+      { q: 'What does exit code 137 mean in a Kubernetes pod?', a: 'OOMKilled -- container exceeded its memory limit. kubectl describe pod shows OOMKilled in Last State. Fix: increase memory limit or find the memory leak.' },
+      { q: 'What does exit code 1 mean in a Kubernetes pod?', a: 'General application error. Check --previous logs for the exception stack trace, missing config file, or connection refused error that caused the crash.' },
+      { q: 'How does a misconfigured liveness probe cause CrashLoopBackOff?', a: 'If initialDelaySeconds is too short, the probe checks before the app finishes starting, fails consecutively, and Kubernetes kills a healthy container in a loop.' },
+      { q: 'How do you debug an init container that is blocking startup?', a: 'kubectl logs <pod> -c <init-container-name> --previous -- init container logs are separate from the main container logs.' },
+      { q: 'What does kubectl describe pod show that logs do not?', a: 'Exit codes, restart counts, OOMKilled status, events (image pull errors, volume mount failures, OOM events), and probe configuration.' },
+      { q: 'How do you run a debug shell in the same image that is crashing?', a: 'kubectl run debug --image=<same-image> --rm -it -- /bin/sh -- starts the app manually so you can observe the error before the container exits.' },
+      { q: 'What is exit code 143 in a Kubernetes container?', a: 'The container received SIGTERM -- graceful termination signal. Usually from a deliberate pod deletion or rolling update, not a crash.' },
+    ],
     references: [
       'https://kubernetes.io/docs/tasks/debug/debug-application/debug-running-pod/',
       'https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes',
@@ -1163,6 +1288,16 @@ Add \`nodeSelector\` or \`nodeAffinity\` to schedule the pod on a larger instanc
 
 Root cause prevention: use VPA (Vertical Pod Autoscaler) in recommendation mode to right-size requests based on actual usage patterns.`,
       },
+    ],
+    quickFire: [
+      { q: 'First command when a pod is stuck Pending?', a: 'kubectl describe pod <name> -- the Events section shows exactly why: "0/3 nodes available: 3 Insufficient memory" or taint mismatch.' },
+      { q: 'Does the Kubernetes scheduler use requests or limits for placement?', a: 'Requests only. A node can be at 30% actual CPU but 100% CPU request allocation -- it still rejects new pods even though it has spare actual capacity.' },
+      { q: 'What is a taint and toleration?', a: 'Taints on nodes repel pods that lack matching tolerations. Check node taints with: kubectl describe node | grep Taint. Add tolerations to the pod spec to allow scheduling.' },
+      { q: 'Why is a pod Pending if its PVC is Pending?', a: 'A pod cannot start until all its PVCs are bound to PVs. PVCs stay Pending when no PV matches the storage class, access mode, or capacity request.' },
+      { q: 'What is Cluster Autoscaler and what triggers it?', a: 'Watches for Pending pods and provisions new nodes to satisfy requests. If pods stay Pending for more than a few minutes, check CA logs for why it is not scaling.' },
+      { q: 'How do you check how much of a node\'s resources are already allocated?', a: 'kubectl describe node | grep -A 5 "Allocated resources" -- shows CPU/memory requests as a percentage of allocatable capacity.' },
+      { q: 'What is TopologySpreadConstraints?', a: 'Spreads pods across zones, nodes, or topology keys. If constraints cannot be satisfied (too few nodes in a zone for the required maxSkew), pods remain Pending.' },
+      { q: 'What is the risk of setting resource requests equal to limits?', a: 'Nodes fill up on paper at lower actual utilization. Pods with high requests but low actual usage leave the cluster over-provisioned on paper and under-utilized in practice.' },
     ],
     references: [
       'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/',
@@ -1251,6 +1386,16 @@ kubectl describe hpa <name>      # Full conditions including error messages
 \`\`\`
 The describe output shows \`FailedGetScale\` or \`AbleToScale\` conditions with detailed messages about why metrics are unavailable.`,
       },
+    ],
+    quickFire: [
+      { q: 'What does TARGETS unknown/unknown mean in kubectl get hpa?', a: 'HPA cannot retrieve the metric. Usually Metrics Server is not installed, resource requests are not set on the pods, or a custom metrics adapter is missing.' },
+      { q: 'Why must pods have resource requests for CPU-based HPA?', a: 'HPA computes CPU utilization as a percentage of the request. Without a request (the denominator), utilization cannot be calculated -- HPA shows unknown.' },
+      { q: 'Why does HPA not scale down immediately when load drops?', a: 'Default scale-down stabilization window is 300 seconds (5 minutes). The metric must stay below threshold for the full window to prevent thrashing.' },
+      { q: 'What is KEDA and when is it better than HPA?', a: 'Kubernetes Event-Driven Autoscaler. Scales on external metrics like SQS queue depth, Kafka lag, or Redis list length. Can scale to zero -- HPA cannot.' },
+      { q: 'What is the Metrics Server?', a: 'Cluster-wide aggregator of resource usage data, required for kubectl top and CPU/memory HPA. Install with Helm. Without it, kubectl top nodes fails.' },
+      { q: 'Why is setting HPA target at 90% CPU dangerous?', a: 'Pods are nearly saturated before new ones are added. By the time new pods are scheduled (30-60s), existing pods are overloaded. Use 50-70% for adequate scale-up headroom.' },
+      { q: 'What command watches HPA metrics update in real time?', a: 'kubectl get hpa <name> -w -- shows current vs target metrics live as they update.' },
+      { q: 'How do you scale based on a custom business metric with HPA?', a: 'Deploy the Prometheus Adapter to expose Prometheus metrics to the Kubernetes custom metrics API, then reference the metric name in the HPA spec.' },
     ],
     references: [
       'https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/',

@@ -15,7 +15,6 @@ import VisitorCountLine from '../components/landing/VisitorCountLine';
 import SkillDrift from '../components/landing/SkillDrift';
 import MagneticCTA from '../components/landing/MagneticCTA';
 import { Container, Section, Eyebrow, SectionHeading, CTAButton, SurfaceCard, Pill } from '../components/marketing/primitives';
-import { cn } from '../utils/cn';
 
 /* ══════════════════════════════════════════════════════════════
    CAMORA LANDING PAGE — enterprise redesign.
@@ -30,6 +29,7 @@ type Step = {
   Anim: () => JSX.Element;
   icon: JSX.Element;
   color: string;
+  cta: string;
 };
 
 const Glyph = (path: JSX.Element) => (
@@ -43,7 +43,8 @@ const APPA: Step[] = [
     key: 'apply', label: 'Apply', href: '/jobs',
     headline: 'Roles matched to your skills',
     desc: '1,000+ matched roles · tailored resume + cover letter',
-    color: '#3B82F6',
+    color: 'var(--cam-primary)',
+    cta: 'Find roles',
     Anim: ApplyAnim,
     icon: Glyph(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 12h6M9 8h6M9 16h3" /></>),
   },
@@ -51,7 +52,8 @@ const APPA: Step[] = [
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
     headline: '978+ curated study topics',
     desc: 'System design, DSA, behavioral, databases · diagrams included',
-    color: '#10B981',
+    color: 'var(--cam-gold-leaf)',
+    cta: 'Start studying',
     Anim: PrepareAnim,
     icon: Glyph(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>),
   },
@@ -59,7 +61,8 @@ const APPA: Step[] = [
     key: 'practice', label: 'Practice', href: '/capra/practice',
     headline: '9,500+ problems with AI feedback',
     desc: 'Coding, DSA, MCQ, SQL · 50+ domains · AI scoring',
-    color: '#F59E0B',
+    color: 'var(--cam-primary-dk)',
+    cta: 'Browse problems',
     Anim: PracticeAnim,
     icon: Glyph(<><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /><line x1="14.5" y1="4" x2="9.5" y2="20" /></>),
   },
@@ -67,7 +70,8 @@ const APPA: Step[] = [
     key: 'attend', label: 'Attend', href: '/lumora',
     headline: 'Real-time AI in the room',
     desc: 'Voice → instant AI answers · diagrams, code, STAR',
-    color: '#8B5CF6',
+    color: 'var(--cam-primary-lt)',
+    cta: 'Try live AI',
     Anim: AttendAnim,
     icon: Glyph(<><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>),
   },
@@ -201,9 +205,6 @@ function Reveal({ children, className, delay = 0 }: { children: React.ReactNode;
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      // emil-design-eng: stronger ease-out (cubic-bezier(0.23, 1, 0.32, 1)) and
-      // sub-300ms duration. The previous 0.45s tween with the default soft curve
-      // is the recognizable AI/Framer reveal — recognizable means slop.
       transition={{ duration: 0.28, delay, ease: [0.23, 1, 0.32, 1] }}
       className={className}
     >
@@ -276,22 +277,11 @@ export default function LandingPage() {
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
             >
               <span className="block text-[var(--text-primary)]">All your prep.</span>
-              <span
-                className="block"
-                style={{
-                  background: 'linear-gradient(120deg, #3683DC 0%, #1E56B5 40%, #6366F1 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                One trusted platform.
-              </span>
+              <span className="block text-[var(--cam-primary)]">One trusted platform.</span>
             </motion.h1>
 
             <motion.p
-              className="mt-6 leading-relaxed text-[var(--text-secondary)] whitespace-nowrap"
-              style={{ fontSize: 'clamp(11px, 1.55vw, 18px)' }}
+              className="mt-6 text-base sm:text-lg leading-relaxed text-[var(--text-secondary)]"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
@@ -334,7 +324,7 @@ export default function LandingPage() {
           <div className="relative mt-6 overflow-hidden">
             <div className="absolute left-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-r from-[var(--bg-surface)] to-transparent" />
             <div className="absolute right-0 inset-y-0 w-12 sm:w-24 z-10 bg-gradient-to-l from-[var(--bg-surface)] to-transparent" />
-            <div className="flex" style={{ animation: 'scroll-logos 36s linear infinite', width: 'max-content' }}>
+            <div className="cam-logo-scroll flex" style={{ animation: 'scroll-logos 36s linear infinite', width: 'max-content' }}>
               {[...COMPANY_LOGOS, ...COMPANY_LOGOS].map((c, i) => (
                 <img
                   key={`${c}-${i}`}
@@ -347,7 +337,10 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <style>{`@keyframes scroll-logos { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          <style>{`
+            @keyframes scroll-logos { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+            @media (prefers-reduced-motion: reduce) { .cam-logo-scroll { animation: none !important; } }
+          `}</style>
         </Container>
       </section>
 
@@ -380,17 +373,15 @@ export default function LandingPage() {
                     <Link
                       key={step.key}
                       to={step.href}
-                      className="group relative flex flex-col gap-3 px-5 py-6 transition-colors duration-200"
+                      className="group relative flex flex-col gap-3 px-5 py-6 transition-colors duration-200 hover:bg-[var(--accent-subtle)]"
                       style={{
                         borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
                         borderTop: `3px solid ${step.color}`,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-subtle)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                     >
                       <span
                         className="text-[52px] font-bold leading-none select-none"
-                        style={{ color: `${step.color}28`, fontFamily: 'var(--font-code)', letterSpacing: '-0.04em' }}
+                        style={{ color: step.color, opacity: 0.2, fontFamily: 'var(--font-code)', letterSpacing: '-0.04em' }}
                       >
                         0{i + 1}
                       </span>
@@ -412,7 +403,7 @@ export default function LandingPage() {
                         className="text-[12px] font-bold inline-flex items-center gap-1 mt-auto transition-colors duration-150"
                         style={{ color: step.color, fontFamily: 'var(--font-code)', letterSpacing: '0.04em' }}
                       >
-                        Explore
+                        {step.cta}
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-0.5">
                           <path d="M2 6h8M6.5 2.5L10 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -468,23 +459,22 @@ export default function LandingPage() {
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
                 <Reveal key={f.title} delay={i * 0.06}>
-                  <SurfaceCard interactive padding="lg" className="h-full group border-l-2 border-[var(--accent)]">
-                    <Eyebrow tone="accent">{f.label}</Eyebrow>
-                    <h3 className="mt-2 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
+                  <SurfaceCard interactive padding="lg" className="h-full group border-t-2 border-[var(--accent)]">
+                    <div className="flex items-center justify-between gap-2">
+                      <Eyebrow tone="accent">{f.label}</Eyebrow>
+                      <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--cam-primary)] whitespace-nowrap">{f.stat} {f.statLabel}</span>
+                    </div>
+                    <h3 className="mt-3 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
                       {f.title}
                     </h3>
                     <ul className="mt-3 space-y-1.5">
                       {f.bullets.map((b) => (
-                        <li key={b} className="flex items-start gap-2 text-[15px] text-[var(--text-secondary)]">
-                          <span className="mt-[3px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                        <li key={b} className="flex items-start gap-2 text-base text-[var(--text-secondary)]">
+                          <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
                           {b}
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-5 pt-5 border-t border-[var(--border)] flex items-baseline gap-2">
-                      <span className="font-mono text-[22px] font-bold text-[var(--accent)]">{f.stat}</span>
-                      <span className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--text-muted)]">{f.statLabel}</span>
-                    </div>
                   </SurfaceCard>
                 </Reveal>
             ))}
@@ -549,7 +539,7 @@ export default function LandingPage() {
           <div className="mt-14 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
             <AudienceCard
               title="Roles, practice & live AI"
-               body="Matched roles, curated study topics, 9,500+ problems, and live AI when it counts most."
+              body="Matched roles, curated study topics, 9,500+ problems, and live AI when it counts most."
               ctaLabel={isAuthenticated ? 'Open dashboard' : 'Start free'}
               ctaHref="/capra/prepare"
             />
@@ -558,7 +548,6 @@ export default function LandingPage() {
               body="Sponsor contests, surface ready candidates, shorten time-to-hire."
               ctaLabel="Explore partnerships"
               ctaHref="/pricing"
-              tone="dark"
             />
           </div>
         </Container>
@@ -577,7 +566,7 @@ export default function LandingPage() {
             {TESTIMONIALS.map((t, i) => (
               <Reveal key={t.name} delay={i * 0.05}>
                 <div
-                  className="h-full rounded-2xl p-6 flex flex-col gap-4"
+                  className="h-full rounded-2xl p-6 flex flex-col gap-4 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--border-hover)] hover:shadow-[0_4px_8px_rgba(11,13,17,0.06),0_16px_32px_-12px_rgba(11,13,17,0.14)]"
                   style={{
                     background: 'var(--bg-elevated)',
                     border: '1px solid var(--border)',
@@ -586,7 +575,7 @@ export default function LandingPage() {
                   <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
                     <path d="M0 14V9.33C0 7.96 0.31 6.64 0.93 5.37 1.55 4.1 2.39 2.97 3.45 1.98 4.51 0.99 5.72 0.33 7.08 0L8.33 1.98C7.22 2.37 6.27 3.01 5.48 3.9 4.69 4.79 4.2 5.79 4.02 6.88H6.67V14H0ZM11.67 14V9.33C11.67 7.96 11.98 6.64 12.6 5.37 13.22 4.1 14.06 2.97 15.12 1.98 16.18 0.99 17.39 0.33 18.75 0L20 1.98C18.89 2.37 17.94 3.01 17.15 3.9 16.36 4.79 15.87 5.79 15.69 6.88H18.33V14H11.67Z" fill="var(--cam-gold-leaf, #d4a043)" opacity="0.5"/>
                   </svg>
-                  <p className="flex-1 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                  <p className="flex-1 text-base leading-relaxed text-[var(--text-secondary)]">
                     {t.text}
                   </p>
                   <div className="flex items-center gap-3">
@@ -619,7 +608,7 @@ export default function LandingPage() {
             {/* Animated aurora gradient */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 opacity-70"
+              className="cam-cta-aurora absolute inset-0 opacity-70"
               style={{
                 background:
                   'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(37,99,235,0.16), transparent 55%),' +
@@ -642,7 +631,7 @@ export default function LandingPage() {
             {/* Decorative glow ring */}
             <div
               aria-hidden="true"
-              className="absolute pointer-events-none"
+              className="cam-cta-ring absolute pointer-events-none"
               style={{
                 width: 320, height: 320, borderRadius: '50%',
                 border: '1px solid rgba(37,99,235,0.12)',
@@ -654,13 +643,13 @@ export default function LandingPage() {
             />
             {/* Floating decorative particles */}
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-              <span className="absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
+              <span className="cam-cta-float absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
                 style={{ background: 'rgba(37,99,235,0.45)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
               />
-              <span className="absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
+              <span className="cam-cta-float absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
                 style={{ background: 'rgba(212,160,67,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
               />
-              <span className="absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
+              <span className="cam-cta-float absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
                 style={{ background: 'rgba(37,99,235,0.28)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
               />
             </div>
@@ -702,6 +691,9 @@ export default function LandingPage() {
                 0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
                 50%      { transform: translateY(-16px) scale(1.2); opacity: 1; }
               }
+              @media (prefers-reduced-motion: reduce) {
+                .cam-cta-aurora, .cam-cta-ring, .cam-cta-float { animation: none !important; }
+              }
             `}</style>
           </div>
         </Container>
@@ -713,22 +705,15 @@ export default function LandingPage() {
 }
 
 function AudienceCard({
-  eyebrow, title, body, ctaLabel, ctaHref, tone = 'light',
+  title, body, ctaLabel, ctaHref,
 }: {
-  eyebrow?: string; title: string; body: string; ctaLabel: string; ctaHref: string; tone?: 'light' | 'dark';
+  title: string; body: string; ctaLabel: string; ctaHref: string;
 }) {
-  const dark = tone === 'dark';
   return (
     <Reveal>
-      <div
-        className={cn(
-          'relative h-full overflow-hidden rounded-3xl border p-8 md:p-10',
-          'bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-primary)]',
-        )}
-      >
+      <div className="relative h-full overflow-hidden rounded-3xl border p-8 md:p-10 bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-primary)]">
         <div className="relative">
-          <Eyebrow tone="accent">{eyebrow}</Eyebrow>
-          <h3 className="mt-3 font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-tight text-[var(--text-primary)]">
+          <h3 className="font-display text-[24px] md:text-[28px] font-semibold tracking-tight leading-tight text-[var(--text-primary)]">
             {title}
           </h3>
           <p className="mt-4 max-w-prose text-[14.5px] leading-relaxed text-[var(--text-secondary)]">

@@ -941,6 +941,31 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html',
       'https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/welcome.html',
     ],
+    visualizations: [
+      {
+        title: 'Multi-VPC Connectivity Architecture',
+        description: `AWS VPC Advanced covers the set of patterns engineers reach for once a single VPC is no longer sufficient. The two primary building blocks are VPC Peering and Transit Gateway, and choosing between them is the first architectural decision.
+
+VPC Peering creates a direct, non-transitive routing path between exactly two VPCs. Both VPCs must have non-overlapping CIDRs, and route tables on both sides must be updated manually. Because peering is non-transitive, a spoke A cannot reach spoke B through a shared hub -- each pair needs its own peering connection. This works well up to about five VPCs but produces N*(N-1)/2 connections at full mesh, which becomes unmanageable quickly.
+
+Transit Gateway replaces the mesh with a hub-and-spoke model. Every VPC attaches to the TGW with one or more ENIs per AZ. The TGW maintains its own route tables, and each attachment associates with one route table and optionally propagates its CIDR into others. This means you can enforce isolation between environments (production, staging, dev) by placing their attachments in separate route tables with no cross-propagation -- dev traffic is dropped at the TGW router without needing security group rules between every pair.
+
+Two advanced patterns build on TGW. Centralized egress places NAT gateways in a dedicated egress VPC. All spoke VPC route tables point their 0.0.0.0/0 default route to the TGW, which forwards to the egress VPC attachment, then out through NAT. This eliminates one NAT gateway per AZ per spoke VPC -- for a 20-VPC organization the savings can exceed 80% of NAT gateway hourly charges. Centralized inspection adds a security VPC with a Gateway Load Balancer fleet. TGW route tables send all inter-VPC and egress traffic through the inspection VPC before delivery. Appliance mode must be enabled on the inspection VPC attachment so stateful firewalls see both directions of each flow on the same appliance instance.
+
+Key tradeoffs: TGW adds a routing hop (~1ms) and has an attachment bandwidth ceiling. VPC peering has lower latency and no bandwidth limit but does not scale operationally. TGW inter-region peering uses static routes only -- no dynamic propagation across regions. The default TGW configuration puts all attachments in one route table with full transitive routing -- disable this default and build explicit segmentation from day one.`,
+      },
+    ],
+    quickFire: [
+      { q: 'Is VPC Peering transitive?', a: 'No. VPC A peered with VPC B and VPC B peered with VPC C does not allow A to reach C. Each pair needs its own peering connection.' },
+      { q: 'What is the maximum number of VPC attachments per Transit Gateway?', a: '5,000 VPC attachments per TGW.' },
+      { q: 'What does appliance mode do on a TGW attachment?', a: 'It pins both directions of a flow to the same AZ attachment, ensuring stateful inspection appliances see both request and response packets.' },
+      { q: 'What problem does centralized egress solve?', a: 'It eliminates NAT gateways in every spoke VPC, concentrating egress through one shared NAT VPC and reducing hourly NAT gateway charges significantly.' },
+      { q: 'When must you use TGW appliance mode?', a: 'When routing traffic through stateful firewalls or IDS/IPS in a centralized inspection VPC -- without it, asymmetric routing breaks stateful inspection.' },
+      { q: 'Does TGW inter-region peering support dynamic route propagation?', a: 'No. Routes across TGW peering connections must be added as static routes on both ends.' },
+      { q: 'What tool validates network paths between VPCs?', a: 'AWS Network Manager Reachability Analyzer -- it programmatically checks whether a packet can travel from a source to a destination through the network topology.' },
+      { q: 'What is the default TGW routing behavior you should disable?', a: 'By default all attachments associate with and propagate to a single route table, giving all VPCs full transitive access. Disable default association and propagation and build explicit segmented route tables from the start.' },
+      { q: 'How does a transit VIF differ from a private VIF on Direct Connect?', a: 'A private VIF connects to a single VPC Virtual Private Gateway. A transit VIF connects to a Direct Connect Gateway linked to a TGW, enabling access to all TGW-attached VPCs across regions through one connection.' },
+    ],
   },
   {
     id: 'aws-cloudfront',
@@ -977,6 +1002,31 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html',
       'https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions.html',
+    ],
+    visualizations: [
+      {
+        title: 'CloudFront Edge Delivery Architecture',
+        description: `Amazon CloudFront sits in front of every origin -- S3, ALB, API Gateway, or any HTTP server -- and serves requests from the nearest of its 450-plus edge Points of Presence. The core data flow is: user DNS resolves to the nearest edge PoP via anycast, the edge checks its cache using the configured cache key, a hit returns immediately, a miss fetches from origin and caches the response per the TTL rules.
+
+A distribution maps one or more origins to cache behaviors, where each behavior is a path-pattern rule evaluated in priority order. The default behavior (/) catches everything not matched by a specific pattern. Static assets like JS and CSS typically get a long TTL (1 year) combined with content-hashed filenames for instant cache busting. HTML files get a short TTL or Cache-Control: no-cache so that new deployments are reflected quickly. API paths use a pass-through behavior with no caching and forward all headers.
+
+Origin Access Control (OAC) is the modern pattern for private S3 buckets. OAC gives CloudFront a signed identity; the S3 bucket policy allows only requests signed by that specific distribution ARN. This keeps S3 completely private while allowing CloudFront to serve its contents globally.
+
+Edge compute comes in two flavors. CloudFront Functions run JavaScript at every edge PoP with sub-millisecond execution and 2MB memory. They only fire on viewer request and viewer response events. Lambda@Edge runs Node.js or Python at ~13 regional edge locations with up to 10 seconds execution time and network access -- required for auth flows, OAuth callbacks, and any logic that calls external services.
+
+WAF attaches at the CloudFront layer for global DDoS protection and rate limiting before traffic ever reaches the origin. Combined with Shield Advanced, this provides the standard defense posture for public-facing applications. CloudFront access logs go to S3 for batch analysis or to Kinesis Data Streams for real-time dashboards with sub-second latency.`,
+      },
+    ],
+    quickFire: [
+      { q: 'How many edge locations does CloudFront have in 2026?', a: 'Over 450 Points of Presence across 90+ cities in 47 countries.' },
+      { q: 'What is Origin Access Control and why use it?', a: 'OAC gives CloudFront a signed identity to access a private S3 bucket. The bucket stays fully private; only requests signed by the specific distribution ARN are allowed -- prevents direct S3 URL access.' },
+      { q: 'What is the difference between Lambda@Edge and CloudFront Functions?', a: 'CloudFront Functions run at every PoP, cost 20x less, execute in under 1ms but have no network access. Lambda@Edge runs at ~13 regional locations, supports all 4 event types, can make network calls, and is needed for auth flows.' },
+      { q: 'How do you prevent stale HTML after a deployment?', a: 'Set HTML TTL to 0 or use Cache-Control: no-cache. For JS/CSS, use content-hashed filenames and set TTL to 1 year -- the hash change acts as a cache buster without needing manual invalidations.' },
+      { q: 'What HTTP status codes should trigger CloudFront origin failover?', a: '500, 502, 503, and 504 -- server-side errors indicating the primary origin is unavailable. Client errors like 404 should not trigger failover.' },
+      { q: 'What controls the CloudFront cache key?', a: 'The cache policy -- it defines which headers, cookies, and query strings are part of the key. Including unnecessary values fragments the cache and reduces hit ratio.' },
+      { q: 'How do you handle SPA deep links on CloudFront + S3?', a: 'Configure a custom error response that maps 403 and 404 status codes to /index.html with a 200 response -- the React router handles the path client-side.' },
+      { q: 'What event types can Lambda@Edge intercept?', a: 'Four events: viewer request, viewer response, origin request, and origin response. CloudFront Functions only support viewer request and viewer response.' },
+      { q: 'How do you attach WAF to CloudFront?', a: 'Create a WAF Web ACL in us-east-1 (CloudFront requires us-east-1 for WAF) and associate it with the CloudFront distribution. WAF rules apply globally at every edge PoP.' },
     ],
   },
   {
@@ -1015,6 +1065,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html',
       'https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html',
     ],
+    visualizations: [
+      {
+        title: 'Route 53 Traffic Flow and Routing Policies',
+        description: `Amazon Route 53 is AWS's authoritative DNS service but its real power lies in the routing policy layer that sits above basic name resolution.
+
+The fundamental concept is a hosted zone -- a container for DNS records for a domain. Public hosted zones serve the internet. Private hosted zones associate with one or more VPCs and resolve names only within those VPCs, enabling internal service discovery without a separate DNS infrastructure.
+
+Alias records are the AWS-specific extension that separates Route 53 from standard DNS providers. Unlike CNAME records, alias records work at the zone apex (example.com, not sub.example.com), incur no additional DNS query charges, and automatically track the IP address changes of the underlying AWS resource (ALB, CloudFront, API Gateway, S3 website). Always use alias records for AWS resources.
+
+The six routing policies serve distinct use cases. Simple routes to a single resource with no logic. Weighted splits traffic by percentage -- useful for canary deployments and gradual region migrations. Latency routes to the region with the lowest measured round-trip latency for the requesting resolver -- the standard policy for multi-region active-active. Failover designates primary and secondary records; Route 53 serves the secondary only when the primary health check fails. Geolocation routes based on the geographic origin of the DNS query -- used for compliance (EU users must hit EU infrastructure), content localization, and restricted distribution. Multivalue returns up to eight healthy records, providing basic client-side load balancing.
+
+Health checks are the engine behind failover and latency routing. Route 53 health checkers from six to eight AWS regions probe the endpoint on the configured protocol and port. Three consecutive failures (configurable) mark the record unhealthy and remove it from DNS responses. The TTL on the record determines how quickly client resolvers pick up the change -- set it to 60 seconds for fast failover. Health check endpoints should test application-level health, not just TCP connectivity.
+
+Route 53 Resolver enables hybrid DNS. Inbound endpoints accept queries from on-premises DNS servers forwarded over Direct Connect or VPN. Outbound endpoints forward queries for specified on-premises domains to on-premises DNS servers via resolver rules.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between an alias record and a CNAME?', a: 'Alias records work at the zone apex, track AWS resource IPs automatically, and have no extra query charge. CNAMEs cannot be used at the zone apex and always incur a DNS lookup cost.' },
+      { q: 'What routing policy do you use for multi-region active-active?', a: 'Latency-based routing with health checks -- routes users to the lowest-latency region and automatically removes failing regions from DNS responses.' },
+      { q: 'What is the TTL you should set for failover records?', a: '60 seconds -- balances fast failover propagation against resolver cache pressure. Lower TTLs increase DNS query volume.' },
+      { q: 'What is the difference between latency routing and geolocation routing?', a: 'Latency routing picks the region with the lowest measured network latency. Geolocation routing picks based on where the user is located geographically, regardless of actual latency -- used for compliance.' },
+      { q: 'How many Route 53 health check regions probe an endpoint?', a: 'Between 6 and 8 AWS regions by default, configurable. The endpoint is marked unhealthy only when a threshold percentage of checkers agree it has failed.' },
+      { q: 'What are Route 53 Resolver inbound and outbound endpoints for?', a: 'Inbound endpoints allow on-premises DNS servers to resolve AWS private hosted zone names. Outbound endpoints allow VPC resources to resolve on-premises hostnames by forwarding queries to on-premises DNS servers.' },
+      { q: 'How do you migrate a domain to Route 53 with zero downtime?', a: 'Reduce TTL at the current registrar to 60s, wait for old TTL to expire, populate all records in Route 53, test against Route 53 nameservers directly, then update the registrar nameservers to Route 53.' },
+      { q: 'What is a calculated health check?', a: 'A health check that aggregates multiple child health checks using AND/OR/NOT logic -- used to mark a region healthy only when all critical components (app, database) are healthy.' },
+      { q: 'Can Route 53 health checks monitor CloudWatch alarms?', a: 'Yes -- Route 53 supports CloudWatch metric health checks that mark a record unhealthy when a CloudWatch alarm enters ALARM state, enabling application-level health signals to drive DNS failover.' },
+    ],
   },
   {
     id: 'aws-elb',
@@ -1051,6 +1128,33 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html',
       'https://docs.aws.amazon.com/elasticloadbalancing/latest/network/introduction.html',
+    ],
+    visualizations: [
+      {
+        title: 'ELB Types and Request Routing Architecture',
+        description: `AWS Elastic Load Balancing offers three distinct load balancer types, each optimized for a different layer of the network stack.
+
+Application Load Balancer operates at Layer 7 (HTTP/HTTPS). It inspects the full HTTP request and routes based on host headers, path patterns, query strings, HTTP methods, and source IPs. Listener rules are evaluated in priority order -- the first matching rule wins. Target groups hold the actual compute targets (EC2 instances, ECS tasks, Lambda functions, or IP addresses), and each rule action can forward, redirect, or return a fixed response. ALB natively supports WebSocket, HTTP/2, and gRPC. It integrates with Cognito and OIDC for built-in authentication. ALB IP addresses change dynamically -- never hardcode them.
+
+Network Load Balancer operates at Layer 4 (TCP/UDP/TLS). It is designed for extreme throughput -- millions of requests per second with single-digit millisecond latency. NLB provides static Elastic IP addresses per AZ, making it the only choice when partners need to allowlist IP addresses. NLB preserves the client source IP natively. It is the required frontend for AWS PrivateLink endpoint services.
+
+Gateway Load Balancer enables transparent inline inspection. Using GENEVE encapsulation on UDP port 6081, it distributes packets to a fleet of virtual appliances (firewalls, IDS/IPS) without changing source or destination IPs. The original packet is preserved end-to-end through the appliance. GWLB is deployed in a security VPC and integrated with Transit Gateway for centralized inspection across all VPCs.
+
+Target group health checks are the mechanism that removes unhealthy targets from rotation. The health check path should test application-layer health -- not a static file. The healthy/unhealthy thresholds and interval determine how quickly targets are removed and reinstated. Connection draining (deregistration delay) lets in-flight requests complete before a target is removed -- set it to match your maximum request duration.
+
+For deployments, ALB weighted target groups enable gradual traffic shifting between blue and green target groups without DNS changes, giving precise control over rollout speed and instant rollback capability.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What layer does ALB operate at vs NLB?', a: 'ALB operates at Layer 7 (HTTP/HTTPS application layer). NLB operates at Layer 4 (TCP/UDP transport layer).' },
+      { q: 'Which load balancer provides static Elastic IP addresses?', a: 'NLB -- one Elastic IP per AZ. ALB IPs are dynamic and change over time. Use NLB when partners need to allowlist specific IPs.' },
+      { q: 'Does NLB preserve the client source IP?', a: 'Yes -- NLB preserves the original client source IP by default. ALB replaces it with the ALB IP (use X-Forwarded-For header to access the original).' },
+      { q: 'What is connection draining (deregistration delay)?', a: 'The period ELB waits for in-flight requests to complete before removing a deregistering target. Default is 300s -- tune lower for fast-completing requests to speed up deployments.' },
+      { q: 'Which load balancer is required for AWS PrivateLink endpoint services?', a: 'NLB -- endpoint services must be backed by a Network Load Balancer.' },
+      { q: 'How does ALB handle WebSocket connections?', a: 'ALB natively upgrades HTTP connections to WebSocket via the standard HTTP Upgrade mechanism -- no special configuration needed beyond allowing the WebSocket port in the security group.' },
+      { q: 'What is the Classic Load Balancer status in 2026?', a: 'Legacy -- AWS deprecated it. All new workloads should use ALB, NLB, or GWLB. Never create a Classic Load Balancer for new architecture.' },
+      { q: 'How do you implement blue-green with ALB?', a: 'Use weighted target group rules -- create blue and green target groups, start at 100/0, shift incrementally (95/5, 80/20, 50/50, 0/100) and roll back instantly by adjusting weights.' },
+      { q: 'What is slow start mode on ALB target groups?', a: 'Gradually ramps up traffic to new targets over a configurable period (30-900s) instead of sending full traffic immediately -- prevents overwhelming new instances during warmup.' },
     ],
   },
   {
@@ -1089,6 +1193,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html',
       'https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html',
     ],
+    visualizations: [
+      {
+        title: 'API Gateway Request Lifecycle and Integration Types',
+        description: `API Gateway sits between clients and backend compute, handling traffic management, authorization, throttling, and protocol translation. Understanding the request lifecycle is key to diagnosing latency, errors, and billing.
+
+A request enters through a listener stage (e.g., /prod). The stage routes to a method resource (/users GET). API Gateway first evaluates the authorizer -- Lambda authorizer, JWT authorizer (HTTP APIs only), IAM Signature V4, or Cognito user pool. A failed authorization returns 401 or 403 immediately without touching the backend.
+
+For REST APIs, a request mapping template (Velocity Template Language) can transform the incoming request before forwarding to the integration. For Lambda proxy integration no transformation occurs -- the full HTTP context is passed as a structured JSON event. The Lambda function must return a valid API Gateway response object with statusCode, headers, and body. For HTTP proxy integration, API Gateway forwards the request verbatim to the backend URL and returns the response verbatim.
+
+The 29-second integration timeout is a hard limit across all API Gateway types -- it cannot be raised. This is the primary architectural constraint that forces long-running workloads into async patterns: the API accepts the request, starts an async job (Lambda invoke async, SQS, Step Functions), returns 202 Accepted with a job ID, and the client polls a status endpoint.
+
+HTTP APIs are the default choice for new Lambda-backed APIs in 2026. They cost 71% less per million requests than REST APIs, have lower latency, and support JWT authorization natively without a Lambda authorizer. REST APIs are required only for: request validation, VTL mapping templates, resource policies, usage plans with API keys, VPC links to NLBs, and AWS service integrations without Lambda.
+
+Throttling uses a token bucket: the burst limit (default 5,000) is the maximum concurrent requests; the rate limit is steady-state requests per second. Exceeding either returns 429. Stage-level and method-level throttling override account defaults for specific APIs.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the maximum integration timeout for API Gateway?', a: '29 seconds -- hard limit, cannot be increased. Long-running operations must use async patterns (return 202, poll status).' },
+      { q: 'When should you use HTTP API vs REST API?', a: 'HTTP API by default -- 71% cheaper, lower latency, native JWT auth. Use REST API only when you need mapping templates, request validation, usage plans, or resource policies.' },
+      { q: 'What HTTP status code does API Gateway return when throttled?', a: '429 Too Many Requests. Clients should implement exponential backoff with jitter when receiving 429 responses.' },
+      { q: 'What is Lambda proxy integration?', a: 'API Gateway passes the full HTTP request as a structured JSON event to Lambda. Lambda returns a response object with statusCode, headers, and body -- API Gateway does no request/response transformation.' },
+      { q: 'How do you remove the stage name from API Gateway URLs?', a: 'Use a custom domain name with a base path mapping. Map the custom domain (api.example.com) to the API and stage, presenting a clean URL without /prod or /v1 in the path.' },
+      { q: 'What is the difference between a Lambda authorizer and a JWT authorizer?', a: 'A Lambda authorizer runs custom code and returns an IAM policy -- flexible but adds ~100ms latency per request. A JWT authorizer (HTTP API) validates JWTs directly without invoking Lambda -- faster and cheaper.' },
+      { q: 'How does API Gateway burst limit work?', a: 'Token bucket algorithm -- burst limit (default 5,000) is the bucket size for handling traffic spikes. Rate limit is the steady-state refill rate. Requests exceeding the burst get 429 until the bucket refills.' },
+      { q: 'How do you enable CORS on an HTTP API?', a: 'Configure CORS in the API Gateway HTTP API settings -- it automatically generates correct preflight responses. For REST APIs you must enable CORS per resource and ensure your Lambda returns Access-Control-Allow-Origin headers.' },
+      { q: 'What is a mock integration in API Gateway?', a: 'A mock integration returns a configured response without calling any backend -- useful for returning static responses, building API contracts before backend exists, or handling OPTIONS preflight without Lambda.' },
+    ],
   },
   {
     id: 'aws-direct-connect',
@@ -1125,6 +1256,33 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/directconnect/latest/UserGuide/Welcome.html',
       'https://docs.aws.amazon.com/directconnect/latest/UserGuide/resiliency_toolkit.html',
+    ],
+    visualizations: [
+      {
+        title: 'Direct Connect Architecture and Redundancy Tiers',
+        description: `AWS Direct Connect replaces or supplements internet-based VPN by providing a dedicated physical network connection between your premises and an AWS Direct Connect location. Traffic never traverses the public internet, providing consistent latency, predictable throughput, and lower data transfer costs at high volumes.
+
+The physical connection (1G, 10G, or 100G dedicated port, or 50Mbps-10G hosted connection through a partner) terminates at a Direct Connect location -- co-location facilities AWS operates in partnership with network providers worldwide. From there, traffic flows over the AWS global backbone to your target VPC or public AWS endpoints.
+
+Virtual Interfaces (VIFs) are logical sub-connections over the physical port. A private VIF uses BGP to exchange routes with a single VPC's Virtual Private Gateway. A transit VIF connects to a Direct Connect Gateway (DXGW), which can bridge to Transit Gateways across multiple regions -- one physical connection, one DXGW, access to hundreds of VPCs across regions. A public VIF provides access to all AWS public IP space (S3, DynamoDB, API endpoints) without going over the internet.
+
+AWS defines four resilience tiers. Development: single connection, no SLA. High availability: two connections at one Direct Connect location. Resilient: two connections at two locations. Maximum resilience: two connections at two locations plus Site-to-Site VPN backup over the internet. Production workloads should start at high availability minimum.
+
+BGP configuration is where most operational complexity lives. Each VIF runs a BGP session. AWS advertises VPC CIDRs to your router; you advertise your on-premises subnets. Always use BGP prefix filters to control exactly which routes are accepted and advertised -- accepting all routes blindly can import unexpected paths. Use AS-path prepending or BGP local preference to establish primary and backup paths across two connections.
+
+MACsec (IEEE 802.1AE) provides wire-speed Layer 2 encryption on dedicated 10G and 100G connections for compliance requirements mandating in-transit encryption even on private links.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What speeds are available for dedicated Direct Connect connections?', a: '1 Gbps, 10 Gbps, and 100 Gbps. Hosted connections through partners offer 50 Mbps to 10 Gbps.' },
+      { q: 'Does a single Direct Connect connection have an SLA?', a: 'No -- AWS provides no SLA for a single connection. Minimum for production is two connections at separate Direct Connect locations (Resilient tier).' },
+      { q: 'What is the difference between a private VIF and a transit VIF?', a: 'Private VIF connects to one VPC via its Virtual Private Gateway. Transit VIF connects to a Direct Connect Gateway linked to a Transit Gateway, enabling access to many VPCs across regions.' },
+      { q: 'What is a Direct Connect Gateway?', a: 'A global resource that bridges a Direct Connect connection to Transit Gateways (via transit VIF) or VGWs (via private VIF) across multiple regions and accounts -- one connection reaches VPCs worldwide.' },
+      { q: 'What does MACsec provide on Direct Connect?', a: 'IEEE 802.1AE Layer 2 wire-speed encryption on dedicated 10G/100G connections. Satisfies compliance requirements for encryption in transit on private links without IPsec overhead.' },
+      { q: 'How does Direct Connect compare to VPN on data transfer cost?', a: 'Direct Connect data-out rates (typically $0.02/GB) are lower than internet rates for high volumes. The crossover where Direct Connect is cheaper is usually around 1TB/month of data transfer out of AWS.' },
+      { q: 'What causes asymmetric routing on Direct Connect and why does it matter?', a: 'If BGP path selection is not configured symmetrically, inbound and outbound traffic may take different connections. This complicates troubleshooting and can break stateful inspection. Use consistent BGP attributes on both connections.' },
+      { q: 'How do you monitor Direct Connect connection health?', a: 'CloudWatch metrics: ConnectionState (0=down, 1=up), ConnectionBpsIngress, ConnectionBpsEgress. Set alarms on ConnectionState to page on-call immediately when a link drops.' },
+      { q: 'What is a hosted Direct Connect connection?', a: 'A sub-port provisioned by an AWS Direct Connect Partner, available in smaller increments (50Mbps-10Gbps). Faster to provision than dedicated ports. One hosted connection = one VIF maximum.' },
     ],
   },
   {
@@ -1163,6 +1321,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html',
       'https://docs.aws.amazon.com/vpc/latest/tgw/tgw-route-tables.html',
     ],
+    visualizations: [
+      {
+        title: 'Transit Gateway Hub-and-Spoke and Route Table Segmentation',
+        description: `AWS Transit Gateway is a regional managed router that replaces VPC peering meshes. The key architectural concept is the relationship between attachments, route tables, and route propagation.
+
+Every attachment to the TGW (VPC, VPN, Direct Connect Gateway, or peering connection to another TGW) has two route-table relationships: an association (which route table the attachment reads from to forward packets) and propagations (which route tables the attachment advertises its CIDR into). This two-sided model enables fine-grained segmentation.
+
+A standard three-domain segmentation pattern works as follows. Create three TGW route tables: Production, NonProduction, and SharedServices. Associate production VPC attachments with the Production route table. Associate dev/staging attachments with the NonProduction route table. Associate shared services (DNS, monitoring, artifact registries) with the SharedServices route table. SharedServices propagates its CIDRs into both Production and NonProduction so all environments can reach shared services. Production and NonProduction propagate only into their own route tables -- there are no cross-routes, so a dev workload has no routable path to production even though both attach to the same TGW.
+
+Centralized egress adds a dedicated Egress VPC with NAT gateways. All spoke VPC route tables get a default route (0.0.0.0/0) pointing to the TGW. The TGW routes default traffic to the Egress VPC attachment. The Egress VPC routes it to its Internet Gateway. This pattern eliminates NAT gateways in every spoke VPC -- a 20-VPC environment saves 20 * 3 AZs * NAT hourly rate per hour.
+
+Centralized inspection routes all inter-VPC and egress traffic through a security VPC running GWLB and firewall appliances. Appliance mode on the security VPC attachment is mandatory to ensure the firewall instance sees both directions of each flow.
+
+TGW Network Manager provides a global topology view and Reachability Analyzer for automated path verification -- essential for validating segmentation after every route table change.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the maximum number of VPC attachments per Transit Gateway?', a: '5,000 VPC attachments per TGW.' },
+      { q: 'What are the two route-table relationships every TGW attachment has?', a: 'Association (which route table it reads/forwards from) and propagation (which route tables it advertises its CIDR into). Both are independently configurable.' },
+      { q: 'What is the default TGW behavior you should always disable for production?', a: 'Default route table association and propagation -- it puts all attachments in one table with full transitive connectivity. Disable it and build explicit segmented route tables.' },
+      { q: 'What does TGW appliance mode do?', a: 'Forces both directions of a TCP flow through the same AZ attachment, ensuring stateful firewall appliances see both request and response on the same instance.' },
+      { q: 'Does TGW peering support dynamic route propagation?', a: 'No -- TGW-to-TGW peering requires static routes on both sides. Dynamic BGP propagation only works for VPC attachments within a single TGW.' },
+      { q: 'What CloudWatch metric indicates a missing route in TGW?', a: 'PacketDropCountBlackhole -- packets that matched a TGW route table but had no attachment to forward to. Alarm on this metric.' },
+      { q: 'How does centralized egress save money?', a: 'Consolidates all NAT gateways from N spoke VPCs into one shared Egress VPC. Reduces NAT gateway hourly charges by N*3 AZs - 3 gateways.' },
+      { q: 'Can one Direct Connect connection reach multiple regions through TGW?', a: 'Yes -- one Direct Connect connection creates a transit VIF to a Direct Connect Gateway, which can associate with TGWs in multiple AWS regions.' },
+      { q: 'How many TGW route tables can one TGW have?', a: '20 TGW route tables per Transit Gateway.' },
+    ],
   },
   {
     id: 'aws-privatelink',
@@ -1199,6 +1384,33 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html',
       'https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints.html',
+    ],
+    visualizations: [
+      {
+        title: 'PrivateLink Endpoint Types and Traffic Isolation Model',
+        description: `AWS PrivateLink solves two distinct problems: accessing AWS-managed services without internet routing, and exposing your own services to other VPCs without giving them network access to your infrastructure.
+
+Gateway Endpoints handle S3 and DynamoDB exclusively. They are route table entries -- not ENIs -- that redirect traffic destined for S3 or DynamoDB prefixes into the AWS service fabric without going through an internet gateway or NAT. Gateway endpoints are free and have no bandwidth limitation. You simply add the endpoint target to route tables for subnets that need private S3/DynamoDB access. Every new VPC should have gateway endpoints for S3 and DynamoDB added immediately.
+
+Interface Endpoints create one or more ENIs in your VPC subnets with private IP addresses from your CIDR range. These ENIs become the private entry point for the target service. Traffic flows from your EC2 or Lambda over the ENI through the AWS PrivateLink fabric to the service -- never touching the internet. Interface endpoints cost approximately $0.01/hour per AZ plus $0.01/GB processed. For a VPC with five services in three AZs, that is 15 hourly charges. Centralize interface endpoints in a shared services VPC and route other VPCs through Transit Gateway to reduce this cost.
+
+The endpoint service pattern enables your own services to be privately consumed by other VPCs or accounts. Front your service with an NLB. Create an endpoint service linked to that NLB. Consumers create interface endpoints pointing to your service name. Their connection request goes to you for approval (manual or automatic). Once approved, a private IP in the consumer's VPC connects through the PrivateLink fabric directly to your NLB -- the consumer has no network route into your VPC whatsoever.
+
+Endpoint policies are JSON resource policies attached to an endpoint. On S3 gateway endpoints, an endpoint policy restricting access to buckets in your AWS Organization (aws:ResourceOrgID condition) is a critical data exfiltration control -- compromised compute cannot upload data to attacker-controlled S3 buckets through the same endpoint.
+
+Private DNS requires both enableDnsHostnames and enableDnsSupport on the VPC. When enabled, the standard service DNS name (e.g., secretsmanager.us-east-1.amazonaws.com) resolves to the endpoint ENI IPs inside the VPC with zero application changes.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between a Gateway Endpoint and an Interface Endpoint?', a: 'Gateway Endpoints are free route table entries for S3 and DynamoDB only. Interface Endpoints create ENIs in your subnets for most AWS services -- they cost hourly per AZ plus per GB processed.' },
+      { q: 'Which AWS services support Gateway Endpoints?', a: 'Only S3 and DynamoDB. All other AWS services require Interface Endpoints.' },
+      { q: 'What VPC settings are required for Interface Endpoint private DNS?', a: 'Both enableDnsHostnames and enableDnsSupport must be true on the VPC. Without both, private DNS resolution fails.' },
+      { q: 'How does an endpoint service expose your service without VPC peering?', a: 'You front your service with an NLB, create an endpoint service, and consumers create interface endpoints pointing to it. Traffic flows through PrivateLink -- the consumer gets a private IP in their VPC but has no network route into yours.' },
+      { q: 'How do you prevent data exfiltration through an S3 gateway endpoint?', a: 'Add an endpoint policy with aws:ResourceOrgID condition restricting access to S3 buckets within your AWS Organization -- prevents uploads to attacker-controlled external buckets.' },
+      { q: 'What is the NLB requirement for an endpoint service?', a: 'Endpoint services must be backed by a Network Load Balancer -- not an ALB or GWLB. The NLB is the gateway that PrivateLink routes consumer traffic to.' },
+      { q: 'How do you reduce Interface Endpoint costs across many VPCs?', a: 'Create endpoints once in a shared services VPC and route all other VPCs through Transit Gateway to reach them. Pay for one set of endpoints instead of N VPCs * M services * 3 AZs.' },
+      { q: 'What happens to endpoint service connections by default -- auto-accept or manual?', a: 'Manual approval by default. The service owner receives a connection request and must approve it. Configure automatic acceptance for trusted consumer account IDs to eliminate operational toil.' },
+      { q: 'Can Interface Endpoints be accessed from on-premises via Direct Connect?', a: 'Yes -- if the Interface Endpoint is in a VPC reachable via Direct Connect or VPN, and the endpoint has private DNS enabled or you use the endpoint-specific DNS name, on-premises systems can access AWS services privately.' },
     ],
   },
   {
@@ -1237,6 +1449,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/global-accelerator/latest/dg/what-is-global-accelerator.html',
       'https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works.html',
     ],
+    visualizations: [
+      {
+        title: 'Global Accelerator Anycast Routing vs Public Internet',
+        description: `AWS Global Accelerator improves application availability and performance by routing user traffic through the AWS global backbone instead of the unpredictable public internet.
+
+The core mechanism is anycast. Two static global IP addresses are assigned to every accelerator and advertised simultaneously from all AWS edge locations worldwide. When a user connects to one of these IPs, BGP routing on the internet directs their packets to the geographically nearest AWS edge PoP -- typically 1-10ms away. From that edge PoP, traffic travels over the AWS private global network to the application endpoint in the target region. The public internet exposure is only the last mile from the user to the nearest edge -- everything else uses AWS's low-latency, high-reliability backbone.
+
+Contrast this with standard DNS-based routing (Route 53 latency routing): the DNS lookup returns the regional endpoint IP, but the user's traffic then traverses the full public internet path to reach that region. Internet routing can be suboptimal, subject to congestion, and variable in latency. Global Accelerator eliminates this variability.
+
+Listeners define which ports and protocols the accelerator accepts (TCP, UDP). Endpoint groups hold the regional endpoints (ALBs, NLBs, EC2 instances, or Elastic IPs) with an associated traffic dial (0-100%) and health checks. Traffic dials enable gradual regional migrations: set new region to 5%, validate, ramp to 100%, zero out old region -- instant rollback by adjusting the dial, no DNS change needed.
+
+Health checks run continuously. When an endpoint fails, Global Accelerator removes it from routing within approximately 60 seconds -- without any DNS propagation delay, because the anycast IPs never change. This makes failover faster and more deterministic than DNS-based failover.
+
+Global Accelerator vs CloudFront: CloudFront caches content at edge locations. Global Accelerator does not cache -- it is purely a routing optimization for TCP/UDP. Use CloudFront for HTTP/HTTPS with caching. Use Global Accelerator for non-HTTP protocols, static IP requirements, gaming/VoIP backends, and applications where connection stability matters more than caching.`,
+      },
+    ],
+    quickFire: [
+      { q: 'How many static IP addresses does Global Accelerator provide?', a: 'Two static global anycast IP addresses per accelerator, regardless of how many regions the application spans.' },
+      { q: 'How does Global Accelerator differ from Route 53 latency routing?', a: 'Route 53 still sends traffic over the public internet after DNS resolution. Global Accelerator routes traffic over the AWS backbone after the first edge PoP hop -- significantly reducing internet variability and latency.' },
+      { q: 'What is a traffic dial?', a: 'A 0-100% setting on each endpoint group that controls what percentage of traffic that group receives. Used for gradual regional migrations and instant rollback without DNS changes.' },
+      { q: 'Does Global Accelerator cache content like CloudFront?', a: 'No -- Global Accelerator is purely a routing optimization with no caching. It accelerates TCP/UDP connections by keeping traffic on the AWS backbone. Use CloudFront for content caching.' },
+      { q: 'How long does failover take with Global Accelerator?', a: 'Approximately 60 seconds from health check failure detection to traffic shifting. No DNS propagation delay -- the anycast IPs never change.' },
+      { q: 'What protocols does Global Accelerator support?', a: 'TCP and UDP -- unlike CloudFront which only supports HTTP/HTTPS. This makes it suitable for gaming, VoIP, and custom TCP protocols.' },
+      { q: 'When would you use Global Accelerator for a gaming backend?', a: 'Players need low, consistent latency for real-time gameplay over UDP or custom TCP. Global Accelerator provides stable anycast IPs, minimizes first-hop latency, and routes over the AWS backbone to the game server region.' },
+      { q: 'What is client affinity in Global Accelerator?', a: 'Session affinity that pins a client (by source IP) to the same endpoint for the configured period. Useful for stateful protocols where session state lives at the endpoint.' },
+      { q: 'What endpoint types does Global Accelerator support?', a: 'ALB, NLB, EC2 instances, and Elastic IP addresses. Multiple types can coexist in the same endpoint group.' },
+    ],
   },
   {
     id: 'aws-rds',
@@ -1273,6 +1512,31 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html',
       'https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html',
+    ],
+    visualizations: [
+      {
+        title: 'RDS Multi-AZ, Read Replicas, and RDS Proxy Architecture',
+        description: `Amazon RDS provides three distinct availability and scaling mechanisms that are frequently confused: Multi-AZ standby, Read Replicas, and RDS Proxy.
+
+Multi-AZ is a high availability feature, not a scaling feature. RDS maintains a synchronous standby instance in a different Availability Zone. Every committed write is synchronously replicated to the standby before the primary acknowledges it to the application -- zero data loss on failover. The standby cannot serve reads; it exists solely for HA. When a failure occurs (hardware, OS, AZ), RDS updates the DNS CNAME of the endpoint to point to the standby, promoting it to primary. This typically takes 60-120 seconds. Applications using the endpoint DNS name (never hardcode IPs) automatically reconnect. Applications must implement connection retry logic for the brief interruption window.
+
+Read Replicas use asynchronous replication and do serve read traffic. They have their own endpoint URLs. Applications must explicitly direct read queries to replica endpoints -- RDS does not automatically route reads. Replication lag (ReplicaLag CloudWatch metric) means replicas may be milliseconds to seconds behind the primary, so read-after-write consistency cannot be guaranteed on replicas. Cross-region read replicas serve local reads near global users and provide a DR target that can be promoted to a standalone primary.
+
+RDS Proxy sits between the application and RDS to solve the connection multiplexing problem. RDS instances have a hard max_connections limit based on instance RAM. Lambda functions, ECS tasks, and microservices can generate thousands of concurrent short-lived connections that exhaust this limit. RDS Proxy maintains a pool of long-lived connections to RDS and multiplexes thousands of application connections through them. It also handles Multi-AZ failover more gracefully -- instead of applications waiting for DNS TTL to expire, they reconnect to Proxy and Proxy handles the backend switchover, reducing application-visible failover time from 30-120 seconds to typically under 30 seconds.
+
+Storage types: gp3 is the default and allows independently provisioned IOPS separate from storage size. io2 Block Express provides up to 256,000 IOPS for the most demanding OLTP workloads. Storage autoscaling only grows -- never shrinks.`,
+      },
+    ],
+    quickFire: [
+      { q: 'Is RDS Multi-AZ a read scaling feature?', a: 'No -- the standby is not readable. Multi-AZ is purely for high availability. Use Read Replicas for read scaling.' },
+      { q: 'How long does RDS Multi-AZ failover take?', a: '60-120 seconds typically. RDS updates the endpoint DNS CNAME to the promoted standby. Applications need connection retry logic for this window.' },
+      { q: 'What is the replication type used by Multi-AZ vs Read Replicas?', a: 'Multi-AZ uses synchronous replication (zero data loss). Read Replicas use asynchronous replication (eventual consistency, some lag).' },
+      { q: 'When do you need RDS Proxy?', a: 'When Lambda functions or many microservices create thousands of short-lived connections. RDS Proxy pools connections and prevents max_connections exhaustion.' },
+      { q: 'Can RDS storage be decreased after autoscaling?', a: 'No -- RDS storage is one-directional. Once allocated (manually or via autoscaling), it can only increase. Set autoscaling maximums conservatively.' },
+      { q: 'What is BufferCacheHitRatio and what does a low value indicate?', a: 'The percentage of reads served from the buffer pool in memory. Below 99% means the working set exceeds RAM -- the instance needs more memory (larger instance class).' },
+      { q: 'How do you perform a major RDS version upgrade with minimal downtime?', a: 'Create a read replica, upgrade the replica to the new major version, validate application compatibility, stop writes to primary, wait for zero lag, promote replica, update connection string.' },
+      { q: 'What does RDS Proxy improve about Multi-AZ failover?', a: 'Applications reconnect to the same Proxy endpoint -- Proxy handles the backend failover transparently, reducing application-visible downtime to under 30 seconds vs waiting for DNS TTL expiry.' },
+      { q: 'What storage type should you use for high-IOPS OLTP on RDS in 2026?', a: 'io2 Block Express -- provides up to 256,000 IOPS with 99.999% durability. gp3 is the default for general workloads up to 16,000 IOPS.' },
     ],
   },
   {
@@ -1311,6 +1575,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html',
       'https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html',
     ],
+    visualizations: [
+      {
+        title: 'Aurora Storage Architecture and Global Database',
+        description: `Aurora's most important architectural distinction from standard RDS is how it handles storage. RDS attaches EBS volumes to a compute instance and replicates at the block level to a standby. Aurora separates compute from storage entirely.
+
+The Aurora storage layer automatically maintains six copies of all data across three Availability Zones -- two copies per AZ. Writes acknowledge after four of six copies confirm (quorum write). Reads require only three of six copies. Individual disk failures are detected and repaired automatically using the remaining copies without any compute involvement or performance impact. Storage grows in 10GB increments up to 128TB with no provisioning required.
+
+Because all read replicas share the same distributed storage volume, there is no replication lag in the traditional sense. A write committed to the storage layer is immediately visible to all replicas reading from that same storage. This means Aurora replicas have near-zero read lag -- a fundamental difference from RDS read replicas which stream binary logs asynchronously and can fall seconds or minutes behind.
+
+Aurora Global Database extends this architecture across regions. A dedicated high-throughput replication channel built into the storage layer propagates changes from the primary region to up to five secondary regions with typical lag under one second. Secondary regions have their own reader instances serving local reads at primary-region write latency. For planned failover, Aurora promotes a secondary to primary in under 60 seconds. For unplanned failover, the managed failover process detects the primary region degradation and promotes a secondary -- applications in the new primary region accept writes.
+
+Aurora Serverless v2 attaches to the same shared storage cluster but scales compute capacity in 0.5 ACU increments continuously based on load -- scaling up in seconds, scaling down gradually. Writers and readers scale independently. Setting minimum capacity above zero avoids cold starts; the tradeoff is minimum cost even at zero traffic.
+
+Backtrack (MySQL-compatible clusters only) rewinds the entire cluster to any point within the last 72 hours in minutes, without restoring from a snapshot -- invaluable for recovering from accidental bulk deletes.`,
+      },
+    ],
+    quickFire: [
+      { q: 'How many storage copies does Aurora maintain and across how many AZs?', a: 'Six copies across three AZs (two per AZ). Writes need 4/6 quorum; reads need 3/6.' },
+      { q: 'Why do Aurora replicas have near-zero replication lag?', a: 'All replicas share the same distributed storage volume. They read directly from storage rather than streaming binary logs -- a write visible in storage is immediately visible to all replicas.' },
+      { q: 'What is Aurora Global Database replication lag?', a: 'Typically under 1 second -- replication uses a dedicated storage-layer channel, not binary log streaming.' },
+      { q: 'How long does Aurora Global Database failover take?', a: 'Managed planned failover: under 60 seconds. Unplanned failover after primary region detection: typically under 60 seconds with automatic promotion.' },
+      { q: 'What is the minimum ACU increment for Aurora Serverless v2 scaling?', a: '0.5 ACU -- scaling is continuous in 0.5 ACU steps, with writers and readers scaling independently.' },
+      { q: 'What is Aurora Backtrack and what is the maximum window?', a: 'Backtrack rewinds a MySQL-compatible Aurora cluster to any point in time within the configured window (up to 72 hours) in minutes -- no snapshot restore needed.' },
+      { q: 'What is the difference between the cluster endpoint and the reader endpoint?', a: 'Cluster endpoint always routes to the primary (writer). Reader endpoint load-balances across all healthy replicas. Always use separate connection pools for each.' },
+      { q: 'Does Aurora storage autoscale?', a: 'Yes -- Aurora storage grows automatically in 10GB increments up to 128TB. You never provision storage size upfront.' },
+      { q: 'What Aurora clone feature saves cost for testing?', a: 'Aurora Fast Clone creates a copy-on-write clone of the cluster instantly. The clone shares storage with the original until pages are modified -- no full data duplication cost.' },
+    ],
   },
   {
     id: 'aws-dynamodb',
@@ -1347,6 +1638,33 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html',
       'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html',
+    ],
+    visualizations: [
+      {
+        title: 'DynamoDB Data Model, Partitions, and Index Strategies',
+        description: `DynamoDB's performance model is determined almost entirely by how you structure primary keys, secondary indexes, and access patterns before writing a single byte of data.
+
+Every item requires a primary key. A simple primary key is just the partition key -- DynamoDB hashes it to determine which physical storage partition holds the item. A composite primary key adds a sort key, co-locating all items with the same partition key in sorted order. The Query operation retrieves all items in a partition or a range of sort keys in a single efficient call. The GetItem operation retrieves a single item by full primary key.
+
+Physical partitions have throughput limits: 3,000 RCU and 1,000 WCU per partition per second, plus a 10GB storage limit. DynamoDB splits partitions automatically when these limits are approached. A hot partition -- one receiving a disproportionate share of traffic because many requests share the same partition key -- hits its per-partition limit even when the table has unused capacity elsewhere. High-cardinality partition keys (user ID, order ID, UUID) distribute load evenly. Low-cardinality keys (status, date, boolean) concentrate traffic.
+
+Local Secondary Indexes share the table's partition key but use a different sort key. They can only be created at table creation time and provide strongly consistent reads. They consume the same partition's capacity. Global Secondary Indexes use a completely different partition key and sort key -- they are essentially an asynchronous projection of the table with their own partitions, capacity, and eventual consistency. Up to 20 GSIs per table. GSI updates lag slightly behind the base table; applications must tolerate this for GSI reads.
+
+DynamoDB Streams capture every item-level change as an ordered sequence of records (INSERT, MODIFY, REMOVE) with old and new images. Records are available for 24 hours. Lambda event source mappings process stream records in batches for CDC pipelines, search index updates, cache invalidation, and cross-region replication triggers.
+
+Transactions (TransactWriteItems, TransactGetItems) provide ACID semantics across up to 100 items in up to 100 tables within one account and region, at 2x capacity cost.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is a hot partition and how do you fix it?', a: 'A hot partition receives disproportionate traffic, hitting the 3,000 RCU / 1,000 WCU per-partition limit. Fix by choosing a high-cardinality partition key or adding a random suffix to distribute writes across N logical shards.' },
+      { q: 'When should you use a GSI vs a LSI?', a: 'GSI when you need a completely different partition key (global query). LSI when you only need a different sort key within the same partition. LSI must be created at table creation; GSI can be added later.' },
+      { q: 'What is the item size limit in DynamoDB?', a: '400KB per item. Store large blobs in S3 and keep only a reference in DynamoDB.' },
+      { q: 'What does on-demand capacity mode offer vs provisioned?', a: 'On-demand scales instantly to any traffic level, charges per request, and requires no capacity planning. Provisioned with auto scaling is approximately 60% cheaper for predictable workloads.' },
+      { q: 'How long are DynamoDB Stream records retained?', a: '24 hours. Consumers that fall behind for longer than 24 hours will miss records.' },
+      { q: 'What operation should you never use for application queries in DynamoDB?', a: 'Scan -- it reads every item in the table, consuming capacity proportional to table size. Always use Query (with partition key) or GetItem (with full primary key).' },
+      { q: 'What consistency modes does DynamoDB support for reads?', a: 'Eventually consistent reads (default, cheaper, may return slightly stale data) and strongly consistent reads (always return latest committed data, consume 2x RCU).' },
+      { q: 'How do DynamoDB transactions differ from conditional writes?', a: 'Transactions coordinate up to 100 items atomically across tables (all succeed or all fail) at 2x cost. Conditional writes are single-item operations with a server-side condition expression -- cheaper for single-item atomic operations.' },
+      { q: 'What is TTL in DynamoDB and does it consume capacity?', a: 'TTL automatically deletes items with an epoch timestamp attribute past the expiry. Deletion is eventually consistent (within 48 hours) and consumes no read or write capacity.' },
     ],
   },
   {
@@ -1385,6 +1703,31 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html',
       'https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.html',
     ],
+    visualizations: [
+      {
+        title: 'DynamoDB Global Tables, DAX, and Single-Table Design Patterns',
+        description: `Advanced DynamoDB usage requires mastering three independent capabilities: multi-region replication via Global Tables, in-memory microsecond caching via DAX, and single-table schema design.
+
+Global Tables provide active-active multi-region replication. Writes are accepted in any configured region. DynamoDB replicates changes to all other regions using a conflict resolution strategy of last-writer-wins based on an internal timestamp. This means simultaneous writes to the same item from two different regions will result in one silently winning. The practical mitigation is home-region routing: hash the item's partition key modulo the number of regions and route each entity consistently to one primary region for writes. Secondary regions serve reads locally and absorb writes during regional failures. Global Tables require on-demand capacity mode or auto-scaling on provisioned tables and DynamoDB Streams must be enabled.
+
+DAX (DynamoDB Accelerator) is an in-memory write-through cache cluster purpose-built for DynamoDB. It is SDK-compatible -- replace the DynamoDB client with the DAX client and caching is transparent. DAX maintains two caches: an item cache for GetItem/BatchGetItem responses and a query cache for Query/Scan results. Writes go through DAX to DynamoDB synchronously (write-through). DAX reduces read latency from single-digit milliseconds to microseconds and significantly reduces consumed RCUs on hot-key workloads. Deploy DAX in Multi-AZ. Implement fallback to the standard DynamoDB client if DAX is unavailable.
+
+Single-table design stores multiple entity types in one table using generic PK and SK attributes with type prefixes (CUSTOMER#123, ORDER#2024-01). Co-locating related entities in the same partition enables fetching a customer and all their orders in a single Query. Sparse GSIs index only items that have the GSI key defined -- efficient for indexing subsets (only active orders, only admin users). The write sharding pattern for hot partitions appends a random suffix (key_1 through key_N) to distribute high-volume writes, then reads all N shards with a parallel BatchGetItem and aggregates in the application.
+
+PartiQL provides SQL-like syntax over DynamoDB but does not change the underlying key-based model -- a SELECT without a key predicate still performs a full table scan.`,
+      },
+    ],
+    quickFire: [
+      { q: 'How does DynamoDB Global Tables resolve write conflicts?', a: 'Last-writer-wins based on an internal timestamp. Conflicts are silent -- one write wins and the other is discarded without error. Mitigate by routing each entity to a home region for writes.' },
+      { q: 'What is DAX and when should you use it?', a: 'DAX is an in-memory write-through cache for DynamoDB providing microsecond read latency. Use it for hot-key workloads where the same items are read frequently and read latency below DynamoDB single-digit-millisecond is required.' },
+      { q: 'Does DAX automatically fall back to DynamoDB if unavailable?', a: 'No -- if DAX is down, the DAX client fails. Implement a circuit breaker in your application that catches DAX errors and falls back to the standard DynamoDB client.' },
+      { q: 'What is a sparse GSI?', a: 'A GSI that only indexes items which have the GSI partition key attribute defined. Items without the attribute are excluded from the index, keeping it small and cheap -- useful for indexing subsets like active orders only.' },
+      { q: 'What is write sharding and when do you need it?', a: 'Append a random suffix (key_1 to key_N) to a hot partition key to distribute writes across N partitions. Read all N shards with BatchGetItem and aggregate in the application. Needed when a small set of keys receives very high write throughput.' },
+      { q: 'What does the PartiQL SELECT without a WHERE key predicate do?', a: 'It performs a full table scan -- extremely expensive at scale. Despite SQL-like syntax, DynamoDB still requires key predicates for efficient access. Always verify queries use primary key or GSI key conditions.' },
+      { q: 'What capacity modes are required for DynamoDB Global Tables?', a: 'On-demand mode or provisioned mode with auto scaling enabled. Fixed provisioned capacity without auto scaling is not supported.' },
+      { q: 'How do you export DynamoDB data to S3 for analytics without impacting table throughput?', a: 'Use the DynamoDB Export to S3 feature -- it exports a full snapshot or incremental changes without consuming table read capacity. Use Athena or EMR to query the exported Parquet or Ion files.' },
+      { q: 'What is the DynamoDB Contributor Insights feature used for?', a: 'Identifies the most frequently accessed and throttled partition keys and sort keys via CloudWatch Contributor Insights -- the first diagnostic step when investigating a hot partition problem in production.' },
+    ],
   },
   {
     id: 'aws-elasticache',
@@ -1421,6 +1764,33 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html',
       'https://redis.io/docs/manual/patterns/',
+    ],
+    visualizations: [
+      {
+        title: 'ElastiCache Redis Architecture: Cluster Modes, Replication, and Eviction',
+        description: `Amazon ElastiCache for Redis provides sub-millisecond in-memory data access and supports rich data structures, persistence, pub/sub, and scripting that make it far more than a simple cache.
+
+The fundamental deployment choice is between cluster mode disabled and cluster mode enabled. In cluster mode disabled, all data lives in a single shard with one primary node and up to five read replicas. The primary accepts all writes; replicas handle reads and provide failover targets. This is the simpler setup, sufficient when the entire working set fits within the memory of the largest available instance (r7g.16xlarge provides up to 416GB). Scaling requires a node type change, which causes a brief failover.
+
+Cluster mode enabled shards data across up to 500 node groups using consistent hashing on key slot assignments (16,384 slots divided across shards). Each shard has its own primary and replicas. You can add or remove shards online without downtime, scaling both memory and write throughput horizontally. The tradeoff: applications must use cluster-aware clients that route commands to the correct shard. Multi-key operations (MGET, MSET, pipelines) only work when all keys hash to the same slot -- use hash tags {user_id} to force co-location of related keys.
+
+Replication is asynchronous. Automatic failover (with Multi-AZ enabled) promotes a replica to primary when the primary fails -- typically completing in under 60 seconds. The DNS primary endpoint updates automatically. Applications must implement connection retry for the failover window.
+
+Eviction policy is critical for pure cache use cases. When maxmemory is reached, Redis applies the configured policy. allkeys-lru (evict least recently used from all keys) is the standard choice for a pure cache. volatile-lru only evicts keys with an expiry set -- safe when some keys must never be evicted. noeviction returns errors on write -- appropriate for persistent data stores, not caches.
+
+ElastiCache Serverless (2024+) eliminates node type selection and cluster topology management entirely. It automatically provisions capacity based on demand, billed per ECPU and GB stored. Use it for variable workloads or when operational simplicity outweighs per-unit cost optimization.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between Redis cluster mode enabled and disabled?', a: 'Cluster mode disabled: single shard, all data in one primary + replicas. Cluster mode enabled: data sharded across up to 500 node groups, horizontal scale of both memory and writes. Requires cluster-aware client.' },
+      { q: 'What eviction policy should you use for a pure cache workload?', a: 'allkeys-lru -- evicts the least recently used key from all keys when memory is full. Ensures the hottest data stays in cache.' },
+      { q: 'Does Redis replication use synchronous or asynchronous replication?', a: 'Asynchronous -- replicas may lag slightly behind the primary. Not suitable for read-after-write consistency requirements.' },
+      { q: 'What is the cache-aside pattern?', a: 'Check cache first; on miss, read from DB, write to cache with TTL, return value. Writes go directly to DB and optionally invalidate cache. Most common caching pattern.' },
+      { q: 'How do you implement a distributed lock with Redis?', a: 'SET lock_key unique_value NX PX 30000 -- atomic set-if-not-exists with millisecond expiry. Release using a Lua script that checks the value matches before DEL to prevent releasing another owner\'s lock.' },
+      { q: 'What Redis data structure do you use for a real-time leaderboard?', a: 'Sorted set (ZADD with score, ZRANGE/ZREVRANGE for top-N). Score is the metric; member is the user ID. O(log N) insertion and O(log N + K) range retrieval.' },
+      { q: 'What is the risk of deploying ElastiCache in a single AZ?', a: 'If the node fails the cache is empty and all requests hit the database cold. Always enable Multi-AZ with at least one replica for production.' },
+      { q: 'Can ElastiCache Redis be accessed cross-region?', a: 'No -- ElastiCache is VPC-local. Use ElastiCache Global Datastore for read-only cross-region replicas (Redis only), or manage self-hosted Redis for active-active multi-region.' },
+      { q: 'What is ElastiCache Serverless and when should you use it?', a: 'A serverless ElastiCache tier that auto-provisions and scales capacity with no node type or shard configuration. Use for variable or spiky workloads where operational simplicity matters more than per-unit cost.' },
     ],
   },
   {
@@ -1459,6 +1829,35 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/redshift/latest/dg/welcome.html',
       'https://docs.aws.amazon.com/redshift/latest/dg/r_tuning_data_distribution.html',
     ],
+    visualizations: [
+      {
+        title: 'Redshift MPP Architecture: Columnar Storage, Distribution, and Query Execution',
+        description: `Amazon Redshift is a massively parallel processing (MPP) columnar data warehouse. Understanding its physical execution model is essential for writing fast queries and designing efficient schemas.
+
+A provisioned Redshift cluster has a leader node and multiple compute nodes. The leader node receives queries, builds query plans, and coordinates execution. Compute nodes are divided into slices -- independent processing units, typically two per node. Data is distributed across all slices according to the table's distribution style. Queries execute in parallel across all slices simultaneously; the slowest slice determines total query time. Distribution skew -- where one slice holds significantly more data than others -- is the most common cause of slow queries.
+
+Columnar storage is the first performance multiplier. Row-oriented storage requires reading entire rows to access any column. Columnar storage groups each column's values contiguously on disk. An analytical query reading 5 of 100 columns reads approximately 5% of the data. Each column additionally uses the most efficient compression encoding for its data type (run-length for low-cardinality, delta for timestamps, LZO for general text), reducing physical I/O further.
+
+Zone maps are block-level metadata storing the minimum and maximum value of each 1MB block per column. Range predicates (WHERE date > '2024-01-01') skip entire blocks where the predicate cannot match, without reading any data from those blocks.
+
+Distribution style choice prevents or causes data movement during joins. KEY distribution places all rows with the same key value on the same slice -- a join between two tables both distributed on the same column requires no data movement (co-located join). EVEN distributes rows round-robin -- simple but requires data redistribution (DS_DIST steps in EXPLAIN) during joins. ALL replicates the entire table to every node -- eliminates join movement for small dimension tables at the cost of storage and slower writes.
+
+Sort keys define the physical order of rows on disk. Range predicates on the leading sort key columns benefit from zone map skipping. Always define sort keys on the most common filter columns (date, region) for fact tables.
+
+Redshift Spectrum extends queries to S3 without data loading, using a separate fleet of Spectrum nodes that process S3 data in parallel. Charges per TB scanned -- always push filter predicates into Spectrum queries to minimize scan cost.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What makes Redshift faster than row-oriented databases for analytics?', a: 'Columnar storage reads only queried columns (less I/O), per-column compression reduces data volume, zone maps skip blocks that cannot match range predicates, and MPP executes queries in parallel across all slices.' },
+      { q: 'What are the three Redshift distribution styles and when do you use each?', a: 'KEY: distribute on join column to co-locate matching rows (eliminates join data movement). EVEN: round-robin for large tables without a natural join key. ALL: replicate small dimension tables to every node for broadcast-free joins.' },
+      { q: 'What does DS_DIST_INNER in an EXPLAIN plan mean?', a: 'The inner table of a join was redistributed across nodes to complete the join -- indicates a distribution key mismatch. Resolve by matching the distribution key on both join tables.' },
+      { q: 'What is a sort key and what query type benefits most?', a: 'Sort key defines physical row order on disk. Range predicates on the leading sort key column benefit from zone map skipping, which avoids reading blocks that cannot match the predicate.' },
+      { q: 'Why must you run VACUUM and ANALYZE regularly on Redshift?', a: 'VACUUM reclaims space from deleted rows (ghost rows) and restores sort order. ANALYZE updates query planner statistics. Without both, query plans degrade over time.' },
+      { q: 'What is Redshift Spectrum?', a: 'Queries data directly in S3 via an external schema without loading into Redshift. Uses a separate Spectrum node fleet, charges per TB scanned. Best for infrequently-queried historical data too large to load cost-effectively.' },
+      { q: 'What is the COPY command and why use it instead of INSERT?', a: 'COPY reads files from S3 in parallel across all compute slices -- the fastest loading mechanism. Single-row INSERTs are extremely slow in Redshift because they bypass the parallel loading path.' },
+      { q: 'What is Redshift Serverless?', a: 'Serverless Redshift eliminates cluster sizing and management. Capacity scales automatically based on query workload. Billed per RPU-second. Best for variable or unpredictable analytical workloads.' },
+      { q: 'What causes distribution skew and how do you detect it?', a: 'A distribution key with low cardinality or highly skewed data concentrates rows on a few slices. Detect via svv_table_info.skew_rows and skew_sortkey1. Fix by choosing a higher-cardinality column or switching to EVEN distribution.' },
+    ],
   },
   {
     id: 'aws-documentdb',
@@ -1496,6 +1895,33 @@ export const cloudTopics = [
       'https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html',
       'https://docs.aws.amazon.com/documentdb/latest/developerguide/best_practices.html',
     ],
+    visualizations: [
+      {
+        title: 'DocumentDB Cluster Architecture and Document Modeling Patterns',
+        description: `Amazon DocumentDB uses the same Aurora-derived distributed storage architecture as Aurora: one primary instance for reads and writes, up to 15 replica instances sharing the same six-way replicated storage volume across three AZs. Replicas have near-zero lag because they read from shared storage rather than streaming oplogs.
+
+DocumentDB stores BSON documents in collections. Each document can have a completely different structure -- there is no enforced schema. This flexibility allows gradual schema evolution: add a new field to new documents without touching existing ones, and handle missing fields in application code. The _id field is the mandatory primary key, indexed automatically.
+
+The embedding vs referencing decision is the central document modeling tradeoff. Embed subdocuments and arrays when data is always retrieved together, has bounded size, and belongs to exactly one parent (order with line items embedded). Reference by _id when the related data is large, accessed independently, or shared by multiple parents (product referenced by many orders). Over-embedding creates large documents where partial reads waste I/O. Over-referencing requires multiple round trips for data that is conceptually one entity.
+
+Indexes are mandatory for query performance. Without an index DocumentDB performs a COLLSCAN -- reading every document in the collection. Run explain() with executionStats on every query during development. An IXSCAN in the winning plan confirms index usage. The ESR rule for compound indexes (Equality fields first, Sort fields second, Range fields last) minimizes the index traversal and filter work.
+
+The aggregation pipeline transforms documents through ordered stages. Early match stages reduce the working set before expensive stages like lookup (join), unwind (flatten arrays), and group (aggregate). Push all match stages as early as possible. A match on an indexed field at the start of the pipeline uses the index; the same match after an unwind cannot.
+
+DocumentDB requires TLS for all connections. The global bundle CA certificate must be passed to the MongoDB driver. DocumentDB supports a subset of the MongoDB 4.0 API -- validate compatibility of all queries before committing to a migration from self-managed MongoDB.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What MongoDB API version is DocumentDB compatible with?', a: 'MongoDB 4.0 API subset. Not all MongoDB features are supported -- validate all queries and aggregation stages before migrating.' },
+      { q: 'Does DocumentDB require TLS?', a: 'Yes -- TLS is required for all connections. Pass the RDS global CA bundle as tlsCAFile in the MongoDB driver connection options.' },
+      { q: 'What is the document size limit in DocumentDB?', a: '16MB per document -- same as MongoDB. Store large binary data in S3 and keep only a reference in DocumentDB.' },
+      { q: 'How do you diagnose a slow query in DocumentDB?', a: 'Enable profiling via profiler_threshold_ms in the cluster parameter group. Profiled queries log to CloudWatch. Run explain(\"executionStats\") to confirm IXSCAN vs COLLSCAN.' },
+      { q: 'When should you embed vs reference in DocumentDB?', a: 'Embed when data is always read together, bounded in size, and belongs to one parent. Reference when data is large, accessed independently, or shared across multiple parents.' },
+      { q: 'How many read replicas can a DocumentDB cluster have?', a: 'Up to 15 read replicas sharing the same storage volume with near-zero replication lag.' },
+      { q: 'What aggregation pipeline stage is equivalent to a SQL JOIN?', a: '$lookup -- performs a left outer join to another collection in the same database. Push $match stages before $lookup to reduce the working set.' },
+      { q: 'What is a change stream in DocumentDB?', a: 'An ordered stream of insert/update/delete events for a collection or database. Used for CDC pipelines, cache invalidation, and event-driven architectures. Backed by the DocumentDB oplog.' },
+      { q: 'What is the ESR rule for compound indexes?', a: 'Equality fields first, Sort fields second, Range fields last. This ordering minimizes index traversal and in-memory filter work for compound queries.' },
+    ],
   },
   {
     id: 'aws-neptune',
@@ -1532,6 +1958,35 @@ export const cloudTopics = [
     references: [
       'https://docs.aws.amazon.com/neptune/latest/userguide/intro.html',
       'https://docs.aws.amazon.com/neptune/latest/userguide/get-started.html',
+    ],
+    visualizations: [
+      {
+        title: 'Neptune Graph Model, Traversal Patterns, and Fraud Detection Architecture',
+        description: `Amazon Neptune is a purpose-built graph database optimized for queries where the primary operation is traversing relationships between entities. It stores billions of vertices (nodes) and edges (relationships) and supports millisecond-latency multi-hop traversals.
+
+Neptune supports two graph models. The property graph model represents data as vertices and edges, each with a label (type) and key-value properties. Queries use Apache TinkerPop Gremlin (g.V().has('age', gt(30)).out('knows').values('name')) or openCypher (MATCH (a:Person)-[:KNOWS]->(b:Person) WHERE a.age > 30 RETURN b.name). The RDF model stores data as subject-predicate-object triples queried via SPARQL -- used for semantic web, ontologies, and knowledge graphs. A Neptune cluster runs one model or the other; they cannot be mixed.
+
+The storage architecture mirrors Aurora: six copies across three AZs, compute separated from storage, replicas share the same volume with near-zero lag. Up to 15 read replicas, automatic failover in under 30 seconds.
+
+The traversal-first design principle separates Neptune from relational databases. A three-hop traversal (friends of friends who purchased item X) in a relational database requires three recursive self-joins that become exponentially more expensive with depth. Neptune traverses edges natively -- a three-hop traversal is algorithmically similar to a one-hop traversal relative to the data actually accessed.
+
+Fraud detection is one of Neptune's primary use cases. Identity elements (email, phone number, device ID, IP address) are modeled as vertices. User accounts link to shared identity elements via edges. A query traversing: find all accounts sharing any identity element with this account within the last 30 days immediately exposes account farms and synthetic identity fraud rings that are invisible in row-based data stores.
+
+Neptune Bulk Loader reads vertex and edge CSV files from S3 using a parallel import process -- orders of magnitude faster than transactional writes for initial dataset loading. Neptune Analytics (separate service) handles graph algorithms like PageRank, community detection, and shortest path without impacting operational query latency.
+
+Always bound traversal depth in production queries. An unbounded traversal on a highly connected graph can expand exponentially, exhausting memory. Use range() or limit() steps consistently.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the two graph models Neptune supports?', a: 'Property graph (Gremlin / openCypher) for vertices and edges with properties. RDF (SPARQL) for subject-predicate-object triples. A cluster supports one model -- they cannot be mixed.' },
+      { q: 'Why is graph traversal faster than SQL joins for multi-hop queries?', a: 'Neptune traverses edges natively without join overhead. A three-hop traversal accesses only the relevant connected vertices. SQL recursive joins scan the full join table at each hop, growing exponentially.' },
+      { q: 'What is the Neptune Bulk Loader?', a: 'Reads vertex and edge CSV files from S3 in parallel -- orders of magnitude faster than transactional Gremlin inserts for initial dataset loading.' },
+      { q: 'Does Neptune have a Global Database like Aurora?', a: 'No -- Neptune does not have an active-active Global Database equivalent. Cross-region DR requires periodic snapshots or custom CDC via Neptune Streams.' },
+      { q: 'What is Neptune Analytics?', a: 'A separate Neptune service optimized for bulk graph algorithms (PageRank, shortest path, community detection) on the graph data without impacting operational transactional query latency.' },
+      { q: 'What happens if you run an unbounded traversal on a highly connected graph?', a: 'The traversal expands exponentially through the graph, consuming all memory and timing out. Always set depth limits using range() or limit() steps -- cap friendship-of-a-friend at 2-3 hops.' },
+      { q: 'How do you load data into Neptune at scale?', a: 'Neptune Bulk Loader: prepare vertex CSV (id, label, properties) and edge CSV (from, to, label, properties), upload to S3, submit a load job via the Neptune REST API.' },
+      { q: 'What query language should you prefer for readability on property graphs?', a: 'openCypher -- SQL-like syntax (MATCH, WHERE, RETURN) is more readable than Gremlin traversal steps for most developers. Neptune supports both.' },
+      { q: 'How does Neptune handle high availability?', a: 'Six-way storage replication across three AZs (Aurora architecture). Automatic failover promotes a replica in under 30 seconds. No data loss because replicas share the same storage volume.' },
     ],
   },
   {

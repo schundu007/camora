@@ -1160,13 +1160,15 @@ export default function DocsPage({ onBack }) {
                               />
                               <div aria-hidden="true" className="cat-card-overlay" style={{ position: 'absolute', inset: 0 }} />
                               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 12px 24px' }}>
-                                <DatabricksThumb
-                                  color={CATEGORY_HEX[cat.id] || 'navy'}
-                                  size={32}
-                                  icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
-                                  title={cat.title}
-                                />
-                                <h3 className="cat-card-title font-bold leading-tight tracking-tight text-center" style={{ fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <DatabricksThumb
+                                    color={CATEGORY_HEX[cat.id] || 'navy'}
+                                    size={32}
+                                    icon={<Icon name={cat.icon} size={15} style={{ color: '#FFFFFF' }} />}
+                                    title={cat.title}
+                                  />
+                                  <h3 className="cat-card-title font-bold leading-tight tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>{cat.title}</h3>
+                                </div>
                                 <span className="cat-card-count-dark font-semibold tabular-nums text-center" style={{ fontFamily: 'var(--font-mono)' }}>{cat.completed}/{cat.count} topics</span>
                               </div>
                               <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
