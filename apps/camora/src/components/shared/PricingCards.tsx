@@ -617,10 +617,10 @@ export default function PricingCards({
         </span>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: LN.text, margin: 0 }}>All features unlocked</h3>
         <p style={{ fontSize: 13, color: LN.textSub, maxWidth: 400, margin: 0 }}>
-          Your account has owner-level access. Manage users, deployments, Stripe events, and platform config from the admin panel.
+          Your account has owner-level access. All features are available to you.
         </p>
-        <Link to="/docs/admin" style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block', fontFamily: LN.font }}>
-          Open Admin Panel
+        <Link to="/" style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block', fontFamily: LN.font }}>
+          Go to Camora
         </Link>
       </div>
     );
