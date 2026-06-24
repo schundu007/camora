@@ -1049,7 +1049,7 @@ export default function DocsPage({ onBack }) {
 
                   {/* ── Overview Dashboard ── */}
                   {activePage === 'overview' && (
-                    <div className="max-w-5xl mx-auto w-full">
+                    <div className="page-wrap">
                       {/* Hero Banner — LeetCode dark navy band w/ diagonal cut */}
                       <div className="relative mb-4 rounded-lg overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
@@ -3477,6 +3477,62 @@ export default function DocsPage({ onBack }) {
                                           <span className="text-[10px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activePage === 'ddia' && (
+                <>
+                  <div className="mb-6">
+                    <div className="space-y-3">
+                    {ddiaCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => ddiaTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader icon={category.icon} title={category.name} count={categoryTopics.length} />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('ddia', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200 ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                                >
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: `${topic.color}1A`, border: `1px solid ${topic.color}40`, color: topic.color }}>
+                                      <Icon name={topic.icon || 'book'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Chip>{topic.questions} questions</Chip>
+                                        {topic.visualizations?.length > 0 && (
+                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>
                                         )}
                                       </div>
                                     </div>
