@@ -25,7 +25,6 @@ export const networkingTopicCategoryMap = {
   'nat-pat':                    'fundamentals',
   'router-vs-switch':           'fundamentals',
   'tcp-congestion-control':     'fundamentals',
-  'ipv6-dual-stack':            'fundamentals',
   // DNS
   'dns-resolution':             'dns',
   'dns-record-types':           'dns',
@@ -9019,6 +9018,247 @@ Best practice: deploy an enterprise DoH resolver + MDM policy directing browsers
       { q: 'What is Oblivious DoH (ODoH)?', a: 'Extension (RFC 9230) routing DoH queries through a proxy. The proxy sees the client IP but not the query; the resolver sees the query but not the client IP. Maximum privacy.' },
       { q: 'Why does DoH break split-horizon DNS in corporate environments?', a: 'Internal hostnames (app.corp.internal) only resolve via the corporate resolver. DoH sends queries to Cloudflare/Google, which return NXDOMAIN for internal names.' },
       { q: 'How can an enterprise prevent browsers from using public DoH resolvers?', a: 'Serve NXDOMAIN for use-application-dns.net (Firefox canary), deploy MDM browser policy disabling DoH or pointing to an internal DoH resolver, or block resolver IPs at the firewall.' },
+    ],
+  },
+
+  // ─── TCP CONGESTION CONTROL ─────────────────────────────────────────────────
+  {
+    id: 'tcp-congestion-control',
+    title: 'TCP Congestion Control',
+    icon: 'activity',
+    color: '#3b82f6',
+    questions: 5,
+    description: 'Slow start, congestion avoidance, CUBIC and BBR algorithms, congestion window vs receive window, and tuning TCP for high-bandwidth long-latency paths.',
+    visualizations: [],
+    introduction: `TCP congestion control prevents senders from overloading the network. Without it, a fast sender fills every buffer in the path, causing queue overflow and packet drops, which trigger retransmissions that worsen congestion (congestive collapse). TCP probes for available bandwidth while backing off when it detects congestion.
+
+The sender maintains a congestion window (cwnd) limiting unacknowledged data in flight. Effective throughput = min(cwnd, rwnd) / RTT, where rwnd is the receiver's advertised window. Slow start doubles cwnd each RTT until reaching ssthresh or packet loss. Congestion avoidance grows cwnd linearly after that.
+
+CUBIC (Linux default since 2.6.19) uses a cubic growth function for faster recovery on high-BDP paths. BBR (Bottleneck Bandwidth and Round-trip propagation time) takes a fundamentally different approach -- it measures the bottleneck bandwidth and minimum RTT to model the pipe, keeping exactly BDP worth of data in flight rather than reacting to packet loss. BBR dramatically improves throughput on lossy paths (satellite, 4G) where packet loss is not purely caused by congestion.`,
+    whenToUse: [
+      'Diagnosing why throughput between datacenters is well below the link bandwidth (BDP not fully utilized).',
+      'Tuning Linux TCP parameters (tcp_rmem, tcp_wmem, tcp_congestion_control) for high-throughput transfers between AWS regions.',
+      'Explaining why a 100ms RTT link is harder to saturate than a 1ms RTT link at the same bandwidth.',
+    ],
+    keyConcepts: [
+      {
+        term: 'Bandwidth-Delay Product (BDP)',
+        definition: `BDP = bandwidth * round-trip-time. It represents the data that can be in transit on the path at any instant to fully utilize the link. For a 1Gbps link with 100ms RTT: BDP = 1e9 * 0.1 = 100 megabits = 12.5MB. TCP needs at least 12.5MB in flight to saturate this link. If the socket buffer (SO_RCVBUF) is smaller than BDP, throughput is capped. Linux auto-tunes up to tcp_rmem_max (default ~6MB, often too small for cross-continent transfers).`,
+      },
+      {
+        term: 'BBR vs CUBIC',
+        definition: `CUBIC reacts to packet loss: on loss, cut cwnd by 30% then grow using a cubic function. Better than Reno (50% cut, linear growth) on high-BDP paths. BBR does not use loss as a congestion signal. It continuously estimates bottleneck bandwidth (BtlBw) and minimum RTT (RTprop), then sets cwnd = BtlBw * RTprop. BBR periodically probes for more bandwidth by briefly increasing the send rate. On lossy paths (mobile, satellite), BBR maintains higher throughput because it does not interpret every lost packet as congestion.`,
+      },
+      {
+        term: 'Buffer Bloat',
+        definition: `When network equipment has very large buffers, packet loss may not occur even under heavy congestion -- instead, RTT inflates as packets queue in the buffer. Loss-based algorithms keep increasing cwnd while RTT rises to hundreds of milliseconds. BBR and AQM (Active Queue Management: CoDel, fq_codel) detect and react to this earlier because they monitor RTT, not just loss.`,
+      },
+    ],
+    pitfalls: [
+      'Not tuning socket buffers on high-BDP paths. Default Linux tcp_rmem_max is too small for cross-continent links. Set tcp_rmem and tcp_wmem max to at least the BDP. Test with iperf3 -P 8 to rule out per-stream cwnd limits.',
+      'BBR fairness issues with CUBIC flows. A BBR flow on a shared bottleneck can starve concurrent CUBIC flows. BBR v1 has known fairness problems in buffer-bloated environments. In homogeneous environments (all BBR or all CUBIC), this is less of a concern.',
+    ],
+    keyQuestions: [
+      {
+        question: 'You have a 10Gbps link between AWS regions with 80ms RTT but iperf3 shows only 200Mbps. What are the likely causes?',
+        answer: `## BDP calculation
+
+10Gbps * 0.08s = 800 megabits = 100MB required in flight. With default tcp_rmem_max ~6MB, max throughput = 6MB / 0.08s = 75MB/s = 600Mbps. 200Mbps suggests even smaller buffers or a single slow stream.
+
+## Fix 1: Socket buffers
+
+\`\`\`bash
+sysctl -w net.ipv4.tcp_rmem="4096 87380 134217728"  # max 128MB
+sysctl -w net.ipv4.tcp_wmem="4096 87380 134217728"
+\`\`\`
+
+## Fix 2: Multiple parallel streams
+
+\`\`\`bash
+iperf3 -c <server> -P 8  # 8 parallel TCP streams
+\`\`\`
+If aggregate throughput jumps, cwnd per stream is the bottleneck.
+
+## Fix 3: Switch to BBR
+
+\`\`\`bash
+sysctl -w net.ipv4.tcp_congestion_control=bbr
+\`\`\`
+Check retransmissions in iperf3 output -- even 0.01% loss at 10Gbps causes thousands of CUBIC cwnd reductions per second.`,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc5681',
+      'https://cloud.google.com/blog/products/networking/tcp-bbr-congestion-control-comes-to-gcp-your-internet-just-got-faster',
+      'https://hpbn.co/building-blocks-of-tcp/',
+    ],
+    quickFire: [
+      { q: 'What is the congestion window (cwnd)?', a: 'The sender-side limit on unacknowledged in-flight data. Effective throughput = min(cwnd, rwnd) / RTT.' },
+      { q: 'What is Bandwidth-Delay Product (BDP)?', a: 'BDP = bandwidth * RTT. The data that must be in flight to fully saturate a link. Socket buffers must be at least BDP-sized.' },
+      { q: 'How does slow start work?', a: 'cwnd doubles every RTT from initcwnd (10 MSS) until exceeding ssthresh or packet loss, then switches to linear congestion avoidance.' },
+      { q: 'What congestion signal does BBR use instead of packet loss?', a: 'Measured bottleneck bandwidth (BtlBw) and minimum RTT (RTprop) to model the pipe, filling it exactly without relying on loss.' },
+      { q: 'What Linux sysctl controls the congestion control algorithm?', a: 'net.ipv4.tcp_congestion_control. Set to "bbr" or "cubic".' },
+      { q: 'What is buffer bloat?', a: 'Large router buffers absorb bursts without dropping packets but cause RTT inflation to hundreds of ms. Loss-based congestion control fails to detect this.' },
+    ],
+  },
+
+  // ─── ENVOY PROXY ────────────────────────────────────────────────────────────
+  {
+    id: 'envoy-proxy',
+    title: 'Envoy Proxy & xDS API',
+    icon: 'gitBranch',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Envoy listener-filter-cluster pipeline, the xDS dynamic configuration protocol, circuit breaking, outlier detection, and Envoy as the Istio data plane.',
+    visualizations: [],
+    introduction: `Envoy is an open-source edge and service proxy written in C++. Originally developed at Lyft and donated to the CNCF, Envoy is the data plane for most production service meshes (Istio, AWS App Mesh, Consul Connect) and is used standalone in projects like Contour and Emissary-ingress.
+
+Traffic flows through a layered pipeline: Listeners bind to ports and define filter chains. Network Filters process the raw byte stream. The HTTP Connection Manager (HCM) is the most important network filter, parsing HTTP. HTTP Filters process individual requests. Clusters define upstream endpoints. Envoy selects an endpoint using the configured load balancing policy (round-robin, least request, ring hash).
+
+The xDS API (discovery services) is Envoy's dynamic configuration protocol. Control planes (Istio's Istiod, Consul) push configuration updates via gRPC streams without restarts. LDS pushes listener configs, CDS pushes cluster definitions, EDS pushes endpoint lists, RDS pushes route tables. An Envoy receiving xDS updates can shift traffic from v1 to v2 within seconds -- zero-downtime canary deployments without pod restarts or DNS changes.`,
+    whenToUse: [
+      'Debugging Istio traffic management by reading Envoy admin interface (port 15000) config dump and access logs.',
+      'Configuring circuit breaking and outlier detection for upstream services in a service mesh.',
+      'Implementing traffic shifting for canary deployments via Istio VirtualService and DestinationRule.',
+      'Understanding why Envoy xDS enables incremental config updates while static Nginx config requires reload.',
+    ],
+    keyConcepts: [
+      {
+        term: 'xDS Protocol',
+        definition: `xDS is a collection of gRPC streaming APIs between a control plane and Envoy. LDS (Listener DS) pushes listener configurations. CDS (Cluster DS) pushes upstream cluster definitions. EDS (Endpoint DS) pushes IP:port lists per cluster. RDS (Route DS) pushes HTTP route tables. Changes stream immediately to all connected Envoys without restart, enabling live traffic shifting (canary: route 20% to v2) by updating route weights in real time.`,
+      },
+      {
+        term: 'Circuit Breaking',
+        definition: `Envoy implements circuit breaking per cluster with thresholds: max_connections, max_pending_requests, max_requests, max_retries. When a threshold is exceeded, Envoy returns 503 immediately to new requests instead of queuing. This prevents cascading failures where a slow upstream causes the caller to accumulate threads waiting for connections. Monitor cx_overflow and rq_overflow metrics to detect when the circuit breaker is triggering.`,
+      },
+      {
+        term: 'Outlier Detection',
+        definition: `Outlier detection automatically ejects unhealthy upstream endpoints from the load balancing pool using real traffic signals. Envoy tracks consecutive 5xx errors and success rate per endpoint. When an endpoint exceeds thresholds, it is ejected for base_ejection_time and periodically retested. Unlike health checks (synthetic probes), outlier detection uses production traffic. Combined with circuit breaking: outlier detection removes bad pods, circuit breaking protects against overloading the remaining ones.`,
+      },
+    ],
+    pitfalls: [
+      'Envoy retries amplifying load on struggling upstreams. A retry policy with 3 attempts multiplies traffic to a slow service by 3x, turning minor slowdowns into full overloads. Configure retry budgets (max concurrent retries) and retry-on conditions carefully.',
+      'Not monitoring circuit breaker overflow. cx_overflow / rq_overflow spikes mean clients are receiving immediate 503s from Envoy -- often mistaken for upstream failures. The circuit breaker is working; the upstream capacity needs to increase.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Istio use Envoy xDS to implement canary traffic shifting without pod restarts?',
+        answer: `## Components
+
+Istiod implements an xDS server. Each Envoy sidecar connects to Istiod on startup via gRPC and receives full config via LDS, CDS, RDS, EDS streams. Istiod watches Kubernetes VirtualService and DestinationRule objects and translates them into xDS resources.
+
+## Canary flow
+
+Step 1: Create DestinationRule defining two subsets -- v1 (label: version=v1) and v2 (label: version=v2). Istiod creates two CDS clusters: reviews-v1 and reviews-v2 with EDS endpoints from matching pods.
+
+Step 2: Create VirtualService with weighted routing: 80% to reviews-v1, 20% to reviews-v2. Istiod generates an RDS RouteConfiguration with two weighted routes to the two clusters.
+
+Step 3: Istiod pushes the updated xDS RouteConfiguration to all sidecars via the RDS stream. Per-entry atomic updates -- not full config reload.
+
+Result: Within 100ms-2s, all sidecars route 20% of reviews traffic to v2 pods. No pod restarts, no DNS changes. Gradually update weight (20% -> 50% -> 100%) as confidence grows. Tools like Flagger or Argo Rollouts can drive weight changes automatically based on Prometheus error rate/latency metrics.`,
+      },
+    ],
+    references: [
+      'https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy',
+      'https://www.envoyproxy.io/docs/envoy/latest/api-docs/xds_protocol',
+      'https://istio.io/latest/docs/ops/diagnostic-tools/proxy-cmd/',
+    ],
+    quickFire: [
+      { q: 'What company developed Envoy?', a: 'Lyft. Donated to CNCF in 2017.' },
+      { q: 'What does EDS stand for in xDS?', a: 'Endpoint Discovery Service -- dynamically updates the IP:port list for each upstream cluster.' },
+      { q: 'What port does Envoy admin interface use in Istio sidecars?', a: 'Port 15000. Access: kubectl exec <pod> -c istio-proxy -- curl localhost:15000/config_dump' },
+      { q: 'What is a Cluster in Envoy?', a: 'A named group of upstream endpoints that Envoy load balances across.' },
+      { q: 'What does Envoy outlier detection do?', a: 'Automatically ejects endpoints exceeding consecutive failure thresholds from the load balancing pool using real traffic signals.' },
+      { q: 'What happens when Envoy max_pending_requests is exceeded?', a: 'Envoy returns 503 immediately to new requests instead of queuing them, preventing cascading failures.' },
+    ],
+  },
+
+  // ─── NETWORK RATE LIMITING ──────────────────────────────────────────────────
+  {
+    id: 'network-rate-limiting',
+    title: 'Rate Limiting Algorithms',
+    icon: 'sliders',
+    color: '#06b6d4',
+    questions: 5,
+    description: 'Token bucket, leaky bucket, sliding window counter, fixed window -- tradeoffs, boundary bursts, and Redis-based distributed rate limiting patterns.',
+    visualizations: [],
+    introduction: `Rate limiting controls how frequently a client can perform an action within a time window. It protects API servers from abuse, ensures fair resource sharing among tenants, and prevents single clients from exhausting server capacity.
+
+Four fundamental algorithms: Fixed window counter divides time into discrete buckets and counts requests -- simple but allows boundary bursts. Sliding window log tracks every request timestamp -- accurate but memory-intensive. Sliding window counter approximates the sliding window by interpolating between two adjacent fixed window counts -- efficient and nearly accurate. Token bucket maintains a bucket that refills at a fixed rate; each request consumes a token, allowing bursts up to the bucket size. Leaky bucket queues requests and drains at a fixed rate regardless of burst -- smoothing traffic for rate-sensitive downstreams.
+
+In distributed systems, rate limiting must be distributed. Local-only state on each API gateway instance enforces N times the limit when traffic is load-balanced across N instances. Redis atomic operations (INCR+EXPIRE for fixed window, Lua scripts for token bucket) provide shared state with sub-millisecond lookup latency.`,
+    whenToUse: [
+      'Protecting an API endpoint from being hammered by misbehaving clients or bots.',
+      'Implementing usage-based billing tiers (100 req/min free, 10,000 req/min paid).',
+      'Designing a rate limiter in a system design interview -- classic question.',
+      'Configuring Envoy local rate limiting or global rate limit service in Kubernetes.',
+    ],
+    keyConcepts: [
+      {
+        term: 'Token Bucket',
+        definition: `A bucket with capacity N tokens refills at a fixed rate (e.g., 100 tokens/sec). Each request consumes a token. If empty, reject. The bucket accumulates up to N tokens during idle periods, allowing short bursts. Token bucket is the most common algorithm because it accommodates legitimate bursty traffic while enforcing a long-term average rate. AWS API Gateway uses token bucket (burst capacity + steady-state RPS limits).`,
+      },
+      {
+        term: 'Sliding Window Counter',
+        definition: `Approximates a sliding window using two fixed window counters. Estimate for the last 60 seconds: prev_count * (1 - elapsed_fraction) + current_count. Small error (< 1% at low rates) but uses only two Redis keys instead of a full timestamp log. Used by Cloudflare for distributed rate limiting because it is memory-efficient and maps to two INCR+EXPIRE operations.`,
+      },
+      {
+        term: 'Redis Lua for Atomic Rate Limiting',
+        definition: `Redis Lua scripts execute atomically (Redis is single-threaded). A token bucket in Redis stores (token_count, last_refill_timestamp) in a hash. The Lua script computes tokens to add since last refill, caps at bucket size, decrements if > 0, and stores the updated state. Without atomicity, two concurrent requests both reading count=99 could both be allowed, exceeding the limit. Lua eliminates this race condition.`,
+      },
+    ],
+    pitfalls: [
+      'Fixed window boundary burst. A client sends N requests just before midnight and N more just after -- getting 2N in a 2-second window. Use sliding window counter or token bucket if boundary bursts are harmful.',
+      'Not returning Retry-After in 429 responses. Without it, clients retry immediately, generating more rejected requests. Always return Retry-After: <seconds> and X-RateLimit-Remaining headers.',
+      'Redis unavailability. Design for Redis being down: fail open (allow requests with imprecise local limiting) to avoid a full outage. Log the failure and alert.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a distributed rate limiter allowing 100 requests per minute per user across 10 API gateway instances.',
+        answer: `## Algorithm: Sliding window counter
+
+Two Redis keys per user: ratelimit:{user}:{current_minute} and ratelimit:{user}:{prev_minute}.
+
+## Lua script (atomic)
+
+\`\`\`lua
+local current_window = tonumber(ARGV[1])   -- Unix time / 60
+local elapsed = tonumber(ARGV[2])          -- seconds into current minute (0-59)
+local limit = tonumber(ARGV[3])
+
+local curr = tonumber(redis.call("GET", "rl:" .. KEYS[1] .. ":" .. current_window) or 0)
+local prev = tonumber(redis.call("GET", "rl:" .. KEYS[1] .. ":" .. (current_window-1)) or 0)
+
+local estimated = prev * ((60 - elapsed) / 60) + curr
+if estimated >= limit then return {0, math.ceil(estimated)} end
+
+redis.call("INCR", "rl:" .. KEYS[1] .. ":" .. current_window)
+redis.call("EXPIRE", "rl:" .. KEYS[1] .. ":" .. current_window, 120)
+return {1, math.ceil(estimated + 1)}
+\`\`\`
+
+## Response headers
+
+- 429: Retry-After: {60 - elapsed}
+- 200: X-RateLimit-Remaining: {limit - estimated}
+
+## Failure mode
+
+If Redis is unavailable: fall back to local in-memory token bucket (imprecise but functional). Log and alert on Redis failure.`,
+      },
+    ],
+    references: [
+      'https://stripe.com/blog/rate-limiters',
+      'https://blog.cloudflare.com/counting-things-a-lot-of-different-things/',
+      'https://redis.io/docs/manual/patterns/rate-limiting/',
+    ],
+    quickFire: [
+      { q: 'What is the token bucket algorithm?', a: 'A bucket filled with tokens at a fixed rate (up to max N). Each request consumes a token; requests are rejected when empty. Allows bursts up to N.' },
+      { q: 'What is the main flaw of fixed window rate limiting?', a: 'Boundary burst: clients can send N requests at window end and N at window start, getting 2N processed in a short burst.' },
+      { q: 'What HTTP status code does a rate limiter return?', a: '429 Too Many Requests, with Retry-After header.' },
+      { q: 'Why use Redis Lua scripts for distributed rate limiting?', a: 'Lua scripts execute atomically in Redis, preventing race conditions where concurrent requests both read the same count and both get allowed.' },
+      { q: 'Difference between token bucket and leaky bucket?', a: 'Token bucket allows bursts (sends accumulated tokens at once). Leaky bucket smooths to a fixed output rate regardless of input bursts.' },
+      { q: 'What should a rate limiter do when Redis is unavailable?', a: 'Fail open with local imprecise limiting to avoid a full outage. Log the failure.' },
     ],
   },
 ];

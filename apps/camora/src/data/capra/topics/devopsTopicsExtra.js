@@ -32,6 +32,12 @@ export const devopsExtraTopicCategoryMap = {
   'database-migrations-cicd': 'cicd',
   'policy-as-code': 'devsecops',
   'progressive-delivery': 'cicd',
+  'karpenter-node-autoscaling': 'orchestration',
+  'crossplane-cloud-control': 'cloudnative',
+  'external-secrets-operator': 'devsecops',
+  'dora-four-keys-implementation': 'foundations',
+  'platform-engineering-idp-design': 'cloudnative',
+  'grpc-protobuf-services': 'foundations',
 };
 
 export const devopsExtraTopics = [
