@@ -62,6 +62,18 @@ export const lldCategoryMap = {
   'mediator': 'patterns-behavioral',
   'memento': 'patterns-behavioral',
   'chain-of-responsibility': 'patterns-behavioral',
+  // Architecture Patterns
+  'mvc-mvp-mvvm': 'patterns-structural',
+  'repository-pattern': 'patterns-structural',
+  'cqrs-pattern': 'patterns-structural',
+  'hexagonal-architecture': 'patterns-structural',
+  'event-sourcing': 'patterns-behavioral',
+  'null-object-pattern': 'patterns-behavioral',
+  // Advanced Principles
+  'dependency-injection': 'principles',
+  'domain-driven-design': 'principles',
+  'anti-patterns': 'principles',
+  'concurrency-patterns': 'principles',
 };
 
 export const lldTopics = [
@@ -2725,6 +2737,490 @@ In Express.js: app.use(logging, auth, rateLimit, cors, router). Each middleware 
       'Implement an approval workflow where different managers approve different amounts',
       'What happens if no handler in the chain can process the request?',
       'Compare Chain of Responsibility with the Strategy pattern'
+    ]
+  },
+
+  // ─────────────────────────────────────────
+  // Architecture Patterns
+  // ─────────────────────────────────────────
+  {
+    id: 'mvc-mvp-mvvm',
+    title: 'MVC / MVP / MVVM',
+    icon: 'link',
+    color: '#06b6d4',
+    questions: 8,
+    description: 'Architectural patterns for separating UI logic from business logic.',
+
+    introduction: `MVC, MVP, and MVVM are three related patterns that all solve the same core problem: separating the user interface from the business logic. Each was developed in response to limitations of its predecessor, and understanding when to use each is a key interview skill.
+
+MVC (Model-View-Controller) is the oldest of the three, originating in Smalltalk. The Model holds data and business logic, the View renders the UI, and the Controller sits between them handling user input and updating both. The View and Controller are both aware of each other and of the Model. Rails, Django, and Spring MVC all follow this pattern.
+
+MVP (Model-View-Presenter) emerged to improve testability. The Presenter replaces the Controller and becomes the only intermediary: the View is entirely passive (no logic) and communicates only with the Presenter. This makes it easy to unit-test the Presenter without a real UI.
+
+MVVM (Model-View-ViewModel) is common in reactive and data-bound environments like Android Jetpack, WPF, SwiftUI, and Vue.js. The ViewModel exposes observable state; the View binds to that state and updates automatically when it changes. There is no direct method call from View to ViewModel on user events—the binding mechanism handles it.`,
+
+    keyQuestions: [
+      {
+        question: 'What is the key difference between MVC and MVP?',
+        answer: `In MVC, the View can directly observe the Model and update when it changes. The Controller handles user input but may not own all display logic. The View is not fully passive—it may contain some rendering decisions.
+
+In MVP, the View is a completely passive interface. It has no knowledge of the Model. The Presenter owns all presentation logic, tells the View exactly what to display, and handles all user events delegated from the View. This makes the Presenter fully unit-testable with a mock View, which is the primary motivation for MVP over MVC. Android classic activities/fragments often follow MVP; Rails and Django follow MVC.`
+      },
+      {
+        question: 'How does MVVM data binding differ from MVP?',
+        answer: `In MVP, the Presenter explicitly calls View methods: presenter.render(user). The coupling is explicit and bidirectional. In MVVM, the ViewModel exposes observable properties (LiveData, StateFlow, RxObservable, Vue reactive refs). The View binds to these properties declaratively and reacts automatically when they change—no explicit method call needed.
+
+This makes MVVM well-suited for reactive UIs where multiple widgets must stay in sync. The tradeoff is that data binding frameworks add complexity and can make debugging harder (it is not always obvious why a UI updated). MVVM also scales better for complex forms and dashboards where many UI elements track the same underlying state.`
+      },
+      {
+        question: 'When would you choose each pattern?',
+        answer: `Choose MVC for server-side web frameworks (Rails, Django, Spring MVC) where the Controller handles HTTP requests and the View generates HTML. The round-trip request-response model maps naturally to MVC.
+
+Choose MVP when you need high testability in a platform without built-in data binding (classic Android, WinForms). The passive View pattern lets you test all logic without a real UI context.
+
+Choose MVVM when your platform supports reactive data binding (Android Jetpack with LiveData/Compose, SwiftUI, WPF, Vue, React with hooks). MVVM shines in apps with complex real-time state updates where manually refreshing the UI would be error-prone.`
+      }
+    ],
+
+    tips: [
+      'In interviews, always start by naming the three components and their responsibilities before discussing differences',
+      'MVC Controllers can get bloated ("Fat Controller"); MVP Presenters face the same risk—keep them thin by delegating to use cases',
+      'MVVM works poorly without a reactive framework; avoid rolling your own observer infrastructure',
+      'All three patterns can coexist in one app: MVVM for the UI layer, with domain-layer logic in plain use case classes',
+      'Be ready to sketch a data-flow diagram for any of the three patterns'
+    ],
+
+    sampleQuestions: [
+      'Draw the data flow in MVC when a user clicks a button',
+      'Why is MVP easier to unit test than classic MVC?',
+      'How does LiveData in Android implement the MVVM pattern?',
+      'What is a "fat controller" and how do you refactor it?',
+      'Compare MVVM in Android Jetpack with MVVM in Vue.js'
+    ]
+  },
+  {
+    id: 'repository-pattern',
+    title: 'Repository Pattern',
+    icon: 'link',
+    color: '#06b6d4',
+    questions: 6,
+    description: 'Abstracts data access behind a collection-like interface.',
+
+    introduction: `The Repository pattern places a layer of abstraction between your domain logic and your data access code. Instead of sprinkling database queries throughout your service classes, all data access goes through a Repository interface that looks like an in-memory collection. Your domain logic calls repository.findById(id), repository.save(user), or repository.findByEmail(email) without knowing whether the data comes from PostgreSQL, MongoDB, a REST API, or an in-memory map.
+
+This separation gives you two key benefits. First, your domain and service code is decoupled from the database technology. Swapping from MySQL to Postgres or from SQL to NoSQL requires changing only the repository implementation, not every service class. Second, it makes unit testing trivial: inject a FakeUserRepository backed by a HashMap in tests, avoiding the need for a running database.
+
+The Repository pattern pairs naturally with the Unit of Work pattern, which tracks all changes made within a business transaction and flushes them to the database in a single atomic operation. ORMs like Hibernate/JPA, Entity Framework, and Django ORM implement both patterns internally.`,
+
+    keyQuestions: [
+      {
+        question: 'How does the Repository pattern differ from a plain DAO?',
+        answer: `A Data Access Object (DAO) is a thin wrapper around a database table, exposing CRUD operations that map directly to SQL statements. It is infrastructure-focused and often returns raw data transfer objects.
+
+A Repository operates at the domain level. It returns fully hydrated domain objects (not raw DTOs), and its methods use domain language (findActiveSubscribers(), not SELECT * WHERE active=1). The Repository can aggregate data from multiple tables or even multiple data sources to construct a single domain object. The Repository interface belongs to the domain layer; the implementation belongs to the infrastructure layer. This inversion is the core of the Dependency Inversion Principle.`
+      },
+      {
+        question: 'When should you use a Generic Repository vs a Specific Repository?',
+        answer: `A Generic Repository provides common CRUD operations via generics: Repository<T> with findById(Long id), save(T entity), delete(T entity). It reduces boilerplate when entities need only basic operations.
+
+A Specific Repository adds domain-meaningful query methods: UserRepository extends Repository<User> with findByEmail(String email) and findActiveByTier(Tier tier). Use specific repositories when the domain has meaningful query concepts that cannot be expressed as simple property lookups. The Generic Repository is a good base class, but the interface exposed to callers should always be the specific, domain-meaningful one. Exposing a generic repository directly to service classes leaks infrastructure concerns into the domain.`
+      }
+    ],
+
+    tips: [
+      'Place the Repository interface in your domain layer and the implementation in the infrastructure layer',
+      'Return domain objects from repositories, not raw database rows or ORM entities with lazy-load traps',
+      'Keep repositories focused on persistence: no business logic inside a repository',
+      'Use in-memory repository implementations in tests to avoid database dependencies',
+      'Pair with Unit of Work for transactional consistency across multiple repositories'
+    ],
+
+    sampleQuestions: [
+      'How does the Repository pattern support the Dependency Inversion Principle?',
+      'Design a UserRepository interface for an e-commerce system',
+      'How would you test a service class that depends on a UserRepository?',
+      'What is the Unit of Work pattern and how does it relate to Repository?',
+      'What is the difference between a Repository and an ORM?'
+    ]
+  },
+  {
+    id: 'cqrs-pattern',
+    title: 'CQRS Pattern',
+    icon: 'link',
+    color: '#06b6d4',
+    questions: 7,
+    description: 'Separates read and write models for scalability and clarity.',
+
+    introduction: `Command Query Responsibility Segregation (CQRS) splits your system into two distinct sides: the write side (commands that change state) and the read side (queries that return data). The principle originates from Bertrand Meyer's Command-Query Separation: a method should either change state or return data, never both.
+
+In a traditional CRUD architecture, the same model handles both reads and writes. This works well at small scale but causes friction when the read and write access patterns diverge. A complex order management system might have dozens of write operations (place order, cancel, refund, add item) with strong consistency requirements, while the read side needs highly denormalized, pre-aggregated views for dashboards and reporting. CQRS lets each side optimize independently.
+
+The write side typically uses a normalized, behavior-rich domain model and processes commands through aggregates. The read side uses denormalized projections optimized for query patterns. The two sides stay in sync through events: when the write side processes a command, it emits domain events that update the read-side projections. This sync is often eventual, which is a key trade-off to understand.`,
+
+    keyQuestions: [
+      {
+        question: 'What problem does CQRS solve that a standard layered architecture cannot?',
+        answer: `In a standard architecture, you have one model that satisfies both reads and writes. When read and write requirements diverge sharply, this model becomes a compromise that does neither well. A normalized write model requires joins that slow down reads. A denormalized read model complicates writes with redundant updates.
+
+CQRS solves this by allowing separate models, separate data stores if needed (e.g., PostgreSQL for writes, Elasticsearch for reads), and separate scaling strategies. The write side can be scaled for consistency and throughput; the read side can be replicated and cached aggressively. At senior interview level, the key insight is that CQRS is not about technology—it is about recognizing when read and write access patterns are so different that sharing one model creates more harm than good.`
+      },
+      {
+        question: 'What are the trade-offs of CQRS?',
+        answer: `The main trade-off is eventual consistency. When a command is processed, the read-side projection updates asynchronously. A user who places an order may not immediately see it in their order history if they refresh instantly. This is often acceptable but requires careful UX design and explicit handling of "optimistic UI" updates.
+
+Other trade-offs: increased complexity (two models to maintain, event infrastructure to build), potential for stale reads during projection lag, and harder debugging (a query result depends on events that may have been applied hours ago). CQRS is overkill for simple CRUD apps. It shines in complex domains with high read/write asymmetry, reporting requirements, or audit trail needs.`
+      }
+    ],
+
+    tips: [
+      'Do not apply CQRS everywhere; start with standard layered architecture and apply CQRS only where read/write patterns diverge significantly',
+      'Simple CQRS (same database, separate read/write models in code) is a valid starting point before introducing event-driven synchronization',
+      'Eventual consistency requires explicit design: show stale-data indicators, optimistic UI, or polling',
+      'CQRS pairs naturally with Event Sourcing but does not require it',
+      'In interviews, always discuss the consistency trade-off when proposing CQRS'
+    ],
+
+    sampleQuestions: [
+      'Explain Command Query Responsibility Segregation and when you would use it',
+      'How does CQRS differ from traditional CRUD architecture?',
+      'What consistency challenges does CQRS introduce and how do you address them?',
+      'Design a CQRS-based order management system',
+      'How does CQRS relate to Event Sourcing?'
+    ]
+  },
+  {
+    id: 'hexagonal-architecture',
+    title: 'Hexagonal Architecture',
+    icon: 'link',
+    color: '#06b6d4',
+    questions: 6,
+    description: 'Ports & Adapters pattern that isolates the application core from infrastructure.',
+
+    introduction: `Hexagonal Architecture, also known as Ports & Adapters, was introduced by Alistair Cockburn to solve a recurring problem: business logic entangled with infrastructure (databases, HTTP, message queues) becomes hard to test, hard to change, and impossible to reuse.
+
+The pattern organizes the system around an application core that contains pure business logic with no dependencies on external systems. The core exposes Ports—interfaces that define what the application needs (driven ports, like a UserRepository) and what it offers (driving ports, like a use case interface). Adapters implement these ports: an HTTP adapter calls a use case port, a JPA adapter implements the repository port.
+
+The result is that the core can be tested in complete isolation using in-memory adapters. You can swap a PostgreSQL adapter for a MongoDB adapter without touching the core. You can add a CLI driving adapter alongside the HTTP one. The shape of the hexagon is metaphorical—the real insight is that everything outside the core is an adapter, and all dependencies point inward toward the core.`,
+
+    keyQuestions: [
+      {
+        question: 'What is the difference between a driving port and a driven port?',
+        answer: `A driving port (primary port) is an interface that the application core exposes for callers to invoke. A use case interface like OrderService with placeOrder(command: PlaceOrderCommand) is a driving port. HTTP controllers, CLI handlers, and test code all drive the application through this port.
+
+A driven port (secondary port) is an interface that the core defines to express a dependency it needs from the outside world. UserRepository, EmailSender, and PaymentGateway are driven ports. The core calls these interfaces; infrastructure adapters implement them. The critical rule: driven ports are defined in the core, owned by the core, and point outward. Adapters implement them in the infrastructure layer. This inversion ensures all dependencies point inward.`
+      },
+      {
+        question: 'How does Hexagonal Architecture relate to Clean Architecture and Onion Architecture?',
+        answer: `All three patterns express the same fundamental idea: the domain/business core should have no dependencies on infrastructure, and dependencies should point inward. They differ mainly in terminology and layering detail.
+
+Clean Architecture (Robert Martin) adds explicit concentric rings: Entities (innermost), Use Cases, Interface Adapters, Frameworks & Drivers. Onion Architecture (Jeffrey Palermo) uses similar rings: Domain Model, Domain Services, Application Services, Infrastructure. Hexagonal Architecture is less prescriptive about internal rings—it focuses on the boundary between core and adapters. In practice, they are compatible and often combined: Hexagonal for the core/adapter boundary, Clean Architecture rings for structuring the core itself.`
+      }
+    ],
+
+    tips: [
+      'The core must never import anything from the infrastructure layer—enforce this with module boundaries or ArchUnit tests',
+      'Name ports after what the core needs, not after the technology: UserRepository not DatabaseConnector',
+      'Start with one adapter per port; add more (REST + GraphQL driving the same use case) when genuinely needed',
+      'Hexagonal Architecture works best in medium-to-large domains; it adds ceremony to simple CRUD services',
+      'Use constructor injection to inject adapters into the core—this makes tests trivial'
+    ],
+
+    sampleQuestions: [
+      'Explain the Ports & Adapters pattern and its benefits',
+      'How does Hexagonal Architecture improve testability?',
+      'Design a payment processing system using Hexagonal Architecture',
+      'What is the difference between a driving and a driven adapter?',
+      'How do you enforce the dependency rule (no inward-pointing dependencies) in code?'
+    ]
+  },
+
+  // ─────────────────────────────────────────
+  // Additional Behavioral Patterns
+  // ─────────────────────────────────────────
+  {
+    id: 'event-sourcing',
+    title: 'Event Sourcing',
+    icon: 'gitBranch',
+    color: '#ef4444',
+    questions: 7,
+    description: 'Store state as an immutable sequence of events rather than current values.',
+
+    introduction: `Event Sourcing is a persistence strategy where, instead of storing the current state of an entity, you store the full sequence of events that led to that state. A BankAccount does not store "balance: $500"—it stores [AccountOpened($0), Deposited($600), Withdrawn($100)]. The current state is derived by replaying these events.
+
+This approach provides a complete audit trail for free. Every state change is recorded with its timestamp and context. You can reconstruct the state at any point in time by replaying events up to that timestamp—invaluable for debugging production issues or regulatory compliance.
+
+Event Sourcing pairs naturally with CQRS: the write side appends events to an event store, and the read side builds denormalized projections by consuming those events. It also enables new projections to be built at any time by replaying historical events—a powerful capability for analytics and reporting.
+
+The trade-offs are real: eventual consistency between the event store and projections, the need for event schema versioning as your domain evolves, and increased complexity compared to simple CRUD. Event Sourcing is most appropriate for domains with complex state machines, strong audit requirements, or high-value transactions.`,
+
+    keyQuestions: [
+      {
+        question: 'What is an event store and how does it differ from a traditional database?',
+        answer: `An event store is an append-only log of domain events. You never update or delete events—you only append new ones. EventStoreDB, Apache Kafka, and AWS Kinesis can serve as event stores; PostgreSQL with an append-only events table also works.
+
+A traditional relational database stores current state: the users table row is updated in place when the user changes their email. An event store stores the EmailChanged event alongside all previous events. The current state is a derived view, not the primary record. This means reads require replaying events (or reading a cached snapshot), while writes are always fast appends. The immutability of events is what enables time-travel queries, audit trails, and projection rebuilds.`
+      },
+      {
+        question: 'How do snapshots improve Event Sourcing performance?',
+        answer: `For long-lived aggregates with thousands of events, replaying every event on each load becomes expensive. Snapshots solve this by periodically capturing the current state of an aggregate and storing it alongside the event log. To load an aggregate, you find the most recent snapshot and replay only events that occurred after that snapshot.
+
+A snapshot can be taken every N events (e.g., every 100 events) or triggered by time. Snapshots do not replace events—they are a read optimization. The full event log remains authoritative. If you delete snapshots, you can always rebuild them. In interviews, the key point is that snapshots are a performance optimization, not a change to the fundamental event-sourcing model.`
+      }
+    ],
+
+    tips: [
+      'Design events as immutable facts in past tense: OrderPlaced, PaymentProcessed, ItemShipped',
+      'Version your events from day one—schema changes are inevitable and migration is hard without versioning',
+      'GDPR "right to erasure" conflicts with immutability; address this with event encryption and key deletion',
+      'Use snapshots for aggregates that accumulate more than ~50-100 events',
+      'Event Sourcing adds significant complexity; validate that your domain genuinely needs its benefits before adopting it'
+    ],
+
+    sampleQuestions: [
+      'What is Event Sourcing and how does it differ from storing current state?',
+      'How do you implement time-travel queries with Event Sourcing?',
+      'What challenges does GDPR create for Event Sourcing?',
+      'How do snapshots improve performance in an event-sourced system?',
+      'Design an event-sourced bank account aggregate'
+    ]
+  },
+  {
+    id: 'null-object-pattern',
+    title: 'Null Object Pattern',
+    icon: 'gitBranch',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Replace null checks with a do-nothing default object that implements the same interface.',
+
+    introduction: `The Null Object pattern eliminates null checks by providing a default object that implements the same interface as real objects but does nothing (or returns safe defaults) when its methods are called. Instead of checking if(logger != null) logger.log(msg) throughout your code, you inject a NullLogger that implements the Logger interface with empty method bodies.
+
+Tony Hoare, who invented the null reference in 1965, famously called it his "billion-dollar mistake." Null references cause NullPointerExceptions that are common runtime errors. The Null Object pattern is one strategy to reduce reliance on null.
+
+The pattern works best for optional dependencies and optional behaviors. A user who has no assigned permissions could be represented by a NullPermissionSet that returns false for all permission checks, eliminating permission-null checks everywhere. A caching layer that is disabled uses a NullCache that performs no caching.
+
+Languages like Kotlin and Swift provide better null safety through their type systems (nullable types, Optional), which address the same problem at the language level. In Java or Python codebases, the Null Object pattern remains a useful tool.`,
+
+    keyQuestions: [
+      {
+        question: 'When should you use Null Object vs Optional<T>?',
+        answer: `Optional<T> (Java, Swift) forces callers to explicitly handle the absence of a value at the call site—it makes nullability visible in the type system. Use Optional when the absence of a value is meaningful and callers need to react differently to present vs absent values: Optional<User> findById(Long id) clearly signals that the user may not exist.
+
+Use Null Object when the absence of a dependency should be transparent to callers—the system should behave correctly without any conditional logic. A NullLogger, NullCache, or NullMetricsReporter lets the rest of the code run unchanged whether or not the feature is enabled. The key distinction: Optional is for values where absence matters to the caller; Null Object is for services/dependencies where absence should be invisible.`
+      },
+      {
+        question: 'What are the risks of overusing the Null Object pattern?',
+        answer: `The main risk is hiding errors. If a required dependency is null due to a configuration bug and you inject a Null Object, the system silently does nothing instead of failing fast with a clear error. This makes bugs harder to detect and debug.
+
+Null Objects work well for optional features (logging, caching, metrics) where disabling them is a valid configuration. They are inappropriate for required dependencies (a payment processor that does nothing would silently lose money). Also, Null Objects can become maintenance burdens if the interface is large—every new interface method requires a corresponding no-op implementation in the Null Object. Use the pattern selectively.`
+      }
+    ],
+
+    tips: [
+      'Make Null Objects clearly named: NullLogger, NoOpCache, DisabledNotifier',
+      'Document that a class is a Null Object implementation to avoid confusion',
+      'Use Null Objects for optional cross-cutting concerns: logging, metrics, caching, feature flags',
+      'Never use Null Objects for required dependencies where absence should fail fast',
+      'Consider language-level null safety (Kotlin, Swift, TypeScript strict null checks) as a more comprehensive solution'
+    ],
+
+    sampleQuestions: [
+      'Explain the Null Object pattern with a concrete example',
+      'How does Null Object differ from Optional<T>?',
+      'Design a NullLogger and show how it eliminates null checks',
+      'When is the Null Object pattern inappropriate?',
+      'How does the Null Object pattern relate to the Interface Segregation Principle?'
+    ]
+  },
+
+  // ─────────────────────────────────────────
+  // Advanced Principles
+  // ─────────────────────────────────────────
+  {
+    id: 'dependency-injection',
+    title: 'Dependency Injection',
+    icon: 'compass',
+    color: '#10b981',
+    questions: 8,
+    description: 'Provide dependencies to a class from outside rather than letting it create them.',
+
+    introduction: `Dependency Injection (DI) is a technique where an object receives its dependencies from an external source rather than creating them itself. Instead of UserService creating new UserRepository() internally, the repository is passed in through the constructor, a setter, or a method parameter. This small inversion has profound effects on testability, flexibility, and coupling.
+
+The underlying principle is Inversion of Control (IoC): the class declares what it needs, and a framework or caller decides what to provide. This shifts control from the class to its environment. DI frameworks like Spring (Java), Dagger (Android), and Angular (TypeScript) automate this process by reading declarations (@Autowired, @Inject) and wiring dependencies at startup.
+
+Without DI, classes instantiate their own dependencies, making them tightly coupled. Unit testing a class that creates a real database connection inside its constructor is painful—you cannot easily substitute a mock. With DI, you inject a mock repository in tests and the real one in production, without changing the class under test.`,
+
+    keyQuestions: [
+      {
+        question: 'What are the three forms of dependency injection?',
+        answer: `Constructor injection passes dependencies through the class constructor. This is the preferred form because it makes dependencies explicit, required, and immutable once set. The class cannot be instantiated without its dependencies, preventing partially constructed objects.
+
+Setter injection passes dependencies through setter methods after construction. This allows optional dependencies and circular dependency resolution, but the object can exist in an invalid state between construction and setter calls.
+
+Interface/method injection injects dependencies through a method defined in an interface that the class implements. It is the least common form and adds interface overhead. In practice, prefer constructor injection for required dependencies and setter injection only for optional ones. DI frameworks support all three forms.`
+      },
+      {
+        question: 'What is the Service Locator pattern and why is it considered an anti-pattern?',
+        answer: `Service Locator provides a global registry (ServiceLocator.get(UserRepository.class)) that classes call to retrieve their dependencies. It superficially resembles DI but is fundamentally different: the class is still responsible for fetching its own dependencies, just through a different mechanism.
+
+Service Locator is considered an anti-pattern because dependencies are hidden inside method bodies rather than declared in constructors—you cannot know what a class depends on without reading its source code. Testing requires setting up the global registry with mocks, which is fragile and order-dependent. DI makes dependencies explicit and injectible from the outside; Service Locator hides them and couples the class to the locator itself. Martin Fowler's article "Inversion of Control Containers and the Dependency Injection pattern" provides the canonical comparison.`
+      }
+    ],
+
+    tips: [
+      'Prefer constructor injection over setter or field injection for required dependencies',
+      'Do not inject more than 3-4 dependencies into one class; too many suggests Single Responsibility violation',
+      'DI frameworks are optional; manual DI (passing dependencies in constructors) works well in smaller codebases',
+      'Never use Service Locator as a substitute for DI; it hides dependencies and makes code harder to test',
+      'Circular dependencies (A needs B, B needs A) are a design smell; break the cycle by introducing a third class or event'
+    ],
+
+    sampleQuestions: [
+      'What is Dependency Injection and what problem does it solve?',
+      'Compare constructor injection, setter injection, and field injection',
+      'How does DI improve unit testability?',
+      'What is Inversion of Control and how does it relate to DI?',
+      'Why is Service Locator considered an anti-pattern compared to DI?'
+    ]
+  },
+  {
+    id: 'domain-driven-design',
+    title: 'Domain-Driven Design',
+    icon: 'compass',
+    color: '#10b981',
+    questions: 8,
+    description: 'Model software around the business domain using a shared language and rich domain objects.',
+
+    introduction: `Domain-Driven Design (DDD) is an approach to software development that centers the design on the core business domain, using a shared language between developers and domain experts. Introduced by Eric Evans in his 2003 book, DDD provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling individual bounded contexts).
+
+The central idea is Ubiquitous Language: developers and domain experts use the exact same terms in conversations, in code, in tests, and in documentation. If a domain expert says "subscription renewal," that phrase appears as a class name, method name, and event name in the codebase. This alignment reduces translation errors between business requirements and implementation.
+
+Strategically, DDD introduces Bounded Contexts: explicit boundaries within which a specific domain model applies. The same word (like "Account") may mean different things in the billing context and the identity context—DDD makes these boundaries explicit rather than letting models blur together. Bounded Contexts communicate through Context Maps.
+
+Tactically, DDD provides patterns for modeling rich domain behavior: Entities (objects with identity), Value Objects (objects defined by their attributes), Aggregates (consistency boundaries with a root entity), Domain Events (significant state changes), Repositories (persistence abstraction), and Domain Services (stateless domain operations).`,
+
+    keyQuestions: [
+      {
+        question: 'What is an Aggregate and why is it important?',
+        answer: `An Aggregate is a cluster of domain objects that should be treated as a single unit for data changes. One object is the Aggregate Root—the only entry point for all operations on the aggregate. External code may hold a reference to the root, but never to internal entities directly.
+
+The Aggregate Root enforces all invariants for the cluster. An Order aggregate might contain the Order (root), OrderItems, and ShippingAddress. Adding an item is done through order.addItem(), which enforces business rules (maximum quantity, available stock). You can never directly add to order.items because that bypasses validation.
+
+Aggregates define transaction boundaries: all changes within an aggregate are committed atomically. Changes across aggregates use eventual consistency (domain events). Keeping aggregates small is critical for performance and concurrency—large aggregates become contention hotspots.`
+      },
+      {
+        question: 'What is the difference between an Entity and a Value Object?',
+        answer: `An Entity has identity that persists through state changes. Two User objects with the same email but different IDs are different entities. The identity (usually a UUID or database ID) is what distinguishes entities, not their attributes.
+
+A Value Object has no identity; it is defined entirely by its attributes. A Money(100, USD) object equals another Money(100, USD) object—they are the same conceptually. Value Objects should be immutable: instead of changing amount, you create a new Money object. Common examples: Money, Address, DateRange, Color, Email.
+
+The distinction matters for equality semantics, persistence strategy, and change management. Entities are persisted as rows with IDs; Value Objects are typically embedded in their parent entity's row or stored as a separate table without their own ID column.`
+      }
+    ],
+
+    tips: [
+      'Start with Ubiquitous Language before designing classes—get domain experts and developers in the same room',
+      'Keep Aggregates small (aim for 1-3 entities per aggregate) to avoid transaction contention',
+      'Use Value Objects aggressively; they eliminate primitive obsession and make domain concepts explicit',
+      'Bounded Contexts should have their own models; resist the temptation to share one "unified" model across contexts',
+      'Domain Events are the preferred way for bounded contexts to communicate without tight coupling'
+    ],
+
+    sampleQuestions: [
+      'What is Ubiquitous Language and why is it central to DDD?',
+      'Explain the difference between an Entity and a Value Object with examples',
+      'What is an Aggregate Root and what invariants does it enforce?',
+      'How do Bounded Contexts prevent model corruption in large systems?',
+      'Design the domain model for an e-commerce order management system using DDD'
+    ]
+  },
+  {
+    id: 'anti-patterns',
+    title: 'OOP Anti-Patterns',
+    icon: 'compass',
+    color: '#10b981',
+    questions: 6,
+    description: 'Common design mistakes that reduce maintainability and how to refactor them.',
+
+    introduction: `Anti-patterns are recurring solutions that seem reasonable but consistently produce negative results. Recognizing them is as important as knowing design patterns, because real codebases are full of them and interviewers often ask candidates to identify and fix them.
+
+The most dangerous anti-patterns are those that appear to work in the short term. A God Class accumulates all logic for a subsystem—it feels convenient until it becomes a 3000-line class that nobody dares change. Spaghetti Code arises from years of quick fixes without refactoring—the control flow becomes impossible to follow. The Anemic Domain Model looks like clean object-oriented code but strips domain objects of behavior, leaving the business logic scattered in service classes.
+
+Understanding anti-patterns also helps in code reviews. When you can name the problem ("this is the Primitive Obsession anti-pattern—we should introduce a Money value object"), you communicate precisely and propose concrete solutions rather than vague complaints.`,
+
+    keyQuestions: [
+      {
+        question: 'What is the God Object anti-pattern and how do you refactor it?',
+        answer: `A God Object (also called God Class) is a class that knows too much and does too much. It accumulates references to most other objects in the system and contains business logic that belongs across multiple smaller classes. It violates Single Responsibility Principle at scale.
+
+Refactoring: identify the distinct responsibilities crammed into the God Class, extract each into a focused class, and rewire the dependencies. Start with the easiest extraction—move a cohesive cluster of methods and fields into a new class and delegate from the God Class. Repeat until each class has one clear purpose. The key challenge is that God Classes often have hundreds of callers—use your IDE's extract class refactoring with test coverage to move safely.`
+      },
+      {
+        question: 'What is the Anemic Domain Model and why is it considered an anti-pattern?',
+        answer: `An Anemic Domain Model has domain objects (User, Order, Product) that contain only fields and getters/setters, with all business logic in separate Service classes (UserService, OrderService). Martin Fowler coined this term and considers it a misapplication of OOP that uses the form of objects without their substance.
+
+The problem: business rules are scattered across service classes, making them hard to find and reuse. The domain objects provide no self-validation—an Order can be in an impossible state (negative quantity, null shipping address) with no enforcement. Refactoring means moving behavior back into domain objects: order.cancel() instead of orderService.cancelOrder(order), with the cancellation rules enforced inside the Order class. This produces a rich domain model where objects encapsulate both state and behavior.`
+      }
+    ],
+
+    tips: [
+      'Learn to name anti-patterns precisely—naming a problem is the first step to fixing it',
+      'God Classes often have many callers; use the Strangler Fig pattern to extract incrementally',
+      'Primitive Obsession is common: replace raw strings and ints with typed Value Objects (Email, Money, OrderId)',
+      'Feature Envy (a method more interested in another class than its own) suggests the method belongs in the other class',
+      'Data Clumps (groups of fields always appearing together) signal a missing Value Object or Entity'
+    ],
+
+    sampleQuestions: [
+      'Identify and describe three common OOP anti-patterns',
+      'How would you refactor a God Class that has grown to 2000 lines?',
+      'What is the Anemic Domain Model and how does it differ from a rich domain model?',
+      'Explain Primitive Obsession with an example and show how to fix it',
+      'How does Feature Envy violate the Single Responsibility Principle?'
+    ]
+  },
+  {
+    id: 'concurrency-patterns',
+    title: 'Concurrency Patterns',
+    icon: 'compass',
+    color: '#10b981',
+    questions: 7,
+    description: 'Patterns for safely coordinating concurrent threads and avoiding race conditions.',
+
+    introduction: `Concurrency patterns address the fundamental challenges of multi-threaded programming: race conditions, deadlocks, starvation, and visibility issues. These patterns appear constantly in system design interviews at senior levels and in LLD problems that involve shared state.
+
+A race condition occurs when the outcome depends on the relative timing of threads—two threads reading, modifying, and writing a shared counter can lose updates. A deadlock occurs when two or more threads wait forever for each other to release locks. These bugs are notoriously hard to reproduce because they depend on thread scheduling, which is non-deterministic.
+
+Modern languages provide higher-level concurrency abstractions (Java's java.util.concurrent, Python's asyncio, Go's goroutines and channels) that encode proven patterns. Understanding the patterns behind these abstractions—Thread Pool, Producer-Consumer, Read-Write Lock, Active Object—helps you use the abstractions correctly and design correct concurrent systems from scratch.`,
+
+    keyQuestions: [
+      {
+        question: 'How does the Thread Pool pattern improve performance over creating threads on demand?',
+        answer: `Creating a thread is expensive: the OS must allocate stack memory (typically 512KB-1MB), initialize thread-local storage, and register the thread with the scheduler. If your server creates a new thread for each incoming request, the thread creation overhead becomes significant at high request rates, and unbounded thread creation can exhaust memory.
+
+A Thread Pool creates a fixed number of threads at startup and reuses them across many tasks. Work items are placed in a queue; idle threads pick them up. The pool bounds the maximum concurrency (preventing resource exhaustion) while amortizing the thread creation cost. Java's Executors.newFixedThreadPool(n) and Python's ThreadPoolExecutor implement this. Key parameters: pool size (usually CPU cores for CPU-bound, higher for I/O-bound), queue capacity (bounded queues prevent backpressure buildup), and rejection policy (what happens when the queue is full).`
+      },
+      {
+        question: 'Explain the Producer-Consumer pattern and how BlockingQueue enables it.',
+        answer: `The Producer-Consumer pattern decouples the rate of work production from the rate of work consumption. Producers add work items to a shared queue; consumers take and process them. This buffers bursts: if producers temporarily outpace consumers, the queue absorbs the excess.
+
+Java's BlockingQueue interface provides the synchronization: put(item) blocks if the queue is full, take() blocks if the queue is empty. This eliminates the need for explicit wait/notify synchronization. LinkedBlockingQueue is unbounded (risky—can grow indefinitely), while ArrayBlockingQueue has a fixed capacity that creates natural backpressure. In practice, always use bounded queues with a rejection policy. The pattern maps directly to real systems: a web server puts requests into a queue; worker threads consume and process them.`
+      }
+    ],
+
+    tips: [
+      'Prefer immutable objects for shared data—they eliminate synchronization needs entirely',
+      'Use the highest-level concurrency abstraction available: ExecutorService over raw Thread, CompletableFuture over synchronized',
+      'Lock ordering prevents deadlocks: always acquire locks in the same global order across all threads',
+      'The volatile keyword in Java ensures visibility but not atomicity—use AtomicInteger for atomic read-modify-write',
+      'Thread-local variables (ThreadLocal in Java) give each thread its own copy, eliminating sharing entirely'
+    ],
+
+    sampleQuestions: [
+      'Design a thread-safe bounded blocking queue from scratch',
+      'How does the Thread Pool pattern prevent thread exhaustion?',
+      'Explain the Read-Write Lock pattern and when it improves performance over a mutex',
+      'What is a race condition? Give an example and explain how to prevent it',
+      'How would you implement a Producer-Consumer system using BlockingQueue?'
     ]
   },
 ];
