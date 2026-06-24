@@ -22,7 +22,15 @@ export const mlopsTopicCategoryMap = {
   'ml-monitoring-alerting':       'mlops-core',
   'mlops-cicd-automation':        'mlops-core',
   'mlops-real-world-cases':       'mlops-core',
-  'responsible-ai-explainability': 'mlops-core',
+  'responsible-ai-explainability':   'mlops-core',
+  'mlops-data-versioning':           'mlops-core',
+  'mlops-pipeline-orchestration':    'mlops-core',
+  'mlops-model-evaluation':          'mlops-core',
+  'mlops-azure-platform':            'mlops-core',
+  'mlops-deployment-strategies':     'mlops-core',
+  'mlops-ml-security':               'mlops-core',
+  'mlops-online-continual-learning': 'mlops-core',
+  'mlops-testing-infrastructure':    'mlops-core',
 };
 
 export const mlopsTopics = [
