@@ -4,11 +4,11 @@
 export const troubleshootingCategories = [
   { id: 'aws-infra',        name: 'AWS Infrastructure',          icon: 'cloud',        color: '#f97316' },
   { id: 'networking',       name: 'Network & Connectivity',       icon: 'globe',        color: '#3b82f6' },
-  { id: 'cicd-issues',      name: 'CI/CD & Deployment',          icon: 'gitMerge',     color: '#22c55e' },
-  { id: 'observability',    name: 'Alerting & Observability',    icon: 'activity',     color: '#06b6d4' },
+  { id: 'kubernetes-issues',name: 'Kubernetes Issues',           icon: 'gitBranch',    color: '#f59e0b' },
   { id: 'database',         name: 'Database Issues',              icon: 'database',     color: '#8b5cf6' },
   { id: 'performance',      name: 'Performance & Resources',     icon: 'trendingUp',   color: '#ef4444' },
-  { id: 'kubernetes-issues',name: 'Kubernetes Issues',           icon: 'gitBranch',    color: '#f59e0b' },
+  { id: 'observability',    name: 'Alerting & Observability',    icon: 'activity',     color: '#06b6d4' },
+  { id: 'cicd-issues',      name: 'CI/CD & Deployment',          icon: 'gitMerge',     color: '#22c55e' },
 ];
 
 export const troubleshootingTopicCategoryMap = {
