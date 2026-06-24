@@ -131,7 +131,7 @@ export default function PricingPage() {
       </div>
 
       {/* ── Page title ── */}
-      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '36px 32px 30px' }}>
+      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '22px 32px 16px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #3683DC 0%, var(--cam-gold-leaf) 45%, #60A5FA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Plans & Pricing
@@ -143,8 +143,8 @@ export default function PricingPage() {
       </div>
 
       {/* ── Main content ── */}
-      <div style={{ flex: 1, padding: '32px 32px 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
+      <div style={{ flex: 1, padding: '24px 32px 40px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 28 }}>
 
           {/* Plans */}
           <section>

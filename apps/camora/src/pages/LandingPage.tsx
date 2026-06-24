@@ -74,16 +74,6 @@ const APPA: Step[] = [
 ];
 
 
-const APPA_ICON_PATHS: JSX.Element[] = [
-  /* Apply — document with lines */
-  <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
-  /* Prepare — open book */
-  <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
-  /* Practice — code brackets */
-  <><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>,
-  /* Attend — microphone */
-  <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></>,
-];
 
 const LOGO_TOKEN = 'pk_VzK1OM-OQSCUuysDpOCzKw';
 const COMPANY_LOGOS = [
@@ -269,7 +259,7 @@ export default function LandingPage() {
           style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.25) 35%, rgba(99,102,241,0.2) 65%, transparent 95%)' }}
         />
 
-        <Container className="relative pt-16 pb-16 md:pt-24 md:pb-20">
+        <Container className="relative pt-10 pb-10 md:pt-16 md:pb-14">
           {/* Centered headline block */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
@@ -280,7 +270,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.h1
-              className="mt-6 font-display text-[44px] sm:text-[56px] md:text-[64px] lg:text-[72px] font-bold tracking-tight leading-[1.0]"
+              className="mt-5 font-display text-[38px] sm:text-[48px] md:text-[56px] lg:text-[64px] font-bold tracking-tight leading-[1.0]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
@@ -336,7 +326,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ LOGO STRIP ═══════════ */}
-      <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-10">
+      <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-6">
         <Container>
           <p className="text-center font-mono text-[10.5px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">
             Trusted by engineers at
@@ -362,7 +352,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ APPA — THE PROCESS ═══════════ */}
-      <Section tone="surface" spacing="lg">
+      <Section tone="surface" spacing="md">
         <Container>
           <Reveal>
             <div
@@ -373,9 +363,9 @@ export default function LandingPage() {
                 border: '1px solid var(--border)',
               }}
             >
-              <div className="px-8 pt-8 pb-10 md:px-12 md:pt-10">
+              <div className="px-6 pt-6 pb-8 md:px-10 md:pt-8">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-5">
                   <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-code)' }}>
                     The process
                   </p>
@@ -437,7 +427,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ CAPABILITY DECK ═══════════ */}
-      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
+      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-5">
@@ -466,7 +456,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ FEATURES — Bento grid ═══════════ */}
-      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
+      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -475,7 +465,7 @@ export default function LandingPage() {
             />
           </Reveal>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
                 <Reveal key={f.title} delay={i * 0.06}>
                   <SurfaceCard interactive padding="lg" className="h-full group border-l-2 border-[var(--accent)]">
@@ -522,7 +512,7 @@ export default function LandingPage() {
 
 
       {/* ═══════════ JOB URL ANALYSIS ═══════════ */}
-      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
+      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 w-full">
@@ -547,7 +537,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ TWO AUDIENCES ═══════════ */}
-      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
+      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -575,7 +565,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ═══════════ TESTIMONIALS ═══════════ */}
-      <Section tone="surface" spacing="lg" className="border-b border-[var(--border)]">
+      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
           <Reveal>
             <SectionHeading
@@ -583,7 +573,7 @@ export default function LandingPage() {
               title={<>Engineers who <span className="text-[var(--cam-primary)]">got the offer.</span></>}
             />
           </Reveal>
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {TESTIMONIALS.map((t, i) => (
               <Reveal key={t.name} delay={i * 0.05}>
                 <div
@@ -625,7 +615,7 @@ export default function LandingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="surface" spacing="md">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl px-8 py-14 md:px-14 md:py-16" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <div className="relative overflow-hidden rounded-3xl px-8 py-10 md:px-14 md:py-12" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             {/* Animated aurora gradient */}
             <div
               aria-hidden="true"
