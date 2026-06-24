@@ -1002,7 +1002,7 @@ export default function DocsPage({ onBack }) {
                   challenges={devopsChallenges}
                   onBack={() => setSelectedTopic(null)}
                 />
-              ) : selectedTopic && !topicDetails && topicsLoading ? (
+              ) : selectedTopic && !topicDetails && (topicsLoading || (!!HEAVY_TOPIC_LOADERS[activePage] && progressInfo.total === 0)) ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: 'var(--accent)' }} aria-label="Loading topic" />
                 </div>
