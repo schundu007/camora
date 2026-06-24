@@ -2025,6 +2025,35 @@ Always bound traversal depth in production queries. An unbounded traversal on a 
       'https://docs.aws.amazon.com/keyspaces/latest/devguide/what-is-keyspaces.html',
       'https://docs.aws.amazon.com/keyspaces/latest/devguide/best-practices.html',
     ],
+    visualizations: [
+      {
+        title: 'Keyspaces Wide-Column Data Model and Time-Bucketing Patterns',
+        description: `Amazon Keyspaces is a serverless, Apache Cassandra-compatible wide-column database. The fundamental difference from relational databases is that the schema must be designed around specific query access patterns, not around normalized entities.
+
+The partition key hashes to determine which storage node holds the data. The clustering key defines the physical sort order within a partition. A query must specify the full partition key -- range scans on clustering keys within a partition are efficient; anything that requires scanning multiple partitions or omits the partition key is expensive.
+
+Wide-column means each row can have a different set of non-primary-key columns. Columns not present in a row consume no storage. This flexibility enables sparse data models where different entity subtypes share a table without nullable column overhead.
+
+The "one query, one table" principle drives Keyspaces schema design. If you need to look up orders by customer ID, create a table with customer_id as the partition key. If you also need orders by status, create a separate table (or a materialized view equivalent) optimized for that query. Denormalization and data duplication are intentional -- Keyspaces (like Cassandra) trades storage for query performance.
+
+Time-bucketing is the standard pattern for time-series data in Keyspaces. An IoT device that writes continuously would create an ever-growing partition if device_id alone is the partition key -- eventually exceeding the 10GB partition limit and creating a hot partition. The solution is a composite partition key: device_id + year_month. Each month's data lives in its own partition. Queries for a device in a specific month specify the exact partition key. Queries spanning multiple months issue parallel requests per month-bucket and merge results in the application.
+
+TTL (time-to-live) is built into Keyspaces at the table and row level. Set default_time_to_live on the table for automatic expiry of all rows, or use USING TTL in individual INSERT statements for per-row expiry. TTL is essential for any data with a bounded retention requirement (sensor readings, session tokens, event logs).
+
+Keyspaces supports LOCAL_QUORUM (strongly consistent majority-acknowledgment reads) and LOCAL_ONE (single-replica, eventually consistent). Always write at LOCAL_QUORUM durability (Keyspaces default). For reads, LOCAL_ONE is faster but may return stale data during replica lag.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the partition size limit in Keyspaces?', a: '10GB per partition. Time-bucket composite partition keys (device_id + year_month) prevent any single partition from growing unboundedly.' },
+      { q: 'What consistency levels does Keyspaces support?', a: 'LOCAL_QUORUM (strongly consistent, majority of replicas acknowledge) and LOCAL_ONE (eventually consistent, single replica). Writes always use LOCAL_QUORUM durability.' },
+      { q: 'What is the guiding principle for Keyspaces schema design?', a: 'One query, one table. Design each table to serve one specific access pattern efficiently. Denormalize and duplicate data across query-specific tables -- joins do not exist.' },
+      { q: 'How do you prevent hot partitions for time-series data in Keyspaces?', a: 'Use a composite partition key: entity_id + time_bucket (e.g., device_id + year_month). Each time bucket is a separate partition, distributing write load across partitions.' },
+      { q: 'Does Keyspaces support Cassandra lightweight transactions (LWT)?', a: 'No -- LWT (IF NOT EXISTS, IF condition) is not supported. This is a major compatibility gap for applications relying on compare-and-set operations.' },
+      { q: 'How do you authenticate to Keyspaces?', a: 'AWS SigV4 authentication -- use the Amazon Keyspaces SigV4 plugin for the Cassandra driver. Standard Cassandra username/password authentication is not used.' },
+      { q: 'What does TTL do in Keyspaces?', a: 'Automatically deletes rows after a configured number of seconds. Set per-table via default_time_to_live or per-row via USING TTL in INSERT. Essential for bounded-retention workloads like sensor data and session tokens.' },
+      { q: 'When is Keyspaces a better choice than DynamoDB?', a: 'When you have existing Cassandra applications using CQL drivers (minimal code changes for migration), need Cassandra-specific data model semantics, or require multi-region tables with eventual consistency for globally distributed writes.' },
+      { q: 'Does Keyspaces support point-in-time recovery?', a: 'Yes -- PITR to any second within the last 35 days. A restore creates a new table.' },
+    ],
   },
   {
     id: 'aws-timestream',
