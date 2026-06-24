@@ -88,7 +88,7 @@ export const ddiaTopics = [
     color: '#6366f1',
     questions: 3,
     description: 'How DDIA frames data systems — databases, caches, queues, search indexes — as components with different access pattern trade-offs.',
-    visualizations: [],
+    visualizations: [{ title: 'Data-Intensive Application Stack', description: '', image: '/diagrams/ddia/data-systems-overview-01.png' }],
     introduction: `Martin Kleppmann opens DDIA by distinguishing data-intensive applications from compute-intensive ones. Most modern applications are not limited by CPU; they are limited by the volume, complexity, and rate of change of data.
 
 A single application typically stitches together multiple specialized data components: a relational database for durable storage, a cache (Redis) for speeding up reads, a search index (Elasticsearch) for full-text queries, a message queue (Kafka) for decoupling asynchronous processing, and a stream processor (Flink) for derived views.
@@ -139,7 +139,7 @@ The application uses all five because each serves a different access pattern. Th
     color: '#6366f1',
     questions: 5,
     description: 'The three core concerns of every data system and how to reason about them in design interviews.',
-    visualizations: [],
+    visualizations: [{ title: 'Twitter Fan-out Architecture', description: '', image: '/diagrams/ddia/reliability-scalability-01.png' }],
     introduction: `Chapter 1 of DDIA opens with the observation that most applications are data-intensive rather than compute-intensive — the real challenges are storing, querying, and transforming data at scale, not raw CPU throughput.
 
 Reliability means the system continues to work correctly even when faults occur — hardware faults, software bugs, and human errors. The key distinction is fault vs failure: a fault is one component deviating from spec; a failure is the whole system stopping. Reliable systems tolerate faults before they become failures. Techniques include redundancy (RAID, replication), chaos engineering to trigger faults deliberately, and design for recoverability (backups, atomic transactions).
@@ -184,7 +184,7 @@ Scalability strategies fall into two categories: scaling up (larger machines —
     color: '#6366f1',
     questions: 4,
     description: 'How to set, measure, and defend latency SLOs with tail percentiles instead of averages.',
-    visualizations: [],
+    visualizations: [{ title: 'Response Time Percentiles', description: '', image: '/diagrams/ddia/percentiles-01.png' }],
     introduction: `An SLA (Service Level Agreement) is a contract with customers specifying expected performance, often including an SLO (Service Level Objective) such as "p99 latency under 200ms for 99.9% of requests." Kleppmann argues that percentile metrics are the only honest way to describe latency — arithmetic means hide the distribution.
 
 Why p99 matters: if a service calls 100 backend dependencies, and each has a 1% chance of being slow, almost every request will hit at least one slow backend. Tail latency amplification is the effect where a small percentage of slow responses at one layer becomes the majority of slow responses at a higher layer.
@@ -229,7 +229,7 @@ We use p99 as the standard SLO target because it is the highest percentile we ca
     color: '#6366f1',
     questions: 4,
     description: 'Write fan-out vs read fan-out trade-offs illustrated by the canonical Twitter home timeline case.',
-    visualizations: [],
+    visualizations: [{ title: 'Fan-out Load Model', description: '', image: '/diagrams/ddia/fan-out-01.png' }],
     introduction: `The Twitter home timeline problem is DDIA's most-cited example of load parameter trade-offs. Two approaches exist:
 
 Approach 1 — Read fan-out (pull on read): when a user requests their timeline, query tweets from everyone they follow and merge in memory. Simple writes (one INSERT per tweet), expensive reads (query N followed accounts, merge, sort).
@@ -279,7 +279,7 @@ The trade-off is write cost vs read latency. Write fan-out trades storage and ba
     color: '#8b5cf6',
     questions: 5,
     description: 'When to use relational (PostgreSQL) vs document (MongoDB) models and the impedance mismatch problem.',
-    visualizations: [],
+    visualizations: [{ title: 'Relational vs Document Model', description: '', image: '/diagrams/ddia/relational-vs-document-01.png' }],
     introduction: `The relational model (Codd, 1970) organizes data into tables with rows and typed columns. Relations between entities are expressed through foreign keys and joins. It enforces schema at write time and normalizes data to reduce redundancy.
 
 The document model stores self-contained documents (JSON, BSON, XML). Documents map naturally to object-oriented code — one document fetch retrieves an entire entity with its nested data, avoiding joins. This locality is the document model's primary advantage.
@@ -324,7 +324,7 @@ I choose relational (PostgreSQL) when: data has genuine many-to-many relationshi
     color: '#8b5cf6',
     questions: 4,
     description: 'Property graphs, triple-stores, and when to use graph databases for highly connected data.',
-    visualizations: [],
+    visualizations: [{ title: 'Property Graph Data Model', description: '', image: '/diagrams/ddia/graph-data-models-01.png' }],
     introduction: `Graph databases excel when data has many-to-many relationships where the connections themselves carry meaning. Social networks (people follow people), road networks (intersections connected by roads), recommendation engines (users rate items, items have categories), and knowledge graphs all fit this model naturally.
 
 The property graph model (Neo4j) has vertices and edges, both carrying arbitrary key-value properties. Edges are directed and have a type label. Cypher is Neo4j's declarative query language — you describe the pattern you want to find, not how to traverse it.
@@ -366,7 +366,7 @@ I would not choose a graph database for a simple social profile with a few frien
     color: '#8b5cf6',
     questions: 3,
     description: 'Why SQL is declarative, how query optimizers work, and how MapReduce differs from SQL.',
-    visualizations: [],
+    visualizations: [{ title: 'Property Graph and Cypher Query', description: '', image: '/diagrams/ddia/graph-data-models-01.png' }],
     introduction: `SQL is declarative: you specify what result you want, not how to compute it. The query optimizer chooses the execution plan — which indexes to use, join order, whether to use a hash join or nested loop join. This lets the optimizer improve independently of application code.
 
 Imperative code (a for-loop over data) tells the computer exactly how to compute the result. It is harder to parallelize and impossible for a query planner to optimize.
@@ -406,7 +406,7 @@ The contrast is MapReduce, where you write Python or Java map/reduce functions. 
     color: '#8b5cf6',
     questions: 3,
     description: 'Enforcing schema at write time (relational) vs at read time (document/schemaless) and the trade-offs for schema evolution.',
-    visualizations: [],
+    visualizations: [{ title: 'Schema-on-Write vs Schema-on-Read', description: '', image: '/diagrams/ddia/schema-on-read-vs-write-01.png' }],
     introduction: `Schema-on-write (relational databases): the database enforces a fixed schema. INSERT statements that violate the schema are rejected. All data in a column is guaranteed to be of the declared type. Schema changes require ALTER TABLE migrations.
 
 Schema-on-read (document databases, CSV files, data lakes): the structure is implicit, interpreted by the application when reading. Any document can be stored regardless of shape. The application must handle missing fields and type variations.
@@ -453,7 +453,7 @@ The pattern for zero-downtime: expand (add new schema compatible with old code),
     color: '#0ea5e9',
     questions: 5,
     description: 'How log-structured merge-trees work, write amplification, space amplification, and which databases use them.',
-    visualizations: [],
+    visualizations: [{ title: 'LSM-Tree Write and Read Path', description: '', image: '/diagrams/ddia/lsm-trees-01.png' }],
     introduction: `LSM-trees (Log-Structured Merge-Trees) are the storage engine behind RocksDB, Cassandra, HBase, and LevelDB. They are optimized for write-heavy workloads.
 
 Write path: writes go to an in-memory buffer (MemTable) and a write-ahead log (WAL) on disk. When the MemTable fills, it is flushed to disk as an SSTable (Sorted String Table) — an immutable file with keys sorted in order. Reads check the MemTable first, then SSTables from newest to oldest.
@@ -503,7 +503,7 @@ Compaction runs in the background, merging SSTables and removing overwritten or 
     color: '#0ea5e9',
     questions: 5,
     description: 'How B-tree indexes work, the WAL for crash recovery, and why B-trees are read-optimized.',
-    visualizations: [],
+    visualizations: [{ title: 'B-Tree Structure and Trade-offs', description: '', image: '/diagrams/ddia/b-trees-01.png' }],
     introduction: `B-trees are the dominant storage structure in relational databases — PostgreSQL, MySQL InnoDB, Oracle, SQL Server all use B-trees as their primary index structure. They are optimized for reads and random access.
 
 A B-tree breaks the database into fixed-size pages (typically 4KB or 8KB, matching the OS page size). Each page has up to n keys and n+1 child page references. Pages form a tree; the root page is always in a known location. To look up a key, traverse from root to leaf — typically 3-4 levels for a database with billions of rows.
@@ -551,7 +551,7 @@ This is why WAL writes must be synchronous (fsync) while page writes can be asyn
     color: '#0ea5e9',
     questions: 4,
     description: 'Hash indexes, B-tree secondary indexes, multi-column indexes, and the read vs write trade-off of every index.',
-    visualizations: [],
+    visualizations: [{ title: 'Index Types: Heap, Clustered, Covering', description: '', image: '/diagrams/ddia/indexes-01.png' }],
     introduction: `An index is a derived data structure that speeds up reads at the cost of write overhead. Every index adds a write to every INSERT, UPDATE, and DELETE. Too many indexes slow writes; too few slow reads.
 
 Hash indexes: a hash map from key to disk offset. O(1) point lookups, but cannot support range queries. Bitcask (Riak's storage engine) uses this model — all keys must fit in RAM. Good for high-throughput key-value workloads with infrequent key set changes.
@@ -599,7 +599,7 @@ If I instead created the index as (created_at, user_id), the database would have
     color: '#0ea5e9',
     questions: 4,
     description: 'Online transaction processing vs online analytical processing — different access patterns, different storage strategies.',
-    visualizations: [],
+    visualizations: [{ title: 'OLTP vs OLAP Star Schema', description: '', image: '/diagrams/ddia/olap-vs-oltp-01.png' }],
     introduction: `OLTP (Online Transaction Processing) systems handle user-facing, low-latency reads and writes. Access pattern: small number of rows per query, often by primary key. Examples: PostgreSQL backing an e-commerce site, MySQL storing user profiles.
 
 OLAP (Online Analytical Processing) systems handle analytical queries that aggregate across large portions of the dataset. Access pattern: scan millions or billions of rows, compute aggregates (SUM, COUNT, AVG) across date ranges or segments. Examples: Redshift, BigQuery, Snowflake backing a business intelligence dashboard.
@@ -646,7 +646,7 @@ Finally, CPU vectorization: operating on a single column laid out contiguously i
     color: '#0ea5e9',
     questions: 4,
     description: 'How column stores achieve I/O reduction, compression strategies (RLE, bitmap encoding, dictionary), and vectorized execution.',
-    visualizations: [],
+    visualizations: [{ title: 'Row vs Column Storage Layout', description: '', image: '/diagrams/ddia/column-storage-01.png' }],
     introduction: `Column-oriented storage (Parquet, ORC, Redshift, BigQuery internal format, DuckDB) stores each column separately. An analytical query reading three columns out of fifty reads only 6% of the raw data.
 
 Compression works by encoding repeated values. Run-length encoding (RLE) collapses consecutive repeated values into (value, count) pairs: the "country" column with 50,000 consecutive "US" values stores as ("US", 50000). Bitmap indexes represent each distinct value as a bitmap — for a "status" column with values IN_PROGRESS, DONE, FAILED, three bitmaps encode which rows have each value. Bitwise AND/OR operations across bitmaps are extremely fast.
@@ -697,7 +697,7 @@ Cost impact: on Athena (priced per byte scanned), switching from CSV to Parquet 
     color: '#14b8a6',
     questions: 4,
     description: 'Trade-offs between human-readable (JSON, XML) and binary (Protobuf, Avro, Thrift, MessagePack) encoding formats.',
-    visualizations: [],
+    visualizations: [{ title: 'Encoding Format Comparison', description: '', image: '/diagrams/ddia/encoding-formats-01.png' }],
     introduction: `Encoding (serialization) formats determine how in-memory data structures are converted to bytes for storage or network transmission.
 
 Text formats (JSON, XML, CSV): human-readable, wide tooling support. Weaknesses: no binary type (JSON encodes numbers as text, losing precision for large integers), verbose (field names repeated in every record), no schema enforcement.
@@ -750,7 +750,7 @@ I would not choose Protobuf for external APIs where humans need to read and debu
     color: '#14b8a6',
     questions: 4,
     description: 'How to change schemas without breaking producers and consumers — backward compatibility, forward compatibility, and full compatibility.',
-    visualizations: [],
+    visualizations: [{ title: 'Forward vs Backward Compatibility', description: '', image: '/diagrams/ddia/schema-evolution-01.png' }],
     introduction: `Schema evolution is the ability to change a data format without breaking existing producers or consumers. Critical in distributed systems where services are deployed independently.
 
 Backward compatibility: new code can read data written by old code. A new consumer can process old messages. Achieved by: adding optional fields with defaults, never removing required fields.
@@ -796,7 +796,7 @@ If you also need to change the field type (e.g., from int32 to int64), that requ
     color: '#14b8a6',
     questions: 3,
     description: 'Three ways services communicate data — via databases, via REST/RPC, and via asynchronous message queues.',
-    visualizations: [],
+    visualizations: [{ title: 'Three Modes of Dataflow', description: '', image: '/diagrams/ddia/dataflow-modes-01.png' }],
     introduction: `Kleppmann identifies three primary modes of dataflow between processes:
 
 1. Via databases: one process writes, another reads. The database is the integration point. The challenge is schema compatibility — if multiple services share a database, schema changes must be coordinated. Also, if old code reads a record updated by new code, it must handle unknown fields gracefully.
@@ -843,7 +843,7 @@ I use REST when: the caller needs an immediate response (user-facing reads), the
     color: '#f97316',
     questions: 6,
     description: 'How leader-follower replication works, failover procedures, and the trade-offs of synchronous vs asynchronous replication.',
-    visualizations: [],
+    visualizations: [{ title: 'Single-Leader Replication', description: '', image: '/diagrams/ddia/single-leader-01.png' }],
     introduction: `Single-leader replication (also called master-slave or primary-replica) is the most common replication model. One node is the leader; all writes go to the leader. The leader sends a replication log to followers; followers apply changes in the same order.
 
 Reads can be served from followers (read scaling) or the leader (read-your-writes consistency). Writes always go to the leader (no horizontal write scaling in this model).
@@ -894,7 +894,7 @@ Risk: if the old primary had unacknowledged asynchronous writes that no replica 
     color: '#f97316',
     questions: 4,
     description: 'Multi-datacenter replication, write conflicts, conflict resolution strategies, and use cases.',
-    visualizations: [],
+    visualizations: [{ title: 'Multi-Leader Conflict and Resolution', description: '', image: '/diagrams/ddia/multi-leader-01.png' }],
     introduction: `Multi-leader replication allows multiple nodes to accept writes. Each leader replicates to the others. This enables writes in multiple datacenters simultaneously, tolerating datacenter-level failures without stopping writes.
 
 Use case: a multinational application where users in Europe write to a European datacenter and users in the US write to a US datacenter. Each datacenter has a local leader; changes replicate asynchronously between leaders.
@@ -946,7 +946,7 @@ If I must use multi-leader for financial data, I treat conflicts as errors: reco
     color: '#f97316',
     questions: 5,
     description: 'Quorum reads and writes, vector clocks, read repair, anti-entropy, and the Dynamo paper model used by Cassandra and Riak.',
-    visualizations: [],
+    visualizations: [{ title: 'Leaderless Quorum (n=3, w=2, r=2)', description: '', image: '/diagrams/ddia/multi-leader-01.png' }],
     introduction: `Leaderless replication (Dynamo-style, used by Cassandra, Riak, Voldemort) removes the single leader constraint. Any replica can accept writes. Consistency is maintained through quorums.
 
 Quorum: with N replicas, a write that reaches W replicas is acknowledged; a read that queries R replicas and returns the most up-to-date value. For strong consistency: W + R > N. Typical: N=3, W=2, R=2 (quorum read and write). Any read will overlap with at least one node that received the latest write.
@@ -1001,7 +1001,7 @@ For a payment system, I would use QUORUM for writes and QUORUM for reads, ensuri
     color: '#f97316',
     questions: 4,
     description: 'Read-your-writes, monotonic reads, consistent prefix reads — the consistency guarantees that close the gaps caused by async replication lag.',
-    visualizations: [],
+    visualizations: [{ title: 'Replication Lag Anomalies', description: '', image: '/diagrams/ddia/replication-lag-01.png' }],
     introduction: `Asynchronous replication introduces replication lag: the time between a write on the leader and its visibility on replicas. Lag is typically milliseconds but can grow to seconds or minutes under load.
 
 Three consistency anomalies arise from replication lag:
@@ -1053,7 +1053,7 @@ In practice, option 3 (optimistic UI) is the best user experience, combined with
     color: '#f97316',
     questions: 4,
     description: 'The consistency model spectrum from eventual consistency to linearizability, and which guarantees each database provides.',
-    visualizations: [],
+    visualizations: [{ title: 'Consistency Guarantee Spectrum', description: '', image: '/diagrams/ddia/consistency-guarantees-01.png' }],
     introduction: `Consistency in distributed databases refers to the guarantees about what values a read can return relative to what has been written. Kleppmann covers a spectrum from weak to strong:
 
 Eventual consistency: given enough time and no new writes, all replicas converge to the same value. The weakest useful guarantee. Does not prevent temporary divergence, stale reads, or concurrent write conflicts.
@@ -1107,7 +1107,7 @@ The nuance DDIA adds: CAP is about what happens during a partition, not the norm
     color: '#ef4444',
     questions: 5,
     description: 'How to distribute data across partitions, hot-spot avoidance, and the trade-offs between range and hash partitioning.',
-    visualizations: [],
+    visualizations: [{ title: 'Key Range vs Hash Ring Partitioning', description: '', image: '/diagrams/ddia/partitioning-01.png' }],
     introduction: `Partitioning (sharding) distributes data across multiple nodes so that each node holds a subset of the data. Each partition is an independent database instance. The goal is to scale both reads and writes beyond what a single node can handle.
 
 Range partitioning: assign contiguous key ranges to partitions. E.g., A-F on partition 1, G-N on partition 2, O-Z on partition 3. Supports efficient range scans (all records for a date range are on one partition). Risk: hot spots — if most activity is on one key range (e.g., recent dates), one partition is overloaded while others are idle.
@@ -1157,7 +1157,7 @@ For hot sensor IDs (sensors that report at 1000x the average rate), I apply sub-
     color: '#ef4444',
     questions: 3,
     description: 'How to move partitions between nodes as the cluster grows, with minimal data movement and no downtime.',
-    visualizations: [],
+    visualizations: [{ title: 'Partition Rebalancing Strategies', description: '', image: '/diagrams/ddia/rebalancing-01.png' }],
     introduction: `Rebalancing is the process of redistributing partitions when nodes are added or removed. The goal is: spread load evenly across the new set of nodes, with minimal data movement, without interrupting reads and writes.
 
 Fixed number of partitions: create many more partitions than nodes from the start (e.g., 1000 partitions for 10 nodes = 100 partitions per node). When a new node joins, move some partitions to it. No partition splitting needed. Used by Elasticsearch and Riak. Problem: the number of partitions must be chosen upfront; too few limits future growth, too many wastes resources.
@@ -1202,7 +1202,7 @@ In both cases, the key invariant is: data is available for reads from at least o
     color: '#ef4444',
     questions: 3,
     description: 'Local vs global secondary indexes, scatter-gather queries, and the consistency trade-offs of each approach.',
-    visualizations: [],
+    visualizations: [{ title: 'Local vs Global Secondary Indexes', description: '', image: '/diagrams/ddia/secondary-indexes-partitioned-01.png' }],
     introduction: `Secondary indexes on partitioned data require a choice: where does the index live?
 
 Local secondary index (document-partitioned index): each partition maintains its own index for the data it contains. A query on the indexed field must scatter to all partitions and gather results — a scatter-gather query. Write is fast (index update is local to the partition that received the write). Read is slow for non-partition-key queries (fan-out to all partitions). Used by MongoDB, Cassandra (secondary indexes), and Elasticsearch.
@@ -1249,7 +1249,7 @@ Optimization: routing keys. If the query filters on a field that is also the rou
     color: '#22c55e',
     questions: 5,
     description: 'What atomicity, consistency, isolation, and durability actually mean in database systems.',
-    visualizations: [],
+    visualizations: [{ title: 'ACID Properties', description: '', image: '/diagrams/ddia/acid-01.png' }],
     introduction: `ACID is the set of properties that guarantee database transactions behave reliably.
 
 Atomicity: a transaction is all-or-nothing. If any step fails, the entire transaction is rolled back. Atomicity is about error recovery, not concurrency. The word "atomic" in ACID has nothing to do with concurrency atomicity (unlike linearizability).
@@ -1299,7 +1299,7 @@ For multi-server durability (protecting against the entire machine failing): rep
     color: '#22c55e',
     questions: 5,
     description: 'Read uncommitted, read committed, snapshot isolation, and serializable — what anomalies each level prevents.',
-    visualizations: [],
+    visualizations: [{ title: 'MVCC Snapshot Isolation Timeline', description: '', image: '/diagrams/ddia/isolation-levels-01.png' }],
     introduction: `Isolation levels define how much of a concurrent transaction's intermediate state is visible to other transactions. Stronger isolation = fewer anomalies = more coordination overhead.
 
 Read uncommitted: transactions see uncommitted writes from other transactions (dirty reads). Almost never used in practice. Provides no useful consistency guarantee.
@@ -1348,7 +1348,7 @@ In PostgreSQL, use SET TRANSACTION ISOLATION LEVEL SERIALIZABLE for the doctor-o
     color: '#22c55e',
     questions: 4,
     description: 'The two anomalies that snapshot isolation does not prevent, with concrete examples and mitigation strategies.',
-    visualizations: [],
+    visualizations: [{ title: 'Write Skew and Lost Update Anomalies', description: '', image: '/diagrams/ddia/write-skew-01.png' }],
     introduction: `Write skew and phantom reads are the two major anomalies that snapshot isolation does not prevent. Both require serializable isolation or application-level locking.
 
 Write skew: two transactions read overlapping data, make decisions, and write to different rows. The combined effect violates an application invariant, but neither write violates any single-row constraint. Examples: two users simultaneously claim the last item in stock, two doctors both go off call, two bookings claim the same meeting room.
@@ -1398,7 +1398,7 @@ I use fix 3 where possible: it requires no transaction isolation management and 
     color: '#22c55e',
     questions: 4,
     description: 'Two-phase locking, serializable snapshot isolation (SSI), and actual serial execution — three ways to achieve serializable transactions.',
-    visualizations: [],
+    visualizations: [{ title: '2PL vs SSI Serializability', description: '', image: '/diagrams/ddia/serializability-01.png' }],
     introduction: `Serializability — the strongest isolation level — can be implemented three ways, with different performance characteristics.
 
 Two-phase locking (2PL): the traditional approach (IBM System R, 1970s). During execution, transactions acquire locks on every record they read (shared locks) and write (exclusive locks). Shared locks block writes; exclusive locks block both reads and writes. Locks are held until commit. Guarantees serializability by preventing any concurrent access to locked rows. Cost: significant lock contention on hot records; deadlocks require detection and transaction abort.
@@ -1444,7 +1444,7 @@ PostgreSQL uses SSI for SERIALIZABLE isolation (since PostgreSQL 9.1). MySQL Inn
     color: '#f59e0b',
     questions: 4,
     description: 'Why partial failures make distributed systems fundamentally different from single-machine systems, and how to design for them.',
-    visualizations: [],
+    visualizations: [{ title: 'Network Fault Taxonomy', description: '', image: '/diagrams/ddia/faults-networks-01.png' }],
     introduction: `In a single machine, software is deterministic: a computation either succeeds or fails completely. The hardware either works or the machine stops. There is no partial failure.
 
 In a distributed system, partial failure is the norm: the network can drop packets, reorder them, or delay them arbitrarily. A remote node may be slow, stopped, or running but unable to respond due to CPU/disk exhaustion. You cannot know whether a message was delivered without a response — and a missing response does not tell you whether the request was never received, is still processing, or the response was lost.
@@ -1492,7 +1492,7 @@ For operations where full idempotency is not achievable (e.g., sending an email)
     color: '#f59e0b',
     questions: 4,
     description: 'Why wall clocks are unreliable in distributed systems, monotonic clocks, NTP drift, and logical clocks (Lamport timestamps, HLC).',
-    visualizations: [],
+    visualizations: [{ title: 'Clock Unreliability and Logical Clocks', description: '', image: '/diagrams/ddia/faults-networks-01.png' }],
     introduction: `Wall clocks (system time) in distributed systems are unreliable for ordering events because: NTP synchronization is imprecise (typically 1-100ms error, occasionally worse), clocks drift forward or backward when NTP adjusts, and a clock can jump backward after a leap second.
 
 Two types of clocks: wall clocks (time of day — what time is it?) and monotonic clocks (elapsed time — how long did this operation take?). Monotonic clocks never go backward (they are forward-only counters). Use monotonic clocks for measuring elapsed time; never use wall clocks for measuring intervals.
@@ -1541,7 +1541,7 @@ Safe alternatives: use logical clocks (Lamport timestamps or HLC) which capture 
     color: '#f59e0b',
     questions: 4,
     description: 'The recency guarantee that makes a distributed system appear as a single copy, its cost, and when you need it.',
-    visualizations: [],
+    visualizations: [{ title: 'Linearizability Test and CAP Theorem', description: '', image: '/diagrams/ddia/linearizability-01.png' }],
     introduction: `Linearizability is the strongest consistency model for distributed systems. A linearizable system behaves as if there is only one copy of the data, and all operations take effect atomically at some point between their start and end time.
 
 Informally: once a read returns value X, all subsequent reads (by any client) must also return X or a later value. You cannot read a stale value after observing a fresh one.
@@ -1591,7 +1591,7 @@ For everything else — user profiles, feeds, configurations, analytics — line
     color: '#f59e0b',
     questions: 3,
     description: 'Why causal ordering matters in distributed systems, and how sequence number ordering and total order broadcast achieve it.',
-    visualizations: [],
+    visualizations: [{ title: 'Lamport Clocks and Version Vectors', description: '', image: '/diagrams/ddia/ordering-and-causality-01.png' }],
     introduction: `Causality establishes a happens-before relationship: if operation A happened before operation B (B read the result of A, or they were part of the same request), then any replica must apply A before B. Violating causal order produces anomalies: a reply appears before the question, a deletion appears before the item.
 
 Lamport timestamps can determine causal order between two events if one knows which happened first (they are causally related). But they cannot determine if two events are concurrent — two different Lamport timestamps do not tell you if they are causally related or independent.
@@ -1638,7 +1638,7 @@ Event sourcing and CQRS (Command Query Responsibility Segregation) systems that 
     color: '#f59e0b',
     questions: 5,
     description: 'How consensus is achieved in distributed systems, how Raft works, and what problems consensus solves.',
-    visualizations: [],
+    visualizations: [{ title: 'Raft Leader Election and Log Replication', description: '', image: '/diagrams/ddia/consensus-01.png' }],
     introduction: `Consensus is the problem of getting multiple nodes to agree on a value. Consensus is needed for: leader election (agree on who is leader), atomic commit in distributed transactions (all nodes agree to commit or abort), and total order broadcast (agree on the order of messages).
 
 Paxos (Lamport, 1989): the original theoretical consensus algorithm. Notoriously difficult to understand and implement. Multi-Paxos (the practical variant) forms the basis of many production systems.
@@ -1693,7 +1693,7 @@ Recovery time: typically 150-600ms for election timeout + heartbeat propagation.
     color: '#f59e0b',
     questions: 3,
     description: 'How ZooKeeper and etcd provide linearizable coordination primitives for distributed systems: locks, leader election, and service discovery.',
-    visualizations: [],
+    visualizations: [{ title: 'ZooKeeper Coordination Service', description: '', image: '/diagrams/ddia/zookeeper-and-coordination-01.png' }],
     introduction: `ZooKeeper and etcd are coordination services — they provide linearizable reads and writes on a small dataset (configuration, membership, locks) that distributed systems use for coordination.
 
 Both implement total order broadcast (ZAB for ZooKeeper, Raft for etcd). This gives them: linearizable writes, sequential consistency for reads, and durable storage of small amounts of data.
@@ -1751,7 +1751,7 @@ Why CAS is critical: without compare-and-swap, two clients could both read "no l
     color: '#06b6d4',
     questions: 4,
     description: 'How MapReduce works, its design philosophy of bringing computation to data, and its limitations that led to Spark.',
-    visualizations: [],
+    visualizations: [{ title: 'MapReduce Word Count Data Flow', description: '', image: '/diagrams/ddia/mapreduce-01.png' }],
     introduction: `MapReduce (Google, 2004) is a programming model for processing large datasets across a cluster. It abstracted parallel computation into two functions: map and reduce.
 
 Map: applied to each input record independently. Emits zero or more (key, value) pairs.
@@ -1808,7 +1808,7 @@ Spark's additional advantages: a rich API (SQL, DataFrame, MLlib, GraphX), inter
     color: '#06b6d4',
     questions: 3,
     description: 'Spark, Flink, Tez, and the dataflow model that replaces MapReduce with DAG-based execution.',
-    visualizations: [],
+    visualizations: [{ title: 'MapReduce vs Spark DAG', description: '', image: '/diagrams/ddia/beyond-mapreduce-01.png' }],
     introduction: `MapReduce's rigid two-phase model (map → shuffle → reduce) is a poor fit for complex pipelines with many stages. Each stage requires writing intermediate results to disk, and pipelines of 10 MapReduce jobs write to disk 10 times.
 
 Dataflow engines (Spark, Flink, Tez, Google Dataflow/Beam) represent computation as a directed acyclic graph (DAG) of operators. Operators communicate via in-memory streams rather than disk files. The engine schedules operators for maximum parallelism, avoiding unnecessary disk I/O.
@@ -1857,7 +1857,7 @@ For batch ETL, data warehouse loading, and ML training data preparation — work
     color: '#06b6d4',
     questions: 3,
     description: 'Sort-merge join, broadcast join, and how distributed systems join datasets that do not fit on one machine.',
-    visualizations: [],
+    visualizations: [{ title: 'Batch Join Algorithms', description: '', image: '/diagrams/ddia/joins-in-batch-01.png' }],
     introduction: `Joining large datasets in a distributed batch job requires moving data across the network. The strategy depends on the relative sizes of the datasets being joined.
 
 Sort-merge join (shuffle join): both datasets are shuffled by the join key. All records with the same key land on the same partition. Each partition performs a local sort + merge join. Cost: O(N log N) total data transfer. Required when both datasets are large (neither fits in memory of one node).
@@ -1909,7 +1909,7 @@ Practical tuning: for a star-schema join (one large fact table, several small di
     color: '#ec4899',
     questions: 5,
     description: 'Kafka vs traditional message queues, log-based messaging, consumer groups, and the advantages of durable event logs.',
-    visualizations: [],
+    visualizations: [{ title: 'Traditional Broker vs Kafka Log', description: '', image: '/diagrams/ddia/event-streams-01.png' }],
     introduction: `Message brokers route messages from producers to consumers. Two models exist:
 
 Traditional message queues (RabbitMQ, ActiveMQ): messages are pushed to consumers. Once acknowledged, messages are deleted. A message is delivered to exactly one consumer. Consumers compete for messages within a queue. Good for task distribution (work queues).
@@ -1965,7 +1965,7 @@ Tradeoff: ordering per key means one partition per key in the extreme case. More
     color: '#ec4899',
     questions: 3,
     description: 'Stream-stream joins, stream-table joins (enrichment), and table-table joins — how to join data sources that arrive over time.',
-    visualizations: [],
+    visualizations: [{ title: 'Stream Join Types', description: '', image: '/diagrams/ddia/stream-joins-01.png' }],
     introduction: `Joining in stream processing is harder than in batch because data arrives over time, in arbitrary order, and both sides of a join are unbounded.
 
 Stream-stream join: join two event streams where both sides are continuously arriving. Example: join "ad_impression" events with "ad_click" events on ad_id to compute click-through rate in real time. The join window defines how long to hold an impression waiting for a click. State must be maintained for all unjoined records within the window — expensive for long windows.
@@ -2013,7 +2013,7 @@ Handling missing user records: if a purchase event arrives for a user_id that is
     color: '#ec4899',
     questions: 3,
     description: 'At-least-once, exactly-once, and how Flink checkpointing and Kafka transactions achieve fault-tolerant stateful stream processing.',
-    visualizations: [],
+    visualizations: [{ title: 'Stream Fault Tolerance and Exactly-Once', description: '', image: '/diagrams/ddia/fault-tolerance-streams-01.png' }],
     introduction: `Stream processors fail. The question is: when a Flink TaskManager crashes and restarts, what happens to the events that were in-flight?
 
 At-least-once: on restart, re-process events from the last committed Kafka offset. Events between the last checkpoint and the crash are reprocessed. If the processing is idempotent (adding to a set, incrementing a counter with deduplication), this is safe.
@@ -2069,7 +2069,7 @@ End result: each input event causes exactly one output record to be durably comm
     color: '#ec4899',
     questions: 4,
     description: 'How CDC streams database changes to downstream systems, enabling real-time search indexing, caching, and analytics.',
-    visualizations: [],
+    visualizations: [{ title: 'CDC Pipeline', description: '', image: '/diagrams/ddia/cdc-01.png' }],
     introduction: `Change Data Capture (CDC) captures the stream of changes to a database (INSERT, UPDATE, DELETE) and makes them available as an event stream. Instead of polling the database (expensive and laggy), CDC reads the database's own replication log.
 
 PostgreSQL CDC: Debezium reads PostgreSQL's WAL (logical replication). Each change is emitted as an event: the full before and after state of the row (for UPDATE), the new row (for INSERT), or the primary key (for DELETE).
@@ -2126,7 +2126,7 @@ Initial load: for an existing database, Debezium performs an initial snapshot (f
     color: '#84cc16',
     questions: 4,
     description: 'Lambda architecture (batch + speed layers), its complexity problem, and the Kappa simplification of using a single stream-processing layer.',
-    visualizations: [],
+    visualizations: [{ title: 'Lambda vs Kappa Architecture', description: '', image: '/diagrams/ddia/lambda-kappa-01.png' }],
     introduction: `Lambda architecture (Nathan Marz) was the dominant big data architecture ca. 2012-2018. It addresses the accuracy vs latency trade-off by maintaining two parallel paths:
 
 Batch layer: processes the complete historical dataset periodically (e.g., every hour). Produces accurate, complete results. High latency (1 hour delay).
@@ -2177,7 +2177,7 @@ Lambda is still justified when: the stream processor genuinely cannot reprocess 
     color: '#84cc16',
     questions: 3,
     description: 'DDIA Chapter 12 synthesis: the Unix philosophy applied to data systems, composing specialized tools into a unified data infrastructure.',
-    visualizations: [],
+    visualizations: [{ title: 'Unbundling the Database', description: '', image: '/diagrams/ddia/unbundling-databases-01.png' }],
     introduction: `Kleppmann's closing argument in DDIA: the monolithic database (store, index, query, enforce constraints, provide transactions, handle replication — all in one system) is being unbundled into specialized tools that do one thing well, composed via event streams.
 
 Unix philosophy: each tool does one thing well; tools are composed via pipes and files. The Unix pipeline ls | grep | wc is analogous to a data pipeline: Kafka → Flink → Elasticsearch → API.
@@ -2238,7 +2238,7 @@ Operational trade-off: this is 7-8 systems with complex interdependencies. For t
     color: '#84cc16',
     questions: 3,
     description: 'Why database transactions and message broker exactly-once guarantees are not sufficient for end-to-end correctness — and how idempotency and request deduplication close the gap.',
-    visualizations: [],
+    visualizations: [{ title: 'End-to-End Idempotency', description: '', image: '/diagrams/ddia/end-to-end-01.png' }],
     introduction: `Kleppmann's Chapter 12 makes a subtle but critical argument: even if your database provides ACID transactions and your message broker guarantees exactly-once delivery, your end-to-end system can still produce duplicate or lost effects at the application level.
 
 The classic example: a user submits a payment. The application writes the charge to the database. The browser times out before receiving a response. The user clicks "submit" again. Did the first charge go through? Should the second click create a new charge? The database transaction committed successfully on the first attempt, but the application has no way to know — and if the browser retries, the second click creates a duplicate charge.
