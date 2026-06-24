@@ -15,6 +15,9 @@ export const cloudCategories = [
   { id: 'aiml',        name: 'AI / ML Services',           icon: 'cpu',        color: '#a855f7' },
   { id: 'devtools',    name: 'Developer Tools & IaC',      icon: 'tool',       color: '#14b8a6' },
   { id: 'migration',   name: 'Migration & Transfer',       icon: 'send',       color: '#6366f1' },
+  { id: 'gcp',         name: 'Google Cloud Platform',      icon: 'cloud',      color: '#4285f4' },
+  { id: 'azure',       name: 'Microsoft Azure',            icon: 'cloud',      color: '#0078d4' },
+  { id: 'multicloud',  name: 'Multi-Cloud & Hybrid',       icon: 'globe',      color: '#6366f1' },
 ];
 
 export const cloudTopicCategoryMap = {
@@ -126,6 +129,26 @@ export const cloudTopicCategoryMap = {
   'aws-architecture-3tier':    'compute',
   // Containers (new)
   'aws-ecs-vs-eks':            'containers',
+  // Governance & Cost
+  'aws-well-architected':      'devtools',
+  'aws-cost-optimization':     'devtools',
+  'aws-organizations':         'security',
+  'aws-systems-manager':       'devtools',
+  // Analytics
+  'aws-glue':                  'databases',
+  'aws-athena':                'databases',
+  'aws-opensearch':            'databases',
+  // Streaming
+  'aws-msk':                   'serverless',
+  // GCP
+  'gcp-compute-core':              'gcp',
+  'gcp-data-services':             'gcp',
+  // Azure
+  'azure-core-compute':            'azure',
+  // Multi-Cloud
+  'multicloud-hybrid-architecture': 'multicloud',
+  // Cloud Security Posture
+  'cloud-security-posture':        'security',
 };
 
 export const cloudTopics = [
@@ -4314,6 +4337,293 @@ For compliance and stakeholder reporting, export server and application states v
   ],
   visualizations: [
     { title: 'AWS 3-Tier Web Architecture', caption: 'Full architecture diagram: User → Route 53 → ALB (public subnets, 2 AZs) → EC2 Auto Scaling Group (private subnets) → RDS Multi-AZ + S3 + IAM. Shows security group boundaries and traffic flow.', image: '/diagrams/linkdiags/aws-concepts.png' },
+  ],
+},
+
+{
+  id: 'aws-well-architected',
+  title: 'AWS Well-Architected Framework',
+  icon: 'layers',
+  color: '#14b8a6',
+  description: 'Six pillars for evaluating cloud architectures: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability. Used in design reviews and architecture assessments.',
+  introduction: 'The **AWS Well-Architected Framework** provides a consistent set of best practices for designing and operating reliable, secure, efficient, cost-effective, and sustainable workloads in the cloud. AWS Solutions Architects use the Well-Architected Tool to run reviews against these six pillars, identifying high-risk issues (HRIs) and medium-risk issues (MRIs) with actionable remediation guidance.',
+  whenToUse: 'Use the Well-Architected Framework when designing a new system, reviewing an existing workload before production launch, or conducting a periodic architecture review. It is the canonical framework AWS uses internally and in customer engagements.',
+  keyConcepts: [
+    { title: 'Operational Excellence', description: 'Ability to run and monitor systems to deliver business value and improve supporting processes. Key practices: infrastructure as code, annotate documentation, anticipate failure, learn from all operational events. Design principles: perform operations as code, make frequent small reversible changes, refine operations procedures frequently.' },
+    { title: 'Security', description: 'Ability to protect data, systems, and assets. Key practices: strong identity foundation (IAM least privilege, MFA), enable traceability (CloudTrail, Config), apply security at all layers (WAF, security groups, encryption), automate security best practices, protect data in transit and at rest, keep people away from data (break-glass access only).' },
+    { title: 'Reliability', description: 'Ability to recover from failures and meet demand. Key practices: automatically recover from failure, test recovery procedures, scale horizontally to increase aggregate availability, stop guessing capacity, manage change through automation. Covers limits and quotas management, network topology, and failure mode testing (Game Days).' },
+    { title: 'Performance Efficiency', description: 'Ability to use resources efficiently as demand changes. Key practices: democratize advanced technologies (use managed AI/ML services), go global in minutes (CloudFront, Global Accelerator), use serverless architectures, experiment more often, consider mechanical sympathy (match instance types to workload characteristics).' },
+    { title: 'Cost Optimization', description: 'Ability to run systems at the lowest price point. Key practices: implement cloud financial management (FinOps), adopt a consumption model (pay for what you use), measure overall efficiency, stop spending money on heavy lifting (use managed services), analyze and attribute expenditure (cost allocation tags, AWS Cost Explorer).' },
+    { title: 'Sustainability', description: 'Minimize environmental impact. Key practices: understand your impact (use AWS Customer Carbon Footprint Tool), establish sustainability goals, maximize utilization (right-size resources), anticipate and adopt new hardware/software offerings, use managed services, reduce downstream impact (efficient user-facing code).' },
+  ],
+  approach: [
+    { step: 'Run a Well-Architected Review', details: 'Open the AWS Well-Architected Tool in the console. Create a workload and answer the review questions for each pillar. The tool automatically identifies HRIs and MRIs and provides remediation milestones.' },
+    { step: 'Prioritize HRIs', details: 'High-risk issues (HRIs) represent significant architectural gaps — single points of failure, no backups, no encryption at rest, no multi-AZ. Address these before production launch.' },
+    { step: 'Use Lenses for specialized workloads', details: 'AWS provides additional Lenses for serverless, SaaS, container, machine learning, and industry-specific workloads. Apply the relevant lens after the base review.' },
+  ],
+  pitfalls: [
+    { title: 'Treating it as a one-time exercise', description: 'Architectures evolve. Run Well-Architected Reviews at least annually and after major architectural changes. The Well-Architected Tool supports saving reviews and tracking progress over time.' },
+    { title: 'Ignoring the Sustainability pillar', description: 'Sustainability is the newest pillar (added 2021) and often skipped. Right-sizing instances, using Graviton, and running workloads in regions with higher renewable energy percentage all reduce carbon footprint — and often also reduce cost.' },
+  ],
+  keyQuestions: [
+    { q: 'What are the six pillars of the AWS Well-Architected Framework?', a: '1. **Operational Excellence** — run and monitor systems, improve processes\n2. **Security** — protect data, systems, assets via IAM, encryption, traceability\n3. **Reliability** — recover from failures, scale horizontally, test procedures\n4. **Performance Efficiency** — use resources efficiently, go serverless, use managed services\n5. **Cost Optimization** — FinOps, right-sizing, Savings Plans, consumption model\n6. **Sustainability** — minimize environmental impact, maximize utilization\n\nMnemonic: **OSRPCS** or "Oscar Silently Reads Pretty Calm Stories".' },
+    { q: 'How do you use the AWS Well-Architected Tool?', a: 'In the AWS Console, navigate to the Well-Architected Tool. Create a workload with your application details. The tool presents a set of yes/no and descriptive questions per pillar. Based on your answers, it identifies High-Risk Issues (HRIs) and Medium-Risk Issues (MRIs) and provides improvement plans with remediation steps. You can save reviews over time to track progress and use Lenses (Serverless, SaaS, Container, ML) for specialized workloads.' },
+    { q: 'What is the difference between reliability and availability?', a: '**Availability** is the percentage of time a system is operational — typically expressed as "nines" (99.9% = 8.7h downtime/year, 99.99% = 52min/year, 99.999% = 5min/year).\n\n**Reliability** is the probability that a system performs its intended function correctly over a given period. A system can be highly available (rarely down) but unreliable (returns wrong answers when up).\n\nIn the Well-Architected Framework, Reliability covers failure recovery, quota management, and change management — all the practices that prevent and reduce the blast radius of failures.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html',
+    'https://aws.amazon.com/architecture/well-architected/',
+  ],
+},
+
+{
+  id: 'aws-cost-optimization',
+  title: 'AWS Cost Optimization — Savings Plans, RIs, Spot',
+  icon: 'trending-down',
+  color: '#14b8a6',
+  description: 'Three purchase models to reduce AWS compute costs: Savings Plans (flexible, up to 66% off), Reserved Instances (EC2/RDS-specific, up to 72% off), and Spot Instances (up to 90% off, interruptible). Right-sizing + Cost Explorer complete the picture.',
+  introduction: 'AWS compute is billed on-demand by default — you pay full price per second. Three commitment-based models reduce costs significantly: **Savings Plans** (flexible commitment to $/hour spend), **Reserved Instances** (capacity commitment to specific instance families), and **Spot Instances** (bid on spare AWS capacity at deep discounts). Combined with right-sizing and Cost Explorer analysis, mature organizations reduce AWS bills by 30-60%.',
+  whenToUse: 'Apply cost optimization when a workload is in production and its resource profile is understood. Do not over-optimize pre-launch — wait until you have real usage data. Reserved Instances and Savings Plans require 1-3 year commitments; make them when the workload is stable.',
+  keyConcepts: [
+    { title: 'Savings Plans', description: 'Commit to a minimum $/hour spend (e.g., $10/hour) for 1 or 3 years. In return, AWS discounts usage up to that commitment. Two types: **Compute Savings Plans** (most flexible — applies to any EC2 instance family, region, OS, or tenancy, and also Lambda + Fargate), **EC2 Instance Savings Plans** (specific instance family in a region, higher discount of up to 72%). Savings Plans are the preferred modern commitment model over RIs for most use cases.' },
+    { title: 'Reserved Instances', description: 'Commit to a specific EC2 instance type/region/OS or RDS instance class for 1 or 3 years. Three payment options: All Upfront (highest discount), Partial Upfront, No Upfront (lowest discount, still significant savings over on-demand). Convertible RIs allow you to change instance family, OS, or tenancy during the term at a slightly lower discount. Standard RIs cannot be changed but can be sold on the Reserved Instance Marketplace.' },
+    { title: 'Spot Instances', description: 'AWS sells spare EC2 capacity at up to 90% off on-demand prices. Spot instances can be interrupted with a 2-minute warning when AWS needs the capacity back. Best for: batch processing, big data analytics, CI/CD jobs, stateless web workers, ML training with checkpointing. Not for: databases, stateful applications, anything requiring guaranteed availability.' },
+    { title: 'Right-Sizing', description: 'Matching instance types to actual workload requirements. AWS Compute Optimizer analyzes CloudWatch metrics and recommends right-sizing — often finding instances running at 5-15% CPU that could be downsized 1-2 sizes with no performance impact. AWS Trusted Advisor flags low-utilization EC2 instances, idle RDS, and underutilized EBS volumes.' },
+    { title: 'Cost Explorer & Budgets', description: '**Cost Explorer** provides interactive cost and usage graphs, rightsizing recommendations, Savings Plans recommendations, and Reserved Instance utilization reports. **AWS Budgets** sets alerts when spend exceeds thresholds. **Cost Allocation Tags** attribute costs to teams, projects, or environments — essential for chargeback in multi-team organizations.' },
+  ],
+  approach: [
+    { step: 'Analyze current spend with Cost Explorer', details: 'Review the last 3-6 months of usage. Identify top cost drivers (EC2, RDS, data transfer). Look at the Savings Plans and RI coverage reports to see what percentage of usage is already committed.' },
+    { step: 'Right-size first', details: 'Before committing to RIs or Savings Plans, right-size instances using Compute Optimizer recommendations. Committing to the wrong instance size wastes the discount.' },
+    { step: 'Purchase Compute Savings Plans', details: 'Compute Savings Plans are the safest commitment — they apply across instance families, regions, and even Lambda/Fargate. Start with covering 70-80% of steady-state baseline usage; leave the spike capacity on on-demand.' },
+    { step: 'Use Spot for variable workloads', details: 'Move batch jobs, CI/CD workers, and stateless auto scaling capacity to Spot Instance pools. Use Spot Fleet or EC2 Auto Scaling with mixed instance types to reduce interruption risk by spreading across multiple Spot pools.' },
+  ],
+  pitfalls: [
+    { title: 'Over-committing RIs to instance types that change', description: 'If you buy Standard RIs for m5.2xlarge and later want to move to m6i.2xlarge or Graviton, you are stuck unless you convert (Convertible RIs) or sell on the marketplace. Savings Plans avoid this by committing to $/hour spend rather than a specific instance type.' },
+    { title: 'Using Spot for stateful workloads', description: 'Spot instances can be interrupted with 2 minutes warning. Any database, cache, or stateful service on Spot without proper shutdown handling will lose data on interruption. Use Spot only for workloads designed to tolerate interruption.' },
+    { title: 'Ignoring data transfer costs', description: 'EC2 compute is often not the top cost driver — data transfer can be. Transferring data out of AWS to the internet is billed; inter-region transfer is billed; inter-AZ transfer within a VPC is billed at $0.01/GB. Architectural decisions (CDN usage, same-AZ service placement, VPC endpoints) often have larger cost impact than instance discounts.' },
+  ],
+  keyQuestions: [
+    { q: 'What is the difference between Savings Plans and Reserved Instances?', a: '**Savings Plans** commit to a minimum $/hour compute spend for 1-3 years. In return AWS discounts usage up to that commitment level. Compute Savings Plans apply to any EC2 instance family, region, OS, and also Lambda and Fargate — maximum flexibility. EC2 Instance Savings Plans are specific to one instance family in one region for a higher discount.\n\n**Reserved Instances (RIs)** commit to a specific EC2 instance type/region/OS or RDS instance class. Standard RIs cannot be changed; Convertible RIs can be exchanged for equivalent value. Payment options: All Upfront (highest discount), Partial Upfront, No Upfront.\n\n**Recommendation**: Use Compute Savings Plans as the primary commitment vehicle for most workloads. Use RIs specifically for RDS, Redshift, ElastiCache, and OpenSearch where Savings Plans do not apply.' },
+    { q: 'When should you use Spot Instances?', a: 'Use Spot Instances for workloads that are **fault-tolerant** and **flexible**:\n- Batch processing and analytics jobs (can checkpoint and restart)\n- CI/CD build workers (job can be retried on interruption)\n- ML training with checkpointing (save model state periodically)\n- Stateless web application scaling (ASG replaces interrupted instances)\n- Big data (EMR, Spark) — typically designed for node loss tolerance\n\nDo NOT use Spot for databases, caches, message queues, or any stateful service that cannot handle 2-minute interruption notices. The 90% discount only helps if the workload design handles interruptions gracefully.' },
+    { q: 'How does AWS Compute Optimizer help with cost optimization?', a: 'Compute Optimizer analyzes **14 days of CloudWatch metrics** for EC2 instances, Auto Scaling groups, EBS volumes, Lambda functions, ECS tasks on Fargate, and RDS instances. It compares actual CPU, memory (if CloudWatch Agent is installed), network, and I/O utilization against the provisioned capacity and recommends:\n- **Rightsizing**: move to a smaller instance type (savings without performance impact)\n- **Same-size Graviton**: move to arm64 Graviton instance (typically 20% cheaper for same performance)\n- **Larger instance**: flag over-provisioned instances running hot that need more capacity\n\nCompute Optimizer is free for standard recommendations; enhanced recommendations with memory metrics require the CloudWatch Agent or Container Insights.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/savingsplans/latest/userguide/',
+    'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html',
+    'https://aws.amazon.com/aws-cost-management/aws-cost-explorer/',
+    'https://aws.amazon.com/compute-optimizer/',
+  ],
+},
+
+{
+  id: 'aws-organizations',
+  title: 'AWS Organizations & Control Tower',
+  icon: 'shield',
+  color: '#ef4444',
+  description: 'AWS Organizations manages multiple AWS accounts centrally with SCPs (Service Control Policies) for governance. Control Tower automates multi-account setup with a landing zone, guardrails, and Account Factory.',
+  introduction: 'Most production AWS environments use **multiple AWS accounts** — not a single account — to achieve strong isolation boundaries between workloads, environments, and teams. **AWS Organizations** is the service that manages this multi-account structure centrally: it groups accounts into Organizational Units (OUs), applies Service Control Policies (SCPs) as permission guardrails, and consolidates billing. **AWS Control Tower** sits on top of Organizations and automates the setup of a well-architected multi-account environment called a Landing Zone.',
+  whenToUse: 'Use AWS Organizations from the start if you plan to have more than one AWS account — which most organizations do. Use Control Tower when you want to automate multi-account setup with guardrails, compliance checks, and an account vending machine (Account Factory) for new teams.',
+  keyConcepts: [
+    { title: 'Organizational Units (OUs)', description: 'Hierarchical groupings of AWS accounts within an Organization. Common structure: Root → Security OU (Log Archive + Audit accounts) → Workloads OU (Production + Development + Staging accounts) → Sandbox OU. SCPs applied to an OU affect all accounts within it.' },
+    { title: 'Service Control Policies (SCPs)', description: 'JSON policies attached to OUs or individual accounts that define the maximum permissions boundary. SCPs do not grant permissions — they restrict what IAM policies within those accounts can allow. Example: an SCP that prevents any action in regions other than us-east-1 and us-west-2, or an SCP that prevents deletion of CloudTrail logs.' },
+    { title: 'Consolidated Billing', description: 'All accounts in an Organization share a single payment method but have separate cost views. Usage across accounts aggregates for volume discounts (S3, data transfer tiers) and Savings Plans/RI sharing. The management account (formerly called master account) receives the consolidated invoice.' },
+    { title: 'Control Tower Landing Zone', description: 'An automated, opinionated multi-account environment. Control Tower creates: management account, Log Archive account (all CloudTrail and Config logs), Audit account (Security Hub, GuardDuty aggregation). It applies mandatory and optional Guardrails (detective and preventive controls) and provides Account Factory for provisioning new accounts from a template.' },
+    { title: 'Guardrails', description: 'Pre-defined governance rules in Control Tower. **Mandatory guardrails** cannot be disabled (e.g., disallow changes to CloudTrail configuration). **Strongly recommended guardrails** cover security best practices. **Elective guardrails** are optional policy choices. Detective guardrails use AWS Config rules; preventive guardrails use SCPs.' },
+  ],
+  approach: [
+    { step: 'Design the OU structure', details: 'Map OUs to organizational boundaries: Security, Infrastructure, Workloads (Production/Non-Production), Sandbox, Suspended. Keep the structure flat — deep nesting makes SCP inheritance hard to reason about.' },
+    { step: 'Set up Control Tower', details: 'If starting fresh, use Control Tower to provision the landing zone. It automatically creates the Log Archive and Audit accounts, enables CloudTrail organization-wide, and sets up AWS Config aggregation.' },
+    { step: 'Write SCPs for baseline governance', details: 'Key SCPs to apply: deny root user actions (except initial account setup), restrict to approved regions only, prevent CloudTrail deletion, require MFA for sensitive actions, prevent disabling GuardDuty.' },
+    { step: 'Use Account Factory for new accounts', details: 'Control Tower Account Factory (backed by Service Catalog) provisions new AWS accounts pre-configured with your baseline guardrails, networking, and IAM settings. New team accounts take minutes instead of days of manual setup.' },
+  ],
+  pitfalls: [
+    { title: 'Putting everything in one AWS account', description: 'A single account has no isolation boundaries. A developer mistake in the development environment can affect production resources in the same account. Multi-account is the AWS best practice — use Organizations from the start.' },
+    { title: 'SCPs accidentally blocking legitimate access', description: 'An overly broad SCP (e.g., deny ec2:* in us-west-2) can lock out an entire OU from using a service. Test SCPs in a sandbox OU first. Use the IAM Policy Simulator to verify intended effects before applying to production OUs.' },
+    { title: 'Management account doing workloads', description: 'The management (payer) account should have no workloads — only Organizations and billing management. If the management account is compromised, an attacker can affect all member accounts via SCPs. Keep it clean with only the minimum required access.' },
+  ],
+  keyQuestions: [
+    { q: 'What is a Service Control Policy (SCP) and how does it differ from an IAM policy?', a: '**IAM policies** grant or deny permissions to principals (users, roles) within a single AWS account. They define what a principal CAN do.\n\n**SCPs** define the maximum permissions boundary for an entire AWS account or OU. They do not grant permissions — they restrict the ceiling. Even if an IAM admin in a member account attaches AdministratorAccess to a role, the SCP can still prevent specific actions (e.g., leaving the organization, disabling CloudTrail).\n\nEvaluation logic: a request is allowed only if BOTH the SCP allows it AND the IAM policy allows it. If either denies or the SCP does not allow it, the request is denied. SCPs do not apply to the management account.' },
+    { q: 'Why should you use multiple AWS accounts instead of a single account?', a: 'Multiple accounts provide:\n1. **Blast radius isolation**: a mistake in dev cannot destroy prod resources\n2. **Security boundaries**: account-level separation is stronger than IAM policies in one account\n3. **Billing clarity**: per-account cost attribution is trivial; per-tag in one account requires discipline\n4. **Limit isolation**: AWS service quotas (EC2 per region, Lambda concurrent executions) are per-account — separate accounts prevent one team from exhausting limits for another\n5. **Compliance scoping**: putting PCI or HIPAA workloads in dedicated accounts reduces the compliance audit scope for other accounts' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/organizations/latest/userguide/',
+    'https://docs.aws.amazon.com/controltower/latest/userguide/',
+    'https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html',
+  ],
+},
+
+{
+  id: 'aws-systems-manager',
+  title: 'AWS Systems Manager (SSM)',
+  icon: 'tool',
+  color: '#14b8a6',
+  description: 'Unified operations platform for AWS resources. Key features: Parameter Store (config/secrets), Session Manager (SSH-less shell access), Patch Manager (automated OS patching), Run Command (remote execution), and Fleet Manager.',
+  introduction: '**AWS Systems Manager (SSM)** is the central operations platform for managing AWS infrastructure at scale. It eliminates the need for SSH bastion hosts, stores configuration and secrets securely, automates OS patching, and provides a unified console for running commands across fleets of EC2 instances and on-premises servers. The SSM Agent runs on managed instances and communicates outbound to the SSM endpoint — no inbound ports required.',
+  whenToUse: 'Use SSM Parameter Store instead of environment variables or config files for any configuration value that changes between environments. Use Session Manager instead of SSH to access EC2 instances — no bastion host, no key pairs, full audit logging. Use Patch Manager to automate OS patching on a schedule.',
+  keyConcepts: [
+    { title: 'Parameter Store', description: 'Hierarchical key-value store for configuration data and secrets. Two tiers: **Standard** (free, up to 4KB per parameter, no rotation) and **Advanced** (paid, up to 8KB, parameter policies with TTL). Two types: **String/StringList** (plain text) and **SecureString** (encrypted with KMS). Organize with path hierarchy: /app/prod/db-password. Pull parameters at runtime via SDK or inject into ECS/Lambda via task definition secrets.' },
+    { title: 'Secrets Manager', description: 'Different from Parameter Store: Secrets Manager is purpose-built for secrets with **automatic rotation** (built-in rotation for RDS, Redshift, DocumentDB; custom Lambda for others), cross-account access, and audit via CloudTrail. Higher cost ($0.40/secret/month + API calls) vs Parameter Store SecureString (free for standard). Choose Secrets Manager for credentials that need automatic rotation; Parameter Store for configuration values and manually rotated secrets.' },
+    { title: 'Session Manager', description: 'Provides interactive shell access to EC2 instances and on-premises servers via the AWS Console, CLI, or SDK — without opening port 22 or managing SSH key pairs. Sessions are logged to CloudWatch Logs or S3 for audit. IAM policies control who can start sessions to which instances. Eliminates the security and operational burden of SSH bastion hosts.' },
+    { title: 'Run Command', description: 'Executes scripts or commands across a fleet of managed instances without SSH. Uses built-in or custom SSM Documents (JSON/YAML command definitions). Results and output stored in S3. Rate controls prevent overloading instances. Common use cases: install software, rotate application secrets, collect diagnostics, run configuration checks.' },
+    { title: 'Patch Manager', description: 'Automates OS patch scanning and application. Define **Patch Baselines** (which patches to approve — by severity, classification, specific CVE IDs). Create **Maintenance Windows** to schedule patching during off-peak hours. Patch Manager scans instances for compliance and can automatically apply approved patches, then report compliance status to Systems Manager Compliance.' },
+  ],
+  approach: [
+    { step: 'Install and configure the SSM Agent', details: 'The SSM Agent is pre-installed on Amazon Linux 2, Amazon Linux 2023, and Windows Server AMIs. For Ubuntu/CentOS, install via package manager. The instance needs the AmazonSSMManagedInstanceCore IAM policy and outbound HTTPS to ssm.region.amazonaws.com (or a VPC endpoint to avoid internet routing).' },
+    { step: 'Migrate secrets from environment variables to Parameter Store', details: 'Replace hardcoded config and .env files with Parameter Store SecureString values. Reference them in ECS task definitions via the secrets field or in Lambda environment variables via dynamic references ${ssm:/path/to/param}. This enables secret rotation without redeployment and provides audit history.' },
+    { step: 'Replace SSH access with Session Manager', details: 'Remove port 22 from all security groups. Remove bastion host EC2 instances. Grant developers the ssm:StartSession IAM permission scoped to the instances they need. Sessions are logged automatically for compliance.' },
+  ],
+  pitfalls: [
+    { title: 'Confusing Parameter Store and Secrets Manager', description: 'Both can store secrets but have different use cases. Parameter Store SecureString is cheaper and sufficient for most secrets. Secrets Manager is required when you need automatic rotation or cross-account secret sharing. Many teams pay for Secrets Manager for configuration values that would be equally well served by Parameter Store.' },
+    { title: 'No VPC endpoints for SSM in private subnets', description: 'SSM Agent needs to reach the SSM, EC2Messages, and SSMMessages endpoints. Instances in private subnets without internet access need VPC Interface Endpoints for these services, or Session Manager and Run Command will fail silently.' },
+  ],
+  keyQuestions: [
+    { q: 'How do you access an EC2 instance in a private subnet without SSH?', a: 'Use **AWS Systems Manager Session Manager**:\n1. Ensure the instance has the SSM Agent installed (pre-installed on Amazon Linux 2/2023 and Windows Server AMIs)\n2. Attach the `AmazonSSMManagedInstanceCore` IAM policy to the instance role\n3. For instances without internet access: create VPC Interface Endpoints for `ssm`, `ec2messages`, and `ssmmessages`\n4. Grant the user/role `ssm:StartSession` permission in IAM\n5. Start a session: `aws ssm start-session --target i-1234567890abcdef`\n\nAll sessions are logged to CloudWatch Logs or S3. No bastion host, no key pairs, no port 22 open in security groups.' },
+    { q: 'When would you use Parameter Store vs Secrets Manager?', a: '**Parameter Store SecureString** (free for standard tier):\n- Application configuration values (DB endpoint, feature flags, external API endpoints)\n- Secrets that do not need automatic rotation\n- When you need a path hierarchy for organizing many parameters\n- When cost is a concern (Parameter Store is free for standard parameters)\n\n**Secrets Manager** ($0.40/secret/month):\n- Database credentials that need **automatic rotation** (built-in for RDS, Redshift, DocumentDB)\n- API keys for external services where you want rotation managed by AWS\n- Cross-account secret sharing\n- When the audit trail of who retrieved a secret is important for compliance\n\nBottom line: use Parameter Store for config; use Secrets Manager when rotation is needed.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/systems-manager/latest/userguide/',
+    'https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html',
+    'https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html',
+  ],
+},
+
+{
+  id: 'aws-glue',
+  title: 'AWS Glue — Serverless ETL & Data Catalog',
+  icon: 'database',
+  color: '#8b5cf6',
+  description: 'Serverless ETL service for data integration. Key components: Glue Data Catalog (centralized metadata store), Crawlers (auto-discover schema from S3/RDS/Redshift), Glue Jobs (Apache Spark/Python Shell ETL scripts), and Glue Studio (visual ETL authoring).',
+  introduction: '**AWS Glue** is a fully managed, serverless data integration service that makes it easy to discover, prepare, and combine data for analytics, machine learning, and application development. It eliminates the need to provision and manage ETL servers. Glue uses Apache Spark under the hood for distributed data processing and auto-scales the compute cluster based on job requirements.',
+  whenToUse: 'Use Glue for ETL pipelines that transform and load data into a data lake (S3) or data warehouse (Redshift). Use the Glue Data Catalog as the unified metadata repository for all data sources in your data platform — it integrates natively with Athena, Redshift Spectrum, and EMR.',
+  keyConcepts: [
+    { title: 'Glue Data Catalog', description: 'Centralized metadata repository that stores table definitions, schemas, and partition information for data stored in S3, RDS, DynamoDB, and other sources. Compatible with the Apache Hive Metastore API — Athena, Redshift Spectrum, and EMR use the Glue Catalog as their metastore. Changes to schemas are versioned.' },
+    { title: 'Crawlers', description: 'Auto-discover schema from data sources (S3, RDS, Redshift, DynamoDB, JDBC) and populate the Data Catalog. Crawlers infer data types, partition structures, and column names. Run on a schedule or on-demand. Handle schema evolution — add new columns, detect new partitions.' },
+    { title: 'Glue Jobs', description: 'ETL scripts that run on a managed Apache Spark or Python Shell environment. Glue generates boilerplate ETL code that you customize, or you write scripts from scratch using Glue DynamicFrames (flexible schema handling) or standard Spark DataFrames. Jobs run on Glue Workers (G.1X, G.2X, G.4X for Spark; Python Shell for lightweight tasks).' },
+    { title: 'Glue Studio', description: 'Visual drag-and-drop ETL authoring tool. Build pipelines by connecting source, transform, and target nodes. Glue Studio generates the Spark code. Useful for data engineers who prefer visual interfaces and for quickly understanding data lineage.' },
+    { title: 'Glue DataBrew', description: 'No-code data preparation tool aimed at data analysts. Profile datasets, visualize data quality, and apply 250+ built-in transformations without writing code. Generates Glue Jobs or exports cleaned data to S3.' },
+  ],
+  approach: [
+    { step: 'Create a Crawler to build the Data Catalog', details: 'Point a Crawler at your S3 data sources. Configure the IAM role (needs S3 read + Glue write permissions). Run the Crawler — it creates database and table definitions in the Glue Catalog. Tables are then immediately queryable via Athena.' },
+    { step: 'Author the ETL Job', details: 'Use Glue Studio for visual authoring or write a PySpark script. Use Glue DynamicFrames for semi-structured data (JSON with inconsistent schemas); use Spark DataFrames for structured data with known schemas. Partition the output by date or key for efficient downstream querying.' },
+    { step: 'Schedule and monitor', details: 'Glue Triggers schedule jobs on a cron schedule, event (another job completing), or on-demand. Monitor job runs via CloudWatch Metrics and Glue Job Bookmarks (track processed data to avoid reprocessing). Use Glue Workflows to orchestrate multi-job pipelines with dependencies.' },
+  ],
+  pitfalls: [
+    { title: 'Glue startup time for small datasets', description: 'Glue Spark jobs have a cold start time of 3-10 minutes to provision the Spark cluster. For small, frequent jobs (minutes of actual processing), this overhead makes Glue uneconomical. Use Glue Python Shell jobs or Lambda for lightweight transformations.' },
+    { title: 'Schema drift breaking downstream consumers', description: 'When source schema changes (new columns, type changes), Crawlers update the Catalog but downstream Athena queries or Glue Jobs that assumed the old schema may fail. Use schema versioning in the Catalog and test schema changes in a development environment before production.' },
+  ],
+  keyQuestions: [
+    { q: 'What is the AWS Glue Data Catalog and why is it important?', a: 'The **Glue Data Catalog** is a centralized, managed metadata repository compatible with the Apache Hive Metastore API. It stores table definitions, column names, data types, partition information, and schema versions for data stored in S3, RDS, DynamoDB, and other sources.\n\nWhy it is important:\n- **Single source of truth**: Athena, Redshift Spectrum, and EMR all use the Glue Catalog as their metastore — define the schema once, query from any service\n- **Schema discovery**: Crawlers auto-populate the Catalog by scanning data sources\n- **Schema versioning**: tracks schema changes over time\n- **Data governance foundation**: Lake Formation uses the Catalog for fine-grained column and row-level access control' },
+    { q: 'When would you use Glue vs Lambda for ETL?', a: '**AWS Glue** (Apache Spark):\n- Large-scale data transformation (GB to TB of data)\n- Complex multi-step ETL with joins, aggregations, deduplication\n- Need for distributed processing across a cluster\n- Batch jobs that run every hour or less frequently\n\n**Lambda** (up to 15 min, 10GB memory):\n- Small, event-driven transformations (S3 event → process one file → write to another bucket)\n- Low-latency, near-real-time processing\n- Simple transformations that do not need Spark\n- Cost-sensitive workloads (Lambda charges per invocation; Glue charges per DPU-hour with minimum runtime)\n\nRule of thumb: if the data fits in Lambda memory and completes within 15 minutes, use Lambda. If you need Spark\'s distributed processing or the dataset is too large for a single machine, use Glue.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/glue/latest/dg/',
+    'https://docs.aws.amazon.com/glue/latest/dg/components-overview.html',
+  ],
+},
+
+{
+  id: 'aws-athena',
+  title: 'Amazon Athena — Serverless SQL on S3',
+  icon: 'database',
+  color: '#8b5cf6',
+  description: 'Interactive query service for analyzing data in S3 using standard SQL. Serverless — no infrastructure to manage. Presto-based engine. Pay per query ($5/TB scanned). Use partitioning and columnar formats (Parquet/ORC) to reduce cost 90%+.',
+  introduction: '**Amazon Athena** is an interactive query service that makes it easy to analyze data directly in S3 using standard SQL. It is built on the open-source Presto/Trino distributed query engine and requires no infrastructure setup — you point Athena at your S3 data, define the schema in the Glue Data Catalog, and start querying immediately. Athena charges $5 per TB of data scanned — making query optimization (partitioning, columnar formats) critical for cost control.',
+  whenToUse: 'Use Athena for ad-hoc analytics on data stored in S3, log analysis (CloudTrail, ALB, S3 access logs), data exploration before building pipelines, and as a query layer over a data lake. Use Redshift for high-concurrency, complex analytics on structured data that needs sub-second performance.',
+  keyConcepts: [
+    { title: 'Serverless Query Engine', description: 'No clusters to provision, scale, or maintain. Athena auto-scales based on query complexity. Pay only for the data scanned by each query — $5/TB scanned. Idle time costs nothing. Concurrency limit is 20 concurrent DML queries by default (can be increased). Results stored in an S3 output bucket.' },
+    { title: 'Partitioning', description: 'The most impactful optimization. Partition data in S3 by date, region, or other high-cardinality filter columns. Athena reads only the relevant partitions — a query with WHERE date=\'2024-01-15\' on a date-partitioned table scans only one day of data instead of the full dataset. Partition projection eliminates the need to run MSCK REPAIR TABLE for new partitions.' },
+    { title: 'Columnar Formats (Parquet / ORC)', description: 'Columnar storage formats store data column-by-column rather than row-by-row. A query that reads 3 columns from a 100-column table scans only 3% of the data. Combined with compression (Snappy, ZSTD), Parquet/ORC typically reduces data scanned by 70-95% vs CSV/JSON, cutting cost by the same factor. Always convert raw data to Parquet or ORC before querying at scale.' },
+    { title: 'Glue Data Catalog Integration', description: 'Athena uses the Glue Data Catalog as its metastore. Define tables once in Glue — via Crawler or DDL — and query them in Athena. Table definitions, column names, data types, partition information, and SerDe configuration live in the Catalog.' },
+    { title: 'Federated Queries', description: 'Athena Federated Query allows querying data sources beyond S3 — RDS, DynamoDB, CloudWatch Logs, Elasticsearch, and custom JDBC sources — using Lambda-based data source connectors. Write SQL that joins S3 data with live RDS data in a single query.' },
+  ],
+  approach: [
+    { step: 'Set up the Glue Data Catalog table', details: 'Either run a Glue Crawler to auto-discover the schema, or write DDL directly in Athena. Specify the S3 location, file format (Parquet, JSON, CSV), and partition columns.' },
+    { step: 'Convert to Parquet for cost efficiency', details: 'If data is stored as CSV or JSON, create a Glue ETL job or Athena CTAS query to convert to Parquet (snappy compressed). For daily log data, run this conversion nightly. The cost reduction from 90% less scanning pays for the conversion job many times over.' },
+    { step: 'Partition and use partition projection', details: 'Structure S3 paths as s3://bucket/logs/year=2024/month=01/day=15/. Enable Partition Projection in the Athena table definition to avoid manual partition registration — Athena infers partitions from the path pattern automatically.' },
+  ],
+  pitfalls: [
+    { title: 'Querying unpartitioned CSV/JSON files', description: 'A full table scan on 1TB of unpartitioned CSV data costs $5. The same data in Parquet with date partitioning and a WHERE date=today filter might scan 1GB and cost $0.005. Always partition and convert to columnar format before Athena becomes a significant cost driver.' },
+    { title: 'Using Athena for high-concurrency BI dashboards', description: 'Athena has a 20 concurrent query limit by default and query latency of seconds to minutes. For high-concurrency BI dashboards with sub-second requirements, use Redshift or Redshift Serverless. Athena excels at ad-hoc and scheduled queries, not interactive dashboards with many concurrent users.' },
+    { title: 'Forgetting output location costs', description: 'Every Athena query writes results to an S3 output location. These results accumulate. Set an S3 lifecycle policy to expire Athena result files after 30 days to avoid unexpected S3 storage costs.' },
+  ],
+  keyQuestions: [
+    { q: 'How does Athena pricing work and how do you optimize costs?', a: 'Athena charges **$5 per TB of data scanned** by each query. Cancelled queries are still charged for data scanned before cancellation. Results storage in S3 is charged at standard S3 rates.\n\nCost optimization strategies:\n1. **Columnar formats (Parquet/ORC)**: store data in columnar format with Snappy compression. Queries read only needed columns — typically 90-95% less data scanned vs CSV/JSON\n2. **Partitioning**: partition S3 data by date or other filter dimensions. WHERE clauses on partition columns prune entire partitions — a date filter on a year of data might scan 1/365th of the dataset\n3. **Partition projection**: eliminates the need to list partitions from the Glue Catalog, reducing overhead for tables with thousands of partitions\n4. **SELECT only needed columns**: avoid SELECT * — specify column names to reduce scanned data in columnar formats\n5. **Compress output data**: use SNAPPY or ZSTD compression inside Parquet/ORC to further reduce file sizes' },
+    { q: 'When would you choose Athena over Redshift?', a: '**Choose Athena** when:\n- Data lives in S3 and you need ad-hoc, exploratory queries\n- Queries are infrequent (paying per query is cheaper than a running cluster)\n- You need to query raw log files (CloudTrail, ALB, S3 access logs) without loading them into a database\n- The team is small and does not want to manage a Redshift cluster\n- Concurrency requirements are low (<20 simultaneous queries)\n\n**Choose Redshift** when:\n- High-concurrency BI dashboards need sub-second query response\n- Data warehouse workloads with complex joins across large structured datasets\n- Need for materialized views, stored procedures, and Redshift-specific optimizations\n- Data is loaded and transformed (ELT) rather than queried in place\n- Cost is more predictable with reserved node pricing vs per-query' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/athena/latest/ug/',
+    'https://docs.aws.amazon.com/athena/latest/ug/partitions.html',
+    'https://docs.aws.amazon.com/athena/latest/ug/columnar-storage.html',
+  ],
+},
+
+{
+  id: 'aws-opensearch',
+  title: 'Amazon OpenSearch Service',
+  icon: 'database',
+  color: '#8b5cf6',
+  description: 'Managed OpenSearch (formerly Elasticsearch) and Kibana/OpenSearch Dashboards. Use cases: full-text search, log analytics, application monitoring, security analytics. Scales from single-node dev to multi-AZ production clusters.',
+  introduction: '**Amazon OpenSearch Service** (formerly Amazon Elasticsearch Service) provides managed OpenSearch clusters — the open-source distributed search and analytics engine forked from Elasticsearch. It handles cluster provisioning, patching, backups, and scaling, while you focus on indexing data and building search and analytics applications. Kibana is replaced by OpenSearch Dashboards.',
+  whenToUse: 'Use OpenSearch for full-text search across large document collections, log analytics (with Kinesis Firehose or Logstash), application search with relevance ranking, security analytics (SIEM use case), and operational dashboards. Use DynamoDB or RDS for transactional data with structured queries.',
+  keyConcepts: [
+    { title: 'Index and Shards', description: 'An **Index** is the equivalent of a database table — a collection of JSON documents. Each index is divided into **Primary Shards** for horizontal scaling and **Replica Shards** for high availability. Rule of thumb: shard size should be 10-50GB. Too many small shards (shard overhead) or too few large shards (can\'t parallelize) both hurt performance.' },
+    { title: 'Full-Text Search', description: '**Inverted Index**: OpenSearch analyzes text at index time using Analyzers (tokenizer + token filters) and stores a mapping of term → list of documents containing that term. At query time, the search term is analyzed the same way and matched against the inverted index. Relevance scoring uses BM25 (best match 25) — documents with the search term appearing frequently and in fields with high importance score higher.' },
+    { title: 'OpenSearch Dashboards', description: 'The visualization layer (formerly Kibana). Create index patterns, build Lens visualizations, and compose dashboards. Includes Dev Tools console for running OpenSearch REST API queries interactively. Integrated with IAM SAML for SSO authentication.' },
+    { title: 'Domain Configuration', description: 'An OpenSearch **Domain** is a cluster. Configure: instance type (r6g, m6g, c6g — Graviton-based preferred), instance count, dedicated master nodes (recommended for production — 3 dedicated masters, kept separate from data nodes), storage type (EBS gp3 preferred), Multi-AZ (2 or 3 AZs), and encryption at rest (KMS).' },
+    { title: 'Index Lifecycle with ISM', description: '**Index State Management (ISM)** automates index lifecycle: hot (recent, fast SSD) → warm (older, lower-cost storage) → delete (expired). Define policies based on index age or size. Essential for log analytics where you want to retain 90 days but only query the last 7 days at full speed.' },
+  ],
+  approach: [
+    { step: 'Size the cluster correctly', details: 'Calculate shard count: (total data size in GB * 1.1 overhead) / target shard size (30GB). Set replica count to 1 for production (doubles storage, provides fault tolerance). Use r6g (memory-optimized) for search-heavy workloads; use UltraWarm for cold data that needs occasional access.' },
+    { step: 'Design the index mapping', details: 'Define explicit mappings (field names, types) rather than relying on dynamic mapping. Disable _source for fields you never need to retrieve. Use keyword type for exact-match fields (IDs, tags) and text type for full-text search fields. Avoid too many fields (mapping explosion).' },
+    { step: 'Ingest data efficiently', details: 'Use Bulk API for high-throughput indexing (batch 1000-5000 documents per bulk request). For log analytics, use Amazon Kinesis Data Firehose as a managed delivery layer — it buffers and bulk-indexes to OpenSearch automatically.' },
+  ],
+  pitfalls: [
+    { title: 'No dedicated master nodes in production', description: 'Data nodes handle both indexing/search and cluster management tasks. Under heavy load, cluster state management can be starved. Always use 3 dedicated master nodes for production clusters with more than 3 data nodes.' },
+    { title: 'Unbounded index growth', description: 'Without ISM policies, indices grow indefinitely. For log data, implement daily indices (logs-2024.01.15) with ISM policies that delete indices older than the retention period. Without this, the cluster will eventually run out of disk space and enter a read-only state.' },
+    { title: 'Using OpenSearch for transactional data', description: 'OpenSearch is eventually consistent — a document indexed may not be immediately searchable. It does not support ACID transactions. Use it as a search replica fed from a primary store (DynamoDB, RDS, S3), not as the system of record.' },
+  ],
+  keyQuestions: [
+    { q: 'How does OpenSearch full-text search work?', a: 'OpenSearch uses an **inverted index** for full-text search:\n\n**At index time**:\n1. Text fields are processed by an Analyzer (Standard Analyzer by default)\n2. The Analyzer: tokenizes text → lowercases → removes stop words → applies stemming\n3. Each resulting token is stored in the inverted index: token → [doc1, doc3, doc7, ...]\n\n**At query time**:\n1. The search query is analyzed with the same Analyzer\n2. Tokens from the query are looked up in the inverted index\n3. Matching documents are scored using **BM25** (term frequency × inverse document frequency adjusted for document length)\n4. Results are returned sorted by score descending\n\nExample: indexing "The quick brown fox" → tokens: [quick, brown, fox]. Searching "fast fox" → tokens: [fast, fox] → matches documents containing "fox" → scored by fox frequency.' },
+    { q: 'How do you handle log analytics at scale with OpenSearch?', a: 'The standard log analytics architecture with OpenSearch:\n\n1. **Ingestion**: Application logs → **Kinesis Data Firehose** (buffers, batches, handles backpressure) → OpenSearch (bulk index)\n2. **Index strategy**: Daily time-based indices (logs-2024.01.15) — allows deleting old data by deleting entire indices instead of document-by-document deletion\n3. **Index State Management**: ISM policy — hot (0-7 days, fast gp3 EBS) → warm (7-30 days, UltraWarm storage, 90% cheaper) → delete (30+ days)\n4. **Dashboards**: OpenSearch Dashboards with index patterns matching logs-* — time-based filtering, histogram visualizations, top-N aggregations\n5. **Scaling**: Dedicate master nodes (3), size data nodes for peak ingestion + query concurrency, enable auto-tune\n\nFor very high volume (>100GB/day), consider Amazon OpenSearch Ingestion (managed OpenTelemetry collector pipeline) instead of Firehose.' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/opensearch-service/latest/developerguide/',
+    'https://opensearch.org/docs/',
+  ],
+},
+
+{
+  id: 'aws-msk',
+  title: 'Amazon MSK — Managed Apache Kafka',
+  icon: 'zap',
+  color: '#f59e0b',
+  description: 'Fully managed Apache Kafka on AWS. MSK handles broker provisioning, Zookeeper/KRaft, patching, and replication. You manage Topics, Producers, and Consumers. Use for high-throughput event streaming, log aggregation, and event-driven architectures.',
+  introduction: '**Amazon MSK (Managed Streaming for Apache Kafka)** provides fully managed Apache Kafka clusters on AWS. MSK handles the undifferentiated heavy lifting — broker provisioning, ZooKeeper management (or KRaft mode in newer versions), OS patching, broker replacement on failure, and configuration. You interact with Kafka via the standard Kafka Producer/Consumer API, making MSK a drop-in replacement for self-managed Kafka.',
+  whenToUse: 'Use MSK when your team already knows Apache Kafka and needs a managed Kafka cluster without the operational overhead of running ZooKeeper, managing broker failures, or handling partition rebalancing. Use Amazon Kinesis Data Streams for simpler use cases where Kafka-specific features (compacted topics, exactly-once semantics, consumer groups) are not needed.',
+  keyConcepts: [
+    { title: 'Topics and Partitions', description: 'A **Topic** is a named stream of records. Topics are divided into **Partitions** for parallelism — each partition is an ordered, immutable log. Producers write to partitions (round-robin or by key hash). Consumers in a **Consumer Group** each own a subset of partitions — enabling parallel consumption. More partitions = more parallelism = higher throughput, but also more resource overhead and more open file descriptors.' },
+    { title: 'Producers and Consumers', description: '**Producers** publish records to topics. Key settings: `acks=all` (wait for all ISR replicas to acknowledge before confirming write — strongest durability), `linger.ms` (batch records for X ms before sending — increases throughput, adds latency), `compression.type` (lz4 or snappy for throughput). **Consumers** poll for records and commit offsets. `auto.offset.reset=earliest` vs `latest` determines behavior when a consumer group starts with no committed offset.' },
+    { title: 'Replication and ISR', description: '**Replication Factor** determines how many broker copies each partition has. Production clusters typically use replication factor 3. The **ISR (In-Sync Replicas)** set contains brokers that are caught up to the leader. If the ISR set shrinks below `min.insync.replicas` (typically set to 2), producers with `acks=all` will receive an error — preventing data loss at the cost of availability.' },
+    { title: 'MSK Serverless', description: 'Automatically scales capacity based on traffic. No broker sizing decisions — MSK manages capacity. Priced per partition-hour and data throughput. Best for variable traffic patterns. MSK Provisioned (standard) is better for predictable high-throughput workloads where you need to optimize broker instance types and storage.' },
+    { title: 'MSK Connect', description: 'Managed Kafka Connect runtime on MSK. Run source connectors (pull data from databases, S3, or external APIs into Kafka) and sink connectors (push Kafka data to S3, OpenSearch, DynamoDB) without managing Kafka Connect worker infrastructure.' },
+  ],
+  approach: [
+    { step: 'Choose broker instance type and count', details: 'For production, use kafka.m5.large (3 brokers) as the starting point. Scale up instance type before adding brokers. Use storage auto-scaling to grow EBS volumes automatically without broker restarts. Deploy across 3 AZs for maximum fault tolerance.' },
+    { step: 'Configure topic settings', details: 'Set replication.factor=3 and min.insync.replicas=2 for durability. Set retention.ms based on your replay window (7 days is common). Set partition count based on target throughput (1 partition ≈ 10-100MB/s depending on message size and broker capacity).' },
+    { step: 'Secure with TLS and IAM', details: 'Enable TLS encryption in transit (MSK default). Use SASL/IAM authentication (MSK IAM auth) — IAM policies control which principals can produce/consume from which topics. Alternatively use SASL/SCRAM for non-IAM clients (third-party tools).' },
+  ],
+  pitfalls: [
+    { title: 'Too few partitions limiting throughput', description: 'A consumer group can use at most one consumer per partition. If a topic has 6 partitions and you want 12 parallel consumers, you will have 6 idle consumers. Plan partition count at topic creation — increasing partitions later is possible but disrupts key-based ordering guarantees.' },
+    { title: 'acks=1 in production for important data', description: 'With `acks=1`, a producer considers the write successful once the leader broker acknowledges it. If the leader fails before replicating to followers, that data is lost. Always use `acks=all` with `min.insync.replicas=2` for durability in production.' },
+    { title: 'Not setting retention and size limits', description: 'By default, Kafka retains data indefinitely (until disk is full). Set `retention.ms` for time-based retention and `retention.bytes` for size-based. Without these, MSK storage fills up, causing producer errors and potential cluster unavailability.' },
+  ],
+  keyQuestions: [
+    { q: 'How does Kafka consumer group parallelism work?', a: 'Each partition in a Kafka topic can be consumed by **at most one consumer** within a consumer group at a time. This is the fundamental parallelism model:\n\n- 6 partitions + 3 consumers in a group → each consumer owns 2 partitions\n- 6 partitions + 6 consumers → each consumer owns 1 partition (maximum parallelism)\n- 6 partitions + 9 consumers → 3 consumers are idle (excess consumers get no partitions)\n\nTo increase consumer parallelism, increase partition count first, then add consumers. Multiple consumer groups reading the same topic each get their own independent offset tracking — a topic with 3 consumer groups is consumed 3 times independently.' },
+    { q: 'When would you choose MSK (Kafka) over Kinesis Data Streams?', a: '**Choose MSK (Kafka)** when:\n- Your team already knows the Kafka API and tooling (ksqlDB, Kafka Streams, Kafka Connect)\n- You need Kafka-specific features: log compaction (keep only the latest value per key), exactly-once semantics, consumer group rebalancing, or custom serializers\n- You need very long retention (days to weeks) and the ability to replay from any offset\n- Migrating from self-managed Kafka — MSK is a drop-in replacement\n- You need MSK Connect for managed Kafka Connect pipelines\n\n**Choose Kinesis Data Streams** when:\n- Your team is AWS-native and does not have Kafka expertise\n- You want simpler AWS integration (Lambda triggers, Firehose delivery)\n- The 1MB record size limit and 7-day retention window fit your use case\n- You want to avoid managing topics/partitions — Kinesis shards are simpler\n- Cost: Kinesis charges per shard-hour; for low-volume use cases it may be cheaper' },
+  ],
+  references: [
+    'https://docs.aws.amazon.com/msk/latest/developerguide/',
+    'https://kafka.apache.org/documentation/',
   ],
 },
 ];
