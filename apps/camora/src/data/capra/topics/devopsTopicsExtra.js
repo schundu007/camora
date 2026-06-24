@@ -24,6 +24,14 @@ export const devopsExtraTopicCategoryMap = {
   'devsecops-pipeline-architecture': 'devsecops',
   'high-availability-system-design': 'cloudnative',
   'overlay-underlay-networking-deep': 'cloudnative',
+  'internal-developer-platform': 'cloudnative',
+  'gitops-pull-model': 'cicd',
+  'slsa-supply-chain': 'devsecops',
+  'dora-metrics-advanced': 'foundations',
+  'trunk-based-development': 'cicd',
+  'database-migrations-cicd': 'cicd',
+  'policy-as-code': 'devsecops',
+  'progressive-delivery': 'cicd',
 };
 
 export const devopsExtraTopics = [
@@ -3135,6 +3143,478 @@ Long-term: build toil metrics into the team's quarterly OKRs — toil percentage
       'https://sre.google/workbook/eliminating-toil/',
       'https://rundeck.com/',
       'https://docs.pagerduty.com/docs/automation-actions',
+    ],
+  },
+
+  {
+    id: 'internal-developer-platform',
+    title: 'Internal Developer Platforms (IDPs) & Backstage',
+    icon: 'layers',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'IDPs abstract infrastructure complexity from developers via golden paths. Backstage (CNCF) is the leading open-source IDP framework: software catalog, templates, plugins, TechDocs. Reduces cognitive load; accelerates onboarding.',
+    visualizations: [],
+    introduction: `An Internal Developer Platform (IDP) is a self-service layer built by platform engineering teams to reduce cognitive load on application developers. Rather than requiring developers to understand Kubernetes, Terraform, IAM, and CI/CD pipelines in depth, an IDP presents golden paths — opinionated, pre-approved workflows for common operations.
+
+Backstage, open-sourced by Spotify and now a CNCF incubating project, is the leading framework for building IDPs. Its core components:
+
+Software Catalog: centralized registry of all services, libraries, websites, and data pipelines. Each entity is defined by a catalog-info.yaml file in the service repo. The catalog tracks ownership, dependencies, API contracts, and links to runbooks and dashboards.
+
+Software Templates (Scaffolder): opinionated project templates that create new services via a form-based UI. A template defines the golden path — which language, framework, CI pipeline, and Kubernetes manifests are pre-configured. Running a template creates the repo, CI pipeline, and initial deployment in one click.
+
+TechDocs: docs-as-code. Write documentation in Markdown alongside code; Backstage renders it centrally with search.
+
+Plugins: Backstage's extension model. Integrates existing tools (PagerDuty, GitHub Actions, ArgoCD, Grafana) into one developer portal.`,
+    whenToUse: [
+      'Platform engineering teams standardizing developer workflows across 10+ services',
+      'Onboarding new engineers who need to create production-ready services without deep infrastructure knowledge',
+      'Replacing scattered wikis with a searchable software catalog',
+      'Implementing CNCF platform engineering maturity model stage 2+',
+    ],
+    keyConcepts: [
+      { term: 'Golden Path', definition: 'The opinionated, platform-supported way to complete a common developer task. Removes decision fatigue and ensures consistency. Teams can deviate, but the golden path is what the platform team supports and optimizes.' },
+      { term: 'Software Catalog', definition: 'Backstage registry of all software entities. Each service has a catalog-info.yaml declaring its kind, owner, lifecycle, dependencies, and links. Enables discoverability and dependency mapping.' },
+      { term: 'Scaffolder Templates', definition: 'Parameterized project templates in Backstage that create new services via a form UI. Generates the repo, CI config, and Kubernetes manifests. Enforces consistency without copy-paste from existing repos.' },
+      { term: 'Cognitive Load', definition: 'The mental effort required for a developer to ship a feature. IDPs reduce intrinsic cognitive load (infrastructure concepts) and extraneous cognitive load (navigating multiple tools) so developers focus on the actual product problem.' },
+      { term: 'Developer Portal', definition: 'The developer-facing UI of an IDP. Backstage is the most common open-source framework. Commercial alternatives: Cortex, Port, OpsLevel.' },
+    ],
+    approach: [
+      'Start with the Software Catalog — register all existing services via catalog-info.yaml before building anything else',
+      'Add golden path templates for the most common service types (REST API, async worker)',
+      'Integrate existing tools via plugins instead of replacing them',
+      'Measure adoption: percentage of new services using scaffold templates, catalog entries with owners and runbooks',
+    ],
+    pitfalls: [
+      'Building without developer input — interview developers, identify their top pain points, solve those first',
+      'Over-engineering before proving value — start with catalog + one template',
+      'Letting the catalog rot — stale entries erode trust in the platform',
+    ],
+    keyQuestions: [
+      { question: 'What is the difference between an IDP and a developer portal?', answer: 'A developer portal is the UI — the website developers interact with (Backstage). An Internal Developer Platform (IDP) is the broader system: the portal plus the underlying infrastructure automations, golden paths, self-service workflows. The portal is how developers access the IDP, not the IDP itself.' },
+      { question: 'How does Backstage Software Catalog work?', answer: 'Each service has a catalog-info.yaml committed alongside its code declaring entity kind, owner, lifecycle, and dependencies. A Backstage discovery processor scans configured locations (GitHub orgs) for catalog-info.yaml files and registers entities in the catalog database. Developers query the catalog to discover services, find owners, and check health via integrated plugins.' },
+    ],
+    quickFire: [
+      { q: 'What is a golden path?', a: 'The opinionated, platform-supported way to complete a common developer task -- reduces decision fatigue and enforces consistency.' },
+      { q: 'What CNCF project is the leading IDP framework?', a: 'Backstage, open-sourced by Spotify.' },
+      { q: 'What does Backstage Scaffolder do?', a: 'Creates new services from opinionated templates -- generates the repo, CI config, and Kubernetes manifests in one workflow.' },
+    ],
+    references: [
+      'https://backstage.io/docs/',
+      'https://tag-app-delivery.cncf.io/whitepapers/platforms/',
+    ],
+  },
+
+  {
+    id: 'gitops-pull-model',
+    title: 'GitOps — Pull-Based Deployment Model',
+    icon: 'gitBranch',
+    color: '#14b8a6',
+    questions: 4,
+    description: 'OpenGitOps 4 principles: declarative, versioned+immutable, pulled automatically, continuously reconciled. ArgoCD and Flux implement the pull model — in-cluster agents watch Git and reconcile desired vs actual state.',
+    visualizations: [],
+    introduction: `GitOps is a set of practices where the desired state of infrastructure and applications is stored in Git and an automated operator continuously reconciles actual state to match desired state.
+
+OpenGitOps (CNCF) defines GitOps through four core principles:
+
+1. Declarative: the entire system state is described declaratively — WHAT it should look like, not HOW to get there. Kubernetes YAML manifests are declarative; imperative kubectl commands are not GitOps.
+
+2. Versioned and Immutable: desired state is stored in Git. All changes are tracked, auditable, and reversible. No direct cluster changes — everything goes through Git.
+
+3. Pulled Automatically: software agents pull desired state from Git and apply it to the system. This is the key distinction from push-based CI/CD where the pipeline pushes kubectl apply from outside the cluster. The agent runs inside the cluster.
+
+4. Continuously Reconciled: agents continuously observe actual state and reconcile any drift. If someone manually runs kubectl delete pod, the GitOps operator detects drift and recreates the pod.
+
+ArgoCD and Flux are the two dominant GitOps operators implementing these principles.`,
+    whenToUse: [
+      'Kubernetes deployments requiring auditability, rollback, and drift detection',
+      'Multi-cluster environments with a central Git repo as source of truth',
+      'Compliance environments requiring every infrastructure change to have a PR review',
+      'Platform engineering teams separating application code repos from deployment config repos',
+    ],
+    keyConcepts: [
+      { term: 'Pull vs Push Model', definition: 'Push: CI pipeline authenticates to Kubernetes and runs kubectl apply — credentials stored in CI, outside-in. Pull: an agent inside the cluster watches Git and pulls changes — cluster needs no external credentials. Pull model is more secure.' },
+      { term: 'ArgoCD', definition: 'Declarative GitOps operator for Kubernetes. Watches Git repos, Helm charts, or Kustomize overlays and syncs the cluster. Provides a UI showing sync status, health, and diff. Supports ApplicationSets for managing many clusters.' },
+      { term: 'Flux', definition: 'CNCF-graduated GitOps toolkit. Modular controllers for Git sources, Helm releases, Kustomizations. More lightweight than ArgoCD; no built-in UI.' },
+      { term: 'Drift Detection', definition: 'GitOps operator continuously compares actual cluster state to desired state in Git. When drift is detected (manual kubectl change), the operator alerts or automatically reconciles back.' },
+    ],
+    approach: [
+      'Separate deployment manifest repos from application code repos',
+      'Install ArgoCD or Flux with minimal RBAC',
+      'Set sync policy: automated sync with self-heal for non-production; require manual approval for production',
+      'Use External Secrets Operator or Sealed Secrets — never commit plaintext secrets to Git',
+    ],
+    pitfalls: [
+      'Committing secrets to Git — always encrypt (Sealed Secrets) or reference externally (External Secrets Operator)',
+      'Auto-sync in production without blast radius analysis — a bad commit with auto-sync can instantly break production',
+      'No environment promotion strategy — without dev → staging → prod promotion, changes go directly to all clusters',
+    ],
+    keyQuestions: [
+      { question: 'What are the four OpenGitOps principles?', answer: '1. Declarative: desired state described declaratively (YAML, not scripts)\n2. Versioned and Immutable: state stored in Git; all changes tracked and auditable\n3. Pulled Automatically: in-cluster agent pulls from Git (not pushed from CI)\n4. Continuously Reconciled: agent detects and corrects drift back to Git state\n\nThe pull model is the key architectural distinction from traditional CI/CD push deployment.' },
+      { question: 'How does ArgoCD implement GitOps?', answer: 'ArgoCD runs controllers inside the cluster (argocd-application-controller, argocd-repo-server). The controller polls Git repos (default 3min) or responds to webhooks. When it detects a difference between Git state and cluster state, it marks the Application as OutOfSync.\n\nWith auto-sync + self-heal: immediately applies the Git state. With manual sync: waits for human approval.\n\nArgoCD never needs external cluster credentials — it uses in-cluster service account RBAC. The cluster reaches out to Git, not the reverse.' },
+    ],
+    quickFire: [
+      { q: 'Key difference between push and pull GitOps?', a: 'Push: CI authenticates to cluster and applies changes (credentials in CI). Pull: in-cluster agent watches Git (credentials never leave cluster).' },
+      { q: 'Name the two dominant GitOps operators.', a: 'ArgoCD (built-in UI, App-of-Apps) and Flux (CNCF-graduated, modular controllers).' },
+      { q: 'How do you handle secrets in GitOps?', a: 'Never commit plaintext. Use Sealed Secrets (cluster-encrypted before commit) or External Secrets Operator (reference from Vault/AWS Secrets Manager).' },
+    ],
+    references: [
+      'https://opengitops.dev/',
+      'https://argo-cd.readthedocs.io/',
+      'https://fluxcd.io/flux/concepts/',
+    ],
+  },
+
+  {
+    id: 'slsa-supply-chain',
+    title: 'SLSA — Software Supply Chain Security',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 4,
+    description: 'SLSA defines 3 levels of supply chain integrity. Level 1: provenance. Level 2: hosted build + signed provenance. Level 3: hardened build + non-falsifiable provenance. Sigstore (Cosign, Rekor, Fulcio) implements keyless signing.',
+    visualizations: [],
+    introduction: `SLSA (Supply-chain Levels for Software Artifacts, pronounced "salsa") is a security framework from Google (now OpenSSF) defining graduated levels of software supply chain integrity. Created in response to attacks like SolarWinds and Log4Shell where the build pipeline or dependency chain was compromised.
+
+SLSA v1.0 defines three levels:
+
+Level 1 — Provenance: the build generates a signed attestation describing how the artifact was built (source, builder, inputs). Basic auditability.
+
+Level 2 — Hosted Build + Signed Provenance: the build runs on a trusted hosted platform (GitHub Actions, Google Cloud Build) and provenance is signed by that platform's identity. Consumers can verify the build platform.
+
+Level 3 — Hardened Build + Non-Falsifiable Provenance: the build environment is hardened (isolated, ephemeral, no network egress), and provenance is generated by the platform such that even the build script cannot forge it.
+
+Sigstore is the open-source ecosystem implementing SLSA signing: Cosign (sign images and attestations), Rekor (immutable transparency log), Fulcio (OIDC-based CA for keyless signing).`,
+    whenToUse: [
+      'Securing CI/CD pipelines against build-time tampering',
+      'Verifying deployed images were built by your CI system and not modified',
+      'NIST SSDF or Executive Order 14028 software supply chain compliance',
+      'Kubernetes admission control: only allow images with valid provenance',
+    ],
+    keyConcepts: [
+      { term: 'Provenance Attestation', definition: 'A signed, machine-readable document (in-toto attestation) describing how an artifact was built: source repo, commit hash, builder identity, build environment. Allows consumers to verify "this image was built by GitHub Actions from commit abc123 of repo org/myapp."' },
+      { term: 'Cosign (Sigstore)', definition: 'CLI tool for signing and verifying container images and attestations. Supports keyless signing (OIDC-based ephemeral certificates from Sigstore PKI) and key-based signing. Adds signatures to the OCI registry alongside the image digest.' },
+      { term: 'Rekor (Sigstore)', definition: 'Immutable, append-only transparency log for software signatures. Every Cosign signature is recorded in Rekor. Consumers query Rekor to verify a signature exists and was recorded at a specific time.' },
+      { term: 'Keyless Signing', definition: 'Sign without managing long-lived key pairs. CI job gets a short-lived certificate from Fulcio CA based on OIDC identity (GitHub Actions workload identity). The signature is tied to the workflow identity. No secrets to rotate; certificates expire in 10 minutes.' },
+    ],
+    approach: [
+      'Start with SLSA Level 1: add provenance generation using slsa-github-generator GitHub Action',
+      'Sign container images with Cosign keyless signing in CI',
+      'Advance to Level 2 by using hosted builders with platform-generated provenance',
+      'Add Kyverno or OPA admission policies to reject images without valid signatures',
+    ],
+    pitfalls: [
+      'Generating provenance without verifying it — provenance only helps if verified at deploy time',
+      'Long-lived signing keys in CI secrets — use keyless signing to eliminate key management entirely',
+      'Confusing SLSA levels — Level 2 is about build platform identity; Level 3 is about hardening the build environment',
+    ],
+    keyQuestions: [
+      { question: 'What problem does SLSA solve and what are its three levels?', answer: 'SLSA addresses software supply chain attacks where the build pipeline or artifact distribution is compromised (SolarWinds, XZ Utils).\n\nLevel 1: build generates signed provenance. Basic auditability.\nLevel 2: build runs on trusted hosted platform; provenance signed by platform identity. Consumers can verify the build platform.\nLevel 3: hardened build environment (isolated, ephemeral); provenance non-falsifiable even by the build script itself.' },
+      { question: 'How does keyless signing with Sigstore work?', answer: '1. CI job requests OIDC token from provider (GitHub Actions)\n2. Cosign sends token to Sigstore Fulcio CA\n3. Fulcio verifies OIDC token, issues short-lived X.509 cert (10min TTL) bound to OIDC subject (github.com/org/repo/workflow@refs/heads/main)\n4. Cosign signs artifact with ephemeral private key\n5. Signature + certificate uploaded to Rekor transparency log\n6. Ephemeral key discarded\n\nVerification: cosign verify checks signature in Rekor, cert from Fulcio, OIDC subject matches expected workflow.' },
+    ],
+    quickFire: [
+      { q: 'What does SLSA stand for?', a: 'Supply-chain Levels for Software Artifacts.' },
+      { q: 'What is Cosign?', a: 'Sigstore tool for signing and verifying container images and attestations.' },
+      { q: 'What is Rekor?', a: 'Immutable transparency log for software signatures -- non-repudiation.' },
+      { q: 'What is keyless signing?', a: 'Sign with OIDC-based ephemeral certs (Sigstore Fulcio) instead of long-lived private keys.' },
+    ],
+    references: [
+      'https://slsa.dev/',
+      'https://docs.sigstore.dev/',
+      'https://github.com/sigstore/cosign',
+    ],
+  },
+
+  {
+    id: 'dora-metrics-advanced',
+    title: 'DORA Four Keys — Deep Dive',
+    icon: 'activity',
+    color: '#22c55e',
+    questions: 4,
+    description: 'DORA Four Keys: Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore. Elite: deploy on-demand, <1h MTTR, <15% CFR. Speed and stability are positively correlated — not a tradeoff.',
+    visualizations: [],
+    introduction: `The DORA (DevOps Research and Assessment) Four Keys are the industry-standard metrics for measuring software delivery performance. Derived from six years of research across 32,000+ professionals in the annual State of DevOps reports.
+
+The four metrics measure delivery speed and stability:
+
+Deployment Frequency: how often code deploys to production. Elite: multiple times per day. High: once per day to once per week. Medium: once per week to once per month. Low: less than once per month.
+
+Lead Time for Changes: commit to production. Elite: under 1 hour. High: 1 day to 1 week. Medium: 1 week to 1 month. Low: 1 to 6 months.
+
+Change Failure Rate: percentage of deployments causing a production failure. Elite/High: 0-15%. Medium: 16-30%. Low: 16-30%.
+
+Time to Restore Service (MTTR): how long to recover from a failure. Elite: under 1 hour. High: under 1 day. Medium: 1 day to 1 week. Low: 1 week to 1 month.
+
+Critical insight: elite teams achieve HIGH speed AND HIGH stability simultaneously. Speed and stability are positively correlated — not a tradeoff.`,
+    whenToUse: [
+      'Establishing a baseline before a DevOps transformation initiative',
+      'Tracking impact of CI/CD improvements over time',
+      'Identifying bottlenecks: high frequency + high CFR = test coverage gap; low frequency + low CFR = batch release risk aversion',
+      'Executive reporting on engineering effectiveness with industry benchmarks',
+    ],
+    keyConcepts: [
+      { term: 'Deployment Frequency', definition: 'How often a team releases to production. Best predictor of lead time — frequent deploys mean smaller batches, lower risk per deployment, faster feedback loops. Trunk-based development and feature flags enable high frequency.' },
+      { term: 'Lead Time for Changes', definition: 'Clock starts at commit; clock stops when live in production. Includes code review + CI build + deployment pipeline + manual approval gates. Reveals where time is spent between code-complete and delivery.' },
+      { term: 'Change Failure Rate', definition: 'Percentage of deployments causing a production incident. Measures deployment quality. Reduced by: comprehensive automated testing, canary deployments, feature flags for instant rollback.' },
+      { term: 'Time to Restore (MTTR)', definition: 'Incident detection to full service recovery. Key enablers: good observability (fast detection), runbooks, feature flags, canary rollbacks, on-call engineers with authority to act.' },
+      { term: 'Elite Profile', definition: 'Deploy multiple times per day, <1h lead time, <15% CFR, <1h MTTR. Elite teams prove speed and stability are mutually reinforcing, not a tradeoff.' },
+    ],
+    approach: [
+      'Instrument deployment events: every production deployment emits a timestamp event',
+      'Instrument incidents: link incidents to causative deployments to calculate CFR automatically',
+      'Measure lead time: timestamp when commit merges to main + timestamp when deployed to production',
+      'Display on a shared dashboard visible to all engineers, not just leadership',
+    ],
+    pitfalls: [
+      'Gaming metrics — teams evaluated on DORA metrics optimize the metric not the outcome (deploy trivial commits to inflate frequency)',
+      'Comparing across teams — most useful for tracking one team\'s improvement over time, not cross-team benchmarking',
+      'Ignoring 2024 additions — documentation quality and reliability are now as predictive as the four keys',
+    ],
+    keyQuestions: [
+      { question: 'What are the DORA Four Keys and elite benchmarks?', answer: '1. Deployment Frequency — Elite: multiple times per day\n2. Lead Time for Changes — Elite: less than 1 hour\n3. Change Failure Rate — Elite: 0-15%\n4. Time to Restore — Elite: less than 1 hour\n\nCritical finding: elite performers achieve high speed AND high stability simultaneously. The research disproves the conventional belief that speed and quality trade off.' },
+      { question: 'How do you measure Lead Time for Changes in practice?', answer: 'Lead Time = time from code commit merged to main → same commit running in production.\n\nImplementation:\n1. Record timestamp when commit merges to main branch\n2. Record timestamp when deployment containing that commit reaches production\n3. Lead time = production timestamp - commit timestamp\n\nTools: DORA Four Keys open-source project (BigQuery + Looker), Datadog CI Visibility, LinearB, Jellyfish.\n\nCommon bottlenecks: long PR review cycles, slow CI (>15min builds), manual approval gates, restricted deployment windows.' },
+    ],
+    quickFire: [
+      { q: 'What are the DORA Four Keys?', a: 'Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore Service.' },
+      { q: 'Elite MTTR benchmark?', a: 'Less than 1 hour to restore after a production incident.' },
+      { q: 'Do elite teams trade speed for stability?', a: 'No -- research shows they are positively correlated. Elite teams achieve high frequency AND low failure rates.' },
+    ],
+    references: [
+      'https://dora.dev/research/',
+      'https://github.com/dora-team/fourkeys',
+    ],
+  },
+
+  {
+    id: 'trunk-based-development',
+    title: 'Trunk-Based Development & Feature Flags',
+    icon: 'gitBranch',
+    color: '#f59e0b',
+    questions: 4,
+    description: 'All developers commit to a single trunk (main) daily. Short-lived branches (<2 days). Feature flags control release. Eliminates merge hell. Required for high DORA Deployment Frequency. Contrasts with Gitflow long-lived branches.',
+    visualizations: [],
+    introduction: `Trunk-Based Development (TBD) is a branching model where all developers commit to a single shared branch (trunk/main) at high frequency — multiple times per day. Branches, if used, are short-lived (under 1-2 days) and merged back quickly.
+
+TBD is used by Google (mono-repo, all code on one branch), Facebook, Netflix, and most elite engineering organizations. DORA research identifies TBD as one of the top predictors of software delivery performance.
+
+Key enablers:
+
+Feature flags: incomplete features are committed behind a flag that is disabled in production. Code ships on every deployment but the feature is dark until ready. This decouples code deployment from feature release.
+
+Comprehensive automated testing: with all developers on one branch, CI must catch regressions immediately. Fast CI (under 10 minutes) is a prerequisite.
+
+Small batches: developers break work into commits small enough to be safe to merge daily. Large features are decomposed into increments that each leave the system in a working state.
+
+Contrasts with Gitflow (long-lived develop, release, hotfix branches) — designed for scheduled releases of packaged software, it creates merge conflicts, long integration delays, and slow feedback loops in CD environments.`,
+    whenToUse: [
+      'Teams aiming for high DORA Deployment Frequency (daily or multiple times per day)',
+      'Teams suffering from long-lived branch merge conflicts and integration delays',
+      'Enabling continuous integration where every commit is tested against the full suite',
+      'Separating feature release from code deployment using feature flags',
+    ],
+    keyConcepts: [
+      { term: 'Trunk / Main Branch', definition: 'The single shared branch all developers commit to. Must always be in a releasable state — CI must pass on every commit. No broken trunk allowed.' },
+      { term: 'Feature Flags (Toggles)', definition: 'Conditional code paths controlled by a runtime flag. Feature code is committed and deployed but inactive until toggled on. Types: release toggles (hide incomplete features), experiment toggles (A/B), ops toggles (circuit breakers), permission toggles (per-user rollout).' },
+      { term: 'Branch by Abstraction', definition: 'Technique for large-scale changes without long-lived branches: introduce abstraction → implement new behavior behind it → switch callers → remove old implementation. All on trunk continuously.' },
+      { term: 'Short-Lived Branches', definition: 'If branches are used in TBD, they must merge to trunk within 1-2 days. Allows code review without blocking trunk but eliminates Gitflow merge conflict accumulation.' },
+    ],
+    approach: [
+      'Make trunk always releasable: CI runs the full test suite on every commit and blocks merges that break tests',
+      'Introduce feature flags for incomplete features: wrap in-progress code rather than using a long-lived branch',
+      'Decompose large features into small commits: each commit leaves the system in a valid state',
+      'Set a branch lifetime policy: any branch not merged within 2 days is merged (with a flag) or deleted',
+    ],
+    pitfalls: [
+      'Committing broken code to trunk: TBD requires rigorous CI. Without fast comprehensive tests, broken code on trunk blocks the entire team.',
+      'Feature flags becoming permanent debt: set a TTL for every flag and schedule removal after full rollout.',
+      'Confusing TBD with "commit directly to main without review": TBD can coexist with code review via short-lived PRs merged in hours, not days.',
+    ],
+    keyQuestions: [
+      { question: 'What is Trunk-Based Development and how does it differ from Gitflow?', answer: 'TBD: all developers commit to a single trunk daily. Branches are short-lived (0-2 days). Trunk is always releasable. Incomplete features are hidden behind feature flags.\n\nGitflow: long-lived develop, release, and hotfix branches. Feature branches can last weeks. Designed for scheduled releases of packaged software.\n\nWhy TBD wins for CI/CD:\n- No merge hell: small frequent commits have tiny conflicts\n- Fast feedback: CI catches integration issues within minutes, not at branch merge time\n- Always deployable: every commit is production-ready\n- Decoupled deployment and release: deploy continuously, release features via flags\n\nDORA research: TBD is one of the top predictors of elite software delivery performance.' },
+      { question: 'How do feature flags enable trunk-based development?', answer: 'Feature flags let developers commit incomplete features to trunk without affecting users.\n\nPattern: wrap in-progress code behind a boolean flag defaulting to false. When false, users see old behavior.\n\nDeployment lifecycle:\n1. Commit new code behind flag (flag=false by default)\n2. Deploy to production -- users unaffected\n3. QA tests by enabling flag in test environment\n4. Gradual rollout: 1% → 10% → 50% → 100%\n5. Full rollout → clean up flag from code\n\nDecouples deployment (continuous) from release (controlled). Incidents mitigated in seconds by toggling flag off -- no rollback deployment needed.' },
+    ],
+    quickFire: [
+      { q: 'What is trunk-based development?', a: 'All developers commit to a single shared branch (main) daily; branches are short-lived (<2 days).' },
+      { q: 'What enables committing incomplete features in TBD?', a: 'Feature flags -- wrap in-progress code behind a runtime flag that defaults to off in production.' },
+      { q: 'Main risk of feature flags?', a: 'Flag debt -- never-cleaned-up flags create a combinatorial explosion of flag states.' },
+    ],
+    references: [
+      'https://trunkbaseddevelopment.com/',
+      'https://martinfowler.com/articles/feature-toggles.html',
+      'https://dora.dev/devops-capabilities/technical/trunk-based-development/',
+    ],
+  },
+
+  {
+    id: 'database-migrations-cicd',
+    title: 'Database Migrations in CI/CD — Flyway & Liquibase',
+    icon: 'database',
+    color: '#8b5cf6',
+    questions: 4,
+    description: 'Schema migrations as code, versioned in Git, applied automatically in CI/CD. Flyway (SQL files, convention-over-config) vs Liquibase (XML/YAML changelogs, rollback support). Expand-contract pattern for zero-downtime schema changes.',
+    visualizations: [],
+    introduction: `Database schema changes are among the highest-risk operations in application deployment. Unlike code that can be rolled back with a revert, migrations that drop columns or modify data can be irreversible. Integrating schema migrations into CI/CD requires careful patterns to maintain backward compatibility and enable zero-downtime deployments.
+
+Flyway and Liquibase both store migration scripts as versioned files in version control, track which migrations have been applied in a metadata table, and apply pending migrations in order on startup or in a CI step.
+
+Flyway uses plain SQL files with a naming convention (V1__Create_users.sql, V2__Add_email_column.sql). Convention-over-configuration; Spring Boot integration; applied automatically on startup. No rollback support — rollback requires a new forward migration.
+
+Liquibase uses changelogs (XML, YAML, JSON, or SQL) with rollback script support, preconditions, and cross-database abstractions. More complex but more powerful for teams needing rollback and database-agnostic changelogs.
+
+The expand-contract pattern is the key technique for zero-downtime migrations: Phase 1 Expand (add new structures, keep old) → Phase 2 Migrate (application uses both) → Phase 3 Contract (remove old structures in a later release).`,
+    whenToUse: [
+      'Any application with a relational database where schema changes are part of the development workflow',
+      'CI/CD pipelines where migrations must be applied automatically before deploying new app code',
+      'Multi-environment setups requiring all environments to stay in sync with the same schema version',
+      'Zero-downtime deployments where schema changes must not break the currently running app version',
+    ],
+    keyConcepts: [
+      { term: 'Migration Versioning', definition: 'Each migration file has a unique version (V1, V2... or timestamps). Applied migrations are recorded in flyway_schema_history or databasechangelog table. The tool applies only pending migrations in version order.' },
+      { term: 'Expand-Contract Pattern', definition: 'Zero-downtime schema change in three phases: Expand (add new structures without removing old -- both app versions work), Migrate (update app to use new structures, backfill data), Contract (remove old structures in a later release). Never combine expand and contract in one deployment.' },
+      { term: 'Backward-Compatible Migrations', definition: 'Safe: ADD COLUMN (nullable or with default), CREATE TABLE, CREATE INDEX CONCURRENTLY. Unsafe: DROP COLUMN, RENAME COLUMN, change type, NOT NULL without default. Unsafe operations require expand-contract pattern.' },
+      { term: 'Migration Locking', definition: 'When multiple app instances start simultaneously, Flyway and Liquibase use a DB-level lock so only one instance applies migrations. Others wait, then proceed after the lock is released.' },
+    ],
+    approach: [
+      'Apply migrations as a separate pipeline step before deploying new app code',
+      'Always use expand-contract for column removal or renames -- never drop a column in the same release that removes the code referencing it',
+      'Test migrations against a copy of production data in staging to catch performance issues (CREATE INDEX on a large table can take hours)',
+      'Never modify an applied migration -- add a new migration to fix mistakes',
+    ],
+    pitfalls: [
+      'Modifying an applied Flyway migration: Flyway stores a checksum. Modification causes checksum mismatch → startup failure.',
+      'Dropping a column in the same release as the code removal: if the new app deployment fails and rolls back, the old code references the now-dropped column.',
+      'Not testing migration performance on production-scale data: adding NOT NULL or an index on 100M rows without CONCURRENTLY can lock the table for hours.',
+    ],
+    keyQuestions: [
+      { question: 'What is the expand-contract pattern?', answer: 'Safe zero-downtime schema change:\n\nPhase 1 — Expand: add new column/table/index without removing old. Both app versions work.\nPhase 2 — Migrate: app writes to both old and new. Backfill data to new structure. Verify integrity.\nPhase 3 — Contract (next release): remove old structure after 100% of instances run new code.\n\nExample — renaming column "user_email" to "email_address":\n1. ADD COLUMN email_address; backfill from user_email\n2. App reads/writes both columns\n3. DROP COLUMN user_email (next deployment)' },
+      { question: 'How does Flyway track applied migrations?', answer: 'Flyway maintains flyway_schema_history in the target database. Each row records: version, description, script filename, CRC32 checksum, installed timestamp, execution time, success.\n\nOn each run: reads all migration files, computes checksums, compares to history, applies only pending migrations. If an applied migration\'s checksum differs (file modified), Flyway fails with a validation error.\n\nThis prevents modified migrations from re-running and ensures all environments have the same schema version.' },
+    ],
+    quickFire: [
+      { q: 'Safe vs unsafe migration operations?', a: 'Safe: ADD COLUMN (nullable), CREATE TABLE, CREATE INDEX. Unsafe: DROP COLUMN, RENAME, type change -- require expand-contract.' },
+      { q: 'What happens if you modify an applied Flyway migration?', a: 'Flyway detects checksum mismatch and refuses to run.' },
+      { q: 'Main Liquibase advantage over Flyway?', a: 'Rollback scripts and database-agnostic changelogs; Flyway is SQL-only with no native rollback.' },
+    ],
+    references: [
+      'https://flywaydb.org/documentation/',
+      'https://docs.liquibase.com/',
+      'https://martinfowler.com/articles/evodb.html',
+    ],
+  },
+
+  {
+    id: 'policy-as-code',
+    title: 'Policy as Code — OPA, Kyverno, Admission Control',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 4,
+    description: 'Security and compliance rules as version-controlled, testable code. OPA (Rego language, general-purpose) and Kyverno (Kubernetes-native YAML) validate/mutate resources at admission. Audit mode first, then enforce.',
+    visualizations: [],
+    introduction: `Policy as Code is the practice of defining compliance, security, and operational rules as code — version-controlled, testable, and automatically enforced — rather than manual checklists or ad-hoc gatekeeping.
+
+In Kubernetes, Policy as Code is implemented via Admission Controllers — webhook plugins that intercept API server requests before objects are persisted. Every create/update/delete goes through admission webhooks, which can validate (allow or deny) or mutate (modify) the resource.
+
+OPA (Open Policy Agent, CNCF graduated) is a general-purpose policy engine using the Rego language. In Kubernetes it is deployed as Gatekeeper — an admission controller evaluating objects against OPA Constraint policies.
+
+Kyverno is a Kubernetes-native policy engine (CNCF incubating). Policies are YAML using Kubernetes-familiar syntax — no new language. Three operations: validate (deny non-compliant), mutate (modify resources to comply), generate (create additional resources, e.g., create a NetworkPolicy when a namespace is created).
+
+Both run in audit mode (log violations without blocking) before enforce mode.`,
+    whenToUse: [
+      'Enforcing security standards across a cluster (images from approved registries, no root containers, resource limits required)',
+      'SOC2, HIPAA, or PCI compliance requiring specific Kubernetes configurations',
+      'Multi-tenant clusters requiring NetworkPolicies and resource quotas per namespace',
+      'Auto-injecting labels, resource limits, or sidecar containers without developer action',
+    ],
+    keyConcepts: [
+      { term: 'Admission Controller', definition: 'Kubernetes plugin intercepting API server requests before etcd persistence. MutatingAdmissionWebhook (can modify objects) runs first, then ValidatingAdmissionWebhook (can approve/deny). Both OPA/Gatekeeper and Kyverno register as admission webhooks.' },
+      { term: 'OPA / Gatekeeper', definition: 'CNCF-graduated general-purpose policy engine. ConstraintTemplate defines Rego policy logic; Constraint is an instance applied to specific resources. Audit mode flags violations; enforce mode denies them.' },
+      { term: 'Kyverno', definition: 'Kubernetes-native policy engine. ClusterPolicy (cluster-wide) and Policy (namespace-scoped). Three operations: validate (deny), mutate (modify), generate (create). Also supports image verification via Cosign/Notary.' },
+      { term: 'Audit vs Enforce Mode', definition: 'Audit: violations are logged to PolicyReport resources but not blocked. Enforce: non-compliant resources are denied at admission. Best practice: audit first to discover baseline violations, fix them, then switch to enforce.' },
+      { term: 'Policy Reports', definition: 'Kubernetes resources (PolicyReport, ClusterPolicyReport) generated by Kyverno listing all violations in the cluster. Provides a compliance dashboard without blocking existing workloads.' },
+    ],
+    approach: [
+      'Deploy in audit mode first: discover existing violations without blocking workloads',
+      'Fix all existing violations before switching to enforce',
+      'Common baseline policies: require resource limits, disallow root containers, require owner/team labels, restrict to approved image registries',
+      'Use Kyverno mutate policies to auto-inject labels and defaults so developers need not specify them',
+      'Test policies in CI with kyverno test or conftest before deploying',
+    ],
+    pitfalls: [
+      'Deploying in enforce mode immediately: blocks all non-compliant resources causing outages. Always audit first.',
+      'Not exempting kube-system and policy operator namespaces: broad policies break cluster components.',
+      'Complex Rego without unit tests: always write opa test unit tests for non-trivial policies.',
+    ],
+    keyQuestions: [
+      { question: 'How does Kubernetes admission control work?', answer: 'When a create/update/delete request hits the API server:\n1. Authentication: verify requester identity\n2. Authorization: verify RBAC permission\n3. Admission: mutating webhooks run first (can modify object), then validating webhooks (can approve or deny)\n\nOPA/Gatekeeper and Kyverno register as admission webhooks. The API server calls them for matching resource types and operations. If any validating webhook returns deny, the request is rejected.\n\nFailure policy: if the webhook is unavailable, Fail mode blocks the request (prevents policy bypass via webhook downtime). Production policy engines should use Fail.' },
+      { question: 'What is the difference between OPA/Gatekeeper and Kyverno?', answer: 'OPA/Gatekeeper:\n- Language: Rego (declarative, steep learning curve)\n- Power: extremely high — can express any logic\n- Cross-platform: OPA also used for Terraform, API authorization, Kafka\n- Resources: ConstraintTemplate + Constraint\n\nKyverno:\n- Language: YAML (Kubernetes-familiar, low learning curve)\n- Three operations: validate, mutate, generate (OPA only validates and mutates)\n- Image verification: built-in Cosign/Notary support\n- Policy Reports: native compliance dashboard resources\n\nRecommendation: Kyverno for Kubernetes-specific policies (easier adoption). OPA for cross-platform policy needs or very complex logic.' },
+    ],
+    quickFire: [
+      { q: 'What does an admission webhook do?', a: 'Intercepts API server requests before persistence -- can validate (approve/deny) or mutate (modify) resources.' },
+      { q: 'Kyverno\'s three policy operations?', a: 'Validate (deny non-compliant), Mutate (modify to comply), Generate (create related resources).' },
+      { q: 'What is audit mode?', a: 'Log violations without blocking -- used to discover baseline before switching to enforce mode.' },
+    ],
+    references: [
+      'https://www.openpolicyagent.org/docs/',
+      'https://kyverno.io/docs/',
+      'https://open-policy-agent.github.io/gatekeeper/',
+    ],
+  },
+
+  {
+    id: 'progressive-delivery',
+    title: 'Progressive Delivery — Canary, Blue/Green, Feature Flags',
+    icon: 'activity',
+    color: '#22c55e',
+    questions: 4,
+    description: 'Gradually expose new versions to user subsets with automated rollback. Canary (traffic %, auto-rollback on error threshold), Blue/Green (instant cutover), Feature Flags (runtime on/off). Tools: Argo Rollouts, Flagger, LaunchDarkly.',
+    visualizations: [],
+    introduction: `Progressive delivery is an evolution of continuous delivery where new versions are exposed to progressively larger user subsets with automated observation and rollback, rather than binary all-at-once deployment.
+
+Four progressive delivery patterns:
+
+Canary Release: route a small percentage of traffic (1%, 5%, 10%) to the new version. Monitor error rates and latency. If metrics degrade, automatically roll back. If healthy, increase traffic. Argo Rollouts and Flagger automate this for Kubernetes.
+
+Blue/Green: maintain two identical environments. Blue=current, Green=new. Switch traffic instantly. Instant rollback capability. Requires double compute capacity.
+
+A/B Testing: route specific user segments to different versions. Measure conversion rates or business metrics. Statistical significance determines the winner.
+
+Feature Flags: runtime toggles controlling feature visibility without deployment. Enable gradual rollout, instant rollback, and user targeting. LaunchDarkly, Unleash, and Flagsmith are the leading platforms.
+
+Shadow Traffic: send a copy of production traffic to the new version without affecting responses. Test under real load with zero user impact. Istio and NGINX support this.`,
+    whenToUse: [
+      'High-risk deployments where gradual rollout with automated rollback reduces blast radius',
+      'A/B testing product changes to measure business impact before full rollout',
+      'Decoupling deployment from feature release: deploy continuously, release features gradually',
+      'Kubernetes environments where Argo Rollouts or Flagger automate analysis and rollback',
+    ],
+    keyConcepts: [
+      { term: 'Canary Analysis', definition: 'Automated comparison of metrics between canary (new) and baseline (current). Argo Rollouts integrates with Prometheus, Datadog, and CloudWatch to evaluate success metrics. If canary metrics cross defined thresholds, the rollout is automatically aborted and canary scaled down.' },
+      { term: 'Argo Rollouts', definition: 'Kubernetes controller extending Deployments with Canary (stepwise traffic shifting with analysis) and Blue/Green strategies. Integrates with Ingress controllers and service meshes (Istio, Linkerd) for traffic splitting. Works with Argo CD for GitOps-based progressive delivery.' },
+      { term: 'Flagger', definition: 'CNCF progressive delivery operator. Automates canary analysis using Prometheus. Integrates with Istio, Linkerd, NGINX, AWS App Mesh. Creates primary and canary Services automatically, shifts traffic based on analysis results.' },
+      { term: 'Feature Flag Lifecycle', definition: 'Release toggle → gradual rollout (1% → 10% → 50% → 100%) → full rollout → flag cleanup. Every flag needs a TTL and owner. Flag debt = exponential flag state combinations impossible to test.' },
+    ],
+    approach: [
+      'Start with feature flags for simple features: deploy behind a flag, enable for internal users first',
+      'For infrastructure changes, use canary releases via Argo Rollouts with Prometheus analysis',
+      'Define rollback criteria before the canary: what error rate threshold triggers rollback?',
+      'Use shadow traffic mirroring before canary for highest-risk changes',
+      'Automate rollback — manual observation defeats the purpose',
+    ],
+    pitfalls: [
+      'No automated rollback criteria: a canary without thresholds requires an engineer watching dashboards and making manual judgment calls',
+      'Permanent feature flags: flags accumulate creating a combinatorial explosion of states impossible to fully test',
+      'A/B tests without statistical significance: ending tests early based on early data leads to false conclusions',
+    ],
+    keyQuestions: [
+      { question: 'What is the difference between canary and blue/green deployment?', answer: 'Canary:\n- New version runs alongside old; traffic split X%/100-X%\n- Gradual traffic increase with health validation at each step\n- Compute efficient: only N% of capacity on new version\n- Use when: gradual validation under real traffic matters; cost efficiency is important\n\nBlue/Green:\n- Two complete environments; 100% traffic on blue, green receives none\n- Instant traffic switch via load balancer\n- Instant rollback: switch back to blue\n- Compute: double capacity required during transition\n- Use when: instant cutover is required; mixed-version traffic causes issues; compliance requires clean switch' },
+      { question: 'How does Argo Rollouts automate canary deployments?', answer: 'Argo Rollouts is a Kubernetes controller replacing standard Deployments. A Rollout resource defines: steps (each increases canary traffic percentage or runs analysis), analysis (Prometheus/Datadog queries with thresholds), and traffic management (Ingress or service mesh integration).\n\nExample steps: 10% weight → 5min pause → analysis → 25% → 10min pause → analysis → 50% → analysis → promote to 100%.\n\nIf analysis fails (error rate exceeds threshold): abort, scale canary to 0, shift all traffic back to stable, mark rollout as degraded. The failing commit is visible in rollout history.' },
+    ],
+    quickFire: [
+      { q: 'What is a canary release?', a: 'Route small traffic percentage to new version, monitor metrics, gradually increase or auto-rollback.' },
+      { q: 'What does Argo Rollouts add over standard Deployments?', a: 'Canary and blue/green strategies with automated analysis (Prometheus/Datadog) and rollback.' },
+      { q: 'What is shadow traffic?', a: 'Copy production traffic to new version without affecting responses -- test under real load with zero user impact.' },
+    ],
+    references: [
+      'https://argo-rollouts.readthedocs.io/',
+      'https://docs.flagger.app/',
+      'https://martinfowler.com/bliki/CanaryRelease.html',
     ],
   },
 ];

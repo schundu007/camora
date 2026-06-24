@@ -881,8 +881,8 @@ export default function DocsPage({ onBack }) {
   // Update when topic files add/remove entries.
   const STATIC_TOPIC_COUNTS = {
     'coding': 57, 'system-design': 616, 'behavioral': 57, 'low-level': 106,
-    'databases': 20, 'microservices': 12, 'cloud': 95, 'linux': 58,
-    'networking': 59, 'sre': 75, 'devops': 165, 'observability': 8,
+    'databases': 20, 'microservices': 12, 'cloud': 103, 'linux': 58,
+    'networking': 59, 'sre': 75, 'devops': 173, 'observability': 8,
     'platform': 5, 'troubleshooting': 14, 'mlops': 7, 'aiops': 10,
     'war-stories': 25, 'comparisons': 35, 'challenges': 1, 'projects': 24,
     'roadmaps': 12, 'eng-blogs': 39,
