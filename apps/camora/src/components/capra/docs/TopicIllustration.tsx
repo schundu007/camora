@@ -34,7 +34,8 @@ export type IllustrationName =
   | 'low-level' | 'projects' | 'roadmaps' | 'eng-blogs' | 'behavioral'
   | 'sre' | 'devops' | 'cloud' | 'linux' | 'networking'
   | 'troubleshooting' | 'war-stories' | 'comparisons'
-  | 'mlops' | 'aiops' | 'observability' | 'platform' | 'challenges';
+  | 'mlops' | 'aiops' | 'observability' | 'platform' | 'challenges'
+  | 'ddia' | 'ai-systems-perf';
 
 const FALLBACK_GRADIENTS: Partial<Record<IllustrationName, string>> = {};
 
