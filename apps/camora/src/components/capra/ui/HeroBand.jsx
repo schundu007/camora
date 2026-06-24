@@ -39,7 +39,7 @@ export default function HeroBand({
         borderBottom: '1px solid var(--cam-gold-leaf)',
       }}
     >
-      <div className={`w-full ${maxWidth} mx-auto px-4 sm:px-6 lg:px-8 ${py}`}>
+      <div className={`page-wrap ${py}`}>
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="min-w-0">
             {eyebrow && (
