@@ -1,4 +1,14 @@
 export const devopsExtraTopicCategoryMap = {
+  'chaos-engineering': 'cloudnative',
+  'finops-cloud-cost': 'cloudnative',
+  'developer-productivity-space': 'foundations',
+  'sigstore-supply-chain-security': 'devsecops',
+  'webassembly-cloud-native': 'cloudnative',
+  'ai-augmented-devops': 'foundations',
+  'dev-containers-environments': 'containers',
+  'openfeature-feature-flags': 'delivery',
+  'cncf-landscape-navigation': 'cloudnative',
+  'toil-reduction-automation': 'foundations',
   'k8s-pod-networking': 'orchestration',
   'k8s-network-policy-guide': 'orchestration',
   'k8s-traffic-flow-deep': 'orchestration',
@@ -2246,6 +2256,885 @@ VXLAN kernel module missing: rare, but some stripped-down OS images lack the vxl
       'https://docs.projectcalico.org/networking/vxlan-ipip',
       'https://docs.cilium.io/en/stable/network/concepts/routing/',
       'https://github.com/flannel-io/flannel/blob/master/Documentation/backends.md',
+    ],
+  },
+
+  // ── Chaos Engineering ────────────────────────────────────────────
+  {
+    id: 'chaos-engineering',
+    title: 'Chaos Engineering',
+    icon: 'zap',
+    color: '#f97316',
+    questions: 5,
+    description: 'Deliberately injecting failures into production-like systems to uncover weaknesses before they cause outages.',
+    visualizations: [],
+    introduction: `Chaos Engineering is the practice of deliberately introducing failures into a system to build confidence in its ability to withstand turbulent conditions. Pioneered by Netflix with Chaos Monkey in 2011, the discipline has evolved into a rigorous experimental science: form a hypothesis about steady-state behavior, run a controlled experiment, observe deviations, and fix weaknesses before incidents find them first.
+
+The core insight is that distributed systems fail in unexpected ways. You cannot reason about resilience from architecture diagrams alone — you must observe the system under stress. A 30-minute planned game day that kills a pod is infinitely preferable to an unplanned 3 AM outage that kills revenue.
+
+Chaos experiments follow a scientific method: (1) define the steady-state metric (requests per second, error rate, p99 latency); (2) hypothesize that the steady state continues during the failure; (3) inject the failure (kill a pod, add network latency, exhaust memory); (4) observe whether the hypothesis holds; (5) improve the system if it does not. Always have an abort condition defined before starting.
+
+Blast radius control is the key engineering discipline: start with a single container in a dev namespace, expand to staging, then to a small percentage of production traffic. Never inject failures into a degraded system — chaos experiments run on healthy systems to find latent weaknesses, not to compound existing problems.
+
+Common failure primitives: process kills (pod/VM termination), network failures (latency, packet loss, blackholes, DNS failures), resource exhaustion (CPU saturation, memory pressure, disk fill), clock skew, and dependency outages (external API unavailability). Tools like Chaos Monkey, Litmus Chaos, Chaos Mesh, Gremlin, and AWS Fault Injection Simulator automate injection at different layers.
+
+GameDays are structured team exercises — an SRE or chaos team coordinates injecting a realistic failure scenario (e.g., "one AZ goes dark") while the on-call team responds as if it were a real incident. GameDays build muscle memory, surface runbook gaps, and improve alert quality before a real event.`,
+    whenToUse: [
+      'Validating that circuit breakers, retries, and fallbacks work as designed under real failure',
+      'Preparing for a major product launch by stress-testing dependencies',
+      'Building confidence before migrating a stateful system to a new region',
+      'Improving on-call readiness by running GameDay exercises with realistic failure scenarios',
+      'Interview questions about how you ensure high availability beyond architecture diagrams',
+    ],
+    keyConcepts: [
+      { term: 'Steady-state hypothesis', definition: 'A measurable, quantified description of normal system behavior (e.g., "error rate < 0.1%, p99 < 200ms"). A chaos experiment validates that this hypothesis holds during the injected failure.' },
+      { term: 'Blast radius', definition: 'The scope of impact of a chaos experiment. Start small (one pod, one AZ) and expand only after confirming the system handles the smaller failure correctly.' },
+      { term: 'Chaos Monkey', definition: 'Netflix open-source tool that randomly terminates VM instances in production during business hours, forcing engineers to design for instance failure from day one.' },
+      { term: 'Litmus Chaos', definition: 'CNCF-incubating Kubernetes-native chaos framework. Provides ChaosExperiment and ChaosEngine CRDs. Runs experiments as Kubernetes Jobs with built-in observability.' },
+      { term: 'GameDay', definition: 'A structured, pre-announced failure injection exercise where a team deliberately breaks a system while on-call engineers respond, revealing runbook gaps and alert quality issues.' },
+      { term: 'Fault injection', definition: 'Programmatically introducing a specific failure (latency, packet loss, error code) into a request path. Service meshes (Istio, Linkerd) support HTTP fault injection natively via traffic management rules.' },
+    ],
+    approach: [
+      'Define the steady-state metric first — if you cannot measure normal behavior, you cannot detect deviation',
+      'Start in a non-production environment and prove the experiment is safe before running in prod',
+      'Document the abort condition before starting — what signals mean "stop immediately"',
+      'Expand blast radius incrementally: single pod → node → AZ → region',
+      'Run experiments during business hours when your best engineers are online, not at 2 AM',
+      'Automate recurring experiments in CI/CD to prevent resilience regressions',
+    ],
+    pitfalls: [
+      'Running chaos without steady-state metrics — you cannot tell if the experiment impacted anything',
+      'Starting with a large blast radius (regional failure) before validating smaller failures work',
+      'Chaos without informed consent — production chaos must be approved by stakeholders and ops teams',
+      'Running chaos on an already-degraded system — experiments compound real problems',
+      'Fixing symptoms instead of root causes — if circuit breaker saves you, investigate why the downstream failed',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you design a chaos engineering program from scratch at a company with no existing practice?',
+        answer: `Start with culture, not tools. Chaos engineering requires executive buy-in and team alignment that breaking things intentionally is how you prevent unintentional breaks.
+
+Phase 1 — Baseline observability: You cannot run chaos without knowing what "normal" looks like. Define steady-state metrics for your critical services: error rate, latency p99, throughput. Make sure your monitoring actually reflects these.
+
+Phase 2 — Start non-production: Run your first experiments in staging. Kill a pod. Does the load balancer reroute? Does the circuit breaker open? Fix what fails before touching production.
+
+Phase 3 — Production, small blast radius: Begin with non-critical services. Inject a single pod kill during business hours. Have an abort condition defined: if error rate crosses 1%, roll back immediately.
+
+Phase 4 — GameDays: Schedule a quarterly GameDay. Announce it in advance ("Next Thursday at 2 PM we will simulate an AZ failure"). On-call team responds as if real. Debrief with a blameless post-mortem.
+
+Phase 5 — Automate in CI: Add chaos experiments to your deployment pipeline. Every deployment to production runs a 5-minute chaos soak: pod kill, 100ms network latency. Fail the deployment if steady-state deviates.
+
+Success metrics: number of weaknesses discovered via chaos vs discovered via real incidents. Over time this ratio should shift toward proactive discovery.`,
+      },
+      {
+        question: 'What is the difference between chaos engineering and load testing?',
+        answer: `Load testing validates performance under expected or peak traffic volume — it asks "does the system handle N requests per second?" It increases a known dimension (request rate) and measures degradation.
+
+Chaos engineering validates resilience under unexpected failure conditions — it asks "does the system behave correctly when component X fails?" It injects unknown failure modes and measures whether steady-state is maintained.
+
+Load testing is deterministic: ramp up RPS, observe latency, find saturation point. Chaos engineering is experimental: form a hypothesis, inject a failure, observe deviation, learn.
+
+They are complementary. Load testing tells you where your capacity ceiling is. Chaos engineering tells you what happens when a node dies at 80% of that ceiling. You need both. A system can pass load testing and completely fail at chaos engineering (no retries, no circuit breakers, no fallbacks).`,
+      },
+    ],
+    quickFire: [
+      { q: 'What company pioneered chaos engineering?', a: 'Netflix, with Chaos Monkey in 2011, which randomly terminated EC2 instances in production.' },
+      { q: 'What is a steady-state hypothesis?', a: 'A measurable description of normal system behavior that the chaos experiment hypothesizes will hold during failure injection.' },
+      { q: 'Name three CNCF chaos tools.', a: 'Litmus Chaos (incubating), Chaos Mesh, and Chaosblade. AWS Fault Injection Simulator is cloud-managed but not CNCF.' },
+      { q: 'What is blast radius in chaos engineering?', a: 'The scope of impact — how many users, services, or instances are affected by the experiment. Always start small and expand.' },
+      { q: 'How does Istio support fault injection?', a: 'Via VirtualService resources: httpFault.delay injects latency; httpFault.abort returns error codes. Applies to a percentage of matching requests.' },
+      { q: 'What is a GameDay?', a: 'A scheduled, announced chaos exercise where engineers inject a realistic failure while on-call responds, revealing runbook gaps and alert quality issues.' },
+      { q: 'What is the difference between chaos engineering and penetration testing?', a: 'Chaos engineering tests resilience to infrastructure and dependency failures. Penetration testing tests security vulnerabilities. Both are proactive, but different threat models.' },
+    ],
+    references: [
+      'https://principlesofchaos.org/',
+      'https://litmuschaos.io/',
+      'https://chaos-mesh.org/',
+      'https://aws.amazon.com/fis/',
+    ],
+  },
+
+  // ── FinOps / Cloud Cost Engineering ──────────────────────────────
+  {
+    id: 'finops-cloud-cost',
+    title: 'FinOps & Cloud Cost Engineering',
+    icon: 'dollarSign',
+    color: '#10b981',
+    questions: 5,
+    description: 'The practice of bringing financial accountability to the variable spend model of cloud computing through cross-functional collaboration.',
+    visualizations: [],
+    introduction: `FinOps (Financial Operations) is a cloud financial management discipline that brings together engineering, finance, and product teams to make data-driven spending decisions. As cloud bills scale from thousands to millions of dollars per month, unmanaged cloud cost becomes a critical engineering problem — not just a finance problem.
+
+The FinOps Foundation defines three phases: Inform (understand what you're spending and why), Optimize (eliminate waste and right-size resources), and Operate (continuous cost governance embedded in engineering workflow). Most organizations loop through these phases iteratively rather than completing them sequentially.
+
+Cost visibility is the foundation. Without tagging — consistent resource tags like team, environment, service, cost-center — cloud bills are opaque. The first engineering action is to enforce tag policies at provisioning time (via Terraform required_tags, AWS SCPs, or Azure Policy) and build a cost allocation dashboard by service and team.
+
+The three pillars of cloud cost optimization: (1) Eliminate waste — stop idle resources (forgotten dev instances, orphaned snapshots, zero-traffic load balancers); (2) Right-size — match instance type to actual CPU/memory utilization (move a consistently-30%-utilized m5.2xlarge to an m5.large); (3) Commitment-based discounts — Reserved Instances (RI) and Savings Plans on AWS, Committed Use Discounts on GCP give 30-72% discount for 1-3 year commitments on baseline workload.
+
+Unit economics translate cloud cost into business metrics engineers can optimize against: cost per API request, cost per user, cost per inference call. Unit cost makes abstract bills concrete — a 2x inference cost increase shows immediately in $/query even if total bill doesn't spike yet because traffic is low.
+
+FinOps tooling: AWS Cost Explorer, Cost and Usage Report (CUR) + Athena for raw billing analysis, CloudHealth, Kubecost (Kubernetes-native cost allocation), Infracost (CI integration — shows cost diff per Terraform PR), and OpenCost (CNCF project for Kubernetes cost monitoring).`,
+    whenToUse: [
+      'Engineering interview questions about managing cloud cost at scale',
+      'Designing cost allocation and chargeback systems for platform teams',
+      'Evaluating which workloads should use Spot/Preemptible vs On-Demand instances',
+      'Building cost guardrails into CI/CD pipelines via Infracost',
+      'Explaining trade-offs between Reserved Instances vs Savings Plans',
+    ],
+    keyConcepts: [
+      { term: 'FinOps Foundation phases', definition: 'Inform (visibility), Optimize (waste elimination + right-sizing + commitments), Operate (embed cost governance in engineering workflow). Iterative, not sequential.' },
+      { term: 'Reserved Instances (RI)', definition: 'AWS commitment to use a specific instance type in a region for 1 or 3 years, yielding up to 72% savings vs On-Demand. Convertible RIs allow instance family changes. Zonal RIs provide capacity reservation.' },
+      { term: 'Savings Plans', definition: 'AWS flexible commitment to spend $/hour (compute or EC2) for 1 or 3 years. Applies across instance families, sizes, OS, and regions automatically. Simpler than RIs for mixed workloads.' },
+      { term: 'Spot/Preemptible instances', definition: 'AWS Spot Instances / GCP Preemptible VMs: spare cloud capacity sold at 70-90% discount. Can be reclaimed with 2-minute notice. Suitable for fault-tolerant batch, CI runners, and ML training with checkpointing.' },
+      { term: 'Unit economics', definition: 'Cost per unit of business value: cost per API call, per user, per inference, per GB processed. Makes aggregate cloud spend actionable for engineers.' },
+      { term: 'Kubecost / OpenCost', definition: 'Tools that break Kubernetes costs down to namespace, deployment, and pod level by allocating node cost proportionally to CPU/memory requests. OpenCost is the CNCF-incubating open standard.' },
+    ],
+    approach: [
+      'Enforce tagging at provisioning time — use Terraform required_tags or cloud policy; retroactive tagging never gets done',
+      'Build a cost anomaly alert: if any service spends >150% of its 7-day average in a single day, page the team',
+      'Right-size first, then commit: analyze 2 weeks of utilization before buying RIs or Savings Plans',
+      'Move CI/CD runners and batch jobs to Spot Instances — these workloads are purpose-built for interruption tolerance',
+      'Review orphaned resources monthly: unattached EBS volumes, idle load balancers, forgotten dev RDS instances',
+      'Add Infracost to PR pipelines: show cost delta for every Terraform change before merge',
+    ],
+    pitfalls: [
+      'Buying Reserved Instances before right-sizing — committing to the wrong (too large) instance type',
+      'Tagging enforcement after the fact — teams resist retroactive tagging; enforce at creation time via policy',
+      'Optimizing for cost in dev environments while ignoring production — cost waste lives in prod, not dev',
+      'Using Savings Plans to cover Spot usage — Savings Plans apply only to On-Demand; Spot is already discounted',
+      'Treating cloud cost as finance team\'s problem — cost awareness must be embedded in engineering workflow',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you reduce Kubernetes cloud costs without sacrificing reliability?',
+        answer: `Kubernetes cost optimization has three levers: waste elimination, right-sizing, and commitment discounts — applied in that order.
+
+1. Eliminate waste first: Find over-provisioned namespaces with Kubecost. Look for deployments with zero traffic in non-prod — delete or scale to zero. Enable cluster autoscaler to remove idle nodes automatically. Use VPA in recommendation mode to surface right-sizing opportunities without auto-applying.
+
+2. Right-size workloads: Compare resource requests to actual utilization. A deployment requesting 4 CPU / 8GB but using 0.5 CPU / 1GB is wasting node capacity. Set requests at p95 actual utilization, not at peak theoretical. Avoid setting requests = limits (that prevents burstable scheduling).
+
+3. Spot/Preemptible node pools: Run stateless workloads (web servers, API replicas, batch jobs) on Spot node groups. Use Pod Disruption Budgets and multiple replicas to tolerate interruption. On AWS, use diversified instance types in the Spot fleet to reduce simultaneous reclamation risk.
+
+4. Commitment discounts: After 2-3 months of stable right-sized utilization data, purchase Savings Plans for the baseline load. Never commit before you have utilization data.
+
+5. Namespace cost allocation: Assign costs to teams via Kubecost labels. Engineers who see their team's bill act differently than engineers who see an aggregate org bill.
+
+Result: typically 30-50% cost reduction in 60-90 days through these levers alone.`,
+      },
+      {
+        question: 'What is the difference between Reserved Instances and Savings Plans on AWS?',
+        answer: `Reserved Instances (RIs) are commitments to a specific EC2 instance configuration: instance type, region, tenancy, and optionally AZ. Standard RIs give the highest discount (up to 72%) but are inflexible — you're locked to a family and size. Convertible RIs allow you to exchange to different instance families, sizes, or OS but give a lower discount (~54%). Zonal RIs additionally reserve capacity in a specific AZ.
+
+Savings Plans are a newer, more flexible commitment model. You commit to spending a specific $/hour amount (e.g., $10/hour) for 1 or 3 years. Compute Savings Plans apply automatically to any EC2 usage regardless of family, size, region, or OS, and also cover Fargate and Lambda. EC2 Instance Savings Plans are restricted to a specific instance family in a region but give higher discounts.
+
+When to use which:
+— Large fleet, homogeneous instance types (e.g., all m5.xlarge): Standard RIs give max savings.
+— Mixed instance families, frequent right-sizing: Compute Savings Plans — flexibility beats the small discount advantage of RIs.
+— Fargate or Lambda workloads: Compute Savings Plans only (RIs don't apply).
+— New workload, unknown utilization: neither — buy after 2-3 months of data.
+
+The key mental model: RIs are "I commit to a specific SKU," Savings Plans are "I commit to a spend rate."`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three FinOps phases?', a: 'Inform (visibility), Optimize (waste + right-size + commitments), Operate (embed cost governance in engineering workflow).' },
+      { q: 'What is the typical discount for a 1-year Savings Plan vs On-Demand?', a: 'Approximately 30-40% for Compute Savings Plans; up to 72% for 3-year standard Reserved Instances.' },
+      { q: 'What is Kubecost?', a: 'A Kubernetes cost monitoring tool that allocates cluster costs to namespaces, deployments, and pods based on resource requests and actual node pricing.' },
+      { q: 'What is OpenCost?', a: 'CNCF-incubating open specification and implementation for real-time cost monitoring of Kubernetes workloads. The open standard underlying Kubecost.' },
+      { q: 'What is Infracost?', a: 'A CLI and CI/CD integration that shows the cloud cost impact of Terraform changes in pull request comments before merge.' },
+      { q: 'When should you NOT buy Reserved Instances?', a: 'Before right-sizing — you risk committing to the wrong instance type. Buy only after 2-3 months of stable, right-sized utilization data.' },
+      { q: 'What workloads are best suited for Spot Instances?', a: 'Stateless, fault-tolerant workloads: CI runners, batch processing, ML training with checkpointing, stateless web servers with multiple replicas.' },
+    ],
+    references: [
+      'https://www.finops.org/introduction/what-is-finops/',
+      'https://www.opencost.io/',
+      'https://www.kubecost.com/',
+      'https://www.infracost.io/',
+    ],
+  },
+
+  // ── Developer Productivity — SPACE Framework ──────────────────────
+  {
+    id: 'developer-productivity-space',
+    title: 'Developer Productivity — SPACE Framework',
+    icon: 'users',
+    color: '#8b5cf6',
+    questions: 5,
+    description: 'The SPACE framework for measuring developer productivity across Satisfaction, Performance, Activity, Communication, and Efficiency — beyond DORA metrics.',
+    visualizations: [],
+    introduction: `Developer productivity is one of the most debated topics in engineering leadership. For decades, organizations tried to measure it with lines of code or tickets closed — proxies that incentivize the wrong behaviors. The SPACE framework (2021, from Microsoft Research and GitHub) provides a multidimensional model that captures the full complexity of productive developer work.
+
+SPACE stands for: Satisfaction and well-being, Performance, Activity, Communication and collaboration, and Efficiency and flow. The critical insight is that no single dimension captures productivity — you need at least three dimensions from different parts of the framework to avoid perverse incentives.
+
+Satisfaction and well-being: developer job satisfaction, burnout risk, perceived productivity. Measured via surveys (quarterly pulse checks, Net Promoter Score for developers). Low satisfaction predicts attrition before performance metrics drop. Engineers who feel productive are more productive.
+
+Performance: outcomes, not output. Does the software do what it's supposed to? Quality metrics (reliability, change failure rate from DORA), customer satisfaction with the feature. Performance is the hardest dimension to measure at the individual level — at team level it's more tractable.
+
+Activity: the volume of engineering actions — commits, PRs, code reviews, deployments, incident responses. Activity is easy to measure but dangerous in isolation (gaming, Goodhart's Law). Valid when correlated with the other four dimensions.
+
+Communication and collaboration: how well engineers work together. Code review turnaround time, PR comment quality, meeting load, documentation contributions. Measured via collaboration analytics and team surveys.
+
+Efficiency and flow: minimal interruptions, work that flows without context switches. Measured by uninterrupted coding time (calendar analysis), deployment frequency, number of PRs requiring re-review. High interrupt load is the most predictable cause of perceived low productivity.
+
+DORA metrics (deployment frequency, lead time, change failure rate, MTTR) fit within the Performance and Efficiency dimensions of SPACE. DORA measures the delivery pipeline; SPACE measures the whole developer experience including the human dimensions DORA ignores.`,
+    whenToUse: [
+      'Designing engineering productivity programs or platform engineering success metrics',
+      'Interview questions about how to measure developer productivity without using lines of code',
+      'Explaining why DORA metrics alone are insufficient for understanding team health',
+      'Evaluating developer tooling investments (IDE plugins, CI speed, local dev environments)',
+      'Presenting engineering metrics to non-technical leadership in a meaningful way',
+    ],
+    keyConcepts: [
+      { term: 'SPACE dimensions', definition: 'Satisfaction & well-being, Performance, Activity, Communication & collaboration, Efficiency & flow. Use at least 3 dimensions together; single-dimension measurement causes gaming.' },
+      { term: 'Goodhart\'s Law', definition: '"When a measure becomes a target, it ceases to be a good measure." Applies directly to developer productivity — measuring commit count causes commit flooding; measuring ticket velocity causes ticket splitting.' },
+      { term: 'Flow state / uninterrupted time', definition: 'Blocks of focused coding time without meetings or Slack interruptions. Studies show context switches from flow cost 15-20 minutes of recovery. Efficiency dimension of SPACE.' },
+      { term: 'DORA metrics', definition: 'Deployment Frequency, Lead Time for Changes, Change Failure Rate, Mean Time to Restore. Measures delivery pipeline health; fits within the Performance and Efficiency dimensions of SPACE.' },
+      { term: 'Developer NPS (dNPS)', definition: 'Net Promoter Score adapted for internal developer tools: "How likely are you to recommend this tool to a colleague?" Rapid pulse measure of tool satisfaction.' },
+      { term: 'Cognitive load', definition: 'Team Topologies concept — the mental effort required to understand and operate a system. High cognitive load from internal platforms is the primary cause of low developer efficiency.' },
+    ],
+    approach: [
+      'Pick 2-3 metrics from different SPACE dimensions — never optimize a single dimension',
+      'Combine quantitative (DORA, PR cycle time) with qualitative (developer surveys) — each exposes what the other hides',
+      'Survey developers quarterly on satisfaction, perceived productivity, and friction points',
+      'Measure PR cycle time (open → merge) and code review wait time — these directly impact flow',
+      'Audit calendar data for uninterrupted coding blocks — less than 2 hours/day of focus time is a productivity crisis',
+      'Report metrics at team level, not individual — individual productivity metrics destroy psychological safety',
+    ],
+    pitfalls: [
+      'Measuring only Activity (commits, PRs, tickets) — trivially gamed and doesn\'t reflect value delivered',
+      'Using individual-level productivity metrics for performance reviews — causes gaming and destroys trust',
+      'Treating DORA as the complete picture — DORA misses satisfaction, collaboration, and cognitive load',
+      'Ignoring well-being until attrition spikes — satisfaction metrics predict attrition months before it appears',
+      'Survey fatigue — quarterly pulse > monthly survey; long surveys get low response rates and noisy data',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you measure developer productivity without using lines of code or ticket counts?',
+        answer: `Lines of code and ticket counts are activity metrics — they measure volume, not value, and are trivially gamed. The right approach uses the SPACE framework to combine multiple complementary dimensions.
+
+Concrete metrics I would track:
+
+Efficiency and flow: PR cycle time (time from PR open to merge). Uninterrupted focus blocks (calendar analysis — how many 2-hour windows per week does each engineer have without meetings). CI feedback time (time from push to test result). Fast feedback is the most direct input to flow.
+
+Performance: Change failure rate (percentage of deployments causing incidents). Feature adoption rate (do users actually use what was shipped?). These measure outcomes, not output.
+
+Satisfaction: Quarterly developer pulse survey (5 questions, NPS for internal tools, one open-ended). Net Promoter Score for your internal developer platform. Turnover intent (single question: "Do you plan to stay at this company for the next 12 months?").
+
+Communication: Code review turnaround time (time from PR creation to first review comment). Onboarding time for new engineers to first production deployment.
+
+The key discipline: never report a single metric in isolation. Always show at least three dimensions together. A team with high deployment frequency (good Performance) but low satisfaction (bad Satisfaction) and high oncall interrupt load (bad Efficiency) is burning out.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What does SPACE stand for?', a: 'Satisfaction & well-being, Performance, Activity, Communication & collaboration, Efficiency & flow.' },
+      { q: 'Why should you use at least 3 SPACE dimensions together?', a: 'Single-dimension metrics are easily gamed (Goodhart\'s Law). Multiple dimensions from different quadrants create a system that\'s harder to optimize in isolation.' },
+      { q: 'Where do DORA metrics fit in SPACE?', a: 'Primarily in Performance (change failure rate, MTTR) and Efficiency (deployment frequency, lead time).' },
+      { q: 'What is cognitive load in the context of developer productivity?', a: 'The mental effort required to understand and operate a system. High cognitive load from internal platforms is the primary cause of low developer efficiency (Team Topologies concept).' },
+      { q: 'What does developer NPS measure?', a: 'How likely developers are to recommend an internal tool to a colleague — a rapid pulse measure of tool satisfaction in the Satisfaction dimension.' },
+      { q: 'What is Goodhart\'s Law?', a: 'When a measure becomes a target, it ceases to be a good measure. The core risk of single-dimension developer productivity metrics.' },
+    ],
+    references: [
+      'https://queue.acm.org/detail.cfm?id=3454124',
+      'https://dora.dev/research/',
+      'https://itrevolution.com/articles/space-framework/',
+    ],
+  },
+
+  // ── Sigstore Supply Chain Security ────────────────────────────────
+  {
+    id: 'sigstore-supply-chain-security',
+    title: 'Sigstore & Software Supply Chain Security',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Signing, verifying, and attesting software artifacts using Sigstore (Cosign, Fulcio, Rekor), SBOM, and SLSA to secure the software supply chain.',
+    visualizations: [],
+    introduction: `The software supply chain — every tool, dependency, build step, and artifact that contributes to your production software — is a major attack surface. The SolarWinds breach (2020), Log4Shell (2021), and XZ Utils backdoor (2024) demonstrated that attackers increasingly target the build and distribution process rather than the running application.
+
+Sigstore is an open-source project (OpenSSF, Linux Foundation) that makes cryptographic signing of software artifacts free and accessible. The three components work together: Cosign signs container images and arbitrary blobs; Fulcio is a certificate authority that issues short-lived signing certificates tied to OIDC identity (your GitHub, Google, or Microsoft identity); Rekor is an immutable, append-only transparency log that records all signing events publicly.
+
+The key innovation is keyless signing. Traditional artifact signing required long-lived private keys to be generated, stored securely, and rotated — complex key management that most teams never did. Sigstore's keyless flow: (1) authenticate to your OIDC provider (GitHub Actions, Google, Microsoft); (2) Fulcio issues a certificate valid for only 10 minutes, tied to your OIDC identity; (3) Cosign signs the artifact using that ephemeral certificate; (4) the signing event is recorded in Rekor. Verifiers check Rekor to confirm the signature was made by a certificate issued to the expected identity, at a timestamp matching the pipeline.
+
+SBOM (Software Bill of Materials) is a machine-readable inventory of every component in a software artifact: packages, versions, licenses, and provenance. SPDX and CycloneDX are the two dominant formats. SBOM enables rapid impact assessment when a vulnerability is disclosed — query the SBOM to know which services depend on the affected component.
+
+SLSA (Supply-chain Levels for Software Artifacts, pronounced "salsa") is a security framework defining four levels of supply chain integrity: L1 (provenance exists), L2 (provenance is signed and hosted by CI), L3 (hardened CI — no manual inputs, signed provenance from a trusted builder), L4 (hermetic, reproducible builds). Most organizations target L2 as the first meaningful milestone.
+
+In-toto attestations are the glue: structured statements signed by a trusted party that assert facts about the build ("this container was built from this Git commit by this pipeline"). SLSA provenance is a specific in-toto attestation schema.`,
+    whenToUse: [
+      'Designing secure CI/CD pipelines for containers deployed to production Kubernetes',
+      'Implementing image signing policies in Kubernetes via admission controllers',
+      'Responding to supply chain vulnerability incidents with SBOM-based impact analysis',
+      'Interview questions about securing the software supply chain beyond SAST/DAST',
+      'Meeting compliance requirements (FedRAMP, NIST SP 800-218) for software provenance',
+    ],
+    keyConcepts: [
+      { term: 'Cosign', definition: 'Sigstore tool for signing and verifying container images and other artifacts. Supports keyless signing via Fulcio and traditional key-based signing. "cosign sign" / "cosign verify" are the primary commands.' },
+      { term: 'Fulcio', definition: 'Sigstore certificate authority. Issues short-lived (10-minute) X.509 certificates tied to OIDC identity. Eliminates long-lived key management by making certificates ephemeral and identity-bound.' },
+      { term: 'Rekor', definition: 'Sigstore\'s immutable, append-only transparency log. Records all signing events publicly. Verifiers check Rekor to confirm a signature was made at the expected time by the expected identity.' },
+      { term: 'Keyless signing', definition: 'Signing artifacts without managing long-lived private keys. Uses OIDC identity (GitHub Actions, Google) to obtain a short-lived certificate from Fulcio. The certificate proves who signed and when.' },
+      { term: 'SBOM (Software Bill of Materials)', definition: 'Machine-readable inventory of all components in a software artifact. SPDX and CycloneDX are the dominant formats. Required by US Executive Order 14028 for federal software vendors.' },
+      { term: 'SLSA levels', definition: 'L1: provenance exists. L2: signed provenance from CI. L3: hardened CI with no manual inputs. L4: hermetic reproducible builds. Most teams target L2 as the first meaningful goal.' },
+    ],
+    approach: [
+      'Sign all container images at build time in CI using Cosign keyless signing with GitHub Actions OIDC',
+      'Enforce image signature verification in Kubernetes via Kyverno or OPA/Gatekeeper policy — reject unsigned images',
+      'Generate SBOM for every container build using Syft (Anchore) or Docker BuildKit --sbom flag; attach to image',
+      'Store SBOM as an OCI artifact alongside the image in your registry (Cosign can attach it)',
+      'Scan SBOMs against vulnerability databases (Grype) as part of the CI pipeline gate',
+      'Target SLSA L2: CI-generated, signed provenance for all production builds within 6 months',
+    ],
+    pitfalls: [
+      'Signing images but not enforcing verification at admission time — signing without policy enforcement is theater',
+      'Generating SBOMs but not using them for vulnerability response — SBOM value is in the query time, not generation time',
+      'Conflating SBOM and SLSA — SBOM lists what\'s in the artifact; SLSA attests how the artifact was built',
+      'Using long-lived Cosign key pairs without rotation — defeats the purpose; prefer keyless signing',
+      'Ignoring transitive dependencies in SBOM — vulnerabilities in transitive deps are the most common blind spot',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Sigstore\'s keyless signing work, and why is it better than traditional key-based signing?',
+        answer: `Traditional code signing requires a long-lived private key: generate it, store it securely (HSM or secrets manager), protect it from leakage, rotate it periodically. Most teams skip signing entirely because key management is complex and risky.
+
+Sigstore keyless signing replaces the long-lived key with a short-lived certificate bound to an OIDC identity:
+
+Step-by-step:
+1. The CI pipeline (e.g., GitHub Actions) runs. It requests an OIDC token from the identity provider (GitHub in this case) — a JWT proving "this job is running in repo X, triggered by commit Y, on branch Z."
+
+2. The pipeline sends this OIDC token to Fulcio (Sigstore's CA). Fulcio validates the token, then issues a short-lived X.509 certificate valid for only 10 minutes. The certificate's Subject Alternative Name encodes the OIDC identity (e.g., the GitHub Actions workflow URI).
+
+3. Cosign uses this ephemeral certificate to sign the container image. The certificate's short lifetime means there's no long-lived private key to protect — it expires before an attacker could meaningfully misuse it.
+
+4. The signing event (certificate, artifact digest, timestamp) is recorded in Rekor, the public transparency log.
+
+Verification: a verifier runs "cosign verify --certificate-identity WORKFLOW_URI --certificate-oidc-issuer https://token.actions.githubusercontent.com IMAGE". Cosign fetches the entry from Rekor, verifies the certificate chain to Fulcio's root CA, confirms the OIDC identity matches expectations, and confirms the signature is valid.
+
+Why it's better: no key management, no key rotation, no key leakage risk. The identity of the signer (which GitHub Actions workflow, which repo, which commit) is embedded in the certificate and publicly auditable in Rekor.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three Sigstore components?', a: 'Cosign (signing/verification tool), Fulcio (OIDC-based certificate authority), Rekor (immutable transparency log).' },
+      { q: 'What is an SBOM?', a: 'Software Bill of Materials — a machine-readable inventory of all components, packages, versions, and licenses in a software artifact. SPDX and CycloneDX are the dominant formats.' },
+      { q: 'What does SLSA L2 require?', a: 'Signed provenance generated by a CI system — proves the artifact was built by CI from the stated source, and the provenance cannot be forged by developers.' },
+      { q: 'How long are Fulcio certificates valid?', a: '10 minutes. Short lifetime eliminates the key management problem — the certificate expires before it can be meaningfully misused.' },
+      { q: 'What Kubernetes admission controller enforces image signing policies?', a: 'Kyverno (native Kubernetes, CNCF) or OPA/Gatekeeper (Rego policies). Both can reject images that lack a valid Cosign signature from a trusted signer.' },
+      { q: 'What is the difference between SBOM and SLSA?', a: 'SBOM lists what\'s in the artifact (components, versions). SLSA attests how the artifact was built (which CI system, which source commit, which build steps). Complementary, not competing.' },
+      { q: 'Name a tool to generate SBOMs from container images.', a: 'Syft (Anchore open-source) — generates SBOM in SPDX or CycloneDX format from container images, filesystems, or source directories.' },
+    ],
+    references: [
+      'https://www.sigstore.dev/',
+      'https://slsa.dev/',
+      'https://spdx.dev/',
+      'https://github.com/anchore/syft',
+    ],
+  },
+
+  // ── WebAssembly in Cloud Native ───────────────────────────────────
+  {
+    id: 'webassembly-cloud-native',
+    title: 'WebAssembly (Wasm) in Cloud Native',
+    icon: 'cpu',
+    color: '#6366f1',
+    questions: 5,
+    description: 'Running WebAssembly workloads on Kubernetes and serverless platforms for near-native performance, instant cold starts, and sandboxed multi-tenancy.',
+    visualizations: [],
+    introduction: `WebAssembly (Wasm) was designed for the browser but its properties — compact binary format, near-native execution speed, sandboxed security model, and language agnosticism — make it increasingly attractive for server-side and cloud-native workloads.
+
+WASI (WebAssembly System Interface) is the key enabler for server-side Wasm. It provides a standardized, capability-based interface to OS resources (file system, networking, clocks) without exposing the underlying OS directly. A Wasm module compiled for WASI runs on any runtime that implements the interface — portability that even containers don't fully achieve (containers are Linux-specific).
+
+The cloud-native Wasm runtime landscape: Wasmtime (Bytecode Alliance, used by Fastly and AWS Lambda), WasmEdge (CNCF sandbox, CNCF-incubating, optimized for edge and cloud), Spin (Fermyon's application framework built on Wasmtime), and WASM-Workers-Server. The OCI working group is standardizing Wasm module distribution via OCI registries — a Wasm module can be pushed and pulled like a container image.
+
+Three cloud-native use cases where Wasm excels over containers: (1) Near-instant cold starts — Wasm modules initialize in microseconds vs 100ms–1s for containers; critical for scale-to-zero serverless; (2) Multi-tenant sandboxing — each Wasm module runs in its own memory sandbox with no shared state; safer multi-tenancy than containers sharing a kernel; (3) Edge computing — tiny binary size (single-digit MB vs hundreds of MB for containers) makes Wasm ideal for CDN edge nodes (Fastly, Cloudflare Workers).
+
+Kubernetes + Wasm integration via containerd shims: the crun runtime supports Wasm workloads, and the runwasi project provides containerd shims for Wasmtime and WasmEdge. A Pod can declare "runtimeClassName: wasmtime" and the Wasm binary runs directly as a container workload — no JVM, no interpreter, no full OS image.
+
+Wasm is not a container replacement today. It lacks mature networking, persistent storage, and GPU access. The sweet spot is short-lived, stateless, latency-sensitive workloads: API middleware, plugin systems, edge inference, and policy enforcement (OPA uses Wasm for policy evaluation, Envoy uses Wasm for HTTP filter plugins).`,
+    whenToUse: [
+      'Evaluating Wasm vs containers for edge, serverless, or multi-tenant plugin architectures',
+      'Interview questions about emerging cloud-native runtimes beyond Docker and containerd',
+      'Understanding why Cloudflare Workers and Fastly Compute use Wasm instead of containers',
+      'Designing plugin systems that need safe multi-tenant code execution (e.g., Envoy Wasm filters)',
+      'Exploring scale-to-zero serverless patterns where container cold start latency is prohibitive',
+    ],
+    keyConcepts: [
+      { term: 'WASI (WebAssembly System Interface)', definition: 'Capability-based API for Wasm modules to access OS resources (files, network, clocks) in a sandboxed, portable way. WASI Preview 2 (2024) introduces a component model for composable Wasm modules.' },
+      { term: 'Wasmtime', definition: 'Bytecode Alliance Wasm runtime written in Rust. Used by Fastly Compute, AWS Lambda (Rust runtime uses Cranelift, Wasmtime\'s JIT). Reference implementation for WASI.' },
+      { term: 'WasmEdge', definition: 'CNCF-incubating Wasm runtime optimized for cloud and edge. Supports WASI, Kubernetes via containerd shim, and has extensions for networking and AI/ML inference.' },
+      { term: 'Spin (Fermyon)', definition: 'Framework for building serverless Wasm applications. Provides HTTP triggers, key-value storage, SQLite, and Redis bindings. Runs on Wasmtime; deployable to Kubernetes via SpinKube.' },
+      { term: 'runwasi', definition: 'CNCF project providing containerd shims for Wasm runtimes. Enables Kubernetes to run Wasm workloads alongside container workloads using runtimeClassName in Pod specs.' },
+      { term: 'Component model', definition: 'WASI Preview 2 feature: composable Wasm modules with typed interfaces (WIT — WebAssembly Interface Types). Enables building applications from independently-compiled, language-agnostic Wasm components.' },
+    ],
+    approach: [
+      'Use Wasm for stateless, short-lived workloads (HTTP handlers, middleware, edge inference) — not long-running stateful services',
+      'Evaluate SpinKube for running Spin applications on existing Kubernetes clusters via containerd shim',
+      'For Envoy/WASM filters: use the proxy-wasm SDK (C++, Rust, Go, AssemblyScript) to write HTTP middleware as Wasm modules',
+      'Distribute Wasm modules via OCI registries — same tooling as container images',
+      'Use WasmEdge for multi-language support; Wasmtime for Rust-native performance-critical paths',
+      'Test cold start latency vs container cold start for your target workload — measure first, optimize second',
+    ],
+    pitfalls: [
+      'Expecting containers to be replaced by Wasm today — Wasm lacks mature networking, storage, and GPU access',
+      'Ignoring WASI version compatibility — Preview 1 and Preview 2 have different APIs; most ecosystems are still on Preview 1',
+      'Using Wasm for CPU-bound ML training — Wasm has no GPU access; containers + CUDA is the right stack',
+      'Assuming all languages compile to Wasm equally — Rust and C compile cleanly; Go and Java have large runtime overhead; Python is impractical',
+      'Deploying Wasm in production without understanding the runtime security model — Wasm sandbox is strong but not equivalent to VM isolation',
+    ],
+    keyQuestions: [
+      {
+        question: 'What advantages does WebAssembly offer over containers for edge and serverless computing?',
+        answer: `Three concrete advantages where Wasm beats containers:
+
+1. Cold start latency: Wasm modules initialize in microseconds (50–200µs). Containers, even with pre-pulled images, take 100ms–1s due to process creation, namespace setup, and application startup (JVM warm-up, etc.). For scale-to-zero serverless where every request might be a cold start, Wasm dramatically reduces tail latency. Cloudflare Workers advertise sub-millisecond cold starts for this reason.
+
+2. Security isolation model: Each Wasm module runs in its own memory sandbox — memory is linear and bounded, the module cannot access anything outside its sandbox unless explicitly granted via WASI capabilities. Multiple tenants can run Wasm modules in the same process with strong isolation. Containers share a kernel and require namespaces, cgroups, and seccomp profiles to isolate; a kernel vulnerability can escape container isolation. The Wasm sandbox operates at the language runtime level, not the OS level.
+
+3. Binary portability: A Wasm module compiled from Rust or C runs identically on x86, arm64, and RISC-V without recompilation — the runtime provides the CPU abstraction. Container images are Linux-specific (amd64 or arm64); you need separate image layers for each architecture. This matters at the CDN edge where hardware varies.
+
+Where containers still win: stateful long-running services (databases, message queues), GPU-accelerated workloads, applications requiring network-level isolation, and workloads using languages that don't compile cleanly to Wasm (Python, Java JVM with large runtime).
+
+The near-term model: Wasm for stateless edge handlers and plugin systems; containers for persistent services. Not either/or.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is WASI?', a: 'WebAssembly System Interface — a capability-based API standard for Wasm modules to access OS resources (files, network) portably and securely without exposing the underlying OS.' },
+      { q: 'What is the cold start advantage of Wasm over containers?', a: 'Wasm modules initialize in microseconds (50–200µs). Containers take 100ms–1s. Critical for scale-to-zero serverless workloads.' },
+      { q: 'Name two CNCF Wasm projects.', a: 'WasmEdge (CNCF incubating runtime) and runwasi (containerd shims for Wasm runtimes).' },
+      { q: 'What is Spin by Fermyon?', a: 'A framework for building serverless Wasm microservices. Runs on Wasmtime with HTTP triggers, key-value storage, and SQLite bindings. Deployable to Kubernetes via SpinKube.' },
+      { q: 'How does OPA use WebAssembly?', a: 'OPA compiles Rego policies to Wasm for high-performance policy evaluation in Envoy sidecars and other latency-sensitive environments.' },
+      { q: 'Which languages compile best to WebAssembly?', a: 'Rust and C/C++ compile cleanly with minimal overhead. Go compiles but has larger binary size. Python and Java have significant runtime overhead making them impractical.' },
+    ],
+    references: [
+      'https://wasi.dev/',
+      'https://wasmtime.dev/',
+      'https://wasmedge.org/',
+      'https://www.fermyon.com/spin',
+      'https://github.com/containerd/runwasi',
+    ],
+  },
+
+  // ── AI-Augmented DevOps ───────────────────────────────────────────
+  {
+    id: 'ai-augmented-devops',
+    title: 'AI-Augmented DevOps',
+    icon: 'cpu',
+    color: '#0ea5e9',
+    questions: 5,
+    description: 'Using large language models and ML to accelerate DevOps workflows: AI code review, intelligent incident response, predictive CI, and AIOps patterns.',
+    visualizations: [],
+    introduction: `AI is being integrated into every layer of the DevOps toolchain — not to replace engineers, but to handle the low-signal, high-volume tasks that consume disproportionate attention. The categories where AI adds measurable value today are code review assistance, incident response acceleration, test generation, and build failure diagnosis.
+
+AI code review tools (GitHub Copilot Code Review, CodeRabbit, Sourcery) analyze pull requests and flag security vulnerabilities, logic errors, and style violations before a human reviewer sees the PR. Effectiveness data from GitHub shows that AI-assisted review reduces time-to-merge by 20-30% in teams that adopt it, primarily by eliminating trivial review cycles on automated findings. The critical design principle: AI review is a first-pass filter, not a replacement for human review of design decisions.
+
+AIOps — applying ML to operations data — addresses the alert fatigue problem that plagues large systems. Raw alert volume in a 1000-node cluster can easily exceed human triage capacity. ML-based noise reduction (Moogsoft, BigPanda, Dynatrace Davis) correlates related alerts into incidents, identifies root cause patterns, and ranks by likely customer impact. The key metric is alert-to-incident ratio: reducing 1000 raw alerts to 50 actionable incidents.
+
+Intelligent incident response uses LLMs to accelerate on-call diagnosis: surface relevant runbooks, recent related deployments, similar past incidents, and code changes in the blast radius. Tools like FireHydrant AI, PagerDuty's Copilot, and Slack-native bots augment human on-call with context retrieval that would take 10-15 manual minutes.
+
+Predictive CI uses ML to prioritize test selection and predict build failure probability. Google pioneered this at scale — instead of running all 100,000 tests on every commit, ML models predict which tests are likely to fail given the changed files, running only the high-probability subset first. This reduces CI feedback time dramatically while maintaining coverage.
+
+LLMOps is the emerging practice of treating LLM pipelines as software systems that require versioned prompts, evaluation frameworks, CI for prompt changes, A/B testing of model versions, and monitoring for drift and degradation.`,
+    whenToUse: [
+      'Evaluating AI tools for code review, incident management, or test optimization at your organization',
+      'Interview questions about how AI is changing DevOps and SRE workflows',
+      'Designing LLMOps pipelines: versioning prompts, evaluating model outputs, deploying LLM applications',
+      'Understanding AIOps vs traditional alerting and when ML-based correlation adds value',
+      'Explaining the risks and limitations of AI-augmented automation in production systems',
+    ],
+    keyConcepts: [
+      { term: 'AIOps', definition: 'Application of ML to IT operations data to reduce alert noise, correlate related events into incidents, predict failures, and surface root causes. Not a product category — a practice. Key metric: alert-to-incident ratio reduction.' },
+      { term: 'LLMOps', definition: 'MLOps practices applied to LLM-based applications: versioned prompts, systematic evaluation (evals), CI/CD for prompt and model changes, A/B testing, and monitoring for output drift.' },
+      { term: 'Predictive test selection', definition: 'ML models that predict which tests are likely to fail given a set of changed files. Reduces CI time by running high-risk tests first without sacrificing coverage. Used at scale by Google and Meta.' },
+      { term: 'AI code review', definition: 'LLM-powered analysis of pull request diffs to flag security issues, bugs, and style violations before human review. Tools: GitHub Copilot Code Review, CodeRabbit, Sourcery.' },
+      { term: 'Evaluation (evals)', definition: 'Systematic testing of LLM outputs against a benchmark dataset. Analogous to unit tests for traditional software. Required before deploying prompt or model changes to production.' },
+      { term: 'Prompt versioning', definition: 'Treating prompts as code artifacts with version control, peer review, and CI validation. Changes to production prompts go through the same review process as application code.' },
+    ],
+    approach: [
+      'Start AI code review as a non-blocking advisory — AI flags issues, humans decide. Avoid auto-blocking on AI findings until you have calibrated its false-positive rate',
+      'Build evals before deploying LLM features — define what "good output" looks like and automate measurement',
+      'For AIOps: measure alert-to-incident ratio before and after ML correlation — clear ROI metric',
+      'Treat prompts as code: version control, peer review, and eval gates before production deployment',
+      'Use AI for incident context retrieval (surface runbooks, recent PRs) — high value, low risk',
+      'Instrument LLM pipelines like any service: latency, error rate, token cost per request, output quality score',
+    ],
+    pitfalls: [
+      'Auto-blocking CI on AI code review findings without calibrating false-positive rate — will block legitimate PRs',
+      'Deploying LLM features without evals — no way to detect regressions when model or prompt changes',
+      'Treating AIOps as a cost reduction tool — the value is reliability improvement (fewer missed incidents), not FTE reduction',
+      'Using AI incident response without human verification — LLM-suggested root causes can be plausible but wrong; always verify before actioning',
+      'Ignoring token cost in LLM pipelines — uncapped token usage can create runaway cloud costs',
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you integrate AI into an existing DevOps pipeline without increasing risk?',
+        answer: `The key principle is AI as advisory, not gatekeeping, until you have calibrated confidence data.
+
+Code review: Start with an AI reviewer that posts comments but does not block merge. Run for 60 days. Measure: what percentage of AI findings are accepted vs dismissed by human reviewers? If acceptance rate is >60%, consider blocking on high-severity findings. If <40%, tune the prompts or switch tools.
+
+CI/CD: Add AI-based build failure diagnosis that surfaces likely root cause and links to similar past failures. Non-blocking — engineers get context faster but CI is not dependent on AI response. This is pure upside with no risk.
+
+Incident response: Deploy an AI Slack bot that surfaces runbooks, recent deployments, and related incidents automatically when a PagerDuty alert fires. Engineers still diagnose; AI saves the 10-minute context-gathering phase. Monitor whether MTTR improves.
+
+Predictive test selection: Implement in shadow mode first — run all tests, but record which tests the ML model predicted would fail. After 1000 builds, measure precision/recall. Only activate test skipping after confirming the model has high recall (does not miss real failures).
+
+What not to do: deploy AI auto-remediation (automated rollback, auto-scaling decisions) without extensive shadow mode testing and gradual rollout. AI errors in automated remediation can compound incidents rather than resolve them.
+
+Governance: log all AI suggestions and their outcomes. Review monthly. This data is what justifies expanding AI scope (from advisory to enforcement) with evidence.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is AIOps?', a: 'Application of ML to IT operations to reduce alert noise, correlate related events into incidents, and surface root causes. Key metric: alert-to-incident ratio.' },
+      { q: 'What is LLMOps?', a: 'MLOps practices for LLM applications: versioned prompts, evaluation frameworks, CI/CD for model/prompt changes, monitoring for output drift.' },
+      { q: 'What are evals in LLM deployment?', a: 'Systematic tests of LLM outputs against a benchmark dataset — analogous to unit tests. Required before deploying prompt or model changes to production.' },
+      { q: 'What is predictive test selection?', a: 'ML models that predict which tests are likely to fail given changed files, enabling CI to run high-risk tests first and reduce feedback time without sacrificing coverage.' },
+      { q: 'Name two AIOps platforms.', a: 'Moogsoft and BigPanda (alert correlation); Dynatrace Davis (ML-driven incident detection). PagerDuty and OpsRamp also have AIOps capabilities.' },
+      { q: 'What is the risk of AI auto-remediation in production?', a: 'AI errors in automated remediation can compound incidents. Deploy in shadow mode with human verification before enabling automatic actions.' },
+    ],
+    references: [
+      'https://www.pagerduty.com/resources/learn/aiops/',
+      'https://openai.com/research/scaling-laws',
+      'https://github.blog/2024-04-09-how-to-build-an-enterprise-llm-application-lessons-from-github-copilot/',
+    ],
+  },
+
+  // ── Dev Containers & Development Environments ──────────────────────
+  {
+    id: 'dev-containers-environments',
+    title: 'Dev Containers & Reproducible Dev Environments',
+    icon: 'terminal',
+    color: '#059669',
+    questions: 5,
+    description: 'Standardizing development environments with Dev Containers spec, Devbox, Nix shells, and cloud IDEs to eliminate "works on my machine" problems.',
+    visualizations: [],
+    introduction: `"It works on my machine" is one of the most persistent problems in software development. Reproducible development environments close the gap between a developer's local setup and CI/production, eliminating entire categories of bugs that exist only in specific configurations.
+
+The Dev Containers specification (Microsoft, open standard, used by VS Code, GitHub Codespaces, and JetBrains) defines a JSON-based format for declaring a development environment as a Docker container. The devcontainer.json file at the repo root specifies the base image, extensions, port forwarding, and lifecycle scripts. Any developer who opens the repo gets the same environment — same runtime version, same tools, same extensions — in seconds via VS Code or Codespaces.
+
+Devbox (Jetify, built on Nix) takes a different approach: instead of a container, it creates a reproducible shell environment with isolated, declarative package dependencies. "devbox.json" lists the packages (Node 20, Python 3.12, go 1.22, postgresql 15) and "devbox shell" drops you into an environment with exactly those versions — without Docker, without VM, with instant activation. Devbox is particularly strong for polyglot repositories and systems development where container overhead is undesirable.
+
+Nix (the package manager and functional language) is the underlying engine that makes Nix shells and Devbox possible. Nix ensures bit-for-bit reproducibility: a "flake.nix" lock file pins every dependency's exact hash. The Nix store is immutable and content-addressed — two projects using different versions of the same library coexist without conflict.
+
+Cloud IDEs (GitHub Codespaces, Gitpod, Daytona, Google Cloud Workstations) move the development environment into the cloud entirely. Benefits: onboarding from zero to running code in <60 seconds, no local compute requirements, enterprise security (code never leaves the cloud), and instant branch-switching without local checkout. The cost tradeoff: per-user cloud compute billing and latency for developers accustomed to local IDEs.
+
+For platform engineering teams, standardized dev environments reduce onboarding time from days to hours, eliminate cross-platform bugs (Windows vs macOS vs Linux), and enable developers to contribute to any service without manually installing language runtimes and toolchains.`,
+    whenToUse: [
+      'Platform engineering initiative to standardize developer environments across a polyglot engineering org',
+      'Interview questions about reducing "works on my machine" problems at scale',
+      'Evaluating GitHub Codespaces vs local dev containers vs Devbox for your team\'s needs',
+      'Designing a fast onboarding experience for a complex microservices repository',
+      'Ensuring CI environment parity with local development to eliminate environment-specific bugs',
+    ],
+    keyConcepts: [
+      { term: 'Dev Containers spec', definition: 'Open standard for defining development environments as Docker containers via devcontainer.json. Supported by VS Code, GitHub Codespaces, JetBrains, and Daytona. Specifies image, extensions, ports, and lifecycle scripts.' },
+      { term: 'Devbox', definition: 'CLI tool by Jetify that creates reproducible development shells using Nix under the hood. devcontainer.json equivalent is devbox.json — lists packages by name and version. No Docker required for the dev shell.' },
+      { term: 'Nix flakes', definition: 'Reproducible, composable Nix expressions with a lock file (flake.lock) that pins every dependency\'s exact cryptographic hash. The foundation of bit-for-bit reproducible builds and environments.' },
+      { term: 'GitHub Codespaces', definition: 'Cloud-hosted VS Code development environments running on Azure VMs. Opens any repo as a dev container in <60 seconds. Billed per compute-hour; pre-builds speed up launch time.' },
+      { term: 'Gitpod', definition: 'Cloud development environment platform (open-source self-hostable). Defines environments in .gitpod.yml. Supports VS Code, JetBrains Gateway, and browser-based Theia IDE.' },
+      { term: 'Pre-build', definition: 'A pre-computed dev container image that runs setup steps (npm install, go build, etc.) ahead of time so developers start with a warm environment. GitHub Codespaces prebuilds are triggered on push to main branches.' },
+    ],
+    approach: [
+      'Start with devcontainer.json: base image + devcontainer features (github.com/devcontainers/features) for common tools — zero custom Dockerfile needed for most repos',
+      'Add postCreateCommand to run first-time setup (npm install, go mod download) so the environment is ready to code immediately on open',
+      'For polyglot repos with native dependencies: evaluate Devbox — avoids container overhead while still providing reproducible package versions',
+      'Set up Codespaces prebuilds on pushes to main — reduces environment startup from 3-5 minutes to <60 seconds',
+      'Mirror CI environment (Docker image or Nix packages) to dev environment — same package versions means CI failures reproduce locally',
+      'Document the expected dev environment in CONTRIBUTING.md with a "one-click launch" Codespaces badge',
+    ],
+    pitfalls: [
+      'Devcontainer image drift — not pinning the base image tag means "latest" changes and breaks the reproducibility promise',
+      'Heavy containers with 5GB images — increases Codespaces startup time; prefer layered images with slim base + features over monolithic custom images',
+      'Forgetting to sync CI environment with dev container — if CI uses Go 1.22 and dev uses 1.20, tests pass locally but fail in CI',
+      'Nix flakes learning curve — the Nix language is unfamiliar to most engineers; provide a devbox.json wrapper if Nix expertise is limited',
+      'Cloud IDE latency — developers doing high-frequency compile-run cycles may find network round-trips frustrating; ensure at least 2-core Codespaces for heavy workloads',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you standardize development environments across a 500-person engineering org?',
+        answer: `The goal is to make the correct environment the path of least resistance, not a mandate engineers will work around.
+
+Strategy: Dev Containers as the baseline, with Devbox for teams that prefer Nix-based shells.
+
+Execution:
+
+1. Template library: Create an org-wide devcontainer feature library (internal GitHub registry) with approved versions of Node, Python, Go, Java. Teams add features from the library — no manual runtime installation, no version drift.
+
+2. Platform team maintains base images: The platform team owns the base devcontainer images and builds them weekly (pinned to specific package versions). Teams inherit from these bases rather than building from scratch.
+
+3. CI parity: CI uses the same container image as the devcontainer. The same npm install, go build, python test commands run identically locally and in CI. Environment-specific bugs disappear.
+
+4. Codespaces prebuilds: Enable prebuilds for all repositories via GitHub org policy. Any push to the default branch triggers a prebuild. Developers get a warm environment in <60 seconds — the onboarding experience is open browser, click "Open in Codespace," write code.
+
+5. Escape hatch: For developers who need local environments (offline work, GPU access, proprietary IDEs), Devbox provides the same package versions without containers. Same devbox.json in the repo as a parallel option.
+
+6. Measurement: Track time-from-git-clone-to-first-commit for new engineers. Target: <2 hours. Alert on repos where this exceeds 1 day.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What file defines a Dev Container?', a: 'devcontainer.json in the .devcontainer/ directory (or repo root). Specifies base image, VS Code extensions, ports, lifecycle commands, and devcontainer features.' },
+      { q: 'What is Devbox and how does it differ from Dev Containers?', a: 'Devbox (Jetify) creates reproducible development shells using Nix — no Docker container required. Packages are declared in devbox.json and activated via "devbox shell". Better for native/polyglot workloads.' },
+      { q: 'What are devcontainer features?', a: 'Reusable, composable installation scripts for common tools (Node.js, Python, Docker-in-Docker, AWS CLI) that add capabilities to a devcontainer without modifying the Dockerfile.' },
+      { q: 'What is a Codespaces prebuild?', a: 'A pre-computed devcontainer state (with dependencies installed) triggered by pushes to default branches. Reduces environment startup from 3-5 minutes to under 60 seconds.' },
+      { q: 'What makes Nix reproducible?', a: 'Content-addressed, immutable Nix store. Every package is identified by a cryptographic hash of its inputs. flake.lock pins exact hashes. Same flake.lock → identical build on any machine.' },
+      { q: 'Name two cloud IDE platforms.', a: 'GitHub Codespaces (Azure-backed, VS Code) and Gitpod (open-source, self-hostable, supports VS Code and JetBrains).' },
+    ],
+    references: [
+      'https://containers.dev/',
+      'https://www.jetify.com/devbox/',
+      'https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake',
+      'https://docs.github.com/en/codespaces',
+    ],
+  },
+
+  // ── OpenFeature & Feature Flag Management ─────────────────────────
+  {
+    id: 'openfeature-feature-flags',
+    title: 'OpenFeature & Feature Flag Governance',
+    icon: 'toggleLeft',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'The OpenFeature standard for feature flagging, flag lifecycle management, technical debt from long-lived flags, and progressive rollout governance.',
+    visualizations: [],
+    introduction: `Feature flags (also called feature toggles) allow teams to deploy code to production without activating it for users — decoupling deployment from release. This is a foundational capability for trunk-based development, A/B testing, progressive delivery, and dark launching. But without governance, feature flags accumulate into technical debt that degrades system maintainability.
+
+OpenFeature is an open standard (CNCF sandbox) that defines a vendor-neutral API for feature flag evaluation. Instead of coupling your application code to a specific vendor (LaunchDarkly, Split.io, Unleash, Flagsmith), you code against the OpenFeature SDK. Switching vendors requires only changing the provider implementation, not the application code. This portability is particularly valuable for large organizations evaluating different flag systems or migrating between vendors.
+
+The OpenFeature architecture: the SDK (available in Go, Java, Node.js, Python, .NET, PHP) provides a standard evaluation API ("getBooleanValue", "getStringValue", etc.). A provider implements the SDK interface for a specific backend (LaunchDarkly provider, Unleash provider, in-memory provider for testing). Hooks intercept the evaluation lifecycle for logging, tracing, and metrics.
+
+Feature flag governance addresses the accumulation problem. Flags that are never cleaned up after a feature fully rolls out become permanent conditional branches — each one increasing cognitive load for every developer who reads the code. Studies find that teams with no flag hygiene policy accumulate flags at 10-15x the rate they remove them. The result: hundreds of flags, many stale, creating a maintenance burden and obscuring the actual code logic.
+
+Flag lifecycle management policies: (1) every flag has an owner and expiry date at creation time; (2) flags that have been 100% on or 100% off for 30 days trigger an automated cleanup ticket; (3) flag evaluation metrics (what percentage of requests evaluate each flag state) surface stale flags automatically; (4) permanent flags for kill switches and ops controls are explicitly labeled and exempt from expiry policies.
+
+Progressive rollout patterns with feature flags: percentage rollout (start 1% → 10% → 50% → 100%), canary (flag targets only canary user cohort), ring deployment (internal → beta → production), and geographic rollout (US first, then EU). Flags combined with SLO monitoring enable automatic rollback: if error rate crosses threshold at 5% rollout, automatically flip the flag back to 0%.`,
+    whenToUse: [
+      'Designing progressive rollout systems for new features without requiring separate deployment pipelines',
+      'Evaluating or migrating between feature flag vendors (LaunchDarkly, Unleash, Split)',
+      'Building a flag governance policy to prevent flag accumulation and technical debt',
+      'Interview questions about decoupling deployment from release, dark launches, and A/B testing infrastructure',
+      'Implementing kill switches for critical features without requiring a deployment',
+    ],
+    keyConcepts: [
+      { term: 'OpenFeature SDK', definition: 'CNCF-sandbox vendor-neutral SDK for feature flag evaluation. Available in 8+ languages. Application code evaluates flags via a standard API; the provider implements the backend. Switching vendors requires no application code changes.' },
+      { term: 'Feature flag provider', definition: 'OpenFeature component that implements flag resolution for a specific backend (LaunchDarkly, Unleash, Flagsmith, environment variables). Swappable without changing evaluation call sites.' },
+      { term: 'Flag lifecycle', definition: 'Create (with owner, expiry, jira ticket) → gradual rollout → 100% on → cleanup (remove flag + conditional code). Without an explicit lifecycle policy, flags accumulate indefinitely.' },
+      { term: 'Targeting rules', definition: 'Logic that determines which flag variant to serve based on context (user ID, email domain, geography, plan tier). Enables percentage rollouts, beta programs, and canary releases without code changes.' },
+      { term: 'Kill switch', definition: 'A permanent-intent feature flag designed to disable a feature quickly in production without a deployment. Labeled explicitly as long-lived and exempt from expiry policies.' },
+      { term: 'Dark launch', definition: 'Running new code in production without exposing the results to users — useful for load testing new infrastructure, validating correctness of shadow path, or warming caches before a feature launch.' },
+    ],
+    approach: [
+      'Adopt OpenFeature SDK in application code from day one — avoid hard-coding to LaunchDarkly or Unleash client directly',
+      'Every flag created must include: owner (team), Jira ticket, and expiry date — enforce at creation time via API hook',
+      'Set automated staleness alerts: flags at 100% on or 100% off for 30+ days trigger a cleanup reminder to the owner',
+      'Use flag evaluation metrics to detect stale flags — a flag where 99.99% of evaluations return the same value for 30 days is ready to remove',
+      'For kill switches: use a separate namespace or tag that exempts them from expiry policies',
+      'Combine flags with SLO monitoring for automated rollback: error rate spike at N% rollout → auto-flip to 0%',
+    ],
+    pitfalls: [
+      'No expiry date at creation time — flags accumulate without governance; removing them later requires archaeology',
+      'Flags evaluated in hot paths without caching — flag evaluation adds latency; providers should cache evaluations and use streaming updates',
+      'Nested flags (flag A checks flag B) — creates combinatorial complexity that defeats the purpose of isolated rollouts',
+      'Removing flag code without removing the flag from the backend — orphaned flags in the dashboard obscure the real flag inventory',
+      'Using flags as configuration — flags for business logic rollout should not become permanent configuration knobs (use proper config management instead)',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you design a feature flag governance policy for a 200-engineer organization?',
+        answer: `The problem is entropy: flags are easy to create and painful to delete. Without policy, you accumulate hundreds of stale flags that developers fear removing. The governance policy must make cleanup easier than accumulation.
+
+Policy components:
+
+1. Creation requirements: Every flag created in the system must have an owner (team Slack channel), a linked Jira ticket, and an expiry date (max 90 days, extendable for releases > 90 days). Enforced via API hook on the flag management platform — flags missing these fields are rejected.
+
+2. Automated staleness detection: A daily job queries flag evaluation metrics. Any flag that has been ≥98% on or ≥98% off for 30 consecutive days is classified as stale. The owner team receives a Jira ticket and a Slack message: "Flag XYZ has been 100% on for 30 days. Remove the conditional code and delete the flag."
+
+3. Ring of responsibility: The flag owner team is responsible for cleanup. Platform team handles cleanup only if the owning team dissolves. No orphaned flags.
+
+4. Cleanup workflow: The Jira ticket links to a runbook: (1) grep the codebase for the flag key, (2) remove the conditional code (keep the new behavior), (3) open a PR, (4) after merge, delete the flag from the backend. The PR description must include the flag key so it's searchable in git history.
+
+5. Exempt flags: Kill switches and ops controls are labeled permanent and exempt from expiry. Require explicit renewal every 12 months with documented justification.
+
+6. Metrics and accountability: Monthly report to engineering leadership: total flags, stale flags, median age, cleanup velocity. Teams with high stale flag counts are flagged (no pun intended) in the report.
+
+Result: flag inventory stays manageable because cleanup is a scheduled, automated process rather than a heroic manual effort.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is OpenFeature?', a: 'A CNCF-sandbox open standard defining a vendor-neutral SDK for feature flag evaluation. Allows switching flag backends without changing application code.' },
+      { q: 'What is a feature flag provider in OpenFeature?', a: 'An implementation of the OpenFeature provider interface for a specific backend (LaunchDarkly, Unleash, Flagsmith). Swappable without changing flag evaluation call sites in application code.' },
+      { q: 'What is a kill switch?', a: 'A permanent-intent flag designed to disable a feature in production without a deployment. Labeled as long-lived and exempt from expiry/cleanup policies.' },
+      { q: 'What is a dark launch?', a: 'Running new code in production without exposing results to users — used to validate correctness, load test, or warm caches before a feature launch.' },
+      { q: 'What is the main risk of flag accumulation?', a: 'Stale conditional code increases cognitive load, obscures business logic, and creates maintenance burden. Each flag branch must be mentally traced by every developer reading the code.' },
+      { q: 'Name two popular feature flag platforms.', a: 'LaunchDarkly (commercial) and Unleash (open-source, self-hostable). Both have OpenFeature providers.' },
+    ],
+    references: [
+      'https://openfeature.dev/',
+      'https://martinfowler.com/articles/feature-toggles.html',
+      'https://launchdarkly.com/',
+      'https://getunleash.io/',
+    ],
+  },
+
+  // ── CNCF Landscape Navigation ─────────────────────────────────────
+  {
+    id: 'cncf-landscape-navigation',
+    title: 'CNCF Landscape & Cloud Native Ecosystem',
+    icon: 'cloud',
+    color: '#0284c7',
+    questions: 5,
+    description: 'Navigating the CNCF landscape, understanding project maturity levels (sandbox/incubating/graduated), and selecting cloud native tools by category.',
+    visualizations: [],
+    introduction: `The Cloud Native Computing Foundation (CNCF) landscape contains over 1,000 projects, making it the most comprehensive map of the cloud native ecosystem — and one of the most overwhelming documents in technology. Understanding how to navigate it, what the maturity levels mean, and how to evaluate projects for production use is a core skill for platform engineers and architects.
+
+CNCF project maturity has three tiers: Sandbox (experimental, early-stage — high innovation risk), Incubating (growing adoption, stable API, formal governance — acceptable for early adopters), and Graduated (production-proven, broad adoption, formal security audit — safe for enterprise use). The graduation requirements are strict: demonstrated production use by at least three independent organizations, committer diversity, formal governance, and completion of a third-party security audit.
+
+The CNCF Trail Map provides an opinionated learning path across nine capability areas: Containerization → CI/CD → Orchestration → Observability & Analysis → Service Proxy → Networking & Policy → Distributed Database & Storage → Messaging & Streaming → Container Registry & Runtime. Each area has recommended starting points (Kubernetes for orchestration, Prometheus for monitoring, Envoy for service proxy).
+
+Choosing between CNCF projects and commercial alternatives requires evaluating four dimensions: operational maturity (do you have the expertise to run it?), community health (commit velocity, maintainer diversity, response time to issues), vendor lock-in risk (is the open-source version crippled vs the commercial version?), and total cost of ownership (cloud managed vs self-hosted includes SRE time to operate).
+
+Key graduated projects to know in depth: Kubernetes, Prometheus, Envoy, CoreDNS, Fluentd, Jaeger, Vitess, Argo (CD, Workflows, Rollouts), Flux, OPA, Falco, Thanos, Cert-Manager, Cilium, OpenTelemetry (metrics/traces framework), Backstage (CNCF incubating), Crossplane.
+
+The CNCF Technical Oversight Committee (TOC) evaluates projects for advancement. The annual KubeCon + CloudNativeCon conferences and the CNCF survey are the primary signals of which projects are gaining real-world adoption vs hype.`,
+    whenToUse: [
+      'Evaluating which CNCF projects to adopt for a given capability (observability, networking, security)',
+      'Interview questions about cloud native ecosystem knowledge and how to avoid lock-in',
+      'Designing a technology radar for your engineering organization',
+      'Comparing sandbox vs incubating vs graduated projects when deciding production readiness',
+      'Understanding the relationship between CNCF projects (Prometheus → Thanos → Cortex for scalable metrics)',
+    ],
+    keyConcepts: [
+      { term: 'Sandbox', definition: 'CNCF maturity level for early-stage projects. High innovation value, high risk. Not recommended for production without significant internal expertise. Projects graduate to Incubating if adoption grows.' },
+      { term: 'Incubating', definition: 'CNCF projects with growing adoption, stable APIs, and formal governance. Suitable for early adopters and teams with operational expertise. Required: 3+ production users, diversity of maintainers.' },
+      { term: 'Graduated', definition: 'CNCF highest maturity level. Requires: broad production adoption, committer diversity, formal governance, and third-party security audit. Safe for enterprise production use.' },
+      { term: 'CNCF Trail Map', definition: 'An opinionated 9-step learning path across cloud native capability areas. Starting points: containerization (Docker) → CI/CD → Kubernetes → Prometheus → Envoy → service mesh → storage → messaging → registry.' },
+      { term: 'Technical Oversight Committee (TOC)', definition: 'CNCF governance body that evaluates and votes on project admission and graduation. TOC members represent diverse companies (Google, Red Hat, Apple, Bloomberg, etc.).' },
+      { term: 'Technology radar', definition: 'An internal artifact (inspired by ThoughtWorks Radar) that classifies technologies as Adopt, Trial, Assess, or Hold for an organization. Used to standardize tool selection and communicate platform team recommendations.' },
+    ],
+    approach: [
+      'Start with Graduated projects for production infrastructure — they have security audits and enterprise adoption',
+      'Use Incubating for new capability areas where you have internal expertise to manage early-stage risks',
+      'Evaluate project health via: GitHub commit velocity (last 90 days), number of active maintainers, issue response time, CNCF Security Audit report',
+      'Check the CNCF Annual Survey for adoption signals — which projects are being adopted by organizations similar to yours',
+      'Build a technology radar for your org: Adopt (standardized), Trial (controlled experimentation), Assess (research only), Hold (do not start new projects)',
+      'For each CNCF tool category, understand the 2-3 leading options and their trade-offs before selecting',
+    ],
+    pitfalls: [
+      'Treating "CNCF project" as a quality signal alone — Sandbox projects are experimental; being CNCF does not mean production-ready',
+      'Adopting every CNCF project that sounds useful — operational complexity compounds; standardize on fewer, deeper tools',
+      'Ignoring the security audit requirement — Graduated projects have had independent security audits; Sandbox projects have not',
+      'Choosing based on hype at KubeCon — new announcements are Sandbox by definition; production adoption follows 2-3 years later',
+      'Not evaluating maintainer diversity — a project with 90% commits from one company faces abandonment risk if that company pivots',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you evaluate a CNCF project for production adoption?',
+        answer: `Evaluation framework across five dimensions:
+
+1. Maturity level: Graduated is the baseline for production infrastructure. Incubating requires internal expertise to operate. Sandbox is for experimentation only.
+
+2. Security posture: Has the project completed a CNCF-sponsored security audit? (Required for Graduation.) Review the audit report — what were the findings and are they resolved? Check CVE history and patch response time.
+
+3. Community health: Open GitHub in the last 90 days — how many commits? How many active contributors from how many organizations? A project with 80% commits from one company is one strategic pivot away from abandonment. Check open issue response time — more than 2 weeks is a support risk.
+
+4. Production adoption: Who is actually running this in production? Look for case studies on the CNCF blog and KubeCon talk recordings. "Used by Netflix, Shopify, and Datadog" is a different signal than "used by two startups." The CNCF Annual Survey shows adoption percentages by category.
+
+5. Operational complexity and TCO: What does it take to run this reliably? Does the vendor offer a managed version (lower TCO, higher lock-in)? Do you have internal expertise? A technically superior project you cannot operate reliably is worse than a simpler one you can.
+
+Final decision gate: Can you patch it yourself if a critical CVE drops? If yes, self-host. If no, use the managed version or choose a project where managed options exist.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three CNCF project maturity levels?', a: 'Sandbox (experimental), Incubating (growing adoption, stable API), Graduated (production-proven, security audit, broad adoption).' },
+      { q: 'What is required for CNCF Graduation?', a: 'Broad production use by 3+ independent organizations, committer diversity, formal governance, and a completed third-party security audit.' },
+      { q: 'Name five CNCF Graduated projects.', a: 'Kubernetes, Prometheus, Envoy, Argo (CD/Workflows), Flux, OPA, Falco, Cilium, CoreDNS, Jaeger — all graduated.' },
+      { q: 'What is the CNCF Trail Map?', a: 'An opinionated 9-capability-area learning path for cloud native adoption, from containerization through Kubernetes to observability, networking, and storage.' },
+      { q: 'What is a technology radar?', a: 'An internal artifact (ThoughtWorks-inspired) classifying technologies as Adopt, Trial, Assess, or Hold. Used to standardize tool selection across engineering teams.' },
+      { q: 'How do you assess community health for a CNCF project?', a: 'Check GitHub commit velocity (last 90 days), maintainer diversity (% commits from top company), open issue response time, and security audit status.' },
+    ],
+    references: [
+      'https://www.cncf.io/projects/',
+      'https://landscape.cncf.io/',
+      'https://github.com/cncf/toc/blob/main/process/graduation_criteria.md',
+      'https://radar.cncf.io/',
+    ],
+  },
+
+  // ── Toil Reduction & Automation ───────────────────────────────────
+  {
+    id: 'toil-reduction-automation',
+    title: 'Toil Reduction & Automation Strategy',
+    icon: 'settings',
+    color: '#64748b',
+    questions: 5,
+    description: 'Identifying, measuring, and eliminating toil — manual, repetitive, automatable operations work — to reclaim engineering time for lasting improvements.',
+    visualizations: [],
+    introduction: `Toil is a specific type of work defined by Google SRE: work that is manual, repetitive, automatable, tactical (not strategic), devoid of enduring value, and O(n) with service growth. The word "toil" is precise — not all operational work is toil. Responding thoughtfully to a novel incident is not toil. Running the same manual DB backup script every Friday is.
+
+The SRE team commitment model caps toil at 50% of engineer time, with the remaining 50% reserved for engineering work that reduces future toil (automation, reliability improvements, scalability work). When toil exceeds 50%, the team is in a reactive death spiral: more toil → less time to automate → more toil accumulates. Measuring current toil percentage is the first step to breaking the cycle.
+
+Identifying toil: the most reliable method is the toil diary — each team member tracks their tasks for two weeks, classifying each as toil or engineering work. Common toil categories: manual deployments, certificate renewals, access provisioning requests, recurring data dumps, manual scaling actions, weekly report generation, and recurring alert investigation that always resolves the same way.
+
+Toil prioritization: not all toil is equally worth automating. Use the automation ROI matrix: (1) frequency (daily >> weekly >> monthly); (2) time cost per occurrence; (3) error risk (high human-error risk tasks get highest priority); (4) automation difficulty (trivial scripts first). The highest-value target: frequent, time-consuming, high-error-risk tasks that are technically straightforward to automate.
+
+Automation patterns for common toil: Runbook automation (PagerDuty Process Automation, Rundeck) converts manual runbooks into push-button or auto-triggered workflows. Self-service portals (Backstage scaffolder, internal Slack bots) eliminate access provisioning and environment creation requests. GitOps (ArgoCD, Flux) eliminates manual deployment steps entirely. Auto-remediation (triggered by alerts) handles known failure patterns without pager wakeups.
+
+The toil reduction loop: measure current toil (diary → percentage) → prioritize by ROI → automate → re-measure → repeat. The goal is not zero toil (impossible) but sustainable toil below 30% so engineers have 70% time for strategic work.`,
+    whenToUse: [
+      'Interview questions about how SRE teams prioritize work and balance operational vs engineering time',
+      'Designing an automation strategy for an ops team drowning in manual work',
+      'Building a toil measurement framework for engineering leadership reporting',
+      'Evaluating which manual tasks to automate first using ROI prioritization',
+      'Explaining the difference between toil and other types of operational work',
+    ],
+    keyConcepts: [
+      { term: 'Toil (SRE definition)', definition: 'Work that is manual, repetitive, automatable, tactical, devoid of enduring value, and scales linearly with service growth. Distinct from operational overhead or project work.' },
+      { term: '50% toil cap', definition: 'Google SRE organizational commitment: toil must not exceed 50% of any team\'s time. When exceeded, leadership intervention is required to reduce service load or add capacity.' },
+      { term: 'Toil diary', definition: 'Two-week time-tracking exercise where engineers classify each task as toil or engineering work. The most reliable method for measuring actual toil percentage before designing automation strategy.' },
+      { term: 'Automation ROI matrix', definition: 'Prioritization framework: score tasks by frequency × time cost × error risk ÷ automation difficulty. High-frequency, high-cost, high-risk, low-difficulty tasks are automated first.' },
+      { term: 'Runbook automation', definition: 'Converting manual step-by-step runbooks into push-button or trigger-based automated workflows using tools like PagerDuty Process Automation, Rundeck, or custom scripts. The lowest-risk form of auto-remediation.' },
+      { term: 'Self-service portal', definition: 'Developer-facing interface (Backstage, Slack bot, internal web app) that handles access provisioning, environment creation, and routine ops requests without SRE involvement. Eliminates the largest source of interrupt-driven toil.' },
+    ],
+    approach: [
+      'Run a toil diary for two weeks across the whole team — measure first, automate second',
+      'Calculate current toil percentage: toil hours / total working hours × 100. If >50%, escalate to leadership before choosing what to automate',
+      'Build the automation ROI matrix: list all identified toil, score each on frequency, time, error risk, automation difficulty',
+      'Automate highest-ROI toil first — typically daily manual operations that take 30+ minutes each',
+      'For human-error-prone tasks: automate even if infrequent — the error cost outweighs the frequency calculation',
+      'After automation, re-measure toil percentage to confirm reduction and track drift over time',
+    ],
+    pitfalls: [
+      'Automating low-frequency, low-cost toil first — feels productive but doesn\'t move the toil percentage needle',
+      'Automated toil without monitoring — broken automation that silently fails becomes worse than manual toil',
+      'Automating before understanding — rushing to script a process before understanding it fully embeds bugs permanently',
+      'Counting project work as toil reduction — project features that happen to require automation are not toil reduction; they are new capabilities',
+      'One-time automation without maintenance — automation that is not updated as the system changes becomes technical debt',
+    ],
+    keyQuestions: [
+      {
+        question: 'You join an SRE team where engineers spend 70% of their time on manual operations. What is your plan?',
+        answer: `70% toil means the team is in a reactive spiral — they have almost no time to do the engineering work that would reduce toil. This is a management and engineering problem simultaneously.
+
+Immediate action (week 1-2): Run a toil diary. Have every team member track and classify every task for two weeks. This gives you the actual data: which tasks consume the most time, which are most frequent, which are highest error risk.
+
+Classification (week 3): Build the toil inventory and the automation ROI matrix. Calculate current toil percentage formally. Present to leadership: "Our team spends 70% on toil. The SRE model says 50% is the intervention threshold. We need either reduced service load or dedicated engineering time to automate."
+
+Negotiate capacity: Leadership needs to understand that 70% toil is an organizational risk, not just an engineering inconvenience. The ask: freeze new feature work for the next sprint to allow the team to reduce toil by 20 percentage points. If refused, escalate the risk: "At 70% toil, we cannot improve reliability — incidents will continue at the same rate."
+
+Top 3 automation targets (based on ROI matrix): typically manual deployments (if not already GitOps), access provisioning requests (self-service portal), and recurring alert investigation that always resolves the same way (auto-remediation script or runbook automation).
+
+Re-measure at week 6 and week 12. Target: below 50% in 60 days. If successful, establish the 50% cap as a standing team commitment with monthly measurement.
+
+Long-term: build toil metrics into the team's quarterly OKRs — toil percentage is a health metric like error rate.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the six characteristics of toil?', a: 'Manual, repetitive, automatable, tactical (not strategic), devoid of enduring value, and O(n) with service growth.' },
+      { q: 'What is Google SRE\'s toil cap?', a: '50% — toil must not exceed half of any SRE team\'s time. When exceeded, leadership intervention is required.' },
+      { q: 'What is a toil diary?', a: 'A two-week time-tracking exercise where engineers classify each task as toil or engineering work — the most reliable way to measure actual toil percentage.' },
+      { q: 'Is incident response toil?', a: 'Not necessarily. Novel incidents requiring judgment are not toil. Repetitive alerts that always resolve the same way are toil — they should be auto-remediated.' },
+      { q: 'What is the difference between toil and overhead?', a: 'Overhead (meetings, planning, hiring) is not toil because it is not O(n) with service growth and often has strategic value. Toil specifically scales with service size and is automatable.' },
+      { q: 'What is runbook automation?', a: 'Converting manual step-by-step runbooks into push-button or trigger-based automated workflows using tools like PagerDuty Process Automation or Rundeck.' },
+    ],
+    references: [
+      'https://sre.google/sre-book/eliminating-toil/',
+      'https://sre.google/workbook/eliminating-toil/',
+      'https://rundeck.com/',
+      'https://docs.pagerduty.com/docs/automation-actions',
     ],
   },
 ];
