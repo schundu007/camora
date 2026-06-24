@@ -6,8 +6,8 @@
 export const aiSystemsPerfCategories = [
   { id: 'ai-perf-hardware',   name: 'GPU Hardware & Architecture',    icon: 'cpu',      color: '#8b5cf6' },
   { id: 'ai-perf-cuda',       name: 'CUDA Programming & Kernels',     icon: 'zap',      color: '#6366f1' },
-  { id: 'ai-perf-inference',  name: 'LLM Inference Optimization',     icon: 'layers',   color: '#0ea5e9' },
   { id: 'ai-perf-training',   name: 'Distributed Training',           icon: 'network',  color: '#10b981' },
+  { id: 'ai-perf-inference',  name: 'LLM Inference Optimization',     icon: 'layers',   color: '#0ea5e9' },
   { id: 'ai-perf-frameworks', name: 'PyTorch & Framework Tuning',     icon: 'settings', color: '#f59e0b' },
 ];
 
