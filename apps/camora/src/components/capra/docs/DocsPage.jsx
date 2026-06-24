@@ -880,11 +880,11 @@ export default function DocsPage({ onBack }) {
   // Static counts used as fallback before heavyData async chunks load.
   // Update when topic files add/remove entries.
   const STATIC_TOPIC_COUNTS = {
-    'coding': 23, 'system-design': 765, 'behavioral': 57, 'low-level': 106,
+    'coding': 57, 'system-design': 616, 'behavioral': 57, 'low-level': 106,
     'databases': 20, 'microservices': 12, 'cloud': 95, 'linux': 48,
-    'networking': 49, 'sre': 65, 'devops': 164, 'observability': 8,
+    'networking': 49, 'sre': 65, 'devops': 155, 'observability': 8,
     'platform': 5, 'troubleshooting': 14, 'mlops': 7, 'aiops': 10,
-    'war-stories': 25, 'comparisons': 35, 'challenges': 1, 'projects': 25,
+    'war-stories': 25, 'comparisons': 35, 'challenges': 1, 'projects': 24,
     'roadmaps': 12, 'eng-blogs': 39,
   };
   const overviewCategories = (() => {
