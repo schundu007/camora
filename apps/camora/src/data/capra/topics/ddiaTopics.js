@@ -130,6 +130,15 @@ Snowflake or BigQuery (columnar OLAP): efficient aggregation queries over billio
 The application uses all five because each serves a different access pattern. The cost is operational complexity: keeping all five consistent, monitoring five systems, and handling the failure modes of each.`,
       },
     ],
+    quickFire: [
+      { q: `What distinguishes a data-intensive application from a compute-intensive one?`, a: `Data-intensive applications are bottlenecked by data volume, complexity, or velocity rather than CPU cycles. A video encoding farm is compute-intensive; a social media feed platform is data-intensive.` },
+      { q: `Name the three top-level concerns Kleppmann organizes Chapter 1 around.`, a: `Reliability (correct behavior under faults), scalability (coping strategies for growth), and maintainability (productive work by many engineers over time).` },
+      { q: `Why can a system be highly available but unreliable?`, a: `Availability measures uptime and responsiveness; reliability measures correctness. A replica serving stale data is available but unreliable — it responds but returns wrong results.` },
+      { q: `What is the composition problem in data systems?`, a: `When an application combines DB, cache, search, and queue, none of those components guarantees the cross-component invariants the application needs. The application code must maintain them, and that is where most correctness bugs live.` },
+      { q: `What does Kleppmann identify as the leading cause of outages?`, a: `Human errors — configuration mistakes, bad deployments, incorrect schema migrations — not hardware failures.` },
+      { q: `What is a fault vs a failure in Kleppmann's terminology?`, a: `A fault is one component deviating from its spec. A failure is the whole system stopping to provide the required service. Fault-tolerant systems isolate faults so they cannot cascade into failures.` },
+      { q: `Give an example of a cross-component correctness invariant that no single component guarantees.`, a: `After a DB write, the cache must not serve the old value. PostgreSQL guarantees its own durability; Redis guarantees its own atomicity; but neither guarantees cache-DB consistency — that is the application's responsibility.` },
+    ],
   },
 
   {
@@ -175,6 +184,15 @@ I then measure performance in two ways: throughput (how many requests per second
 Scalability strategies fall into two categories: scaling up (larger machines — limited ceiling) and scaling out (more machines — preferred for stateless services). Stateful services like databases require partitioning or sharding to scale out, which introduces new complexity around cross-partition queries and transactions.`,
       },
     ],
+    quickFire: [
+      { q: `What are the three categories of faults in DDIA Chapter 1?`, a: `Hardware faults (random, uncorrelated), software errors (systematic, correlated across instances), and human errors (configuration mistakes, bad deployments — the leading cause of outages).` },
+      { q: `What is the disk MTBF range Kleppmann cites, and why does it matter for cluster sizing?`, a: `10 to 50 years MTBF per disk. In a cluster of 10,000 disks you expect roughly one failure per day, so redundancy is mandatory at scale even though individual failure rates are low.` },
+      { q: `What load parameters make Twitter's fan-out architecture the right choice?`, a: `4.6K writes/sec average but 300K home timeline reads/sec — a 65:1 read/write ratio that makes it economically attractive to do more work at write time to keep reads cheap.` },
+      { q: `What is the celebrity problem in fan-out-on-write?`, a: `A high-follower-count user (Lady Gaga, 30M followers) triggers 30M cache writes per tweet, which at peak tweet rates overwhelms the write pipeline.` },
+      { q: `What is the difference between essential and accidental complexity?`, a: `Essential complexity is inherent to the problem domain and cannot be removed. Accidental complexity is introduced by the implementation and can be eliminated through better abstractions or refactoring.` },
+      { q: `What does Kleppmann mean by operability?`, a: `Making it easy for operations teams to run the system day-to-day: good monitoring, easy rollback, predictable failure behavior, good documentation, and no single-person dependencies.` },
+      { q: `Why is horizontal scaling harder for stateful services than stateless ones?`, a: `Stateless services share no state, so any instance can handle any request. Stateful services require sharding or replication strategies to distribute data, and cross-shard queries and transactions add significant complexity.` },
+    ],
   },
 
   {
@@ -219,6 +237,16 @@ More critically, tail latency amplifies across call chains. If each of 50 micros
 
 We use p99 as the standard SLO target because it is the highest percentile we can realistically serve within cost constraints, and it captures the experience of users who matter most: power users, paying customers, and automated callers that retry on failure.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the difference between response time and latency?`, a: `Response time is the total client-observed time including network, queuing, and processing. Latency is specifically queuing time (time waiting, not being processed). High response time with low processing time points to a queue or network bottleneck.` },
+      { q: `What does p99 response time mean?`, a: `99% of requests complete within that time threshold. Equivalently, 1 in 100 requests is slower than the p99 value.` },
+      { q: `If each of 100 backend services has a 1% chance of being slow, what is the probability that a fan-out request hitting all 100 is slow?`, a: `1 - 0.99^100 = approximately 63%. The fan-out amplifies tail latency dramatically.` },
+      { q: `What is head-of-line blocking?`, a: `A slow request at the head of a processing queue blocks all subsequent requests behind it, artificially inflating their response times even if they would individually be fast.` },
+      { q: `Name two algorithms for computing streaming percentiles without storing all observations.`, a: `t-digest (accurate at tails, mergeable) and HdrHistogram (accurate across the range, high-frequency recording, fixed memory footprint).` },
+      { q: `Why might p999 matter more than p99 for some businesses?`, a: `The slowest 0.1% of users are often your highest-value customers — largest accounts, most data, highest spend. Ignoring p999 means ignoring the users you most want to retain.` },
+      { q: `What is the difference between an SLO and an SLA?`, a: `SLO is an internal engineering target. SLA is a customer contract with financial consequences for missing it. SLOs should be stricter than SLAs to provide an operational safety buffer.` },
+      { q: `What is the hedged request technique and when does it help?`, a: `After a timeout (e.g., the p95 latency), send the same request to a second server instance and use whichever responds first. It dramatically reduces tail latency at the cost of slightly higher resource usage — Google reported 95% reduction in p999 latency with 2% more requests.` },
     ],
   },
 
@@ -268,6 +296,16 @@ For celebrity accounts (above a configurable follower threshold, say 1M): we do 
 The trade-off is write cost vs read latency. Write fan-out trades storage and background CPU for fast reads. Read fan-out is free at write time but becomes expensive at read time as follower graphs grow. The hybrid gives us fast reads for the common case while avoiding catastrophic write amplification for outliers.`,
       },
     ],
+    quickFire: [
+      { q: `What are Twitter's key load parameters from DDIA Chapter 1?`, a: `4.6K tweets written per second average (12K peak), and 300K home timeline reads per second — a read/write ratio of approximately 65:1.` },
+      { q: `Why does pull-on-read fail at Twitter's scale?`, a: `At 300K timeline reads per second, each requiring a JOIN across a follows graph and tweets corpus with billions of rows, the database cannot sustain the query load. Computation cost is paid on every read.` },
+      { q: `What is the celebrity problem in fan-out-on-write?`, a: `An account with 30M followers triggers 30M cache writes per tweet. At peak tweet rates, a handful of celebrity tweets creates hundreds of millions of writes per second.` },
+      { q: `How does Twitter's hybrid approach resolve the celebrity problem?`, a: `Normal users get fan-out-on-write; their followers' caches are pre-populated. High-follower accounts are excluded from fan-out; their tweets are fetched live and merged into the timeline at read time.` },
+      { q: `What is write amplification?`, a: `The ratio of actual storage writes to logical application writes. In fan-out, one tweet write becomes N cache writes where N is the follower count.` },
+      { q: `When does fan-out favor the read side over pull-on-read?`, a: `When the read/write ratio is high (many more reads than writes), fan-out amortizes the write cost across many cheap reads. If reads are rare relative to writes, fan-out wastes write throughput on results that are rarely consumed.` },
+      { q: `What must a fan-out system do asynchronously and why?`, a: `The fan-out itself must be asynchronous (via a queue or background job) because synchronously writing to millions of follower caches during the tweet write would make the write API timeout.` },
+      { q: `What load parameter would make you choose pull-on-read over fan-out?`, a: `A write-heavy workload where writes significantly outnumber reads, or where the fan-out degree is extremely high for most items, making write amplification prohibitive for the majority of writes rather than just celebrity outliers.` },
+    ],
   },
 
   // ── DATA MODELS ──────────────────────────────────────────────────────────────
@@ -315,6 +353,15 @@ A concrete example is a CMS article with metadata, body sections, tags, and auth
 I choose relational (PostgreSQL) when: data has genuine many-to-many relationships (orders have many products, products belong to many orders), I need ad-hoc aggregations and GROUP BY, or I need transactions across multiple entities. PostgreSQL's JSONB column gives me a middle ground: store document-like fields inside a relational row with full indexing support, which is often the best of both worlds.`,
       },
     ],
+    quickFire: [
+      { q: `What problem did Edgar Codd's 1970 relational model paper solve?`, a: `It freed applications from knowing the physical layout of data. Navigational databases (IMS, CODASYL) required programmers to traverse explicit pointers; changing storage layout broke application code. The relational model made queries declarative and let a query optimizer choose access paths.` },
+      { q: `Why does the document model have better data locality than relational?`, a: `A document is stored contiguously, so one disk read or network call retrieves all related data for an entity. Relational databases spread an entity across multiple tables, requiring joins (and potentially multiple disk seeks) to reassemble it.` },
+      { q: `When does the document model break down?`, a: `When data has many-to-many relationships. Representing shared entities (like a company referenced by many resumes) requires either duplication (causing update anomalies) or application-level joins, which are slower and error-prone compared to database joins.` },
+      { q: `What is schema-on-read?`, a: `The document model stores any structure without enforcing a schema at write time. The application interprets the document shape at read time and handles missing or differently-shaped fields in code.` },
+      { q: `How is the relational vs document distinction blurring?`, a: `PostgreSQL added jsonb columns (binary JSON with GIN indexes) and MongoDB added $lookup (joins). Both databases now support mixed relational and document patterns, making the choice more about operational familiarity than fundamental capability differences.` },
+      { q: `What is the N+1 query problem?`, a: `Loading a list of N records and then issuing one query per record to fetch a related entity, resulting in N+1 total queries. It is a common ORM pitfall solved by eager loading (JOIN or IN query to fetch all related records at once).` },
+      { q: `Why can a document database still have a schema?`, a: `The schema is implicit, encoded in the application code that reads documents. MongoDB 3.6+ supports explicit JSON Schema validation at the collection level, and application-layer libraries (Joi, Zod) enforce structure before writes, giving schema-on-read databases an optional schema-on-write layer.` },
+    ],
   },
 
   {
@@ -357,6 +404,15 @@ For fraud detection, graph databases are valuable because fraud patterns manifes
 I would not choose a graph database for a simple social profile with a few friend counts. If the queries are "fetch a user and their direct friends," a relational join suffices. The graph database pays off when the depth of traversal is unknown or unbounded.`,
       },
     ],
+    quickFire: [
+      { q: `Name three real-world domains where graph databases outperform relational databases.`, a: `Social networks (friend-of-friend traversal), fraud detection (identifying clusters of accounts sharing devices or bank accounts), and dependency graphs (package managers resolving transitive dependencies across hundreds of packages).` },
+      { q: `What does the * in a Cypher MATCH clause mean?`, a: `Variable-length path matching. MATCH (a)-[:WITHIN*0..]->(b) traverses zero or more WITHIN edges between a and b, handling transitive relationships without knowing the depth in advance.` },
+      { q: `What is a triple in the RDF model?`, a: `A (subject, predicate, object) statement where each element is typically a URI. For example, (dbpedia:Idaho, dbpedia:within, dbpedia:United_States). Triples form a directed graph and enable linked data across different organizations.` },
+      { q: `Can a relational database represent a graph?`, a: `Yes, using an adjacency table (vertex_id, neighbor_id) and WITH RECURSIVE for traversal. It works for small graphs or single-depth queries but becomes verbose for variable-depth traversal and does not optimize graph queries as well as dedicated graph databases.` },
+      { q: `What database uses Datalog as its query language?`, a: `Datomic, created by Rich Hickey. Datomic stores data as immutable facts with transaction timestamps and uses Datalog for queries, supporting time-travel queries against historical states of the database.` },
+      { q: `Why is sharding a graph database difficult?`, a: `Edges connect arbitrary vertex pairs. If two connected vertices live on different shards, every edge traversal between them requires a cross-shard network call, which destroys the performance advantage of graph traversal. Most graph databases run on a single large node or primary-replica pairs.` },
+      { q: `What is the difference between a graph database and a graph processing framework?`, a: `A graph database stores and queries graph-structured data transactionally, serving application queries with low latency. A graph processing framework (Apache Spark GraphX, Google Pregel) runs batch algorithms like PageRank or community detection across very large static graphs, typically in analytical pipelines rather than application backends.` },
+    ],
   },
 
   {
@@ -396,6 +452,15 @@ This matters for two reasons: performance and evolvability. Performance: the opt
 
 The contrast is MapReduce, where you write Python or Java map/reduce functions. It is portable and powerful for unstructured data but has no query optimizer. Modern systems like Spark SQL layer a declarative SQL interface on top, giving both the expressiveness of SQL and the scalability of distributed compute.`,
       },
+    ],
+    quickFire: [
+      { q: `Give one example each of a declarative and an imperative query approach.`, a: `Declarative: SQL SELECT statement (specifies the desired result, not the algorithm). Imperative: iterating over a CODASYL database cursor following explicit record pointers, or a JavaScript for-loop that filters an array of objects.` },
+      { q: `Why can a declarative SQL query run faster after a database upgrade without changing the query?`, a: `The query optimizer may choose a better execution plan when new indexes exist, statistics are updated, or the optimizer's cost model improves. The declarative specification remains unchanged while the engine's execution strategy improves.` },
+      { q: `What is the core problem with MapReduce for ad-hoc queries?`, a: `The map and reduce functions are opaque JavaScript code that the framework cannot inspect or optimize. It cannot push predicates into the map function, reorder operations, or use indexes, so every MapReduce job does a full scan.` },
+      { q: `What MongoDB pipeline stage is equivalent to a SQL WHERE clause?`, a: `$match. Placed first in the pipeline, it filters documents before subsequent stages process them, and MongoDB can use an index for it when one exists on the filter field.` },
+      { q: `Why is CSS considered a declarative language?`, a: `CSS specifies what elements should look like (.button { color: blue }) without prescribing when to repaint, how to resolve specificity, or how to batch DOM updates. The browser engine determines the execution.` },
+      { q: `Can SQL parallelize queries automatically?`, a: `Yes, in distributed SQL engines like Presto, BigQuery, and Spark SQL, a single SQL query is split into tasks that run across hundreds of nodes. The declarative nature of SQL allows the engine to partition work without developer involvement.` },
+      { q: `Why did Google invent MapReduce if SQL already existed?`, a: `SQL engines of the early 2000s could not scale to petabytes across thousands of commodity machines. MapReduce was designed for fault-tolerant, distributed batch processing at Google's scale. The industry later built SQL query engines (Hive, Dremel, Presto) on top of distributed infrastructure, combining SQL's declarative benefits with distributed execution.` },
     ],
   },
 
@@ -441,6 +506,16 @@ For PostgreSQL: ALTER TABLE ADD COLUMN with a DEFAULT is instant since PostgreSQ
 
 The pattern for zero-downtime: expand (add new schema compatible with old code), migrate (backfill data), contract (remove old schema after all code is updated). This is the expand-contract pattern.`,
       },
+    ],
+    quickFire: [
+      { q: `What is schema-on-read?`, a: `Schema is implicit and only interpreted when data is read — like JSON documents or MongoDB. No enforcement at write time.` },
+      { q: `What is schema-on-write?`, a: `Schema is explicit and enforced at write time — like relational databases. Invalid data is rejected before it's stored.` },
+      { q: `What is the main advantage of schema-on-read?`, a: `Flexibility — you can store heterogeneous or evolving data without a migration step. Different documents can have different fields.` },
+      { q: `What is the main advantage of schema-on-write?`, a: `Safety — the database guarantees all stored data conforms to the schema, making reads predictable and type-safe.` },
+      { q: `How do you perform a schema migration in a schema-on-write database?`, a: `Run an ALTER TABLE (or equivalent) migration, which may lock the table or require a multi-step shadow-copy process for large tables.` },
+      { q: `How do you 'migrate' schema in a schema-on-read system?`, a: `You don't migrate existing data — instead you update the read path to handle both old and new formats using conditional logic on the field's presence.` },
+      { q: `When does schema-on-read cause problems?`, a: `When you assume a field exists but it doesn't — bugs surface at read time, not write time, making them harder to catch early.` },
+      { q: `What's an analogy Kleppmann uses for schema-on-read vs schema-on-write?`, a: `Dynamic type checking (schema-on-read) vs static type checking (schema-on-write) — same trade-off between flexibility and early error detection.` },
     ],
   },
 
@@ -494,6 +569,16 @@ Read path: check the MemTable first (if the key was written recently, it is here
 Compaction runs in the background, merging SSTables and removing overwritten or deleted keys. Without compaction, read performance degrades as the number of SSTables grows.`,
       },
     ],
+    quickFire: [
+      { q: `Why are LSM-Tree writes faster than B-tree writes on spinning disks?`, a: `LSM-Tree writes are purely sequential: appending to the WAL and flushing the memtable to SSTable files. B-tree writes involve random seeks to locate and overwrite the correct page on disk. Sequential I/O is 10-100x faster than random I/O on spinning disks.` },
+      { q: `What happens when the process crashes with an unflushed memtable?`, a: `On restart, the engine replays the write-ahead log from the last successful memtable flush checkpoint, rebuilding the in-memory state that existed at crash time. The WAL must have been flushed to disk before acknowledging writes; otherwise those writes are lost.` },
+      { q: `Name four production systems that use LSM-Trees as their storage engine.`, a: `Cassandra (size-tiered or leveled compaction), RocksDB (leveled, used inside TiKV, MyRocks, PebbleDB), HBase (size-tiered), and ScyllaDB (leveled). Lucene uses a similar log-structured approach for its inverted index segments.` },
+      { q: `What is a tombstone in an LSM-Tree?`, a: `A special marker written when a key is deleted. Because SSTables are immutable, you cannot remove a key in place. The tombstone propagates through compaction levels until it merges with and removes the original key entry, after which the tombstone itself is discarded.` },
+      { q: `What problem does a Bloom filter solve in an LSM-Tree read path?`, a: `It eliminates unnecessary disk reads for keys that do not exist in a given SSTable. The filter answers 'definitely absent' with zero false negatives, allowing the engine to skip SSTable disk reads for missing keys without any false misses.` },
+      { q: `What is read amplification in an LSM-Tree?`, a: `The number of disk reads required to satisfy a single logical read. In an LSM-Tree without Bloom filters, a read must check every SSTable from newest to oldest. With Bloom filters and leveled compaction, read amplification is roughly equal to the number of levels (6-7 for a typical LevelDB/RocksDB configuration).` },
+      { q: `Why does leveled compaction have higher write amplification than size-tiered?`, a: `In leveled compaction, a key is rewritten each time it is moved from level L to L+1 during compaction, potentially traversing 6 or more levels before reaching the deepest level. Each rewrite is counted in write amplification. Size-tiered merges fewer times but produces larger, overlapping SSTables.` },
+      { q: `What data structure is the memtable typically implemented as, and why?`, a: `A red-black tree (self-balancing BST) or a skip list. Both maintain sorted key order with O(log n) inserts and provide in-order iteration when flushing to a sorted SSTable. RocksDB uses a skip list by default; alternatives like MemTable in Cassandra use a ConcurrentSkipListMap in Java.` },
+    ],
   },
 
   {
@@ -541,6 +626,15 @@ If a crash occurs after the WAL write and after the page modification but before
 
 This is why WAL writes must be synchronous (fsync) while page writes can be asynchronous — the WAL is the source of truth for recovery.`,
       },
+    ],
+    quickFire: [
+      { q: `Why is the B-tree branching factor typically around 500?`, a: `A 4KB page holds roughly 500 entries of typical key size (8 bytes) plus child pointers (8 bytes each). Higher branching factor reduces tree height. A branching factor of 500 gives a 4-level tree that can index hundreds of terabytes.` },
+      { q: `What does the B+ tree's leaf page doubly-linked list enable?`, a: `Efficient range scans: after finding the first matching leaf page via the tree traversal, the engine follows forward pointers through adjacent leaf pages to retrieve all keys in the range without returning to internal pages.` },
+      { q: `What is the purpose of abbreviated keys in B+ tree internal pages?`, a: `Internal pages only need enough of each key to route between children, not the full key value. Storing abbreviated separator keys allows more entries per internal page, increasing the branching factor and reducing tree height.` },
+      { q: `How does LMDB achieve crash safety without a write-ahead log?`, a: `LMDB uses copy-on-write: modifying a page creates a new copy of that page and all its ancestors up to the root. The root pointer is updated atomically at the end. Old pages are kept for readers using MVCC and reclaimed when no transaction holds them. The atomic root update ensures the tree is always in a valid state.` },
+      { q: `What is the typical tree depth for a B-tree in a large production database?`, a: `3-4 levels. With a branching factor of 500, a 4-level tree can address 500^4 pages (about 250 TB at 4KB per page). Almost no practical database exceeds 4 levels.` },
+      { q: `Why do B-trees have lower read amplification than LSM-Trees for point lookups?`, a: `A key exists in exactly one location in a B-tree: one leaf page. A point lookup requires exactly one I/O per tree level (3-4 total). In an LSM-Tree, a key might exist in any SSTable across multiple levels; without Bloom filters, every SSTable must be checked.` },
+      { q: `What is a B-tree fill factor and why does PostgreSQL default to 90%?`, a: `The fill factor controls what percentage of a page must be full before it is considered full for insert purposes. At 90%, PostgreSQL leaves 10% headroom in leaf pages for future inserts, reducing the frequency of splits. For append-only tables (like time-series), a fill factor of 100% wastes no space since keys are never inserted into the middle of the range.` },
     ],
   },
 
@@ -590,6 +684,15 @@ This turns the query into a range scan within the index — the database never t
 If I instead created the index as (created_at, user_id), the database would have to scan all rows within the created_at range across all users, then filter for the specific user_id — far less selective and more expensive.`,
       },
     ],
+    quickFire: [
+      { q: `What does a secondary index value store, compared to a primary index?`, a: `A list of row identifiers (since multiple rows can share the same secondary key value), whereas a primary index maps each key to exactly one row.` },
+      { q: `In MySQL InnoDB, what is stored at the leaf of a secondary index?`, a: `The primary key value of the matching row, not a heap pointer. To read the full row, InnoDB then looks up the primary (clustered) index using that primary key.` },
+      { q: `Can a composite index on (last_name, first_name) speed up WHERE first_name = 'Alice'?`, a: `No. The index is sorted by last_name first; first_name values are interleaved across all last-name groups, so there is no contiguous range to scan for a given first_name.` },
+      { q: `Is Redis data lost if the process restarts?`, a: `Not necessarily. Redis supports RDB snapshots and AOF (append-only file) persistence. With AOF fsync-every-second, you lose at most one second of writes on crash.` },
+      { q: `What is a full-text index, and how does Lucene support fuzzy matching?`, a: `A full-text index enables linguistic and approximate search over text fields. Lucene decomposes terms into trigrams and uses finite automata to find matches within a configured edit distance.` },
+      { q: `When might a PostgreSQL query planner choose a sequential scan over an available secondary index?`, a: `When the query returns a large fraction of rows spread across many heap pages, making random heap fetches costlier than reading the table sequentially. The planner uses column statistics to estimate this threshold.` },
+      { q: `What is the main storage advantage of in-memory databases beyond avoiding disk I/O?`, a: `They avoid the overhead of encoding data into disk-page formats. In-memory structures (hash tables, skip lists) are accessed directly without parsing page headers, slot arrays, or null bitmaps.` },
+    ],
   },
 
   {
@@ -636,6 +739,15 @@ Column storage also compresses extremely well. A "country" column with values li
 
 Finally, CPU vectorization: operating on a single column laid out contiguously in memory allows SIMD (Single Instruction Multiple Data) CPU instructions to process 4, 8, or 16 values per clock cycle instead of 1. This is why columnar databases like BigQuery and DuckDB can aggregate billions of rows in seconds on modest hardware.`,
       },
+    ],
+    quickFire: [
+      { q: `How many rows does a typical OLTP query touch vs an OLAP query?`, a: `OLTP: a handful of rows (often one) per transaction. OLAP: millions to billions of rows per aggregation query.` },
+      { q: `What is the latency expectation difference between OLTP and OLAP?`, a: `OLTP targets sub-100ms for user-facing operations. OLAP accepts seconds to minutes for complex aggregations over historical data.` },
+      { q: `What is the role of the fact table in a star schema?`, a: `It records each event (sale, click, order line) as one row, storing numeric measures and foreign keys to dimension tables. It is the largest table in the schema by row count.` },
+      { q: `Why is dim_date a separate dimension table rather than just a date column in the fact table?`, a: `A dimension table allows queries to filter and group by derived attributes (day of week, quarter, fiscal year, holiday flag) without computing them at query time for every row scanned.` },
+      { q: `What is Snowflake's pricing model, and how does it differ from a traditional data warehouse like Teradata?`, a: `Snowflake charges by compute-second (virtual warehouse credits) and separates storage cost. Teradata and on-premise warehouses require upfront hardware investment regardless of actual query volume.` },
+      { q: `Can you run analytics on a PostgreSQL read replica instead of a warehouse?`, a: `You can, but long-running analytics queries will slow replication (the replica cannot apply WAL while processing a query), evict hot pages from the buffer pool, and degrade performance for all other replica readers.` },
+      { q: `What does the 'L' in ETL mean in practice for a data warehouse pipeline?`, a: `Loading transformed data into the warehouse, typically via bulk COPY or INSERT operations that bypass row-by-row overhead and leverage the warehouse's columnar storage format.` },
     ],
   },
 
@@ -685,6 +797,16 @@ Schema: Parquet stores the schema in the file footer. Readers do not need a sepa
 
 Cost impact: on Athena (priced per byte scanned), switching from CSV to Parquet typically reduces query cost by 60-80% and query time by 50-70%.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the core I/O advantage of column-oriented storage for analytical queries?`, a: `The query engine reads only the column files it needs, skipping all other columns. A query over 3 of 100 columns reads approximately 3% of the data a row-oriented engine would read.` },
+      { q: `What type of column compresses best with run-length encoding?`, a: `Low-cardinality columns that are sorted by that column's values -- long runs of the same value encode to a single (value, count) pair.` },
+      { q: `What is Parquet?`, a: `An open-source columnar file format used in Hadoop and cloud data lake ecosystems. It stores data in column chunks within row groups and supports per-column compression with Snappy, Gzip, or Zstandard.` },
+      { q: `What does SIMD mean, and why does columnar storage enable it?`, a: `Single Instruction Multiple Data -- one CPU instruction applied to multiple values simultaneously (e.g., 8 int32s in AVX2). Columnar storage places homogeneous typed values in contiguous memory, making tight SIMD loops possible.` },
+      { q: `Why are OLAP cubes (materialized aggregates) limited?`, a: `They precompute only specific dimension combinations. Ad-hoc queries over dimension combinations not in the cube still require full column scans.` },
+      { q: `What is C-Store's contribution to columnar database design?`, a: `C-Store (the research prototype that became Vertica) introduced the idea of storing multiple sorted copies of the data (projections), each sorted by a different column, to optimize compression and query performance for different query patterns.` },
+      { q: `Does column-oriented storage help point lookups (fetch row by primary key)?`, a: `No. Point lookups require assembling one row from multiple column files, which is slower than fetching one row from a row-oriented page. Columnar storage is optimized for analytical scans, not point access.` },
+      { q: `What is Apache Arrow?`, a: `An in-memory columnar data format standard that allows zero-copy data sharing between different systems (Spark, DuckDB, Pandas, Parquet readers) without serialization. It is the in-memory counterpart to Parquet's on-disk format.` },
     ],
   },
 
@@ -741,6 +863,15 @@ Backward compatibility: Protobuf is designed for schema evolution. New optional 
 I would not choose Protobuf for external APIs where humans need to read and debug the wire format, or for services that need to be called from browsers without generated client libraries.`,
       },
     ],
+    quickFire: [
+      { q: `Why can JSON lose precision for large integers?`, a: `JSON's number type is parsed by JavaScript as IEEE 754 double-precision float, which can represent integers exactly only up to 2^53. Integers larger than this (e.g., 64-bit database IDs) are silently rounded.` },
+      { q: `What is a field tag in Protobuf, and why must it never change?`, a: `A numeric identifier (e.g., field 1, field 2) used in the binary encoding instead of the field name. Changing it breaks all existing encoded messages because the decoder uses the tag to identify the field.` },
+      { q: `How does Avro encode a record with three fields?`, a: `It writes the three values in schema-defined order with no field names, tags, or type markers between them. The decoder must have the writer's schema to know the order and types.` },
+      { q: `What is MessagePack?`, a: `A binary encoding of JSON that replaces verbose ASCII field names with compact type-prefixed values. It reduces JSON size slightly but does not eliminate field names, so it is less compact than Protobuf or Avro.` },
+      { q: `What is the Confluent Schema Registry used for?`, a: `Storing versioned Avro, Protobuf, or JSON schemas. Kafka message producers register a schema and embed a 4-byte schema ID in each message; consumers fetch the schema from the registry to decode.` },
+      { q: `How does gRPC relate to Protocol Buffers?`, a: `gRPC is an RPC framework that uses Protobuf as its serialization format and HTTP/2 as its transport layer. Service methods are defined in .proto files, and protoc generates client and server stubs in multiple languages.` },
+      { q: `Which encoding format should you choose for a Kafka pipeline where producers and consumers are written in different languages and schemas will evolve?`, a: `Apache Avro with the Confluent Schema Registry. It supports multi-language codecs, enforces schema evolution compatibility rules, and adds only 5 bytes of overhead per message for the schema ID.` },
+    ],
   },
 
   {
@@ -787,6 +918,15 @@ The process: (1) rename the field in the .proto file, keeping the same tag numbe
 If you also need to change the field type (e.g., from int32 to int64), that requires more care. Adding a new field with a new tag number and the new type, then migrating code to write the new field and read from either field during a transition period, is the safe approach. After all producers are writing the new field and all consumers read only the new field, the old field can be deprecated and marked reserved.`,
       },
     ],
+    quickFire: [
+      { q: `Can you add an optional field to a Protobuf schema without breaking existing consumers?`, a: `Yes. Existing consumers encounter the new tag, use the wire type to skip it, and decode the rest of the message normally. This is forward compatible.` },
+      { q: `Can you rename a field in Avro without breaking existing consumers?`, a: `No. Avro matches fields by name during schema resolution. Renaming breaks the match; the reader will not find the field and will use the default value instead. Use Avro aliases if renaming is required.` },
+      { q: `What happens if you reuse a deleted Protobuf field tag for a new field?`, a: `Old messages that contained the deleted field will have their bytes interpreted as the new field, producing incorrect values. Always mark deleted tags as 'reserved' to prevent reuse.` },
+      { q: `What is the Confluent Schema Registry's BACKWARD compatibility mode?`, a: `New schemas registered under BACKWARD mode must be readable by the latest deployed consumer -- new schemas can read data written by any previous schema version. Enforced at schema registration time.` },
+      { q: `Why is changing a Protobuf field from optional to required a breaking change?`, a: `Old data that omits the field will fail required-field validation when decoded by new code that marks it required. Proto3 removes required fields entirely to avoid this class of bug.` },
+      { q: `What is the safe order for adding a NOT NULL column to a large production database table?`, a: `First add it as nullable with a default (no table rewrite needed on modern databases), then backfill existing rows, then add the NOT NULL constraint. Never add NOT NULL without a default in one step.` },
+      { q: `How long must you maintain forward compatibility for a public REST API?`, a: `Until you know all clients have migrated away from old versions -- which for public APIs may be years. APIs should ignore unknown fields in requests and always return known fields in responses, never removing them without a versioned deprecation cycle.` },
+    ],
   },
 
   {
@@ -831,6 +971,16 @@ With REST, I would have to call all three services synchronously from the order 
 
 I use REST when: the caller needs an immediate response (user-facing reads), the operation requires confirmation before proceeding (payment authorization), or the call is idempotent and simple enough that retry logic is sufficient.`,
       },
+    ],
+    quickFire: [
+      { q: `What are the three main modes of dataflow between processes?`, a: `Via databases (write/read), via service calls (REST/RPC), and via async message passing (message brokers).` },
+      { q: `What compatibility concern arises when dataflow goes through a database?`, a: `Different processes may run different code versions simultaneously — old code must be able to read data written by new code (forward compatibility) and vice versa.` },
+      { q: `What is the key compatibility requirement for REST APIs?`, a: `Clients and servers may be updated independently — servers must maintain backward compatibility for old clients, and new clients must handle older server responses.` },
+      { q: `Why is RPC more fragile than database dataflow for schema evolution?`, a: `RPC assumes synchronous request/response, so both ends must be compatible simultaneously — you can't easily have the server ahead of the client like you can with async data.` },
+      { q: `What compatibility advantage do message brokers provide?`, a: `The producer and consumer are decoupled in time — the broker buffers messages, so you can evolve them independently as long as messages are forward/backward compatible.` },
+      { q: `What does 'backward compatible' mean in the context of encoding?`, a: `New code can read data written by old code — you can add new fields but must handle their absence when reading old records.` },
+      { q: `What does 'forward compatible' mean in the context of encoding?`, a: `Old code can read data written by new code — typically achieved by ignoring unknown fields.` },
+      { q: `Why is Avro's schema evolution approach notable?`, a: `Avro uses writer's schema and reader's schema separately — the reader resolves fields by name, enabling evolution without field tags.` },
     ],
   },
 
@@ -885,6 +1035,16 @@ Reconfiguration: (1) the new primary's connection string is updated in the servi
 Risk: if the old primary had unacknowledged asynchronous writes that no replica received, those writes are lost. This is why critical financial systems use synchronous_commit = on with at least one synchronous replica. The trade-off is ~1ms added write latency vs potential data loss on failover.`,
       },
     ],
+    quickFire: [
+      { q: `In single-leader replication, which node accepts write requests?`, a: `Only the leader (primary). Followers are read-only replicas that apply changes from the leader's replication log.` },
+      { q: `What is the PostgreSQL term for the position in the write-ahead log, used to track replication progress?`, a: `LSN -- Log Sequence Number. Followers report their current LSN to the leader; the difference between leader LSN and follower LSN is the replication lag in bytes.` },
+      { q: `What durability risk is inherent in fully asynchronous replication?`, a: `If the leader fails before the async followers receive its latest WAL entries, those writes are permanently lost -- even though the leader acknowledged them to clients.` },
+      { q: `How long does a typical single-leader system wait before detecting a failed leader and starting failover?`, a: `Typically 30 seconds of missed heartbeats, though this is configurable. Shorter timeouts catch real failures faster but increase false positives from temporary load spikes or GC pauses.` },
+      { q: `What is a semi-synchronous replication configuration?`, a: `One follower is designated synchronous (leader waits for its ack); all others are asynchronous. Provides one extra durable copy without making the leader dependent on all followers' availability.` },
+      { q: `What is split-brain, in one sentence?`, a: `Two nodes both believe they are the leader and simultaneously accept writes, causing permanent data divergence that cannot be automatically reconciled.` },
+      { q: `What is STONITH, and why is it used in high-availability database clusters?`, a: `Shoot The Other Node In The Head -- physically power-cycling the old leader via IPMI or a network power switch before promoting a new leader, guaranteeing only one active leader can accept writes.` },
+      { q: `Can a follower serve read requests in single-leader replication?`, a: `Yes, followers can serve reads, but the data may be stale by the current replication lag. Applications must route reads that require up-to-date data (such as read-your-own-writes) to the leader.` },
+    ],
   },
 
   {
@@ -936,6 +1096,16 @@ For financial data, I avoid multi-leader replication entirely. I use single-lead
 
 If I must use multi-leader for financial data, I treat conflicts as errors: record all conflicting writes, prevent the system from proceeding, alert operations, and require a human or compensating transaction to resolve.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the primary motivation for multi-leader replication?`, a: `Enabling low-latency local writes in multiple datacenters. Each datacenter has its own leader, so writes do not need to cross the WAN to reach a single primary.` },
+      { q: `What is Cassandra's default conflict resolution strategy?`, a: `Last-write-wins (LWW) using the write timestamp. The write with the highest timestamp is kept; the other is silently discarded, which can cause data loss.` },
+      { q: `What is the quorum condition that guarantees a read sees the latest quorum write?`, a: `w + r > n, where w is the write quorum, r is the read quorum, and n is the total number of replicas. This ensures at least one node in any read set has the latest write.` },
+      { q: `What is a sloppy quorum and what does it trade away?`, a: `Writing to any w reachable nodes during a partition rather than the designated home replicas. It preserves write availability but breaks the w + r > n freshness guarantee because the written nodes may not overlap with the read quorum.` },
+      { q: `How does read repair work in Cassandra?`, a: `When a client reads from multiple replicas and detects that one returned a stale value, the client (or coordinator) writes the latest value back to the stale replica. It is triggered by reads, not a background process.` },
+      { q: `Name two CRDT types and what they model.`, a: `G-Counter models a grow-only counter using a per-replica slot vector; PN-Counter models an increment-decrement counter using two G-Counters for positives and negatives.` },
+      { q: `What ordering problem affects all-to-all multi-leader topology?`, a: `Writes from different leaders may arrive at a third leader out of causal order due to varying network path latencies. A causally dependent write (B depends on A) can arrive before its predecessor (A), violating causal consistency.` },
+      { q: `What is anti-entropy in a leaderless system?`, a: `A background process that continuously compares replicas and copies missing data between them, repairing divergence that read repair misses because the relevant key was never read.` },
     ],
   },
 
@@ -992,6 +1162,16 @@ ALL: all replicas must respond. Maximum durability and consistency — a read wi
 For a payment system, I would use QUORUM for writes and QUORUM for reads, ensuring no acknowledged write is missed on read while tolerating one node failure.`,
       },
     ],
+    quickFire: [
+      { q: `What is leaderless replication?`, a: `Any replica can accept writes directly — there is no single leader. Used by Dynamo, Cassandra, and Riak.` },
+      { q: `What is a quorum in leaderless replication?`, a: `A majority-based threshold: if n replicas total, writes go to w replicas and reads from r replicas. When w + r > n, at least one read node always has the latest write.` },
+      { q: `What is read repair?`, a: `When a client reads from multiple replicas and detects stale data on one, it writes the up-to-date value back to that replica immediately.` },
+      { q: `What is anti-entropy?`, a: `A background process that continuously compares replicas and copies missing data between them — ensures eventual convergence without depending on reads to trigger repair.` },
+      { q: `What is a sloppy quorum?`, a: `During a network partition, writes are accepted by any reachable nodes even if they're not in the intended quorum set — improves availability at the cost of consistency.` },
+      { q: `What is hinted handoff?`, a: `When a node accepts a write on behalf of an unavailable node (sloppy quorum), it keeps a 'hint' and forwards the write once the target node recovers.` },
+      { q: `Can quorum reads guarantee you always read the latest write?`, a: `No — edge cases like concurrent writes, failed writes partially applied, and clock skew can cause stale reads even with w + r > n.` },
+      { q: `How does Cassandra handle concurrent writes to the same key on different replicas?`, a: `Last-write-wins using timestamps — but this risks data loss if clocks are skewed. Alternatives include CRDTs or application-level conflict resolution.` },
+    ],
   },
 
   {
@@ -1043,6 +1223,16 @@ Option 3 — Optimistic UI / local cache: after the user submits a comment, imme
 
 In practice, option 3 (optimistic UI) is the best user experience, combined with option 1 as a safety net for the rare case where the user refreshes in a new tab or on a different device.`,
       },
+    ],
+    quickFire: [
+      { q: `What causes replication lag to spike beyond milliseconds?`, a: `Long-running queries on the follower that block the apply thread, network congestion between leader and follower, or a follower that is under heavy read load and cannot keep up with applying the write stream from the leader.` },
+      { q: `What is the simplest fix for read-your-writes on a user's own profile data?`, a: `Route reads of the user's own profile to the primary leader rather than any follower. This sacrifices replica offload for that specific data but is simple and always correct.` },
+      { q: `Does sticky-replica routing (pinning user to same follower) solve read-your-writes?`, a: `Not fully. It solves monotonic reads (no backward time jumps) but if the pinned follower is still behind on the user's write, the user still will not see their own write until that follower catches up.` },
+      { q: `Which PostgreSQL view shows replication lag?`, a: `pg_stat_replication on the primary, with the replay_lag column (interval) and the difference between pg_current_wal_lsn() and each standby's replay_lsn (bytes) being the key metrics.` },
+      { q: `Does consistent prefix reads matter in a single-partition single-leader system?`, a: `No. A single WAL log imposes total order on all writes, and followers apply in log order, so causal ordering is automatically preserved.` },
+      { q: `What is the trade-off of routing all reads to the leader to avoid lag?`, a: `It eliminates all the read-scaling benefit of having followers. The leader must handle both all writes and all reads, defeating the primary purpose of adding replicas.` },
+      { q: `What AWS metric exposes RDS replica lag?`, a: `CloudWatch ReplicaLag metric, measured in seconds, shows how far behind the read replica is relative to the primary instance.` },
+      { q: `How does consistent prefix reads differ from monotonic reads?`, a: `Monotonic reads prevents a single reader from seeing data go backward in time across sequential reads. Consistent prefix reads prevents any observer from seeing a causally later write (B) without first seeing the causally earlier write (A) it depended on.` },
     ],
   },
 
@@ -1096,6 +1286,16 @@ AP systems (Cassandra, CouchDB, DynamoDB with eventual consistency): during a pa
 The nuance DDIA adds: CAP is about what happens during a partition, not the normal case. In normal operation (no partition), you can have both consistency and availability. Systems like DynamoDB and Cassandra allow you to tune consistency level per request — you choose C or A on each call.`,
       },
     ],
+    quickFire: [
+      { q: `What is eventual consistency?`, a: `If you stop writing, all replicas will eventually converge to the same value — but during active writes, replicas may temporarily diverge.` },
+      { q: `What is 'reading your own writes' consistency?`, a: `After you write a value, any subsequent read by the same user is guaranteed to see that write — also called read-your-writes or read-your-own-writes (RYOW).` },
+      { q: `How can you implement read-your-own-writes without routing all reads to the leader?`, a: `Track the timestamp of your last write; only read from replicas that have caught up to at least that timestamp. Or always route your own profile reads to the leader.` },
+      { q: `What is monotonic reads?`, a: `A guarantee that if a user makes multiple reads in sequence, they will not see time go backward — they won't read a newer value then later read an older value.` },
+      { q: `How can monotonic reads be implemented?`, a: `Route each user's reads to the same replica consistently (e.g., by hashing user ID) so they always see the same replica's state.` },
+      { q: `What is consistent prefix reads?`, a: `If a sequence of writes happens in a certain order, anyone reading those writes sees them in that same order — prevents causality violations across shards.` },
+      { q: `What is the gap between 'eventual consistency' marketing and actual guarantees?`, a: `Vendors often say 'eventual consistency' without specifying which session guarantees (RYOW, monotonic reads, etc.) they provide — you must read fine print to know the real behavior.` },
+      { q: `What are session guarantees?`, a: `Consistency promises scoped to a single client session — RYOW, monotonic reads, monotonic writes, and writes-follow-reads are the classic four.` },
+    ],
   },
 
   // ── PARTITIONING ─────────────────────────────────────────────────────────────
@@ -1148,6 +1348,16 @@ The trade-off: I cannot do a single range scan across all sensors for a given ti
 For hot sensor IDs (sensors that report at 1000x the average rate), I apply sub-partitioning: split the hot sensor's data across multiple partitions using a composite key of (sensor_id + bucket, where bucket = hash(timestamp) % 10). Reads from this sensor merge 10 sub-partitions.`,
       },
     ],
+    quickFire: [
+      { q: `What is the main advantage of key range partitioning over hash partitioning?`, a: `Efficient range scans. Keys in a given range are co-located on one or a few partitions, so a range query touches a bounded number of partitions rather than scatter/gathering all partitions.` },
+      { q: `Why does using a timestamp as the partition key cause hot spots in range partitioning?`, a: `All new writes arrive with the current timestamp, which falls in the same partition range. All write load concentrates on that one partition while past-timestamp partitions sit idle.` },
+      { q: `How many vnodes does Cassandra assign to each physical node by default?`, a: `256 virtual nodes per physical node, distributed around the consistent hash ring to balance load and minimize data movement when nodes join or leave.` },
+      { q: `What does scatter/gather mean in the context of hash-partitioned range queries?`, a: `The query is sent (scattered) to all partitions because hash ordering does not match key ordering. Each partition returns its matching records, and the coordinator gathers and merges the results.` },
+      { q: `What fraction of keys must move when a node is added in naive modulo-based partitioning versus consistent hashing?`, a: `Modulo: approximately (n-1)/n keys must move. Consistent hashing: approximately 1/n keys move (only those in the new node's neighborhood on the ring).` },
+      { q: `What is Cassandra's compound partition key and what problem does it solve?`, a: `The partition key component is hashed to select the node; the clustering columns are sorted within the partition. This enables range queries within a partition while distributing data evenly across nodes by hash.` },
+      { q: `How do you mitigate a hot key from a celebrity user in a hash-partitioned system?`, a: `Append a random suffix (e.g., 2 digits) to split writes across 100 partitions. Reads must then query all 100 suffix variants and aggregate, trading read cost for write distribution.` },
+      { q: `HBase uses what type of partitioning and what does it call its partitions?`, a: `Key range partitioning. HBase calls its partitions 'regions'. Regions auto-split when they exceed a configured size (default 10GB) and auto-merge when they fall below a threshold.` },
+    ],
   },
 
   {
@@ -1193,6 +1403,16 @@ In Elasticsearch: shards move as complete atomic units. The source shard continu
 In both cases, the key invariant is: data is available for reads from at least one node throughout the move. The transfer is copy-then-switch, not move-then-switch.`,
       },
     ],
+    quickFire: [
+      { q: `Why should you NOT use hash mod N for partitioning?`, a: `If N (the number of nodes) changes, almost every key maps to a different node — requiring a full data reshuffle, which is extremely expensive.` },
+      { q: `What is the fixed number of partitions strategy?`, a: `Create many more partitions than nodes upfront (e.g., 1000 partitions for 10 nodes). When nodes are added, whole partitions are moved — no key rehashing needed.` },
+      { q: `What is dynamic partitioning?`, a: `Partitions split when they grow above a threshold and merge when they shrink — used by HBase and MongoDB. Partition count adapts to data volume.` },
+      { q: `What is proportional-to-nodes partitioning?`, a: `Each node has a fixed number of partitions. When a node joins, it splits some existing partitions and takes half — used by Cassandra.` },
+      { q: `What is request routing in a partitioned system?`, a: `Determining which node to contact for a given key. Options: any node forwards, a routing tier, or clients know the partition mapping directly.` },
+      { q: `How does ZooKeeper help with request routing?`, a: `Nodes register their partition assignments in ZooKeeper. Routing tiers or clients subscribe to ZooKeeper for up-to-date partition-to-node mappings.` },
+      { q: `How does Cassandra handle request routing without ZooKeeper?`, a: `Cassandra uses a gossip protocol — nodes exchange state with each other, so every node eventually knows the partition assignments of every other node.` },
+      { q: `What is the key trade-off between fixed vs dynamic partitioning?`, a: `Fixed partitions are simpler but require guessing the right count upfront; dynamic partitions adapt automatically but add complexity from split/merge operations.` },
+    ],
   },
 
   {
@@ -1237,6 +1457,16 @@ The result: reads require one round-trip to all shards (O(shards) network calls)
 
 Optimization: routing keys. If the query filters on a field that is also the routing key (e.g., a tenant_id), Elasticsearch routes the query only to shards that contain that tenant's data, eliminating the scatter to irrelevant shards.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the read cost of a local (document-partitioned) secondary index?`, a: `Scatter/gather: the read must query every partition's local index and merge results, making read latency proportional to the slowest partition's response time.` },
+      { q: `Why are DynamoDB GSI reads eventually consistent?`, a: `GSI updates are applied asynchronously after the base table write succeeds. There is a propagation delay, so a GSI read immediately after a write may not reflect the write.` },
+      { q: `What does ZooKeeper store in a Kafka cluster?`, a: `Partition-to-broker assignments, consumer group offsets (in older versions), controller election, and topic configuration. When a partition is reassigned, ZooKeeper notifies all brokers and consumer groups.` },
+      { q: `What does a MOVED response mean in Redis Cluster?`, a: `The client sent a request to a node that does not own the key's hash slot. The response contains the address of the node that does own the slot. The client should update its local slot map and retry at the new address.` },
+      { q: `What is the bootstrapping problem with dynamic partitioning?`, a: `A new cluster starts with a single partition covering the entire key space, so all initial writes go to one node. Auto-split does not trigger until enough data accumulates. Pre-splitting the key range at cluster creation avoids this.` },
+      { q: `Which secondary index approach does Elasticsearch use?`, a: `Document-partitioned (local) secondary indexes. Each shard maintains its own Lucene index. A search query is scattered to all shards and results are gathered and merged at the coordinating node.` },
+      { q: `What is the overhead of adding a 100th partition to a fixed-partition cluster with 1000 total partitions?`, a: `Approximately 10 partitions are moved from each of the 99 existing nodes to the new node, distributing the data movement across all nodes and allowing it to proceed in parallel.` },
+      { q: `In a term-partitioned global secondary index, how many index partitions does a write to a document with 5 indexed fields touch?`, a: `Up to 5 index partitions, one per indexed term (though terms may hash to the same index partition). The data partition is also updated, so a single write can touch up to 6 partitions.` },
     ],
   },
 
@@ -1290,6 +1520,16 @@ Fsync is the critical operation. Without fsync, the WAL is only in the OS page c
 For multi-server durability (protecting against the entire machine failing): replication to another node with synchronous replication ensures the WAL entry is committed to disk on at least two machines before the client acknowledgment.`,
       },
     ],
+    quickFire: [
+      { q: `Who coined the ACID acronym and when?`, a: `Andreas Haerder and Andreas Reuter in their 1983 paper 'Principles of Transaction-Oriented Database Recovery.'` },
+      { q: `Which ACID property is primarily the application's responsibility, not the database's?`, a: `Consistency (the C). The database provides tools (constraints, atomicity, isolation) but business invariants must be defined and enforced by the application.` },
+      { q: `What does PostgreSQL's default isolation level provide?`, a: `Read committed. Not full serializability. This means some anomalies (read skew, write skew, phantom reads) are possible unless the application explicitly uses SERIALIZABLE or REPEATABLE READ.` },
+      { q: `What does fsync do and why does it matter for durability?`, a: `fsync forces the OS to flush its write buffer to physical storage. Without it, a crash can lose WAL records that the OS had buffered in DRAM, causing committed transaction data to be lost.` },
+      { q: `What does BASE stand for?`, a: `Basically Available, Soft state, Eventually consistent. A design philosophy for distributed NoSQL systems that trades strict ACID guarantees for higher availability and partition tolerance.` },
+      { q: `Is ACID atomicity about concurrency?`, a: `No. ACID atomicity is about fault handling — making a transaction all-or-nothing. Concurrency control is the job of Isolation. The word 'atomic' is used in a different sense than in CPU atomic operations.` },
+      { q: `What mechanism allows a database to roll back an incomplete transaction after a crash?`, a: `The WAL's undo log (before-images of modified data). On recovery, the database reads the WAL backward from the crash point and reverses each uncommitted change to restore the pre-transaction state.` },
+      { q: `Can perfect durability be achieved?`, a: `No. Physical disasters (simultaneous disk failures, datacenter fires destroying all replicas, firmware bugs in storage controllers) can defeat any durability mechanism. ACID durability reduces but cannot eliminate data loss probability.` },
+    ],
   },
 
   {
@@ -1338,6 +1578,16 @@ Serializable isolation prevents write skew by detecting that Alice and Bob's tra
 
 In PostgreSQL, use SET TRANSACTION ISOLATION LEVEL SERIALIZABLE for the doctor-on-call pattern. For most other patterns (no write skew risk), snapshot isolation is sufficient and more performant.`,
       },
+    ],
+    quickFire: [
+      { q: `What isolation level does PostgreSQL use by default?`, a: `Read committed. This prevents dirty reads and dirty writes but allows read skew (non-repeatable reads), lost updates, and write skew.` },
+      { q: `Does MVCC use read locks?`, a: `No. Readers select an appropriate row version based on transaction ID rules without acquiring any locks. This is why readers never block writers and writers never block readers in MVCC systems.` },
+      { q: `What are the two system columns PostgreSQL adds to every row for MVCC?`, a: `xmin (transaction ID of the inserting transaction) and xmax (transaction ID of the deleting transaction, null if the row is still current).` },
+      { q: `Does snapshot isolation prevent write skew?`, a: `No. Write skew (two transactions reading the same data and writing to disjoint rows in a way that together violates an invariant) is not prevented by snapshot isolation. It requires serializable isolation or SELECT FOR UPDATE.` },
+      { q: `What happens to old row versions in PostgreSQL's MVCC and what cleans them up?`, a: `Old versions are retained on disk (dead tuples) until VACUUM determines no running transaction has a snapshot older than the version. Long-running transactions can block VACUUM and cause table bloat.` },
+      { q: `What does Oracle call its snapshot isolation level, and why is that misleading?`, a: `Oracle calls it SERIALIZABLE. It is misleading because it does not provide true serializability — write skew is still possible. Oracle's SERIALIZABLE is snapshot isolation, not the fully serial guarantee implied by the name.` },
+      { q: `What is Serializable Snapshot Isolation (SSI)?`, a: `PostgreSQL's implementation of true serializable isolation since version 9.1. It runs snapshot isolation but tracks read-write dependencies and aborts transactions that form dangerous cycles, achieving serializability without the throughput cost of two-phase locking.` },
+      { q: `What is a phantom read and which isolation level prevents it?`, a: `A phantom read is when a range query run twice in the same transaction returns different sets of rows because another transaction inserted or deleted matching rows between the two executions. Serializable isolation prevents phantom reads. Snapshot isolation prevents most phantom reads in practice but not formally.` },
     ],
   },
 
@@ -1389,6 +1639,16 @@ Fix 3 — Unique constraint: model the booking as an INSERT with a UNIQUE constr
 I use fix 3 where possible: it requires no transaction isolation management and the unique constraint is enforced atomically by the database. Fix 2 is appropriate when the conflict check is more complex than a unique key. Fix 1 is a last resort for complex write skew patterns.`,
       },
     ],
+    quickFire: [
+      { q: `What is the difference between a lost update and write skew?`, a: `Lost update is a same-object problem: two transactions both read and write the same row, one write overwrites the other. Write skew is a multi-object problem: two transactions read overlapping data, make decisions, write to different objects, and the combined result violates an invariant.` },
+      { q: `Does snapshot isolation prevent write skew?`, a: `No. Snapshot isolation (MVCC, the default in PostgreSQL as REPEATABLE READ) prevents dirty reads, non-repeatable reads, and lost updates via detection, but it does not prevent write skew. Write skew requires serializable isolation or explicit SELECT FOR UPDATE.` },
+      { q: `What is a phantom read?`, a: `A transaction queries rows matching a condition, another transaction inserts a row that matches that condition and commits, and the first transaction re-reads and sees a different result set. The inserted row is the phantom.` },
+      { q: `How does SELECT FOR UPDATE prevent write skew?`, a: `It locks the rows whose values informed the decision, not just the rows being written. The second transaction blocks on acquiring those locks, re-reads after the first commits, and sees the updated state before making its own decision.` },
+      { q: `What is materializing conflicts?`, a: `Pre-creating concrete rows (e.g., one row per room-timeslot) so that SELECT FOR UPDATE can acquire a lock on an existing row, converting a phantom into a lockable conflict. It is a workaround for cases where predicate locks are unavailable.` },
+      { q: `What SQLSTATE code does PostgreSQL return when SSI aborts a transaction?`, a: `40001 (serialization_failure). The application must catch this and retry the transaction from the beginning.` },
+      { q: `Can atomic SQL operations like UPDATE counter = counter + 1 prevent write skew?`, a: `No. Atomic operations prevent lost updates on a single column by making the read-modify-write atomic. Write skew involves decisions spanning multiple rows or objects; atomic single-row operations do not address cross-row invariants.` },
+      { q: `Name three databases that detect lost updates automatically under snapshot isolation.`, a: `PostgreSQL (snapshot isolation / REPEATABLE READ detects lost updates since version 9.1 via SSI-lite), SQL Server (SNAPSHOT isolation level), and Oracle (Serializable which is actually snapshot isolation also performs lost update detection).` },
+    ],
   },
 
   {
@@ -1432,6 +1692,15 @@ Example: a reporting dashboard that reads many rows for aggregation while backgr
 
 PostgreSQL uses SSI for SERIALIZABLE isolation (since PostgreSQL 9.1). MySQL InnoDB uses a combination of MVCC (for reads) and 2PL (for writes). In practice, the choice of database determines the isolation implementation; you choose the isolation level, not the mechanism.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the key difference between 2PL and MVCC with respect to readers and writers?`, a: `In 2PL, readers block writers and writers block readers. In MVCC (snapshot isolation), readers never block writers and writers never block readers because each transaction reads a consistent snapshot.` },
+      { q: `What SQLSTATE does PostgreSQL return for a serialization failure under SSI?`, a: `40001 (serialization_failure). The application must catch this, roll back, and retry the entire transaction.` },
+      { q: `What is the growing phase in 2PL?`, a: `Phase 1, where a transaction acquires locks but does not release any. Locks can only be released during Phase 2 (shrinking phase), after the transaction has decided to commit or abort.` },
+      { q: `Name three production databases that use SSI.`, a: `PostgreSQL (SERIALIZABLE isolation level, since 9.1), CockroachDB (default isolation), and FoundationDB.` },
+      { q: `What is an index-range lock and why is it used instead of predicate locks?`, a: `An index-range lock locks a range of values in an existing index, approximating a predicate lock. It is used because true predicate locks (locking based on arbitrary search conditions) are expensive to track. Index-range locks are a practical approximation that prevents most phantom reads.` },
+      { q: `Why does deadlock rate grow super-linearly with the number of concurrent transactions in 2PL?`, a: `Because each additional transaction adds potential waiter-for edges with all other transactions. The probability of a cycle grows faster than linearly, making deadlocks increasingly frequent as concurrency increases.` },
+      { q: `What are the two conditions required for actual serial execution to achieve high throughput?`, a: `All data must fit in RAM (no disk I/O blocking the single thread), and transactions must use stored procedures to eliminate network round-trips between the application and database during a transaction.` },
     ],
   },
 
@@ -1483,6 +1752,15 @@ Implementation details: the idempotency key and result are stored in a fast key-
 For operations where full idempotency is not achievable (e.g., sending an email), idempotency at the operation level is replaced by at-least-once semantics plus deduplication at the delivery layer.`,
       },
     ],
+    quickFire: [
+      { q: `Name four scenarios that look identical to a caller when a request receives no response.`, a: `Request lost in transit, response lost in transit, server crashed before processing, server alive but paused (GC or OS preemption). No timeout can distinguish these scenarios.` },
+      { q: `What is the typical NTP clock accuracy in a well-managed data center?`, a: `10-100ms. Google TrueTime (GPS + atomic clocks) achieves 0-7ms bounded uncertainty.` },
+      { q: `Why can a JVM garbage collector pause create a split-brain in a distributed lock system?`, a: `A GC stop-the-world pause can last 10+ seconds, longer than a lock lease. The process wakes up believing it holds the lock, but the lease expired during the pause and another node acquired the lock. Both nodes now believe they hold an exclusive lock.` },
+      { q: `What does a Lamport timestamp guarantee?`, a: `If event A causally happened before event B, then A's Lamport timestamp is less than B's. It does not guarantee the converse: a lower timestamp does not necessarily mean the event happened first in wall-clock time.` },
+      { q: `What is the difference between a synchronous and asynchronous network?`, a: `A synchronous network (like telephone circuit switching) provides bounded delay guarantees. An asynchronous network (like the internet) queues packets with no upper bound on delay. Distributed systems built on the internet must assume unbounded delay.` },
+      { q: `Why must a distributed leader step down even if it disagrees with the quorum's decision?`, a: `A node cannot trust its own judgment in a distributed system. It may have been partitioned, paused, or misinformed. Quorum decisions define truth by majority, and the leader must respect the quorum's verdict to prevent split-brain.` },
+      { q: `What is commit-wait in Google Spanner and why is it needed?`, a: `Commit-wait is a delay imposed after acquiring a commit timestamp: the transaction waits until TT.now().earliest > commit_timestamp, ensuring that no future transaction can be assigned an earlier timestamp. It guarantees real-time ordering of transactions across globally distributed nodes.` },
+    ],
   },
 
   {
@@ -1531,6 +1809,16 @@ The result: LWW with wall clocks silently discards writes. There is no error, no
 
 Safe alternatives: use logical clocks (Lamport timestamps or HLC) which capture causality without relying on synchronized clocks. Or use CRDTs that merge concurrent writes without discarding either. Or use serializable transactions that route all writes through a single ordered log.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the difference between a time-of-day clock and a monotonic clock?`, a: `Time-of-day clocks return the current wall-clock time and can jump backward (NTP sync). Monotonic clocks only move forward and are used for measuring elapsed time.` },
+      { q: `Why can't you use wall-clock time to order events in a distributed system?`, a: `Clocks on different machines drift and are periodically corrected by NTP — two nodes' clocks may disagree by milliseconds to seconds, making timestamp ordering unreliable.` },
+      { q: `What is NTP clock skew?`, a: `The difference between a node's local clock and the true time. NTP reduces but never eliminates skew — typical drift is tens of milliseconds, worst case seconds.` },
+      { q: `What is Google's TrueTime API?`, a: `Used in Spanner — returns a time interval [earliest, latest] rather than a single timestamp, explicitly representing clock uncertainty. Spanner waits out the interval before committing.` },
+      { q: `What is a process pause in the context of distributed systems?`, a: `A process can be stopped for an unpredictable duration — GC pause, VM migration, OS scheduling, disk I/O — during which it can't detect that time has passed or leases have expired.` },
+      { q: `Why are process pauses dangerous for distributed leases?`, a: `A node may believe it holds a lease, pause, and resume after the lease expired — it can then make writes believing it's the leader when another node has already taken over.` },
+      { q: `What is clock confidence interval and why does it matter?`, a: `The range of uncertainty in a clock reading. Systems like Spanner use it to ensure causality — by waiting for the uncertainty window to pass before making a transaction visible.` },
+      { q: `Can monotonic clocks be used across machines?`, a: `No — monotonic clocks have no absolute meaning; they're only meaningful within a single process. You can't compare monotonic timestamps from two different nodes.` },
     ],
   },
 
@@ -1582,6 +1870,15 @@ Balance checks before debit: ensuring a balance is not overdrafted requires that
 For everything else — user profiles, feeds, configurations, analytics — linearizability is not required and the availability tax (becoming unavailable during partitions) is too high. Use eventual consistency or causal consistency instead.`,
       },
     ],
+    quickFire: [
+      { q: `What is the recency guarantee that linearizability provides?`, a: `Once a write completes, all subsequent reads must return that value or a newer one. Once any read returns a new value, no subsequent read from any node can return an old value.` },
+      { q: `Is PostgreSQL REPEATABLE READ linearizable?`, a: `No. REPEATABLE READ uses snapshot isolation, which allows transactions to read from a consistent snapshot that may be stale. Two transactions starting at different times can read different values for the same row simultaneously.` },
+      { q: `Why is partition tolerance not optional in the CAP theorem?`, a: `Network partitions (some nodes unable to communicate with others) happen in any real distributed system. You cannot choose to have no partitions, only to decide how to behave when they occur. So the real choice is C vs A during a partition.` },
+      { q: `What consistency model does Cassandra provide by default?`, a: `Eventual consistency. Cassandra prioritizes availability over linearizability. With QUORUM reads and writes you can get stronger consistency but not linearizability. Cassandra's Lightweight Transactions (using Paxos) provide linearizable compare-and-set for specific operations.` },
+      { q: `What does PACELC add to CAP?`, a: `PACELC adds the latency-vs-consistency tradeoff that exists even without partitions. CAP only describes behavior during partitions, but most of the time systems face a choice between low latency (return local replica's value) and consistency (coordinate with all replicas before returning).` },
+      { q: `For what use cases is linearizability strictly required?`, a: `Leader election (exactly one leader), distributed lock acquisition (exactly one holder), unique constraint enforcement (one user per username), and cross-channel coordination where a reader must not observe a notification before the corresponding data write is visible.` },
+      { q: `What is the difference between linearizability and sequential consistency?`, a: `Linearizability additionally requires that the linearization order must be consistent with real-time order: if operation A completes before operation B begins, A must appear before B. Sequential consistency only requires all nodes to observe the same total order, without the real-time constraint.` },
+    ],
   },
 
   {
@@ -1628,6 +1925,16 @@ The fix: use a total order broadcast mechanism (Kafka partition ordering, a sing
 
 Event sourcing and CQRS (Command Query Responsibility Segregation) systems that use Kafka ensure causal ordering by partitioning events by their aggregate root ID (order_id, user_id) — all events for a single aggregate are in one partition, preserving their causal order.`,
       },
+    ],
+    quickFire: [
+      { q: `What is causal consistency?`, a: `A consistency model where causally related operations are seen in order by all nodes — if A causes B, every node that sees B has already seen A.` },
+      { q: `What is the happened-before relationship?`, a: `Event A happened before event B if A could have causally influenced B — either A happened on the same node before B, or A's result was seen by B's node before B occurred.` },
+      { q: `What are Lamport timestamps?`, a: `A logical clock scheme: each node tracks a counter, incrementing it on each event and setting it to max(local, received) + 1 on message receipt — provides total ordering consistent with causality.` },
+      { q: `What can Lamport timestamps NOT do?`, a: `They cannot tell you if two events are concurrent — if A < B in Lamport order, B might have happened before A in real time. They only enforce a consistent total order.` },
+      { q: `What is total order broadcast?`, a: `A protocol that delivers messages to all nodes in the same order — no node sees message M2 before M1, for all nodes. Used to implement replicated state machines.` },
+      { q: `What is the relationship between total order broadcast and linearizability?`, a: `Total order broadcast is equivalent to consensus — you can build a linearizable register from total order broadcast and vice versa. They're the same problem in different clothing.` },
+      { q: `Why is total order broadcast harder than causal broadcast?`, a: `Causal order only requires agreement on causally related events. Total order requires a globally consistent order for ALL events, even concurrent ones — requiring consensus.` },
+      { q: `How can you use total order broadcast to implement a linearizable compare-and-set?`, a: `Append the operation to the log; it's linearizable because all nodes process the log in the same order — the first successful CAS in the log wins.` },
     ],
   },
 
@@ -1684,6 +1991,15 @@ Once elected, the new leader begins serving requests. If there were uncommitted 
 Recovery time: typically 150-600ms for election timeout + heartbeat propagation. For production systems, this means a leader failure causes roughly 300-600ms of unavailability.`,
       },
     ],
+    quickFire: [
+      { q: `How many nodes can a 5-node Raft cluster lose while maintaining a quorum?`, a: `2 nodes. A quorum requires a strict majority: 3 of 5 nodes must be available. If 3 fail, the remaining 2 cannot form a quorum and the cluster stops accepting writes.` },
+      { q: `What is the purpose of a term number in Raft?`, a: `Terms are monotonically increasing epoch numbers that identify each leader election round. A node that sees a higher term immediately becomes a follower, preventing a partitioned old leader from issuing conflicting writes after a new leader is elected.` },
+      { q: `What is an ephemeral node in ZooKeeper?`, a: `A znode automatically deleted when the client session that created it expires. Used for failure detection: a process registers an ephemeral node on startup; if the process crashes and misses heartbeats, ZooKeeper deletes the node and notifies all watchers.` },
+      { q: `Why is the log completeness property critical in Raft?`, a: `It ensures a candidate can only become leader if its log is at least as up-to-date as a majority of nodes. This guarantees that committed entries (which a majority have appended) are always present in the new leader's log and will never be lost.` },
+      { q: `What replaced ZooKeeper in Kafka and why?`, a: `KRaft (Kafka Raft), an internal Raft-based metadata system using a dedicated quorum of controller brokers. It eliminates the external ZooKeeper dependency, reduces startup time, and supports 10x more partitions per cluster.` },
+      { q: `What does the FLP impossibility result state?`, a: `In a purely asynchronous distributed system with even one crash-faulty process, no deterministic consensus algorithm can guarantee both safety and liveness (termination). Practical algorithms escape this via randomization or partial synchrony assumptions.` },
+      { q: `What is total order broadcast and why is it equivalent to consensus?`, a: `Total order broadcast delivers messages to all nodes in the same total order, with no messages lost. It is equivalent to consensus: given total order broadcast, you can implement consensus (agree on message sequence); given consensus, you can implement total order broadcast (agree on the next message to deliver).` },
+    ],
   },
 
   {
@@ -1739,6 +2055,16 @@ Release: explicitly delete the lock key, releasing the lock before the lease exp
 
 Why CAS is critical: without compare-and-swap, two clients could both read "no lock holder," both decide to write, and both write — two holders simultaneously. etcd's transaction guarantees atomicity of the check and write.`,
       },
+    ],
+    quickFire: [
+      { q: `What is ZooKeeper?`, a: `A distributed coordination service providing linearizable writes, sequential-consistency reads, leader election, distributed locks, and service discovery via a hierarchical namespace.` },
+      { q: `What kind of data does ZooKeeper store?`, a: `Small amounts of slowly-changing metadata — partition assignments, leader identity, service addresses. Not for large or frequently-written data.` },
+      { q: `What are ephemeral nodes in ZooKeeper?`, a: `ZNodes that automatically disappear when the client session that created them ends — used for failure detection since a crashed node's ephemeral nodes are cleaned up automatically.` },
+      { q: `How does ZooKeeper enable leader election?`, a: `Multiple nodes try to create the same ephemeral sequential ZNode; whoever gets the lowest sequence number is leader. Others watch the next-lowest node to detect leadership changes.` },
+      { q: `What consistency does ZooKeeper provide for reads vs writes?`, a: `Writes are linearizable (go through the ZooKeeper leader). Reads are sequentially consistent — they may return slightly stale data but are always from the node's own monotonic log.` },
+      { q: `How does ZooKeeper support distributed locks?`, a: `Clients create ephemeral sequential nodes; the client with the lowest-numbered node holds the lock. When it releases or crashes, the next client's watch fires.` },
+      { q: `What is a ZooKeeper watch?`, a: `A one-time notification mechanism — a client registers a watch on a ZNode and receives an event when that node changes, allowing reactive coordination without polling.` },
+      { q: `What are the limitations of ZooKeeper?`, a: `Not suitable for storing large data volumes, high-throughput writes, or application data — it's designed for coordination metadata only and has limited write throughput.` },
     ],
   },
 
@@ -1799,6 +2125,15 @@ For single-pass ETL (read CSV, transform, write Parquet) where data does not fit
 Spark's additional advantages: a rich API (SQL, DataFrame, MLlib, GraphX), interactive querying via spark-shell, and better support for streaming (Spark Structured Streaming) vs MapReduce's batch-only model.`,
       },
     ],
+    quickFire: [
+      { q: `What is the default HDFS block size and replication factor?`, a: `128MB block size, 3x replication across different nodes and racks.` },
+      { q: `What is a combiner in MapReduce and when can it be used?`, a: `A combiner is an optional local aggregation step run after Map and before shuffle. It reduces the data transferred during shuffle. It can only be used for commutative and associative operations (like sum, count, max) where partial aggregation does not change the final result.` },
+      { q: `Why does Spark outperform MapReduce for iterative machine learning jobs?`, a: `Spark keeps intermediate datasets in memory (RDDs), avoiding disk I/O between iterations. MapReduce writes all intermediate output to HDFS between stages. An iterative ML algorithm with 100 iterations would read/write HDFS 100 times in MapReduce vs once in Spark.` },
+      { q: `What happens if a Map task fails mid-execution?`, a: `The framework re-schedules the failed Map task on another node. The failed task's partial output on local disk is discarded. Only the specific failed task is retried, not the entire job. This is safe because Map tasks are deterministic and idempotent.` },
+      { q: `What is speculative execution and why is determinism required?`, a: `Speculative execution launches a duplicate copy of a slow task on another node, using whichever finishes first. Determinism is required because both copies of the task must produce identical output; otherwise the framework cannot safely choose between two different results.` },
+      { q: `What does the NameNode store and why is it a single point of failure concern?`, a: `The NameNode stores all HDFS filesystem metadata in memory: file-to-block mappings, block-to-DataNode mappings, and filesystem namespace. If the NameNode fails without a backup (HDFS HA uses a standby NameNode with shared edit log via ZooKeeper), the entire HDFS cluster is unavailable even though DataNodes are fine.` },
+      { q: `How does MapReduce ensure output atomicity?`, a: `Tasks write to a temporary directory. On successful completion, the output is renamed (atomically, using HDFS's rename operation) to the final output directory. If a task fails, the temporary output is discarded. Readers only see complete output, never partial results.` },
+    ],
   },
 
   {
@@ -1847,6 +2182,15 @@ Flink's watermark and event-time model is also more sophisticated. When processi
 
 For batch ETL, data warehouse loading, and ML training data preparation — workloads with no latency requirement — Spark is simpler, has a larger ecosystem (Delta Lake, MLlib), and is generally the better choice.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the core problem with MapReduce's fault tolerance approach?`, a: `MapReduce materializes all intermediate results to HDFS after each map and reduce phase — this is very slow due to repeated disk I/O even when no failure occurs.` },
+      { q: `How do dataflow engines like Spark differ from MapReduce?`, a: `Operators can be composed into a pipeline without forcing a sort-and-shuffle between every step. Intermediate results can stay in memory rather than being written to disk.` },
+      { q: `What is a dataflow engine operator?`, a: `A processing function (analogous to a mapper or reducer) that consumes input partitions and produces output — but without MapReduce's rigid map → shuffle → reduce structure.` },
+      { q: `How does Spark handle fault tolerance without materializing intermediate results?`, a: `Spark tracks the lineage of each RDD (how it was computed). On failure, it recomputes only the lost partitions from the last checkpointed or source data.` },
+      { q: `What is the key advantage of Flink's streaming-first model?`, a: `Flink treats batch as a special case of streaming — the same engine handles both, and fault tolerance uses checkpointing rather than materializing all intermediate state.` },
+      { q: `Why does avoiding the sort-and-shuffle matter?`, a: `The shuffle requires all map tasks to finish before any reduce task can start, plus it writes all intermediate data to disk — skipping it when unnecessary dramatically reduces latency.` },
+      { q: `What is a broadcast join in dataflow engines?`, a: `A small dataset is sent (broadcast) to every partition of a large dataset so each partition can join locally — avoids a shuffle entirely when one side fits in memory.` },
     ],
   },
 
@@ -1897,6 +2241,16 @@ Manual hints: in Spark SQL, you can force a join strategy with hints: SELECT /*+
 
 Practical tuning: for a star-schema join (one large fact table, several small dimension tables), setting autoBroadcastJoinThreshold to 256MB and pre-caching dimension tables eliminates all shuffle joins, typically reducing job runtime by 3-5x.`,
       },
+    ],
+    quickFire: [
+      { q: `What is a sort-merge join in MapReduce?`, a: `Both input datasets are keyed by the join key and sent through the shuffle — after sorting, records with the same key arrive together at the reducer, where the join is performed.` },
+      { q: `What is a broadcast hash join?`, a: `The smaller dataset is loaded into a hash table in memory on each mapper. The mapper scans the larger dataset and looks up join keys in the in-memory hash table — no shuffle needed.` },
+      { q: `What is a partitioned hash join?`, a: `Both datasets are partitioned by the same join key hash so matching keys end up in the same partition. Each partition pair is then joined in memory — requires both sides to partition consistently.` },
+      { q: `What is a hot key in batch joins, and why is it a problem?`, a: `A key that appears disproportionately often (e.g., a celebrity user). All records with that key go to one reducer, causing skew — that reducer becomes a bottleneck.` },
+      { q: `How can you mitigate hot key skew in sort-merge joins?`, a: `Split the hot key's records across multiple reducers by appending a random suffix — then combine partial results. Or use a separate broadcast join for the hot-key side.` },
+      { q: `What is GROUP BY skew and how do you handle it?`, a: `Aggregating a hot key produces a massive intermediate group. Mitigate with two-phase aggregation: partially aggregate with a random reducer key, then combine partial results.` },
+      { q: `What is the difference between a reduce-side join and a map-side join?`, a: `Reduce-side joins shuffle data by key and join in reducers — flexible but expensive. Map-side joins (broadcast or partitioned hash) avoid the shuffle entirely — faster but require assumptions about input.` },
+      { q: `When is a broadcast hash join not applicable?`, a: `When the smaller dataset doesn't fit in memory on each mapper — you need a partitioned hash join or sort-merge join instead.` },
     ],
   },
 
@@ -1956,6 +2310,16 @@ Example: an e-commerce order lifecycle — OrderPlaced, PaymentConfirmed, OrderS
 Tradeoff: ordering per key means one partition per key in the extreme case. More partitions allow more parallelism (more consumers) but require careful key selection to balance load. A skewed key distribution (one order_id with 10M messages) creates a hot partition.`,
       },
     ],
+    quickFire: [
+      { q: `What is the fundamental difference between Kafka and RabbitMQ in terms of message retention?`, a: `RabbitMQ deletes messages after acknowledgment; they are not replayable. Kafka retains messages on disk for a configurable period regardless of consumption. Any consumer can read from any offset, enabling replay and multiple independent downstream consumers.` },
+      { q: `How does Kafka ensure exactly-once delivery semantics?`, a: `Kafka provides exactly-once within Kafka using idempotent producers (sequence numbers prevent duplicate writes on retry) and transactions (atomic write across multiple partitions, including the __consumer_offsets topic). End-to-end exactly-once also requires idempotent downstream writes.` },
+      { q: `What is log compaction and when would you use it?`, a: `Log compaction retains only the latest value per key, deleting older values with the same key. Use it when a topic represents a changelog (CDC, event sourcing) and consumers need to reconstruct current state without replaying all history. New consumers can read from the beginning of a compacted topic to get the current snapshot.` },
+      { q: `You have a Kafka topic with 8 partitions and 10 consumers in one group. What happens?`, a: `Only 8 consumers are active (one per partition). The remaining 2 consumers are idle. To utilize all 10 consumers, you need at least 10 partitions.` },
+      { q: `What is the stream-table duality?`, a: `A stream is a sequence of change events; a table is the aggregated current state. A table can be derived from a stream by applying all changes. A stream can be derived from a table by emitting a change event on every insert, update, or delete. Kafka Streams and Flink exploit this to join streams with tables.` },
+      { q: `Why does Kafka use the sendfile system call?`, a: `sendfile is a Linux kernel optimization that copies data from disk (page cache) directly to the network socket without passing through user-space memory. This eliminates two memory copies, reduces CPU usage, and is a primary reason for Kafka's high throughput at low CPU cost.` },
+      { q: `What is the at-least-once delivery guarantee and when is it violated in Kafka?`, a: `At-least-once means a message is delivered one or more times; duplicates are possible but no messages are lost. In Kafka, at-least-once is violated (becoming at-most-once) if you commit the offset before successfully processing the message, causing the message to be skipped if the consumer crashes after committing but before processing.` },
+      { q: `What determines which partition a Kafka producer writes a message to?`, a: `If a partition key is specified, the key is hashed (murmur2 hash) modulo the number of partitions, deterministically routing all messages with the same key to the same partition. If no key is specified, messages are distributed round-robin across partitions (or using sticky partitioner for batching efficiency in Kafka 2.4+).` },
+    ],
   },
 
   {
@@ -2003,6 +2367,16 @@ Keeping the table fresh: use CDC (Change Data Capture) — Debezium reads the Po
 
 Handling missing user records: if a purchase event arrives for a user_id that is not yet in the state store (new user whose record has not yet been captured by CDC), buffer the purchase event for a short window (e.g., 30 seconds) and retry the lookup. If still missing, enrich with defaults and flag for re-processing.`,
       },
+    ],
+    quickFire: [
+      { q: `What are the three types of joins in stream processing?`, a: `Stream-stream join (windowed), stream-table join (enrichment), and table-table join (materialized view maintenance).` },
+      { q: `What is a stream-stream join?`, a: `Both sides are streams of events. Events within a time window are matched on a join key — requires buffering one or both sides until the window closes.` },
+      { q: `What is a stream-table join?`, a: `One side is a stream of events; the other is a database table (or changelog). The stream is enriched by looking up the current state of the table at the time of each event.` },
+      { q: `What is a table-table join?`, a: `Both sides are changelogs (CDC streams). The join materializes a view that is kept up-to-date as both tables change — like a continuously maintained JOIN in a database.` },
+      { q: `What ordering issue affects stream-stream joins?`, a: `Events from two streams may arrive out of order. If a user action on stream A happened before a related event on stream B, A might arrive late — requiring either buffering or accepting approximate results.` },
+      { q: `How does a stream-table join handle table updates?`, a: `The processor keeps a local copy of the table (updated via a changelog). When a stream event arrives, it looks up the table's state at that moment — called enrichment.` },
+      { q: `What happens if the table changes after a stream event was already processed in a stream-table join?`, a: `The event was joined against the table's state at event-processing time. If you want point-in-time accuracy, you need event-time-based lookups with versioned table state.` },
+      { q: `Why are stream joins harder than batch joins?`, a: `Stream joins are stateful and unbounded — you must decide how long to buffer for out-of-order data and how to handle late arrivals, whereas batch joins see the complete, bounded dataset.` },
     ],
   },
 
@@ -2060,6 +2434,16 @@ Failure handling: if a TaskManager fails before the checkpoint completes, the pr
 End result: each input event causes exactly one output record to be durably committed to the Kafka output topic.`,
       },
     ],
+    quickFire: [
+      { q: `What is microbatching in Spark Streaming?`, a: `The stream is broken into small time-based batches (e.g., every second) and processed like a mini-batch job — exactly-once semantics via batch retries, but adds latency.` },
+      { q: `What is checkpointing in Flink?`, a: `Flink periodically snapshots all operator state to durable storage. On failure, it rolls back all operators to the last consistent checkpoint and replays input from that point.` },
+      { q: `What is the difference between at-least-once and exactly-once processing?`, a: `At-least-once may process an event multiple times on retry. Exactly-once ensures each event affects state exactly once — requires idempotency or atomic commits.` },
+      { q: `What makes a producer idempotent in Kafka?`, a: `Kafka assigns each producer a PID and sequence number. The broker deduplicates retried messages using these IDs, so duplicate sends don't produce duplicate records.` },
+      { q: `What is an idempotent consumer?`, a: `A consumer that can safely process the same message multiple times and produce the same output — achieved by deduplicating on a message ID or making writes naturally idempotent.` },
+      { q: `What is the challenge of exactly-once across heterogeneous systems?`, a: `If a stream processor writes to both Kafka and a database, you need an atomic commit spanning both — different from a single-system transaction. Requires two-phase commit or careful offset management.` },
+      { q: `How does Kafka Streams achieve exactly-once?`, a: `Uses Kafka transactions — reading offsets and writing output are committed atomically to Kafka, so a failure rolls back both the consumed offset and the produced output.` },
+      { q: `What is the trade-off of microbatching vs true streaming for fault tolerance?`, a: `Microbatching is simpler (reuse batch fault-tolerance) but adds inherent latency from batch intervals. True streaming (Flink) has lower latency but more complex checkpointing logic.` },
+    ],
   },
 
   {
@@ -2115,6 +2499,15 @@ Latency: typically 1-5 seconds from database write to Elasticsearch visibility. 
 Initial load: for an existing database, Debezium performs an initial snapshot (full table scan to emit all existing rows as INSERT events) before switching to WAL-based CDC. This seeds Elasticsearch with the current data before the real-time sync begins.`,
       },
     ],
+    quickFire: [
+      { q: `What PostgreSQL configuration is required to enable Debezium CDC?`, a: `Set wal_level = logical in postgresql.conf (requires restart), ensure max_replication_slots >= 1 and max_wal_senders >= 1, and grant the REPLICATION role to the Debezium user.` },
+      { q: `Why is MySQL statement-based binlog unsuitable for CDC?`, a: `Statement-based logging records SQL text rather than row changes. Non-deterministic functions (NOW(), UUID(), RAND()) produce different values when re-executed, making the log unreliable for CDC. Row-based logging must be used.` },
+      { q: `What is the operational risk of an unmonitored PostgreSQL replication slot?`, a: `PostgreSQL retains WAL segments from the slot's confirmed position onward. If Debezium stops consuming, WAL accumulates indefinitely, eventually filling the disk and crashing the database by preventing further writes.` },
+      { q: `How does a Kafka compacted topic behave like a key-value store?`, a: `Log compaction keeps only the latest value per key, deleting older values with the same key. A consumer reading from offset 0 receives the current value for every key, equivalent to a full table scan of a key-value store.` },
+      { q: `What is the outbox pattern and what problem does it solve?`, a: `The outbox pattern writes to the application table and an outbox table in a single database transaction, ensuring atomicity. A separate publisher reads the outbox and publishes to Kafka. It solves the dual-write problem: preventing the case where the database is updated but the Kafka event is not published (or vice versa).` },
+      { q: `What is the difference between event sourcing and CDC?`, a: `Event sourcing makes events the primary data model (application writes events, state is derived). CDC derives events from an existing relational database's WAL as a side effect of normal writes. Event sourcing requires application redesign; CDC retrofits event-streaming benefits onto existing databases.` },
+      { q: `What does a Debezium change event contain?`, a: `Source metadata (table, database, commit timestamp, WAL position), operation type (c=create, u=update, d=delete, r=read/snapshot), before image (previous row values), and after image (new row values). The schema is registered in Confluent Schema Registry for typed deserialization.` },
+    ],
   },
 
   // ── DATA INTEGRATION ──────────────────────────────────────────────────────────
@@ -2167,6 +2560,15 @@ The enablers that made Kappa practical: (1) Flink and Spark Structured Streaming
 
 Lambda is still justified when: the stream processor genuinely cannot reprocess historical data fast enough within the SLA, or when batch accuracy (e.g., exact deduplication across 5 years of data) requires algorithms that are not feasible in streaming.`,
       },
+    ],
+    quickFire: [
+      { q: `What is the main operational problem with Lambda architecture?`, a: `Maintaining two separate codepaths (batch logic in Spark/MapReduce and streaming logic in Storm/Flink) that implement the same business logic. They drift over time, causing divergent results and doubled debugging effort.` },
+      { q: `In Kappa architecture, how do you reprocess historical data after a bug fix?`, a: `Deploy a new version of the streaming job starting from Kafka offset 0, process all historical events in parallel with the production job, wait until it catches up to real-time, then cut over traffic to the new job and decommission the old one.` },
+      { q: `What does Apache Flink mean when it says batch is a special case of streaming?`, a: `Flink uses the same operator graph for both batch (bounded data source, process to completion) and streaming (unbounded data source, process continuously). The same code and APIs work for both; only the data source differs (a file vs a live Kafka topic).` },
+      { q: `Why is event-time windowing preferred over processing-time windowing for analytics?`, a: `Event-time windowing groups events by when they actually occurred (the event's timestamp). Processing-time windowing groups them by when the streaming processor received them. Late-arriving events (due to network delays, mobile apps reconnecting) are placed in the wrong window with processing-time, causing incorrect aggregates.` },
+      { q: `What is the serving layer's role in Lambda architecture?`, a: `The serving layer merges the batch view (accurate historical data) and the speed view (real-time data covering the current batch window gap) at query time. It presents a unified answer to queries that includes both historical accuracy and real-time freshness.` },
+      { q: `Name two streaming systems that implement the Kappa pattern natively.`, a: `Apache Flink (supports both bounded and unbounded sources with the same job) and Kafka Streams (processes Kafka topics from any offset, enabling historical replay via consumer group offset reset).` },
+      { q: `What is Apache Beam and how does it relate to Lambda/Kappa?`, a: `Apache Beam is Google's unified programming model (open-sourced from the Dataflow paper) that provides a single API for batch and streaming via PCollections, PTransforms, windowing, and watermarks. It runs on multiple runners (Flink, Spark, Dataflow), implementing the Kappa principle of one codebase for both modes.` },
     ],
   },
 
@@ -2229,6 +2631,16 @@ Event bus: Kafka connects all systems. PostCreated, UserUpdated, RelationshipCre
 Operational trade-off: this is 7-8 systems with complex interdependencies. For the first 10K users, a single PostgreSQL instance with pg_search and pg_trgm for search is operationally far simpler. The unbundled architecture is justified when PostgreSQL cannot serve the combined read load or when specialized capabilities (Elasticsearch's relevance ranking, Cassandra's write throughput) become necessary.`,
       },
     ],
+    quickFire: [
+      { q: `What does 'unbundling the database' mean?`, a: `Instead of one monolithic database handling storage, indexing, caching, search, and replication, you compose specialized tools (Kafka, Elasticsearch, Redis, Flink) coordinated by derived data pipelines.` },
+      { q: `What is the Unix philosophy applied to databases?`, a: `Small, focused tools that do one thing well, composed via standard interfaces (like Unix pipes) — rather than one tool trying to do everything.` },
+      { q: `What is derived data in this context?`, a: `Data that is computed from a primary source of truth — indexes, caches, search replicas, materialized views. They can always be rebuilt by reprocessing the source.` },
+      { q: `What is the Lambda architecture?`, a: `A pattern with two parallel pipelines: a batch layer (recomputes from raw data periodically) and a speed layer (processes recent data in real time). Results are merged at query time.` },
+      { q: `What is Kleppmann's main critique of Lambda architecture?`, a: `You maintain two code paths (batch and streaming) that must produce identical results — this is complex and error-prone. The Kappa architecture proposes using only a stream-processing system.` },
+      { q: `What is the Kappa architecture?`, a: `Use a single stream-processing system for both real-time and reprocessing (by replaying the event log). Eliminates the dual-pipeline complexity of Lambda.` },
+      { q: `What is the role of an event log (like Kafka) in the unbundled database?`, a: `It acts as the integration backbone — a durable, ordered log that all derived systems consume. It enables rebuilding any derived view by replaying from the beginning.` },
+      { q: `What is the key challenge in composing unbundled tools?`, a: `Keeping derived data in sync — ensuring that writes to the primary store and all derived systems (search index, cache, etc.) are eventually consistent without complex distributed transactions.` },
+    ],
   },
 
   {
@@ -2278,6 +2690,16 @@ Key expiration: idempotency keys have a TTL (Stripe uses 24 hours). After expira
 
 Stripe's implementation: every Stripe API endpoint accepts an Idempotency-Key header. Stripe stores results for 24 hours. This pattern is the industry standard for financial APIs.`,
       },
+    ],
+    quickFire: [
+      { q: `Why is TCP's exactly-once delivery guarantee insufficient for application-level idempotency?`, a: `TCP provides exactly-once within a single connection. Application retries create a new TCP connection. The original connection's result is unknown, so the retry may duplicate the operation. Application-level idempotency keys are required.` },
+      { q: `Where must an idempotency key be stored relative to the operation it protects?`, a: `In the same database transaction as the operation. This ensures the key and the operation are atomically committed or rolled back together, preventing partial state (key stored but operation incomplete, or operation complete but key missing).` },
+      { q: `Name a production API that uses idempotency keys. How is the key provided?`, a: `Stripe's payment API uses the Idempotency-Key request header. The client generates a UUID before sending a charge or transfer request and sends the same key on all retries. Stripe guarantees the payment is processed exactly once for a given key.` },
+      { q: `What is silent data corruption and give one real-world source?`, a: `Silent data corruption is data modification without an error signal from the affected layer. One source: SSD firmware bugs that return incorrect data without reporting an I/O error. Another: DRAM multi-bit errors that exceed ECC correction capability.` },
+      { q: `Why does adding checksums at every layer (TCP, TLS, filesystem, application) provide better integrity than relying on one layer?`, a: `Each layer's checksum uses a different algorithm and covers a different scope. Corruption introduced between two layers is caught by the upper layer's checksum but not the lower layer's. Silent corruption that passes TCP's 16-bit CRC can still be caught by an application SHA-256.` },
+      { q: `What makes an immutable event log useful for system integrity verification?`, a: `You can replay the event log from the beginning and compare the derived state to the current stored state. Any discrepancy reveals a bug, unauthorized modification, or undetected data corruption. The append-only nature makes past events tamper-evident.` },
+      { q: `What did Saltzer, Reed, and Clark prove in their 1981 end-to-end argument paper?`, a: `That correctness guarantees can only be fully provided at the ends of a communication system (the application layer), not in intermediate layers. Lower layers can optimize the common case but cannot replace end-to-end application-level checks.` },
+      { q: `What is the key ethical concern DDIA raises about predictive analytics?`, a: `ML models trained on historical data can encode and amplify historical biases, causing discriminatory outcomes in decisions about people (lending, hiring, parole). Compliance with anti-discrimination law is insufficient; engineers bear responsibility for the disparate impacts of systems they build.` },
     ],
   },
 
