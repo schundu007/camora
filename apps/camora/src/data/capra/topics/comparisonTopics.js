@@ -5,10 +5,10 @@ export const comparisonCategories = [
   { id: 'compute',     name: 'Compute & Containers',        icon: 'cpu',        color: '#f97316' },
   { id: 'storage',     name: 'Storage & Databases',         icon: 'database',   color: '#3b82f6' },
   { id: 'messaging',   name: 'Messaging & Streaming',        icon: 'send',       color: '#8b5cf6' },
+  { id: 'networking',  name: 'Networking & Load Balancing', icon: 'globe',      color: '#14b8a6' },
   { id: 'cicd',        name: 'CI/CD Tools',                  icon: 'gitMerge',   color: '#22c55e' },
   { id: 'monitoring',  name: 'Monitoring & Observability',   icon: 'activity',   color: '#06b6d4' },
   { id: 'deployment',  name: 'Deployment Strategies',        icon: 'layers',     color: '#f59e0b' },
-  { id: 'networking',  name: 'Networking & Load Balancing', icon: 'globe',      color: '#14b8a6' },
 ];
 
 export const comparisonTopicCategoryMap = {
