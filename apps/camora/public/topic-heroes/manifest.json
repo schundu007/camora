@@ -17,7 +17,7 @@
   },
   "microservices": {
     "file": "/topic-heroes/microservices.jpg",
-    "photographer": "Roma Kaiuk🇺🇦",
+    "photographer": "Roma Kaiuk\ud83c\uddfa\ud83c\udde6",
     "photographerUrl": "https://unsplash.com/@roma_kaiuk?utm_source=camora&utm_medium=referral",
     "unsplashUrl": "https://unsplash.com/photos/a-close-up-of-some-lights-4oLZ9UxdEFw?utm_source=camora&utm_medium=referral",
     "query": "abstract geometric pattern",
@@ -57,7 +57,7 @@
   },
   "eng-blogs": {
     "file": "/topic-heroes/eng-blogs.jpg",
-    "photographer": "Priscilla Du Preez 🇨🇦",
+    "photographer": "Priscilla Du Preez \ud83c\udde8\ud83c\udde6",
     "photographerUrl": "https://unsplash.com/@priscilladupreez?utm_source=camora&utm_medium=referral",
     "unsplashUrl": "https://unsplash.com/photos/a-stack-of-books-sitting-on-top-of-a-wooden-table-vZb2zeAhmAc?utm_source=camora&utm_medium=referral",
     "query": "modern library books minimal",
@@ -174,5 +174,21 @@
     "unsplashUrl": "https://unsplash.com/photos/1528819622765-d6bcf132f793?utm_source=camora&utm_medium=referral",
     "query": "chess board strategy dark moody",
     "bytes": 55377
+  },
+  "ddia": {
+    "file": "/topic-heroes/ddia.jpg",
+    "photographer": "Susan Yin",
+    "photographerUrl": "https://unsplash.com/@syinq?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/photo-1507842217343-583bb7270b66?utm_source=camora&utm_medium=referral",
+    "query": "library books dark moody",
+    "bytes": 134292
+  },
+  "ai-systems-perf": {
+    "file": "/topic-heroes/ai-systems-perf.jpg",
+    "photographer": "Alexandre Debi\u00e8ve",
+    "photographerUrl": "https://unsplash.com/@alexkixa?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/photo-1518770660439-4636190af475?utm_source=camora&utm_medium=referral",
+    "query": "circuit board macro dark tech",
+    "bytes": 83520
   }
 }
