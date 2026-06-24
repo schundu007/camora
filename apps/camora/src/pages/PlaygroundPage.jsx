@@ -33,27 +33,24 @@ export default function PlaygroundPage() {
   const setTab = (key) => setParams({ tab: key }, { replace: false });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      {/* ── Header ── */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* ── Sub-nav ── */}
       <div style={{
         flexShrink: 0,
-        height: 34,
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        padding: '0 12px',
-        background: 'var(--cam-hero-strip)',
-        borderBottom: '1px solid var(--cam-gold-leaf)',
+        padding: '0 16px',
+        height: 40,
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-surface)',
       }}>
-        <Link to="/capra/prepare" style={{
-          fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)',
-          textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3,
-          flexShrink: 0,
-        }}>
-          ‹ Home
-        </Link>
-        <div style={{ width: 1, height: 14, background: 'var(--border)', flexShrink: 0 }} />
-        <div className="tab-group" style={{ flex: 1 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+          Playground
+        </span>
+        <span className="badge-neutral" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em' }}>BETA</span>
+        <div style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0, marginLeft: 4 }} />
+        <div className="tab-group">
           {TABS.map(t => (
             <button
               key={t.key}
