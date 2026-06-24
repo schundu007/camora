@@ -382,11 +382,13 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
                   el.style.transform = 'none';
                 }}
               >
-                <div style={{ width:40, height:40, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, marginBottom:14 }}>
-                  {cp.icon}
-                </div>
-                <div style={{ fontFamily:'var(--font-display)', fontSize:15, fontWeight:700, color:'var(--text-primary)', marginBottom:5 }}>
-                  {cp.name}
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                  <div style={{ width:40, height:40, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, flexShrink:0 }}>
+                    {cp.icon}
+                  </div>
+                  <div style={{ fontFamily:'var(--font-display)', fontSize:15, fontWeight:700, color:'var(--text-primary)' }}>
+                    {cp.name}
+                  </div>
                 </div>
                 <div style={{ fontSize:12, lineHeight:1.6, color:'var(--text-muted)', marginBottom:16 }}>
                   {cp.desc}
