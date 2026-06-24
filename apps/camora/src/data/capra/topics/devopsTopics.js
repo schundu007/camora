@@ -205,6 +205,12 @@ export const devopsTopicCategoryMap = {
   'helm-security-supply-chain':     'helm',
   'helm-4-migration':               'helm',
   'helm-production-patterns':       'helm',
+  // New topics from authoritative sources (DORA 2024, CNCF, Gateway API v1)
+  'dora-2024-capabilities':             'foundations',
+  'opentelemetry-collector-pipelines':  'cloudnative',
+  'kubernetes-gateway-api':             'orchestration',
+  'platform-engineering-maturity':      'cloudnative',
+  'gitops-secrets-management':          'gitops',
 };
 
 // Topic content lives below — each topic uses the same schema as SRE topics:
@@ -43218,6 +43224,145 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // New topics from authoritative sources (DORA 2024, CNCF, K8s Gateway API v1)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'dora-2024-capabilities',
+    title: 'DORA 2024 — 39 Capabilities & AI Impact',
+    icon: 'activity',
+    color: '#3b82f6',
+    description: 'DORA 2024 State of DevOps: 39 capabilities across 5 clusters, new AI category, 5 performance levels. How elite performers differ.',
+    introduction: '**DORA (DevOps Research and Assessment)** has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified **39 capabilities** organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new **AI capabilities cluster** — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
+    keyConcepts: [
+      { title: 'The Four Key DORA Metrics', description: '**Deployment Frequency**: how often you deploy to production. **Lead Time for Changes**: commit-to-production time. **Mean Time to Restore (MTTR)**: recovery time from production failure. **Change Failure Rate**: percentage of deployments causing incidents. Elite thresholds: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
+      { title: 'AI Capabilities Cluster (New in 2024)', description: 'Six capabilities added in 2024: AI-assisted code review, test generation, documentation, code assistance (Copilot/Cursor), incident response augmentation, and AI as a team collaborator in architecture decisions. Organizations with mature AI capability scores show 1.6× higher deployment frequency and 1.4× lower change failure rates.' },
+      { title: 'Core Model Capabilities (18)', description: 'Technical: continuous delivery, trunk-based development, test automation, deployment automation, shift-left security, database change management, flexible infrastructure, loosely coupled architecture, monitoring/observability. Cultural: generative organizational culture (Westrum), learning from failures (blameless postmortems), working in small batches, team autonomy, continuous learning culture.' },
+      { title: '5 Performance Clusters', description: '2024 research identifies five clusters from **Low** through **Medium**, **High**, **Thriving** to **Transformative** (previously just "Elite"). Transformative performers are AI-augmented — 2× more likely to be top performers, 50% less likely to experience burnout. Low performers take 1-6 months to deploy; elite deploy on demand multiple times per day.' },
+    ],
+    quickFire: [
+      { q: 'What are the four DORA key metrics?', a: 'Deployment Frequency (how often to prod), Lead Time for Changes (commit-to-prod time), Mean Time to Restore (incident recovery), Change Failure Rate (% deployments causing incidents). Elite: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
+      { q: 'What is "generative organizational culture" in DORA\'s model?', a: 'Based on Westrum\'s typology: information flows freely, failure is a learning opportunity (not blame), risks are shared across teams, cross-functional collaboration is normal. DORA research consistently shows it is one of the strongest cultural predictors of software delivery performance.' },
+      { q: 'What new capability cluster did DORA add in 2024?', a: 'AI capabilities — 6 items covering AI-assisted code review, test generation, documentation, code assistance (Copilot/Cursor), incident response augmentation, and using AI as a team collaborator in architecture. Organizations with higher AI capability scores show 1.6× higher deployment frequency.' },
+      { q: 'What is "trunk-based development" and why does DORA recommend it?', a: 'All engineers commit to a single main branch (or feature branches merged within 1-2 days). DORA research shows it is one of the strongest technical predictors of elite performance — it eliminates long-lived merge conflicts, enables continuous integration, and makes automated deployment pipelines feasible.' },
+      { q: 'How do DORA metrics connect to business outcomes?', a: 'Elite performers are 2× more likely to exceed profitability goals, have lower employee burnout rates, and can respond faster to market changes. The causal chain: good technical practices → better delivery performance → better organizational outcomes (revenue, retention, market responsiveness).' },
+    ],
+    references: [
+      'https://dora.dev/research/2024/',
+      'https://dora.dev/capabilities/',
+      'https://cloud.google.com/devops/state-of-devops',
+      'https://itrevolution.com/accelerate-book/',
+    ],
+  },
+  {
+    id: 'opentelemetry-collector-pipelines',
+    title: 'OpenTelemetry Collector — Pipelines & Deployment',
+    icon: 'filter',
+    color: '#06b6d4',
+    description: 'OTel Collector: receivers, processors, exporters. Tail-based vs head-based sampling. Agent/Gateway topology. Kubernetes Operator.',
+    introduction: '**OpenTelemetry Collector** is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
+    keyConcepts: [
+      { title: 'Pipeline Components: Receivers → Processors → Exporters', description: '**Receivers** accept telemetry: OTLP (gRPC/HTTP), Jaeger, Zipkin, Prometheus scrape, Fluentd, StatsD. **Processors** transform data: batch, memory limiter (always first!), attribute enrichment, filter, tail-based sampling, PII redaction. **Exporters** ship to backends: OTLP, Prometheus remote write, Jaeger, Datadog, Grafana OTLP, AWS X-Ray. Each pipeline is configured per signal type (traces/metrics/logs) in YAML.' },
+      { title: 'Head-Based vs Tail-Based Sampling', description: '**Head-based**: sampling decision made at trace start — fast, zero memory overhead, cannot sample based on outcome (errors, slow spans). **Tail-based**: buffers all spans for a complete trace before deciding — enables "100% errors, 1% success" strategies. The tailsampling processor must see ALL spans for a trace, requiring sticky routing (all pods of a service → same Gateway collector via TraceID hash).' },
+      { title: 'Agent vs Gateway Topology', description: '**Agent mode**: one Collector DaemonSet per node — receives from local apps, lightweight processing (batch, attribute enrichment), forwards to Gateway. **Gateway mode**: centralized horizontally-scaled Collectors — expensive operations: tail sampling, PII redaction, rate limiting. Production pattern: App → OTel Agent (node DaemonSet) → OTel Gateway (cluster deployment with HPA) → Backend.' },
+      { title: 'Kubernetes Operator', description: '**OpenTelemetry Operator** (CNCF) manages Collector deployments as `OpenTelemetryCollector` CRDs — Deployment, DaemonSet, StatefulSet, or Sidecar modes. Auto-scaling support via HPA. **Auto-instrumentation**: injects OTel SDK into pods via mutating webhook — add annotation `instrumentation.opentelemetry.io/inject-java: "true"` and the operator adds the SDK without code changes.' },
+    ],
+    quickFire: [
+      { q: 'What are the three pipeline component types in an OTel Collector?', a: 'Receivers (accept telemetry — OTLP, Jaeger, Prometheus scrape), Processors (transform — batch, memory limiter, tail sampling, attribute enrichment), Exporters (ship to backends — OTLP, Prometheus remote write, Datadog, Jaeger). Each pipeline is declared per signal type (traces/metrics/logs) in YAML config.' },
+      { q: 'Why does tail-based sampling require a Gateway topology?', a: 'Tail sampling needs ALL spans for a complete trace before deciding. With multiple agent collectors, spans from the same trace land on different agents. You must route all spans for a TraceID to the same Gateway instance (consistent hash on TraceID), otherwise the sampler sees an incomplete picture and cannot make a correct sampling decision.' },
+      { q: 'Why is the memory_limiter processor critical and where should it go?', a: 'memory_limiter drops/refuses new telemetry when the Collector\'s heap exceeds a threshold. Without it, a trace volume spike can OOM-kill the Collector — taking down your observability pipeline precisely during the incident you need it most. It must be the FIRST processor in every pipeline, before batching or sampling.' },
+      { q: 'How does the OTel Operator auto-instrumentation work?', a: 'The Operator injects OTel SDKs via a mutating admission webhook. Add annotation `instrumentation.opentelemetry.io/inject-java: "true"` to a Pod/Deployment. The webhook patches the pod spec: adds an init container that copies the SDK to a shared volume and sets OTEL_EXPORTER_OTLP_ENDPOINT. No application code changes needed — works for Java, Python, Node.js, .NET, Go.' },
+      { q: 'What advantage does running a Collector DaemonSet give over in-process SDK exporters?', a: 'The DaemonSet centralizes retry logic, compression, batching, and PII redaction — the app exports fire-and-forget to localhost. You can reconfigure sampling strategy or add a new backend (add a Datadog exporter) without redeploying 50 services. The app also does not bear the CPU/memory cost of export retries during downstream backend outages.' },
+    ],
+    references: [
+      'https://opentelemetry.io/docs/collector/',
+      'https://github.com/open-telemetry/opentelemetry-collector-contrib',
+      'https://opentelemetry.io/docs/kubernetes/operator/',
+      'https://opentelemetry.io/docs/collector/deployment/',
+    ],
+  },
+  {
+    id: 'kubernetes-gateway-api',
+    title: 'Kubernetes Gateway API v1',
+    icon: 'globe',
+    color: '#14b8a6',
+    description: 'Gateway API v1 (GA Oct 2023): GatewayClass/Gateway/HTTPRoute hierarchy. Role-oriented design, traffic splitting, ReferenceGrants.',
+    introduction: '**Kubernetes Gateway API** reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a **role-oriented** resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
+    keyConcepts: [
+      { title: 'Three-Tier Hierarchy: GatewayClass → Gateway → Routes', description: '**GatewayClass** (cluster-scoped): maps a name to a controller implementation (Envoy Gateway, Istio, Kong, Cilium). **Gateway** (namespace-scoped): instantiates a load balancer — specifies listeners (port, protocol, TLS cert ref). **HTTPRoute / GRPCRoute / TCPRoute / TLSRoute** (namespace-scoped): routing rules — hostname, path, header matching, traffic splitting via weighted BackendRefs.' },
+      { title: 'Role-Oriented Design', description: '**Infrastructure Provider** defines GatewayClasses (e.g., platform team creates cloud LB classes). **Cluster Operator** creates Gateways (selects GatewayClass, configures TLS, sets listeners). **Application Developer** creates Routes pointing to their Services — no cluster-level RBAC needed. This is a fundamental improvement over Ingress where all config was in one resource requiring elevated permissions.' },
+      { title: 'Native Traffic Management Features', description: 'HTTPRoute natively supports: hostname-based routing, path matching (exact/prefix/regex), header-based routing, query param matching, **weighted traffic splitting** (canary with 90/10 via two BackendRefs with `weight`), request/response header modification, URL rewriting, redirects, timeout configuration, and retry policies — no nginx/alb annotation sprawl.' },
+      { title: 'ReferenceGrant for Cross-Namespace Routing', description: 'A ReferenceGrant in namespace B allows resources in namespace A to reference objects in namespace B. Required when an HTTPRoute in the "ingress" namespace references Services in "app-team-1" namespace — the app team creates a ReferenceGrant granting that specific Gateway cross-namespace access. Prevents unauthorized cross-namespace traffic flows without explicit opt-in.' },
+    ],
+    quickFire: [
+      { q: 'What is the fundamental improvement of Gateway API over Ingress?', a: 'Ingress is a single monolithic resource with all config in vendor-specific annotations. Gateway API uses a 3-tier hierarchy (GatewayClass/Gateway/Route) with role separation — infra providers, cluster operators, and app developers each manage their layer. Traffic splitting, gRPC routing, header routing are native features. It is implementation-agnostic with a shared conformance test suite.' },
+      { q: 'How do you implement a canary deployment with Gateway API?', a: 'Create an HTTPRoute with two BackendRefs: `- name: stable weight: 90` and `- name: canary weight: 10`. The Gateway sends 10% of traffic to the canary Service. Weight-based splitting is native — no annotations, no Nginx configuration snippets. Adjust weights progressively as canary metrics prove healthy.' },
+      { q: 'What is a ReferenceGrant and when is it required?', a: 'A ReferenceGrant in namespace B allows resources in namespace A to reference objects in namespace B. Required when an HTTPRoute in the "gateway" namespace routes to a Service in the "my-app" namespace — my-app must create a ReferenceGrant allowing that specific Gateway. Without it, the cross-namespace reference is rejected as a security violation.' },
+      { q: 'What is GatewayClass and who manages it?', a: 'GatewayClass (cluster-scoped) maps a name to a specific controller implementation — e.g., `controllerName: gateway.envoyproxy.io/gatewayclass-controller`. Infrastructure providers or platform teams create GatewayClasses. Cluster operators then instantiate Gateways referencing a GatewayClass — like how PersistentVolumeClaims reference StorageClasses.' },
+      { q: 'How does GRPCRoute differ from HTTPRoute?', a: 'GRPCRoute (GA in v1.1) routes gRPC traffic by service name and method name rather than URL path. Match on `io.grpc.method.my.Service/MyMethod` for fine-grained routing. Supports header matching and weighted backends. Without GRPCRoute, gRPC routing via HTTP/2 required fragile path-prefix annotation hacks that broke with non-unary RPCs.' },
+    ],
+    references: [
+      'https://gateway-api.sigs.k8s.io/',
+      'https://gateway.envoyproxy.io/',
+      'https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/',
+      'https://kubernetes.io/blog/2023/10/31/gateway-api-ga/',
+    ],
+  },
+  {
+    id: 'platform-engineering-maturity',
+    title: 'Platform Engineering Maturity Model',
+    icon: 'layers',
+    color: '#8b5cf6',
+    description: 'CNCF Platform Engineering Whitepaper: 5 maturity levels, 13 capability domains, measuring platform ROI and developer satisfaction.',
+    introduction: '**The CNCF Platform Engineering Whitepaper** (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a **maturity model** with five levels and **13 capability domains** that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
+    keyConcepts: [
+      { title: '5 Maturity Levels', description: '**1. Provisional**: ad-hoc, undocumented, built for immediate need. **2. Operationalized**: documented, repeatable, but manually triggered. **3. Scalable**: self-service, automated, handles multiple teams. **4. Optimizing**: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. **5. Leading**: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
+      { title: '13 Capability Domains', description: 'A mature IDP covers: (1) artifact/image store, (2) CI/CD pipelines, (3) cloud/environment provisioning, (4) developer portal, (5) IDP orchestration layer, (6) observability, (7) policy/governance, (8) RBAC/access control, (9) secrets management, (10) service catalog/registry, (11) service mesh, (12) testing frameworks, (13) toolchain selection/standardization. Not all domains need full coverage at once — prioritize by team pain points.' },
+      { title: 'Golden Paths and Cognitive Load Reduction', description: '**Golden paths** are the opinionated, pre-built workflows that let application teams deploy a new service without understanding the full infrastructure stack. A golden path bundles: Backstage template → GitHub Actions CI → ECR push → ArgoCD sync → CloudWatch dashboards pre-configured. Cognitive load reduction is the primary success metric: if developers spend less time on infrastructure, the platform is succeeding.' },
+      { title: 'Developer Portal (Backstage)', description: '**Backstage** (CNCF Incubating, originally Spotify) is the de facto developer portal. It provides: software catalog (ownership map of all services), tech docs (docs-as-code), scaffolder (golden path templates), and plugin ecosystem (Kubernetes, ArgoCD, PagerDuty, SonarQube integrations). A developer portal is the "store front" of the platform — without it, discoverability of platform capabilities is limited to Slack messages and tribal knowledge.' },
+    ],
+    quickFire: [
+      { q: 'What are the 5 platform engineering maturity levels?', a: 'Provisional (ad-hoc), Operationalized (documented, repeatable), Scalable (self-service, automated), Optimizing (data-driven, DORA metrics tracked, developer feedback loops), Leading (platform as product with SLOs, roadmap, dedicated PM). Most orgs are at level 2-3; reaching 4+ requires cultural investment beyond tooling.' },
+      { q: 'What is a "golden path" in platform engineering?', a: 'A golden path is the opinionated, pre-built workflow that lets app teams ship a new service without understanding the full infra stack. It bundles: scaffolder template → CI pipeline → container registry → GitOps sync → pre-configured dashboards. Developers follow the path with one command; the platform enforces security and operational standards automatically.' },
+      { q: 'What is Backstage and why is it used for developer portals?', a: 'Backstage (CNCF Incubating, originally Spotify) is the de facto platform for internal developer portals. It provides: software catalog (ownership map of all services/resources), tech docs (docs-as-code), scaffolder (golden path templates via UI), and 200+ plugins (K8s, ArgoCD, PagerDuty, SonarQube). It solves discoverability — instead of asking in Slack, developers find runbooks, APIs, and deployment status in one place.' },
+      { q: 'How do you measure whether a platform engineering investment is paying off?', a: 'Primary metric: reduction in cognitive load (time developers spend on infrastructure tasks vs feature work). Proxy metrics: onboarding time for a new service (should drop from days to hours), DORA metrics improvement (deployment frequency, lead time) across teams using the platform vs not, internal NPS/developer satisfaction surveys, support ticket volume reduction.' },
+      { q: 'What is the difference between an IDP and a developer portal?', a: 'An IDP (Internal Developer Platform) is the complete self-service infrastructure layer: CI/CD, environment provisioning, secrets, observability, deployment automation. A developer portal (Backstage) is the UI/discovery layer on top of the IDP — it makes the platform capabilities visible and accessible via a catalog and templating UI. Backstage without solid IDP capabilities underneath is just a pretty website.' },
+    ],
+    references: [
+      'https://platformengineering.org/blog/what-is-platform-engineering',
+      'https://tag-app-delivery.cncf.io/whitepapers/platforms/',
+      'https://backstage.io/',
+      'https://internaldeveloperplatform.org/',
+    ],
+  },
+  {
+    id: 'gitops-secrets-management',
+    title: 'Secrets Management in GitOps',
+    icon: 'lock',
+    color: '#0891b2',
+    description: 'Secrets in GitOps: SOPS+age, Sealed Secrets, External Secrets Operator (ESO). Vault integration patterns. When to use each approach.',
+    introduction: '**GitOps** stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: **encrypt in Git** (SOPS, Sealed Secrets), **reference externally** (External Secrets Operator, Vault agent), and **hybrid** (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
+    keyConcepts: [
+      { title: 'SOPS + age: Encrypted Values in Git', description: '**SOPS** (Secrets OPerationS, Mozilla) encrypts specific values within YAML/JSON/ENV files — you can read the structure, not the values. **age** is the modern encryption backend (replacing PGP). Workflow: `sops --encrypt --age <pubkey> secrets.yaml > secrets.enc.yaml` → commit encrypted file → ArgoCD/Flux decrypts at deploy using age private key in a cluster Secret. Pros: simple, works with any backend. Cons: key rotation complexity, decryption key must exist in-cluster.' },
+      { title: 'Sealed Secrets: Cluster-Bound Encryption', description: '**Sealed Secrets** (Bitnami/CNCF) generates a `SealedSecret` CRD that can only be decrypted by the controller running in a specific cluster. You encrypt with `kubeseal --cert <cluster-pub-cert>` and commit the sealed YAML. The Sealed Secrets controller decrypts it into a standard Kubernetes Secret. Pros: dead simple, GitOps-native. Cons: sealed secrets are cluster-bound (cannot share across clusters), key rotation requires re-sealing all secrets.' },
+      { title: 'External Secrets Operator (ESO)', description: '**ESO** (CNCF Incubating) syncs secrets from external stores (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, 1Password) into Kubernetes Secrets. You commit an `ExternalSecret` CRD referencing a path in the external store — no sensitive values in Git at all. ESO polls for changes and updates K8s Secrets automatically. Pros: centralized secret management, rotation handled by the external store, secrets not in Git. Cons: external store dependency, ESO must be highly available.' },
+      { title: 'Vault Integration Patterns', description: 'Three patterns for HashiCorp Vault with Kubernetes: **Vault Agent Injector** — sidecar reads Vault secrets and writes them to a shared volume as files; **Vault Secrets Operator (VSO)** — Vault\'s own CRD-based operator, similar to ESO but Vault-native; **ESO with Vault provider** — unified ESO approach works alongside other stores. Vault adds complexity but provides: dynamic short-lived credentials (database, AWS IAM roles), PKI CA, audit logging, multi-datacenter replication.' },
+    ],
+    quickFire: [
+      { q: 'Why can\'t you just commit Kubernetes Secrets to Git?', a: 'Kubernetes Secrets are base64-encoded, not encrypted — base64 is trivially reversible. Committing base64 secrets to Git exposes them to anyone with repo access and permanently in git history (even after deletion). Secrets must be encrypted before committing (SOPS/Sealed Secrets) or stored entirely outside Git (ESO/Vault) with only references committed.' },
+      { q: 'When would you choose SOPS over External Secrets Operator?', a: 'Use SOPS when: you want self-contained repos with no external secret store dependency, team size is small, or you\'re OK with managing encryption keys. Use ESO when: you already have a secrets manager (AWS SM, GCP SM, Vault), need secret rotation without re-deploying, or need centralized audit logging of all secret access. ESO is the more scalable long-term choice; SOPS is simpler to bootstrap.' },
+      { q: 'What is a SealedSecret and how does it differ from a regular Kubernetes Secret?', a: 'A SealedSecret is a CRD encrypted with the Sealed Secrets controller\'s asymmetric key — it can only be decrypted by that specific controller in that specific cluster. You commit the SealedSecret YAML to Git safely. The controller decrypts it into a standard Kubernetes Secret automatically. A regular K8s Secret is base64 only — not safe for Git.' },
+      { q: 'How does the External Secrets Operator work in a GitOps workflow?', a: 'You commit an `ExternalSecret` CRD to Git specifying: secretStoreRef (which ESO SecretStore, e.g., AWS SM in us-east-1), remoteRef.key (the secret path in the store), and the target K8s Secret name. ESO reconciles this CRD by fetching the value from AWS SM (via IRSA/service account IAM) and creating/updating the Kubernetes Secret. The actual secret value lives only in AWS SM — Git contains only the reference.' },
+      { q: 'What is the Vault Agent Injector and what problem does it solve?', a: 'Vault Agent Injector uses a mutating admission webhook to add a vault-agent init container and sidecar to pods with specific annotations. The init container authenticates to Vault (via Kubernetes Service Account JWT), fetches secrets, and writes them to a shared emptyDir volume as files. The sidecar renews short-lived secrets continuously. This keeps secrets out of K8s Secret objects entirely — they live only in pod memory.' },
+    ],
+    references: [
+      'https://getsops.io/',
+      'https://sealed-secrets.netlify.app/',
+      'https://external-secrets.io/',
+      'https://developer.hashicorp.com/vault/docs/platform/k8s',
+    ],
+  },
+
 ];
 
 // ─── Standalone exports for top-level Prepare pages ───────────────────────
@@ -43240,6 +43385,7 @@ export const observabilityTopicCategoryMap = {
   'apm-platforms':                           'platforms',
   'ebpf-observability':                      'advanced',
   'ace-observability-alerting-pipeline-debug': 'advanced',
+  'opentelemetry-collector-pipelines':       'advanced',
 };
 
 export const observabilityTopics = devopsTopics.filter(t =>
