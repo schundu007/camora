@@ -171,6 +171,7 @@ export default function DocsPage({ onBack }) {
   const codingCategoryMap = heavyData.codingCategoryMap || {};
   const codingTopics = heavyData.codingTopics || [];
   const systemDesignTopics = heavyData.systemDesignTopics || [];
+  const systemDesignExtraTopics = heavyData.systemDesignExtraTopics || [];
   const systemDesignProblemCategories = heavyData.systemDesignProblemCategories || [];
   const systemDesignProblemCategoryMap = heavyData.systemDesignProblemCategoryMap || {};
   const systemDesigns = heavyData.systemDesigns || [];
@@ -563,7 +564,7 @@ export default function DocsPage({ onBack }) {
   // Calculate progress
   const getProgress = () => {
     const topics = activePage === 'coding' ? codingTopics :
-      activePage === 'system-design' ? [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] :
+      activePage === 'system-design' ? [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics] :
       activePage === 'low-level' ? [...lldTopics, ...lldProblems] :
       activePage === 'microservices' ? microservicesPatterns :
       activePage === 'databases' ? [...databaseTopics, ...sqlTopics] :
@@ -735,7 +736,7 @@ export default function DocsPage({ onBack }) {
     // Search must operate over the same merged set, otherwise typing
     // matches nothing for topics that live in microservicesPatterns,
     // systemDesignTradeoffs, concurrencyTopics, etc.
-    else if (activePage === 'system-design') topics = [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
+    else if (activePage === 'system-design') topics = [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
     else if (activePage === 'low-level') topics = [...lldTopics, ...lldProblems];
     else if (activePage === 'behavioral') topics = behavioralTopics;
     else if (activePage === 'microservices') topics = microservicesPatterns;
@@ -827,7 +828,7 @@ export default function DocsPage({ onBack }) {
 
     // Search all topic arrays — no page restriction, prevents "topic not found" for valid topics
     const allSources = [
-      codingTopics, systemDesignTopics, systemDesigns, systemDesignPatterns,
+      codingTopics, systemDesignTopics, systemDesignExtraTopics, systemDesigns, systemDesignPatterns,
       systemDesignTradeoffs, concurrencyTopics, scalableSystemsTopics,
       lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
@@ -900,7 +901,7 @@ export default function DocsPage({ onBack }) {
   // Static counts used as fallback before heavyData async chunks load.
   // Update when topic files add/remove entries.
   const STATIC_TOPIC_COUNTS = {
-    'coding': 57, 'system-design': 616, 'behavioral': 72, 'low-level': 126,
+    'coding': 57, 'system-design': 208, 'behavioral': 72, 'low-level': 126,
     'databases': 20, 'microservices': 12, 'cloud': 110, 'linux': 58,
     'networking': 62, 'sre': 75, 'devops': 180, 'observability': 9,
     'platform': 5, 'troubleshooting': 14, 'mlops': 17, 'aiops': 18, 'ai-systems-perf': 10,
@@ -914,7 +915,7 @@ export default function DocsPage({ onBack }) {
     const cats = [
       // ── Tier 1 · Universal — every interview loop tests these ────────────
       { id: 'coding',       href: 'coding',        title: 'DSA & Algorithms',          icon: 'cpu',         color: 'var(--text-primary)', topics: codingTopics,                                                                                                                                      description: 'Arrays, strings, trees, graphs, DP — the algorithmic core of technical hiring.' },
-      { id: 'system-design',href: 'system-design', title: 'System Design',             icon: 'systemDesign',color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics], description: 'Scale, sharding, caching, queues, consistency — design Twitter, Uber, WhatsApp end to end.' },
+      { id: 'system-design',href: 'system-design', title: 'System Design',             icon: 'systemDesign',color: 'var(--text-primary)', topics: [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics], description: 'Scale, sharding, caching, queues, consistency — design Twitter, Uber, WhatsApp end to end.' },
       { id: 'behavioral',   href: 'behavioral',    title: 'Behavioral',                icon: 'users',       color: 'var(--text-primary)', topics: [...behavioralTopics, ...companyPrep],                                                                                                              description: 'STAR method, leadership stories, conflict resolution — company-specific prep for FAANG and startups.' },
       { id: 'low-level',    href: 'low-level-design',title: 'Low Level Design',        icon: 'layers',      color: 'var(--text-primary)', topics: [...lldTopics, ...lldProblems],                                                                                                                    description: 'OOP, SOLID, design patterns — parking lot, LRU cache, vending machine, chess engine.' },
       { id: 'databases',    href: 'databases',     title: 'Databases & SQL',           icon: 'database',    color: 'var(--text-primary)', topics: [...databaseTopics, ...sqlTopics],                                                                                                                  description: 'Indexes, transactions, isolation levels, query plans — relational + NoSQL with hands-on SQL practice.' },
@@ -1282,7 +1283,7 @@ export default function DocsPage({ onBack }) {
 
                       {/* Recently Completed / Starred */}
                       {(() => {
-                        const allTopicsList = [...codingTopics, ...systemDesignTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...lldTopics, ...lldProblems, ...behavioralTopics, ...companyPrep];
+                        const allTopicsList = [...codingTopics, ...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...lldTopics, ...lldProblems, ...behavioralTopics, ...companyPrep];
                         const starredIds = Object.keys(starredTopics).filter(k => starredTopics[k]);
                         const completedIds = Object.keys(completedTopics).filter(k => completedTopics[k]);
                         const recentItems = [...new Set([...starredIds, ...completedIds])].slice(0, 5)
@@ -3752,7 +3753,7 @@ export default function DocsPage({ onBack }) {
               <div className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase mb-3">Favorites</div>
               <div className="space-y-1">
                 {Object.keys(starredTopics).filter(k => starredTopics[k]).map((topicId) => {
-                  const t = [...codingTopics, ...systemDesignTopics, ...systemDesigns, ...behavioralTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...concurrencyTopics, ...lldTopics, ...lldProblems, ...companyPrep].find(x => x.id === topicId);
+                  const t = [...codingTopics, ...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...behavioralTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...concurrencyTopics, ...lldTopics, ...lldProblems, ...companyPrep].find(x => x.id === topicId);
                   if (!t) return null;
                   return (
                     <button

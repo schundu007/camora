@@ -32,13 +32,17 @@ export const HEAVY_TOPIC_LOADERS = {
   },
 
   'system-design': async () => {
-    const [topics, problems, problemsExtra] = await Promise.all([
+    const [topics, problems, problemsExtra, extra] = await Promise.all([
       import('./systemDesignTopics.js'),
       import('./systemDesignProblems.js'),
       import('./systemDesignProblemsExtra.js'),
+      import('./systemDesignTopicsExtra.js'),
     ]);
     return {
       systemDesignTopics: topics.systemDesignTopics,
+      systemDesignExtraTopics: extra.systemDesignExtraTopics,
+      systemDesignExtraCategories: extra.systemDesignExtraCategories,
+      systemDesignExtraCategoryMap: extra.systemDesignExtraCategoryMap,
       systemDesignProblemCategories: [
         ...problems.systemDesignProblemCategories,
         ...problemsExtra.extraSystemDesignProblemCategories.filter(
