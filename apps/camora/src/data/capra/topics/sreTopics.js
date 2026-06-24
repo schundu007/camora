@@ -98,6 +98,19 @@ export const sreTopicCategoryMap = {
   'zero-trust-defense':        'security',
   'supply-chain-security':     'security',
   'security-incident-response':'security',
+  'dos-mitigation':            'security',
+  // Reliability (new from books)
+  'reliability-testing':       'reliability',
+  'nalsd':                     'reliability',
+  'data-integrity':            'reliability',
+  'design-understandability':  'reliability',
+  // Automation (new from books)
+  'release-engineering':       'automation',
+  'config-management':         'automation',
+  'canary-analysis':           'automation',
+  'launch-coordination':       'automation',
+  // Reliability Patterns (new from books)
+  'admission-control':         'patterns',
 };
 
 export const sreTopics = [
@@ -12534,6 +12547,708 @@ Measure completion rate as an SRE metric. Action item completion rate (items clo
       'https://sre.google/sre-book/postmortem-culture/',
       'https://sre.google/workbook/postmortem-analysis/',
       'https://how.complexsystems.fail/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // NEW TOPICS — sourced from 3 primary books (Jun 2026)
+  //   1. Google SRE Book (sre.google/sre-book)
+  //   2. The SRE Workbook (sre.google/workbook)
+  //   3. Building Secure and Reliable Systems (g.co/bsrs)
+  // ─────────────────────────────────────────────────────────────────────
+
+  {
+    id: 'release-engineering',
+    title: 'Release Engineering',
+    icon: 'package',
+    color: '#f59e0b',
+    questions: 4,
+    description: 'Hermetic builds, binary provenance, self-service pipelines, and the SRE Book\'s four principles that make releases boring by design.',
+    visualizations: [
+      {
+        title: 'Release pipeline — source to production in four gates',
+        description: 'Build (hermetic, reproducible) → Test (unit + integration + canary) → Stage (traffic replay) → Production (gated rollout with automated rollback). Each gate has a binary pass/fail verdict from tooling, not humans.',
+        image: '/diagrams/sre/rel-pipeline.png',
+      },
+      {
+        title: 'Hermetic build — same input always produces same output',
+        description: 'All dependencies pinned at known versions inside the build sandbox. No network calls during build. Binary produced by any engineer on any machine is bit-for-bit identical to the CI binary. Provenance record links artifact SHA → source commit → build log.',
+        image: '/diagrams/sre/rel-hermetic.png',
+      },
+    ],
+    introduction: `SRE Book Chapter 8 defines release engineering as "a specific job function and a set of best practices used by software companies to build and deliver software." The four release engineering principles the SRE Book establishes are: self-service model, high velocity, hermetic builds, and enforcement of policies through process rather than fiat.
+
+Self-service means development teams release their own software using centralized tooling built by the release engineering team — release engineers are not a bottleneck. High velocity means releases happen frequently, making each individual release smaller and lower-risk. Hermetic builds guarantee that the build process is fully specified, self-contained, and reproducible — no external dependencies at build time, no "works on my machine." Policy enforcement means security scanning, test gates, and compliance checks are baked into the pipeline, not bolted on as manual approvals.
+
+Binary provenance — the cryptographic linkage from a production binary back to a specific source commit, build environment, and test run — is the artifact that makes all four principles auditable. Without provenance, you cannot answer "what exactly is running in production right now."`,
+    whenToUse: [
+      '"How do you ensure what deploys to prod matches what was tested?" — hermetic builds + provenance',
+      'Designing a release system for a team growing from 10 to 100 engineers',
+      'Explaining why frequent small releases are safer than infrequent large ones',
+      'Justifying investment in build infrastructure vs. accepting slow, unreliable pipelines',
+    ],
+    keyConcepts: [
+      { term: 'Hermetic build', definition: 'A build where all inputs (source, dependencies, toolchain) are pinned; same inputs always produce the same binary. No network access during build.' },
+      { term: 'Binary provenance', definition: 'Cryptographic metadata linking a production artifact to the exact source commit, build environment, and test run that produced it. Enables "what is running in prod?"' },
+      { term: 'Self-service model', definition: 'Development teams own their release cadence using shared tooling; release engineers build the platform, not the release. Eliminates the bottleneck of a dedicated "release team."' },
+      { term: 'Enforcement through process', definition: 'Security scans, test gates, and compliance checks are automated pipeline stages — they cannot be bypassed. Policy is code, not a checklist.' },
+      { term: 'Flagged release', definition: 'Code that is deployed but not yet active, controlled by feature flags. Separates deployment (binary in production) from release (feature available to users).' },
+    ],
+    pitfalls: [
+      'Non-hermetic builds that call out to the internet at build time — a dependency server going down breaks every build.',
+      'Treating release engineering as "just ops" — the SRE Book treats it as a software engineering discipline with its own career track.',
+      'Manual approval gates as a substitute for automated test gates — manual approvals scale linearly with release frequency and add latency without improving quality.',
+      'Conflating deployment (binary is in production) with release (users can access the feature) — the distinction enables dark launches, canaries, and instant rollbacks.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What does "hermetic build" mean and why does SRE care about it?',
+        answer: `A hermetic build is one where every input — source code, dependencies, compiler, system libraries — is pinned to a known version and the build process runs in an isolated environment with no network access. The same inputs always produce the same binary output, bit for bit.
+
+SRE cares for three reasons. First, reproducibility: when a binary behaves differently in staging vs. production, a non-hermetic build is a leading suspect — the build server may have pulled a different dependency version. Hermetic builds eliminate that variable. Second, auditability: provenance records can cryptographically link any production binary back to a specific source commit and build log. Third, security: a build system that calls out to the internet is a supply-chain attack surface. Hermetic builds constrain what can be injected into the artifact.
+
+The SRE Book's Google-scale implementation (Blaze, now open-sourced as Bazel) achieves hermeticity through content-addressed build caches and sandboxed build actions. The same principle applies at any scale: pin everything, sandbox the build, record the provenance.`,
+      },
+      {
+        question: 'Why are frequent small releases safer than infrequent large releases, from an SRE perspective?',
+        answer: `Three compounding effects make large releases dangerous:
+
+1. Blast radius per release. A release with 50 changes has 50 potential root causes when something breaks. A release with 3 changes has 3. The larger the change set, the longer MTTD and MTTR — both because there are more suspects and because engineers are less familiar with code they reviewed weeks ago.
+
+2. Rollback atomicity. Rolling back a 50-change release reverts 50 changes, including ones that were correct and may have had downstream dependencies. Rolling back a 3-change release is surgical.
+
+3. Psychological risk amplification. Teams that release infrequently treat each release as a high-stakes event — they add manual approval gates, schedule change freezes, and move slowly. This cultural overhead compounds the technical risk. Frequent releases normalize the process, reduce individual release risk, and eliminate the change-freeze pattern that forces batching in the first place.
+
+The SRE Book quantifies this via the DORA metrics (deployment frequency, lead time, change failure rate, recovery time): high-performing engineering organizations deploy multiple times per day with lower change failure rates than teams deploying monthly. Frequency is correlated with, not opposed to, reliability.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the four SRE Book release engineering principles?', a: 'Self-service model, high velocity, hermetic builds, and enforcement of policies through automated process (not manual gates).' },
+      { q: 'What is binary provenance?', a: 'Cryptographic metadata linking a production artifact to the source commit, build environment, and test run that produced it. Answers "what exactly is running in prod?"' },
+      { q: 'What is the difference between deployment and release?', a: 'Deployment = binary is in production. Release = feature is available to users. Separating them enables canary rollouts, dark launches, and instant rollback without requiring a new deploy.' },
+      { q: 'Why should builds have no network access?', a: 'Network access during build creates non-hermetic builds — a dependency server going down breaks all builds, and a compromised dependency server can inject malicious code. Hermetic builds pin all dependencies upfront.' },
+      { q: 'What is a flagged release?', a: 'Code that is deployed but controlled by a feature flag — the binary is in production but the feature is off for users. Decouples release schedule from deployment schedule.' },
+      { q: 'How does release engineering reduce on-call burden?', a: 'Automated canary analysis and rollback mean bad releases self-revert before causing significant impact. Hermetic builds eliminate "it works on my machine" incidents. Frequent small releases reduce blast radius per incident.' },
+      { q: 'What is the SRE Book\'s self-service release model?', a: 'Development teams own their release cadence using shared tooling. Release engineers build the platform, not individual releases. Eliminates the bottleneck of a gatekeeping "release team."' },
+    ],
+    references: [
+      'https://sre.google/sre-book/release-engineering/',
+      'https://sre.google/workbook/canarying-releases/',
+      'https://bazel.build/',
+    ],
+  },
+
+  {
+    id: 'reliability-testing',
+    title: 'Testing for Reliability',
+    icon: 'checkSquare',
+    color: '#22c55e',
+    questions: 3,
+    description: 'The SRE testing hierarchy — unit through production — and how each layer targets a different class of reliability failure.',
+    visualizations: [
+      {
+        title: 'SRE testing pyramid — confidence vs cost',
+        description: 'Unit (fast, cheap, many) → Integration (slower, catches interface bugs) → System (full stack, catches emergent behavior) → Stress (finds capacity limits) → Canary (real traffic, real users) → DR test (validates recovery path). Each layer catches failure classes the one below cannot.',
+        image: '/diagrams/sre/test-pyramid.png',
+      },
+    ],
+    introduction: `SRE Book Chapter 17 frames testing not as quality assurance but as a confidence-building exercise for production. The key distinction: traditional QA asks "does the feature work?"; SRE testing asks "does the system remain reliable under real production conditions?"
+
+The SRE testing hierarchy has six layers. Unit tests catch algorithmic bugs in individual components — they run in milliseconds and should number in the thousands. Integration tests catch contract violations between components — service A calls service B expecting a specific schema; integration tests verify the schema. System tests run the entire stack in a production-like environment; they catch emergent failures that only appear when all components interact. Stress tests push the system beyond its designed load to find the capacity cliff and the failure mode — you want to find the breaking point in a controlled test, not during a Black Friday traffic spike. Canary tests run the new binary against a fraction of live production traffic; they catch failures that only appear with real user data. Disaster recovery tests deliberately destroy components and validate that recovery procedures work — these must be practiced because an untested DR procedure is not a DR procedure.
+
+The SRE Book's key insight: "If you haven't tested your recovery process, you don't have a recovery process." DR tests, chaos engineering, and game days all validate this layer.`,
+    whenToUse: [
+      '"How do you ensure a service stays reliable after changes?" — walk through the testing hierarchy',
+      'Justifying investment in integration or system tests when unit coverage is already high',
+      '"What testing does your team do before releasing to production?"',
+      'Designing a testing strategy for a new service with a reliability SLO',
+    ],
+    keyConcepts: [
+      { term: 'Unit test', definition: 'Validates a single function or class in isolation. Catches algorithmic bugs. Should be the most numerous, fastest, and cheapest tests in the suite.' },
+      { term: 'Integration test', definition: 'Validates that two or more components interact correctly — typically service-to-service API contracts, database schema adherence, or event format correctness.' },
+      { term: 'System test', definition: 'Runs the full service stack in a production-like environment. Catches emergent failures that only appear when all components interact simultaneously.' },
+      { term: 'Stress test', definition: 'Applies load beyond the service\'s designed capacity to identify the breaking point, the failure mode, and the recovery behavior. Answers "what happens when we hit our traffic spike?"' },
+      { term: 'Canary test', definition: 'Routes a small fraction of live production traffic to the new binary. Real users, real data — catches failures that staged tests miss because production traffic is unpredictable.' },
+      { term: 'DR test', definition: 'Deliberately destroys or disables a component and validates that documented recovery procedures produce recovery within RTO. An untested DR procedure is not a DR procedure.' },
+    ],
+    pitfalls: [
+      'Over-investing in unit tests while skipping integration tests — unit tests do not catch interface bugs between services, which are the most common failure class in microservices.',
+      'Testing only the happy path — reliability failures occur in error handling, timeout behavior, and degraded-mode operation, which unit tests rarely cover.',
+      'Never running DR tests — organizations routinely discover that their backup restoration procedure is broken only during an actual incident.',
+      'Confusing load testing (validates performance at expected load) with stress testing (finds the breaking point beyond expected load) — both are necessary.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Why can\'t you rely on unit tests alone to validate service reliability?',
+        answer: `Unit tests validate individual components in isolation. The reliability failures that actually page SREs almost never originate in a single component behaving incorrectly in isolation — they originate in the interactions between components:
+
+- Service A calls Service B with a payload format that changed after a library upgrade — integration test catches this; unit tests for both services pass independently.
+- The service performs correctly under normal load but fails to handle a connection pool exhaustion under high load — stress test catches this; unit tests don't model connection pools.
+- A new binary handles all test scenarios correctly but has a memory leak that only manifests after 4 hours of sustained production traffic — canary test with monitoring catches this; unit tests and staging tests miss it entirely.
+- The database backup restoration procedure was last tested 18 months ago and now fails due to a schema migration — DR test catches this; nothing else does.
+
+The SRE Book's testing hierarchy addresses each failure class with the appropriate test layer. A 95% unit test coverage number tells you about algorithmic correctness, not reliability.`,
+      },
+      {
+        question: 'How do you design a stress test for a service whose peak traffic you\'ve never seen?',
+        answer: `Four steps:
+
+1. Establish the baseline. Run load tests at current peak (with 20% headroom) to confirm the service handles it and to establish the performance profile — latency percentiles, error rate, CPU/memory utilization at known load.
+
+2. Apply a model. If the service has been running for 6+ months, use historical traffic data to project growth: 3× current peak in 12 months, or 10× for a new service launch. If you have no data, use the business team's projections and add 2× safety margin.
+
+3. Find the cliff. Increase load at 10% increments, watching for: latency p99 exceeding SLO thresholds, error rate breaking the error budget, resource saturation (CPU >80%, connection pool exhaustion), or cascading behavior (downstream service starts failing). The cliff is the load level where the system transitions from degraded to failing.
+
+4. Validate the failure mode. When the service breaks under stress, it should break gracefully — queue backing up, requests timing out with 503s, circuit breakers opening. A crash, data corruption, or silent data loss under stress is a reliability bug, not just a capacity limit.
+
+Document: peak load supported, failure mode, recovery behavior, and the capacity additions needed to handle 2× projected peak.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the six layers of the SRE testing hierarchy?', a: 'Unit, integration, system, stress, canary (production traffic subset), and disaster recovery tests. Each layer catches a distinct class of reliability failure.' },
+      { q: 'What does a canary test catch that staging tests cannot?', a: 'Real user traffic patterns, real data shapes, and real interaction sequences. Production traffic is unpredictable in ways that staged test data never fully replicates.' },
+      { q: 'Why must DR procedures be tested, not just documented?', a: '"If you haven\'t tested your recovery process, you don\'t have a recovery process." (SRE Book Ch 17). Documentation decays — backup restore procedures break silently when schemas change or tooling versions drift.' },
+      { q: 'What is the difference between a load test and a stress test?', a: 'Load test: validates the service handles expected peak traffic within SLO. Stress test: pushes beyond expected peak to find the breaking point and validate the failure mode. Both are necessary.' },
+      { q: 'What does an integration test validate that a unit test cannot?', a: 'Service-to-service API contracts, database schema adherence, event format correctness. Unit tests validate individual components in isolation; integration tests validate that the interfaces between components are correct.' },
+      { q: 'How often should DR tests be run?', a: 'At minimum quarterly; for critical services, monthly. Frequency should match the pace of system change — a DR procedure validated 12 months ago against a service that has since migrated databases may be invalid.' },
+      { q: 'What makes a reliability test different from a functionality test?', a: 'Functionality tests ask "does the feature work?" Reliability tests ask "does the system remain stable under failure conditions, high load, network partitions, and real user data?" They test the error paths, not just the happy path.' },
+    ],
+    references: [
+      'https://sre.google/sre-book/testing-reliability/',
+      'https://sre.google/workbook/canarying-releases/',
+    ],
+  },
+
+  {
+    id: 'nalsd',
+    title: 'NALSD — Non-Abstract Large System Design',
+    icon: 'layers',
+    color: '#22c55e',
+    questions: 3,
+    description: 'The SRE Workbook\'s structured approach to system design interviews: requirements quantification, component sizing, and explicit trade-off documentation.',
+    visualizations: [
+      {
+        title: 'NALSD method — five steps from requirements to architecture',
+        description: 'Step 1: requirements (what must it do, at what scale). Step 2: capacity estimates (QPS, storage, bandwidth). Step 3: component design (which components, which interfaces). Step 4: reliability analysis (single points of failure, failure domains). Step 5: trade-offs (what did you give up to get what you chose).',
+        image: '/diagrams/sre/nalsd-method.png',
+      },
+    ],
+    introduction: `SRE Workbook Chapter 12 introduces Non-Abstract Large System Design (NALSD) as a structured method for designing production systems that SREs must operate. The word "non-abstract" is load-bearing: unlike whiteboard designs that wave hands at "a database" or "a cache," NALSD requires concrete numbers at every step — actual QPS, actual storage bytes, actual machine counts, actual failure domains.
+
+The NALSD method has five phases. First, clarify requirements: functional requirements (what must the system do) and non-functional requirements (scale, latency targets, availability SLO, geographic distribution). Second, estimate capacity: derive the steady-state load from first principles — if the system serves 10M DAU each making 50 requests/day, that's 5,000 QPS at steady state, 15,000 at peak (3× factor), with specific storage growth rate per day. Third, design components: choose which components are needed, how they communicate, and where state lives. Fourth, analyze reliability: identify single points of failure, failure domains, and whether the design meets the stated SLO under the realistic failure scenarios. Fifth, document trade-offs explicitly: what did you sacrifice to achieve the design's strengths?
+
+The Workbook's key insight: a design review that skips the capacity estimation step cannot evaluate whether the design is operationally feasible. "A distributed system that requires 10,000 machines to handle a 1,000 QPS workload is not a good design, even if it is functionally correct."`,
+    whenToUse: [
+      'System design interviews — the NALSD framework gives a structured answer to "design X at Google scale"',
+      'Production readiness reviews — the reliability analysis phase exposes SPOFs before launch',
+      'Capacity planning for a new service — requirements → estimate → component → sizing',
+      '"Walk me through how you would design this system" — NALSD provides the five-phase structure',
+    ],
+    keyConcepts: [
+      { term: 'NALSD', definition: 'Non-Abstract Large System Design. A structured method requiring concrete numbers (QPS, storage, machine counts) at each design phase, not abstract component names.' },
+      { term: 'Requirements phase', definition: 'Establish functional requirements (what must it do) and non-functional requirements (scale, latency SLO, availability SLO, geographic constraints) before designing anything.' },
+      { term: 'Capacity estimation', definition: 'Derive steady-state QPS, storage growth rate, and bandwidth from first principles (DAU × requests/day, record size × write rate). The most-skipped and most-important design step.' },
+      { term: 'Failure domain analysis', definition: 'For each component, identify the blast radius of its failure: what breaks, how many users are affected, and whether the stated SLO can still be met.' },
+      { term: 'Trade-off documentation', definition: 'Every design choice has a cost. NALSD requires naming what you gave up: latency for throughput, consistency for availability, cost for redundancy.' },
+    ],
+    pitfalls: [
+      'Jumping to component design before capacity estimation — you cannot know if "one database" is sufficient without knowing the write rate, storage growth, and read QPS.',
+      'Listing components without specifying interfaces — "the service talks to the database" is abstract; "the service issues 500 writes/sec to a Postgres primary with <5ms p99 latency budget" is not.',
+      'Ignoring failure domains — a design that looks correct under normal operation may violate its SLO if a single availability zone fails.',
+      'Treating trade-offs as optional — every interviewer asking a NALSD question is implicitly asking "what did you give up?" Silence is a worse answer than an imperfect trade-off.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through the NALSD method for designing a URL shortener serving 100M users.',
+        answer: `Step 1 — Requirements. Functional: accept a long URL, return a short code; resolve a short code to the original URL. Non-functional: write rate (estimate 1% of DAU create a link per day = 1M writes/day = ~12 writes/sec). Read rate (each link is clicked 10× on average = 10M reads/day = ~120 reads/sec, with 10× peak = 1,200 reads/sec). Latency: p99 redirect <50ms. Availability: 99.9% (8.7h downtime/year).
+
+Step 2 — Capacity. Storage: short code (7 chars) + long URL (avg 200 chars) + metadata (100 chars) = ~300 bytes/record. 1M writes/day × 365 = 365M records/year = ~110GB/year. Five-year storage: ~550GB — fits on a single database server but warrants a read replica.
+
+Step 3 — Components. Write path: API server → write to primary DB, generate code (hash of long URL + collision check, or base62 of auto-increment ID). Read path: API server → check Redis cache (hit: redirect; miss: query replica DB, populate cache). Cache sizing: if the top 20% of links serve 80% of traffic, cache ~73M records × 300 bytes = ~22GB — fits in one Redis node.
+
+Step 4 — Reliability. Single points of failure: primary DB (mitigate with hot standby + automated failover), Redis (mitigate with replica), API server (mitigate with multiple instances behind load balancer). Failure domain: single region → 99.9% achievable; global availability → requires multi-region with DNS routing.
+
+Step 5 — Trade-offs. Chose base62 of auto-increment over hash: predictable, collision-free, but sequentially guessable (security trade-off). Chose single-region over multi-region: lower cost and complexity, but cannot achieve 99.99%.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What does "non-abstract" mean in NALSD?', a: 'Every design decision must use concrete numbers — actual QPS, actual storage bytes, actual machine counts. Vague components ("a database," "a cache") are replaced with sized, specified components.' },
+      { q: 'What are the five NALSD phases in order?', a: 'Requirements → capacity estimation → component design → failure domain/reliability analysis → trade-off documentation.' },
+      { q: 'Why is capacity estimation the most-skipped and most-important NALSD step?', a: 'You cannot evaluate whether a component choice is correct without knowing the load it must handle. A design review that skips sizing cannot determine if the design is operationally feasible.' },
+      { q: 'What is a failure domain?', a: 'The set of components that fail together when a single failure occurs — e.g., everything in one AZ, or everything sharing a database primary. Identifying failure domains reveals SLO violations hiding in "correct" designs.' },
+      { q: 'What is the standard peak-to-steady-state multiplier used in capacity estimates?', a: 'Typically 3×–5× for consumer services (traffic spikes at business hours or events). Use historical data if available; use 5× as a conservative default for new services.' },
+      { q: 'How do you handle trade-offs in a system design interview?', a: 'Name the trade-off explicitly: "I chose X over Y because X optimizes for [primary goal] at the cost of [what you gave up]. For this system\'s requirements, that trade-off is correct because..."' },
+    ],
+    references: [
+      'https://sre.google/workbook/non-abstract-design/',
+    ],
+  },
+
+  {
+    id: 'admission-control',
+    title: 'Admission Control',
+    icon: 'sliders',
+    color: '#ec4899',
+    questions: 3,
+    description: 'The SRE Book\'s approach to handling server overload: CPU-based throttling, per-client quotas, and criticality signals that prevent overload from destroying service quality for all users.',
+    visualizations: [
+      {
+        title: 'Admission control — three-layer defense against overload',
+        description: 'Layer 1: client-side throttling (client tracks error rate, throttles itself before the server saturates). Layer 2: server-side admission (reject requests when CPU utilization exceeds threshold, with per-client quota enforcement). Layer 3: criticality-based shedding (if overloaded, shed lowest-criticality traffic first — batch jobs before interactive requests).',
+        image: '/diagrams/sre/admission-control.png',
+      },
+    ],
+    introduction: `SRE Book Chapter 21 ("Handling Overload") addresses a failure mode that circuit breakers and load balancers alone cannot prevent: a server that is so saturated that it cannot process requests fast enough to serve its own error responses. At extreme overload, the server spends all its capacity on requests it will ultimately reject, entering a death spiral.
+
+The SRE Book's admission control strategy has three layers. Client-side throttling: each client tracks its own recent request/error ratio; when errors climb, the client throttles new requests before they reach the server. This is called "client-side adaptive throttling" — the Workbook Chapter 17 provides the exact formula: throttle probability = max(0, (requests - K × accepts) / (requests + 1)), where K is a multiplier (typically 2) that determines how aggressively the client throttles. Server-side admission: the server enforces per-client quotas and rejects requests that exceed them with 429 responses — not after processing them, but before allocating resources. Criticality-based shedding: when the server is saturated, it sheds work by criticality — batch background jobs are stopped first, then non-interactive RPCs, then interactive user-facing requests. Criticality is propagated in request metadata.
+
+The critical insight from Ch 21: "Servers should protect themselves from overload by explicitly throttling requests, rather than attempting to handle all requests and failing unpredictably." Predictable degradation — serve fewer users at full quality — beats unpredictable degradation — serve all users at random quality.`,
+    whenToUse: [
+      '"What happens to your service when it receives 10× its normal traffic?" — walk through admission control layers',
+      'Designing a public API that must stay stable when clients misbehave or traffic spikes unexpectedly',
+      '"How do you prevent a retry storm from taking down your service?" — client-side adaptive throttling',
+      'Explaining why a server should reject requests early rather than queueing them indefinitely',
+    ],
+    keyConcepts: [
+      { term: 'Client-side adaptive throttling', definition: 'Client tracks its own request/error ratio and throttles new outbound requests before they reach the server, proportional to the recent rejection rate. Prevents retry storms from amplifying overload.' },
+      { term: 'Per-client quota enforcement', definition: 'Server tracks request rate per authenticated client and returns 429 (Too Many Requests) immediately — before resource allocation — for quota-exceeding requests.' },
+      { term: 'Criticality', definition: 'A metadata field on each request classifying its business importance. During overload, the server sheds lowest-criticality requests first, preserving quality for high-criticality user-facing traffic.' },
+      { term: 'Load-based admission', definition: 'Server-side gate that rejects new requests when CPU or queue depth exceeds a threshold — measured in utilization, not arrival rate. Prevents the overload death spiral.' },
+      { term: 'Backend response estimation', definition: 'When a backend is too overloaded to serve a response, returning a cached stale response or a degraded response is better than timing out — serves the user, reduces retry pressure.' },
+    ],
+    pitfalls: [
+      'Relying only on timeouts for overload handling — timeouts reduce server load after the fact, but the damage (resource exhaustion, queue saturation) is already done.',
+      'Clients retrying 503s without backoff — a server returning 503 under overload is immediately deluged by retries from all clients simultaneously, amplifying the overload.',
+      'Not propagating criticality metadata — without criticality signals, all traffic is treated equally under load and the server cannot make intelligent shedding decisions.',
+      'Setting per-client quotas too high — if all clients are quota-limited at 10,000 RPS and you have 1,000 clients, the server can still receive 10M RPS. Quotas must be set relative to total server capacity.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain client-side adaptive throttling and why it outperforms pure server-side rate limiting during overload.',
+        answer: `Client-side adaptive throttling works from a simple formula the SRE Book provides verbatim: throttle probability = max(0, (requests - K * accepts) / (requests + 1)).
+
+Each client tracks its own request count and accept count over a rolling window (typically 2 minutes). When the server starts rejecting requests (accepts < requests), the ratio rises and each client probabilistically drops outbound requests before sending them. K (typically 2) controls the sensitivity: at K=2, a client starts throttling when more than half its requests are rejected.
+
+This outperforms pure server-side rate limiting in two ways. First, it reduces server load before the server is saturated — clients throttle themselves at the first sign of rejection, not after the server is in a death spiral. Second, it distributes the throttling decision across all clients without central coordination — each client adapts independently, which is both resilient and scalable.
+
+The failure mode of server-only rate limiting: a server returning 429s under overload still receives the request, allocates resources to parse and authenticate it, then rejects it. At 100,000 RPS of inbound requests generating 100,000 RPS of 429 responses, the server is fully saturated serving rejection messages. Client-side throttling prevents this by ensuring most of those requests never leave the client.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the SRE Book\'s formula for client-side adaptive throttling?', a: 'throttle_probability = max(0, (requests - K * accepts) / (requests + 1)), where K (typically 2) controls throttle aggressiveness. Higher K = more tolerant of rejections before throttling.' },
+      { q: 'Why should servers reject requests before processing them rather than after?', a: 'Processing a request before rejecting it wastes server resources — CPU for auth, memory for request parsing. Under overload, wasted resources on rejected requests accelerate the death spiral. Reject at the admission gate, before resource allocation.' },
+      { q: 'What is criticality in the context of admission control?', a: 'A request metadata field indicating business importance (e.g., CRITICAL_PLUS, SHEDDABLE_PLUS). During overload, the server sheds SHEDDABLE requests first, preserving capacity for user-facing CRITICAL traffic.' },
+      { q: 'How does admission control differ from a circuit breaker?', a: 'Circuit breaker: caller-side protection that stops sending requests to a degraded service. Admission control: server-side protection that rejects requests the server cannot handle. They are complementary — circuit breakers protect callers, admission control protects servers.' },
+      { q: 'What happens to a service that queues all requests rather than rejecting them under overload?', a: 'Queue depth grows unbounded, latency increases for all requests, and the service enters a death spiral where it spends all capacity on work it cannot complete in time. Explicit admission control prevents the queue from growing beyond the processing capacity.' },
+      { q: 'What is the preferred response when a backend is too overloaded to generate a response?', a: 'Return a cached stale response or a degraded response rather than timing out. Stale is better than absent — it serves the user and reduces retry pressure on the overloaded backend.' },
+    ],
+    references: [
+      'https://sre.google/sre-book/handling-overload/',
+      'https://sre.google/workbook/managing-load/',
+    ],
+  },
+
+  {
+    id: 'config-management',
+    title: 'Configuration Management',
+    icon: 'settings',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'SRE Workbook approach to configuration as code: validation, staged rollout, blast radius containment, and the pitfalls that make config changes the leading cause of production incidents.',
+    visualizations: [
+      {
+        title: 'Safe config rollout — staged with automated validation',
+        description: 'Config change commit → schema validation (fail fast on syntax/type errors) → canary deployment to 1% of instances → metric comparison against baseline → staged rollout to 10% → 50% → 100% with automated hold/rollback if error rate rises.',
+        image: '/diagrams/sre/config-rollout.png',
+      },
+    ],
+    introduction: `SRE Workbook Chapters 14 and 15 treat configuration as a first-class engineering artifact — not a collection of YAML files that someone edits at 2am, but a versioned, validated, staged deployment pipeline with automated rollback.
+
+The central SRE Book insight on configuration: "A change in configuration is a change in behavior." Configuration changes cause the majority of major production incidents — not code changes, not hardware failures, but human-written configuration that is not validated before it reaches production.
+
+Four principles from the Workbook govern safe configuration management. First, configuration must have a schema: every field must be typed, range-bounded, and validated before the configuration is accepted. A configuration system that accepts arbitrary strings will eventually accept a malformed value that crashes the service. Second, configuration changes must be staged: no configuration change reaches 100% of instances simultaneously. The safe rollout pattern is 1% canary → automated validation → 10% → 50% → 100%. Third, configuration rollback must be faster than the service restart time: if rolling back a bad configuration takes longer than the service takes to restart, the configuration system is not safe for production. Fourth, configuration and code must be versioned together: a binary deployed at version N expects a configuration schema that is versioned and compatible with version N.`,
+    whenToUse: [
+      '"What percentage of incidents are caused by configuration changes?" — most industry data says 30-70%',
+      'Designing a configuration system for a service that operates across multiple environments',
+      '"How do you safely roll out a configuration change?" — the staged rollout pattern',
+      'Justifying investment in configuration validation tooling vs. manual review',
+    ],
+    keyConcepts: [
+      { term: 'Configuration as code', definition: 'Configuration is stored in version control, reviewed like code, validated by automated tooling, and deployed through the same staged pipeline as binary changes.' },
+      { term: 'Schema validation', definition: 'Every configuration field is typed and range-bounded. Invalid configuration is rejected before deployment, not after it reaches production instances.' },
+      { term: 'Configuration canary', definition: 'The new configuration is applied to 1% of instances first. Metrics are compared against the 99% running the previous config. Rollout proceeds only if no regressions are detected.' },
+      { term: 'Configuration drift', definition: 'When production configuration diverges from version-controlled configuration through ad-hoc manual edits. Drift is the primary reason why "it works in staging" incidents occur.' },
+      { term: 'Feature flags', definition: 'Configuration-driven toggles that enable or disable code paths without a binary deployment. Separate code deployment from behavior change, enabling gradual exposure and instant rollback.' },
+    ],
+    pitfalls: [
+      'Applying configuration changes to all instances simultaneously — a bad config at 100% scope is a SEV-1 with no fast rollback path.',
+      'No schema validation — accepting arbitrary YAML or JSON without type checking allows malformed values to reach production and crash services during startup.',
+      'Treating configuration differently from code — "it\'s just a config change" is the most dangerous phrase in production operations. Config changes have the same blast radius as code changes.',
+      'Storing secrets in configuration files — configuration is often more widely accessible than the service binary. Secrets belong in a secrets manager, referenced by configuration, not embedded in it.',
+    ],
+    keyQuestions: [
+      {
+        question: 'Why do configuration changes cause more production incidents than code changes, and how do you prevent it?',
+        answer: `Three structural reasons configuration is more dangerous than code:
+
+1. Config changes bypass the testing pipeline. Code changes go through unit tests, integration tests, code review, and a staged binary rollout. Configuration changes in most organizations go through: someone edits a YAML file, another person looks at the diff, it deploys to production. The shorter the review process, the more likely errors survive.
+
+2. Config changes are untyped and unvalidated by default. Code fails to compile if you pass a string where an integer is required. Configuration in most systems accepts any value that is syntactically valid YAML/JSON, including ranges that are semantically invalid (timeout: -1ms, replicas: 0, max_connections: "banana").
+
+3. Config changes are often made under time pressure. Feature flags toggled during an incident, rate limits adjusted during a traffic spike — the situations that most require config changes are also the situations with least time for careful review.
+
+Prevention requires treating configuration as code: version control with mandatory review, schema validation that rejects invalid values before deployment, staged rollout (1% canary → metric comparison → 10% → 50% → 100%), and automated rollback if metrics regress within 15 minutes of the config change completing.
+
+The Workbook additionally recommends: config and binary versions must be compatible and versioned together; a config system that does not support atomic rollback is not safe for production.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What percentage of production incidents are caused by configuration changes?', a: 'Industry data consistently shows 30-70% of major incidents are triggered by configuration changes, making config the leading single cause of production failures.' },
+      { q: 'What is the safe configuration rollout sequence?', a: '1% canary → automated metric validation → 10% → 50% → 100%. Automated hold or rollback if error rate or latency SLO regressions are detected at any stage.' },
+      { q: 'What is configuration drift and why is it dangerous?', a: 'Drift is when production config diverges from version-controlled config through ad-hoc edits. It creates an invisible gap between "what we think is configured" and "what is actually running," causing "it works in staging" incidents.' },
+      { q: 'What must a production-safe configuration system guarantee about rollback?', a: 'Configuration rollback must complete faster than the service startup time. If rolling back config takes longer than restarting the service, the config system is not safe for production incidents.' },
+      { q: 'What is the difference between a feature flag and a config value?', a: 'Feature flags are boolean configuration toggles that enable/disable code paths without a binary deployment. Regular config values tune behavior (timeouts, limits, thresholds). Both require validation and staged rollout.' },
+      { q: 'Why should secrets never be stored in configuration files?', a: 'Configuration files are often committed to version control, cached in CI systems, and accessed by more engineers than have production access. Secrets belong in a secrets manager (Vault, AWS Secrets Manager) and referenced by configuration, not embedded in it.' },
+    ],
+    references: [
+      'https://sre.google/workbook/configuration-design/',
+      'https://sre.google/workbook/configuration-specifics/',
+    ],
+  },
+
+  {
+    id: 'canary-analysis',
+    title: 'Canary Analysis',
+    icon: 'trendingUp',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'The SRE Workbook\'s automated canary analysis methodology: metric selection, baseline comparison, automated rollout decisions, and why canarying catches what staging cannot.',
+    visualizations: [
+      {
+        title: 'Automated canary analysis pipeline',
+        description: 'New binary deployed to 1% of instances (canary). Canary and baseline traffic are compared across key metrics (error rate, p99 latency, CPU, custom business metrics) over a fixed window. Automated analysis engine scores the canary as PASS/FAIL/INCONCLUSIVE. PASS triggers progressive rollout; FAIL triggers automatic rollback.',
+        image: '/diagrams/sre/canary-pipeline.png',
+      },
+    ],
+    introduction: `SRE Workbook Chapter 16 ("Canarying Releases") defines a canary as "a small, controlled experiment on live production traffic that uses real user data to evaluate whether a binary change is safe to fully release." The key words are live, real, and controlled.
+
+The canary catches failures that staging environments systematically miss: production traffic has unpredictable data shapes, edge cases that test data never exercises, user behavior patterns that are impossible to reproduce synthetically, and correlated load patterns. A binary that passes all staging tests can fail on 0.01% of production requests — a canary exposes this before it affects all users.
+
+The Workbook's canary analysis framework has three components. Baseline selection: the canary must be compared against a simultaneously-running baseline of the same binary version that was previously stable — not against historical metrics, which may reflect different traffic patterns. Metric selection: you need at minimum error rate, request latency (p50 and p99), and resource utilization (CPU, memory). Beyond those, add service-specific business metrics: order failure rate for an e-commerce service, transaction error rate for a payments service, segfault rate for a compute service. Analysis automation: the pass/fail decision must be automated. Human-evaluated canaries have two failure modes — engineers approve bad canaries under time pressure ("it looks fine") and reject good canaries due to unrelated noise. Automated analysis engines (Spinnaker/Kayenta, Netflix's approach) compare statistical distributions of canary vs. baseline metrics and produce a confidence-scored verdict.`,
+    whenToUse: [
+      '"How do you release a binary change safely to production?" — walk through canary methodology',
+      '"What\'s the difference between canarying and blue/green deployment?"',
+      'Designing a release strategy for a high-traffic service with a strict reliability SLO',
+      '"What metrics do you watch during a canary rollout?"',
+    ],
+    keyConcepts: [
+      { term: 'Canary', definition: 'A small controlled experiment routing a fraction of live production traffic (typically 1-5%) to a new binary version, compared against a simultaneously-running baseline.' },
+      { term: 'Baseline', definition: 'Instances running the previous stable binary, receiving equivalent traffic simultaneously with the canary. Comparison must be simultaneous to control for time-of-day traffic variations.' },
+      { term: 'Automated canary analysis', definition: 'Automated comparison of canary vs. baseline metric distributions. Produces a confidence-scored PASS/FAIL/INCONCLUSIVE verdict, triggering rollout or rollback without human approval.' },
+      { term: 'Canary bake time', definition: 'The minimum duration for which the canary must run before analysis is performed. Too short (< 15 min) captures insufficient data; too long delays releases. Typical: 30-60 minutes for high-traffic services.' },
+      { term: 'Progressive rollout', definition: 'After canary PASS, traffic is shifted incrementally: 1% → 10% → 25% → 50% → 100%. Each increment has its own analysis window. Rollback is triggered at any stage if metrics regress.' },
+    ],
+    pitfalls: [
+      'Comparing canary metrics against historical baselines — historical metrics reflect different traffic volumes, time-of-day patterns, and user behavior. Compare against simultaneous baseline only.',
+      'Short bake times catching too little traffic — a canary receiving 50 requests over 5 minutes cannot statistically distinguish a 2% error rate from noise. Wait for statistical significance.',
+      'Human-evaluated canaries under time pressure — engineers approve marginal canaries when they are under release pressure. Automated analysis removes the human from the go/no-go decision.',
+      'Watching only infrastructure metrics — CPU and latency regressions are obvious; business metric regressions (higher checkout abandonment rate) require service-specific custom metrics in the canary analysis.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you design a canary analysis strategy for a payments service with 10,000 QPS?',
+        answer: `At 10,000 QPS, a 1% canary receives 100 RPS — sufficient for statistical significance within 10 minutes. The canary analysis should include:
+
+Infrastructure metrics: error rate (HTTP 5xx and payment-specific error codes), p50/p99 latency, CPU utilization, memory utilization, connection pool saturation. Regressions in any of these that exceed 10% relative change vs. baseline trigger an automatic hold.
+
+Business metrics: transaction success rate (distinct from HTTP 200 — a 200 response with a "payment declined" body in the response payload is a business failure), idempotency key collision rate (indicates request deduplication is broken), and average transaction processing time (separate from HTTP latency — captures database and downstream service latency).
+
+Baseline selection: 5% of traffic routed to the stable binary simultaneously with the 1% canary on the new binary. The remaining 94% is irrelevant to canary comparison.
+
+Bake time: 30 minutes at 100 RPS canary traffic = 180,000 requests — sufficient for detecting a 0.1% change in error rate at 99% confidence.
+
+Rollout sequence: PASS at 30 min → 5% → PASS at 15 min → 25% → PASS at 15 min → 100%. Automated rollback (return to 0% canary, restore to stable binary) if any metric exceeds regression threshold at any stage.
+
+Critical: payments services should have a post-rollout reconciliation check — compare successful transactions recorded in the payment processor against the database 1 hour after full rollout. Data integrity failures in a payment service are more dangerous than availability failures.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the minimum set of metrics to watch in a canary analysis?', a: 'Error rate, p50 and p99 latency, CPU utilization. For any service with business transactions, add business success rate (e.g., order success rate, not just HTTP 200).' },
+      { q: 'Why must canary comparisons use simultaneous baselines, not historical metrics?', a: 'Traffic volume, user behavior, and backend load all vary by time of day. A canary running at 2pm compared against 9am historical metrics confounds time-of-day variation with binary change effects.' },
+      { q: 'What is the standard canary traffic fraction?', a: '1-5% for high-traffic services (statistical significance in minutes). For low-traffic services, higher fractions may be needed — the goal is 1,000+ requests in the bake window for statistical confidence.' },
+      { q: 'What is automated canary analysis and why is it preferred over human evaluation?', a: 'Automated analysis (e.g., Kayenta, Spinnaker) compares statistical distributions of canary vs. baseline metrics and produces a confidence-scored verdict. Human evaluation fails under time pressure — engineers approve marginal canaries when rushing a release.' },
+      { q: 'What triggers an automatic canary rollback?', a: 'Any metric regression exceeding the configured threshold (typically 10-20% relative change in error rate or latency vs. baseline). The rollback is automatic — the canary traffic is redirected back to the stable binary without human action.' },
+      { q: 'What is canary bake time?', a: 'The minimum duration the canary must run before analysis occurs. Too short = insufficient data, high false-positive rate. Typical: 30-60 minutes for high-traffic services, proportionally longer for low-traffic services.' },
+    ],
+    references: [
+      'https://sre.google/workbook/canarying-releases/',
+      'https://spinnaker.io/docs/guides/user/canary/',
+    ],
+  },
+
+  {
+    id: 'data-integrity',
+    title: 'Data Integrity',
+    icon: 'database',
+    color: '#22c55e',
+    questions: 3,
+    description: 'SRE Book Chapter 26 — reading what you wrote: checksums, soft deletes, backup validation, and why data loss is harder to recover from than downtime.',
+    visualizations: [
+      {
+        title: 'Data integrity verification pipeline',
+        description: 'Write path: application → database (with write checksum). Read path: database → checksum verification → application. Backup path: primary → logical backup → integrity verification (restore + checksums) → offsite storage. Alert: data loss MTTD must be shorter than backup retention window.',
+        image: '/diagrams/sre/data-integrity.png',
+      },
+    ],
+    introduction: `SRE Book Chapter 26 opens with a statement that frames the entire chapter: "The goal of data integrity is to ensure that data is what you expect it to be — that what you read is what you wrote." This is distinct from availability (the data is accessible) and durability (the data is persisted). A system can be available and durable while silently corrupting the data it stores.
+
+The chapter introduces three categories of data loss and corruption. Physical corruption: bit-rot in storage, hardware failure, cosmic ray bit flips — addressed by checksums at the storage layer and RAID/replication at the hardware layer. Logical corruption: application bugs that write incorrect data, schema migrations that transform data incorrectly, bugs in backup/restore procedures — addressed by application-layer checksums, schema migration testing, and backup validation via test restores. Deletion (intentional and accidental): user-initiated deletes, admin mistakes, software bugs that delete data incorrectly — addressed by soft deletes (mark deleted, retain for a period), delayed hard deletes, and point-in-time recovery.
+
+The SRE Book's key operational insight: "Data loss is almost always harder to recover from than an availability failure." A service that is unavailable for 4 hours returns to full operation at hour 4. A service that loses 10% of its customer records may never fully recover — the data is simply gone. This asymmetry justifies investing more in data integrity than availability: an extra 9 of availability is worth less than a comprehensive backup validation program.`,
+    whenToUse: [
+      '"How do you ensure data written to your service is the same data read back?"',
+      '"What is your backup strategy and how do you know it works?"',
+      'Designing a storage system that must handle both hardware failures and application bugs',
+      '"What is the difference between durability and integrity?"',
+    ],
+    keyConcepts: [
+      { term: 'Data integrity', definition: 'The guarantee that data read from a system is identical to data written to it. Distinct from availability (data is accessible) and durability (data is persisted).' },
+      { term: 'Checksum', definition: 'A hash of the data content stored alongside the data. On read, the stored checksum is recomputed and compared — a mismatch indicates corruption between write and read.' },
+      { term: 'Soft delete', definition: 'Marking a record as deleted (deleted_at timestamp) without removing it from storage. Enables recovery from accidental deletion. Hard delete occurs after a retention period (e.g., 30 days).' },
+      { term: 'Backup validation', definition: 'Regularly performing test restores from backup to verify that the backup contains correct, uncorrupted data and that the restore procedure works. An untested backup is not a backup.' },
+      { term: 'Point-in-time recovery (PITR)', definition: 'The ability to restore a database to its state at any specific timestamp within a retention window. Requires continuous transaction log shipping, not just periodic snapshots.' },
+    ],
+    pitfalls: [
+      'Treating backup existence as backup validation — backups that are never restored are commonly discovered to be corrupt or incomplete during the incident they are needed for.',
+      'Hard-deleting data immediately on user request — accidental deletion (user error, software bug, admin mistake) is a leading cause of data loss. Soft deletes with a retention period are the standard mitigation.',
+      'Relying solely on replication for data integrity — database replication propagates corruption. If a bug writes corrupt data to the primary, the corrupt data is immediately replicated to all replicas.',
+      'Not monitoring backup age — a backup job that silently fails leaves the service with stale backups. Alert when last successful backup is older than 25 hours (gives one missed daily backup before alarming).',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you design a data integrity strategy for a service that cannot tolerate data loss?',
+        answer: `Four-layer strategy from the SRE Book framework:
+
+Layer 1 — Write integrity. Application computes a checksum of each record at write time and stores it alongside the data. Read path recomputes the checksum and fails loudly on mismatch. This catches: storage corruption, partial writes, hardware failures. Implement at the application layer, not just the storage layer — storage checksums catch hardware corruption but not application-level bugs.
+
+Layer 2 — Deletion safety. Implement soft deletes: delete operations set a deleted_at timestamp, not a physical row removal. Hard deletion is deferred 30 days (longer for compliance-sensitive data). Undelete is a supported API operation during the retention window. This catches: accidental user deletion, software bugs that issue incorrect deletes, admin mistakes.
+
+Layer 3 — Backup with validation. Daily logical backups (pg_dump, mysqldump, or equivalent snapshot). Monthly test restores to a shadow environment with automated integrity checks — row counts, checksum verification, key invariant validation (e.g., "no order without a customer"). Alert on last-successful-backup age exceeding 25 hours. A backup that has never been restored is not a backup.
+
+Layer 4 — Point-in-time recovery. Enable continuous transaction log shipping (WAL archiving for Postgres, binlog for MySQL). Retain logs for 7 days. Test PITR quarterly by restoring to a specific timestamp and running automated tests against the restored state. PITR is the recovery path for "we had a bug that corrupted data starting at 14:32:07 yesterday."`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is the difference between data durability and data integrity?', a: 'Durability: the data persists across failures (stored on disk, replicated). Integrity: the stored data is what was written (no corruption, no silent modification). A system can be durable while being non-integer if it stores corrupted data reliably.' },
+      { q: 'Why does replication not protect against data corruption?', a: 'Replication propagates writes — if a bug writes corrupt data to the primary, the corruption is immediately replicated to all replicas. Replication protects against hardware failure, not application-level data corruption.' },
+      { q: 'What is a soft delete and why does SRE prefer it?', a: 'Setting a deleted_at timestamp rather than removing the row. The record is logically deleted (hidden from queries) but physically retained for a recovery window (e.g., 30 days). Enables recovery from accidental deletion — a leading cause of data loss.' },
+      { q: 'How do you validate that a backup is usable?', a: 'Perform a test restore to a shadow environment. Run automated integrity checks: row counts, checksum validation, key invariant assertions. An untested backup is not a backup — restore procedures break silently when schemas change.' },
+      { q: 'What is point-in-time recovery (PITR) and when is it needed?', a: 'PITR restores the database to its exact state at a specific timestamp using continuous transaction log shipping. Needed when: a bug corrupted data starting at a specific time, requiring restoration to the moment before the corruption began.' },
+      { q: 'What is the SRE Book\'s key argument for investing more in data integrity than availability?', a: '"Data loss is almost always harder to recover from than an availability failure." A service down for 4 hours recovers at hour 4. A service that loses 10% of its customer records may never fully recover the lost data.' },
+    ],
+    references: [
+      'https://sre.google/sre-book/data-integrity/',
+    ],
+  },
+
+  {
+    id: 'launch-coordination',
+    title: 'Launch Coordination',
+    icon: 'rocket',
+    color: '#f59e0b',
+    questions: 3,
+    description: 'SRE Book Chapter 27 — production readiness reviews, launch checklists, traffic ramping, and the structured process that prevents launches from becoming outages.',
+    visualizations: [
+      {
+        title: 'Launch lifecycle — PRR to full traffic',
+        description: 'Design review (architecture approved) → Production Readiness Review (PRR checklist complete) → pre-launch (capacity provisioned, rollback tested) → traffic ramp (1% → 10% → 50% → 100% with holds at each increment) → post-launch monitoring window (24-72h SRE coverage).',
+        image: '/diagrams/sre/launch-lifecycle.png',
+      },
+    ],
+    introduction: `SRE Book Chapter 27 ("Reliable Product Launches at Scale") establishes the framework Google uses to launch products that may immediately receive billions of requests. The central mechanism is the Production Readiness Review (PRR) — a structured checklist process that a service must complete before SRE teams agree to support it in production.
+
+The PRR covers eight domains: architecture and dependencies (is the dependency graph understood?), capacity planning (is the service provisioned for peak + N+2?), failure modes (are single points of failure identified and mitigated?), monitoring and alerting (are SLIs defined and alerting on SLO burn?), rollout and rollback (is there a tested rollback procedure?), operational documentation (are runbooks written and reviewed?), security (are authentication and authorization correct?), and privacy (does the service handle user data appropriately?).
+
+The traffic ramping procedure is distinct from a canary analysis: a canary tests whether the new binary is correct; a launch ramp tests whether the infrastructure can handle the load. The ramp sequence for a major launch is typically 1% → 10% → 25% → 50% → 100%, with holds of 15-60 minutes at each increment. A "launch freeze" — a period of no configuration or code changes during the ramp — is standard SRE practice for major launches, because correlated changes during a ramp make incident diagnosis impossible.`,
+    whenToUse: [
+      '"How do you ensure a new service is production-ready before launch?" — PRR checklist',
+      '"What does your team do differently for a major traffic event vs. a regular deploy?"',
+      'Designing a launch process for a new service that will receive high traffic immediately',
+      '"What is a production readiness review and what does it cover?"',
+    ],
+    keyConcepts: [
+      { term: 'Production Readiness Review (PRR)', definition: 'A structured checklist-based review that a service must pass before receiving SRE support and production traffic. Covers architecture, capacity, failure modes, monitoring, rollback, runbooks, security, and privacy.' },
+      { term: 'Launch Coordination Lead (LCL)', definition: 'An SRE assigned as the single owner of the launch process. Coordinates pre-launch checks, owns the traffic ramp decision, and is the escalation point during the launch window.' },
+      { term: 'Traffic ramp', definition: 'Progressive exposure of the new service to production traffic: 1% → 10% → 25% → 50% → 100%. Each increment has a hold period for metric validation before proceeding.' },
+      { term: 'Launch freeze', definition: 'A period of no configuration or code changes during the traffic ramp. Eliminates correlated changes that make incident diagnosis impossible when the service is in a partially-ramped state.' },
+      { term: 'Post-launch monitoring window', definition: 'A 24-72 hour period after full rollout with enhanced SRE coverage — typically tighter alerting thresholds and on-call engineer briefed on the launch details. Most launch-related incidents occur in this window.' },
+    ],
+    pitfalls: [
+      'Treating the PRR as a one-time gate rather than a living document — services evolve, and a PRR written at launch may be out of date 12 months later after significant architecture changes.',
+      'Ramping traffic without a tested rollback procedure — a launch ramp that reveals a critical bug requires instant traffic shift back to the previous state. An untested rollback is not a rollback.',
+      'Making code or configuration changes during the traffic ramp — correlated changes make it impossible to determine whether an incident during the ramp was caused by the new binary or the concurrent change.',
+      'Skipping the post-launch monitoring window — user behavior during the first 24 hours after a major launch is often different from the ramp (more users, different usage patterns, more edge cases).',
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a launch process for a new service that must handle 100,000 QPS within 24 hours of public launch.',
+        answer: `Four phases, adapted from SRE Book Ch 27:
+
+Phase 1 — Pre-launch readiness (T-2 weeks). Complete the PRR: architecture diagram reviewed, dependencies documented, capacity provisioned (100,000 QPS * 2 = 200,000 QPS capacity, N+2 redundancy), failure modes identified (what breaks if the downstream user service is unavailable?), SLIs defined and alerting live in staging, rollback procedure tested (can traffic be shifted back to the previous version in < 5 minutes?), runbook written and reviewed by the on-call team, security review complete.
+
+Phase 2 — Pre-launch checks (T-4 hours). Load test to 150% of expected peak (150,000 QPS in staging). Confirm all instances are healthy. Brief the on-call team on the launch: what the service does, the expected traffic ramp, the critical metrics to watch, and the rollback procedure. Declare a launch freeze: no configuration or code changes from T-4h through T+48h.
+
+Phase 3 — Traffic ramp. 1% traffic at T+0: hold 30 min, verify error rate < 0.1%, p99 latency < SLO. 10% at T+30min: hold 30 min. 25% at T+60min: hold 15 min. 50% at T+75min: hold 15 min. 100% at T+90min. Automated hold triggers if error rate exceeds 0.5% or p99 latency exceeds SLO + 20% at any stage.
+
+Phase 4 — Post-launch window (T+0 to T+72h). Tighter alerting thresholds: alert at 50% of error budget burn instead of standard 75%. LCL available by pager. Daily review of metrics against launch projections. Monitor for user behavior surprises (e.g., unexpected API patterns, features used in ways not covered by load tests).`,
+      },
+    ],
+    quickFire: [
+      { q: 'What does a Production Readiness Review (PRR) cover?', a: 'Eight domains: architecture and dependencies, capacity planning, failure mode analysis, monitoring and alerting (SLIs/SLOs defined), rollout and rollback procedures, operational runbooks, security, and privacy.' },
+      { q: 'What is a launch freeze and why is it required?', a: 'A period of no code or configuration changes during the traffic ramp. Eliminates correlated changes that make incident root-cause analysis impossible when the service is in a partially-ramped state.' },
+      { q: 'What is the standard traffic ramp sequence for a major launch?', a: '1% → 10% → 25% → 50% → 100%, with hold periods (15-60 min) and automated metric validation at each increment. Rollback is triggered automatically if metrics regress.' },
+      { q: 'What is a Launch Coordination Lead (LCL)?', a: 'A single named SRE who owns the launch process end-to-end: coordinates the PRR, runs the traffic ramp, is the escalation point during the launch window, and owns the go/no-go decision at each ramp increment.' },
+      { q: 'Why is a post-launch monitoring window important?', a: 'User behavior in the first 24-72 hours after a major launch often differs from the ramp: more users, different usage patterns, more edge cases from real user data. Most launch-related incidents surface in this window.' },
+      { q: 'What is the minimum capacity target for a service launching at 100,000 QPS?', a: 'N+2 at 100% peak: provision for 200,000 QPS capacity (2× peak) across enough instances that two simultaneous failures (one planned, one unplanned) still leave sufficient capacity to serve 100,000 QPS.' },
+    ],
+    references: [
+      'https://sre.google/sre-book/reliable-product-launches/',
+      'https://sre.google/sre-book/production-environment/',
+    ],
+  },
+
+  {
+    id: 'dos-mitigation',
+    title: 'DoS Attack Mitigation',
+    icon: 'shield',
+    color: '#6366f1',
+    questions: 3,
+    description: 'From Building Secure and Reliable Systems Ch 10 — anycast, scrubbing centers, rate limiting tiers, and the architectural choices that separate services that survive volumetric attacks from those that do not.',
+    visualizations: [
+      {
+        title: 'DoS mitigation layers — absorb, deflect, shed',
+        description: 'Volumetric attack traffic → ISP-level filtering (BGP blackhole) → anycast edge nodes (absorb via distributed ingestion) → scrubbing center (strip attack packets) → rate limiting at load balancer → per-IP and per-client API rate limiting → application-layer admission control (drop low-criticality requests). Each layer reduces the traffic reaching the next.',
+        image: '/diagrams/sre/dos-mitigation.png',
+      },
+    ],
+    introduction: `Building Secure and Reliable Systems Chapter 10 ("Mitigating Denial-of-Service Attacks") treats DoS mitigation as a reliability engineering problem, not purely a security problem. A service that goes down during a volumetric attack has failed its SLO — the cause is irrelevant to the users who cannot reach it.
+
+The chapter distinguishes three types of DoS attacks and the appropriate mitigation layer for each. Volumetric attacks flood the network link with traffic measured in Gbps or Tbps — the mitigation must happen upstream of the service, at the ISP or CDN layer, before the traffic reaches the data center. Protocol attacks exploit weaknesses in network protocol handling (SYN floods, fragmented packets) — mitigated at the load balancer or firewall with SYN cookies, connection table limits, and protocol validation. Application-layer attacks send valid HTTP requests at high rate, targeting expensive endpoints — mitigated at the application layer with rate limiting, CAPTCHA, and admission control.
+
+Three architectural properties the book identifies as essential for DoS resilience: anycast routing (the same IP address is announced from multiple geographic locations; attack traffic is naturally distributed across all of them, reducing the per-location impact), scrubbing capacity (a network of scrubbing centers that can redirect attack traffic, strip malicious packets, and forward clean traffic), and over-provisioning (a service that has 2× its expected peak capacity can absorb a 100% traffic spike without degrading — whether the spike is an attack or organic). The book's key observation: "The most resilient services are not those that detect and block all attacks, but those that are architected to function under abnormal traffic conditions."`,
+    whenToUse: [
+      '"How do you protect your service against a DDoS attack?" — walk through the layer model',
+      'Designing a public-facing API that must remain available during attack traffic',
+      '"What is the difference between a volumetric attack and an application-layer attack?"',
+      'Justifying CDN or anycast infrastructure investment for a reliability budget',
+    ],
+    keyConcepts: [
+      { term: 'Anycast', definition: 'A routing technique where the same IP address is announced from multiple geographic locations. Traffic is routed to the nearest node, distributing attack volume across all locations rather than concentrating it at one.' },
+      { term: 'Scrubbing center', definition: 'A network facility that receives redirected (possibly attack) traffic, filters malicious packets using deep packet inspection and rate-limiting rules, and forwards clean traffic to the origin.' },
+      { term: 'BGP blackholing', definition: 'Advertising a route with a null next-hop via BGP, causing ISP routers to drop all traffic destined for a specific IP prefix. Nuclear option for volumetric attacks — effective but takes the service offline for legitimate users too.' },
+      { term: 'SYN cookie', definition: 'A TCP connection mechanism that encodes connection state in the initial SYN-ACK sequence number rather than allocating a connection table entry. Prevents SYN flood attacks from exhausting connection table memory.' },
+      { term: 'Rate limiting tiers', definition: 'Multiple layers of rate limiting at different granularities: IP-level (prevent volumetric from single source), user/API key (prevent application-layer abuse), endpoint-level (protect expensive operations).' },
+    ],
+    pitfalls: [
+      'Relying solely on application-layer rate limiting for volumetric protection — if 100 Gbps of attack traffic saturates the network link, no amount of application-layer logic runs fast enough to matter.',
+      'Setting BGP blackholing as the first response — it stops the attack by making the service unreachable for everyone. It is a last resort, not a first response.',
+      'Not testing DoS mitigation in controlled exercises — discovery that a scrubbing center\'s capacity is insufficient happens during an attack, not during a game day.',
+      'Treating DoS as a security team problem — if a DoS attack degrades the service SLO, it is an SRE problem. Both teams own the mitigation architecture.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you architect a public API service to remain available during a 100 Gbps volumetric DDoS attack?',
+        answer: `Four layers, from outer to inner:
+
+Layer 1 — ISP/CDN (volumetric absorption). Use anycast routing: announce the service IP from 20+ PoPs globally. A 100 Gbps attack is distributed across all PoPs — each absorbs 5 Gbps if evenly distributed, within the capacity of a well-provisioned edge node. Partner with a DDoS mitigation provider (Cloudflare, Akamai) that has 10+ Tbps of scrubbing capacity. Activate scrubbing for the affected prefixes within minutes of attack detection.
+
+Layer 2 — Network boundary (protocol attacks). Enable SYN cookies at the load balancer to neutralize SYN flood attacks without connection table exhaustion. Configure connection rate limits per source IP at the firewall: >1,000 new TCP connections/second from a single IP is anomalous for any legitimate client.
+
+Layer 3 — Load balancer (application rate limiting). Per-IP rate limits: 1,000 requests/second per IP for the API surface. Lower limits for expensive endpoints (/search, /export): 10 requests/second per API key. Return 429 with Retry-After header — do not drop silently.
+
+Layer 4 — Application admission control. During an attack, activate criticality-based shedding: pause background jobs and batch processing to preserve capacity for interactive user-facing traffic. Set automated scaling to 150% of current capacity to absorb legitimate traffic surge that often accompanies an attack.
+
+Monitoring: alert on inbound bandwidth at the edge nodes crossing 50% of PoP capacity (gives time to activate mitigation before saturation). Alert on global error rate crossing the error budget burn threshold.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three types of DoS attacks and their mitigation layers?', a: 'Volumetric (Gbps flood) — mitigated at ISP/CDN/anycast layer. Protocol (SYN flood, fragmented packets) — mitigated at load balancer with SYN cookies and connection limits. Application-layer (valid requests at high rate) — mitigated with per-client rate limiting and admission control.' },
+      { q: 'What is anycast and how does it help against volumetric DDoS?', a: 'The same IP is announced from multiple geographic PoPs. Attack traffic is distributed across all PoPs (routing to nearest), so a 100 Gbps attack is spread across 20 locations at 5 Gbps each — within each PoP\'s capacity.' },
+      { q: 'What is BGP blackholing and when should it be used?', a: 'Advertising a null route via BGP causes ISPs to drop all traffic to a prefix. Effective at stopping volumetric attacks but takes the service offline for everyone. Last resort only — after scrubbing capacity is exhausted.' },
+      { q: 'Why is DoS mitigation an SRE concern, not just a security concern?', a: 'If a DoS attack degrades the service SLO, it is an SRE incident regardless of cause. The BSRS book frames DoS as a reliability engineering problem: services that survive attacks are those architected to function under abnormal traffic conditions.' },
+      { q: 'What is a SYN cookie and what does it protect against?', a: 'SYN cookies encode connection state in the SYN-ACK sequence number, avoiding connection table allocation until the handshake completes. Prevents SYN flood attacks from exhausting the server\'s connection table memory.' },
+      { q: 'What is the key architectural property that makes a service naturally DoS-resilient?', a: 'Over-provisioning: a service with 2× expected peak capacity can absorb a 100% traffic spike. Anycast distribution. Admission control that maintains quality for legitimate traffic under load, rather than failing uniformly.' },
+    ],
+    references: [
+      'https://google.github.io/building-secure-and-reliable-systems/raw/ch10.html',
+      'https://sre.google/sre-book/handling-overload/',
+    ],
+  },
+
+  {
+    id: 'design-understandability',
+    title: 'Design for Understandability',
+    icon: 'eye',
+    color: '#22c55e',
+    questions: 3,
+    description: 'Building Secure and Reliable Systems Ch 6 — designing systems whose behavior is predictable, whose failure modes are obvious, and whose mental models do not decay over time.',
+    visualizations: [
+      {
+        title: 'Understandability spectrum — from opaque to transparent',
+        description: 'Opaque system: global mutable state, implicit side effects, failure modes visible only in logs. Transparent system: explicit state machines, invariants documented and enforced, failures surfaced as typed errors with clear remediation. Moving right increases on-call effectiveness and reduces MTTR.',
+        image: '/diagrams/sre/design-understandability.png',
+      },
+    ],
+    introduction: `Building Secure and Reliable Systems Chapter 6 ("Design for Understandability") argues that the primary cause of extended incidents is not technical complexity — it is operational incomprehensibility. The on-call engineer cannot diagnose and remediate what they cannot understand.
+
+The book identifies three properties that make systems understandable. Invariants: properties of the system that should always be true, expressed in a form that can be checked — "the number of active sessions should never exceed the number of active users" is an invariant; if violated, it indicates a specific class of bug. Mental models: the engineer's internal representation of how the system works; a good design has a mental model that remains correct as the system evolves; a bad design has a mental model that is correct only when the engineer built it. Least surprise: the system behaves the way an experienced engineer would expect based on the interfaces and documentation — no hidden state transitions, no implicit side effects, no behavior that is only explainable by reading the implementation.
+
+The practical design guidance from Chapter 6: prefer explicit state machines over implicit state managed by correlated global variables. Prefer typed errors (distinct error types for distinct failure modes) over opaque error codes or catch-all exceptions. Prefer synchronous over asynchronous operations where correctness requires it — async systems are harder to reason about under failure conditions. Design APIs that are hard to misuse: a function that requires its caller to understand implementation details to use correctly will be misused, eventually, in production.`,
+    whenToUse: [
+      '"Why is this system so hard to debug when it breaks?" — use understandability principles to audit the design',
+      'Reviewing a new system design for operability before it reaches production',
+      '"What makes a system easy or hard to operate at 3am?" — mental models and invariants',
+      'Explaining why simplicity is a reliability property, not just an engineering aesthetic',
+    ],
+    keyConcepts: [
+      { term: 'System invariant', definition: 'A property that should always be true about the system state, expressible as a checkable assertion. Violated invariants indicate a specific bug class and narrow diagnosis to the component responsible for the invariant.' },
+      { term: 'Mental model', definition: 'The engineer\'s internal representation of how the system works. A reliable system has a mental model that remains accurate as the system evolves. Complexity that invalidates mental models causes diagnostic errors under incident conditions.' },
+      { term: 'Least surprise', definition: 'The system behaves as an experienced engineer would expect based on its interfaces and documentation. No hidden state transitions, implicit side effects, or behavior explainable only by reading the implementation.' },
+      { term: 'Explicit state machine', definition: 'System state managed through a formal state machine with named states and named transitions. State is auditable, transitions are logged, and invalid transitions are rejected — vs. implicit state through correlated global variables.' },
+      { term: 'Typed errors', definition: 'Distinct error types for distinct failure modes, rather than opaque error codes or catch-all exceptions. Enables callers to handle specific failure modes programmatically and on-call engineers to diagnose failures without reading source code.' },
+    ],
+    pitfalls: [
+      'Implicit state through correlated global variables — when the system\'s behavior depends on the combination of five global flags, no one can predict what it does in states not explicitly tested.',
+      'Catch-all exception handling that silently swallows errors — "except Exception: log and continue" makes failures invisible until the cascade of silent failures causes a visible SEV.',
+      'Configuration that changes behavior non-monotonically — "setting X to 2 means fast, setting it to 4 means slow, setting it to 3 means undefined" violates least surprise and creates operational traps.',
+      'Asynchronous APIs where ordering guarantees are required — race conditions and ordering bugs only surface under load or failure conditions, not in development environments.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What makes a distributed system "understandable" and why does understandability reduce MTTR?',
+        answer: `Understandability has three components from BSRS Ch 6:
+
+1. Clear invariants. An understandable system has stated invariants that can be checked: "the write-ahead log entry count should equal the committed entry count + uncommitted entry count." When an incident occurs, the first step is checking which invariants are violated. A violated invariant narrows the failure to the component responsible for maintaining it. A system with no stated invariants requires reading all code paths to understand what went wrong.
+
+2. Accurate mental model. Under incident pressure, engineers make decisions based on their mental model of the system. If the mental model is accurate, their hypotheses are likely correct and their diagnostic steps are targeted. If the mental model is outdated or incorrect (because the system evolved without updating documentation), diagnostic steps are random — they check the wrong things, try the wrong fixes, and MTTR climbs. Systems designed to keep their mental model accurate over time have: explicit state machines (state is always visible, not inferred from correlated variables), synchronous interfaces where possible (async systems generate mental model drift), and documentation that is enforced by the type system rather than requiring manual updates.
+
+3. Failures that diagnose themselves. An understandable system surfaces failures as typed errors with clear failure mode names and remediation suggestions. A payment service that returns "PaymentDeclinedException: card number invalid, check digit mismatch at position 12" is understandable. One that returns "Error: 500" requires the on-call engineer to grep through logs, read source code, and correlate timestamps before they know what broke.
+
+The MTTR reduction is direct: a system that tells you what broke and where reduces the diagnose phase from hours to minutes. "Check invariant X" is a 5-minute operation; "read all code paths to understand failure mode Y" is a 90-minute operation.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the three properties that make a system understandable per BSRS Ch 6?', a: 'Invariants (checkable properties that should always be true), accurate mental models (system behavior matches what engineers expect), and least surprise (behavior is predictable from interfaces, no hidden state).' },
+      { q: 'Why do explicit state machines improve reliability vs implicit state?', a: 'Explicit state machines have named states and named transitions — state is auditable, transitions are logged, and invalid transitions are rejected. Implicit state through correlated globals creates states the designers didn\'t intend and on-call engineers can\'t diagnose.' },
+      { q: 'What is the principle of least surprise in system design?', a: 'The system behaves as an experienced engineer would expect based on its interfaces and documentation. No hidden state transitions, implicit side effects, or behavior explainable only by reading the implementation.' },
+      { q: 'What is a system invariant and how does it help during incidents?', a: 'A checkable property that should always be true (e.g., "sessions <= users"). Violated invariants immediately narrow the failure domain to the component responsible for maintaining that invariant, reducing MTTR.' },
+      { q: 'Why does BSRS argue that simplicity is a reliability property?', a: 'A simpler system has fewer possible states, fewer possible failure modes, and a more accurate mental model. Engineers diagnosing failures in a simpler system make fewer errors and take fewer wrong diagnostic steps — reducing MTTR and preventing misdiagnosis-induced secondary incidents.' },
+      { q: 'What is wrong with catch-all exception handling from an understandability perspective?', a: '"except Exception: log and continue" makes failures invisible — the system continues running in an undefined state, accumulating silent errors. When a cascade of silent failures produces a visible symptom, the diagnostic chain is opaque.' },
+    ],
+    references: [
+      'https://google.github.io/building-secure-and-reliable-systems/raw/ch06.html',
+      'https://sre.google/sre-book/simplicity/',
+      'https://sre.google/workbook/simplicity/',
     ],
   },
 ];
