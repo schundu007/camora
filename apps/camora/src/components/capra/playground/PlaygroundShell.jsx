@@ -353,13 +353,32 @@ export default function PlaygroundShell() {
             width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
             background: 'var(--bg-elevated)', borderRight: '1px solid var(--border)', overflowY: 'auto',
           }}>
-            <div style={{ padding: '20px 20px 0' }}>
+            {/* Sidebar header */}
+            <div style={{
+              padding: '14px 16px 12px',
+              borderBottom: '1px solid var(--border)',
+              background: 'var(--bg-surface)',
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 18 }}>⌨️</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Playground</span>
-                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)', color: 'var(--cam-gold-leaf-lt)' }}>BETA</span>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+                  background: 'color-mix(in oklab, var(--accent) 12%, var(--bg-elevated))',
+                  border: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                  </svg>
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Playground</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                  background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
+                  color: 'var(--cam-gold-leaf-lt)', letterSpacing: '0.05em',
+                }}>BETA</span>
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                 Disposable Linux VMs with VS Code IDE — start in seconds.
               </p>
             </div>

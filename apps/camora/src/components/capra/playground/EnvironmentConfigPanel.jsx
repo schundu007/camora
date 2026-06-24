@@ -1,6 +1,5 @@
 import { EnvIcon } from './EnvironmentPicker';
 
-
 const TERMINAL_PREVIEWS = {
   ubuntu: '$ ls -la',
   docker: '$ docker ps',
@@ -13,6 +12,17 @@ const TERMINAL_PREVIEWS = {
   custom: '$ bash setup.sh',
 };
 
+const Section = ({ label, children }) => (
+  <div style={{ padding: '12px 16px 0' }}>
+    <p className="text-eyebrow" style={{ marginBottom: 8 }}>{label}</p>
+    {children}
+  </div>
+);
+
+const Divider = () => (
+  <div style={{ height: 1, background: 'var(--border)', margin: '12px 16px 0' }} />
+);
+
 const EnvironmentConfigPanel = ({ env }) => {
   if (!env) return null;
 
@@ -22,52 +32,55 @@ const EnvironmentConfigPanel = ({ env }) => {
   const previewCmd = TERMINAL_PREVIEWS[env.id] || '$ bash';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Terminal preview */}
-      <div style={{ margin: '0 16px 14px', flexShrink: 0 }}>
+      <div style={{ margin: '0 16px 4px' }}>
         <div style={{
-          height: 78, borderRadius: 8, background: '#0a0a0a',
-          border: '1px solid var(--border)', borderTop: '3px solid var(--cam-gold-leaf)',
-          overflow: 'hidden', padding: '7px 10px',
-          fontFamily: '"IBM Plex Mono", monospace', fontSize: 12, color: '#e4e4e4',
+          height: 76, borderRadius: 8,
+          background: '#0d0d0d',
+          border: '1px solid var(--border)',
+          borderTop: '2px solid var(--cam-gold-leaf)',
+          overflow: 'hidden', padding: '8px 12px',
+          fontFamily: '"IBM Plex Mono", monospace', fontSize: 12,
         }}>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444' }} />
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#f59e0b' }} />
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981' }} />
+          <div style={{ display: 'flex', gap: 5, marginBottom: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', opacity: 0.8 }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', opacity: 0.8 }} />
           </div>
-          <div style={{ color: '#10b981' }}>{previewCmd}<span style={{ animation: 'pulse 1.2s step-end infinite' }}>▊</span></div>
-          <div style={{ color: 'rgba(255,255,255,0.25)', marginTop: 4, fontSize: 11 }}>
+          <div style={{ color: '#4ade80', fontWeight: 500 }}>
+            {previewCmd}
+            <span style={{ display: 'inline-block', width: 7, height: 13, background: '#4ade80', marginLeft: 2, verticalAlign: 'text-bottom', animation: 'pulse 1.2s step-end infinite', opacity: 0.9 }} />
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.2)', marginTop: 4, fontSize: 11 }}>
             {nodes.length} node{nodes.length !== 1 ? 's' : ''} · {env.category}
           </div>
         </div>
       </div>
 
       {/* Env name + badges */}
-      <div style={{ padding: '0 16px', marginBottom: 10, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+      <div style={{ padding: '10px 16px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
           <EnvIcon icon={env.icon} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{env.label}</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{env.label}</span>
         </div>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {env.category.split(' · ').map((cat) => (
-            <span key={cat} style={{
-              fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
-              background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
-            }}>{cat}</span>
+            <span key={cat} className="chip">{cat}</span>
           ))}
           <span style={{
-            fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
+            fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
             background: env.plan === 'free'
-              ? 'color-mix(in oklab, var(--accent) 10%, transparent)'
+              ? 'color-mix(in oklab, var(--accent) 12%, transparent)'
               : 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
+            border: `1px solid ${env.plan === 'free' ? 'color-mix(in oklab, var(--accent) 35%, transparent)' : 'color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)'}`,
             color: env.plan === 'free' ? 'var(--accent)' : 'var(--cam-gold-leaf-lt)',
           }}>
             {env.plan === 'free' ? 'Free' : 'Pro'}
           </span>
           {env.badge && (
             <span style={{
-              fontSize: 11, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
+              fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
               background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
               border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
               color: 'var(--cam-gold-leaf-lt)',
@@ -76,92 +89,67 @@ const EnvironmentConfigPanel = ({ env }) => {
         </div>
       </div>
 
-      <div style={{ height: 1, background: 'var(--border)', margin: '0 16px 10px', flexShrink: 0 }} />
+      <Divider />
 
       {/* Node topology */}
-      <div style={{ padding: '0 16px', flexShrink: 0 }}>
-        <p style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: 'var(--text-secondary)', marginBottom: 8,
-        }}>
-          Topology · {nodes.length} node{nodes.length !== 1 ? 's' : ''}
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <Section label={`Topology · ${nodes.length} node${nodes.length !== 1 ? 's' : ''}`}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 4 }}>
           {nodes.map((node, i) => (
             <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              padding: '6px 8px', borderRadius: 6,
-              background: 'var(--bg-base)', border: '1px solid var(--border)',
+              padding: '8px 10px', borderRadius: 8,
+              background: 'var(--bg-base)',
+              border: '1px solid var(--border)',
             }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 700, color: 'var(--text-primary)',
-                    fontFamily: '"IBM Plex Mono", monospace',
-                  }}>{node.name}</span>
-                  <span style={{
-                    fontSize: 11, padding: '1px 4px', borderRadius: 2,
-                    background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 600,
-                  }}>{node.role}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, boxShadow: '0 0 4px var(--accent)' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{node.name}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>{node.role}</span>
                 </div>
-                <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                  {node.tools.map((t) => (
-                    <span key={t} style={{
-                      fontSize: 11, padding: '1px 4px', borderRadius: 2, fontWeight: 600,
-                      background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
-                    }}>{t}</span>
-                  ))}
-                </div>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: '"IBM Plex Mono", monospace' }}>{node.mem}</span>
               </div>
-              <span style={{
-                fontSize: 11, color: 'var(--text-secondary)',
-                fontFamily: '"IBM Plex Mono", monospace', flexShrink: 0,
-              }}>{node.mem}</span>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                {node.tools.map((t) => (
+                  <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>{t}</span>
+                ))}
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* Features */}
       {features.length > 0 && (
         <>
-          <div style={{ height: 1, background: 'var(--border)', margin: '10px 16px 10px', flexShrink: 0 }} />
-          <div style={{ padding: '0 16px', flexShrink: 0 }}>
-            <p style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: 'var(--text-secondary)', marginBottom: 8,
-            }}>Features</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <Divider />
+          <Section label="Features">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, paddingBottom: 4 }}>
               {features.map((f) => (
-                <span key={f} style={{
-                  fontSize: 11, padding: '2px 6px', borderRadius: 3,
-                  background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-                  color: 'var(--text-secondary)',
-                }}>{f}</span>
+                <span key={f} className="chip">{f}</span>
               ))}
             </div>
-          </div>
+          </Section>
         </>
       )}
 
-      {/* Specs footer */}
-      <div style={{ marginTop: 'auto', padding: '10px 16px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Duration</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>60 min</span>
+      {/* Specs */}
+      <Divider />
+      <div style={{ padding: '12px 16px 16px' }}>
+        <p className="text-eyebrow" style={{ marginBottom: 8 }}>Specs</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="text-caption">Duration</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>60 min</span>
           </div>
           {specs.totalMem && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Memory</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.totalMem}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="text-caption">Memory</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.totalMem}</span>
             </div>
           )}
           {specs.bootTime && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Boot time</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.bootTime}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="text-caption">Boot time</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.bootTime}</span>
             </div>
           )}
         </div>
