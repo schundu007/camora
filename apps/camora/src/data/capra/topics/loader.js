@@ -151,6 +151,17 @@ export const HEAVY_TOPIC_LOADERS = {
     };
   },
 
+  // DDIA — Designing Data-Intensive Applications (Martin Kleppmann) interview prep.
+  // 11 sub-categories, 44 topics. Lives at /capra/prepare?page=ddia.
+  ddia: async () => {
+    const mod = await import('./ddiaTopics.js');
+    return {
+      ddiaCategories: mod.ddiaCategories,
+      ddiaTopicCategoryMap: mod.ddiaTopicCategoryMap,
+      ddiaTopics: mod.ddiaTopics,
+    };
+  },
+
   // MLOps & LLMOps — ML lifecycle, feature stores, model serving, LLM ops.
   // Lives at /capra/prepare?page=mlops.
   mlops: async () => {
