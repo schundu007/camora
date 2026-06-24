@@ -1476,6 +1476,111 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     color: '#84cc16',
     questions: 5,
     description: 'LLM inference is unique — KV cache, continuous batching, GPU memory bound. Covers vLLM (PagedAttention), HuggingFace TGI, NVIDIA TensorRT-LLM, SGLang (RadixAttention), llama.cpp, quantization (FP16/FP8/INT8/GPTQ/AWQ/GGUF), throughput-vs-latency, multi-tenant LLM hosting via LiteLLM.',
+    introduction: `LLM inference is architecturally unlike serving any other model. Autoregressive generation introduces constraints -- KV cache memory pressure, two-phase computation, variable sequence lengths -- that make naive serving approaches fail catastrophically at scale. A dedicated generation of inference engines was built specifically for these constraints, and understanding them is core to ML platform engineering in 2026.
+
+## Why LLM inference is its own discipline
+
+Inference runs in two phases with different bottlenecks. Prefill processes the entire prompt in parallel: it is compute-bound (like a forward pass of any neural net) and fast. Decode generates one token at a time autoregressively: each decode step must read the full KV cache for all attention layers, making it memory-bandwidth-bound. For long outputs, nearly all the wall-clock time is in decode.
+
+The KV cache stores key and value attention activations for every generated token. Its size scales with layers, attention heads, head dimension, sequence length, and batch size. A 70B parameter model serving a 4K context request uses multiple gigabytes of GPU memory per request for KV cache alone. GPU memory is the throughput ceiling for LLM serving -- not compute.
+
+Naive batching wastes this resource: if requests in a batch finish at different times, shorter requests hold up the entire batch until the longest one completes. Continuous batching (inflight batching) solves this by dropping completed requests and adding new ones at every decode step, keeping GPU utilization near 100%. This single technique produces 5-10x throughput improvement over static batching.
+
+## The 2026 serving landscape
+
+vLLM (UC Berkeley, 2023) is the dominant open-source engine. Its core innovation -- PagedAttention -- stores KV cache in non-contiguous physical memory pages (like virtual memory for GPU), eliminating fragmentation and enabling near-100% GPU memory utilization. vLLM supports continuous batching, prefix caching, speculative decoding, tensor and pipeline parallelism, and a wide model catalog. It is the default choice for self-hosted open-weight LLMs.
+
+TensorRT-LLM (NVIDIA) pre-compiles a model graph for a specific GPU architecture, applying kernel fusion, quantization, and hardware-specific optimizations. It achieves the highest throughput per GPU-dollar on NVIDIA hardware but requires a build step for each model-GPU combination and is less flexible for rapid iteration.
+
+SGLang (UC Berkeley, late 2023) focuses on structured generation and multi-turn efficiency. Its RadixAttention stores KV cache in a prefix tree, enabling cross-request KV cache sharing when requests share a common prefix (system prompts, RAG context blocks). This is a large win for chatbot and agent workloads.
+
+llama.cpp is the C++ engine for CPU and Apple Silicon inference, powering local tools like Ollama and LM Studio. It is not a production server but is the foundation of the edge and developer ecosystem.
+
+## Quantization
+
+Running 70B models in FP16 demands multiple H100s. Quantization reduces memory footprint at small quality cost. FP8 (native on H100/B100) halves FP16 memory with minimal accuracy impact. INT8 is widely supported. GPTQ uses calibration data for 4-bit post-training quantization. AWQ (Activation-Aware Weight Quantization) preserves accuracy better than GPTQ at 4-bit by protecting activation-sensitive weights. GGUF is llama.cpp's quantization-friendly container format supporting 2 through 8-bit variants.
+
+## Throughput vs latency
+
+Higher batch size increases throughput (tokens generated per second per GPU) but raises p99 latency. Lower batch size reduces latency but wastes GPU. Continuous batching and speculative decoding both improve the tradeoff. Prefix caching reduces time-to-first-token for requests with shared prefixes by skipping their prefill entirely.`,
+    quickFire: [
+      { q: 'What are the two phases of LLM inference and what bottlenecks each?', a: 'Prefill (process prompt in parallel, compute-bound) and decode (generate one token at a time, memory-bandwidth-bound because it reads the full KV cache per step).' },
+      { q: 'What is the KV cache and why does it dominate GPU memory?', a: 'Cached key and value attention activations per generated token. Scales with layers, heads, sequence length, and batch size -- multiple GB per request for large models.' },
+      { q: 'What is continuous (inflight) batching?', a: 'Dropping completed requests and adding new ones at each decode step rather than waiting for the full batch to finish. Provides 5-10x throughput improvement over static batching.' },
+      { q: 'What is PagedAttention and which engine introduced it?', a: 'Storing KV cache in non-contiguous physical memory pages like OS virtual memory, eliminating fragmentation. Introduced by vLLM (UC Berkeley 2023).' },
+      { q: 'What is RadixAttention in SGLang?', a: 'Storing KV cache in a prefix tree, enabling cross-request sharing of KV cache for requests with common prefixes like system prompts or RAG context.' },
+      { q: 'When would you choose TensorRT-LLM over vLLM?', a: 'When you have a stable set of high-traffic models on NVIDIA hardware and need maximum throughput per GPU -- TRT-LLM pre-compiles per GPU architecture for peak performance.' },
+      { q: 'What is speculative decoding?', a: 'A cheap draft model proposes multiple tokens; the target model verifies them in parallel. Reduces wall-clock latency when the draft is accurate without reducing throughput.' },
+      { q: 'What is AWQ quantization?', a: 'Activation-Aware Weight Quantization -- 4-bit post-training quantization that protects weights with high activation magnitudes, often better quality than GPTQ at the same bit width.' },
+      { q: 'What is GGUF?', a: 'A quantization-friendly model container format used by llama.cpp, supporting 2 through 8-bit quantization variants. Powers Ollama and LM Studio.' },
+      { q: 'What is FP8 and which hardware supports it natively?', a: '8-bit floating point format -- half the memory of FP16 with minimal accuracy loss. Natively supported on NVIDIA H100 and B100 GPUs.' },
+      { q: 'What is tensor parallelism in LLM serving?', a: 'Splitting a single attention or FFN layer across multiple GPUs so that a model too large for one GPU can be served across a device mesh.' },
+      { q: 'What is LiteLLM and when is it used?', a: 'An open-source proxy providing a unified OpenAI-compatible API across 100+ LLM providers, with routing, fallbacks, cost tracking, and rate limiting.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain PagedAttention and why it was a breakthrough for LLM serving throughput.',
+        answer: `Before PagedAttention, LLM serving engines pre-allocated a contiguous block of GPU memory for each request's KV cache based on the maximum possible sequence length. This caused two problems. First, it wasted memory: a request that generates 100 tokens holds a block sized for 4096 tokens, leaving 97.5% unused. Second, fragmentation: as requests of different lengths complete and new ones start, the contiguous-block requirement means that free GPU memory is scattered in chunks too small to fit new requests, even when aggregate free memory is sufficient. This is exactly the problem that caused the notorious memory fragmentation in early operating systems before virtual memory was invented.
+
+PagedAttention borrows the solution. It divides GPU memory into fixed-size pages (typically 16 or 32 tokens of KV cache) and maintains a page table per request that maps logical sequence positions to physical pages. KV cache is no longer contiguous in physical memory -- it can span any set of available pages. A request that grows from 100 to 200 tokens simply allocates additional pages from the free pool rather than requiring a contiguous region. When a request completes, its pages return to the free pool immediately.
+
+The practical impact: GPU memory utilization rose from 20-40% (contiguous allocation with fragmentation) to over 90% in production workloads. Higher utilization means more concurrent requests on the same hardware, which directly translates to higher throughput. The vLLM paper (Kwon et al. 2023) demonstrated 2-4x throughput improvement over prior systems on a single A100 GPU, which was a significant step change.
+
+PagedAttention also enables prefix caching: if multiple requests share the same prompt prefix (common in chatbots with system prompts, or RAG with shared context blocks), those pages can be shared across requests -- reading once from GPU memory and reusing rather than recomputing the prefill for each request. This reduces time-to-first-token for cache-hit prefixes.`,
+      },
+      {
+        question: 'Compare vLLM, TensorRT-LLM, and SGLang. What workload does each optimize for?',
+        answer: `vLLM is the general-purpose open-source serving engine optimized for breadth and iteration speed. Its PagedAttention handles KV cache efficiently across the model catalog (Llama, Mistral, Mixtral, Gemma, Qwen, DeepSeek, Phi and more). It ships with continuous batching, prefix caching, speculative decoding, tensor and pipeline parallelism, and a drop-in OpenAI-compatible server. vLLM is the right default for teams deploying open-weight models, running mixed workloads with varying context lengths, or iterating rapidly across model families. Its flexibility comes at the cost of not squeezing the last few percent of throughput from a specific GPU architecture -- it does not pre-compile per-GPU like TensorRT-LLM.
+
+TensorRT-LLM is NVIDIA's optimization-first engine. It takes a model and a target GPU architecture (A100, H100, B100) and compiles an optimized engine with kernel fusion, quantization integration, and hardware-specific instruction scheduling. The resulting engine runs faster than vLLM on the same hardware -- typically 20-40% higher throughput depending on the model and request mix -- but requires a model build step that takes minutes to hours. The build must be redone for each model version and each target GPU type. TensorRT-LLM is the right choice for production systems with a stable model (e.g., a fine-tuned Llama serving millions of requests per day) where maximizing throughput and minimizing cost-per-token is the primary objective. It pairs with NVIDIA Triton Inference Server for the full production deployment.
+
+SGLang is optimized for structured generation and multi-turn/multi-step prompt programs. Its core innovation, RadixAttention, stores KV cache in a prefix tree. When two concurrent requests share a common prefix (same system prompt, same RAG context block), their prefix pages are stored once and shared -- the prefill runs once, not twice. For workloads where most requests share a long system prompt (customer service bots, coding assistants, RAG applications with static context), SGLang's prefix sharing provides significant throughput improvements. SGLang also leads on constrained decoding (JSON schema, regex) as a first-class primitive, making it the best choice for structured output applications.`,
+      },
+      {
+        question: 'Explain the throughput-latency tradeoff in LLM serving and what techniques improve both simultaneously.',
+        answer: `The fundamental tradeoff is that GPU throughput (tokens generated per second across all concurrent requests) and per-request latency (time from request arrival to last token) pull in opposite directions when controlled by batch size.
+
+Larger batches increase throughput: more requests share the GPU's memory bandwidth and compute units per time unit, amortizing the per-step KV cache read cost. Smaller batches reduce latency: individual requests wait less before their decode steps execute. At very small batch sizes (batch=1), the GPU is severely underutilized -- memory bandwidth is the bottleneck and throughput is far below peak. At large batch sizes, queuing latency dominates -- requests wait for earlier requests to complete before their first token is generated.
+
+Continuous batching fundamentally improves this tradeoff. By dropping completed requests and adding new ones every decode step, it maintains near-maximum batch size without causing long-tail latency from a few slow requests holding up the entire batch. This is the most important single technique for LLM serving efficiency.
+
+Speculative decoding improves latency without sacrificing throughput. A small draft model (e.g., Llama-68M) proposes the next K tokens; the full target model verifies all K in one parallel forward pass. When the draft is accurate (common for predictable continuations), the effective decode rate is K tokens per step instead of one. Latency improves proportionally to draft accuracy, with no throughput regression because the target model verification uses the same compute as a standard decode step.
+
+Prefix caching reduces time-to-first-token (TTFT) for requests that share a prompt prefix. If a system prompt of 2000 tokens is shared across requests, the first request pays the prefill cost; subsequent requests read from the KV cache pages directly. TTFT for cache-hit requests collapses from hundreds of milliseconds to near zero. This is the highest-leverage latency optimization for chatbot and RAG workloads.
+
+Quantization (FP8, AWQ, GPTQ) improves both metrics simultaneously by fitting more requests into GPU memory. More requests in flight increases throughput; less memory pressure per request reduces wait time for memory allocation.`,
+      },
+      {
+        question: 'How would you design a self-hosted LLM serving infrastructure for a B2B SaaS product serving 1000 concurrent users?',
+        answer: `The design must handle 1000 concurrent users with predictable latency SLOs, multi-tenancy with cost attribution, model updates without downtime, and cost efficiency that matches or beats managed APIs at scale.
+
+For the inference engine, I would run vLLM behind a LiteLLM proxy. vLLM handles the actual model serving with PagedAttention, continuous batching, prefix caching (critical since many SaaS users share a system prompt), and an OpenAI-compatible REST API. LiteLLM sits in front as the multi-tenant gateway: it handles API key validation and tenant attribution, per-tenant rate limiting and cost caps, model routing (route simple requests to a smaller/cheaper model), and request logging for billing.
+
+For hardware, 1000 concurrent users at typical chatbot usage (5-10 requests per user per minute) is roughly 5000-10000 requests per minute or 80-170 RPS. On a single NVIDIA H100 80GB running Llama-3.1-70B in FP8, vLLM can sustain roughly 200-400 tokens/second throughput depending on output length. At 200 tokens average output, that is 1-2 RPS per H100 at full utilization -- so I would need 40-80 H100s for the 80-170 RPS target, or scale down by using a smaller model (8B or 13B) that fits on one H100 with MIG partitioning.
+
+For model updates, I would run blue-green deployments: spin up the new vLLM instance with the new model version, warm it by running prefill on representative prompts to populate the KV cache, then shift traffic via the LiteLLM routing table. The old instance stays running until in-flight requests complete. Rollback is re-routing traffic to the previous version.
+
+For multi-tenancy cost isolation, LiteLLM tracks tokens per request per tenant and writes to a cost table (Postgres). A billing service reads this table nightly to compute invoices. Per-tenant caps prevent runaway usage. Enterprise tenants with dedicated SLAs get dedicated vLLM pods with reserved GPU capacity; SMB tenants share a pool.`,
+      },
+      {
+        question: 'What quantization formats exist for LLMs in 2026 and when would you use each?',
+        answer: `Quantization reduces model weight and KV cache precision from the full FP16 or BF16 (2 bytes per parameter) to a lower bit width, shrinking GPU memory requirements and often increasing throughput at a small accuracy cost.
+
+FP16 and BF16 are the unquantized baselines. BF16 is preferred over FP16 for training because it has a wider dynamic range; for inference both are common. A 70B model in BF16 requires approximately 140 GB of GPU memory for weights alone, requiring two H100 80GB GPUs minimum.
+
+FP8 (E4M3 or E5M2 formats) is the first quantization tier that NVIDIA hardware (H100, B100) accelerates natively. It halves weight memory relative to FP16, so a 70B model fits in roughly 70 GB, allowing single-H100 80GB deployment with enough headroom for KV cache. Quality degradation is minimal -- benchmarks show less than 1% on most tasks. This is the default production quantization for large models on H100+ hardware.
+
+INT8 quantization stores weights as 8-bit integers with a per-channel or per-tensor scale factor. It is widely supported, well-understood, and achieves similar memory savings to FP8. The LLM.int8() method (Dettmers 2022) uses mixed precision -- 8-bit for most weights, FP16 for high-magnitude outlier weights -- and is available in the transformers library. Slightly more accuracy degradation than FP8 in some models.
+
+GPTQ (Post-Training Quantization by the GPTQ paper, 2022) is a 4-bit post-training quantization method that uses Hessian-based optimal quantization with a calibration dataset. A 70B model in GPTQ 4-bit requires approximately 35 GB -- fits on a single A100 40GB. Quality drops are noticeable on complex reasoning tasks compared to INT8 but acceptable for many production use cases.
+
+AWQ (Activation-Aware Weight Quantization, 2023) is also 4-bit but identifies and preserves the 1% of weights that have the highest activation magnitudes (these contribute most to model quality), quantizing the rest aggressively. AWQ consistently outperforms GPTQ at the same bit width, making it the preferred 4-bit format for production deployment on memory-constrained hardware.
+
+GGUF is llama.cpp's container format supporting 2 through 8-bit variants (Q2_K through Q8_0 notation). It is optimized for CPU and Apple Silicon inference, not GPU serving at scale. Use it for local developer tooling (Ollama, LM Studio) and edge deployments, not for production server inference.
+
+The practical selection rule: H100/B100 hardware and willing to stay at 8-bit? Use FP8. Memory-constrained (A100 40GB or smaller) and need the best quality? Use AWQ 4-bit. Need broad compatibility and llama.cpp ecosystem? Use GGUF. Never use bare GPTQ when AWQ is available at the same bit width.`,
+      },
+    ],
     visualizations: [
       {
         title: 'Why LLM serving is its own discipline and the 2026 landscape',
