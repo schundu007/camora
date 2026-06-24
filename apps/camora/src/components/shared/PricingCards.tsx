@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { dialogAlert } from './Dialog';
 import { isOwner } from '../../lib/owner';
@@ -613,15 +613,15 @@ export default function PricingCards({
         fontFamily: LN.font,
       }}>
         <span style={{ padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.blueFade, color: LN.blue, border: `1px solid ${LN.blueBorder}`, fontFamily: LN.mono }}>
-          Admin Access
+          Owner
         </span>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: LN.text, margin: 0 }}>All features unlocked</h3>
         <p style={{ fontSize: 13, color: LN.textSub, maxWidth: 400, margin: 0 }}>
-          Your account has owner-level access. Use the billing portal to view invoices, manage payment methods, or adjust subscriptions.
+          Your account has owner-level access. Manage users, deployments, Stripe events, and platform config from the admin panel.
         </p>
-        <button onClick={() => goToPortal(prepareUrl)} style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', border: 'none', cursor: 'pointer', fontFamily: LN.font }}>
-          Open Billing Portal
-        </button>
+        <Link to="/docs/admin" style={{ marginTop: 8, padding: '9px 24px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block', fontFamily: LN.font }}>
+          Open Admin Panel
+        </Link>
       </div>
     );
   }
