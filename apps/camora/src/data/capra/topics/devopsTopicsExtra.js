@@ -1200,7 +1200,7 @@ resource "aws_instance" "web" {
   count         = 3
   ami           = "ami-12345"
   instance_type = "t3.micro"
-  tags = { Name = "web-${count.index}" }
+  tags = { Name = "web-\${count.index}" }
 }
 Creates: aws_instance.web[0], aws_instance.web[1], aws_instance.web[2].
 
@@ -1229,7 +1229,7 @@ Converting count to for_each: requires moving state entries (terraform state mv)
     keyConcepts: [
       {
         term: 'count.index',
-        definition: 'The zero-based index of the current resource instance when using count. Used to create unique names: Name = "web-${count.index}". Danger: index depends on position in the list, not the value.',
+        definition: 'The zero-based index of the current resource instance when using count. Used to create unique names: Name = "web-\${count.index}". Danger: index depends on position in the list, not the value.',
       },
       {
         term: 'each.key / each.value',
@@ -1619,7 +1619,7 @@ pipeline {
   agent any
   environment {
     APP_ENV = "production"
-    IMAGE_TAG = "${env.BUILD_NUMBER}"
+    IMAGE_TAG = "\${env.BUILD_NUMBER}"
   }
   stages {
     stage("Build") {
@@ -1635,7 +1635,7 @@ pipeline {
     }
     stage("Docker Build") {
       steps {
-        sh "docker build -t myapp:${IMAGE_TAG} ."
+        sh "docker build -t myapp:\${IMAGE_TAG} ."
       }
     }
     stage("Deploy") {
@@ -1643,13 +1643,13 @@ pipeline {
         branch "main"
       }
       steps {
-        sh "helm upgrade --install myapp ./chart --set image.tag=${IMAGE_TAG}"
+        sh "helm upgrade --install myapp ./chart --set image.tag=\${IMAGE_TAG}"
       }
     }
   }
   post {
-    success { slackSend message: "Build ${env.BUILD_NUMBER} succeeded" }
-    failure { slackSend message: "Build ${env.BUILD_NUMBER} failed" }
+    success { slackSend message: "Build \${env.BUILD_NUMBER} succeeded" }
+    failure { slackSend message: "Build \${env.BUILD_NUMBER} failed" }
     always { cleanWs() }
   }
 }
@@ -1734,7 +1734,7 @@ Additional powerful blocks:
   environment {
     REGISTRY = "registry.example.com"
     IMAGE = "myapp"
-    TAG = "${env.BUILD_NUMBER}"
+    TAG = "\${env.BUILD_NUMBER}"
   }
   stages {
     stage("Build") {
@@ -1757,9 +1757,9 @@ Additional powerful blocks:
           passwordVariable: "DOCKER_PASS"
         )]) {
           sh """
-            docker build -t ${REGISTRY}/${IMAGE}:${TAG} .
-            docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASS}
-            docker push ${REGISTRY}/${IMAGE}:${TAG}
+            docker build -t \${REGISTRY}/\${IMAGE}:\${TAG} .
+            docker login \${REGISTRY} -u \${DOCKER_USER} -p \${DOCKER_PASS}
+            docker push \${REGISTRY}/\${IMAGE}:\${TAG}
           """
         }
       }
@@ -1767,12 +1767,12 @@ Additional powerful blocks:
     stage("Deploy") {
       when { branch "main" }
       steps {
-        sh "helm upgrade --install ${IMAGE} ./chart --set image.tag=${TAG}"
+        sh "helm upgrade --install \${IMAGE} ./chart --set image.tag=\${TAG}"
       }
     }
   }
   post {
-    success { echo "Pipeline succeeded — ${IMAGE}:${TAG} deployed" }
+    success { echo "Pipeline succeeded — \${IMAGE}:\${TAG} deployed" }
     failure { echo "Pipeline failed — check logs" }
     always { cleanWs() }
   }
