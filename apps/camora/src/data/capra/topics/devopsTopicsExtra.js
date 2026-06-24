@@ -3623,4 +3623,338 @@ Shadow Traffic: send a copy of production traffic to the new version without aff
       'https://martinfowler.com/bliki/CanaryRelease.html',
     ],
   },
+  {
+    id: 'karpenter-node-autoscaling',
+    title: 'Karpenter — Node Autoscaling',
+    icon: 'zap',
+    color: '#f59e0b',
+    description: 'Just-in-time node provisioning for Kubernetes — Karpenter watches unschedulable pods and provisions the optimal EC2 instance type directly, replacing Cluster Autoscaler.',
+    introduction: `Karpenter is an open-source node autoscaler for Kubernetes that provisions new nodes in response to unschedulable pods. Unlike Cluster Autoscaler (which manages predefined node groups), Karpenter directly calls the cloud provider API to launch the optimal instance type for the pending workload.
+
+How Karpenter works:
+1. A pod cannot be scheduled — no node has enough CPU, memory, or GPU, or no node matches the required node affinity.
+2. Karpenter watches for unschedulable pods via the Kubernetes scheduler.
+3. Karpenter evaluates the pod resource requests and scheduling constraints and computes the cheapest or fastest instance type that satisfies all constraints.
+4. Karpenter calls the EC2 RunInstances API directly — no Auto Scaling Group required. The new node registers with the cluster and the pod is scheduled.
+
+NodePool: defines constraints on nodes Karpenter can provision — allowed instance families, capacity types (On-Demand or Spot), zones, and resource limits (max total CPU and memory across all Karpenter nodes).
+
+EC2NodeClass: specifies the AMI family, subnet selector, security group selector, and instance store configuration. Decouples cloud-specific configuration from the generic NodePool.
+
+Consolidation: Karpenter continuously evaluates whether the cluster is using nodes efficiently. If a node is underutilized and its workloads can fit on other nodes, Karpenter drains and terminates it. This runs proactively — Karpenter does not wait for scale-down delay timers.
+
+Drift detection: if a NodePool or EC2NodeClass is updated (new AMI, changed instance requirements), Karpenter detects that existing nodes are drifted from the desired spec and replaces them through a rolling process.
+
+Karpenter vs. Cluster Autoscaler: Cluster Autoscaler requires pre-defined node groups (ASGs) and can only scale within those group boundaries. Karpenter selects the best instance type dynamically, can mix On-Demand and Spot in a single NodePool, and consolidates nodes proactively. Karpenter is the recommended approach for new EKS clusters.`,
+    whenToUse: [
+      'Replacing Cluster Autoscaler in EKS clusters for better cost efficiency and speed',
+      'Interview questions about Kubernetes node autoscaling strategies',
+      'Mixing Spot and On-Demand instances dynamically based on workload requirements',
+      'Reducing cluster costs by automatically consolidating underutilized nodes',
+      'Designing EKS clusters that scale from zero for batch or ML workloads',
+    ],
+    keyConcepts: [
+      { term: 'NodePool', definition: 'Karpenter CRD that defines what kinds of nodes Karpenter can provision: allowed instance families, capacity types (On-Demand/Spot), availability zones, and resource limits (max total CPU/memory for all Karpenter nodes).' },
+      { term: 'EC2NodeClass', definition: 'AWS-specific Karpenter CRD that defines the AMI family, subnet selector (by tag), security group selector, and block device configuration for nodes Karpenter launches.' },
+      { term: 'Consolidation', definition: 'Karpenter feature that continuously evaluates whether underutilized nodes can be emptied and terminated. Workloads are rescheduled onto remaining nodes. Reduces cluster costs proactively without waiting for CPU or memory thresholds.' },
+      { term: 'Disruption Budget', definition: 'Constraint on how many nodes Karpenter can disrupt simultaneously during consolidation or drift replacement. Set via NodePool disruption settings to prevent consolidation from causing service outages.' },
+      { term: 'Drift Detection', definition: 'Karpenter detects when existing nodes no longer match their NodePool or EC2NodeClass spec (e.g., AMI changed) and proactively replaces them via rolling node replacements.' },
+      { term: 'Topology Spread Constraints', definition: 'Kubernetes scheduling constraint that distributes pods across zones or nodes. Karpenter respects these constraints when selecting which AZ to launch new nodes in.' },
+    ],
+    pitfalls: [
+      { title: 'No disruption budget with Spot nodes', description: 'Karpenter consolidation and Spot interruption can both trigger pod rescheduling simultaneously. Without a PodDisruptionBudget on your workload and a NodePool disruption budget, Karpenter may drain multiple nodes at once, removing more replicas than your availability allows.' },
+      { title: 'Unlimited NodePool resource limits', description: 'Without a resource limit on the NodePool, a misconfigured HPA or workload requesting unbounded resources can cause Karpenter to provision hundreds of nodes and generate a large unexpected EC2 bill. Always set NodePool resource limits.' },
+      { title: 'Missing Spot interruption handling', description: 'Karpenter does not automatically handle Spot interruption notices. Deploy the AWS Node Termination Handler or enable Karpenter native interruption handling via SQS to cordon and drain Spot nodes when AWS sends a 2-minute interruption warning.' },
+    ],
+    keyQuestions: [
+      { q: 'How does Karpenter differ from Cluster Autoscaler?', a: 'Cluster Autoscaler works by scaling pre-defined Auto Scaling Groups (node groups). It can only provision the instance type defined in the ASG. To support multiple instance types you need multiple ASGs. Karpenter eliminates node groups entirely — it directly calls the EC2 API to launch any instance type that satisfies the pending pod constraints. This means Karpenter can always select the cheapest available instance type, mix On-Demand and Spot without separate node groups, and consolidate underutilized nodes proactively. Karpenter also provisions nodes faster — typically under 60 seconds vs. 2-3 minutes for Cluster Autoscaler. For new EKS clusters, Karpenter is the recommended approach.' },
+      { q: 'How does Karpenter handle Spot Instance interruptions?', a: 'Karpenter supports two interruption handling mechanisms. The AWS Node Termination Handler (NTH) is a DaemonSet that watches the EC2 instance metadata endpoint for Spot interruption notices. On a notice, NTH cordons the node and drains it, giving pods 2 minutes to reschedule before AWS terminates the instance. Karpenter native interruption handling uses an SQS queue and EventBridge rules that receive Spot interruption notices. Karpenter watches the SQS queue and drains the node when a notice arrives. The native handler is preferred for clusters where Karpenter manages all nodes. Both approaches require PodDisruptionBudgets on workloads to ensure Kubernetes does not evict too many replicas simultaneously.' },
+      { q: 'What is Karpenter consolidation and when would you disable it?', a: 'Consolidation is Karpenter continuously evaluating whether underutilized nodes can be emptied and terminated to save cost. When a node is underutilized, Karpenter checks if its pods can fit on other existing nodes. If yes, it cordons the node, evicts the pods (respecting PDBs), and terminates the node. This runs proactively and significantly reduces cluster costs for variable workloads. When to limit consolidation: for latency-sensitive stateful workloads where pod rescheduling causes disruption even with PDBs; for batch jobs that should run to completion without interruption (use consolidationPolicy: WhenEmpty to only consolidate empty nodes); and when GPU node warm-up time is significant, because consolidation would repeatedly terminate and recreate expensive nodes for periodic workloads.' },
+    ],
+    references: [
+      'https://karpenter.sh/docs/',
+      'https://docs.aws.amazon.com/eks/latest/best-practices/karpenter.html',
+    ],
+    visualizations: [
+      { title: 'Karpenter Node Provisioning Flow', caption: 'Unschedulable pod -> Karpenter evaluates resource requirements -> selects cheapest EC2 instance type (On-Demand or Spot) -> calls EC2 RunInstances API directly (no ASG) -> node joins cluster -> pod scheduled. Consolidation loop runs continuously to remove underutilized nodes.', image: '/diagrams/linkdiags/karpenter-autoscaling.png' },
+    ],
+  },
+  {
+    id: 'crossplane-cloud-control',
+    title: 'Crossplane — Cloud Control Plane',
+    icon: 'layers',
+    color: '#6366f1',
+    description: 'Kubernetes-native cloud infrastructure management — Crossplane turns your Kubernetes cluster into a universal control plane that provisions cloud resources via CRDs and continuous reconciliation.',
+    introduction: `Crossplane is an open-source CNCF project that extends Kubernetes with the ability to manage cloud infrastructure (AWS, GCP, Azure) using native Kubernetes primitives — CRDs, controllers, and RBAC.
+
+The core idea: instead of running Terraform CLI or CloudFormation stacks, you declare the desired state of cloud resources as Kubernetes manifests, and Crossplane controllers reconcile actual cloud state to match.
+
+Provider: a Crossplane package that installs CRDs and a controller for a specific cloud (provider-aws, provider-gcp, provider-azure). Each managed resource type becomes a Kubernetes CRD.
+
+Managed Resources (MR): Kubernetes objects that directly map to cloud resources. An RDSInstance object creates an actual AWS RDS instance. The controller watches the object and calls AWS APIs to create or update or delete the resource to match the spec.
+
+Compositions and CompositeResourceDefinitions (XRDs): XRDs define new abstract resource types (e.g., PostgreSQLDatabase) that hide cloud-specific details. Compositions map XRDs to one or more underlying managed resources. A developer creates a PostgreSQLDatabase object; the Composition provisions an RDSInstance, a SecurityGroup, and a SubnetGroup automatically. Platform teams define Compositions; developers consume abstract XRDs.
+
+Claims: namespace-scoped objects created by developers to request infrastructure from a Composition. Claims hide underlying cloud complexity and can be quota-controlled per namespace.
+
+Crossplane vs. Terraform: Terraform uses plan/apply CLI operations with external state files. Crossplane continuously reconciles state like a Kubernetes controller — if someone manually changes a cloud resource outside Crossplane, the controller corrects it automatically. No drift. Crossplane also enables GitOps workflows and integrates with Kubernetes RBAC for infrastructure access control.`,
+    whenToUse: [
+      'Building a self-service platform where developers request infrastructure via Kubernetes manifests',
+      'Implementing GitOps for cloud infrastructure provisioning',
+      'Interview questions about Kubernetes-native IaC and platform engineering',
+      'Replacing Terraform for teams that are already Kubernetes-native',
+      'Enabling multi-cloud resource management from a single Kubernetes cluster',
+    ],
+    keyConcepts: [
+      { term: 'Managed Resource (MR)', definition: 'Kubernetes CRD representing a single cloud resource (e.g., RDSInstance, S3Bucket). Crossplane controllers watch MRs and call cloud APIs to make actual resources match the spec. Deletion of an MR deletes the cloud resource by default.' },
+      { term: 'CompositeResourceDefinition (XRD)', definition: 'Defines a new abstract API type (e.g., XPostgreSQLServer). Platform teams create XRDs so developers work with cloud-agnostic APIs instead of raw managed resources.' },
+      { term: 'Composition', definition: 'Defines how an XR maps to one or more Managed Resources. A single XPostgreSQLServer Composition might create an RDSInstance plus a SecurityGroup plus a SubnetGroup on AWS.' },
+      { term: 'Claim', definition: 'Namespace-scoped proxy for a Composite Resource. Developers create Claims in their namespace; Crossplane creates a cluster-scoped XR and binds the Claim to it. Claims enforce namespace isolation and quota control.' },
+      { term: 'Provider', definition: 'Crossplane package (OCI image plus CRDs plus controller) for a specific cloud. provider-aws installs CRDs for every AWS service. Providers authenticate via ProviderConfig (IAM role, IRSA).' },
+      { term: 'Continuous Reconciliation', definition: 'Unlike Terraform (one-shot apply), Crossplane controllers continuously compare actual cloud state with desired state. If a resource is modified outside Crossplane, the controller reverts it on the next reconcile cycle.' },
+    ],
+    pitfalls: [
+      { title: 'Deleting managed resources deletes cloud infrastructure', description: 'Crossplane managed resources have deletionPolicy: Delete by default — deleting the Kubernetes object also deletes the actual cloud resource. Set deletionPolicy: Orphan on production resources before deleting the object, or you will accidentally delete databases and buckets.' },
+      { title: 'Compositions are complex to debug', description: 'A failed Composition shows errors on the XR or MR objects, not on the Claim the developer submitted. Developers must understand the XR/Claim/MR layering to debug. Provide clear status conditions and document the object hierarchy for platform users.' },
+      { title: 'Full provider-aws bloats etcd', description: 'provider-aws installs hundreds of CRDs. Large CRD count increases API server load and etcd memory usage. Use family-specific provider packages such as provider-aws-s3 or provider-aws-rds instead of the full provider-aws when you only need a subset of services.' },
+    ],
+    keyQuestions: [
+      { q: 'How does Crossplane differ from Terraform for infrastructure management?', a: 'Terraform uses a CLI plan/apply workflow with external state files. Drift correction requires a manual terraform apply. Crossplane uses the Kubernetes controller pattern: a reconcile loop continuously compares actual cloud state with the desired state in Kubernetes objects and corrects drift automatically. Crossplane is fully GitOps-compatible — Flux or ArgoCD syncs manifests and Crossplane reconciles cloud resources. RBAC controls which teams can create which resource types. Crossplane is better when you are already Kubernetes-native and want infrastructure as a first-class Kubernetes API. Terraform is better for complex provisioning workflows, existing module ecosystems, and multi-team setups with strong Terraform expertise.' },
+      { q: 'What is the purpose of Crossplane Compositions and XRDs?', a: 'Compositions and XRDs implement the platform abstraction layer. An XRD defines a new cloud-agnostic API such as XRelationalDatabase with fields for engine, size, and storageGB. A Composition defines how to realize that XRD on a specific cloud: create an RDSInstance, a SecurityGroup, and a SubnetGroup, mapping XR field values to each managed resource. Platform teams own XRDs and Compositions and hide cloud-specific complexity. Developers only see XRelationalDatabase and create Claims against it. This means platform teams can change the underlying cloud implementation without changing the developer-facing API.' },
+      { q: 'How does Crossplane handle drift in cloud resources?', a: 'Crossplane controllers implement a continuous reconcile loop. Every reconcile interval (default 10 minutes), the controller reads the current state of the cloud resource via the provider API and compares it to the desired state in the Kubernetes object. If they differ, the controller calls the cloud API to reconcile actual state back to desired. For example, if someone manually modifies an RDS instance size in the AWS console, the Crossplane controller detects the drift on the next reconcile and reverts the size to match the MR spec. This is a stronger guarantee than Terraform drift detection, which requires running terraform plan explicitly. The trade-off is that Crossplane generates continuous API calls to cloud providers — factor in API rate limits for large fleets of managed resources.' },
+    ],
+    references: [
+      'https://docs.crossplane.io/',
+      'https://www.cncf.io/projects/crossplane/',
+    ],
+    visualizations: [
+      { title: 'Crossplane Architecture', caption: 'Developer creates Claim (namespace-scoped) -> Crossplane creates XR -> Composition maps XR to Managed Resources -> Provider controller calls AWS/GCP/Azure APIs -> Cloud resources created. GitOps: ArgoCD syncs manifests, Crossplane reconciles cloud state continuously.', image: '/diagrams/linkdiags/crossplane-architecture.png' },
+    ],
+  },
+  {
+    id: 'external-secrets-operator',
+    title: 'External Secrets Operator',
+    icon: 'lock',
+    color: '#ef4444',
+    description: 'Sync secrets from AWS Secrets Manager, Vault, GCP Secret Manager, and other stores into Kubernetes Secrets — the standard pattern for secrets management in Kubernetes.',
+    introduction: `The External Secrets Operator (ESO) is a Kubernetes operator that reads secrets from external secret stores (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Azure Key Vault, and others) and synchronizes them into native Kubernetes Secrets.
+
+The problem ESO solves: storing secrets directly in Kubernetes Secrets is insecure by default because Secret values are base64-encoded (not encrypted) in etcd. ESO bridges external secret stores — which handle access control, audit logging, rotation, and versioning — with Kubernetes applications that need secrets as environment variables or volume mounts.
+
+SecretStore (namespace-scoped): defines how to authenticate to an external secrets backend within a namespace. References an IAM role (via IRSA), a Vault token, or a GCP service account.
+
+ClusterSecretStore (cluster-scoped): same as SecretStore but available to all namespaces. Use for centrally managed backends like a shared Vault cluster.
+
+ExternalSecret: declares which keys to read from the external store and how to write them as a Kubernetes Secret. References a SecretStore or ClusterSecretStore and maps external key paths to Kubernetes Secret keys. ESO reconciles the Kubernetes Secret to stay in sync with the external store.
+
+IRSA (IAM Roles for Service Accounts): ESO on EKS uses a Kubernetes service account annotated with an IAM role ARN. The ESO pod assumes this role via OIDC federation to call AWS Secrets Manager APIs — no long-term AWS credentials needed.
+
+Secret rotation: when a secret is rotated in AWS Secrets Manager, ESO detects the change on the next reconcile interval and updates the Kubernetes Secret. Pods that read secrets from environment variables require a restart to pick up new values — use the Reloader operator or reference secrets as volumes for seamless rotation.`,
+    whenToUse: [
+      'Syncing secrets from AWS Secrets Manager or Vault into Kubernetes without storing them in Git',
+      'Interview questions about secrets management patterns in Kubernetes',
+      'Implementing automatic secret rotation without manual pod restarts',
+      'Centralizing secret storage and access control across multiple Kubernetes clusters',
+      'Replacing manually created Kubernetes Secrets with GitOps-compatible external sync',
+    ],
+    keyConcepts: [
+      { term: 'ExternalSecret', definition: 'ESO CRD that defines which secret to read from the external store and how to write it into a Kubernetes Secret. Specifies the SecretStore reference, remote key paths, and target secret name and keys.' },
+      { term: 'SecretStore', definition: 'ESO CRD defining the connection and authentication to a specific secrets backend. Namespace-scoped — only ExternalSecrets in the same namespace can reference it.' },
+      { term: 'ClusterSecretStore', definition: 'Cluster-scoped SecretStore. Any ExternalSecret in any namespace can reference it. Use for shared backends like a central Vault cluster or organization-wide AWS Secrets Manager account.' },
+      { term: 'IRSA (IAM Roles for Service Accounts)', definition: 'EKS mechanism where a Kubernetes service account is annotated with an IAM role ARN. The kubelet exchanges the service account token for AWS credentials via OIDC federation. ESO uses IRSA to call AWS Secrets Manager without static credentials.' },
+      { term: 'refreshInterval', definition: 'ExternalSecret field that controls how often ESO polls the external store for changes. Default is 1 hour. Lower values catch secret rotations faster but generate more API calls against the external store.' },
+      { term: 'Secrets Store CSI Driver', definition: 'Alternative to ESO — mounts secrets directly as files in the pod filesystem using a CSI volume mount, bypassing Kubernetes Secrets entirely. Better for compliance environments that prohibit storing secrets in etcd; ESO is simpler for teams that need standard Kubernetes Secret compatibility.' },
+    ],
+    pitfalls: [
+      { title: 'Env vars do not pick up rotated secrets', description: 'When a Kubernetes Secret is updated by ESO after rotation, pods that read the secret as environment variables continue using the old values — env vars are injected at pod startup and do not update. Deploy the Reloader operator to watch Secrets and trigger rolling restarts on updates, or mount secrets as volumes which update in place within about one minute.' },
+      { title: 'Too-low refreshInterval hitting rate limits', description: 'Setting refreshInterval to 1m across hundreds of ExternalSecrets generates hundreds of AWS Secrets Manager API calls per minute. AWS Secrets Manager has per-secret and per-account rate limits. Set refreshInterval to 15-60 minutes for stable secrets; use higher frequency only for rapidly rotating credentials.' },
+      { title: 'Deleting ExternalSecret deletes the Kubernetes Secret', description: 'By default, deleting an ExternalSecret also deletes the synced Kubernetes Secret. Set spec.target.deletionPolicy: Retain to keep the Kubernetes Secret when the ExternalSecret is deleted. Important during migrations and debugging.' },
+    ],
+    keyQuestions: [
+      { q: 'How does External Secrets Operator compare to storing secrets directly in Kubernetes Secrets?', a: 'Native Kubernetes Secrets store values as base64-encoded data in etcd. Without etcd encryption at rest, anyone with etcd access or kubectl get secret permission can read the values. Secrets committed to Git for GitOps are base64-encoded plaintext in the repository. ESO keeps the source of truth in a purpose-built secret store like AWS Secrets Manager which provides encryption at rest by default, fine-grained IAM access control per secret, full audit logging of every read and rotation, and automated rotation. ESO syncs these secrets into Kubernetes Secrets for pod consumption. The Kubernetes Secret is ephemeral and recreatable; the actual secret value lives in the external store. This follows the principle that Kubernetes Secrets are a delivery mechanism, not the authoritative store.' },
+      { q: 'How do you implement zero-downtime secret rotation with ESO?', a: 'Rotation without downtime requires ESO sync and pod-level handling together. Configure the ExternalSecret with an appropriate refreshInterval such as 5 minutes for frequently rotated credentials. Mount the secret as a volume rather than env vars — Kubernetes updates projected volumes in place within about one minute, so pods see the new value without restart. For env var consumers, deploy the Reloader operator which watches Kubernetes Secrets and triggers rolling restarts of Deployments that reference them when values change. With Reloader, pod restart happens automatically after ESO syncs the new secret. Also ensure the application handles the transition period — most secret stores support dual-active credentials during rotation so both old and new credentials are valid for a grace period.' },
+      { q: 'What is IRSA and why is it important for ESO on EKS?', a: 'IRSA (IAM Roles for Service Accounts) federates Kubernetes service account identities with AWS IAM. Each EKS cluster has an OIDC provider endpoint. You create an IAM role with a trust policy that allows the EKS OIDC provider to assume the role for a specific Kubernetes service account. Annotate the service account with the role ARN. The kubelet exchanges the service account JWT token for short-lived AWS credentials via the OIDC endpoint when the pod starts. ESO uses IRSA to call AWS Secrets Manager with pod-scoped IAM permissions — no static AWS_ACCESS_KEY_ID needed. This is more secure than node-level instance profiles which grant all pods on the node the same permissions, and more secure than static credentials that need manual rotation.' },
+    ],
+    references: [
+      'https://external-secrets.io/latest/',
+      'https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html',
+    ],
+    visualizations: [
+      { title: 'External Secrets Operator Flow', caption: 'ExternalSecret references ClusterSecretStore -> ESO controller reads from AWS Secrets Manager (via IRSA) -> writes Kubernetes Secret -> Pod mounts Secret. On rotation: AWS Secrets Manager updates -> ESO detects on next reconcile -> Kubernetes Secret updated -> Pod gets new value via volume mount or Reloader-triggered restart.', image: '/diagrams/linkdiags/external-secrets-operator.png' },
+    ],
+  },
+  {
+    id: 'dora-four-keys-implementation',
+    title: 'DORA Four Keys — Implementation',
+    icon: 'bar-chart-2',
+    color: '#22c55e',
+    description: 'Implementing DORA 4 Keys in practice — measuring deployment frequency, lead time, change failure rate, and MTTR using real tooling, data pipelines, and dashboards.',
+    introduction: `The DORA Four Keys are the most widely validated metrics for measuring software delivery performance. Identified by the DevOps Research and Assessment team (now at Google Cloud) and validated across 7+ years of the State of DevOps Report, they predict organizational performance and team well-being.
+
+The four metrics and how to measure them:
+
+Deployment Frequency: how often code is deployed to production. Measure by counting production deployment events in your CI/CD system. Elite: multiple times per day. High: once per day to once per week. Medium: once per week to once per month. Low: less than once per month. Instrument by counting successful pipeline runs tagged with environment=production, grouped by day or week.
+
+Lead Time for Changes: time from a code commit being merged to that commit running in production. Measure the delta between commit timestamp and deployment timestamp for every commit in each release. Elite: less than one hour. High: one day to one week. Instrument by tracking commit hashes in each deployment and calculating deployment_timestamp minus commit_timestamp for each included commit.
+
+Change Failure Rate (CFR): percentage of deployments that cause a production incident, rollback, or service degradation. Elite: 0-15%. High: 16-30%. Instrument by linking incidents and rollbacks to the triggering deployment. CFR = incidents_linked_to_deployments divided by total_deployments.
+
+Mean Time to Restore (MTTR): how long it takes to restore service after a production failure. Elite: less than one hour. High: less than one day. Export from PagerDuty or OpsGenie: MTTR = mean(resolved_at minus triggered_at) for all production incidents.
+
+Tooling options:
+- DORA Quick Check at dora.dev: free self-assessment survey.
+- Four Keys open-source project (Google): BigQuery plus Looker Studio dashboard pulling from GitHub or GitLab and PagerDuty.
+- Sleuth, LinearB, Faros AI: commercial platforms with automatic integration.
+- Custom: GitHub Actions plus CloudWatch or Datadog metrics with a custom dashboard.
+
+A fifth metric, Reliability (meeting SLOs), was added to the DORA model in 2023.`,
+    whenToUse: [
+      'Setting up engineering metrics programs for DevOps teams',
+      'Interview questions about measuring software delivery performance',
+      'Demonstrating data-driven DevOps improvement to engineering leadership',
+      'Benchmarking team performance against DORA elite or high or medium or low clusters',
+      'Identifying bottlenecks in the software delivery pipeline',
+    ],
+    keyConcepts: [
+      { term: 'Deployment Frequency', definition: 'How often code is successfully released to production. The primary velocity metric. Elite performers deploy multiple times per day. Measured by counting successful production deployment events in the CI/CD pipeline.' },
+      { term: 'Lead Time for Changes', definition: 'Time from code commit to that commit running in production. Measures the speed of the full delivery pipeline. Calculate as deployment_timestamp minus commit_timestamp for all commits in each release.' },
+      { term: 'Change Failure Rate (CFR)', definition: 'Percentage of deployments causing a production incident, rollback, or hotfix. The quality and stability counter-balance to deployment frequency. Link incidents and rollbacks to the triggering deployment to calculate.' },
+      { term: 'Mean Time to Restore (MTTR)', definition: 'Average time from production incident detected to service restored. Measures team responsiveness and system recoverability. Export from incident management tools as resolved_at minus triggered_at.' },
+      { term: 'DORA Performance Clusters', definition: 'DORA research classifies teams into Elite, High, Medium, and Low clusters based on the four key values. Elite teams have far more frequent deployments, faster lead time, lower CFR, and faster MTTR than Low performers.' },
+      { term: 'DORA 5th Key: Reliability', definition: 'Added in 2023. Measures whether teams are meeting their user-facing SLOs. Operationalized as the percentage of time a service meets its SLO. Captures operational stability alongside velocity.' },
+    ],
+    pitfalls: [
+      { title: 'Measuring non-production deployments as deployment frequency', description: 'Deployment frequency measures production deployments only. Counting staging or dev deployments inflates the metric and misrepresents actual value delivery. Filter strictly to production environment deployments in your instrumentation.' },
+      { title: 'Gaming metrics instead of improving the system', description: 'Teams measured on DORA metrics may find ways to improve numbers without improving the system. Splitting a weekly deployment into 7 daily no-op deployments inflates frequency without improving lead time. Pair metrics with leading indicators such as PR cycle time and test pass rates to detect gaming.' },
+      { title: 'Using MTTR for performance reviews', description: 'MTTR is a learning metric, not a compliance metric. Using it for performance reviews incentivizes closing incidents quickly (marking as resolved) rather than actually restoring service and learning from failure. Use MTTR for trend analysis and process improvement only.' },
+    ],
+    keyQuestions: [
+      { q: 'What are the DORA Four Keys and what does each measure?', a: 'The DORA Four Keys measure software delivery performance across two dimensions: speed and stability. Speed: Deployment Frequency measures how often you deploy to production (elite: multiple per day); Lead Time for Changes measures time from code commit to production deployment (elite: under 1 hour). Stability: Change Failure Rate measures the percentage of deployments that cause incidents or rollbacks (elite: under 15%); MTTR measures time to restore service after a production failure (elite: under 1 hour). DORA research shows that elite performers achieve high velocity AND high stability simultaneously — these are not trade-offs. A fifth metric, Reliability (meeting SLOs), was added in 2023.' },
+      { q: 'How would you instrument Deployment Frequency for a team using GitHub Actions and ArgoCD?', a: 'Two instrumentation points for a GitOps pipeline. First, in GitHub Actions, listen for the workflow_run event with conclusion=success and filter for workflows that target the production environment. Emit a CloudWatch metric or push a Datadog event with service name and deployment timestamp. Second, in ArgoCD, use ArgoCD notifications or webhook integration to capture successful sync events for production Applications. Filter by destination environment label. For lead time, capture the list of commits in each sync by comparing old and new revision hashes with git log old_rev..new_rev. For each commit, lead_time equals sync_timestamp minus commit authored_date. Store in BigQuery or a time-series database and build a Grafana or Looker Studio dashboard segmented by service and team.' },
+      { q: 'How are Deployment Frequency and Lead Time for Changes different from each other?', a: 'Both measure speed but from different angles. Deployment Frequency measures how often releases reach production — it captures batch size and release cadence. A team that deploys once per week has low frequency even if each deployment runs fast through the pipeline. Lead Time measures the duration of the full delivery pipeline from code commit to production — it captures cycle time and pipeline efficiency. A team could have high frequency (daily deploys) but slow lead time (4 days from commit to production) if their pipeline has long queues, slow tests, or manual approval gates. Ideally both improve together: small frequent deployments with short pipeline stages. If frequency is high but lead time is long, investigate pipeline bottlenecks. If frequency is low, examine batch size, branching strategy, and deployment fear caused by high change failure rate.' },
+    ],
+    references: [
+      'https://dora.dev/research/',
+      'https://github.com/dora-team/fourkeys',
+    ],
+    visualizations: [
+      { title: 'DORA Four Keys Performance Clusters', caption: 'Elite: deploy multiple times per day, lead time under 1 hour, CFR under 15%, MTTR under 1 hour. High: deploy daily to weekly, lead time under 1 week. Medium: weekly to monthly. Low: less than monthly. Elite teams achieve high velocity and high stability simultaneously.', image: '/diagrams/linkdiags/dora-four-keys.png' },
+    ],
+  },
+  {
+    id: 'platform-engineering-idp-design',
+    title: 'Platform Engineering & IDP Design',
+    icon: 'layout',
+    color: '#8b5cf6',
+    description: 'Designing Internal Developer Platforms — golden paths, thinnest viable platform, Backstage, cognitive load reduction, and the CNCF Platform Engineering maturity model.',
+    introduction: `Platform Engineering is the discipline of building and operating Internal Developer Platforms (IDPs) that reduce cognitive load on development teams and provide self-service infrastructure capabilities. It applies product thinking to internal tooling.
+
+Platform as a Product: the platform team treats development teams as customers. Define a product roadmap, collect feedback, measure adoption, and iterate based on developer needs — not on what the platform team finds technically interesting.
+
+Thinnest Viable Platform (TVP): start with the smallest set of capabilities that delivers real value to development teams. Resist building a comprehensive platform before validating demand. Expand based on measured developer pain points.
+
+Golden Paths: opinionated, paved paths for the most common developer use cases — deploy a containerized service, create a PostgreSQL database, add monitoring to a service. Golden paths are not the only way; they are the easy default. Teams can go off-path with justification. Golden paths reduce cognitive load by eliminating decision fatigue.
+
+Cognitive Load: the mental effort required to understand, build, and operate a service. Platform engineering reduces cognitive load so teams can focus on product logic. Too many tools, undocumented APIs, and manual steps increase cognitive load and slow delivery.
+
+Internal Developer Portal: the UI and API surface of a platform. Backstage (CNCF graduated project) is the most common IDP framework. Backstage provides a Software Catalog (inventory of services, owners, dependencies), Templates (self-service scaffolding), TechDocs (docs-as-code), and a Plugin ecosystem.
+
+CNCF Platform Engineering Maturity Model — 5 levels:
+Level 0: no platform team; each team manages its own infrastructure.
+Level 1: provisional — platform team exists, provides some shared services ad-hoc.
+Level 2: operational — defined platform with documented golden paths and SLAs.
+Level 3: scalable — platform-as-product, self-service capabilities, measured developer adoption.
+Level 4: optimizing — platform drives competitive advantage, industry-leading developer experience.
+
+Team Topologies context: the Platform team is one of the four team types. Platform teams exist to reduce cognitive load on stream-aligned teams through X-as-a-service interfaces.`,
+    whenToUse: [
+      'Designing or evaluating an Internal Developer Platform for an engineering organization',
+      'Interview questions about platform engineering, developer experience, and team topologies',
+      'Explaining Backstage, golden paths, and platform-as-product to engineering leadership',
+      'Building a roadmap for a new platform team',
+      'Measuring platform engineering success with developer experience metrics',
+    ],
+    keyConcepts: [
+      { term: 'Internal Developer Platform (IDP)', definition: 'The full set of tools, workflows, and self-service capabilities provided by a platform team to development teams. Includes infrastructure provisioning, deployment pipelines, observability, and golden path templates.' },
+      { term: 'Golden Path', definition: 'An opinionated, documented, well-maintained set of tools and workflows for common use cases. A golden path for deploying a new microservice includes Helm chart templates, CI/CD setup, monitoring dashboards, and alerting in a single scaffolding command.' },
+      { term: 'Thinnest Viable Platform', definition: 'The smallest set of platform capabilities that provides measurable value. Platform teams should start thin and expand based on validated developer needs, not engineer judgment.' },
+      { term: 'Backstage', definition: 'CNCF graduated open-source IDP framework from Spotify. Core features: Software Catalog (service registry with ownership and dependency tracking), Software Templates (self-service scaffolding), TechDocs (Markdown docs rendered in the portal), and a plugin ecosystem.' },
+      { term: 'Cognitive Load', definition: 'Mental effort required to understand and operate a system. Platform engineering reduces cognitive load on stream-aligned teams by handling infrastructure complexity. Team Topologies identifies three types: intrinsic (inherent problem complexity), extraneous (accidental complexity from poor tools), germane (learning that builds expertise).' },
+      { term: 'Platform SLOs', definition: 'Service Level Objectives defined by the platform team for platform services: API availability, provisioning latency, support response time. Platforms are internal services — they need SLOs to be accountable to developer customers.' },
+    ],
+    pitfalls: [
+      { title: 'Building a comprehensive platform before validating demand', description: 'Platform teams sometimes build elaborate self-service portals that developers do not use because they solved problems developers did not have. Start with the thinnest viable platform: identify the top 3 developer pain points from surveys or support tickets and build only for those. Measure adoption before expanding.' },
+      { title: 'Forcing all teams onto golden paths', description: 'Golden paths should reduce friction for the common case, not mandate conformance. If golden paths become mandatory, teams with unusual requirements spend months getting exceptions approved instead of building product. Communicate that golden paths are the default, not the only option.' },
+      { title: 'No customer feedback loop', description: 'A platform team without a product manager and regular developer feedback tends to build what engineers find interesting, not what developers need. Run quarterly developer experience surveys, review support tickets weekly, and measure adoption rates per capability.' },
+    ],
+    keyQuestions: [
+      { q: 'What is the difference between an Internal Developer Platform and an Internal Developer Portal?', a: 'An Internal Developer Platform (IDP) is the full set of capabilities and services provided to development teams — CI/CD pipelines, infrastructure provisioning, service mesh, observability, golden path templates. It is the platform itself. An Internal Developer Portal is the UI layer of the IDP — the web application developers use to interact with the platform. Backstage is the most common developer portal framework. The portal provides a Software Catalog (all services, owners, SLOs), Software Templates (one-click service scaffolding), TechDocs (integrated documentation), and plugin-based integrations. An IDP can exist without a portal. A portal without underlying platform capabilities is just a dashboard.' },
+      { q: 'How do you measure the success of a platform engineering initiative?', a: 'Platform success has two dimensions: developer adoption and business impact. Adoption metrics: active users of each capability per month, percentage of new services using golden paths, self-service request ratio. Developer experience metrics using the SPACE framework: Satisfaction from developer NPS surveys, Performance from DORA metrics for platform-using vs. non-using teams, Activity from deployments per week, Communication from PR review time, Efficiency from onboarding time for new services. Business impact: platform-using teams show faster deployment frequency, lower CFR, and shorter lead time than teams not using it. Survey teams on cognitive load reduction annually.' },
+      { q: 'What is Backstage and what problems does it solve?', a: 'Backstage is an open-source IDP framework from Spotify, now a CNCF graduated project. It solves three problems common in growing engineering organizations. First, discoverability — engineers do not know what services exist, who owns them, or how they are deployed. The Software Catalog aggregates all services, owners, runbooks, and deployment details in one searchable UI. Second, self-service provisioning — creating a new service requires coordination with many teams. Software Templates provide one-click scaffolding: enter service name and choose options, and Backstage creates the GitHub repo, CI/CD pipeline, Kubernetes manifests, and monitoring setup automatically. Third, documentation fragmentation — docs live in Confluence, Notion, and GitHub. TechDocs renders Markdown from the service repo directly in the portal so docs are version-controlled with the code.' },
+    ],
+    references: [
+      'https://backstage.io/',
+      'https://tag-app-delivery.cncf.io/whitepapers/platforms/',
+      'https://teamtopologies.com/key-concepts',
+    ],
+    visualizations: [
+      { title: 'Platform Engineering Maturity Model', caption: 'Level 0: no platform team. Level 1: provisional shared services. Level 2: operational platform with SLAs. Level 3: scalable self-service, platform-as-product. Level 4: optimizing, competitive advantage. Most organizations target Level 2-3.', image: '/diagrams/linkdiags/platform-engineering-idp.png' },
+    ],
+  },
+  {
+    id: 'grpc-protobuf-services',
+    title: 'gRPC & Protocol Buffers',
+    icon: 'radio',
+    color: '#14b8a6',
+    description: 'High-performance RPC framework using Protocol Buffers — unary and streaming RPCs, HTTP/2 multiplexing, schema evolution, service mesh integration, and REST transcoding.',
+    introduction: `gRPC is an open-source, high-performance Remote Procedure Call (RPC) framework developed by Google. It uses HTTP/2 as the transport and Protocol Buffers (Protobuf) as the interface definition language and wire format.
+
+Why gRPC over REST: REST uses HTTP/1.1 text-based JSON with no schema enforcement. gRPC uses HTTP/2 (multiplexing, header compression, binary framing) with Protobuf (binary wire format, strict schema, forward and backward compatible). gRPC is typically 5-10x faster and more bandwidth-efficient than JSON over REST for the same payload.
+
+Protocol Buffers: define service contracts in .proto files. The protoc compiler generates strongly-typed client and server code in any supported language (Go, Java, Python, Node.js, C++). Protobuf binary encoding is compact — a JSON object is roughly 3x larger than the equivalent Protobuf encoding.
+
+gRPC call types:
+Unary RPC: single request, single response. Equivalent to a REST API call. Most common pattern.
+Server-side streaming: client sends one request, server streams multiple responses. Use for real-time data feeds or large result sets.
+Client-side streaming: client streams multiple requests, server sends one response. Use for file uploads or batch input.
+Bidirectional streaming: both sides stream simultaneously over one HTTP/2 connection. Use for real-time collaborative features or interactive protocols.
+
+Schema evolution: Protobuf fields have numbers that persist across schema versions. Never change a field number or its type. Adding new fields with new numbers is backward and forward compatible. Removing fields: mark as reserved, never reuse the number.
+
+gRPC in Kubernetes: gRPC uses HTTP/2, which is not compatible with layer-4 load balancers that do not understand HTTP/2 stream multiplexing. Use a service mesh (Istio, Linkerd) or a gRPC-aware load balancer (NGINX, Envoy, AWS ALB) that terminates HTTP/2 and properly load-balances at the request level.
+
+gRPC-Gateway: generates a reverse proxy from Protobuf annotations that translates HTTP/JSON REST calls to gRPC. Enables one backend to serve both REST (for browsers) and gRPC (for internal services) from the same .proto definition.`,
+    whenToUse: [
+      'Designing high-throughput microservice-to-microservice communication',
+      'Interview questions about inter-service communication protocols and trade-offs',
+      'Replacing REST APIs for internal services where performance and schema safety matter',
+      'Building streaming APIs for real-time data feeds or bidirectional communication',
+      'Enforcing contract-first API development with generated client and server stubs',
+    ],
+    keyConcepts: [
+      { term: 'Protocol Buffers (Protobuf)', definition: 'Binary serialization format and IDL. Define message and service schemas in .proto files. protoc compiles them to language-specific stubs. Binary encoding is 3-10x smaller than equivalent JSON for typical API payloads.' },
+      { term: 'HTTP/2 Transport', definition: 'gRPC uses HTTP/2 which provides multiplexing (multiple requests over one TCP connection), header compression (HPACK), binary framing, and server push. This eliminates HTTP/1.1 head-of-line blocking and connection overhead.' },
+      { term: 'Bidirectional Streaming', definition: 'Both client and server send a stream of messages over a single long-lived HTTP/2 connection. Used for real-time applications, collaborative features, and interactive protocols where latency matters.' },
+      { term: 'Field Numbers', definition: 'Every Protobuf field has a unique integer tag encoded in the binary wire format (not the field name). Never change a field number once published — it breaks backward compatibility. Adding new fields with new numbers is safe.' },
+      { term: 'gRPC-Gateway', definition: 'Protobuf plugin that generates an HTTP/JSON reverse proxy from .proto annotations. Allows a single gRPC service to serve REST clients (browsers) and gRPC clients (microservices) from one codebase.' },
+      { term: 'gRPC Load Balancing', definition: 'HTTP/2 multiplexing means all streams go to one backend with L4 load balancing. Use L7 load balancers (Envoy, NGINX, AWS ALB with gRPC protocol) or client-side load balancing with a headless Kubernetes service for proper request distribution.' },
+    ],
+    pitfalls: [
+      { title: 'Using gRPC with L4 load balancers', description: 'A gRPC client opens one HTTP/2 connection and multiplexes all calls on it. An L4 (TCP) load balancer routes the connection to one backend at connection setup. All subsequent RPC calls on that connection go to the same backend — effectively no load balancing. Use an L7 load balancer or service mesh that understands HTTP/2 frames and distributes individual RPCs.' },
+      { title: 'Reusing field numbers for different fields', description: 'If you remove a field and reuse its number for a new field with a different type, old clients will misinterpret the new field as the old type — causing silent data corruption, not an error. Mark removed fields as reserved and never reuse the number.' },
+      { title: 'No deadline or timeout propagation', description: 'gRPC supports per-call deadlines. Without deadlines, a slow downstream RPC blocks the caller indefinitely, causing cascading timeouts. Always set a deadline on gRPC calls and propagate the remaining deadline from incoming requests to outgoing calls.' },
+    ],
+    keyQuestions: [
+      { q: 'Why would you choose gRPC over REST for internal microservice communication?', a: 'gRPC offers several advantages over REST for internal services. Performance: HTTP/2 binary framing with Protobuf binary encoding is 5-10x more efficient than HTTP/1.1 JSON — lower latency and bandwidth for high-throughput services. Strong typing: .proto files define the contract and the compiler generates type-safe client and server stubs in any language. REST relies on informal OpenAPI specs with runtime type errors. Streaming: gRPC natively supports server, client, and bidirectional streaming over one connection — REST requires WebSockets or SSE as separate protocols. Code generation: one .proto file generates clients in Go, Python, Java simultaneously. For public APIs consumed by browsers, REST is still preferable because browser support for gRPC requires the grpc-web proxy layer.' },
+      { q: 'How do Protocol Buffers handle backward and forward compatibility?', a: 'Protobuf is designed for schema evolution. Rules: never change a field number — it is the identity of the field in the binary format. Never change the type of an existing field. Adding new fields with new numbers is safe — old clients ignore unknown fields (forward compatibility) and new clients receive zero values for missing fields from old servers (backward compatibility). Remove fields by marking them reserved using the reserved keyword so the number and name cannot be accidentally reused. Enums: adding new values is forward-compatible; old clients receive the default (0) for unknown enum values. These rules mean Protobuf services can evolve their schemas without API versioning as long as the rules are followed.' },
+      { q: 'How do you load-balance gRPC services in Kubernetes?', a: 'gRPC over HTTP/2 requires L7 (application-layer) load balancing for proper request distribution. Options in Kubernetes: a service mesh like Istio or Linkerd intercepts gRPC connections via a sidecar proxy and load-balances at the individual RPC level — each pod gets a share of requests regardless of connection count. This is best for polyglot environments. Headless Service plus client-side load balancing: create a Kubernetes Headless Service (clusterIP: None). DNS resolution returns all pod IPs. Use the gRPC built-in round-robin resolver in the client to distribute RPCs across all pod IPs — fast with no proxy overhead. L7 Ingress or Gateway: AWS ALB or NGINX with gRPC protocol support terminates HTTP/2 at the load balancer and distributes individual RPCs to backends — use this for north-south gRPC traffic from external clients.' },
+    ],
+    references: [
+      'https://grpc.io/docs/',
+      'https://protobuf.dev/',
+    ],
+    visualizations: [
+      { title: 'gRPC vs REST Architecture', caption: 'REST: HTTP/1.1 plus JSON, no schema enforcement, one connection per request. gRPC: HTTP/2 plus Protobuf binary encoding, generated typed stubs, multiple RPCs multiplexed over one connection. Bidirectional streaming: both client and server push messages asynchronously over one HTTP/2 connection.', image: '/diagrams/linkdiags/grpc-protobuf.png' },
+    ],
+  },
 ];
