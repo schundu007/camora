@@ -92,6 +92,16 @@ export const topicCategoryMap = {
     'prioritization-frameworks': 'delivery',
     'ethics-integrity': 'conflict',
     'technical-leadership': 'leadership',
+    // Staff/senior-level + remote/ethics gaps
+    'managing-up': 'leadership',
+    'cross-org-alignment': 'teamwork',
+    'handling-ambiguity': 'problem-solving',
+    'technical-debt-negotiation': 'delivery',
+    'psychological-safety': 'leadership',
+    'async-remote-collaboration': 'communication',
+    'ethical-dilemmas': 'conflict',
+    'staff-engineer-scope': 'achievements',
+    'layoffs-reorgs': 'growth',
   };
 
 export const behavioralTopics = [
@@ -6246,6 +6256,974 @@ Establishing a pattern in one team that spreads organically to others (through h
         'Multiplying your impact (platforms, standards, mentoring) is a key Staff+ signal — have at least one story',
         'Translation to non-technical stakeholders is often tested explicitly — practice explaining a technical trade-off in business terms',
         'Architectural decision stories are strongest when you show multiple options were considered and you can articulate why you chose what you did'
+      ]
+    },
+    {
+      id: 'managing-up',
+      title: 'Managing Up',
+      icon: 'arrowUp',
+      color: '#3b82f6',
+      questions: 5,
+      description: 'Proactive upward communication and alignment with your manager.',
+      introduction: `Managing up is the art of actively shaping your relationship with your manager to be productive, transparent, and mutually beneficial. It is not about flattering or manipulating your manager — it is about ensuring they have the information they need to support you, advocate for you, and make good decisions. Engineers who manage up well get better assignments, more autonomy, and stronger sponsorship.
+
+The core principle is eliminating surprises. Your manager should never learn bad news from someone else before hearing it from you. They should never wonder what you're working on, why a project is delayed, or how you feel about a decision. Proactive communication builds trust faster than any technical achievement.
+
+Managing up also means understanding your manager's goals, pressures, and communication preferences — and adapting to them. The best engineers I've seen treated their manager relationship like any other important stakeholder relationship: with intentionality, empathy, and strategy.`,
+      keyQuestions: [
+        {
+          question: 'How do you keep your manager informed without over-communicating?',
+          answer: `**The no-surprises rule**: Your manager should learn bad news from you first, immediately. For everything else, calibrate to their style.
+
+**Weekly written update (async-friendly)**:
+- What I shipped this week
+- What I'm focused on next week
+- Blockers or risks (and what I need from them)
+- One thing I'm learning / noticing
+
+This takes 5 minutes to write and saves 30 minutes of status meetings. Many managers will tell you this is the most valuable thing a direct report can do.
+
+**Escalation calibration**:
+- Minor risks (< 1 sprint impact): handle yourself, mention in weekly update
+- Medium risks (> 1 sprint or cross-team): flag proactively, propose solution
+- Major risks (deadline, scope, customer impact): escalate immediately with options
+
+**Interview answer**: "I send a weekly async update every Friday — what shipped, what's next, and any risks. My manager told me it made 1:1s more strategic because we weren't spending time on status."`,
+        },
+        {
+          question: 'How do you professionally disagree with your manager\'s direction?',
+          answer: `**Disagree in private, commit in public.** Once a decision is made, support it — but before that, advocate clearly.
+
+**The framework**:
+1. Ask to understand before you push back: "Help me understand the reasoning behind this approach."
+2. State your concern factually: "My concern is that [X] will likely cause [Y]. Here's my evidence."
+3. Propose an alternative: "I'd suggest [Z] because it achieves the same goal with lower risk."
+4. Accept the outcome: "I understand. I'll commit to making this work."
+
+**What to avoid**:
+- Going around your manager to their manager (almost always backfires)
+- Passive resistance (agreeing then not delivering)
+- Public disagreement in team settings
+
+**Interview story**: "My manager wanted to launch a feature before the reliability work was done. I came to our 1:1 with data — three similar launches that caused incidents, and an estimate of the risk. She heard me out, agreed to a 2-week delay, and later told me the data made it easy to say yes."`,
+        },
+        {
+          question: 'How do you handle a manager who is hands-off or unavailable?',
+          answer: `**Hands-off managers are a gift if you're senior enough, a gap if you need support.**
+
+**If it's working for you**: Fill the void. Set your own priorities, document your decisions, build relationships with your manager's peers. Report accomplishments proactively since they won't ask.
+
+**If you need more guidance**:
+- Request a recurring 1:1 (start with 30 minutes biweekly)
+- Come with a specific agenda — don't put the work on them
+- Ask for explicit feedback: "What would make you more confident in my work on this?"
+- Name what you need: "I'd value more context on the team's Q3 priorities."
+
+**Signs you need to escalate the relationship gap**:
+- Decisions are being made without your input that affect your work
+- You're getting feedback from their skip-level instead of them
+- Performance review conversations feel like first contact
+
+**Interview story**: "My manager was stretched across three teams. I learned to make every 1:1 count — I'd show up with a prioritized list of 3 things: one decision I needed, one update they needed, one ask for career development."`,
+        },
+        {
+          question: 'How do you ask for a promotion or raise through managing up?',
+          answer: `**Promotions are won in the months before the conversation, not in the conversation itself.**
+
+**Build the case continuously**:
+- Track your impact in terms your manager uses (metrics they care about)
+- Align on promotion criteria explicitly — ask "what does success look like at the next level?"
+- Collect evidence of next-level behavior before the review cycle
+
+**The ask conversation**:
+"I'd like to talk about my path to [Staff/L6/Principal]. Based on what we've discussed, I believe I've been operating at that level for the past [X months] — specifically [example 1, example 2, example 3]. Is there a gap you see that I should be focused on?"
+
+**What not to do**:
+- Surprise your manager with an ask at review time
+- Anchor on tenure ("I've been here 2 years")
+- Compare yourself to a peer
+
+**Managing up for visibility**:
+- Share wins in channels your manager's manager can see
+- Volunteer for cross-team projects that expose you to leadership
+- Ask your manager to advocate for you in rooms you're not in`,
+        },
+        {
+          question: 'What does good managing up look like at Staff+ level?',
+          answer: `**At Staff+, you're managing a relationship, not just a reporting line.**
+
+Your manager is often a VP or Director with many stakeholders. Your job is to make their job easier by operating with high autonomy and giving them signal, not noise.
+
+**Staff-level managing up**:
+- Bring problems with proposed solutions, not just problems
+- Proactively flag risks that affect their other bets
+- Build relationships with your manager's peers (their partners, not just your skip)
+- Help them understand technical complexity — translate, don't assume
+
+**What your manager needs from you**:
+- Confidence that you're handling your area without constant oversight
+- Early warning when something is off track
+- Your honest read on team health and technical risk
+- A clear articulation of what you need to be effective
+
+**The sponsorship ask**: "I'm working toward Principal. Are there opportunities where you could pull me into rooms where those decisions are made, so I can build visibility?" Most good managers will say yes — they just need to be asked.`,
+        },
+      ],
+      tips: [
+        'Send a weekly written update — this single habit builds more trust than almost anything else',
+        'Disagree in private, commit in public — once a decision is made, support it fully',
+        'Ask your manager explicitly what success looks like for your next promotion level',
+        'Never let your manager learn bad news from someone else first',
+        'Adapt to their communication style — some want detail, some want summary',
+      ]
+    },
+    {
+      id: 'cross-org-alignment',
+      title: 'Driving Cross-Org Alignment',
+      icon: 'gitMerge',
+      color: '#8b5cf6',
+      questions: 4,
+      description: 'Aligning multiple teams and stakeholders across org boundaries toward a shared goal.',
+      introduction: `Cross-org alignment is one of the highest-leverage skills for senior and staff engineers. The higher you go in an organization, the more your success depends not on what you personally build, but on what you can align multiple teams to build together.
+
+This is hard for several reasons: teams have different priorities, managers have different incentives, and there is no single authority who can simply mandate coordination. You have to earn alignment through clear thinking, relationship-building, and persistent communication.
+
+Interviewers ask about cross-org alignment to test whether you can operate beyond your team's boundaries — a key signal for Staff and above.`,
+      keyQuestions: [
+        {
+          question: 'How do you align multiple teams on a shared technical direction?',
+          answer: `**The RFC (Request for Comments) process** is the gold standard for technical cross-org alignment.
+
+**Step 1: Write a clear problem statement** — not a solution. Make sure all stakeholders agree on the problem before proposing anything.
+
+**Step 2: Draft the RFC with a proposed approach** — include alternatives considered and trade-offs. This shows intellectual honesty and invites real engagement.
+
+**Step 3: Async comment period** (1-2 weeks) — give teams time to read and respond in their own time zones and schedules. Most real objections surface here.
+
+**Step 4: Resolve objections or incorporate them** — don't just close objections, address them. If you can't, explain why.
+
+**Step 5: Synchronous decision meeting** (only if needed) — come in with a recommendation, not an open question.
+
+**Common failure mode**: Skipping the async period and trying to reach alignment in a single meeting. People need time to think.
+
+**Interview story**: "I needed three teams to agree on a shared event schema. I wrote an RFC, gave two weeks for comments, and held one 45-minute sync to resolve the two open questions. We shipped with zero conflicts because everyone had ownership."`,
+        },
+        {
+          question: 'How do you handle teams with competing priorities?',
+          answer: `**Competing priorities are a resource allocation problem disguised as an alignment problem.**
+
+**Step 1: Understand each team's constraints** — don't assume bad faith. Find out what they're optimizing for and why.
+
+**Step 2: Find the shared outcome** — "We all want customers to succeed with [X]. Here's how this work serves that."
+
+**Step 3: Reduce the ask** — often teams resist because the ask is too large. Break it into phases, find the minimum viable commitment.
+
+**Step 4: Make the cost of not aligning visible** — "If we don't align on this now, here's what the alternative looks like: [divergent APIs / doubled maintenance / customer confusion]."
+
+**Step 5: Escalate with data, not frustration** — if a team can't commit, surface the conflict to leadership with a clear framing: "We need a decision on whether Team A or Team B owns X, because both can't."
+
+**What not to do**: Go around a team to their manager without telling them first. This destroys trust and creates enemies you'll work with for years.`,
+        },
+        {
+          question: 'Tell me about a time you drove alignment across multiple teams.',
+          answer: `**STAR structure for cross-org alignment stories**:
+
+**Situation**: Set the scale — how many teams, what was at stake, why was alignment needed?
+
+**Task**: What were you trying to get all parties to agree on? What would happen if you failed?
+
+**Action** (this is where most detail should live):
+- How did you map stakeholders and their concerns?
+- What artifacts did you create (RFC, design doc, decision matrix)?
+- How did you handle objections?
+- What relationship-building happened outside of meetings?
+
+**Result**: What did alignment unlock? Quantify if possible — "three teams shipped a unified API that served 4M users, instead of three separate implementations."
+
+**What makes this story strong**:
+- You drove it, not your manager
+- There was genuine disagreement that you resolved
+- The outcome was measurably better for having alignment
+
+**Weak version**: "I coordinated a meeting where everyone agreed." This shows coordination, not influence.`,
+        },
+        {
+          question: 'How do you build relationships with peer teams before you need them?',
+          answer: `**Alignment is easier when relationships pre-exist the conflict.**
+
+**Proactive relationship building**:
+- Attend other teams' architecture reviews occasionally — you learn their constraints and they see you as engaged
+- Help solve a small problem for a peer team without being asked — "I noticed X, here's a fix"
+- Share knowledge openly — internal blog posts, tech talks, RFC reviews
+- Recognize other teams' work in public channels
+
+**Tactical moves**:
+- Find the "connectors" in adjacent teams — the engineers who know everything about their system and are willing to share
+- Establish a regular (even quarterly) informal sync with key counterparts
+- When starting a cross-team project, begin with listening: "Tell me about your constraints before I tell you my proposal"
+
+**The investment pays off**: When you need alignment quickly, you're calling a friend, not a stranger. Decisions that take weeks in adversarial relationships take hours in trusting ones.`,
+        },
+      ],
+      tips: [
+        'Write RFCs with async comment periods — synchronous meetings are for resolving the last 20% of disagreement, not the first 80%',
+        'Start with the shared outcome, not the technical solution',
+        'Competing priorities are usually a resource problem — reduce the ask before escalating',
+        'Build relationships with peer teams before you need something from them',
+        'When escalating conflicts to leadership, present options with trade-offs, not just the problem',
+      ]
+    },
+    {
+      id: 'handling-ambiguity',
+      title: 'Handling Ambiguity',
+      icon: 'compass',
+      color: '#06b6d4',
+      questions: 4,
+      description: 'Making confident decisions and driving progress when requirements are unclear or incomplete.',
+      introduction: `Ambiguity is the natural state of hard problems. Every significant engineering challenge starts with unclear requirements, unknown constraints, and competing interpretations. How you handle that ambiguity — whether you freeze, over-clarify, or move forward intelligently — is one of the clearest signals of engineering maturity.
+
+Amazon's "Bias for Action" leadership principle exists because the cost of inaction is often higher than the cost of a reversible mistake. Great engineers develop a calibrated sense for when to act with incomplete information and when clarification is worth the wait.
+
+Interviewers probe this to distinguish engineers who need a clear spec to execute from engineers who can operate in the fog of real-world product development.`,
+      keyQuestions: [
+        {
+          question: 'How do you decide whether to act or clarify when requirements are unclear?',
+          answer: `**The reversibility test (Amazon's "two-way vs. one-way door")**:
+
+**One-way door decisions** (hard to reverse): Get clarity before acting. Examples: deleting production data, choosing a new data store, designing a public API contract.
+
+**Two-way door decisions** (easily reversible): Bias toward action. Build a prototype, make an assumption, try the simple thing first. Examples: internal implementation details, UI layout, algorithm choice.
+
+**Time-box your ambiguity**: If you've spent more than 20% of estimated task time trying to clarify rather than doing, you're probably over-clarifying. Make an assumption, document it, and proceed.
+
+**The assumption log**: When you act with incomplete information, write down your assumptions. "I'm assuming users will upload files < 10MB. If this is wrong, the impact is [X] and the fix is [Y]." This shows maturity and makes course-correction easy.
+
+**Interview answer**: "I first ask: is this a one-way or two-way door? If it's reversible, I bias toward action and document my assumptions. If it's hard to reverse, I invest in getting clarity from the right person before proceeding."`,
+        },
+        {
+          question: 'Tell me about a time you drove a project forward despite unclear requirements.',
+          answer: `**What makes a strong ambiguity story**:
+
+1. **Genuine ambiguity** — not just "the spec was missing one field." Multiple interpretations existed, stakeholders disagreed, or the problem itself was unclear.
+
+2. **Your active choice** — you didn't wait to be unblocked; you drove clarity or made a principled assumption.
+
+3. **The mechanism** — how specifically did you clarify? (User research? Stakeholder interviews? Time-boxed prototype? Data analysis?) Or how did you make an assumption? (What was your framework?)
+
+4. **The result** — what happened? Did your assumption hold? Did you course-correct? What did the team learn?
+
+**Weak version**: "Requirements were unclear so I asked my manager to clarify, then I built it."
+
+**Strong version**: "We had three competing definitions of 'active user' across product, data, and eng. Instead of waiting for alignment, I built the feature with a configurable parameter and documented each definition's trade-offs. Product chose the definition in the next sprint review based on our prototype data."`,
+        },
+        {
+          question: 'How do you ask good clarifying questions without appearing incompetent?',
+          answer: `**The difference is demonstrating you've thought before asking.**
+
+**Bad clarifying question**: "What should the API response look like?"
+- Shows you haven't looked at existing patterns
+- Forces the other person to do your thinking
+
+**Good clarifying question**: "I'm planning to follow the same response format as our Users API — paginated list with cursor-based pagination. The one decision I want your input on is whether errors should return 400 or 422. My instinct is 422 since we're validating input, not just rejecting it. Does that match your expectation?"
+- Shows you've done the research
+- Narrows to a specific, bounded decision
+- Offers a recommendation — asks for confirmation, not direction
+
+**Framework for good clarifying questions**:
+1. Research first (check existing patterns, docs, prior decisions)
+2. Propose your default assumption
+3. Ask only about the gap your research didn't close
+4. Make it easy to say yes: "I'm planning X — does that work?"
+
+**Timing**: Ask clarifying questions early in scope, not midway through implementation. A question on day 1 is wisdom; the same question on day 8 is a risk.`,
+        },
+        {
+          question: 'How do you handle a project where the goal changes mid-stream?',
+          answer: `**Changing goals are an opportunity to demonstrate adaptability and influence.**
+
+**First response: understand before reacting**
+"Help me understand what changed and why." Knee-jerk resistance to change makes you look rigid. Understanding the reason gives you data to evaluate the change's merit.
+
+**Assess impact clearly**:
+- What work is invalidated?
+- What can be salvaged or pivoted?
+- What's the new timeline impact?
+- Are there downstream teams affected?
+
+**Communicate the trade-offs**:
+Don't just absorb the change silently. "Understood. Here's what this means for us: [X weeks of work needs to be redone / Y feature will need to be descoped / Z team will be impacted]. Is that acceptable given the reason for the change?"
+
+**If the change is wrong, say so with data**:
+"I want to flag a concern before we commit: changing the API contract at this stage will break [3 downstream integrations]. Can we find a solution that achieves the new goal without that impact?"
+
+**Interview story format**: Show you absorbed the change, assessed the impact, communicated clearly, and delivered despite the disruption. Avoid making the story about how frustrating the change was.`,
+        },
+      ],
+      tips: [
+        'Use the reversibility test: one-way door decisions warrant clarity; two-way door decisions warrant action',
+        'Document your assumptions explicitly — "I assumed X; if wrong, the fix is Y"',
+        'Propose your answer when asking clarifying questions — ask for confirmation, not direction',
+        'Time-box ambiguity resolution — if you spend more than 20% of task time clarifying, you are over-clarifying',
+        'Changing requirements are normal; show adaptability and impact assessment, not frustration',
+      ]
+    },
+    {
+      id: 'technical-debt-negotiation',
+      title: 'Negotiating Technical Debt',
+      icon: 'clock',
+      color: '#f59e0b',
+      questions: 4,
+      description: 'Making the case for reliability and refactoring work to non-technical stakeholders.',
+      introduction: `Technical debt is the gap between where your system is and where it needs to be to support the product's future. Every engineering organization has it. The question is not whether to have technical debt, but whether you are managing it intentionally or accumulating it unconsciously.
+
+The hard part is not identifying technical debt — engineers are excellent at that. The hard part is convincing product managers, executives, and business stakeholders to invest time in fixing it when they could be shipping features. This requires translating technical risk into business language: revenue, customer trust, reliability, and velocity.
+
+Interviewers ask about this because the ability to advocate for technical work is a Staff+ core competency. Engineers who can only speak to other engineers cap their own impact.`,
+      keyQuestions: [
+        {
+          question: 'How do you make the business case for technical debt reduction?',
+          answer: `**The translation formula**: Tech debt description → Business impact → Cost to fix → Cost to ignore.
+
+**Weak framing** (engineer-to-engineer only):
+"We need to refactor the authentication service. It uses a deprecated library, has no tests, and the coupling makes it hard to add new providers."
+
+**Strong framing** (engineer-to-stakeholder):
+"Our authentication system has three reliability risks:
+1. The library it uses stops receiving security patches in 6 months — meaning we'll be running unpatched auth code in production.
+2. It takes 3x longer to add new login providers than it should. The Google SSO feature that's on the roadmap would take 3 weeks instead of 1 because of this coupling.
+3. It was involved in 2 of our 4 security incidents last year.
+
+The fix is 4 weeks of engineering time. The cost of not fixing it is: one security incident that costs us [X] in customer trust and incident response, or 2 extra weeks on every auth-adjacent feature for the next 2 years."
+
+**Quantify when possible**: Development velocity loss, incident frequency and cost, time-to-ship for specific roadmap items.`,
+        },
+        {
+          question: 'How do you prioritize technical debt without stopping feature delivery?',
+          answer: `**The Boy Scout Rule applied at scale**: Leave every system a little better than you found it.
+
+**The 20% model**: Reserve 20% of engineering capacity for reliability, tech debt, and developer experience. This is not dead time — it is what makes the other 80% sustainable. Teams that skip this see velocity compound downward over 12-18 months.
+
+**Inline refactoring**: When you touch a system for a feature, pay down adjacent debt. You're already paying the context-switching cost; the marginal cost of cleanup is low.
+
+**The strangler fig pattern**: For large legacy system rewrites, don't stop the world. Build the new system alongside the old, redirect traffic incrementally, and retire the old system piece by piece. No big bang, no freeze on feature work.
+
+**Make debt visible**: A public technical debt register (even a simple spreadsheet) with estimated cost and impact makes prioritization conversations easier. Stakeholders can see the trade-offs they're making.
+
+**Interview framing**: "We maintained a living debt register with three columns: the debt item, the business impact if left unaddressed, and the estimated fix cost. This turned debt conversations from 'trust me' to 'here are the trade-offs.'"`,
+        },
+        {
+          question: 'How do you push back on shipping features on top of known debt?',
+          answer: `**The right time to push back is before the commitment, not during delivery.**
+
+**At planning time**:
+"I want to flag that [Feature X] will be significantly harder to build reliably on top of [System Y] in its current state. We have two options: spend 2 weeks stabilizing Y first and then build X in 3 weeks, or build X now in 5+ weeks with higher risk of incidents. Which do you prefer?"
+
+Give stakeholders the choice — don't make it for them. They may have information (like a customer deadline) that changes the calculus.
+
+**If the decision goes against you**:
+Document the risk: "We're proceeding with [Feature X] before stabilizing [System Y]. Known risks: [list]. Mitigation: [list]. If [incident type] occurs, recovery plan is [plan]."
+
+This protects the team and creates a paper trail for future prioritization conversations.
+
+**If the same pattern repeats**:
+"This is the third time in two quarters we've shipped on top of [System Y] and experienced [type of incident]. I'd like to propose that we treat Y as a blocker for the next major feature in this area."
+
+**What to avoid**: Unilaterally slowing down or holding features hostage. Make the risks visible, give the recommendation, and respect the decision.`,
+        },
+        {
+          question: 'Tell me about a time you successfully got buy-in to address technical debt.',
+          answer: `**What makes this story strong**:
+
+1. **Business framing** — you translated the technical problem into language that resonated with non-engineers.
+2. **Quantified impact** — you had data, not just intuition.
+3. **You drove it** — not your manager, not the VP. You identified, framed, and advocated.
+4. **It worked** — the investment was approved and delivered measurable benefit.
+
+**Story structure**:
+- What was the debt? (brief technical description)
+- What was the business risk? (this is the meat)
+- How did you frame the ask? (what did you say to whom?)
+- What was the result of the investment? (velocity improvement, incident reduction, feature unblocking)
+
+**What to prepare**:
+- A specific system, not "tech debt in general"
+- A specific stakeholder you persuaded
+- A metric that improved afterward
+
+**Common mistake**: Stories where the manager decided to invest and the engineer executed the refactor. The interview is testing whether you can advocate, not just execute.`,
+        },
+      ],
+      tips: [
+        'Translate tech debt into business language: velocity loss, incident frequency, time-to-ship specific roadmap items',
+        'Use the strangler fig pattern for large rewrites — no big bang migrations',
+        'Maintain a living debt register with business impact estimates to make trade-offs visible',
+        'Push back at planning time, not during delivery',
+        'Document risks clearly when the decision goes against you — it protects the team and creates data for future conversations',
+      ]
+    },
+    {
+      id: 'psychological-safety',
+      title: 'Building Psychological Safety',
+      icon: 'shield',
+      color: '#22c55e',
+      questions: 4,
+      description: 'Creating team environments where people speak up, take risks, and learn from failure.',
+      introduction: `Google's Project Aristotle — a 2-year study of what made teams effective — found that psychological safety was the single most important factor in team performance. Not skills, not experience, not compensation. The degree to which team members felt safe to take interpersonal risks — speaking up, asking "dumb" questions, admitting mistakes — determined whether the team learned and improved.
+
+Psychological safety is not about being nice or avoiding conflict. It is about creating conditions where people can engage authentically with hard problems without fear of humiliation or punishment. Teams with high psychological safety surface problems earlier, run better postmortems, and iterate faster.
+
+Senior engineers and engineering managers are often asked about this because building this culture is a leadership skill, not a management title.`,
+      keyQuestions: [
+        {
+          question: 'How do you build psychological safety on a team you\'re joining?',
+          answer: `**The first 90 days**: You build psychological safety by modeling the behaviors you want to see.
+
+**Show vulnerability first**:
+Ask "dumb" questions openly. Admit when you don't know something. Say "I was wrong about that" in team settings. This signals that not-knowing is acceptable here.
+
+**Reward speaking up**:
+When someone raises a concern — especially a junior engineer — respond visibly positively. "That's a really important question. I'm glad you asked." Even if the concern turns out to be unfounded.
+
+**Never punish the messenger**:
+If someone brings you bad news, your first response sets the tone for all future bad news. "Thank you for flagging this early. Let's figure out what to do." If you react with frustration, people will stop bringing you problems — and you'll get surprised instead.
+
+**Create explicit space**:
+Start retrospectives with "What didn't go as planned?" before "What went well?" This signals that failure is discussable. Ask quieter team members directly — not to put them on the spot, but to signal that their input matters.
+
+**Interview framing**: "I lead by example. In my first week, I deliberately asked questions I wasn't sure about in public, admitted when my initial architecture idea was flawed after hearing feedback, and made a point of thanking people who raised concerns."`,
+        },
+        {
+          question: 'How do you run blameless postmortems?',
+          answer: `**Blameless postmortems** are based on a key assumption: people don't cause incidents; systems do. Individual mistakes happen within system conditions that made them possible.
+
+**The blameless postmortem structure**:
+
+1. **Timeline reconstruction** — what happened, in sequence, based on logs and metrics. Facts, not interpretations.
+2. **Contributing factors** — what conditions made this incident possible? (Not: who made the mistake.)
+3. **Impact** — customers affected, duration, severity.
+4. **Action items** — what changes to the system will prevent this class of incident?
+5. **What went well** — what detection, response, or tooling worked? Reinforce it.
+
+**What to avoid**:
+- "The engineer who deployed the change"
+- "Human error" as a root cause (it's always a symptom)
+- Action items that are "be more careful" — these are not actionable
+
+**Make postmortems learning artifacts, not records of shame**:
+Publish them internally. Reference them in future design reviews. Build a culture where "we have a postmortem for this exact pattern" is a resource, not an embarrassment.
+
+**Interview story**: "I introduced blameless postmortems after we had two incidents where engineers were visibly afraid to speak up about what happened. Within a quarter, we saw earlier escalation of problems because people trusted that reporting wouldn't hurt them."`,
+        },
+        {
+          question: 'How do you handle a high performer who undermines psychological safety?',
+          answer: `**This is one of the hardest leadership challenges**: the person who produces results but damages the team's ability to collaborate.
+
+**Common behaviors**:
+- Dismissing others' ideas in meetings ("we tried that, it doesn't work")
+- Using technical knowledge to intimidate rather than educate
+- Reacting badly to feedback or challenge
+- Taking credit, deflecting blame
+
+**Why this matters more than their output**:
+One person who makes others feel unsafe can suppress the contributions of three to five other people. The net effect is often negative even if the individual's output is high.
+
+**How to address it**:
+1. Name the specific behavior privately: "In today's design review, when [Person] said [X], I noticed [Junior Engineer] stopped contributing for the rest of the meeting. I need that to change."
+2. Connect to impact, not character: "This isn't about your intent — it's about the effect on the team's ability to surface problems."
+3. Give them a specific alternative: "Instead of 'we tried that,' try 'tell me more about how you're thinking about that differently.'"
+4. Follow up: "I noticed you did [better behavior] in today's meeting. That's exactly what I mean."
+
+**If the behavior continues**: This is a performance issue, not just a culture issue. Document it and treat it as such.`,
+        },
+        {
+          question: 'How do you measure whether your team has psychological safety?',
+          answer: `**You can't manage what you don't measure, but psychological safety is hard to quantify directly.**
+
+**Leading indicators to track**:
+- **Incident reporting rate**: Are people flagging problems earlier? More postmortems for smaller incidents is a good sign.
+- **Retrospective participation**: Are more people speaking in retros over time? Are more improvement ideas surfacing?
+- **Question frequency**: Are engineers asking "dumb" questions in public channels? A silent channel often means people are afraid to appear uninformed.
+- **Disagreement in design reviews**: Healthy teams push back on design decisions. A review where everyone agrees is often a sign people are self-censoring.
+
+**Survey questions** (quarterly team health checks):
+- "I feel safe to speak up when I see a problem, even if it's uncomfortable."
+- "When I make a mistake, I'm comfortable being transparent about it."
+- "I feel like my ideas are valued, even when they're different from the majority view."
+
+**What high psychological safety looks like in practice**:
+- Junior engineers push back on senior engineers' code in reviews
+- Bad news travels up fast
+- Postmortems are detailed and candid
+- People laugh about past mistakes instead of hiding them`,
+        },
+      ],
+      tips: [
+        'Model vulnerability first — ask "dumb" questions openly and admit mistakes in team settings',
+        'Never punish the messenger — your reaction to bad news sets the tone for all future bad news',
+        'Blameless postmortems blame systems, not people — "human error" is never a root cause',
+        'High performers who undermine safety have negative net impact — address the behavior directly',
+        'Measure safety through leading indicators: incident reporting rate, retro participation, disagreement in design reviews',
+      ]
+    },
+    {
+      id: 'async-remote-collaboration',
+      title: 'Async & Remote Collaboration',
+      icon: 'globe',
+      color: '#ec4899',
+      questions: 4,
+      description: 'Effective collaboration across time zones, written communication, and distributed teams.',
+      introduction: `Remote and distributed work has shifted from exception to expectation in software engineering. Even teams that share an office often work with contractors, partners, and sister teams across time zones. The engineers who thrive in this environment are those who master asynchronous communication — making decisions, building alignment, and driving work forward without requiring real-time interaction.
+
+The skills are learnable and high-leverage. Written clarity compounds: a well-written proposal that gets async buy-in is faster than three rounds of meetings. A team with strong async norms can operate with more autonomy, less coordination overhead, and higher overall throughput.
+
+Interviewers ask about remote collaboration to assess whether you can work effectively in distributed environments and contribute positively to team culture without requiring constant synchronous interaction.`,
+      keyQuestions: [
+        {
+          question: 'What does a strong async communication culture look like?',
+          answer: `**Writing-first**: Default to writing over meetings. Proposals, decisions, and status updates in written form allow people to engage on their own schedule and create a record.
+
+**Core async artifacts**:
+- **RFC / Design docs**: The proposal, alternatives considered, open questions. Single source of truth.
+- **Decision log**: A record of what was decided, why, and who decided. Prevents revisiting settled questions.
+- **Async stand-up**: Daily written update — what did I do yesterday, what am I doing today, any blockers? Async, not a meeting.
+- **Incident timeline**: Written record during and after incidents, so everyone has the same facts.
+
+**Communication norms that help**:
+- Default to over-sharing context (the reader doesn't have your mental model)
+- Use threads, not DMs, for technical discussions — so others can learn and contribute
+- Set and respect response-time expectations: "I'll respond to messages within 4 hours during working hours"
+- Never use "can you jump on a quick call?" without explaining why async won't work
+
+**Interview answer**: "Our team had a 'writing-first' norm. Before scheduling a meeting, you had to write up the problem and what you needed from the group. This eliminated about 40% of our meetings because most questions got answered async."`,
+        },
+        {
+          question: 'How do you handle time zone challenges on a distributed team?',
+          answer: `**The goal is maximum overlap at maximum value.**
+
+**Design for overlap**:
+- Identify the hours where most team members overlap and protect them for synchronous work that truly needs it (e.g., production incidents, sensitive 1:1s, complex design discussions)
+- Schedule recurring meetings at the edge of overlap to give everyone reasonable hours
+- Rotate meeting times quarterly so the same people don't always get the inconvenient slot
+
+**Work ahead of your dependency**:
+If you're blocked on someone in a different time zone, give them everything they need before you sign off — so they can unblock you while you sleep. "I'm blocked on X. Here's everything I know, here are the two options I see, here's my recommendation. Let me know if you have questions."
+
+**The async-first default**:
+Most things do not need real-time discussion. Reserve synchronous time for: ambiguous situations where back-and-forth is genuinely needed, sensitive conversations, and production incidents.
+
+**Reduce coordination overhead**:
+- Clear owners for each area so fewer people need to be consulted per decision
+- Well-written documentation so answers don't require pinging someone
+
+**Interview story**: "My team was split across three time zones with only 2 hours of overlap. We moved standups async, documented decisions in a shared log, and protected our overlap window for pairing and incident response only. Velocity actually went up."`,
+        },
+        {
+          question: 'When does async fail, and how do you know to switch to sync?',
+          answer: `**Async fails when the problem has too much back-and-forth for written form.**
+
+**Switch to sync when**:
+- You've gone 3+ rounds in a thread without reaching clarity — the problem needs real-time dialogue
+- The topic is emotionally charged — written words lose tone and ambiguity creates conflict
+- There's a production incident — async is too slow when systems are down
+- You're doing creative or exploratory work — whiteboarding and thinking together is faster
+- Someone is clearly confused or stuck — talking through it takes 10 minutes; written back-and-forth takes 2 hours
+
+**How to call for sync effectively**:
+"This is getting complex in text. Can we do a 20-minute call? I'll send a summary of where we are beforehand so we can jump straight to the open questions."
+
+Always write up the outcome of sync conversations and share them with anyone who should know. "Sync" shouldn't mean "private."
+
+**The async trap to avoid**: Using async to avoid difficult conversations. A feedback conversation done poorly over Slack is worse than a well-prepared video call.
+
+**Interview answer**: "My rule: if I can't resolve it in 2 rounds of async messages, I switch to sync. Otherwise I'm creating more friction than I'm saving."`,
+        },
+        {
+          question: 'How do you maintain team culture and connection on a remote team?',
+          answer: `**Intentional connection replaces accidental connection.**
+
+In-office teams build relationships through hallway conversations, lunches, and incidental interactions. Remote teams have to create these deliberately.
+
+**Rituals that work**:
+- **Virtual coffee chats**: 15-30 minutes, no agenda, just connection. Especially important for new team members.
+- **Team channels for non-work content**: Celebrate wins, share interesting articles, post weekend photos. The team should feel like people, not handles.
+- **Retrospective social time**: First 5 minutes of a retro for personal updates — "one word for how your week was."
+- **Recognition in public channels**: Praise and gratitude visible to the whole team builds belonging.
+
+**For new team members specifically**:
+- Pair them with a buddy for the first 90 days
+- Include them in social channels and async discussions from day 1
+- Over-communicate context — they can't absorb culture by osmosis
+
+**What doesn't work**:
+- Mandatory fun (virtual happy hours with required attendance)
+- Trying to recreate in-office norms exactly (some things just work better in person)
+
+**Interview answer**: "I scheduled 1:1 coffee chats with every team member in my first month, completely unstructured. By week 4, I felt connected. By month 3, I had trusted relationships across the team — which made everything else faster."`,
+        },
+      ],
+      tips: [
+        'Default to writing over meetings — most decisions can be made async with a well-written proposal',
+        'Work ahead of your dependencies: give blockers everything they need before you sign off',
+        'Switch to sync after 3 rounds of back-and-forth in text — write up the outcome afterward',
+        'Protect overlap windows for things that truly require real-time: incidents, sensitive discussions, complex design',
+        'Intentional connection rituals (coffee chats, recognition channels) replace the accidental connection of in-office work',
+      ]
+    },
+    {
+      id: 'ethical-dilemmas',
+      title: 'Handling Ethical Dilemmas',
+      icon: 'alertTriangle',
+      color: '#ef4444',
+      questions: 4,
+      description: 'Navigating situations where technical decisions have moral, legal, or social implications.',
+      introduction: `Software engineers increasingly face decisions with ethical dimensions: a recommendation algorithm that amplifies harmful content, a data collection feature that undermines user privacy, a system designed to automate decisions that affect people's livelihoods. These are not abstract problems — they are decisions that real engineers at real companies make daily.
+
+Interviewers ask about ethical dilemmas to understand whether you think beyond the technical requirements, whether you have a framework for escalating concerns, and whether you can advocate effectively without creating unnecessary conflict. Companies that don't screen for this end up with engineers who build things they shouldn't, or engineers who go rogue without using internal channels first.
+
+The goal is not to be a moral absolutist — it's to be someone who raises concerns thoughtfully, uses appropriate channels, and can operate within an organization while maintaining integrity.`,
+      keyQuestions: [
+        {
+          question: 'How do you raise an ethical concern about a product or technical decision?',
+          answer: `**The escalation ladder**: Internal channels first, always.
+
+**Step 1: Understand the concern clearly**
+Before raising it, make sure you understand the issue well enough to articulate it specifically. "This feels wrong" is not a productive starting point. "This feature collects location data in background without clear user consent, which may violate GDPR Article 7 and our own privacy policy" is actionable.
+
+**Step 2: Raise it with your direct team**
+In a design review, 1:1 with your manager, or team meeting. Frame it as a risk, not an accusation. "I want to flag a concern before we build this — here's what I'm seeing."
+
+**Step 3: Escalate within the org if needed**
+If your team won't engage, go to your manager's manager, a privacy/legal/trust-and-safety team, or an ethics review board if one exists. Document that you raised it and what response you got.
+
+**Step 4: External channels** (only if internal fails on serious harm)
+Regulatory bodies, journalists, or public whistleblowing are last resorts — with real professional and legal risk. Consult a lawyer before going external.
+
+**What to avoid**:
+- Going external before exhausting internal channels
+- Unilaterally blocking work without surfacing the concern
+- Making it personal or accusatory
+
+**Interview answer**: "I always start with internal channels. My job is to make the risk visible to the decision-makers, not to make the decision myself."`,
+        },
+        {
+          question: 'Tell me about a time you disagreed with a product decision on ethical grounds.',
+          answer: `**What interviewers are looking for**:
+- That you identified the concern and raised it (not ignored it)
+- That you used appropriate channels
+- That you can articulate the concern clearly without being self-righteous
+- How you handled it when the decision went against you
+
+**Strong story structure**:
+- What was the product or technical decision?
+- What was the ethical concern you identified? (Specific, not vague)
+- What did you do? (Who did you talk to, what did you say, what artifacts did you create?)
+- What was the outcome? (Did they change direction? Did you have to commit to something you disagreed with?)
+- What did you learn?
+
+**Handling "the decision went against you"**: This is not a failure story. The test is whether you raised it appropriately and could commit professionally. "They heard my concern, chose to proceed, and I implemented it while flagging the ongoing risk in our incident playbook" is a mature answer.
+
+**What to avoid**: Stories where you unilaterally blocked work, or where you had no ethical concern ever in your career. Both are red flags.`,
+        },
+        {
+          question: 'How do you think about privacy and user data in your engineering decisions?',
+          answer: `**Privacy by design**: Build with data minimization and user control from the start, not as an afterthought.
+
+**Questions to ask before collecting or storing user data**:
+1. Do we need this data to deliver the core value? (data minimization)
+2. Does the user understand what we're collecting and why?
+3. Can the user opt out or delete their data?
+4. How long do we retain it, and why?
+5. Who has access to it internally?
+6. What happens if this data is breached?
+
+**Common engineering traps**:
+- Logging too much for debugging convenience (sensitive data ends up in logs)
+- Sharing user data across services without checking consent scope
+- Building features that work on more data than necessary because it's available
+- Treating "we can collect it" as "we should collect it"
+
+**Regulatory awareness**: GDPR (EU), CCPA (California), COPPA (children's data) each have specific requirements around consent, purpose limitation, and data subject rights. Not knowing these is not an excuse — it's a risk.
+
+**Interview answer**: "I ask 'do we need this?' before 'can we build this?' for any feature involving user data. If the answer isn't clearly yes, I flag it."`,
+        },
+        {
+          question: 'How do you handle a situation where your company asks you to build something you believe is harmful?',
+          answer: `**This is a test of both your ethics and your judgment.**
+
+**Spectrum of situations**:
+- **Questionable but legal**: Raise the concern through appropriate channels, commit professionally if overruled.
+- **Likely illegal or regulatory violation**: Escalate to legal/compliance. Document your escalation. If ignored, this is whistleblower territory.
+- **Clearly causing serious harm**: This is rare but real. Know your company's ethics reporting channels, your legal protections as a whistleblower, and the career risk of going public.
+
+**Framework for evaluating "harm"**:
+1. Who is affected and how?
+2. Is it reversible?
+3. Is there consent?
+4. Would a reasonable person see this as harmful?
+
+**The professional path**:
+- Document your concern in writing
+- Use internal channels in sequence: manager → legal/trust-and-safety → ethics board → HR
+- Get external legal advice before going public
+- If you cannot in good conscience build it, negotiate alternatives or recognize this may be a resignation-level situation
+
+**Interview answer**: "I would raise it through every internal channel available. If I exhausted those and was asked to build something I genuinely believed caused serious harm, I would get legal advice and make a decision about whether to stay. I wouldn't go to the press without having done that."`,
+        },
+      ],
+      tips: [
+        'Escalate through internal channels first — going external without exhausting internal options is almost always wrong',
+        'Frame ethical concerns as business risk, not moral lectures — this makes them easier to hear',
+        'Data minimization by default: collect what you need, not what you can',
+        'Know the regulatory landscape for your domain: GDPR, CCPA, COPPA, HIPAA',
+        'Document your concerns in writing when you raise them — this protects you and creates a record',
+      ]
+    },
+    {
+      id: 'staff-engineer-scope',
+      title: 'Staff Engineer Scope & Impact',
+      icon: 'star',
+      color: '#eab308',
+      questions: 5,
+      description: 'Demonstrating org-wide technical impact, architectural leadership, and cross-team influence at Staff and Principal level.',
+      introduction: `The transition from Senior to Staff Engineer is one of the hardest in a technical career — not because the technical bar rises dramatically, but because the definition of success changes completely. Senior engineers succeed by shipping great code. Staff engineers succeed by multiplying the output of other engineers and making technical decisions that shape how the organization builds.
+
+This shift requires a different relationship with ambiguity (you define the problem, not just solve it), with other people (you influence without authority across teams), and with time horizons (you think in quarters and years, not sprints).
+
+Interviewers at the Staff level are listening for evidence that you've operated at this scope — not that you understand it conceptually.`,
+      keyQuestions: [
+        {
+          question: 'What is the difference between Senior and Staff engineer impact?',
+          answer: `**The fundamental shift**: Senior engineers maximize their own output. Staff engineers maximize the output of the engineers around them.
+
+**Senior engineer scope**:
+- Owns a service or feature area
+- Makes technical decisions within their team
+- Delivers complex projects reliably
+- Mentors 1-2 more junior engineers
+
+**Staff engineer scope**:
+- Owns a technical domain across multiple teams
+- Makes architectural decisions that constrain many teams' future options
+- Defines standards, platforms, and patterns that others build on
+- Identifies and drives technical strategy, not just executes it
+- Unblocks multiple engineers across teams, not just their own team
+
+**The multiplier test**: If you disappeared for a month, how many engineers would be unblocked or enabled by the systems, documentation, and platforms you've left behind? Senior: your own team's backlog stays clear. Staff: teams you've never directly worked with are more productive because of your work.
+
+**Common misconceptions**:
+- Staff is not "Senior but more of it" — it's a different job
+- Staff is not about writing more code — it's about increasing the leverage of code written
+- Staff is not a title you wait for — it's a set of behaviors you demonstrate first`,
+        },
+        {
+          question: 'How do you articulate Staff-level impact in an interview?',
+          answer: `**Make the scope visible**: Interviewers need to understand scale, breadth, and who was affected.
+
+**Impact framing formula**:
+[What you built/changed] → [Who it affected and at what scale] → [What they could do that they couldn't before]
+
+**Examples**:
+- "I designed the distributed tracing standard adopted across 40 services. Before this, debugging cross-service latency took hours of log archaeology. After, engineers could trace a request end-to-end in under 2 minutes."
+- "I led the migration from our monolithic deploy to feature flags, enabling 30 engineers to ship independently instead of waiting for weekly release trains."
+- "I wrote the API design guidelines that became the standard for our platform team. 12 new APIs were built to this spec in the next 6 months with zero breaking changes at launch."
+
+**What to emphasize**:
+- The ambiguity you started with (no one handed you a clear problem)
+- The alignment you built (who you had to convince and how)
+- The lasting impact (what is different now because of your work)
+- The scale (teams × engineers × customers × time saved)
+
+**What to avoid**: Stories where you were the best implementer on a clearly-defined problem. Those are Senior stories, even if the system was complex.`,
+        },
+        {
+          question: 'How do you set technical direction without management authority?',
+          answer: `**The Staff engineer's primary tool is not authority — it is credibility, clarity, and consistency.**
+
+**Building credibility**:
+- Be right about technical trade-offs more often than you're wrong — and be honest when you're wrong
+- Demonstrate you understand the constraints other teams operate under, not just your own
+- Show up to help when things go wrong, not just to propose things
+
+**Setting direction through artifacts**:
+- Write RFCs and design docs that are so clear and well-reasoned that they become the reference
+- Create architectural decision records (ADRs) that explain the "why" behind past decisions
+- Build the proof-of-concept that removes uncertainty — often a working prototype convinces more than a document
+
+**Setting direction through behavior**:
+- Be consistent: the same standards in design reviews, whether the code is from a junior or a VP's team
+- Review early, not after — catch problems during RFC phase, not after implementation
+- Be specific: "I'd suggest X because of Y constraint" beats "I'm concerned about this"
+
+**Interview story**: "I didn't have any authority over three teams, but I wrote the proposal, built a prototype that proved feasibility, and spent two weeks doing design reviews with each team's tech lead. By the time we had the all-hands, there was no debate — everyone had already shaped it."`,
+        },
+        {
+          question: 'What does a Staff engineer\'s relationship with product and leadership look like?',
+          answer: `**Staff engineers are technical partners to product and business, not just implementers.**
+
+**With product managers**:
+- Proactively flag technical risks to roadmap items: "Feature X will take 3x longer because of [debt]. Here's the trade-off."
+- Bring technical opportunities: "We could build [Y] with relatively low effort that would unlock [business outcome]."
+- Be the person who makes technical trade-offs legible: "Here are three ways we could approach this, with different time/quality/risk profiles."
+
+**With engineering leadership (VPs, Directors)**:
+- Represent engineering's constraints and opportunities clearly: "Here's what's holding back velocity and what it would take to fix it."
+- Be a reliable source of technical truth — leadership needs to trust that what you say about system state is accurate
+- Bring recommendations, not just problems
+
+**With executives**:
+- Speak in business outcomes, not technical implementation
+- Know how your technical work connects to the company's strategic bets
+- Be brief: one slide or a 5-minute conversation that captures the essence
+
+**What Staff engineers don't do**:
+- Wait to be asked — they proactively surface what leadership needs to know
+- Advocate only for engineering — they understand business constraints
+- Speak only to engineers — they develop the range to communicate across functions`,
+        },
+        {
+          question: 'How do you know if you\'re operating at Staff level or just a Senior with more experience?',
+          answer: `**The checklist: what is the scope of your decisions, influence, and accountability?**
+
+**Staff indicators**:
+- Your technical decisions affect multiple teams' roadmaps
+- You identify and own technical problems that no one asked you to solve
+- When there's ambiguity about who owns a technical area, the answer is often "ask you"
+- You've changed how your organization builds, not just what it builds
+- Junior and senior engineers learn from your RFCs and design decisions at scale
+- You've navigated competing priorities across multiple teams without management mandate
+
+**Senior-only indicators**:
+- Your impact is primarily within your team's codebase
+- Problems are handed to you by your manager or product
+- You're the best implementer, but someone else identified the problem and defined the approach
+- Your influence stops at your team's boundary
+
+**The honest self-assessment**:
+- What would be different about your organization if you had never joined?
+- Which decisions did you make that affected engineers you've never directly worked with?
+- What do you own that no one else can clearly own?
+
+**Interview guidance**: If you're interviewing for Staff and your stories are all within-team execution, acknowledge that gap and articulate your growth path rather than overstating your scope. Interviewers respect honesty about current level + clear evidence of trajectory more than inflated stories that don't hold up to questions.`,
+        },
+      ],
+      tips: [
+        'Staff impact = multiplying other engineers, not maximizing your own output',
+        'Use the impact formula: [what you built] → [who it affected at what scale] → [what they could do that they couldn\'t before]',
+        'Build credibility before setting direction — be right about trade-offs, be honest when wrong',
+        'Proactively surface technical risks and opportunities to product and leadership — don\'t wait to be asked',
+        'If your stories are all within-team execution, acknowledge the gap honestly — interviewers respect trajectory over inflation',
+      ]
+    },
+    {
+      id: 'layoffs-reorgs',
+      title: 'Navigating Layoffs & Reorgs',
+      icon: 'shuffle',
+      color: '#6366f1',
+      questions: 4,
+      description: 'Leading through organizational uncertainty, restructuring, and headcount reduction.',
+      introduction: `Layoffs and reorgs have become a recurring feature of the tech industry. Almost every engineer who has spent more than five years in the field has experienced at least one. How you lead — and interview about — these experiences reveals a great deal about your maturity, resilience, and ability to protect team effectiveness under pressure.
+
+Interviewers ask about navigating organizational uncertainty because they want to know whether you'll be an anchor or a hole in the boat when things get hard. Strong candidates demonstrate that they protected team morale, prioritized ruthlessly given new constraints, and maintained or restored trust through the disruption.
+
+This topic is increasingly common as companies ask "tell me about a time the organization changed significantly around you."`,
+      keyQuestions: [
+        {
+          question: 'How do you maintain team effectiveness during a layoff or reorg?',
+          answer: `**The first 48 hours matter most**: People are watching leaders closely for signals about what this means.
+
+**What to do immediately**:
+- Acknowledge the uncertainty — don't pretend everything is normal
+- Share what you know, be honest about what you don't: "Here's what I know. Here's what I don't know yet and when I expect to find out."
+- Create space for questions, even if you can't answer all of them
+- Protect your team from organizational chaos as much as possible — absorb uncertainty upward, don't pass it down
+
+**In the following weeks**:
+- Re-clarify priorities with your manager: with fewer people, you cannot do everything. Get explicit agreement on what gets cut.
+- Re-establish team rituals — standups, retros, 1:1s — even if they feel small. Routine creates stability.
+- Watch for secondary departures: motivated engineers often leave in the months following layoffs. Understand their concerns directly.
+- Celebrate wins loudly. In a downturn, recognition matters more, not less.
+
+**What not to do**:
+- Pretend it didn't happen or "stay positive" in a way that feels dishonest
+- Make promises about security you can't guarantee
+- Let team velocity collapse because everyone is distracted and you didn't re-prioritize`,
+        },
+        {
+          question: 'How do you re-prioritize ruthlessly when headcount is cut?',
+          answer: `**Fewer people means the work doesn't get done — it means you do fewer things, not the same things slower.**
+
+**The prioritization conversation with leadership**:
+"We've gone from 6 to 4 engineers. I want to align on what we're no longer doing so we can focus fully on what matters most. Here's my draft of what I think should be cut: [list]. Is that the right call?"
+
+Don't absorb the reduction silently and try to do everything with fewer people. That leads to burnout, quality drops, and missed commitments — all of which are worse than having the prioritization conversation.
+
+**Criteria for cutting work**:
+- Customer impact: what directly affects retention, NPS, revenue?
+- Strategic alignment: what does leadership care most about this half?
+- Reversibility: what can be picked up again in 6 months vs. what creates permanent technical debt if deferred?
+
+**Managing stakeholder expectations**:
+"Due to team changes, we're deprioritizing [X] and [Y] for the next quarter. We're focusing on [Z] because [reason]. Here's when we expect to revisit [X] and [Y]."
+
+Set the expectation early. Stakeholders are far more forgiving of honest re-scoping than of silent failure to deliver.`,
+        },
+        {
+          question: 'How do you rebuild trust after leadership changes?',
+          answer: `**Trust rebuilds through consistency and transparency, not through declarations.**
+
+**After a leadership change** (new manager, new skip, new exec):
+- Ask explicitly: "What do you need from me to feel confident in this team?" Listen more than you talk.
+- Show continuity: maintain the team's commitments and rituals while the new leader gets oriented
+- Offer context: write up the team's current work, in-flight decisions, and key relationships so they don't have to discover it through questions
+- Give it time: trust is earned through repeated behavior, not a single meeting
+
+**After a trust-damaging event** (missed commitment, incident, unexpected departure):
+- Acknowledge what happened directly and specifically
+- Don't overexplain or justify — this reads as not taking responsibility
+- Describe what has changed: "Here's what we're doing differently: [specific actions]."
+- Deliver on the next thing reliably — one clean delivery does more to rebuild trust than any number of words
+
+**The credibility bank analogy**: Trust is a balance built through small reliable actions. A big failure makes a large withdrawal. You rebuild with consistent small deposits — keeping commitments, communicating proactively, following through.
+
+**Interview story**: "After our VP changed, I wrote a 2-page team brief — who we are, what we're building, our current commitments, our technical risks. Our new VP told me in our first 1:1 that it was the clearest onboarding document she'd received. We had a productive working relationship from week one."`,
+        },
+        {
+          question: 'How do you answer "tell me about a time your team was restructured"?',
+          answer: `**What the interviewer is really assessing**:
+1. Did you protect the team's effectiveness?
+2. Did you re-prioritize or try to absorb the change?
+3. Did you maintain morale and prevent secondary attrition?
+4. What did you learn that you'd do differently?
+
+**STAR structure for reorg stories**:
+
+**Situation**: Set the scale — what changed, how significant was it? (Merger, layoff, leadership change, team split?)
+
+**Task**: What was your role? Were you an IC trying to stay effective, or a lead trying to protect your team?
+
+**Action** (the substance):
+- How did you communicate the change to your team?
+- What did you cut or de-prioritize?
+- What relationships did you rebuild?
+- What did you do for team morale?
+
+**Result**:
+- How did team productivity track through the disruption?
+- Did you retain your key people?
+- What shipped despite the disruption?
+
+**What to avoid**:
+- Complaining about leadership decisions (even if the reorg was poorly handled)
+- Stories where you personally thrived but your team suffered
+- Generic answers about "staying positive" with no specific actions`,
+        },
+      ],
+      tips: [
+        'In the first 48 hours: acknowledge uncertainty, share what you know, be honest about what you don\'t',
+        'Fewer people means fewer things done — force the prioritization conversation with leadership, don\'t absorb it silently',
+        'Trust rebuilds through consistent behavior, not declarations — one clean delivery after a miss matters more than any explanation',
+        'After leadership changes, offer context proactively: write up team state so they don\'t have to discover it through questions',
+        'Protect your team from organizational chaos — absorb uncertainty upward, don\'t pass it down',
       ]
     },
   ];
