@@ -2091,6 +2091,33 @@ Keyspaces supports LOCAL_QUORUM (strongly consistent majority-acknowledgment rea
       'https://docs.aws.amazon.com/timestream/latest/developerguide/what-is-timestream.html',
       'https://docs.aws.amazon.com/timestream/latest/developerguide/best-practices.html',
     ],
+    visualizations: [
+      {
+        title: 'Timestream Tiered Storage Model and IoT Ingestion Pipeline',
+        description: `Amazon Timestream is purpose-built for time-series data: DevOps metrics, IoT sensor readings, application telemetry, and financial tick data. Its defining architectural feature is automatic tiered storage that separates hot recent data from cold historical data without any application changes.
+
+The memory store holds the most recent data in RAM for fast millisecond-latency queries. Retention is configurable from 1 hour to 1 year. The magnetic store holds historical data on magnetic storage at approximately 1/50th the cost of memory store per GB. Data automatically transitions between tiers based on the configured retention policy. A query that spans both tiers (e.g., the last 7 days where memory holds 24 hours) retrieves data from both stores transparently in a single SQL query.
+
+Each Timestream record contains a mandatory time attribute, one or more dimensions (string metadata describing what the series is: hostname, region, service), and one or more measures (the numeric or boolean values being recorded: cpu_utilization, memory_bytes). The multi-measure record format stores all measures collected from the same entity at the same timestamp in a single record -- reducing the write count by N (number of measures), improving columnar scan efficiency, and lowering ingestion cost since Timestream charges per record written.
+
+A standard IoT ingestion pipeline flows: devices publish MQTT to AWS IoT Core, IoT Rules route to Kinesis Data Streams or directly invoke a Lambda function, Lambda batches up to 100 records per WriteRecords API call (the maximum batch size), and writes multi-measure records to Timestream. Memory store retention covers the operational alerting window. Grafana with the native Timestream data source plugin visualizes the data.
+
+Scheduled queries pre-compute aggregations on a cron schedule and write results to a separate Timestream table. Dashboards read the pre-computed aggregate table rather than re-scanning gigabytes of raw records on every refresh -- dramatically reducing query cost for high-frequency dashboard workloads.
+
+Timestream does not enforce uniqueness. Duplicate records with the same time and dimensions are stored as separate records. Deduplication must happen in the ingestion pipeline before writing. Always include time range predicates in queries against the magnetic store -- queries without time bounds scan all historical data and can be expensive.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What are the two Timestream storage tiers?', a: 'Memory store (RAM, fast, expensive, configurable 1hr-1yr retention) and magnetic store (disk, cheap, long-term). Data transitions automatically. Queries span both tiers transparently.' },
+      { q: 'What is a multi-measure record in Timestream?', a: 'A single record containing multiple measure values (cpu, memory, disk) for the same entity at the same timestamp. Reduces records written by N, lowers cost, and improves columnar query performance.' },
+      { q: 'What is a scheduled query and why use it?', a: 'A SQL aggregation that runs on a cron schedule and writes results to a Timestream table. Dashboards read the pre-computed table instead of re-scanning raw data -- dramatically reduces query cost for repeated aggregations.' },
+      { q: 'Does Timestream enforce record uniqueness?', a: 'No -- duplicate records with the same time and dimensions are stored separately. Deduplication must be done in the ingestion pipeline before writing.' },
+      { q: 'What is the maximum batch size for WriteRecords API calls?', a: '100 records per batch. Batch writes as close to 100 as possible to minimize per-request overhead and cost.' },
+      { q: 'What happens if you query magnetic storage without a time predicate?', a: 'The query scans all historical magnetic data -- potentially terabytes. Cost is charged per GB scanned. Always include a time range WHERE clause on magnetic store queries.' },
+      { q: 'What is the difference between dimensions and measures in Timestream?', a: 'Dimensions are string metadata identifying the time series (hostname, region, service). Measures are the actual recorded values (cpu_utilization: 72.4). Dimensions must be strings; measures support double, bigint, boolean, and varchar.' },
+      { q: 'How do you visualize Timestream data in Grafana?', a: 'Amazon Managed Grafana has a native Timestream data source plugin. Connect via the data source configuration using IAM credentials. Build dashboards using Timestream SQL with bin() for time bucketing and Grafana variables for dimension filters.' },
+      { q: 'What is the typical use case for Timestream over DynamoDB for IoT data?', a: 'Timestream has built-in time-series functions (bin, interpolate, anomaly detection), automatic tiered storage for cost management at scale, and native Grafana integration. DynamoDB requires manual time-bucketing and has no built-in time-series query functions.' },
+    ],
   },
 {
   id: 'aws-iam',
@@ -3965,6 +3992,33 @@ Keyspaces supports LOCAL_QUORUM (strongly consistent majority-acknowledgment rea
   ],
   references: [
     'https://docs.aws.amazon.com/migrationhub/latest/ug/',
+  ],
+  visualizations: [
+    {
+      title: 'AWS Migration Program: Discovery, Wave Planning, and Tool Integration',
+      description: `AWS Migration Hub is the coordination and visibility layer for large-scale migrations. It does not perform migrations itself -- it aggregates status from multiple migration tools into a single dashboard and provides the portfolio-level tracking that program managers and executives need.
+
+The migration program lifecycle has four phases that Migration Hub supports end-to-end. Discovery uses Application Discovery Service (ADS) to inventory on-premises servers. ADS offers two collection methods: agentless VMware connectors that read vCenter inventory and performance data without touching individual servers, and lightweight agents installed on each server that capture process-level data and network connection patterns for dependency mapping. Discovery data populates Migration Hub with server profiles, utilization metrics, and communication dependency graphs.
+
+Assessment uses the dependency data to group servers into logical applications. Servers that communicate frequently must migrate in the same wave -- migrating the web tier while leaving the database on-premises creates a cross-environment dependency that can severely impact performance. Migration Hub Strategies provides a seven-Rs recommendation (Retire, Retain, Rehost, Replatform, Repurchase, Refactor, Relocate) for each server based on usage patterns, compatibility analysis, and business rules.
+
+Execution integrates with the actual migration tools. Application Migration Service (MGN) sends replication status updates to Migration Hub automatically once configured to report to the Migration Hub home region. Database Migration Service (DMS) can also report task status. As servers progress through MGN states (Discovered, Replicating, Ready for Testing, Cutover Complete), those states appear in the Migration Hub application dashboard.
+
+The home region is a permanent, one-time selection -- all tool status updates must be routed to this region. Choosing the wrong region means all API calls for status queries are cross-region. Select the home region closest to your migration operations team.
+
+For compliance and stakeholder reporting, export server and application states via the CLI (list-application-states, list-server-summary-states) on a daily schedule into S3, then use QuickSight to build migration progress dashboards showing wave completion percentages, server counts by state, and projected completion dates.`,
+    },
+  ],
+  quickFire: [
+    { q: 'Does Migration Hub perform migrations?', a: 'No -- it is a tracking and visibility layer only. Actual migrations are performed by MGN (servers), DMS (databases), and partner tools that send status updates to Migration Hub.' },
+    { q: 'What is the Migration Hub home region?', a: 'A single AWS region where all Migration Hub data is stored. Selected once, cannot be changed. All migration tool status updates must be routed to this region.' },
+    { q: 'What are the two discovery methods in Application Discovery Service?', a: 'Agentless VMware connector (reads vCenter inventory, no server-level installation) and agent-based (installed on each server, captures processes and network connections for dependency mapping).' },
+    { q: 'What are the 7 Rs in migration strategy?', a: 'Retire, Retain, Rehost (lift-and-shift), Replatform (lift-and-adjust), Repurchase (move to SaaS), Refactor (re-architect), Relocate (move to cloud same platform e.g. VMware Cloud on AWS).' },
+    { q: 'Why must servers in the same application migrate in the same wave?', a: 'Servers that communicate frequently will have cross-environment latency if split across waves. A web tier migrated while its database remains on-premises adds VPN/Direct Connect latency to every database call.' },
+    { q: 'How do you track migration progress for compliance reporting?', a: 'Export server and application states via CLI (list-application-states, list-server-summary-states) to S3 daily. Build QuickSight dashboards showing per-wave completion percentage and timestamp snapshots for audit evidence.' },
+    { q: 'What is Migration Hub Refactor Spaces?', a: 'An extension that provides routing infrastructure for incrementally refactoring monoliths to microservices -- routes traffic between the legacy monolith and new services during the transition period.' },
+    { q: 'How does MGN integrate with Migration Hub?', a: 'Configure MGN to report to the Migration Hub home region in MGN settings. Server states (Replicating, Ready for Testing, Cutover Complete) automatically appear in the Migration Hub dashboard without manual updates.' },
+    { q: 'What is the Migration Hub import feature?', a: 'Allows uploading a CSV of server inventory from an existing CMDB into Migration Hub without running discovery agents. Lacks network dependency data but enables quick portfolio population for wave planning.' },
   ],
 },
 {
