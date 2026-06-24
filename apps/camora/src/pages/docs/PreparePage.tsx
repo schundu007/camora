@@ -6,7 +6,7 @@ export default function PrepareDocsPage() {
   return (
     <DocsPageLayout
       title="Prepare"
-      description="Browse 500+ prep topics across 9 categories, generate company-specific prep, and use the SQL Playground and Resume Optimizer."
+      description="Browse 750+ prep topics across 9 categories, generate company-specific prep, and use the SQL Playground and Resume Optimizer."
       path="/docs/prepare"
       breadcrumbs={[{ label: 'Prepare' }]}
       onThisPage={[
@@ -23,7 +23,7 @@ export default function PrepareDocsPage() {
       <section id="topic-library" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">Topic library</h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Camora ships with 500+ curated interview topics across 9 category families &mdash; coding,
+          Camora ships with 750+ curated interview topics across 9 category families &mdash; coding,
           system design, microservices patterns, databases, low-level design, project deep-dives,
           roadmaps, engineering blogs, and behavioral. Each topic has a written explanation, worked
           examples, illustrations / diagrams, and topic comments.
