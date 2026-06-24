@@ -833,7 +833,7 @@ export default function DocsPage({ onBack }) {
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
       roadmapTopics, engBlogTopics, sreTopics, devopsTopics,
       observabilityTopics, platformTopics, challengesTopics,
-      mlopsTopics, aiopsTopics, aiSystemsPerfTopics,
+      mlopsTopics, aiopsTopics, aiSystemsPerfTopics, ddiaTopics,
       cloudTopics, linuxTopics, networkingTopics, troubleshootingTopics,
       warStoriesTopics, comparisonTopics,
     ];
