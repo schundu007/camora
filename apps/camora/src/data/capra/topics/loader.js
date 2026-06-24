@@ -239,6 +239,7 @@ export const HEAVY_TOPIC_LOADERS = {
       comparisonTopics: mod.comparisonTopics,
     };
   },
+
 };
 
 /**

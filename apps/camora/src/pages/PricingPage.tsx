@@ -34,7 +34,7 @@ const COMPARE_SECTIONS: CompareSection[] = [
     rows: [
       { label: 'AI hours included',                    free: '1 hr · 7-day trial', monthly: '2 hrs / month',  yearly: '5 hrs / year', team: 'Pooled across team' },
       { label: 'Live session AI',                      free: '✓',                  monthly: '✓',              yearly: '✓',            team: '✓' },
-      { label: 'Prep · 750+ topics',                 free: '1 / category',       monthly: 'All',            yearly: 'All',          team: 'All' },
+      { label: 'Prep · 1,500+ topics',                 free: '1 / category',       monthly: 'All',            yearly: 'All',          team: 'All' },
       { label: 'Coding solver + system design',        free: 'Limited',             monthly: '✓',              yearly: '✓',            team: '✓' },
       { label: 'Voice filter + architecture diagrams', free: '—',                  monthly: '✓',              yearly: '✓',            team: '✓' },
       { label: 'Terminal playground (Ubuntu · Docker · K8s)', free: 'Ubuntu only', monthly: '✓',              yearly: '✓',            team: '✓' },
