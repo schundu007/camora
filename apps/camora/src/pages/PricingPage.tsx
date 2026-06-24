@@ -92,11 +92,12 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
       <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', flexShrink: 0 }} aria-hidden="true" />
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono, whiteSpace: 'nowrap' }}>
         {children}
       </span>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
   );
 }
@@ -104,6 +105,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [hoveredFaq, setHoveredFaq] = useState<number | null>(null);
   const { isAuthenticated } = useAuth();
   const ctaHref = isAuthenticated ? '/lumora' : '/signup';
 
@@ -121,30 +123,31 @@ export default function PricingPage() {
       />
       <SiteNav />
 
-      {/* ── Breadcrumb bar ── */}
-      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '0 32px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', height: 44, gap: 8 }}>
-          <Link to="/" style={{ fontSize: 13, color: LN.muted, textDecoration: 'none' }}>Camora</Link>
-          <span style={{ color: LN.dim, fontSize: 13 }}>/</span>
-          <span style={{ fontSize: 13, color: LN.text }}>Plans & Pricing</span>
-        </div>
-      </div>
-
-      {/* ── Page title ── */}
-      <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '22px 32px 16px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', color: 'var(--text-primary)' }}>
-            Plans & Pricing
-          </h1>
-          <p style={{ fontSize: 16, color: LN.muted, margin: 0 }}>
-            One free AI hour on signup. Plans from $19/mo. Top-ups at $15/hr, never expire.
-          </p>
+      {/* ── Hero strip ── */}
+      <div style={{ background: '#0B1B3F', borderBottom: '2px solid var(--cam-gold-leaf)', padding: '0 32px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', height: 40, gap: 8 }}>
+            <Link to="/" style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)', textDecoration: 'none' }}>Camora</Link>
+            <span style={{ color: 'rgba(255,255,255,0.20)', fontSize: 12 }}>/</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.60)' }}>Plans & Pricing</span>
+          </div>
+          <div style={{ padding: '24px 0 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 14 }}>
+              Pricing
+            </div>
+            <h1 style={{ fontSize: 40, fontWeight: 800, margin: '0 0 12px', letterSpacing: '-0.03em', color: '#fff', lineHeight: 1.1 }}>
+              Plans & Pricing
+            </h1>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.55)', margin: '0 auto', maxWidth: 480 }}>
+              One free AI hour on signup. Plans from $19/mo. Top-ups at $15/hr, never expire.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* ── Main content ── */}
       <div style={{ flex: 1, padding: '24px 32px 40px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 40 }}>
 
           {/* Plans */}
           <section>
@@ -230,40 +233,47 @@ export default function PricingPage() {
           <section id="faq">
             <SectionLabel>Frequently asked questions</SectionLabel>
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
-              {FAQS.map((faq, i) => (
-                <div key={i} style={{ borderTop: i > 0 ? `1px solid ${LN.border}` : undefined, background: openFaq === i ? LN.surface : LN.card }}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    aria-expanded={openFaq === i}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 16 }}
-                  >
-                    <span style={{ fontSize: 14, fontWeight: 500, color: LN.text }}>{faq.q}</span>
-                    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={LN.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-                      className="cam-faq-chevron" style={{ flexShrink: 0, transform: openFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
-                  </button>
-                  {openFaq === i && (
-                    <div style={{ padding: '0 20px 16px', fontSize: 15, lineHeight: 1.7, color: LN.muted }}>{faq.a}</div>
-                  )}
-                </div>
-              ))}
+              {FAQS.map((faq, i) => {
+                const isOpen = openFaq === i;
+                const isHovered = hoveredFaq === i && !isOpen;
+                return (
+                  <div key={i} style={{ borderTop: i > 0 ? `1px solid ${LN.border}` : undefined, background: isOpen ? LN.surface : isHovered ? 'var(--bg-elevated)' : LN.card }}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      onMouseEnter={() => setHoveredFaq(i)}
+                      onMouseLeave={() => setHoveredFaq(null)}
+                      aria-expanded={isOpen}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 16 }}
+                    >
+                      <span style={{ fontSize: 15, fontWeight: 600, color: isOpen ? LN.text : isHovered ? LN.text : LN.textSub, lineHeight: 1.4 }}>{faq.q}</span>
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={isOpen ? LN.blue : LN.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+                        className="cam-faq-chevron" style={{ flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: '0 24px 20px', fontSize: 15, lineHeight: 1.75, color: LN.muted }}>{faq.a}</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
           {/* Bottom CTA */}
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, padding: '20px 28px', background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4 }}>
+            <div style={{ background: '#0B1B3F', border: '1px solid var(--cam-gold-leaf)', borderRadius: 8, padding: '32px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: LN.text, marginBottom: 4 }}>Ready to start?</div>
-                <div style={{ fontSize: 13, color: LN.muted }}>Free hour, no card. Pick a plan when you're ready.</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 10 }}>Get started</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6, letterSpacing: '-0.02em' }}>Ready to start?</div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.50)' }}>Free hour, no card required. Pick a plan whenever you're ready.</div>
               </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Link to={ctaHref} style={{ padding: '9px 20px', fontSize: 13, fontWeight: 700, borderRadius: 3, background: LN.blue, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Link to={ctaHref} style={{ padding: '12px 28px', fontSize: 14, fontWeight: 700, borderRadius: 4, background: 'var(--cam-gold-leaf)', color: '#0B1B3F', textDecoration: 'none', display: 'inline-block', boxShadow: '0 2px 12px rgba(212,160,67,0.35)' }}>
                   {isAuthenticated ? 'Open Camora' : 'Create account — free'}
                 </Link>
-                <a href="mailto:hello@cariara.com?subject=Camora%20Team%20plan" style={{ padding: '9px 20px', fontSize: 13, fontWeight: 600, borderRadius: 3, border: `1px solid ${LN.border}`, color: LN.muted, textDecoration: 'none', display: 'inline-block' }}>
+                <a href="mailto:hello@cariara.com?subject=Camora%20Team%20plan" style={{ padding: '12px 24px', fontSize: 13, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)', textDecoration: 'none', display: 'inline-block' }}>
                   Talk to sales
                 </a>
               </div>
