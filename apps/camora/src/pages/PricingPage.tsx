@@ -107,7 +107,7 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [hoveredFaq, setHoveredFaq] = useState<number | null>(null);
   const { isAuthenticated } = useAuth();
-  const ctaHref = isAuthenticated ? '/lumora' : '/signup';
+  const ctaHref = isAuthenticated ? '/capra/prepare' : '/signup';
 
   useEffect(() => {
     document.title = 'Pricing | Camora';
