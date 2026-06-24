@@ -3298,8 +3298,7 @@ Fourth, maintain a compliance audit trail. Every model promotion event should re
       'https://interpret.ml/docs/lime.html',
     ],
   },
-,
-{
+  {
     id: 'mlops-data-versioning',
     title: 'Data Versioning and Dataset Management',
     icon: 'cpu',
