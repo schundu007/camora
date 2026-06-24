@@ -1710,6 +1710,22 @@ export default function DocsPage({ onBack }) {
                   </div>
                   )}
 
+              {/* Loading skeleton — shown while heavyData chunk fetches */}
+              {topicsLoading && filteredTopics.length === 0 && activePage !== 'overview' && activePage !== 'resume' && (
+                <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] last:border-0 animate-pulse">
+                      <div className="w-5 h-5 rounded bg-[var(--bg-surface)] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="h-3 rounded bg-[var(--bg-surface)] w-2/5 mb-1.5" />
+                        <div className="h-2.5 rounded bg-[var(--bg-surface)] w-3/5" />
+                      </div>
+                      <div className="w-12 h-2.5 rounded bg-[var(--bg-surface)]" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* DSA Content */}
               {activePage === 'coding' && (
                 <>
