@@ -812,6 +812,7 @@ export default function DocsPage({ onBack }) {
       lldTopics, lldProblems, behavioralTopics, companyPrep,
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
       roadmapTopics, engBlogTopics, sreTopics, devopsTopics,
+      observabilityTopics, platformTopics, challengesTopics,
       mlopsTopics, aiopsTopics,
       cloudTopics, linuxTopics, networkingTopics, troubleshootingTopics,
       warStoriesTopics, comparisonTopics,
