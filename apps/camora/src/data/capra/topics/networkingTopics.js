@@ -6,8 +6,8 @@ export const networkingCategories = [
   { id: 'fundamentals',      name: 'TCP/IP & OSI Fundamentals',     icon: 'globe',        color: '#3b82f6' },
   { id: 'dns',               name: 'DNS & Service Discovery',        icon: 'search',       color: '#22c55e' },
   { id: 'loadbalancing',     name: 'Load Balancing & Proxies',       icon: 'gitBranch',    color: '#06b6d4' },
-  { id: 'firewalls',         name: 'Firewalls & Zero Trust',         icon: 'shield',       color: '#ef4444' },
   { id: 'protocols',         name: 'Routing Protocols',              icon: 'share2',       color: '#8b5cf6' },
+  { id: 'firewalls',         name: 'Firewalls & Zero Trust',         icon: 'shield',       color: '#ef4444' },
   { id: 'cloud-networking',  name: 'Cloud Networking (AWS/GCP/AZ)', icon: 'cloud',        color: '#f59e0b' },
   { id: 'troubleshooting',   name: 'Networking Troubleshooting',     icon: 'tool',         color: '#f97316' },
 ];

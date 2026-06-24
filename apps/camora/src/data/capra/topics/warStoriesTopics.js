@@ -5,10 +5,10 @@
 export const warStoriesCategories = [
   { id: 'availability',  name: 'Availability & Outages',       icon: 'alertTriangle', color: '#ef4444' },
   { id: 'data',          name: 'Data Loss & Corruption',        icon: 'database',      color: '#8b5cf6' },
-  { id: 'security',      name: 'Security Incidents',            icon: 'shield',        color: '#dc2626' },
   { id: 'performance',   name: 'Performance Degradation',       icon: 'activity',      color: '#f97316' },
   { id: 'deployment',    name: 'Deployment Disasters',          icon: 'gitMerge',      color: '#f59e0b' },
   { id: 'networking',    name: 'Network & DNS Failures',        icon: 'globe',         color: '#3b82f6' },
+  { id: 'security',      name: 'Security Incidents',            icon: 'shield',        color: '#dc2626' },
 ];
 
 export const warStoriesTopicCategoryMap = {
