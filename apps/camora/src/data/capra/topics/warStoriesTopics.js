@@ -1326,6 +1326,15 @@ New connection attempts failed with connection refused errors that looked identi
 Mitigation options: (1) Add a second NAT Gateway — each NAT Gateway has its own pool of source ports, so spreading Lambda subnets across multiple NAT Gateways effectively multiplies available SNAT ports. (2) Use connection pooling with limits — limit maximum connections per Lambda instance to reduce port consumption at peak. (3) Use VPC endpoints for any AWS service calls (S3, SQS, DynamoDB) — these bypass the NAT Gateway entirely and are free of SNAT limits. (4) Move Lambda out of VPC if it does not require VPC resources — Lambda outside VPC reaches the internet without NAT Gateway constraints. (5) Increase the number of NAT Gateways and distribute Lambda subnets across them proportionally to expected concurrent calls.`,
       },
     ],
+    quickFire: [
+      { q: 'Root cause of the NAT Gateway port exhaustion?', a: '800 concurrent Lambda functions all connecting to the same external API IP exhausted all 65,535 SNAT ports on the single NAT Gateway, causing new connections to fail with "connection refused".' },
+      { q: 'What detection would have caught this earlier?', a: 'CloudWatch metric ErrorPortAllocation on the NAT Gateway -- any non-zero value means SNAT port exhaustion is occurring. Alert when this metric exceeds 0.' },
+      { q: 'Key mitigation applied?', a: 'Adding a second NAT Gateway and distributing Lambda subnets across both -- each NAT Gateway has its own SNAT port pool, effectively doubling available connections.' },
+      { q: 'What runbook item was missing?', a: 'A capacity planning check for Lambda-in-VPC workloads: project peak concurrent executions times connections per Lambda against the 55,000 NAT Gateway simultaneous connection limit.' },
+      { q: 'What is SNAT port exhaustion?', a: 'Running out of available source port numbers (max 65,535) for a specific destination IP/port pair. New TCP connections cannot be established until existing ports leave TIME_WAIT state (60-120s).' },
+      { q: 'How do VPC endpoints help Lambda workloads avoid NAT Gateway limits?', a: 'VPC endpoints route traffic to AWS services (S3, SQS, DynamoDB) privately within the VPC, bypassing the NAT Gateway entirely -- zero SNAT port consumption for AWS API calls.' },
+      { q: 'Should Lambda functions run inside a VPC by default?', a: 'No -- Lambda outside VPC reaches the internet without NAT Gateway constraints and has lower cold-start latency. Only put Lambda in VPC when it must access VPC resources (RDS, ElastiCache).' },
+    ],
     references: [
       'https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html',
     ],
