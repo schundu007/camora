@@ -24,6 +24,8 @@ export const networkingTopicCategoryMap = {
   'ip-addressing-cidr':         'fundamentals',
   'nat-pat':                    'fundamentals',
   'router-vs-switch':           'fundamentals',
+  'tcp-congestion-control':     'fundamentals',
+  'ipv6-dual-stack':            'fundamentals',
   // DNS
   'dns-resolution':             'dns',
   'dns-record-types':           'dns',
@@ -40,6 +42,8 @@ export const networkingTopicCategoryMap = {
   'anycast':                    'loadbalancing',
   'nginx-haproxy':              'loadbalancing',
   'cdn-architecture':           'loadbalancing',
+  'envoy-proxy':                'loadbalancing',
+  'network-rate-limiting':      'loadbalancing',
   // Firewalls
   'iptables-nftables':          'firewalls',
   'aws-security-groups':        'firewalls',
@@ -47,6 +51,7 @@ export const networkingTopicCategoryMap = {
   'zero-trust-networking':      'firewalls',
   'waf-ddos-protection':        'firewalls',
   'network-policies-k8s':       'firewalls',
+  'mtls-spiffe':                'firewalls',
   // Protocols
   'bgp-routing':                'protocols',
   'ospf-eigrp':                 'protocols',
@@ -55,6 +60,8 @@ export const networkingTopicCategoryMap = {
   'mpls':                       'protocols',
   'grpc-vs-rest':               'protocols',
   'overlay-underlay-network':   'protocols',
+  'quic-protocol':              'protocols',
+  'ebpf-xdp':                   'protocols',
   // Cloud Networking
   'aws-vpc-design':             'cloud-networking',
   'vpc-peering':                'cloud-networking',
@@ -63,12 +70,20 @@ export const networkingTopicCategoryMap = {
   'direct-connect-vpn':        'cloud-networking',
   'hybrid-connectivity':        'cloud-networking',
   'service-mesh':               'cloud-networking',
+  'wireguard-protocol':         'cloud-networking',
   // Troubleshooting
   'network-debugging-tools':    'troubleshooting',
   'packet-capture-analysis':    'troubleshooting',
   'latency-diagnosis':          'troubleshooting',
   'connectivity-failures':      'troubleshooting',
   'mtu-fragmentation':          'troubleshooting',
+  'network-observability':      'troubleshooting',
+  'network-chaos-engineering':  'troubleshooting',
+  // New additions
+  'ipv6-fundamentals':          'fundamentals',
+  'cni-plugins-comparison':     'cloud-networking',
+  'ipsec-vpn':                  'firewalls',
+  'dns-over-https-tls':         'dns',
 };
 
 export const networkingTopics = [
@@ -8104,6 +8119,906 @@ Choose overlay for simplicity and portability. Choose underlay routing when perf
       { q: 'What CNI plugin uses a simple VXLAN overlay for Kubernetes pod networking?', a: 'Flannel -- it deploys a VTEP on each node and encapsulates pod traffic in VXLAN for cross-node delivery.' },
       { q: 'What is the performance advantage of BGP underlay routing over VXLAN overlay?', a: 'No encapsulation overhead -- pods use real routable IPs and packets travel without VXLAN wrapping, reducing CPU cost and latency.' },
       { q: 'What MTU issue arises when enabling VXLAN on a 1500-byte MTU underlay?', a: 'VXLAN adds 50 bytes, leaving only 1450 bytes for the inner payload. Applications assuming 1500-byte MTU will have large packets silently dropped.' },
+    ],
+  },
+
+  // ─── NEW TOPICS ────────────────────────────────────────────────────────────
+
+  {
+    id: 'ipv6-fundamentals',
+    title: 'IPv6 Addressing & Dual Stack',
+    icon: 'globe',
+    color: '#3b82f6',
+    questions: 6,
+    description: 'IPv6 address format, address types, SLAAC vs DHCPv6, NDP, dual-stack vs NAT64, and Kubernetes dual-stack clusters.',
+    visualizations: [],
+    introduction: `IPv6 uses 128-bit addresses written as eight 16-bit groups in colon-hex notation (e.g., 2001:0db8:85a3::8a2e:0370:7334). Leading zeros in each group can be omitted, and one consecutive run of all-zero groups can be replaced with ::.
+
+**Address types:**
+- Link-local (fe80::/10): auto-configured, not routable, used on-link for NDP. Every interface has one.
+- Global unicast (2000::/3): globally routable, equivalent to IPv4 public addresses.
+- Unique local (fc00::/7): like RFC 1918, not globally routable.
+- Multicast (ff00::/8): replaces IPv4 broadcast. NDP uses multicast for neighbor discovery.
+- Anycast: same address assigned to multiple nodes; routing delivers to nearest.
+
+**Address configuration:**
+- SLAAC (Stateless Address Autoconfiguration): host generates its own address from the link-local prefix + EUI-64 (derived from MAC). No DHCP server needed. Router sends RA (Router Advertisement) with prefix.
+- DHCPv6: like DHCPv4 but stateful. Assigns addresses from a pool. Required when you need to control specific assignments.
+
+**NDP (Neighbor Discovery Protocol):** replaces ARP. Uses ICMPv6 multicast instead of broadcast. Key messages: Router Solicitation (RS), Router Advertisement (RA), Neighbor Solicitation (NS), Neighbor Advertisement (NA).
+
+**Dual-stack** runs IPv4 and IPv6 simultaneously. A host gets both addresses and prefers IPv6 (Happy Eyeballs RFC 8305). **NAT64** + **DNS64** translates IPv6-only client connections to IPv4 backends — the DNS64 resolver synthesizes AAAA records for IPv4-only destinations.
+
+**Kubernetes dual-stack** (stable in 1.23): pods and services get both IPv4 and IPv6 addresses. Requires two pod CIDRs, two service CIDRs, and a CNI that supports dual-stack (Calico, Cilium).`,
+    whenToUse: [
+      'Explaining why modern cloud environments prefer IPv6 for scale (AWS assigns /56 blocks to VPCs)',
+      'Debugging NDP failures when IPv6 hosts cannot reach the gateway',
+      'Configuring Kubernetes dual-stack and explaining CIDR planning',
+      'Explaining NAT64 when deploying IPv6-only infrastructure with IPv4 dependencies',
+    ],
+    keyConcepts: [
+      { term: 'EUI-64', definition: 'Method to derive a 64-bit interface ID from a 48-bit MAC address by inserting ff:fe in the middle and flipping bit 7. Used in SLAAC to generate the host portion of a link-local address.' },
+      { term: 'SLAAC', definition: 'Stateless Address Autoconfiguration. Host listens for Router Advertisements containing the /64 prefix, then appends its EUI-64 to form a global unicast address — no DHCP server required.' },
+      { term: 'NDP', definition: 'Neighbor Discovery Protocol (ICMPv6 types 133-137). Replaces ARP. Used for router discovery, prefix discovery, address resolution, and duplicate address detection.' },
+      { term: 'NAT64 / DNS64', definition: 'Transition mechanism for IPv6-only clients reaching IPv4 servers. DNS64 synthesizes AAAA records from A records; NAT64 gateway translates packets between IPv6 and IPv4.' },
+      { term: 'Happy Eyeballs', definition: 'RFC 8305 algorithm where clients race IPv4 and IPv6 connections with a 250ms delay preference for IPv6. Ensures IPv6 is used when available without penalizing IPv6-only delays.' },
+    ],
+    pitfalls: [
+      'Forgetting to allow ICMPv6 in firewall rules — NDP requires ICMPv6 types 133-137. Blocking all ICMPv6 breaks IPv6 routing entirely.',
+      'Planning /64 subnets too small — IPv6 subnets are always /64 for SLAAC compatibility. Never subnet below /64 for host-facing networks.',
+      'Missing IPv6 in security group rules — IPv4 and IPv6 are separate stacks. An IPv4 allow rule does not cover the same traffic on IPv6.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between SLAAC and DHCPv6, and when do you use each?',
+        answer: `SLAAC (Stateless Address Autoconfiguration) lets hosts generate their own IPv6 addresses without a server. The router sends a Router Advertisement with the /64 prefix; the host appends its EUI-64 interface ID. There is no central record of which host has which address (stateless). Fast, zero-config for hosts.
+
+DHCPv6 is stateful: a DHCPv6 server assigns specific addresses from a pool and keeps a lease database, just like DHCPv4. Use DHCPv6 when you need:
+- Specific address assignments for servers/VMs (for firewall rules or DNS records)
+- DNS suffix or other options that SLAAC RA cannot deliver (RFC 8106 adds DNS via RA, but support varies)
+- Audit trail of address-to-host mappings
+
+In practice: end-user LANs use SLAAC (no admin overhead), data center / cloud VM environments use DHCPv6 or static assignment for predictability. Kubernetes uses static pod CIDR allocation via the CNI plugin, not SLAAC.`,
+      },
+      {
+        question: 'How does Kubernetes dual-stack work, and what changes when you enable it?',
+        answer: `Kubernetes dual-stack (stable since 1.23) allows pods and Services to have both IPv4 and IPv6 addresses simultaneously.
+
+Configuration requirements:
+- Two pod CIDRs: --cluster-cidr=10.244.0.0/16,fd00:10:244::/56
+- Two service CIDRs: --service-cluster-ip-range=10.96.0.0/16,fd00:10:96::/112
+- CNI plugin with dual-stack support (Calico, Cilium, kindnet)
+- kube-proxy in dual-stack mode
+
+Pod behavior: each pod gets one IPv4 and one IPv6 address. The CNI assigns both. Both are routable within the cluster.
+
+Service behavior: Services get a .spec.ipFamilyPolicy field — SingleStack (one family), PreferDualStack (dual if available), or RequireDualStack (fails if not supported). A dual-stack Service gets a ClusterIP in each family.
+
+External access: dual-stack nodes expose both a 4-in-6 mapped address and a native IPv6 address for NodePort Services. LoadBalancer Services require the cloud provider LB to support dual-stack.
+
+Main operational change: firewall rules and network policies must be written for both address families — an IPv4 NetworkPolicy does not restrict IPv6 traffic to the same pod.`,
+      },
+    ],
+    references: [
+      'https://kubernetes.io/docs/concepts/services-networking/dual-stack/',
+      'https://www.rfc-editor.org/rfc/rfc4862',
+      'https://www.rfc-editor.org/rfc/rfc8305',
+    ],
+    quickFire: [
+      { q: 'How many bits are in an IPv6 address?', a: '128 bits, written as eight 16-bit groups in colon-hex notation.' },
+      { q: 'What prefix denotes a link-local IPv6 address?', a: 'fe80::/10 — link-local addresses are auto-configured on every interface and are not routable beyond the local link.' },
+      { q: 'What replaces ARP in IPv6?', a: 'NDP (Neighbor Discovery Protocol) using ICMPv6 multicast messages — specifically Neighbor Solicitation and Neighbor Advertisement.' },
+      { q: 'What is SLAAC?', a: 'Stateless Address Autoconfiguration — hosts generate their own IPv6 global address by combining the router-advertised /64 prefix with their EUI-64 interface ID.' },
+      { q: 'What is EUI-64?', a: 'A 64-bit interface identifier derived from a 48-bit MAC address by inserting ff:fe at the midpoint and flipping the universal/local bit.' },
+      { q: 'What is NAT64?', a: 'A transition mechanism translating between IPv6-only clients and IPv4-only servers. DNS64 synthesizes AAAA records; NAT64 gateway translates packet headers.' },
+      { q: 'What is the Happy Eyeballs algorithm?', a: 'RFC 8305 — clients race IPv4 and IPv6 connections with 250ms IPv6 preference. IPv6 wins if it connects first or within the delay window.' },
+      { q: 'What is the minimum subnet size for SLAAC compatibility?', a: '/64 — SLAAC requires the host portion to be 64 bits for EUI-64 generation. Never subnet below /64 for host-facing networks.' },
+      { q: 'Why does blocking all ICMPv6 break IPv6?', a: 'NDP (Neighbor Discovery) uses ICMPv6 types 133-137 for router discovery and address resolution. Without ICMPv6, hosts cannot discover routers or resolve neighbor addresses.' },
+      { q: 'What Kubernetes version made dual-stack stable?', a: '1.23 (released December 2021). Dual-stack requires two pod CIDRs, two service CIDRs, and a dual-stack capable CNI plugin.' },
+    ],
+  },
+
+  {
+    id: 'quic-protocol',
+    title: 'QUIC Protocol & Transport',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'QUIC over UDP, 0-RTT handshake, multiplexed streams without HOL blocking, connection migration, and HTTP/3.',
+    visualizations: [],
+    introduction: `QUIC (originally Google Quick UDP Internet Connections, now standardized as RFC 9000) is a multiplexed transport protocol built over UDP. It is the transport layer for HTTP/3 (RFC 9114).
+
+**Why QUIC?** TCP + TLS has two fundamental problems at scale:
+1. **Head-of-line blocking**: TCP delivers bytes in order. One lost packet stalls all data behind it, even data from unrelated requests.
+2. **Slow connection setup**: TCP handshake (1 RTT) + TLS 1.3 handshake (1 RTT) = 2 RTTs before the first byte of application data.
+
+**QUIC solves both:**
+- **Multiplexed streams**: QUIC runs multiple independent byte streams over one connection. A lost packet only blocks the stream it belongs to, not other streams.
+- **0-RTT / 1-RTT handshake**: QUIC merges the transport and TLS handshakes into a single 1-RTT exchange. With session resumption, 0-RTT allows data in the first packet (with replay caveats).
+- **Connection migration**: QUIC connections are identified by a Connection ID, not the (IP, port) tuple. A mobile client can switch from Wi-Fi to LTE and maintain the same QUIC connection.
+
+**QUIC packet structure**: encrypted at the QUIC layer (not just TLS). Even QUIC headers are partially encrypted to prevent middlebox ossification. Only the Connection ID and packet number are visible.
+
+**Deployment**: Cloudflare, Google, Facebook, and Akamai carry significant QUIC traffic. In Kubernetes, HTTP/3 Ingress support is available in nginx-ingress (experimental) and Envoy (stable). gRPC over HTTP/3 is in progress.`,
+    whenToUse: [
+      'Explaining why HTTP/3 uses UDP instead of TCP',
+      'Justifying QUIC for mobile applications with frequent network changes',
+      'Debugging connection migration or 0-RTT replay issues',
+      'Comparing QUIC with WebSockets or gRPC for real-time systems',
+    ],
+    keyConcepts: [
+      { term: 'Head-of-line blocking', definition: 'TCP delivers bytes strictly in order. A single lost packet blocks all subsequent data on that connection, even from unrelated requests. QUIC eliminates this with independent streams.' },
+      { term: '0-RTT handshake', definition: 'QUIC session resumption allows the client to send application data in the very first packet using a cached session ticket. Caution: 0-RTT data is replay-vulnerable (not idempotent-safe).' },
+      { term: 'Connection ID', definition: 'A QUIC connection identifier that is independent of the client IP and port. Enables connection migration: the client can change networks and keep the same QUIC connection.' },
+      { term: 'Stream multiplexing', definition: 'QUIC runs multiple independent byte streams over one UDP connection. A lost packet blocks only its own stream, not others — eliminating the TCP head-of-line blocking problem.' },
+      { term: 'Connection migration', definition: 'When the client IP or port changes (e.g., Wi-Fi to LTE), QUIC sends a PATH_CHALLENGE to the new path and continues the same logical connection using the Connection ID.' },
+    ],
+    pitfalls: [
+      '0-RTT replay vulnerability — 0-RTT data can be replayed by a network attacker. Never use 0-RTT for non-idempotent requests (POST, payment operations). Safe for GETs with cache semantics.',
+      'UDP blocking by enterprise firewalls — many corporate networks block or rate-limit UDP 443. QUIC clients must fall back to TCP+TLS (Alt-Svc header informs clients of QUIC availability). Plan for TCP fallback.',
+      'Middlebox interference — NAT devices and stateful firewalls expect TCP connection tracking. QUIC uses UDP, so NAT state times out faster. Clients must send keep-alive packets more aggressively.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does QUIC eliminate head-of-line blocking that TCP suffers from?',
+        answer: `TCP delivers bytes as a single ordered byte stream. If packet N is lost, the TCP receiver cannot deliver packets N+1, N+2, ... to the application even if they arrived — it waits for retransmission of N. This stalls every HTTP/2 stream multiplexed over the same TCP connection.
+
+QUIC sends each HTTP stream as an independent QUIC stream within the same UDP flow. Streams are identified by a stream ID in the QUIC packet. A lost packet carrying stream 5 data only blocks stream 5 — the QUIC layer delivers stream 1, 3, 7 data to the application immediately. Each stream has its own flow control.
+
+Result: HTTP/3 over QUIC achieves true application-layer multiplexing without transport-layer blocking. In high-loss environments (mobile, satellite), this is a significant latency improvement over HTTP/2.
+
+Note: QUIC still has head-of-line blocking within a single stream — a lost packet for stream 5 blocks later stream 5 data. The improvement is cross-stream isolation.`,
+      },
+      {
+        question: 'What is QUIC connection migration and why does it matter for mobile users?',
+        answer: `QUIC identifies connections by a Connection ID (an opaque byte string negotiated at handshake), not by the (source IP, source port, destination IP, destination port) 4-tuple that TCP uses.
+
+When a mobile client switches from Wi-Fi (192.168.1.5:54321) to LTE (10.0.0.2:62000), the TCP connection is dead — the 4-tuple changed, the server has no matching connection. The client must reconnect: new TCP handshake, new TLS handshake, HTTP/2 re-establishment.
+
+With QUIC, the client sends a PATH_CHALLENGE on the new path (LTE). The server verifies the new path and updates the destination tuple while keeping the same Connection ID and session state. The connection continues with no re-handshake, no session restart, and no application-visible interruption.
+
+This matters for: mobile apps on trains/elevators, laptop users moving between networks, and IoT devices with intermittent connectivity. Services like Google Meet and YouTube use QUIC to maintain streams across network changes.
+
+Caveat: connection migration requires that the server's IP does not change. For load-balanced deployments, consistent hashing on Connection ID (not 5-tuple) is required so migrated connections reach the same backend.`,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc9000',
+      'https://www.rfc-editor.org/rfc/rfc9114',
+      'https://blog.cloudflare.com/http3-the-past-present-and-future/',
+    ],
+    quickFire: [
+      { q: 'What transport protocol does QUIC use?', a: 'UDP. QUIC implements its own reliability, ordering, and congestion control on top of UDP.' },
+      { q: 'What is HTTP/3?', a: 'HTTP/3 is HTTP semantics (methods, headers, status codes) running over QUIC instead of TCP+TLS. RFC 9114.' },
+      { q: 'How many RTTs does a new QUIC connection require before sending data?', a: '1 RTT — QUIC merges the transport and TLS 1.3 handshakes into a single exchange.' },
+      { q: 'What is 0-RTT in QUIC and what is its security risk?', a: '0-RTT allows clients to send application data in the first packet using a cached session ticket. Risk: 0-RTT data is replay-vulnerable — an attacker can replay the first packet.' },
+      { q: 'How does QUIC identify connections?', a: 'By a Connection ID, not by the (IP, port) 4-tuple. This enables connection migration when the client changes networks.' },
+      { q: 'What problem does QUIC stream multiplexing solve?', a: 'TCP head-of-line blocking — a lost packet blocks all subsequent data on the TCP connection. QUIC streams are independent; a loss only blocks that stream.' },
+      { q: 'Why do enterprise firewalls often block QUIC?', a: 'Many firewalls block or rate-limit UDP 443. QUIC clients fall back to TCP+TLS via the Alt-Svc header.' },
+      { q: 'How does QUIC handle connection migration when a mobile user switches networks?', a: 'The client sends a PATH_CHALLENGE on the new network path. The server validates and updates the routing tuple while keeping the same Connection ID and session.' },
+      { q: 'Is QUIC encryption optional like TCP?', a: 'No. QUIC encrypts all payload and most header fields using TLS 1.3. There is no unencrypted QUIC.' },
+      { q: 'What is the QUIC Connection ID used for?', a: 'To identify the QUIC connection independently of the client IP and port, enabling connection migration and consistent load balancer routing.' },
+    ],
+  },
+
+  {
+    id: 'ebpf-xdp',
+    title: 'eBPF Networking & XDP',
+    icon: 'share2',
+    color: '#8b5cf6',
+    questions: 6,
+    description: 'eBPF program types, XDP packet processing pipeline, Cilium eBPF dataplane, BPF maps, and bpftrace for network debugging.',
+    visualizations: [],
+    introduction: `eBPF (extended Berkeley Packet Filter) allows safely running sandboxed programs in the Linux kernel without modifying kernel source code. Originally designed for packet filtering (classic BPF in tcpdump), eBPF now powers networking, observability, and security in production at scale.
+
+**eBPF program types for networking:**
+- **XDP (eXpress Data Path)**: attaches at the lowest point in the network driver, before the kernel networking stack allocates an sk_buff. Three modes: DRV (driver-native, fastest), SKB (generic, slower), HW (offloaded to NIC). Actions: XDP_DROP, XDP_PASS, XDP_TX (hairpin), XDP_REDIRECT.
+- **TC (Traffic Control)**: attaches at the tc ingress/egress hook. Has access to sk_buff metadata. Used for NAT, packet mangling, and policy after sk_buff allocation.
+- **Socket programs**: sk_filter for per-socket packet filtering, sockops for TCP socket option manipulation, sk_msg for redirecting between sockets.
+
+**BPF maps**: kernel data structures shared between eBPF programs and user space. Types: hash, array, LRU hash, per-CPU variants, ring buffer. Used for connection tracking, rate limit counters, policy rules, and observability data export.
+
+**Cilium**: Kubernetes CNI that uses eBPF to replace kube-proxy (iptables) entirely. Policy enforcement, load balancing, encryption (WireGuard/IPSec), and observability (Hubble) are all implemented as eBPF programs. At 1M iptables rules, iptables lookups are O(n); eBPF hash maps are O(1).
+
+**bpftrace**: high-level tracing language for writing eBPF probes. Single-line network debugging: bpftrace -e 'tracepoint:net:net_dev_queue { @[args->name] = count(); }' — counts packets per interface in real time.`,
+    whenToUse: [
+      'Explaining why Cilium outperforms iptables-based kube-proxy at scale',
+      'Debugging network performance with bpftrace one-liners',
+      'Designing DDoS mitigation at the XDP layer (drop before kernel stack)',
+      'Understanding how Kubernetes network policy is enforced at the eBPF level',
+    ],
+    keyConcepts: [
+      { term: 'XDP (eXpress Data Path)', definition: 'eBPF hook at the NIC driver level, before sk_buff allocation. Fastest possible packet processing — can drop/redirect millions of packets per second per core. Used for DDoS mitigation and load balancing.' },
+      { term: 'BPF map', definition: 'Kernel data structure (hash, array, ring buffer, etc.) shared between eBPF programs and user space via file descriptors. Persists across program invocations — used for connection state, counters, and policy tables.' },
+      { term: 'Cilium', definition: 'Kubernetes CNI using eBPF for all networking: pod-to-pod routing, L3/L4/L7 NetworkPolicy, kube-proxy replacement (eBPF load balancing), encryption, and Hubble flow observability.' },
+      { term: 'Hubble', definition: 'Cilium observability layer built on eBPF. Provides per-flow L3/L4/L7 visibility without sidecar proxies — DNS queries, HTTP requests, TCP connections, drop reasons — all exported as structured flow records.' },
+      { term: 'bpftrace', definition: 'High-level language for writing eBPF tracing probes. Supports tracepoints, kprobes, uprobes, and USDT. Enables one-liner kernel debugging without C programming or kernel recompilation.' },
+    ],
+    pitfalls: [
+      'XDP DRV mode requires driver support — not all NIC drivers implement XDP natively. Check with ethtool -i and ip link show for xdp support. Fall back to SKB mode if needed (slower but universal).',
+      'BPF map size is fixed at creation — hash maps do not grow dynamically. Choose map sizes conservatively based on expected maximum entries; a full map causes ENOSPC errors and silent drops.',
+      'Mixing Cilium with kube-proxy causes conflicts — Cilium in kube-proxy replacement mode installs its own BPF load-balancing programs. Running kube-proxy alongside creates duplicate NAT rules and unpredictable behavior. Disable kube-proxy when using Cilium full replacement.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does Cilium eBPF replace iptables for Kubernetes networking, and why is it better at scale?',
+        answer: `Traditional Kubernetes uses kube-proxy to program iptables rules for Service load balancing and NetworkPolicy enforcement. iptables is a linear chain of rules — adding a Service adds multiple rules (DNAT for each endpoint). At 10,000 Services, a packet traverses thousands of iptables rules per lookup. This is O(n) per packet and causes measurable latency at scale. Rule updates also require a full iptables-restore, which holds a lock and causes brief packet drops.
+
+Cilium replaces kube-proxy entirely with eBPF programs:
+- Service load balancing uses a BPF hash map keyed by (VIP, port) → (endpoint list). Lookup is O(1) regardless of the number of Services.
+- NetworkPolicy is enforced in BPF programs attached at the TC hook per pod veth interface. Policy rules are compiled into BPF bytecode and loaded into the kernel — no iptables chains at all.
+- Connection tracking uses a BPF LRU hash map instead of the kernel conntrack table, which also has scaling issues.
+
+Results at scale: at 100,000 Services, iptables update takes >11 seconds; Cilium eBPF update takes <1 second. Per-packet latency is lower because packets hit the BPF program at XDP or TC before traversing iptables chains.
+
+Hubble adds zero-overhead observability by reading flow data from BPF ring buffer maps — no sidecar required.`,
+      },
+      {
+        question: 'What is XDP and how is it used for DDoS mitigation?',
+        answer: `XDP (eXpress Data Path) attaches eBPF programs at the network driver hook — before the kernel allocates an sk_buff (socket buffer). This is the earliest possible point in the kernel receive path.
+
+DDoS mitigation with XDP:
+1. The XDP program reads the packet header (Ethernet, IP, TCP/UDP) directly from the DMA ring buffer.
+2. It looks up the source IP in a BPF hash map of known attack sources.
+3. If the source is in the blocklist, it returns XDP_DROP — the packet is discarded immediately without touching the kernel stack, allocating memory, or waking up user space.
+4. Legitimate traffic returns XDP_PASS and flows normally through the kernel network stack.
+
+Performance: XDP DRV mode on modern NICs can drop 20-30 million packets per second per core. This is sufficient to absorb volumetric UDP/ICMP floods without impacting legitimate traffic.
+
+Cloudflare uses XDP in production for their DDoS mitigation pipeline. Their system processes flow metadata in BPF maps to detect attack signatures and push block rules to XDP programs across all edge servers within seconds.
+
+Key advantage over iptables DROP: iptables operates after sk_buff allocation (CPU + memory overhead). XDP drops before allocation — the kernel never processes the packet, making it nearly free per dropped packet.`,
+      },
+    ],
+    references: [
+      'https://docs.cilium.io/en/latest/network/ebpf/',
+      'https://www.kernel.org/doc/html/latest/bpf/index.html',
+      'https://github.com/iovisor/bpftrace',
+    ],
+    quickFire: [
+      { q: 'What does eBPF stand for?', a: 'Extended Berkeley Packet Filter. Originally for packet filtering, now a general-purpose kernel extension mechanism.' },
+      { q: 'What is XDP and at what point in the network stack does it run?', a: 'eXpress Data Path — eBPF hook at the NIC driver level, before sk_buff allocation. The earliest possible packet processing point.' },
+      { q: 'What are the three XDP driver modes?', a: 'DRV (driver-native, fastest), SKB (generic fallback), HW (offloaded to NIC hardware).' },
+      { q: 'What XDP action drops a packet without processing?', a: 'XDP_DROP — the packet is discarded at the driver level without allocating kernel memory.' },
+      { q: 'What is a BPF map?', a: 'A kernel data structure (hash, array, ring buffer) shared between eBPF programs and user space via file descriptors. Used for connection state, counters, and policy tables.' },
+      { q: 'Why does Cilium outperform iptables at scale?', a: 'iptables rules are O(n) linear lookup. Cilium uses BPF hash maps with O(1) lookup for Service load balancing and NetworkPolicy, regardless of rule count.' },
+      { q: 'What is Hubble in the Cilium ecosystem?', a: 'The observability layer — reads per-flow L3/L4/L7 data from BPF ring buffers to provide DNS, HTTP, and TCP visibility without sidecar proxies.' },
+      { q: 'What is bpftrace used for?', a: 'Writing eBPF tracing probes in a high-level language for one-liner kernel debugging — tracepoints, kprobes, uprobes — without C or kernel recompilation.' },
+      { q: 'What happens when a BPF map is full?', a: 'Hash map inserts return ENOSPC. Packets requiring new map entries may be silently dropped. Size maps conservatively at creation.' },
+      { q: 'Why should Cilium not run alongside kube-proxy?', a: 'Both install NAT rules for Services. Cilium in kube-proxy replacement mode installs its own BPF programs; kube-proxy iptables rules create duplicates and unpredictable routing.' },
+    ],
+  },
+
+  {
+    id: 'mtls-spiffe',
+    title: 'mTLS & SPIFFE/SPIRE Workload Identity',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 6,
+    description: 'mTLS handshake mechanics, SPIFFE workload identity, SPIRE attestation, Istio PeerAuthentication, and certificate rotation.',
+    visualizations: [],
+    introduction: `mTLS (mutual TLS) extends standard TLS so both the client and server present and validate certificates. It provides cryptographic service-to-service identity — neither side can be impersonated without the corresponding private key.
+
+**mTLS handshake additions vs TLS:**
+1. Server sends CertificateRequest after its own Certificate message.
+2. Client responds with its certificate and a CertificateVerify (signature over the handshake transcript using its private key).
+3. Server validates the client certificate against its trusted CA.
+
+**SPIFFE (Secure Production Identity Framework for Everyone):** a CNCF standard that defines workload identity. A SPIFFE ID is a URI: spiffe://trust-domain/path (e.g., spiffe://example.com/ns/payments/sa/billing-service). The X.509 certificate encoding a SPIFFE ID is called an SVID (SPIFFE Verifiable Identity Document).
+
+**SPIRE (SPIFFE Runtime Environment):** the reference implementation. The SPIRE Server is the CA; SPIRE Agents run on each node and attest workloads (by UID, binary hash, Kubernetes service account, or cloud metadata). On attestation, the agent issues a short-lived SVID (typically 1 hour). SVIDs are automatically rotated before expiry.
+
+**Istio integration:** Istio's control plane (istiod) is a SPIFFE-compatible CA. It issues SVIDs to each Envoy sidecar. PeerAuthentication policy enforces mTLS: STRICT (reject plaintext), PERMISSIVE (allow both — for migration). Authorization policy uses SPIFFE IDs for allow/deny decisions at L7.
+
+**Certificate pinning:** pins a specific certificate or public key instead of trusting any cert from a CA. More brittle but eliminates CA compromise risk. Used for critical internal APIs.`,
+    whenToUse: [
+      'Designing zero-trust service-to-service authentication in microservices',
+      'Explaining why Istio/Linkerd use short-lived certs instead of long-lived API keys',
+      'Debugging mTLS handshake failures (wrong trust domain, expired SVIDs)',
+      'Comparing SPIFFE vs traditional PKI for dynamic cloud workloads',
+    ],
+    keyConcepts: [
+      { term: 'SPIFFE ID', definition: 'A URI workload identity: spiffe://trust-domain/path. Encoded in the X.509 SAN (Subject Alternative Name) field. Uniquely identifies a workload regardless of IP address or hostname.' },
+      { term: 'SVID', definition: 'SPIFFE Verifiable Identity Document. An X.509 certificate or JWT encoding a SPIFFE ID. Issued by SPIRE and typically valid for 1 hour with automatic rotation.' },
+      { term: 'SPIRE Agent', definition: 'Runs on each node. Attests workloads via selectors (UID, binary checksum, K8s service account, AWS instance identity). Issues SVIDs to attested workloads via the Workload API.' },
+      { term: 'PeerAuthentication', definition: 'Istio policy that controls mTLS mode per namespace or workload. STRICT rejects plaintext; PERMISSIVE accepts both (for brownfield migration). Applied via Kubernetes CRD.' },
+      { term: 'Short-lived certificates', definition: 'SVIDs valid for 1 hour (vs traditional certs valid for 1 year). Compromise of a short-lived cert is bounded in time. Eliminates the need for CRL/OCSP revocation infrastructure.' },
+    ],
+    pitfalls: [
+      'PERMISSIVE mode is not zero-trust — plaintext connections are accepted. Use PERMISSIVE only during migration; switch to STRICT once all services are meshed. Monitor plaintext traffic in Hubble/Kiali during transition.',
+      'Trust domain mismatch causes silent mTLS failures — SPIFFE IDs must share a trust domain or have explicit federated trust. A workload from spiffe://cluster-a.example.com cannot authenticate to a service expecting spiffe://cluster-b.example.com without federation.',
+      'Clock skew breaks certificate validation — SVIDs have tight validity windows. Nodes with NTP drift >5 minutes will have SVIDs rejected as "not yet valid" or "expired." Ensure time sync across all nodes.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does SPIFFE/SPIRE provide workload identity without secrets or API keys?',
+        answer: `Traditional service authentication requires secrets (API keys, shared passwords) embedded in the application or environment. These are static, hard to rotate, and create a secret distribution problem.
+
+SPIFFE eliminates static secrets by using attestation:
+1. The SPIRE Agent on each node attests itself to the SPIRE Server using a node-level trust anchor (e.g., AWS instance identity document, cloud provider metadata).
+2. When a workload starts, it calls the Workload API (Unix domain socket on the node). The SPIRE Agent attests the workload using selectors — on Kubernetes, this includes the pod service account, namespace, and pod name.
+3. If attestation passes, the SPIRE Agent issues a short-lived SVID (X.509 cert with the workload's SPIFFE ID in the SAN). The private key never leaves the node.
+4. The workload uses the SVID for mTLS with other services. The receiving service validates the SPIFFE ID against its authorization policy.
+
+Rotation: SVIDs expire in ~1 hour. SPIRE agents automatically renew before expiry. If a node is compromised and an SVID stolen, it is valid for at most 1 hour.
+
+No secret distribution: there are no long-lived API keys. Workload identity is bound to runtime properties (service account, node attestation) rather than static credentials.`,
+      },
+      {
+        question: 'What is the difference between Istio PERMISSIVE and STRICT mTLS mode, and when do you use each?',
+        answer: `Istio PeerAuthentication policy controls whether Envoy sidecars require mTLS from peers:
+
+STRICT mode: all incoming connections must present a valid client certificate with a SPIFFE ID. Plaintext connections are rejected with a TLS handshake error. This is the zero-trust target state — only meshed services with valid SVIDs can communicate.
+
+PERMISSIVE mode: sidecars accept both mTLS and plaintext. They upgrade mTLS connections to mutual auth but do not reject plaintext. Authorization policy can still apply to mTLS-authenticated traffic.
+
+When to use each:
+- PERMISSIVE during migration: when adding a service to the mesh, it may receive traffic from unmeshed clients. PERMISSIVE allows incremental rollout without breaking existing connections.
+- STRICT in steady state: once all services that talk to a workload are meshed, switch to STRICT. This is the security goal.
+
+Migration pattern:
+1. Deploy new service with PERMISSIVE.
+2. Monitor in Kiali/Hubble for plaintext traffic sources.
+3. Mesh those sources one by one.
+4. Switch to STRICT once all traffic sources are identified and meshed.
+
+Important: PERMISSIVE does not mean insecure mTLS — the mTLS connections are still fully authenticated. PERMISSIVE just allows the fallback path for unmeshed clients.`,
+      },
+    ],
+    references: [
+      'https://spiffe.io/docs/latest/spiffe-about/overview/',
+      'https://istio.io/latest/docs/concepts/security/#mutual-tls-authentication',
+      'https://www.rfc-editor.org/rfc/rfc8705',
+    ],
+    quickFire: [
+      { q: 'What does mTLS add to standard TLS?', a: 'The client also presents a certificate, and the server validates it — mutual authentication instead of server-only authentication.' },
+      { q: 'What is a SPIFFE ID?', a: 'A URI workload identity: spiffe://trust-domain/path. Encoded in the X.509 SAN field to uniquely identify a workload.' },
+      { q: 'What is an SVID?', a: 'SPIFFE Verifiable Identity Document — an X.509 certificate encoding a SPIFFE ID, issued by SPIRE with a short lifetime (typically 1 hour).' },
+      { q: 'How does SPIRE attest a Kubernetes workload?', a: 'The SPIRE Agent uses selectors (pod service account, namespace, pod name) to attest workloads and issues an SVID via the Unix domain socket Workload API.' },
+      { q: 'What is Istio PeerAuthentication STRICT mode?', a: 'Envoy sidecars reject all plaintext connections. Only mTLS with a valid SPIFFE client certificate is accepted.' },
+      { q: 'What is PERMISSIVE mode used for?', a: 'Migration — allows both mTLS and plaintext so unmeshed services can still connect while the mesh is being rolled out incrementally.' },
+      { q: 'Why are short-lived SVIDs (1 hour) better than long-lived certificates?', a: 'A compromised SVID is valid for at most 1 hour. Eliminates the need for CRL/OCSP revocation infrastructure.' },
+      { q: 'What causes a trust domain mismatch error in SPIFFE?', a: 'Two services with SPIFFE IDs in different trust domains without federated trust configuration. The receiving service rejects the client certificate.' },
+      { q: 'What infrastructure issue can break SVID validation?', a: 'NTP clock skew >5 minutes causes SVIDs to be rejected as "not yet valid" or "expired" due to their tight validity windows.' },
+      { q: 'What is certificate pinning vs CA-based trust?', a: 'Pinning trusts a specific certificate or public key. CA-based trust accepts any cert signed by a trusted CA. Pinning eliminates CA compromise risk but is brittle to certificate rotation.' },
+    ],
+  },
+
+  {
+    id: 'network-observability',
+    title: 'Network Observability & Flow Analysis',
+    icon: 'tool',
+    color: '#f97316',
+    questions: 6,
+    description: 'NetFlow/sFlow/IPFIX, VPC flow logs, Hubble, Prometheus network metrics, East-West traffic visibility, and anomaly detection.',
+    visualizations: [],
+    introduction: `Network observability provides visibility into what traffic is flowing where — without full packet capture. Modern network observability stacks use flow records, metrics, and structured logs rather than raw PCAP.
+
+**Flow record protocols:**
+- **NetFlow v9 / IPFIX (RFC 7011):** Cisco-originated, now standardized. Network devices export flow records (5-tuple + byte/packet counts + timestamps) to a collector. IPFIX is the IETF standardization of NetFlow v9.
+- **sFlow:** samples 1-in-N packets rather than tracking all flows. Lower overhead, suitable for high-speed links. Less accurate for small flows.
+- **VPC Flow Logs (AWS/GCP/Azure):** cloud-managed flow logging. AWS VPC Flow Logs write to CloudWatch Logs or S3. Fields: srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, action (ACCEPT/REJECT). Enable per-ENI, per-subnet, or per-VPC. Critical for security incident investigation.
+
+**Kubernetes-native observability:**
+- **Hubble (Cilium):** exports L3/L4/L7 flow records from eBPF ring buffers. DNS queries, HTTP method/path/status, TCP RSTs, drop reasons — all without sidecar overhead. Queried via hubble observe CLI or Hubble UI.
+- **Prometheus + kube-state-metrics + node-exporter:** metrics-based. Track interface bytes/packets/errors, TCP socket states (ss -s), conntrack table utilization.
+
+**Distributed tracing:** correlates network calls with application spans. Jaeger/Tempo track latency across microservice calls. Istio injects trace headers (X-B3-TraceId) automatically.
+
+**Anomaly detection patterns:** baseline normal traffic profiles (bytes/s per service pair, connection counts, error rates). Alert on: sudden bandwidth spikes, new service-to-service connections, abnormal port usage, high TCP RST rates, or REJECT spikes in VPC flow logs.`,
+    whenToUse: [
+      'Investigating a security incident — which external IPs communicated with a compromised host?',
+      'Capacity planning — which service pairs generate the most East-West traffic?',
+      'Debugging Kubernetes DNS failures — is the query reaching CoreDNS?',
+      'Detecting lateral movement in a compromised cluster via abnormal connection patterns',
+    ],
+    keyConcepts: [
+      { term: 'IPFIX', definition: 'IP Flow Information Export (RFC 7011). IETF standardization of NetFlow v9. Network devices export flow records (5-tuple, bytes, packets, timestamps) to a collector. The standard format for NetFlow-compatible systems.' },
+      { term: 'VPC Flow Logs', definition: 'Cloud-managed flow record service. AWS logs per-ENI flows to CloudWatch/S3 with ACCEPT/REJECT action. GCP logs per-VM flows with project/region metadata. Essential for security investigations and compliance.' },
+      { term: 'Hubble', definition: 'Cilium\'s network observability layer. Reads eBPF ring buffer data to export per-flow L3/L4/L7 records — DNS, HTTP, TCP drops — without sidecars. Accessible via hubble observe CLI.' },
+      { term: 'East-West traffic', definition: 'Traffic between services within the same data center or cluster. Often invisible to traditional network monitoring (which focuses on North-South ingress/egress). Service mesh and CNI observability cover East-West.' },
+      { term: 'sFlow', definition: 'Statistical sampling of 1-in-N packets. Lower overhead than NetFlow for high-throughput links. Less accurate for bursty small flows. Common in data center switching fabrics.' },
+    ],
+    pitfalls: [
+      'VPC Flow Logs capture accepted and rejected traffic but not metadata about why — a REJECT from a Security Group does not tell you which rule matched. Correlate with Security Group audit logs or AWS Config for the rule.',
+      'Hubble does not capture traffic outside the Cilium-managed interfaces — hostNetwork pods and node-level traffic bypass Cilium and are not visible in Hubble. Use node-level tools (tcpdump, bpftrace) for host network namespace traffic.',
+      'Flow sampling (sFlow) misses short-lived connections — a connection that completes in one packet may never be sampled. Use IPFIX (full flow tracking) for security investigations where completeness matters.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you use VPC Flow Logs to investigate a security incident?',
+        answer: `VPC Flow Logs capture a record per flow per network interface. For a security investigation:
+
+1. Enable VPC Flow Logs at the VPC level (not just subnet) to capture all ENI traffic. Send to S3 for long-term retention and Athena queries.
+
+2. For an incident investigation, identify the compromised EC2 instance's ENI ID. Query flow logs for that ENI:
+   - All ACCEPT records from unusual source IPs (external scanning or C2 callback)
+   - All REJECT records (port scanning against the instance — what was probed?)
+   - Outbound connections from the instance to unusual destinations
+
+3. Athena query example:
+   SELECT srcaddr, dstaddr, dstport, action, SUM(bytes) as total_bytes
+   FROM vpc_flow_logs
+   WHERE (srcaddr = '10.0.1.15' OR dstaddr = '10.0.1.15')
+   AND start > 1700000000
+   GROUP BY srcaddr, dstaddr, dstport, action
+   ORDER BY total_bytes DESC
+
+4. Look for: data exfiltration (large outbound bytes to external IPs), lateral movement (connections to other private IPs not in normal baselines), C2 beaconing (periodic small connections to external IPs).
+
+Limitation: VPC Flow Logs do not capture HTTP-level data (URLs, request bodies). For that, use ALB access logs or WAF logs in addition to flow logs.`,
+      },
+      {
+        question: 'How does Hubble provide L7 network visibility without sidecar proxies?',
+        answer: `Traditional service mesh observability (Istio + Envoy sidecars) intercepts traffic by inserting a proxy container alongside each application pod. The proxy logs all HTTP requests and responses. This adds ~50-100ms startup latency per pod, ~10MB memory per sidecar, and latency per request.
+
+Hubble uses eBPF instead:
+1. Cilium attaches eBPF programs at the TC (Traffic Control) hook on each pod's veth interface.
+2. For L7 visibility, Cilium parses HTTP/DNS/Kafka protocol headers in the eBPF program (Cilium Layer 7 proxy feature uses Envoy as a per-node shared proxy, not per-pod).
+3. Flow records are written to a BPF ring buffer in the kernel.
+4. The Hubble agent (one per node) reads from the ring buffer and exports structured flow records via gRPC to the Hubble Relay.
+
+Result: full L7 visibility (HTTP method, path, status code; DNS query, response, NXDOMAIN; Kafka topic, produce/consume) with zero per-pod sidecar overhead.
+
+CLI usage:
+hubble observe --namespace payments --protocol http
+hubble observe --namespace kube-system --type drop
+hubble observe --from-pod payments/billing-service --to-pod payments/database
+
+Hubble UI provides a service map showing which services communicate and their error rates.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html',
+      'https://docs.cilium.io/en/latest/observability/hubble/',
+      'https://www.rfc-editor.org/rfc/rfc7011',
+    ],
+    quickFire: [
+      { q: 'What is IPFIX?', a: 'IP Flow Information Export (RFC 7011) — the IETF standard for exporting network flow records (5-tuple, bytes, packets, timestamps) from network devices to collectors.' },
+      { q: 'What is the difference between NetFlow and sFlow?', a: 'NetFlow tracks every flow (complete records). sFlow samples 1-in-N packets (lower overhead, less accurate for small/short flows).' },
+      { q: 'What does AWS VPC Flow Logs capture?', a: '5-tuple (src/dst IP, src/dst port, protocol), bytes, packets, start/end time, and ACCEPT/REJECT action per flow per ENI.' },
+      { q: 'What traffic does VPC Flow Logs miss?', a: 'Instance metadata service traffic (169.254.169.254), Windows license activation traffic, DNS to the VPC DNS server (Route 53 Resolver). These are filtered by default.' },
+      { q: 'What is East-West traffic?', a: 'Traffic between services within the same data center or cluster. Service mesh and CNI observability tools (Hubble, Cilium) provide East-West visibility; traditional monitoring focuses on North-South.' },
+      { q: 'How does Hubble achieve L7 visibility without per-pod sidecars?', a: 'eBPF programs on each pod veth interface parse HTTP/DNS headers; a per-node shared Envoy proxy handles L7 policy. Flow records are exported from BPF ring buffers with zero per-pod overhead.' },
+      { q: 'What Hubble command shows HTTP traffic in a namespace?', a: 'hubble observe --namespace <ns> --protocol http -- shows HTTP flows with method, path, and status codes.' },
+      { q: 'What is a good anomaly detection signal in VPC flow logs?', a: 'REJECT action spike (port scanning), new destination IPs not in baseline, large outbound bytes to external IPs (exfiltration), or periodic small connections to external IPs (C2 beaconing).' },
+      { q: 'What tool queries VPC Flow Logs stored in S3?', a: 'Amazon Athena — allows SQL queries over flow log Parquet/text files in S3 with no data movement.' },
+      { q: 'What is distributed tracing and how does it relate to network observability?', a: 'Distributed tracing (Jaeger, Tempo) correlates application spans across microservice calls by propagating trace headers. Istio auto-injects X-B3-TraceId headers, linking network flow data to application traces.' },
+    ],
+  },
+
+  {
+    id: 'wireguard-protocol',
+    title: 'WireGuard VPN Protocol',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 5,
+    description: 'WireGuard cryptographic design, configuration, kernel integration, Kubernetes use (Cilium/Flannel encryption), and comparison with IPSec and OpenVPN.',
+    visualizations: [],
+    introduction: `WireGuard is a modern, cryptographically opinionated VPN protocol built into the Linux kernel (5.6+). It is designed to be simpler, faster, and more secure than IPSec or OpenVPN.
+
+**Cryptographic design (no negotiation):** WireGuard does not negotiate algorithms. It uses a fixed modern suite: X25519 for key exchange, ChaCha20-Poly1305 for encryption/authentication, and BLAKE2s for hashing. No cipher suites, no downgrade attacks.
+
+**Peers and allowed IPs:** WireGuard is connectionless — there are no sessions. Each peer is identified by its public key and configured with AllowedIPs (the IP ranges it routes to/from). When a packet arrives, WireGuard looks up the source IP in the AllowedIPs of known peers and validates the packet signature. Invalid packets are dropped silently.
+
+**Roaming / stealth:** WireGuard endpoints do not respond to unauthenticated packets. A WireGuard server is invisible to port scanners — no response to probes without a valid handshake. The client always initiates.
+
+**Kernel implementation:** the userspace implementation is wg-quick; the kernel module handles all crypto in kernel space (or hardware offload). The entire implementation is ~4,000 lines of code (vs OpenVPN's ~70,000 or StrongSwan IPSec's ~300,000).
+
+**Kubernetes use:** Cilium and Flannel both support WireGuard for transparent pod-to-pod encryption. Cilium activates WireGuard per-node with --enable-wireguard. All inter-node pod traffic is encrypted without application changes. Tailscale uses WireGuard as its underlying protocol.`,
+    whenToUse: [
+      'Selecting a VPN protocol for cloud-to-on-premises connectivity',
+      'Explaining why Cilium WireGuard encryption adds less overhead than IPSec',
+      'Configuring site-to-site VPN between two cloud VPCs',
+      'Justifying WireGuard over OpenVPN for Kubernetes pod encryption',
+    ],
+    keyConcepts: [
+      { term: 'AllowedIPs', definition: 'Per-peer IP ranges that WireGuard routes through that peer. Acts as both the routing table and access control — packets from a peer must have source IPs within its AllowedIPs.' },
+      { term: 'Cryptographic key routing', definition: 'WireGuard matches incoming packets to peers by public key + source IP. No session state, no connection setup — stateless design makes it resilient to roaming.' },
+      { term: 'ChaCha20-Poly1305', definition: 'The WireGuard AEAD cipher. Faster than AES-GCM on CPUs without AES-NI (ARM, older x86). Provides both encryption and authentication in one pass.' },
+      { term: 'Silent drop', definition: 'WireGuard drops unauthenticated packets without responding. A port scan of a WireGuard endpoint returns nothing — the server appears offline to non-peers.' },
+      { term: 'wg-quick', definition: 'Userspace configuration tool for WireGuard. Manages /etc/wireguard/*.conf files, brings up wg0 interfaces, and configures AllowedIPs routing.' },
+    ],
+    pitfalls: [
+      'WireGuard has no built-in key distribution — each peer must have the other\'s public key pre-configured. For large meshes, use a control plane (Tailscale, Netbird, Headscale) instead of manual wg.conf management.',
+      'AllowedIPs must not overlap between peers — WireGuard uses AllowedIPs as a routing table and drops packets if the source IP matches multiple peers. Design CIDR ranges carefully.',
+      'WireGuard does not hide traffic patterns — payload is encrypted but packet timing, size, and source/destination IP are visible. For traffic analysis resistance, use Tor or obfuscation layers on top.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How does WireGuard differ from IPSec and OpenVPN in design philosophy?',
+        answer: `IPSec is a framework with hundreds of configurable parameters: IKE version (v1/v2), DH group, cipher (3DES, AES-128, AES-256), hash (MD5, SHA-1, SHA-256), mode (transport/tunnel), etc. Configuration requires matching every parameter on both sides. This flexibility creates attack surface (downgrade attacks, weak cipher negotiation) and operational complexity.
+
+OpenVPN is an SSL/TLS-based VPN running in userspace. It uses standard TLS cipher negotiation (inheriting all TLS complexity), has a large codebase (~70,000 lines), and runs entirely in userspace (higher latency than kernel bypass).
+
+WireGuard's philosophy: no negotiation, no options. One modern cipher suite (X25519, ChaCha20-Poly1305, BLAKE2s), fixed. The surface area for protocol-level attacks is minimal. The entire implementation is ~4,000 lines — small enough for meaningful security audits.
+
+Performance: WireGuard runs in the Linux kernel (5.6+). Crypto operations happen in kernel space (or hardware offload). Benchmarks show WireGuard throughput 3-10x faster than OpenVPN on the same hardware. Latency is lower because there is no TLS session setup per connection.
+
+Trade-off: WireGuard's simplicity means less flexibility. No built-in certificate infrastructure (IPSec IKEv2 supports X.509 certs). No dynamic routing protocol support (BGP over WireGuard requires manual setup). For enterprise compliance that mandates specific cipher suites or cert-based auth, IPSec may be required.`,
+      },
+    ],
+    references: [
+      'https://www.wireguard.com/papers/wireguard.pdf',
+      'https://docs.cilium.io/en/latest/network/wireguard/',
+    ],
+    quickFire: [
+      { q: 'What Linux kernel version includes WireGuard natively?', a: '5.6 (released March 2020). Earlier kernels require the wireguard-dkms out-of-tree module.' },
+      { q: 'What cipher does WireGuard use for encryption?', a: 'ChaCha20-Poly1305 — AEAD cipher, faster than AES-GCM on CPUs without AES-NI hardware acceleration.' },
+      { q: 'What is AllowedIPs in WireGuard?', a: 'Per-peer IP ranges for routing. WireGuard both routes traffic to the peer for those IPs and validates that incoming packets from the peer have source IPs within AllowedIPs.' },
+      { q: 'How does WireGuard handle a port scan from a non-peer?', a: 'Silent drop -- WireGuard does not respond to unauthenticated packets. The server appears offline to scanners.' },
+      { q: 'Does WireGuard negotiate cipher suites?', a: 'No -- the cipher suite (X25519, ChaCha20-Poly1305, BLAKE2s) is fixed. No negotiation means no downgrade attacks.' },
+      { q: 'How does Cilium use WireGuard?', a: 'Cilium enables WireGuard with --enable-wireguard. All inter-node pod traffic is encrypted transparently without application changes. Each node has a WireGuard key pair.' },
+      { q: 'What is the WireGuard codebase size vs OpenVPN?', a: 'WireGuard: ~4,000 lines. OpenVPN: ~70,000 lines. Smaller surface area for security audits.' },
+      { q: 'What tool manages WireGuard interfaces in userspace?', a: 'wg-quick -- manages /etc/wireguard/*.conf files and brings up/down wg0 interfaces.' },
+    ],
+  },
+
+  {
+    id: 'network-chaos-engineering',
+    title: 'Network Chaos Engineering',
+    icon: 'tool',
+    color: '#f97316',
+    questions: 5,
+    description: 'tc netem for latency/loss injection, Toxiproxy, chaos mesh network faults, testing circuit breakers and timeout behavior.',
+    visualizations: [],
+    introduction: `Network chaos engineering deliberately injects network failures — latency, packet loss, bandwidth limits, corruption, reordering — to verify that distributed systems behave correctly under adverse conditions.
+
+**Linux tc netem (network emulator):**
+tc qdisc add dev eth0 root netem delay 100ms 20ms distribution normal
+tc qdisc add dev eth0 root netem loss 1% 25%  # correlated loss
+tc qdisc add dev eth0 root netem corrupt 0.1%
+tc qdisc add dev eth0 root netem duplicate 1% reorder 5% 50%
+
+**Toxiproxy (Shopify):** a TCP proxy that injects network conditions at the application layer. Supports: latency, slow_close, timeout, bandwidth, slicer (chunked delivery), reset_peer. Configurable via HTTP API — ideal for integration tests. Run as a sidecar in CI/CD.
+
+**Chaos Mesh (CNCF):** Kubernetes-native chaos engineering. NetworkChaos CRD supports: network partition, delay, loss, corrupt, bandwidth, duplicate. Applies faults using tc and iptables under the hood via a privileged DaemonSet. Faults can be targeted to specific pod label selectors and namespaces.
+
+**What to test:**
+- Timeout behavior: does the service return an error within its declared timeout? Does it release resources?
+- Retry storms: under 50% packet loss, do retries amplify load on downstream services?
+- Circuit breaker activation: does the circuit open under sustained failure rates?
+- Graceful degradation: does the service fall back to cached data under 1000ms backend latency?
+- Cascading failure prevention: does a single slow service degrade the entire request path?`,
+    whenToUse: [
+      'Verifying circuit breaker configuration before a production deployment',
+      'Testing that timeouts are set correctly across all service dependencies',
+      'Validating graceful degradation under database latency spikes',
+      'CI/CD integration tests that include network fault scenarios',
+    ],
+    keyConcepts: [
+      { term: 'tc netem', definition: 'Linux traffic control network emulator. Injects delay, loss, duplication, reordering, and corruption on a network interface. Requires root or CAP_NET_ADMIN. Applied via tc qdisc commands.' },
+      { term: 'Toxiproxy', definition: 'Shopify\'s TCP proxy for chaos testing. Injects network conditions via HTTP API. Runs in CI/CD to test timeout and retry logic without kernel-level privileges.' },
+      { term: 'Chaos Mesh NetworkChaos', definition: 'Kubernetes CRD for network fault injection. Targets specific pods by label selector. Implements faults via tc and iptables on node DaemonSets. Supports partition, delay, loss, corrupt, bandwidth.' },
+      { term: 'Retry storm', definition: 'When a downstream service slows, upstream services retry — amplifying load on the already-slow service. Exponential backoff with jitter prevents synchronized retry waves.' },
+      { term: 'Circuit breaker', definition: 'Pattern that stops sending requests to a failing service after a threshold of errors. Returns a fast error immediately instead of waiting for timeout. Prevents cascading failures. Implemented in Istio via DestinationRule outlier detection.' },
+    ],
+    pitfalls: [
+      'Running chaos experiments in production without a rollback plan — always scope experiments to specific pods/namespaces, set a maximum duration, and have a kill switch (kubectl delete networkchaos). Never run open-ended experiments in production.',
+      'Testing only happy-path retries — test what happens when retries are exhausted. Does the service return a meaningful error? Or does it hang waiting for a timeout that never fires?',
+      'Ignoring inter-cluster network faults — most chaos testing focuses on pod-to-pod within a cluster. Cross-cluster, cross-region, and cloud-provider edge network paths have different failure modes.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you use tc netem to simulate a flaky network for integration testing?',
+        answer: `tc (traffic control) with the netem qdisc allows precise network condition simulation:
+
+Add 100ms latency with 20ms normal distribution jitter:
+tc qdisc add dev eth0 root netem delay 100ms 20ms distribution normal
+
+Add 1% packet loss with 25% correlation (bursted loss, not random):
+tc qdisc add dev eth0 root netem loss 1% 25%
+
+Combine latency and loss:
+tc qdisc replace dev eth0 root netem delay 200ms loss 5%
+
+Remove all netem rules:
+tc qdisc del dev eth0 root
+
+For integration testing, apply netem to the container's veth interface from the host or within the container with CAP_NET_ADMIN. Alternatively, use Toxiproxy in CI/CD (no kernel privileges required):
+toxiproxy-cli create --listen 127.0.0.1:5432 --upstream db:5432 mydb
+toxiproxy-cli toxic add --type latency --attribute latency=200 mydb
+
+Then point your application at localhost:5432. The Toxiproxy HTTP API allows dynamically adjusting faults without restarting the service — useful for testing circuit breaker activation and recovery.`,
+      },
+    ],
+    references: [
+      'https://chaos-mesh.org/docs/simulate-network-chaos-on-kubernetes/',
+      'https://github.com/Shopify/toxiproxy',
+      'https://www.man7.org/linux/man-pages/man8/tc-netem.8.html',
+    ],
+    quickFire: [
+      { q: 'What Linux command adds 100ms latency to eth0?', a: 'tc qdisc add dev eth0 root netem delay 100ms' },
+      { q: 'What is Toxiproxy used for?', a: 'TCP proxy for injecting network faults (latency, loss, timeout, bandwidth) in CI/CD integration tests via HTTP API, without kernel privileges.' },
+      { q: 'What Kubernetes CRD injects network faults in Chaos Mesh?', a: 'NetworkChaos -- supports partition, delay, loss, corrupt, bandwidth targeting specific pods by label selector.' },
+      { q: 'What is a retry storm?', a: 'When a slow service causes upstream clients to retry, amplifying load on the already-slow service. Prevented with exponential backoff and jitter.' },
+      { q: 'How does a circuit breaker prevent cascading failures?', a: 'After a threshold of failures, the circuit opens and returns fast errors immediately instead of waiting for timeouts. Prevents the slow service from backing up all upstream callers.' },
+      { q: 'What capability does tc netem require?', a: 'CAP_NET_ADMIN -- or running as root. Without it, tc qdisc commands fail with RTNETLINK answers: Operation not permitted.' },
+      { q: 'How do you remove netem rules from an interface?', a: 'tc qdisc del dev eth0 root -- removes all queuing disciplines on the interface.' },
+      { q: 'What is correlated packet loss in netem?', a: 'Loss with a correlation percentage (e.g., 1% 25%) means a lost packet increases the probability the next packet is also lost -- simulating burst loss patterns seen in real networks.' },
+    ],
+  },
+
+  {
+    id: 'cni-plugins-comparison',
+    title: 'CNI Plugin Comparison',
+    icon: 'cloud',
+    color: '#f59e0b',
+    questions: 6,
+    description: 'Calico, Flannel, Cilium, Antrea CNI plugins — routing modes, NetworkPolicy support, performance, and selection criteria.',
+    visualizations: [],
+    introduction: `CNI (Container Network Interface) is the standard interface between a container runtime and a network plugin. When a pod is created, the kubelet calls the CNI binary to allocate an IP, configure routes, and set up network policy. When a pod is deleted, CNI cleans up.
+
+**Major CNI plugins:**
+
+**Flannel:** the simplest CNI. VXLAN overlay by default (can also use host-gw for pure L3 routing on the same subnet). No NetworkPolicy support — requires a separate policy engine (Calico policy-only mode). Best for: small clusters, learning environments, or when simplicity outweighs features.
+
+**Calico:** L3 routing with BGP. In BGP mode, Calico advertises pod CIDRs via BGP directly on the physical network — no overlay overhead. In VXLAN mode, works like Flannel but with full NetworkPolicy. eBPF dataplane available (replaces iptables). Supports: GlobalNetworkPolicy, HostEndpoint policy, Egress gateway. Best for: bare-metal, on-premises, performance-sensitive workloads.
+
+**Cilium:** eBPF-native. Replaces kube-proxy for Service load balancing. Hubble provides L3/L4/L7 observability. Supports: L7 NetworkPolicy (HTTP method/path, gRPC service/method, Kafka topic), transparent encryption (WireGuard/IPSec), multi-cluster (ClusterMesh), bandwidth management. Best for: large-scale clusters, zero-trust security, observability.
+
+**Antrea:** based on Open vSwitch (OVS). Tight VMware/vSphere integration. Supports NetworkPolicy with Antrea-native policies (ANP). Flows exported via IPFIX. Best for: VMware environments, vSphere with Tanzu.
+
+**Multus:** meta-CNI that chains multiple CNI plugins. Pods can have multiple network interfaces (eth0 from Cilium + net1 from SR-IOV for high-performance workloads). Required for telco/NFV deployments.`,
+    whenToUse: [
+      'Selecting a CNI plugin for a new Kubernetes cluster',
+      'Explaining why Cilium outperforms Calico BGP at 100k+ Services',
+      'Debugging network policy not being enforced (which CNI implements it?)',
+      'Justifying Multus for telco or GPU-accelerated networking use cases',
+    ],
+    keyConcepts: [
+      { term: 'BGP mode (Calico)', definition: 'Calico advertises pod CIDRs via BGP to the physical network. Pods are directly routable without overlay encapsulation. Requires physical network routers to support BGP — not available in most cloud managed networks.' },
+      { term: 'VXLAN mode', definition: 'Overlay networking that encapsulates L2 frames in UDP (port 4789). Works on any IP network without BGP. All major CNIs support VXLAN mode. Adds 50-byte overhead per packet.' },
+      { term: 'NetworkPolicy enforcement', definition: 'CNI plugins vary in policy support. Flannel has none (needs Calico policy-only). Calico and Cilium enforce NetworkPolicy natively. Cilium extends to L7 (HTTP/gRPC/Kafka). Antrea uses ANP for additional policy types.' },
+      { term: 'Multus', definition: 'Meta-CNI that allows pods to have multiple network interfaces. Each interface is managed by a different CNI (e.g., eth0 by Cilium for cluster networking, net1 by SR-IOV for high-throughput data plane). Required for NFV and DPDK workloads.' },
+      { term: 'eBPF dataplane', definition: 'Calico and Cilium both offer eBPF modes that replace iptables/kube-proxy with BPF programs. O(1) Service lookup vs O(n) iptables. Cilium uses eBPF natively; Calico eBPF is an opt-in mode.' },
+    ],
+    pitfalls: [
+      'BGP mode requires physical network support — Calico BGP mode needs the top-of-rack switches to peer with the cluster nodes. Most cloud managed networks (EKS, GKE) block BGP. Use VXLAN mode in cloud unless you have bare-metal.',
+      'NetworkPolicy is CNI-dependent — a Flannel-only cluster silently ignores NetworkPolicy objects (no enforcement). Add Calico in policy-only mode alongside Flannel, or switch to a CNI with built-in policy support.',
+      'CNI migration is disruptive — changing CNI plugins on a running cluster requires draining and re-creating all pods (and sometimes nodes). Plan CNI selection before initial deployment. There is no in-place CNI migration path.',
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you choose between Calico, Cilium, and Flannel for a Kubernetes cluster?',
+        answer: `Decision framework:
+
+Flannel: choose if you need the simplest possible CNI with minimal operational overhead and do not need NetworkPolicy. Learning environment, hobbyist cluster, or when another team manages networking. Not recommended for production without adding Calico policy-only mode.
+
+Calico: choose for bare-metal or on-premises clusters where you control the physical network and can peer BGP. BGP mode eliminates overlay overhead. Full NetworkPolicy support including GlobalNetworkPolicy for host endpoints. Mature, widely deployed. Also available as a managed add-on on EKS (AWS VPC CNI + Calico for policy).
+
+Cilium: choose when you need: (a) observability — Hubble L7 flow visibility without sidecars; (b) scale — 100k+ Services where iptables kube-proxy hits performance limits; (c) L7 policy — block specific HTTP paths or Kafka topics at the CNI layer; (d) multi-cluster networking via ClusterMesh; (e) transparent encryption (WireGuard). Best choice for greenfield large-scale or security-focused clusters.
+
+Cloud-managed environments: EKS defaults to aws-vpc-cni (pods get VPC ENI IPs). GKE defaults to Calico or Cilium (via Dataplane V2). AKS defaults to Azure CNI or Azure CNI Overlay. Most cloud CNIs are replaced or supplemented with Cilium for advanced features.
+
+Summary: Flannel for simplicity, Calico for bare-metal BGP, Cilium for scale/observability/security. Antrea for VMware vSphere.`,
+      },
+      {
+        question: 'What is Multus CNI and when do you need it?',
+        answer: `Multus is a meta-CNI plugin that enables Kubernetes pods to have multiple network interfaces simultaneously. Normally, a pod has one interface (eth0) managed by the cluster CNI. Multus reads a NetworkAttachmentDefinition CRD annotation on the pod and invokes additional CNI plugins to create additional interfaces (net1, net2, ...).
+
+Use cases:
+1. Telco / NFV (Network Function Virtualization): a virtual router or firewall pod needs a management interface (eth0, routed via Cilium) and data plane interfaces (net1, net2 backed by SR-IOV VFs for line-rate throughput).
+2. DPDK workloads: high-performance packet processing applications need a dedicated NIC interface bypassing the kernel network stack.
+3. Storage networks: pods that need a dedicated high-bandwidth NIC for Ceph or NVMe-oF storage separate from the cluster network.
+4. Security isolation: a pod needs interfaces on two separate VLANs (management + data) and should not bridge them in software.
+
+Configuration example:
+annotations:
+  k8s.v1.cni.cncf.io/networks: '[{"name":"sriov-net1","interface":"net1"}]'
+
+The cluster CNI (e.g., Cilium) still manages eth0 for Kubernetes Service access. SR-IOV CNI manages net1 for direct hardware access.
+
+Multus is required for OpenShift Telco/RAN deployments and is part of the CNCF reference architecture for cloud-native network functions.`,
+      },
+    ],
+    references: [
+      'https://www.cni.dev/docs/',
+      'https://docs.cilium.io/en/latest/network/concepts/',
+      'https://docs.tigera.io/calico/latest/networking/',
+      'https://github.com/k8snetworkplumbingwg/multus-cni',
+    ],
+    quickFire: [
+      { q: 'What does CNI stand for?', a: 'Container Network Interface — the standard interface between a container runtime and network plugins for pod IP allocation and routing.' },
+      { q: 'Which CNI plugin has no built-in NetworkPolicy support?', a: 'Flannel — it requires a separate policy engine like Calico in policy-only mode.' },
+      { q: 'What routing mode does Calico use for zero-overhead pod networking?', a: 'BGP mode — pod CIDRs are advertised via BGP to physical routers, eliminating VXLAN encapsulation overhead.' },
+      { q: 'Which CNI plugin provides L7 NetworkPolicy (HTTP/gRPC/Kafka)?', a: 'Cilium — it enforces L7 policy via Envoy filters attached as eBPF TC hooks per pod interface.' },
+      { q: 'What is Multus CNI used for?', a: 'Enabling pods to have multiple network interfaces from different CNI plugins — needed for telco/NFV workloads requiring separate management and data plane NICs.' },
+      { q: 'What observability tool is built into Cilium?', a: 'Hubble — provides L3/L4/L7 flow visibility (DNS, HTTP, TCP drops) from eBPF ring buffers without sidecars.' },
+      { q: 'Why is Calico BGP mode not available in most cloud environments?', a: 'Cloud managed networks block BGP from VM/node NICs. BGP mode requires physical network BGP peering, available only in bare-metal or on-premises deployments.' },
+      { q: 'What happens to NetworkPolicy objects in a Flannel-only cluster?', a: 'They are silently ignored — Flannel does not implement NetworkPolicy enforcement. No error is shown; traffic is simply not restricted.' },
+      { q: 'What is the main operational risk of changing CNI plugins?', a: 'CNI migration requires draining all pods (and often nodes). There is no in-place migration path. Plan CNI selection before initial cluster deployment.' },
+      { q: 'What CNI is best for VMware vSphere Kubernetes clusters?', a: 'Antrea — built on Open vSwitch, with tight VMware/vSphere integration and native Antrea NetworkPolicy (ANP) support.' },
+    ],
+  },
+
+  {
+    id: 'ipsec-vpn',
+    title: 'IPSec & VPN Deep Dive',
+    icon: 'shield',
+    color: '#ef4444',
+    questions: 6,
+    description: 'IPSec transport vs tunnel mode, IKEv1 vs IKEv2, ESP vs AH, AWS Site-to-Site VPN, and debugging phase 1/2 failures.',
+    visualizations: [],
+    introduction: `IPSec (Internet Protocol Security) is a suite of protocols for authenticating and encrypting IP traffic. It operates at Layer 3, making it transport-agnostic — any TCP/UDP/ICMP traffic is protected transparently.
+
+**IPSec modes:**
+- **Transport mode:** encrypts only the IP payload (TCP/UDP segment). Original IP header is preserved. Used for host-to-host or host-to-gateway communication.
+- **Tunnel mode:** encrypts the entire original IP packet and wraps it in a new IP header. Used for site-to-site VPNs — the original packet is hidden inside the tunnel. The new outer IP header routes between VPN gateways.
+
+**IPSec protocols:**
+- **ESP (Encapsulating Security Payload):** provides confidentiality (encryption), integrity, and optional authentication. The standard choice for VPNs.
+- **AH (Authentication Header):** provides integrity and authentication but no encryption. Rarely used alone; incompatible with NAT (AH covers the outer IP header, which NAT modifies).
+
+**IKE (Internet Key Exchange):** negotiates and manages IPSec SAs (Security Associations).
+- **IKEv1:** two phases. Phase 1: establishes IKE SA (authenticated channel). Phase 2: negotiates IPSec SA (encryption parameters for data). Main mode (6 messages) or aggressive mode (3 messages, less secure).
+- **IKEv2:** single exchange, faster, more reliable NAT traversal, built-in EAP support, dead peer detection. Preferred for all new deployments.
+
+**AWS Site-to-Site VPN:** managed IPSec VPN. Creates two tunnels (active/standby) between a Virtual Private Gateway (VGW) or Transit Gateway and the customer gateway (on-premises device). Uses IKEv2 by default (IKEv1 available). Pre-shared keys or certificates. BGP optional for dynamic routing.`,
+    whenToUse: [
+      'Designing hybrid cloud connectivity between on-premises data center and AWS/GCP',
+      'Debugging AWS Site-to-Site VPN phase 1 or phase 2 negotiation failures',
+      'Explaining why AH is incompatible with NAT',
+      'Choosing between IPSec, WireGuard, and OpenVPN for a new VPN deployment',
+    ],
+    keyConcepts: [
+      { term: 'Security Association (SA)', definition: 'A one-way logical connection with defined encryption/authentication parameters. Full IPSec communication requires two SAs (one per direction). SAs are identified by SPI (Security Parameter Index).' },
+      { term: 'IKE Phase 1', definition: 'Establishes an authenticated, encrypted IKE SA between peers. Negotiates: encryption algorithm, hash, DH group, and authentication method (PSK or certificates). Result: ISAKMP SA.' },
+      { term: 'IKE Phase 2', definition: 'Uses the IKE SA to negotiate IPSec SAs for data. Negotiates: ESP algorithm, hash, PFS (perfect forward secrecy), and selectors (which traffic to encrypt). Result: IPSec SA pair.' },
+      { term: 'NAT-T (NAT Traversal)', definition: 'Encapsulates ESP in UDP port 4500 to traverse NAT devices. Required when either endpoint is behind NAT, since NAT modifies IP headers that ESP protects.' },
+      { term: 'PFS (Perfect Forward Secrecy)', definition: 'Each Phase 2 SA uses a new Diffie-Hellman key exchange. Compromising the long-term private key cannot decrypt past sessions. IKEv2 with PFS is the recommended configuration.' },
+    ],
+    pitfalls: [
+      'Phase 1/Phase 2 parameter mismatch causes silent failures — both sides must agree on every parameter (DH group, cipher, hash, lifetime). A mismatch causes the SA to not establish. Check logs on both sides: on Linux, strongSwan journalctl; AWS, use VPN tunnel telemetry in CloudWatch.',
+      'AH breaks with NAT — AH authenticates the entire IP header including source IP. When NAT rewrites the source IP, AH validation fails. Always use ESP (not AH) when NAT is in the path.',
+      'One-tunnel failure in AWS Site-to-Site VPN — AWS provides two tunnels for redundancy. If the customer gateway only configures one tunnel and it goes down, the VPN is lost. Always configure both tunnels with BGP failover or static route priority.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between IPSec transport mode and tunnel mode?',
+        answer: `Transport mode protects only the payload of the original IP packet. The original IP header (source/destination IP) remains in the clear. The ESP header is inserted between the original IP header and the payload. Used for host-to-host encryption where both endpoints are the IPSec peers.
+
+Tunnel mode wraps the entire original IP packet inside a new IP packet. The original packet (including its header) is encrypted and becomes the payload of the outer IP packet. The outer IP header routes between VPN gateways. Used for site-to-site VPNs.
+
+Example — site-to-site VPN:
+- Host A (10.0.1.5) in Site A sends a packet to Host B (192.168.1.10) in Site B.
+- VPN Gateway A receives the packet. In tunnel mode, it encrypts the entire original packet and sends a new packet: src=VPN-GW-A-public-IP, dst=VPN-GW-B-public-IP, payload=encrypted(original packet).
+- VPN Gateway B receives it, decrypts, and delivers the original packet to Host B.
+- Host A and Host B are unaware of the VPN tunnel — it is transparent.
+
+In transport mode, Host A would need to directly IPSec-encrypt its packet to Host B's IP — requiring Host B to also be an IPSec peer. This works for host-to-host (e.g., two servers in the same data center) but not for network-to-network VPNs.`,
+      },
+      {
+        question: 'How do you debug a failing AWS Site-to-Site VPN tunnel?',
+        answer: `AWS Site-to-Site VPN creates two IPSec tunnels. Each tunnel has a status: UP (IKE SA established, routing works) or DOWN (Phase 1 or Phase 2 negotiation failed, or no traffic).
+
+Step 1 — Check tunnel status in AWS Console: VPC > Site-to-Site VPN > your VPN > Tunnel details. Note which tunnel is DOWN and the "Last status change" timestamp.
+
+Step 2 — Check CloudWatch metrics: VPN TunnelState (0=down, 1=up), TunnelDataIn, TunnelDataOut. Zero data for a supposedly UP tunnel means routing is broken.
+
+Step 3 — Check on-premises VPN device logs. Common errors:
+- "no proposal chosen" → Phase 1 parameter mismatch. Compare your IKE settings with AWS VPN configuration file (downloadable from console). AWS supports: DH groups 2, 14-24; ciphers AES-128, AES-256; hashes SHA-1, SHA-256, SHA-384, SHA-512.
+- "AUTHENTICATION_FAILED" → pre-shared key mismatch. Regenerate PSK in AWS and update both sides.
+- Phase 2 fails after Phase 1 succeeds → IPSec proposal mismatch. Ensure PFS group matches (or disable PFS on both sides).
+- NAT-T issues → if either endpoint is behind NAT, enable NAT-T (UDP 4500). AWS requires UDP 500 and 4500 to be open on the on-premises firewall.
+
+Step 4 — For persistent issues, enable VPN logs in AWS (send to CloudWatch Logs). Provides IKE negotiation details.
+
+Step 5 — Verify BGP: if using BGP routing, check that BGP session is UP after the tunnel comes up. Missing BGP routes = tunnel UP but no routes exchanged.`,
+      },
+    ],
+    references: [
+      'https://docs.aws.amazon.com/vpn/latest/s2svpn/how_it_works.html',
+      'https://www.rfc-editor.org/rfc/rfc7296',
+      'https://docs.strongswan.org/docs/5.9/config/quickstart.html',
+    ],
+    quickFire: [
+      { q: 'What is the difference between IPSec transport mode and tunnel mode?', a: 'Transport mode encrypts only the payload, leaving the original IP header visible. Tunnel mode encrypts the entire original packet and adds a new outer IP header — used for site-to-site VPNs.' },
+      { q: 'What does ESP provide vs AH in IPSec?', a: 'ESP provides encryption + integrity + auth. AH provides integrity + auth but no encryption. AH breaks with NAT; ESP with NAT-T handles NAT.' },
+      { q: 'What is an IPSec Security Association (SA)?', a: 'A one-way logical connection with agreed encryption/auth parameters, identified by SPI. Full bidirectional communication requires two SAs.' },
+      { q: 'What is IKE Phase 1 responsible for?', a: 'Establishing an authenticated encrypted channel (ISAKMP SA) between peers, negotiating: cipher, hash, DH group, and auth method (PSK or certs).' },
+      { q: 'What is IKE Phase 2 responsible for?', a: 'Negotiating IPSec SAs for protecting actual data traffic — cipher, hash, PFS, and traffic selectors (which flows to encrypt).' },
+      { q: 'Why is IKEv2 preferred over IKEv1?', a: 'IKEv2 is simpler (fewer messages), has built-in NAT-T, supports EAP authentication, and has better dead peer detection. IKEv1 main mode uses 9+ messages; IKEv2 uses 4.' },
+      { q: 'What is NAT-T in IPSec?', a: 'NAT Traversal — encapsulates ESP in UDP port 4500 to pass through NAT devices that would otherwise break ESP authentication.' },
+      { q: 'How many tunnels does AWS Site-to-Site VPN provide?', a: 'Two tunnels for redundancy (active/standby). Only one is active unless using BGP ECMP. Always configure both tunnels.' },
+      { q: 'What causes "no proposal chosen" in IPSec negotiation?', a: 'Parameter mismatch between peers — DH group, cipher, hash, or lifetime differ. Both sides must agree on every IKE and IPSec SA parameter.' },
+      { q: 'What is PFS in IPSec?', a: 'Perfect Forward Secrecy — each Phase 2 negotiation uses a new DH key exchange. Past sessions cannot be decrypted even if the long-term key is compromised.' },
+    ],
+  },
+
+  {
+    id: 'dns-over-https-tls',
+    title: 'DNS over HTTPS & TLS (DoH/DoT)',
+    icon: 'search',
+    color: '#22c55e',
+    questions: 5,
+    description: 'DoH vs DoT vs classic DNS, RFC 7858 and RFC 8484, privacy guarantees, enterprise interception challenges, and split-horizon compatibility.',
+    visualizations: [],
+    introduction: `Classic DNS (RFC 1035, 1987) transmits queries and responses in plaintext over UDP/TCP port 53. Anyone on the network path — ISP, Wi-Fi operator, government — can observe which domains are queried. DNS over TLS (DoT) and DNS over HTTPS (DoH) address this by encrypting DNS traffic.
+
+**DNS over TLS (DoT — RFC 7858):**
+- DNS queries sent over a persistent TLS connection on TCP port 853.
+- The resolver authenticates with a certificate (PKIX or DANE).
+- Traffic is distinguishable from other traffic (port 853 is DNS-specific). Network operators can identify and block or filter it.
+- Supported by: Android 9+ (Private DNS), Linux systemd-resolved (systemd 239+), Unbound, Knot Resolver.
+
+**DNS over HTTPS (DoH — RFC 8484):**
+- DNS queries sent as HTTPS requests on TCP/443 (POST /dns-query or GET with dns= parameter).
+- Traffic is indistinguishable from normal HTTPS traffic — cannot be blocked without blocking all HTTPS to the resolver's IP.
+- Supported by: Firefox (uses Cloudflare DoH by default unless enterprise policy disables it), Chrome, iOS/macOS 14+, Edge.
+- Resolver URL examples: https://cloudflare-dns.com/dns-query, https://dns.google/dns-query.
+
+**DNSSEC vs DoH:** different problem spaces. DNSSEC validates that DNS responses have not been tampered with (data integrity, not confidentiality). DoH/DoT encrypts the query/response channel (confidentiality from the network path). Both can be used together.
+
+**Enterprise challenges:** corporate DNS filtering (Pi-hole, corporate resolver for internal domains) relies on intercepting port-53 DNS. DoH bypasses this — browsers sending DoH to Cloudflare never hit the corporate resolver. Enterprises must: detect DoH traffic (block DoH resolvers at firewall), deploy enterprise DoH resolvers, or use browser policy (DoH managed policy via MDM).`,
+    whenToUse: [
+      'Explaining why Firefox defaults to DoH and how enterprises can override it',
+      'Designing a privacy-preserving DNS architecture for users on public Wi-Fi',
+      'Debugging split-horizon DNS failures when browsers use DoH instead of the corporate resolver',
+      'Comparing DoH vs DoT for a mobile app DNS privacy requirement',
+    ],
+    keyConcepts: [
+      { term: 'DoT (DNS over TLS)', definition: 'DNS queries transmitted over TLS on TCP port 853 (RFC 7858). Traffic is encrypted and authenticated but distinguishable from other traffic by port number.' },
+      { term: 'DoH (DNS over HTTPS)', definition: 'DNS queries as HTTPS requests on TCP 443 (RFC 8484). Traffic is mixed with regular HTTPS, making it indistinguishable and resistant to blocking at the port level.' },
+      { term: 'Oblivious DoH (ODoH)', definition: 'Extension to DoH that routes queries through a proxy, so the resolver sees the client\'s query but not its IP, and the proxy sees the client IP but not the query. Cloudflare + Apple deployed ODoH.' },
+      { term: 'Enterprise DNS policy', definition: 'Browsers support DoH policy overrides via MDM/group policy. When a corporate DNS server is detected or policy is set, browsers disable DoH and use the configured resolver.' },
+      { term: 'Canary domain', definition: 'use-application-dns.net — Firefox queries this domain at startup. If it returns NXDOMAIN or SERVFAIL, Firefox disables DoH (indicating the network uses filtering that DoH would bypass). Corporate resolvers can serve this canary to disable Firefox DoH.' },
+    ],
+    pitfalls: [
+      'DoH breaks corporate split-horizon DNS — internal hostnames (app.corp.internal) are only resolvable by the corporate resolver. If browsers use DoH to Cloudflare instead, internal name resolution fails. Resolve by serving the DoH canary domain or deploying an enterprise DoH resolver.',
+      'Pi-hole / network-level DNS filtering becomes ineffective with DoH — browsers bypass the Pi-hole resolver. Solutions: block DNS-over-HTTPS at the firewall by IP (block Cloudflare 1.1.1.1 and Google 8.8.8.8), or deploy a local DoH resolver that Pi-hole fronts.',
+      'DoT on port 853 is easily blocked — network operators can block port 853. DoH on 443 is nearly impossible to block without also blocking all HTTPS. For maximum privacy resistance, DoH is more robust.',
+    ],
+    keyQuestions: [
+      {
+        question: 'What is the difference between DNS over TLS and DNS over HTTPS, and which provides more privacy?',
+        answer: `DNS over TLS (DoT) wraps classic DNS queries in TLS and sends them over TCP port 853. The TLS encryption prevents the query contents from being read on the network path. However, port 853 is clearly identifiable as DNS traffic — a network firewall or ISP can detect and block DoT connections without reading the encrypted content.
+
+DNS over HTTPS (DoH) sends DNS queries as standard HTTPS POST or GET requests to an HTTPS endpoint on port 443. The queries are encrypted with TLS and appear identical to any other HTTPS traffic. A firewall cannot distinguish DoH to https://cloudflare-dns.com/dns-query from any other HTTPS request to Cloudflare unless it blocks the entire IP range.
+
+Privacy comparison:
+- Both protect query contents from passive network monitoring.
+- DoH provides more resistance to blocking and identification — a censoring network cannot block DoH without blocking all HTTPS to the resolver's IPs.
+- DoT is easier to monitor (port 853 is a clear signal) — useful for enterprises that want to allow encrypted DNS but log it.
+
+Resolver privacy: both DoH and DoT still send queries to the resolver (Cloudflare, Google) — the resolver sees all queries. ODoH (Oblivious DoH, RFC 9230) adds a proxy layer so the resolver does not see the client IP.
+
+For enterprises: DoH is harder to manage because it bypasses corporate DNS filtering. For users on public Wi-Fi: DoH provides stronger protection against ISP-level surveillance.`,
+      },
+      {
+        question: 'How does DoH affect corporate DNS filtering and how do enterprises address it?',
+        answer: `Corporate DNS filtering works by intercepting all DNS queries on port 53 and routing them through a corporate resolver (which may block malware domains, enforce acceptable use policy, and resolve internal hostnames). If a browser uses DoH directly to Cloudflare, it bypasses the corporate resolver entirely.
+
+Problems caused by DoH in corporate environments:
+1. Internal hostname resolution fails — app.corp.internal is not in Cloudflare's DNS. The browser gets NXDOMAIN.
+2. DNS-based content filtering is bypassed — malware/phishing domains that are blocked by the corporate resolver are reachable via DoH.
+3. DNS query visibility is lost — IT security teams use DNS logs for threat detection; DoH queries to external resolvers are invisible.
+
+Enterprise mitigation options:
+1. Canary domain: configure the corporate resolver to return NXDOMAIN for use-application-dns.net. Firefox disables DoH when it sees this response. Other browsers have similar mechanisms.
+2. Browser policy: deploy MDM/group policy to disable DoH or configure the enterprise DoH resolver. Chrome: DnsOverHttps policy. Firefox: network.trr.mode = 5 (disabled).
+3. Firewall blocking: block outbound connections to known DoH resolver IPs (1.1.1.1, 8.8.8.8 on port 443 for DoH endpoints). However, this also blocks regular HTTPS to those IPs.
+4. Enterprise DoH resolver: deploy an internal DoH endpoint (using Unbound + stunnel or CoreDNS with DoH plugin) that resolves both internal and external names. Configure browsers to use this resolver via policy.
+
+Best practice: deploy an enterprise DoH resolver + MDM policy directing browsers to it. This gives employees encrypted DNS (privacy from network sniffing) while maintaining corporate DNS control and split-horizon resolution.`,
+      },
+    ],
+    references: [
+      'https://www.rfc-editor.org/rfc/rfc7858',
+      'https://www.rfc-editor.org/rfc/rfc8484',
+      'https://support.mozilla.org/en-US/kb/firefox-dns-over-https',
+    ],
+    quickFire: [
+      { q: 'What port does DoT (DNS over TLS) use?', a: 'TCP port 853 (RFC 7858).' },
+      { q: 'What port does DoH (DNS over HTTPS) use?', a: 'TCP port 443 — standard HTTPS, indistinguishable from regular web traffic.' },
+      { q: 'What RFC defines DNS over HTTPS?', a: 'RFC 8484.' },
+      { q: 'What RFC defines DNS over TLS?', a: 'RFC 7858.' },
+      { q: 'Why is DoH harder to block than DoT?', a: 'DoT traffic is on port 853 (easily blocked). DoH is on port 443 mixed with HTTPS — blocking it requires blocking all HTTPS to the resolver IP.' },
+      { q: 'What is the Firefox DoH canary domain?', a: 'use-application-dns.net — if this returns NXDOMAIN/SERVFAIL, Firefox disables DoH. Corporate resolvers can serve this to prevent DoH bypass.' },
+      { q: 'Does DoH replace DNSSEC?', a: 'No — they solve different problems. DoH encrypts the DNS channel (confidentiality). DNSSEC validates DNS response integrity (tamper detection). Both can be used together.' },
+      { q: 'What is Oblivious DoH (ODoH)?', a: 'Extension (RFC 9230) routing DoH queries through a proxy. The proxy sees the client IP but not the query; the resolver sees the query but not the client IP. Maximum privacy.' },
+      { q: 'Why does DoH break split-horizon DNS in corporate environments?', a: 'Internal hostnames (app.corp.internal) only resolve via the corporate resolver. DoH sends queries to Cloudflare/Google, which return NXDOMAIN for internal names.' },
+      { q: 'How can an enterprise prevent browsers from using public DoH resolvers?', a: 'Serve NXDOMAIN for use-application-dns.net (Firefox canary), deploy MDM browser policy disabling DoH or pointing to an internal DoH resolver, or block resolver IPs at the firewall.' },
     ],
   },
 ];
