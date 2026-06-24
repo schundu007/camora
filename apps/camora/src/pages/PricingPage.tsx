@@ -273,13 +273,6 @@ export default function PricingPage() {
                 <Link to={ctaHref} style={{ padding: '12px 28px', fontSize: 14, fontWeight: 700, borderRadius: 4, background: 'var(--cam-gold-leaf)', color: '#0B1B3F', textDecoration: 'none', display: 'inline-block', boxShadow: '0 2px 12px rgba(212,160,67,0.35)' }}>
                   {isAuthenticated ? 'Open Camora' : 'Create account — free'}
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => { window.location.href = 'mailto:hello@cariara.com?subject=Camora%20Team%20plan'; }}
-                  style={{ padding: '12px 24px', fontSize: 13, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(255,255,255,0.22)', color: 'rgba(255,255,255,0.70)', background: 'transparent', cursor: 'pointer' }}
-                >
-                  Talk to sales
-                </button>
               </div>
             </div>
           </section>
