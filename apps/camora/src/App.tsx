@@ -587,7 +587,7 @@ export const App = () => {
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/topic/:slug" element={<ShellRoute><LearnTopicPage /></ShellRoute>} />
-          <Route path="/playground" element={<ProtectedRoute><PlaygroundPage /></ProtectedRoute>} />
+          <Route path="/playground" element={<ShellRoute><ProtectedRoute><PlaygroundPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/capra/playground" element={<Navigate to="/playground?tab=vm" replace />} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
