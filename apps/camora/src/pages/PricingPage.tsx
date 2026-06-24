@@ -92,8 +92,8 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-      <div style={{ width: 3, height: 16, borderRadius: 2, background: 'linear-gradient(180deg, var(--cam-gold-leaf) 0%, #3683DC 100%)', flexShrink: 0 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+      <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', flexShrink: 0 }} aria-hidden="true" />
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
         {children}
       </span>
@@ -133,10 +133,10 @@ export default function PricingPage() {
       {/* ── Page title ── */}
       <div style={{ background: LN.surface, borderBottom: `1px solid ${LN.border}`, padding: '22px 32px 16px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', background: 'linear-gradient(120deg, #3683DC 0%, var(--cam-gold-leaf) 45%, #60A5FA 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-0.025em', color: 'var(--text-primary)' }}>
             Plans & Pricing
           </h1>
-          <p style={{ fontSize: 15, color: LN.muted, margin: 0 }}>
+          <p style={{ fontSize: 16, color: LN.muted, margin: 0 }}>
             One free AI hour on signup. Plans from $19/mo. Top-ups at $15/hr, never expire.
           </p>
         </div>
@@ -156,8 +156,7 @@ export default function PricingPage() {
           <section>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
-              background: LN.surface, border: `1px solid ${LN.border}`, borderRadius: 4,
-              borderLeft: '3px solid var(--cam-gold-leaf)',
+              background: 'rgba(212,160,67,0.06)', border: '1px solid rgba(212,160,67,0.28)', borderRadius: 4,
             }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(212,160,67,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth={2.5} aria-hidden="true">
@@ -207,7 +206,7 @@ export default function PricingPage() {
                       </span>
                     </div>
                     <div /><div /><div />
-                    <div style={{ background: 'rgba(99,102,241,0.08)' }} />
+                    <div style={{ background: 'rgba(212,160,67,0.06)' }} />
                   </div>
                   {section.rows.map((row, ri) => (
                     <div key={`${si}-${ri}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', borderTop: `1px solid ${LN.border}`, background: ri % 2 === 0 ? LN.card : LN.bg }}>
@@ -241,12 +240,12 @@ export default function PricingPage() {
                   >
                     <span style={{ fontSize: 14, fontWeight: 500, color: LN.text }}>{faq.q}</span>
                     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={LN.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-                      style={{ flexShrink: 0, transform: openFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                      className="cam-faq-chevron" style={{ flexShrink: 0, transform: openFaq === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                   {openFaq === i && (
-                    <div style={{ padding: '0 20px 16px', fontSize: 13, lineHeight: 1.7, color: LN.muted }}>{faq.a}</div>
+                    <div style={{ padding: '0 20px 16px', fontSize: 15, lineHeight: 1.7, color: LN.muted }}>{faq.a}</div>
                   )}
                 </div>
               ))}
@@ -274,6 +273,7 @@ export default function PricingPage() {
         </div>
       </div>
 
+      <style>{`@media (prefers-reduced-motion: reduce) { .cam-faq-chevron { transition: none !important; } }`}</style>
       <SiteFooter />
     </div>
   );

@@ -1410,6 +1410,99 @@ A: Novel failure modes with no historical data, sparse observability coverage, o
     color: '#d946ef',
     questions: 5,
     description: 'ML approaches to predicting resource needs before they become incidents — Prophet for seasonal decomposition, ARIMA/SARIMA for stationary series, STL residual forecasting. Covers Netflix Scryer, Uber Argos scale patterns, confidence intervals for pre-scaling decisions, and connecting forecasts to cloud cost optimization.',
+    introduction: `Capacity forecasting shifts operations from reactive to predictive. Static capacity alerts fire when a resource is already constrained; forecasting tells you when it will be constrained, with enough lead time to act. The difference between "your disk will fill in 18 hours" and "your disk is now full" is the difference between a planned maintenance window and a 3am P1.
+
+## Why Static Thresholds Fail
+
+Static thresholds have three structural weaknesses. They are reactive by design: the alert fires only after capacity is constrained. They are seasonality-blind: a service that peaks every Monday morning at 9am fires the same "CPU above 80%" alert every Monday, carrying no information. And they are growth-blind: a service growing 20 percent month-over-month will outgrow a threshold set six months ago even if nothing goes wrong.
+
+ML-based forecasting addresses all three. A good forecast gives you lead time (act before the constraint), seasonal context (Monday morning peaks are normal; alert at 90% not 80%), and growth awareness (the trend predicts capacity exhaustion on a specific date, not just "CPU is high now").
+
+## The Algorithm Hierarchy
+
+Prophet (Meta, 2017) is the standard starting point for any metric with clear daily or weekly seasonality. It fits a Bayesian additive model -- piecewise trend, Fourier seasonality components, explicit holiday regressors -- and produces forecasts with confidence intervals. The changepoint_prior_scale parameter is the most important tuning lever: keep it low for stable services, higher for rapidly growing ones. Netflix Scryer extends Prophet with weekly periodicity detection and Isolation Forest contamination adjustment to clean historical anomalies from training data.
+
+ARIMA and SARIMA serve stationary or single-season series where Prophet's additional complexity is unnecessary. STL decomposition as a preprocessing step separates trend and seasonal components, allowing simpler models on each component independently. DeepAR (Amazon) handles large fleets where many related series can be trained jointly.
+
+## Connecting Forecasts to Operations
+
+A forecast is only valuable if it drives action. The connection to pre-scaling requires knowing lead times: HPA scaling takes 15 seconds, node provisioning takes 4 to 12 minutes, database vertical scaling may take hours. Forecast upper-band breaches expected within a window shorter than the lead time should trigger automated scaling. Wider windows allow scheduled capacity work. Confidence intervals translate to action thresholds: upper 80% CI breach in 24 hours triggers manual review; upper 95% CI breach in 4 hours triggers auto-scale. The MAPE (Mean Absolute Percentage Error) feedback loop -- tracking forecast accuracy weekly per service -- ensures models retune when traffic patterns change.`,
+    quickFire: [
+      { q: 'What are the three structural weaknesses of static capacity thresholds?', a: 'Reactive (fires when capacity is already gone), seasonality-blind (alerts every Monday even when normal), and growth-blind (thresholds from six months ago age out as traffic grows).' },
+      { q: 'What is Prophet and what problem does it solve?', a: 'Meta\'s open-source Bayesian additive forecasting library (2017). Handles multiple seasonality periods, holidays, and growth trends simultaneously. Standard for seasonal capacity forecasting.' },
+      { q: 'What is changepoint_prior_scale in Prophet?', a: 'Controls trend flexibility. Low (0.001 to 0.01) for stable services. High (0.05 to 0.5) for rapidly growing services or after major product launches.' },
+      { q: 'When should you use additive vs multiplicative seasonality?', a: 'Additive when seasonal swings are constant size. Multiplicative when swings scale proportionally with the trend -- common for growing services where peaks are percentage-based.' },
+      { q: 'What is Netflix Scryer?', a: 'Prophet-based capacity forecasting for Netflix microservices. Adds weekly periodicity detection and per-hour Isolation Forest contamination adjustment to remove historical incident data from training.' },
+      { q: 'When do you use ARIMA instead of Prophet?', a: 'For stationary or single-season series without complex holiday patterns or multi-period seasonality. Auto-ARIMA via pmdarima fits p,d,q automatically via AIC minimization.' },
+      { q: 'What is STL decomposition used for in forecasting?', a: 'Preprocessing -- splits series into trend, seasonal, and remainder components, then models each separately. Useful for interpretable components and for cleaning seasonality before ARIMA.' },
+      { q: 'What is MAPE and why does it matter for forecasting?', a: 'Mean Absolute Percentage Error -- primary forecast accuracy metric. Exceeding 20% per service per week indicates the model needs retuning. Without measuring accuracy, a forecast is decoration.' },
+      { q: 'How do confidence intervals connect to scaling decisions?', a: 'Upper 80% CI breach in 24 hours triggers manual review alert. Upper 95% CI breach in 4 hours triggers auto-scale action. Median breach in 1 hour triggers immediate page.' },
+      { q: 'What is the FinOps connection to capacity forecasting?', a: 'Use the 12-month forecast lower bound to size committed use discounts (reserved instances). Cover upper bound variation with on-demand. Minimizes committed spend waste while covering peaks.' },
+      { q: 'What is DeepAR and when is it useful?', a: 'Amazon\'s RNN-based probabilistic forecaster that trains jointly across many related series. Useful for large fleets of similar services where shared patterns improve accuracy across the fleet.' },
+      { q: 'What is the operational shift capacity forecasting enables?', a: 'From "react to capacity alerts" to "schedule capacity work as planned engineering tasks." Capacity becomes predictable work on a calendar, not emergency on-call response.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you build a capacity forecasting system for a 200-service microservices platform?',
+        answer: `Building capacity forecasting at scale requires architectural decisions about model management, service tiering, and feedback loops before any algorithm selection.
+
+The first decision is service tiering. Not every service warrants a custom Prophet model. Tier 1 services (revenue-critical path: auth, payments, order processing) get individual models with per-service tuning, holiday calendars, and weekly accuracy reviews. Tier 2 services (important but not revenue-critical) get cluster-level models -- group services with similar traffic patterns and fit one model per cluster, applying it to all members. Tier 3 services (background jobs, internal tools) get simple rolling-window statistical forecasts or are excluded from forecasting entirely. This tiering reduces model maintenance from 200 individual models to 20 to 30.
+
+The training pipeline runs daily for Tier 1 models and weekly for Tier 2. It fetches the last 90 days of metric data from Prometheus or Datadog, removes anomalous points (historical incidents corrupt the baseline -- use Isolation Forest contamination detection as Netflix Scryer does), fits the Prophet model, writes the next 7-day forecast back to a metrics store as new time series, and records the MAPE for the last 7-day period for accuracy tracking. The pipeline runs as a Kubernetes CronJob or Airflow DAG.
+
+The alert integration layer compares live metric values against the forecast upper bands. When a live metric crosses the upper 80% confidence interval with 24 hours of runway, route a low-priority alert to Slack for manual review. When it crosses the upper 95% CI with 4 hours of runway, trigger the scaling automation or page on-call. These thresholds are configurable per service tier.
+
+The feedback loop is essential and frequently omitted. Track MAPE per service per week in a dashboard. Services whose MAPE exceeds 20% for two consecutive weeks get flagged for manual retuning -- potentially new changepoints, updated seasonality periods, or algorithm change. Without this feedback loop, models silently degrade as traffic patterns evolve, producing forecasts that are wrong with high confidence.`,
+      },
+      {
+        question: 'Explain how Prophet handles seasonality and when the model fails in practice.',
+        answer: `Prophet models seasonality through Fourier series -- a sum of sine and cosine terms at different frequencies that together approximate the periodic pattern in the data. For daily seasonality, Prophet fits Fourier terms at periods of 24 hours and its harmonics. For weekly seasonality, it fits terms at 168 hours and harmonics. The fourier_order parameter controls how many terms are included per seasonality component: higher order captures more complex shapes (a morning peak followed by a midday dip followed by an afternoon peak) but risks overfitting to historical noise.
+
+The seasonality_mode choice has significant practical consequences. Additive mode assumes the seasonal component adds a constant amount to the trend: a service that averages 1000 RPS gets a Monday morning peak of plus 300 RPS regardless of whether the baseline is 800 or 1200 RPS. Multiplicative mode assumes the seasonal component scales with the trend: a Monday morning peak of 30 percent above baseline grows in absolute terms as the service scales. Most growing services need multiplicative mode, but teams default to additive because it is the Prophet default and the distinction is easy to miss.
+
+Prophet's most common failure mode in production is regime change after a major architectural event. A service that migrates from synchronous to asynchronous request handling, adds a caching layer, or changes its primary geographic region will have fundamentally different resource consumption patterns. Prophet's piecewise linear trend can adapt, but the transition period produces forecasts that lag reality by weeks until enough post-change data accumulates. The mitigation is adding an explicit changepoint at the architectural event date and reducing the training window to only post-change data.
+
+The holiday regressors failure mode is omission. A service that is impacted by Black Friday, end-of-quarter sales pushes, and product launch events will show spikes that look like anomalies to Prophet without explicit holiday modeling. Each spike shifts the trend component, gradually inflating the model's sense of normal. Add holiday events proactively for any known business calendar event that affects traffic, using the holidays_prior_scale parameter to control how strongly each holiday is fitted.
+
+Low-volume series failure: Prophet requires at least two full seasonal cycles of data to fit seasonal components reliably. A service with only six weeks of history cannot support weekly seasonal modeling. Use simpler exponential smoothing for series with less than two full seasons of data.`,
+      },
+      {
+        question: 'How does capacity forecasting connect to auto-scaling and pre-scaling decisions?',
+        answer: `Capacity forecasting is only operationally valuable when it is connected to action -- either automated pre-scaling or a human workflow that acts before constraints materialize. The connection requires understanding lead times, scaling mechanism capabilities, and confidence threshold selection.
+
+Lead time awareness is the first requirement. Different scaling mechanisms have different response times that determine how far in advance the forecast must fire. Kubernetes HPA adjusting replica count takes 15 to 30 seconds. Kubernetes node provisioning with pre-warmed node pools takes 4 to 6 minutes; cold provisioning takes 10 to 15 minutes. AWS RDS vertical scaling can take 20 to 45 minutes with a multi-minute restart window. Cloud CDN capacity changes propagate in minutes but require advance planning through the CDN provider. The forecast alert must fire earlier than the lead time for the relevant scaling mechanism with enough buffer for human review or automated execution.
+
+The pre-scaling pattern works as follows: the forecast system writes the next 48-hour prediction for each service to a Prometheus metric. A separate alert rule watches that metric and fires when the predicted upper band exceeds the current capacity threshold with more than two lead-time periods of runway. For HPA-managed services, this alert triggers a KEDA-based Cron scaler that sets the HPA minimum replicas to the forecast-required level one hour before the predicted peak. For node-provisioned workloads, the alert triggers a cluster autoscaler warm-up job that pre-provisions the forecast-required nodes 30 minutes before the predicted peak.
+
+The confidence interval selection for automation versus manual review balances false-alarm cost against under-reaction cost. Using the upper 95% confidence interval as the trigger for automatic scaling is conservative -- it only fires when the model is quite confident capacity will be needed. For services where over-provisioning is cheap (stateless web tier with spot instances), lower the threshold to the upper 70% CI to provide more runway. For services where scaling is expensive or disruptive (stateful services, databases), raise it to the upper 99% CI to avoid unnecessary scaling events.
+
+The MAPE feedback loop closes the loop: after each scaling event, compare the actual peak against the forecast peak. If MAPE for pre-scaled events exceeds 25%, the model is either over-forecasting (causing unnecessary pre-scaling cost) or under-forecasting (causing capacity misses despite pre-scaling). Either pattern triggers model retuning.`,
+      },
+      {
+        question: 'What is the Uber Argos approach to capacity forecasting and what makes it different from a single-service Prophet model?',
+        answer: `Uber Argos operates at a fundamentally different scale and architectural assumption than a single-service Prophet model. Understanding the difference clarifies when the additional complexity is justified.
+
+A single-service Prophet model treats each service independently. It learns the service's own historical traffic patterns and produces forecasts for that service based solely on its own history. This works well when each service's capacity demand is driven primarily by its own incoming traffic. It fails when a service's resource demand is strongly correlated with other services -- when service A's CPU usage is largely determined by queue depth in service B, or when multiple services all respond to the same upstream traffic source.
+
+Argos operates on 100 million-plus metrics across Uber's microservices fleet with an explicit topology-aware correlation layer. The key architectural addition is that Argos knows the service graph -- which services call which, which services share infrastructure, which services respond to the same upstream traffic sources. When forecasting capacity for service A, Argos includes as features not only service A's historical metrics but also the forecast for the upstream services that drive load into service A and the current state of shared infrastructure components.
+
+This topology awareness catches correlated capacity failures before they happen. If Argos forecasts a traffic surge into the ride-matching upstream service, it simultaneously forecasts the downstream capacity needs for driver location updates, pricing calculation, and notification services -- all of which will receive more traffic as a direct consequence of the upstream surge. A single-service model for the pricing calculation service would not anticipate this surge until the traffic actually arrived.
+
+The second architectural differentiator is training at scale. STL decomposition pre-processes all series in parallel, extracting trend and seasonal components that are then used as features in an ML regression model rather than as direct forecast outputs. The regression model learns cross-service correlations from the historical data -- patterns like "when metric X in service Y increases, metric Z in service A typically increases 15 minutes later." This requires the entire historical corpus across all services, not just each service's own history.
+
+The practical implication: single-service Prophet models are appropriate for teams with under 100 services or for services whose demand is driven by direct incoming traffic. Topology-aware fleet forecasting is appropriate for large platforms where services have strong interdependencies and where capacity failures cascade across service boundaries.`,
+      },
+      {
+        question: 'How do you integrate capacity forecasting with FinOps to reduce cloud costs without sacrificing reliability?',
+        answer: `Capacity forecasting and FinOps share the same underlying need -- accurate predictions of future resource consumption -- but optimize for different objectives. Forecasting for reliability maximizes uptime; forecasting for cost minimizes spend. The integration produces a Pareto frontier: the set of capacity configurations that cannot improve reliability without increasing cost, and cannot decrease cost without degrading reliability.
+
+The committed use discount connection is the most direct FinOps application. Cloud providers (AWS Reserved Instances, GCP Committed Use Discounts, Azure Reserved VM Instances) offer 30 to 60 percent cost savings on resources committed for 1 or 3 years. The risk is committing to capacity you do not use. The forecasting-informed strategy is to commit at the 12-month forecast lower bound (the pessimistic case for usage) and cover the upper bound with on-demand. The lower bound represents the minimum capacity you will almost certainly need; paying committed-use pricing for it is safe. The variation above the lower bound is uncertainty that warrants on-demand premium pricing. Generating the 12-month lower bound from a Prophet model with 80% confidence interval and setting the committed purchase at the 10th percentile forecast produces a configuration that is right-sized for the distribution of expected demand.
+
+The over-provisioning detection application finds services where actual utilization consistently runs far below provisioned capacity. Track the ratio of actual peak utilization to provisioned capacity per service per week. Services with consistent ratios below 40% are over-provisioned -- a common outcome of "provision for the worst case I can imagine" engineering culture without forecasting data to calibrate the estimate. Forecasting-informed right-sizing reduces this cushion from "imagined worst case" to "forecast upper 95% CI plus 20% buffer" -- typically 40 to 60 percent smaller.
+
+The auto-scaling integration prevents the "always-on maximum capacity" pattern that emerges when teams fear capacity incidents. KEDA-based predictive scaling sets the minimum replica count based on the forecast, allowing the cluster to scale down during genuinely low-traffic periods rather than maintaining maximum capacity continuously. The cost saving is the difference between "always running 50 pods" and "running 8 pods at 3am Tuesday, 50 pods at 10am Monday." Measured correctly across a 24-7 operation, this reduces pod-hours by 40 to 60 percent for services with strong daily cycles.`,
+      },
+    ],
     visualizations: [
       {
         title: 'Why static thresholds fail for capacity and what ML replaces them with',
@@ -1545,6 +1638,105 @@ A: Use 12-month forecast lower bound for committed use discounts (reserved insta
     color: '#d946ef',
     questions: 5,
     description: 'Building AIOps capability without vendor lock-in — Prometheus anomaly detector (Fourier + Prophet), Grafana three-band PromQL anomaly detection, Robusta enrichment playbooks for Kubernetes context, DoWhy causal graphs for RCA, and the CCF AIOps challenge reference implementations. Honest read on when DIY is worth the maintenance cost.',
+    introduction: `Open-source AIOps means assembling capabilities from composable components rather than buying a bundled vendor platform. The motivations are data residency (telemetry cannot leave your infrastructure), custom metric semantics (vendor tools do not understand your business KPIs), cost constraints (vendor AIOps pricing can be prohibitive at scale), or organizational preference for owning and understanding every layer.
+
+## The Stack Architecture
+
+A production-capable open-source AIOps stack has four layers. The collection and storage layer uses Prometheus for metrics, Loki for logs, and Tempo for traces -- the Grafana stack. Alertmanager handles alert routing, grouping, inhibition, and silencing, and integrates with PagerDuty, Slack, and OpsGenie.
+
+The anomaly detection layer sits on top. The Prometheus Anomaly Detector (Red Hat AICoE) is a Python service that runs Fourier or Prophet models against Prometheus metrics and writes anomaly scores back as new Prometheus metrics -- visible in Grafana and queryable in Alertmanager rules. Alternatively, a custom Python microservice running statsforecast or scikit-learn exposes results via a /metrics endpoint for Prometheus to scrape. The Grafana ML plugin provides a zero-infrastructure option for basic Holt-Winters seasonal detection within Grafana panels.
+
+The enrichment layer is where Robusta fits. Robusta is a Kubernetes-native runbook automation platform that intercepts Alertmanager webhooks and attaches Kubernetes context -- pod logs, events, resource usage, recent deploys -- to every alert before routing it to PagerDuty or Slack. It eliminates the first five minutes of every Kubernetes incident.
+
+The causal inference layer uses DoWhy (Microsoft Research) for the teams that need to go beyond correlation-based RCA to actual causal analysis.
+
+## When DIY Is and Is Not Worth It
+
+DIY is justified when: vendor pricing is prohibitive for your data volume, compliance or data-residency requirements prevent telemetry from leaving your infrastructure, your metrics have non-standard semantics that vendor tools misinterpret, or you have the ML engineering capability to own model retraining pipelines.
+
+DIY is not justified when: Datadog Watchdog or Dynatrace Davis is already bundled with your APM subscription (the marginal cost is zero), your team lacks Python and ML skills to maintain model drift, or the operational overhead of running additional services outweighs the savings versus the vendor option.`,
+    quickFire: [
+      { q: 'What are the four layers of an open-source AIOps stack?', a: 'Collection and storage (Prometheus, Loki, Tempo, Alertmanager), anomaly detection (Prometheus Anomaly Detector or custom Python), enrichment (Robusta), and causal inference (DoWhy).' },
+      { q: 'What is the Prometheus Anomaly Detector?', a: 'Red Hat AICoE Python service. Runs Fourier or Prophet models against Prometheus metrics, writes anomaly scores back as new Prometheus metrics. Integrates with MLflow. Deploys on Kubernetes.' },
+      { q: 'What is Grafana three-band anomaly detection?', a: 'Pure PromQL recording rules: short-term band (26h stddev), long-term band (metric offset 23h30m for yesterday-same-time), margin band (minimum width). No ML framework needed.' },
+      { q: 'Why does the Grafana long-term band use 23h30m offset instead of 24h?', a: 'Avoids exact alignment artifacts and clock drift. 23h30m captures "yesterday at approximately this time" without aliasing on the hour boundary.' },
+      { q: 'What is Robusta and what problem does it solve?', a: 'Kubernetes alert enrichment platform. When Alertmanager fires, Robusta playbooks auto-attach pod logs, Kubernetes events, and resource graphs to the alert before routing to PagerDuty. Eliminates first 5 minutes of context gathering.' },
+      { q: 'What is DoWhy?', a: 'Microsoft Research open-source Python library for causal inference. Implements Pearl\'s backdoor criterion and do-calculus to answer "did X cause Y" while controlling for confounders.' },
+      { q: 'What is the backdoor criterion?', a: 'Pearl\'s method to identify and block confounder paths in a causal graph. Controls for variables that causally precede both treatment and outcome, removing spurious correlation from the causal estimate.' },
+      { q: 'What is do-calculus?', a: 'Pearl\'s formal language for interventional queries. P(Y | do(X=x)) -- "what would Y be if I force X to x" -- differs from P(Y | X=x), which is observational conditioning, not intervention.' },
+      { q: 'When is DIY AIOps justified over buying a vendor platform?', a: 'When vendor pricing is prohibitive, data-residency requirements prevent telemetry from leaving your infrastructure, or metric semantics are non-standard. Not justified if Watchdog or Davis is already bundled with your APM.' },
+      { q: 'What is statsforecast (Nixtla)?', a: 'Production-grade Python forecasting library with vectorized classical methods (ARIMA, ETS, Theta). Runs many series in parallel orders of magnitude faster than individual model fits.' },
+      { q: 'What is the CCF AIOps Challenge?', a: 'Annual competition focused on log-based anomaly detection and root-cause localization on real production datasets. 2024 track reference implementations are available on GitHub.' },
+      { q: 'What is Drain3 and where is it used in open-source AIOps?', a: 'Log template extraction algorithm (online, streaming). Clusters log lines into templates without predefined patterns. Used in Alibaba OWL and open-source log-based anomaly detection pipelines.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through implementing Grafana three-band anomaly detection on Prometheus metrics.',
+        answer: `The Grafana three-band approach builds anomaly detection entirely from PromQL recording rules with no external ML framework. It exploits two properties of typical production metrics: they have daily patterns (yesterday at this time is a good baseline) and they have short-term variance (recent stddev represents normal fluctuation).
+
+The three bands serve distinct purposes. The short-term band captures recent variance: stddev_over_time(metric[26h]) computes the standard deviation of the metric over the last 26 hours. This represents how much the metric normally fluctuates. Using 26 hours rather than 24 avoids aliasing artifacts at the 24-hour boundary. The long-term band establishes the baseline value: metric offset 23h30m fetches the metric value from yesterday at approximately this time. Using 23h30m instead of 24h avoids exact alignment artifacts. The upper anomaly band combines them: yesterday's value at this time plus the recent standard deviation represents "normal for this time of day given recent variance."
+
+The margin band -- a minimum width floor -- prevents false positives on flat metrics. Without it, a metric that has been exactly 100.0 for three days has zero short-term variance. Any fluctuation from 100.0 then exceeds the band. The margin band forces a minimum width of at least some absolute value (0.1 for normalized metrics, larger for raw counts) so that trivial fluctuations do not alert.
+
+Implementation in Prometheus requires adding a recording rule group. The rules compute the bands as separate recorded metrics, then an alert rule compares the live metric against the upper band. Setting the alert to require the exceedance to persist for 10 minutes prevents single-spike false positives. The computed band metrics also serve as visualization overlays in Grafana -- display the raw metric alongside the upper and lower bands to give operators visual context for what "normal" looks like at each time of day.
+
+The key limitation is that this approach only captures daily seasonality. It cannot handle weekly patterns (Monday versus Wednesday differences), holiday distortions, or growth trends. For metrics with weekly seasonality, extend the offset to 7 days and 23h30m combined, or graduate to Prophet-based detection.`,
+      },
+      {
+        question: 'How does Robusta work and what playbooks are most valuable to implement first?',
+        answer: `Robusta installs as a Helm chart in your Kubernetes cluster. It runs as a Deployment that subscribes to Alertmanager webhooks. When Alertmanager fires an alert, Robusta receives the webhook payload, matches it against configured playbooks, executes the playbook function, and routes the enriched finding to configured sinks (Slack, PagerDuty, Datadog, OpsGenie).
+
+Playbooks are Python functions decorated with @action. They receive an event object (typed to the alert type -- PodEvent, NodeEvent, DeploymentEvent) and call enrichment methods that gather context from the Kubernetes API, Prometheus, and external sources. The enrichment is attached to a Finding object that Robusta formats and routes to the configured sink.
+
+The highest-value playbooks to implement first are those that address the most time-consuming context-gathering steps in your existing incident workflow.
+
+The OOMKilled enricher is typically the highest priority. When a container is OOM killed, the engineer needs: the last N log lines before the kill (often contain the offending query or allocation), the container's resource requests and limits (to understand the headroom), the node's current memory pressure state, and the memory usage trend over the last hour. A Robusta OOMKilled playbook attaches all four in 10 seconds. Without it, gathering this context manually takes 5 to 8 minutes.
+
+The CrashLoopBackOff enricher is the second-highest priority in most environments. When a pod enters CrashLoopBackOff, the engineer needs: recent logs from the failing container, the restart count and timeline, Kubernetes events for the pod, and the exit code (which often indicates the failure type -- exit code 1 is application error, 137 is OOM kill, 143 is graceful termination signal). Robusta's built-in CrashLoopBackOff enricher handles all of these.
+
+The HPA max replicas enricher matters for services under scaling pressure. When HPA reaches its maximum replica count, the engineer needs: current CPU and memory utilization, recent traffic graph, Kubernetes events, and an assessment of whether increasing the HPA maximum is appropriate. This playbook surfaces all four and can include a Prometheus-based recommendation: "at current traffic, increasing max replicas to 30 would bring utilization to 60%."
+
+After these three, prioritize playbooks for the alerts that most frequently produce long triage times in your specific on-call history.`,
+      },
+      {
+        question: 'When does DoWhy\'s causal inference add value over correlation-based RCA, and what are its practical limitations?',
+        answer: `DoWhy adds value over correlation-based RCA in two specific scenarios: when confounders create misleading correlations, and when the question is explicitly interventional ("what would have happened if X had not occurred?").
+
+The confounder scenario is the most common practical case. Suppose error rate and CPU utilization both spike simultaneously during an incident. Correlation analysis suggests CPU spike caused the error rate increase and the RCA tool recommends "reduce CPU load." But both are actually caused by a third variable: a traffic surge. CPU rose because of traffic; error rate rose because the application logic fails under high concurrency. Neither caused the other. A standard RCA tool following the temporal correlation will recommend the wrong fix.
+
+DoWhy addresses this by requiring you to specify a structural causal model -- a directed acyclic graph where edges represent causal relationships. You specify: traffic causes CPU load, traffic causes error rate, CPU load has a small direct effect on error rate only above a threshold. DoWhy's backdoor criterion then identifies traffic as a confounder and blocks the spurious CPU-to-error-rate path before estimating the effect. The resulting estimate is the true causal effect of CPU on error rate holding traffic constant -- often near zero, confirming that the real fix is the application logic, not the CPU capacity.
+
+The interventional query is the second valuable scenario. During post-incident review, the question "would the incident have occurred if we had not deployed version 4.8.1?" is counterfactual -- it asks about a world that did not happen. Standard correlation cannot answer this. DoWhy's Graphical Causal Model component, available in DoWhy 0.9 and later, can simulate the intervention: set deploy=not_4.8.1 in the causal model, run the model forward, compare the simulated outcome to the observed outcome. This is the most rigorous form of root cause analysis available in open-source tooling.
+
+The practical limitations are significant. DoWhy requires a known causal graph structure. In practice you know the service dependency graph but may not know all relevant confounders. An incorrect graph structure produces incorrect causal estimates -- sometimes overconfidently wrong. The graph learning algorithms (PC algorithm, FCI, LiNGAM) can help infer structure from data but require large historical datasets and produce graphs that are correct only under their respective assumptions. Most production uses of DoWhy start with the known service topology as the initial graph and add confounders based on domain knowledge, treating the graph as a hypothesis to validate rather than a ground truth.`,
+      },
+      {
+        question: 'How do you decide between buying a vendor AIOps platform versus building with open-source tools?',
+        answer: `The build-versus-buy decision for AIOps has a clear framework when you account for the full cost of each option, including the costs that are easy to undercount.
+
+The buy case is strong when: vendor AIOps is already bundled with your observability platform at no incremental cost (Datadog Watchdog is included in APM Pro, Dynatrace Davis is included in full-stack monitoring -- in both cases the marginal cost of AIOps is zero), your team lacks the Python and ML engineering skills to maintain model retraining pipelines, or you need the platform operational quickly and cannot staff a six-month build. The frequently underestimated cost of building is ongoing maintenance: model drift detection, retraining pipelines, sensitivity tuning, holiday calendar updates, and upgrade compatibility across the Prometheus-Grafana-Python-MLflow stack. That ongoing cost is typically 0.5 to 1 full-time engineer equivalent.
+
+The build case is strong when: data-residency or compliance requirements prevent telemetry from leaving your infrastructure (common in finance, healthcare, government), the vendor platform does not understand your metric semantics (a trading system measuring order flow, a manufacturing platform measuring machine utilization), vendor pricing at your data volume is prohibitive (Datadog charges per host and per custom metric -- at 10,000 hosts with 50 custom metrics per host the AIOps tier adds significant cost), or your team has the ML engineering capability and wants full auditability of every model decision.
+
+The hybrid approach is often the most practical: use the vendor's bundled AIOps (Watchdog, Davis) for standard infrastructure metrics and application golden signals, and build custom open-source solutions only for the specific metrics that the vendor tool handles poorly. This minimizes build scope to the genuine gaps rather than rebuilding what the vendor already does adequately.
+
+Evaluation process: identify the top five alert types that caused the most on-call pain in the last 90 days. Run a 30-day parallel pilot of the vendor AIOps tool against those five alert types. Measure noise reduction, false positive rate, and time-to-acknowledge improvement. If the vendor tool reduces noise by 70 percent or more on those five types at acceptable cost, buy. If it reduces noise by less than 50 percent on your specific alert types, build -- your metrics have semantics the vendor tool cannot model effectively.`,
+      },
+      {
+        question: 'How would you use open-source tools to build an alert enrichment pipeline that reduces investigation time?',
+        answer: `An alert enrichment pipeline takes a bare alert (service name, alert type, timestamp, severity) and automatically attaches the context an engineer needs to begin investigation, before the alert reaches PagerDuty or Slack. The goal is that by the time an engineer opens the PagerDuty incident, the first five minutes of context-gathering have already been done.
+
+The pipeline architecture has three stages: receive, enrich, route. The receive stage is an Alertmanager webhook receiver -- a Python service that Alertmanager POSTs alert payloads to when rules fire. This service is the entry point for all enrichment logic.
+
+The enrich stage executes enrichment functions based on alert labels. When an alert arrives with labels {alertname="PodCrashLoopBackOff", pod="auth-service-abc123", namespace="production"}, the enricher looks up: the last 100 log lines from that pod via the Kubernetes API (kubectl logs --previous --tail=100), the pod's Kubernetes events via kubectl get events --field-selector involvedObject.name=auth-service-abc123, the pod's resource requests and limits from the pod spec, the deployment's rollout history from kubectl rollout history deployment/auth-service, and the Prometheus query for the pod's memory usage over the last 2 hours. These five calls run concurrently, completing in 3 to 8 seconds total.
+
+Robusta handles this entire pattern via its playbook system and is the recommended production implementation for Kubernetes-specific enrichment. For non-Kubernetes alerts or custom enrichment logic, a custom Python service using the kubernetes-client, prometheus-api-client, and boto3 (for AWS resource metadata) libraries handles the enrichment calls.
+
+The route stage formats the enriched payload and sends it to the configured sink. For Slack, this means a Block Kit message with a collapsible section for logs, an inline graph for memory usage, and a table for resource requests versus limits. For PagerDuty, the enrichment attaches as a note to the incident with the same structured content in text format.
+
+The resulting workflow: engineer receives PagerDuty page for CrashLoopBackOff on auth-service, opens the incident, finds logs showing OutOfMemoryError on the third restart, resource limits showing 256Mi limit with 254Mi actual usage, and a memory growth chart showing gradual increase over 4 hours. Investigation starts from evidence: "this is a memory leak, likely in the connection handler." Time from page to action: under 3 minutes instead of 8.`,
+      },
+    ],
     visualizations: [
       {
         title: 'The open-source AIOps stack — how the pieces fit together',
@@ -1706,6 +1898,117 @@ A: Cloud Computing Foundation annual AIOps competition. 2024 track focused on lo
     color: '#d946ef',
     questions: 5,
     description: 'How chaos engineering and AIOps intersect — steady-state hypothesis definition, using AIOps to validate that fault injection produces expected alert groups, AI-guided experiment selection, Chaos Engineering 2.0 with service-mesh-native fault injection and policy-as-code gates. When chaos is premature and observability must come first.',
+    introduction: `Chaos engineering is the discipline of deliberately injecting failures into a system to discover weaknesses before they cause production incidents. Netflix popularized it with the Chaos Monkey in 2011; the community has since formalized the practice into a structured experimental method with well-defined prerequisites, hypothesis formats, and success criteria.
+
+## The Core Principle
+
+The scientific method applied to distributed systems: form a falsifiable hypothesis about system behavior under failure, inject a controlled fault, measure whether steady state is maintained, and learn from the result. "We believe the system maintains p99 latency below 200ms and error rate below 0.1% if we terminate one auth service pod" is a proper chaos hypothesis. It specifies the steady-state metric, the fault, and the expected outcome. Either steady state holds -- the system is resilient to that fault -- or it does not -- revealing a weakness to fix.
+
+## The Observability Prerequisite
+
+Chaos without observability is not engineering -- it is random damage. If you cannot measure whether steady state held during the experiment, you learn nothing. The practical test: "If a random pod dies right now, would we know immediately, know which pod, know the customer impact, and know how to respond?" If no to any of these, fix observability before introducing chaos.
+
+## The AIOps Intersection
+
+Chaos engineering and AIOps connect in both directions. AIOps validates chaos: does your anomaly detection fire within the expected window after fault injection? Does your alert correlation group the resulting alert storm into one incident? If not, the gaps in AIOps coverage are your monitoring improvement backlog. Chaos validates AIOps: by injecting known faults with known expected alerts, you test whether your AIOps system correctly detects, correlates, and surfaces the right information.
+
+## Chaos Engineering 2.0
+
+The 2025 generation adds three capabilities: policy-as-code gates that block experiments when SLO burn rate exceeds a threshold or a deployment is in progress, service-mesh-native fault injection via Istio VirtualService httpFault specifications that inject latency and errors at the proxy layer without application code changes, and AI-guided experiment selection that analyzes service topology and past experiment history to recommend the highest-value next experiment based on coverage gaps.`,
+    quickFire: [
+      { q: 'What is the chaos engineering experiment loop?', a: 'Define steady state, form a falsifiable hypothesis, inject a fault with small blast radius, measure whether steady state holds, learn and improve resilience or increase blast radius.' },
+      { q: 'What is steady state in chaos engineering?', a: 'A measurable output representing normal system behavior -- p99 latency < 200ms, error rate < 0.1%, throughput > 1000 RPS. The experiment tests whether steady state holds under fault injection.' },
+      { q: 'Why must observability come before chaos engineering?', a: 'Without observability you cannot measure whether steady state held. Chaos without measurement is random damage, not engineering.' },
+      { q: 'What is the practical readiness test for chaos?', a: '"If a random pod dies right now, would we know immediately, know which pod, know the customer impact, and know how to respond?" No to any = fix observability first.' },
+      { q: 'How does chaos validate AIOps?', a: 'Inject a known fault, then check whether anomaly detection fired within the expected window, alert correlation grouped the storm into one incident, and exactly one page was sent.' },
+      { q: 'What is LitmusChaos?', a: 'CNCF Incubating Kubernetes-native chaos platform. ChaosEngine custom resources, community ChaosHub, ProbeSuccessCriteria for Prometheus-based steady-state validation within the experiment.' },
+      { q: 'What is Istio fault injection?', a: 'VirtualService httpFault spec injects HTTP errors or latency delays at the Envoy proxy layer. No application code changes, precise traffic percentage control, requires Istio.' },
+      { q: 'What is a policy-as-code chaos gate?', a: 'Blocks chaos experiments if SLO burn rate exceeds a threshold, a deployment is in progress, or on-call is actively triaging an incident. Prevents chaos from compounding real incidents.' },
+      { q: 'What is Gremlin\'s primary advantage over LitmusChaos?', a: 'Better multi-cloud and Windows workload coverage. Gremlin Failure Flags also allows application-level fault injection via SDK without needing Kubernetes.' },
+      { q: 'What are the chaos maturity levels?', a: 'Level 1: manual GameDays on non-production. Level 2: automated in staging. Level 3: automated in production with policy gates. Level 4: AI-guided experiment selection.' },
+      { q: 'When is chaos engineering premature?', a: 'No defined SLOs, incomplete observability, known unfixed critical bugs, overloaded on-call, or no runbooks for the failure modes chaos would discover.' },
+      { q: 'What is ProbeSuccessCriteria in LitmusChaos?', a: 'A mechanism to validate steady state within the chaos experiment itself. The experiment is marked failed unless a Prometheus query, HTTP probe, or command returns a success result.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you design a GameDay for a team that has never run chaos engineering before?',
+        answer: `A first GameDay should be scoped conservatively, run on a staging environment, and produce clear findings that justify the next GameDay on production. The goal is building organizational confidence and process familiarity, not discovering maximum blast radius on the first attempt.
+
+Pre-GameDay preparation (one week before) covers five items. First, confirm that steady-state metrics are instrumented and their current values are accessible on a shared dashboard -- every participant should be able to see p99 latency, error rate, and throughput in real time. Second, select one fault type for the first experiment: pod termination is the canonical starting point because it is common in production (spot instance reclamation, node eviction), well-supported by all chaos tools, and has a clear expected outcome for most services. Third, define the hypothesis explicitly in writing: "We believe service X maintains error rate below 0.1% and p99 latency below 200ms for five minutes if one of its three pods is terminated." Fourth, confirm the rollback plan: who can restore the terminated pod immediately if steady state breaks and the system does not self-heal. Fifth, brief any other teams whose services might be affected, even in staging.
+
+GameDay structure (half day): the first hour is baseline confirmation -- open the dashboards, confirm steady state is currently met, run the experiment at minimum blast radius (one pod, five-minute observation window). Document the result. The second and third hours expand scope based on findings: if pod termination held, try terminating two pods simultaneously, then try a network latency injection between the service and its database. The fourth hour is debrief: each weakness found becomes a filed issue with severity classification (P0 if system failed entirely, P1 if degraded but survived) and owner assignment.
+
+Post-GameDay within one week: prioritize and assign P0 issues to the current sprint, P1 issues to the next sprint, and schedule the next GameDay for four weeks out on the same service in production, or on a different service in staging.`,
+      },
+      {
+        question: 'How does Istio fault injection work and when should you use it instead of LitmusChaos?',
+        answer: `Istio fault injection operates at the Envoy proxy layer rather than at the infrastructure layer. Instead of terminating pods or consuming node resources, it intercepts HTTP requests in transit and injects faults into the response stream before the request reaches the upstream service. This distinction has significant operational implications.
+
+The VirtualService httpFault specification supports two fault types. Delay injects artificial latency before forwarding the request: a delay of 500ms simulates a slow upstream database or a network degradation. Abort returns an HTTP error code (typically 503 or 504) instead of forwarding the request: this simulates a complete service outage from the caller's perspective. Both support percentage-based traffic selection -- inject the fault for exactly 10% of requests matching the route, leaving 90% unaffected.
+
+The example VirtualService injects a 2-second delay for 50% of requests to the auth service from the payment service:
+
+\`\`\`
+http:
+- fault:
+    delay:
+      percentage:
+        value: 50
+      fixedDelay: 2s
+  route:
+  - destination:
+      host: auth-service
+\`\`\`
+
+Use Istio fault injection instead of LitmusChaos when: you want to test retry logic and circuit breaker behavior without actually degrading the upstream service (Istio injects at the caller side, so the upstream service itself is healthy), you need precise traffic percentage control (10% of specific request types rather than all-or-nothing pod termination), the fault you want to test is specifically a network-layer failure (latency, packet loss, timeout) rather than an infrastructure failure (pod crash, memory exhaustion), or you are testing idempotency of client retry logic (does the client correctly handle a 503 and retry with the same payload?).
+
+Use LitmusChaos when testing infrastructure-level failures: pod termination, node drain, disk fill, CPU stress. These faults cannot be simulated at the proxy layer because they affect the actual resource availability, not just the request flow.
+
+The two tools are complementary. Istio tests application-layer resilience (retry logic, circuit breakers, timeout handling). LitmusChaos tests infrastructure-layer resilience (availability under pod loss, behavior under resource pressure). A mature chaos program uses both.`,
+      },
+      {
+        question: 'How do you use AIOps tooling to evaluate the coverage quality of your monitoring after a chaos experiment?',
+        answer: `Using AIOps tools to evaluate monitoring coverage after chaos experiments creates a systematic feedback loop: inject known faults, measure whether the monitoring system responded correctly, and treat gaps as the monitoring improvement backlog.
+
+The evaluation framework defines expected AIOps behavior for each fault type before the experiment. For pod termination on auth-service: anomaly detection should fire on auth-service error rate within 2 minutes of pod termination, alert correlation should group all downstream alerts into one incident, the incident should be routed to exactly one PagerDuty page, and the page should reach the engineer within 3 minutes of fault injection. These expected behaviors are the test oracle.
+
+During the experiment, log the actual AIOps behavior against the expected. Did anomaly detection fire? If yes, how many minutes after fault injection? If no, which detection gap caused the miss -- was the metric not instrumented, was the anomaly detection threshold too conservative, or was the fault simply below the detection threshold? Did alert correlation correctly group downstream alerts? If multiple separate incidents were created instead of one, was the topology data missing or stale? How many pages fired -- one (correct), more than one (over-alerting), or zero (missed incident)?
+
+The gap analysis produces a prioritized monitoring improvement backlog. Detection gaps (anomaly detection did not fire) indicate missing instrumentation or misconfigured sensitivity. Correlation gaps (multiple incidents for one fault) indicate missing topology data or too-conservative grouping windows. Alert volume gaps (too many pages) indicate missing inhibition rules or suppression logic. Timing gaps (anomaly detection fired correctly but 15 minutes after fault injection) indicate evaluation window or aggregation interval tuning opportunities.
+
+Running this evaluation quarterly for each service tier builds a quantitative view of monitoring coverage over time: percentage of chaos experiments where anomaly detection fired within 2 minutes, percentage where correlation produced exactly one incident, percentage where MTTA from fault injection to engineer acknowledgment met the target. These metrics make the ROI of monitoring investment tangible -- each dollar spent on alert hygiene or topology data quality translates to a measurable improvement in these coverage scores.`,
+      },
+      {
+        question: 'What are the organizational and process prerequisites for running chaos in production?',
+        answer: `Production chaos engineering requires organizational prerequisites that are more demanding than the technical prerequisites. Most teams that fail at production chaos do so because the organizational conditions were not established, not because the tooling was wrong.
+
+SLO definitions are the first prerequisite. Every service targeted for chaos experiments must have defined and measured SLOs -- error rate budget, latency target, availability target. Without SLOs, "steady state" is undefined and you cannot determine whether the experiment succeeded or failed. Implementing chaos before SLOs is running experiments with no success criteria.
+
+On-call readiness is the second prerequisite. The on-call team must be informed before any production chaos experiment. Even with policy-as-code gates blocking experiments during active incidents, production chaos can reveal real weaknesses that require immediate attention. Running chaos during a period when on-call is already stretched creates compounding harm. The standard practice is to notify the on-call team, get explicit acknowledgment, and establish a direct communication channel (shared Slack channel with experiment status updates) for the duration of the experiment.
+
+Runbook coverage is the third prerequisite. Chaos experiments discover failure modes. If there is no runbook for the failure mode discovered, the finding becomes an active risk rather than a learning opportunity -- engineers know the failure mode exists but do not know how to respond to it. Before running chaos in production, confirm that runbooks exist for the top five failure modes each experiment targets.
+
+Blast radius control mechanisms are the fourth prerequisite. The experiment must be stoppable immediately if steady state breaks and does not recover within the expected time window. LitmusChaos supports manual abort via the ChaosEngine status update. Gremlin has a halt button. Istio fault injection is reverted by deleting or updating the VirtualService. Whoever runs the experiment must have these controls ready before injection, not after.
+
+Incremental scope expansion enforces the fifth prerequisite: start with one pod, confirm recovery, then expand to two pods, then an AZ, then a region. Each expansion only happens after the previous blast radius has been demonstrated safe. Organizations that skip straight to regional fault injection before validating pod-level resilience routinely cause the incidents they were trying to characterize.`,
+      },
+      {
+        question: 'How does AI-guided chaos experiment selection work and what data does it need?',
+        answer: `AI-guided chaos experiment selection uses the service topology, past experiment history, and observed failure patterns to recommend which experiment to run next -- maximizing the coverage value of each GameDay by targeting services and fault types with the highest probability of revealing real weaknesses.
+
+The input data has three components. The service topology graph describes all services, their dependencies, and their criticality (tier classification, SLO targets, business impact). Services in the critical path with many downstream dependencies are higher-priority targets because a weakness there has larger blast radius in production. Services with no chaos experiment history are unknown unknowns -- they have not been tested and may have hidden weaknesses.
+
+The experiment history describes what has already been run: which services, which fault types, what blast radius, and whether steady state held. Services that have passed pod termination but never been tested for network latency injection have incomplete coverage. Services that failed a fault type in the past but have since been patched have a validation gap -- the patch should be retested.
+
+The observed failure patterns from the production incident history describe which fault types have actually caused incidents. If network latency between auth-service and auth-db has caused three incidents in the last six months, testing network latency injection between those two services is directly validated by production evidence as a relevant fault type.
+
+The selection algorithm combines these signals. Services with high criticality, no recent experiment history, and fault types matching historical incident patterns score highest. The algorithm also diversifies across fault categories (infrastructure, network, resource) to avoid over-indexing on pod termination while leaving network faults untested.
+
+In practice, Dynatrace and LitmusChaos both offer variants of this capability. Dynatrace's Davis can identify topology nodes with no observability coverage -- these are natural chaos experiment targets because both the fault and the monitoring gap would be discovered. LitmusChaos's ChaosCenter provides experiment coverage visualization by service, enabling manual prioritization using the same logic.
+
+The practical value: instead of "what should we test next?" being a discussion in a planning meeting, it becomes a data-driven recommendation grounded in topology, coverage, and production incident history. Teams that adopt AI-guided selection consistently run higher-value experiments than teams that select targets ad hoc.`,
+      },
+    ],
     visualizations: [
       {
         title: 'Chaos Engineering fundamentals — the hypothesis loop',
@@ -1845,6 +2148,115 @@ A: Filed issues per weakness found. P0 (system failed) → immediate remediation
     color: '#d946ef',
     questions: 5,
     description: 'AIOps patterns specific to Kubernetes — kube-state-metrics for cluster health, Prometheus Operator ServiceMonitor pattern, Robusta enrichment playbooks, ML-driven autoscaling (VPA, HPA, KEDA), and cluster-level anomaly detection using pod churn rate, eviction pressure, and topology from owner references.',
+    introduction: `Kubernetes-native AIOps applies ML-augmented operations specifically to the Kubernetes control plane and workload layer. The challenges are distinct from general AIOps: high metric cardinality (each pod, node, deployment, and namespace generates separate metric series), ephemeral workloads (pod lifetimes of minutes to hours break model training assumptions), and a rich topology encoded in owner references (pod to ReplicaSet to Deployment to HPA) that can be exploited for better anomaly attribution.
+
+## The Observability Foundation
+
+Two primitives underpin every Kubernetes AIOps pattern. kube-state-metrics (KSM) watches the Kubernetes API and exposes object state as Prometheus metrics -- not resource usage (that is cAdvisor), but object health: pod phase, restart count, deployment desired-vs-available gap, node condition, PVC status, HPA scaling pressure. Prometheus Operator manages Prometheus instances via CRDs and auto-discovers scrape targets via ServiceMonitor objects, eliminating manual prometheus.yml edits every time a new service deploys.
+
+Together these two enable zero-touch Kubernetes observability: new services automatically get scraped, cluster state is automatically exposed as metrics, and anomaly detection rules can query both layers via PromQL.
+
+## Feature Engineering for Kubernetes Anomaly Detection
+
+Raw Kubernetes metrics require transformation before ML models can use them effectively. Pod churn rate (new pods per minute relative to cluster size) is a leading indicator of CrashLoopBackOff storms. Eviction pressure on multiple nodes simultaneously signals cluster-wide resource exhaustion rather than a single workload problem. Owner references chain pods to workloads (kube_pod_owner to kube_replicaset_owner to kube_deployment), which is the Kubernetes equivalent of a service topology graph -- essential for distinguishing "3 pods from one deployment crashed" (deployment issue) from "3 pods across 3 deployments crashed" (node issue).
+
+## Autoscaling Intelligence
+
+HPA scales pod count reactively based on current CPU or custom metrics. KEDA extends this to scale to zero and react to external event sources (Kafka lag, queue depth, Prometheus queries including ML-computed forecasts). VPA right-sizes resource requests based on observed usage, reducing overprovisioning. The combination of KEDA plus a Prophet-based forecast metric enables predictive pre-scaling: scale before traffic arrives rather than after it is already stressing the system.`,
+    quickFire: [
+      { q: 'What does kube-state-metrics expose?', a: 'Kubernetes object state as Prometheus metrics -- pod phase, restart counts, deployment desired vs available replicas, node conditions, PVC status, HPA scaling pressure.' },
+      { q: 'What is the difference between kube-state-metrics and cAdvisor?', a: 'cAdvisor measures resource usage (CPU, memory bytes). kube-state-metrics measures Kubernetes object health (pod phase, node Ready status, deployment replica gaps).' },
+      { q: 'What is Prometheus Operator and what does ServiceMonitor do?', a: 'Kubernetes-native Prometheus management via CRDs. ServiceMonitor auto-discovers scrape targets by label selector, eliminating manual prometheus.yml edits when services deploy.' },
+      { q: 'What is pod churn rate and what does it signal?', a: 'rate(kube_pod_created_total[10m]) / count(kube_pod_info). High relative churn indicates CrashLoopBackOff storms or eviction cascades -- a leading indicator of cluster instability.' },
+      { q: 'How do owner references enable better anomaly attribution in Kubernetes?', a: 'kube_pod_owner links pods to ReplicaSets to Deployments. Lets anomaly detection distinguish "3 pods from one Deployment crashed" (deployment issue) from "3 pods across 3 Deployments crashed" (node issue).' },
+      { q: 'What is the HPA vs VPA conflict and how do you resolve it?', a: 'HPA and VPA on the same metric (CPU) conflict. Resolution: use VPA for memory recommendations only, HPA for CPU-based horizontal scaling. Or use VPA in recommendation-only mode.' },
+      { q: 'What is KEDA?', a: 'Kubernetes Event-Driven Autoscaler. Scales deployments to zero and reacts to external sources: Kafka lag, SQS depth, Prometheus queries, Cron. Enables forecast-driven pre-scaling.' },
+      { q: 'How does KEDA enable predictive scaling?', a: 'A KEDA custom Prometheus scaler can consume a metric exposing a Prophet forecast. Set HPA minimum replicas based on predicted load 30 to 60 minutes before the peak arrives.' },
+      { q: 'What is Robusta and why is it high-value in Kubernetes AIOps?', a: 'Kubernetes alert enrichment platform. Intercepts Alertmanager webhooks, attaches pod logs, Kubernetes events, and resource graphs to alerts before routing to PagerDuty. Eliminates the first 5 minutes of context gathering.' },
+      { q: 'What cluster-level signal best predicts scheduling failure?', a: 'rate(kube_pod_status_unschedulable[5m]) increase. Pods stuck Pending due to insufficient node resources, PV provisioning failure, or node selector mismatches -- before services degrade.' },
+      { q: 'What is Kepler (CNCF)?', a: 'Measures per-pod energy consumption as Prometheus metrics. Enables energy-aware and carbon-aware autoscaling -- consolidate workloads on fewer nodes during off-peak.' },
+      { q: 'How should you train anomaly detection models on ephemeral Kubernetes pods?', a: 'Train at the workload level (Deployment, StatefulSet) by aggregating pod metrics via owner references. Pod-level training fails because pods have only minutes to hours of history.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'What Kubernetes metrics are most valuable for cluster-level anomaly detection and why?',
+        answer: `Cluster-level anomaly detection targets signals that affect multiple workloads simultaneously, distinguishing infrastructure-layer problems from application-layer problems. The most valuable metrics operate at the cluster or node scope, not the pod scope.
+
+The Node Ready ratio -- count of Ready nodes divided by total nodes -- is the primary cluster health signal. A single NotReady node is a workload placement event; more than 10% of nodes NotReady is a cluster-level emergency. Track this as a continuous metric and alert when it drops below 0.9. The metric is kube_node_status_condition with condition="Ready" and status="true".
+
+Namespace resource saturation tracks the ratio of total CPU requests across all pods in the cluster to total allocatable CPU across all nodes. Above 80%, the scheduler begins making suboptimal placement decisions. Above 95%, new pods become unschedulable even when nodes have some free capacity (due to resource fragmentation). Monitor this with sum(kube_pod_container_resource_requests{resource="cpu"}) divided by sum(kube_node_status_allocatable{resource="cpu"}).
+
+Control plane health metrics are frequently overlooked but critical. etcd_server_is_leader dropping to zero means etcd has lost its leader and writes are failing. apiserver_current_inflight_requests above the node limit causes cascading failures in HPA decisions, rolling deployments, and admission webhooks -- everything that touches the Kubernetes API. scheduler_pending_pods_count rising continuously signals that the scheduler cannot keep up with pod creation requests.
+
+Pod scheduling failure rate -- rate(kube_pod_status_unschedulable[5m]) -- is the earliest warning of node resource exhaustion. Pods transition to Unschedulable before services degrade: the scheduler cannot place new pods, but existing pods continue running until their nodes become unhealthy. A rising unschedulable rate gives 5 to 30 minutes of warning before service degradation begins.
+
+OOM kill rate per namespace -- container_oom_events_total aggregated per namespace per hour -- identifies memory limit tuning problems or memory leaks at the namespace scope rather than requiring per-pod investigation. A namespace with 20 OOM kills per hour has a systemic memory configuration problem, not isolated pod issues.
+
+API server latency -- apiserver_request_duration_seconds_bucket at p99 -- is a leading indicator of cluster control plane overload. Elevated latency here affects every Kubernetes operation and often precedes visible service degradation by minutes.`,
+      },
+      {
+        question: 'Explain how to implement predictive autoscaling using KEDA and Prophet together.',
+        answer: `Predictive autoscaling with KEDA and Prophet pre-scales Kubernetes workloads before load arrives, rather than waiting for CPU or memory to spike and then scaling reactively. The HPA reaction time of 15 to 30 seconds is insufficient for services that receive sharp traffic spikes -- by the time HPA adds replicas, the first wave of requests has already experienced elevated latency.
+
+The architecture has three components: a forecasting service that generates predictions, a Prometheus metric that exposes those predictions, and a KEDA ScaledObject that uses the forecast metric to set the HPA minimum replica count.
+
+The forecasting service is a Python CronJob or Deployment that runs Prophet against historical RPS data from Prometheus. It fetches the last 90 days of request rate for each service, fits the Prophet model, generates a 48-hour forecast, and writes the forecast as a Prometheus gauge metric: forecast_replicas_required{service="auth-api", horizon="30m"} = 24. The metric represents the number of replicas the service will need in 30 minutes based on the forecast.
+
+The KEDA configuration then uses the Prometheus scaler to read this forecast metric and set the HPA minimum: when forecast_replicas_required exceeds the current replica count plus a 20% buffer, KEDA increases the HPA minimum replicas to the forecast value. This forces HPA to scale to at least the predicted level, completing the scale-up 30 minutes before the load arrives.
+
+The critical configuration detail is the KEDA cooldown period. Without a sufficiently long cooldown (typically 15 to 30 minutes), KEDA will scale back down to baseline during the approach to a peak, negating the pre-scaling benefit. Set cooldownPeriod to at least twice the expected peak duration.
+
+The feedback loop validates forecast accuracy. After each scaling event, compare the actual peak RPS to the forecast RPS and the actual peak replica count to the KEDA-prescribed minimum. MAPE above 20% for a service over two consecutive weeks triggers model retuning -- likely a changepoint addition for a recent architectural or traffic pattern change.
+
+Conflict management with standard CPU HPA: KEDA sets the minimum replica count via the ScaledObject; standard HPA reads current CPU utilization and scales above that minimum as needed. KEDA and HPA coexist when KEDA manages the floor and HPA manages the ceiling. Configure this by setting the HPA minReplicas to the KEDA-managed value via the ScaledObject rather than running two separate scaling controllers on the same deployment.`,
+      },
+      {
+        question: 'How does Robusta reduce Kubernetes incident MTTR and what playbooks should you build first?',
+        answer: `Robusta reduces MTTR by eliminating the context-gathering phase that begins every Kubernetes incident. Without enrichment, an engineer receives "CrashLoopBackOff on auth-service-abc123 in production" and spends the first 5 to 8 minutes running kubectl logs, kubectl describe, kubectl get events, and kubectl top pod to gather the context needed to begin investigation. Robusta runs those commands automatically when the alert fires and attaches the results to the PagerDuty incident before the engineer opens it.
+
+The implementation model is Helm chart installation into the cluster, configuration of Alertmanager webhook to POST to Robusta's receiver, and Python playbook functions that define which enrichment to gather for each alert type. Robusta routes enriched findings to configured sinks -- Slack block messages with collapsible log sections, PagerDuty incident notes, or Datadog events.
+
+The highest-value playbooks to implement first are those that address the most time-consuming context-gathering steps in your actual incident workflow. Review your last 90 days of Kubernetes incidents and identify the top five alert types by total investigation time.
+
+For most Kubernetes environments, OOMKilled is the first priority. The playbook fetches: last 100 log lines from the terminated container (often contains the offending operation), the container's memory request and limit (to understand headroom), the node's current MemoryPressure condition, and a Prometheus graph of container_memory_working_set_bytes over the last 2 hours (to show whether this was sudden or gradual). This four-component enrichment takes Robusta 3 to 8 seconds to gather concurrently and saves 6 to 8 minutes of manual context gathering.
+
+CrashLoopBackOff is the second priority. The playbook fetches: previous container logs (the logs from the last crash, not the current restart), the exit code from the last termination (exit 1 is application error, 137 is OOM kill, 143 is graceful signal), the pod's Kubernetes events (useful for image pull failures, volume mount errors, and liveness probe failures), and the restart count timeline (to show whether the crash rate is accelerating).
+
+HPA at max replicas is the third priority for services under scaling pressure. The playbook fetches: current CPU and memory utilization across all pods in the deployment, recent traffic graph from Prometheus, the HPA's current state (current replicas, desired replicas, target utilization), and a scaling recommendation based on current utilization versus current capacity.
+
+After these three, build playbooks for PVC filling (attach usage growth rate and time-to-full calculation), node NotReady (attach kubelet logs and system pod status), and deployment rollout stuck (attach rollout history and the specific pods failing readiness probes).`,
+      },
+      {
+        question: 'What are the key differences between Kubernetes AIOps and traditional VM-based AIOps?',
+        answer: `Kubernetes introduces five structural differences from VM-based infrastructure that require different AIOps patterns.
+
+Ephemerality is the first difference. VMs have lifetimes measured in months; Kubernetes pods have lifetimes measured in minutes to hours. Model training on pod-level time series fails because there is insufficient history per pod. The solution is training at the workload level (Deployment, StatefulSet, DaemonSet) by aggregating pod metrics through owner references. kube_pod_owner chains pod to ReplicaSet to Deployment, enabling PromQL aggregation that produces a stable series at the workload scope even as individual pods come and go.
+
+Metric cardinality is the second difference. A 50-VM environment has 50 CPU metrics. A Kubernetes cluster with 50 nodes running 500 pods across 50 services has approximately 25,000 metric time series from cAdvisor alone, plus kube-state-metrics adding another 10,000. Naive application of anomaly detection to every series is computationally expensive and produces excessive false positives. Service tiering -- applying anomaly detection only to metrics for Tier 1 services at the pod scope and aggregating Tier 2 and 3 to the namespace scope -- reduces the effective cardinality to a manageable level.
+
+Topology richness is the third difference. VMs have flat network topology; Kubernetes has rich owner reference hierarchies, namespace organization, label-based service discovery, and service mesh topology. This richness enables much more precise anomaly attribution. An anomaly detected at the node scope -- three pods from different deployments on the same node all showing elevated latency simultaneously -- is a node issue, not a deployment issue. The owner reference chain makes this attribution automatic.
+
+Self-healing built-ins are the fourth difference. Kubernetes already has built-in self-healing: pod restart policies, liveness probes, readiness probes, and HPA. These handle the common cases that would require AIOps automation on VM infrastructure. AIOps on Kubernetes should complement these mechanisms, not duplicate them. The valuable AIOps additions are the cases that Kubernetes cannot handle automatically: workload-level anomalies requiring human judgment, capacity forecasting for pre-scaling before HPA reacts, and enrichment that reduces MTTR when Kubernetes's self-healing is insufficient.
+
+Control plane observability is the fifth difference. Kubernetes has a control plane (API server, etcd, scheduler, controller manager) that has no VM equivalent. Control plane degradation cascades to all workloads and is frequently invisible to application-layer monitoring. Explicit monitoring of control plane health metrics (API server latency, etcd leader elections, scheduler pending pods) is required for complete Kubernetes AIOps coverage.`,
+      },
+      {
+        question: 'How do you handle anomaly detection on Kubernetes metrics that have very high cardinality?',
+        answer: `High cardinality in Kubernetes metrics -- where the full label space includes pod name, container name, namespace, node name, and deployment name -- creates two problems: computational cost of running individual anomaly detection models per series, and statistical insufficiency of individual pod series (too short-lived to train a reliable model).
+
+The solution is hierarchical aggregation: apply anomaly detection at the level of granularity where the metric is both stable and actionable, not at the maximum granularity available.
+
+For CPU and memory usage, the actionable granularity is the Deployment or StatefulSet scope. An anomaly in CPU usage for a single pod is noise if the other pods in the deployment are healthy -- it is likely a pod-level flap. An anomaly in the aggregated CPU usage across all pods of a deployment is a workload-level signal worth paging on. The PromQL aggregation using kube_pod_owner chains (join pod metrics to deployment labels via owner references) produces a deployment-scoped series with a long, stable history that supports reliable anomaly detection models.
+
+For network and error rate metrics, the actionable granularity is the Service scope. The service represents the external interface of a workload; its latency and error rate are what downstream callers experience and what SLOs are defined against. Service-scoped anomaly detection aligns with the SLO structure and produces actionable signals.
+
+For cluster-level signals (node health, control plane metrics, namespace resource saturation), anomaly detection is appropriate at the cluster or node scope directly. These metrics have one or few series and represent cluster-wide health rather than individual workload health.
+
+The implementation pattern: define recording rules in Prometheus that pre-aggregate the high-cardinality raw metrics to the appropriate scope. Record cpu:deployment:rate5m as the sum of container CPU usage across all pods of each deployment. Record errors:service:rate5m as the sum of error-status responses across all pods behind each service. Apply anomaly detection only to the recorded metrics at the aggregated scope, not to the raw per-pod series.
+
+For the Grafana three-band approach, this means defining recording rules that produce the deployment-scoped or service-scoped series, then applying the stddev_over_time and offset bands to the recorded metrics. The result is anomaly detection that scales to 500-service clusters without requiring 500 individual model fits.`,
+      },
+    ],
     visualizations: [
       {
         title: 'Kubernetes observability foundation — kube-state-metrics and Prometheus Operator',

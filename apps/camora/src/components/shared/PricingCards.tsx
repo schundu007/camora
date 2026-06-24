@@ -226,6 +226,7 @@ function SoloPlanTable({
   loading: string;
 }) {
   const [selected, setSelected] = useState<'monthly' | 'yearly'>('monthly');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
     <div style={{ fontFamily: LN.font }}>
@@ -258,18 +259,17 @@ function SoloPlanTable({
             <div
               key={plan.id}
               onClick={() => setSelected(plan.id)}
+              onMouseEnter={() => { if (!isSelected) setHoveredId(plan.id); }}
+              onMouseLeave={() => setHoveredId(null)}
               style={{
                 display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
                 padding: '14px 16px',
                 cursor: 'pointer',
-                background: isSelected ? 'rgba(212,160,67,0.07)' : LN.card,
-                borderLeft: `3px solid ${isSelected ? 'var(--cam-gold-leaf)' : 'transparent'}`,
+                background: isSelected ? 'rgba(212,160,67,0.07)' : hoveredId === plan.id ? LN.cardHover : LN.card,
                 borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.divider}` : 'none',
                 transition: 'background 0.1s',
                 alignItems: 'center',
               }}
-              onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.cardHover; }}
-              onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = LN.card; }}
             >
               {/* Radio + plan name */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
