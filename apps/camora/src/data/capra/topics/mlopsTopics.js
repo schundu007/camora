@@ -3298,4 +3298,783 @@ Fourth, maintain a compliance audit trail. Every model promotion event should re
       'https://interpret.ml/docs/lime.html',
     ],
   },
+,
+{
+    id: 'mlops-data-versioning',
+    title: 'Data Versioning and Dataset Management',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Git-like versioning for large datasets and data lakes using DVC, Delta Lake, Apache Iceberg, and LakeFS.',
+    introduction: `## Why Data Versioning Matters
+
+Reproducibility is a first-class requirement in machine learning. A model trained on one slice of data can behave completely differently when retrained weeks later if the underlying dataset has silently changed. Unlike source code, raw datasets are often gigabytes or terabytes in size, live in object storage or distributed file systems, and are mutated in place. Traditional Git cannot track these files efficiently. Data versioning tools solve this by decoupling the lightweight metadata pointer from the heavy binary payload.
+
+## DVC — Data Version Control
+
+DVC (Data Version Control) treats data with the same discipline Git applies to source code. Each tracked file or directory is replaced by a small \`.dvc\` pointer file committed to Git. The actual bytes live in a configurable remote backend: Amazon S3, Google Cloud Storage, Azure Blob, SSH servers, or local paths. When you run \`dvc pull\`, DVC fetches the exact content-addressed version specified by the pointer.
+
+DVC pipelines (\`dvc run\` or \`dvc.yaml\`) record each transformation stage with its inputs, outputs, and command. Running \`dvc repro\` re-executes only stages whose dependencies have changed — a content-hash–based build cache. This gives you end-to-end experiment reproducibility: pinning both the code (Git commit) and the data (DVC pointer) fully determines a training run.
+
+## Delta Lake
+
+Delta Lake is an open-source storage layer that brings ACID transactions to Apache Spark data lakes. Every write operation — whether an INSERT, UPDATE, DELETE, or MERGE — appends a JSON transaction log entry to the \`_delta_log/\` directory. Readers and writers coordinate through this log, enabling snapshot isolation without a central lock manager.
+
+Time travel is a first-class feature: \`SELECT * FROM events TIMESTAMP AS OF '2024-01-01'\` or \`VERSION AS OF 42\` restores an earlier snapshot by replaying the transaction log up to that point. \`RESTORE TABLE events TO VERSION AS OF 42\` makes that version the current state. Schema enforcement rejects writes that would break downstream consumers, while schema evolution allows explicitly approved changes with \`MERGE schema\` options.
+
+## Apache Iceberg
+
+Apache Iceberg defines a table format specification rather than a storage engine. Its metadata hierarchy — catalog → metadata file → snapshot → manifest list → manifest files → data files — enables features impossible in Hive's directory-scanning model. Hidden partitioning stores the partition value alongside each data file rather than embedding it in the directory path, so partition schemes can evolve without rewriting data (\`ALTER TABLE ADD PARTITION FIELD\`).
+
+Snapshot isolation means readers always see a consistent view even while writers commit new snapshots. Compaction (\`rewrite_data_files\`) merges small files written by streaming ingestion into larger ones for efficient batch reads. Multiple catalogs are supported: Hive Metastore, AWS Glue, REST, JDBC, and Nessie.
+
+## LakeFS — Git Semantics for Object Storage
+
+LakeFS layers Git-like branching, committing, and merging directly onto S3, GCS, or Azure Blob without copying data. A branch is a zero-copy pointer to a set of objects; creating a branch is instantaneous regardless of dataset size. Data scientists can experiment on a feature branch, validate results, and merge back to main — or discard the branch entirely with no storage cost. CI pipelines can gate merges on data quality checks. LakeFS exposes an S3-compatible API, so existing tools (Spark, Pandas, DVC) work without modification.
+
+## Reproducing Training Runs
+
+Pinning an experiment requires three coordinates: the Git commit hash, the DVC pointer (or Delta/Iceberg snapshot ID), and the environment specification (Docker image digest or conda lock file). Teams that store all three in their experiment tracker can reconstruct any training run deterministically, which is essential for debugging production regressions and for regulatory audit trails.
+
+![Data Versioning](/diagrams/mlops/data-versioning.png)`,
+    quickFire: [
+      { q: 'What does a .dvc file contain?', a: 'A content-addressed hash (md5/sha256) of the tracked file or directory, its size, and the remote path — a lightweight pointer stored in Git while the actual bytes live in the remote.' },
+      { q: 'How does Delta Lake prevent concurrent write conflicts?', a: 'Optimistic concurrency: writers check the transaction log for conflicting operations since they last read it. If a conflict is detected, the write is retried; otherwise the new log entry is atomically committed.' },
+      { q: 'What is hidden partitioning in Iceberg?', a: 'Iceberg computes partition values from column data and stores them in metadata, not in the directory path. This lets the engine prune files without path-level scanning and allows partition evolution without rewriting files.' },
+      { q: 'How does LakeFS achieve zero-copy branching?', a: 'A branch is a pointer into a shared namespace of immutable objects on the underlying object store. No data is copied; only the metadata reference is duplicated.' },
+      { q: 'What is time travel in Delta Lake?', a: 'Querying a historical version of a table using VERSION AS OF or TIMESTAMP AS OF, reconstructed by replaying the transaction log up to that snapshot.' },
+      { q: 'How do you pin a dataset in a DVC-tracked experiment?', a: 'Commit the .dvc pointer file to Git alongside the code. The Git commit hash + DVC pointer together uniquely identify the dataset version used.' },
+      { q: 'What is Delta Lake MERGE used for?', a: 'Upserting records: INSERT new rows, UPDATE matching rows, and DELETE unwanted rows in a single atomic operation — equivalent to a SQL MERGE INTO statement.' },
+      { q: 'What is an Iceberg snapshot?', a: 'An immutable record of all data files that made up a table at a specific point in time, referenced from the metadata file via a manifest list.' },
+      { q: 'What problem does DVC solve that Git alone cannot?', a: 'Git cannot efficiently store large binary files. DVC stores only a tiny pointer in Git and pushes the actual file bytes to a separate remote storage backend.' },
+      { q: 'How does schema enforcement work in Delta Lake?', a: 'On write, Delta compares the incoming DataFrame schema against the table schema and raises an error if columns are missing or have incompatible types, preventing silent data corruption.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through how you would make a model training run fully reproducible using DVC.',
+        answer: `Full reproducibility requires pinning every input that can affect the output: code, data, environment, and hyperparameters. With DVC, the workflow is as follows.
+
+First, initialize DVC in the repository (\`dvc init\`) and configure a remote backend (\`dvc remote add -d myremote s3://bucket/path\`). Add each raw dataset to DVC tracking (\`dvc add data/train.parquet\`), which creates a \`data/train.parquet.dvc\` pointer file. Commit the pointer to Git.
+
+Second, define the pipeline in \`dvc.yaml\`. Each stage declares its \`cmd\`, \`deps\` (inputs), \`params\` (hyperparameter files), and \`outs\` (outputs). DVC computes a content hash for every dep and param; if none have changed since the last run, \`dvc repro\` skips that stage using its cache.
+
+Third, capture the environment: either commit a \`requirements.txt\` / conda \`environment.yml\`, or store the Docker image digest in an experiment tag. MLflow or DVC experiments can record the Git commit hash, the DVC run cache key, and all params in one record.
+
+To reproduce later, check out the Git commit, run \`dvc pull\` to fetch the exact data versions those pointers reference, restore the environment, and run \`dvc repro\`. The content-hash cache ensures byte-for-byte identical intermediates.
+
+The most common failure mode is data stored outside DVC — for example, reading directly from a mutable S3 prefix without snapshotting it first. Always push data into DVC before starting a training run to close this gap.`,
+      },
+      {
+        question: 'How does Apache Iceberg handle partition evolution, and why is it superior to the Hive partition model?',
+        answer: `In the Hive model, partition values are encoded in directory paths (e.g., \`s3://bucket/events/dt=2024-01-01/\`). Changing the partitioning strategy — for example, switching from daily to hourly, or adding a region column — requires rewriting every existing data file into new paths, a massively expensive operation. Tools must also scan directory listings to discover partitions, which becomes slow at scale.
+
+Iceberg solves this with hidden partitioning and partition evolution. Partition transforms (identity, bucket, truncate, year/month/day/hour) are recorded in the table's schema metadata, not in file paths. Each data file in a manifest carries its partition value as metadata. The query engine reads the manifest to prune files without ever listing directories.
+
+Partition evolution (\`ALTER TABLE events ADD PARTITION FIELD hour(event_time)\`) adds a new partition spec. Iceberg writes new data files under the new spec while old files remain under the old spec. A single query transparently spans both specs: the engine unions the pruning results from each spec's manifests. No data rewrite is needed.
+
+This has three practical benefits for ML teams: (1) feature pipelines can reorganize partitions as access patterns change without a migration weekend; (2) time-travel queries work across partition spec changes because each snapshot records which spec was active; (3) engines like Spark, Trino, and Flink can all read the same Iceberg table without agreeing on a directory convention.`,
+      },
+      {
+        question: 'Describe a data branching strategy for a team running multiple parallel ML experiments using LakeFS.',
+        answer: `The core pattern mirrors the Git Flow model. The \`main\` branch holds the canonical, production-ready version of each dataset. Data engineers merge validated, quality-checked data into \`main\` on a regular cadence.
+
+ML engineers create feature branches from \`main\` for each experiment: \`experiment/user-embedding-v3\`, \`experiment/augmented-negatives\`. Because LakeFS branches are zero-copy pointers, creating a branch is instantaneous even for petabyte-scale tables. The experiment branch can receive new files, updates, or deletes without touching \`main\`.
+
+A data quality gate runs as a pre-merge hook: Great Expectations or Soda validates schema, null rates, and statistical distributions on the branch before the merge is allowed. If the gate fails, the branch is discarded with no storage cost.
+
+CI/CD integration is straightforward: a GitHub Actions workflow creates a LakeFS branch named after the PR, runs the pipeline, validates outputs, and merges to \`main\` on success. The LakeFS commit hash is stored alongside the MLflow run ID, giving a single pointer that reproduces the exact data state for any experiment.
+
+For hotfixes — for example, discovering label errors in a training set already promoted to production — a patch branch is created from the \`main\` commit at that version, the bad rows are corrected, and the branch is merged back. The transaction history provides a full audit trail of who changed what and when, which is required for regulated ML applications.`,
+      },
+      {
+        question: 'What are the trade-offs between Delta Lake, Apache Iceberg, and Apache Hudi for ML use cases?',
+        answer: `All three add ACID semantics and time travel to data lakes, but they make different trade-offs that affect ML workflows.
+
+Delta Lake is deeply integrated with Apache Spark and Databricks. Its transaction log is simple JSON, making it easy to audit manually. The Databricks-managed version adds liquid clustering and predictive I/O optimization. For teams already on Databricks, Delta is the lowest-friction choice and has the most mature MERGE implementation. Its weakness is ecosystem lock-in: non-Spark engines (Trino, Flink, Hive) required the Delta Kernel or compatibility shims until Delta 3.x, whereas Iceberg has broader native support.
+
+Apache Iceberg is an open specification with implementations across Spark, Trino, Flink, Presto, Snowflake, BigQuery, and more. Its metadata model is richer — supporting row-level deletes via deletion vectors, multiple partition specs, and branch/tag semantics in its own catalog. For ML teams that need to read the same feature table from both a Spark training job and a Trino serving query, Iceberg's engine neutrality is a strong advantage.
+
+Apache Hudi was designed specifically for incremental ingestion from CDC streams (Debezium, Kafka). Its copy-on-write and merge-on-read storage types optimize for either read performance or write amplification respectively. Hudi's incremental pull API lets a downstream pipeline consume only the records changed since the last checkpoint, which is useful for real-time feature pipelines. However, its operational complexity is higher and its query engine support is narrower than Iceberg.
+
+For most ML teams: use Delta Lake if your stack is Databricks; use Iceberg if you need multi-engine access or are on AWS (Glue/Athena native support); use Hudi if your primary need is low-latency incremental ingestion from CDC.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-pipeline-orchestration',
+    title: 'ML Pipeline Orchestration',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Designing and running reproducible ML workflows with Kubeflow Pipelines, Airflow, Prefect, Dagster, and Metaflow.',
+    introduction: `## The Orchestration Problem in ML
+
+A machine learning pipeline is a directed acyclic graph of computational steps: data ingestion, validation, feature engineering, training, evaluation, and deployment. Running these steps manually works for a single experiment but fails at scale: steps need to be retried on transient failures, intermediate artifacts need to be cached, runs need to be scheduled on a cadence, and teams need visibility into what ran, when, and with what inputs. Orchestrators solve all of these problems.
+
+## Kubeflow Pipelines
+
+Kubeflow Pipelines (KFP) is the orchestration layer in the Kubeflow ecosystem, designed for Kubernetes-native ML workflows. Each pipeline step runs in a separate Docker container, giving complete environment isolation. The KFP SDK lets you define pipelines in Python using the \`@component\` and \`@pipeline\` decorators. Components declare typed inputs and outputs; KFP wires them together and handles artifact passing through MinIO or a cloud object store.
+
+KFP tracks artifact lineage automatically — you can trace any model artifact back through evaluation, training, feature engineering, and raw data. Step-level caching stores the output of a component execution keyed on the component code and input fingerprint; reruns skip cached steps. The KFP UI provides a visual DAG, run history, and artifact viewer integrated into the Kubeflow central dashboard.
+
+## Apache Airflow
+
+Apache Airflow is the most widely deployed workflow orchestrator in the data industry. Pipelines are Python DAG files stored in a \`dags/\` directory. Operators execute work: \`PythonOperator\`, \`BashOperator\`, \`KubernetesPodOperator\`, \`DockerOperator\`. XCom (cross-communication) lets tasks push small values for downstream tasks to pull. Sensors block execution until an external condition is met — for example, a file arriving in S3 or a Spark job completing.
+
+Airflow's scheduler backfills historical intervals, making it natural for time-partitioned ML pipelines that need to reprocess past data. Its primary limitation for ML is that it treats tasks as execution units, not data assets — there is no built-in notion of which dataset a task produces, making lineage tracking an add-on rather than a first-class feature.
+
+## Prefect
+
+Prefect is built on an async-native Python runtime. Flows and tasks are decorated Python functions; Prefect infers the DAG from data dependencies automatically. Prefect Cloud provides a managed orchestration plane while agents run locally or in Kubernetes, polling for work. The retry, timeout, and result caching policies are configured declaratively on each task. Prefect's fail-fast mode surfaces errors immediately; its deferred retry mode queues failed tasks for later execution without blocking the rest of the flow.
+
+## Dagster
+
+Dagster takes an asset-centric approach called Software-Defined Assets (SDAs). Instead of defining tasks that run, you define assets that exist — a training dataset, a feature table, a model artifact. Dagster infers the job DAG from asset dependencies. This inversion is powerful for ML: you can materialize a subset of assets on demand, inspect their current freshness, and set partition-level materialization policies. Type-checked inputs and outputs catch schema mismatches at the framework level rather than at runtime. Dagster's UI provides an asset catalog with lineage graphs, run history, and per-asset status.
+
+## Metaflow
+
+Metaflow was developed at Netflix and open-sourced in 2019. Pipelines are Python classes where each method decorated with \`@step\` is a DAG node. The \`@resources\` decorator specifies CPU, memory, and GPU requirements; Metaflow provisions the corresponding AWS Batch or Kubernetes job. The \`@conda\` and \`@pypi\` decorators pin dependencies per step. Metaflow's local execution mode runs the exact same code locally that runs in the cloud, with no code changes. All artifacts are automatically versioned and retrievable via the Metaflow Client API.
+
+## Choosing an Orchestrator
+
+Task-centric orchestrators (Airflow, Prefect) are natural fits for scheduled ETL pipelines with well-understood step sequences. Asset-centric orchestrators (Dagster) fit teams that want to reason about data freshness and lineage as primary concepts. Kubeflow Pipelines and Metaflow are purpose-built for ML, with native support for GPU scheduling, artifact lineage, and experiment tracking integration. Many mature ML platforms use two layers: Airflow for data pipeline scheduling and KFP or Metaflow for the training DAG itself.
+
+![ML Pipeline Orchestration](/diagrams/mlops/pipeline-orchestration.png)`,
+    quickFire: [
+      { q: 'What is XCom in Airflow?', a: 'Cross-communication mechanism that lets Airflow tasks push small values (JSON-serializable) to a metadata database and downstream tasks pull them by key.' },
+      { q: 'What is the difference between a Prefect flow and a task?', a: 'A flow is the top-level workflow function; tasks are the individual units of work inside it. Prefect infers the DAG from how task return values are passed between tasks within the flow.' },
+      { q: 'What is a Software-Defined Asset in Dagster?', a: 'A Python object (decorated with @asset) that represents a persistent data artifact. Dagster tracks its existence, freshness, and lineage rather than just the job that produces it.' },
+      { q: 'How does KFP handle environment isolation between steps?', a: 'Each pipeline component runs in its own Docker container, so each step can have a completely independent Python environment, system libraries, and resource allocation.' },
+      { q: 'What does Metaflow\'s @resources decorator do?', a: 'Specifies the CPU, memory, and GPU requirements for a step so Metaflow can provision the correct cloud compute instance (AWS Batch or Kubernetes pod).' },
+      { q: 'What is backfilling in Airflow?', a: 'Re-running DAG tasks for past scheduled intervals — useful when a bug was fixed or a new transformation needs to be applied retroactively to historical data.' },
+      { q: 'How does KFP step caching work?', a: 'KFP hashes the component code and all input artifact fingerprints. If a previous run produced the same hash combination, the cached output is reused and the step is skipped.' },
+      { q: 'What is a Dagster partition?', a: 'A logical subdivision of an asset (e.g., a daily time partition). Dagster can materialize, backfill, or check freshness at the partition level independently.' },
+      { q: 'What is the main limitation of Airflow for ML pipelines?', a: 'Airflow is task-centric, not asset-centric — it has no built-in concept of the data artifact a task produces, so lineage tracking and freshness reasoning require external tooling.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Compare task-centric and asset-centric orchestration models and explain when you would choose each for an ML platform.',
+        answer: `In a task-centric model (Airflow, Prefect), the primitive is a unit of computation: "run this Python function, then run that Bash script." The DAG describes execution order. Scheduling logic ("run daily at 2am") is attached to the DAG. This model is well-understood, widely deployed, and flexible — any computation can be expressed as a task.
+
+For ETL pipelines with stable schedules and well-defined execution sequences, task-centric orchestrators excel. Airflow's backfill is particularly valuable when historical data must be reprocessed. Prefect's async runtime handles high-fan-out DAGs efficiently.
+
+In an asset-centric model (Dagster), the primitive is a data artifact: "this training dataset exists, it depends on this feature table, which depends on this raw events table." The DAG is inferred from data dependencies, not execution order. You materialize an asset by name; Dagster figures out what needs to run. Freshness policies define how stale an asset can be before it must be rematerialized.
+
+For ML platforms, asset-centric orchestration is a better fit for several reasons. First, ML engineers think in terms of artifacts — "give me the latest user embeddings, trained on last week's data" — not execution graphs. Second, partial rematerialization is natural: if the raw data for one partition is corrected, Dagster can rematerialize just that partition without touching others. Third, the asset catalog provides a self-documenting data dictionary that teams can browse.
+
+The practical choice: use Airflow if your team already has Airflow expertise and the ML pipelines are scheduled batch jobs with stable structure. Adopt Dagster if you are building a new ML platform and want lineage, freshness, and partial rematerialization as first-class features. Use KFP or Metaflow if GPU scheduling, artifact lineage, and experiment tracking integration are primary requirements.`,
+      },
+      {
+        question: 'How would you design a fault-tolerant ML training pipeline that handles transient failures without rerunning expensive steps?',
+        answer: `The core technique is checkpointing at multiple levels: pipeline step outputs, training checkpoints within a single run, and idempotent data writes.
+
+At the pipeline level, use step-level caching in KFP or Metaflow's artifact versioning. Each step writes its output artifacts to durable storage (S3, GCS) before marking itself complete. On retry, the orchestrator checks whether the output artifact already exists with the correct content hash; if it does, the step is skipped. This makes expensive preprocessing steps — tokenization, embedding computation — effectively free on reruns.
+
+At the training level, save model checkpoints every N steps with a checkpoint manager (PyTorch Lightning's ModelCheckpoint, TensorFlow's tf.train.CheckpointManager). On restart, the training loop resumes from the latest valid checkpoint. Combine this with a heartbeat timeout: if the training process has not written a checkpoint within a threshold, the orchestrator kills and restarts the job.
+
+For transient infrastructure failures (spot instance preemption, network timeouts), configure exponential backoff retries at the task level. In Prefect, this is \`@task(retries=3, retry_delay_seconds=exponential_backoff(backoff_factor=2))\`. In Airflow, \`retries=3\` and \`retry_delay=timedelta(minutes=5)\` on the operator.
+
+Idempotent writes prevent duplicate data from accumulating across retries. Use Delta Lake MERGE or write to a partition path that can be overwritten atomically (\`s3://bucket/partition=2024-01-01/\` replaced in full). Never append without deduplication.
+
+Finally, distinguish retriable failures from non-retriable ones. A training divergence (loss NaN) should fail fast without retry; a spot preemption should retry immediately. Use structured exception types in your pipeline code to let the orchestrator make this distinction.`,
+      },
+      {
+        question: 'Describe how you would implement end-to-end artifact lineage tracking across a multi-step ML pipeline.',
+        answer: `Artifact lineage answers the question: "given this model in production, what data was it trained on, what code processed that data, and what evaluation did it pass?" Full lineage requires tracking at three layers: the orchestration layer, the experiment tracking layer, and the model registry.
+
+At the orchestration layer, every step that reads or writes a dataset should log the artifact URI and a content hash. In KFP, this is automatic — components declare typed outputs and KFP stores artifact metadata in ML Metadata (MLMD). In Airflow or Prefect, use OpenLineage (the open standard for data lineage) to emit lineage events from each task to a Marquez or Atlan backend.
+
+At the experiment tracking layer (MLflow, Weights and Biases), log the artifact URI and version identifier as a run parameter alongside hyperparameters. MLflow's \`log_artifact\` and \`log_input\` methods attach dataset URIs to the run record. The run ID links the trained model back to the exact dataset version.
+
+At the model registry, tag each registered model version with the MLflow run ID, the DVC commit hash (or Delta/Iceberg snapshot ID), and the Git commit of the training code. This three-pointer record is sufficient to reconstruct the full provenance: given a model version, retrieve its run ID → retrieve the dataset hash → retrieve the Git commit → reproduce the environment.
+
+Practically, enforce lineage completeness with a pre-registration check: before a model can be promoted to staging, a CI job verifies that all three pointers exist and resolve to valid artifacts. This catches the common failure mode where a data scientist ran training locally without pushing the dataset to DVC, making the run unreproducible.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-model-evaluation',
+    title: 'Model Evaluation — Offline and Online',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Rigorous offline validation and controlled online experiments to safely promote ML models to production.',
+    introduction: `## Two Phases of Model Evaluation
+
+Model evaluation in production systems has two distinct phases: offline evaluation, which happens before deployment using held-out data, and online evaluation, which measures model behavior on live traffic. Relying solely on offline metrics is insufficient — a model that performs well on a static test set can degrade in production due to distribution shift, latency constraints, or interaction effects with other system components. A mature MLOps practice uses both phases systematically.
+
+## Offline Evaluation
+
+The holdout test set is the foundation: a random or stratified sample of labeled examples set aside before any model training. Its integrity depends on avoiding any leakage from training data — including leakage through feature engineering pipelines that look at the full dataset. For classification, standard metrics are precision, recall, F1, and AUC-ROC. For regression, MAE, RMSE, and R².
+
+K-fold cross-validation gives a lower-variance estimate of generalization error by averaging performance across K non-overlapping test folds. For time-series data, temporal cross-validation (walk-forward validation) is essential: the train set always ends before the test set begins, preserving temporal order and avoiding look-ahead bias.
+
+Per-segment fairness slices go beyond aggregate metrics. A model might achieve 92% accuracy overall while performing at 75% for a demographic subgroup. Tools like Fairlearn, TFX Model Analysis, and Google's What-If Tool support slice-level metric computation. Threshold selection — choosing the operating point on the ROC curve — is a business decision: a fraud model may tolerate low precision to minimize missed fraud, while a content moderation model may prioritize precision to avoid false positives.
+
+## Online Evaluation
+
+A/B testing exposes two user segments to different model versions and measures a business metric (conversion rate, engagement, revenue) in addition to ML metrics. The required sample size is determined by the minimum detectable effect (MDE), the desired statistical power (typically 80%), and the significance level (typically 5%). Experiments must run long enough to capture weekly seasonality and avoid novelty effects.
+
+Shadow mode is the safest online evaluation technique. The new model receives a copy of production traffic and generates predictions, but those predictions are discarded — only the production model's output is returned to users. Shadow mode reveals distribution mismatches, latency issues, and crash rates with zero user impact. It is the standard first step for evaluating a new model architecture in production systems.
+
+Champion/challenger evaluation runs both models simultaneously on live traffic with a defined split (e.g., 90% champion, 10% challenger). The challenger is promoted if it meets pre-defined success criteria over a sufficient observation window. Rollback criteria — error rate spike, latency p99 regression, output distribution shift — are defined before the experiment starts.
+
+## Delayed Labels
+
+Many production ML systems face the delayed label problem: ground truth arrives long after the prediction. A loan default label may arrive 30–90 days after origination; a click may arrive milliseconds after the recommendation. Evaluation in these systems requires logging all predictions with a request ID, collecting labels asynchronously, and joining them in a label store. The evaluation window must account for the label delay to avoid artificially optimistic metrics.
+
+![Model Evaluation](/diagrams/mlops/model-evaluation.png)`,
+    quickFire: [
+      { q: 'What is temporal cross-validation?', a: 'A validation scheme for time-series where each train fold ends before the test fold begins, preserving temporal order to prevent look-ahead bias.' },
+      { q: 'What is the minimum detectable effect (MDE) in A/B testing?', a: 'The smallest true difference between variants that the experiment is powered to detect with the specified significance level and statistical power.' },
+      { q: 'What is shadow mode evaluation?', a: 'Running the new model on a copy of production traffic without returning its predictions to users, allowing safe comparison of outputs and performance metrics.' },
+      { q: 'What is a fairness slice in model evaluation?', a: 'A demographic or feature-based subgroup on which model metrics are computed separately to detect performance disparities across groups.' },
+      { q: 'How does the delayed label problem affect online evaluation?', a: 'Ground truth arrives after the prediction, requiring async label collection, request logging with IDs, and a join step before computing real-world accuracy.' },
+      { q: 'What is champion/challenger evaluation?', a: 'Running the incumbent (champion) and candidate (challenger) models simultaneously on live traffic with a defined split and pre-specified rollback criteria.' },
+      { q: 'Why is k-fold cross-validation preferred over a single train/test split?', a: 'It averages performance across K test folds, reducing variance in the metric estimate compared to a single holdout split, especially for smaller datasets.' },
+      { q: 'What is a rollback trigger in online model evaluation?', a: 'A pre-defined threshold — error rate, latency p99, output distribution shift — that, when breached, automatically reverts traffic to the previous model version.' },
+      { q: 'What is interleaving in online evaluation?', a: 'Mixing results from two ranking models in a single response and inferring which model performed better from user interactions, requiring smaller sample sizes than A/B tests.' },
+      { q: 'What is a multi-armed bandit in online model evaluation?', a: 'An adaptive traffic allocation algorithm that continuously shifts more traffic toward better-performing variants, trading statistical rigor for faster convergence.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How would you design an offline evaluation framework for a production recommendation model that handles temporal leakage and per-segment fairness?',
+        answer: `Temporal leakage is the most common and consequential mistake in recommendation system evaluation. It occurs when features computed from the future (relative to the prediction time) leak into training or when the test set overlaps temporally with the training set. The remedy is strict temporal splitting: order all events by timestamp, use all events before cutoff T for training, and all events between T and T+W for testing. Crucially, feature pipelines must be recomputed using only data available before T — this means running a separate feature pipeline pass with a time-bounded view.
+
+For cross-validation, use a walk-forward scheme with multiple cutoffs: train on [0, T1], test on [T1, T1+W]; train on [0, T2], test on [T2, T2+W]; and so on. This gives multiple metric estimates and reveals whether performance is stable across time periods.
+
+Per-segment fairness evaluation requires enumerating the relevant slice dimensions upfront — demographics, item categories, user tenure buckets, geographic regions. Compute precision@K, recall@K, and NDCG separately for each slice. Tools like TFX Model Analysis support slice computation at scale on distributed datasets. Set minimum performance thresholds per slice as a gate: a model cannot be promoted if any critical slice falls below the floor, even if the aggregate metric improves.
+
+Calibration is often overlooked in recommendation evaluation. A model that ranks items correctly but assigns poorly calibrated scores will cause issues in downstream business logic (e.g., bid pricing in ads). Use reliability diagrams and Expected Calibration Error (ECE) as supplementary metrics.
+
+Finally, run the evaluation pipeline as a DAG step in the training pipeline — not as a manual notebook. Gate model promotion on the evaluation job passing all metric thresholds, with the results logged to the model registry as required attributes of the model version.`,
+      },
+      {
+        question: 'Design an A/B test to evaluate a new fraud detection model. Cover sample size, assignment, metric selection, and stopping rules.',
+        answer: `Fraud detection A/B tests have several properties that differ from typical recommendation experiments: labels are delayed (fraud confirmed days to weeks later), the positive rate is very low (class imbalance), and the cost of false negatives (missed fraud) vastly outweighs false positives (blocked legitimate transactions).
+
+Sample size: The power calculation requires specifying the MDE (e.g., a 10% relative reduction in fraud rate), baseline fraud rate (e.g., 0.5%), desired power (80%), and significance level (5%). For a 0.5% base rate and 10% MDE, the required sample is on the order of hundreds of thousands of transactions per arm. Use Statsig or Evan Miller's calculator to compute this before the experiment starts.
+
+Assignment must be at the user level (not transaction level) to avoid the same user receiving inconsistent model decisions across transactions, which can create confounding signals. Use a deterministic hash of the user ID modulo 100 to assign users to control (incumbent model) or treatment (new model) at session start. Ensure the assignment is logged with each transaction.
+
+Primary metric: fraud rate (confirmed fraud / total transactions) in the treatment arm vs. control arm. Secondary metrics: false positive rate (legitimate transactions blocked), average review queue depth, and transaction approval latency. Statistical test: two-proportion z-test for the primary metric. Apply a Bonferroni correction for multiple secondary metrics.
+
+Stopping rules: define a minimum run duration (14 days to capture weekly seasonality) and a label collection window (30 days post-transaction for ground truth). Do not evaluate primary metrics until the label window closes. Use sequential testing (e.g., always-valid p-values via mSPRT) only if early stopping is required for operational reasons — in fraud, it is usually better to wait for full label collection. Define a rollback trigger: if the treatment's false positive rate exceeds control by more than 2 percentage points at any checkpoint, stop and roll back.`,
+      },
+      {
+        question: 'Explain the shadow mode deployment pattern and describe the operational infrastructure needed to support it.',
+        answer: `Shadow mode is the lowest-risk technique for evaluating a new model against live traffic. The serving layer receives a request, routes it to the production (shadow host) model, and simultaneously sends a copy to the shadow (candidate) model. The production model's response is returned to the user; the shadow model's response is discarded or written to a log. The shadow model's errors, latency, and output distribution are monitored without affecting user experience.
+
+The operational infrastructure has four components. First, a request duplication layer: either a sidecar proxy (Envoy, Nginx) that forks requests to a shadow backend, or application-level duplication where the serving code calls both models asynchronously. The shadow call must be fire-and-forget — its latency should not block the production response. Use asyncio (Python) or goroutines (Go) with a timeout shorter than the production SLO.
+
+Second, a shadow log store: all shadow requests, responses, latencies, and errors are written to a durable queue (Kafka, Kinesis) and consumed into a comparison table. Schema: request_id, timestamp, production_output, shadow_output, production_latency_ms, shadow_latency_ms, shadow_error (nullable).
+
+Third, a comparison pipeline: a batch or streaming job joins shadow outputs with ground truth labels (when available) and computes metric distributions. Statistical tests (KS test for continuous outputs, chi-squared for categorical) detect output distribution divergence between the two models.
+
+Fourth, alerting: dashboards and alerts on shadow error rate, latency p95 and p99, and output distribution shift relative to production. A shadow model that crashes 1% of requests reveals a serialization bug before it hits users.
+
+Shadow mode is time-bounded: run it long enough to cover the full distribution of input patterns (typically 7–14 days), then proceed to a canary or A/B experiment if the shadow metrics are acceptable.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-azure-platform',
+    title: 'Azure Machine Learning Platform',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'End-to-end ML lifecycle management using Azure ML workspaces, managed endpoints, MLflow integration, and Responsible AI tooling.',
+    introduction: `## Azure ML Workspace
+
+The Azure Machine Learning workspace is the top-level resource that organizes all ML assets: experiments, datasets, environments, models, compute targets, and endpoints. Every resource created in the SDK, CLI, or Studio UI is registered in the workspace and discoverable by all team members. Workspaces are deployed in an Azure subscription and connected to supporting resources: an Azure Storage Account (for artifact storage), Azure Container Registry (for environment images), Azure Key Vault (for secrets), and Application Insights (for endpoint monitoring).
+
+Role-based access control (RBAC) at the workspace level separates data scientists (who can submit runs and register models) from ML engineers (who can deploy endpoints) from administrators (who manage compute and quotas). Workspaces support private endpoints and VNet integration for enterprise network isolation.
+
+## Experiments, Runs, and Environments
+
+An experiment is a named grouping of training runs. A run is a single execution of a training script; it captures parameters, metrics, and artifacts logged via MLflow or the Azure ML SDK. Azure ML uses MLflow as its native tracking backend — \`mlflow.log_metric()\`, \`mlflow.log_param()\`, and \`mlflow.log_artifact()\` all work without modification, making experiments portable to other MLflow-compatible servers.
+
+Environments define the Python packages, conda dependencies, and Docker base image for a training job or endpoint. Azure ML curates environments for common frameworks (PyTorch, TensorFlow, HuggingFace) that are pre-built and cached in ACR, reducing startup time. Custom environments are defined in YAML and built once, then reused across runs.
+
+## Compute Targets and Azure ML Pipelines
+
+Compute targets range from single-node VMs (compute instances, for interactive development) to auto-scaling compute clusters (AmlCompute, for batch training) to attached Kubernetes clusters (AKS, for serving) and Azure Databricks (for large-scale data processing). Compute clusters scale to zero when idle, so teams pay only for active training time.
+
+Azure ML Pipelines chain steps — data preparation, feature engineering, training, evaluation, registration — into a reproducible DAG. Each step runs on its own compute target and environment, enabling heterogeneous pipelines (e.g., a Spark step for feature engineering followed by a GPU step for training). Pipeline outputs are registered as datasets, creating automatic lineage.
+
+## Managed Endpoints
+
+Online endpoints provide real-time inference with SLA-backed availability. A deployment specifies the model, environment, compute SKU, and instance count. Traffic is routed to one or more deployments using a percentage split, enabling blue/green and canary patterns natively. Batch endpoints process large files asynchronously using AmlCompute, returning predictions to blob storage.
+
+The Responsible AI Dashboard, available in Azure ML Studio, integrates error analysis (decision tree–based error pattern discovery), fairness assessment (metric disparity across demographic slices), model interpretability (SHAP values), and causal analysis (DoWhy integration) into a single visualization surface. It is generated as a pipeline component that runs after model training and is attached to the registered model.
+
+## Azure Databricks Integration
+
+Azure Databricks is the preferred platform for large-scale feature engineering and distributed training. The integration with Azure ML allows Databricks compute clusters to be attached as training targets and enables bidirectional MLflow tracking: runs started in Databricks are visible in the Azure ML workspace experiment view. Feature tables created in Databricks Feature Store can be consumed directly by Azure ML training jobs and online endpoints.
+
+![Azure ML Platform](/diagrams/mlops/azure-ml-platform.png)`,
+    quickFire: [
+      { q: 'What Azure resources does an Azure ML workspace connect to?', a: 'Azure Storage Account (artifacts), Azure Container Registry (environment images), Azure Key Vault (secrets), and Application Insights (endpoint telemetry).' },
+      { q: 'How does Azure ML use MLflow?', a: 'MLflow is the native experiment tracking backend. Standard mlflow.log_metric / log_param / log_artifact calls work without modification and are stored in the Azure ML workspace.' },
+      { q: 'What is an Azure ML environment?', a: 'A versioned specification of Python packages, conda dependencies, and Docker base image used to run a training job or serve a model endpoint.' },
+      { q: 'What is AmlCompute?', a: 'Azure ML managed compute clusters that auto-scale to zero when idle, used for batch training jobs and pipeline steps.' },
+      { q: 'How do Azure ML online endpoints support canary deployments?', a: 'An online endpoint can host multiple deployments simultaneously, with traffic split by percentage across them — enabling gradual traffic shifts.' },
+      { q: 'What does the Responsible AI Dashboard in Azure ML provide?', a: 'Error analysis, fairness assessment, model interpretability (SHAP), and causal analysis integrated into a single post-training visualization attached to a registered model.' },
+      { q: 'What is a batch endpoint in Azure ML?', a: 'An endpoint that processes large input files asynchronously on AmlCompute and writes predictions back to blob storage, suitable for scoring millions of records offline.' },
+      { q: 'How does Azure Databricks integrate with Azure ML?', a: 'Databricks clusters can be attached as training compute targets, and MLflow runs started in Databricks are visible in the Azure ML workspace experiment view.' },
+      { q: 'What is the difference between Azure ML Pipelines and Azure ML Designer?', a: 'Pipelines are code-first DAGs defined in Python/YAML; Designer is a drag-and-drop GUI for building similar pipelines without code.' },
+      { q: 'How does Azure ML AutoML work?', a: 'AutoML automatically iterates over algorithm families, preprocessing steps, and hyperparameters to find the best-performing model for a given dataset and task type within a compute budget.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Design an end-to-end MLOps pipeline on Azure that covers data ingestion, training, evaluation, registration, and deployment with CI/CD gates.',
+        answer: `The pipeline has six stages, implemented as an Azure ML Pipeline DAG triggered by GitHub Actions.
+
+Stage 1 — Data ingestion and validation: an Azure Data Factory pipeline moves raw data from source systems to Azure Data Lake Storage. A validation step using Great Expectations or Azure ML's built-in data drift detection checks schema, null rates, and statistical distributions. If validation fails, the pipeline aborts and sends an alert to PagerDuty.
+
+Stage 2 — Feature engineering: a PySpark job on Azure Databricks computes features and writes them to a Delta Lake feature table registered in the Azure ML Dataset catalog. The output dataset version is logged to the Azure ML run.
+
+Stage 3 — Training: an Azure ML Pipeline step submits a training job to an AmlCompute GPU cluster. The training script logs metrics and artifacts via MLflow. The environment is pinned to a versioned Azure ML environment to ensure reproducibility.
+
+Stage 4 — Evaluation: a separate pipeline step loads the trained model and runs evaluation on a held-out test set. It computes aggregate metrics and per-segment fairness slices using the Responsible AI Dashboard component. A Python evaluation script compares the new model's metrics against the current champion registered in the Azure ML Model Registry. If the new model does not meet the minimum threshold (e.g., AUC ≥ 0.01 improvement), the pipeline fails with a descriptive error.
+
+Stage 5 — Registration: on evaluation pass, the model is registered in the Azure ML Model Registry with tags for the run ID, dataset version, Git commit, and evaluation metrics.
+
+Stage 6 — Deployment: a GitHub Actions workflow detects the new registered model, deploys it to a staging online endpoint using blue/green, runs smoke tests (latency, schema validation), and promotes traffic to 100% on success. Production deployment requires a manual approval gate from a senior engineer.`,
+      },
+      {
+        question: 'How would you monitor an Azure ML online endpoint in production and respond to model drift?',
+        answer: `Azure ML online endpoints emit telemetry to Application Insights automatically: request count, latency percentiles (p50, p95, p99), HTTP error rates, and deployment-level health. These are the infrastructure metrics — they tell you if the endpoint is up and fast, but not if the model is making good predictions.
+
+Model-level monitoring requires three additional data streams. First, input data distribution monitoring: log a sample of inference inputs (with PII stripped) to Azure Blob Storage. A scheduled Azure ML monitoring job (DataDriftDetector) compares the input feature distribution against the training data distribution using the Population Stability Index (PSI) or Jensen-Shannon divergence. A PSI > 0.2 on any critical feature triggers a drift alert.
+
+Second, prediction distribution monitoring: log the output score distribution and a rolling histogram of predicted labels. A sudden shift — for example, the fraction of high-confidence positive predictions dropping from 5% to 1% — can indicate upstream data issues before ground truth is available.
+
+Third, outcome monitoring (where labels are available): join prediction logs with ground truth labels in a label store and recompute business metrics (precision, recall, AUC) on a rolling 7-day window. If the metric drops below the rollback threshold, trigger the incident response.
+
+The incident response playbook has three tiers. Tier 1 (input drift, no metric degradation): investigate the upstream data pipeline, notify data engineering, increase monitoring frequency. Tier 2 (metric degradation, within SLO): trigger retraining on recent data, evaluate the retrained model in shadow mode, promote if metrics recover. Tier 3 (metric degradation, SLO breach): immediately roll back traffic to the previous champion endpoint version, trigger Tier 2 in parallel.
+
+All monitoring jobs and alerts are defined as code in the repository and provisioned by Terraform, ensuring the monitoring setup is reproducible across environments.`,
+      },
+      {
+        question: 'Explain how you would use Azure ML\'s Responsible AI Dashboard to detect and mitigate bias in a credit scoring model.',
+        answer: `The Responsible AI (RAI) Dashboard is generated as a post-training Azure ML Pipeline component that takes the trained model, the test dataset, and a specification of sensitive features (race, gender, age group) and produces an interactive HTML report attached to the registered model version.
+
+The error analysis component uses a decision tree algorithm to partition the test set into groups that the model disproportionately misclassifies. For a credit scoring model, this might reveal that applicants from a specific zip code cluster have a false negative rate (approved loans that defaulted) three times the overall rate — suggesting the model has learned a spurious geographic proxy for a protected attribute.
+
+The fairness component computes demographic parity (difference in approval rates across groups), equalized odds (difference in true positive and false positive rates), and equal opportunity (difference in true positive rate) for each sensitive feature. Azure ML's Fairlearn integration surfaces these metrics in the dashboard alongside the model's overall AUC, making the tradeoff between accuracy and fairness explicit.
+
+The model interpretability component computes SHAP values for each feature using TreeSHAP or KernelSHAP, depending on the model type. For the credit scoring model, SHAP values reveal which features drive individual predictions. If a legally protected attribute (or a close proxy like zip code) appears in the top-5 features by mean absolute SHAP value, this is a red flag requiring investigation.
+
+Mitigation options fall into three categories. Pre-processing: resample the training data to balance representation across protected groups; apply fairness-aware feature transformations to remove proxy signals. In-processing: use Fairlearn's reductions approach (ExponentiatedGradient with a fairness constraint) to retrain the model subject to a demographic parity or equalized odds constraint. Post-processing: apply threshold optimization using Fairlearn's ThresholdOptimizer to set group-specific decision thresholds that equalize a chosen fairness metric.
+
+The chosen mitigation must be re-evaluated on the test set, and the updated RAI Dashboard should show improved fairness metrics without unacceptable accuracy degradation. This process and its tradeoffs must be documented in the model card before production deployment.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-deployment-strategies',
+    title: 'Model Deployment Strategies',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Blue/green, canary, shadow, A/B, and feature flag strategies for safely promoting ML models to production.',
+    introduction: `## Why Deployment Strategy Matters for ML
+
+Deploying a new model version is riskier than deploying a new software version. A code change has deterministic behavior given the same inputs; a new model may produce different outputs for the exact same request, affecting user experience in ways that are hard to predict from offline metrics alone. The deployment strategy controls the blast radius of any unexpected behavior: how quickly a bad model reaches users, and how quickly it can be rolled back.
+
+## Blue/Green Deployment
+
+Blue/green maintains two identical production environments. The blue environment runs the current model; the green environment runs the new model. Traffic is switched atomically from blue to green at the load balancer level. Rollback is instant — switch traffic back to blue. The cost is maintaining two full production environments simultaneously, which doubles the serving infrastructure cost during the transition window.
+
+Blue/green is the right choice when the model change is large enough that gradual exposure is not meaningful, or when the serving infrastructure does not support traffic splitting natively. It is also preferred when rollback speed is the primary concern and cost is secondary.
+
+## Canary Deployment
+
+A canary routes a small fraction of traffic — typically 1%, then 10%, then 50%, then 100% — to the new model while the remainder stays on the current model. Metrics are evaluated at each gate before traffic is increased. If any gate metric falls outside the acceptance window, the rollout is halted and traffic is returned to 0% on the new model.
+
+The key design decisions are: what fraction to use at each gate, how long to observe each gate (the observation window), and which metrics are gate-qualified. Business metrics (conversion, revenue per session) require larger sample sizes and longer windows than infrastructure metrics (error rate, latency). For ML-specific metrics (output distribution, score distribution), use KS tests to detect statistically significant divergence.
+
+## Shadow Mode
+
+Shadow mode runs the new model in parallel with production, receiving a copy of each request but not returning its response to users. It is the lowest-risk evaluation technique because it has zero user impact. Shadow mode is used to validate that a new model: (a) produces responses without crashing, (b) meets latency requirements under real traffic patterns, and (c) produces output distributions consistent with expectations. It does not validate that the model produces better predictions — that requires an A/B test or champion/challenger experiment.
+
+## Feature Flags
+
+Feature flags decouple deployment from release. A new model is deployed to all serving instances but routed to only a subset of users based on a flag configuration in a feature flag service (LaunchDarkly, Unleash, GrowthBook). This enables targeting: the new model can be activated for internal users first, then beta users, then a percentage of production users. Flags can be toggled in seconds without a deployment, making rollback instantaneous.
+
+## Multi-Armed Bandit
+
+A multi-armed bandit continuously reallocates traffic toward better-performing variants. Unlike A/B tests with a fixed allocation, bandits adapt: if the new model is winning on the reward metric (clicks, conversions), more traffic shifts to it automatically. Thompson Sampling and Upper Confidence Bound (UCB) are common bandit algorithms. Bandits are appropriate when the objective is to maximize reward during the experiment, not to reach a statistically definitive conclusion. They are widely used in recommendation and ad ranking systems.
+
+## Rollback Triggers
+
+Every deployment strategy needs pre-defined rollback triggers. Define them before the rollout begins: error rate > X%, latency p99 > Y ms, output distribution KS statistic > Z. Automated rollback — triggered by monitoring alerts without human intervention — is preferable for fast-moving systems. Manual rollback requires an on-call engineer to observe the alert, assess severity, and execute the rollback procedure, which introduces minutes of delay.
+
+![Deployment Strategies](/diagrams/mlops/deployment-strategies.png)`,
+    quickFire: [
+      { q: 'What is the key operational difference between blue/green and canary deployment?', a: 'Blue/green switches all traffic atomically between two environments; canary gradually shifts a small percentage of traffic to the new version, observing metrics at each gate.' },
+      { q: 'What is the primary advantage of shadow mode?', a: 'Zero user impact — the new model receives real traffic and its behavior is observed without its responses ever being returned to users.' },
+      { q: 'How do feature flags differ from canary deployments?', a: 'Feature flags decouple deployment from release: the code is deployed everywhere but activated for only a targeted subset of users via a flag service, without requiring a new deployment to roll back.' },
+      { q: 'What is Thompson Sampling in a multi-armed bandit?', a: 'A Bayesian bandit algorithm that samples from the posterior distribution of each arm\'s reward probability and routes the next request to the arm with the highest sample — naturally balancing exploration and exploitation.' },
+      { q: 'What rollback triggers should be defined before a canary rollout?', a: 'Error rate threshold, latency p99 threshold, output distribution KS statistic threshold, and business metric degradation threshold — all defined before the rollout starts.' },
+      { q: 'Why is blue/green deployment more expensive than canary?', a: 'Blue/green requires maintaining two full production environments simultaneously during the transition window, doubling the serving infrastructure cost.' },
+      { q: 'What is a traffic gate in a canary deployment?', a: 'A checkpoint where metrics are evaluated before the next traffic increment is applied. If gate metrics fail, the rollout is paused or reversed.' },
+      { q: 'When would you choose a multi-armed bandit over an A/B test?', a: 'When maximizing reward during the experiment is more important than reaching a statistically clean conclusion — common in recommendation, ad ranking, and content optimization systems.' },
+      { q: 'What is the observation window in a canary deployment?', a: 'The minimum time at each traffic gate before metrics are evaluated and the next increment is considered, chosen to capture enough samples for statistical significance and cover daily/weekly cycles.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Design a complete canary rollout procedure for a new ranking model at a large e-commerce platform.',
+        answer: `The procedure starts before any code is written: define success criteria and rollback triggers in a deployment document reviewed by the product and engineering teams. Primary success metric: revenue per session (business outcome). Secondary metrics: click-through rate, add-to-cart rate, latency p99. Rollback triggers: error rate > 0.1%, latency p99 > 200ms (vs. 150ms baseline), revenue per session degradation > 5% at any gate.
+
+Pre-deployment: run the new model in shadow mode for 7 days. Validate that error rates are near zero, latency is within budget, and output distributions (top-K score distributions) are not wildly different from production. Confirm that the shadow model handles all input edge cases (empty queries, cold-start users, unsupported locales).
+
+Gate 1 — 1% traffic for 24 hours: this is a smoke test at scale. Monitor infrastructure metrics (error rate, latency) hourly. Do not evaluate business metrics at 1% — the sample is too small for statistical significance on revenue per session. Proceed to Gate 2 if error rate < 0.05% and latency p99 < 180ms.
+
+Gate 2 — 10% traffic for 48 hours: sufficient for statistical significance on CTR (higher volume, shorter cycle). Run a two-proportion z-test on CTR. If CTR improvement is significant at p < 0.05, proceed. If degradation is significant at p < 0.05, roll back. If inconclusive, extend the observation window by 24 hours before deciding.
+
+Gate 3 — 50% traffic for 72 hours: full business metric evaluation. Revenue per session requires the most samples due to high variance. Use a t-test with Welch's correction. Evaluate daily, accounting for weekday/weekend seasonality. Proceed to 100% if all metrics pass; roll back automatically if any rollback trigger is hit.
+
+Gate 4 — 100% traffic: decommission the old model after a 24-hour observation period at full traffic. Keep the old model's artifact in the registry for 30 days in case a rollback is needed.
+
+Automate gates 1 and 2 with your deployment platform's metric-gated rollout feature. Require human approval for Gate 3 → 100% transition.`,
+      },
+      {
+        question: 'Compare feature flags and canary deployments as model rollout strategies. When would you choose each?',
+        answer: `Feature flags and canary deployments both control the exposure of a new model to users, but they operate at different layers and serve different needs.
+
+Canary deployment is an infrastructure-level strategy. Traffic is split at the load balancer or service mesh. All users in the canary segment receive the new model's responses, regardless of who they are. The serving infrastructure must support weighted routing (Kubernetes service mesh with Istio, AWS ALB weighted target groups, Nginx upstream weights). Canary is the right choice when the model change is self-contained — the same code and model artifact are used for all users, and the only question is whether the new model performs better in aggregate.
+
+Feature flags operate at the application level. The model selection logic is inside the serving code: "if feature flag X is enabled for this user, use model v2; otherwise use model v1." Both models are deployed and running. The flag service (LaunchDarkly, Unleash) evaluates flag rules — user attributes, percentage rollout, cohort membership — and returns the flag value for each request. Rollback is toggling the flag to 0%, which takes effect in seconds without a deployment.
+
+Choose feature flags when: you need to target specific user segments (beta users, premium tier, internal employees) rather than a random percentage; when you want to enable rollback faster than a deployment cycle; when the rollout depends on user attributes that the load balancer cannot see; or when you need to run multiple model variants simultaneously for different experiments.
+
+Choose canary when: you want infrastructure-level traffic control that is model-serving-framework agnostic; when the serving code is too complex to add per-request flag logic; or when you are evaluating the new model on a clean random sample for an unbiased statistical comparison.
+
+In practice, mature ML platforms use both: feature flags for targeting and fast rollback, with canary-style metric gating applied to the flag rollout (e.g., GrowthBook's metric-gated sequential rollout). The combination gives the targeting flexibility of flags and the safety of canary gates.`,
+      },
+      {
+        question: 'How do you implement automated rollback for a production ML model and what signals drive it?',
+        answer: `Automated rollback requires three components: signal collection, threshold evaluation, and rollback execution — all implemented as code and tested before every deployment.
+
+Signal collection: the serving layer emits structured logs and metrics to a time-series database (Prometheus, Datadog). Key signals fall into three categories. Infrastructure signals (collected in real time): HTTP error rate by status code, request latency p50/p95/p99, model loading errors, memory and CPU utilization. ML output signals (collected per request): output score distribution (mean, std, percentiles), prediction confidence histogram, fraction of inputs where the model falls back to a default. Business signals (computed on streaming windows): conversion rate, click-through rate, add-to-cart rate — these lag real-time signals by minutes to hours.
+
+Threshold evaluation: a monitoring job evaluates each signal against its rollback threshold on a defined cadence (every 5 minutes for infrastructure, every 30 minutes for ML output, every 2 hours for business signals). Thresholds are defined as absolute values (error rate > 0.5%), relative values (latency p99 > 1.5x baseline), or statistical tests (KS statistic > 0.1 on output score distribution). Thresholds are stored in version-controlled configuration alongside the deployment definition.
+
+Rollback execution: when a threshold is breached, the monitoring job sends a webhook to the deployment platform. For Kubernetes deployments, this triggers a \`kubectl rollout undo\` to the previous ReplicaSet. For cloud-managed endpoints (Azure ML, SageMaker, Vertex), the rollback script updates the traffic split to 100% on the previous deployment. The rollback must complete within 60 seconds — if it takes longer, alert the on-call engineer.
+
+Post-rollback: send an incident notification with the triggering signal, the timestamp, and a link to the deployment logs. Require a post-mortem before the same model version is re-promoted. Store the rollback event in the model registry as a note on the model version.
+
+Test automated rollback quarterly by deliberately deploying a model that exceeds a rollback threshold in a staging environment and verifying that the rollback executes within the SLO.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-ml-security',
+    title: 'ML Security and Adversarial Robustness',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Adversarial attacks, data poisoning, model stealing, supply chain risks, and defenses including adversarial training and differential privacy.',
+    introduction: `## The ML Security Surface
+
+Machine learning systems introduce security vulnerabilities that do not exist in traditional software. The attack surface spans the entire ML lifecycle: data collection and labeling, model training, model storage and distribution, and inference serving. A mature MLSecOps practice treats these threats with the same rigor applied to application security — threat modeling, attack simulation, defense implementation, and continuous monitoring.
+
+## Adversarial Examples
+
+Adversarial examples are inputs crafted to fool a model while appearing normal to a human observer. The Fast Gradient Sign Method (FGSM) adds a perturbation proportional to the gradient of the loss with respect to the input, in the direction that maximizes prediction error. A single-step attack, FGSM is fast but detectable. Projected Gradient Descent (PGD) iterates FGSM multiple times, projecting the perturbation back into an epsilon-ball after each step — it finds stronger adversarial examples within a given perturbation budget.
+
+Physical adversarial attacks extend this to the real world: adversarial patches printed on paper can fool object detection systems in camera feeds. In NLP, character substitution, synonym replacement, and homoglyph attacks fool text classifiers with imperceptible changes. In speech, psychoacoustic hiding inserts commands inaudible to humans but interpreted by voice recognition systems.
+
+## Data Poisoning
+
+Data poisoning attacks corrupt the training pipeline rather than inference. In backdoor attacks, an attacker inserts training examples with a trigger pattern (a specific pixel patch, a word token) and a target label. The trained model behaves normally on clean inputs but produces the attacker's chosen label whenever the trigger is present. Clean-label attacks do not change the label — they modify the input features imperceptibly to cause the model to learn incorrect decision boundaries.
+
+Label flipping attacks change a fraction of training labels from correct to incorrect, degrading overall model accuracy or targeting a specific class. In federated learning, a malicious participant can submit poisoned gradient updates that survive aggregation.
+
+## Model Stealing and Membership Inference
+
+Model stealing extracts a functionally equivalent copy of a model by querying its prediction API repeatedly. Given enough (input, output) pairs, an attacker can train a surrogate model that matches the target's behavior. This undermines the business value of proprietary models and enables targeted adversarial attacks (since the surrogate is a white-box proxy).
+
+Membership inference attacks determine whether a specific record was in the training set by querying the model. Models that overfit tend to output higher confidence scores for training examples than for unseen examples. This is a privacy violation when the training data contains sensitive personal information (medical records, private communications).
+
+## Supply Chain Attacks
+
+Pre-trained models downloaded from public hubs (HuggingFace, PyPI) can carry embedded backdoors that survive fine-tuning. Pickle-based serialization formats (\`torch.load\`, \`pickle.load\`) execute arbitrary Python code on deserialization — a malicious \`.pt\` file can run a reverse shell. This is a critical supply chain risk for teams that download pre-trained weights without verification.
+
+## Defenses
+
+Adversarial training augments the training set with adversarially perturbed examples, teaching the model to correctly classify inputs near the decision boundary. PGD-adversarial training is the most robust known defense against norm-bounded attacks.
+
+Differential privacy (DP-SGD) adds calibrated Gaussian noise to gradients during training, providing a formal privacy guarantee: an attacker cannot determine with high confidence whether any individual record was in the training set. The privacy-utility tradeoff is parameterized by epsilon (smaller = stronger privacy guarantee = lower model accuracy).
+
+Input preprocessing defenses (JPEG compression, feature squeezing, randomized smoothing) reduce the effectiveness of adversarial perturbations before inference. Randomized smoothing is the only defense with a certified robustness guarantee: it provably classifies an input correctly within a certified perturbation radius.
+
+Threat modeling for ML systems — enumerating assets (training data, model weights, serving API), threat actors, and attack vectors — is the NIST AI Risk Management Framework's recommended starting point for any production ML security program.
+
+![ML Security](/diagrams/mlops/ml-security.png)`,
+    quickFire: [
+      { q: 'What is FGSM?', a: 'Fast Gradient Sign Method — a single-step adversarial attack that adds a perturbation equal to epsilon times the sign of the loss gradient w.r.t. the input, maximizing prediction error.' },
+      { q: 'How does a backdoor attack differ from a label flipping attack?', a: 'Backdoor attacks insert a trigger pattern that activates a specific target label at inference time while leaving clean-input accuracy intact. Label flipping corrupts training labels directly, degrading overall accuracy.' },
+      { q: 'What makes pickle deserialization a security risk for ML?', a: 'pickle.load executes arbitrary Python code embedded in the serialized file. A malicious .pt or .pkl file can run arbitrary commands on the machine that loads it.' },
+      { q: 'What is differential privacy in ML?', a: 'A training technique (DP-SGD) that adds calibrated Gaussian noise to gradient updates, providing a formal guarantee (parameterized by epsilon) that individual training records cannot be identified from the model.' },
+      { q: 'What is model stealing?', a: 'Querying a model\'s prediction API with many inputs to collect (input, output) pairs and training a surrogate model that replicates the target\'s behavior.' },
+      { q: 'What is membership inference?', a: 'Inferring whether a specific record was in a model\'s training set, typically by exploiting the higher confidence scores models assign to training examples vs. unseen examples.' },
+      { q: 'What is randomized smoothing?', a: 'A defense that classifies an input by majority vote over many Gaussian-noisy copies, providing a certified robustness guarantee within a provable perturbation radius.' },
+      { q: 'What is a PGD attack?', a: 'Projected Gradient Descent — an iterative adversarial attack that applies FGSM multiple times and projects the perturbation back into an L-infinity epsilon-ball after each step, finding stronger adversarial examples.' },
+      { q: 'What is the NIST AI Risk Management Framework?', a: 'A voluntary framework from NIST for identifying, assessing, and managing risks throughout the AI system lifecycle, including adversarial threats, bias, and supply chain risks.' },
+      { q: 'How can federated learning be vulnerable to poisoning?', a: 'A malicious participant can submit poisoned gradient updates that, after aggregation, shift the global model toward a targeted misclassification without being detected by standard Byzantine-robust aggregation.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Describe the threat landscape for a production ML model serving real-time fraud predictions, and prioritize the top three mitigations.',
+        answer: `The fraud prediction model has three primary attack surfaces: the inference API, the training pipeline, and the model artifact supply chain.
+
+The inference API is exposed to adversarial example attacks. A sophisticated fraudster who knows or can approximate the model architecture can craft transaction features that bypass the fraud detector — for example, slightly adjusting transaction amounts, merchant categories, or timing patterns to cross the model's decision boundary from positive to negative. The attacker does not need white-box access; with enough queries, they can estimate gradients through the API (a transfer attack via a stolen surrogate model).
+
+The training pipeline is exposed to data poisoning if the feedback loop is not protected. If fraudsters can systematically dispute fraudulent transactions and have their labels flipped to "legitimate" (by a manual review process that the attacker has learned to game), they can gradually shift the model's decision boundary. This is a real-world attack observed in payment fraud systems.
+
+The supply chain is exposed if the model uses pre-trained embeddings or third-party libraries downloaded from public sources without integrity verification.
+
+Top three mitigations in priority order:
+
+1. Adversarial training (inference robustness): generate PGD adversarial examples during training using the fraud model's own gradients. Include them in the training set alongside clean examples. This is the most direct mitigation for adversarial input attacks and has well-understood empirical effectiveness.
+
+2. Input anomaly detection (API protection): monitor the distribution of inference inputs in real time. Flag requests whose feature vectors are far from the training distribution (high Mahalanobis distance or low-density under a KDE). Rate-limit IPs that submit statistically unusual feature patterns — this disrupts systematic adversarial probing.
+
+3. Label pipeline hardening (poisoning prevention): require a minimum review queue depth and reviewer agreement before flipping disputed labels. Implement concept drift monitoring on label quality: if the fraction of disputed transactions that are re-labeled "legitimate" spikes, alert the fraud operations team. Retrain only on labels that have passed the review queue, never on raw dispute outcomes.`,
+      },
+      {
+        question: 'Explain differential privacy in ML training: what guarantee does it provide, how is it implemented with DP-SGD, and what are the practical tradeoffs?',
+        answer: `Differential privacy provides a mathematical guarantee: an algorithm is (epsilon, delta)-differentially private if, for any two datasets differing by a single record, the probability of any output is at most e^epsilon times higher on one dataset than the other (with a delta failure probability). In plain terms: an adversary with access to the trained model cannot determine with high confidence whether any specific individual's record was in the training data. This protects against membership inference attacks and is a regulatory requirement for models trained on medical, financial, or other sensitive data.
+
+DP-SGD (Differentially Private Stochastic Gradient Descent, introduced by Abadi et al. 2016) implements differential privacy during neural network training. It modifies two steps of standard SGD. First, per-example gradient clipping: each individual example's gradient vector is clipped to L2 norm C. This bounds the sensitivity — the maximum influence a single training example can have on the gradient. Second, Gaussian noise addition: after clipping, isotropic Gaussian noise scaled to sigma * C is added to the summed gradient before the parameter update. The noise masks the contribution of any individual example.
+
+The privacy accountant tracks the cumulative privacy cost across all training steps. The TensorFlow Privacy library (which provides the reference DP-SGD implementation) uses the Rényi Differential Privacy accountant, which gives tighter epsilon bounds than the basic composition theorem. The final (epsilon, delta) guarantee is a function of the noise multiplier sigma, the clipping norm C, the batch size, the number of training steps, and the dataset size.
+
+The practical tradeoffs are significant. First, utility: DP training consistently reduces model accuracy. On CIFAR-10, a well-tuned DP-SGD run with epsilon=3 achieves 80-85% accuracy vs. 95%+ for non-private training. On small datasets or complex architectures, the gap is larger. Second, compute cost: per-example gradient computation is more expensive than batch gradient computation — typically 2-4x wall-clock time per epoch. Third, hyperparameter sensitivity: noise multiplier and clipping norm must be tuned jointly; poor choices cause either excessive accuracy loss or insufficient privacy. Fourth, the epsilon guarantee is meaningful only if delta is negligible (typically 1/N where N is the dataset size) and if the privacy accountant's assumptions hold (random batch sampling, independent noise draws).
+
+Practical recommendations: use DP-SGD for fine-tuning pre-trained models rather than training from scratch — the pre-trained representation provides a strong initialization that requires fewer DP-trained epochs. Use the TF Privacy library's epsilon calculator to verify that the chosen hyperparameters achieve the target epsilon before starting training.`,
+      },
+      {
+        question: 'How would you secure the ML model supply chain from pre-training artifact to production deployment?',
+        answer: `The ML supply chain attack surface starts at the pre-trained model artifact and extends through fine-tuning, serialization, registry storage, and deployment. Each stage is an injection point.
+
+Stage 1 — Source verification: before downloading any pre-trained model from HuggingFace Hub, PyPI, or a public S3 bucket, verify its SHA-256 hash against the value published by the model's authors in a separately secured location (not the same README that could be compromised). HuggingFace Hub supports cryptographic signatures via the \`huggingface_hub\` library's \`hf_hub_download\` with hash verification. Add this verification to your CI pipeline — no model artifact is used without a passing hash check.
+
+Stage 2 — Safe deserialization: never use \`torch.load()\` or \`pickle.load()\` on artifacts from untrusted sources. These formats execute arbitrary code on deserialization. Use \`torch.load(..., weights_only=True)\` (PyTorch 2.0+) to restrict deserialization to tensors only, rejecting any embedded Python objects. For frameworks without a safe deserialization option, convert artifacts to safetensors format immediately after downloading and work exclusively with the converted file.
+
+Stage 3 — Backdoor scanning: run STRIP (STRong Intentional Perturbation) or Neural Cleanse on downloaded pre-trained models. These tools detect backdoors by looking for anomalous activation patterns or finding trigger patterns that cause class collapse. Integrate scanning into the CI pipeline — flag any model that fails scanning for manual review before fine-tuning begins.
+
+Stage 4 — Private model registry: store all approved model artifacts in a private registry (Azure ACR, AWS ECR, Artifactory) with immutable tags and access logging. Disable public read access. Require authentication and authorization for all downloads. Tag each artifact with its source hash and scan results.
+
+Stage 5 — Signing and attestation: sign model artifacts with cosign or Notary v2 after internal validation. The deployment pipeline verifies the signature before loading any model. Maintain an SBOM (Software Bill of Materials) for each model artifact listing its lineage: source artifact, training data version, fine-tuning code commit.
+
+Stage 6 — Runtime isolation: serve models in containers with minimal system privileges (non-root, read-only filesystem, no network access except the serving port). Use seccomp profiles to restrict syscalls. Monitor for anomalous process behavior (unexpected network connections, file writes) using Falco or similar runtime security tools.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-online-continual-learning',
+    title: 'Online and Continual Learning',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Incremental learning from streaming data, catastrophic forgetting, concept drift detection, and strategies for real-time model adaptation.',
+    introduction: `## The Case for Online Learning
+
+Most production ML systems follow a batch retraining cycle: collect data, retrain, evaluate, deploy, repeat. For many applications — weekly content recommendations, monthly fraud model updates — this is sufficient. But for fast-moving domains where the data distribution changes on timescales shorter than the retraining cycle, batch retraining is too slow. Real-time fraud detection, CTR prediction for news articles, and dynamic pricing in spot markets all benefit from models that update continuously as new observations arrive.
+
+## Online Learning Algorithms
+
+Online learning algorithms update model parameters incrementally, one example or mini-batch at a time, without revisiting past data. Online Gradient Descent (OGD) applies a single SGD step per example with a decaying learning rate. Vowpal Wabbit (VW) is a production-grade online learning library from Microsoft that implements logistic regression, contextual bandits, and neural networks with sub-millisecond per-example update latency. The River library (Python) provides a modern online learning toolkit with implementations of Naive Bayes, Hoeffding Trees, and adaptive ensemble methods designed for data streams.
+
+The key property of online learning is O(1) memory: the model processes each example once and discards it. This makes online learning suitable for unbounded data streams where storing the full history is impractical.
+
+## Continual Learning and Catastrophic Forgetting
+
+Continual learning differs from online learning in scope: it addresses the challenge of learning a sequence of tasks while retaining performance on previous tasks. When a neural network is fine-tuned on new task data with standard gradient descent, it overwrites the weights that encoded knowledge of the previous task — a phenomenon known as catastrophic forgetting or catastrophic interference.
+
+Elastic Weight Consolidation (EWC) mitigates forgetting by adding a regularization term to the loss that penalizes large changes to parameters that were important for previous tasks. The importance of each parameter is estimated by its Fisher information — parameters with high Fisher information are penalized more heavily when updated. EWC has been shown to preserve 90%+ of previous task performance while learning new tasks.
+
+Progressive Neural Networks allocate new capacity (new columns of neurons) for each new task and connect them to frozen previous-task columns via lateral connections. Past task performance is preserved by construction since previous weights are frozen. The cost is linear growth in network size with the number of tasks.
+
+Experience Replay stores a buffer of past task examples and mixes them into each mini-batch during new task training. The simplest variant, Reservoir Sampling, maintains a fixed-size buffer that is uniformly sampled from the stream. Dark Experience Replay (DER) stores soft labels (logits) in addition to inputs, providing richer training signal for replay.
+
+## Concept Drift
+
+Concept drift occurs when the statistical properties of the data stream change over time. Sudden drift is an abrupt shift (a new fraud pattern emerges overnight). Gradual drift is a slow change (seasonal purchasing behavior shifts). Recurring drift cycles (weekday vs. weekend traffic patterns). Incremental drift is a steady monotonic shift.
+
+The ADWIN (ADaptive WINdowing) algorithm detects drift by maintaining a sliding window of recent examples and testing whether the error rate in the recent sub-window is significantly higher than in the older sub-window. When drift is detected, ADWIN shrinks the window to exclude pre-drift data. The Page-Hinkley test is a sequential change detection method based on cumulative sum statistics, suited for detecting drift in continuously monitored metrics. The Drift Detection Method (DDM) monitors the online learner's error rate: a statistically significant increase triggers a warning or drift alarm.
+
+## When to Use Online vs. Batch Retraining
+
+Use online learning when: labels are available within seconds to minutes (clicks, transactions, sensor readings); the prediction task changes faster than the retraining cycle; or memory constraints prohibit storing a growing training set. Use batch retraining when: labels are delayed (weeks to months); model quality requires evaluation on a held-out test set before deployment; or the model architecture requires full-dataset statistics (normalization layers, tree splits).
+
+Many production systems use a hybrid: a daily or weekly batch retrain for the base model, with online updates applied continuously to a small set of user-level or context-specific parameters.
+
+![Continual Learning](/diagrams/mlops/continual-learning.png)`,
+    quickFire: [
+      { q: 'What is catastrophic forgetting?', a: 'The tendency of a neural network to lose performance on previously learned tasks when trained on new task data, because gradient updates overwrite the weights encoding old knowledge.' },
+      { q: 'How does EWC prevent catastrophic forgetting?', a: 'It adds a regularization term penalizing large weight changes, weighted by the Fisher information matrix, which measures each parameter\'s importance to the previous task.' },
+      { q: 'What is ADWIN?', a: 'Adaptive Windowing — a drift detection algorithm that maintains a sliding window of recent error rates and shrinks the window when a statistically significant difference between recent and older sub-windows is detected.' },
+      { q: 'What is Experience Replay in continual learning?', a: 'Storing a buffer of past task examples and mixing them into mini-batches during new task training, so the model rehearses old knowledge while learning new information.' },
+      { q: 'What is concept drift?', a: 'A change in the statistical relationship between input features and the target variable over time, causing a model\'s predictions to degrade even without any change to the model itself.' },
+      { q: 'What is the Vowpal Wabbit library used for?', a: 'Production-grade online learning — incremental training of logistic regression, contextual bandits, and neural networks with sub-millisecond per-example update latency.' },
+      { q: 'What is the memory complexity of online learning?', a: 'O(1) with respect to the number of training examples — the model updates from each example and discards it, making online learning suitable for unbounded streams.' },
+      { q: 'What is the Page-Hinkley test?', a: 'A sequential change detection method that monitors cumulative sum statistics of a monitored metric and triggers an alarm when the cumulative deviation exceeds a threshold.' },
+      { q: 'When is a hybrid batch + online learning architecture appropriate?', a: 'When labels are delayed (requiring batch retraining for base model quality) but fast-moving features (user context, recent behavior) benefit from online adaptation without waiting for a full retrain cycle.' },
+      { q: 'What is Progressive Neural Networks\' approach to preventing forgetting?', a: 'Allocating new network columns for each task while freezing previous columns. Past task performance is preserved by construction; new tasks access previous knowledge via lateral connections.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Design an online learning system for CTR prediction in a real-time ad serving platform that handles millions of events per second.',
+        answer: `CTR prediction at ad serving scale has strict requirements: sub-10ms prediction latency, the ability to learn from billions of click/no-click events per day, and sensitivity to rapid distribution shifts (new ad creatives, breaking news, seasonal events).
+
+The architecture has three layers: feature computation, model serving, and online update.
+
+Feature computation: raw events (ad impression with user context, page context, ad attributes) arrive on Kafka. A Flink streaming job computes user-level features (recent click history, session behavior) with a Redis-backed feature store for sub-millisecond lookup. Static features (user demographics, ad metadata) are pre-computed in batch and cached. The feature vector is assembled at serving time by joining real-time and cached features.
+
+Model serving: a FTRL-Proximal (Follow-the-Regularized-Leader) logistic regression model is the workhorse for CTR prediction at this scale. FTRL handles the L1/L2 regularization tradeoff well and is the standard for Vowpal Wabbit and TensorFlow's FTRL optimizer. The model is sharded across multiple serving replicas by feature hash range. Each shard holds a partition of the sparse feature weight table in memory (typically 100M–1B parameters for a large platform). Prediction latency is 1–3ms with this architecture.
+
+Online update: each impression event is logged with its feature vector and a request ID. When a click (or a 30-minute timeout with no click) is observed, the label is joined with the logged feature vector by request ID and published to a "label ready" Kafka topic. The FTRL update worker consumes this topic, computes the gradient, and applies the weight update. The feature weight table is updated in a shared distributed cache (Redis or a custom parameter server). This closes the loop in 30–60 seconds from click to weight update.
+
+Concept drift handling: monitor the daily AUC on a held-out evaluation stream. If AUC drops more than 2% from the 7-day moving average, trigger an investigation. Since FTRL naturally discounts old examples through its learning rate schedule, it handles gradual drift automatically. For sudden drift (e.g., a new ad format launches), increase the learning rate temporarily using an ADWIN-triggered adaptive learning rate adjustment.`,
+      },
+      {
+        question: 'Explain the three main approaches to mitigating catastrophic forgetting in continual learning and discuss their practical tradeoffs.',
+        answer: `The three main families of continual learning approaches are regularization-based (EWC), architecture-based (Progressive Neural Networks), and memory-based (Experience Replay). They make fundamentally different tradeoffs between plasticity, stability, compute, and memory.
+
+Regularization-based approaches (EWC, SI, RWalk) add penalty terms to the loss function that resist changes to important parameters. EWC computes the Fisher information matrix after learning each task, using the diagonal as a per-parameter importance weight. During subsequent tasks, a quadratic penalty on weight deviation, scaled by importance, is added to the task loss. This allows the network to adapt to new tasks while preserving critical old-task weights.
+
+Tradeoffs: EWC requires storing the Fisher diagonal and the optimal weights for each previous task — O(P * T) memory where P is the number of parameters and T is the number of tasks. For large models, this becomes prohibitive. Fisher estimation is expensive (requires a full backward pass over the previous task's data). EWC works well for small T but degrades as tasks accumulate and Fisher estimates overlap.
+
+Architecture-based approaches (PNNs, PackNet, HAT) isolate task-specific parameters. Progressive Neural Networks add a new column for each task, connected to all previous columns via lateral connections. Previous columns are frozen, making forgetting impossible. PackNet iteratively prunes and re-trains sub-networks, allocating non-overlapping parameter subsets to each task.
+
+Tradeoffs: PNNs guarantee zero forgetting but grow linearly in size. For T=100 tasks, the network is 100x larger than a single-task model. This is impractical for large pre-trained models. PackNet is more efficient but requires knowing the number of tasks in advance and fine-tuning the pruning fraction.
+
+Memory-based approaches (ER, DER, GDumb) maintain a replay buffer of past examples. During new task training, each mini-batch is augmented with replayed examples from the buffer. GDumb (Greedy Sampler and Dumb Learner) takes this to the extreme: store as many old examples as possible and retrain from scratch on the buffer at test time.
+
+Tradeoffs: Experience Replay requires storing raw examples, which raises privacy concerns when training data is personal. Dark Experience Replay (DER) stores soft labels (logits) instead of raw inputs, reducing storage and enabling privacy-preserving replay. The buffer size is a hyperparameter that controls the plasticity-stability tradeoff — larger buffers remember more but reduce capacity for new tasks. GDumb's simplicity often matches or beats more sophisticated methods on standard benchmarks.
+
+Practical recommendation: for production systems with a bounded task count and moderate model size, EWC is a good default. For streaming tasks with unbounded T, Experience Replay with a reservoir-sampled buffer and reservoir size proportional to available memory is the most practical choice. For systems with strict privacy requirements on training data, use DER with soft labels and differential privacy on the stored logits.`,
+      },
+      {
+        question: 'How do you detect and respond to concept drift in a production fraud detection model?',
+        answer: `Concept drift in fraud detection has two flavors: input drift (the feature distribution of incoming transactions changes) and output drift (the relationship between features and fraud labels changes). Both degrade model performance, but they require different detection methods and responses.
+
+Input drift detection: compare the distribution of recent inference inputs against the training data distribution. For numerical features, use the Population Stability Index (PSI): PSI = sum((observed_rate - expected_rate) * ln(observed_rate / expected_rate)) over binned feature values. PSI < 0.1 is stable; 0.1–0.2 is moderate drift; > 0.2 is significant drift. For categorical features, use chi-squared tests or Jensen-Shannon divergence. Automate this as a daily batch job that processes the previous day's inference logs and sends alerts to the model monitoring dashboard.
+
+Output drift detection: monitor the distribution of prediction scores (not just labels, since labels are delayed). A shift in the score distribution — for example, the mean prediction score dropping from 0.12 to 0.07 — can indicate drift even before ground truth is available. Use the KS statistic between the current week's score distribution and the baseline week from training to quantify the shift.
+
+Label-based drift detection (when labels are available): after the label collection window (e.g., 30 days post-transaction), join labels with predictions and compute precision, recall, and AUC on rolling 7-day windows. Plot these metrics as time series. Use CUSUM (Cumulative Sum control chart) to detect statistically significant breakpoints in the metric trend.
+
+Response protocol: separate drift into three severity tiers. Tier 1 (PSI > 0.1 on non-critical features, no metric degradation): increase monitoring frequency, notify the model team, begin data collection for potential retraining. Tier 2 (PSI > 0.2 on critical features, or metric degradation < SLO threshold): trigger an expedited retraining pipeline using recent data with higher weight, evaluate the retrained model in shadow mode, promote if metrics recover. Tier 3 (AUC degrades more than 5% from baseline, or false negative rate spikes on high-value fraud category): immediately invoke business escalation, consider rule-based fallback while retraining, deploy the retrained model through a fast-track canary with daily gate reviews.
+
+Prevention: design the training pipeline to use a sliding window of recent data rather than the full historical dataset, so each scheduled retrain naturally adapts to recent distribution. Use temporal downsampling — recent examples weighted more heavily — to give the model stronger signal on the current fraud landscape.`,
+      },
+    ],
+  },
+  {
+    id: 'mlops-testing-infrastructure',
+    title: 'ML Testing Infrastructure',
+    icon: 'cpu',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Building a complete ML test pyramid covering data validation, behavioral model tests, pipeline determinism, and serving contracts.',
+    introduction: `## Why ML Systems Need Specialized Testing
+
+Software testing practices — unit tests, integration tests, end-to-end tests — apply to ML systems but are insufficient on their own. An ML system has three failure modes that traditional tests miss: silent data quality degradation, unexpected model behavior on distribution-edge inputs, and training pipeline non-determinism. A mature ML testing infrastructure extends the standard test pyramid with layers specific to data and model behavior.
+
+## The ML Test Pyramid
+
+The base of the pyramid — unit tests — covers the deterministic components: data transformation functions, feature engineering logic, pre/post-processing code. These tests are fast, cheap, and should run on every commit. A transformation that maps raw categorical values to embeddings should be tested for correctness, null handling, and boundary values with pytest. Model architecture unit tests verify that a forward pass produces the expected output shape for a given input tensor shape.
+
+Integration tests verify that pipeline stages compose correctly. A training pipeline integration test runs the full pipeline on a small synthetic dataset and verifies that the model is saved to the expected artifact location, that metrics are logged to the experiment tracker, and that the evaluation stage loads the model correctly. These tests catch interface mismatches between pipeline stages that unit tests cannot.
+
+## Data Validation Tests
+
+Data validation is a first-class test category for ML systems. Great Expectations defines "expectations" — assertions about data schema, null rates, value ranges, and statistical distributions — as versioned test suites. An expectation suite is generated from a reference batch of clean training data and checked against every new data batch in the pipeline. Soda provides a SQL-first alternative with \`soda scan\` checks defined in YAML. TFX Data Validation (TFDV) integrates with TensorFlow Extended pipelines and supports distribution-based anomaly detection.
+
+The key expectations for ML data: schema conformance (column names, types), null rate thresholds (< 5% nulls on critical features), value range checks (age > 0, price > 0), cardinality checks for categorical features (no unseen categories in serving that were absent in training), and distribution drift checks (PSI or KS statistic against training statistics).
+
+## Model Behavioral Tests
+
+Behavioral testing (inspired by the CheckList framework from Ribeiro et al. 2020) evaluates model behavior through semantically meaningful test cases rather than aggregate metrics. Three test types: invariance tests (small perturbations to inputs should not change the output — changing a person's name in a resume should not change a hiring model's score), directional tests (increasing a feature value should monotonically change the output in the expected direction — higher credit score should increase loan approval probability), and minimum functionality tests (the model must correctly classify obviously positive and obviously negative examples from a hand-curated minimum competency set).
+
+These tests are implemented as pytest parametrize suites and run as a post-training gate before model registration. A model that fails behavioral tests is not registered, regardless of its aggregate AUC.
+
+## Training Pipeline Tests
+
+Training pipeline tests verify properties of the training process itself. Determinism test: run training with a fixed random seed on the same data twice; verify that the output weights are bit-for-bit identical. Convergence test: run 10 gradient steps on a tiny batch; verify that the loss decreases monotonically. Overfitting test: run training for 100 epochs on a tiny dataset (10 examples); verify that the model achieves near-zero training loss, confirming that the gradient computation is correct and the model has sufficient capacity.
+
+These tests catch silent bugs in the training code: incorrect loss function, wrong gradient flow due to detached tensors, incorrect learning rate schedule implementation. They run quickly on CPU and should be part of the CI pipeline on every training code commit.
+
+## Serving Tests and Hermetic Environments
+
+Serving tests verify the contract between the model and its serving infrastructure. A schema contract test sends a valid inference request to the serving endpoint and verifies that the response matches the expected schema (field names, types, value ranges). A latency SLO test sends N requests concurrently and verifies that p99 latency is below the SLO. A throughput test verifies that the endpoint sustains the target QPS without error rate degradation.
+
+Hermetic testing isolates the test environment from external dependencies: pinned dependency versions (requirements.txt locked with pip-compile), reproducible test data (checked into the repository or generated deterministically from a seed), and isolated infrastructure (Docker Compose or a Kubernetes namespace). Hermetic tests produce the same result regardless of when or where they run, which is the fundamental property that makes CI reliable.
+
+![ML Testing Infrastructure](/diagrams/mlops/ml-testing-infra.png)`,
+    quickFire: [
+      { q: 'What is a minimum functionality test in behavioral testing?', a: 'A hand-curated set of obviously positive and negative examples that any competent model must classify correctly — a basic sanity check before deployment.' },
+      { q: 'What is an invariance test in the CheckList framework?', a: 'A test that verifies the model\'s output does not change when a semantically irrelevant input perturbation is applied — e.g., changing a name should not affect a resume scoring model.' },
+      { q: 'What does a training pipeline convergence test verify?', a: 'That the loss decreases monotonically over a small number of gradient steps on a tiny batch, confirming that gradients are flowing correctly.' },
+      { q: 'What is Great Expectations?', a: 'A data validation library that defines expectations (assertions about schema, null rates, value ranges, distributions) as versioned test suites run against data batches in the pipeline.' },
+      { q: 'What is a directional test in ML behavioral testing?', a: 'A test that verifies the model\'s output changes in the expected direction when a specific feature is perturbed — e.g., higher credit score should increase approval probability.' },
+      { q: 'What is hermetic testing?', a: 'Testing in an isolated environment with pinned dependencies and reproducible data, ensuring tests produce the same result regardless of when or where they run.' },
+      { q: 'What does a serving schema contract test verify?', a: 'That the inference endpoint returns a response with the expected field names, types, and value ranges for a valid input request.' },
+      { q: 'What is the overfitting test in training pipeline testing?', a: 'Running training for many epochs on a tiny dataset and verifying near-zero training loss — confirming the model has sufficient capacity and gradient computation is correct.' },
+      { q: 'What is TFX Data Validation used for?', a: 'Detecting schema anomalies and distribution shifts in ML input data as part of a TensorFlow Extended pipeline, with support for generating statistics and comparing against a reference schema.' },
+      { q: 'Why is training determinism testing important?', a: 'Non-deterministic training makes debugging and reproducibility impossible. A determinism test verifies that the same seed + data always produces identical weights, confirming no hidden sources of randomness.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Design an ML test suite for a text classification model that catches data quality issues, behavioral regressions, and serving contract violations.',
+        answer: `The test suite has five layers that run at different stages of the ML pipeline.
+
+Layer 1 — Data validation (runs on every new data batch before training): define a Great Expectations suite generated from the initial training set. Expectations include: all required columns present with correct dtypes; text column null rate < 1%; label column values in {0, 1, 2} (the three classes); text length distribution within 2 standard deviations of the training mean; no duplicate document IDs. On each new data batch, run \`ge.validate()\` and fail the pipeline if any expectation is not met. Log the validation report to the experiment tracker.
+
+Layer 2 — Transformation unit tests (runs on every commit): pytest tests covering the tokenizer, text cleaning function (unicode normalization, HTML stripping), label encoding, and train/val split function. Test boundary cases: empty string input, maximum-length input (512 tokens), special characters, multilingual text. Test that the tokenizer output shape is correct for a known input.
+
+Layer 3 — Training pipeline tests (runs on every training code commit): (a) Determinism test: train for 5 steps with seed=42 twice, assert weight tensors are equal. (b) Convergence test: train for 20 steps on a 32-example batch, assert loss at step 20 < loss at step 1. (c) Overfitting test: train for 100 epochs on a 16-example dataset, assert train accuracy > 0.99. These run on CPU in under 60 seconds.
+
+Layer 4 — Behavioral tests (runs post-training, before model registration): CheckList-style tests defined in a YAML specification file. Invariance: randomly replace named entities in text samples; verify classification does not change by more than 10% of examples. Directional: prepend strong positive sentiment words to neutral text; verify the positive-class score increases. Minimum functionality: a hand-curated set of 50 obviously positive and 50 obviously negative examples; require > 90% accuracy on this set. Run with pytest parametrize, fail registration if any test fails.
+
+Layer 5 — Serving contract tests (runs on staging endpoint after deployment): (a) Schema test: POST a valid JSON request, assert response fields {class_id: int, confidence: float, latency_ms: float} present and in range. (b) Latency SLO test: send 100 concurrent requests, assert p99 latency < 200ms. (c) Regression test: for 100 fixed input examples stored in the repository, assert predictions match the reference output from the currently registered production model within a tolerance (allowing for small floating-point differences across hardware).`,
+      },
+      {
+        question: 'How would you implement and maintain a behavioral test suite for an ML model that evolves over time?',
+        answer: `Behavioral tests for ML models are more brittle than unit tests because the model is a statistical artifact: its behavior can change legitimately when the architecture or training data changes. A robust behavioral test suite design must anticipate this.
+
+Test design: structure the test suite in three tiers with different failure semantics. Hard failures (always block deployment): minimum functionality tests on the core competency examples. These should be nearly trivially correct for any model that is not catastrophically broken. If these fail, the model is broken, not evolved. Soft warnings (alert but do not block): invariance tests where the model might reasonably change behavior. Log the fraction of failing cases; alert if it exceeds 15%, but do not fail the deployment. Track this metric over time to detect gradual behavioral drift. Experimental tests: new tests being drafted for future hard requirements. Run them in report-only mode until they are stable enough to gate on.
+
+Maintenance: behavioral tests are owned by the feature team, not a separate QA team. When a model version intentionally changes behavior in a way that fails an existing test (for example, a new data source correctly identifies a class the model was previously uncertain about), the test owner updates the test expectation and documents the reason in a changelog. All test changes are reviewed in pull requests alongside the model code change.
+
+Test data management: reference examples are checked into the repository as JSON fixtures. Each fixture has a source annotation (where the example came from), a date (when it was added), and a rationale (why this example tests a specific behavioral property). Fixtures are updated rarely and only with explicit justification. Never auto-generate fixtures from model outputs — that makes the test circular.
+
+Coverage tracking: measure behavioral coverage by documenting which failure modes from the model card are covered by at least one behavioral test. Use a coverage matrix: rows are failure modes (topic confusion, demographic bias, code vs. prose misclassification), columns are test IDs. Require 100% coverage of P0 failure modes before production deployment.
+
+Evolution: when the model architecture changes (e.g., switching from BERT to RoBERTa), run the full behavioral suite in report-only mode first to quantify behavioral changes. Review the report with the product team before deciding whether behavioral regressions are acceptable. This makes the behavioral test suite a communication tool between ML engineers and product stakeholders, not just a CI gate.`,
+      },
+      {
+        question: 'Describe a complete CI/CD pipeline for an ML project that integrates all testing layers and production deployment gates.',
+        answer: `The CI/CD pipeline has six stages triggered by three event types: pull request, merge to main, and scheduled daily retraining.
+
+On pull request: Stage 1 runs immediately — code quality (flake8, mypy), unit tests (pytest on transformation functions and model components), and training pipeline determinism/convergence tests. These run in under 5 minutes on a CPU runner and gate PR merge. No model is trained at this stage.
+
+On merge to main: Stage 2 triggers a full training run on the latest data. The training job runs on a GPU runner (or submits to Kubeflow Pipelines). Output: a trained model artifact in MLflow, evaluation metrics, and a behavioral test report. Stage 3 runs behavioral tests against the newly trained model. Hard-failing tests block model registration; soft warnings are logged to the MLflow run. Stage 4 — data validation: if a new data batch was ingested, the Great Expectations suite runs and failures abort the pipeline.
+
+If all stage 2-4 checks pass: Stage 5 registers the model in MLflow with tags for the Git commit, data version, evaluation metrics, and behavioral test results. Stage 5 then deploys to staging — a Kubernetes namespace with the same infrastructure as production. Serving contract tests (schema, latency SLO, regression tests) run against the staging endpoint. Failures block promotion to production.
+
+Stage 6 — production promotion: requires human approval via a GitHub Actions environment approval gate. The approver reviews the evaluation report, behavioral test results, and a diff of the prediction distribution between the new model and the current champion (computed from the staging regression test). On approval, a blue/green deployment switches production traffic to the new model. Post-deployment, the serving monitoring dashboard is checked for 30 minutes before the old model is decommissioned.
+
+On scheduled daily retraining (2am UTC): the pipeline runs stages 2-6 automatically with the previous day's data included. If the model does not improve on the holdout test set (by more than a significance threshold), the existing production model is retained and an alert is sent. This prevents unnecessary deployments when the new data did not change the model meaningfully.
+
+The pipeline is defined in YAML (GitHub Actions), with each stage as a separate job with explicit dependencies. All secrets (model registry credentials, cloud provider keys) are stored in GitHub Secrets, never in the repository. The pipeline configuration is version-controlled alongside the model code and reviewed in the same pull request.`,
+      },
+    ],
+  },
 ];

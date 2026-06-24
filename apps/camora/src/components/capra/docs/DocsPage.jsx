@@ -409,7 +409,7 @@ export default function DocsPage({ onBack }) {
       setVisitedTopics(prev => {
         if (prev[topic]) return prev;
         const next = { ...prev, [topic]: true };
-        try { localStorage.setItem('ascend_visited_topics', JSON.stringify(next)); } catch {}
+        const _uv=user?.id; try { localStorage.setItem(`ascend_visited_topics${_uv?'_'+_uv:''}`, JSON.stringify(next)); } catch {}
         return next;
       });
     }
@@ -426,7 +426,8 @@ export default function DocsPage({ onBack }) {
       else window.scrollTo({ top: 0, behavior: 'smooth' });
       // Persist for the "Continue learning" card on the Prepare overview.
       try {
-        localStorage.setItem('ascend_last_topic', JSON.stringify({
+        const _ul=user?.id;
+        localStorage.setItem(`ascend_last_topic${_ul?'_'+_ul:''}`, JSON.stringify({
           topicId: topic,
           category: activePage,
           savedAt: Date.now(),
@@ -447,15 +448,18 @@ export default function DocsPage({ onBack }) {
   const [expandedTheoryQuestions, setExpandedTheoryQuestions] = useState({});
 
   // ── Interactive features (AlgoMaster-inspired) ──
-  const [completedTopics, setCompletedTopics] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ascend_completed_topics') || '{}'); } catch { return {}; }
-  });
-  const [starredTopics, setStarredTopics] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ascend_starred_topics') || '{}'); } catch { return {}; }
-  });
-  const [visitedTopics, setVisitedTopics] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ascend_visited_topics') || '{}'); } catch { return {}; }
-  });
+  const [completedTopics, setCompletedTopics] = useState({});
+  const [starredTopics, setStarredTopics] = useState({});
+  const [visitedTopics, setVisitedTopics] = useState({});
+  useEffect(() => {
+    const uid = user?.id;
+    const sfx = uid ? `_${uid}` : '';
+    try {
+      setCompletedTopics(JSON.parse(localStorage.getItem(`ascend_completed_topics${sfx}`) || '{}'));
+      setStarredTopics(JSON.parse(localStorage.getItem(`ascend_starred_topics${sfx}`) || '{}'));
+      setVisitedTopics(JSON.parse(localStorage.getItem(`ascend_visited_topics${sfx}`) || '{}'));
+    } catch {}
+  }, [user?.id]);
   const [showAskAI, setShowAskAI] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState('');
@@ -467,7 +471,7 @@ export default function DocsPage({ onBack }) {
   const toggleComplete = (topicId) => {
     setCompletedTopics(prev => {
       const next = { ...prev, [topicId]: !prev[topicId] };
-      localStorage.setItem('ascend_completed_topics', JSON.stringify(next));
+      const _uc=user?.id; localStorage.setItem(`ascend_completed_topics${_uc?'_'+_uc:''}`, JSON.stringify(next));
       return next;
     });
   };
@@ -475,7 +479,7 @@ export default function DocsPage({ onBack }) {
   const toggleStar = (topicId) => {
     setStarredTopics(prev => {
       const next = { ...prev, [topicId]: !prev[topicId] };
-      localStorage.setItem('ascend_starred_topics', JSON.stringify(next));
+      const _us=user?.id; localStorage.setItem(`ascend_starred_topics${_us?'_'+_us:''}`, JSON.stringify(next));
       return next;
     });
   };
@@ -904,7 +908,7 @@ export default function DocsPage({ onBack }) {
     'coding': 57, 'system-design': 208, 'behavioral': 72, 'low-level': 126,
     'databases': 20, 'microservices': 12, 'cloud': 110, 'linux': 58,
     'networking': 62, 'sre': 75, 'devops': 180, 'observability': 9,
-    'platform': 5, 'troubleshooting': 14, 'mlops': 17, 'aiops': 18, 'ai-systems-perf': 10,
+    'platform': 5, 'troubleshooting': 14, 'mlops': 25, 'aiops': 18, 'ai-systems-perf': 10,
     'war-stories': 25, 'comparisons': 35, 'ddia': 44, 'challenges': 1, 'projects': 24,
     'roadmaps': 12, 'eng-blogs': 39,
   };
@@ -1086,7 +1090,7 @@ export default function DocsPage({ onBack }) {
                       {(() => {
                         let lastTopic = null;
                         try {
-                          const raw = localStorage.getItem('ascend_last_topic');
+                          const _ur=user?.id; const raw = localStorage.getItem(`ascend_last_topic${_ur?'_'+_ur:''}`);
                           if (raw) lastTopic = JSON.parse(raw);
                         } catch { /* ignore */ }
                         // Find the title for the saved topic id (best-effort).
