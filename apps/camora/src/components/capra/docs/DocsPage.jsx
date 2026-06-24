@@ -903,7 +903,7 @@ export default function DocsPage({ onBack }) {
     'coding': 57, 'system-design': 616, 'behavioral': 72, 'low-level': 126,
     'databases': 20, 'microservices': 12, 'cloud': 110, 'linux': 58,
     'networking': 62, 'sre': 75, 'devops': 180, 'observability': 9,
-    'platform': 5, 'troubleshooting': 14, 'mlops': 7, 'aiops': 18, 'ai-systems-perf': 10,
+    'platform': 5, 'troubleshooting': 14, 'mlops': 17, 'aiops': 10, 'ai-systems-perf': 10,
     'war-stories': 25, 'comparisons': 35, 'ddia': 44, 'challenges': 1, 'projects': 24,
     'roadmaps': 12, 'eng-blogs': 39,
   };
