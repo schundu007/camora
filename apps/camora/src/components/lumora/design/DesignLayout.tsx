@@ -614,11 +614,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     if (gvImgUrl) return; // already generated, just switch tab
     setGvLoading(true);
     try {
-      const r = await fetch(`${CAPRA_URL}/api/diagram/generate`, {
+      const r = await fetch(`${CAPRA_URL}/api/diagram/generate-dot`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ question, cloudProvider, detailLevel: 'basic', designKind: 'system' }),
+        body: JSON.stringify({ question, cloudProvider }),
       });
       const data = await r.json();
       if (data.success && data.image_url) {
