@@ -181,9 +181,14 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
-  // Graphviz diagram generated on demand via the Architecture chip.
+  // Diagram tab switcher — Python (default) vs Graphviz
+  const [diagramTab, setDiagramTab] = useState<'python' | 'graphviz'>('python');
   const [gvImgUrl, setGvImgUrl] = useState<string | null>(null);
   const [gvLoading, setGvLoading] = useState(false);
+  const gvBlobRef = useRef<string | null>(null); // revoke previous object URL on unmount
+
+  // Revoke blob URL when component unmounts to avoid memory leaks
+  useEffect(() => () => { if (gvBlobRef.current) URL.revokeObjectURL(gvBlobRef.current); }, []);
 
   const startTimer = useCallback((minutes: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -604,6 +609,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   // fills this textarea instead of being asked of Sona.
   const handleGraphviz = useCallback(async () => {
     if (!question || !token || gvLoading) return;
+    setDiagramTab('graphviz');
+    if (gvImgUrl) return; // already generated, just switch tab
     setGvLoading(true);
     try {
       const r = await fetch(`${CAPRA_URL}/api/diagram/generate`, {
@@ -614,8 +621,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       });
       const data = await r.json();
       if (data.success && data.image_url) {
-        const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
-        setGvImgUrl(url);
+        const rawUrl = data.image_url.startsWith('/') ? `${CAPRA_URL}${data.image_url}` : data.image_url;
+        // Fetch with auth so cookie-gated image endpoints resolve correctly
+        const imgR = await fetch(rawUrl, { credentials: 'include', headers: { Authorization: `Bearer ${token}` } });
+        if (imgR.ok) {
+          const blob = await imgR.blob();
+          if (gvBlobRef.current) URL.revokeObjectURL(gvBlobRef.current);
+          const objUrl = URL.createObjectURL(blob);
+          gvBlobRef.current = objUrl;
+          setGvImgUrl(objUrl);
+        } else {
+          await dialogAlert('Failed to load generated diagram image');
+        }
       } else {
         await dialogAlert(data.error || 'Diagram generation failed');
       }
@@ -623,7 +640,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       await dialogAlert(err.message || 'Network error');
     }
     setGvLoading(false);
-  }, [question, token, gvLoading, cloudProvider]);
+  }, [question, token, gvLoading, cloudProvider, gvImgUrl]);
 
   const handleReset = useCallback(() => {
     setProblemText('');
@@ -634,6 +651,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setExpandedFollowup(null);
     setInputCollapsed(false);
     setGvImgUrl(null);
+    setDiagramTab('python');
     useSessionStore.getState().setLastFromCache(null);
     useSessionStore.getState().setLiveSolveContext(null);
   }, []);
@@ -1092,24 +1110,40 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <option value="azure">Azure</option>
                   <option value="gcp">GCP</option>
                 </select>
-                <button
-                  onClick={handleGraphviz}
-                  disabled={gvLoading}
-                  title="Generate Graphviz architecture diagram"
-                  className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,opacity] hover:opacity-90 active:scale-[0.97] disabled:opacity-50"
-                  style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}
-                >
-                  {gvLoading ? '…' : 'Graphviz'}
-                </button>
               </div>
-              <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
-              {gvImgUrl && (
-                <div className="mt-3 pt-2 border-t border-[var(--border)]">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Graphviz Diagram</h4>
-                    <button onClick={() => setGvImgUrl(null)} className="text-[10px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
-                  </div>
-                  <img src={gvImgUrl} alt="Graphviz architecture diagram" className="w-full rounded-lg" />
+              {/* Diagram type tabs */}
+              <div className="flex gap-1 mb-2">
+                {(['python', 'graphviz'] as const).map(tab => (
+                  <button key={tab}
+                    onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
+                    className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                    style={diagramTab === tab
+                      ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
+                      : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                  >
+                    {tab === 'graphviz' && gvLoading ? '…' : tab}
+                  </button>
+                ))}
+              </div>
+              {diagramTab === 'python' && (
+                <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
+              )}
+              {diagramTab === 'graphviz' && (
+                <div className="flex-1 min-h-0">
+                  {gvLoading && (
+                    <div className="flex items-center gap-2 py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                      Generating Graphviz diagram…
+                    </div>
+                  )}
+                  {!gvLoading && gvImgUrl && (
+                    <img src={gvImgUrl} alt="Graphviz architecture diagram" className="w-full rounded-lg" />
+                  )}
+                  {!gvLoading && !gvImgUrl && (
+                    <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      Click <strong>Graphviz</strong> tab again to generate.
+                    </div>
+                  )}
                 </div>
               )}
               {sd?.cloudServices && sd.cloudServices.length > 0 && (
