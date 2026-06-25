@@ -180,6 +180,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
+  // Graphviz diagram generated on demand via the Architecture chip.
+  const [gvImgUrl, setGvImgUrl] = useState<string | null>(null);
+  const [gvLoading, setGvLoading] = useState(false);
 
   const startTimer = useCallback((minutes: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -598,6 +601,29 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   // dictate or paste a fresh design problem in the same window. Also
   // flips the voice route back to 'problem' so the next utterance
   // fills this textarea instead of being asked of Sona.
+  const handleGraphviz = useCallback(async () => {
+    if (!question || !token || gvLoading) return;
+    setGvLoading(true);
+    try {
+      const r = await fetch(`${API_URL}/api/diagram/generate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ question, cloudProvider, detailLevel: 'basic', designKind: 'system' }),
+      });
+      const data = await r.json();
+      if (data.success && data.image_url) {
+        const url = data.image_url.startsWith('/') ? `${API_URL}${data.image_url}` : data.image_url;
+        setGvImgUrl(url);
+      } else {
+        await dialogAlert(data.error || 'Diagram generation failed');
+      }
+    } catch (err: any) {
+      await dialogAlert(err.message || 'Network error');
+    }
+    setGvLoading(false);
+  }, [question, token, gvLoading, cloudProvider]);
+
   const handleReset = useCallback(() => {
     setProblemText('');
     setResult(null);
@@ -606,6 +632,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setErrorMsg(null);
     setExpandedFollowup(null);
     setInputCollapsed(false);
+    setGvImgUrl(null);
     useSessionStore.getState().setLastFromCache(null);
     useSessionStore.getState().setLiveSolveContext(null);
   }, []);
@@ -1064,8 +1091,26 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <option value="azure">Azure</option>
                   <option value="gcp">GCP</option>
                 </select>
+                <button
+                  onClick={handleGraphviz}
+                  disabled={gvLoading}
+                  title="Generate Graphviz architecture diagram"
+                  className="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,opacity] hover:opacity-90 active:scale-[0.97] disabled:opacity-50"
+                  style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}
+                >
+                  {gvLoading ? '…' : 'Graphviz'}
+                </button>
               </div>
               <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
+              {gvImgUrl && (
+                <div className="mt-3 pt-2 border-t border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Graphviz Diagram</h4>
+                    <button onClick={() => setGvImgUrl(null)} className="text-[10px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
+                  </div>
+                  <img src={gvImgUrl} alt="Graphviz architecture diagram" className="w-full rounded-lg" />
+                </div>
+              )}
               {sd?.cloudServices && sd.cloudServices.length > 0 && (
                 <div className="mt-3 pt-2 border-t border-[var(--border)]">
                   <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider mb-1.5">Services Used</h4>
