@@ -1308,7 +1308,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-[10px] mb-2" style={{ color: t.textMuted }}>Click a tier to re-stream a focused LLD drill-down for that component.</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
                       {sd.techJustifications.map((tier, i) => (
                           <button
                             key={i}
@@ -1319,7 +1319,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                             }}
                             disabled={isLoading}
                             title={`Drill into ${tier.tech}`}
-                            className="rounded-lg p-2 text-center transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
+                            className="rounded-lg p-2 flex flex-col justify-start transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
                             style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
                             onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}
                             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
