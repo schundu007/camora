@@ -457,20 +457,15 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
       else throw new Error('Claude did not produce a valid DOT digraph');
     }
 
-    // 3. Render via ai-services /diagram/render-dot (reuses existing endpoint)
-    const AI_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
-    const AI_KEY = process.env.AI_SERVICES_API_KEY || '';
-    const renderResp = await fetch(`${AI_URL}/diagram/render-dot`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-Key': AI_KEY },
-      body: JSON.stringify({ dot: dotSource, format: 'png' }),
-    });
-    if (!renderResp.ok) {
-      const errText = await renderResp.text().catch(() => '');
-      throw new Error(`DOT render failed (${renderResp.status}): ${errText.slice(0, 200)}`);
-    }
-    const renderData = await renderResp.json();
-    const pngBuffer = Buffer.from(renderData.content, 'base64');
+    // 3. Render DOT locally — graphviz is pre-installed on the ascend-backend
+    //    Railway container (Nixpacks graphviz package), no ai-services hop needed.
+    const { execFile } = await import('child_process');
+    const { promisify } = await import('util');
+    const execFileAsync = promisify(execFile);
+    const { stdout: pngBuffer } = await execFileAsync(
+      'dot', ['-Tpng'],
+      { input: dotSource, encoding: 'buffer', timeout: 15000, maxBuffer: 8 * 1024 * 1024 },
+    );
 
     // 4. Cache in DB
     const imageUrl = `/api/diagram/image/${problemHash}`;
