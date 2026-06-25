@@ -267,7 +267,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
 
     // 3. Check if configured
     if (!pythonDiagrams.isConfigured()) {
-      throw new AppError('Diagram generation not configured — ANTHROPIC_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
+      throw new AppError('Diagram generation not configured — GOOGLE_AI_API_KEY is not set', ErrorCode.EXTERNAL_API_ERROR);
     }
 
     // 4. Generate via Python diagrams (Graphviz). The previous Mermaid
@@ -435,27 +435,20 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
       }
     } catch { /* table may not exist */ }
 
-    // 2. Generate DOT via Claude
-    const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    let _step = 'claude';
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      system: DOT_SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `Generate a Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider preference: ${provider}\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`,
-      }],
-    });
+    // 2. Generate DOT via Gemini
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+    const gmodel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: DOT_SYSTEM_PROMPT });
+    let _step = 'gemini';
+    const msg = await gmodel.generateContent(`Generate a Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider preference: ${provider}\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`);
 
-    let dotSource = msg.content[0].text.trim();
+    let dotSource = msg.response.text().trim();
     // Strip any accidental markdown fences
     dotSource = dotSource.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim();
     if (!dotSource.startsWith('digraph')) {
       const idx = dotSource.indexOf('digraph');
       if (idx !== -1) dotSource = dotSource.slice(idx);
-      else throw new Error('Claude did not produce a valid DOT digraph');
+      else throw new Error('Gemini did not produce a valid DOT digraph');
     }
 
     // 3. Render DOT locally — graphviz is pre-installed on the ascend-backend
