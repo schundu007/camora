@@ -310,9 +310,9 @@ skip
 ${deepSection}
 
 [CLOUDSERVICES]
-S3: one-line role
-Lambda: one-line role
-(list only the specific named services used — S3, DynamoDB, SQS, Lambda, CloudFront, ECS, RDS, Redis, etc. — 4-6 services max)
+ServiceName: one-line role
+ServiceName: one-line role
+(list only the specific named cloud services used — e.g. AWS: S3, DynamoDB, SQS, Lambda, CloudFront, ECS, RDS; Azure: Blob Storage, Cosmos DB, Service Bus, Functions, Front Door, AKS, SQL Database; GCP: Cloud Storage, Firestore, Pub/Sub, Cloud Run, Cloud CDN, GKE, Cloud SQL — use actual service names, 4-6 max)
 [/CLOUDSERVICES]
 
 [EDGECASES]
