@@ -9,15 +9,15 @@
  * Hard 300ms wall-clock budget — fails open on timeout (all chunks pass through).
  * Gated by RAG_USE_GRADING=true env var (off by default).
  */
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const MODEL_GRADER = 'claude-haiku-4-5-20251001';
+const MODEL_GRADER = 'gemini-2.0-flash';
 const GRADING_TIMEOUT_MS = 300;
 
-let _client = null;
+let _genAI = null;
 function getClient() {
-  if (!_client) _client = new Anthropic();
-  return _client;
+  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  return _genAI;
 }
 
 const GRADE_PROMPT = `You are a relevance grader for interview coaching content.
@@ -33,16 +33,9 @@ Be strict. When in doubt, return IRRELEVANT.`;
 
 async function gradeOne(question, chunk) {
   try {
-    const msg = await getClient().messages.create({
-      model: MODEL_GRADER,
-      max_tokens: 5,
-      system: GRADE_PROMPT,
-      messages: [{
-        role: 'user',
-        content: `Question: ${question}\n\nExcerpt: ${(chunk.content || '').slice(0, 500)}`,
-      }],
-    });
-    const verdict = msg.content?.[0]?.text?.trim().toUpperCase();
+    const gmodel = getClient().getGenerativeModel({ model: MODEL_GRADER, systemInstruction: GRADE_PROMPT });
+    const msg = await gmodel.generateContent(`Question: ${question}\n\nExcerpt: ${(chunk.content || '').slice(0, 500)}`);
+    const verdict = msg.response.text().trim().toUpperCase();
     return verdict === 'RELEVANT';
   } catch {
     return true; // fail open

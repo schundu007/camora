@@ -10,17 +10,17 @@
  * Returns null on failure so callers can transparently fall back to
  * embedding the literal question.
  */
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createHash } from 'node:crypto';
 
-const MODEL = 'claude-haiku-4-5-20251001';
+const MODEL = 'gemini-2.0-flash';
 const MAX_TOKENS = 180;
 const CACHE_MAX = 1000;
 
-let _client = null;
+let _genAI = null;
 function client() {
-  if (!_client) _client = new Anthropic();
-  return _client;
+  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  return _genAI;
 }
 
 const cache = new Map();
@@ -48,17 +48,9 @@ export async function hydeRewrite(question) {
   const cached = cacheGet(k);
   if (cached !== undefined) return cached;
   try {
-    const r = await client().messages.create({
-      model: MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: question }],
-    });
-    const text = (r.content || [])
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n')
-      .trim();
+    const gmodel = client().getGenerativeModel({ model: MODEL, systemInstruction: SYSTEM });
+    const r = await gmodel.generateContent(question);
+    const text = r.response.text().trim();
     const out = text || null;
     cacheSet(k, out);
     return out;
