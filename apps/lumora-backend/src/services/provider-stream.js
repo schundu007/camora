@@ -64,7 +64,7 @@ function buildProviderChain(primaryProvider, options) {
       key: 'gemini',
       label: 'Gemini',
       fn: streamResponseGemini,
-      opts: { ...options, model: options.model?.startsWith('gemini-') ? options.model : 'gemini-2.5-flash' },
+      opts: { ...options, model: options.model?.startsWith('gemini-') ? options.model : 'gemini-2.0-flash' },
     },
     deepseekClient && {
       key: 'deepseek',
