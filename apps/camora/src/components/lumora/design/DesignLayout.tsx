@@ -257,8 +257,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const source = snapChipCode || problemText;
     if (!source?.trim()) return;
     if (snapChipCode) setSnapChipCode(null);
-    handleSubmit(`${prompt}\n\n${source}`);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Use ref so we always call the latest handleSubmit (avoids stale isLoading closure)
+    handleSubmitRef.current(`${prompt}\n\n${source}`);
   }, [snapChipCode, problemText]);
 
   const handleUrlFetch = async (overrideUrl?: string) => {
@@ -433,12 +433,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           }
         },
         onAnswer: (data: any) => {
-          // Surface cache hits in the UI so users can see when the
-          // backend is replaying a cached design instead of running
-          // the model. Cleared on every fresh /stream call (see
-          // store's lastFromCache reset in handleReset / before
-          // streamResponse below).
           useSessionStore.getState().setLastFromCache(Boolean(data.fromCache));
+          // Save to session history so /lumora/sessions shows design answers
+          useSessionStore.getState().addHistoryEntry({
+            question: text.trim(),
+            blocks: data.parsed && Array.isArray(data.parsed) ? data.parsed : [],
+            timestamp: new Date(),
+          });
           const parsed = data.parsed;
           const raw = data.raw || '';
           lastRawAnswer = raw;
