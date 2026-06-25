@@ -23,6 +23,18 @@ import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureSt
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
+function cleanErrorMsg(raw: string | undefined | null): string {
+  if (!raw) return 'Failed to generate design. Please try again.';
+  try {
+    const json = JSON.parse(raw.replace(/^\d+\s+/, ''));
+    const msg = json?.error?.message || json?.message || json?.detail;
+    if (msg) return String(msg);
+  } catch { /* not JSON */ }
+  if (raw.includes('All inference providers exhausted')) return 'AI service temporarily unavailable. Please try again in a moment.';
+  if (raw.length > 120) return 'AI service returned an error. Please try again.';
+  return raw;
+}
+
 const SNAP_CHIPS = [
   { label: 'Find Issues', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
   { label: 'Explain', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
@@ -542,8 +554,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         onError: (data) => {
           onErrorFired = true;
           setIsLoading(false);
-          setErrorMsg(data.msg || 'Failed to generate design. Please try again.');
-          setStatus('error', data.msg);
+          const clean = cleanErrorMsg(data.msg);
+          setErrorMsg(clean);
+          setStatus('error', clean);
         },
       });
     } catch (err: any) {
@@ -1195,6 +1208,21 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Right: Design Result — light panel when standalone, themed when embedded */}
         <div className={`flex-1 min-h-0 min-w-0 overflow-auto ${embedded ? '' : 'lumora-light-panel'}`} style={{ background: t.surfaceBg }}>
+
+          {!result && !isLoading && !streamingText && errorMsg && (
+            <div className="flex flex-col items-center justify-center h-full gap-3 px-8">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)' }}>
+                <svg className="w-6 h-6" fill="none" stroke="var(--danger)" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+              </div>
+              <p className="text-sm font-semibold text-center" style={{ color: 'var(--danger)' }}>{errorMsg}</p>
+              <button
+                onClick={() => handleSubmit(problemText)}
+                disabled={!problemText.trim()}
+                className="px-4 py-2 text-xs font-bold rounded-lg transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: 'var(--accent)', color: '#fff' }}
+              >Try again</button>
+            </div>
+          )}
 
           {!result && !isLoading && !streamingText && !errorMsg && (
             <div className="flex flex-col items-center justify-center h-full" style={{ color: t.textDim }}>
