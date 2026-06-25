@@ -1331,7 +1331,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                             </div>
                             {tier.details.length > 0 && (
                               <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>
-                                {tier.details.map((d, j) => <div key={j} title={d}>- {d}</div>)}
+                                {tier.details.slice(0, 3).map((d, j) => <div key={j} title={d}>- {d}</div>)}
                               </div>
                             )}
                           </button>
