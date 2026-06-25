@@ -44,6 +44,7 @@ const OVERVIEW_CUT_MARKERS = [
   '[SCALECALC]',
   '[DIAGRAM]',
   '[DEEPDESIGN]',
+  '[CLOUDSERVICES]',
   '[EDGECASES]',
   '[TRADEOFFS]',
   '[FOLLOWUP]',
@@ -1065,17 +1066,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </select>
               </div>
               <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
-              {sd?.techJustifications && sd.techJustifications.length > 0 && (
+              {sd?.cloudServices && sd.cloudServices.length > 0 && (
                 <div className="mt-3 pt-2 border-t border-[var(--border)]">
                   <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider mb-1.5">Services Used</h4>
                   <div className="grid grid-cols-1 gap-1">
-                    {sd.techJustifications.map((tier: { tech: string; details: string[] }, i: number) => (
+                    {sd.cloudServices.map((svc: { name: string; role: string }, i: number) => (
                       <div key={i} className="flex items-baseline gap-1.5 text-[11px] leading-snug">
-                        <span className="font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>{tier.tech}</span>
-                        {tier.details[0] && (
+                        <span className="font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>{svc.name}</span>
+                        {svc.role && (
                           <>
                             <span style={{ color: 'var(--text-muted)' }}>—</span>
-                            <span style={{ color: 'var(--text-muted)' }}>{tier.details[0]}</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{svc.role}</span>
                           </>
                         )}
                       </div>
