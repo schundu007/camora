@@ -935,6 +935,19 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 ref={textareaRef}
                 value={problemText}
                 onChange={(e) => setProblemText(e.target.value)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pasted = e.clipboardData.getData('text');
+                  const clean = pasted
+                    .split('\n')
+                    .map((l) => l.trimEnd())
+                    .filter((l) => l.trim() !== '')
+                    .join('\n');
+                  setProblemText((prev) => {
+                    const base = prev.trimEnd();
+                    return base ? `${base}\n${clean}` : clean;
+                  });
+                }}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[80px] rounded-lg p-3 text-xs leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
                 style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.01em' }}
