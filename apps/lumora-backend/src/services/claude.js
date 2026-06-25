@@ -162,77 +162,55 @@ RULES:
 // only the *content prompt inside* changes.
 const DEEPDESIGN_SYSTEM = `[DEEPDESIGN]
 1. LAYER TITLE
-  - Detail bullet 1
-  - Detail bullet 2
-(6-8 layers covering CDN, LB, App, Cache, DB, Async, HA/DR, Monitoring)
+  - Key decision (max 10 words)
+  - Key decision (max 10 words)
+(5-6 layers covering CDN, LB, App, Cache, DB, Async — 2-3 bullets each, no explanatory sentences)
 [/DEEPDESIGN]`;
 
 const DEEPDESIGN_APPLICATION = `[DEEPDESIGN]
-Cover the application design in 5-7 numbered sections — pick the ones that fit the problem. NO infra layers (no CDN/LB/cache tiers); this is software design at the class/API level.
+Cover the application design in 4-5 numbered sections. NO infra layers. 2-3 bullets each, max 10 words per bullet.
 
 1. API CONTRACT
-  - Method signatures with input / output types and error cases
-  - Idempotency / pagination / auth if relevant
+  - Key method + signature (e.g. get(key) → value | null)
+  - Idempotency or pagination decision if relevant
 
 2. CLASS / MODULE STRUCTURE
-  - Core classes with one-line responsibilities
+  - Core classes and one-word responsibility each
   - Composition vs inheritance choice
-  - Public vs private surface
 
 3. DATA MODEL
-  - In-memory representation (HashMap + DLL, Tree, Heap, etc.)
-  - Why this choice supports each operation's complexity
-  - Memory footprint tradeoff
+  - In-memory structure (HashMap + DLL, Tree, Heap, etc.)
+  - Why it hits the required complexity
 
 4. DESIGN PATTERNS
-  - Specific patterns applied (Factory, Strategy, Observer, Decorator, Singleton)
-  - Why each pattern fits this problem
+  - Pattern name + one-word reason (e.g. Strategy — swappable eviction)
 
 5. CONCURRENCY / THREAD-SAFETY
-  - Read-write contention model
-  - Locking strategy or lock-free / atomic operations
-
-6. ERROR HANDLING
-  - Pre-condition checks vs runtime exceptions
-  - Recovery semantics
-
-7. EXTENSIBILITY
-  - What's deliberately easy to add later, and how
+  - Locking strategy or lock-free choice (one line)
 [/DEEPDESIGN]`;
 
 const DEEPDESIGN_INFRASTRUCTURE = `[DEEPDESIGN]
-Cover the infrastructure component in 5-7 numbered sections — emphasize data plane vs control plane. This is NOT a multi-tier app stack.
+Cover the infrastructure component in 5 numbered sections. 2-3 bullets each, max 10 words per bullet.
 
 1. DATA PLANE
-  - Hot path: how a request is served (e.g. consistent-hash route → cache shard → response)
+  - Hot path in one line (e.g. hash-route → cache shard → response)
   - Latency budget per hop
 
 2. CONTROL PLANE
-  - How config / membership / topology is managed (gossip, ZK, etcd, custom)
-  - Failure-detection mechanism
+  - Topology management tool (gossip / ZK / etcd) + reason
+  - Failure-detection mechanism (one line)
 
-3. PARTITIONING STRATEGY
-  - Hash / range / geographic
-  - Resharding cost
-  - Hot-key mitigation
+3. PARTITIONING
+  - Strategy: hash / range / geo
+  - Hot-key mitigation approach
 
-4. REPLICATION & CONSISTENCY MODEL
-  - Sync vs async replication
-  - Strong / eventual / causal / quorum
-  - Read & write quorum sizing
+4. REPLICATION & CONSISTENCY
+  - Sync vs async + quorum size
+  - Strong / eventual / causal choice + reason
 
-5. NETWORK PROTOCOL
-  - Wire format (gRPC, custom binary, HTTP/2)
-  - Backpressure / flow control
-
-6. FAILURE MODES
-  - Node failure recovery
-  - Network-partition behavior
-  - Cascading-failure prevention (circuit breakers, hedged requests)
-
-7. CAPACITY & SIZING
-  - Throughput per node
-  - Headroom for traffic spikes
+5. FAILURE MODES
+  - Node failure recovery (one line)
+  - Partition behavior + cascading-failure guard
 [/DEEPDESIGN]`;
 
 const SCALEMATH_BLOCK = `[SCALEMATH]
@@ -275,8 +253,8 @@ export function buildDesignPrompt(resume, technical, detailLevel = null, cloudPr
   const detailRules = isBasic
     ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
     : isFull
-    ? `DETAIL MODE: FULL — emit every section. 4-6 bullets per section, with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
-    : `DETAIL MODE: STANDARD — emit every section. 3-4 bullets per section.`;
+    ? `DETAIL MODE: FULL — emit every section. 3-4 bullets per section (DEEPDESIGN: 2-3 only), with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
+    : `DETAIL MODE: STANDARD — emit every section. 2-3 bullets per section.`;
   // Progressive disclosure: emit HEADLINE + REQUIREMENTS first so the
   // candidate can start speaking immediately while DEEPDESIGN streams.
   // This matches the "agentic multi-step" pattern from awesome-llm-apps —
