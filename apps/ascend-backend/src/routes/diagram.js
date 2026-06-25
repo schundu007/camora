@@ -438,6 +438,7 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
     // 2. Generate DOT via Claude
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    let _step = 'claude';
     const msg = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
@@ -459,6 +460,7 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
 
     // 3. Render DOT locally — graphviz is pre-installed on the ascend-backend
     //    Railway container (Nixpacks graphviz package), no ai-services hop needed.
+    _step = 'render';
     const { execFile } = await import('child_process');
     const { promisify } = await import('util');
     const execFileAsync = promisify(execFile);
@@ -468,6 +470,7 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
     );
 
     // 4. Cache in DB
+    _step = 'db';
     const imageUrl = `/api/diagram/image/${problemHash}`;
     await query(
       `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, image_data, description)
@@ -478,7 +481,8 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
 
     res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
   } catch (err) {
-    next(err);
+    console.error('[generate-dot] ERROR at step=', typeof _step !== 'undefined' ? _step : 'init', err?.message);
+    return res.status(500).json({ error: err?.message || 'Unknown error', step: typeof _step !== 'undefined' ? _step : 'init' });
   }
 });
 
