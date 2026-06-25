@@ -3,7 +3,7 @@
  *
  * Streams Claude responses via SSE-formatted events for the inference route.
  */
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { parseAnswer } from './answerParser.js';
 
 // ---------------------------------------------------------------------------
@@ -25,7 +25,11 @@ const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
 const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
-const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
+let _genAI = null;
+function getGenAI() {
+  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  return _genAI;
+}
 
 // ---------------------------------------------------------------------------
 // Question-type detection keywords
@@ -263,35 +267,8 @@ function getDefaultTechnicalContext() {
 // ---------------------------------------------------------------------------
 // Web search helper
 // ---------------------------------------------------------------------------
-async function runSearch(question, history) {
-  try {
-    const messages = [
-      ...history.slice(-CONTEXT_TURNS),
-      { role: 'user', content: question },
-    ];
-
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 4096,
-      system: (
-        'You are a research assistant. Use web_search to find current facts, ' +
-        'versions, CVEs, and DORA/CNCF metrics relevant to the question. ' +
-        'Return only a concise JSON summary of findings.'
-      ),
-      messages,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-    });
-
-    const context = response.content
-      .filter((block) => block.type === 'text' && block.text)
-      .map((block) => block.text)
-      .join('');
-
-    return context.trim() ? context.trim().slice(0, 800) : null;
-  } catch (err) {
-    console.warn('Web search failed:', err.message);
-    return null;
-  }
+async function runSearch(_question, _history) {
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -431,44 +408,32 @@ IMPORTANT CODE FORMATTING RULE:
   let firstTokenAt = 0;
 
   try {
-    const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isShortMode ? 'behavioral' : 'general');
-    const chosenModel = selectModel(plan, questionType);
-    // Prompt caching — wraps the large system prompt with an ephemeral
-    // cache control so the second-and-beyond request in a 5-minute window
-    // hits the cache and TTFT drops ~50-70%. No output change; full prompt
-    // and full response are preserved.
-    const stream = client.messages.stream({
-      model: chosenModel,
-      max_tokens: maxTokens,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-      messages,
-    }, signal ? { signal } : undefined);
-
-    for await (const event of stream) {
-      if (signal?.aborted) { try { stream.controller?.abort(); } catch {} break; }
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        const token = event.delta.text;
+    const geminiHistory = messages.slice(0, -1).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+    const lastMsg = messages[messages.length - 1].content;
+    const gmodel = getGenAI().getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: systemPrompt,
+    });
+    const chat = gmodel.startChat({
+      history: geminiHistory,
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.2 },
+    });
+    const result = await chat.sendMessageStream(lastMsg, signal ? { signal } : undefined);
+    for await (const chunk of result.stream) {
+      if (signal?.aborted) break;
+      const token = chunk.text();
+      if (token) {
         if (!firstTokenAt) firstTokenAt = performance.now();
         chunks.push(token);
         yield { event: 'token', data: { t: token } };
       }
     }
-
     if (signal?.aborted) return;
-
-    // Get final message for usage info
-    const finalMessage = await stream.finalMessage();
-    if (finalMessage.usage) {
-      inputTokens = finalMessage.usage.input_tokens;
-      outputTokens = finalMessage.usage.output_tokens;
-      // Anthropic returns these only when cache_control was honored.
-      // cache_read = warm-cache hit (cheap), cache_creation = first write
-      // of this prompt prefix into the 5-minute ephemeral cache.
-      cacheReadTokens = finalMessage.usage.cache_read_input_tokens || 0;
-      cacheCreationTokens = finalMessage.usage.cache_creation_input_tokens || 0;
-    }
   } catch (err) {
-    console.error('Claude stream error:', err);
+    console.error('Gemini stream error:', err);
     yield { event: 'error', data: { msg: err.message || String(err) } };
     return;
   }
