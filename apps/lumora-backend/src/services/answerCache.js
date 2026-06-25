@@ -215,4 +215,3 @@ export async function cacheFlushAll() {
   return { redisCount, dbCount };
 }
 
-export { buildAnswerCacheKey };
