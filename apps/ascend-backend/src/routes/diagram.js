@@ -460,14 +460,15 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
 
     // 3. Render DOT locally — graphviz is pre-installed on the ascend-backend
     //    Railway container (Nixpacks graphviz package), no ai-services hop needed.
+    //    execFileSync (not promisify(execFile)) is required because only the Sync
+    //    variants forward `input` as stdin data to the child process.
     _step = 'render';
-    const { execFile } = await import('child_process');
-    const { promisify } = await import('util');
-    const execFileAsync = promisify(execFile);
-    const { stdout: pngBuffer } = await execFileAsync(
-      'dot', ['-Tpng'],
-      { input: dotSource, encoding: 'buffer', timeout: 15000, maxBuffer: 8 * 1024 * 1024 },
-    );
+    const { execFileSync } = await import('child_process');
+    const pngBuffer = execFileSync('dot', ['-Tpng', '-Gdpi=150'], {
+      input: dotSource,
+      timeout: 15000,
+      maxBuffer: 8 * 1024 * 1024,
+    });
 
     // 4. Cache in DB
     _step = 'db';

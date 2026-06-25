@@ -48,31 +48,18 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
   const [noCache, setNoCache] = useState(false);
   const [cloudProvider, setCloudProvider] = useCloudProvider();
 
-  // Pan & zoom
+  // Zoom — scroll-based (overflow:auto handles pan; no drag needed)
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const translateStart = useRef({ x: 0, y: 0 });
 
+  // Ctrl/Cmd+Wheel zooms; plain wheel scrolls the diagram naturally via overflow:auto
   const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
-    setScale(prev => Math.min(Math.max(0.3, prev + (e.deltaY > 0 ? -0.1 : 0.1)), 4));
+    setScale(prev => Math.min(Math.max(0.25, prev + (e.deltaY > 0 ? -0.1 : 0.1)), 4));
   }, []);
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY };
-    translateStart.current = { ...translate };
-  }, [translate]);
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setTranslate({ x: translateStart.current.x + (e.clientX - dragStart.current.x), y: translateStart.current.y + (e.clientY - dragStart.current.y) });
-  }, [isDragging]);
-  const handleMouseUp = useCallback(() => setIsDragging(false), []);
-  const resetView = useCallback(() => { setScale(1); setTranslate({ x: 0, y: 0 }); }, []);
+  const resetView = useCallback(() => setScale(1), []);
 
   // Step 1: Cache-only lookup (fast, no generation)
   useEffect(() => {
@@ -179,7 +166,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
           <div className="flex items-center gap-1">
             <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
             <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.3))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
+            <button onClick={() => setScale(s => Math.max(s - 0.25, 0.25))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
             <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
             <button onClick={() => setIsFullscreen(true)} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1" title="View full size">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -248,24 +235,18 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
         </div>
       )}
 
-      {/* Image — fits container width by default; pan/zoom controls let
-          the user drill in. The previous maxWidth:'none' made the image
-          render at native pixel size (3600px wide before the DPI cut)
-          and overflow the design panel. */}
+      {/* Image — fills panel width at 100% so text is readable; tall TB diagrams
+          scroll vertically via overflow:auto on the container. Ctrl/Cmd+Wheel or
+          the +/- buttons zoom by scaling the inner wrapper width. */}
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
-          className="rounded-lg select-none flex items-center justify-center"
-          style={{ cursor: isDragging ? 'grabbing' : 'grab', overflow: 'hidden', minHeight: '400px', maxHeight: '82vh', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-          onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-          <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
-            style={{
-              transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
-              transformOrigin: 'center center',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-              height: 'auto',
-            }} />
+          className="rounded-lg select-none"
+          style={{ overflow: 'auto', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          onWheel={handleWheel}>
+          <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: '100%', margin: '0 auto' }}>
+            <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
+              style={{ width: '100%', height: 'auto', display: 'block' }} />
+          </div>
         </div>
       )}
 
