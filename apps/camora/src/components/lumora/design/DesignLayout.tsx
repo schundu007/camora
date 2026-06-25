@@ -1113,25 +1113,39 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <option value="gcp">GCP</option>
                 </select>
               </div>
-              {/* Diagram type tabs */}
-              <div className="flex gap-1 mb-2">
-                {(['python', 'graphviz'] as const).map(tab => (
-                  <button key={tab}
-                    onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
-                    className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
-                    style={diagramTab === tab
-                      ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
-                      : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
-                  >
-                    {tab === 'graphviz' && gvLoading ? '…' : tab}
-                  </button>
-                ))}
-              </div>
               {diagramTab === 'python' && (
-                <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
+                <ArchitectureDiagram
+                  question={question}
+                  className="diagram-left-panel"
+                  autoGenerate={true}
+                  leadingControls={(['python', 'graphviz'] as const).map(tab => (
+                    <button key={tab}
+                      onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
+                      className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                      style={diagramTab === tab
+                        ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
+                        : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                    >
+                      {tab === 'graphviz' && gvLoading ? '…' : tab}
+                    </button>
+                  ))}
+                />
               )}
               {diagramTab === 'graphviz' && (
                 <div className="flex-1 min-h-0">
+                  <div className="flex items-center gap-1 mb-2">
+                    {(['python', 'graphviz'] as const).map(tab => (
+                      <button key={tab}
+                        onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
+                        className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                        style={diagramTab === tab
+                          ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
+                          : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                      >
+                        {tab === 'graphviz' && gvLoading ? '…' : tab}
+                      </button>
+                    ))}
+                  </div>
                   {gvLoading && (
                     <div className="flex items-center gap-2 py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
                       <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />

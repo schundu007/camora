@@ -30,9 +30,11 @@ interface ArchitectureDiagramProps {
    *  auto-triggered as soon as a cache miss is detected. Also hides the
    *  cloud selector (caller owns the picker). */
   autoGenerate?: boolean;
+  /** Chips/buttons rendered on the left of the controls row, sharing one line with the zoom controls. */
+  leadingControls?: React.ReactNode;
 }
 
-export const ArchitectureDiagram = ({ question, className = '', designKind = 'system', autoGenerate = false }: ArchitectureDiagramProps) => {
+export const ArchitectureDiagram = ({ question, className = '', designKind = 'system', autoGenerate = false, leadingControls }: ArchitectureDiagramProps) => {
   const { token, user } = useAuth();
   // Only owners/admins may trigger fresh generation. Regular users consume
   // pre-generated diagrams from the cache. Backend enforces this via 403
@@ -159,8 +161,9 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
 
   return (
     <div className={className}>
-      {/* Controls */}
+      {/* Controls — single row: leading chips (Python/Graphviz) + zoom buttons */}
       <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+        {leadingControls && <div className="flex items-center gap-1">{leadingControls}</div>}
         {!autoGenerate && (
           <div className="flex items-center gap-2">
             <select value={cloudProvider} onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
