@@ -352,6 +352,141 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
   }
 });
 
+const DOT_SYSTEM_PROMPT = `You are an expert cloud architect. Generate a pure Graphviz DOT diagram with an enterprise whiteboard style.
+
+OUTPUT: Raw DOT source ONLY — no markdown fences, no explanations, just the digraph block.
+
+REQUIRED SKELETON:
+digraph G {
+  graph [rankdir=LR bgcolor=white fontname="Helvetica" nodesep=0.5 ranksep=0.8 dpi=200 splines=ortho pad="0.6,0.6"]
+  node  [fontname="Helvetica" fontsize=11 margin="0.22,0.10" style="rounded,filled" penwidth=1.5 shape=box]
+  edge  [fontname="Helvetica" fontsize=9 color="#94a3b8" arrowsize=0.8 penwidth=1.2]
+
+  clients [label="Clients\\n(Web / Mobile)" fillcolor="#f0f9ff" color="#0284c7" fontcolor="#0c4a6e"]
+
+  subgraph cluster_edge {
+    label="Edge / CDN"
+    graph [bgcolor="#eff6ff" pencolor="#3b82f6" fontcolor="#1e3a8a" fontsize=11 fontname="Helvetica-Bold" style=rounded penwidth=1.8]
+    cdn [label="CDN" fillcolor="#dbeafe" color="#3b5bdb" fontcolor="#1e3a5f"]
+    lb  [label="Load\\nBalancer" fillcolor="#dbeafe" color="#3b5bdb" fontcolor="#1e3a5f"]
+  }
+
+  subgraph cluster_app {
+    label="Application"
+    graph [bgcolor="#f0fdf4" pencolor="#15803d" fontcolor="#14532d" fontsize=11 fontname="Helvetica-Bold" style=rounded penwidth=1.8]
+    api [label="API\\nGateway" fillcolor="#dcfce7" color="#16a34a" fontcolor="#14532d"]
+    svc [label="App\\nService" fillcolor="#dcfce7" color="#16a34a" fontcolor="#14532d"]
+  }
+
+  subgraph cluster_data {
+    label="Data"
+    graph [bgcolor="#fffbeb" pencolor="#b45309" fontcolor="#78350f" fontsize=11 fontname="Helvetica-Bold" style=rounded penwidth=1.8]
+    db    [label="Primary\\nDB" fillcolor="#fef3c7" color="#d97706" fontcolor="#78350f"]
+    cache [label="Cache" fillcolor="#fef3c7" color="#d97706" fontcolor="#78350f"]
+  }
+
+  clients -> cdn [label="HTTPS"]
+  cdn -> lb
+  lb -> api
+  api -> svc
+  svc -> db  [label="read/write"]
+  svc -> cache [label="get/set"]
+}
+
+PALETTE — assign clusters based on function:
+  Edge/CDN:      bgcolor=#eff6ff pencolor=#3b82f6  node fillcolor=#dbeafe color=#3b5bdb  fontcolor=#1e3a5f
+  Application:   bgcolor=#f0fdf4 pencolor=#15803d  node fillcolor=#dcfce7 color=#16a34a  fontcolor=#14532d
+  Data/Storage:  bgcolor=#fffbeb pencolor=#b45309  node fillcolor=#fef3c7 color=#d97706  fontcolor=#78350f
+  Async/Queue:   bgcolor=#fdf4ff pencolor=#7c3aed  node fillcolor=#f3e8ff color=#9333ea  fontcolor=#4c1d95
+  Observability: bgcolor=#fff1f2 pencolor=#be123c  node fillcolor=#ffe4e6 color=#e11d48  fontcolor=#881337
+
+RULES:
+- rankdir=LR is MANDATORY — never TB
+- 8-14 nodes total — do not over-engineer
+- SHORT labels: 2-3 words max, use \\n for line breaks
+- Edge labels ONLY on the 3-5 most important paths (auth, cache miss, write, stream, etc.)
+- All node IDs must be valid DOT identifiers (letters/digits/underscore only)
+- No HTML-like labels (<...>) — plain string labels only
+- splines=ortho for clean right-angle routing`;
+
+/**
+ * POST /api/diagram/generate-dot
+ * Generate a pure Graphviz DOT architecture diagram (enterprise whiteboard style).
+ * Uses Claude to generate DOT source, then renders via ai-services /diagram/render-dot.
+ * Cached with dot: prefix to avoid collision with Python diagram cache.
+ */
+router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req, res, next) => {
+  req.setTimeout(90000);
+  res.setTimeout(90000);
+  try {
+    const { question, cloudProvider } = req.body;
+    if (!question) return res.status(400).json({ error: 'question is required' });
+    const provider = cloudProvider || 'aws';
+    const problemHash = hashProblem(`dot:${question}::${provider}`);
+
+    // 1. Check cache
+    try {
+      const cached = await query(
+        'SELECT image_data IS NOT NULL AS has_image FROM ascend_diagram_cache WHERE problem_hash = $1 AND image_data IS NOT NULL',
+        [problemHash],
+      );
+      if (cached.rows.length > 0) {
+        return res.json({ success: true, image_url: `/api/diagram/image/${problemHash}`, cloud_provider: provider, cached: true });
+      }
+    } catch { /* table may not exist */ }
+
+    // 2. Generate DOT via Claude
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2048,
+      system: DOT_SYSTEM_PROMPT,
+      messages: [{
+        role: 'user',
+        content: `Generate a Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider preference: ${provider}\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`,
+      }],
+    });
+
+    let dotSource = msg.content[0].text.trim();
+    // Strip any accidental markdown fences
+    dotSource = dotSource.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim();
+    if (!dotSource.startsWith('digraph')) {
+      const idx = dotSource.indexOf('digraph');
+      if (idx !== -1) dotSource = dotSource.slice(idx);
+      else throw new Error('Claude did not produce a valid DOT digraph');
+    }
+
+    // 3. Render via ai-services /diagram/render-dot (reuses existing endpoint)
+    const AI_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
+    const AI_KEY = process.env.AI_SERVICES_API_KEY || '';
+    const renderResp = await fetch(`${AI_URL}/diagram/render-dot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': AI_KEY },
+      body: JSON.stringify({ dot: dotSource, format: 'png' }),
+    });
+    if (!renderResp.ok) {
+      const errText = await renderResp.text().catch(() => '');
+      throw new Error(`DOT render failed (${renderResp.status}): ${errText.slice(0, 200)}`);
+    }
+    const renderData = await renderResp.json();
+    const pngBuffer = Buffer.from(renderData.content, 'base64');
+
+    // 4. Cache in DB
+    const imageUrl = `/api/diagram/image/${problemHash}`;
+    await query(
+      `INSERT INTO ascend_diagram_cache (problem_hash, detail_level, cloud_provider, direction, image_url, image_data, description)
+       VALUES ($1, 'overview', $2, 'LR', $3, $4, $5)
+       ON CONFLICT (problem_hash) DO UPDATE SET image_url = $3, image_data = $4`,
+      [problemHash, provider, imageUrl, pngBuffer, question.slice(0, 500)],
+    );
+
+    res.json({ success: true, image_url: imageUrl, cloud_provider: provider, cached: false });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * POST /api/diagram/lookup
  * Cache-only lookup — never generates. Returns cached diagram or 404.
