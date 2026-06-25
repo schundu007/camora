@@ -383,7 +383,12 @@ export const useSessionStore = create<SessionState>()(
           timestamp,
           messageId,
           conversationId,
-          blocks: blocks ?? [],
+          // Cap at 6 blocks × 2000 chars to stay under localStorage quota.
+          blocks: (blocks ?? []).slice(0, 6).map(b => ({
+            type: String(b?.type ?? ''),
+            content: typeof b?.content === 'string' ? b.content.slice(0, 2000) : '',
+            ...(b?.lang ? { lang: String(b.lang) } : {}),
+          })),
         })),
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,

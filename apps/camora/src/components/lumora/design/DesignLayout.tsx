@@ -902,10 +902,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {/* Reset */}
-          <button onClick={handleReset} className="p-1.5 opacity-75 hover:opacity-100 hover:bg-white/10 rounded-md transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Reset">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={handleReset} className="flex items-center gap-1 px-2.5 py-1 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10 transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Reset — clear problem and solution">
+            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
           </button>
 
           {/* Voice Input — no more hacky getElementById */}
