@@ -20,7 +20,7 @@ import tempfile
 import uuid
 import traceback
 
-import anthropic
+import google.generativeai as genai
 
 
 # ── Class-name aliases ─────────────────────────────────────────────────────
@@ -1083,7 +1083,8 @@ def execute_code(code, output_path, output_dir):
 
 
 def generate_diagram(question, provider, detail_level, direction, output_dir, api_key, design_kind="system"):
-    client = anthropic.Anthropic(api_key=api_key)
+    genai.configure(api_key=api_key)
+    gmodel = genai.GenerativeModel("gemini-2.0-flash")
     # Multi-cloud needs horizontal layout — per-CSP columns must read
     # left-to-right. Override the CLI direction so a stale frontend
     # passing TB doesn't ruin the layout.
@@ -1095,11 +1096,8 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
     output_path = os.path.join(output_dir, f"diagram-{diagram_id}")
 
     # Attempt 1
-    resp = client.messages.create(
-        model="claude-sonnet-4-6", max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    body = extract_code(resp.content[0].text)
+    resp = gmodel.generate_content(prompt)
+    body = extract_code(resp.text)
     full_code = assemble_code(body, provider, direction)
     try:
         full_code = sanitize(full_code)
@@ -1155,15 +1153,12 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
                 f"NEVER import from diagrams.aws/azure/gcp other than {provider}."
             )
 
-        fix_resp = client.messages.create(
-            model="claude-sonnet-4-6", max_tokens=4096,
-            messages=[
-                {"role": "user", "content": prompt},
-                {"role": "assistant", "content": body},
-                {"role": "user", "content": f"ERROR:\n{error_text}{import_hint}\n\nFix the code. Return the COMPLETE output in the SAME format: imports first, then indented body. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() constructor."},
-            ],
-        )
-        body = extract_code(fix_resp.content[0].text)
+        fix_resp = gmodel.generate_content([
+            {"role": "user", "parts": [prompt]},
+            {"role": "model", "parts": [body]},
+            {"role": "user", "parts": [f"ERROR:\n{error_text}{import_hint}\n\nFix the code. Return the COMPLETE output in the SAME format: imports first, then indented body. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() constructor."]},
+        ])
+        body = extract_code(fix_resp.text)
         full_code = assemble_code(body, provider, direction)
         try:
             full_code = sanitize(full_code)
@@ -1183,10 +1178,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
         sys.stderr.write(f"[DiagramEngine] Attempt 2 failed: {result['stderr'][:200]}\n")
 
         available = build_import_list(provider)
-        fallback_resp = client.messages.create(
-            model="claude-sonnet-4-6", max_tokens=4096,
-            messages=[
-                {"role": "user", "content": f"""Generate a simple cloud architecture diagram for: {question}
+        fallback_resp = gmodel.generate_content(f"""Generate a simple cloud architecture diagram for: {question}
 
 Use ONLY these verified imports:
 {available}
@@ -1196,10 +1188,8 @@ Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or Di
 The body MUST contain at least 2 Cluster() blocks and at least 4 connections using >>.
 EVERY connection must use Edge(label="...", color="...", penwidth="2.0").
 Start body with: users = Users("Clients")
-Return ONLY ONE Python code block (everything wrapped in a single ```python ... ``` fence). No prose, no multiple blocks, no explanation."""},
-            ],
-        )
-        body = extract_code(fallback_resp.content[0].text)
+Return ONLY ONE Python code block (everything wrapped in a single ```python ... ``` fence). No prose, no multiple blocks, no explanation.""")
+        body = extract_code(fallback_resp.text)
         full_code = assemble_code(body, provider, direction)
         try:
             full_code = sanitize(full_code)
@@ -1263,9 +1253,9 @@ def main():
     else:
         provider = args.provider
     try:
-        api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
+        api_key = args.api_key or os.environ.get("GOOGLE_AI_API_KEY") or os.environ.get("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY is not set in the environment")
+            raise ValueError("GOOGLE_AI_API_KEY is not set in the environment")
         result = generate_diagram(
             question=args.question, provider=provider,
             detail_level=args.detail_level, direction=args.direction,
