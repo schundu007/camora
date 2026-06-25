@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { indexR2Doc } from '../services/userDocIndexer.js';
 import { query } from '../lib/shared-db.js';
+import { cacheDelete, cacheFlushAll, buildAnswerCacheKey } from '../services/answerCache.js';
 
 const router = Router();
 
@@ -38,6 +39,24 @@ router.post('/remove-doc-chunks', async (req, res) => {
     console.error('[internal/remove-doc-chunks] error:', err.message);
     res.status(500).json({ error: err.message });
   }
+});
+
+// DELETE a specific question from the answer cache
+// Body: { question, mode?, cloudProvider?, detailLevel? }
+router.post('/cache/delete', async (req, res) => {
+  const { question, mode, cloudProvider, detailLevel, model } = req.body;
+  if (!question) return res.status(400).json({ error: 'question required' });
+  const key = buildAnswerCacheKey({ question, mode, cloudProvider, detailLevel, model });
+  const result = await cacheDelete(key);
+  console.log(`[internal/cache/delete] key=${key} redis=${result.redis} db=${result.db}`);
+  res.json({ success: true, key, ...result });
+});
+
+// FLUSH the entire answer cache (Redis + DB)
+router.post('/cache/flush', async (req, res) => {
+  const result = await cacheFlushAll();
+  console.log(`[internal/cache/flush] redis=${result.redisCount} db=${result.dbCount}`);
+  res.json({ success: true, ...result });
 });
 
 export default router;
