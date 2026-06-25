@@ -21,6 +21,7 @@ import Chip from '@/components/shared/ui/Chip';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+const CAPRA_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 const SNAP_CHIPS = [
   { label: 'Find Issues', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
@@ -605,7 +606,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     if (!question || !token || gvLoading) return;
     setGvLoading(true);
     try {
-      const r = await fetch(`${API_URL}/api/diagram/generate`, {
+      const r = await fetch(`${CAPRA_URL}/api/diagram/generate`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
