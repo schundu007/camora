@@ -23,6 +23,7 @@ export interface SystemDesign {
   architecture?: { components?: string[]; description?: string };
   scalability?: string[];
   techJustifications?: Array<{ tech: string; details: string[] }>;
+  cloudServices?: Array<{ name: string; role: string }>;
   tradeoffs?: string[];
   edgeCases?: string[];
   followups?: Array<{ question: string; answer: string }>;
@@ -194,13 +195,26 @@ export function parseTagsToDesign(byType: Record<string, string>): DesignResult 
     if (techJusts.length > 0) sd.techJustifications = techJusts;
   }
 
+  // Cloud services — "ServiceName: one-line role" per line
+  if (byType.CLOUDSERVICES) {
+    const services: Array<{ name: string; role: string }> = [];
+    byType.CLOUDSERVICES.split('\n').forEach(line => {
+      const trimmed = line.replace(/^[-*]\s*/, '').trim();
+      const colon = trimmed.indexOf(':');
+      if (colon > 0) {
+        services.push({ name: trimmed.slice(0, colon).trim(), role: trimmed.slice(colon + 1).trim() });
+      }
+    });
+    if (services.length > 0) sd.cloudServices = services;
+  }
+
   return { pitch: byType.ANSWER || byType.HEADLINE || '', systemDesign: sd };
 }
 
 /** Known tag names for bare-heading fallback */
 const KNOWN_TAGS = new Set([
   'HEADLINE', 'ANSWER', 'DIAGRAM', 'CODE', 'FOLLOWUP',
-  'REQUIREMENTS', 'SCALEMATH', 'SCALECALC', 'DEEPDESIGN', 'EDGECASES', 'TRADEOFFS',
+  'REQUIREMENTS', 'SCALEMATH', 'SCALECALC', 'DEEPDESIGN', 'CLOUDSERVICES', 'EDGECASES', 'TRADEOFFS',
   'PROBLEM', 'APPROACH', 'COMPLEXITY', 'WALKTHROUGH', 'TESTCASES',
 ]);
 

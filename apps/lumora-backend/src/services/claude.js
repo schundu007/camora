@@ -276,7 +276,7 @@ VOICE — NON-NEGOTIABLE:
 CRITICAL RULES:
 - ${detailRules}
 - Each bullet: ONE short sentence (under 15 words).
-- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
+- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, CLOUDSERVICES, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
 - ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === MY BACKGROUND ===
@@ -308,6 +308,12 @@ skip
 [/DIAGRAM]
 
 ${deepSection}
+
+[CLOUDSERVICES]
+S3: one-line role
+Lambda: one-line role
+(list only the specific named services used — S3, DynamoDB, SQS, Lambda, CloudFront, ECS, RDS, Redis, etc. — 4-6 services max)
+[/CLOUDSERVICES]
 
 [EDGECASES]
 - 3-5 bullet points, one line each
