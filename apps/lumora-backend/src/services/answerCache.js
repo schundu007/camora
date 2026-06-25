@@ -177,3 +177,42 @@ export function logCacheEvent(kind, key, meta = {}) {
   const k = key.length > 80 ? key.slice(0, 77) + '...' : key;
   console.log(`[answerCache] ${kind} key=${k} ${Object.entries(meta).map(([a, b]) => `${a}=${JSON.stringify(b)}`).join(' ')}`);
 }
+
+/** Delete one entry by its raw cache key. Returns { redis, db } deleted booleans. */
+export async function cacheDelete(key) {
+  let redis = false;
+  let db = false;
+  const c = getClient();
+  if (c) {
+    try { const n = await c.del(key); redis = n > 0; } catch {}
+  }
+  try {
+    const r = await query('DELETE FROM lumora_answer_cache WHERE cache_key = $1', [key]);
+    db = (r.rowCount || 0) > 0;
+  } catch {}
+  return { redis, db };
+}
+
+/** Flush ALL answer cache entries across Redis + DB. Returns { redisCount, dbCount }. */
+export async function cacheFlushAll() {
+  let redisCount = 0;
+  let dbCount = 0;
+  const c = getClient();
+  if (c) {
+    try {
+      let cursor = '0';
+      do {
+        const [next, keys] = await c.scan(cursor, 'MATCH', 'lumora:answer:*', 'COUNT', 200);
+        cursor = next;
+        if (keys.length) { await c.del(...keys); redisCount += keys.length; }
+      } while (cursor !== '0');
+    } catch (err) { console.warn('[answerCache] Redis flush failed:', err.message); }
+  }
+  try {
+    const r = await query('DELETE FROM lumora_answer_cache');
+    dbCount = r.rowCount || 0;
+  } catch (err) { console.warn('[answerCache] DB flush failed:', err.message); }
+  return { redisCount, dbCount };
+}
+
+export { buildAnswerCacheKey };
