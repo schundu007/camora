@@ -2150,7 +2150,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 stream as part of the reset. */}
             <button
               onClick={handleNewProblem}
-              className="ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+              className="ml-auto shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors"
               style={{
                 color: 'var(--cam-strip-text)',
                 background: 'var(--cam-strip-icon-bg)',
@@ -2158,12 +2158,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-border)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
-              title="New Problem — reset everything for a fresh question"
+              title="Reset — clear everything for a fresh problem"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
               </svg>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
             </button>
           </div>
 

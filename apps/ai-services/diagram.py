@@ -92,10 +92,10 @@ def _build_system_prompt(question: str, cloud_provider: str, detail_text: str) -
 REQUIREMENTS:
 1. The diagram should primarily use the `{cloud_provider}` provider, but you may also import from `diagrams.generic.*` and `diagrams.onprem.*` for components that don't have a clean provider equivalent (CI/CD, k8s, monitoring stacks).
 2. Use `from diagrams import Diagram, Cluster, Edge` and relevant {cloud_provider} node imports.
-3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.9", "ranksep": "1.4", "fontsize": "18", "dpi": "150"}})`. `direction="LR"` (left-to-right) lays layers side-by-side so the diagram stays wide rather than tall — a tall diagram is unreadable in the panel. DO NOT use direction="TB".
-4. Group related services with `Cluster(...)` blocks AND give each cluster `graph_attr={{"bgcolor": "<pastel hex>", "pencolor": "<darker hex>", "style": "rounded", "fontsize": "16"}}` so the layers are visually distinct (e.g. Edge → Application → Data → Async → Observability are separate colored regions, not one undifferentiated grid).
-5. Use descriptive labels for each node (one or two words).
-6. Use `Edge(label="…")` on the hot-path connections; leave secondary links unlabeled to reduce visual clutter.
+3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.5", "ranksep": "0.9", "fontsize": "12", "dpi": "200"}}, node_attr={{"fontsize": "10", "margin": "0.25,0.06", "labelloc": "b", "width": "0.8", "height": "0.8"}})`. `direction="LR"` (left-to-right) lays layers side-by-side. DO NOT use direction="TB".
+4. Group related services with `Cluster(...)` blocks AND give each cluster `graph_attr={{"bgcolor": "<pastel hex>", "pencolor": "<darker hex>", "style": "rounded", "fontsize": "13"}}` so the layers are visually distinct (e.g. Edge → Application → Data → Async → Observability are separate colored regions).
+5. Use SHORT labels — 1-2 words max per node (e.g. `EC2("API GW")` not `EC2("API Gateway Service")`). For compound names use `\\n` (e.g. `Lambda("Build\\nQueue")`). Long labels overflow the icon box and make the diagram unreadable.
+6. Use `Edge(label="…")` on the hot-path connections only (3-5 total); leave all secondary links unlabeled to reduce clutter.
 7. Detail level: {detail_text}
 
 AVAILABLE IMPORTS (use only what is needed, you may import other valid diagrams.{cloud_provider}.* modules):
@@ -141,7 +141,7 @@ from diagrams.generic.storage import Storage
 from diagrams.programming.flowchart import Action, Document, Database, InputOutput, Decision
 
    `Blank` is the default — use it for ANY component that would otherwise be an AWS/GCP/Azure/Terraform/Ansible/ArgoCD logo. The label carries the meaning ("Provisioning API\\n(Cluster Spec)", "Terraform\\nAPI-driven CSPs", "Ansible\\nnode bootstrap"). Use `Document` for spec-files (IP lists, kubeconfigs), `Database` for state stores, `Storage` for blob/object storage, `InputOutput` for external feeds. Network shapes (Subnet/Switch/Router/Firewall) only when actually drawing network topology.
-3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.9", "ranksep": "1.4", "fontsize": "18", "dpi": "150", "compound": "true", "bgcolor": "white"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right. DO NOT use direction="TB".
+3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "ortho", "nodesep": "0.5", "ranksep": "0.9", "fontsize": "12", "dpi": "200", "compound": "true", "bgcolor": "white"}}, node_attr={{"fontsize": "10", "margin": "0.25,0.06"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right. DO NOT use direction="TB".
 4. Use NESTED `Cluster` blocks with colored backgrounds + thick borders, mirroring the reference whiteboard style:
    - Control Plane / Orchestration   (bgcolor=#E8F0FF, pencolor=#3B5BDB, fontcolor=#1E40AF)
    - IaC & Config Management         (bgcolor=#FFFBEB, pencolor=#C9A227, fontcolor=#92400E)
@@ -420,18 +420,36 @@ def _sanitize_code(code: str) -> str:
     if 'direction="LR"' not in code and "direction='LR'" not in code:
         code = _re.sub(r'Diagram\s*\(', 'Diagram(direction="LR", ', code, count=1)
 
-    # Inject dpi="150" into graph_attr for higher-resolution PNG output.
-    # Also bump fontsize to 18 if the LLM used a smaller value.
+    # Inject dpi="200" into graph_attr for crisp PNG output.
+    # Clamp nodesep/ranksep down to avoid wasted whitespace, and cap fontsize
+    # at 13 so cluster labels don't dwarf the node icons.
     def _patch_graph_attr(m: _re.Match) -> str:
         inner = m.group(1)
         if '"dpi"' not in inner and "'dpi'" not in inner:
-            inner = '"dpi": "150", ' + inner
+            inner = '"dpi": "200", ' + inner
+        else:
+            inner = _re.sub(r'"dpi"\s*:\s*"\d+"', '"dpi": "200"', inner)
+        inner = _re.sub(r'"nodesep"\s*:\s*"([\d.]+)"',
+                        lambda fm: '"nodesep": "0.5"' if float(fm.group(1)) > 0.5 else fm.group(0),
+                        inner)
+        inner = _re.sub(r'"ranksep"\s*:\s*"([\d.]+)"',
+                        lambda fm: '"ranksep": "0.9"' if float(fm.group(1)) > 0.9 else fm.group(0),
+                        inner)
         inner = _re.sub(r'"fontsize"\s*:\s*"(\d+)"',
-                        lambda fm: '"fontsize": "18"' if int(fm.group(1)) < 18 else fm.group(0),
+                        lambda fm: '"fontsize": "12"' if int(fm.group(1)) > 13 else fm.group(0),
                         inner)
         return 'graph_attr={' + inner + '}'
 
     code = _re.sub(r'graph_attr\s*=\s*\{([^}]+)\}', _patch_graph_attr, code, count=1)
+
+    # Inject node_attr with tight margins and small font if the LLM omitted it.
+    # This prevents long labels from overflowing the icon bounding box.
+    if 'node_attr' not in code:
+        code = _re.sub(
+            r'(graph_attr\s*=\s*\{[^}]+\})',
+            r'\1, node_attr={"fontsize": "10", "margin": "0.25,0.06", "labelloc": "b", "width": "0.8", "height": "0.8"}',
+            code, count=1,
+        )
 
     return code
 
