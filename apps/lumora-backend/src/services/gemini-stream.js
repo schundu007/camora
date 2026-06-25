@@ -14,7 +14,7 @@ import {
   getDefaultTechnicalContext,
 } from './claude.js';
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS_QUICK = 2000;
 const MAX_TOKENS_DESIGN = 8000;
 
