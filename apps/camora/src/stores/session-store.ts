@@ -378,12 +378,12 @@ export const useSessionStore = create<SessionState>()(
         responseFormat: state.responseFormat,
         preferredModel: state.preferredModel,
         threshold: state.threshold,
-        history: state.history.map(({ question, timestamp, messageId, conversationId }) => ({
+        history: state.history.map(({ question, timestamp, messageId, conversationId, blocks }) => ({
           question,
           timestamp,
           messageId,
           conversationId,
-          blocks: [] as import('@/types').ParsedBlock[],
+          blocks: blocks ?? [],
         })),
         voiceMode: state.voiceMode,
         voiceEnrolled: state.voiceEnrolled,
@@ -403,7 +403,7 @@ export const useSessionStore = create<SessionState>()(
           timestamp: e.timestamp ?? new Date(),
           messageId: e.messageId,
           conversationId: e.conversationId,
-          blocks: [],
+          blocks: Array.isArray(e.blocks) ? e.blocks : [],
         })),
         voiceMode: old?.voiceMode ?? 'filter-candidate',
         voiceEnrolled: old?.voiceEnrolled ?? false,
