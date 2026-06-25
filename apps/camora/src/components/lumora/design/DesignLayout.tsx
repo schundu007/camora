@@ -1012,32 +1012,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 <span>{errorMsg}</span>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <select
-                value={cloudProvider}
-                onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
-                className="text-xs font-mono rounded-lg px-2 py-2.5 shrink-0"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-                title="Cloud provider for design + diagram"
-              >
-                <option value="auto">Auto</option>
-                <option value="aws">AWS</option>
-                <option value="azure">Azure</option>
-                <option value="gcp">GCP</option>
-              </select>
-              <button
-                onClick={() => handleSubmit()}
-                disabled={!problemText.trim() || isLoading}
-                className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
-              >
-                {isLoading ? (
-                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-                ) : (
-                  <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => handleSubmit()}
+              disabled={!problemText.trim() || isLoading}
+              className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
+            >
+              {isLoading ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+              ) : (
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>Design</>
+              )}
+            </button>
           </div>
 
           {/* Architecture Diagram - in left panel below input.
@@ -1052,8 +1038,38 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
                 <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
+                <select
+                  value={cloudProvider}
+                  onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
+                  className="ml-auto text-[10px] font-mono rounded px-1.5 py-0.5"
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                  title="Cloud provider for design + diagram"
+                >
+                  <option value="auto">Auto</option>
+                  <option value="aws">AWS</option>
+                  <option value="azure">Azure</option>
+                  <option value="gcp">GCP</option>
+                </select>
               </div>
               <ArchitectureDiagram question={question} className="diagram-left-panel" autoGenerate={true} />
+              {sd?.techJustifications && sd.techJustifications.length > 0 && (
+                <div className="mt-3 pt-2 border-t border-[var(--border)]">
+                  <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider mb-1.5">Services Used</h4>
+                  <div className="grid grid-cols-1 gap-1">
+                    {sd.techJustifications.map((tier: { tech: string; details: string[] }, i: number) => (
+                      <div key={i} className="flex items-baseline gap-1.5 text-[11px] leading-snug">
+                        <span className="font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>{tier.tech}</span>
+                        {tier.details[0] && (
+                          <>
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{tier.details[0]}</span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
