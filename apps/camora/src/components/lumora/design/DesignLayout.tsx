@@ -648,7 +648,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           await dialogAlert('Failed to load generated diagram image');
         }
       } else {
-        await dialogAlert(data.error || 'Diagram generation failed');
+        await dialogAlert(cleanErrorMsg(data.error));
       }
     } catch (err: any) {
       await dialogAlert(err.message || 'Network error');

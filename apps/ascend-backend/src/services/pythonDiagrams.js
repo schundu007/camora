@@ -77,7 +77,7 @@ export async function generateDiagram({
 }) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
+    throw new Error('GOOGLE_AI_API_KEY not configured');
   }
   ensureOutputDir();
 
@@ -106,7 +106,7 @@ export async function generateDiagram({
       cwd: OUTPUT_DIR,
       env: {
         ...process.env,
-        ANTHROPIC_API_KEY: apiKey,
+        GOOGLE_AI_API_KEY: apiKey,
       },
     });
 

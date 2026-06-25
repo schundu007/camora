@@ -50,9 +50,10 @@ export async function* streamResponseGemini(question, history, options = {}) {
     systemContext = null,
     retrievedContext = null,
     responseFormat = null,
-    model = DEFAULT_MODEL,
+    model: rawModel = null,
     signal = null,
   } = options;
+  const model = rawModel || DEFAULT_MODEL;
 
   const startTime = performance.now();
 
