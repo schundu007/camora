@@ -202,7 +202,13 @@ export function parseTagsToDesign(byType: Record<string, string>): DesignResult 
       const trimmed = line.replace(/^[-*]\s*/, '').trim();
       const colon = trimmed.indexOf(':');
       if (colon > 0) {
-        services.push({ name: trimmed.slice(0, colon).trim(), role: trimmed.slice(colon + 1).trim() });
+        const name = trimmed.slice(0, colon).trim();
+        const role = trimmed.slice(colon + 1).trim();
+        // Skip instruction/placeholder lines — real service names are short (≤ 30 chars)
+        // and don't start with < or (
+        if (name && name.length <= 30 && !name.startsWith('<') && !name.startsWith('(') && !name.startsWith('RULE')) {
+          services.push({ name, role });
+        }
       }
     });
     if (services.length > 0) sd.cloudServices = services;

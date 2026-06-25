@@ -309,13 +309,11 @@ skip
 
 ${deepSection}
 
-List the 4-6 actual cloud services your design uses. EXACT branded names only — never generic descriptions (S3 not "object storage", Lambda not "serverless function", DynamoDB not "NoSQL database"):
 [CLOUDSERVICES]
-S3: stores user-uploaded media and static assets
-DynamoDB: primary store for user profiles and session data
-Lambda: event-driven processing for async notification jobs
-CloudFront: CDN for low-latency global content delivery
-SQS: message queue to decouple write bursts from consumers
+(RULES: List 4-6 actual named services from YOUR design above. EXACT brand names — AWS: S3/DynamoDB/Lambda/SQS/ECS/RDS/CloudFront; Azure: Blob Storage/Cosmos DB/Functions/Service Bus/AKS/SQL Database/Front Door; GCP: Cloud Storage/Firestore/Pub-Sub/Cloud Run/GKE/Cloud SQL/Cloud CDN. Never generic terms like "object storage" or "NoSQL database".)
+<ServiceName>: its specific role in this design
+<ServiceName>: its specific role in this design
+<ServiceName>: its specific role in this design
 [/CLOUDSERVICES]
 
 [EDGECASES]
