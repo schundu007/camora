@@ -14,7 +14,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkAndReserveInferenceSlot } from '../services/quota.js';
 import { streamResponse, MODEL } from '../services/claude.js';
-import { streamResponseAny } from '../services/provider-stream.js';
+import { streamResponseGemini } from '../services/gemini-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
@@ -181,7 +181,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
     });
 
     // Stream tokens — dispatches to Claude/OpenAI/Gemini based on preferredModel prefix
-    for await (const evt of streamResponseAny(question, history, {
+    for await (const evt of streamResponseGemini(question, history, {
       useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
@@ -527,7 +527,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
     // Pass abortController.signal so the upstream call halts when the
     // client disconnects — without this, navigating away mid-answer
     // keeps tokens billing to completion.
-    for await (const evt of streamResponseAny(question, [], {
+    for await (const evt of streamResponseGemini(question, [], {
       useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,
