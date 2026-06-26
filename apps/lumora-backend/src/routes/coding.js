@@ -79,6 +79,7 @@ async function ensureImageWithinAnthropicLimit(rawBase64, mediaType) {
     .toBuffer();
   return { mediaType: 'image/jpeg', data: resized.toString('base64') };
 }
+import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
@@ -87,11 +88,21 @@ import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../servi
 
 const router = Router();
 
-const _geminiAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+let _geminiAI = null;
+let _geminiAIKey = null;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
+function getGeminiClient() {
+  const apiKey = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_geminiAI || _geminiAIKey !== apiKey) {
+    _geminiAI = new GoogleGenerativeAI(apiKey);
+    _geminiAIKey = apiKey;
+  }
+  return _geminiAI;
+}
+
 function geminiGetModel(systemInstruction) {
-  return _geminiAI.getGenerativeModel({ model: GEMINI_MODEL, ...(systemInstruction ? { systemInstruction } : {}) });
+  return getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, ...(systemInstruction ? { systemInstruction } : {}) });
 }
 
 function toGeminiHistory(msgs) {
@@ -1204,6 +1215,39 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       } catch (fbErr) {
         console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} error=${fbErr.message}`);
       }
+    }
+  }
+
+  // ── Pass 4b: Gemini fallback when all else is exhausted ─────────────────
+  if (!parsedJson && anthropicExhausted && !clientDisconnected) {
+    sendEvent('status', { state: 'warn', msg: 'Switching to Gemini…' });
+    try {
+      const gModel = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gHistory = toGeminiHistory(messages.slice(0, -1));
+      const lastMsg = messages[messages.length - 1];
+      const lastContent = Array.isArray(lastMsg?.content)
+        ? lastMsg.content.map(b => b.text || '').join('')
+        : (lastMsg?.content || '');
+      let gResult;
+      if (gHistory.length > 0) {
+        const chat = gModel.startChat({ history: gHistory });
+        gResult = await chat.sendMessage(lastContent);
+      } else {
+        gResult = await gModel.generateContent(lastContent);
+      }
+      const gRaw = gResult.response?.text?.() || '';
+      const gParsed = extractJsonFromText(gRaw);
+      if (gParsed && (gParsed.code || gParsed.solutions)) {
+        parsedJson = gParsed;
+        rawAnswer = gRaw;
+        modelUsed = GEMINI_MODEL;
+        passTag = 'gemini_fallback';
+        terminalFailure = null;
+      } else {
+        console.warn(`[coding/solve] pass=gemini_fallback parse_failed rawLen=${gRaw.length}`);
+      }
+    } catch (gErr) {
+      console.warn(`[coding/solve] pass=gemini_fallback error=${gErr.message}`);
     }
   }
 
