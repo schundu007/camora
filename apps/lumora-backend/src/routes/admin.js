@@ -1,6 +1,34 @@
 import { Router } from 'express';
 import { getAdminConfigSnapshot, setAdminConfigValue, deleteAdminConfigValue } from '../services/adminConfig.js';
 
+const PROVIDER_ENV_VAR = {
+  gemini: 'GOOGLE_AI_API_KEY',
+  anthropic: 'ANTHROPIC_API_KEY',
+  deepseek: 'DEEPSEEK_API_KEY',
+  openrouter: 'OPENROUTER_API_KEY',
+};
+
+async function syncToRailway(envVarName, value) {
+  const token = process.env.RAILWAY_TOKEN;
+  const projectId = process.env.RAILWAY_PROJECT_ID;
+  const environmentId = process.env.RAILWAY_ENVIRONMENT_ID;
+  const serviceIds = (process.env.RAILWAY_SERVICE_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!token || !projectId || !environmentId || !serviceIds.length) return { skipped: true };
+
+  const mutation = `mutation VariableUpsert($input: VariableUpsertInput!) { variableUpsert(input: $input) }`;
+  const results = await Promise.allSettled(
+    serviceIds.map(serviceId =>
+      fetch('https://backboard.railway.app/graphql/v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ query: mutation, variables: { input: { projectId, environmentId, serviceId, name: envVarName, value } } }),
+      }).then(r => r.json())
+    )
+  );
+  const failed = results.filter(r => r.status === 'rejected').length;
+  return { synced: serviceIds.length - failed, failed };
+}
+
 const router = Router();
 
 const PROVIDERS = ['gemini', 'anthropic', 'deepseek', 'openrouter'];
@@ -71,7 +99,13 @@ router.post('/api-keys', requireOwner, async (req, res) => {
       if (!apiKey) {
         await deleteAdminConfigValue(`provider.${provider}.api_key`);
       } else {
-        await setAdminConfigValue(`provider.${provider}.api_key`, apiKey.trim());
+        const trimmed = apiKey.trim();
+        await setAdminConfigValue(`provider.${provider}.api_key`, trimmed);
+        const envVar = PROVIDER_ENV_VAR[provider];
+        if (envVar) {
+          const railway = await syncToRailway(envVar, trimmed);
+          return res.json({ ok: true, railway });
+        }
       }
     }
     res.json({ ok: true });

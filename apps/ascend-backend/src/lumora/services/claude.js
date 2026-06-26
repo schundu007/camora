@@ -5,6 +5,7 @@
  */
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { parseAnswer } from './answerParser.js';
+import { getApiKey } from '../../services/adminConfig.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -26,8 +27,13 @@ const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10)
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
 let _genAI = null;
+let _genAIKey = null;
 function getGenAI() {
-  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  const apiKey = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== apiKey) {
+    _genAI = new GoogleGenerativeAI(apiKey);
+    _genAIKey = apiKey;
+  }
   return _genAI;
 }
 
