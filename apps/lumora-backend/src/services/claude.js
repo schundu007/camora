@@ -4,6 +4,7 @@
  * Streams Claude responses via SSE-formatted events for the inference route.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from './adminConfig.js';
 import { parseAnswer } from './answerParser.js';
 import { buildCloudHint } from './cloudHint.js';
@@ -38,6 +39,17 @@ function getAnthropicClient() {
     _anthropicClientKey = key;
   }
   return _anthropicClient;
+}
+
+let _geminiClient = null;
+let _geminiClientKey = null;
+function getGeminiClient() {
+  const key = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_geminiClient || key !== _geminiClientKey) {
+    _geminiClient = new GoogleGenerativeAI(key);
+    _geminiClientKey = key;
+  }
+  return _geminiClient;
 }
 
 // ---------------------------------------------------------------------------
@@ -751,32 +763,21 @@ For technical questions, map STAR to the technical context (Situation = the prob
   let outputTokens = 0;
 
   try {
-    const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isShortMode ? 'behavioral' : 'general');
-    const chosenModel = selectModel(plan, questionType);
-    // Prompt caching — wraps the large system prompt with an ephemeral
-    // cache control so the second-and-beyond request in a 5-minute window
-    // hits the cache and TTFT drops ~50-70%. No output change; full prompt
-    // and full response are preserved.
-    const stream = getAnthropicClient().messages.stream({
-      model: chosenModel,
-      max_tokens: maxTokens,
-      // Pin temperature low for consistency. The candidate complained
-      // that asking the same question twice produced completely
-      // different answers — that's expected at the default temp ~1.0.
-      // 0.2 keeps light natural variation in phrasing but locks down
-      // the structural choices: which past project, which metric,
-      // which JD requirement to lead with. Combined with the v2
-      // answer cache, repeat questions either hit the cache verbatim
-      // or regenerate to nearly the same answer.
-      temperature: isShortMode ? 0.35 : 0.2,
-      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-      messages,
-    }, signal ? { signal } : undefined);
+    const geminiModel = getGeminiClient().getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      systemInstruction: systemPrompt,
+      generationConfig: { temperature: isShortMode ? 0.35 : 0.2 },
+    });
+    const geminiContents = messages.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
+    }));
+    const result = await geminiModel.generateContentStream({ contents: geminiContents });
 
-    for await (const event of stream) {
-      if (signal?.aborted) { try { stream.controller?.abort(); } catch {} break; }
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        const token = event.delta.text;
+    for await (const chunk of result.stream) {
+      if (signal?.aborted) break;
+      const token = chunk.text();
+      if (token) {
         chunks.push(token);
         yield { event: 'token', data: { t: token } };
       }
@@ -784,14 +785,14 @@ For technical questions, map STAR to the technical context (Situation = the prob
 
     if (signal?.aborted) return;
 
-    // Get final message for usage info
-    const finalMessage = await stream.finalMessage();
-    if (finalMessage.usage) {
-      inputTokens = finalMessage.usage.input_tokens;
-      outputTokens = finalMessage.usage.output_tokens;
+    const finalResponse = await result.response;
+    const usage = finalResponse.usageMetadata;
+    if (usage) {
+      inputTokens = usage.promptTokenCount || 0;
+      outputTokens = usage.candidatesTokenCount || 0;
     }
   } catch (err) {
-    console.error('Claude stream error:', err);
+    console.error('Gemini stream error:', err);
     yield { event: 'error', data: { msg: err.message || String(err) } };
     return;
   }

@@ -1,12 +1,12 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from './adminConfig.js';
 
 let _caraClient = null;
 let _caraClientKey = null;
-function getAnthropicClient() {
-  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
+function getGeminiClient() {
+  const key = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
   if (!_caraClient || key !== _caraClientKey) {
-    _caraClient = new Anthropic({ apiKey: key });
+    _caraClient = new GoogleGenerativeAI(key);
     _caraClientKey = key;
   }
   return _caraClient;
@@ -162,19 +162,13 @@ Omit "action" when navigation is not relevant.`;
 }
 
 export async function askCara({ message, context }) {
-  const msg = await getAnthropicClient().messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
-    system: buildSystemPrompt(context),
-    // Prefill forces the model to start mid-JSON — prevents preamble text
-    messages: [
-      { role: 'user', content: message },
-      { role: 'assistant', content: '{' },
-    ],
+  const model = getGeminiClient().getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    systemInstruction: buildSystemPrompt(context),
+    generationConfig: { responseMimeType: 'application/json' },
   });
-
-  // Prepend the prefilled '{' the model continued from
-  const raw = '{' + (msg.content[0]?.text?.trim() ?? '');
+  const result = await model.generateContent(message);
+  const raw = result.response.text().trim();
 
   // Strategy 1: raw is valid JSON
   try {
