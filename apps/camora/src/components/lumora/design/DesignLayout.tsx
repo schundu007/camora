@@ -193,12 +193,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
-  // Diagram tab switcher — Python (default) vs Graphviz
-  const [diagramTab, setDiagramTab] = useState<'python' | 'graphviz'>('python');
+  // Diagram tab switcher — Python (default) vs Graphviz vs Eraser
+  const [diagramTab, setDiagramTab] = useState<'python' | 'graphviz' | 'eraser'>('python');
   const [gvImgUrl, setGvImgUrl] = useState<string | null>(null);
   const [gvLoading, setGvLoading] = useState(false);
   const gvBlobRef = useRef<string | null>(null); // revoke previous object URL on unmount
   const [gvKey, setGvKey] = useState(''); // "question::provider" of last successful Graphviz render
+  const [eraserImgUrl, setEraserImgUrl] = useState<string | null>(null);
+  const [eraserLoading, setEraserLoading] = useState(false);
+  const [eraserKey, setEraserKey] = useState('');
 
   // Revoke blob URL when component unmounts to avoid memory leaks
   useEffect(() => () => { if (gvBlobRef.current) URL.revokeObjectURL(gvBlobRef.current); }, []);
@@ -673,6 +676,41 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     handleGraphvizRef.current();
   }, [cloudProvider, question]);
 
+  const handleEraser = useCallback(async () => {
+    if (!question || !token || eraserLoading) return;
+    setDiagramTab('eraser');
+    const currentKey = `${question}::${cloudProvider}`;
+    if (eraserImgUrl && eraserKey === currentKey) return;
+    setEraserImgUrl(null);
+    setEraserLoading(true);
+    try {
+      const r = await fetch(`${CAPRA_URL}/api/diagram/eraser`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ description: question, cloudProvider, detailLevel: 'detailed' }),
+      });
+      const data = await r.json();
+      if (data.imageUrl) {
+        setEraserImgUrl(data.imageUrl);
+        setEraserKey(currentKey);
+      } else {
+        await dialogAlert(cleanErrorMsg(data.error));
+      }
+    } catch (err: any) {
+      await dialogAlert(err.message || 'Network error');
+    }
+    setEraserLoading(false);
+  }, [question, token, eraserLoading, cloudProvider, eraserImgUrl, eraserKey]);
+
+  const handleEraserRef = useRef(handleEraser);
+  useEffect(() => { handleEraserRef.current = handleEraser; }, [handleEraser]);
+
+  useEffect(() => {
+    if (diagramTab !== 'eraser' || !question) return;
+    handleEraserRef.current();
+  }, [cloudProvider, question]);
+
   const handleReset = useCallback(() => {
     setProblemText('');
     setResult(null);
@@ -684,6 +722,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setGvImgUrl(null);
     setGvKey('');
     setGvLoading(false);
+    setEraserImgUrl(null);
+    setEraserKey('');
+    setEraserLoading(false);
     setDiagramTab('python');
     useSessionStore.getState().setLastFromCache(null);
     useSessionStore.getState().setLiveSolveContext(null);
@@ -1183,15 +1224,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   question={question}
                   className="diagram-left-panel"
                   autoGenerate={true}
-                  leadingControls={(['python', 'graphviz'] as const).map(tab => (
+                  leadingControls={(['python', 'graphviz', 'eraser'] as const).map(tab => (
                     <button key={tab}
-                      onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
+                      onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
                       className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
                       style={diagramTab === tab
                         ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                         : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
                     >
-                      {tab === 'graphviz' && gvLoading ? '…' : tab}
+                      {tab === 'graphviz' && gvLoading ? '…' : tab === 'eraser' && eraserLoading ? '…' : tab}
                     </button>
                   ))}
                 />
@@ -1199,15 +1240,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {diagramTab === 'graphviz' && (
                 <div className="flex-1 min-h-0">
                   <div className="flex items-center gap-1 mb-2">
-                    {(['python', 'graphviz'] as const).map(tab => (
+                    {(['python', 'graphviz', 'eraser'] as const).map(tab => (
                       <button key={tab}
-                        onClick={() => tab === 'graphviz' ? handleGraphviz() : setDiagramTab('python')}
+                        onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
                         className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
                         style={diagramTab === tab
                           ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                           : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
                       >
-                        {tab === 'graphviz' && gvLoading ? '…' : tab}
+                        {tab === 'graphviz' && gvLoading ? '…' : tab === 'eraser' && eraserLoading ? '…' : tab}
                       </button>
                     ))}
                   </div>
@@ -1223,6 +1264,37 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {!gvLoading && !gvImgUrl && (
                     <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
                       Click <strong>Graphviz</strong> tab again to generate.
+                    </div>
+                  )}
+                </div>
+              )}
+              {diagramTab === 'eraser' && (
+                <div className="flex-1 min-h-0">
+                  <div className="flex items-center gap-1 mb-2">
+                    {(['python', 'graphviz', 'eraser'] as const).map(tab => (
+                      <button key={tab}
+                        onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
+                        className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                        style={diagramTab === tab
+                          ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
+                          : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                      >
+                        {tab === 'graphviz' && gvLoading ? '…' : tab === 'eraser' && eraserLoading ? '…' : tab}
+                      </button>
+                    ))}
+                  </div>
+                  {eraserLoading && (
+                    <div className="flex items-center gap-2 py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
+                      Generating Eraser diagram…
+                    </div>
+                  )}
+                  {!eraserLoading && eraserImgUrl && (
+                    <img src={eraserImgUrl} alt="Eraser architecture diagram" className="w-full rounded-lg" />
+                  )}
+                  {!eraserLoading && !eraserImgUrl && (
+                    <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      Click <strong>Eraser</strong> tab again to generate.
                     </div>
                   )}
                 </div>
