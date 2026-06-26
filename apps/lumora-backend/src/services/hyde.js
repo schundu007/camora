@@ -13,7 +13,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createHash } from 'node:crypto';
 
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS = 180;
 const CACHE_MAX = 1000;
 

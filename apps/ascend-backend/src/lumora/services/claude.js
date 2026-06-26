@@ -414,7 +414,7 @@ IMPORTANT CODE FORMATTING RULE:
     }));
     const lastMsg = messages[messages.length - 1].content;
     const gmodel = getGenAI().getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: systemPrompt,
     });
     const chat = gmodel.startChat({
