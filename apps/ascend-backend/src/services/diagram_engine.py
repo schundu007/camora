@@ -1084,7 +1084,7 @@ def execute_code(code, output_path, output_dir):
 
 def generate_diagram(question, provider, detail_level, direction, output_dir, api_key, design_kind="system"):
     genai.configure(api_key=api_key)
-    gmodel = genai.GenerativeModel("gemini-2.0-flash")
+    gmodel = genai.GenerativeModel("gemini-2.5-flash")
     # Multi-cloud needs horizontal layout — per-CSP columns must read
     # left-to-right. Override the CLI direction so a stale frontend
     # passing TB doesn't ruin the layout.

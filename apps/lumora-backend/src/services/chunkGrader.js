@@ -11,7 +11,7 @@
  */
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const MODEL_GRADER = 'gemini-2.0-flash';
+const MODEL_GRADER = 'gemini-2.5-flash';
 const GRADING_TIMEOUT_MS = 300;
 
 let _genAI = null;
