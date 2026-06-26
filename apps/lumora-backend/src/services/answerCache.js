@@ -103,15 +103,15 @@ export function buildAnswerCacheKey(parts) {
     mo: parts.mode || null, // 'general' | 'design' | 'coding' — different system prompts
     rt: parts.route || null, // 'stream' | 'solve' — different shapes
     lg: parts.language || null,
+    cp: parts.cloudProvider || null, // v9: cloud provider affects CLOUDSERVICES section
     // Starter code changes the expected solution structure completely (CASE A vs CASE B,
     // different function signatures, shebang/readarray boilerplate). Must be part of the
     // key or a no-starter solve gets served for a starter-code problem and produces wrong output.
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v8: systemContext removed from key (2026-06-21) — keys are now question-scoped,
-  // not user-scoped, enabling cross-user cache hits for coding/design solutions.
-  return `lumora:answer:v8:${h}`;
+  // v9: cloudProvider added to key (2026-06-25) — Azure/GCP/AWS each get their own cache entry.
+  return `lumora:answer:v9:${h}`;
 }
 
 async function cacheGetFromDb(key) {

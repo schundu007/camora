@@ -53,13 +53,22 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
   const [scale, setScale] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Ctrl/Cmd+Wheel zooms; plain wheel scrolls the diagram naturally via overflow:auto
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    setScale(prev => Math.min(Math.max(0.25, prev + (e.deltaY > 0 ? -0.1 : 0.1)), 4));
-  }, []);
   const resetView = useCallback(() => setScale(1), []);
+
+  // Native non-passive wheel listener so preventDefault() actually suppresses
+  // page scroll. Geometric zoom (×1.15 per notch) feels natural on both
+  // mouse wheels and trackpads.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !imageUrl) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      setScale(prev => Math.min(Math.max(0.25, prev * factor), 4));
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, [imageUrl]);
 
   // Step 1: Cache-only lookup (fast, no generation)
   useEffect(() => {
@@ -241,8 +250,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none"
-          style={{ overflow: 'auto', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
-          onWheel={handleWheel}>
+          style={{ overflow: 'auto', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           <div style={{ width: `${Math.round(scale * 100)}%`, margin: '0 auto' }}>
             <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
               style={{ width: '100%', height: 'auto', display: 'block' }} />
