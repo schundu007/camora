@@ -388,13 +388,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
   const runCustomTest = useCallback(async (id: string) => {
     const tc = customTests.find(t => t.id === id);
-    if (!tc || !fixedCode || !tc.input.trim()) return;
+    if (!tc || !fixedCode || !String(tc.input ?? '').trim()) return;
     setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: true, result: null } : t));
     try {
       // Strip top-level lines in fixedCode that duplicate a registered test input.
       // Without this, fixedCode's own driver calls (e.g. `print(add(2,7))`) fire
       // before the test input and pollute the actual output, causing false MISMATCHes.
-      const testInputLines = new Set(customTests.map(t => t.input.trim()).filter(Boolean));
+      const testInputLines = new Set(customTests.map(t => String(t.input ?? '').trim()).filter(Boolean));
       const cleanCode = fixedCode.split('\n')
         .filter(line => {
           const isTopLevel = !line.startsWith(' ') && !line.startsWith('\t');
@@ -413,16 +413,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       const output = rawOut.startsWith('(no output) —') ? '(no output)' : rawOut;
       const err = !resp.ok || output.startsWith('Error:') || output.startsWith('Traceback') || /^error:/i.test(output);
       setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: output, isErr: err } : t));
-      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${tc.input.trim()}\n${output}` }]);
+      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${String(tc.input ?? '').trim()}\n${output}` }]);
     } catch (e: any) {
       setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: `Error: ${(e as any).message}`, isErr: true } : t));
-      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${tc.input.trim()}\nError: ${(e as any).message}` }]);
+      setRunOutputLog(prev => [...prev, { ts: new Date(), text: `[Test] ${String(tc.input ?? '').trim()}\nError: ${(e as any).message}` }]);
     }
   }, [customTests, fixedCode, effectiveLang, token]);
 
   const runAllCustomTests = useCallback(async () => {
     for (const tc of customTests) {
-      if (tc.input.trim()) await runCustomTest(tc.id);
+      if (String(tc.input ?? '').trim()) await runCustomTest(tc.id);
     }
   }, [customTests, runCustomTest]);
 
@@ -661,7 +661,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           ({ id: `edge-${i}-${Date.now()}`, input: call, expected: '', result: null, running: false, isErr: false })
         );
         setCustomTests(prev => {
-          const userTyped = prev.filter(t => t.input.trim() !== '' && !t.id.startsWith('ai-') && !t.id.startsWith('edge-'));
+          const userTyped = prev.filter(t => String(t.input ?? '').trim() !== '' && !t.id.startsWith('ai-') && !t.id.startsWith('edge-'));
           return [...aiTests, ...edgeTests, ...userTyped, mkTest()];
         });
       })
@@ -1342,14 +1342,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
                     Tests
                     <span className="ml-1.5 normal-case font-normal text-[10px] opacity-60">
-                      {customTests.filter(t => t.input.trim()).length} case{customTests.filter(t => t.input.trim()).length !== 1 ? 's' : ''}
+                      {customTests.filter(t => String(t.input ?? '').trim()).length} case{customTests.filter(t => String(t.input ?? '').trim()).length !== 1 ? 's' : ''}
                       {analysisLoading && ' · generating…'}
                     </span>
                   </span>
                   <div className="flex-1" />
                   <button
                     onClick={runAllCustomTests}
-                    disabled={!fixedCode || customTests.every(t => !t.input.trim())}
+                    disabled={!fixedCode || customTests.every(t => !String(t.input ?? '').trim())}
                     className="text-[10px] font-bold px-2 py-0.5 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
                     style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
                   >▶ All</button>
@@ -1382,7 +1382,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                           <div className="flex flex-col gap-1 shrink-0 pt-0.5">
                             <button
                               onClick={() => runCustomTest(tc.id)}
-                              disabled={tc.running || !fixedCode || !tc.input.trim()}
+                              disabled={tc.running || !fixedCode || !String(tc.input ?? '').trim()}
                               className="flex items-center justify-center text-[10px] font-bold w-7 h-6 rounded transition-opacity disabled:opacity-40"
                               style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)', color: '#0a0e1a' }}
                             >

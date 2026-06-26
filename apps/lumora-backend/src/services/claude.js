@@ -313,7 +313,7 @@ VOICE — NON-NEGOTIABLE:
 CRITICAL RULES:
 - ${detailRules}
 - Each bullet: ONE short sentence (under 15 words).
-- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, CLOUDSERVICES, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
+- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, APIDESIGN, DATAMODEL, TECHNOLOGIES, CLOUDSERVICES, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
 - ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === MY BACKGROUND ===
@@ -345,6 +345,24 @@ skip
 [/DIAGRAM]
 
 ${deepSection}
+
+[APIDESIGN]
+(RULES: List 3-6 key REST endpoints for this design. Format: METHOD /path: one-line description. Real HTTP methods only. No markdown.)
+GET /example: description
+POST /example: description
+[/APIDESIGN]
+
+[DATAMODEL]
+(RULES: List 3-5 core entities. Format: EntityName: field1, field2, field3. Key fields only — 4-6 per entity. No markdown.)
+EntityName: field1, field2, field3
+EntityName: field1, field2, field3
+[/DATAMODEL]
+
+[TECHNOLOGIES]
+(RULES: List 4-6 key technologies. Format: TechName: one-line rationale. Specific names only — e.g., PostgreSQL not "relational DB". No markdown.)
+TechName: why it is chosen for this design
+TechName: why it is chosen for this design
+[/TECHNOLOGIES]
 
 [CLOUDSERVICES]
 (RULES: List 4-6 ${cloudLabel} services for this design. ${cloudLabel} NAMES ONLY. ${cloudForbidden} Use exact ${cloudLabel} service names — e.g.: ${cloudServiceExamples}. Never generic terms like "object storage" or "NoSQL database".)

@@ -6,6 +6,7 @@ interface SEOProps {
   path?: string;
   image?: string;
   type?: string;
+  noIndex?: boolean;
 }
 
 const DEFAULTS = {
@@ -15,7 +16,7 @@ const DEFAULTS = {
   url: 'https://camora.cariara.com',
 };
 
-export default function SEO({ title, description, path = '', image, type = 'website' }: SEOProps) {
+export default function SEO({ title, description, path = '', image, type = 'website', noIndex = false }: SEOProps) {
   const fullTitle = title ? `${title} | Camora` : DEFAULTS.title;
   const desc = description || DEFAULTS.description;
   const url = `${DEFAULTS.url}${path}`;
@@ -24,6 +25,7 @@ export default function SEO({ title, description, path = '', image, type = 'webs
   return (
     <Helmet>
       <title>{fullTitle}</title>
+      {noIndex && <meta name="robots" content="noindex,nofollow" />}
       <meta name="description" content={desc} />
       <link rel="canonical" href={url} />
       <meta property="og:title" content={fullTitle} />
