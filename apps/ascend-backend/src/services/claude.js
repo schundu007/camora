@@ -1,18 +1,50 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey as getAdminApiKey } from './adminConfig.js';
 import { buildCloudHint } from './cloudHint.js';
 
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
 export function getApiKey() {
-  return process.env.ANTHROPIC_API_KEY;
+  return getAdminApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+}
+
+function sysText(s) {
+  if (!s) return '';
+  if (typeof s === 'string') return s;
+  if (Array.isArray(s)) return s.map(b => b.text || '').join('\n');
+  return String(s);
+}
+
+function msgsText(msgs) {
+  if (!msgs) return '';
+  return msgs.map(m => (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || ''))).join('\n\n');
 }
 
 function getClient() {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY not configured');
-  }
-  return new Anthropic({
-    apiKey,
-  });
+  const genAI = new GoogleGenerativeAI(getApiKey());
+  return {
+    messages: {
+      create: async ({ system, messages }) => {
+        const gm = genAI.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: sysText(system) });
+        const resp = await gm.generateContent(msgsText(messages));
+        const text = resp.response.text();
+        return { content: [{ type: 'text', text }] };
+      },
+      stream: ({ system, messages }) => {
+        const gm = genAI.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: sysText(system) });
+        const sp = gm.generateContentStream(msgsText(messages));
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            const sr = await sp;
+            for await (const chunk of sr.stream) {
+              const t = chunk.text();
+              if (t) yield { type: 'content_block_delta', delta: { text: t } };
+            }
+          },
+        };
+      },
+    },
+  };
 }
 
 const SYSTEM_PROMPT = `You are an expert coding interview assistant.
