@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getTopicContent, saveTopicContent, deleteTopicContent } from '../services/learnTopicCache.js';
 
 const router = Router();
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+function getGeminiModel() {
+  const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  return new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: GEMINI_MODEL });
+}
 
 function buildPrompt({ title, source, category, level, count }) {
   if (source === 'programiz') {
@@ -100,15 +105,14 @@ router.post('/:slug', async (req, res) => {
 
   let full = '';
   try {
-    const stream = await anthropic.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content: buildPrompt({ title, source, category, level, count }) }],
-    });
+    const model = getGeminiModel();
+    const geminiStream = await model.generateContentStream(
+      buildPrompt({ title, source, category, level, count }),
+    );
 
-    for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
-        const text = chunk.delta.text;
+    for await (const chunk of geminiStream.stream) {
+      const text = chunk.text();
+      if (text) {
         full += text;
         res.write(`data: ${JSON.stringify({ text })}\n\n`);
       }
