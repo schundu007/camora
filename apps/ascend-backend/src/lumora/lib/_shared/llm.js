@@ -6,29 +6,34 @@
  * `apiKey` arg supports per-request keys (e.g. user-supplied keys from the
  * Settings UI) without forcing a singleton.
  */
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey as getAdminApiKey } from '../../../services/adminConfig.js';
 import OpenAI from 'openai';
 
-let defaultAnthropic = null;
 let defaultOpenAI = null;
-const keyedAnthropic = new Map();
 const keyedOpenAI = new Map();
 
-/**
- * Get an Anthropic client. Pass nothing to use the env-backed singleton
- * (reads ANTHROPIC_API_KEY); pass an apiKey for a per-key cached client.
- */
-export function getAnthropicClient(apiKey) {
-  if (!apiKey) {
-    if (!defaultAnthropic) defaultAnthropic = new Anthropic();
-    return defaultAnthropic;
-  }
-  let client = keyedAnthropic.get(apiKey);
-  if (!client) {
-    client = new Anthropic({ apiKey });
-    keyedAnthropic.set(apiKey, client);
-  }
-  return client;
+const GEMINI_MODEL = 'gemini-2.5-flash';
+function _sysText(s) { if (!s) return ''; if (typeof s === 'string') return s; if (Array.isArray(s)) return s.map(b => b.text || '').join('\n'); return String(s); }
+function _msgsText(msgs) { if (!msgs) return ''; return msgs.map(m => (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || ''))).join('\n\n'); }
+
+export function getAnthropicClient() {
+  const k = getAdminApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  const genAI = new GoogleGenerativeAI(k);
+  return {
+    messages: {
+      create: async ({ system, messages }) => {
+        const gm = genAI.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: _sysText(system) });
+        const resp = await gm.generateContent(_msgsText(messages));
+        return { content: [{ type: 'text', text: resp.response.text() }] };
+      },
+      stream: ({ system, messages }) => {
+        const gm = genAI.getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: _sysText(system) });
+        const sp = gm.generateContentStream(_msgsText(messages));
+        return { [Symbol.asyncIterator]: async function* () { const sr = await sp; for await (const c of sr.stream) { const t = c.text(); if (t) yield { type: 'content_block_delta', delta: { text: t } }; } } };
+      },
+    },
+  };
 }
 
 /**
