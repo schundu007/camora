@@ -441,7 +441,13 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
     const genAI = new GoogleGenerativeAI(getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
     const gmodel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: DOT_SYSTEM_PROMPT });
     let _step = 'gemini';
-    const msg = await gmodel.generateContent(`Generate a Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider preference: ${provider}\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`);
+    const providerServices = {
+      aws: 'Use REAL AWS service names as node labels — e.g. "Amazon\\nCloudFront", "Application\\nLoad Balancer", "Amazon\\nAPI Gateway", "AWS\\nLambda", "Amazon\\nEC2 / ECS", "Amazon\\nRDS / Aurora", "Amazon\\nDynamoDB", "Amazon\\nElastiCache", "Amazon\\nS3", "Amazon\\nSQS / SNS", "Amazon\\nCognito", "AWS\\nWAF", "Amazon\\nCloudWatch".',
+      gcp: 'Use REAL GCP service names as node labels — e.g. "Cloud\\nLoad Balancing", "Cloud\\nCDN", "Cloud\\nRun", "Google\\nKubernetes Engine", "Cloud\\nFunctions", "Cloud\\nSQL / Spanner", "Firestore", "BigQuery", "Cloud\\nMemorystore", "Cloud\\nStorage (GCS)", "Pub/Sub", "Dataflow", "Cloud\\nArmor", "Cloud\\nMonitoring".',
+      azure: 'Use REAL Azure service names as node labels — e.g. "Azure\\nFront Door", "Azure\\nCDN", "Application\\nGateway", "Azure\\nAPI Management", "Azure\\nAKS", "App\\nService", "Function\\nApps", "Azure\\nSQL DB", "Cosmos\\nDB", "Azure Cache\\nfor Redis", "Blob\\nStorage", "Service\\nBus", "Event\\nGrid", "Key\\nVault", "Azure\\nMonitor".',
+      auto: 'Use specific real cloud service names (AWS, GCP, or Azure) — NOT generic labels like "Database", "Cache", "Queue", "CDN".',
+    };
+    const msg = await gmodel.generateContent(`Generate a detailed Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider: ${provider.toUpperCase()}\n${providerServices[provider] || providerServices.auto}\n\nInclude 10-16 nodes organised into 4-6 subgraph clusters (Edge/CDN, Application, Data, Async/Messaging, Observability, Security as needed). Label edges with protocol or data-flow direction.\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`);
 
     let dotSource = msg.response.text().trim();
     // Strip any accidental markdown fences
@@ -502,7 +508,7 @@ router.post('/lookup', async (req, res) => {
     // Resolve archetype to match the hash that /generate writes.
     const { classifyDesignKind } = await import('../services/designKindClassifier.js');
     const designKind = classifyDesignKind(question, explicitDesignKind);
-    const providers = cloudProvider === 'auto' ? ['auto'] : [cloudProvider, 'auto'];
+    const providers = [cloudProvider || 'auto'];
     const tried = new Set();
 
     for (const p of providers) {
