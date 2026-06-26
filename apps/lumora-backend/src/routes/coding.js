@@ -10,6 +10,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dns from 'node:dns/promises';
 
@@ -114,6 +115,163 @@ function toGeminiHistory(msgs) {
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: typeof m.content === 'string' ? m.content : (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : String(m.content)) }],
   }));
+}
+
+// ── Anthropic lazy client — resolved at call time so admin-panel key
+//    changes take effect without restarting the service.
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+let _anthropicClient = null;
+let _anthropicKey = null;
+function getAnthropicClient() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
+  if (!key) return null;
+  if (!_anthropicClient || _anthropicKey !== key) {
+    _anthropicClient = new Anthropic({ apiKey: key });
+    _anthropicKey = key;
+  }
+  return _anthropicClient;
+}
+
+// ── Normalise message history to a flat string (used by providers that
+//    don't support structured multi-turn history in their non-streaming API).
+function flattenMessages(msgs) {
+  return msgs.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
+}
+
+// ── Build the ordered provider list at call time so any key added to the
+//    admin panel or env is picked up immediately on the next request.
+function buildProviderList() {
+  const list = [];
+  if (getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) list.push('gemini');
+  if (getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY) list.push('anthropic');
+  if (process.env.OPENROUTER_API_KEY) list.push('deepseek');
+  // Always keep at least gemini (client will fail gracefully if key is missing)
+  if (list.length === 0) list.push('gemini');
+  return list;
+}
+
+// ── Stream a coding solve with a specific provider.
+//    Returns { raw, model, error? } — error is set but raw may still have
+//    partial output if the stream died mid-way.
+async function streamWithProvider(providerName, messages, systemPrompt, onToken, isAborted) {
+  const lastMsg = messages[messages.length - 1];
+  const lastContent = Array.isArray(lastMsg?.content)
+    ? lastMsg.content.map(b => b.text || '').join('')
+    : (lastMsg?.content || '');
+  const chunks = [];
+
+  try {
+    if (providerName === 'gemini') {
+      const gModel = geminiGetModel(systemPrompt);
+      const gHistory = toGeminiHistory(messages.slice(0, -1));
+      let streamResult;
+      if (gHistory.length > 0) {
+        const chat = gModel.startChat({ history: gHistory });
+        streamResult = await chat.sendMessageStream(lastContent);
+      } else {
+        streamResult = await gModel.generateContentStream(lastContent);
+      }
+      for await (const chunk of streamResult.stream) {
+        if (isAborted()) break;
+        const token = chunk.text();
+        if (token) { chunks.push(token); onToken(token); }
+      }
+      return { raw: chunks.join(''), model: GEMINI_MODEL };
+    }
+
+    if (providerName === 'anthropic') {
+      const client = getAnthropicClient();
+      if (!client) return { raw: '', model: null, error: 'Anthropic key not configured' };
+      const anthropicMsgs = messages.map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || ''),
+      }));
+      const stream = client.messages.stream({
+        model: ANTHROPIC_MODEL,
+        max_tokens: MAX_TOKENS,
+        system: systemPrompt,
+        messages: anthropicMsgs,
+      });
+      for await (const event of stream) {
+        if (isAborted()) break;
+        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          const token = event.delta.text;
+          if (token) { chunks.push(token); onToken(token); }
+        }
+      }
+      return { raw: chunks.join(''), model: ANTHROPIC_MODEL };
+    }
+
+    if (providerName === 'deepseek') {
+      if (!openrouterClient) return { raw: '', model: null, error: 'OpenRouter key not configured' };
+      const oaiMsgs = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '') })),
+      ];
+      const stream = await openrouterClient.chat.completions.create({
+        model: 'deepseek/deepseek-chat-v3-0324',
+        max_tokens: MAX_TOKENS,
+        stream: true,
+        messages: oaiMsgs,
+      });
+      for await (const chunk of stream) {
+        if (isAborted()) break;
+        const token = chunk.choices?.[0]?.delta?.content || '';
+        if (token) { chunks.push(token); onToken(token); }
+      }
+      return { raw: chunks.join(''), model: 'deepseek/deepseek-chat-v3-0324' };
+    }
+
+    return { raw: '', model: null, error: `Unknown provider: ${providerName}` };
+  } catch (err) {
+    return { raw: chunks.join(''), model: null, error: err.message || String(err), _err: err };
+  }
+}
+
+// ── Non-streaming generate for JSON fix passes.
+async function generateWithProvider(providerName, messages, systemPrompt) {
+  try {
+    if (providerName === 'gemini') {
+      const gModel = geminiGetModel(systemPrompt);
+      const resp = await gModel.generateContent(flattenMessages(messages));
+      return { raw: resp.response.text() || '', model: GEMINI_MODEL };
+    }
+
+    if (providerName === 'anthropic') {
+      const client = getAnthropicClient();
+      if (!client) return { raw: '', model: null, error: 'Anthropic key not configured' };
+      const anthropicMsgs = messages.map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || ''),
+      }));
+      const resp = await client.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: MAX_TOKENS,
+        system: systemPrompt,
+        messages: anthropicMsgs,
+      });
+      return { raw: resp.content?.[0]?.text || '', model: ANTHROPIC_MODEL };
+    }
+
+    if (providerName === 'deepseek') {
+      if (!openrouterClient) return { raw: '', model: null, error: 'OpenRouter key not configured' };
+      const oaiMsgs = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '') })),
+      ];
+      const resp = await openrouterClient.chat.completions.create({
+        model: 'deepseek/deepseek-chat-v3-0324',
+        max_tokens: MAX_TOKENS,
+        stream: false,
+        messages: oaiMsgs,
+      });
+      return { raw: resp.choices?.[0]?.message?.content || '', model: 'deepseek/deepseek-chat-v3-0324' };
+    }
+
+    return { raw: '', model: null, error: `Unknown provider: ${providerName}` };
+  } catch (err) {
+    return { raw: '', model: null, error: err.message || String(err), _err: err };
+  }
 }
 
 // OpenRouter client — OpenAI-SDK compatible, routes to Qwen/DeepSeek/etc.
@@ -973,237 +1131,120 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   let hardcodingDetected = false;
 
-  // ── Pass 1: streaming via Gemini 2.5-flash ─────────────────────────────
+  // ── Build provider list at call time — picks up admin-panel key changes
+  //    immediately without a service restart. Order: Gemini → Anthropic → DeepSeek.
+  const providerList = buildProviderList();
+
+  // ── Pass 1: streaming — try each provider in order until one succeeds ───
+  let parsedJson = null;
   {
     const passStart = performance.now();
-    const chunks = [];
-    try {
-      const gModel1 = geminiGetModel(systemPrompt);
-      const gHistory1 = toGeminiHistory(messages.slice(0, -1));
-      const lastMsg1 = messages[messages.length - 1];
-      const lastContent1 = Array.isArray(lastMsg1?.content)
-        ? lastMsg1.content.map(b => b.text || '').join('')
-        : (lastMsg1?.content || '');
-      let streamResult;
-      if (gHistory1.length > 0) {
-        const chat = gModel1.startChat({ history: gHistory1 });
-        streamResult = await chat.sendMessageStream(lastContent1);
-      } else {
-        streamResult = await gModel1.generateContentStream(lastContent1);
-      }
-      for await (const chunk of streamResult.stream) {
-        if (clientDisconnected) break;
-        const token = chunk.text();
-        if (token) { chunks.push(token); sendEvent('token', { t: token }); }
-      }
+    let streamOk = false;
+    for (const provider of providerList) {
+      if (clientDisconnected) break;
+      const result = await streamWithProvider(
+        provider, messages, systemPrompt,
+        (token) => sendEvent('token', { t: token }),
+        () => clientDisconnected,
+      );
       if (clientDisconnected) return;
-      rawAnswer = chunks.join('');
-      modelUsed = GEMINI_MODEL;
+      if (result.error && !result.raw) {
+        const status = result._err?.status || result._err?.statusCode || 'unknown';
+        console.error(
+          `[coding/solve] pass=primary_stream provider=${provider} ok=false ` +
+          `status=${status} msg=${JSON.stringify(result.error)} ua=${JSON.stringify(userAgent)}`,
+        );
+        terminalFailure = { msg: result.error, category: 'api_error' };
+        continue;
+      }
+      rawAnswer = result.raw;
+      modelUsed = result.model || provider;
       console.log(
-        `[coding/solve] pass=primary_stream model=${GEMINI_MODEL} ok=true ` +
+        `[coding/solve] pass=primary_stream provider=${provider} model=${result.model} ok=true ` +
         `rawLen=${rawAnswer.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
-    } catch (err) {
-      const status = err?.status || err?.statusCode || err?.response?.status || 'unknown';
-      console.error(
-        `[coding/solve] pass=primary_stream model=${GEMINI_MODEL} ok=false ` +
-        `status=${status} msg=${JSON.stringify(err?.message || String(err))} ua=${JSON.stringify(userAgent)}`,
-      );
+      streamOk = true;
+      break;
+    }
+    if (!streamOk && !clientDisconnected) {
       rawAnswer = '';
-      terminalFailure = { msg: err?.message || 'Gemini API error', category: 'api_error' };
     }
   }
 
   // ── Parse Pass 1 output ─────────────────────────────────────────────────
-  let parsedJson = null;
   if (rawAnswer && rawAnswer.trim()) {
     parsedJson = extractJsonFromText(rawAnswer);
     if (!parsedJson || (!parsedJson.code && !parsedJson.solutions)) {
       console.error(
-        `[coding/solve] parse_failed pass=primary_stream model=${primaryModel} rawLen=${rawAnswer.length} ` +
+        `[coding/solve] parse_failed pass=primary_stream rawLen=${rawAnswer.length} ` +
         `head=${JSON.stringify(truncateForLog(rawAnswer.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(rawAnswer.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
       );
       parsedJson = null;
     } else if (detectsHardcoding(getCodeFromParsed(parsedJson))) {
-      console.error(`[coding/solve] hardcoding_detected pass=primary_stream model=${primaryModel} — rejecting and retrying`);
+      console.error(`[coding/solve] hardcoding_detected pass=primary_stream — rejecting and retrying`);
       hardcodingDetected = true;
       parsedJson = null;
     }
   }
 
-  // ── Pass 2: non-streaming primary model with strict reminder ────────────
-  if (!parsedJson && !anthropicExhausted) {
-    passTag = 'primary_strict';
-    sendEvent('status', { state: 'warn', msg: 'Polishing solution — one more moment…' });
-    const passStart = performance.now();
-    try {
-      const pass2Reminder = hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER;
-      const strictMessages = hardcodingDetected
-        ? [...messages, { role: 'user', content: pass2Reminder }]
-        : [...messages, { role: 'assistant', content: rawAnswer || '(no output)' }, { role: 'user', content: pass2Reminder }];
-      const gModel2 = geminiGetModel(systemPrompt);
-      const strict2Content = strictMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
-      const resp2 = await gModel2.generateContent(strict2Content);
-      const strictRaw = resp2.response.text() || '';
-      const strictParsed = extractJsonFromText(strictRaw);
+  // ── Pass 2 + 3: non-streaming fix passes — rotate through all providers ─
+  //    Pass 2 uses the same provider as Pass 1 with a strict JSON reminder.
+  //    Pass 3+ tries each remaining provider until one parses cleanly.
+  if (!parsedJson && !clientDisconnected) {
+    const reminder = hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER;
+    const fixMessages = hardcodingDetected
+      ? [...messages, { role: 'user', content: reminder }]
+      : [...messages, { role: 'assistant', content: rawAnswer || '(no output)' }, { role: 'user', content: reminder }];
+
+    let passNum = 2;
+    for (const provider of providerList) {
+      if (clientDisconnected) break;
+      if (passNum === 2) {
+        passTag = 'primary_strict';
+        sendEvent('status', { state: 'warn', msg: 'Polishing solution — one more moment…' });
+      } else {
+        passTag = `fallback_p${passNum}`;
+        sendEvent('status', { state: 'warn', msg: `Switching to backup model (${provider})…` });
+      }
+      const passStart = performance.now();
+      const result = await generateWithProvider(provider, fixMessages, systemPrompt);
+      const fixRaw = result.raw || '';
+      const fixParsed = extractJsonFromText(fixRaw);
       console.log(
-        `[coding/solve] pass=primary_strict model=${primaryModel} ok=${!!(strictParsed && (strictParsed.code || strictParsed.solutions))} ` +
-        `rawLen=${strictRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+        `[coding/solve] pass=${passTag} provider=${provider} model=${result.model} ` +
+        `ok=${!!(fixParsed && (fixParsed.code || fixParsed.solutions))} ` +
+        `rawLen=${fixRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
-      if (strictParsed && (strictParsed.code || strictParsed.solutions)) {
-        if (detectsHardcoding(getCodeFromParsed(strictParsed))) {
-          console.error(`[coding/solve] hardcoding_detected pass=primary_strict model=${primaryModel} — falling to pass 3`);
+      if (fixParsed && (fixParsed.code || fixParsed.solutions)) {
+        if (detectsHardcoding(getCodeFromParsed(fixParsed))) {
+          console.error(`[coding/solve] hardcoding_detected pass=${passTag} provider=${provider}`);
           hardcodingDetected = true;
         } else {
-          parsedJson = strictParsed;
-          rawAnswer = strictRaw;
-          modelUsed = primaryModel;
+          parsedJson = fixParsed;
+          rawAnswer = fixRaw;
+          modelUsed = result.model || provider;
           terminalFailure = null;
+          break;
         }
       } else {
-        console.error(
-          `[coding/solve] parse_failed pass=primary_strict model=${primaryModel} rawLen=${strictRaw.length} ` +
-          `head=${JSON.stringify(truncateForLog(strictRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(strictRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
-        );
-      }
-    } catch (err) {
-      console.error(
-        `[coding/solve] pass=primary_strict model=${primaryModel} ok=false ` +
-        `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
-      );
-    }
-  }
-
-  // ── Pass 3: cross-tier fallback ─────────────────────────────────────────
-  // Re-enabled after the cost-guard caused user-visible failures: when
-  // Haiku produces un-parseable JSON twice, Sonnet usually does succeed
-  // (different model, different malformed-JSON failure modes). The
-  // cost is bounded because Pass 3 only fires on real parse failures,
-  // not on every request, and uses the same MAX_TOKENS cap. Spend
-  // protection now lives at the Anthropic console daily-cap layer
-  // instead of in code where it caused outages.
-  if (!parsedJson && !anthropicExhausted) {
-    passTag = 'fallback_model';
-    const fbModel = fallbackModelFor(primaryModel);
-    sendEvent('status', { state: 'warn', msg: 'Switching to backup model…' });
-    const passStart = performance.now();
-    try {
-      const fbMessages = [
-        ...messages,
-        { role: 'user', content: hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER },
-      ];
-      const gModel3 = geminiGetModel(systemPrompt);
-      const fb3Content = fbMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
-      const resp3 = await gModel3.generateContent(fb3Content);
-      const fbRaw = resp3.response.text() || '';
-      const fbParsed = extractJsonFromText(fbRaw);
-      console.log(
-        `[coding/solve] pass=fallback_model model=${fbModel} ok=${!!(fbParsed && (fbParsed.code || fbParsed.solutions))} ` +
-        `rawLen=${fbRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
-      );
-      if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
-        if (detectsHardcoding(getCodeFromParsed(fbParsed))) {
-          console.error(`[coding/solve] hardcoding_detected pass=fallback_model model=${fbModel} — all passes exhausted`);
-          terminalFailure = { msg: 'Generated solution contained hardcoded data on all attempts. Please tap Regenerate.', category: 'hardcoding' };
+        if (result.error) {
+          console.error(`[coding/solve] parse_failed pass=${passTag} provider=${provider} error=${JSON.stringify(result.error)}`);
+          terminalFailure = { msg: result.error, category: 'api_error' };
         } else {
-          parsedJson = fbParsed;
-          rawAnswer = fbRaw;
-          modelUsed = fbModel;
-          terminalFailure = null;
+          console.error(
+            `[coding/solve] parse_failed pass=${passTag} provider=${provider} rawLen=${fixRaw.length} ` +
+            `head=${JSON.stringify(truncateForLog(fixRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(fixRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
+          );
+          terminalFailure = hardcodingDetected
+            ? { msg: 'Generated solution contained hardcoded data on all attempts. Please tap Regenerate.', category: 'hardcoding' }
+            : { msg: "Couldn't generate a structured solution. Tap retry to try again.", category: 'parse_failure' };
         }
-      } else {
-        console.error(
-          `[coding/solve] parse_failed pass=fallback_model model=${fbModel} rawLen=${fbRaw.length} ` +
-          `head=${JSON.stringify(truncateForLog(fbRaw.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(fbRaw.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
-        );
-        terminalFailure = {
-          msg: "Couldn't generate a structured solution. Tap retry to try again.",
-          category: 'parse_failure',
-        };
       }
-    } catch (err) {
-      console.error(
-        `[coding/solve] pass=fallback_model model=${fbModel} ok=false ` +
-        `msg=${JSON.stringify(err?.message || String(err))} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
-      );
-      terminalFailure = {
-        msg: err?.message || 'Fallback model also failed. Tap retry to try again.',
-        category: isRetryableClaudeError(err) ? 'overloaded' : 'api_error',
-      };
+      passNum++;
     }
   }
 
   const latencyMs = Math.round(performance.now() - startTime);
-
-  // ── Pass 4: OpenRouter fallback when Anthropic spending limit hit ──────
-  if (!parsedJson && anthropicExhausted && FALLBACK_PROVIDERS.length > 0) {
-    const oaiMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : m.content })),
-    ];
-    for (const provider of FALLBACK_PROVIDERS) {
-      if (clientDisconnected) break;
-      sendEvent('status', { state: 'warn', msg: `Switching to ${provider.label}…` });
-      try {
-        const fbResp = await provider.client.chat.completions.create({
-          model: provider.model,
-          max_tokens: 8000,
-          stream: false,
-          messages: oaiMessages,
-        });
-        const fbRaw = fbResp.choices?.[0]?.message?.content || '';
-        const fbParsed = extractJsonFromText(fbRaw);
-        if (fbParsed && (fbParsed.code || fbParsed.solutions)) {
-          console.log(`[coding/solve] pass=openrouter_fallback provider=${provider.label} ok=true rawLen=${fbRaw.length}`);
-          parsedJson = fbParsed;
-          rawAnswer = fbRaw;
-          modelUsed = provider.model;
-          passTag = 'openrouter_fallback';
-          terminalFailure = null;
-          break;
-        }
-        console.warn(
-          `[coding/solve] pass=openrouter_fallback provider=${provider.label} parse_failed rawLen=${fbRaw.length} ` +
-          `head=${JSON.stringify(fbRaw.slice(0, 300))} tail=${JSON.stringify(fbRaw.slice(-300))}`,
-        );
-      } catch (fbErr) {
-        console.warn(`[coding/solve] pass=openrouter_fallback provider=${provider.label} error=${fbErr.message}`);
-      }
-    }
-  }
-
-  // ── Pass 4b: Gemini fallback when all else is exhausted ─────────────────
-  if (!parsedJson && anthropicExhausted && !clientDisconnected) {
-    sendEvent('status', { state: 'warn', msg: 'Switching to Gemini…' });
-    try {
-      const gModel = geminiGetModel(systemPrompt);
-      const gHistory = toGeminiHistory(messages.slice(0, -1));
-      const lastMsg = messages[messages.length - 1];
-      const lastContent = Array.isArray(lastMsg?.content)
-        ? lastMsg.content.map(b => b.text || '').join('')
-        : (lastMsg?.content || '');
-      let gResult;
-      if (gHistory.length > 0) {
-        const chat = gModel.startChat({ history: gHistory });
-        gResult = await chat.sendMessage(lastContent);
-      } else {
-        gResult = await gModel.generateContent(lastContent);
-      }
-      const gRaw = gResult.response?.text?.() || '';
-      const gParsed = extractJsonFromText(gRaw);
-      if (gParsed && (gParsed.code || gParsed.solutions)) {
-        parsedJson = gParsed;
-        rawAnswer = gRaw;
-        modelUsed = GEMINI_MODEL;
-        passTag = 'gemini_fallback';
-        terminalFailure = null;
-      } else {
-        console.warn(`[coding/solve] pass=gemini_fallback parse_failed rawLen=${gRaw.length}`);
-      }
-    } catch (gErr) {
-      console.warn(`[coding/solve] pass=gemini_fallback error=${gErr.message}`);
-    }
-  }
 
   // ── Terminal failure path ───────────────────────────────────────────────
   if (!parsedJson) {
