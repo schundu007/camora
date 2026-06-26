@@ -1,10 +1,17 @@
-// apps/ascend-backend/src/routes/ask.js
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
 
 const router = Router();
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
+}
 
 const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
 
@@ -155,7 +162,7 @@ router.post('/stream', async (req, res) => {
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
     if (provider === 'gemini' && !geminiKey) {
-      console.warn('[Ask/Gemini] No API key — set GEMINI_API_KEY or GOOGLE_AI_API_KEY. Falling back to Claude.');
+      console.warn('[Ask/Gemini] No API key — set GEMINI_API_KEY or GOOGLE_AI_API_KEY. Falling back to Gemini SDK.');
     }
 
     // ── Coding: Gemini 2.5 Pro primary (when user picks Gemini provider) ────────
@@ -208,17 +215,17 @@ router.post('/stream', async (req, res) => {
       if (!geminiOk || !full) full = '';
     }
 
-    // ── Dual-model for coding questions (Claude provider) ─────────────────────
-    // Gemini drafts a fast solution; Claude verifies, fixes bugs, and streams
-    // the minimal correct final answer. For non-coding or when Gemini key is
-    // absent the path degrades to Claude-only with no UX change.
-    let claudeSystem = system;
+    // ── Dual-model for coding questions (non-Gemini provider) ─────────────────
+    // Gemini drafts a fast solution; Gemini 2.5 Flash verifies, fixes bugs, and
+    // streams the minimal correct final answer. For non-coding or when Gemini key
+    // is absent the path degrades to a single-model call with no UX change.
+    let finalSystem = system;
     if (isCode && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
       const draft = await fetchGeminiDraft(message, history, geminiKey);
       if (draft) {
-        claudeSystem = SYS_CODE_DUAL(draft);
-        res.write(`data: ${JSON.stringify({ status: 'Verifying with Claude…' })}\n\n`);
+        finalSystem = SYS_CODE_DUAL(draft);
+        res.write(`data: ${JSON.stringify({ status: 'Verifying with Gemini…' })}\n\n`);
       }
     }
 
@@ -272,29 +279,27 @@ router.post('/stream', async (req, res) => {
       if (!geminiOk || !full) full = '';
     }
 
-    // ── Claude final stream (coding always; non-coding when not Gemini-only) ──
+    // ── Gemini final stream (coding always; non-coding when not Gemini-only) ──
     if (!full) {
-      let claudeOk = false;
+      let geminiOk = false;
       try {
-        const stream = anthropic.messages.stream({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 8000,
-          system: claudeSystem,
-          messages: msgs,
-        });
-        for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            full += chunk.delta.text;
-            res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+        const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: finalSystem });
+        const _msgs = msgs.map(m => (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')));
+        const _stream = await _model.generateContentStream(_msgs.join('\n\n'));
+        for await (const chunk of _stream.stream) {
+          const token = chunk.text();
+          if (token) {
+            full += token;
+            res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
           }
         }
-        claudeOk = true;
-      } catch (claudeErr) {
-        console.error('[Ask/Claude] stream error:', claudeErr.message);
+        geminiOk = true;
+      } catch (geminiErr) {
+        console.error('[Ask/Gemini-final] stream error:', geminiErr.message);
         full = '';
       }
 
-      if (!claudeOk || !full) {
+      if (!geminiOk || !full) {
         res.write(`data: ${JSON.stringify({ error: 'AI service is temporarily unavailable. Please try again in a moment.' })}\n\n`);
         res.write('data: [DONE]\n\n');
         res.end();

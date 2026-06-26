@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from '../services/adminConfig.js';
 import rateLimit from 'express-rate-limit';
 import { query } from '../lib/shared-db.js';
 
@@ -31,13 +32,13 @@ try {
   console.warn('[MCQ] Could not load mcq-problems.json:', err.message);
 }
 
-// ── Claude Haiku client ───────────────────────────────────────────────────────
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-
-function getAnthropicClient() {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
-  return new Anthropic({ apiKey });
+// ── Gemini client ─────────────────────────────────────────────────────────────
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
 }
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
@@ -61,19 +62,15 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
 {"question":"...","options":[{"letter":"A","text":"..."},{"letter":"B","text":"..."},{"letter":"C","text":"..."},{"letter":"D","text":"..."}],"correctLetter":"A","explanation":"..."}`;
 }
 
-// ── Claude call with one retry on JSON parse failure ─────────────────────────
+// ── Gemini call with one retry on JSON parse failure ──────────────────────────
 async function generateWithClaude(promptData) {
-  const client = getAnthropicClient();
   const prompt = buildPrompt(promptData);
 
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const response = await client.messages.create({
-      model: HAIKU_MODEL,
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _resp = await _model.generateContent(prompt);
 
-    const text = response.content[0]?.text ?? '';
+    const text = _resp.response.text();
     try {
       // Strip any accidental markdown fences before parsing
       const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
@@ -88,9 +85,9 @@ async function generateWithClaude(promptData) {
       ) {
         return parsed;
       }
-      throw new Error('Missing required fields in Claude response');
+      throw new Error('Missing required fields in Gemini response');
     } catch (parseErr) {
-      if (attempt === 2) throw new Error(`Failed to parse Claude response after 2 attempts: ${parseErr.message}`);
+      if (attempt === 2) throw new Error(`Failed to parse Gemini response after 2 attempts: ${parseErr.message}`);
       // else loop for retry
     }
   }
@@ -123,7 +120,7 @@ router.post('/generate', mcqLimiter, async (req, res, next) => {
       });
     }
 
-    // 2. Generate via Claude Haiku
+    // 2. Generate via Gemini
     const generated = await generateWithClaude({ title, domain, difficulty, tags });
 
     // 3. Store in DB

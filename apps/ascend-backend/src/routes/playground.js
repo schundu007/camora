@@ -7,7 +7,8 @@ import { join } from 'path';
 import { tmpdir, platform } from 'os';
 import { randomUUID, createHash } from 'crypto';
 import { query } from '../config/database.js';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from '../services/adminConfig.js';
 import OpenAI from 'openai';
 
 const execFileAsync = promisify(execFile);
@@ -60,13 +61,13 @@ const EXEC_OPTS = { maxBuffer: 1024 * 1024, encoding: 'utf8' };
 const EXPLAIN_CACHE = new Map();
 const EXPLAIN_CACHE_MAX = 500;
 
-let _anthropic = null;
-const getAnthropic = () => {
-  if (!_anthropic && process.env.ANTHROPIC_API_KEY) {
-    _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  }
-  return _anthropic;
-};
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
+}
 
 let _openrouter = null;
 const getOpenRouter = () => {
@@ -103,17 +104,12 @@ async function callExplain(prompt) {
   if (process.env.GEMINI_API_KEY) {
     try { return await callGemini(prompt); } catch (e) { console.warn('[explain] Gemini failed:', e.message); }
   }
-  const anthropic = getAnthropic();
-  if (anthropic) {
-    try {
-      const msg = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 700,
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
-    } catch (e) { console.warn('[explain] Anthropic failed:', e.message); }
-  }
+  try {
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _msgs = [{ role: 'user', content: prompt }].map(m => (Array.isArray(m.content) ? m.content.map(b => b.text||'').join('') : (m.content||'')));
+    const _resp = await _model.generateContent(_msgs.join('\n\n'));
+    return _resp.response.text().trim();
+  } catch (e) { console.warn('[explain] Gemini SDK failed:', e.message); }
   const or = getOpenRouter();
   if (or) {
     try {

@@ -1,13 +1,21 @@
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import multer from 'multer';
-import { getApiKey as getClaudeKey } from '../services/claude.js';
+import { getApiKey } from '../services/adminConfig.js';
 import { getApiKey as getOpenAIKey } from '../services/openai.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
+
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
+}
 
 const INTERVIEW_SYSTEM_PROMPT = `You are a Staff Engineer interview coach. ULTRA-COMPACT answers only.
 
@@ -165,35 +173,29 @@ Give a STAFF ENGINEER level answer tailored to the candidate's background and th
         }
       }
     } else {
-      // Claude (default)
-      const apiKey = getClaudeKey();
-      console.log('[Ascend] Got Claude API key:', apiKey ? 'yes' : 'NO');
-      if (!apiKey) {
-        res.write(`data: ${JSON.stringify({ error: 'Anthropic API key not configured' })}\n\n`);
+      // Gemini (replaces Claude as default)
+      const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+      console.log('[Ascend] Got Gemini API key:', k ? 'yes' : 'NO');
+      if (!k) {
+        res.write(`data: ${JSON.stringify({ error: 'Gemini API key not configured' })}\n\n`);
         res.end();
         return;
       }
 
-      const anthropic = new Anthropic({ apiKey });
-      const selectedModel = model || 'claude-sonnet-4-6';
-      console.log('[Ascend] Creating Claude stream with model:', selectedModel);
+      const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: INTERVIEW_SYSTEM_PROMPT });
+      console.log('[Ascend] Creating Gemini stream...');
 
-      const stream = await anthropic.messages.stream({
-        model: selectedModel,
-        max_tokens: 4096,
-        system: INTERVIEW_SYSTEM_PROMPT,
-        messages: [
-          { role: 'user', content: userMessage },
-        ],
-      });
+      const _msgs = [{ role: 'user', parts: [{ text: userMessage }] }];
+      const _stream = await _model.generateContentStream({ contents: _msgs });
 
-      console.log('[Ascend] Stream created, iterating events...');
+      console.log('[Ascend] Stream created, iterating chunks...');
       let chunkCount = 0;
-      for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta?.text) {
+      for await (const chunk of _stream.stream) {
+        const token = chunk.text();
+        if (token) {
           chunkCount++;
           if (chunkCount === 1) console.log('[Ascend] First chunk received');
-          res.write(`data: ${JSON.stringify({ chunk: event.delta.text })}\n\n`);
+          res.write(`data: ${JSON.stringify({ chunk: token })}\n\n`);
         }
       }
       console.log('[Ascend] Stream complete, chunks:', chunkCount);
@@ -224,72 +226,61 @@ router.post('/extract-text', upload.single('file'), async (req, res) => {
     if (fileName.endsWith('.txt')) {
       text = buffer.toString('utf-8');
     } else if (fileName.endsWith('.pdf')) {
-      // Use Claude to extract text from PDF
-      const apiKey = getClaudeKey();
-      if (!apiKey) {
+      // Use Gemini to extract text from PDF
+      const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+      if (!k) {
         return res.status(500).json({ error: 'API key not configured' });
       }
 
-      const anthropic = new Anthropic({ apiKey });
       const base64 = buffer.toString('base64');
+      const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8000,
-        messages: [{
+      const _resp = await _model.generateContent({
+        contents: [{
           role: 'user',
-          content: [
+          parts: [
             {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: 'application/pdf',
+              inlineData: {
+                mimeType: 'application/pdf',
                 data: base64,
               },
             },
             {
-              type: 'text',
               text: 'Extract ALL text content from this document. Return ONLY the extracted text, no commentary or formatting. Preserve paragraphs and structure.',
             },
           ],
         }],
       });
 
-      text = response.content[0]?.text || '';
+      text = _resp.response.text() || '';
     } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
-      // For DOCX, try to extract using simple parsing or Claude
-      const apiKey = getClaudeKey();
-      if (!apiKey) {
+      // Use Gemini to extract text from DOCX
+      const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+      if (!k) {
         return res.status(500).json({ error: 'API key not configured' });
       }
 
-      // DOCX files can be read by Claude as documents
-      const anthropic = new Anthropic({ apiKey });
       const base64 = buffer.toString('base64');
+      const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 8000,
-        messages: [{
+      const _resp = await _model.generateContent({
+        contents: [{
           role: 'user',
-          content: [
+          parts: [
             {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              inlineData: {
+                mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 data: base64,
               },
             },
             {
-              type: 'text',
               text: 'Extract ALL text content from this document. Return ONLY the extracted text, no commentary or formatting. Preserve paragraphs and structure.',
             },
           ],
         }],
       });
 
-      text = response.content[0]?.text || '';
+      text = _resp.response.text() || '';
     } else {
       // Try to read as text
       text = buffer.toString('utf-8');
