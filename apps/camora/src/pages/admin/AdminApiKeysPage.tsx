@@ -181,7 +181,7 @@ export default function AdminApiKeysPage() {
               onChange={(e) => handlePrimaryChange(e.target.value as ProviderKey)}
               disabled={primarySaving || loading}
               className="text-sm rounded-lg px-3 py-2 border font-medium"
-              style={{ background: 'var(--bg-input, #fff)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle, #d1d5db)' }}
+              style={{ background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.15)' }}
             >
               {PROVIDERS.map((p) => (
                 <option key={p} value={p}>{PROVIDER_LABELS[p]}</option>
@@ -216,7 +216,7 @@ export default function AdminApiKeysPage() {
                   </div>
 
                   {status?.masked && (
-                    <div className="mb-3 font-mono text-xs px-3 py-2 rounded-lg" style={{ background: 'var(--bg-input, #f3f4f6)', color: 'var(--text-secondary)' }}>
+                    <div className="mb-3 font-mono text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.12)' }}>
                       {status.masked}
                     </div>
                   )}
@@ -228,8 +228,8 @@ export default function AdminApiKeysPage() {
                       value={state.inputKey}
                       onChange={(e) => updateCardState(provider, { inputKey: e.target.value })}
                       onKeyDown={(e) => e.key === 'Enter' && handleSaveKey(provider)}
-                      className="flex-1 text-sm rounded-lg px-3 py-2 border font-mono"
-                      style={{ background: 'var(--bg-input, #fff)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle, #d1d5db)' }}
+                      className="flex-1 text-sm rounded-lg px-3 py-2 border font-mono placeholder:opacity-40"
+                      style={{ background: 'rgba(255,255,255,0.07)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.15)' }}
                     />
                     <button
                       onClick={() => handleSaveKey(provider)}
