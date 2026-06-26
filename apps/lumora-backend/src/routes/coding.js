@@ -102,7 +102,11 @@ function getGeminiClient() {
 }
 
 function geminiGetModel(systemInstruction) {
-  return getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, ...(systemInstruction ? { systemInstruction } : {}) });
+  return getGeminiClient().getGenerativeModel({
+    model: GEMINI_MODEL,
+    ...(systemInstruction ? { systemInstruction } : {}),
+    generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+  });
 }
 
 function toGeminiHistory(msgs) {
@@ -974,7 +978,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     const passStart = performance.now();
     const chunks = [];
     try {
-      const gModel1 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gModel1 = geminiGetModel(systemPrompt);
       const gHistory1 = toGeminiHistory(messages.slice(0, -1));
       const lastMsg1 = messages[messages.length - 1];
       const lastContent1 = Array.isArray(lastMsg1?.content)
@@ -1037,7 +1041,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       const strictMessages = hardcodingDetected
         ? [...messages, { role: 'user', content: pass2Reminder }]
         : [...messages, { role: 'assistant', content: rawAnswer || '(no output)' }, { role: 'user', content: pass2Reminder }];
-      const gModel2 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gModel2 = geminiGetModel(systemPrompt);
       const strict2Content = strictMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
       const resp2 = await gModel2.generateContent(strict2Content);
       const strictRaw = resp2.response.text() || '';
@@ -1088,7 +1092,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         ...messages,
         { role: 'user', content: hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER },
       ];
-      const gModel3 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gModel3 = geminiGetModel(systemPrompt);
       const fb3Content = fbMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
       const resp3 = await gModel3.generateContent(fb3Content);
       const fbRaw = resp3.response.text() || '';
@@ -1172,7 +1176,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   if (!parsedJson && anthropicExhausted && !clientDisconnected) {
     sendEvent('status', { state: 'warn', msg: 'Switching to Gemini…' });
     try {
-      const gModel = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gModel = geminiGetModel(systemPrompt);
       const gHistory = toGeminiHistory(messages.slice(0, -1));
       const lastMsg = messages[messages.length - 1];
       const lastContent = Array.isArray(lastMsg?.content)
