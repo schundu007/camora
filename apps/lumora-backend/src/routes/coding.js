@@ -975,74 +975,44 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   let hardcodingDetected = false;
 
-  // ── Pass 1: streaming primary attempt with transport-error retries ──────
-  let transportAttempt = 0;
-  while (true) {
+  // ── Pass 1: streaming via Gemini 2.5-flash ─────────────────────────────
+  {
+    const passStart = performance.now();
+    const chunks = [];
     try {
-      const passStart = performance.now();
-      const chunks = [];
-      // Extended thinking — forces internal chain-of-thought before writing
-      // code. Cuts logic errors on complex scheduling/graph/DP problems.
-      // Thinking blocks are internal only; we skip them, forward text only.
-      const useThinking = primaryModel.includes('opus');
-      const streamParams = {
-        model: primaryModel,
-        max_tokens: useThinking ? MAX_TOKENS + 10000 : MAX_TOKENS,
-        system: systemBlocks,
-        messages,
-        ...(useThinking ? { thinking: { type: 'enabled', budget_tokens: 10000 } } : {}),
-      };
-      const stream = await client.messages.stream(streamParams, { signal: abortController.signal });
-
-      for await (const event of stream) {
-        if (clientDisconnected) { try { stream.controller?.abort(); } catch {} break; }
-        if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-          const token = event.delta.text;
-          chunks.push(token);
-          sendEvent('token', { t: token });
-        }
+      const gModel1 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const gHistory1 = toGeminiHistory(messages.slice(0, -1));
+      const lastMsg1 = messages[messages.length - 1];
+      const lastContent1 = Array.isArray(lastMsg1?.content)
+        ? lastMsg1.content.map(b => b.text || '').join('')
+        : (lastMsg1?.content || '');
+      let streamResult;
+      if (gHistory1.length > 0) {
+        const chat = gModel1.startChat({ history: gHistory1 });
+        streamResult = await chat.sendMessageStream(lastContent1);
+      } else {
+        streamResult = await gModel1.generateContentStream(lastContent1);
+      }
+      for await (const chunk of streamResult.stream) {
+        if (clientDisconnected) break;
+        const token = chunk.text();
+        if (token) { chunks.push(token); sendEvent('token', { t: token }); }
       }
       if (clientDisconnected) return;
-
-      const finalMessage = await stream.finalMessage();
-      if (finalMessage.usage) {
-        inputTokens = finalMessage.usage.input_tokens;
-        outputTokens = finalMessage.usage.output_tokens;
-      }
       rawAnswer = chunks.join('');
-      modelUsed = primaryModel;
+      modelUsed = GEMINI_MODEL;
       console.log(
-        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=true ` +
-        `rawLen=${rawAnswer.length} tokens=${inputTokens}+${outputTokens} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+        `[coding/solve] pass=primary_stream model=${GEMINI_MODEL} ok=true ` +
+        `rawLen=${rawAnswer.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
-      break; // stream succeeded, fall through to parse
     } catch (err) {
-      const retryable = isRetryableClaudeError(err);
       const status = err?.status || err?.statusCode || err?.response?.status || 'unknown';
       console.error(
-        `[coding/solve] pass=primary_stream model=${primaryModel} attempt=${transportAttempt + 1} ok=false ` +
-        `status=${status} retryable=${retryable} msg=${JSON.stringify(err?.message || String(err))} ua=${JSON.stringify(userAgent)}`,
+        `[coding/solve] pass=primary_stream model=${GEMINI_MODEL} ok=false ` +
+        `status=${status} msg=${JSON.stringify(err?.message || String(err))} ua=${JSON.stringify(userAgent)}`,
       );
-      if (retryable && transportAttempt < CLAUDE_MAX_TRANSPORT_RETRIES) {
-        const delay = CLAUDE_TRANSPORT_BACKOFFS_MS[transportAttempt] ?? 1500;
-        transportAttempt++;
-        sendEvent('status', {
-          state: 'warn',
-          msg: `Recovering — retry ${transportAttempt}/${CLAUDE_MAX_TRANSPORT_RETRIES}…`,
-        });
-        await sleep(delay);
-        continue;
-      }
-      // Transport failure is terminal for Pass 1. Pass 2 will try
-      // non-streaming which sometimes succeeds where streaming doesn't
-      // (different upstream edge), using the same model, strict prompt.
       rawAnswer = '';
-      if (isApiExhaustedError(err)) anthropicExhausted = true;
-      terminalFailure = {
-        msg: err?.message || 'Claude API error',
-        category: retryable ? 'overloaded' : 'api_error',
-      };
-      break;
+      terminalFailure = { msg: err?.message || 'Gemini API error', category: 'api_error' };
     }
   }
 
@@ -1073,17 +1043,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       const strictMessages = hardcodingDetected
         ? [...messages, { role: 'user', content: pass2Reminder }]
         : [...messages, { role: 'assistant', content: rawAnswer || '(no output)' }, { role: 'user', content: pass2Reminder }];
-      const resp = await client.messages.create({
-        model: primaryModel,
-        max_tokens: MAX_TOKENS,
-        system: systemBlocks,
-        messages: strictMessages,
-      });
-      const strictRaw = resp.content?.map(b => b.text || '').join('') || '';
-      if (resp.usage) {
-        inputTokens += resp.usage.input_tokens || 0;
-        outputTokens += resp.usage.output_tokens || 0;
-      }
+      const gModel2 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const strict2Content = strictMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
+      const resp2 = await gModel2.generateContent(strict2Content);
+      const strictRaw = resp2.response.text() || '';
       const strictParsed = extractJsonFromText(strictRaw);
       console.log(
         `[coding/solve] pass=primary_strict model=${primaryModel} ok=${!!(strictParsed && (strictParsed.code || strictParsed.solutions))} ` +
@@ -1131,17 +1094,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         ...messages,
         { role: 'user', content: hardcodingDetected ? ANTI_CHEAT_REJECTION : STRICT_JSON_REMINDER },
       ];
-      const resp = await client.messages.create({
-        model: fbModel,
-        max_tokens: MAX_TOKENS,
-        system: systemBlocks,
-        messages: fbMessages,
-      });
-      const fbRaw = resp.content?.map(b => b.text || '').join('') || '';
-      if (resp.usage) {
-        inputTokens += resp.usage.input_tokens || 0;
-        outputTokens += resp.usage.output_tokens || 0;
-      }
+      const gModel3 = getGeminiClient().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: systemPrompt });
+      const fb3Content = fbMessages.map(m => Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')).join('\n\n');
+      const resp3 = await gModel3.generateContent(fb3Content);
+      const fbRaw = resp3.response.text() || '';
       const fbParsed = extractJsonFromText(fbRaw);
       console.log(
         `[coding/solve] pass=fallback_model model=${fbModel} ok=${!!(fbParsed && (fbParsed.code || fbParsed.solutions))} ` +
