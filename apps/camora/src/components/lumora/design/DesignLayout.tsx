@@ -198,6 +198,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [gvImgUrl, setGvImgUrl] = useState<string | null>(null);
   const [gvLoading, setGvLoading] = useState(false);
   const gvBlobRef = useRef<string | null>(null); // revoke previous object URL on unmount
+  const [gvKey, setGvKey] = useState(''); // "question::provider" of last successful Graphviz render
 
   // Revoke blob URL when component unmounts to avoid memory leaks
   useEffect(() => () => { if (gvBlobRef.current) URL.revokeObjectURL(gvBlobRef.current); }, []);
@@ -624,7 +625,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const handleGraphviz = useCallback(async () => {
     if (!question || !token || gvLoading) return;
     setDiagramTab('graphviz');
-    if (gvImgUrl) return; // already generated, just switch tab
+    const currentKey = `${question}::${cloudProvider}`;
+    if (gvImgUrl && gvKey === currentKey) return; // same question+provider already rendered
+    setGvImgUrl(null);
     setGvLoading(true);
     try {
       const r = await fetch(`${CAPRA_URL}/api/diagram/generate-dot`, {
@@ -644,6 +647,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           const objUrl = URL.createObjectURL(blob);
           gvBlobRef.current = objUrl;
           setGvImgUrl(objUrl);
+          setGvKey(`${question}::${cloudProvider}`);
         } else {
           await dialogAlert('Failed to load generated diagram image');
         }
@@ -654,7 +658,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       await dialogAlert(err.message || 'Network error');
     }
     setGvLoading(false);
-  }, [question, token, gvLoading, cloudProvider, gvImgUrl]);
+  }, [question, token, gvLoading, cloudProvider, gvImgUrl, gvKey]);
+
+  // Keep a ref to the latest handleGraphviz so the effect below never captures a stale closure
+  const handleGraphvizRef = useRef(handleGraphviz);
+  useEffect(() => { handleGraphvizRef.current = handleGraphviz; }, [handleGraphviz]);
+
+  // Auto-regenerate when on Graphviz tab and question or provider changes
+  useEffect(() => {
+    if (diagramTab !== 'graphviz' || !question) return;
+    handleGraphvizRef.current();
+  }, [cloudProvider, question]);
 
   const handleReset = useCallback(() => {
     setProblemText('');
