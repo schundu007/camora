@@ -243,7 +243,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
           className="rounded-lg select-none"
           style={{ overflow: 'auto', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
           onWheel={handleWheel}>
-          <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: '100%', margin: '0 auto' }}>
+          <div style={{ width: `${Math.round(scale * 100)}%`, margin: '0 auto' }}>
             <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
               style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
