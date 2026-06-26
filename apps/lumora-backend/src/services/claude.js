@@ -268,10 +268,19 @@ function scaleMathFor(kind) {
   return SCALEMATH_BLOCK;
 }
 
+const CLOUD_LABEL = { aws: 'AWS', azure: 'Azure', gcp: 'GCP' };
+const CLOUD_SERVICE_EXAMPLES = {
+  aws: 'S3, DynamoDB, Lambda, SQS, ECS/Fargate, RDS, CloudFront, API Gateway, ElastiCache, MSK, EKS, ECR, Kinesis, CloudWatch',
+  azure: 'AKS, Azure Blob Storage, Cosmos DB, Azure SQL Database, Azure Cache for Redis, Service Bus, Azure Container Registry, Azure Front Door, Azure Functions, Azure Monitor, Event Hubs, API Management, Key Vault',
+  gcp: 'GKE, Cloud Storage, Firestore, Cloud SQL, Memorystore, Pub/Sub, Cloud Run, Artifact Registry, Cloud CDN, Cloud Monitoring, BigQuery, Secret Manager',
+};
+
 export function buildDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws', designKind = 'system') {
   const kind = VALID_DESIGN_KINDS.has(designKind) ? designKind : 'system';
   const isBasic = detailLevel === 'basic';
   const isFull = detailLevel === 'full';
+  const cloudLabel = CLOUD_LABEL[cloudProvider] || 'AWS';
+  const cloudServiceExamples = CLOUD_SERVICE_EXAMPLES[cloudProvider] || CLOUD_SERVICE_EXAMPLES.aws;
   const detailRules = isBasic
     ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
     : isFull
@@ -332,7 +341,7 @@ skip
 ${deepSection}
 
 [CLOUDSERVICES]
-(RULES: List 4-6 actual named services from YOUR design above. EXACT brand names — AWS: S3/DynamoDB/Lambda/SQS/ECS/RDS/CloudFront; Azure: Blob Storage/Cosmos DB/Functions/Service Bus/AKS/SQL Database/Front Door; GCP: Cloud Storage/Firestore/Pub-Sub/Cloud Run/GKE/Cloud SQL/Cloud CDN. Never generic terms like "object storage" or "NoSQL database".)
+(RULES: List 4-6 ${cloudLabel} services ONLY from YOUR design above. ${cloudLabel} ONLY — do NOT reference AWS, GCP, or Azure services from other clouds. Use exact ${cloudLabel} names, e.g.: ${cloudServiceExamples}. Never generic terms like "object storage" or "NoSQL database".)
 <ServiceName>: its specific role in this design
 <ServiceName>: its specific role in this design
 <ServiceName>: its specific role in this design
