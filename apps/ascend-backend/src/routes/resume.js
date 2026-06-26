@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from '../services/adminConfig.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { fetchJobViaAPI } from './jobAnalyze.js';
 import {
@@ -8,11 +9,18 @@ import {
 } from 'docx';
 
 const router = Router();
-const client = new Anthropic();
+
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
+}
 
 /**
  * POST /api/v1/resume/optimize
- * Optimize a resume for a specific job description using Claude AI.
+ * Optimize a resume for a specific job description using Gemini AI.
  * Streams the response via SSE.
  */
 router.post('/optimize', authenticate, async (req, res) => {
@@ -51,15 +59,13 @@ INSTRUCTIONS:
 
 Output ONLY the optimized resume text, ready to copy. No commentary.`;
 
-    const stream = await client.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _stream = await _model.generateContentStream(prompt);
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+    for await (const chunk of _stream.stream) {
+      const token = chunk.text();
+      if (token) {
+        res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
       }
     }
 
@@ -117,15 +123,13 @@ INSTRUCTIONS:
 
 Output ONLY the cover letter text, ready to copy. No commentary.`;
 
-    const stream = await client.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _stream = await _model.generateContentStream(prompt);
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-        res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+    for await (const chunk of _stream.stream) {
+      const token = chunk.text();
+      if (token) {
+        res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
       }
     }
 
@@ -158,10 +162,8 @@ router.post('/ats-score', authenticate, async (req, res) => {
       ? '(No resume text provided — resume was uploaded as a binary file and could not be read. Treat all JD requirements as unmet.)'
       : resume;
 
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: `You are an ATS (Applicant Tracking System) analyzer. Compare the BASE resume against the job description requirements.
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _resp = await _model.generateContent(`You are an ATS (Applicant Tracking System) analyzer. Compare the BASE resume against the job description requirements.
 
 STEP 1 — Extract from the JD: every required skill, tool, technology, certification, and qualification mentioned.
 STEP 2 — Check each one against the resume. Classify as matched (explicitly present) or missing.
@@ -187,10 +189,9 @@ Rules:
 - keywordsMatched + keywordsMissing must together cover ALL significant JD requirements (aim for 10-20 total keywords)
 - If resume is empty or unreadable, keywordsMatched=[], keywordsMissing=<all JD requirements>, score=0
 - Never return empty keywordsMissing if the JD has requirements
-- suggestions must be concrete and reference specific JD terms` }],
-    });
+- suggestions must be concrete and reference specific JD terms`);
 
-    const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+    const text = _resp.response.text();
     try {
       const json = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, '').trim());
       res.json(json);
@@ -259,16 +260,10 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Could not extract job description from that URL. Try pasting it directly.' });
     }
 
-    const extraction = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      messages: [{
-        role: 'user',
-        content: `Extract the job description from the following scraped web page text. Return ONLY the structured job posting content — job title, company, location, role summary, responsibilities, required qualifications, and nice-to-have skills. Remove all navigation, headers, footers, cookie notices, ads, and unrelated page content. Format clearly with section headings.\n\nSCRAPED TEXT:\n${rawText}`,
-      }],
-    });
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _resp = await _model.generateContent(`Extract the job description from the following scraped web page text. Return ONLY the structured job posting content — job title, company, location, role summary, responsibilities, required qualifications, and nice-to-have skills. Remove all navigation, headers, footers, cookie notices, ads, and unrelated page content. Format clearly with section headings.\n\nSCRAPED TEXT:\n${rawText}`);
 
-    const text = extraction.content[0]?.text?.trim() || rawText.substring(0, 4000);
+    const text = _resp.response.text().trim() || rawText.substring(0, 4000);
     res.json({ text });
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -281,7 +276,7 @@ router.post('/fetch-jd', authenticate, async (req, res) => {
 /**
  * POST /api/v1/resume/generate
  * Full resume + cover letter generator:
- *   1. Claude Sonnet generates structured JSON (gap analysis + tailored content)
+ *   1. Gemini generates structured JSON (gap analysis + tailored content)
  *   2. docx renders two .docx files (resume + cover letter)
  *   3. Both returned as base64 in a single JSON response
  */
@@ -295,12 +290,8 @@ router.post('/generate', authenticate, async (req, res) => {
     const targetCompany = company || 'the company';
     const targetRole = role || 'the role';
 
-    const msg = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 6000,
-      messages: [{
-        role: 'user',
-        content: `You are an expert resume writer and career coach. Analyze the candidate's resume against the job description and produce a structured JSON output.
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _resp = await _model.generateContent(`You are an expert resume writer and career coach. Analyze the candidate's resume against the job description and produce a structured JSON output.
 
 TARGET COMPANY: ${targetCompany}
 TARGET ROLE: ${targetRole}
@@ -347,11 +338,9 @@ Return ONLY valid JSON (no markdown fences) matching this exact schema:
     "body2": "<paragraph 3 — cultural fit / motivation for this company>",
     "closing": "<closing paragraph with call to action>"
   }
-}`,
-      }],
-    });
+}`);
 
-    const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
+    const raw = _resp.response.text().trim();
     let data;
     try {
       data = JSON.parse(raw.replace(/^```json?\n?/, '').replace(/```$/, '').trim());

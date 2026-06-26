@@ -1,20 +1,23 @@
 import { Router } from 'express';
 import * as cheerio from 'cheerio';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from '../services/adminConfig.js';
 import dns from 'node:dns/promises';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { recordTokens } from '../services/aiHoursMeter.js';
 
 const router = Router();
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const MODEL = 'claude-sonnet-4-6';
+const MODEL = 'gemini-2.5-flash';
 
-/* ── Helpers ─────────────────────────────────────────────── */
+/* ── Gemini Client ───────────────────────────────────────── */
 
-function getClient() {
-  if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not set');
-  return new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+let _genAI = null;
+let _genAIKey = null;
+function getGenAI() {
+  const k = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || _genAIKey !== k) { _genAI = new GoogleGenerativeAI(k); _genAIKey = k; }
+  return _genAI;
 }
 
 const FETCH_HEADERS = {
@@ -471,20 +474,11 @@ Rules:
 - Return ONLY valid JSON, no markdown fences, no explanation.`;
 
 async function analyzeJobDescription(jobText, pageTitle) {
-  const client = getClient();
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 1200,
-    messages: [
-      {
-        role: 'user',
-        content: `Page title: ${pageTitle}\n\nJob description:\n${jobText}`,
-      },
-    ],
-    system: ANALYZE_PROMPT,
-  });
+  const _model = getGenAI().getGenerativeModel({ model: MODEL, systemInstruction: ANALYZE_PROMPT });
+  const _msgs = [`Page title: ${pageTitle}\n\nJob description:\n${jobText}`];
+  const _resp = await _model.generateContent(_msgs.join('\n\n'));
 
-  const text = response.content[0].text.trim();
+  const text = _resp.response.text().trim();
   // Parse JSON — handle potential markdown fences
   const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '');
   return JSON.parse(cleaned);
@@ -556,7 +550,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Step 3: Analyze with Claude
+    // Step 3: Analyze with Gemini
     const analysis = await analyzeJobDescription(jobText, pageTitle);
 
     // Deduct free usage on success
