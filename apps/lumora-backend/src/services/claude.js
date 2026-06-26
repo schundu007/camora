@@ -186,11 +186,11 @@ const DEEPDESIGN_SYSTEM = `[DEEPDESIGN]
 1. LAYER TITLE
   - Key decision (max 10 words)
   - Key decision (max 10 words)
-(5-6 layers covering CDN, LB, App, Cache, DB, Async — 2-3 bullets each, no explanatory sentences)
+(5-6 layers covering CDN, LB, App, Cache, DB, Async — 2-3 bullets each, no explanatory sentences. VOICE: direct imperative only — NO "I would" / "I'd" / "I'd use". Start every bullet with an action verb: "Use managed K8s (EKS/AKS/GKE)", "Provision node groups for CPU+GPU", "Implement HPA autoscaling".)
 [/DEEPDESIGN]`;
 
 const DEEPDESIGN_APPLICATION = `[DEEPDESIGN]
-Cover the application design in 4-5 numbered sections. NO infra layers. 2-3 bullets each, max 10 words per bullet.
+Cover the application design in 4-5 numbered sections. NO infra layers. 2-3 bullets each, max 10 words per bullet. VOICE: direct imperative only — NO "I would" / "I'd". Start every bullet with a verb: "Expose GET /items endpoint", "Use HashMap + DLL for O(1)", "Apply Strategy pattern for eviction".
 
 1. API CONTRACT
   - Key method + signature (e.g. get(key) → value | null)
@@ -212,7 +212,7 @@ Cover the application design in 4-5 numbered sections. NO infra layers. 2-3 bull
 [/DEEPDESIGN]`;
 
 const DEEPDESIGN_INFRASTRUCTURE = `[DEEPDESIGN]
-Cover the infrastructure component in 5 numbered sections. 2-3 bullets each, max 10 words per bullet.
+Cover the infrastructure component in 5 numbered sections. 2-3 bullets each, max 10 words per bullet. VOICE: direct imperative only — NO "I would" / "I'd". Start every bullet with a verb: "Hash-route requests to cache shards", "Use gossip protocol for topology", "Enforce quorum writes for durability".
 
 1. DATA PLANE
   - Hot path in one line (e.g. hash-route → cache shard → response)
