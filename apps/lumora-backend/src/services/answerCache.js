@@ -110,8 +110,8 @@ export function buildAnswerCacheKey(parts) {
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
-  // v9: cloudProvider added to key (2026-06-25) — Azure/GCP/AWS each get their own cache entry.
-  return `lumora:answer:v9:${h}`;
+  // v10: CLOUD_FORBIDDEN enforcement added (2026-06-26) — invalidates stale v9 entries with wrong provider services.
+  return `lumora:answer:v10:${h}`;
 }
 
 async function cacheGetFromDb(key) {
