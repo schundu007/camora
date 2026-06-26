@@ -214,10 +214,8 @@ function truncateForLog(text, max = 2048) {
  * Free users get Haiku (cheaper), paid users get Sonnet (more capable).
  * Restored after the all-Haiku experiment produced weaker answers.
  */
-function getModelForUser(req) {
-  const plan = req.user?.plan_type || 'free';
-  if (plan === 'free' || !plan) return 'claude-haiku-4-5-20251001';
-  return process.env.CLAUDE_MODEL || 'claude-opus-4-7';
+function getModelForUser() {
+  return GEMINI_MODEL;
 }
 
 /**
@@ -227,9 +225,8 @@ function getModelForUser(req) {
  * back to Sonnet (more capable, acceptable one-off cost when Haiku
  * couldn't produce parseable JSON even with a strict reminder).
  */
-function fallbackModelFor(primaryModel) {
-  if (!primaryModel) return FALLBACK_MODEL_PAID;
-  return primaryModel.includes('haiku') ? FALLBACK_MODEL_FREE : FALLBACK_MODEL_PAID;
+function fallbackModelFor() {
+  return GEMINI_MODEL;
 }
 
 /**
@@ -954,9 +951,6 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
   // time-to-first-token by 200–500 ms in the steady state. Identical
   // pattern to services/claude.js:457. Per-request blocks are unchanged.
-  const systemBlocks = [
-    { type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } },
-  ];
   const STRICT_JSON_REMINDER =
     'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
 
