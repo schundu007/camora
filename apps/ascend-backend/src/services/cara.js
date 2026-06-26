@@ -1,6 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey } from './adminConfig.js';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+let _caraClient = null;
+let _caraClientKey = null;
+function getAnthropicClient() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
+  if (!_caraClient || key !== _caraClientKey) {
+    _caraClient = new Anthropic({ apiKey: key });
+    _caraClientKey = key;
+  }
+  return _caraClient;
+}
 
 const CAMORA_ROUTES = `
 /capra/prepare                  → Prep dashboard — all topic categories
@@ -152,7 +162,7 @@ Omit "action" when navigation is not relevant.`;
 }
 
 export async function askCara({ message, context }) {
-  const msg = await anthropic.messages.create({
+  const msg = await getAnthropicClient().messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 400,
     system: buildSystemPrompt(context),

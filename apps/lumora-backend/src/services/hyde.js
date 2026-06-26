@@ -12,14 +12,20 @@
  */
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createHash } from 'node:crypto';
+import { getApiKey } from './adminConfig.js';
 
 const MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS = 180;
 const CACHE_MAX = 1000;
 
 let _genAI = null;
+let _genAIKey = null;
 function client() {
-  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  const key = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || key !== _genAIKey) {
+    _genAI = new GoogleGenerativeAI(key);
+    _genAIKey = key;
+  }
   return _genAI;
 }
 

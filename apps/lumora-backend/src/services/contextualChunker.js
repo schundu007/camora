@@ -17,14 +17,20 @@
  * partial run still produces a valid index.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey } from './adminConfig.js';
 
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 100;
 const PARALLEL = 8;
 
 let _client = null;
+let _clientKey = null;
 function client() {
-  if (!_client) _client = new Anthropic();
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY;
+  if (!_client || key !== _clientKey) {
+    _client = new Anthropic(key ? { apiKey: key } : {});
+    _clientKey = key;
+  }
   return _client;
 }
 

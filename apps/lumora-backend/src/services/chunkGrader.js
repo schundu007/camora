@@ -10,13 +10,19 @@
  * Gated by RAG_USE_GRADING=true env var (off by default).
  */
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getApiKey } from './adminConfig.js';
 
 const MODEL_GRADER = 'gemini-2.5-flash';
 const GRADING_TIMEOUT_MS = 300;
 
 let _genAI = null;
+let _genAIKey = null;
 function getClient() {
-  if (!_genAI) _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+  const key = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!_genAI || key !== _genAIKey) {
+    _genAI = new GoogleGenerativeAI(key);
+    _genAIKey = key;
+  }
   return _genAI;
 }
 
