@@ -356,6 +356,11 @@ async function runMigrations() {
            ALTER TABLE lumora_user_code_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
          END IF;
        END $$`,
+      `CREATE TABLE IF NOT EXISTS camora_admin_config (
+        key VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
@@ -406,6 +411,8 @@ import audioPrefsRouter from './routes/audioPreferences.js';
 import usercodeRouter from './routes/usercode.js';
 import githubRouter from './routes/github.js';
 import internalRouter from './routes/internal.js';
+import adminRouter from './routes/admin.js';
+import { loadAdminConfig } from './services/adminConfig.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
 // diagram were wide open to abuse before this.
@@ -461,6 +468,7 @@ app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public
 app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
 
 app.use('/internal', internalRouter);
+app.use('/api/v1/admin', apiLimiter, authenticate, adminRouter);
 
 // Global error handler — generic message to client, full details to logs.
 app.use((err, req, res, next) => {
@@ -500,7 +508,7 @@ const PORT = config.port;
 // safe; a runtime failure surfaces in logs but doesn't block boot.
 // Fail fast on missing critical env vars — better a clear boot error
 // than a cryptic API failure on the first live request.
-const REQUIRED_ENV = ['ANTHROPIC_API_KEY', 'DATABASE_URL', 'JWT_SECRET', 'AI_SERVICES_API_KEY'];
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'AI_SERVICES_API_KEY'];
 if (process.env.NODE_ENV !== 'test') {
   for (const v of REQUIRED_ENV) {
     if (!process.env[v]) {
@@ -514,9 +522,11 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info({ port: PORT }, 'Lumora backend listening (migrations running in background)');
 });
 
-runMigrations().catch((err) => {
-  logger.error({ err: err?.message }, 'Background migrations failed');
-});
+runMigrations()
+  .then(() => loadAdminConfig())
+  .catch((err) => {
+    logger.error({ err: err?.message }, 'Background migrations or admin config load failed');
+  });
 
 // Graceful shutdown — stop accepting connections, drain, close the DB pool,
 // exit. Previously exit happened before closePool so in-flight queries could
