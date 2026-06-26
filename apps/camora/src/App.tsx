@@ -83,6 +83,7 @@ const ProgramizLearnPage = lazy(() => import('./pages/capra/ProgramizLearnPage')
 const LearnTopicPage = lazy(() => import('./pages/capra/LearnTopicPage'));
 const PlaygroundPage = lazy(() => import('./pages/PlaygroundPage'));
 const AdminPlaygroundObservePage = lazy(() => import('./pages/admin/AdminPlaygroundObservePage'));
+const AdminApiKeysPage = lazy(() => import('./pages/admin/AdminApiKeysPage'));
 
 const Loading = () => {
   return (
@@ -535,6 +536,7 @@ export const App = () => {
           <Route path="/docs/admin/playground" element={<OwnerRoute><AdminPlaygroundPage /></OwnerRoute>} />
           <Route path="/admin/teams" element={<OwnerRoute><AdminTeamsPage /></OwnerRoute>} />
           <Route path="/admin/playground/observe" element={<OwnerRoute><AdminPlaygroundObservePage /></OwnerRoute>} />
+          <Route path="/admin/api-keys" element={<OwnerRoute><AdminApiKeysPage /></OwnerRoute>} />
           <Route path="/flyer" element={<FlyerPage />} />
 
           {/* ── Jobs: Apply ──────────────────────────────── */}

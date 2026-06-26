@@ -13,19 +13,22 @@ import {
   getDefaultResumeContext,
   getDefaultTechnicalContext,
 } from './claude.js';
+import { getApiKey } from './adminConfig.js';
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS_QUICK = 2000;
 const MAX_TOKENS_DESIGN = 8000;
 
-let genAI = null;
+let _genAI = null;
+let _genAIKey = null;
 function getGeminiClient() {
-  if (!genAI) {
-    const apiKey = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GOOGLE_AI_API_KEY or GEMINI_API_KEY env var is required');
-    genAI = new GoogleGenerativeAI(apiKey);
+  const apiKey = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('No Gemini API key configured. Set one via Admin > API Keys or GOOGLE_AI_API_KEY env var.');
+  if (!_genAI || _genAIKey !== apiKey) {
+    _genAI = new GoogleGenerativeAI(apiKey);
+    _genAIKey = apiKey;
   }
-  return genAI;
+  return _genAI;
 }
 
 /**
