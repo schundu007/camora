@@ -69,7 +69,7 @@ RUN npm install --no-audit --no-fund --omit=optional
 
 # Python venv used by the diagram generation pipeline (services/diagram-*).
 RUN python3 -m venv /app/.venv \
- && /app/.venv/bin/pip install --no-cache-dir diagrams google-generativeai ruff black radon pytest
+ && /app/.venv/bin/pip install --no-cache-dir diagrams google-genai ruff black radon pytest
 
 # Rebuild the font cache so freshly-added fonts are visible to graphviz/rsvg.
 RUN fc-cache -fv || true
