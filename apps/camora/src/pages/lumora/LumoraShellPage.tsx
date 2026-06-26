@@ -713,9 +713,10 @@ export const LumoraShellPage = () => {
             </div>
           )}
 
-          {/* Docs tab */}
-          {activeTab === 'prepkit' && (
-            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0">
+          {/* Docs tab — keep-alive so prepAPI.getState() only fires once */}
+          {mountedTabs.has('prepkit') && (
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
+              style={{ display: activeTab === 'prepkit' ? undefined : 'none' }}>
               <LumoraDocsPanel />
             </div>
           )}
