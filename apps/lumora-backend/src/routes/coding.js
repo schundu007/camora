@@ -144,7 +144,7 @@ function buildProviderList() {
   const list = [];
   if (getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) list.push('gemini');
   if (getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY) list.push('anthropic');
-  if (process.env.OPENROUTER_API_KEY) list.push('deepseek');
+  if (getApiKey('openrouter') || process.env.OPENROUTER_API_KEY) list.push('deepseek');
   // Always keep at least gemini (client will fail gracefully if key is missing)
   if (list.length === 0) list.push('gemini');
   return list;
@@ -203,12 +203,12 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
     }
 
     if (providerName === 'deepseek') {
-      if (!openrouterClient) return { raw: '', model: null, error: 'OpenRouter key not configured' };
+      if (!getOpenRouterClient()) return { raw: '', model: null, error: 'OpenRouter key not configured' };
       const oaiMsgs = [
         { role: 'system', content: systemPrompt },
         ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '') })),
       ];
-      const stream = await openrouterClient.chat.completions.create({
+      const stream = await getOpenRouterClient().chat.completions.create({
         model: 'deepseek/deepseek-chat-v3-0324',
         max_tokens: MAX_TOKENS,
         stream: true,
@@ -254,12 +254,12 @@ async function generateWithProvider(providerName, messages, systemPrompt) {
     }
 
     if (providerName === 'deepseek') {
-      if (!openrouterClient) return { raw: '', model: null, error: 'OpenRouter key not configured' };
+      if (!getOpenRouterClient()) return { raw: '', model: null, error: 'OpenRouter key not configured' };
       const oaiMsgs = [
         { role: 'system', content: systemPrompt },
         ...messages.map(m => ({ role: m.role, content: Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '') })),
       ];
-      const resp = await openrouterClient.chat.completions.create({
+      const resp = await getOpenRouterClient().chat.completions.create({
         model: 'deepseek/deepseek-chat-v3-0324',
         max_tokens: MAX_TOKENS,
         stream: false,
@@ -274,23 +274,23 @@ async function generateWithProvider(providerName, messages, systemPrompt) {
   }
 }
 
-// OpenRouter client — OpenAI-SDK compatible, routes to Qwen/DeepSeek/etc.
-// Preferred fallback over OpenAI direct because it's significantly cheaper.
-const openrouterClient = process.env.OPENROUTER_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENROUTER_API_KEY,
+// OpenRouter lazy client — resolved at call time so admin-panel key changes
+// take effect without a service restart.
+let _openrouterClient = null;
+let _openrouterKey = null;
+function getOpenRouterClient() {
+  const key = getApiKey('openrouter') || process.env.OPENROUTER_API_KEY || '';
+  if (!key) return null;
+  if (!_openrouterClient || _openrouterKey !== key) {
+    _openrouterClient = new OpenAI({
+      apiKey: key,
       baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: { 'HTTP-Referer': 'https://cariara.com', 'X-Title': 'Camora CoFix' },
-    })
-  : null;
-
-// Fallback model priority when Anthropic is exhausted:
-//   1. DeepSeek-V3 via OpenRouter (excellent code quality, very cheap)
-//   2. Qwen2.5-Coder-32B via OpenRouter (strong alternative)
-const FALLBACK_PROVIDERS = [
-  openrouterClient && { client: openrouterClient, model: 'deepseek/deepseek-chat-v3-0324',     label: 'DeepSeek-V3' },
-  openrouterClient && { client: openrouterClient, model: 'qwen/qwen-2.5-coder-32b-instruct',   label: 'Qwen2.5-Coder' },
-].filter(Boolean);
+    });
+    _openrouterKey = key;
+  }
+  return _openrouterClient;
+}
 
 // Detects Anthropic "spending limit reached" errors (returned as 400
 // invalid_request_error, distinct from transient 429/529 errors).
