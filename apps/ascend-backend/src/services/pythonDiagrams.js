@@ -33,7 +33,7 @@ export function setApiKey(key) {
  * Get API key (runtime takes precedence over environment)
  */
 export function getApiKey() {
-  return runtimeApiKey || process.env.ANTHROPIC_API_KEY;
+  return runtimeApiKey || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
 }
 
 /**

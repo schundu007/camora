@@ -20,7 +20,7 @@ import tempfile
 import uuid
 import traceback
 
-import google.generativeai as genai
+from google import genai
 
 
 # ── Class-name aliases ─────────────────────────────────────────────────────
@@ -1083,8 +1083,7 @@ def execute_code(code, output_path, output_dir):
 
 
 def generate_diagram(question, provider, detail_level, direction, output_dir, api_key, design_kind="system"):
-    genai.configure(api_key=api_key)
-    gmodel = genai.GenerativeModel("gemini-2.5-flash")
+    gclient = genai.Client(api_key=api_key)
     # Multi-cloud needs horizontal layout — per-CSP columns must read
     # left-to-right. Override the CLI direction so a stale frontend
     # passing TB doesn't ruin the layout.
@@ -1096,7 +1095,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
     output_path = os.path.join(output_dir, f"diagram-{diagram_id}")
 
     # Attempt 1
-    resp = gmodel.generate_content(prompt)
+    resp = gclient.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     body = extract_code(resp.text)
     full_code = assemble_code(body, provider, direction)
     try:
@@ -1153,11 +1152,14 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
                 f"NEVER import from diagrams.aws/azure/gcp other than {provider}."
             )
 
-        fix_resp = gmodel.generate_content([
-            {"role": "user", "parts": [prompt]},
-            {"role": "model", "parts": [body]},
-            {"role": "user", "parts": [f"ERROR:\n{error_text}{import_hint}\n\nFix the code. Return the COMPLETE output in the SAME format: imports first, then indented body. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() constructor."]},
-        ])
+        fix_resp = gclient.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                {"role": "user", "parts": [{"text": prompt}]},
+                {"role": "model", "parts": [{"text": body}]},
+                {"role": "user", "parts": [{"text": f"ERROR:\n{error_text}{import_hint}\n\nFix the code. Return the COMPLETE output in the SAME format: imports first, then indented body. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() constructor."}]},
+            ],
+        )
         body = extract_code(fix_resp.text)
         full_code = assemble_code(body, provider, direction)
         try:
@@ -1178,7 +1180,7 @@ def generate_diagram(question, provider, detail_level, direction, output_dir, ap
         sys.stderr.write(f"[DiagramEngine] Attempt 2 failed: {result['stderr'][:200]}\n")
 
         available = build_import_list(provider)
-        fallback_resp = gmodel.generate_content(f"""Generate a simple cloud architecture diagram for: {question}
+        fallback_resp = gclient.models.generate_content(model="gemini-2.5-flash", contents=f"""Generate a simple cloud architecture diagram for: {question}
 
 Use ONLY these verified imports:
 {available}
