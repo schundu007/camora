@@ -220,11 +220,10 @@ graph_attr = {
     #   (no ratio) lets the engine pick a natural aspect.
     # - size kept at 14,8 with the fixed-aspect ! marker so the panel
     #   has a stable canvas to fit-to-width against.
-    "dpi": "110",
-    "nodesep": "0.9",
-    "ranksep": "1.1",
+    "dpi": "130",
+    "nodesep": "0.45",
+    "ranksep": "0.65",
     "splines": "ortho",
-    "size": "14,8!",
 }
 
 node_attr = {

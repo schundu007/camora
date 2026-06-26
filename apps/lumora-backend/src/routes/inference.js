@@ -403,6 +403,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       mode,
       model: preferredModel || null,
       route: 'stream',
+      cloudProvider: cloudProvider || null,
     });
     const cached = bypassCache ? null : await cacheGet(cacheKey);
     if (bypassCache) {
