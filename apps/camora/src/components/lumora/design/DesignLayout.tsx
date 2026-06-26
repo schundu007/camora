@@ -1128,6 +1128,24 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
                 <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
               </div>
+              {sd?.cloudServices && sd.cloudServices.length > 0 && (
+                <div className="mb-3 pb-2 border-b border-[var(--border)]">
+                  <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider mb-1.5">Services Used</h4>
+                  <div className="grid grid-cols-1 gap-1">
+                    {sd.cloudServices.map((svc: { name: string; role: string }, i: number) => (
+                      <div key={i} className="flex items-baseline gap-1.5 text-[11px] leading-snug">
+                        <span className="font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>{svc.name}</span>
+                        {svc.role && (
+                          <>
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                            <span style={{ color: 'var(--text-muted)' }}>{svc.role}</span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {diagramTab === 'python' && (
                 <ArchitectureDiagram
                   question={question}
@@ -1175,24 +1193,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       Click <strong>Graphviz</strong> tab again to generate.
                     </div>
                   )}
-                </div>
-              )}
-              {sd?.cloudServices && sd.cloudServices.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-[var(--border)]">
-                  <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider mb-1.5">Services Used</h4>
-                  <div className="grid grid-cols-1 gap-1">
-                    {sd.cloudServices.map((svc: { name: string; role: string }, i: number) => (
-                      <div key={i} className="flex items-baseline gap-1.5 text-[11px] leading-snug">
-                        <span className="font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>{svc.name}</span>
-                        {svc.role && (
-                          <>
-                            <span style={{ color: 'var(--text-muted)' }}>—</span>
-                            <span style={{ color: 'var(--text-muted)' }}>{svc.role}</span>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
