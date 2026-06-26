@@ -437,7 +437,8 @@ router.post('/generate-dot', adminOnlyForGeneration, hourBudgetGate, async (req,
 
     // 2. Generate DOT via Gemini
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+    const { getApiKey } = await import('../services/adminConfig.js');
+    const genAI = new GoogleGenerativeAI(getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
     const gmodel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: DOT_SYSTEM_PROMPT });
     let _step = 'gemini';
     const msg = await gmodel.generateContent(`Generate a Graphviz DOT architecture diagram for this system design question:\n\n"${question}"\n\nCloud provider preference: ${provider}\n\nReturn ONLY the raw digraph DOT source — no fences, no explanations.`);

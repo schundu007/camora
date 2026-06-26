@@ -733,11 +733,19 @@ async function runMigrations() {
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`);
 
+    await query(`CREATE TABLE IF NOT EXISTS camora_admin_config (
+      key VARCHAR(100) PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
   } catch (err) {
     console.warn('[Migrations] Failed to run lumora migrations:', err.message);
   }
 }
-runMigrations().then(() => seedK8sCurriculum()).catch(err => console.warn('[K8s Curriculum] seed failed:', err.message));
+runMigrations()
+  .then(() => loadAdminConfig())
+  .then(() => seedK8sCurriculum())
+  .catch(err => console.warn('[Startup] seed/config failed:', err.message));
 
 const app = express();
 const PORT = config.PORT;
