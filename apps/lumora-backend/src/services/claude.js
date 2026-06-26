@@ -186,7 +186,7 @@ const DEEPDESIGN_SYSTEM = `[DEEPDESIGN]
 1. LAYER TITLE
   - Key decision (max 10 words)
   - Key decision (max 10 words)
-(5-6 layers covering CDN, LB, App, Cache, DB, Async — 2-3 bullets each, no explanatory sentences. VOICE: direct imperative only — NO "I would" / "I'd" / "I'd use". Start every bullet with an action verb: "Use managed K8s (EKS/AKS/GKE)", "Provision node groups for CPU+GPU", "Implement HPA autoscaling".)
+(5-6 layers covering CDN, LB, App, Cache, DB, Async — 2-3 bullets each, no explanatory sentences. VOICE: direct imperative only — NO "I would" / "I'd" / "I'd use". Start every bullet with an action verb: "Use managed Kubernetes", "Provision node groups for CPU+GPU", "Implement HPA autoscaling". Use CLOUD-PLATFORM-SPECIFIC service names per the CLOUD PLATFORM constraint at the top of this prompt.)
 [/DEEPDESIGN]`;
 
 const DEEPDESIGN_APPLICATION = `[DEEPDESIGN]
@@ -274,6 +274,11 @@ const CLOUD_SERVICE_EXAMPLES = {
   azure: 'AKS, Azure Blob Storage, Cosmos DB, Azure SQL Database, Azure Cache for Redis, Service Bus, Azure Container Registry, Azure Front Door, Azure Functions, Azure Monitor, Event Hubs, API Management, Key Vault',
   gcp: 'GKE, Cloud Storage, Firestore, Cloud SQL, Memorystore, Pub/Sub, Cloud Run, Artifact Registry, Cloud CDN, Cloud Monitoring, BigQuery, Secret Manager',
 };
+const CLOUD_FORBIDDEN = {
+  aws: '',
+  azure: 'NEVER write AWS names: S3, EC2, EKS, Lambda, SQS, DynamoDB, RDS, CloudFront, IAM, KMS, ElastiCache, MSK, ECR, Kinesis, CloudWatch.',
+  gcp: 'NEVER write AWS names: S3, EC2, EKS, Lambda, SQS, DynamoDB, RDS, CloudFront, IAM, KMS, ElastiCache, MSK, ECR, Kinesis, CloudWatch. NEVER write Azure names.',
+};
 
 export function buildDesignPrompt(resume, technical, detailLevel = null, cloudProvider = 'aws', designKind = 'system') {
   const kind = VALID_DESIGN_KINDS.has(designKind) ? designKind : 'system';
@@ -281,6 +286,7 @@ export function buildDesignPrompt(resume, technical, detailLevel = null, cloudPr
   const isFull = detailLevel === 'full';
   const cloudLabel = CLOUD_LABEL[cloudProvider] || 'AWS';
   const cloudServiceExamples = CLOUD_SERVICE_EXAMPLES[cloudProvider] || CLOUD_SERVICE_EXAMPLES.aws;
+  const cloudForbidden = CLOUD_FORBIDDEN[cloudProvider] || '';
   const detailRules = isBasic
     ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
     : isFull
@@ -341,7 +347,7 @@ skip
 ${deepSection}
 
 [CLOUDSERVICES]
-(RULES: List 4-6 ${cloudLabel} services ONLY from YOUR design above. ${cloudLabel} ONLY — do NOT reference AWS, GCP, or Azure services from other clouds. Use exact ${cloudLabel} names, e.g.: ${cloudServiceExamples}. Never generic terms like "object storage" or "NoSQL database".)
+(RULES: List 4-6 ${cloudLabel} services for this design. ${cloudLabel} NAMES ONLY. ${cloudForbidden} Use exact ${cloudLabel} service names — e.g.: ${cloudServiceExamples}. Never generic terms like "object storage" or "NoSQL database".)
 <ServiceName>: its specific role in this design
 <ServiceName>: its specific role in this design
 <ServiceName>: its specific role in this design
