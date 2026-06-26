@@ -365,6 +365,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setErrorMsg(null);
     setProblemText(text.trim());
     setQuestion(text.trim());
+    setGvImgUrl(null);
+    setGvKey('');
+    setGvLoading(false);
     setStatus('write', 'Generating design...');
     // Reset cache indicator before each solve; onAnswer overwrites it.
     useSessionStore.getState().setLastFromCache(null);
@@ -679,6 +682,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setExpandedFollowup(null);
     setInputCollapsed(false);
     setGvImgUrl(null);
+    setGvKey('');
+    setGvLoading(false);
     setDiagramTab('python');
     useSessionStore.getState().setLastFromCache(null);
     useSessionStore.getState().setLiveSolveContext(null);
