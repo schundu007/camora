@@ -1,9 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey } from './adminConfig.js';
 import { Resend } from 'resend';
 import jwt from 'jsonwebtoken';
 import { queryJobs } from './jobsDb.js';
 
-const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) : null;
+function getAnthropicClient() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
+  return key ? new Anthropic({ apiKey: key }) : null;
+}
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.EMAIL_FROM || 'Camora <noreply@cariara.com>';
 
@@ -103,8 +107,9 @@ async function rankJobsWithClaude(jobs, user) {
 
   const prompt = `${userContent}\n\nReturn ONLY a JSON array of up to 10 objects:\n[{"index":<1-based>,"summary":"<2 sentences>"}]\n\nValid JSON only, no markdown.`;
 
+  const anthropic = getAnthropicClient();
   if (!anthropic) {
-    console.warn('[JobAlerts] ANTHROPIC_API_KEY not set, using recency fallback');
+    console.warn('[JobAlerts] No Anthropic API key configured, using recency fallback');
     return jobs.slice(0, 10).map(j => ({ ...j, ai_digest_summary: j.ai_summary || '' }));
   }
 

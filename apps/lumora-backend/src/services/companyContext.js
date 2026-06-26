@@ -14,6 +14,7 @@
  * culture frame from companyCulture.js is the fallback.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey } from './adminConfig.js';
 import { query } from '../lib/shared-db.js';
 
 const FETCH_TIMEOUT_MS = 6000;
@@ -196,7 +197,10 @@ Rules:
 - If a section has nothing real to say, write "(insufficient public data)" rather than padding.
 `;
 
-const client = new Anthropic();
+function getAnthropicClient() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY;
+  return new Anthropic(key ? { apiKey: key } : {});
+}
 
 async function summarize(company, engText, githubText) {
   if (!engText && !githubText) return null;
@@ -207,7 +211,7 @@ async function summarize(company, engText, githubText) {
   ].filter(Boolean).join('\n\n');
 
   try {
-    const resp = await client.messages.create({
+    const resp = await getAnthropicClient().messages.create({
       model: SUMMARY_MODEL,
       max_tokens: 800,
       system: SUMMARY_PROMPT(company),

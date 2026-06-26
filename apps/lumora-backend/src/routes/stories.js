@@ -2,6 +2,7 @@ import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { authenticate } from '../middleware/authenticate.js';
 import { saveUserStories } from '../services/storyAnchor.js';
+import { getApiKey } from '../services/adminConfig.js';
 
 const router = Router();
 
@@ -47,7 +48,8 @@ router.post('/parse', authenticate, async (req, res) => {
   }
 
   try {
-    const client = new Anthropic();
+    const _key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY;
+    const client = new Anthropic(_key ? { apiKey: _key } : {});
     const msg = await client.messages.create({
       model: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
       max_tokens: 2400,

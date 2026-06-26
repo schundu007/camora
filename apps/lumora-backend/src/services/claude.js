@@ -4,6 +4,7 @@
  * Streams Claude responses via SSE-formatted events for the inference route.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getApiKey } from './adminConfig.js';
 import { parseAnswer } from './answerParser.js';
 import { buildCloudHint } from './cloudHint.js';
 
@@ -28,7 +29,16 @@ const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
 const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10);
 const CONTEXT_TURNS = parseInt(process.env.CONTEXT_TURNS || '6', 10);
 
-const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
+let _anthropicClient = null;
+let _anthropicClientKey = null;
+function getAnthropicClient() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY;
+  if (!_anthropicClient || key !== _anthropicClientKey) {
+    _anthropicClient = new Anthropic(key ? { apiKey: key } : {});
+    _anthropicClientKey = key;
+  }
+  return _anthropicClient;
+}
 
 // ---------------------------------------------------------------------------
 // Question-type detection keywords
@@ -422,7 +432,7 @@ async function runSearch(question, history, plan) {
     // users measurably degraded answer quality vs running on Sonnet.
     // Free callers keep Haiku to avoid double-charging.
     const searchModel = (plan && plan !== 'free') ? MODEL_PAID : MODEL;
-    const response = await client.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: searchModel,
       max_tokens: 4096,
       system: (
@@ -747,7 +757,7 @@ For technical questions, map STAR to the technical context (Situation = the prob
     // cache control so the second-and-beyond request in a 5-minute window
     // hits the cache and TTFT drops ~50-70%. No output change; full prompt
     // and full response are preserved.
-    const stream = client.messages.stream({
+    const stream = getAnthropicClient().messages.stream({
       model: chosenModel,
       max_tokens: maxTokens,
       // Pin temperature low for consistency. The candidate complained
