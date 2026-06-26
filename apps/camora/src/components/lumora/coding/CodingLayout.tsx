@@ -632,7 +632,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       return;
     }
 
-    const validTestCases = testCases.filter(tc => tc.input.trim());
+    const validTestCases = testCases.filter(tc => String(tc.input ?? '').trim());
 
     // If the code has its own embedded test runner (if __name__ == '__main__',
     // Java main, Node.js top-level calls), the builder would strip __main__ and
@@ -826,7 +826,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!testCases || testCases.length === 0) return;
     // Only fire if at least one test case has a real input — empty
     // placeholders shouldn't trigger a useless empty run.
-    const hasRealInput = testCases.some((tc) => tc.input && tc.input.trim().length > 0);
+    const hasRealInput = testCases.some((tc) => tc.input && String(tc.input ?? '').trim().length > 0);
     if (!hasRealInput) return;
     autoRunFiredRef.current = true;
     handleRun();
@@ -2825,11 +2825,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     collapsedCards={collapsedCards}
                     onToggle={(t) => { const n = new Set(collapsedCards); if (n.has(t)) n.delete(t); else n.add(t); setCollapsedCards(n); }}
                     onTestCaseClick={(input, expected) => {
-                      const hasEmpty = testCases.some(tc => !tc.input.trim());
+                      const hasEmpty = testCases.some(tc => !String(tc.input ?? '').trim());
                       if (hasEmpty) {
                         let replaced = false;
                         setTestCases(testCases.map(tc => {
-                          if (!replaced && !tc.input.trim()) { replaced = true; return { input, expected }; }
+                          if (!replaced && !String(tc.input ?? '').trim()) { replaced = true; return { input, expected }; }
                           return tc;
                         }));
                       } else if (testCases.length < MAX_TEST_CASES) {

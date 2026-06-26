@@ -1601,6 +1601,76 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </section>
               )}
 
+              {/* ── API DESIGN ── */}
+              {sd.apiDesign && sd.apiDesign.length > 0 && (
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-primary), ${t.dotColor})` }} />
+                    <h2 className="text-sm font-bold" style={{ color: 'var(--cam-strip-heading)' }}>API Design</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => (sd.apiDesign || []).map(e => `${e.method ? e.method + ' ' : ''}${e.path}: ${e.description}`).join('\n')} title="Copy API design" /></div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="flex flex-col gap-1.5">
+                      {sd.apiDesign.map((ep, i) => (
+                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                          {ep.method && (
+                            <span className="text-[10px] font-black font-mono shrink-0 mt-0.5 px-1.5 py-0.5 rounded" style={{ background: 'var(--accent)', color: '#fff' }}>{ep.method}</span>
+                          )}
+                          <span className="text-xs font-mono font-semibold shrink-0" style={{ color: t.dotColor }}>{ep.path}</span>
+                          <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{ep.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* ── DATA MODEL ── */}
+              {sd.dataModel && sd.dataModel.length > 0 && (
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, ${t.dotColor}, var(--cam-primary))` }} />
+                    <h2 className="text-sm font-bold" style={{ color: 'var(--cam-strip-heading)' }}>Data Model</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => (sd.dataModel || []).map(e => `${e.entity}: ${e.fields.join(', ')}`).join('\n')} title="Copy data model" /></div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {sd.dataModel.map((entity, i) => (
+                        <div key={i} className="rounded-lg px-3 py-2.5" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                          <div className="text-xs font-bold mb-1.5" style={{ color: t.dotColor }}>{entity.entity}</div>
+                          <div className="flex flex-wrap gap-1">
+                            {entity.fields.map((field, j) => (
+                              <span key={j} className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>{field}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* ── TECHNOLOGIES ── */}
+              {sd.technologies && sd.technologies.length > 0 && (
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-primary), ${t.dotColor})` }} />
+                    <h2 className="text-sm font-bold" style={{ color: 'var(--cam-strip-heading)' }}>Technologies</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => (sd.technologies || []).map(e => `${e.name}: ${e.reason}`).join('\n')} title="Copy technologies" /></div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {sd.technologies.map((tech, i) => (
+                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                          <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{tech.name}</span>
+                          <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{tech.reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* ── TRADEOFFS + EDGE CASES ── */}
               {(() => {
                 // Cap at 5. Anything more is noise — interview-grade designs

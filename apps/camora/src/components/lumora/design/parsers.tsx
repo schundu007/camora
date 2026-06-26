@@ -24,6 +24,9 @@ export interface SystemDesign {
   scalability?: string[];
   techJustifications?: Array<{ tech: string; details: string[] }>;
   cloudServices?: Array<{ name: string; role: string }>;
+  apiDesign?: Array<{ method: string; path: string; description: string }>;
+  dataModel?: Array<{ entity: string; fields: string[] }>;
+  technologies?: Array<{ name: string; reason: string }>;
   tradeoffs?: string[];
   edgeCases?: string[];
   followups?: Array<{ question: string; answer: string }>;
@@ -195,6 +198,62 @@ export function parseTagsToDesign(byType: Record<string, string>): DesignResult 
     if (techJusts.length > 0) sd.techJustifications = techJusts;
   }
 
+  // API Design — "METHOD /path: description" per line
+  if (byType.APIDESIGN) {
+    const endpoints: Array<{ method: string; path: string; description: string }> = [];
+    byType.APIDESIGN.split('\n').forEach(line => {
+      const trimmed = line.replace(/^[-*]\s*/, '').trim();
+      const methodMatch = trimmed.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD)\s+(\/[^\s:]*)\s*:\s*(.*)/i);
+      if (methodMatch) {
+        endpoints.push({ method: methodMatch[1].toUpperCase(), path: methodMatch[2], description: methodMatch[3].trim() });
+      } else {
+        const colon = trimmed.indexOf(':');
+        if (colon > 0) {
+          const left = trimmed.slice(0, colon).trim();
+          const desc = trimmed.slice(colon + 1).trim();
+          if (left && desc && left.length <= 60 && !left.startsWith('<') && !left.startsWith('(')) {
+            endpoints.push({ method: '', path: left, description: desc });
+          }
+        }
+      }
+    });
+    if (endpoints.length > 0) sd.apiDesign = endpoints;
+  }
+
+  // Data Model — "EntityName: field1, field2, field3" per line
+  if (byType.DATAMODEL) {
+    const entities: Array<{ entity: string; fields: string[] }> = [];
+    byType.DATAMODEL.split('\n').forEach(line => {
+      const trimmed = line.replace(/^[-*]\s*/, '').trim();
+      const colon = trimmed.indexOf(':');
+      if (colon > 0) {
+        const entity = trimmed.slice(0, colon).trim();
+        const fields = trimmed.slice(colon + 1).split(',').map(f => f.trim()).filter(Boolean);
+        if (entity && fields.length > 0 && !entity.startsWith('<') && !entity.startsWith('(') && !entity.startsWith('RULE')) {
+          entities.push({ entity, fields });
+        }
+      }
+    });
+    if (entities.length > 0) sd.dataModel = entities;
+  }
+
+  // Technologies — "TechName: reason" per line
+  if (byType.TECHNOLOGIES) {
+    const techs: Array<{ name: string; reason: string }> = [];
+    byType.TECHNOLOGIES.split('\n').forEach(line => {
+      const trimmed = line.replace(/^[-*]\s*/, '').trim();
+      const colon = trimmed.indexOf(':');
+      if (colon > 0) {
+        const name = trimmed.slice(0, colon).trim();
+        const reason = trimmed.slice(colon + 1).trim();
+        if (name && reason && name.length <= 40 && !name.startsWith('<') && !name.startsWith('(') && !name.startsWith('RULE')) {
+          techs.push({ name, reason });
+        }
+      }
+    });
+    if (techs.length > 0) sd.technologies = techs;
+  }
+
   // Cloud services — "ServiceName: one-line role" per line
   if (byType.CLOUDSERVICES) {
     const services: Array<{ name: string; role: string }> = [];
@@ -220,7 +279,7 @@ export function parseTagsToDesign(byType: Record<string, string>): DesignResult 
 /** Known tag names for bare-heading fallback */
 const KNOWN_TAGS = new Set([
   'HEADLINE', 'ANSWER', 'DIAGRAM', 'CODE', 'FOLLOWUP',
-  'REQUIREMENTS', 'SCALEMATH', 'SCALECALC', 'DEEPDESIGN', 'CLOUDSERVICES', 'EDGECASES', 'TRADEOFFS',
+  'REQUIREMENTS', 'SCALEMATH', 'SCALECALC', 'DEEPDESIGN', 'APIDESIGN', 'DATAMODEL', 'TECHNOLOGIES', 'CLOUDSERVICES', 'EDGECASES', 'TRADEOFFS',
   'PROBLEM', 'APPROACH', 'COMPLEXITY', 'WALKTHROUGH', 'TESTCASES',
 ]);
 
