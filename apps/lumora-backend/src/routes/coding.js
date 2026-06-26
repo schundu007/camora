@@ -10,7 +10,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import OpenAI from 'openai';
-import { getAnthropicClient } from '../lib/_shared/llm.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dns from 'node:dns/promises';
 
 // Lazy-load sharp. The native binary fails to resolve on some Railway
@@ -87,10 +87,19 @@ import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../servi
 
 const router = Router();
 
-// Process-wide singleton via shared-llm. Avoids the per-request `new
-// Anthropic()` pattern that would otherwise re-initialize connection pools
-// + rate-limit state on every request.
-const anthropicClient = getAnthropicClient();
+const _geminiAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '');
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+function geminiGetModel(systemInstruction) {
+  return _geminiAI.getGenerativeModel({ model: GEMINI_MODEL, ...(systemInstruction ? { systemInstruction } : {}) });
+}
+
+function toGeminiHistory(msgs) {
+  return msgs.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: typeof m.content === 'string' ? m.content : (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : String(m.content)) }],
+  }));
+}
 
 // OpenRouter client — OpenAI-SDK compatible, routes to Qwen/DeepSeek/etc.
 // Preferred fallback over OpenAI direct because it's significantly cheaper.
@@ -118,7 +127,7 @@ function isApiExhaustedError(err) {
   const msg = (err.message || err.error?.message || '').toLowerCase();
   return (
     (status === 400 || status === 429) &&
-    (msg.includes('usage limit') || msg.includes('spending limit') || msg.includes('quota') || msg.includes('regain access'))
+    (msg.includes('usage limit') || msg.includes('spending limit') || msg.includes('quota') || msg.includes('regain access') || msg.includes('resource has been exhausted'))
   );
 }
 
@@ -906,7 +915,6 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // Telemetry: every failure mode is logged server-side with model,
   // duration, raw-head/tail (truncated to ~2 KB), user-agent, and
   // parse error so we can diagnose recurring failure patterns.
-  const client = anthropicClient;
   const startTime = performance.now();
   const userAgent = req.get?.('user-agent') || req.headers?.['user-agent'] || 'unknown';
   const primaryModel = getModelForUser(req);
@@ -1347,14 +1355,7 @@ router.post('/fix', authenticate, checkUsage('questions'), async (req, res) => {
   const model = getModelForUser(req);
 
   try {
-    const client = anthropicClient;
-    const response = await client.messages.create({
-      model,
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'user',
-          content: `Fix this ${language} code so every test produces the EXACT expected output.
+    const fixResult = await geminiGetModel('').generateContent(`Fix this ${language} code so every test produces the EXACT expected output.
 ${problemContext}
 CODE:
 \`\`\`${language}
@@ -1383,12 +1384,9 @@ RULES:
 - Do NOT add comments in the code
 - Return the COMPLETE runnable code, not a partial snippet
 - Keep the same function signature
-- No extra blank lines in the output`,
-        },
-      ],
-    });
+- No extra blank lines in the output`);
 
-    const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const content = fixResult.response.text() || '';
 
     try {
       const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) ||
@@ -1532,19 +1530,14 @@ RULES:
   }
 
   try {
-    const stream = await anthropicClient.messages.stream({
-      model,
-      max_tokens: 8192,
-      messages: [{ role: 'user', content: cofixUserContent }],
-    }, { signal: abortController.signal });
+    const cofixChat = geminiGetModel('').startChat({ history: [] });
+    const cofixStreamResult = await cofixChat.sendMessageStream(cofixUserContent);
 
     let fullText = '';
-    for await (const chunk of stream) {
+    for await (const chunk of cofixStreamResult.stream) {
       if (clientDisconnected) break;
-      if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-        fullText += chunk.delta.text;
-        sendEvent('token', { chunk: chunk.delta.text });
-      }
+      const token = chunk.text();
+      if (token) { fullText += token; sendEvent('token', { chunk: token }); }
     }
 
     if (clientDisconnected) { clearInterval(keepaliveTimer); return; }
@@ -1629,18 +1622,9 @@ Rules:
 Respond with ONLY the translated code inside a single \`\`\`${target} code block — no prose before or after.`;
 
   try {
-    const client = anthropicClient;
-    const msg = await client.messages.create({
-      model: getModelForUser(req),
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: `${problemContext}\nORIGINAL CODE (${fromLanguage || 'source'}):\n\`\`\`\n${code}\n\`\`\`\n\nTranslate the code above to ${target}.`,
-      }],
-    });
+    const translateResult = await geminiGetModel(systemPrompt).generateContent(`${problemContext}\nORIGINAL CODE (${fromLanguage || 'source'}):\n\`\`\`\n${code}\n\`\`\`\n\nTranslate the code above to ${target}.`);
 
-    const text = msg.content?.map(b => b.text).join('') || '';
+    const text = translateResult.response.text() || '';
     const m = text.match(/```(?:\w+)?\n?([\s\S]*?)```/);
     const translated = m ? m[1].trim() : text.trim();
     if (!translated) return res.status(502).json({ error: 'Translator returned empty output' });
@@ -1777,12 +1761,8 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     // Use Claude to clean and extract just the problem description (optional step)
     let problem = textContent.slice(0, 2000);
     try {
-      const msg = await anthropicClient.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: `Extract ONLY the coding problem description from this text. Return just the problem statement, constraints, and examples. No solutions.\n\n${textContent}` }],
-      });
-      problem = msg.content[0]?.type === 'text' ? msg.content[0].text : problem;
+      const extractResult = await geminiGetModel('').generateContent(`Extract ONLY the coding problem description from this text. Return just the problem statement, constraints, and examples. No solutions.\n\n${textContent}`);
+      problem = extractResult.response.text() || problem;
     } catch (claudeErr) {
       console.warn('[fetch-problem] Claude unavailable, returning raw text:', claudeErr.message?.slice(0, 120));
     }
@@ -1857,18 +1837,11 @@ Critical rules:
 
     let rawText = '';
     try {
-      const msg = await anthropicClient.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data } },
-            { type: 'text', text: prompt },
-          ],
-        }],
-      });
-      rawText = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+      const visionResult = await geminiGetModel('').generateContent([
+        prompt,
+        { inlineData: { mimeType: mediaType, data } },
+      ]);
+      rawText = visionResult.response.text().trim();
     } catch (claudeErr) {
       throw claudeErr;
     }
@@ -1925,33 +1898,25 @@ router.post('/construct-from-images', authenticate, checkUsage('questions'), ima
   }
   const kind = (req.body?.kind || 'coding').trim();
 
-  const contentBlocks = [];
+  const geminiParts = ['You extract interview problems from screenshots. Return valid JSON only, no prose.'];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     const rawMediaType = f.mimetype.startsWith('image/') ? f.mimetype : 'image/png';
     const [resizedData, resizedType] = await ensureImageWithinAnthropicLimit(
       f.buffer.toString('base64'), rawMediaType
     );
-    if (i > 0) contentBlocks.push({ type: 'text', text: `--- Page ${i + 1} ---` });
-    contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: resizedType, data: resizedData } });
+    if (i > 0) geminiParts.push(`--- Page ${i + 1} ---`);
+    geminiParts.push({ inlineData: { mimeType: resizedType, data: resizedData } });
   }
 
   const isDesign = kind === 'design';
-  contentBlocks.push({
-    type: 'text',
-    text: isDesign
-      ? 'These screenshots show a system design interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages into one coherent description. Return ONLY valid JSON: {"problem": "full problem statement"}'
-      : 'These screenshots show a coding interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages. Include constraints, examples, and starter code if visible. Return ONLY valid JSON: {"problem": "full problem statement", "starter_code": "code or null", "detected_language": "python|java|javascript|etc or null"}',
-  });
+  geminiParts.push(isDesign
+    ? 'These screenshots show a system design interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages into one coherent description. Return ONLY valid JSON: {"problem": "full problem statement"}'
+    : 'These screenshots show a coding interview problem (possibly across multiple pages/scrolls). Construct the complete problem statement by combining all pages. Include constraints, examples, and starter code if visible. Return ONLY valid JSON: {"problem": "full problem statement", "starter_code": "code or null", "detected_language": "python|java|javascript|etc or null"}');
 
   try {
-    const response = await anthropicClient.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      system: 'You extract interview problems from screenshots. Return valid JSON only, no prose.',
-      messages: [{ role: 'user', content: contentBlocks }],
-    });
-    const raw = response.content[0]?.text?.trim() || '';
+    const constructResult = await geminiGetModel('').generateContent(geminiParts);
+    const raw = constructResult.response.text().trim();
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     const problem = parsed?.problem || raw || '(could not extract problem)';
@@ -2020,12 +1985,8 @@ Rules:
   }
 
   try {
-    const msg = await anthropicClient.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2500,
-      messages: [{ role: 'user', content: prompt }],
-    });
-    const raw = (msg.content[0]?.type === 'text' ? msg.content[0].text : '').trim();
+    const analyzeResult = await geminiGetModel('').generateContent(prompt);
+    const raw = analyzeResult.response.text().trim();
     return res.json(parseAnalyzeResponse(raw));
   } catch (err) {
     if (FALLBACK_PROVIDERS.length > 0) {
