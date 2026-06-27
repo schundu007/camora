@@ -547,7 +547,7 @@ A model enters the registry after training with stage **None**. After automated 
 
 The **pyfunc flavor** is the lowest-common-denominator interface — any MLflow model can be called as a Python predict function regardless of the underlying framework.
 
-**MLflow 2.x** deprecated hard-coded stages in favor of **aliases** (`champion`, `challenger`, `production-blue`), enabling multiple concurrent production versions. **MLflow 3.0** added Prompts and Evaluation as first-class objects and deepened autologging for LangChain, LlamaIndex, and Anthropic.
+**MLflow 2.x** deprecated hard-coded stages in favor of **aliases** (\`champion\`, \`challenger\`, \`production-blue\`), enabling multiple concurrent production versions. **MLflow 3.0** added Prompts and Evaluation as first-class objects and deepened autologging for LangChain, LlamaIndex, and Anthropic.
 
 ## The 2026 Landscape
 
@@ -793,7 +793,7 @@ Production requirements cluster into six areas:
 
 ## KServe
 
-**KServe** (formerly KFServing) is the dominant Kubernetes-native model serving framework. It defines an `InferenceService` Custom Resource Definition (CRD) that declares the model URI, framework runtime, autoscaling configuration, and canary split in a single YAML manifest.
+**KServe** (formerly KFServing) is the dominant Kubernetes-native model serving framework. It defines an \`InferenceService\` Custom Resource Definition (CRD) that declares the model URI, framework runtime, autoscaling configuration, and canary split in a single YAML manifest.
 
 Two modes: **individual deployments** (one pod per model) and **ModelMesh** (many small models share a pool of pods, reducing overhead for large catalogs). Serverless mode uses Knative for scale-to-zero. KServe is the default serving layer in Kubeflow and is CNCF-incubating.
 
