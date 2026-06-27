@@ -2135,18 +2135,17 @@ export default function TopicDetail({
                       />
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
-                        {topicDetails.basicImplementation.components && !topicDetails.basicImplementation.diagramSrc && !topicDetails.basicImplementation.svgTemplate ? (
-                          <TopicDiagram
-                            topicId={topicDetails.id || selectedTopic}
-                            kind="architecture-basic"
-                            alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
-
-                            className="mb-3"
-                          />
-                        ) : (
+                        {topicDetails.basicImplementation.diagramSrc || topicDetails.basicImplementation.svgTemplate ? (
                           <ContentDiagram
                             src={topicDetails.basicImplementation.diagramSrc}
                             template={topicDetails.basicImplementation.svgTemplate}
+                            alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
+                            className="mb-3"
+                          />
+                        ) : (
+                          <TopicDiagram
+                            topicId={topicDetails.id || selectedTopic}
+                            kind="architecture-basic"
                             alt={topicDetails.basicImplementation.title || 'Basic Architecture'}
                             className="mb-3"
                           />
@@ -2175,17 +2174,17 @@ export default function TopicDetail({
                       />
                       <div className="pt-2">
                         <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
-                        {topicDetails.advancedImplementation.components && !topicDetails.advancedImplementation.diagramSrc && !topicDetails.advancedImplementation.svgTemplate ? (
-                          <TopicDiagram
-                            topicId={topicDetails.id || selectedTopic}
-                            kind="architecture-advanced"
+                        {topicDetails.advancedImplementation.diagramSrc || topicDetails.advancedImplementation.svgTemplate ? (
+                          <ContentDiagram
+                            src={topicDetails.advancedImplementation.diagramSrc}
+                            template={topicDetails.advancedImplementation.svgTemplate}
                             alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
                             className="mb-3"
                           />
                         ) : (
-                          <ContentDiagram
-                            src={topicDetails.advancedImplementation.diagramSrc}
-                            template={topicDetails.advancedImplementation.svgTemplate}
+                          <TopicDiagram
+                            topicId={topicDetails.id || selectedTopic}
+                            kind="architecture-advanced"
                             alt={topicDetails.advancedImplementation.title || 'Advanced Architecture'}
                             className="mb-3"
                           />
