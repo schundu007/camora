@@ -208,23 +208,23 @@ graph_attr = {
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "bgcolor": "white",
-    "pad": "0.5",
+    "pad": "0.4",
     "dpi": "130",
-    "nodesep": "0.30",
-    "ranksep": "0.45",
+    "nodesep": "0.35",
+    "ranksep": "0.50",
     "splines": "ortho",
-    "size": "20,11!",
 }
 
 node_attr = {
-    "fontsize": "13",
+    "fontsize": "11",
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "imagepos": "tc",
     "labelloc": "b",
-    "width": "1.0",
-    "height": "1.0",
-    "margin": "0.2,0.15",
+    "width": "1.1",
+    "height": "1.4",
+    "margin": "0.15,0.10",
+    "fixedsize": "false",
 }
 
 edge_attr = {
@@ -268,7 +268,7 @@ EDGE COLORS (you MUST use these):
   Write/insert path:  Edge(label="...", color="#16a34a", penwidth="2.0")
   Async/event path:   Edge(label="...", color="#ea580c", penwidth="2.0")
   Auth/security path: Edge(label="...", color="#7c3aed", penwidth="2.0")
-  Monitoring/logs:    Edge(label="...", color="#9ca3af", style="dotted", penwidth="1.5")
+  Monitoring/logs:    Edge(color="#9ca3af", style="dotted", penwidth="1.5")  # NO label — labels on cross-cluster edges create floating text
   Secondary/fallback: Edge(label="...", color="#2563eb", style="dashed", penwidth="1.5")
   Replication:        Edge(label="...", color="#6b7280", style="dashed", penwidth="1.5")
 """
@@ -751,13 +751,14 @@ CLUSTER graph_attr PRESETS — copy exactly:
 RULES:
 1. Start body with: users = Users("Clients")
 2. Short labels (2-3 words): "Redis Cache", "Primary DB", "API Gateway"
-3. EVERY connection MUST use Edge(label="...", color="...", penwidth="2.0")
-4. NEVER chain: WRONG: a >> Edge() >> b >> c. RIGHT: a >> Edge() >> b (newline) b >> Edge() >> c
-5. Each variable name must be unique
-6. Only import classes you actually use — don't import everything
-7. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — I add those
-8. Design REAL components for THIS system using {provider.upper()} services
-9. NEVER mix providers (no aws.* if provider is gcp; no gcp.* if provider is azure, etc.)
+3. EVERY connection MUST use Edge(label="...", color="...", penwidth="2.0") — EXCEPT monitoring/observability edges which use NO label: Edge(color="#9ca3af", style="dotted", penwidth="1.5")
+4. NEVER add label="" to monitoring/observability edges — Graphviz places edge labels at the midpoint which creates floating text far from both nodes
+5. NEVER chain: WRONG: a >> Edge() >> b >> c. RIGHT: a >> Edge() >> b (newline) b >> Edge() >> c
+6. Each variable name must be unique
+7. Only import classes you actually use — don't import everything
+8. Do NOT include `import os`, `from diagrams import Diagram, Cluster, Edge`, or the Diagram() call — I add those
+9. Design REAL components for THIS system using {provider.upper()} services
+10. NEVER mix providers (no aws.* if provider is gcp; no gcp.* if provider is azure, etc.)
 
 EXAMPLE OUTPUT (using {provider.upper()} services for clarity — adapt to the question above):
 {example["imports"]}
