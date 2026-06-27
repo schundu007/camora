@@ -8,9 +8,9 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'airbnb')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11',
             penwidth='1.5', height='0.5', margin='0.15,0.1')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'client':  ('#dbeafe', '#3b82f6', '#1e40af'),
@@ -36,7 +36,7 @@ def mk(title, direction='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.55',
            splines='spline', rankdir=direction,
            label=f'  {title}  ', labelloc='t',
-           fontsize='15', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='15', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -123,7 +123,7 @@ def dd_double_booking():
 
     with g.subgraph(name='cluster_alice') as s:
         s.attr(label='  Alice (T=0ms)  ', style='filled,rounded',
-               color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Neue Bold',
+               color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#166534')
         n(s, 'a_hold', 'Soft Hold\nstatus→HELD\nversion 1→2', 'service')
         n(s, 'a_pay', 'Stripe Auth\n(success)', 'process')
@@ -131,7 +131,7 @@ def dd_double_booking():
 
     with g.subgraph(name='cluster_bob') as s:
         s.attr(label='  Bob (T=50ms)  ', style='filled,rounded',
-               color='#ef4444', fillcolor='#fef2f2', fontname='Helvetica Neue Bold',
+               color='#ef4444', fillcolor='#fef2f2', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#991b1b')
         n(s, 'b_hold', 'Soft Hold\nattempt fails\nversion≠1', 'alert')
         n(s, 'b_msg', '"Dates no longer\navailable"\n✗ REJECTED', 'alert')

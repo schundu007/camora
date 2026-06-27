@@ -5,8 +5,8 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'twitter')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -21,7 +21,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def tweet_flow():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
-           rankdir='LR', label='  Tweet Post Flow  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Tweet Post Flow  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User\nposts tweet', 'blue')
     n(g, 'api', 'API Gateway\n(rate limit)', 'gray')
     n(g, 'write', 'Tweet Service\n(write path)', 'green')
@@ -43,7 +43,7 @@ def tweet_flow():
 def feed_flow():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
-           rankdir='LR', label='  Home Feed Generation  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Home Feed Generation  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User opens\nhome feed', 'blue')
     n(g, 'api', 'Feed Service', 'green')
     n(g, 'timeline', 'Pre-computed\nTimeline\n(Redis list)', 'yellow')
@@ -64,7 +64,7 @@ def feed_flow():
 def key_decisions():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45', splines='spline',
-           rankdir='TB', label='  Twitter — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='TB', label='  Twitter — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'client', 'Mobile/Web\nClient', 'blue')
     n(g, 'api', 'API Gateway\n(rate limiting)', 'gray')
     n(g, 'tweet_svc', 'Tweet Service\n(write path)', 'green')

@@ -8,9 +8,9 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'amazon')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11',
             penwidth='1.5', height='0.5', margin='0.15,0.1')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'client':  ('#dbeafe', '#3b82f6', '#1e40af'),
     'service': ('#dcfce7', '#22c55e', '#166534'),
@@ -32,7 +32,7 @@ def mk(title, direction='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.55',
            splines='spline', rankdir=direction,
            label=f'  {title}  ', labelloc='t',
-           fontsize='15', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='15', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 # ═══════════════════════════════════════════════════════════════════
@@ -97,14 +97,14 @@ def dd_inventory():
 
     with g.subgraph(name='cluster_alice') as s:
         s.attr(label='  Alice checks out  ', style='filled,rounded',
-               color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Neue Bold',
+               color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#166534')
         n(s, 'a_reserve', 'RESERVE 2 units\navailable: 5→3\nreserved: 0→2\n(version 1→2)', 'service')
         n(s, 'a_pay', 'Payment OK\nreserved→committed\navailable: 3\ncommitted: 2', 'output')
 
     with g.subgraph(name='cluster_bob') as s:
         s.attr(label='  Bob checks out  ', style='filled,rounded',
-               color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Neue Bold',
+               color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#1e40af')
         n(s, 'b_reserve', 'RESERVE 4 units\navailable: 3\n3 < 4 → FAIL\n"Only 3 left"', 'alert')
 

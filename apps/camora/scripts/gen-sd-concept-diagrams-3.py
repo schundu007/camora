@@ -5,8 +5,8 @@ import graphviz, os
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
 COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.45', splines='spline')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.5', margin='0.18,0.1')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.5', margin='0.18,0.1')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
@@ -26,11 +26,11 @@ def save(g, subdir, name):
 def gen_acid_vs_base():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  ACID vs BASE — Consistency Trade-offs  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_acid') as s:
         s.attr(label='ACID (Strong Consistency)', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'a', 'Atomicity\nAll or nothing', 'blue')
         n(s, 'c', 'Consistency\nValid state always', 'blue')
         n(s, 'i', 'Isolation\nConcurrent = serial', 'blue')
@@ -39,7 +39,7 @@ def gen_acid_vs_base():
 
     with g.subgraph(name='cluster_base') as s:
         s.attr(label='BASE (Eventual Consistency)', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'ba', 'Basically Available\nAlways responds', 'green')
         n(s, 'ss', 'Soft State\nMay be stale', 'green')
         n(s, 'ec', 'Eventually Consistent\nConverges over time', 'green')
@@ -55,12 +55,12 @@ def gen_acid_vs_base():
 def gen_cap():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  CAP Theorem — Pick 2 of 3 During Partition  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'cap', 'Network Partition\n(P) happens', 'red')
     g.node('choose', 'Choose:', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.6')
+           fontname='Helvetica', fontsize='11', height='0.6')
     n(g, 'cp', 'CP System\nConsistency + Partition\nReject writes during partition\nHBase, MongoDB, etcd', 'blue')
     n(g, 'ap', 'AP System\nAvailability + Partition\nAccept writes, merge later\nCassandra, DynamoDB, CouchDB', 'green')
     n(g, 'ca', 'CA System\n(No partition tolerance)\nOnly in single-node DB\nTraditional RDBMS', 'gray')
@@ -77,7 +77,7 @@ def gen_cap():
 def gen_checksum():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Checksums — Data Integrity Verification  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'data', 'Original Data\n"Hello World"', 'blue')
     n(g, 'hash', 'Hash Function\nMD5 / SHA-256\nCRC32', 'purple')
@@ -86,7 +86,7 @@ def gen_checksum():
     n(g, 'verify', 'Recompute Hash\n+ Compare', 'green')
     g.node('match', 'Match?', shape='diamond', style='filled',
            fillcolor='#dcfce7', color='#22c55e', fontcolor='#166534',
-           fontname='Helvetica Neue', fontsize='11', height='0.5')
+           fontname='Helvetica', fontsize='11', height='0.5')
     n(g, 'ok', 'Data Intact', 'green')
     n(g, 'corrupt', 'Data Corrupted!\nRequest retransmit', 'red')
 
@@ -105,25 +105,25 @@ def gen_checksum():
 def gen_db_indexes():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Database Index Types — B-Tree vs LSM-Tree vs Hash  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     g.node('query', 'Query Pattern?', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.7')
+           fontname='Helvetica', fontsize='11', height='0.7')
 
     with g.subgraph(name='cluster_btree') as s:
         s.attr(label='B-Tree Index', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'btree', 'Balanced tree\nO(log n) read/write\nRange queries\nPostgreSQL default', 'blue')
 
     with g.subgraph(name='cluster_lsm') as s:
         s.attr(label='LSM-Tree Index', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'lsm', 'Log-structured merge\nO(1) write (append)\nSlow reads (compaction)\nCassandra, RocksDB', 'green')
 
     with g.subgraph(name='cluster_hash') as s:
         s.attr(label='Hash Index', style='filled,rounded', color='#f97316',
-               fillcolor='#fff7ed', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#fff7ed', fontname='Helvetica Bold', fontsize='10')
         n(s, 'hash_idx', 'Hash table\nO(1) exact lookup\nNo range queries\nRedis, Memcached', 'orange')
 
     e(g, 'query', 'btree', 'range scans +\npoint lookups', '#3b82f6')
@@ -137,13 +137,13 @@ def gen_db_indexes():
 def gen_heartbeat():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Heartbeat Mechanism — Failure Detection  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'node', 'Server Node\n(sends heartbeat\nevery 5s)', 'blue')
     n(g, 'monitor', 'Monitor / Leader\n(tracks last heartbeat\nper node)', 'purple')
     g.node('timeout', 'Timeout?\n(>15s no beat)', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.6')
+           fontname='Helvetica', fontsize='11', height='0.6')
     n(g, 'alive', 'Node Alive\nContinue normal\noperations', 'green')
     n(g, 'dead', 'Node Presumed Dead\nTrigger failover\nRemove from pool\nAlert on-call', 'red')
 
@@ -159,16 +159,16 @@ def gen_heartbeat():
 def gen_latency_throughput():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Latency vs Throughput — The Core Trade-off  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_latency') as s:
         s.attr(label='Latency (Time per Request)', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'lat', 'How long ONE\nrequest takes\np50, p95, p99\nTarget: <100ms', 'blue')
 
     with g.subgraph(name='cluster_throughput') as s:
         s.attr(label='Throughput (Requests per Second)', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'tput', 'How many requests\nper second\nRPS / QPS\nTarget: varies', 'green')
 
     n(g, 'tradeoff', 'Trade-off:\nBatching increases\nthroughput but adds\nlatency per request', 'yellow')
@@ -186,7 +186,7 @@ def gen_latency_throughput():
 def gen_leader_follower():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Leader-Follower Replication  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'writes', 'Write\nRequests', 'orange')
     n(g, 'leader', 'Leader\n(Primary)\nAll writes', 'blue')
@@ -209,7 +209,7 @@ def gen_leader_follower():
 def gen_quorum():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Quorum Consensus — W + R > N  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'client', 'Client Write\n(or Read)', 'blue')
 
@@ -237,17 +237,17 @@ def gen_quorum():
 def gen_rest_vs_rpc():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  REST vs RPC — API Communication Styles  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_rest') as s:
         s.attr(label='REST (Resource-Oriented)', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'rest', 'HTTP + JSON\nGET /users/123\nStateless, cacheable\nHATEOAS (links)', 'blue')
         n(s, 'rest_use', 'Public APIs\nWeb/Mobile clients\nCRUD operations', 'blue')
 
     with g.subgraph(name='cluster_rpc') as s:
         s.attr(label='RPC (Action-Oriented)', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'rpc', 'gRPC: Protobuf + HTTP/2\nThrift: Binary + TCP\nFunction-call style\ngetUser(123)', 'green')
         n(s, 'rpc_use', 'Microservices internal\nLow-latency comms\nStreaming', 'green')
 
@@ -261,17 +261,17 @@ def gen_rest_vs_rpc():
 def gen_consistency():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Strong vs Eventual Consistency  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_strong') as s:
         s.attr(label='Strong Consistency', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'strong', 'Every read sees\nlatest write\nLinearizable\nHigher latency', 'blue')
         n(s, 'strong_ex', 'Banking balance\nInventory count\nLeader election\nPostgreSQL, etcd', 'blue')
 
     with g.subgraph(name='cluster_eventual') as s:
         s.attr(label='Eventual Consistency', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'eventual', 'Reads may return\nstale data temporarily\nConverges eventually\nLower latency', 'green')
         n(s, 'eventual_ex', 'Social feed likes\nDNS propagation\nShopping cart\nCassandra, DynamoDB', 'green')
 
@@ -285,18 +285,18 @@ def gen_consistency():
 def gen_sync_async():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Synchronous vs Asynchronous Communication  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_sync') as s:
         s.attr(label='Synchronous (Blocking)', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'sync_a', 'Service A\n(caller)', 'blue')
         n(s, 'sync_b', 'Service B\n(blocks until\nresponse)', 'blue')
     n(g, 'sync_use', 'Simple, predictable\nHTTP REST calls\nCascading failures\nTight coupling', 'gray')
 
     with g.subgraph(name='cluster_async') as s:
         s.attr(label='Asynchronous (Non-blocking)', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'async_a', 'Service A\n(fire & forget)', 'green')
         n(s, 'async_q', 'Message Queue\n(Kafka / SQS)', 'yellow')
         n(s, 'async_b', 'Service B\n(processes later)', 'green')

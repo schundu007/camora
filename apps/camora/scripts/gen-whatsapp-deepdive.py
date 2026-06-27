@@ -6,8 +6,8 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'whats
 os.makedirs(OUT, exist_ok=True)
 
 COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
@@ -21,7 +21,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 # 1. Message Ordering
 def ordering():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Message Ordering — Sequence Numbers  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Message Ordering — Sequence Numbers  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'a', 'User A\nsends msgs', 'blue')
     n(g, 'gw', 'Chat Gateway', 'green')
     n(g, 'redis', 'Redis INCR\nseq:{convId}', 'pink')
@@ -37,7 +37,7 @@ def ordering():
 # 2. Presence at Scale
 def presence():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Presence at 33M QPS  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Presence at 33M QPS  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'clients', '1B Online\nClients', 'blue')
     n(g, 'gw', 'Chat Gateways\n(batch heartbeats)', 'green')
     n(g, 'redis', 'Redis Cluster\nSET + TTL 45s', 'pink')
@@ -52,7 +52,7 @@ def presence():
 # 3. Hot/Cold Storage
 def hot_cold():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Hot / Warm / Cold Storage Tiering  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Hot / Warm / Cold Storage Tiering  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'new', 'New Messages\n(< 7 days)', 'green')
     n(g, 'hot', 'HOT\nCassandra SSD\nfast reads', 'orange')
     n(g, 'warm', 'WARM\nCassandra HDD\n7-90 days', 'yellow')
@@ -68,14 +68,14 @@ def hot_cold():
 # 4. Group Fan-out Strategies
 def group_fanout():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Group Fan-out Decision Tree  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Group Fan-out Decision Tree  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'msg', 'Group Message\nReceived', 'blue')
     n(g, 'check', 'Group Size?', 'yellow')
     n(g, 'small', '< 100 members\nFan-out on Write\n(instant delivery)', 'green')
     n(g, 'large', '> 100 members\nFan-out on Read\n(lazy pull)', 'orange')
     n(g, 'online', 'Online?\nPush via WS', 'green')
     n(g, 'offline', 'Offline?\nQueue + Push', 'orange')
-    g.node('check', 'Group Size?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue', fontsize='11', height='0.6')
+    g.node('check', 'Group Size?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica', fontsize='11', height='0.6')
     e(g, 'msg', 'check', '', '#f59e0b')
     e(g, 'check', 'small', '≤ 100', '#22c55e')
     e(g, 'check', 'large', '> 100', '#f97316')
@@ -86,16 +86,16 @@ def group_fanout():
 # 5. Cross-Region Delivery
 def cross_region():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Cross-Region Message Delivery  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Cross-Region Message Delivery  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_us') as s:
-        s.attr(label='US Region', style='filled,rounded', color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#1e40af')
+        s.attr(label='US Region', style='filled,rounded', color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10', fontcolor='#1e40af')
         n(s, 'us_gw', 'Gateway US', 'green')
         n(s, 'us_kafka', 'Kafka US', 'yellow')
         n(s, 'us_cass', 'Cassandra US', 'purple')
 
     with g.subgraph(name='cluster_eu') as s:
-        s.attr(label='EU Region', style='filled,rounded', color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#166534')
+        s.attr(label='EU Region', style='filled,rounded', color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10', fontcolor='#166534')
         n(s, 'eu_gw', 'Gateway EU', 'green')
         n(s, 'eu_kafka', 'Kafka EU', 'yellow')
         n(s, 'eu_cass', 'Cassandra EU', 'purple')
@@ -116,7 +116,7 @@ def cross_region():
 # 6. Resumable Media Upload
 def media_upload():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Resumable Media Upload Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Resumable Media Upload Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'device', 'Sender\nDevice', 'blue')
     n(g, 'encrypt', 'AES-256\nEncrypt', 'purple')
     n(g, 'chunk', 'Chunked Upload\n256KB chunks\n+ upload token', 'yellow')

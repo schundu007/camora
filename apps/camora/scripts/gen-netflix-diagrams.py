@@ -5,8 +5,8 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'netflix')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -21,7 +21,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def transcode_flow():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
-           rankdir='LR', label='  Video Upload + Transcoding Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Video Upload + Transcoding Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'studio', 'Content\nStudio', 'blue')
     n(g, 'upload', 'Upload Service\n(chunked)', 'green')
     n(g, 's3_raw', 'S3\n(raw master)', 'purple')
@@ -41,7 +41,7 @@ def transcode_flow():
 def playback_flow():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline',
-           rankdir='LR', label='  Video Streaming Playback  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Video Streaming Playback  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User clicks\nPlay', 'blue')
     n(g, 'api', 'Playback\nService', 'green')
     n(g, 'drm', 'DRM License\nServer', 'purple')
@@ -61,7 +61,7 @@ def playback_flow():
 def key_decisions():
     g = graphviz.Digraph(format='png')
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45', splines='spline',
-           rankdir='LR', label='  Netflix — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           rankdir='LR', label='  Netflix — Key Design Decisions  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'client', 'Client Device\n(Smart TV, Mobile,\nBrowser)', 'blue')
     n(g, 'api', 'API Gateway\n(Zuul)', 'gray')
     n(g, 'rec', 'Recommendation\nEngine\n(ML: 80% of\ncontent watched)', 'purple')

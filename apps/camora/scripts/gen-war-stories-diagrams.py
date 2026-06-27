@@ -65,6 +65,7 @@ def diag_cascading_failure_flow():
 
 def diag_cascading_failure_recovery():
     g = base_graph('cascading_failure_recovery', 'Cascading Failure — Recovery Order & Circuit Breaker States', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     n(g, 'detect',  'Step 1: Detect\nthread pool metrics\ndistributed traces', 'navy')
     n(g, 'break',   'Step 2: Break Loop\n503 + Retry-After\nstop retry amplification', 'gold')
     n(g, 'root',    'Step 3: Fix Root\npayment processor\nrecovers / is bypassed', 'green')
@@ -178,12 +179,18 @@ def diag_accidental_delete():
 
 def diag_rto_rpo():
     g = base_graph('rto_rpo', 'RPO vs RTO — Backup Strategy Tradeoffs', rankdir='LR')
+    g.attr(rankdir='TB', nodesep='2.5')
     n(g, 'incident', 'Incident\n(data loss event)', 'red')
     n(g, 'rpo',      'RPO\n(Recovery Point Objective)\nmax data loss window\ne.g. 1 hour', 'gold')
     n(g, 'rto',      'RTO\n(Recovery Time Objective)\nmax downtime allowed\ne.g. 4 hours', 'navy')
     n(g, 'snap',     'Automated Snapshots\nRPO: up to 24h\nRTO: 15-30 min', 'gray')
     n(g, 'pitr_node','PITR (WAL replay)\nRPO: seconds\nRTO: longer (replay time)', 'teal')
     n(g, 'softdel',  'Soft Delete\nRPO: near-zero\nRTO: one UPDATE stmt', 'green')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('snap')
+        s.node('pitr_node')
+        s.node('softdel')
     e(g, 'incident', 'rpo')
     e(g, 'incident', 'rto')
     e(g, 'snap',     'rpo', 'worst-case 24h', '#f59e0b', 'dashed')
@@ -217,6 +224,7 @@ def diag_data_corruption_migration():
 
 def diag_migration_safe_process():
     g = base_graph('migration_safe_process', 'Safe Data Migration — 6-Step Verification Process', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     n(g, 's1', '1. Dry Run on Replica\ncompare before/after\nsum, min, max, sample', 'navy')
     n(g, 's2', '2. Invariant Assertions\npost-migration SQL checks\nfail if violated', 'navy')
     n(g, 's3', '3. Partial Run First\nWHERE id % 100 = 0\nverify 1% before full', 'gold')
@@ -258,6 +266,7 @@ def diag_credential_leak():
 
 def diag_credential_prevention():
     g = base_graph('credential_prevention', 'Secrets Management — OIDC vs Long-Lived Keys', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     n(g, 'bad',    'Long-Lived IAM Key\nstored in CI secret\nblast radius: unlimited\nrotation: manual', 'red')
     n(g, 'good',   'OIDC Token\nGitHub → AWS STS\nscoped + short-lived\nauto-revoked after job', 'green')
     n(g, 'sm',     'Secrets Manager\napp fetches at runtime\nrotated automatically\nno code/config storage', 'teal')
@@ -297,6 +306,7 @@ def diag_memory_leak():
 
 def diag_memory_leak_diagnosis():
     g = base_graph('memory_leak_diag', 'Memory Leak Diagnosis — Heap Snapshot Workflow', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     n(g, 'metric',  'Alert: heapUsed > 80%\nor OOM restart detected', 'red')
     n(g, 'snap_a',  'Snapshot A\nprocess start\n(baseline)', 'navy')
     n(g, 'snap_b',  'Snapshot B\nafter N hours traffic\n(observe growth)', 'navy')
@@ -382,6 +392,7 @@ def diag_dns_cache_poisoning():
 
 def diag_dns_service_discovery():
     g = base_graph('dns_service_discovery', 'Resilient Service Discovery — Health-Checked DNS', rankdir='TB')
+    g.attr(nodesep='1.5')
     n(g, 'svc_a',   'Service A\n(caller)', 'navy')
     n(g, 'cloud_map','AWS Cloud Map\nor Consul\nservice registry', 'teal')
     n(g, 'hc',      'Health Checks\nevery 10 seconds\nper instance', 'green')

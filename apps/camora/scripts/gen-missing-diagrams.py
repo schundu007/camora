@@ -2,8 +2,8 @@
 """Generate missing diagrams for Netflix algorithm approaches."""
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -15,7 +15,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def mk(out_dir, **kw):
     os.makedirs(out_dir, exist_ok=True)
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline', **kw)
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.6', nodesep='0.7', ranksep='0.9', splines='spline', **kw)
     return g
 
 BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
@@ -23,7 +23,7 @@ BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
 # Netflix algo: CDN Routing
 def netflix_cdn():
     OUT = os.path.join(BASE, 'netflix')
-    g = mk(OUT, rankdir='LR', label='  CDN Node Selection (Consistent Hashing)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(OUT, rankdir='LR', label='  CDN Node Selection (Consistent Hashing)  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'client', 'Client\nRequest', 'blue')
     n(g, 'steer', 'CDN Steering\n(hash client IP)', 'green')
     n(g, 'oca1', 'OCA 1\n(ISP local)', 'red')
@@ -38,7 +38,7 @@ def netflix_cdn():
 # Netflix algo: Recommendation
 def netflix_rec():
     OUT = os.path.join(BASE, 'netflix')
-    g = mk(OUT, rankdir='LR', label='  Two-Stage Recommendation Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(OUT, rankdir='LR', label='  Two-Stage Recommendation Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User\nProfile', 'blue')
     n(g, 'candidate', 'Candidate\nGeneration\n(1000s)', 'green')
     n(g, 'rank', 'Deep Ranking\nModel', 'purple')
@@ -53,7 +53,7 @@ def netflix_rec():
 # Netflix algo: ABR
 def netflix_abr():
     OUT = os.path.join(BASE, 'netflix')
-    g = mk(OUT, rankdir='LR', label='  Buffer-Based ABR Algorithm  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(OUT, rankdir='LR', label='  Buffer-Based ABR Algorithm  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'buffer', 'Buffer Level\n(seconds)', 'yellow')
     n(g, 'bw', 'Bandwidth\nEstimate', 'green')
     n(g, 'algo', 'ABR\nDecision\n(quality ↕)', 'purple')
@@ -70,7 +70,7 @@ def netflix_abr():
 # Netflix algo: Matrix Factorization
 def netflix_mf():
     OUT = os.path.join(BASE, 'netflix')
-    g = mk(OUT, rankdir='LR', label='  Collaborative Filtering (Matrix Factorization)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(OUT, rankdir='LR', label='  Collaborative Filtering (Matrix Factorization)  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'matrix', 'User × Item\nRatings Matrix\n(sparse)', 'blue')
     n(g, 'decompose', 'SVD / ALS\nDecomposition', 'purple')
     n(g, 'user_vec', 'User\nEmbeddings\n(k dims)', 'green')

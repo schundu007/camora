@@ -6,9 +6,9 @@ import os
 
 OUT_BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
 
-COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.45', splines='spline')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.5', margin='0.18,0.1')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.65', ranksep='0.75', splines='spline')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.5', margin='0.18,0.1')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'blue':   ('#dbeafe', '#3b82f6', '#1e40af'),
@@ -38,7 +38,7 @@ def gen_consistent_hashing():
     out = os.path.join(OUT_BASE, 'consistent-hashing')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Consistent Hashing — Minimal Remapping on Scale  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'key', 'Data Key\nhash(key)', 'blue')
     n(g, 'ring', 'Hash Ring\n(0 to 2^32-1)', 'yellow')
@@ -68,7 +68,7 @@ def gen_bloom_filter():
     out = os.path.join(OUT_BASE, 'bloom-filters')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Bloom Filter — Probabilistic Set Membership  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'input', 'Element X\nto check', 'blue')
     n(g, 'hash', '3 Hash Functions\nh1(X), h2(X), h3(X)', 'purple')
@@ -76,7 +76,7 @@ def gen_bloom_filter():
 
     g.node('check', 'All bits = 1?', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.6')
+           fontname='Helvetica', fontsize='11', height='0.6')
 
     n(g, 'maybe', 'Probably in set\n(false positive\npossible)', 'orange')
     n(g, 'no', 'Definitely NOT\nin set\n(100% certain)', 'green')
@@ -95,7 +95,7 @@ def gen_bloom_use_cases():
     out = os.path.join(OUT_BASE, 'bloom-filters')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Bloom Filter Use Cases  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'bf', 'Bloom Filter\nO(k) lookup\nk = hash count', 'purple')
 
@@ -119,20 +119,27 @@ def gen_bloom_use_cases():
 def gen_partitioning_strategies():
     out = os.path.join(OUT_BASE, 'data-partitioning')
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Data Partitioning Strategies  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Data Partitioning Strategies  ', labelloc='t',
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'data', 'Large Dataset\n(too big for 1 node)', 'blue')
 
     with g.subgraph() as s:
         s.attr(rank='same')
-        n(s, 'horiz', 'Horizontal\n(Sharding)\nSplit rows across\nnodes by key', 'green')
-        n(s, 'vert', 'Vertical\nSplit columns\ninto separate\ntables/services', 'purple')
-        n(s, 'func', 'Functional\nSplit by feature\n(users DB, orders DB,\nanalytics DB)', 'orange')
+        n(s, 'horiz', 'Horizontal Sharding\nSplit rows by key\nacross N nodes', 'green')
+        n(s, 'vert', 'Vertical Partitioning\nSplit columns into\nseparate tables', 'purple')
+        n(s, 'func', 'Functional Partitioning\nSplit by domain\n(users, orders, analytics)', 'orange')
+
+    n(g, 'hash', 'Hash Partitioning\nmod(key, N)\nuniform distribution', 'teal')
+    n(g, 'range', 'Range Partitioning\nA–M → shard1\nN–Z → shard2', 'teal')
+    n(g, 'dir', 'Directory Partitioning\nLookup table maps\nkey → shard', 'gray')
 
     e(g, 'data', 'horiz', 'most\ncommon', '#22c55e')
     e(g, 'data', 'vert', 'column\ngroups', '#6366f1')
-    e(g, 'data', 'func', 'by service\nboundary', '#f97316')
+    e(g, 'data', 'func', 'service\nboundary', '#f97316')
+    e(g, 'horiz', 'hash', '', '#14b8a6')
+    e(g, 'horiz', 'range', '', '#14b8a6')
+    e(g, 'horiz', 'dir', '', '#6b7280')
 
     save(g, out, 'partitioning-strategies')
     print('  ✓ data-partitioning/partitioning-strategies.png')
@@ -143,23 +150,23 @@ def gen_realtime_comparison():
     out = os.path.join(OUT_BASE, 'long-polling-websockets-sse')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Real-Time Communication — Long Polling vs WebSocket vs SSE  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_lp') as s:
         s.attr(label='Long Polling', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'lp', 'Client holds HTTP\nconnection open\nServer responds on\nchange or timeout', 'blue')
         n(s, 'lp_use', 'Dropbox sync\nSimple chat\nFirewall-friendly', 'blue')
 
     with g.subgraph(name='cluster_ws') as s:
         s.attr(label='WebSocket', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'ws', 'Full-duplex TCP\nBidirectional\nPersistent connection\nLow overhead', 'green')
         n(s, 'ws_use', 'Chat apps\nLive tracking\nCollaboration\nGaming', 'green')
 
     with g.subgraph(name='cluster_sse') as s:
         s.attr(label='Server-Sent Events', style='filled,rounded', color='#f97316',
-               fillcolor='#fff7ed', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#fff7ed', fontname='Helvetica Bold', fontsize='10')
         n(s, 'sse', 'Server → Client only\nHTTP-based\nAuto-reconnect\nText-only', 'orange')
         n(s, 'sse_use', 'News feeds\nStock tickers\nNotifications\nLog streaming', 'orange')
 
@@ -176,11 +183,11 @@ def gen_proxy_types():
     out = os.path.join(OUT_BASE, 'proxies')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Forward Proxy vs Reverse Proxy  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     with g.subgraph(name='cluster_forward') as s:
         s.attr(label='Forward Proxy', style='filled,rounded', color='#3b82f6',
-               fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10')
         n(s, 'clients', 'Clients\n(in network)', 'blue')
         n(s, 'fproxy', 'Forward Proxy\nMasks client IP\nContent filtering\nCaching', 'blue')
 
@@ -188,7 +195,7 @@ def gen_proxy_types():
 
     with g.subgraph(name='cluster_reverse') as s:
         s.attr(label='Reverse Proxy', style='filled,rounded', color='#22c55e',
-               fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10')
+               fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10')
         n(s, 'rproxy', 'Reverse Proxy\nSSL termination\nLoad balancing\nCaching + WAF', 'green')
         n(s, 'servers', 'Origin Servers\n(hidden from client)', 'green')
 
@@ -206,7 +213,7 @@ def gen_dns_resolution():
     out = os.path.join(OUT_BASE, 'dns-deep-dive')
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  DNS Resolution — From Domain to IP  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'browser', 'Browser\nexample.com', 'blue')
     n(g, 'local', 'Local DNS\nCache\n(OS + Browser)', 'gray')

@@ -51,6 +51,7 @@ def base_graph(name, title, rankdir='LR'):
 # ── Layered cache topology (cache-read-write-strategies) ───────────
 def diag_layered_cache():
     g = base_graph('cache_layers', 'Layered cache architecture — L1 edge → L2 app → L3 distributed', rankdir='TB')
+    g.attr(pad='0.7')
     n(g, 'client', 'Client', 'gray')
     n(g, 'cdn', 'CDN / Edge Cache (L1)\nstatic assets, API responses\nwith Cache-Control', 'navy')
     n(g, 'app', 'Application Cache (L2)\nin-process (Caffeine,\nnode-cache) hot data', 'green')
@@ -213,6 +214,7 @@ def diag_serverless():
 # ── Polling vs WebSockets vs Webhooks ──────────────────────────────
 def diag_realtime_channels():
     g = base_graph('realtime_channels', 'Real-time delivery — polling vs WebSockets vs webhooks')
+    g.attr(ranksep='2.5', nodesep='1.5')
     n(g, 'cli', 'Client', 'gray')
     n(g, 'srv', 'Server', 'navy')
     n(g, 'peer', 'Other system\n(receiver)', 'green')
@@ -226,6 +228,7 @@ def diag_realtime_channels():
 # ── Primary-replica vs peer-to-peer ────────────────────────────────
 def diag_replication_topology():
     g = base_graph('replication_topology', 'Replication topology — single-leader vs peer-to-peer (multi-leader)')
+    g.attr(ranksep='1.5', nodesep='1.0')
     with g.subgraph(name='cluster_pr') as s:
         s.attr(label='Primary-replica', style='rounded', color='#3b82f6')
         s.node('p', 'Primary\n(writes)',
@@ -380,6 +383,7 @@ def diag_thread_pool():
 def diag_primary_replica():
     g = base_graph('primary_replica',
                    'Primary-replica replication — writes to primary, reads from replicas')
+    g.attr(ranksep='1.2', nodesep='0.8')
     n(g, 'w', 'Writes', 'gray')
     n(g, 'p', 'Primary', 'navy')
     n(g, 'r1', 'Replica 1', 'green')
@@ -546,6 +550,7 @@ def diag_consumer_groups():
 def diag_priority_queue_routing():
     g = base_graph('priority_queue_routing',
                    'Priority queue routing — urgent / normal / batch fanout', rankdir='TB')
+    g.attr(nodesep='2.5')
     n(g, 'req', 'Incoming Requests', 'gray')
     n(g, 'router', 'Priority Router', 'navy')
     n(g, 'urgent', 'URGENT Queue\n(Kafka)', 'red')
@@ -568,6 +573,7 @@ def diag_priority_queue_routing():
 def diag_typeahead_cache():
     g = base_graph('typeahead_cache',
                    'Typeahead cache hierarchy — browser → CDN edge → service')
+    g.attr(ranksep='3.0', nodesep='1.0')
     n(g, 'browser', 'Browser Cache\n(1 min)', 'gray')
     n(g, 'cdn', 'CDN Edge Cache\n(5 min)', 'navy')
     n(g, 'svc', 'Typeahead Service', 'green')
@@ -580,6 +586,7 @@ def diag_typeahead_cache():
 def diag_audio_streaming_path():
     g = base_graph('audio_streaming_path',
                    'Audio streaming path — client → CDN → origin → S3')
+    g.attr(ranksep='2.5', nodesep='1.0')
     n(g, 'client', 'Client', 'gray')
     n(g, 'cdn', 'CDN (Edge)', 'navy')
     n(g, 'origin', 'Origin\n(if miss)', 'green')
@@ -594,6 +601,7 @@ def diag_audio_streaming_path():
 def diag_spotify_connect():
     g = base_graph('spotify_connect',
                    'Spotify Connect — control device → service → playback device', rankdir='TB')
+    g.attr(nodesep='4.0')
     n(g, 'phone', 'Phone\n(Control)', 'gray')
     n(g, 'svc',   'Connect Service', 'navy')
     n(g, 'spk',   'Speaker\n(Playback)', 'green')
@@ -608,6 +616,7 @@ def diag_spotify_connect():
 def diag_hybrid_fanout():
     g = base_graph('hybrid_fanout',
                    'Hybrid fan-out — push for normal users, pull for celebrities', rankdir='TB')
+    g.attr(nodesep='4.0')
     n(g, 'post', 'User Posts', 'gray')
     n(g, 'check', 'Check followers', 'navy')
     n(g, 'normal', '< 10K followers\n(Normal users)', 'green')
@@ -626,6 +635,7 @@ def diag_hybrid_fanout():
 def diag_realtime_feed_update():
     g = base_graph('realtime_feed_update',
                    'Real-time feed update — Kafka → fan-out → WebSocket fleet', rankdir='TB')
+    g.attr(nodesep='2.0')
     n(g, 'src', 'Friend posts\n(Post Service)', 'gray')
     n(g, 'kafka', 'Kafka', 'navy')
     n(g, 'fanout', 'Fan-out Service', 'navy')
@@ -648,13 +658,17 @@ def diag_realtime_feed_update():
 def diag_consistent_hash_ring():
     g = base_graph('consistent_hash_ring',
                    'Consistent hash ring — keys walk clockwise to nearest node', rankdir='TB')
-    g.attr(layout='circo')
-    n(g, 'a', 'Node A', 'navy')
-    n(g, 'b', 'Node B', 'green')
-    n(g, 'c', 'Node C', 'gold')
-    n(g, 'k1', 'key1', 'gray')
-    n(g, 'k2', 'key2', 'gray')
-    n(g, 'k3', 'key3', 'gray')
+    g.attr(nodesep='3.0', ranksep='1.5')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'a', 'Node A', 'navy')
+        n(s, 'b', 'Node B', 'green')
+        n(s, 'c', 'Node C', 'gold')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'k1', 'key1', 'gray')
+        n(s, 'k2', 'key2', 'gray')
+        n(s, 'k3', 'key3', 'gray')
     e(g, 'k1', 'a', 'walk CW')
     e(g, 'k2', 'b', 'walk CW')
     e(g, 'k3', 'c', 'walk CW')
@@ -687,6 +701,7 @@ def diag_write_quorum():
 def diag_news_ingestion():
     g = base_graph('news_ingestion',
                    'News article ingestion pipeline', rankdir='TB')
+    g.attr(rankdir='LR', ranksep='2.5', nodesep='1.5')
     n(g, 'feed', 'Feed Poller\n(scheduled)', 'gray')
     n(g, 'dedup', 'URL Dedup\n(Bloom filter)', 'navy')
     n(g, 'fetch', 'Content Fetcher\n(text, images, meta)', 'green')
@@ -705,6 +720,7 @@ def diag_news_ingestion():
 def diag_write_aggregation():
     g = base_graph('write_aggregation',
                    'Leaderboard write aggregation — local buffer per server, flush 1s')
+    g.attr(ranksep='2.5', nodesep='1.5')
     n(g, 'g1', 'Game Server 1', 'gray')
     n(g, 'g2', 'Game Server 2', 'gray')
     n(g, 'g3', 'Game Server 3', 'gray')
@@ -823,6 +839,7 @@ def diag_active_speaker_layout():
 def diag_cqrs_vs_traditional():
     g = base_graph('cqrs_vs_traditional',
                    'Single-model vs CQRS — separate read and write models', rankdir='TB')
+    g.attr(nodesep='2.5')
     with g.subgraph(name='cluster_trad') as s:
         s.attr(label='  Traditional (single model)  ', style='rounded',
                color='#cbd5e1', fontname='Helvetica', fontsize='11')
@@ -873,6 +890,7 @@ def diag_microservices_mesh():
 def diag_zero_trust_services():
     g = base_graph('zero_trust_services',
                    'Zero-trust services — JWT validated at every hop, encrypted store')
+    g.attr(ranksep='3.0', nodesep='1.5')
     n(g, 'a', 'Service A\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')
     n(g, 'b', 'Service B\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')
     n(g, 'c', 'Service C\nValidate JWT\nCheck scopes\nRBAC checks', 'navy')

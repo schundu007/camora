@@ -5,8 +5,8 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'netflix')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -18,12 +18,12 @@ def n(g, nm, label, c): g.node(nm, label, fillcolor=C[c][0], color=C[c][1], font
 def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def mk(**kw):
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline', **kw)
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.6', nodesep='0.7', ranksep='0.9', splines='spline', **kw)
     return g
 
 # Flowchart: Content Ingestion
 def flow_ingest():
-    g = mk(rankdir='LR', label='  Content Ingestion Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Content Ingestion Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'studio', 'Content\nStudio', 'blue')
     n(g, 'upload', 'Upload\nService', 'green')
     n(g, 'raw', 'S3\n(Raw Master)', 'purple')
@@ -41,7 +41,7 @@ def flow_ingest():
 
 # DD1: ABR Streaming
 def dd_abr():
-    g = mk(rankdir='LR', label='  Adaptive Bitrate Streaming  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Adaptive Bitrate Streaming  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'client', 'Netflix\nClient', 'blue')
     n(g, 'manifest', 'Manifest\n(DASH/HLS)\nbitrate ladder', 'green')
     n(g, 'monitor', 'Bandwidth\nMonitor\n(client-side)', 'yellow')
@@ -58,7 +58,7 @@ def dd_abr():
 
 # DD2: Transcoding Pipeline
 def dd_transcode():
-    g = mk(rankdir='LR', label='  Video Encoding Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Video Encoding Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'master', 'Master File\n(4K/8K source)', 'blue')
     n(g, 'analyze', 'Shot-level\nAnalysis\n(complexity)', 'green')
     n(g, 'encode', 'Per-shot\nEncoding\n(optimal bitrate)', 'orange')
@@ -74,7 +74,7 @@ def dd_transcode():
 
 # DD3: Open Connect CDN
 def dd_oc():
-    g = mk(rankdir='LR', label='  Open Connect CDN Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Open Connect CDN Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'aws', 'AWS Control Plane\n(API, auth, catalog,\nrecommendations)', 'blue')
     n(g, 'steer', 'CDN Steering\nService\n(pick best OCA)', 'green')
     with g.subgraph() as s:
@@ -93,7 +93,7 @@ def dd_oc():
 
 # DD4: Recommendations
 def dd_rec():
-    g = mk(rankdir='LR', label='  Recommendation Engine  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Recommendation Engine  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'signals', 'User Signals\n(watch history,\nratings, time)', 'blue')
     n(g, 'collab', 'Collaborative\nFiltering\n(similar users)', 'green')
     n(g, 'content', 'Content-Based\n(genre, actors,\ntags)', 'yellow')
@@ -111,7 +111,7 @@ def dd_rec():
 
 # DD5: Chaos Engineering
 def dd_chaos():
-    g = mk(rankdir='TB', label='  Chaos Engineering (Simian Army)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Chaos Engineering (Simian Army)  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'monkey', 'Chaos Monkey\n(kill random\ninstances)', 'red')
     n(g, 'gorilla', 'Chaos Kong\n(take down\nentire region)', 'orange')
     n(g, 'latency', 'Latency\nMonkey\n(inject delays)', 'yellow')
@@ -127,7 +127,7 @@ def dd_chaos():
 
 # Discussion diagrams
 def disc_oc():
-    g = mk(rankdir='LR', label='  Open Connect Overview  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Open Connect Overview  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'aws', 'AWS\n(control plane)', 'blue')
     n(g, 'oca', 'OCA Appliances\n(at ISPs)', 'red')
     n(g, 'user', 'Viewer', 'blue')
@@ -136,7 +136,7 @@ def disc_oc():
     g.render(os.path.join(OUT, 'discuss-open-connect'), cleanup=True)
 
 def disc_abr():
-    g = mk(rankdir='LR', label='  Adaptive Bitrate  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Adaptive Bitrate  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'monitor', 'Bandwidth\nMonitor', 'yellow')
     n(g, 'select', 'Quality\nSwitch', 'orange')
     n(g, 'buffer', 'Buffer\n(2-5 sec)', 'green')
@@ -147,7 +147,7 @@ def disc_abr():
     g.render(os.path.join(OUT, 'discuss-abr'), cleanup=True)
 
 def disc_rec():
-    g = mk(rankdir='LR', label='  Recommendation Personalization  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Recommendation Personalization  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User\nProfile', 'blue')
     n(g, 'model', 'ML Models\n(collaborative +\ncontent-based)', 'purple')
     n(g, 'rows', 'Personalized\nRows\n(genre, mood)', 'orange')
@@ -158,7 +158,7 @@ def disc_rec():
     g.render(os.path.join(OUT, 'discuss-recommendations'), cleanup=True)
 
 def disc_chaos():
-    g = mk(rankdir='LR', label='  Resilience & Chaos  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Resilience & Chaos  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'chaos', 'Chaos\nMonkey', 'red')
     n(g, 'prod', 'Production', 'blue')
     n(g, 'fallback', 'Graceful\nFallback', 'green')

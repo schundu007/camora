@@ -3,8 +3,8 @@
 import graphviz, os
 
 BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.4', margin='0.12,0.06')
-EDGE = dict(fontname='Helvetica Neue', fontsize='9', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11', penwidth='1.5', height='0.5', margin='0.20,0.10')
+EDGE = dict(fontname='Helvetica', fontsize='9', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -17,8 +17,8 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def mk(out, name, title):
     os.makedirs(out, exist_ok=True)
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.5', ranksep='0.45', splines='spline',
-           label=f'  {title}  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b', rankdir='LR')
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.8', nodesep='1.0', ranksep='1.4', splines='spline',
+           label=f'  {title}  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b', rankdir='LR')
     return g, os.path.join(out, name)
 
 def gen(d, name, title, nodes, edges):
@@ -231,6 +231,113 @@ TOPICS = {
   },
 }
 
+def gen_microservices_data_models():
+    MS = os.path.join(BASE, 'microservices')
+    os.makedirs(MS, exist_ok=True)
+
+    def mg(name, title, nodes, edges, **kw):
+        g, path = mk(MS, name, title)
+        for attr, val in kw.items():
+            g.graph_attr[attr] = val
+        for nd in nodes: n(g, *nd)
+        for ed in edges: e(g, *ed)
+        g.render(path, cleanup=True)
+        print(f'  OK microservices/{name}.png')
+
+    mg('data-model-sidecar-pattern', 'Sidecar Pattern',
+       [('app','Main App\nContainer','blue'),('sidecar','Sidecar\nContainer\n(Envoy proxy)','orange'),('pod','Kubernetes\nPod','gray'),
+        ('service','Service\nMesh\n(Istio)','purple'),('telemetry','Telemetry\nCollector','teal'),('lb','Load\nBalancer','green')],
+       [('pod','app','hosts','#3b82f6'),('pod','sidecar','hosts','#f97316'),('app','sidecar','localhost\ntraffic','#3b82f6'),
+        ('sidecar','service','mTLS\nrouting','#6366f1'),('sidecar','telemetry','metrics\n+ traces','#14b8a6'),('service','lb','discover','#22c55e')])
+
+    mg('data-model-bff-pattern', 'Backend for Frontend (BFF) Pattern',
+       [('mobile','Mobile\nApp','blue'),('web','Web\nApp','teal'),('desktop','Desktop\nApp','green'),
+        ('bff_m','Mobile BFF\n(lightweight\nresponses)','blue'),('bff_w','Web BFF\n(rich data)','teal'),('bff_d','Desktop BFF\n(full features)','green'),
+        ('api','Core\nAPI Services','gray'),('db','Database','purple')],
+       [('mobile','bff_m','request','#3b82f6'),('web','bff_w','request','#14b8a6'),('desktop','bff_d','request','#22c55e'),
+        ('bff_m','api','query','#6b7280'),('bff_w','api','query','#6b7280'),('bff_d','api','query','#6b7280'),
+        ('api','db','fetch','#6366f1')])
+
+    mg('data-model-service-discovery', 'Service Discovery Pattern',
+       [('svc_a','Service A\n(producer)','blue'),('registry','Service\nRegistry\n(Consul/etcd)','purple'),
+        ('svc_b','Service B\n(consumer)','green'),('lb','Load\nBalancer','orange'),
+        ('health','Health\nChecker','red'),('config','Config\nServer','teal')],
+       [('svc_a','registry','register\non start','#3b82f6'),('health','registry','heartbeat\n/health','#ef4444','dashed'),
+        ('svc_b','registry','lookup\ninstances','#22c55e'),('registry','lb','return\nendpoints','#6366f1'),
+        ('lb','svc_a','route\nrequest','#f97316'),('config','svc_a','inject\nconfig','#14b8a6','dashed')])
+
+    mg('data-model-api-gateway-pattern', 'API Gateway Pattern',
+       [('client','Client\n(web/mobile)','blue'),('gw','API Gateway\n(auth + rate\nlimit + route)','gray'),
+        ('auth','Auth\nService','red'),('user','User\nService','blue'),('order','Order\nService','purple'),
+        ('payment','Payment\nService','green'),('notify','Notification\nService','orange')],
+       [('client','gw','request','#3b82f6'),('gw','auth','verify\nJWT','#ef4444'),
+        ('gw','user','GET /users','#3b82f6'),('gw','order','POST /orders','#6366f1'),
+        ('gw','payment','POST /pay','#22c55e'),('gw','notify','async\nnotify','#f97316','dashed')])
+
+    mg('data-model-configuration-externalization', 'Configuration Externalization',
+       [('git','Git Repo\n(config files)','gray'),('configsvr','Config\nServer\n(Spring Cloud\nConfig)','purple'),
+        ('svc_a','Service A\ninstance 1','blue'),('svc_b','Service A\ninstance 2','blue'),
+        ('vault','HashiCorp\nVault\n(secrets)','red'),('bus','Config\nEvent Bus\n(Kafka)','orange')],
+       [('git','configsvr','pull\nconfig','#6b7280'),('vault','configsvr','inject\nsecrets','#ef4444'),
+        ('configsvr','svc_a','serve\nconfig','#3b82f6'),('configsvr','svc_b','serve\nconfig','#3b82f6'),
+        ('configsvr','bus','change\nevent','#f97316'),('bus','svc_a','refresh\n(no restart)','#f97316','dashed'),
+        ('bus','svc_b','refresh','#f97316','dashed')])
+
+    mg('data-model-strangler-fig', 'Strangler Fig Migration Pattern',
+       [('client','Client\nRequests','blue'),('facade','Strangler\nFacade\n(proxy)','gray'),
+        ('legacy','Legacy\nMonolith\n(shrinking)','red'),('svc1','New Auth\nMicroservice','green'),
+        ('svc2','New Orders\nMicroservice','green'),('svc3','New Catalog\nMicroservice','teal'),
+        ('db_old','Legacy DB','red'),('db_new','New DBs\n(per service)','green')],
+       [('client','facade','all traffic','#3b82f6'),('facade','legacy','unmigraded\nroutes','#ef4444'),
+        ('facade','svc1','migrated:\n/auth','#22c55e'),('facade','svc2','migrated:\n/orders','#22c55e'),
+        ('facade','svc3','migrated:\n/catalog','#14b8a6'),('legacy','db_old','read/write','#ef4444'),
+        ('svc1','db_new','read/write','#22c55e'),('svc2','db_new','','#22c55e'),('svc3','db_new','','#14b8a6')])
+
+    mg('data-model-bulkhead-pattern', 'Bulkhead Pattern',
+       [('client_p','Premium\nClients','blue'),('client_s','Standard\nClients','gray'),
+        ('pool_p','Thread Pool A\n(premium)\n50 threads','blue'),('pool_s','Thread Pool B\n(standard)\n20 threads','gray'),
+        ('circuit_p','Circuit\nBreaker\n(premium)','orange'),('circuit_s','Circuit\nBreaker\n(standard)','orange'),
+        ('svc','Downstream\nService','purple'),('fallback','Fallback\nResponse','red')],
+       [('client_p','pool_p','isolated\npool','#3b82f6'),('client_s','pool_s','isolated\npool','#6b7280'),
+        ('pool_p','circuit_p','','#3b82f6'),('pool_s','circuit_s','','#6b7280'),
+        ('circuit_p','svc','call','#6366f1'),('circuit_s','svc','call','#6366f1'),
+        ('circuit_p','fallback','open\ncircuit','#ef4444','dashed'),('circuit_s','fallback','open\ncircuit','#ef4444','dashed')])
+
+    mg('data-model-saga-pattern', 'Saga Pattern (Choreography)',
+       [('order','Order\nService','blue'),('kafka','Event Bus\n(Kafka)','orange'),
+        ('payment','Payment\nService','green'),('inventory','Inventory\nService','purple'),
+        ('shipping','Shipping\nService','teal'),('comp_p','Compensate:\nRefund','red'),
+        ('comp_i','Compensate:\nRestock','red'),('notify','Notify\nService','gray')],
+       [('order','kafka','OrderCreated','#3b82f6'),('kafka','payment','consume','#f97316'),
+        ('payment','kafka','PaymentDone\n(or failed)','#22c55e'),('kafka','inventory','consume','#f97316'),
+        ('inventory','kafka','Stocked\n(or failed)','#6366f1'),('kafka','shipping','consume','#f97316'),
+        ('shipping','notify','ShipmentBooked','#14b8a6'),('payment','comp_p','on failure','#ef4444','dashed'),
+        ('inventory','comp_i','on failure','#ef4444','dashed')])
+
+    mg('data-model-event-driven-architecture', 'Event-Driven Architecture',
+       [('producer_a','Service A\n(Producer)','blue'),('producer_b','Service B\n(Producer)','teal'),
+        ('broker','Event\nBroker\n(Kafka/RabbitMQ)','orange'),('topic_u','Topic:\nuser-events','purple'),
+        ('topic_o','Topic:\norder-events','purple'),('consumer_1','Billing\nService','green'),
+        ('consumer_2','Analytics\nService','green'),('consumer_3','Notification\nService','green')],
+       [('producer_a','broker','publish\nuser events','#3b82f6'),('producer_b','broker','publish\norder events','#14b8a6'),
+        ('broker','topic_u','route','#f97316'),('broker','topic_o','route','#f97316'),
+        ('topic_u','consumer_1','subscribe','#22c55e'),('topic_o','consumer_1','subscribe','#22c55e'),
+        ('topic_u','consumer_2','subscribe','#22c55e'),('topic_o','consumer_3','subscribe','#22c55e')])
+
+    mg('data-model-circuit-breaker', 'Circuit Breaker Pattern',
+       [('client','Client\nService','blue'),('cb','Circuit\nBreaker\nState Machine','orange'),
+        ('closed','CLOSED\n(normal flow)\nfailures < threshold','green'),('open','OPEN\n(fast fail)\ntimer active','red'),
+        ('half','HALF-OPEN\n(probe request)\ntest recovery','yellow'),
+        ('downstream','Downstream\nService','purple'),('fallback','Fallback\nCache / Default','gray')],
+       [('client','cb','request','#3b82f6'),('cb','closed','state','#22c55e'),
+        ('closed','downstream','call','#6366f1'),('downstream','open','failures\n≥ threshold','#ef4444'),
+        ('open','fallback','fast\nfail','#ef4444'),('open','half','timeout\nexpires','#f59e0b'),
+        ('half','downstream','probe\ncall','#6366f1'),('half','closed','success','#22c55e'),
+        ('half','open','failure','#ef4444')])
+
+    print('Done — 10 microservices data-model diagrams generated.')
+
+
 if __name__ == '__main__':
     print(f'Generating {len(TOPICS) * 2} diagrams for {len(TOPICS)} topics...\n')
     for topic_id, diagrams in TOPICS.items():
@@ -238,3 +345,4 @@ if __name__ == '__main__':
         gen(topic_id, 'impl-advanced', diagrams['advanced'][0], diagrams['advanced'][1], diagrams['advanced'][2])
         print(f'  OK {topic_id}')
     print(f'\nDone! {len(TOPICS) * 2} diagrams generated.')
+    gen_microservices_data_models()

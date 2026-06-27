@@ -132,7 +132,7 @@ def diag_users_types():
 # ─── linux-package-families ───────────────────────────────────────────────────
 
 def diag_package_families():
-    g = base_graph('pkgfam', 'Linux Package Manager Families & Universal Packages', rankdir='LR')
+    g = base_graph('pkgfam', 'Linux Package Manager Families & Universal Packages', rankdir='TB')
     n(g, 'deb',     'Debian Family\nUbuntu / Debian /\nLinux Mint', 'navy')
     n(g, 'apt',     'apt (high-level)\napt install / update\napt upgrade / purge', 'green')
     n(g, 'dpkg',    'dpkg (low-level)\ndpkg -i pkg.deb\ndpkg -l | grep pkg', 'teal')
@@ -304,50 +304,42 @@ def diag_troubleshooting_playbook():
 
 def diag_devops_roadmap():
     g = base_graph('roadmap', 'Linux for DevOps — 10-Day Learning Roadmap', rankdir='LR')
-    n(g, 'm1',  'Module 1\nFoundations\nFilesystem + Commands\nNavigation basics', 'navy')
-    n(g, 'm2',  'Module 2\nUsers, Permissions\n& Processes\nsystemd basics', 'teal')
-    n(g, 'm3',  'Module 3\nSystem & Network\nPackage mgmt\nSSH essentials', 'green')
-    n(g, 'm4',  'Module 4\nAutomation &\nProduction Ready\nScripting + Security', 'gold')
-    n(g, 'd1',  'Day 1\nFilesystem\nhierarchy', 'navy')
-    n(g, 'd2',  'Day 2\nEssential\ncommands', 'navy')
-    n(g, 'd3',  'Day 3\nPermissions\n& ownership', 'teal')
-    n(g, 'd4',  'Day 4\nUsers, groups\n& sudo', 'teal')
-    n(g, 'd5',  'Day 5\nProcesses\n& systemd', 'teal')
-    n(g, 'd6',  'Day 6\nPackage\nmanagement', 'green')
-    n(g, 'd7',  'Day 7\nNetworking\n& SSH', 'green')
-    n(g, 'd8',  'Day 8\nBash\nscripting', 'gold')
-    n(g, 'd9',  'Day 9\nText processing\n& log analysis', 'gold')
-    n(g, 'd10', 'Day 10\nSecurity &\nhardening', 'red')
+    with g.subgraph(name='cluster_m1') as c:
+        c.attr(label='Module 1 — Foundations', style='rounded,filled',
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica-Bold',
+               fontsize='11', fontcolor='#1e40af')
+        n(c, 'd1', 'Day 1\nFilesystem\nhierarchy', 'navy')
+        n(c, 'd2', 'Day 2\nEssential\ncommands', 'navy')
+    with g.subgraph(name='cluster_m2') as c:
+        c.attr(label='Module 2 — Users & Processes', style='rounded,filled',
+               fillcolor='#f0fdfa', color='#14b8a6', fontname='Helvetica-Bold',
+               fontsize='11', fontcolor='#115e59')
+        n(c, 'd3', 'Day 3\nPermissions\n& ownership', 'teal')
+        n(c, 'd4', 'Day 4\nUsers, groups\n& sudo', 'teal')
+        n(c, 'd5', 'Day 5\nProcesses\n& systemd', 'teal')
+    with g.subgraph(name='cluster_m3') as c:
+        c.attr(label='Module 3 — System & Network', style='rounded,filled',
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica-Bold',
+               fontsize='11', fontcolor='#166534')
+        n(c, 'd6', 'Day 6\nPackage\nmanagement', 'green')
+        n(c, 'd7', 'Day 7\nNetworking\n& SSH', 'green')
+    with g.subgraph(name='cluster_m4') as c:
+        c.attr(label='Module 4 — Automation & Security', style='rounded,filled',
+               fillcolor='#fffbeb', color='#f59e0b', fontname='Helvetica-Bold',
+               fontsize='11', fontcolor='#92400e')
+        n(c, 'd8',  'Day 8\nBash\nscripting', 'gold')
+        n(c, 'd9',  'Day 9\nText processing\n& log analysis', 'gold')
+        n(c, 'd10', 'Day 10\nSecurity &\nhardening', 'red')
 
-    with g.subgraph() as s:
-        s.attr(rank='same')
-        s.node('m1'); s.node('m2'); s.node('m3'); s.node('m4')
-    with g.subgraph() as s:
-        s.attr(rank='same')
-        s.node('d1'); s.node('d2')
-    with g.subgraph() as s:
-        s.attr(rank='same')
-        s.node('d3'); s.node('d4'); s.node('d5')
-    with g.subgraph() as s:
-        s.attr(rank='same')
-        s.node('d6'); s.node('d7')
-    with g.subgraph() as s:
-        s.attr(rank='same')
-        s.node('d8'); s.node('d9'); s.node('d10')
-
-    e(g, 'm1', 'm2')
-    e(g, 'm2', 'm3')
-    e(g, 'm3', 'm4')
-    e(g, 'm1', 'd1')
-    e(g, 'm1', 'd2')
-    e(g, 'm2', 'd3')
-    e(g, 'm2', 'd4')
-    e(g, 'm2', 'd5')
-    e(g, 'm3', 'd6')
-    e(g, 'm3', 'd7')
-    e(g, 'm4', 'd8')
-    e(g, 'm4', 'd9')
-    e(g, 'm4', 'd10')
+    e(g, 'd1', 'd2')
+    e(g, 'd3', 'd4')
+    e(g, 'd4', 'd5')
+    e(g, 'd6', 'd7')
+    e(g, 'd8', 'd9')
+    e(g, 'd9', 'd10')
+    e(g, 'd2', 'd3', 'next module')
+    e(g, 'd5', 'd6', 'next module')
+    e(g, 'd7', 'd8', 'next module')
 
     g.render(os.path.join(OUT, 'linux-devops-roadmap'), cleanup=True)
     print('Generated: linux-devops-roadmap')

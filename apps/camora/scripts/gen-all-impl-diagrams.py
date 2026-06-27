@@ -3,8 +3,8 @@
 import graphviz, os
 
 BASE = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.4', margin='0.12,0.06')
-EDGE = dict(fontname='Helvetica Neue', fontsize='9', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11', penwidth='1.5', height='0.5', margin='0.20,0.10')
+EDGE = dict(fontname='Helvetica', fontsize='9', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -17,8 +17,8 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 def mk(out, name, title, **kw):
     os.makedirs(out, exist_ok=True)
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.5', ranksep='0.45', splines='spline',
-           label=f'  {title}  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b', **kw)
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.8', nodesep='1.0', ranksep='1.4', splines='spline',
+           label=f'  {title}  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b', **kw)
     return g, os.path.join(out, name)
 
 def gen(topic_dir, name, title, nodes, edges, **kw):

@@ -25,8 +25,8 @@ def make_dot(title, nodes, edges, same_ranks=None):
     safe_title = title.replace('"', '\\"')
     lines = [
         "digraph {",
-        f'  graph [rankdir=LR bgcolor="#ffffff" splines=ortho nodesep=0.5 ranksep=0.8 pad="0.6,0.4" fontname="Arial" fontsize=14 label="{safe_title}" labelloc=t fontcolor="#1e293b"]',
-        '  node [fontname="Arial" shape=box style="rounded,filled" penwidth=2.0 margin="0.22,0.14" fontsize=11]',
+        f'  graph [rankdir=LR bgcolor="#ffffff" splines=ortho nodesep=1.0 ranksep=1.5 pad="0.8,0.5" fontname="Arial" fontsize=14 label="{safe_title}" labelloc=t fontcolor="#1e293b"]',
+        '  node [fontname="Arial" shape=box style="rounded,filled" penwidth=2.0 margin="0.28,0.16" fontsize=11]',
         '  edge [color="#94a3b8" penwidth=1.5 arrowsize=0.8]',
     ]
     for nid, label, role in nodes:

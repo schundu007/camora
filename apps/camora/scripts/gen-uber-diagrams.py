@@ -8,9 +8,9 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'uber')
 os.makedirs(OUT, exist_ok=True)
 
-COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline')
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+COMMON = dict(bgcolor='#ffffff', dpi='200', pad='0.6', nodesep='0.7', ranksep='0.9', splines='spline')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'blue':   ('#dbeafe', '#3b82f6', '#1e40af'),
@@ -35,7 +35,7 @@ def e(g, a, b, label='', color='#475569', style='solid'):
 def gen_cell_architecture():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Cell-Based Geospatial Architecture  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'rider', 'Rider App\nPickup Location', 'blue')
     n(g, 'gw', 'API Gateway\n(S2 Cell Lookup)', 'gray')
@@ -71,7 +71,7 @@ def gen_cell_architecture():
 def gen_location_pipeline():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Location Update Pipeline — 10M+ GPS/sec  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'drivers', '10M Drivers\nGPS every 3s', 'blue')
     n(g, 'lb', 'Load Balancer\nhash(cellId)', 'gray')
@@ -102,7 +102,7 @@ def gen_location_pipeline():
 def gen_surge_pricing():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Surge Pricing Engine  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'requests', 'Ride Requests\nper Cell', 'blue')
     n(g, 'drivers', 'Available\nDrivers/Cell', 'green')
@@ -128,7 +128,7 @@ def gen_surge_pricing():
 def gen_eta():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  ETA Prediction — Road Graph + Live Traffic + ML  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'road', 'Road Network\nGraph (OSM)', 'gray')
     n(g, 'traffic', 'Live Traffic\nfrom Driver GPS', 'orange')
@@ -154,13 +154,13 @@ def gen_eta():
 # ── Deep Dive 5: Matching Optimization ──
 def gen_matching():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Matching — Greedy vs Batch vs Pool  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Matching — Greedy vs Batch vs Pool  ', labelloc='t',
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'requests', 'Ride Requests', 'blue')
     g.node('check', 'Demand > Supply?', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.6')
+           fontname='Helvetica', fontsize='11', height='0.6')
 
     n(g, 'greedy', 'Greedy Match\nNearest driver\nO(n), <50ms', 'green')
     n(g, 'batch', 'Batch Match\nHungarian Algo\nO(n³), ~100ms\n20-30% better', 'purple')
@@ -182,7 +182,7 @@ def gen_matching():
 def gen_algo_s2():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  S2 / H3 Hexagonal Indexing  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'point', 'Pickup\nLocation\n(lat, lng)', 'blue')
     n(g, 'h3', 'H3 Index\nlat_lng_to_cell()\nLevel 9 (~0.1km²)', 'purple')
@@ -204,8 +204,8 @@ def gen_algo_s2():
 # ── Algorithm 2: Hungarian Matching ──
 def gen_algo_hungarian():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Hungarian Algorithm — Batch Matching  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Hungarian Algorithm — Batch Matching  ', labelloc='t',
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'window', '2-Second\nBatch Window', 'yellow')
     n(g, 'riders', 'N Ride\nRequests', 'blue')
@@ -228,7 +228,7 @@ def gen_algo_hungarian():
 def gen_algo_ch():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Contraction Hierarchies — Sub-ms ETA Queries  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'graph', 'Road Graph\n(intersections\n= nodes)', 'gray')
     n(g, 'preprocess', 'Pre-process\nContract low-\nimportance nodes\n(hours)', 'yellow')
@@ -248,7 +248,7 @@ def gen_algo_ch():
 def gen_algo_consistent_hashing():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='TB', label='  Consistent Hashing — Location Sharding  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'driver', 'Driver Location\nUpdate', 'blue')
     n(g, 'hash', 'hash(cellId)\non ring', 'purple')
@@ -276,7 +276,7 @@ def gen_algo_consistent_hashing():
 def gen_discuss_eta():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  ETA Calculation — Multi-Source Prediction  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'road', 'Road Graph', 'gray')
     n(g, 'gps', 'Driver Fleet\nGPS Speed', 'orange')
@@ -296,7 +296,7 @@ def gen_discuss_eta():
 def gen_discuss_surge():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Surge Pricing — Supply/Demand per Cell  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'demand', 'Ride Requests\n(per cell)', 'blue')
     n(g, 'supply', 'Available\nDrivers', 'green')
@@ -315,13 +315,13 @@ def gen_discuss_surge():
 # ── Discussion 3: Dispatch ──
 def gen_discuss_dispatch():
     g = graphviz.Digraph(format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Dispatch Optimization — Mode Selection  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Dispatch Optimization — Mode Selection  ', labelloc='t',
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'req', 'Ride Request', 'blue')
     g.node('check', 'Demand\nvs Supply?', shape='diamond', style='filled',
            fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e',
-           fontname='Helvetica Neue', fontsize='11', height='0.6')
+           fontname='Helvetica', fontsize='11', height='0.6')
     n(g, 'greedy', 'Greedy\nNearest O(n)\n<50ms', 'green')
     n(g, 'batch', 'Hungarian\nO(n³) ~100ms\n20-30% better', 'purple')
     n(g, 'pool', 'VRP Insert\n25% detour\n+60% rev', 'orange')
@@ -338,7 +338,7 @@ def gen_discuss_dispatch():
 def gen_discuss_safety():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Safety & Compliance System  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'trip', 'Active\nTrip', 'blue')
     n(g, 'share', 'Trip Sharing\nLive URL', 'green')
@@ -362,7 +362,7 @@ def gen_discuss_safety():
 def gen_flow_ride_request():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Ride Request Flow — End to End  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'rider', 'Rider App\nSend Pickup\n+ Dropoff', 'blue')
     n(g, 'gw', 'API Gateway\nAuth + Rate Limit', 'gray')
@@ -390,7 +390,7 @@ def gen_flow_ride_request():
 def gen_flow_location():
     g = graphviz.Digraph(format='png')
     g.attr(**COMMON, rankdir='LR', label='  Driver Location Update Pipeline  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'driver', 'Driver GPS\nevery 3-4s', 'blue')
     n(g, 'lb', 'Load Balancer\nhash(cellId)', 'gray')

@@ -11,8 +11,8 @@ COMMON = {
     'bgcolor': '#ffffff', 'dpi': '200',
     'pad': '0.3', 'nodesep': '0.5', 'ranksep': '0.6', 'splines': 'spline',
 }
-NODE = {'shape': 'box', 'style': 'filled,rounded', 'fontname': 'Helvetica Neue', 'fontsize': '12', 'penwidth': '1.5', 'height': '0.45', 'margin': '0.15,0.08'}
-EDGE = {'fontname': 'Helvetica Neue', 'fontsize': '10', 'penwidth': '1.5'}
+NODE = {'shape': 'box', 'style': 'filled,rounded', 'fontname': 'Helvetica', 'fontsize': '12', 'penwidth': '1.5', 'height': '0.45', 'margin': '0.15,0.08'}
+EDGE = {'fontname': 'Helvetica', 'fontsize': '10', 'penwidth': '1.5'}
 
 C = {
     'blue':   {'fill': '#dbeafe', 'border': '#3b82f6', 'font': '#1e40af'},
@@ -32,7 +32,7 @@ def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f' 
 # ── 1. Consistent Hashing ──
 def gen_consistent_hashing():
     g = graphviz.Digraph('consistent_hash', format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Consistent Hashing — Connection Routing  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='TB', label='  Consistent Hashing — Connection Routing  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'user', 'User connects', 'blue')
     n(g, 'lb', 'Load Balancer\n(L4)', 'gray')
@@ -61,11 +61,11 @@ def gen_consistent_hashing():
 # ── 2. Fan-out Strategies ──
 def gen_fanout():
     g = graphviz.Digraph('fanout', format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Fan-out on Write vs Read (Group Messages)  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='TB', label='  Fan-out on Write vs Read (Group Messages)  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     # Write side
     with g.subgraph(name='cluster_write') as s:
-        s.attr(label='Fan-out on Write (<100 members)', style='filled,rounded', color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#166534')
+        s.attr(label='Fan-out on Write (<100 members)', style='filled,rounded', color='#22c55e', fillcolor='#f0fdf4', fontname='Helvetica Bold', fontsize='10', fontcolor='#166534')
         n(s, 'w_msg', 'Message', 'blue')
         n(s, 'w_copy', 'Copy to each\nmember inbox', 'green')
         n(s, 'w_m1', 'Inbox 1', 'green')
@@ -79,7 +79,7 @@ def gen_fanout():
 
     # Read side
     with g.subgraph(name='cluster_read') as s:
-        s.attr(label='Fan-out on Read (>100 members)', style='filled,rounded', color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Neue Bold', fontsize='10', fontcolor='#1e40af')
+        s.attr(label='Fan-out on Read (>100 members)', style='filled,rounded', color='#3b82f6', fillcolor='#eff6ff', fontname='Helvetica Bold', fontsize='10', fontcolor='#1e40af')
         n(s, 'r_msg', 'Message', 'blue')
         n(s, 'r_store', 'Store once in\ngroup partition', 'purple')
         n(s, 'r_pull', 'Members pull\non open', 'blue')
@@ -93,7 +93,7 @@ def gen_fanout():
 # ── 3. ACK-based Delivery ──
 def gen_ack_delivery():
     g = graphviz.Digraph('ack_delivery', format='png')
-    g.attr(**COMMON, rankdir='LR', label='  ACK-based Guaranteed Delivery  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  ACK-based Guaranteed Delivery  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'sender', 'Sender', 'blue')
     n(g, 'server', 'Chat Server', 'green')
@@ -117,7 +117,7 @@ def gen_ack_delivery():
 # ── 4. Double Ratchet ──
 def gen_double_ratchet():
     g = graphviz.Digraph('double_ratchet', format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Double Ratchet (Signal Protocol)  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Double Ratchet (Signal Protocol)  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'alice', 'Alice', 'blue')
     n(g, 'x3dh', 'X3DH\nKey Agreement', 'purple')
@@ -141,7 +141,7 @@ def gen_double_ratchet():
 # ── 5. E2E Encryption Discussion ──
 def gen_e2e_encryption():
     g = graphviz.Digraph('e2e', format='png')
-    g.attr(**COMMON, rankdir='LR', label='  End-to-End Encryption Flow  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  End-to-End Encryption Flow  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'sender', 'Sender\nDevice', 'blue')
     n(g, 'encrypt', 'Encrypt\n(Signal Protocol)', 'green')
@@ -160,7 +160,7 @@ def gen_e2e_encryption():
 # ── 6. Group Messaging Architecture ──
 def gen_group_arch():
     g = graphviz.Digraph('group_arch', format='png')
-    g.attr(**COMMON, rankdir='TB', label='  Group Messaging Architecture  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Group Messaging Architecture  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'sender', 'Sender', 'blue')
     n(g, 'gateway', 'Chat Gateway', 'green')
@@ -187,7 +187,7 @@ def gen_group_arch():
 # ── 7. Media Handling Pipeline ──
 def gen_media_pipeline():
     g = graphviz.Digraph('media', format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Media Handling Pipeline  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Media Handling Pipeline  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'device', 'Sender\nDevice', 'blue')
     n(g, 'compress', 'Compress +\nEncrypt', 'green')
@@ -212,7 +212,7 @@ def gen_media_pipeline():
 # ── 8. Presence System ──
 def gen_presence():
     g = graphviz.Digraph('presence', format='png')
-    g.attr(**COMMON, rankdir='LR', label='  Presence & Typing Indicators  ', labelloc='t', fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g.attr(**COMMON, rankdir='LR', label='  Presence & Typing Indicators  ', labelloc='t', fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
 
     n(g, 'client', 'Client\nDevice', 'blue')
     n(g, 'gateway', 'Chat\nGateway', 'green')
