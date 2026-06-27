@@ -2797,7 +2797,7 @@ figure:has(> .viz-caption) {
    Overrides the 72ch/68ch constraints that fire when section wrappers
    match .prep-content > section > p/li selectors. */
 .formatted-content p,
-.formatted-content li { max-width: none; }
+.formatted-content li { max-width: none !important; }
 .docs-page ol > li::marker,
 .prep-content > ol > li::marker,
 .prep-content > section > ol > li::marker { color: var(--cam-primary); font-weight: 700; }
