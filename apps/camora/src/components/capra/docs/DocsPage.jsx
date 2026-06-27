@@ -38,6 +38,7 @@ const CATEGORY_HEX = {
   'mlops':          'navy',
   'aiops':          'navy-lt',
   'ai-systems-perf':'navy-dk',
+  'agentic':        'navy',
   'challenges':     'gold',
 };
 
@@ -131,7 +132,7 @@ export default function DocsPage({ onBack }) {
   // (coding, system-design, behavioral, low-level, sre, devops, projects)
   // report 0 topics until the user explicitly visits each page.
   const [heavyData, setHeavyData] = useState(() => {
-    const CACHE_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'ddia', 'mlops', 'aiops', 'ai-systems-perf', 'challenges'];
+    const CACHE_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'ddia', 'mlops', 'aiops', 'ai-systems-perf', 'agentic', 'challenges'];
     const initial = {};
     for (const page of CACHE_PAGES) {
       const cached = getCachedTopicsForPage(page);
@@ -145,7 +146,7 @@ export default function DocsPage({ onBack }) {
     setTopicsLoading(true);
 
     if (activePage === 'overview') {
-      const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'ddia', 'mlops', 'aiops', 'ai-systems-perf', 'challenges'];
+      const HEAVY_PAGES = ['coding', 'system-design', 'behavioral', 'low-level', 'sre', 'devops', 'observability', 'platform', 'projects', 'cloud', 'linux', 'networking', 'troubleshooting', 'war-stories', 'comparisons', 'ddia', 'mlops', 'aiops', 'ai-systems-perf', 'agentic', 'challenges'];
       Promise.all(HEAVY_PAGES.map(loadTopicsForPage)).then((results) => {
         if (cancelled) return;
         const merged = {};
@@ -226,6 +227,11 @@ export default function DocsPage({ onBack }) {
   const aiSystemsPerfCategories = heavyData.aiSystemsPerfCategories || [];
   const aiSystemsPerfTopicCategoryMap = heavyData.aiSystemsPerfTopicCategoryMap || {};
   const aiSystemsPerfTopics = heavyData.aiSystemsPerfTopics || [];
+
+  // Agentic Orchestration — LangGraph multi-agent, async long-running tools, context window mgmt.
+  const agenticCategories = heavyData.agenticCategories || [];
+  const agenticTopicCategoryMap = heavyData.agenticTopicCategoryMap || {};
+  const agenticTopics = heavyData.agenticTopics || [];
 
   // Coding Challenges — DevOps now; AIOps/MLOps/IaC sub-categories coming.
   const challengesCategories = heavyData.challengesCategories || [];
@@ -582,6 +588,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'mlops' ? mlopsTopics :
       activePage === 'aiops' ? aiopsTopics :
       activePage === 'ai-systems-perf' ? aiSystemsPerfTopics :
+      activePage === 'agentic' ? agenticTopics :
       activePage === 'challenges' ? challengesTopics :
       activePage === 'cloud' ? cloudTopics :
       activePage === 'linux' ? linuxTopics :
@@ -767,6 +774,7 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'mlops') topics = mlopsTopics;
     else if (activePage === 'aiops') topics = aiopsTopics;
     else if (activePage === 'ai-systems-perf') topics = aiSystemsPerfTopics;
+    else if (activePage === 'agentic') topics = agenticTopics;
     else if (activePage === 'challenges') topics = challengesTopics;
     else if (activePage === 'cloud') topics = cloudTopics;
     else if (activePage === 'linux') topics = linuxTopics;
@@ -850,6 +858,7 @@ export default function DocsPage({ onBack }) {
       case 'devops': return { title: 'DevOps', color: 'var(--text-primary)' };
       case 'mlops': return { title: 'MLOps & LLMOps', color: 'var(--text-primary)' };
       case 'aiops': return { title: 'AIOps', color: 'var(--text-primary)' };
+      case 'agentic': return { title: 'Agentic Orchestration', color: 'var(--text-primary)' };
       case 'ai-systems-perf': return { title: 'AI Systems Performance Engineering', color: 'var(--text-primary)' };
       case 'challenges': return { title: 'Coding Challenges', color: 'var(--text-primary)' };
       case 'cloud': return { title: 'Cloud / AWS', color: 'var(--text-primary)' };
@@ -877,7 +886,7 @@ export default function DocsPage({ onBack }) {
       microservicesPatterns, databaseTopics, sqlTopics, projectTopics,
       roadmapTopics, engBlogTopics, sreTopics, devopsTopics,
       observabilityTopics, platformTopics, challengesTopics,
-      mlopsTopics, aiopsTopics, aiSystemsPerfTopics, ddiaTopics,
+      mlopsTopics, aiopsTopics, aiSystemsPerfTopics, agenticTopics, ddiaTopics,
       cloudTopics, linuxTopics, networkingTopics, troubleshootingTopics,
       warStoriesTopics, comparisonTopics,
     ];
@@ -947,7 +956,7 @@ export default function DocsPage({ onBack }) {
     'coding': 57, 'system-design': 208, 'behavioral': 72, 'low-level': 126,
     'databases': 20, 'microservices': 12, 'cloud': 110, 'linux': 58,
     'networking': 62, 'sre': 75, 'devops': 180, 'observability': 9,
-    'platform': 5, 'troubleshooting': 14, 'mlops': 25, 'aiops': 18, 'ai-systems-perf': 10,
+    'platform': 5, 'troubleshooting': 14, 'mlops': 25, 'aiops': 18, 'ai-systems-perf': 10, 'agentic': 3,
     'war-stories': 25, 'comparisons': 35, 'ddia': 44, 'challenges': 1, 'projects': 24,
     'roadmaps': 12, 'eng-blogs': 39,
   };
@@ -978,6 +987,7 @@ export default function DocsPage({ onBack }) {
       { id: 'mlops',        href: 'mlops',         title: 'MLOps & LLMOps',            icon: 'cpu',         color: 'var(--text-primary)', topics: mlopsTopics,                                                                                                                                        description: 'ML lifecycle, feature stores, model registry, serving, drift detection, LLM ops and evals.' },
       { id: 'aiops',        href: 'aiops',         title: 'AIOps',                     icon: 'zap',         color: 'var(--text-primary)', topics: aiopsTopics,                                                                                                                                        description: 'ML-driven operations: anomaly detection, alert correlation, root-cause analysis, capacity forecasting.' },
       { id: 'ai-systems-perf', href: 'ai-systems-perf', title: 'AI Systems Performance', icon: 'cpu',      color: 'var(--text-primary)', topics: aiSystemsPerfTopics,                                                                                                                                description: 'GPU hardware, CUDA kernels, LLM inference optimization, distributed training, quantization, MoE — from "AI Systems Performance" (Fregly, O\'Reilly 2025).' },
+      { id: 'agentic',        href: 'agentic',         title: 'Agentic Orchestration',     icon: 'network',   color: 'var(--text-primary)', topics: agenticTopics,                                                                                                                                      description: 'LangGraph multi-agent patterns, async long-running tool calls with checkpointers, context window management for persistent agents.' },
       { id: 'war-stories',  href: 'war-stories',   title: 'War Stories',               icon: 'zap',         color: 'var(--text-primary)', topics: warStoriesTopics,                                                                                                                                    description: 'Real production incidents — what broke, how it was diagnosed, what changed to prevent recurrence.' },
       { id: 'comparisons',  href: 'comparisons',   title: 'This vs That',              icon: 'gitBranch',   color: 'var(--text-primary)', topics: comparisonTopics,                                                                                                                                    description: 'ECS vs EKS, RDS vs DynamoDB, SQS vs SNS, GitHub Actions vs Jenkins — clear decision guides for common interview trade-offs.' },
       { id: 'challenges',   href: 'challenges',    title: 'Coding Challenges',         icon: 'code',        color: 'var(--text-primary)', topics: challengesTopics,                                                                                                                                    description: 'Hands-on coding problems — DevOps, AIOps, MLOps/LLMOps, and IaC challenges from HackerRank and beyond.' },
@@ -3701,6 +3711,70 @@ export default function DocsPage({ onBack }) {
                                         {isStarred && <span className="badge-warning text-[10px]">★</span>}
                                         {isLocked && <span className="badge-warning text-[10px]">PRO</span>}
                                       </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {activePage === 'agentic' && (
+                <>
+                  <div className="mb-6">
+                    <div className="space-y-3">
+                    {agenticCategories.map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => agenticTopicCategoryMap[t.id] === category.id);
+                      if (categoryTopics.length === 0) return null;
+                      return (
+                        <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                          <CategoryHeader
+                            icon={category.icon}
+                            title={category.name}
+                            count={categoryTopics.length}
+                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 p-3">
+                            {categoryTopics.map((topic) => {
+                              const isCompleted = completedTopics[topic.id];
+                              const isStarred = starredTopics[topic.id];
+                              const isLocked = contentAccess.isTopicLocked('agentic', topic.id);
+                              return (
+                                <div
+                                  key={topic.id}
+                                  onClick={() => !isLocked && setSelectedTopic(topic.id)}
+                                  className={`group relative rounded p-3.5 cursor-pointer transition-colors duration-200   ${isLocked ? 'opacity-60' : ''}`}
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                                >
+                                  <div className="flex items-start justify-between gap-2.5">
+                                    <span
+                                      className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+                                      style={{
+                                        background: `${topic.color}1A`,
+                                        border: `1px solid ${topic.color}40`,
+                                        color: topic.color,
+                                      }}
+                                    >
+                                      <Icon name={topic.icon || 'network'} size={18} />
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="landing-display font-semibold text-sm text-[var(--text-primary)] truncate">{topic.title}</span>
+                                        {isCompleted && <Icon name="check" size={12} className="text-[var(--success)] shrink-0" />}
+                                        {isLocked && <Icon name="lock" size={12} className="text-[var(--text-muted)] shrink-0" />}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Chip>{topic.questions} questions</Chip>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 mt-1">
+                                      {isStarred && <Icon name="star" size={12} className="text-[var(--accent)]" />}
+                                      <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] group-hover:translate-x-0.5 transition-colors" />
                                     </div>
                                   </div>
                                 </div>
