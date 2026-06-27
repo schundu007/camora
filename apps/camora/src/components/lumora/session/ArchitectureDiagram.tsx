@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
 // detailed) added confusion without changing perceived quality, and the
 // backend cache hit-rate suffered when users toggled them. One layout, one
 // density.
-const DIRECTION = 'TB';
+const DIRECTION = 'LR';
 const DETAIL = 'detailed';
 
 const getCacheKey = (question: string, provider: string, designKind: string = 'system') => {
@@ -55,19 +55,25 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
 
   const resetView = useCallback(() => setScale(1), []);
 
-  // Native non-passive wheel listener so preventDefault() actually suppresses
-  // page scroll. Geometric zoom (×1.15 per notch) feels natural on both
-  // mouse wheels and trackpads.
+  // Document-level non-passive wheel listener. Attaching to the container
+  // element fails when the container has no overflow (nothing to scroll),
+  // because some browsers skip non-passive handling on non-scrollable elements.
+  // Instead, we attach to document and only intercept when the pointer is
+  // inside the container's bounding rect.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !imageUrl) return;
+    if (!imageUrl) return;
     const handler = (e: WheelEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right ||
+          e.clientY < rect.top  || e.clientY > rect.bottom) return;
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
       setScale(prev => Math.min(Math.max(0.25, prev * factor), 4));
     };
-    el.addEventListener('wheel', handler, { passive: false });
-    return () => el.removeEventListener('wheel', handler);
+    document.addEventListener('wheel', handler, { passive: false });
+    return () => document.removeEventListener('wheel', handler);
   }, [imageUrl]);
 
   // Step 1: Cache-only lookup (fast, no generation)
@@ -250,8 +256,14 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
       {imageUrl && !loading && !generating && (
         <div ref={containerRef}
           className="rounded-lg select-none"
-          style={{ overflow: 'auto', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-          <div style={{ width: `${Math.round(scale * 100)}%`, margin: '0 auto' }}>
+          style={{
+            overflow: 'auto',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            maxHeight: '65vh',
+            cursor: scale > 1 ? 'grab' : 'zoom-in',
+          }}>
+          <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: 'min-content' }}>
             <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
               style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
