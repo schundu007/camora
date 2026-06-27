@@ -222,7 +222,8 @@ Both integrate with Auto Scaling, support health checks, and work with ECS and E
         image: '/diagrams/networking/tls-ssl-handshake-mtls.png',
       },
     ],
-    introduction: `TLS (Transport Layer Security) provides confidentiality, integrity, and authentication for network communications. TLS 1.3 (RFC 8446, 2018) is the current standard; TLS 1.2 is still widely deployed. TLS 1.0 and 1.1 are deprecated.
+    introduction: `## Overview
+TLS (Transport Layer Security) provides confidentiality, integrity, and authentication for network communications. TLS 1.3 (RFC 8446, 2018) is the current standard; TLS 1.2 is still widely deployed. TLS 1.0 and 1.1 are deprecated.
 
 TLS 1.2 handshake (2 round trips): ClientHello (TLS version, cipher suites, random), ServerHello (chosen cipher, random), Certificate (server's cert chain), ServerKeyExchange (for ECDHE), ServerHelloDone; ClientKeyExchange, ChangeCipherSpec, Finished; ChangeCipherSpec, Finished. Then application data.
 
@@ -329,7 +330,8 @@ For containerized services, also check if the trust store inside the container h
         image: '/diagrams/networking/dns-resolution-ttl.png',
       },
     ],
-    introduction: `DNS (Domain Name System) is the distributed hierarchical naming system that translates human-readable names to IP addresses. It is often called the "phone book of the internet," but a more accurate analogy is a distributed key-value store with hierarchical delegation and time-to-live caching.
+    introduction: `## Overview
+DNS (Domain Name System) is the distributed hierarchical naming system that translates human-readable names to IP addresses. It is often called the "phone book of the internet," but a more accurate analogy is a distributed key-value store with hierarchical delegation and time-to-live caching.
 
 The resolution hierarchy: root servers (13 root server clusters managed by IANA; they know who manages .com, .org, etc.) -> TLD nameservers (Verisign manages .com; they know who manages example.com) -> authoritative nameservers (your DNS provider, e.g., Route53; they have the actual A, CNAME, MX records).
 
@@ -414,7 +416,8 @@ dig api.example.com +trace     # Full resolution from root (requires external re
         image: '/diagrams/networking/dns-record-types-overview.png',
       },
     ],
-    introduction: `DNS record types define what kind of data a zone entry contains. Each record type has a specific format and use case.
+    introduction: `## Overview
+DNS record types define what kind of data a zone entry contains. Each record type has a specific format and use case.
 
 A and AAAA: Map a hostname to an IPv4 (A) or IPv6 (AAAA) address. The most basic record type. Multiple A records for the same name implement round-robin DNS load balancing.
 
@@ -498,7 +501,8 @@ Why not just find the ALB's IP and use an A record: ALB IPs are dynamic — AWS 
         image: '/diagrams/networking/l4-vs-l7-lb-algorithms.png',
       },
     ],
-    introduction: `Load balancers are categorised by the OSI layer at which they make routing decisions. This determines what information they can use to route traffic and what overhead they introduce.
+    introduction: `## Overview
+Load balancers are categorised by the OSI layer at which they make routing decisions. This determines what information they can use to route traffic and what overhead they introduce.
 
 Layer 4 (L4) load balancers operate at the TCP/UDP level. They see source IP, destination IP, and port number but not the content of the payload. Routing decisions are made purely on connection-level metadata. The LB acts as a TCP proxy: it accepts the connection, forwards packets to a backend, and tracks the connection state for the duration of the session. Because it does not parse HTTP, it cannot route based on URL, headers, or cookies. L4 LBs are extremely fast (no protocol parsing) and support any TCP/UDP protocol.
 
@@ -582,7 +586,8 @@ Metrics to watch: error rate (5xx%), p99 latency, application-specific metrics (
         image: '/diagrams/networking/cdn-architecture-flow.png',
       },
     ],
-    introduction: `A CDN (Content Delivery Network) is a geographically distributed network of cache servers (Points of Presence, PoPs) that serve content from locations close to the user, reducing latency and origin load.
+    introduction: `## Overview
+A CDN (Content Delivery Network) is a geographically distributed network of cache servers (Points of Presence, PoPs) that serve content from locations close to the user, reducing latency and origin load.
 
 When a user requests a resource, DNS routes them to the nearest PoP via anycast or GeoDNS. The PoP checks its cache (cache hit): returns the cached response. Cache miss: fetches from origin (or from a parent PoP in a hierarchy), caches the response, returns it to the user.
 
@@ -1172,7 +1177,8 @@ Best diagnostic tool: distributed tracing (Jaeger, Tempo). Sample a slow request
     questions: 5,
     description: 'DNSSEC chain of trust, ZSK/KSK key pairs, RRSIG/DNSKEY/DS records, validation process, and real-world adoption challenges.',
     visualizations: [],
-    introduction: `DNSSEC (Domain Name System Security Extensions) adds cryptographic authentication to DNS, protecting against cache poisoning and man-in-the-middle attacks. Without DNSSEC, a resolver has no way to verify that the answer it received for a query actually came from the authoritative nameserver and was not tampered with in transit. The 2008 Kaminsky attack demonstrated how DNS cache poisoning could be weaponized at scale, accelerating DNSSEC adoption.
+    introduction: `## Overview
+DNSSEC (Domain Name System Security Extensions) adds cryptographic authentication to DNS, protecting against cache poisoning and man-in-the-middle attacks. Without DNSSEC, a resolver has no way to verify that the answer it received for a query actually came from the authoritative nameserver and was not tampered with in transit. The 2008 Kaminsky attack demonstrated how DNS cache poisoning could be weaponized at scale, accelerating DNSSEC adoption.
 
 DNSSEC does not encrypt DNS traffic — it only signs DNS responses so resolvers can verify authenticity. Each DNS zone signs its resource records with a private key, and resolvers validate those signatures using the corresponding public key, which is itself authenticated by the parent zone.
 
@@ -1420,7 +1426,8 @@ Algorithm 13 (ECDSA P-256 SHA-256) is now the modern default, producing smaller 
     questions: 6,
     description: 'AWS Route 53 hosted zones, routing policies (simple/weighted/latency/failover/geolocation), health checks, and alias records.',
     visualizations: [],
-    introduction: `AWS Route 53 is a globally distributed authoritative DNS service with additional traffic management capabilities that go far beyond standard DNS. It operates from 13 geographically distributed DNS server clusters, providing low-latency responses worldwide and SLA-backed availability of 100% for authoritative DNS.
+    introduction: `## Overview
+AWS Route 53 is a globally distributed authoritative DNS service with additional traffic management capabilities that go far beyond standard DNS. It operates from 13 geographically distributed DNS server clusters, providing low-latency responses worldwide and SLA-backed availability of 100% for authoritative DNS.
 
 Route 53 combines three functions: domain registration, authoritative DNS hosting (hosted zones), and health check-based traffic routing. This combination makes it a core building block for multi-region availability, blue/green deployments, and gradual traffic shifting in AWS architectures.
 
@@ -1690,7 +1697,8 @@ Attach health checks to each weighted record. If the canary crashes, Route 53 st
     questions: 4,
     description: 'Internal vs external DNS views for the same domain, use in VPCs and split-tunnel VPNs, and private hosted zones.',
     visualizations: [],
-    introduction: `Split-horizon DNS (also called split-brain DNS or split-view DNS) is a configuration where the same domain name returns different DNS responses depending on the source of the query. External clients resolving api.example.com receive the public IP of a load balancer; internal clients within the VPC receive the private IP of the same service, bypassing the load balancer and NAT gateway entirely.
+    introduction: `## Overview
+Split-horizon DNS (also called split-brain DNS or split-view DNS) is a configuration where the same domain name returns different DNS responses depending on the source of the query. External clients resolving api.example.com receive the public IP of a load balancer; internal clients within the VPC receive the private IP of the same service, bypassing the load balancer and NAT gateway entirely.
 
 This pattern is fundamental to cloud networking. In AWS, Route 53 private hosted zones implement split-horizon DNS natively — you create a private hosted zone for example.com, associate it with specific VPCs, and records in that private zone shadow the public hosted zone for queries originating inside those VPCs. The resolver inside the VPC (169.254.169.253, the VPC's built-in resolver at the second IP of the VPC CIDR) checks private hosted zones first, then falls through to public DNS.
 
@@ -1889,7 +1897,8 @@ VPC peering is a one-to-one connection. For hub-and-spoke DNS across many VPCs, 
     questions: 6,
     description: 'Consul service mesh, CoreDNS in Kubernetes, headless services, SRV records, and client-side vs server-side discovery patterns.',
     visualizations: [],
-    introduction: `Service discovery is the mechanism by which services in a distributed system locate each other's network endpoints without hardcoded IPs or configuration files. In dynamic environments where containers, pods, and instances start, stop, and move frequently, static service endpoints are impractical. Service discovery solves this by maintaining a real-time registry of healthy service endpoints and providing a consistent interface for clients to query it.
+    introduction: `## Overview
+Service discovery is the mechanism by which services in a distributed system locate each other's network endpoints without hardcoded IPs or configuration files. In dynamic environments where containers, pods, and instances start, stop, and move frequently, static service endpoints are impractical. Service discovery solves this by maintaining a real-time registry of healthy service endpoints and providing a consistent interface for clients to query it.
 
 There are two primary discovery patterns. In client-side discovery, the client queries a service registry (such as Consul or Eureka) directly, receives a list of healthy endpoints, and applies its own load balancing logic to select an instance. Netflix Ribbon used this pattern extensively. In server-side discovery, the client sends requests to a fixed intermediary (a load balancer or service mesh proxy), which queries the registry and routes the request. Kubernetes services and AWS ECS use server-side discovery, where kube-proxy or the cloud load balancer handles the routing transparently.
 
@@ -2231,7 +2240,8 @@ Services connect to upstreams via localhost:local_bind_port; the Envoy sidecar h
     questions: 5,
     description: 'TTL mechanics, negative caching, NXDOMAIN propagation, stale-while-revalidate, cache poisoning attacks, and resolver hierarchies.',
     visualizations: [],
-    introduction: `DNS caching is fundamental to the scalability of the internet. Without caching, every DNS query would traverse from the client to the root nameservers, through TLD nameservers, to the authoritative nameservers for every single request. Caching allows resolvers to store and reuse responses for the duration specified by the Time-To-Live (TTL) value in each DNS record, dramatically reducing query volume to authoritative servers and decreasing resolution latency for clients.
+    introduction: `## Overview
+DNS caching is fundamental to the scalability of the internet. Without caching, every DNS query would traverse from the client to the root nameservers, through TLD nameservers, to the authoritative nameservers for every single request. Caching allows resolvers to store and reuse responses for the duration specified by the Time-To-Live (TTL) value in each DNS record, dramatically reducing query volume to authoritative servers and decreasing resolution latency for clients.
 
 The TTL field in a DNS resource record specifies how long, in seconds, the record may be cached by resolvers. When an authoritative nameserver returns a record, it includes the TTL; each resolver that caches the response decrements the TTL as time passes and re-queries the authoritative server when it reaches zero. A record with TTL 300 cached by a resolver five minutes ago has TTL 0 — the resolver must re-query before serving the record to the next client.
 
@@ -2591,7 +2601,8 @@ dig api.newservice.example.com AAAA  # name exists (A record) but no AAAA -> NOD
     questions: 6,
     description: 'TCP 3-way handshake, SYN/ACK/FIN/RST flags, TCP state machine, congestion control algorithms, and Nagle algorithm tradeoffs.',
     visualizations: [],
-    introduction: `The TCP/IP stack is the foundational protocol suite that powers virtually all internet communication. Understanding it deeply is essential for any engineer working on distributed systems, backend services, or infrastructure.
+    introduction: `## Overview
+The TCP/IP stack is the foundational protocol suite that powers virtually all internet communication. Understanding it deeply is essential for any engineer working on distributed systems, backend services, or infrastructure.
 
 TCP (Transmission Control Protocol) operates at Layer 4 of the OSI model and provides reliable, ordered, and error-checked delivery of data between applications. It achieves this through a combination of sequence numbers, acknowledgments, retransmissions, and flow control mechanisms.
 
@@ -2808,7 +2819,8 @@ Use connection pools with validation-on-borrow (test-on-acquire), short TCP keep
     questions: 5,
     description: 'Reliability vs speed tradeoffs, head-of-line blocking, QUIC protocol, and choosing the right transport for each use case.',
     visualizations: [],
-    introduction: `TCP and UDP are the two dominant Layer 4 protocols in the TCP/IP stack, and choosing between them is one of the most fundamental decisions in protocol design. They represent fundamentally different philosophies: TCP provides a reliable, ordered byte stream with built-in congestion control, while UDP is a lightweight datagram protocol that provides no guarantees beyond best-effort delivery.
+    introduction: `## Overview
+TCP and UDP are the two dominant Layer 4 protocols in the TCP/IP stack, and choosing between them is one of the most fundamental decisions in protocol design. They represent fundamentally different philosophies: TCP provides a reliable, ordered byte stream with built-in congestion control, while UDP is a lightweight datagram protocol that provides no guarantees beyond best-effort delivery.
 
 TCP's reliability comes at a cost. The 3-way handshake adds at minimum one round-trip before data can flow. Retransmissions of lost packets introduce latency spikes. Head-of-line (HOL) blocking means a single lost packet stalls all subsequent data in a stream until the retransmission arrives. For bulk transfers, file downloads, API calls, and any use case where data integrity is required and latency is secondary, TCP is the right choice.
 
@@ -2969,7 +2981,8 @@ sysctl -w net.core.rmem_default=26214400
     questions: 6,
     description: 'HTTP/1.1 keep-alive and pipelining, request/response structure, TLS certificate chain validation, and HTTPS security model.',
     visualizations: [],
-    introduction: `HTTP (Hypertext Transfer Protocol) is the application-layer protocol that underpins the web and the vast majority of API communication in modern distributed systems. Understanding it deeply — beyond just knowing that GET fetches and POST creates — is essential for building reliable, performant, and secure services.
+    introduction: `## Overview
+HTTP (Hypertext Transfer Protocol) is the application-layer protocol that underpins the web and the vast majority of API communication in modern distributed systems. Understanding it deeply — beyond just knowing that GET fetches and POST creates — is essential for building reliable, performant, and secure services.
 
 HTTP/1.1, standardized in RFC 7230-7235, introduced persistent connections (keep-alive) as the default, allowing multiple requests to reuse a single TCP connection. This eliminated the per-request TCP handshake overhead of HTTP/1.0. Pipelining extended this by allowing a client to send multiple requests without waiting for responses, though it suffered from head-of-line blocking at the response level and was never reliably implemented in practice.
 
@@ -3205,7 +3218,8 @@ Once submitted to the preload list, removal takes months and requires browsers t
     questions: 6,
     description: 'Multiplexing streams, HPACK/QPACK header compression, server push, QUIC UDP transport, and 0-RTT connection resumption.',
     visualizations: [],
-    introduction: `HTTP/2 and HTTP/3 are major protocol revisions designed to address the performance limitations of HTTP/1.1. Understanding them is critical for engineers working on high-performance web services, CDNs, API gateways, and load balancers.
+    introduction: `## Overview
+HTTP/2 and HTTP/3 are major protocol revisions designed to address the performance limitations of HTTP/1.1. Understanding them is critical for engineers working on high-performance web services, CDNs, API gateways, and load balancers.
 
 HTTP/2, standardized in RFC 7540, introduced binary framing as a replacement for HTTP/1.1's text-based format. Requests and responses are split into frames, which are multiplexed over a single TCP connection using stream IDs. This eliminates the need for multiple TCP connections to parallelize requests (HTTP/1.1 required 6 parallel connections per origin in browsers). HTTP/2 also introduced HPACK header compression, which significantly reduces header overhead for APIs that send the same headers repeatedly, and server push, which allows the server to proactively send resources the client will need before it asks.
 
@@ -3392,7 +3406,8 @@ curl -sI https://www.google.com | grep alt-svc
     questions: 5,
     description: 'WebSocket upgrade handshake, full-duplex frames, ping/pong heartbeat, and comparison with SSE and long-polling.',
     visualizations: [],
-    introduction: `Real-time communication between clients and servers is a fundamental requirement for chat applications, live dashboards, collaborative editing, trading platforms, and online games. HTTP was designed as a request/response protocol — the client always initiates. WebSockets, Server-Sent Events (SSE), and long-polling are three approaches that work around or extend HTTP to enable server-initiated data delivery.
+    introduction: `## Overview
+Real-time communication between clients and servers is a fundamental requirement for chat applications, live dashboards, collaborative editing, trading platforms, and online games. HTTP was designed as a request/response protocol — the client always initiates. WebSockets, Server-Sent Events (SSE), and long-polling are three approaches that work around or extend HTTP to enable server-initiated data delivery.
 
 WebSockets (RFC 6455) provide a full-duplex, persistent, bidirectional communication channel over a single TCP connection. The protocol begins with an HTTP upgrade handshake: the client sends an HTTP/1.1 Upgrade request with specific WebSocket headers (Upgrade: websocket, Connection: Upgrade, Sec-WebSocket-Key), and the server responds with 101 Switching Protocols. After the upgrade, the connection is no longer HTTP — data flows as WebSocket frames, which have a compact binary header (2-10 bytes) followed by payload. Either side can send frames at any time, and either side can initiate close.
 
@@ -3605,7 +3620,8 @@ Use for: chat, collaborative editing, multiplayer games, trading platforms
     questions: 6,
     description: 'CIDR notation, subnetting, private RFC 1918 ranges, IPv6 basics, and calculating usable hosts per subnet.',
     visualizations: [],
-    introduction: `IP addressing and subnetting are foundational networking knowledge that every cloud engineer, SRE, and backend developer working with infrastructure must understand. Whether you are designing VPC address spaces, configuring Kubernetes pod CIDR ranges, debugging why two services cannot communicate, or understanding why a security group rule is not matching, IP addressing knowledge is directly applied.
+    introduction: `## Overview
+IP addressing and subnetting are foundational networking knowledge that every cloud engineer, SRE, and backend developer working with infrastructure must understand. Whether you are designing VPC address spaces, configuring Kubernetes pod CIDR ranges, debugging why two services cannot communicate, or understanding why a security group rule is not matching, IP addressing knowledge is directly applied.
 
 An IP address is a 32-bit (IPv4) or 128-bit (IPv6) number that identifies a network interface. IPv4 addresses are written in dotted-decimal notation as four octets (e.g., 192.168.1.100). The address is divided into a network portion and a host portion, determined by the subnet mask.
 
@@ -3805,7 +3821,8 @@ aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId,CidrBlock]' --output table
     questions: 5,
     description: 'SNAT vs DNAT, connection tracking, port forwarding, NAT traversal techniques, and why NAT breaks peer-to-peer connectivity.',
     visualizations: [],
-    introduction: `Network Address Translation (NAT) is the mechanism by which IP addresses are rewritten in packet headers as they traverse a router or firewall. NAT was originally designed as a stopgap to address IPv4 exhaustion — by hiding many private RFC 1918 addresses behind a single public IP, NAT allowed billions of devices to share a relatively small pool of public addresses. Today NAT is ubiquitous: home routers, cloud NAT gateways, container runtimes, and Kubernetes kube-proxy all rely on it.
+    introduction: `## Overview
+Network Address Translation (NAT) is the mechanism by which IP addresses are rewritten in packet headers as they traverse a router or firewall. NAT was originally designed as a stopgap to address IPv4 exhaustion — by hiding many private RFC 1918 addresses behind a single public IP, NAT allowed billions of devices to share a relatively small pool of public addresses. Today NAT is ubiquitous: home routers, cloud NAT gateways, container runtimes, and Kubernetes kube-proxy all rely on it.
 
 Source NAT (SNAT) rewrites the source IP address of outgoing packets. This is the standard form of NAT used in home routers and cloud NAT gateways: a device with a private IP (10.0.0.5) sends a packet; the router rewrites the source to its public IP (203.0.113.1) and records the mapping in a connection tracking table. When the response arrives, the router looks up the connection and rewrites the destination back to 10.0.0.5.
 
@@ -4004,7 +4021,8 @@ Every IPv6 host can have a globally unique, publicly reachable address. No NAT r
     questions: 6,
     description: 'AS numbers, iBGP vs eBGP, path selection attributes (MED/LocalPref/AS_PATH), route aggregation, and BGP hijacking attacks.',
     visualizations: [],
-    introduction: `BGP (Border Gateway Protocol) is the routing protocol that holds the internet together. As an exterior gateway protocol standardized in RFC 4271, BGP exchanges reachability information between autonomous systems (AS) — collections of IP prefixes under a single administrative domain identified by a unique AS number. Unlike interior routing protocols that optimize for shortest path within a network, BGP is a path-vector protocol that makes routing decisions based on policies and a rich set of attributes.
+    introduction: `## Overview
+BGP (Border Gateway Protocol) is the routing protocol that holds the internet together. As an exterior gateway protocol standardized in RFC 4271, BGP exchanges reachability information between autonomous systems (AS) — collections of IP prefixes under a single administrative domain identified by a unique AS number. Unlike interior routing protocols that optimize for shortest path within a network, BGP is a path-vector protocol that makes routing decisions based on policies and a rich set of attributes.
 
 BGP sessions operate over TCP port 179, ensuring reliable delivery of routing updates. Two fundamental session types exist: eBGP (external BGP) connects routers in different autonomous systems and is the basis of inter-domain internet routing, while iBGP (internal BGP) connects routers within the same AS to distribute externally learned routes internally.
 
@@ -4174,7 +4192,8 @@ When the BGP session drops, AWS withdraws the advertised routes. If you have a S
     questions: 5,
     description: '802.1Q tagging, trunk vs access ports, VXLAN encapsulation over UDP port 4789, VTEP endpoints, and NVO3 overlay networks.',
     visualizations: [],
-    introduction: `VLANs (Virtual Local Area Networks) and VXLAN (Virtual Extensible LAN) are foundational technologies for network segmentation and overlay networking, both critical in modern cloud and data center infrastructure.
+    introduction: `## Overview
+VLANs (Virtual Local Area Networks) and VXLAN (Virtual Extensible LAN) are foundational technologies for network segmentation and overlay networking, both critical in modern cloud and data center infrastructure.
 
 A VLAN is a logical partition of a Layer 2 network. Using IEEE 802.1Q tagging, a 12-bit VLAN ID (1-4094) is inserted into the Ethernet frame header, allowing switches to segregate traffic into isolated broadcast domains without requiring separate physical infrastructure. VLANs are the building block of traditional enterprise network segmentation, used to separate departments, isolate tenants, and reduce broadcast domain size.
 
@@ -4314,7 +4333,8 @@ Modern data centers use a combination: a Layer 3 IP underlay (BGP between spine 
     questions: 6,
     description: 'Protocol Buffers vs JSON serialization, streaming modes (unary/server/client/bidirectional), HTTP/2 multiplexing, and choosing the right API style.',
     visualizations: [],
-    introduction: `gRPC and REST are the two dominant API paradigms in modern distributed systems, and choosing between them has significant performance, developer experience, and operational implications. Understanding both deeply is expected at senior engineering levels at Google, Amazon, and Meta.
+    introduction: `## Overview
+gRPC and REST are the two dominant API paradigms in modern distributed systems, and choosing between them has significant performance, developer experience, and operational implications. Understanding both deeply is expected at senior engineering levels at Google, Amazon, and Meta.
 
 REST (Representational State Transfer) is an architectural style using HTTP/1.1 with JSON. It relies on standard HTTP verbs (GET, POST, PUT, DELETE, PATCH), stateless request-response patterns, and human-readable JSON payloads. REST's simplicity, browser compatibility, and universal tooling have made it the default for public-facing APIs.
 
@@ -4467,7 +4487,8 @@ Compared to polling: bidirectional streaming eliminates polling overhead entirel
     questions: 5,
     description: 'Link-state vs distance-vector algorithms, OSPF areas and DR/BDR election, EIGRP DUAL algorithm, and enterprise routing tradeoffs.',
     visualizations: [],
-    introduction: `OSPF (Open Shortest Path First) and EIGRP (Enhanced Interior Gateway Routing Protocol) are the two dominant interior gateway protocols (IGPs) used within enterprise and service provider networks. While BGP handles inter-AS routing, IGPs handle routing within a single autonomous system.
+    introduction: `## Overview
+OSPF (Open Shortest Path First) and EIGRP (Enhanced Interior Gateway Routing Protocol) are the two dominant interior gateway protocols (IGPs) used within enterprise and service provider networks. While BGP handles inter-AS routing, IGPs handle routing within a single autonomous system.
 
 OSPF is an open-standard link-state protocol defined in RFC 2328. Each router maintains a complete map of the network topology (the Link State Database or LSDB) and runs Dijkstra's SPF algorithm to compute the shortest path tree. OSPF is organized into areas — the backbone area 0 is required, with all other areas connecting to it. This hierarchy limits the size of the LSDB and reduces SPF computation overhead. OSPF is widely used in enterprise networks, service provider cores, and is the IGP of choice for large-scale deployments.
 
@@ -4594,7 +4615,8 @@ OSPF convergence involves: LSA flood, SPF trigger delay, SPF calculation, route 
     questions: 4,
     description: 'Underlay vs overlay separation, intelligent path selection, WAN optimization, and SD-WAN vendor landscape (Cisco Viptela, VMware, Palo Alto).',
     visualizations: [],
-    introduction: `SD-WAN (Software-Defined Wide Area Network) decouples network control from physical hardware, enabling centralized management and intelligent traffic routing across multiple WAN transport links (MPLS, broadband internet, LTE/5G). It emerged as enterprises sought to reduce expensive MPLS costs while maintaining application performance and security.
+    introduction: `## Overview
+SD-WAN (Software-Defined Wide Area Network) decouples network control from physical hardware, enabling centralized management and intelligent traffic routing across multiple WAN transport links (MPLS, broadband internet, LTE/5G). It emerged as enterprises sought to reduce expensive MPLS costs while maintaining application performance and security.
 
 Traditional WAN relied on static routing with MPLS circuits providing guaranteed QoS but at high cost and with slow provisioning lead times (weeks to months). SD-WAN introduces a software overlay that monitors all available transport links in real time and routes application traffic based on policy, measured performance metrics (latency, jitter, packet loss), and application identity.
 
@@ -4682,7 +4704,8 @@ In Cisco SD-WAN, OMP redistributes route changes from vSmart to all vEdge device
     questions: 4,
     description: 'Label switching, Label Switched Paths, LDP and RSVP-TE signaling, MPLS VPN services, and traffic engineering capabilities.',
     visualizations: [],
-    introduction: `MPLS (Multiprotocol Label Switching) is a high-performance packet forwarding technology that uses short fixed-length labels instead of long IP address lookups to forward packets. Standardized by the IETF in the early 2000s, MPLS became the backbone technology for service provider networks and enterprise WAN services for over two decades.
+    introduction: `## Overview
+MPLS (Multiprotocol Label Switching) is a high-performance packet forwarding technology that uses short fixed-length labels instead of long IP address lookups to forward packets. Standardized by the IETF in the early 2000s, MPLS became the backbone technology for service provider networks and enterprise WAN services for over two decades.
 
 In traditional IP routing, each router performs a full IP lookup in the routing table for every packet. MPLS replaces this with label-based forwarding: the ingress Label Edge Router (LER) assigns a label to an incoming packet, and all subsequent Label Switching Routers (LSRs) in the MPLS network forward the packet based solely on the label using a simple table lookup — much faster than full IP routing on older hardware.
 
@@ -4774,7 +4797,8 @@ The CE routers never see MPLS labels. The entire MPLS VPN is transparent to the 
     questions: 5,
     description: 'Transitive peering limitations, non-overlapping CIDR requirement, inter-region peering, and routing table configuration.',
     visualizations: [],
-    introduction: `VPC Peering is an AWS networking feature that creates a direct, private network connection between two VPCs, enabling instances in either VPC to communicate as if they were on the same network. Traffic remains on the AWS backbone and never traverses the public internet, providing low latency and high bandwidth.
+    introduction: `## Overview
+VPC Peering is an AWS networking feature that creates a direct, private network connection between two VPCs, enabling instances in either VPC to communicate as if they were on the same network. Traffic remains on the AWS backbone and never traverses the public internet, providing low latency and high bandwidth.
 
 Peering connections can be established between VPCs in the same account, between different AWS accounts, or across AWS regions (inter-region VPC peering). The connection is established through a request-accept workflow: the requester VPC sends a peering request, and the accepter VPC owner approves it. Once active, both sides must update their route tables to direct traffic destined for the peer CIDR through the peering connection.
 
@@ -4947,7 +4971,8 @@ aws ec2 modify-vpc-peering-connection-options \
     questions: 5,
     description: 'Hub-and-spoke topology for VPCs, centralized routing tables, TGW peering across regions, and comparison with VPC peering.',
     visualizations: [],
-    introduction: `AWS Transit Gateway (TGW) is a regional network transit hub that enables customers to connect VPCs, VPNs, and Direct Connect connections through a single gateway, implementing a hub-and-spoke network topology at scale. Launched in 2018, it solved the fundamental scalability problem of VPC peering's non-transitive, full-mesh requirement.
+    introduction: `## Overview
+AWS Transit Gateway (TGW) is a regional network transit hub that enables customers to connect VPCs, VPNs, and Direct Connect connections through a single gateway, implementing a hub-and-spoke network topology at scale. Launched in 2018, it solved the fundamental scalability problem of VPC peering's non-transitive, full-mesh requirement.
 
 Every VPC, VPN, or Direct Connect attachment connects to the Transit Gateway, and the TGW routes traffic between all connected networks according to its route tables. A single TGW supports up to 5,000 VPC attachments, making it suitable for large enterprise multi-account AWS environments managed via AWS Organizations.
 
@@ -5046,7 +5071,8 @@ Prod VPCs are associated with production-rt. Production-rt only contains routes 
     questions: 5,
     description: 'Interface VPC endpoints, NLB-backed endpoint services, private connectivity without internet traversal, and endpoint service sharing.',
     visualizations: [],
-    introduction: `AWS PrivateLink provides private connectivity between VPCs, AWS services, and on-premises applications without exposing traffic to the public internet. It enables service providers (whether AWS itself or third-party SaaS vendors) to offer services that consumers can access privately from within their own VPCs.
+    introduction: `## Overview
+AWS PrivateLink provides private connectivity between VPCs, AWS services, and on-premises applications without exposing traffic to the public internet. It enables service providers (whether AWS itself or third-party SaaS vendors) to offer services that consumers can access privately from within their own VPCs.
 
 PrivateLink works through two complementary constructs: VPC Endpoints (on the consumer side) and Endpoint Services (on the provider side). An Interface VPC Endpoint creates one or more Elastic Network Interfaces (ENIs) with private IP addresses in your VPC subnets. Traffic to the service is routed through these ENIs, never leaving the AWS network. This is fundamentally different from internet-based access or even VPC peering — the service's actual infrastructure can be in a completely separate VPC or account.
 
@@ -5175,7 +5201,8 @@ aws ec2 authorize-security-group-ingress \
     questions: 6,
     description: 'Dedicated circuits, hosted connections, virtual interface types (public/private/transit), BGP over Direct Connect, and VPN as failover.',
     visualizations: [],
-    introduction: `AWS Direct Connect and Site-to-Site VPN are the two primary mechanisms for establishing private connectivity between on-premises data centers and AWS. They serve different use cases and are frequently deployed together for redundancy.
+    introduction: `## Overview
+AWS Direct Connect and Site-to-Site VPN are the two primary mechanisms for establishing private connectivity between on-premises data centers and AWS. They serve different use cases and are frequently deployed together for redundancy.
 
 AWS Direct Connect provides dedicated network connections from your premises to AWS via a physical fiber circuit. Connections are established at one of AWS's Direct Connect locations (co-location facilities operated by partners). You can order a Dedicated Connection (1G or 10G port owned by you) or a Hosted Connection (sub-1G or 1G/10G shared on a partner's port). Direct Connect provides consistent network performance, reduced data transfer costs compared to internet, and higher bandwidth than VPN.
 
@@ -5334,7 +5361,8 @@ Running IPsec over the Direct Connect circuit provides Layer 3 encryption. Used 
     questions: 5,
     description: 'Site-to-site VPN architecture, SD-WAN to cloud integration, Transit Gateway with Direct Connect, and latency considerations.',
     visualizations: [],
-    introduction: `Hybrid cloud connectivity is the practice of linking on-premises infrastructure with public cloud environments (AWS, Azure, GCP) in a secure, performant, and resilient manner. It is one of the most common architectural challenges faced by enterprise SREs and cloud architects, as most large organizations have existing on-premises systems that must coexist and interoperate with cloud-native workloads.
+    introduction: `## Overview
+Hybrid cloud connectivity is the practice of linking on-premises infrastructure with public cloud environments (AWS, Azure, GCP) in a secure, performant, and resilient manner. It is one of the most common architectural challenges faced by enterprise SREs and cloud architects, as most large organizations have existing on-premises systems that must coexist and interoperate with cloud-native workloads.
 
 The connectivity options exist on a spectrum of cost, bandwidth, latency, and reliability. At one end, public internet with TLS provides basic connectivity but with unpredictable latency and no bandwidth guarantees. VPN tunnels over internet add IPsec encryption and are cost-effective for low-to-medium bandwidth needs. SD-WAN solutions improve internet-based connectivity with intelligent path selection and application awareness. At the other end, dedicated circuits (AWS Direct Connect, Azure ExpressRoute, GCP Dedicated Interconnect) provide consistent performance, high bandwidth, and reduced data transfer costs at higher fixed expense and longer provisioning times.
 
@@ -5461,7 +5489,8 @@ aws route53resolver create-resolver-rule \
     questions: 6,
     description: 'tcpdump syntax and BPF expressions, Wireshark display filters, pcap format, and decoding protocol layers from a capture.',
     visualizations: [],
-    introduction: `Packet capture and analysis is a fundamental SRE and network engineering skill for diagnosing connectivity issues, performance problems, protocol errors, and security incidents that cannot be solved with higher-level metrics and logs alone. When an application reports "connection refused" or "timeout" and log analysis is inconclusive, packet-level inspection is often the only way to determine ground truth.
+    introduction: `## Overview
+Packet capture and analysis is a fundamental SRE and network engineering skill for diagnosing connectivity issues, performance problems, protocol errors, and security incidents that cannot be solved with higher-level metrics and logs alone. When an application reports "connection refused" or "timeout" and log analysis is inconclusive, packet-level inspection is often the only way to determine ground truth.
 
 tcpdump is the standard command-line packet capture tool available on nearly every Linux system. It uses the libpcap library and supports Berkeley Packet Filter (BPF) expressions for efficient kernel-level packet filtering. BPF filtering happens in the kernel before packets are copied to userspace, making tcpdump efficient even on high-traffic interfaces. Understanding BPF syntax — filtering by host, port, protocol, direction, and combining expressions with and/or/not — is essential for targeted captures that don't overwhelm disk or memory.
 
@@ -5631,7 +5660,8 @@ Zero window means the receiver buffer is full. The sender stops until a Window U
     questions: 6,
     description: 'Interpreting ping and traceroute output, firewall drop vs reject behavior, MTU black holes, and asymmetric routing issues.',
     visualizations: [],
-    introduction: `Connectivity failures are one of the most common and frustrating categories of production incidents. A service that worked yesterday suddenly cannot be reached, or a new deployment fails to connect to a dependency. Systematic diagnosis using the right tools and a layered OSI-model approach dramatically reduces mean time to resolution.
+    introduction: `## Overview
+Connectivity failures are one of the most common and frustrating categories of production incidents. A service that worked yesterday suddenly cannot be reached, or a new deployment fails to connect to a dependency. Systematic diagnosis using the right tools and a layered OSI-model approach dramatically reduces mean time to resolution.
 
 The fundamental diagnostic loop is: determine what layer the failure is at (physical, IP, transport, application), then use layer-appropriate tools to isolate the exact failure point. Starting with ping and traceroute provides an initial map of IP-layer connectivity. If IP connectivity exists but TCP connections fail, tcpdump at both endpoints reveals whether SYN packets are arriving and whether RST or ICMP unreachable messages are being sent back. If TCP connects but application responses are wrong, curl and application-layer debugging tools take over.
 
@@ -5828,7 +5858,8 @@ aws ec2 authorize-security-group-ingress \
     questions: 5,
     description: 'Ethernet 1500-byte MTU, jumbo frames at 9000 bytes, Path MTU Discovery, DF bit, VPN encapsulation overhead, and MSS clamping.',
     visualizations: [],
-    introduction: `Maximum Transmission Unit (MTU) and IP fragmentation are foundational networking concepts that become critical in cloud and overlay networking environments where encapsulation overhead can silently degrade or break connectivity.
+    introduction: `## Overview
+Maximum Transmission Unit (MTU) and IP fragmentation are foundational networking concepts that become critical in cloud and overlay networking environments where encapsulation overhead can silently degrade or break connectivity.
 
 The MTU is the largest IP packet that can be transmitted over a network link without fragmentation. Ethernet's standard MTU is 1500 bytes. This has been the dominant link MTU for decades. However, the effective MTU for application data is smaller: IP headers consume 20 bytes, TCP headers consume 20-60 bytes, leaving a Maximum Segment Size (MSS) of approximately 1460 bytes for TCP payload.
 
@@ -5998,7 +6029,8 @@ sysctl -w net.ipv4.tcp_wmem='4096 65536 16777216'
     questions: 6,
     description: 'Round-robin, weighted, least-connections, IP hash, random, power-of-two-choices, and consistent hashing with virtual nodes.',
     visualizations: [],
-    introduction: `Load balancing algorithms determine how a load balancer distributes incoming requests across a pool of backend servers. Choosing the wrong algorithm for your traffic pattern causes hot spots, wasted capacity, or session loss.
+    introduction: `## Overview
+Load balancing algorithms determine how a load balancer distributes incoming requests across a pool of backend servers. Choosing the wrong algorithm for your traffic pattern causes hot spots, wasted capacity, or session loss.
 
 Round-robin is the simplest: requests cycle through servers in order. It works well when all servers are homogeneous and request cost is uniform. Weighted round-robin assigns a weight to each server proportional to its capacity, so a server with weight 3 receives three requests for every one sent to a server with weight 1.
 
@@ -6171,7 +6203,8 @@ nginx -t && nginx -s reload
     questions: 5,
     description: 'Active vs passive health checks, HTTP 200 probes, TCP checks, intervals and thresholds, and circuit breaker patterns.',
     visualizations: [],
-    introduction: `Health checks are the mechanism by which a load balancer determines whether a backend is capable of serving traffic. Without them, requests are sent to dead or degraded backends, resulting in timeouts and errors that the client experiences directly.
+    introduction: `## Overview
+Health checks are the mechanism by which a load balancer determines whether a backend is capable of serving traffic. Without them, requests are sent to dead or degraded backends, resulting in timeouts and errors that the client experiences directly.
 
 Active health checks are periodic requests the load balancer sends to each backend independently of real traffic. A typical HTTP active check sends a GET to /health every 10 seconds. If the backend returns 200 within a timeout window, it is considered healthy. After a configurable number of consecutive failures (the unhealthy threshold — typically 2 or 3), the backend is removed from the rotation. After a number of consecutive successes (the healthy threshold — typically 2), it is reinstated. TCP active checks simply test that the port accepts a connection, which is faster but verifies less.
 
@@ -6341,7 +6374,8 @@ When these limits are exceeded, Envoy returns 503 immediately rather than queuin
     questions: 4,
     description: 'Cookie-based affinity, source IP hashing, JSESSIONID pinning, and how sticky sessions conflict with horizontal scaling.',
     visualizations: [],
-    introduction: `Sticky sessions (also called session affinity) ensure that a client's requests are consistently routed to the same backend server. This is necessary when server-side session state is stored in-process (in memory) rather than in a shared external store. If a subsequent request lands on a different server, that server has no knowledge of the session and the user experiences an authentication failure or lost cart.
+    introduction: `## Overview
+Sticky sessions (also called session affinity) ensure that a client's requests are consistently routed to the same backend server. This is necessary when server-side session state is stored in-process (in memory) rather than in a shared external store. If a subsequent request lands on a different server, that server has no knowledge of the session and the user experiences an authentication failure or lost cart.
 
 Cookie-based affinity is the most common implementation. The load balancer inserts a cookie (e.g., AWSALB on AWS ALB) into the first response. On subsequent requests, the load balancer reads this cookie and routes to the pinned backend.
 
@@ -6477,7 +6511,8 @@ aws elbv2 describe-target-group-attributes \\
     questions: 4,
     description: 'Same IP announced from multiple PoPs, BGP selects closest, DDoS resilience, and how 1.1.1.1 and 8.8.8.8 work.',
     visualizations: [],
-    introduction: `Anycast is a network addressing and routing method where the same IP address is announced from multiple geographically distributed locations (Points of Presence, or PoPs). BGP selects the "closest" PoP based on AS path length and routing policy, so a client in Tokyo reaches the Tokyo PoP while a client in Frankfurt reaches the Frankfurt PoP — both using the same destination IP.
+    introduction: `## Overview
+Anycast is a network addressing and routing method where the same IP address is announced from multiple geographically distributed locations (Points of Presence, or PoPs). BGP selects the "closest" PoP based on AS path length and routing policy, so a client in Tokyo reaches the Tokyo PoP while a client in Frankfurt reaches the Frankfurt PoP — both using the same destination IP.
 
 The mechanism works through BGP route announcements. Each PoP originates a BGP route for the same prefix (e.g., 1.1.1.1/32). BGP routers on the Internet receive multiple paths to the same prefix and select the best path based on the BGP decision process — typically shortest AS path, then lowest MED.
 
@@ -6610,7 +6645,8 @@ aws route53 change-resource-record-sets --hosted-zone-id Z123 --change-batch '{
     questions: 6,
     description: 'nginx upstream blocks and proxy_pass directives, HAProxy ACLs and backend pools, stats page, and connection limit tuning.',
     visualizations: [],
-    introduction: `nginx and HAProxy are the two dominant open-source load balancers and reverse proxies used in production infrastructure.
+    introduction: `## Overview
+nginx and HAProxy are the two dominant open-source load balancers and reverse proxies used in production infrastructure.
 
 nginx was designed as a high-performance web server and reverse proxy. Its event-driven, asynchronous architecture handles tens of thousands of concurrent connections per worker process with low memory overhead. nginx excels at HTTP/HTTPS proxying, SSL termination, static file serving, caching, rate limiting, and gzip compression — a full layer-7 feature set in one binary.
 
@@ -6810,7 +6846,8 @@ haproxy -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid -sf $(cat /run/haproxy.p
     questions: 6,
     description: 'Netfilter chains (INPUT/OUTPUT/FORWARD/PREROUTING/POSTROUTING), tables (filter/nat/mangle), rule evaluation order, and nft syntax.',
     visualizations: [],
-    introduction: `iptables and nftables are the primary tools for configuring the Linux kernel's packet filtering framework, Netfilter. Every major Linux firewall, container networking system, and cloud hypervisor ultimately uses Netfilter under the hood — Docker, Kubernetes (kube-proxy), and UFW all write iptables rules or nftables rules.
+    introduction: `## Overview
+iptables and nftables are the primary tools for configuring the Linux kernel's packet filtering framework, Netfilter. Every major Linux firewall, container networking system, and cloud hypervisor ultimately uses Netfilter under the hood — Docker, Kubernetes (kube-proxy), and UFW all write iptables rules or nftables rules.
 
 Netfilter uses the concept of tables and chains. The filter table handles allow/drop decisions. The nat table handles Network Address Translation (SNAT, DNAT, masquerade). The mangle table modifies packet headers (TTL, DSCP, marks). The raw table is evaluated first and can exempt packets from connection tracking.
 
@@ -7016,7 +7053,8 @@ iptables -I DOCKER-USER -i eth0 -s 10.0.0.0/8 -j RETURN
     questions: 5,
     description: 'Stateful filtering, inbound/outbound rules, port ranges, security group references as sources, and no-deny-rule model.',
     visualizations: [],
-    introduction: `AWS Security Groups are the primary layer of network access control for EC2 instances, RDS databases, Lambda functions in VPCs, ECS tasks, and most other AWS resources that have network interfaces (ENIs).
+    introduction: `## Overview
+AWS Security Groups are the primary layer of network access control for EC2 instances, RDS databases, Lambda functions in VPCs, ECS tasks, and most other AWS resources that have network interfaces (ENIs).
 
 A security group is a stateful virtual firewall attached to an ENI. Stateful means that if you allow inbound traffic on port 443, the return traffic is automatically allowed without any outbound rule. The connection tracking is handled by the underlying hypervisor.
 
@@ -7142,7 +7180,8 @@ A misconfigured security group (too permissive) is still blocked by the NACL. A 
     questions: 5,
     description: 'Stateless rule evaluation, numbered rules, explicit allow and deny, ephemeral port ranges, and differences from security groups.',
     visualizations: [],
-    introduction: `AWS Network Access Control Lists (NACLs) are stateless subnet-level firewalls that provide an additional layer of network security beyond Security Groups. NACLs operate at the subnet boundary and inspect each packet independently without tracking connection state.
+    introduction: `## Overview
+AWS Network Access Control Lists (NACLs) are stateless subnet-level firewalls that provide an additional layer of network security beyond Security Groups. NACLs operate at the subnet boundary and inspect each packet independently without tracking connection state.
 
 Every subnet in a VPC is associated with exactly one NACL. The VPC's default NACL allows all inbound and outbound traffic by default. NACLs affect all instances in the subnet regardless of their individual security group configurations.
 
@@ -7300,7 +7339,8 @@ Default: 20 inbound + 20 outbound rules per NACL (adjustable via Service Quotas)
     questions: 6,
     description: 'BeyondCorp identity-based access, microsegmentation, ZTNA architecture, mTLS everywhere, and never-trust-always-verify model.',
     visualizations: [],
-    introduction: `Zero Trust Networking (ZTN) is a security model that eliminates the concept of a trusted network perimeter. Traditional security assumes that traffic inside the corporate network or VPC is trusted. Zero Trust rejects this assumption: "never trust, always verify" — every request must be authenticated and authorized regardless of where it originates.
+    introduction: `## Overview
+Zero Trust Networking (ZTN) is a security model that eliminates the concept of a trusted network perimeter. Traditional security assumes that traffic inside the corporate network or VPC is trusted. Zero Trust rejects this assumption: "never trust, always verify" — every request must be authenticated and authorized regardless of where it originates.
 
 The model emerged from Google's BeyondCorp initiative (2014-2016). BeyondCorp moved access control from the network layer to the application layer. Employees access corporate applications via a proxy that verifies their device certificate, identity token, and risk posture — not their network location. A laptop on a coffee shop WiFi receives the same treatment as one on the corporate network.
 
@@ -7475,7 +7515,8 @@ Phase 3: Decommission VPN when all applications are accessible via ZTNA.`,
     questions: 5,
     description: 'WAF rule sets (OWASP CRS), rate limiting, AWS Shield Standard vs Advanced, Cloudflare Magic Transit, and scrubbing centers.',
     visualizations: [],
-    introduction: `Web Application Firewalls (WAFs) and DDoS protection are two distinct but complementary defenses. A WAF operates at Layer 7 (HTTP) and inspects request content to detect and block application-layer attacks — SQL injection, XSS, path traversal, and other OWASP Top 10 threats. DDoS protection operates at Layers 3, 4, and 7 to absorb volumetric attacks that aim to exhaust bandwidth or compute capacity.
+    introduction: `## Overview
+Web Application Firewalls (WAFs) and DDoS protection are two distinct but complementary defenses. A WAF operates at Layer 7 (HTTP) and inspects request content to detect and block application-layer attacks — SQL injection, XSS, path traversal, and other OWASP Top 10 threats. DDoS protection operates at Layers 3, 4, and 7 to absorb volumetric attacks that aim to exhaust bandwidth or compute capacity.
 
 A WAF inspects individual HTTP requests and applies a set of rules (signatures, rate limits, geographic restrictions, IP reputation) to make a per-request decision to allow, block, or challenge. The OWASP Core Rule Set (CRS) is the open-source baseline used by ModSecurity, AWS WAF, and Cloudflare WAF. It contains hundreds of rules detecting common attack patterns.
 
@@ -7645,7 +7686,8 @@ For most workloads, Shield Standard + CloudFront + AWS WAF rate limiting provide
     questions: 5,
     description: 'NetworkPolicy spec, ingress/egress rules, podSelector and namespaceSelector, and CNI support (Calico/Cilium).',
     visualizations: [],
-    introduction: `Kubernetes NetworkPolicy resources define rules for how pods can communicate with each other and with endpoints outside the cluster. By default, Kubernetes applies no network isolation — all pods can communicate with all other pods regardless of namespace. NetworkPolicy is the mechanism for implementing Zero Trust microsegmentation within a Kubernetes cluster.
+    introduction: `## Overview
+Kubernetes NetworkPolicy resources define rules for how pods can communicate with each other and with endpoints outside the cluster. By default, Kubernetes applies no network isolation — all pods can communicate with all other pods regardless of namespace. NetworkPolicy is the mechanism for implementing Zero Trust microsegmentation within a Kubernetes cluster.
 
 A NetworkPolicy applies to a set of pods (selected by a podSelector label query) and defines which inbound (ingress) and outbound (egress) traffic is allowed. Once at least one NetworkPolicy selects a pod, that pod's traffic is restricted to what the policies explicitly allow — unmatched traffic is denied. A pod with no NetworkPolicy selecting it remains unrestricted.
 
@@ -8131,7 +8173,8 @@ Choose overlay for simplicity and portability. Choose underlay routing when perf
     questions: 6,
     description: 'IPv6 address format, address types, SLAAC vs DHCPv6, NDP, dual-stack vs NAT64, and Kubernetes dual-stack clusters.',
     visualizations: [],
-    introduction: `IPv6 uses 128-bit addresses written as eight 16-bit groups in colon-hex notation (e.g., 2001:0db8:85a3::8a2e:0370:7334). Leading zeros in each group can be omitted, and one consecutive run of all-zero groups can be replaced with ::.
+    introduction: `## Overview
+IPv6 uses 128-bit addresses written as eight 16-bit groups in colon-hex notation (e.g., 2001:0db8:85a3::8a2e:0370:7334). Leading zeros in each group can be omitted, and one consecutive run of all-zero groups can be replaced with ::.
 
 Address types:
 - Link-local (fe80::/10): auto-configured, not routable, used on-link for NDP. Every interface has one.
@@ -8225,7 +8268,8 @@ Main operational change: firewall rules and network policies must be written for
     questions: 6,
     description: 'QUIC over UDP, 0-RTT handshake, multiplexed streams without HOL blocking, connection migration, and HTTP/3.',
     visualizations: [],
-    introduction: `QUIC (originally Google Quick UDP Internet Connections, now standardized as RFC 9000) is a multiplexed transport protocol built over UDP. It is the transport layer for HTTP/3 (RFC 9114).
+    introduction: `## Overview
+QUIC (originally Google Quick UDP Internet Connections, now standardized as RFC 9000) is a multiplexed transport protocol built over UDP. It is the transport layer for HTTP/3 (RFC 9114).
 
 Why QUIC? TCP + TLS has two fundamental problems at scale:
 1. Head-of-line blocking: TCP delivers bytes in order. One lost packet stalls all data behind it, even data from unrelated requests.
@@ -8308,7 +8352,8 @@ Caveat: connection migration requires that the server's IP does not change. For 
     questions: 6,
     description: 'eBPF program types, XDP packet processing pipeline, Cilium eBPF dataplane, BPF maps, and bpftrace for network debugging.',
     visualizations: [],
-    introduction: `eBPF (extended Berkeley Packet Filter) allows safely running sandboxed programs in the Linux kernel without modifying kernel source code. Originally designed for packet filtering (classic BPF in tcpdump), eBPF now powers networking, observability, and security in production at scale.
+    introduction: `## Overview
+eBPF (extended Berkeley Packet Filter) allows safely running sandboxed programs in the Linux kernel without modifying kernel source code. Originally designed for packet filtering (classic BPF in tcpdump), eBPF now powers networking, observability, and security in production at scale.
 
 eBPF program types for networking:
 - XDP (eXpress Data Path): attaches at the lowest point in the network driver, before the kernel networking stack allocates an sk_buff. Three modes: DRV (driver-native, fastest), SKB (generic, slower), HW (offloaded to NIC). Actions: XDP_DROP, XDP_PASS, XDP_TX (hairpin), XDP_REDIRECT.
@@ -8396,7 +8441,8 @@ Key advantage over iptables DROP: iptables operates after sk_buff allocation (CP
     questions: 6,
     description: 'mTLS handshake mechanics, SPIFFE workload identity, SPIRE attestation, Istio PeerAuthentication, and certificate rotation.',
     visualizations: [],
-    introduction: `mTLS (mutual TLS) extends standard TLS so both the client and server present and validate certificates. It provides cryptographic service-to-service identity — neither side can be impersonated without the corresponding private key.
+    introduction: `## Overview
+mTLS (mutual TLS) extends standard TLS so both the client and server present and validate certificates. It provides cryptographic service-to-service identity — neither side can be impersonated without the corresponding private key.
 
 mTLS handshake additions vs TLS:
 1. Server sends CertificateRequest after its own Certificate message.
@@ -8491,7 +8537,8 @@ Important: PERMISSIVE does not mean insecure mTLS — the mTLS connections are s
     questions: 6,
     description: 'NetFlow/sFlow/IPFIX, VPC flow logs, Hubble, Prometheus network metrics, East-West traffic visibility, and anomaly detection.',
     visualizations: [],
-    introduction: `Network observability provides visibility into what traffic is flowing where — without full packet capture. Modern network observability stacks use flow records, metrics, and structured logs rather than raw PCAP.
+    introduction: `## Overview
+Network observability provides visibility into what traffic is flowing where — without full packet capture. Modern network observability stacks use flow records, metrics, and structured logs rather than raw PCAP.
 
 Flow record protocols:
 - NetFlow v9 / IPFIX (RFC 7011): Cisco-originated, now standardized. Network devices export flow records (5-tuple + byte/packet counts + timestamps) to a collector. IPFIX is the IETF standardization of NetFlow v9.
@@ -8594,7 +8641,8 @@ Hubble UI provides a service map showing which services communicate and their er
     questions: 5,
     description: 'WireGuard cryptographic design, configuration, kernel integration, Kubernetes use (Cilium/Flannel encryption), and comparison with IPSec and OpenVPN.',
     visualizations: [],
-    introduction: `WireGuard is a modern, cryptographically opinionated VPN protocol built into the Linux kernel (5.6+). It is designed to be simpler, faster, and more secure than IPSec or OpenVPN.
+    introduction: `## Overview
+WireGuard is a modern, cryptographically opinionated VPN protocol built into the Linux kernel (5.6+). It is designed to be simpler, faster, and more secure than IPSec or OpenVPN.
 
 Cryptographic design (no negotiation): WireGuard does not negotiate algorithms. It uses a fixed modern suite: X25519 for key exchange, ChaCha20-Poly1305 for encryption/authentication, and BLAKE2s for hashing. No cipher suites, no downgrade attacks.
 
@@ -8661,7 +8709,8 @@ Trade-off: WireGuard's simplicity means less flexibility. No built-in certificat
     questions: 5,
     description: 'tc netem for latency/loss injection, Toxiproxy, chaos mesh network faults, testing circuit breakers and timeout behavior.',
     visualizations: [],
-    introduction: `Network chaos engineering deliberately injects network failures — latency, packet loss, bandwidth limits, corruption, reordering — to verify that distributed systems behave correctly under adverse conditions.
+    introduction: `## Overview
+Network chaos engineering deliberately injects network failures — latency, packet loss, bandwidth limits, corruption, reordering — to verify that distributed systems behave correctly under adverse conditions.
 
 Linux tc netem (network emulator):
 tc qdisc add dev eth0 root netem delay 100ms 20ms distribution normal
@@ -8746,7 +8795,8 @@ Then point your application at localhost:5432. The Toxiproxy HTTP API allows dyn
     questions: 6,
     description: 'Calico, Flannel, Cilium, Antrea CNI plugins — routing modes, NetworkPolicy support, performance, and selection criteria.',
     visualizations: [],
-    introduction: `CNI (Container Network Interface) is the standard interface between a container runtime and a network plugin. When a pod is created, the kubelet calls the CNI binary to allocate an IP, configure routes, and set up network policy. When a pod is deleted, CNI cleans up.
+    introduction: `## Overview
+CNI (Container Network Interface) is the standard interface between a container runtime and a network plugin. When a pod is created, the kubelet calls the CNI binary to allocate an IP, configure routes, and set up network policy. When a pod is deleted, CNI cleans up.
 
 Major CNI plugins:
 
@@ -8839,7 +8889,8 @@ Multus is required for OpenShift Telco/RAN deployments and is part of the CNCF r
     questions: 6,
     description: 'IPSec transport vs tunnel mode, IKEv1 vs IKEv2, ESP vs AH, AWS Site-to-Site VPN, and debugging phase 1/2 failures.',
     visualizations: [],
-    introduction: `IPSec (Internet Protocol Security) is a suite of protocols for authenticating and encrypting IP traffic. It operates at Layer 3, making it transport-agnostic — any TCP/UDP/ICMP traffic is protected transparently.
+    introduction: `## Overview
+IPSec (Internet Protocol Security) is a suite of protocols for authenticating and encrypting IP traffic. It operates at Layer 3, making it transport-agnostic — any TCP/UDP/ICMP traffic is protected transparently.
 
 IPSec modes:
 - Transport mode: encrypts only the IP payload (TCP/UDP segment). Original IP header is preserved. Used for host-to-host or host-to-gateway communication.
@@ -8933,7 +8984,8 @@ Step 5 — Verify BGP: if using BGP routing, check that BGP session is UP after 
     questions: 5,
     description: 'DoH vs DoT vs classic DNS, RFC 7858 and RFC 8484, privacy guarantees, enterprise interception challenges, and split-horizon compatibility.',
     visualizations: [],
-    introduction: `Classic DNS (RFC 1035, 1987) transmits queries and responses in plaintext over UDP/TCP port 53. Anyone on the network path — ISP, Wi-Fi operator, government — can observe which domains are queried. DNS over TLS (DoT) and DNS over HTTPS (DoH) address this by encrypting DNS traffic.
+    introduction: `## Overview
+Classic DNS (RFC 1035, 1987) transmits queries and responses in plaintext over UDP/TCP port 53. Anyone on the network path — ISP, Wi-Fi operator, government — can observe which domains are queried. DNS over TLS (DoT) and DNS over HTTPS (DoH) address this by encrypting DNS traffic.
 
 DNS over TLS (DoT — RFC 7858):
 - DNS queries sent over a persistent TLS connection on TCP port 853.
@@ -9030,7 +9082,8 @@ Best practice: deploy an enterprise DoH resolver + MDM policy directing browsers
     questions: 5,
     description: 'Slow start, congestion avoidance, CUBIC and BBR algorithms, congestion window vs receive window, and tuning TCP for high-bandwidth long-latency paths.',
     visualizations: [],
-    introduction: `TCP congestion control prevents senders from overloading the network. Without it, a fast sender fills every buffer in the path, causing queue overflow and packet drops, which trigger retransmissions that worsen congestion (congestive collapse). TCP probes for available bandwidth while backing off when it detects congestion.
+    introduction: `## Overview
+TCP congestion control prevents senders from overloading the network. Without it, a fast sender fills every buffer in the path, causing queue overflow and packet drops, which trigger retransmissions that worsen congestion (congestive collapse). TCP probes for available bandwidth while backing off when it detects congestion.
 
 The sender maintains a congestion window (cwnd) limiting unacknowledged data in flight. Effective throughput = min(cwnd, rwnd) / RTT, where rwnd is the receiver's advertised window. Slow start doubles cwnd each RTT until reaching ssthresh or packet loss. Congestion avoidance grows cwnd linearly after that.
 
@@ -9111,7 +9164,8 @@ Check retransmissions in iperf3 output -- even 0.01% loss at 10Gbps causes thous
     questions: 5,
     description: 'Envoy listener-filter-cluster pipeline, the xDS dynamic configuration protocol, circuit breaking, outlier detection, and Envoy as the Istio data plane.',
     visualizations: [],
-    introduction: `Envoy is an open-source edge and service proxy written in C++. Originally developed at Lyft and donated to the CNCF, Envoy is the data plane for most production service meshes (Istio, AWS App Mesh, Consul Connect) and is used standalone in projects like Contour and Emissary-ingress.
+    introduction: `## Overview
+Envoy is an open-source edge and service proxy written in C++. Originally developed at Lyft and donated to the CNCF, Envoy is the data plane for most production service meshes (Istio, AWS App Mesh, Consul Connect) and is used standalone in projects like Contour and Emissary-ingress.
 
 Traffic flows through a layered pipeline: Listeners bind to ports and define filter chains. Network Filters process the raw byte stream. The HTTP Connection Manager (HCM) is the most important network filter, parsing HTTP. HTTP Filters process individual requests. Clusters define upstream endpoints. Envoy selects an endpoint using the configured load balancing policy (round-robin, least request, ring hash).
 
@@ -9182,7 +9236,8 @@ Result: Within 100ms-2s, all sidecars route 20% of reviews traffic to v2 pods. N
     questions: 5,
     description: 'Token bucket, leaky bucket, sliding window counter, fixed window -- tradeoffs, boundary bursts, and Redis-based distributed rate limiting patterns.',
     visualizations: [],
-    introduction: `Rate limiting controls how frequently a client can perform an action within a time window. It protects API servers from abuse, ensures fair resource sharing among tenants, and prevents single clients from exhausting server capacity.
+    introduction: `## Overview
+Rate limiting controls how frequently a client can perform an action within a time window. It protects API servers from abuse, ensures fair resource sharing among tenants, and prevents single clients from exhausting server capacity.
 
 Four fundamental algorithms: Fixed window counter divides time into discrete buckets and counts requests -- simple but allows boundary bursts. Sliding window log tracks every request timestamp -- accurate but memory-intensive. Sliding window counter approximates the sliding window by interpolating between two adjacent fixed window counts -- efficient and nearly accurate. Token bucket maintains a bucket that refills at a fixed rate; each request consumes a token, allowing bursts up to the bucket size. Leaky bucket queues requests and drains at a fixed rate regardless of burst -- smoothing traffic for rate-sensitive downstreams.
 

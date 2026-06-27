@@ -38,7 +38,8 @@ export const databaseTopics = [
       'Write amplification is the hidden cost that kills SSD lifespan and throughput'
     ],
 
-    introduction: `Storage engines are the heart of every database. They determine how data is physically written to disk, organized in memory, and retrieved during queries. Two dominant paradigms exist: B-trees (used by PostgreSQL, MySQL InnoDB, Oracle) and LSM-trees (used by RocksDB, LevelDB, Cassandra).
+    introduction: `## Overview
+Storage engines are the heart of every database. They determine how data is physically written to disk, organized in memory, and retrieved during queries. Two dominant paradigms exist: B-trees (used by PostgreSQL, MySQL InnoDB, Oracle) and LSM-trees (used by RocksDB, LevelDB, Cassandra).
 
 The choice of storage engine shapes every performance characteristic of the database. Read-heavy OLTP workloads favor B-trees with their O(log n) point lookups and in-place updates. Write-heavy workloads favor LSM-trees with their sequential write patterns and high ingestion throughput. Understanding these internals lets you pick the right engine for your workload and tune it effectively.`,
 
@@ -271,7 +272,8 @@ Tuning:
       'Over-indexing slows writes and wastes storage — measure before adding indexes'
     ],
 
-    introduction: `Indexes are the most impactful performance tool in any database. A missing index can turn a 10ms query into a 10-second table scan. But indexes are not free: each one consumes storage, slows down writes, and adds maintenance overhead during compaction and vacuuming.
+    introduction: `## Overview
+Indexes are the most impactful performance tool in any database. A missing index can turn a 10ms query into a 10-second table scan. But indexes are not free: each one consumes storage, slows down writes, and adds maintenance overhead during compaction and vacuuming.
 
 Mastering indexes means understanding not just B-tree indexes, but the full spectrum: hash indexes for equality lookups, GIN indexes for full-text search and JSONB, GiST indexes for geometric and range queries, partial indexes for filtered subsets, and covering indexes that serve queries entirely from the index without touching the heap.`,
 
@@ -507,7 +509,8 @@ GIN vs GiST:
       'Savepoints let you partially roll back without aborting the entire transaction'
     ],
 
-    introduction: `Transactions are the mechanism that keeps data correct in the face of failures and concurrency. The ACID properties — Atomicity, Consistency, Isolation, Durability — are not abstract theory; they are concrete guarantees implemented by specific mechanisms in the storage engine.
+    introduction: `## Overview
+Transactions are the mechanism that keeps data correct in the face of failures and concurrency. The ACID properties — Atomicity, Consistency, Isolation, Durability — are not abstract theory; they are concrete guarantees implemented by specific mechanisms in the storage engine.
 
 Understanding transactions deeply means knowing how the WAL ensures atomicity and durability, how MVCC provides isolation without blocking readers, how constraint checks enforce consistency, and how distributed transactions coordinate across multiple nodes. In interviews, you need to discuss not just what ACID means but how each property is implemented and what trade-offs exist.`,
 
@@ -745,7 +748,8 @@ When to choose:
       'Deadlocks are not bugs — they are expected in concurrent systems. The key is detecting and handling them.'
     ],
 
-    introduction: `Concurrency control is how databases allow multiple transactions to operate simultaneously without corrupting data. Without it, two users buying the last item in stock could both succeed, or a bank transfer could lose money mid-flight.
+    introduction: `## Overview
+Concurrency control is how databases allow multiple transactions to operate simultaneously without corrupting data. Without it, two users buying the last item in stock could both succeed, or a bank transfer could lose money mid-flight.
 
 Two fundamental philosophies exist: pessimistic locking (assume conflicts will happen, lock preemptively) and optimistic locking (assume conflicts are rare, detect and retry). Modern databases primarily use MVCC (Multi-Version Concurrency Control), which provides snapshot isolation by maintaining multiple versions of each row, allowing readers and writers to operate without blocking each other.`,
 
@@ -997,7 +1001,8 @@ In Practice:
       'Write skew is the anomaly most developers overlook — it cannot occur under true serializability'
     ],
 
-    introduction: `SQL isolation levels define the degree to which concurrent transactions are visible to each other. The SQL standard defines four levels, each preventing progressively more anomalies at the cost of reduced concurrency or increased overhead.
+    introduction: `## Overview
+SQL isolation levels define the degree to which concurrent transactions are visible to each other. The SQL standard defines four levels, each preventing progressively more anomalies at the cost of reduced concurrency or increased overhead.
 
 In practice, most databases implement isolation levels using MVCC snapshots rather than locks. This means the actual behavior often differs from the SQL standard definitions. PostgreSQL's "Repeatable Read" actually provides snapshot isolation (which prevents phantoms but allows write skew). MySQL InnoDB's "Repeatable Read" uses gap locks to prevent phantoms but still differs from true serializability.`,
 
@@ -1261,7 +1266,8 @@ Practical Impact:
       'Rebalancing without downtime requires consistent hashing or virtual shards'
     ],
 
-    introduction: `Partitioning splits a large dataset across multiple storage units. When those units are on different machines, it is called sharding. Partitioning enables databases to scale beyond what a single machine can handle, improving both storage capacity and query throughput.
+    introduction: `## Overview
+Partitioning splits a large dataset across multiple storage units. When those units are on different machines, it is called sharding. Partitioning enables databases to scale beyond what a single machine can handle, improving both storage capacity and query throughput.
 
 The critical challenge is choosing the right partitioning strategy and shard key. A poor choice leads to hotspots (one shard getting most of the traffic), cross-shard queries (expensive multi-machine joins), and painful rebalancing (redistributing data when adding or removing nodes). These decisions are extremely difficult to change later, so getting them right upfront is essential.`,
 
@@ -1514,7 +1520,8 @@ Mitigation Strategies:
       'Conflict resolution is the hardest part of multi-leader replication — last-writer-wins loses data silently'
     ],
 
-    introduction: `Replication maintains copies of data on multiple machines. It serves three goals: fault tolerance (survive node failures), read scalability (distribute read load), and geographic locality (serve users from nearby replicas).
+    introduction: `## Overview
+Replication maintains copies of data on multiple machines. It serves three goals: fault tolerance (survive node failures), read scalability (distribute read load), and geographic locality (serve users from nearby replicas).
 
 The fundamental tension is between consistency and performance. Synchronous replication guarantees every replica has the latest data but blocks writes until all replicas confirm. Asynchronous replication is faster but replicas may serve stale data. Understanding these trade-offs is essential for designing systems that meet their specific consistency and availability requirements.`,
 
@@ -1768,7 +1775,8 @@ Automated vs Manual Failover:
       'A majority quorum (N/2 + 1) is the minimum needed to tolerate N/2 failures'
     ],
 
-    introduction: `Consensus algorithms allow a group of distributed nodes to agree on a single value, even when some nodes fail or messages are delayed. They are the foundation of every reliable distributed system: replicated state machines, distributed databases, configuration services, and leader election.
+    introduction: `## Overview
+Consensus algorithms allow a group of distributed nodes to agree on a single value, even when some nodes fail or messages are delayed. They are the foundation of every reliable distributed system: replicated state machines, distributed databases, configuration services, and leader election.
 
 Paxos was the first proven consensus algorithm but is notoriously difficult to understand and implement. Raft was designed as an equivalent algorithm that prioritizes understandability. Both guarantee safety (no conflicting decisions) under any failure condition, and guarantee liveness (eventual progress) as long as a majority of nodes are operational and can communicate.`,
 
@@ -2026,7 +2034,8 @@ Performance Characteristics:
       'Point-in-time recovery combines base backup + WAL replay to restore to any moment'
     ],
 
-    introduction: `Database recovery ensures that committed transactions survive any failure — crashes, power outages, disk failures — and that uncommitted transactions are cleanly rolled back. The Write-Ahead Log (WAL) is the cornerstone: every change is recorded in a sequential log file before being applied to the actual data pages.
+    introduction: `## Overview
+Database recovery ensures that committed transactions survive any failure — crashes, power outages, disk failures — and that uncommitted transactions are cleanly rolled back. The Write-Ahead Log (WAL) is the cornerstone: every change is recorded in a sequential log file before being applied to the actual data pages.
 
 The ARIES (Algorithms for Recovery and Isolation Exploiting Semantics) algorithm is the gold standard for crash recovery, used by PostgreSQL, MySQL InnoDB, SQL Server, and DB2. Understanding ARIES means understanding how modern databases guarantee durability without sacrificing performance. The key insight is that data pages can be written to disk lazily (improving write performance) because the WAL ensures we can always recover the correct state.`,
 
@@ -2276,7 +2285,8 @@ Practical Considerations:
       'Denormalization in NoSQL trades storage for read performance — design for your queries, not your entities'
     ],
 
-    introduction: `NoSQL databases emerged to address limitations of relational databases at internet scale: rigid schemas, expensive joins, and difficulty with horizontal scaling. Each NoSQL category optimizes for different access patterns and trade-offs.
+    introduction: `## Overview
+NoSQL databases emerged to address limitations of relational databases at internet scale: rigid schemas, expensive joins, and difficulty with horizontal scaling. Each NoSQL category optimizes for different access patterns and trade-offs.
 
 Understanding the internals of each type — how data is stored on disk, how queries are routed, how consistency is maintained — is essential for choosing the right database and designing effective data models. The biggest mistake engineers make with NoSQL is modeling data the same way they would in a relational database. NoSQL requires query-driven data modeling: design your tables around your access patterns, not your entity relationships.`,
 
@@ -2563,7 +2573,8 @@ At depth 3-4, SQL JOIN performance becomes unacceptable (minutes), while graph d
       'CockroachDB uses hybrid logical clocks because it cannot rely on specialized hardware like Spanner'
     ],
 
-    introduction: `NewSQL databases combine the best of both worlds: the SQL interface, ACID transactions, and strong consistency of traditional relational databases with the horizontal scalability and fault tolerance of distributed NoSQL systems. They emerged because many applications needed both scale and correctness — the NoSQL movement went too far in sacrificing consistency.
+    introduction: `## Overview
+NewSQL databases combine the best of both worlds: the SQL interface, ACID transactions, and strong consistency of traditional relational databases with the horizontal scalability and fault tolerance of distributed NoSQL systems. They emerged because many applications needed both scale and correctness — the NoSQL movement went too far in sacrificing consistency.
 
 Google Spanner pioneered the category with its TrueTime API. CockroachDB brought similar capabilities to the open-source world using commodity hardware. TiDB provides MySQL-compatible distributed SQL. These systems solve the historically "impossible" problem of distributed transactions with acceptable performance.`,
 
@@ -2833,7 +2844,8 @@ Real-World Decision Examples:
       'Vector databases are the hottest category due to AI/ML embedding search — understand the fundamentals'
     ],
 
-    introduction: `General-purpose databases are good at everything but exceptional at nothing. Specialized databases sacrifice generality to achieve order-of-magnitude performance improvements for specific workloads. Time-series databases exploit the temporal ordering of data. Spatial databases use R-tree indexes for geometric queries. Search engines use inverted indexes for full-text retrieval. Vector databases use approximate nearest neighbor algorithms for similarity search.
+    introduction: `## Overview
+General-purpose databases are good at everything but exceptional at nothing. Specialized databases sacrifice generality to achieve order-of-magnitude performance improvements for specific workloads. Time-series databases exploit the temporal ordering of data. Spatial databases use R-tree indexes for geometric queries. Search engines use inverted indexes for full-text retrieval. Vector databases use approximate nearest neighbor algorithms for similarity search.
 
 Understanding when to reach for a specialized database — and when a general-purpose database with the right index is sufficient — is a key architectural skill. Over-specialization creates operational complexity; under-specialization creates performance problems.`,
 

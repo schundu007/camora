@@ -452,7 +452,8 @@ If the pipeline fails, the SSE stream emits an error event with a human-readable
       { type: 'architecture', caption: '3-Tier Context Window Architecture', image: '/diagrams/agentic/context-window-mgmt.png' },
       { type: 'workflow',     caption: 'Summarization Node Flow',            image: '/diagrams/agentic/summarization-flow.png' },
     ],
-    introduction: `The Problem
+    introduction: `## Overview
+The Problem
 
 Production agents that span days or weeks face a hard physical constraint: the LLM context window. Claude 3.5 Sonnet and GPT-4o both offer 128K-token windows. A multi-day conversation — including tool call round-trips, retrieved documents, and verbose AI responses — can accumulate tens of thousands of tokens per hour. Within one business day, the raw history exceeds the context limit.
 

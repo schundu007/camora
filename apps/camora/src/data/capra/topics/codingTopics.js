@@ -54,7 +54,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Arrays and Hash Maps are the foundation of nearly every coding interview. Understanding these data structures deeply will help you solve 40-50% of all LeetCode problems.
+      introduction: `## Overview
+Arrays and Hash Maps are the foundation of nearly every coding interview. Understanding these data structures deeply will help you solve 40-50% of all LeetCode problems.
 
 Why This Matters:
 - Arrays provide O(1) random access and are the basis for most algorithms
@@ -435,7 +436,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Binary Search is a fundamental algorithm that reduces search time from O(n) to O(log n) by repeatedly dividing the search space in half. It's one of the most important patterns to master.
+      introduction: `## Overview
+Binary Search is a fundamental algorithm that reduces search time from O(n) to O(log n) by repeatedly dividing the search space in half. It's one of the most important patterns to master.
 
 The Key Insight:
 Binary search works on any monotonic property—not just sorted arrays. If you can define a predicate function that goes from False to True (or True to False) as you move through the search space, you can binary search.
@@ -809,7 +811,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Two Pointers is a technique that uses two index variables to traverse a data structure, typically reducing time complexity from O(n²) to O(n). It's essential for array and linked list problems.
+      introduction: `## Overview
+Two Pointers is a technique that uses two index variables to traverse a data structure, typically reducing time complexity from O(n²) to O(n). It's essential for array and linked list problems.
 
 Three Main Variants:
 1. Opposite Direction: Start from both ends, move toward center (e.g., Two Sum on sorted array)
@@ -1199,7 +1202,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Sliding Window is one of the most important patterns for string and subarray problems. It processes contiguous elements efficiently by maintaining a "window" that slides across the data.
+      introduction: `## Overview
+Sliding Window is one of the most important patterns for string and subarray problems. It processes contiguous elements efficiently by maintaining a "window" that slides across the data.
 
 Two Types:
 1. Fixed-Size Window: Window size is constant (e.g., "max sum of k consecutive elements")
@@ -1614,7 +1618,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Stacks follow Last-In-First-Out (LIFO) principle. They're essential for problems involving nested structures, parsing, and finding relationships between elements.
+      introduction: `## Overview
+Stacks follow Last-In-First-Out (LIFO) principle. They're essential for problems involving nested structures, parsing, and finding relationships between elements.
 
 Key Applications:
 1. Matching Brackets: Validate nested structures (parentheses, HTML tags)
@@ -2033,7 +2038,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Linked Lists test your ability to manipulate pointers and think about data structures. Unlike arrays, linked lists don't have random access but allow O(1) insertion/deletion at known positions.
+      introduction: `## Overview
+Linked Lists test your ability to manipulate pointers and think about data structures. Unlike arrays, linked lists don't have random access but allow O(1) insertion/deletion at known positions.
 
 Key Concepts:
 - Singly Linked: Each node points to next (forward traversal only)
@@ -2427,7 +2433,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Trees are hierarchical data structures essential for interviews. Most tree problems require recursive thinking—solving for the current node using solutions from subtrees.
+      introduction: `## Overview
+Trees are hierarchical data structures essential for interviews. Most tree problems require recursive thinking—solving for the current node using solutions from subtrees.
 
 Key Tree Types:
 - Binary Tree: Each node has at most 2 children
@@ -2819,7 +2826,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Graphs model relationships between entities. Master graph traversal and you'll solve 15-20% of interview problems. Grids are graphs too—each cell connects to its neighbors.
+      introduction: `## Overview
+Graphs model relationships between entities. Master graph traversal and you'll solve 15-20% of interview problems. Grids are graphs too—each cell connects to its neighbors.
 
 Graph Representations:
 - Adjacency List: {node: [neighbors]} - Best for sparse graphs, O(V+E) space
@@ -3332,7 +3340,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Dynamic Programming (DP) is one of the most important and challenging topics in coding interviews. It's used when a problem has overlapping subproblems and optimal substructure.
+      introduction: `## Overview
+Dynamic Programming (DP) is one of the most important and challenging topics in coding interviews. It's used when a problem has overlapping subproblems and optimal substructure.
 
 Two Approaches:
 1. Top-Down (Memoization): Start with the main problem, recursively solve subproblems, cache results
@@ -3784,7 +3793,8 @@ visualizations: [
         }
       ],
 
-      introduction: `A heap is a complete binary tree that satisfies the heap property: every parent is smaller (min-heap) or larger (max-heap) than its children. It provides O(log n) insert/delete and O(1) access to min/max.
+      introduction: `## Overview
+A heap is a complete binary tree that satisfies the heap property: every parent is smaller (min-heap) or larger (max-heap) than its children. It provides O(log n) insert/delete and O(1) access to min/max.
 
 Key Operations:
 - Push: O(log n) - Add element and bubble up
@@ -4146,7 +4156,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Backtracking is a systematic way to explore all possible solutions by building candidates incrementally and abandoning ("pruning") candidates that cannot lead to a valid solution.
+      introduction: `## Overview
+Backtracking is a systematic way to explore all possible solutions by building candidates incrementally and abandoning ("pruning") candidates that cannot lead to a valid solution.
 
 The Backtracking Template:
 1. Choose: Make a choice from available options
@@ -4612,7 +4623,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Greedy algorithms make the locally optimal choice at each step, hoping this leads to a globally optimal solution. Unlike Dynamic Programming which explores all possibilities, greedy commits to decisions without reconsidering them.
+      introduction: `## Overview
+Greedy algorithms make the locally optimal choice at each step, hoping this leads to a globally optimal solution. Unlike Dynamic Programming which explores all possibilities, greedy commits to decisions without reconsidering them.
 
 The key insight: if making the best choice right now doesn't hurt future choices, greedy works.
 
@@ -5105,7 +5117,8 @@ In interviews, greedy problems often involve intervals, scheduling, or making se
       questions: 12,
       description: 'Prefix tree for string operations. Efficient autocomplete and spell check.',
 
-      introduction: `A Trie (pronounced "try") or Prefix Tree is a specialized tree data structure used to store and retrieve strings efficiently. Unlike binary search trees where each node holds a single key, in a trie, each node represents a character, and paths from root to leaf spell out words.
+      introduction: `## Overview
+A Trie (pronounced "try") or Prefix Tree is a specialized tree data structure used to store and retrieve strings efficiently. Unlike binary search trees where each node holds a single key, in a trie, each node represents a character, and paths from root to leaf spell out words.
 
 Tries excel at prefix-based operations, making them essential for:
 • Autocomplete systems (Google search suggestions)
@@ -5409,7 +5422,8 @@ class Trie:
       questions: 13,
       description: 'Operations on binary representations. XOR, AND, OR, shifts.',
 
-      introduction: `Bit manipulation involves operating directly on the binary representation of numbers using bitwise operators. It's one of the most efficient techniques - operating at the hardware level with O(1) operations.
+      introduction: `## Overview
+Bit manipulation involves operating directly on the binary representation of numbers using bitwise operators. It's one of the most efficient techniques - operating at the hardware level with O(1) operations.
 
 Master these operators:
 • AND (&): Both bits must be 1 → 1 & 1 = 1, otherwise 0
@@ -5692,7 +5706,8 @@ def missingNumber_math(nums):
       questions: 10,
       description: 'Mathematical algorithms and geometric computations.',
 
-      introduction: `Math and geometry problems test your understanding of fundamental algorithms and mathematical reasoning. These problems often have elegant O(1) or O(log n) solutions once you know the right formula or technique.
+      introduction: `## Overview
+Math and geometry problems test your understanding of fundamental algorithms and mathematical reasoning. These problems often have elegant O(1) or O(log n) solutions once you know the right formula or technique.
 
 Key mathematical concepts:
 • GCD/LCM: Foundation for fraction simplification, coprime checks
@@ -6006,7 +6021,8 @@ def gcd_array(arr):
       questions: 7,
       description: 'Two-dimensional array traversal and manipulation.',
 
-      introduction: `Matrix problems involve 2D arrays and test your ability to navigate, transform, and search within grid structures. These problems are common because they combine array manipulation with spatial reasoning.
+      introduction: `## Overview
+Matrix problems involve 2D arrays and test your ability to navigate, transform, and search within grid structures. These problems are common because they combine array manipulation with spatial reasoning.
 
 Key traversal patterns:
 • Row-major: Process row by row (standard iteration)
@@ -6371,7 +6387,8 @@ visualizations: [
         }
       ],
 
-      introduction: `Recursion is a problem-solving technique where a function calls itself to solve smaller instances of the same problem. It's the foundation for understanding trees, graphs, divide and conquer, and dynamic programming.
+      introduction: `## Overview
+Recursion is a problem-solving technique where a function calls itself to solve smaller instances of the same problem. It's the foundation for understanding trees, graphs, divide and conquer, and dynamic programming.
 
 Every recursive solution has two essential parts:
 • Base Case(s): The simplest case(s) that can be solved directly without recursion
@@ -6911,7 +6928,8 @@ private void backtrack(String digits, int index, StringBuilder current,
       questions: 18,
       description: 'Comparison and non-comparison based sorting techniques.',
 
-      introduction: `Sorting is a fundamental operation that arranges elements in a specific order. Understanding sorting algorithms is crucial because:
+      introduction: `## Overview
+Sorting is a fundamental operation that arranges elements in a specific order. Understanding sorting algorithms is crucial because:
 1. Many problems become easier after sorting (binary search, two pointers)
 2. Sorting is often a key step in algorithms (greedy, intervals)
 3. Custom comparators enable complex sorting logic
@@ -7223,7 +7241,8 @@ def findKthLargest_heap(nums, k):
       questions: 5,
       description: 'Problems involving ranges and overlapping segments.',
 
-      introduction: `Interval problems involve operations on ranges or segments, often requiring merging, insertion, or conflict detection. These problems appear frequently in scheduling, calendar, and resource allocation contexts.
+      introduction: `## Overview
+Interval problems involve operations on ranges or segments, often requiring merging, insertion, or conflict detection. These problems appear frequently in scheduling, calendar, and resource allocation contexts.
 
 Key concepts:
 • Overlap detection: Two intervals [a, b] and [c, d] overlap if a < d AND c < b
@@ -7522,7 +7541,8 @@ Sweep line technique: Instead of treating intervals as wholes, process START and
       questions: 23,
       description: 'Linear search, binary search, and advanced search techniques.',
 
-      introduction: `Search algorithms are fundamental techniques for finding elements or optimal values. Binary search is the most important - it reduces O(n) to O(log n) and appears in countless interview problems.
+      introduction: `## Overview
+Search algorithms are fundamental techniques for finding elements or optimal values. Binary search is the most important - it reduces O(n) to O(log n) and appears in countless interview problems.
 
 Binary Search Basics:
 • Requires sorted data (or monotonic property)
@@ -7808,7 +7828,8 @@ def binary_search_left(nums, target):
       questions: 17,
       description: 'FIFO data structure for BFS, task scheduling, and buffering.',
 
-      introduction: `A Queue is a linear data structure that follows the First-In-First-Out (FIFO) principle -- the element added first is removed first, like a line at a checkout counter. Queues are fundamental to breadth-first search, level-order traversal, and any scenario where processing order matters.
+      introduction: `## Overview
+A Queue is a linear data structure that follows the First-In-First-Out (FIFO) principle -- the element added first is removed first, like a line at a checkout counter. Queues are fundamental to breadth-first search, level-order traversal, and any scenario where processing order matters.
 
 Queue variants each solve different problems:
 - Standard Queue: Simple FIFO with enqueue and dequeue
@@ -8108,7 +8129,8 @@ def leastInterval(tasks, n):
       questions: 75,
       description: 'Curated list of 75 essential LeetCode problems covering all major patterns.',
 
-      introduction: `The Blind 75 is the most popular curated list of LeetCode problems for technical interview preparation, originally compiled and shared on the Blind platform by a Facebook engineer. It distills hundreds of LeetCode problems into 75 essentials that cover every major pattern tested at top tech companies.
+      introduction: `## Overview
+The Blind 75 is the most popular curated list of LeetCode problems for technical interview preparation, originally compiled and shared on the Blind platform by a Facebook engineer. It distills hundreds of LeetCode problems into 75 essentials that cover every major pattern tested at top tech companies.
 
 The list is organized into 10 categories: Array (9), Binary (5), Dynamic Programming (11), Graph (8), Interval (5), Linked List (6), Matrix (4), String (10), Tree (14), and Heap (3). Each problem was selected because it teaches a fundamental pattern that recurs across many other problems.
 
@@ -8287,7 +8309,8 @@ The Blind 75 is best suited for candidates who already have basic data structure
       questions: 100,
       description: 'Our curated list of 100 must-solve problems for interview success.',
 
-      introduction: `The Ascend 100 is our carefully curated list of 100 problems designed to take you from fundamentals to interview-ready in the most efficient path possible. Unlike the Blind 75 which focuses on breadth, the Ascend 100 emphasizes progressive difficulty with deeper pattern coverage.
+      introduction: `## Overview
+The Ascend 100 is our carefully curated list of 100 problems designed to take you from fundamentals to interview-ready in the most efficient path possible. Unlike the Blind 75 which focuses on breadth, the Ascend 100 emphasizes progressive difficulty with deeper pattern coverage.
 
 The list is structured in three tiers:
 - Tier 1 (Easy, 35 problems): Build your foundation with arrays, strings, hash maps, and basic tree traversal. Every problem teaches a reusable pattern.

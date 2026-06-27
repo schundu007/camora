@@ -54,7 +54,8 @@ export const scalableSystemsTopics = [
       'Real-world example: DNS resolvers cache NXDOMAIN responses (RFC 2308) with a negative TTL',
     ],
 
-    introduction: `Negative caching is the practice of storing "miss" results — such as HTTP 404 responses, empty database query results, or null lookups — in the cache so that subsequent requests for the same non-existent resource are served from cache rather than hitting the origin. Without negative caching, an attacker (or a misconfigured client) can overwhelm your backend by repeatedly requesting keys that do not exist, since every request bypasses the cache and goes straight to the database.
+    introduction: `## Overview
+Negative caching is the practice of storing "miss" results — such as HTTP 404 responses, empty database query results, or null lookups — in the cache so that subsequent requests for the same non-existent resource are served from cache rather than hitting the origin. Without negative caching, an attacker (or a misconfigured client) can overwhelm your backend by repeatedly requesting keys that do not exist, since every request bypasses the cache and goes straight to the database.
 
 This problem is called cache penetration: the cache provides zero protection because the requested key was never cached in the first place. It is distinct from a cache stampede (many requests for a recently expired key) and from cache avalanche (many keys expiring simultaneously). Negative caching directly addresses penetration by ensuring that even "nothing found" is a cached result.
 
@@ -215,7 +216,8 @@ Cache Lookup Decision Tree:
       'Stale-while-revalidate serves the expired value while one thread refreshes in the background — great for availability',
     ],
 
-    introduction: `A cache stampede (also called thundering herd or dog-pile effect) occurs when a frequently accessed cache key expires and a large number of concurrent requests simultaneously experience a cache miss. Each of those requests independently queries the backend and attempts to recompute the cached value. If the recomputation is expensive (e.g., a complex database query or an API call taking several seconds), the backend can be overwhelmed — leading to cascading failures, increased latency, and potentially a complete outage.
+    introduction: `## Overview
+A cache stampede (also called thundering herd or dog-pile effect) occurs when a frequently accessed cache key expires and a large number of concurrent requests simultaneously experience a cache miss. Each of those requests independently queries the backend and attempts to recompute the cached value. If the recomputation is expensive (e.g., a complex database query or an API call taking several seconds), the backend can be overwhelmed — leading to cascading failures, increased latency, and potentially a complete outage.
 
 The danger is proportional to the product of request rate and recomputation time. A key serving 10,000 requests per second that takes 2 seconds to recompute will generate 20,000 simultaneous backend requests in the worst case. Even a well-provisioned database cannot handle that kind of sudden spike without protection.
 
@@ -395,7 +397,8 @@ Protection Strategy Selection:
       'Different data types need different TTLs: user session (minutes), product catalog (hours), static config (days)',
     ],
 
-    introduction: `Cache expiration is one of the two hard problems in computer science (the other being naming things and off-by-one errors). The fundamental tension is between freshness (serving up-to-date data) and performance (avoiding backend calls). A hard TTL is the traditional approach: after a fixed duration, the cached entry is evicted and the next request triggers a cache miss. This is simple but creates problems — the moment of expiry is a vulnerability window where a stampede can occur, and the data goes from "definitely fresh" to "definitely missing" with no intermediate state.
+    introduction: `## Overview
+Cache expiration is one of the two hard problems in computer science (the other being naming things and off-by-one errors). The fundamental tension is between freshness (serving up-to-date data) and performance (avoiding backend calls). A hard TTL is the traditional approach: after a fixed duration, the cached entry is evicted and the next request triggers a cache miss. This is simple but creates problems — the moment of expiry is a vulnerability window where a stampede can occur, and the data goes from "definitely fresh" to "definitely missing" with no intermediate state.
 
 A soft TTL introduces a more nuanced lifecycle: after the soft TTL expires, the cached data is considered "stale but usable." The system continues serving the stale value to incoming requests while triggering a background refresh. The data is only truly removed when the hard TTL expires. This pattern — known as stale-while-revalidate in HTTP caching — provides the best of both worlds: low latency for users (they always get a cached response) and eventual freshness (the background refresh updates the cache within seconds).
 
@@ -589,7 +592,8 @@ HTTP Cache-Control Mapping (\`max-age=60, stale-while-revalidate=240\`):
       'In interviews, argue for stateless architecture first, then explain when sticky sessions are a pragmatic compromise',
     ],
 
-    introduction: `Sticky sessions (also called session affinity) is a load balancing strategy where all requests from a particular client are routed to the same backend server for the duration of a session. This is typically implemented by the load balancer setting a cookie (e.g., AWS ALB's AWSALB cookie) or by hashing the client's IP address to select a consistent backend. The primary motivation is to support applications that store session state in memory on the server — such as shopping carts, authentication tokens, or WebSocket connections — where routing to a different server would lose that state.
+    introduction: `## Overview
+Sticky sessions (also called session affinity) is a load balancing strategy where all requests from a particular client are routed to the same backend server for the duration of a session. This is typically implemented by the load balancer setting a cookie (e.g., AWS ALB's AWSALB cookie) or by hashing the client's IP address to select a consistent backend. The primary motivation is to support applications that store session state in memory on the server — such as shopping carts, authentication tokens, or WebSocket connections — where routing to a different server would lose that state.
 
 While sticky sessions solve the immediate problem of in-memory state, they introduce significant operational trade-offs. Uneven load distribution is the most common issue: if one user generates 100x more traffic than average, the server they are pinned to becomes a bottleneck while other servers sit idle. Fault tolerance is another concern: if the pinned server crashes, the user's session is lost and they must re-authenticate or lose their shopping cart.
 
@@ -784,7 +788,8 @@ Session State Externalization:
       'Combine GeoDNS for region selection with local load balancers (ALB/NLB) for instance-level distribution',
     ],
 
-    introduction: `Global Server Load Balancing (GSLB) is the practice of distributing user traffic across geographically distributed data centers to minimize latency, maximize availability, and provide disaster recovery. When a user in Tokyo makes a request, GSLB ensures they are routed to the nearest healthy data center (e.g., ap-northeast-1) rather than one in Virginia — reducing round-trip time from 200ms to 10ms.
+    introduction: `## Overview
+Global Server Load Balancing (GSLB) is the practice of distributing user traffic across geographically distributed data centers to minimize latency, maximize availability, and provide disaster recovery. When a user in Tokyo makes a request, GSLB ensures they are routed to the nearest healthy data center (e.g., ap-northeast-1) rather than one in Virginia — reducing round-trip time from 200ms to 10ms.
 
 The two primary mechanisms for GSLB are GeoDNS and Anycast. GeoDNS works at the DNS resolution layer: the authoritative DNS server inspects the source IP of the DNS resolver and returns the IP address of the nearest data center. Anycast works at the network layer: the same IP address is advertised via BGP from multiple locations, and the internet's routing infrastructure automatically directs packets to the nearest announcement. CDNs like Cloudflare and cloud providers like AWS (Route 53, CloudFront) use both techniques extensively.
 
@@ -1001,7 +1006,8 @@ DNS Record Structure:
       'GraphQL Relay specification standardizes cursor pagination with edges/nodes/pageInfo',
     ],
 
-    introduction: `Pagination is the practice of dividing a large result set into smaller pages, returning a manageable subset of records per API call. It is one of the most common API design decisions, and choosing the wrong strategy can have severe performance implications at scale. The three main approaches are offset pagination (OFFSET/LIMIT), cursor pagination (opaque encoded tokens), and keyset pagination (WHERE id > last_seen).
+    introduction: `## Overview
+Pagination is the practice of dividing a large result set into smaller pages, returning a manageable subset of records per API call. It is one of the most common API design decisions, and choosing the wrong strategy can have severe performance implications at scale. The three main approaches are offset pagination (OFFSET/LIMIT), cursor pagination (opaque encoded tokens), and keyset pagination (WHERE id > last_seen).
 
 Offset pagination (e.g., \`?page=5&size=20\`) is the simplest to implement and understand: the database skips \`offset\` rows and returns the next \`size\` rows. However, it has a critical flaw — the database must scan and discard all skipped rows, making deep pages (page 10,000+) extremely slow. Additionally, if new records are inserted while a user is paginating, they may see duplicates or miss records.
 
@@ -1275,7 +1281,8 @@ Required Indexes:
       'In interviews, always connect idempotency to real-world scenarios: double-charging a credit card, duplicate order placement',
     ],
 
-    introduction: `Idempotency is the property of an operation where performing it multiple times produces the same result as performing it once. In distributed systems, network failures, timeouts, and retries are inevitable — a client that does not receive a response cannot know whether the server processed the request or not. Without idempotency, retrying a payment request could charge a customer twice; retrying an order submission could create duplicate orders.
+    introduction: `## Overview
+Idempotency is the property of an operation where performing it multiple times produces the same result as performing it once. In distributed systems, network failures, timeouts, and retries are inevitable — a client that does not receive a response cannot know whether the server processed the request or not. Without idempotency, retrying a payment request could charge a customer twice; retrying an order submission could create duplicate orders.
 
 The standard implementation uses an idempotency key: the client generates a unique identifier (typically a UUID) and includes it with every request. The server stores the key alongside the result of the first execution. On subsequent requests with the same key, the server returns the stored result without re-executing the operation. This transforms any non-idempotent operation (like creating a charge) into an idempotent one.
 
@@ -1539,7 +1546,8 @@ Idempotency Key Lifecycle:
       'Know the difference between lock-based isolation (MySQL) and MVCC-based isolation (PostgreSQL)',
     ],
 
-    introduction: `SQL isolation levels define how concurrent transactions interact with each other — specifically, what data changes made by one transaction are visible to another concurrent transaction. The SQL standard defines four isolation levels, each preventing an increasing set of anomalies at the cost of reduced concurrency. Understanding these trade-offs is essential for designing correct, performant database applications.
+    introduction: `## Overview
+SQL isolation levels define how concurrent transactions interact with each other — specifically, what data changes made by one transaction are visible to another concurrent transaction. The SQL standard defines four isolation levels, each preventing an increasing set of anomalies at the cost of reduced concurrency. Understanding these trade-offs is essential for designing correct, performant database applications.
 
 The four standard levels are: Read Uncommitted (lowest, allows dirty reads), Read Committed (prevents dirty reads, PostgreSQL default), Repeatable Read (prevents non-repeatable reads, MySQL default), and Serializable (highest, prevents all anomalies). In practice, most databases implement these differently from the SQL standard — PostgreSQL uses Multi-Version Concurrency Control (MVCC) with snapshot isolation for Repeatable Read, and Serializable Snapshot Isolation (SSI) for Serializable. MySQL InnoDB uses a combination of MVCC and gap locks.
 
@@ -1818,7 +1826,8 @@ Lock Types (MySQL InnoDB):
       'The ARIES recovery algorithm (used by most databases) has three phases: Analysis, Redo, Undo',
     ],
 
-    introduction: `The Write-Ahead Log (WAL) is the most fundamental mechanism for ensuring database durability. The protocol is deceptively simple: before any change is applied to the actual data pages on disk, a record of that change must be written to a sequential, append-only log file and fsynced to durable storage. If the database process crashes after writing the WAL record but before updating the data pages, the system replays the log on startup and reconstructs a consistent state.
+    introduction: `## Overview
+The Write-Ahead Log (WAL) is the most fundamental mechanism for ensuring database durability. The protocol is deceptively simple: before any change is applied to the actual data pages on disk, a record of that change must be written to a sequential, append-only log file and fsynced to durable storage. If the database process crashes after writing the WAL record but before updating the data pages, the system replays the log on startup and reconstructs a consistent state.
 
 Every major relational database relies on WAL: PostgreSQL, MySQL/InnoDB, SQLite, SQL Server, and Oracle. Beyond relational databases, the pattern extends to LSM-tree engines (RocksDB, LevelDB, Cassandra), distributed consensus systems (etcd Raft log, ZooKeeper ZAB), and message brokers (Kafka's commit log). The WAL is, conceptually, the source of truth — the data files are merely a materialized view of the log.
 
@@ -2054,7 +2063,8 @@ ARIES Recovery Phases:
       'Snapshot isolation (MVCC-based) prevents dirty reads, non-repeatable reads, and phantoms but allows write skew',
     ],
 
-    introduction: `Multi-Version Concurrency Control (MVCC) is the concurrency mechanism used by virtually all modern relational databases — PostgreSQL, MySQL InnoDB, Oracle, SQL Server (snapshot isolation mode), and CockroachDB. The core principle is that instead of locking rows to prevent concurrent access, the database maintains multiple versions of each row. Readers see a consistent snapshot of the database at a specific point in time, while writers create new versions without disturbing existing ones.
+    introduction: `## Overview
+Multi-Version Concurrency Control (MVCC) is the concurrency mechanism used by virtually all modern relational databases — PostgreSQL, MySQL InnoDB, Oracle, SQL Server (snapshot isolation mode), and CockroachDB. The core principle is that instead of locking rows to prevent concurrent access, the database maintains multiple versions of each row. Readers see a consistent snapshot of the database at a specific point in time, while writers create new versions without disturbing existing ones.
 
 The revolutionary property of MVCC is that readers never block writers and writers never block readers. A long-running analytical query can read a consistent snapshot while concurrent transactions insert, update, and delete rows — the query sees the versions that existed at the time it started, and the new versions are invisible to it. This is a dramatic improvement over lock-based concurrency, where a write lock on a row would block all readers until the transaction commits.
 
@@ -2330,7 +2340,8 @@ Visibility Check Algorithm (PostgreSQL):
       'For financial systems, at-least-once delivery with deduplication at the consumer is the practical standard',
     ],
 
-    introduction: `Delivery semantics describe the guarantees a messaging system provides about whether and how many times a message will be delivered to a consumer. The three levels are at-most-once (message may be lost but never duplicated), at-least-once (message is never lost but may be duplicated), and exactly-once (message is delivered precisely once). This is one of the most frequently discussed topics in distributed systems design because the choice fundamentally affects system correctness, complexity, and performance.
+    introduction: `## Overview
+Delivery semantics describe the guarantees a messaging system provides about whether and how many times a message will be delivered to a consumer. The three levels are at-most-once (message may be lost but never duplicated), at-least-once (message is never lost but may be duplicated), and exactly-once (message is delivered precisely once). This is one of the most frequently discussed topics in distributed systems design because the choice fundamentally affects system correctness, complexity, and performance.
 
 The uncomfortable truth is that exactly-once delivery is theoretically impossible in a distributed system with unreliable networks (a consequence of the Two Generals Problem). What systems like Kafka actually provide is effectively exactly-once through a combination of idempotent producers, transactional writes, and consumer-side deduplication. The message may technically be delivered more than once at the network level, but the system ensures it is processed exactly once at the application level.
 
@@ -2581,7 +2592,8 @@ Transactional Outbox Entry:
       'Error budget policies: if budget is exhausted, freeze feature releases and focus on reliability',
     ],
 
-    introduction: `SLI (Service Level Indicator), SLO (Service Level Objective), and SLA (Service Level Agreement) form a hierarchy for defining, measuring, and communicating service reliability. Originating from Google's Site Reliability Engineering (SRE) practice, these concepts provide a data-driven framework for making trade-offs between feature velocity and reliability investment.
+    introduction: `## Overview
+SLI (Service Level Indicator), SLO (Service Level Objective), and SLA (Service Level Agreement) form a hierarchy for defining, measuring, and communicating service reliability. Originating from Google's Site Reliability Engineering (SRE) practice, these concepts provide a data-driven framework for making trade-offs between feature velocity and reliability investment.
 
 An SLI is a quantitative measure of some aspect of service health — such as the proportion of requests that return successfully within 200ms. An SLO is the target value for that SLI — for example, "99.9% of requests must succeed within 200ms, measured over a 30-day rolling window." An SLA is a formal business contract that specifies consequences (usually financial penalties) if the service fails to meet certain SLOs. The relationship is: SLI measures reality, SLO sets the engineering target, and SLA sets the business commitment (typically less aggressive than the SLO to provide a buffer).
 
@@ -2850,7 +2862,8 @@ Error Budget Tracking:
       'Point-in-time recovery (PITR) in PostgreSQL uses base backup + WAL replay to restore to any second',
     ],
 
-    introduction: `RPO (Recovery Point Objective) and RTO (Recovery Time Objective) are the two fundamental metrics for disaster recovery planning. RPO defines the maximum acceptable amount of data loss measured in time — if your RPO is 1 hour, you can tolerate losing up to 1 hour of data in a disaster. RTO defines the maximum acceptable downtime — if your RTO is 15 minutes, the system must be operational within 15 minutes of a failure.
+    introduction: `## Overview
+RPO (Recovery Point Objective) and RTO (Recovery Time Objective) are the two fundamental metrics for disaster recovery planning. RPO defines the maximum acceptable amount of data loss measured in time — if your RPO is 1 hour, you can tolerate losing up to 1 hour of data in a disaster. RTO defines the maximum acceptable downtime — if your RTO is 15 minutes, the system must be operational within 15 minutes of a failure.
 
 These are fundamentally business decisions, not technical ones. A payment processing system might require RPO=0 (zero data loss) and RTO<1 minute (near-instant recovery), while a marketing analytics dashboard might accept RPO=24 hours and RTO=4 hours. The technical architecture and cost follow directly from these requirements: tighter RPO/RTO demands more sophisticated (and expensive) infrastructure — synchronous replication across regions, hot standby databases, automated failover, and continuous data protection.
 
@@ -3111,7 +3124,8 @@ DR Test Tracking:
       'ULID encodes millisecond timestamp + 80 bits of randomness in a 26-character Crockford Base32 string',
     ],
 
-    introduction: `Generating unique identifiers in a distributed system is a deceptively complex problem. A single-database auto-increment column works perfectly for a monolith, but fails in distributed architectures where multiple nodes must independently generate IDs without coordination. The ID must be globally unique (no collisions across billions of IDs), and ideally sortable by creation time (for efficient database indexing) and compact (to minimize storage and network overhead).
+    introduction: `## Overview
+Generating unique identifiers in a distributed system is a deceptively complex problem. A single-database auto-increment column works perfectly for a monolith, but fails in distributed architectures where multiple nodes must independently generate IDs without coordination. The ID must be globally unique (no collisions across billions of IDs), and ideally sortable by creation time (for efficient database indexing) and compact (to minimize storage and network overhead).
 
 The three dominant strategies are UUID (Universally Unique Identifier — 128-bit, standardized by RFC 4122/9562), ULID (Universally Unique Lexicographically Sortable Identifier — 128-bit, time-ordered), and Snowflake (Twitter's 64-bit, timestamp-embedded ID scheme). Each makes different trade-offs between uniqueness guarantees, sortability, size, and operational complexity.
 
@@ -3402,7 +3416,8 @@ Database Column Types:
       'Active-active is required when users in different regions need low-latency writes simultaneously',
     ],
 
-    introduction: `Active-passive and active-active are the two fundamental high-availability deployment topologies for distributed systems. In active-passive (also called primary-standby or master-slave), one instance handles all traffic while one or more standby instances remain ready to take over if the primary fails. In active-active (also called multi-master or multi-primary), multiple instances simultaneously handle traffic, including writes, with changes replicated bidirectionally.
+    introduction: `## Overview
+Active-passive and active-active are the two fundamental high-availability deployment topologies for distributed systems. In active-passive (also called primary-standby or master-slave), one instance handles all traffic while one or more standby instances remain ready to take over if the primary fails. In active-active (also called multi-master or multi-primary), multiple instances simultaneously handle traffic, including writes, with changes replicated bidirectionally.
 
 The choice between these topologies is one of the most impactful architectural decisions in system design. Active-passive is simpler, avoids write conflicts entirely (since only one node accepts writes), and is well-supported by all major databases (PostgreSQL streaming replication, MySQL replication, Redis Sentinel). The trade-off is that failover takes time (seconds to minutes), and the standby resources are underutilized during normal operation (though they can serve read traffic as hot standbys).
 

@@ -57,7 +57,8 @@ export const warStoriesTopics = [
     questions: 5,
     description: 'A single slow dependency turned synchronous timeouts into a process-pool meltdown that propagated upstream.',
     visualizations: [],
-    introduction: `At 2:14 AM on a Tuesday, the on-call engineer received a PagerDuty alert: the checkout API was returning 503s. By 2:17 AM, two upstream services that called checkout had also gone red. By 2:22 AM, four services in total were down — services that had nothing to do with each other except that they all shared a downstream dependency on a payment processor that had begun responding slowly.
+    introduction: `## Overview
+At 2:14 AM on a Tuesday, the on-call engineer received a PagerDuty alert: the checkout API was returning 503s. By 2:17 AM, two upstream services that called checkout had also gone red. By 2:22 AM, four services in total were down — services that had nothing to do with each other except that they all shared a downstream dependency on a payment processor that had begun responding slowly.
 
 The root problem was not the slow dependency. It was the application architecture: every service had a thread pool sized for peak traffic, and every thread was configured to wait up to 30 seconds for the payment processor to respond. As the processor slowed to 8-second response times, threads backed up. New requests arrived faster than threads returned to the pool. Within six minutes, thread pools across all four services were exhausted, and each service began refusing new connections. Callers upstream got timeouts, panicked, retried — amplifying load on already-exhausted services.
 
@@ -125,7 +126,8 @@ The correct approach is to set timeouts at or slightly above the p99 latency of 
     questions: 4,
     description: 'A globally deployed service collapsed because its auth token endpoint was pinned to a single AWS region.',
     visualizations: [],
-    introduction: `The service deployed across four AWS regions advertised 99.99% uptime in its SLA. Customers were paying for multi-region resilience. On the night of the incident, us-east-1 experienced elevated API error rates — a well-known AWS event that lasted about 40 minutes. The service's own compute in all four regions kept running. But within 8 minutes, authenticated requests in all four regions began failing globally.
+    introduction: `## Overview
+The service deployed across four AWS regions advertised 99.99% uptime in its SLA. Customers were paying for multi-region resilience. On the night of the incident, us-east-1 experienced elevated API error rates — a well-known AWS event that lasted about 40 minutes. The service's own compute in all four regions kept running. But within 8 minutes, authenticated requests in all four regions began failing globally.
 
 The reason: every region's auth middleware validated JWT tokens by calling a shared introspection endpoint in us-east-1. The endpoint was behind an Application Load Balancer that itself depended on IAM calls — which were degraded during the event. Token validation began timing out at 15 seconds per attempt. With no circuit breaker and no cache, every authenticated request across all four regions stalled waiting for us-east-1. The multi-region architecture had a single-region soft dependency that negated all geographic redundancy.
 
@@ -182,7 +184,8 @@ Third, add a circuit breaker and local cache: if the introspection endpoint is s
     questions: 3,
     description: 'Four hours of debugging internal code before realizing the root cause was a third-party geolocation API silently returning stale data.',
     visualizations: [],
-    introduction: `The incident began with a spike in customer support tickets: shipping cost calculations were returning zero for international orders. Engineering spent the first two hours ruling out recent deployments — the last deploy was 72 hours ago. They reviewed the pricing service code, replayed requests through staging, and ran integration tests. Everything passed.
+    introduction: `## Overview
+The incident began with a spike in customer support tickets: shipping cost calculations were returning zero for international orders. Engineering spent the first two hours ruling out recent deployments — the last deploy was 72 hours ago. They reviewed the pricing service code, replayed requests through staging, and ran integration tests. Everything passed.
 
 At hour three, a junior engineer noticed the geolocation API used to convert ZIP codes to country codes was returning "US" for every ZIP code, including obviously non-US postal codes. The third-party API had silently changed its fallback behavior: instead of returning an error when it could not resolve a ZIP code, it was returning "US" as a default. International orders were being priced as domestic.
 
@@ -229,7 +232,8 @@ The vendor acknowledged the change in their changelog — an entry added three d
     questions: 4,
     description: 'Restarting an ElastiCache cluster during low-traffic hours triggered a database overload at 3 AM when all cache misses hit simultaneously.',
     visualizations: [],
-    introduction: `The plan seemed safe: rotate the ElastiCache Redis cluster to a new node type during the 3 AM low-traffic window. The maintenance completed in 11 minutes. At 3:14 AM, as the application reconnected to the new cluster, every request encountered a cold cache. The cache hit ratio dropped from 94% to 0% simultaneously for all nodes in the application fleet.
+    introduction: `## Overview
+The plan seemed safe: rotate the ElastiCache Redis cluster to a new node type during the 3 AM low-traffic window. The maintenance completed in 11 minutes. At 3:14 AM, as the application reconnected to the new cluster, every request encountered a cold cache. The cache hit ratio dropped from 94% to 0% simultaneously for all nodes in the application fleet.
 
 The RDS primary received 47x its normal query rate within 90 seconds. Read replicas, which normally handled 80% of traffic, were not warmed either — connection pools to replicas filled and began queuing. By 3:17 AM, p99 latency on the main API had risen from 45ms to 8 seconds. By 3:19 AM, the RDS instance hit its max_connections limit and began refusing new connections. The site effectively went down for 22 minutes during what was supposed to be a zero-downtime maintenance window.`,
     whenToUse: [
@@ -276,7 +280,8 @@ The RDS primary received 47x its normal query rate within 90 seconds. Read repli
     questions: 3,
     description: 'Synchronized TTL expiry on a high-traffic product page caused every application server to hit the database simultaneously at the top of the hour.',
     visualizations: [],
-    introduction: `The e-commerce platform had a flash sale starting at noon. Product page cache TTLs were set to exactly 3600 seconds. Every product had been cached at the last cache flush — also at noon exactly, one hour earlier. At 12:00:00 PM, every product page key expired simultaneously across the fleet.
+    introduction: `## Overview
+The e-commerce platform had a flash sale starting at noon. Product page cache TTLs were set to exactly 3600 seconds. Every product had been cached at the last cache flush — also at noon exactly, one hour earlier. At 12:00:00 PM, every product page key expired simultaneously across the fleet.
 
 With 200 application servers all receiving traffic at noon, and all finding the product cache empty, every server independently fired a database query for each product page. The PostgreSQL database received approximately 4,000 concurrent queries in the first 500ms. Query queue depth reached 600. Response time for cache-miss queries rose to 12 seconds. Application servers began timing out, treating the response as an error, and retrying — which doubled the query count again.
 
@@ -325,7 +330,8 @@ The database held for 4 minutes before the most popular queries repopulated the 
     questions: 5,
     description: 'An engineer running a cleanup script against the wrong environment deleted 2.3 million user preference records in 4 seconds.',
     visualizations: [],
-    introduction: `The task was routine: delete soft-deleted user records older than 90 days from the staging database to free up space. The engineer had run the same script dozens of times. This time, the environment variable pointing to the database DSN had a typo — it fell back to the default value, which was the production connection string set in the shell profile.
+    introduction: `## Overview
+The task was routine: delete soft-deleted user records older than 90 days from the staging database to free up space. The engineer had run the same script dozens of times. This time, the environment variable pointing to the database DSN had a typo — it fell back to the default value, which was the production connection string set in the shell profile.
 
 The script ran in 4.1 seconds and deleted 2.3 million rows from the user_preferences table. No WHERE clause had been added to scope by environment because the engineer believed the DSN would ensure environment isolation.
 
@@ -393,7 +399,8 @@ For critical tables, the combination of PITR + application-level soft delete pro
     questions: 4,
     description: 'A database migration that ran successfully corrupted currency amounts for 6% of transactions due to an integer division truncation error.',
     visualizations: [],
-    introduction: `The payment platform stored monetary amounts as integers representing cents. A migration was written to convert a legacy float column (storing dollars with two decimal places) to the integer cents format used everywhere else. The migration ran cleanly against all test environments and against staging with a production data sample.
+    introduction: `## Overview
+The payment platform stored monetary amounts as integers representing cents. A migration was written to convert a legacy float column (storing dollars with two decimal places) to the integer cents format used everywhere else. The migration ran cleanly against all test environments and against staging with a production data sample.
 
 In production, the migration ran against 14 million rows in 22 minutes without errors. The error was discovered 11 days later during a monthly reconciliation: a subset of transactions had amounts that were off by 1 cent or occasionally by 1 dollar. The investigation revealed that the migration had used integer division in Python (amount / 100 instead of int(round(amount * 100))) — a floor operation that silently truncated amounts like $19.999... to $19.99 instead of $20.00.
 
@@ -442,7 +449,8 @@ The affected rows totaled $847,000 in under-recorded revenue. Recovery required 
     questions: 4,
     description: 'Automatic RDS failover promoted a replica that was 4 minutes behind the primary, discarding all writes from that window.',
     visualizations: [],
-    introduction: `The e-commerce platform used RDS Multi-AZ for its orders database. Multi-AZ was configured correctly — the standby replica was in a different availability zone and received synchronous replication. The incident did not involve the Multi-AZ standby.
+    introduction: `## Overview
+The e-commerce platform used RDS Multi-AZ for its orders database. Multi-AZ was configured correctly — the standby replica was in a different availability zone and received synchronous replication. The incident did not involve the Multi-AZ standby.
 
 The problem was a different replica: the analytics team had provisioned an additional read replica for reporting queries. This replica was not synchronous — it used asynchronous replication and had accumulated a replication lag of 4 minutes due to a heavy reporting query that had locked table statistics.
 
@@ -493,7 +501,8 @@ For 4 minutes, order status pages showed orders as "pending" that had already sh
     questions: 3,
     description: 'A 14-month-old backup job was logging success but writing zero bytes — discovered only when a recovery was attempted.',
     visualizations: [],
-    introduction: `The daily backup job had been running for 14 months without a single alert. Every morning, the Slack notification read "Backup completed successfully." When the database host suffered a disk failure and the team attempted recovery, they discovered the backup S3 bucket was empty. The job had been "succeeding" since a configuration change 14 months ago had pointed the output path to a bucket that no longer existed. S3 responded with a 404 to the PUT request. The backup script interpreted any non-exception exit as success and posted the success message regardless of the HTTP response code.
+    introduction: `## Overview
+The daily backup job had been running for 14 months without a single alert. Every morning, the Slack notification read "Backup completed successfully." When the database host suffered a disk failure and the team attempted recovery, they discovered the backup S3 bucket was empty. The job had been "succeeding" since a configuration change 14 months ago had pointed the output path to a bucket that no longer existed. S3 responded with a 404 to the PUT request. The backup script interpreted any non-exception exit as success and posted the success message regardless of the HTTP response code.
 
 The team had never run a restore drill. There was no monitoring on the backup bucket's object count or size. The only backup that existed was a weekly RDS automated snapshot — 6 days old at the time of the disk failure — which meant 6 days of data was unrecoverable.`,
     whenToUse: [
@@ -540,7 +549,8 @@ The team had never run a restore drill. There was no monitoring on the backup bu
     questions: 5,
     description: 'An access key ID and secret committed in a config file were found by an automated scanner within 4 minutes, leading to $34,000 in EC2 charges overnight.',
     visualizations: [],
-    introduction: `A developer was writing a tutorial blog post and committed a sample config file to a public GitHub repository. The file contained a real AWS access key that had been left in the project after local testing. The developer planned to remove it before publishing — but pushed to the public branch first.
+    introduction: `## Overview
+A developer was writing a tutorial blog post and committed a sample config file to a public GitHub repository. The file contained a real AWS access key that had been left in the project after local testing. The developer planned to remove it before publishing — but pushed to the public branch first.
 
 Automated scanners that watch public GitHub commits for credential patterns found the key within 4 minutes. By the time the developer noticed the mistake 3 hours later and revoked the key, the attacker had already: launched 400 p3.16xlarge GPU instances in 6 regions for cryptocurrency mining, created 12 IAM users, and configured an SQS queue as a dead drop for ongoing communications. Total EC2 charges incurred: $34,200 in 14 hours. AWS ultimately waived the charges after a Security Incident Report, but recovery took 3 days.`,
     whenToUse: [
@@ -592,7 +602,8 @@ Prevention: Remove the file from git history using git filter-branch or BFG Repo
     questions: 4,
     description: 'A single Block Public Access setting left unchecked exposed 3.2 million customer records in a logging bucket.',
     visualizations: [],
-    introduction: `The engineering team had strong S3 security practices: all application buckets required server-side encryption, versioning, and had Block Public Access enabled at the bucket level. What they missed was the logging bucket.
+    introduction: `## Overview
+The engineering team had strong S3 security practices: all application buckets required server-side encryption, versioning, and had Block Public Access enabled at the bucket level. What they missed was the logging bucket.
 
 A new observability pipeline had been set up 8 months earlier. The engineer creating the logging bucket was working quickly and unchecked the "Block all public access" option, intending to come back and restrict it after testing. The bucket was never locked down. The logging pipeline wrote application logs that included request payloads — which included customer email addresses, shipping addresses, and partial payment card data in error logs.
 
@@ -641,7 +652,8 @@ The exposure was discovered during an automated compliance audit 8 months later.
     questions: 4,
     description: 'A developer with iam:PassRole and lambda:CreateFunction permissions silently escalated to full AdministratorAccess in 10 minutes.',
     visualizations: [],
-    introduction: `The security audit finding came in a routine IAM access review: a developer in the platform team had the permissions iam:PassRole, lambda:CreateFunction, and lambda:InvokeFunction. These appeared reasonable — the developer managed Lambda deployments. What the access review initially missed was that these three permissions, combined, allow full privilege escalation.
+    introduction: `## Overview
+The security audit finding came in a routine IAM access review: a developer in the platform team had the permissions iam:PassRole, lambda:CreateFunction, and lambda:InvokeFunction. These appeared reasonable — the developer managed Lambda deployments. What the access review initially missed was that these three permissions, combined, allow full privilege escalation.
 
 The attack chain: the developer could create a new Lambda function, pass it an IAM role with AdministratorAccess (a role that already existed for production deployments), and then invoke the Lambda. The Lambda, running with the admin role, could then create a new IAM user with AdministratorAccess and return the credentials. This attack was never executed maliciously — it was discovered by a contractor running an automated privilege escalation scanner (Cloudsplaining) during a pen test.
 
@@ -691,7 +703,8 @@ The finding required revoking iam:PassRole from the developer's policy and imple
     questions: 3,
     description: 'A typosquatted npm package installed via a developer\'s local npm install exfiltrated AWS credentials from CI environment variables.',
     visualizations: [],
-    introduction: `A developer on the platform team was setting up a new project and typed npm install lodash-utils instead of lodash. The package lodash-utils was a typosquatted package published to npm 3 weeks earlier. Its postinstall script ran a Node.js snippet that read process.env, serialized the object, and sent it to an external endpoint via an HTTPS request.
+    introduction: `## Overview
+A developer on the platform team was setting up a new project and typed npm install lodash-utils instead of lodash. The package lodash-utils was a typosquatted package published to npm 3 weeks earlier. Its postinstall script ran a Node.js snippet that read process.env, serialized the object, and sent it to an external endpoint via an HTTPS request.
 
 On the developer's local machine, the only interesting environment variable was the AWS_PROFILE for development. But that developer had also recently added lodash-utils to the project's package.json without noticing it was not lodash. When the project was subsequently cloned in CI (GitHub Actions), the CI runner had AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY injected as environment variables for deployment. The postinstall script ran during npm install in CI and sent those credentials to the attacker.
 
@@ -743,7 +756,8 @@ The CI keys had S3 read/write and CloudFront invalidation permissions. The attac
     questions: 4,
     description: 'A closures-based event listener accumulation caused heap growth of 40 MB/hour, requiring nightly automated restarts to prevent OOM crashes.',
     visualizations: [],
-    introduction: `The symptom was consistent: every night around 3 AM, the Node.js API server would become unresponsive and be restarted by the health check. Engineers accepted this as normal for months because the restart took only 30 seconds and the 3 AM timing meant low user impact. When the service scaled from 2 to 8 instances, the crash window widened — with staggered starts, some instances were crashing at different times throughout the day.
+    introduction: `## Overview
+The symptom was consistent: every night around 3 AM, the Node.js API server would become unresponsive and be restarted by the health check. Engineers accepted this as normal for months because the restart took only 30 seconds and the 3 AM timing meant low user impact. When the service scaled from 2 to 8 instances, the crash window widened — with staggered starts, some instances were crashing at different times throughout the day.
 
 The investigation used a heap snapshot taken at startup and compared to one taken 4 hours later. The growing objects were EventEmitter listener arrays on a shared Redis client. Each incoming HTTP request was adding a new close event listener to the Redis client to handle request teardown, but the listener was never removed after the request completed. After 10,000 requests, there were 10,000 listeners, each holding a closure reference to the request object. The fix was a single removeListener call in the response end handler, plus a maxListeners increase with a warning threshold.`,
     whenToUse: [
@@ -794,7 +808,8 @@ Monitor with a CloudWatch/Datadog metric for process.memoryUsage().heapUsed and 
     questions: 4,
     description: 'An ORM-generated N+1 query pattern that ran fine in staging (10 records) caused 8,400 database queries per user request in production.',
     visualizations: [],
-    introduction: `The API endpoint served a list of orders with associated products and customer details. In development and staging, test data had at most 10-20 orders per user. In production, power users had hundreds to thousands of orders.
+    introduction: `## Overview
+The API endpoint served a list of orders with associated products and customer details. In development and staging, test data had at most 10-20 orders per user. In production, power users had hundreds to thousands of orders.
 
 The ORM code was straightforward: fetch orders, then for each order fetch the associated product, then fetch the associated customer. With lazy loading enabled by default, each association trigger generated a separate SQL SELECT. A user with 840 orders triggered 840 product queries and 840 customer queries — 1,681 queries for a single API request. Database connection pool was sized for 20 concurrent connections. Three concurrent power user requests (5,043 queries) exhausted the pool, causing all other requests to queue.
 
@@ -847,7 +862,8 @@ Monitor: add a per-request query count metric to APM. Alert if any endpoint aver
     questions: 4,
     description: 'A single slow migration caused connection pool exhaustion on the RDS primary, cascading to 12 services that shared the same database.',
     visualizations: [],
-    introduction: `The shared PostgreSQL RDS instance had a max_connections limit of 500. Across 12 microservices, connection pools totaled 420 max connections — 84% of capacity under normal load. A database engineer kicked off a schema migration during a low-traffic window: ALTER TABLE orders ADD COLUMN delivery_estimate_v2 jsonb. The migration on a 300-million-row table took a table-level lock for 18 minutes.
+    introduction: `## Overview
+The shared PostgreSQL RDS instance had a max_connections limit of 500. Across 12 microservices, connection pools totaled 420 max connections — 84% of capacity under normal load. A database engineer kicked off a schema migration during a low-traffic window: ALTER TABLE orders ADD COLUMN delivery_estimate_v2 jsonb. The migration on a 300-million-row table took a table-level lock for 18 minutes.
 
 During those 18 minutes, every query from every service that touched the orders table queued behind the lock. Connection pool slots filled with waiting connections. Within 4 minutes, all 12 services had exhausted their pools — new requests could not acquire connections and began failing with "connection pool timeout" errors. The services themselves appeared healthy (process running, health checks passing via a bypass route), but all order-related operations were failing for users.
 
@@ -899,7 +915,8 @@ For index creation: always use CREATE INDEX CONCURRENTLY — it builds the index
     questions: 4,
     description: 'A product ID used as the DynamoDB partition key concentrated 80% of flash-sale reads on a single partition, causing sustained throttling.',
     visualizations: [],
-    introduction: `The flash sale featured one hero product — a limited-edition sneaker. The product catalog DynamoDB table used product_id as the partition key. The hero product's product_id was read by every shopper visiting the sale page, by the inventory service checking stock every 5 seconds, and by the recommendation engine for all related products.
+    introduction: `## Overview
+The flash sale featured one hero product — a limited-edition sneaker. The product catalog DynamoDB table used product_id as the partition key. The hero product's product_id was read by every shopper visiting the sale page, by the inventory service checking stock every 5 seconds, and by the recommendation engine for all related products.
 
 DynamoDB partitions are limited to 3,000 read capacity units (RCU) per second per partition. The hero product's reads concentrated exclusively on a single partition. At peak, the sale page received 2,200 requests/second, each triggering 3 DynamoDB reads. The partition received 6,600 reads/second — more than twice its limit. DynamoDB returned ProvisionedThroughputExceededException errors. The application had no retry logic for DynamoDB errors on the read path, so product pages began failing for all users, not just users experiencing throttling.`,
     whenToUse: [
@@ -948,7 +965,8 @@ DynamoDB partitions are limited to 3,000 read capacity units (RCU) per second pe
     questions: 4,
     description: 'A database migration included in the same deployment as application code made rollback impossible after the new version broke production.',
     visualizations: [],
-    introduction: `The deploy bundle included two changes: a new API version that changed the response shape of /api/v1/orders, and a database migration that renamed the orders.status column to orders.fulfillment_status. Both changes were tested together in staging and passed.
+    introduction: `## Overview
+The deploy bundle included two changes: a new API version that changed the response shape of /api/v1/orders, and a database migration that renamed the orders.status column to orders.fulfillment_status. Both changes were tested together in staging and passed.
 
 In production, the new API code deployed successfully across 8 instances. Within 3 minutes, PagerDuty fired: error rate on /api/v1/orders spiked to 34%. The old mobile app version (still in use by 12% of users) expected the old response shape and was failing. The team attempted to roll back the application code to the previous version. But the previous version referenced orders.status — the column that had been renamed. Rolling back the app code with the renamed database column caused all database queries to fail. Rolling back the database rename required reverting 2 hours of writes that had used the new column name.
 
@@ -1005,7 +1023,8 @@ This pattern means: any application version can be deployed between phases witho
     questions: 3,
     description: 'Enabling a feature flag caused all application instances to immediately reload configuration, creating a thundering herd on the config service.',
     visualizations: [],
-    introduction: `The platform used a centralized configuration service backed by DynamoDB. All 240 application instances polled the config service every 30 seconds. When a feature flag was toggled from false to true, all 240 instances detected the change on their next poll. But instead of using the locally cached config for the flag evaluation, the application code fetched the full config from DynamoDB on every feature flag evaluation — by design, to ensure freshness.
+    introduction: `## Overview
+The platform used a centralized configuration service backed by DynamoDB. All 240 application instances polled the config service every 30 seconds. When a feature flag was toggled from false to true, all 240 instances detected the change on their next poll. But instead of using the locally cached config for the flag evaluation, the application code fetched the full config from DynamoDB on every feature flag evaluation — by design, to ensure freshness.
 
 Enabling the flag caused 240 concurrent DynamoDB GetItem calls per second as each instance evaluated the flag on every incoming request. DynamoDB was configured with provisioned capacity of 100 RCU. The instantaneous spike to 240 RCU triggered throttling. The application interpreted DynamoDB throttling errors as "flag not available" and defaulted to disabled — meaning the feature was effectively off for 11 minutes until the throttling subsided. The irony: a flag change intended to enable a feature disabled it instead.`,
     whenToUse: [
@@ -1051,7 +1070,8 @@ Enabling the flag caused 240 concurrent DynamoDB GetItem calls per second as eac
     questions: 4,
     description: 'A migration script that added 3 constraints failed partway through, leaving the database with one constraint applied and the others missing.',
     visualizations: [],
-    introduction: `The migration added three foreign key constraints to the orders table as part of a data integrity project. The migration file contained three separate ALTER TABLE statements. In PostgreSQL, each ALTER TABLE runs in its own implicit transaction unless wrapped in an explicit transaction block. The migration tool was configured to run each statement individually.
+    introduction: `## Overview
+The migration added three foreign key constraints to the orders table as part of a data integrity project. The migration file contained three separate ALTER TABLE statements. In PostgreSQL, each ALTER TABLE runs in its own implicit transaction unless wrapped in an explicit transaction block. The migration tool was configured to run each statement individually.
 
 The first two statements succeeded. The third failed: a data quality issue — orphaned order records that referenced non-existent customer IDs — violated the constraint. The migration tool marked the migration as "failed" and exited. But the first two constraints were already committed to the database.
 
@@ -1099,7 +1119,8 @@ The application code was deployed before the migration was fixed. It expected al
     questions: 3,
     description: 'Incomplete session store migration meant users were authenticated on green but not on blue, causing random logout loops during traffic shifting.',
     visualizations: [],
-    introduction: `The team was deploying a new version of the session management service as part of a blue-green deployment. Blue was the old version, green was the new. Session tokens issued by blue used HMAC-SHA256 with a 32-byte key. Green used the same algorithm but a newly generated key (as part of a planned key rotation).
+    introduction: `## Overview
+The team was deploying a new version of the session management service as part of a blue-green deployment. Blue was the old version, green was the new. Session tokens issued by blue used HMAC-SHA256 with a 32-byte key. Green used the same algorithm but a newly generated key (as part of a planned key rotation).
 
 The load balancer was shifted to send 50% of traffic to green. Users who had been active on blue had tokens signed with the blue key. When their requests were routed to green, token validation failed. Green returned a 401 and invalidated the session. The user saw a logout — then on re-login, received a green token. If that user's next request routed to blue, the same cycle repeated.
 
@@ -1150,7 +1171,8 @@ This is the same pattern used for JWT algorithm migrations, TLS certificate tran
     questions: 3,
     description: 'A misconfigured internal DNS resolver accepted forged responses, causing microservice-to-microservice calls to route to a stale IP for 2 hours.',
     visualizations: [],
-    introduction: `The internal DNS resolver used by all microservices was a self-hosted BIND instance running in an EC2 instance. During an upgrade, the engineer had disabled DNSSEC validation temporarily and forgotten to re-enable it. A configuration management drift detection tool caught the issue 6 weeks later, but by then the resolver had accepted a forged response.
+    introduction: `## Overview
+The internal DNS resolver used by all microservices was a self-hosted BIND instance running in an EC2 instance. During an upgrade, the engineer had disabled DNSSEC validation temporarily and forgotten to re-enable it. A configuration management drift detection tool caught the issue 6 weeks later, but by then the resolver had accepted a forged response.
 
 The forged response had come from a rogue resolver that the BIND instance briefly queried during a network hiccup — the forged response set the A record for payments-api.internal to a stale IP (an IP that had previously belonged to the payments service but now pointed to a decommissioned instance). All microservices resolving that hostname began sending requests to the dead IP. Requests silently failed with connection refused. Because the forged TTL was 7,200 seconds, the stale record persisted for 2 hours even after the rogue resolver was identified and blocked.
 
@@ -1199,7 +1221,8 @@ Recovery required flushing the DNS cache (rndc flush) and repointing the A recor
     questions: 3,
     description: 'A wildcard TLS certificate for internal APIs expired with no automated renewal, causing all internal service-to-service calls to fail with SSL errors.',
     visualizations: [],
-    introduction: `The internal API gateway used a wildcard certificate for *.internal.company.com. The certificate had been issued manually 13 months earlier with a 12-month validity. It had expired 31 days earlier — but the expiry had gone unnoticed because the monitoring alert had been configured to fire at 7 days remaining, and the alert had been misconfigured to send to a defunct team email alias.
+    introduction: `## Overview
+The internal API gateway used a wildcard certificate for *.internal.company.com. The certificate had been issued manually 13 months earlier with a 12-month validity. It had expired 31 days earlier — but the expiry had gone unnoticed because the monitoring alert had been configured to fire at 7 days remaining, and the alert had been misconfigured to send to a defunct team email alias.
 
 The expiry was discovered when a new microservice was deployed and its integration tests failed with "SSL certificate has expired" errors. Investigation revealed that all existing services had cached TLS sessions from before the expiry — those sessions continued to work because TLS session resumption does not revalidate the certificate. New connections (new deployments, container restarts, cold starts) were failing. The incident had technically been active for 31 days, but only new connections were affected.
 
@@ -1248,7 +1271,8 @@ Recovery was a 45-minute process: obtain a new certificate, update the certifica
     questions: 3,
     description: 'A misconfigured BGP peer accepted a broader-than-intended prefix announcement, briefly rerouting user traffic through a third-party network.',
     visualizations: [],
-    introduction: `The company operated a hybrid cloud setup with a Direct Connect connection to AWS. A network engineer updated a BGP route policy at the Direct Connect router and made an error in the prefix filter: instead of accepting only the specific /24 prefix for the corporate network, the filter accepted a /16 supernet that covered the corporate /24 plus an adjacent /24 owned by a different customer.
+    introduction: `## Overview
+The company operated a hybrid cloud setup with a Direct Connect connection to AWS. A network engineer updated a BGP route policy at the Direct Connect router and made an error in the prefix filter: instead of accepting only the specific /24 prefix for the corporate network, the filter accepted a /16 supernet that covered the corporate /24 plus an adjacent /24 owned by a different customer.
 
 For 18 minutes, some BGP speakers in the regional network preferred the newly-announced /16 route (longer AS-path, but wider prefix — behavior is AS-dependent). Traffic destined for a portion of the adjacent customer's IP space was briefly transiting through the company's Direct Connect link. The company's network team did not notice — they had not been impacted directly. The adjacent customer noticed unusual latency spikes and filed a complaint with the shared carrier, which traced it to the misconfigured route.
 
@@ -1297,7 +1321,8 @@ The incident had no data security impact for the company, but it violated accept
     questions: 3,
     description: 'A burst of Lambda invocations exhausted NAT Gateway SNAT ports, causing connection failures to external APIs with confusing "connection refused" errors.',
     visualizations: [],
-    introduction: `The data pipeline used Lambda functions deployed in a VPC to call external third-party APIs. The pipeline ran nightly batches and had been stable for months. A new customer acquisition campaign tripled the batch size overnight. Lambda scaled to 800 concurrent executions. Each Lambda maintained 3 persistent HTTPS connections to the external API.
+    introduction: `## Overview
+The data pipeline used Lambda functions deployed in a VPC to call external third-party APIs. The pipeline ran nightly batches and had been stable for months. A new customer acquisition campaign tripled the batch size overnight. Lambda scaled to 800 concurrent executions. Each Lambda maintained 3 persistent HTTPS connections to the external API.
 
 NAT Gateway supports 55,000 simultaneous connections. But the 800 Lambdas were all assigned to the same NAT Gateway, all connecting to the same external IP, and all using ephemeral source ports from the same SNAT pool. The NAT Gateway exhausted its SNAT port allocation for the destination IP — all 65,535 ports from the NAT Gateway's IP to the external API's IP were in use or in TIME_WAIT.
 

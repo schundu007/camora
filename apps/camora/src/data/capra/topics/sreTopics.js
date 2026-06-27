@@ -131,7 +131,8 @@ export const sreTopics = [
         image: '/diagrams/sre/a1-sre-vs-devops.png',
       },
     ],
-    introduction: `Site Reliability Engineering (SRE) was created at Google in 2003 by Ben Treynor Sloss. Treynor's one-line definition — quoted verbatim across the SRE Book — is "what happens when you ask a software engineer to design an operations team." That framing is load-bearing: SRE is not "ops with code on the side." It's an engineering discipline whose product happens to be production reliability.
+    introduction: `## Overview
+Site Reliability Engineering (SRE) was created at Google in 2003 by Ben Treynor Sloss. Treynor's one-line definition — quoted verbatim across the SRE Book — is "what happens when you ask a software engineer to design an operations team." That framing is load-bearing: SRE is not "ops with code on the side." It's an engineering discipline whose product happens to be production reliability.
 
 The relationship to DevOps is best summarised by the SRE Workbook's chapter title: \`class SRE implements interface DevOps\`. DevOps is the broad cultural philosophy (no silos, change should be gradual, accidents are normal, measurement is crucial); SRE is one prescriptive implementation of that philosophy with opinionated, measurable artifacts: SLOs, error budgets, a 50% toil cap, blameless postmortems.
 
@@ -236,7 +237,8 @@ The SRE response is error budgets — convert the dev/SRE tension into a math pr
         image: '/diagrams/sre/a2_3-sli-slo-sla-example.png',
       },
     ],
-    introduction: `These three are the most-tested SRE definitions in interviews. Get them precise; the differences are load-bearing.
+    introduction: `## Overview
+These three are the most-tested SRE definitions in interviews. Get them precise; the differences are load-bearing.
 
 From the Google SRE Book Ch 4, verbatim:
 
@@ -394,7 +396,8 @@ The SRE runs the measurement; the SRE does not unilaterally set the target. If o
         image: '/diagrams/sre/a4_2-error-budget-policy.png',
       },
     ],
-    introduction: `An error budget is the operational expression of an SLO. The math is one line: error_budget = 1 − SLO, applied over the SLO\'s measurement window.
+    introduction: `## Overview
+An error budget is the operational expression of an SLO. The math is one line: error_budget = 1 − SLO, applied over the SLO\'s measurement window.
 
 For a 99.9% SLO measured over a 30-day window with 3 million requests (Workbook Ch 2 worked example), the budget is 3,000 allowed errors. A single incident producing 1,500 errors burns 50% of the quarterly budget. That\'s the lever.
 
@@ -553,7 +556,8 @@ Ties to budget: a 14.4× sustained burn would eat the whole 30-day budget in jus
         image: '/diagrams/sre/a6-risk-velocity.png',
       },
     ],
-    introduction: `Maximising reliability and maximising feature velocity are in tension. The SRE response is not to pick a winner — it\'s to make the tradeoff quantitative via SLOs and error budgets so both sides can negotiate against the same number.
+    introduction: `## Overview
+Maximising reliability and maximising feature velocity are in tension. The SRE response is not to pick a winner — it\'s to make the tradeoff quantitative via SLOs and error budgets so both sides can negotiate against the same number.
 
 The headline argument from SRE Book Ch 3, verbatim: "Extreme reliability comes at a cost: maximizing stability limits how fast new features can be developed and dramatically increases costs." And Ch 1\'s epigraph: "Hope is not a strategy."
 
@@ -658,7 +662,8 @@ The goal: product sees that SRE is not arbitrarily blocking launches — SRE is 
         image: '/diagrams/sre/a5-toil-split.png',
       },
     ],
-    introduction: `Toil is the SRE\'s anti-feature. Quoting SRE Book Ch 5 verbatim:
+    introduction: `## Overview
+Toil is the SRE\'s anti-feature. Quoting SRE Book Ch 5 verbatim:
 
 > "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
 
@@ -775,7 +780,8 @@ The cost-benefit rule for automation: time saved over the automation\'s lifetime
         image: '/diagrams/sre/a4-cuj.png',
       },
     ],
-    introduction: `An SLO measured at the wrong layer is worse than no SLO. A service can hit 99.99% on individual API calls while 30% of user checkouts fail because the calls compose into a path that breaks somewhere in the middle. The thing that matters is the end-to-end user task, not the per-call success rate.
+    introduction: `## Overview
+An SLO measured at the wrong layer is worse than no SLO. A service can hit 99.99% on individual API calls while 30% of user checkouts fail because the calls compose into a path that breaks somewhere in the middle. The thing that matters is the end-to-end user task, not the per-call success rate.
 
 The Workbook (Ch 2) names this the Critical User Journey (CUJ) — "a multi-step user task whose end-to-end success is what really matters." For an e-commerce site, the CUJ is "complete a checkout," not "API responds 200 on individual route." For a streaming service, it\'s "start watching this title within 5 seconds of clicking play," not "metadata service responds."
 
@@ -891,7 +897,8 @@ Implementing quality SLIs is harder than availability — you usually need appli
         image: '/diagrams/sre/a6-risk-velocity.png',
       },
     ],
-    introduction: `Not every SLO needs to gate launches on day one. The Workbook (Ch 2) explicitly recognises aspirational SLOs — targets you track but don\'t enforce. The point is to start measuring, build instrumentation, calibrate the SLI, then graduate to enforcement when the data is trustworthy.
+    introduction: `## Overview
+Not every SLO needs to gate launches on day one. The Workbook (Ch 2) explicitly recognises aspirational SLOs — targets you track but don\'t enforce. The point is to start measuring, build instrumentation, calibrate the SLI, then graduate to enforcement when the data is trustworthy.
 
 The progression is roughly:
 
@@ -999,7 +1006,8 @@ Concretely: announce in the next reliability review that the SLO is going aspira
         image: '/diagrams/sre/b1-redundancy.png',
       },
     ],
-    introduction: `High availability is not "buy a more reliable box." A single 99.9% server is a 99.9% server. The only way to push availability past the per-component reliability is redundancy + automated failover, and the math is unforgiving.
+    introduction: `## Overview
+High availability is not "buy a more reliable box." A single 99.9% server is a 99.9% server. The only way to push availability past the per-component reliability is redundancy + automated failover, and the math is unforgiving.
 
 The formula from the AWS Well-Architected Reliability Pillar:
 
@@ -1124,7 +1132,8 @@ Also useful: the rough rule that each additional 9 costs ~10× the engineering i
         image: '/diagrams/sre/b2-dr-strategies.png',
       },
     ],
-    introduction: `Disaster recovery is the discipline of getting back to a working state after a region, AZ, or whole-cloud failure. Every workload needs a DR strategy; the question is which one, and the answer is driven by the cost of downtime, not by engineering preference.
+    introduction: `## Overview
+Disaster recovery is the discipline of getting back to a working state after a region, AZ, or whole-cloud failure. Every workload needs a DR strategy; the question is which one, and the answer is driven by the cost of downtime, not by engineering preference.
 
 The AWS Well-Architected Reliability Pillar names four strategies, in increasing order of cost and decreasing order of RTO/RPO. Each is roughly 10× the cost of the previous and gives roughly 10× faster recovery.
 
@@ -1268,7 +1277,8 @@ Also consider: warm-standby costs roughly 30-50% of full production (you\'re sca
         image: '/diagrams/sre/b3-rto-rpo.png',
       },
     ],
-    introduction: `RTO and RPO are the two numbers every DR conversation orbits. Verbatim from Google Cloud\'s DR documentation:
+    introduction: `## Overview
+RTO and RPO are the two numbers every DR conversation orbits. Verbatim from Google Cloud\'s DR documentation:
 
 - RTO (Recovery Time Objective): "How long after a disaster before I\'m up and running."
 - RPO (Recovery Point Objective): "How much data can I afford to lose in the event of a disaster."
@@ -1380,7 +1390,8 @@ Also: as called out earlier, RTO=0 for region failure is not RTO=0 for data corr
         image: '/diagrams/sre/b4-multi-cloud.png',
       },
     ],
-    introduction: `True multi-cloud active/active is rare; most "multi-cloud" deployments are one primary cloud + one DR target. When you do go fully active/active, the hard problem isn\'t the traffic split — global load balancers (AWS Global Accelerator, GCP Global LB, Azure Front Door, Cloudflare) handle that. The hard problem is writes: every region accepts writes; how do they reconcile?
+    introduction: `## Overview
+True multi-cloud active/active is rare; most "multi-cloud" deployments are one primary cloud + one DR target. When you do go fully active/active, the hard problem isn\'t the traffic split — global load balancers (AWS Global Accelerator, GCP Global LB, Azure Front Door, Cloudflare) handle that. The hard problem is writes: every region accepts writes; how do they reconcile?
 
 The AWS DR whitepaper names three strategies. None is free. Pick the one that matches your data model.
 
@@ -1494,7 +1505,8 @@ Multi-cloud is a related answer: if your DR strategy depends on AWS being up to 
         image: '/diagrams/sre/b5-nalsd.png',
       },
     ],
-    introduction: `Scaling problems usually don\'t look like "we need bigger machines." They look like "this design works at 10K QPS but breaks at 100K." The bottleneck is some component whose growth pattern the original design didn\'t anticipate.
+    introduction: `## Overview
+Scaling problems usually don\'t look like "we need bigger machines." They look like "this design works at 10K QPS but breaks at 100K." The bottleneck is some component whose growth pattern the original design didn\'t anticipate.
 
 Google\'s framework for this — from SRE Workbook Ch 12 — is Non-Abstract Large System Design (NALSD): "the ability to assess, design, and evaluate large systems." The thesis: "all systems will eventually have to run on real computers in real datacenters using real networks." You can\'t hand-wave the math.
 
@@ -1627,7 +1639,8 @@ The diagnostic: if your monitoring shows uniform CPU across most shards but one 
         image: '/diagrams/sre/b6-latency-budget.png',
       },
     ],
-    introduction: `Performance optimization is the discipline of making something faster without breaking it. The non-discipline is what most engineering teams do — making changes that are faster most of the time and creating subtle correctness or reliability issues at the tail.
+    introduction: `## Overview
+Performance optimization is the discipline of making something faster without breaking it. The non-discipline is what most engineering teams do — making changes that are faster most of the time and creating subtle correctness or reliability issues at the tail.
 
 The SRE Book\'s framing (Ch 21 + 22): performance isn\'t a single number. The interesting question is the tail — p99 and p99.9 — because that\'s what users feel. A change that improves the median by 20% but adds 5× to the p99 is usually a regression.
 
@@ -1763,7 +1776,8 @@ The detection: use histograms with exponentially-bucketed boundaries (Prometheus
         image: '/diagrams/sre/b7-raft.png',
       },
     ],
-    introduction: `Distributed consensus is the protocol problem at the heart of every reliable distributed system: how do N machines agree on a value when some of them might fail or be partitioned? It\'s not a footnote — it\'s a foundation.
+    introduction: `## Overview
+Distributed consensus is the protocol problem at the heart of every reliable distributed system: how do N machines agree on a value when some of them might fail or be partitioned? It\'s not a footnote — it\'s a foundation.
 
 You need consensus when (SRE Book Ch 23): leader election, group membership, lease/lock validity, reliable distributed queuing, message commitment, datastore values. Anywhere a single piece of state must be consistent across multiple machines, you need consensus underneath.
 
@@ -1887,7 +1901,8 @@ Practical pattern: 5-replica clusters spread across 3 AZs (e.g. 2-2-1). Loss of 
         image: '/diagrams/sre/c1-three-pillars.png',
       },
     ],
-    introduction: `Observability is the property of a system that lets you understand its internal state from its external outputs. Sounds abstract; the practical decomposition has been the same for ~10 years: metrics, logs, traces — the "three pillars."
+    introduction: `## Overview
+Observability is the property of a system that lets you understand its internal state from its external outputs. Sounds abstract; the practical decomposition has been the same for ~10 years: metrics, logs, traces — the "three pillars."
 
 Each pillar has a specific job:
 
@@ -2009,7 +2024,8 @@ Worth knowing: the pillars view is fine as a starting mental model. The "wide ev
         image: '/diagrams/sre/c2-red-use.png',
       },
     ],
-    introduction: `Three named methods exist for "what to measure," and engineers conflate them constantly. The interview-clean version:
+    introduction: `## Overview
+Three named methods exist for "what to measure," and engineers conflate them constantly. The interview-clean version:
 
 RED Method (Tom Wilkie, formerly Weaveworks, now Grafana) — for services:
 - Rate — requests per second
@@ -2167,7 +2183,8 @@ Google SRE Book Ch 6 quote: "It\'s important to distinguish between the latency 
         image: '/diagrams/sre/c3-sli-types.png',
       },
     ],
-    introduction: `Picking the right SLI is the single most consequential observability decision. A bad SLI makes a service look healthy when users are unhappy; a good SLI fires when users feel pain.
+    introduction: `## Overview
+Picking the right SLI is the single most consequential observability decision. A bad SLI makes a service look healthy when users are unhappy; a good SLI fires when users feel pain.
 
 The SRE Workbook (Ch 2) names six SLI types, each appropriate for a different kind of work:
 
@@ -2304,7 +2321,8 @@ Pragmatic guidance: most services don\'t need a quality SLI explicitly. But any 
         image: '/diagrams/sre/c4-prom-stack.png',
       },
     ],
-    introduction: `The 2026 observability landscape has consolidated around three commercial-grade options:
+    introduction: `## Overview
+The 2026 observability landscape has consolidated around three commercial-grade options:
 
 1. Grafana LGTM stack (open-source, self-hosted)
 - Loki — log aggregation, label-indexed (cheaper than Elastic).
@@ -2445,7 +2463,8 @@ Trade-offs: eBPF requires a recent kernel (4.18+ for most features, 5.x preferre
         image: '/diagrams/sre/c5-logs-cost.png',
       },
     ],
-    introduction: `Logging is the most expensive of the three pillars at scale and the most often abused. Two engineers logging "everything at INFO" can quintuple a service\'s log spend without proportional debug value.
+    introduction: `## Overview
+Logging is the most expensive of the three pillars at scale and the most often abused. Two engineers logging "everything at INFO" can quintuple a service\'s log spend without proportional debug value.
 
 Rules that hold up in production:
 
@@ -2596,7 +2615,8 @@ Final guardrail: budget alerts per service. If service X\'s logs spike 2× overn
         image: '/diagrams/sre/c6-trace.png',
       },
     ],
-    introduction: `Distributed tracing answers a question metrics and logs can\'t: "this user request took 5 seconds — where did the time go across our 12 services?"
+    introduction: `## Overview
+Distributed tracing answers a question metrics and logs can\'t: "this user request took 5 seconds — where did the time go across our 12 services?"
 
 The mechanics:
 - A trace represents one user request crossing service boundaries.
@@ -2744,7 +2764,8 @@ What I\'d tell a team setting up tracing: aim for <5% CPU overhead, <2% addition
         image: '/diagrams/sre/c7-symptom-alert.png',
       },
     ],
-    introduction: `Alerting is where observability meets human attention. Bad alerting is the leading cause of SRE burnout. Good alerting is rare and load-bearing.
+    introduction: `## Overview
+Alerting is where observability meets human attention. Bad alerting is the leading cause of SRE burnout. Good alerting is rare and load-bearing.
 
 The SRE Book\'s core principle (Ch 6, paraphrased): alert on symptoms, not on causes. "Did something break?" is a better question than "Is the database CPU above 90%?"
 
@@ -2897,7 +2918,8 @@ The first month is painful — you\'re killing alerts and people are nervous. Th
         image: '/diagrams/sre/c8-dashboard-hierarchy.png',
       },
     ],
-    introduction: `Dashboards are how humans consume metrics. Bad dashboards are noise; great dashboards orient on-call instantly.
+    introduction: `## Overview
+Dashboards are how humans consume metrics. Bad dashboards are noise; great dashboards orient on-call instantly.
 
 The hierarchy that works:
 
@@ -3071,7 +3093,8 @@ The principle: anything that COULD cause a metric change should be visible on th
         image: '/diagrams/sre/c9-cardinality-bomb.png',
       },
     ],
-    introduction: `Observability is one of the largest line items in modern infrastructure budgets. Datadog's S-1 reveals customers spending double-digit percentages of cloud spend on observability alone. Understanding the cost levers is now an SRE-grade skill.
+    introduction: `## Overview
+Observability is one of the largest line items in modern infrastructure budgets. Datadog's S-1 reveals customers spending double-digit percentages of cloud spend on observability alone. Understanding the cost levers is now an SRE-grade skill.
 
 Cardinality is the number of distinct combinations of label values for a metric. \`http_requests_total{service, route, status, method}\` with 5 services × 100 routes × 10 statuses × 5 methods = 25,000 time series. Add \`user_id\` as a label and your 100K-user system becomes 25,000 × 100,000 = 2.5 billion time series. Prometheus chokes on millions; billions are an OOM.
 
@@ -3252,7 +3275,8 @@ The hardest part is engineering buy-in: people are attached to the tools they kn
         image: '/diagrams/sre/d1-incident-roles.png',
       },
     ],
-    introduction: `Google's incident response framework (SRE Book Ch 14) is modeled on FEMA's Incident Command System (ICS) — the same structure US wildland firefighters and emergency responders use. The core idea: separate command from execution.
+    introduction: `## Overview
+Google's incident response framework (SRE Book Ch 14) is modeled on FEMA's Incident Command System (ICS) — the same structure US wildland firefighters and emergency responders use. The core idea: separate command from execution.
 
 Three roles, always:
 
@@ -3443,7 +3467,8 @@ Quote from SRE Book Ch 14: "The first priority is incident resolution... root-ca
         image: '/diagrams/sre/d2_2-availability.png',
       },
     ],
-    introduction: `The incident lifecycle has four canonical time measurements. They\'re used inconsistently across the industry; getting them precise matters in interviews and postmortems.
+    introduction: `## Overview
+The incident lifecycle has four canonical time measurements. They\'re used inconsistently across the industry; getting them precise matters in interviews and postmortems.
 
 MTTD — Mean Time To Detect.
 From "the issue starts" to "monitoring detects it." A measure of observability quality. If MTTD is 30 minutes, your monitoring is detecting issues 30 minutes after they begin — users are seeing them long before you know.
@@ -3605,7 +3630,8 @@ The interview-quality framing: every "we want N nines" claim should come with an
         image: '/diagrams/sre/d3-sev-tree.png',
       },
     ],
-    introduction: `Severity levels triage incident response. Get them wrong and you either page the on-call SRE for cosmetic UI bugs (alert fatigue) or wait business hours to fix a billing outage (career-limiting).
+    introduction: `## Overview
+Severity levels triage incident response. Get them wrong and you either page the on-call SRE for cosmetic UI bugs (alert fatigue) or wait business hours to fix a billing outage (career-limiting).
 
 Industry-standard four-tier model (used by Google, Meta, Atlassian, PagerDuty, most major tech companies):
 
@@ -3780,7 +3806,8 @@ The cultural fix that works: leadership publicly demotes incidents that were ove
         image: '/diagrams/sre/d5-postmortem.png',
       },
     ],
-    introduction: `Blameless postmortems are the SRE Book's most-quoted contribution to industry practice. The thesis: if humans fear blame, they\'ll hide failures, mitigate without disclosure, and the organization can\'t learn. Blameless culture is a prerequisite for honest incident analysis.
+    introduction: `## Overview
+Blameless postmortems are the SRE Book's most-quoted contribution to industry practice. The thesis: if humans fear blame, they\'ll hide failures, mitigate without disclosure, and the organization can\'t learn. Blameless culture is a prerequisite for honest incident analysis.
 
 "Blameless" doesn\'t mean "no consequences." It means: focus on systems, not individuals. The framing: "how did our system, our processes, and our tools make this failure possible?" — not "who pushed the bad code?". The action items are systemic fixes (better testing, better monitoring, better deploy gates), not "Bob will be more careful."
 
@@ -3996,7 +4023,8 @@ The general rule: when in doubt, do the postmortem. The cost of writing one for 
         image: '/diagrams/sre/d4-five-whys.png',
       },
     ],
-    introduction: `Five Whys is a root-cause analysis technique from Toyota's manufacturing process, adapted into SRE postmortem practice. The mechanic: ask "why?" five times, each time peeling back a layer.
+    introduction: `## Overview
+Five Whys is a root-cause analysis technique from Toyota's manufacturing process, adapted into SRE postmortem practice. The mechanic: ask "why?" five times, each time peeling back a layer.
 
 Worked example (a checkout outage):
 1. Why did checkout go down? Service returned 500 errors.
@@ -4175,7 +4203,8 @@ Quote from the SRE Book Ch 15: "User error" is too convenient an explanation. It
         image: '/diagrams/sre/d6-status-cadence.png',
       },
     ],
-    introduction: `Communications during an incident is high-leverage and underinvested. Customers, executives, and internal teams all need updates; the cost of doing it badly is reputational. The good news: it\'s a learnable skill with clear patterns.
+    introduction: `## Overview
+Communications during an incident is high-leverage and underinvested. Customers, executives, and internal teams all need updates; the cost of doing it badly is reputational. The good news: it\'s a learnable skill with clear patterns.
 
 The audiences and their needs:
 
@@ -4376,7 +4405,8 @@ The bonus: a third-party status page also lets you communicate during incidents 
         image: '/diagrams/sre/d7-chaos-maturity.png',
       },
     ],
-    introduction: `Practicing failure is the SRE discipline that separates "we hope it works" from "we know it works." Three related practices:
+    introduction: `## Overview
+Practicing failure is the SRE discipline that separates "we hope it works" from "we know it works." Three related practices:
 
 1. Game Days — scheduled, full-team incident simulations.
 The team picks a date; runs a realistic incident scenario; treats it like a real incident (page on-call, run command structure, mitigate, postmortem). Originated at Amazon ~2003; Google formalized it as DiRT (Disaster Recovery Testing) week.
@@ -4569,7 +4599,8 @@ Practical staging: most companies start with chaos engineering (technical, autom
         image: '/diagrams/sre/e1-toil-six.png',
       },
     ],
-    introduction: `Toil is one of the SRE Book\'s most precise terms. Verbatim definition (Ch 5):
+    introduction: `## Overview
+Toil is one of the SRE Book\'s most precise terms. Verbatim definition (Ch 5):
 
 "Toil is the kind of work tied to running a production service that tends to be manual, repetitive, automatable, tactical, devoid of enduring value, and that scales linearly as a service grows."
 
@@ -4762,7 +4793,8 @@ Each is a 1-3 month project that returns hundreds of hours/year. The 50% enginee
         image: '/diagrams/sre/e2-iac-compare.png',
       },
     ],
-    introduction: `Infrastructure as Code (IaC) treats infrastructure provisioning as software: version-controlled, code-reviewed, deployed via automation. Has been the SRE standard since ~2015; the question now is which tool, not whether.
+    introduction: `## Overview
+Infrastructure as Code (IaC) treats infrastructure provisioning as software: version-controlled, code-reviewed, deployed via automation. Has been the SRE standard since ~2015; the question now is which tool, not whether.
 
 The major players:
 
@@ -4976,7 +5008,8 @@ The discipline: "everything via code review, modules versioned, state isolated b
         image: '/diagrams/sre/e3-cicd.png',
       },
     ],
-    introduction: `Deployment is where most production incidents are born. ~60-80% of incidents trace to recent deploys (across multiple industry surveys). The discipline of how you deploy is more impactful than what code you ship.
+    introduction: `## Overview
+Deployment is where most production incidents are born. ~60-80% of incidents trace to recent deploys (across multiple industry surveys). The discipline of how you deploy is more impactful than what code you ship.
 
 The deployment-strategy spectrum (lowest risk to highest):
 
@@ -5198,7 +5231,8 @@ The mistake low-performing teams make: "we\'ll deploy carefully, once a month, w
         image: '/diagrams/sre/e4-gitops.png',
       },
     ],
-    introduction: `GitOps is a deployment philosophy: Git is the source of truth for desired state; agents continuously reconcile actual state to match Git. Coined by Weaveworks (2017); widely adopted in Kubernetes shops.
+    introduction: `## Overview
+GitOps is a deployment philosophy: Git is the source of truth for desired state; agents continuously reconcile actual state to match Git. Coined by Weaveworks (2017); widely adopted in Kubernetes shops.
 
 The four GitOps principles (from gitops.tech):
 
@@ -5425,7 +5459,8 @@ In 2026, this stack (GitOps + canary + SLO-gated rollback) is the modern standar
         image: '/diagrams/sre/e5-self-healing.png',
       },
     ],
-    introduction: `Self-healing is the discipline of building systems that recover from failures without human intervention. The fewer pages, the fewer mistakes; the higher the availability per engineer-hour invested.
+    introduction: `## Overview
+Self-healing is the discipline of building systems that recover from failures without human intervention. The fewer pages, the fewer mistakes; the higher the availability per engineer-hour invested.
 
 Layers of self-healing:
 
@@ -5663,7 +5698,8 @@ The right framing: autoscaling is a TOOL, not a SUBSTITUTE for capacity planning
         image: '/diagrams/sre/f1-capacity-loop.png',
       },
     ],
-    introduction: `Capacity planning is the SRE discipline of ensuring you have the right amount of resources for current and future load — not too much (waste money) and not too little (outages).
+    introduction: `## Overview
+Capacity planning is the SRE discipline of ensuring you have the right amount of resources for current and future load — not too much (waste money) and not too little (outages).
 
 The SRE Book Ch 18 framework: capacity planning is predictive, not reactive. By the time you\'re scaling under load, it\'s already too late for non-trivial provisioning (rack-scale, contract-scale, region-scale). Plan ahead.
 
@@ -5846,7 +5882,8 @@ Hidden trap: dependencies. Your service has N+1; does your database? Cache? Mess
         image: '/diagrams/sre/f2-forecast.png',
       },
     ],
-    introduction: `Capacity planning needs forecasts. Forecasting is its own discipline. The good news: most production services don\'t need fancy models — simple ones work.
+    introduction: `## Overview
+Capacity planning needs forecasts. Forecasting is its own discipline. The good news: most production services don\'t need fancy models — simple ones work.
 
 The forecast hierarchy (lowest to highest sophistication):
 
@@ -6046,7 +6083,8 @@ The cultural finding: most teams\' forecasts are systematically optimistic about
         image: '/diagrams/sre/f3-load-testing.png',
       },
     ],
-    introduction: `Load testing is how you validate that capacity planning is real, not aspirational. Without load testing, capacity numbers are guesses.
+    introduction: `## Overview
+Load testing is how you validate that capacity planning is real, not aspirational. Without load testing, capacity numbers are guesses.
 
 Five test types, each answering a different question:
 
@@ -6270,7 +6308,8 @@ The stress test\'s value isn\'t in "passing" — it\'s in identifying the cascad
         image: '/diagrams/sre/f4-autoscale.png',
       },
     ],
-    introduction: `Autoscaling automates capacity decisions. It\'s never the whole story (you still need capacity planning) but it absorbs predictable variance and rare spikes.
+    introduction: `## Overview
+Autoscaling automates capacity decisions. It\'s never the whole story (you still need capacity planning) but it absorbs predictable variance and rare spikes.
 
 The Kubernetes autoscaling toolkit:
 
@@ -6502,7 +6541,8 @@ When NOT to use predictive:
         image: '/diagrams/sre/f5-cost-curve.png',
       },
     ],
-    introduction: `Reliability has a cost curve. Each additional 9 of availability roughly costs 10× the engineering investment of the previous. Understanding the curve is essential to setting SLOs that match business reality.
+    introduction: `## Overview
+Reliability has a cost curve. Each additional 9 of availability roughly costs 10× the engineering investment of the previous. Understanding the curve is essential to setting SLOs that match business reality.
 
 The cost-of-9s reality (from SRE Workbook Ch 4 + industry data):
 
@@ -6729,7 +6769,8 @@ Cultural shift: from "cloud cost is finance\'s problem" to "cloud cost is part o
         image: '/diagrams/sre/f6-db-pool.png',
       },
     ],
-    introduction: `Databases are usually the first thing to break under load and the hardest thing to scale. Database capacity planning is its own subspecialty.
+    introduction: `## Overview
+Databases are usually the first thing to break under load and the hardest thing to scale. Database capacity planning is its own subspecialty.
 
 The connection-pool ceiling.
 
@@ -6971,7 +7012,8 @@ The discipline: failover should be a practiced, automated, tested procedure, not
         image: '/diagrams/sre/g1-circuit-breaker.png',
       },
     ],
-    introduction: `Circuit breaker is a software pattern from Michael Nygard\'s Release It! (2007) that became canonical via Netflix Hystrix and now ships in service meshes (Istio, Linkerd) by default.
+    introduction: `## Overview
+Circuit breaker is a software pattern from Michael Nygard\'s Release It! (2007) that became canonical via Netflix Hystrix and now ships in service meshes (Istio, Linkerd) by default.
 
 The principle: when a downstream dependency is failing, stop calling it for a while. Counterintuitive but powerful — the failing dependency gets a chance to recover, and your service stops wasting threads/CPU on doomed calls.
 
@@ -7223,7 +7265,8 @@ The pragmatic truth: circuit breakers are necessary but not sufficient. Layer th
         image: '/diagrams/sre/g2-cascade.png',
       },
     ],
-    introduction: `Cascading failure is the SRE Book Ch 22\'s deepest material. The pattern: one component fails or slows; it triggers a series of compounding effects that bring down the whole system. Every SRE has seen it; many architectures don\'t survive their first one.
+    introduction: `## Overview
+Cascading failure is the SRE Book Ch 22\'s deepest material. The pattern: one component fails or slows; it triggers a series of compounding effects that bring down the whole system. Every SRE has seen it; many architectures don\'t survive their first one.
 
 The four canonical cascading failure patterns (SRE Book Ch 22):
 
@@ -7472,7 +7515,8 @@ Other-language equivalents:
         image: '/diagrams/sre/g7-graceful-deg.png',
       },
     ],
-    introduction: `Graceful degradation is the discipline of "serve less when you can\'t serve everything" instead of "fail completely." Often the difference between an outage and a recoverable incident.
+    introduction: `## Overview
+Graceful degradation is the discipline of "serve less when you can\'t serve everything" instead of "fail completely." Often the difference between an outage and a recoverable incident.
 
 The three patterns:
 
@@ -7710,7 +7754,8 @@ Common pitfall: SREs build sophisticated graceful degradation, then never look a
         image: '/diagrams/sre/g3-retry-storm.png',
       },
     ],
-    introduction: `Retries are the most common cause of cascading failure. The intuition is fine ("if a request fails, try again"); the implementation is subtle.
+    introduction: `## Overview
+Retries are the most common cause of cascading failure. The intuition is fine ("if a request fails, try again"); the implementation is subtle.
 
 The three knobs:
 
@@ -7972,7 +8017,8 @@ The cultural framing: retries help individual requests; retry budget protects th
         image: '/diagrams/sre/g4-load-shed.png',
       },
     ],
-    introduction: `Load shedding is the discipline of rejecting some requests so that others succeed. Counterintuitive — engineers want to serve every request. The right reframe: serving 70% of requests successfully is much better than failing 100% of requests because the system collapsed.
+    introduction: `## Overview
+Load shedding is the discipline of rejecting some requests so that others succeed. Counterintuitive — engineers want to serve every request. The right reframe: serving 70% of requests successfully is much better than failing 100% of requests because the system collapsed.
 
 The SRE Book Ch 21 (Handling Overload) is the canonical treatment. Quote: "Avoid serving requests that you can\'t serve gracefully. The point of load shedding is to reduce the load on the server such that it can return to a healthy state and serve the rest of its load."
 
@@ -8240,7 +8286,8 @@ Both should include \`Retry-After\` header to tell clients when to retry.`,
         image: '/diagrams/sre/g5-idempotency.png',
       },
     ],
-    introduction: `Idempotent = an operation that can be performed multiple times with the same result. \`f(x) = f(f(x))\`. Critical for retries: if an operation isn\'t idempotent, retries cause duplicate side effects.
+    introduction: `## Overview
+Idempotent = an operation that can be performed multiple times with the same result. \`f(x) = f(f(x))\`. Critical for retries: if an operation isn\'t idempotent, retries cause duplicate side effects.
 
 The canonical case: a payment API. Without idempotency, a network timeout that triggers a client retry can charge the user twice — the first request succeeded but the response was lost; the retry creates a second charge. With an idempotency key, the server detects the duplicate and returns the original response.
 
@@ -8546,7 +8593,8 @@ Stripe\'s opinion (from their docs): "Idempotency is fundamental to building rel
         image: '/diagrams/sre/g6-bulkhead.png',
       },
     ],
-    introduction: `Bulkheads are an isolation pattern from Michael Nygard\'s Release It! (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
+    introduction: `## Overview
+Bulkheads are an isolation pattern from Michael Nygard\'s Release It! (2007). The analogy: ship hulls are divided into watertight compartments (bulkheads); a hole in one compartment doesn\'t flood the entire ship.
 
 In software: isolate resource pools so a failure in one can\'t exhaust the whole service\'s capacity.
 
@@ -8833,7 +8881,8 @@ In 2026 with Java 21 virtual threads being mainstream, the bulkhead pattern is s
         image: '/diagrams/sre/g8-deadline.png',
       },
     ],
-    introduction: `Every external call must have a timeout. This is non-negotiable. A call without a timeout is a call that can hang forever; under load, hung calls are how services collapse.
+    introduction: `## Overview
+Every external call must have a timeout. This is non-negotiable. A call without a timeout is a call that can hang forever; under load, hung calls are how services collapse.
 
 The SRE Book Ch 22 quote: "RPCs inherit and decrease deadlines as they descend the stack so a server doesn\'t waste cycles on a request whose caller already gave up."
 
@@ -9141,7 +9190,8 @@ Skipping any leaves a failure mode open. The mature production service has all f
         image: '/diagrams/sre/h1-oncall-rotation.png',
       },
     ],
-    introduction: `On-call is the discipline of "someone is always available to respond to production issues." How that\'s organized matters — bad on-call drives engineers out of SRE; good on-call is sustainable.
+    introduction: `## Overview
+On-call is the discipline of "someone is always available to respond to production issues." How that\'s organized matters — bad on-call drives engineers out of SRE; good on-call is sustainable.
 
 The two-tier model (standard):
 
@@ -9406,7 +9456,8 @@ The data: the cost of replacing a senior SRE is 6-12 months of lost productivity
         image: '/diagrams/sre/h5-oncall-health.png',
       },
     ],
-    introduction: `On-call burnout is the leading cause of SRE attrition. Engineers who started with passion become apathetic. Quality drops. Recruitment becomes a treadmill. The fix is structural; "be a more resilient engineer" is not the answer.
+    introduction: `## Overview
+On-call burnout is the leading cause of SRE attrition. Engineers who started with passion become apathetic. Quality drops. Recruitment becomes a treadmill. The fix is structural; "be a more resilient engineer" is not the answer.
 
 The SRE Workbook Ch 11 sustainable-on-call framework:
 
@@ -9687,7 +9738,8 @@ Painful but the only sustainable path. Otherwise, every service decays into a no
         image: '/diagrams/sre/h3-runbook.png',
       },
     ],
-    introduction: `A runbook is a document that tells an on-call engineer "if X happens, do Y." Good runbooks are the difference between a 5-minute mitigation and a 60-minute investigation. Bad runbooks are wiki pages that become stale and unread.
+    introduction: `## Overview
+A runbook is a document that tells an on-call engineer "if X happens, do Y." Good runbooks are the difference between a 5-minute mitigation and a 60-minute investigation. Bad runbooks are wiki pages that become stale and unread.
 
 The runbook structure that works under stress:
 
@@ -9996,7 +10048,8 @@ The discipline: even fully-automated runbooks should track their auto-remediatio
         image: '/diagrams/sre/h4-pager-protocol.png',
       },
     ],
-    introduction: `Pager discipline is the soft skill of running a productive on-call shift. The mechanics are easy; the rhythm is learned.
+    introduction: `## Overview
+Pager discipline is the soft skill of running a productive on-call shift. The mechanics are easy; the rhythm is learned.
 
 The acknowledge-first principle:
 
@@ -10304,7 +10357,8 @@ Post-incident:
         image: '/diagrams/sre/h2-team-models.png',
       },
     ],
-    introduction: `SRE team structure matters more than people realize. The wrong structure produces dysfunctional outcomes regardless of individual talent.
+    introduction: `## Overview
+SRE team structure matters more than people realize. The wrong structure produces dysfunctional outcomes regardless of individual talent.
 
 The four common models:
 
@@ -10601,7 +10655,8 @@ The bottom line: SRE is engineering applied to reliability. If the work is mostl
         image: '/diagrams/sre/i1-rel-sec.png',
       },
     ],
-    introduction: `Reliability and security are deeply linked. A system that\'s "available" but compromised is failed; a system that\'s "secure" but unavailable is failed. Google\'s Building Secure & Reliable Systems (BSRS, 2020) is the canonical SRE-meets-security text.
+    introduction: `## Overview
+Reliability and security are deeply linked. A system that\'s "available" but compromised is failed; a system that\'s "secure" but unavailable is failed. Google\'s Building Secure & Reliable Systems (BSRS, 2020) is the canonical SRE-meets-security text.
 
 The thesis: many security and reliability practices are the same practices applied to different threat models.
 
@@ -10898,7 +10953,8 @@ The 80/20: secret management + least privilege + audit logging covers most of wh
         image: '/diagrams/sre/i2-dynamic-secrets.png',
       },
     ],
-    introduction: `Secrets are credentials that grant access: API keys, database passwords, TLS private keys, OAuth tokens, encryption keys. Improper secret management is one of the most common security incident causes.
+    introduction: `## Overview
+Secrets are credentials that grant access: API keys, database passwords, TLS private keys, OAuth tokens, encryption keys. Improper secret management is one of the most common security incident causes.
 
 Where secrets should NEVER live:
 - In source code.
@@ -11204,7 +11260,8 @@ Prevention is much cheaper than response:
         image: '/diagrams/sre/i3-zero-trust.png',
       },
     ],
-    introduction: `Zero Trust is the security model that replaced "trust the network." Originated as Google\'s BeyondCorp (2014); now the mainstream approach.
+    introduction: `## Overview
+Zero Trust is the security model that replaced "trust the network." Originated as Google\'s BeyondCorp (2014); now the mainstream approach.
 
 The old model (perimeter security):
 - "Inside the corporate network" = trusted.
@@ -11528,7 +11585,8 @@ The high-value moves:
         image: '/diagrams/sre/i4-slsa.png',
       },
     ],
-    introduction: `Supply chain attacks target the dependencies a system relies on, not the system itself. The attacker compromises a library, a package, a CI tool, an infrastructure provider — anything upstream of your code — and your build inherits the compromise.
+    introduction: `## Overview
+Supply chain attacks target the dependencies a system relies on, not the system itself. The attacker compromises a library, a package, a CI tool, an infrastructure provider — anything upstream of your code — and your build inherits the compromise.
 
 The notable incidents:
 
@@ -11872,7 +11930,8 @@ For a new system in 2026: cosign + Kyverno is the table-stakes setup. Cost: a da
         image: '/diagrams/sre/i5-nist-phases.png',
       },
     ],
-    introduction: `Security incident response shares the incident-command structure with reliability incidents but has critical differences: an active adversary, legal/regulatory obligations, and the need for forensics.
+    introduction: `## Overview
+Security incident response shares the incident-command structure with reliability incidents but has critical differences: an active adversary, legal/regulatory obligations, and the need for forensics.
 
 The NIST framework (SP 800-61):
 
@@ -12253,7 +12312,8 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
     color: '#ef4444',
     questions: 2,
     description: 'Diagnosing latency spikes affecting users in one region but not others in a multi-region deployment.',
-    introduction: 'Multi-region latency issues are hard to diagnose because they span routing, replication, and infrastructure layers. Systematic scoping — which region, which endpoints, which percentage of users — is the first step before touching anything.',
+    introduction: '## Overview
+Multi-region latency issues are hard to diagnose because they span routing, replication, and infrastructure layers. Systematic scoping — which region, which endpoints, which percentage of users — is the first step before touching anything.',
     keyQuestions: [
       {
         question: 'A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?',
@@ -12289,7 +12349,8 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
     color: '#8b5cf6',
     questions: 2,
     description: 'Deploying breaking schema changes to production databases with zero downtime using the expand-contract pattern.',
-    introduction: 'Breaking schema changes — column renames, type changes, NOT NULL additions — are among the highest-risk database operations. The expand-contract pattern decouples schema changes from code changes, eliminating the window where incompatible versions coexist.',
+    introduction: '## Overview
+Breaking schema changes — column renames, type changes, NOT NULL additions — are among the highest-risk database operations. The expand-contract pattern decouples schema changes from code changes, eliminating the window where incompatible versions coexist.',
     keyQuestions: [
       {
         question: 'You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?',
@@ -12325,7 +12386,8 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
     color: '#f59e0b',
     questions: 3,
     description: 'Your service hits zero error budget with 2 weeks left in the sprint. Walk through the policy activation, stakeholder conversation, and recovery steps.',
-    introduction: 'The moment the error budget hits zero is the highest-stakes SRE conversation. The policy is clear on paper; the hard part is the product conversation, correctly attributing what burned the budget, and not restarting the clock prematurely.',
+    introduction: '## Overview
+The moment the error budget hits zero is the highest-stakes SRE conversation. The policy is clear on paper; the hard part is the product conversation, correctly attributing what burned the budget, and not restarting the clock prematurely.',
     keyQuestions: [
       {
         question: 'Your checkout service SLO is 99.95% over 30 days. On day 16, a 45-minute partial outage exhausts the remaining error budget. What do you do?',
@@ -12385,7 +12447,8 @@ Third, aspirational SLO calibration. If the service consistently exhausts budget
     color: '#ef4444',
     questions: 3,
     description: 'Walk through diagnosing and stopping a cascading failure spreading across services at 3am with incomplete information.',
-    introduction: 'Cascading failures are the hardest incident class because symptoms are misleading — multiple services are degraded, but fixing the wrong one first makes things worse. The SRE Book Ch 22 names four patterns: server overload, resource exhaustion, retry storms, and metastable failure. Identifying which pattern you are in determines the correct first action.',
+    introduction: '## Overview
+Cascading failures are the hardest incident class because symptoms are misleading — multiple services are degraded, but fixing the wrong one first makes things worse. The SRE Book Ch 22 names four patterns: server overload, resource exhaustion, retry storms, and metastable failure. Identifying which pattern you are in determines the correct first action.',
     keyQuestions: [
       {
         question: 'At 3am, your monitoring fires alerts on 6 services simultaneously. All show high latency and elevated error rates. What do you do in the first 10 minutes?',
@@ -12450,7 +12513,8 @@ Runbook quality. Could the on-call diagnose this without escalating? If not, the
     color: '#8b5cf6',
     questions: 2,
     description: 'An interviewer asks you to size a new service from scratch. Walk through demand forecasting, headroom calculation, and autoscaling design.',
-    introduction: 'Capacity planning interviews test whether you can translate a vague business requirement into concrete infrastructure decisions. The NALSD framework from the SRE Book (Non-Abstract Large System Design) gives the correct sequence: calculate first, design second.',
+    introduction: '## Overview
+Capacity planning interviews test whether you can translate a vague business requirement into concrete infrastructure decisions. The NALSD framework from the SRE Book (Non-Abstract Large System Design) gives the correct sequence: calculate first, design second.',
     keyQuestions: [
       {
         question: 'An interviewer says: "We expect 10 million daily active users on a new social feed service. Size the service." Walk through your approach.',
@@ -12505,7 +12569,8 @@ The architectural cliff at 10x, not 3x: the relational write path for post creat
     color: '#14b8a6',
     questions: 2,
     description: 'You are facilitating a postmortem for a SEV-1 that caused 2 hours of customer-facing downtime. Walk through running it without blame.',
-    introduction: 'The postmortem facilitator\'s job is to guide the room to system-level causes without letting the conversation drift toward individual blame. Most postmortems fail not because the facts are wrong but because psychological safety breaks down — engineers get defensive, root-cause analysis gets shallow, and action items become symbolic rather than structural.',
+    introduction: '## Overview
+The postmortem facilitator\'s job is to guide the room to system-level causes without letting the conversation drift toward individual blame. Most postmortems fail not because the facts are wrong but because psychological safety breaks down — engineers get defensive, root-cause analysis gets shallow, and action items become symbolic rather than structural.',
     keyQuestions: [
       {
         question: 'You are facilitating a postmortem for a 2-hour outage caused when an engineer deleted a production Kubernetes namespace by mistake. Three product managers are demanding accountability. How do you run the session?',
@@ -12576,7 +12641,8 @@ Measure completion rate as an SRE metric. Action item completion rate (items clo
         image: '/diagrams/sre/rel-hermetic.png',
       },
     ],
-    introduction: `SRE Book Chapter 8 defines release engineering as "a specific job function and a set of best practices used by software companies to build and deliver software." The four release engineering principles the SRE Book establishes are: self-service model, high velocity, hermetic builds, and enforcement of policies through process rather than fiat.
+    introduction: `## Overview
+SRE Book Chapter 8 defines release engineering as "a specific job function and a set of best practices used by software companies to build and deliver software." The four release engineering principles the SRE Book establishes are: self-service model, high velocity, hermetic builds, and enforcement of policies through process rather than fiat.
 
 Self-service means development teams release their own software using centralized tooling built by the release engineering team — release engineers are not a bottleneck. High velocity means releases happen frequently, making each individual release smaller and lower-risk. Hermetic builds guarantee that the build process is fully specified, self-contained, and reproducible — no external dependencies at build time, no "works on my machine." Policy enforcement means security scanning, test gates, and compliance checks are baked into the pipeline, not bolted on as manual approvals.
 
@@ -12652,7 +12718,8 @@ The SRE Book quantifies this via the DORA metrics (deployment frequency, lead ti
         image: '/diagrams/sre/test-pyramid.png',
       },
     ],
-    introduction: `SRE Book Chapter 17 frames testing not as quality assurance but as a confidence-building exercise for production. The key distinction: traditional QA asks "does the feature work?"; SRE testing asks "does the system remain reliable under real production conditions?"
+    introduction: `## Overview
+SRE Book Chapter 17 frames testing not as quality assurance but as a confidence-building exercise for production. The key distinction: traditional QA asks "does the feature work?"; SRE testing asks "does the system remain reliable under real production conditions?"
 
 The SRE testing hierarchy has six layers. Unit tests catch algorithmic bugs in individual components — they run in milliseconds and should number in the thousands. Integration tests catch contract violations between components — service A calls service B expecting a specific schema; integration tests verify the schema. System tests run the entire stack in a production-like environment; they catch emergent failures that only appear when all components interact. Stress tests push the system beyond its designed load to find the capacity cliff and the failure mode — you want to find the breaking point in a controlled test, not during a Black Friday traffic spike. Canary tests run the new binary against a fraction of live production traffic; they catch failures that only appear with real user data. Disaster recovery tests deliberately destroy components and validate that recovery procedures work — these must be practiced because an untested DR procedure is not a DR procedure.
 
@@ -12733,7 +12800,8 @@ Document: peak load supported, failure mode, recovery behavior, and the capacity
         image: '/diagrams/sre/nalsd-method.png',
       },
     ],
-    introduction: `SRE Workbook Chapter 12 introduces Non-Abstract Large System Design (NALSD) as a structured method for designing production systems that SREs must operate. The word "non-abstract" is load-bearing: unlike whiteboard designs that wave hands at "a database" or "a cache," NALSD requires concrete numbers at every step — actual QPS, actual storage bytes, actual machine counts, actual failure domains.
+    introduction: `## Overview
+SRE Workbook Chapter 12 introduces Non-Abstract Large System Design (NALSD) as a structured method for designing production systems that SREs must operate. The word "non-abstract" is load-bearing: unlike whiteboard designs that wave hands at "a database" or "a cache," NALSD requires concrete numbers at every step — actual QPS, actual storage bytes, actual machine counts, actual failure domains.
 
 The NALSD method has five phases. First, clarify requirements: functional requirements (what must the system do) and non-functional requirements (scale, latency targets, availability SLO, geographic distribution). Second, estimate capacity: derive the steady-state load from first principles — if the system serves 10M DAU each making 50 requests/day, that's 5,000 QPS at steady state, 15,000 at peak (3× factor), with specific storage growth rate per day. Third, design components: choose which components are needed, how they communicate, and where state lives. Fourth, analyze reliability: identify single points of failure, failure domains, and whether the design meets the stated SLO under the realistic failure scenarios. Fifth, document trade-offs explicitly: what did you sacrifice to achieve the design's strengths?
 
@@ -12798,7 +12866,8 @@ Step 5 — Trade-offs. Chose base62 of auto-increment over hash: predictable, co
         image: '/diagrams/sre/admission-control.png',
       },
     ],
-    introduction: `SRE Book Chapter 21 ("Handling Overload") addresses a failure mode that circuit breakers and load balancers alone cannot prevent: a server that is so saturated that it cannot process requests fast enough to serve its own error responses. At extreme overload, the server spends all its capacity on requests it will ultimately reject, entering a death spiral.
+    introduction: `## Overview
+SRE Book Chapter 21 ("Handling Overload") addresses a failure mode that circuit breakers and load balancers alone cannot prevent: a server that is so saturated that it cannot process requests fast enough to serve its own error responses. At extreme overload, the server spends all its capacity on requests it will ultimately reject, entering a death spiral.
 
 The SRE Book's admission control strategy has three layers. Client-side throttling: each client tracks its own recent request/error ratio; when errors climb, the client throttles new requests before they reach the server. This is called "client-side adaptive throttling" — the Workbook Chapter 17 provides the exact formula: throttle probability = max(0, (requests - K × accepts) / (requests + 1)), where K is a multiplier (typically 2) that determines how aggressively the client throttles. Server-side admission: the server enforces per-client quotas and rejects requests that exceed them with 429 responses — not after processing them, but before allocating resources. Criticality-based shedding: when the server is saturated, it sheds work by criticality — batch background jobs are stopped first, then non-interactive RPCs, then interactive user-facing requests. Criticality is propagated in request metadata.
 
@@ -12862,7 +12931,8 @@ The failure mode of server-only rate limiting: a server returning 429s under ove
         image: '/diagrams/sre/config-rollout.png',
       },
     ],
-    introduction: `SRE Workbook Chapters 14 and 15 treat configuration as a first-class engineering artifact — not a collection of YAML files that someone edits at 2am, but a versioned, validated, staged deployment pipeline with automated rollback.
+    introduction: `## Overview
+SRE Workbook Chapters 14 and 15 treat configuration as a first-class engineering artifact — not a collection of YAML files that someone edits at 2am, but a versioned, validated, staged deployment pipeline with automated rollback.
 
 The central SRE Book insight on configuration: "A change in configuration is a change in behavior." Configuration changes cause the majority of major production incidents — not code changes, not hardware failures, but human-written configuration that is not validated before it reaches production.
 
@@ -12930,7 +13000,8 @@ The Workbook additionally recommends: config and binary versions must be compati
         image: '/diagrams/sre/canary-pipeline.png',
       },
     ],
-    introduction: `SRE Workbook Chapter 16 ("Canarying Releases") defines a canary as "a small, controlled experiment on live production traffic that uses real user data to evaluate whether a binary change is safe to fully release." The key words are live, real, and controlled.
+    introduction: `## Overview
+SRE Workbook Chapter 16 ("Canarying Releases") defines a canary as "a small, controlled experiment on live production traffic that uses real user data to evaluate whether a binary change is safe to fully release." The key words are live, real, and controlled.
 
 The canary catches failures that staging environments systematically miss: production traffic has unpredictable data shapes, edge cases that test data never exercises, user behavior patterns that are impossible to reproduce synthetically, and correlated load patterns. A binary that passes all staging tests can fail on 0.01% of production requests — a canary exposes this before it affects all users.
 
@@ -13000,7 +13071,8 @@ Critical: payments services should have a post-rollout reconciliation check — 
         image: '/diagrams/sre/data-integrity.png',
       },
     ],
-    introduction: `SRE Book Chapter 26 opens with a statement that frames the entire chapter: "The goal of data integrity is to ensure that data is what you expect it to be — that what you read is what you wrote." This is distinct from availability (the data is accessible) and durability (the data is persisted). A system can be available and durable while silently corrupting the data it stores.
+    introduction: `## Overview
+SRE Book Chapter 26 opens with a statement that frames the entire chapter: "The goal of data integrity is to ensure that data is what you expect it to be — that what you read is what you wrote." This is distinct from availability (the data is accessible) and durability (the data is persisted). A system can be available and durable while silently corrupting the data it stores.
 
 The chapter introduces three categories of data loss and corruption. Physical corruption: bit-rot in storage, hardware failure, cosmic ray bit flips — addressed by checksums at the storage layer and RAID/replication at the hardware layer. Logical corruption: application bugs that write incorrect data, schema migrations that transform data incorrectly, bugs in backup/restore procedures — addressed by application-layer checksums, schema migration testing, and backup validation via test restores. Deletion (intentional and accidental): user-initiated deletes, admin mistakes, software bugs that delete data incorrectly — addressed by soft deletes (mark deleted, retain for a period), delayed hard deletes, and point-in-time recovery.
 
@@ -13065,7 +13137,8 @@ Layer 4 — Point-in-time recovery. Enable continuous transaction log shipping (
         image: '/diagrams/sre/launch-lifecycle.png',
       },
     ],
-    introduction: `SRE Book Chapter 27 ("Reliable Product Launches at Scale") establishes the framework Google uses to launch products that may immediately receive billions of requests. The central mechanism is the Production Readiness Review (PRR) — a structured checklist process that a service must complete before SRE teams agree to support it in production.
+    introduction: `## Overview
+SRE Book Chapter 27 ("Reliable Product Launches at Scale") establishes the framework Google uses to launch products that may immediately receive billions of requests. The central mechanism is the Production Readiness Review (PRR) — a structured checklist process that a service must complete before SRE teams agree to support it in production.
 
 The PRR covers eight domains: architecture and dependencies (is the dependency graph understood?), capacity planning (is the service provisioned for peak + N+2?), failure modes (are single points of failure identified and mitigated?), monitoring and alerting (are SLIs defined and alerting on SLO burn?), rollout and rollback (is there a tested rollback procedure?), operational documentation (are runbooks written and reviewed?), security (are authentication and authorization correct?), and privacy (does the service handle user data appropriately?).
 
@@ -13131,7 +13204,8 @@ Phase 4 — Post-launch window (T+0 to T+72h). Tighter alerting thresholds: aler
         image: '/diagrams/sre/dos-mitigation.png',
       },
     ],
-    introduction: `Building Secure and Reliable Systems Chapter 10 ("Mitigating Denial-of-Service Attacks") treats DoS mitigation as a reliability engineering problem, not purely a security problem. A service that goes down during a volumetric attack has failed its SLO — the cause is irrelevant to the users who cannot reach it.
+    introduction: `## Overview
+Building Secure and Reliable Systems Chapter 10 ("Mitigating Denial-of-Service Attacks") treats DoS mitigation as a reliability engineering problem, not purely a security problem. A service that goes down during a volumetric attack has failed its SLO — the cause is irrelevant to the users who cannot reach it.
 
 The chapter distinguishes three types of DoS attacks and the appropriate mitigation layer for each. Volumetric attacks flood the network link with traffic measured in Gbps or Tbps — the mitigation must happen upstream of the service, at the ISP or CDN layer, before the traffic reaches the data center. Protocol attacks exploit weaknesses in network protocol handling (SYN floods, fragmented packets) — mitigated at the load balancer or firewall with SYN cookies, connection table limits, and protocol validation. Application-layer attacks send valid HTTP requests at high rate, targeting expensive endpoints — mitigated at the application layer with rate limiting, CAPTCHA, and admission control.
 
@@ -13199,7 +13273,8 @@ Monitoring: alert on inbound bandwidth at the edge nodes crossing 50% of PoP cap
         image: '/diagrams/sre/design-understandability.png',
       },
     ],
-    introduction: `Building Secure and Reliable Systems Chapter 6 ("Design for Understandability") argues that the primary cause of extended incidents is not technical complexity — it is operational incomprehensibility. The on-call engineer cannot diagnose and remediate what they cannot understand.
+    introduction: `## Overview
+Building Secure and Reliable Systems Chapter 6 ("Design for Understandability") argues that the primary cause of extended incidents is not technical complexity — it is operational incomprehensibility. The on-call engineer cannot diagnose and remediate what they cannot understand.
 
 The book identifies three properties that make systems understandable. Invariants: properties of the system that should always be true, expressed in a form that can be checked — "the number of active sessions should never exceed the number of active users" is an invariant; if violated, it indicates a specific class of bug. Mental models: the engineer's internal representation of how the system works; a good design has a mental model that remains correct as the system evolves; a bad design has a mental model that is correct only when the engineer built it. Least surprise: the system behaves the way an experienced engineer would expect based on the interfaces and documentation — no hidden state transitions, no implicit side effects, no behavior that is only explainable by reading the implementation.
 
