@@ -176,6 +176,7 @@ PROVIDER_IMPORTS = {
         "analytics": ["ElasticsearchService", "Kinesis"],
         "management": ["Cloudwatch"],
         "security": ["IAM", "WAF", "KMS", "Cognito"],
+        "ml": ["Sagemaker"],
     },
     "gcp": {
         "compute": ["GCE", "GKE", "Run", "Functions", "AppEngine"],
@@ -185,6 +186,7 @@ PROVIDER_IMPORTS = {
         "analytics": ["PubSub", "Dataflow", "BigQuery"],
         "security": ["IAP"],
         "operations": ["Monitoring"],
+        "ml": ["AIPlatform"],
     },
     "azure": {
         "compute": ["VM", "AKS", "FunctionApps", "AppServices"],
@@ -194,6 +196,7 @@ PROVIDER_IMPORTS = {
         "integration": ["ServiceBus", "EventGridDomains"],
         "security": ["KeyVaults"],
         "monitor": ["Monitor"],
+        "ml": ["MachineLearning"],
     },
 }
 
@@ -212,7 +215,7 @@ graph_attr = {
     "dpi": "130",
     "nodesep": "0.35",
     "ranksep": "0.50",
-    "splines": "ortho",
+    "splines": "spline",
 }
 
 node_attr = {
@@ -224,7 +227,6 @@ node_attr = {
     "width": "1.1",
     "height": "1.4",
     "margin": "0.15,0.10",
-    "fixedsize": "false",
 }
 
 edge_attr = {
@@ -251,13 +253,13 @@ with Diagram(
 # ── Cluster color presets ──────────────────────────────────────────────────
 
 CLUSTER_COLORS = {
-    "edge":    '{"bgcolor": "#dbeafe", "style": "rounded", "pencolor": "#2563eb", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#1e3a5f"}',
-    "app":     '{"bgcolor": "#dcfce7", "style": "rounded", "pencolor": "#16a34a", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#14532d"}',
-    "data":    '{"bgcolor": "#fef3c7", "style": "rounded", "pencolor": "#d97706", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#78350f"}',
-    "async":   '{"bgcolor": "#fce7f3", "style": "rounded", "pencolor": "#db2777", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#831843"}',
-    "monitor": '{"bgcolor": "#f3f4f6", "style": "rounded", "pencolor": "#6b7280", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#1f2937"}',
+    "edge":    '{"bgcolor": "#dbeafe", "style": "rounded", "pencolor": "#2563eb", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#1e3a5f"}',
+    "app":     '{"bgcolor": "#dcfce7", "style": "rounded", "pencolor": "#16a34a", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#14532d"}',
+    "data":    '{"bgcolor": "#fef3c7", "style": "rounded", "pencolor": "#d97706", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#78350f"}',
+    "async":   '{"bgcolor": "#fce7f3", "style": "rounded", "pencolor": "#db2777", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#831843"}',
+    "monitor": '{"bgcolor": "#f3f4f6", "style": "rounded", "pencolor": "#6b7280", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#1f2937"}',
     "sub":     '{"bgcolor": "#f0fdf4", "style": "dashed", "pencolor": "#22c55e", "penwidth": "1.5", "fontsize": "13", "fontname": "DejaVu Sans"}',
-    "ai":      '{"bgcolor": "#f0e6ff", "style": "rounded", "pencolor": "#7c3aed", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#4c1d95"}',
+    "ai":      '{"bgcolor": "#f0e6ff", "style": "rounded", "pencolor": "#7c3aed", "penwidth": "2.5", "fontsize": "13", "fontname": "DejaVu Sans Bold", "fontcolor": "#4c1d95"}',
 }
 
 # ── Edge color presets ─────────────────────────────────────────────────────
@@ -285,9 +287,14 @@ def build_import_list(provider):
     lines.append("  from diagrams.onprem.queue import Kafka, RabbitMQ")
     lines.append("  from diagrams.onprem.monitoring import Grafana, Prometheus")
     lines.append("  from diagrams.onprem.network import Nginx")
-    lines.append("  # AI/ML orchestration — use these generic shapes (no cloud icon required):")
-    lines.append("  from diagrams.programming.flowchart import Action  # LangGraph, LangChain, MCP Server, AI Agent, Tool Executor, RAG Pipeline")
-    lines.append("  from diagrams.generic.blank import Blank  # Any AI service without a provider icon (Vector DB, LLM API, Embedding Model)")
+    lines.append("  # AI/ML orchestration — use real icons, NOT Action() or Blank() which render as empty boxes:")
+    lines.append("  from diagrams.onprem.mlops import Mlflow  # LangGraph Orchestrator, RAG Pipeline, AI Agent, MCP Server, LangChain")
+    lines.append("  from diagrams.onprem.workflow import Airflow  # Workflow orchestrator / pipeline scheduler")
+    lines.append("  # For LLM Service node, use your cloud provider's ML service:")
+    lines.append("  #   AWS:   from diagrams.aws.ml import Sagemaker")
+    lines.append("  #   GCP:   from diagrams.gcp.ml import AIPlatform")
+    lines.append("  #   Azure: from diagrams.azure.ml import MachineLearning")
+    lines.append("  # For Vector DB, use your cloud provider's search/DB service with label 'Vector DB (pgvector)' etc.")
     return "\n".join(lines)
 
 
