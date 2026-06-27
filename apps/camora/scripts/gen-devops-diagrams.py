@@ -74,12 +74,17 @@ def diag_three_ways():
 
 def diag_dora_metrics():
     g = base_graph('a2_dora_metrics', 'DORA — 4 keys × Elite/High/Medium/Low bands')
-    n(g, 'velocity', 'VELOCITY pair', 'navy')
-    n(g, 'df', 'Deploy Frequency\nElite: multiple/day\nHigh: daily-weekly\nLow: monthly+', 'green')
-    n(g, 'lt', 'Lead Time\nElite: < 1 day\nHigh: 1d-1w\nLow: 1-6 months', 'green')
-    n(g, 'stability', 'STABILITY pair', 'navy')
-    n(g, 'cfr', 'Change Failure Rate\nElite: 0-15%\nHigh: 16-30%\nLow: 46-60%', 'gold')
-    n(g, 'mttr', 'MTTR\nElite: < 1 hour\nHigh: < 1 day\nLow: 1+ weeks', 'gold')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'velocity', 'VELOCITY pair', 'navy')
+        n(s, 'stability', 'STABILITY pair', 'navy')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'df',   'Deploy Frequency\nElite: multiple/day\nHigh: daily-weekly\nLow: monthly+', 'green')
+        n(s, 'lt',   'Lead Time\nElite: < 1 day\nHigh: 1d-1w\nLow: 1-6 months', 'green')
+        n(s, 'cfr',  'Change Failure Rate\nElite: 0-15%\nHigh: 16-30%\nLow: 46-60%', 'gold')
+        n(s, 'mttr', 'MTTR\nElite: < 1 hour\nHigh: < 1 day\nLow: 1+ weeks', 'gold')
     n(g, 'finding', 'KEY: speed-stability\nis NOT a tradeoff.\nElites win on BOTH.', 'red')
     e(g, 'velocity', 'df')
     e(g, 'velocity', 'lt')
@@ -207,10 +212,13 @@ def diag_test_pyramid():
 
 def diag_monorepo_build():
     g = base_graph('b5_monorepo_build', 'Monorepo build systems — Bazel / Nx / Turborepo / Pants')
-    n(g, 'bazel', 'Bazel (Google)\nprecision, hermetic,\n60% build speedup\nat scale.\nLearning curve: high', 'navy')
-    n(g, 'nx',    'Nx\nmulti-language,\ncodegen, arch rules\n50+ packages', 'green')
-    n(g, 'turbo', 'Turborepo\nJS/TS-only,\nsimple caching,\nVercel integration\n5-50 packages', 'gold')
-    n(g, 'pants', 'Pants\npolyglot Py/Go/JVM,\nauto dep inference', 'purple')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'bazel', 'Bazel (Google)\nprecision, hermetic,\n60% build speedup\nat scale.\nLearning curve: high', 'navy')
+        n(s, 'nx',    'Nx\nmulti-language,\ncodegen, arch rules\n50+ packages', 'green')
+        n(s, 'turbo', 'Turborepo\nJS/TS-only,\nsimple caching,\nVercel integration\n5-50 packages', 'gold')
+        n(s, 'pants', 'Pants\npolyglot Py/Go/JVM,\nauto dep inference', 'purple')
     n(g, 'cache', 'Remote caching\n(BuildBuddy,\nNx Cloud,\nVercel)\nshared across CI', 'red')
     e(g, 'bazel', 'cache')
     e(g, 'nx',    'cache')
@@ -238,12 +246,17 @@ def diag_trunk():
 # ─────────────────────────────────────────────────────────────────────
 def diag_progressive_delivery():
     g = base_graph('c1_progressive_delivery', 'Progressive Delivery — canary, blue/green, dark, A/B')
-    n(g, 'main', 'main green\n(deployable)', 'green')
-    n(g, 'canary','Canary\n5% → 25% → 50% → 100%\nSLO-gated promotions', 'navy')
-    n(g, 'bg',   'Blue/Green\n2 envs;\nflip traffic instantly', 'gold')
-    n(g, 'dark', 'Dark launch\n(shadow traffic)\nrun in prod\nignore output', 'purple')
-    n(g, 'ab',   'A/B test\nbusiness metric;\nnot just safety', 'cyan')
-    n(g, 'flag', 'Feature flag\n(decouple deploy\nfrom release)', 'red')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'main', 'main green\n(deployable)', 'green')
+        n(s, 'flag', 'Feature flag\n(decouple deploy\nfrom release)', 'red')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'canary','Canary\n5% → 25% → 50% → 100%\nSLO-gated promotions', 'navy')
+        n(s, 'bg',   'Blue/Green\n2 envs;\nflip traffic instantly', 'gold')
+        n(s, 'dark', 'Dark launch\n(shadow traffic)\nrun in prod\nignore output', 'purple')
+        n(s, 'ab',   'A/B test\nbusiness metric;\nnot just safety', 'cyan')
     e(g, 'main', 'canary')
     e(g, 'main', 'bg')
     e(g, 'main', 'dark')
@@ -374,10 +387,13 @@ def diag_pulumi():
 
 def diag_cloud_native_iac():
     g = base_graph('d4_cloud_native_iac', 'Cloud-native IaC — CDK / Bicep / Crossplane')
-    n(g, 'cdk',  'AWS CDK\nTS / Python\n→ CloudFormation\n(L1/L2/L3 constructs)', 'gold')
-    n(g, 'bicep','Azure Bicep\nstructured DSL\n→ ARM templates', 'navy')
-    n(g, 'cft',  'GCP CFT\nPython modules\npolicy validator', 'green')
-    n(g, 'cross','Crossplane\nK8s-native CRDs\n→ multi-cloud\n+ GitOps', 'purple')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'cdk',  'AWS CDK\nTS / Python\n→ CloudFormation\n(L1/L2/L3 constructs)', 'gold')
+        n(s, 'bicep','Azure Bicep\nstructured DSL\n→ ARM templates', 'navy')
+        n(s, 'cft',  'GCP CFT\nPython modules\npolicy validator', 'green')
+        n(s, 'cross','Crossplane\nK8s-native CRDs\n→ multi-cloud\n+ GitOps', 'purple')
     n(g, 'shared','Shared:\nhigher-level abstractions\nover raw cloud APIs', 'gray')
     e(g, 'cdk',  'shared')
     e(g, 'bicep','shared')
@@ -389,6 +405,7 @@ def diag_cloud_native_iac():
 
 def diag_iac_state():
     g = base_graph('d5_iac_state', 'IaC state at scale — backends + locking + drift')
+    g.attr(rankdir='TB')
     n(g, 's3',   'S3 bucket\n(versioned)\n+ DynamoDB table\n(lock)', 'navy')
     n(g, 'tfc',  'Terraform Cloud\nencrypted state,\nrun history,\nSentinel policies', 'gold')
     n(g, 'spc',  'Spacelift /\nEnv0\napproval workflows\ncost gates', 'green')
@@ -444,9 +461,12 @@ def diag_ansible():
 
 def diag_pcs():
     g = base_graph('e2_pcs', 'Puppet vs Chef vs Salt — agent and DSL trade-offs')
-    n(g, 'pup',  'Puppet\nRuby DSL\npull-based agent\nenterprise RBAC', 'navy')
-    n(g, 'chef', 'Chef\nRuby DSL\npull-based agent\n(declining usage)', 'red')
-    n(g, 'salt', 'Salt\nPython, ZMQ\nevent-driven\nhigh concurrency', 'green')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'pup',  'Puppet\nRuby DSL\npull-based agent\nenterprise RBAC', 'navy')
+        n(s, 'chef', 'Chef\nRuby DSL\npull-based agent\n(declining usage)', 'red')
+        n(s, 'salt', 'Salt\nPython, ZMQ\nevent-driven\nhigh concurrency', 'green')
     n(g, 'ans',  'Ansible (compare)\npush-based\nagentless', 'gold')
     e(g, 'pup',  'ans', 'agent vs none')
     e(g, 'chef', 'ans', 'agent vs none')
@@ -621,10 +641,15 @@ def diag_k8s_resources():
 
 def diag_helm_kustomize():
     g = base_graph('g3_helm_kustomize', 'Helm vs Kustomize — package manager vs overlay')
-    n(g, 'helm','Helm\nGo templating\nreleases (history)\ndependencies\nOCI registry', 'navy')
-    n(g, 'kus', 'Kustomize\nbuilt into kubectl\nstrategic merge\nNO templating\nplain YAML', 'green')
-    n(g, 'use1','Use Helm:\n3rd-party charts,\nrelease versioning,\ncomplex configs', 'gold')
-    n(g, 'use2','Use Kustomize:\nGitOps,\nminimal overhead,\navoid logic in config', 'purple')
+    g.attr(rankdir='TB', nodesep='2.5')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'helm','Helm\nGo templating\nreleases (history)\ndependencies\nOCI registry', 'navy')
+        n(s, 'kus', 'Kustomize\nbuilt into kubectl\nstrategic merge\nNO templating\nplain YAML', 'green')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'use1','Use Helm:\n3rd-party charts,\nrelease versioning,\ncomplex configs', 'gold')
+        n(s, 'use2','Use Kustomize:\nGitOps,\nminimal overhead,\navoid logic in config', 'purple')
     e(g, 'helm','use1')
     e(g, 'kus', 'use2')
     g.render(os.path.join(OUT, 'g3-helm-kustomize'), cleanup=True)
@@ -648,9 +673,12 @@ def diag_operators():
 
 def diag_service_mesh():
     g = base_graph('g5_service_mesh', 'Service mesh — Istio / Linkerd / Cilium')
-    n(g, 'istio','Istio\n(Google/IBM/Lyft)\nfull-featured\nheavyweight\nAmbient (sidecarless)', 'navy')
-    n(g, 'lin', 'Linkerd\n(CNCF graduated)\nlightweight\n10% overhead of Istio', 'green')
-    n(g, 'cil', 'Cilium Service Mesh\n(eBPF-native, 2023+)\nkernel-level\nhottest in 2026', 'gold')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'istio','Istio\n(Google/IBM/Lyft)\nfull-featured\nheavyweight\nAmbient (sidecarless)', 'navy')
+        n(s, 'lin', 'Linkerd\n(CNCF graduated)\nlightweight\n10% overhead of Istio', 'green')
+        n(s, 'cil', 'Cilium Service Mesh\n(eBPF-native, 2023+)\nkernel-level\nhottest in 2026', 'gold')
     n(g, 'cap', 'Capabilities (all):\n• mTLS\n• retries / timeouts\n• traffic shifting\n• circuit breaking\n• observability', 'purple')
     e(g, 'istio','cap')
     e(g, 'lin', 'cap')
@@ -781,10 +809,13 @@ def diag_idp():
 
 def diag_backstage():
     g = base_graph('h3_backstage', 'Backstage (Spotify, CNCF 2020) — 3 core modules')
+    g.attr(rankdir='TB')
     n(g, 'cat',  'Software Catalog\nmetadata of\nservices, libs,\nresources', 'navy')
-    n(g, 'sca',  'Scaffolder\ntemplates\n→ new service\nin minutes', 'green')
-    n(g, 'doc',  'TechDocs\nMarkdown-as-docs\nin Git, auto-published', 'gold')
-    n(g, 'ext',  'Extensible:\nplugins\n(CI/CD, observability,\nincident, costs)', 'purple')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'sca',  'Scaffolder\ntemplates\n→ new service\nin minutes', 'green')
+        n(s, 'doc',  'TechDocs\nMarkdown-as-docs\nin Git, auto-published', 'gold')
+        n(s, 'ext',  'Extensible:\nplugins\n(CI/CD, observability,\nincident, costs)', 'purple')
     e(g, 'cat', 'sca', 'feeds')
     e(g, 'cat', 'doc', 'links')
     e(g, 'cat', 'ext', 'extends')
@@ -807,8 +838,11 @@ def diag_golden_paths():
 
 def diag_dx_metrics():
     g = base_graph('h5_dx_metrics', 'Developer Experience — DORA + SPACE')
-    n(g, 'dora', 'DORA (4 keys)\nDeploy Freq,\nLead Time,\nCFR, MTTR\n→ delivery perf', 'navy')
-    n(g, 'space','SPACE framework\n(Forsgren 2021)\n• Satisfaction\n• Performance\n• Activity\n• Communication\n• Efficiency', 'green')
+    g.attr(rankdir='TB', nodesep='3.5')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'dora', 'DORA (4 keys)\nDeploy Freq,\nLead Time,\nCFR, MTTR\n→ delivery perf', 'navy')
+        n(s, 'space','SPACE framework\n(Forsgren 2021)\n• Satisfaction\n• Performance\n• Activity\n• Communication\n• Efficiency', 'green')
     n(g, 'use',  'Use both:\nDORA = throughput\nSPACE = experience\n(counter to gaming)', 'gold')
     e(g, 'dora', 'use')
     e(g, 'space','use')
@@ -834,12 +868,15 @@ def diag_shift_left():
 
 def diag_security_taxonomy():
     g = base_graph('i2_security_taxonomy', 'SAST / DAST / SCA / IaC / Container / Secrets — full taxonomy')
-    n(g, 'sast','SAST\n(SonarQube, Semgrep,\nCodeQL, Snyk Code)\nsource scan', 'navy')
-    n(g, 'dast','DAST\n(OWASP ZAP, Burp,\nNuclei)\nrunning app scan', 'green')
-    n(g, 'sca', 'SCA\n(Snyk, Dependabot,\nRenovate, Mend)\ndep vulnerabilities', 'gold')
-    n(g, 'sec', 'Secret scanning\n(gitleaks, trufflehog,\nGitHub native,\nGitGuardian)', 'red')
-    n(g, 'iac', 'IaC scan\n(Checkov, tfsec,\nKICS)', 'purple')
-    n(g, 'cnt', 'Container scan\n(Trivy, Grype,\nSnyk Container)', 'cyan')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'sast','SAST\n(SonarQube, Semgrep,\nCodeQL, Snyk Code)\nsource scan', 'navy')
+        n(s, 'dast','DAST\n(OWASP ZAP, Burp,\nNuclei)\nrunning app scan', 'green')
+        n(s, 'sca', 'SCA\n(Snyk, Dependabot,\nRenovate, Mend)\ndep vulnerabilities', 'gold')
+        n(s, 'sec', 'Secret scanning\n(gitleaks, trufflehog,\nGitHub native,\nGitGuardian)', 'red')
+        n(s, 'iac', 'IaC scan\n(Checkov, tfsec,\nKICS)', 'purple')
+        n(s, 'cnt', 'Container scan\n(Trivy, Grype,\nSnyk Container)', 'cyan')
     n(g, 'pipe','CI pipeline\n(all stages)', 'pink')
     e(g, 'sast','pipe')
     e(g, 'dast','pipe')
@@ -873,10 +910,13 @@ def diag_supply_chain_slsa():
 
 def diag_policy_as_code():
     g = base_graph('i4_policy_as_code', 'Policy as Code — OPA / Kyverno / Cedar / Sentinel')
-    n(g, 'opa', 'OPA (CNCF)\nRego language\ngeneral-purpose', 'navy')
-    n(g, 'kyv', 'Kyverno\nK8s-native\nYAML policies\nadmission control', 'green')
-    n(g, 'ced', 'Cedar (AWS)\nauthorization\n(IAM-style)', 'gold')
-    n(g, 'sent','Sentinel\nTerraform Cloud only', 'purple')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'opa', 'OPA (CNCF)\nRego language\ngeneral-purpose', 'navy')
+        n(s, 'kyv', 'Kyverno\nK8s-native\nYAML policies\nadmission control', 'green')
+        n(s, 'ced', 'Cedar (AWS)\nauthorization\n(IAM-style)', 'gold')
+        n(s, 'sent','Sentinel\nTerraform Cloud only', 'purple')
     n(g, 'use1','Use cases:\n• admission control\n• Terraform plan gates\n• microservice authz', 'red')
     e(g, 'opa', 'use1')
     e(g, 'kyv', 'use1')
@@ -908,11 +948,34 @@ def diag_runtime_security():
 # ─────────────────────────────────────────────────────────────────────
 def diag_twelve_factor():
     g = base_graph('j1_twelve_factor', '12-Factor App (Heroku, Adam Wiggins, 2011)')
-    n(g, 'one',   '1. Codebase\n2. Dependencies\n3. Config (env)\n4. Backing services\n5. Build/release/run\n6. Processes', 'navy')
-    n(g, 'two',   '7. Port binding\n8. Concurrency\n9. Disposability\n10. Dev/prod parity\n11. Logs\n12. Admin processes', 'gold')
-    n(g, 'cn',    'Cloud-native\nreadiness checklist:\nstateless, ephemeral,\nconfig externalized', 'green')
-    e(g, 'one',   'cn')
-    e(g, 'two',   'cn')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'f1',  '1. Codebase\none repo, many deploys', 'navy')
+        n(s, 'f2',  '2. Dependencies\nexplicitly declare + isolate', 'navy')
+        n(s, 'f3',  '3. Config\nenv vars — not in code', 'navy')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'f4',  '4. Backing services\nattached resources via URL', 'green')
+        n(s, 'f5',  '5. Build / Release / Run\nstrict stage separation', 'green')
+        n(s, 'f6',  '6. Processes\nstateless + share-nothing', 'green')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'f7',  '7. Port binding\nexport service via port', 'gold')
+        n(s, 'f8',  '8. Concurrency\nscale out via process model', 'gold')
+        n(s, 'f9',  '9. Disposability\nfast start, graceful stop', 'gold')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'f10', '10. Dev/Prod parity\nkeep envs close', 'purple')
+        n(s, 'f11', '11. Logs\ntreat as event streams', 'purple')
+        n(s, 'f12', '12. Admin processes\none-off in same env', 'purple')
+    n(g, 'cn',  'Cloud-native readiness:\nstateless · ephemeral · config externalized', 'red')
+    e(g, 'f1',  'f4',  '', '#94a3b8', 'dotted')
+    e(g, 'f4',  'f7',  '', '#94a3b8', 'dotted')
+    e(g, 'f7',  'f10', '', '#94a3b8', 'dotted')
+    e(g, 'f10', 'cn')
+    e(g, 'f11', 'cn')
+    e(g, 'f12', 'cn')
     g.render(os.path.join(OUT, 'j1-twelve-factor'), cleanup=True)
     print('Generated: j1-twelve-factor')
 
@@ -992,10 +1055,13 @@ def diag_strangler_fig():
 # ─────────────────────────────────────────────────────────────────────
 def diag_db_migrations():
     g = base_graph('k1_db_migrations', 'Schema migration tools — declarative vs imperative')
-    n(g, 'fly',  'Flyway\nSQL-first\nversion-based\n(replay scripts)', 'navy')
-    n(g, 'liq',  'Liquibase\nXML / YAML / SQL\nrollback-aware', 'green')
-    n(g, 'atl',  'Atlas (Ariga)\ndeclarative HCL\nplan / apply (Terraform-like)', 'gold')
-    n(g, 'byt',  'Bytebase\ndeclarative + GUI\ngovernance + audit', 'purple')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'fly',  'Flyway\nSQL-first\nversion-based\n(replay scripts)', 'navy')
+        n(s, 'liq',  'Liquibase\nXML / YAML / SQL\nrollback-aware', 'green')
+        n(s, 'atl',  'Atlas (Ariga)\ndeclarative HCL\nplan / apply (Terraform-like)', 'gold')
+        n(s, 'byt',  'Bytebase\ndeclarative + GUI\ngovernance + audit', 'purple')
     n(g, 'all',  'All support:\nCI/CD pipeline\nzero-downtime deploys', 'red')
     e(g, 'fly', 'all')
     e(g, 'liq', 'all')
@@ -2456,6 +2522,82 @@ def diag_runtime_security_flow():
     print('Generated: kubescape-runtime-security-flow')
 
 
+def diag_dockerfile_reference():
+    g = base_graph('f7_dockerfile_ref', 'Dockerfile Instruction Reference — 18 core instructions')
+    g.attr(rankdir='TB')
+    # Row 1 — Base + identity
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'FROM',    'FROM\nbase image or scratch\nFROM golang:1.23-alpine\nFROM scratch', 'navy')
+        n(s, 'ARG',     'ARG\nbuild-time variable\nARG VERSION=1.0\n--build-arg overrides', 'navy')
+        n(s, 'LABEL',   'LABEL\nimage metadata\norg.opencontainers.*\nkey=value pairs', 'navy')
+    # Row 2 — Filesystem
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'WORKDIR', 'WORKDIR\nset working dir\nWORKDIR /app\nauto-creates path', 'green')
+        n(s, 'COPY',    'COPY\ncopy host → image\nCOPY src/ ./src/\n--chown --link flags', 'green')
+        n(s, 'ADD',     'ADD\nlike COPY + untar\nauto-extracts .tar.gz\nprefer COPY for files', 'green')
+    # Row 3 — Build execution
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'RUN',     'RUN\nexecute at build time\nRUN apt-get install -y &&\\\n    rm -rf /var/lib/apt', 'gold')
+        n(s, 'SHELL',   'SHELL\noverride default shell\nSHELL ["/bin/bash","-c"]\nWindows: cmd /S /C', 'gold')
+        n(s, 'ONBUILD', 'ONBUILD\ntrigger on child build\nONBUILD COPY . /app\nbase-image pattern', 'gold')
+    # Row 4 — Runtime config
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'ENV',     'ENV\nruntime env var\nENV NODE_ENV=production\npersists in image layers', 'purple')
+        n(s, 'EXPOSE',  'EXPOSE\ndocumentation only\nEXPOSE 8080/tcp\n-p flag needed to publish', 'purple')
+        n(s, 'VOLUME',  'VOLUME\nanonymous volume\nVOLUME /data\npersists across restarts', 'purple')
+    # Row 5 — Process identity
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'USER',       'USER\nset UID:GID\nUSER 1001:1001\nnon-root best practice', 'cyan')
+        n(s, 'ENTRYPOINT', 'ENTRYPOINT\nmain process\nEXEC form preferred\n["./app"]', 'cyan')
+        n(s, 'CMD',        'CMD\ndefault args\noverridable at runtime\nCMD ["--port","8080"]', 'cyan')
+    # Row 6 — Health + signal + tip
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'HEALTHCHECK', 'HEALTHCHECK\nHTTP / exec probe\ninterval=30s retries=3\nexit code in status', 'red')
+        n(s, 'STOPSIGNAL',  'STOPSIGNAL\nstop signal sent\nSTOPSIGNAL SIGTERM\ndefault: SIGTERM', 'red')
+        n(s, 'tip',         'Multi-stage pattern:\nFROM build AS builder\nRUN go build -o app\nFROM scratch\nCOPY --from=builder /app .', 'gray')
+    # Ordering anchors (one dotted edge per row transition)
+    e(g, 'FROM',    'WORKDIR',     '', '#94a3b8', 'dotted')
+    e(g, 'WORKDIR', 'RUN',         '', '#94a3b8', 'dotted')
+    e(g, 'RUN',     'ENV',         '', '#94a3b8', 'dotted')
+    e(g, 'ENV',     'USER',        '', '#94a3b8', 'dotted')
+    e(g, 'USER',    'HEALTHCHECK', '', '#94a3b8', 'dotted')
+    g.render(os.path.join(OUT, 'f7-dockerfile-reference'), cleanup=True)
+    print('Generated: f7-dockerfile-reference')
+
+
+def diag_docker_compose_f10():
+    g = base_graph('f10_docker_compose', 'Docker Compose — Multi-Container App Orchestration')
+    g.attr(rankdir='TB')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'yml',  'docker-compose.yml\nservices / networks /\nvolumes / configs', 'navy')
+        n(s, 'cmds', 'CLI commands:\ndocker compose up -d\ndocker compose down\ndocker compose logs -f\ndocker compose ps', 'gray')
+    n(g, 'dc',   'Docker Compose\norchestrates all services\ndependency ordering\nnetwork + volume mgmt', 'purple')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        n(s, 'fe',   'Frontend\nnginx / React\nport: 3000:80\ndepends_on: backend', 'teal')
+        n(s, 'be',   'Backend\nNode / Python / Go\nport: 8080:8080\ndepends_on: db', 'teal')
+        n(s, 'db',   'Database\npostgres:15\nport: 5432:5432\nvolume: db-data:/var/lib/pgsql', 'gold')
+    n(g, 'disc', 'Service Discovery:\ncontainers connect by\nservice name not IP\ndb:5432 / backend:8080', 'green')
+    e(g, 'yml',  'dc',   'parsed by')
+    e(g, 'cmds', 'dc',   'invokes', '#94a3b8', 'dashed')
+    e(g, 'dc',   'fe',   'creates')
+    e(g, 'dc',   'be',   'creates')
+    e(g, 'dc',   'db',   'creates')
+    e(g, 'be',   'db',   'db:5432')
+    e(g, 'fe',   'be',   'backend:8080')
+    e(g, 'disc', 'be',   'DNS', '#94a3b8', 'dashed')
+    e(g, 'disc', 'db',   'DNS', '#94a3b8', 'dashed')
+    g.render(os.path.join(OUT, 'f10-docker-compose'), cleanup=True)
+    print('Generated: f10-docker-compose')
+
+
 if __name__ == '__main__':
     # Foundations
     diag_three_ways(); diag_dora_metrics(); diag_westrum_calms(); diag_team_topologies(); diag_value_stream()
@@ -2473,6 +2615,7 @@ if __name__ == '__main__':
     diag_ansible(); diag_pcs(); diag_immutable(); diag_drift_remediation()
     # Containers
     diag_container_fundamentals(); diag_docker_buildkit(); diag_image_hardening(); diag_buildpacks(); diag_container_security()
+    diag_dockerfile_reference(); diag_docker_compose_f10()
     # Orchestration
     diag_k8s_arch(); diag_k8s_resources(); diag_helm_kustomize(); diag_operators(); diag_service_mesh(); diag_gateway_api(); diag_gateway_simple(); diag_gateway_http_routing(); diag_gateway_cross_ns(); diag_gateway_traffic_split()
     # Observability (NEW)
