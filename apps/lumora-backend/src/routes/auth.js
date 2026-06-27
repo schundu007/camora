@@ -110,6 +110,12 @@ router.post('/sync', (req, res) => {
 router.get('/me', authenticate, async (req, res) => {
   try {
     const user = formatUserResponse(req.user);
+    // SSO cookie JWT is minted at OAuth time without is_admin, so read the
+    // live DB value rather than trusting req.user.is_admin (always undefined).
+    const dbRow = await query('SELECT is_admin FROM users WHERE id = $1', [req.user.id]);
+    if (dbRow.rows.length > 0) {
+      user.is_admin = dbRow.rows[0].is_admin === true;
+    }
     // type:'access' is required by the ascend backend's authenticate middleware
     // (`payload.type === 'access'` strict check). Without it, a token minted
     // here would auth on lumora but get 401 when used to call ascend endpoints
