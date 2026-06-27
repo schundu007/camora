@@ -24,36 +24,28 @@ export const agenticTopics = [
       { type: 'architecture', caption: 'LangGraph Supervisor Architecture', image: '/diagrams/agentic/langgraph-supervisor.png' },
       { type: 'workflow',     caption: 'State and Message Flow',            image: '/diagrams/agentic/langgraph-state-flow.png' },
     ],
-    introduction: `**What Are Multi-Agent Systems?**
+    introduction: `Multi-agent systems divide complex tasks across **specialist agents** that each focus on one narrow concern. **LangGraph** is the graph-based orchestration layer that wires them together — it turns agents into graph nodes and messages into edges, giving you explicit control over routing, state, and persistence that a single monolithic agent chain cannot provide.
 
-Multi-agent systems divide complex tasks across **specialist agents** that each focus on one narrow concern. **LangGraph** is the graph-based orchestration layer that wires them together — turning agents into graph nodes and messages into edges, giving you explicit control over routing, state, and persistence that a single monolithic chain cannot provide.
+## LangGraph Fundamentals
 
-**LangGraph Fundamentals**
+LangGraph models execution as a **directed graph**. Nodes are Python functions (or Runnables) that take the current state and return an updated state. Edges connect nodes and can be **conditional** — the graph decides the next node based on the current state value. A **StateGraph** is compiled into a runnable graph object with a stream or invoke interface. The core objects are:
 
-LangGraph models execution as a **directed graph**:
+- **StateGraph** — the graph builder
+- The **compiled graph** (via .compile()) — the runnable
+- A **state TypedDict** — the shared data model
+- An optional **checkpointer** — for persistence
 
-- **Nodes** — Python functions (or Runnables) that take state and return updated state
-- **Edges** — connections between nodes; can be **conditional** (next node chosen at runtime)
-- **StateGraph** — the graph definition container
-- **Compiled graph** — produced by \`.compile()\`, exposes \`stream\`/\`invoke\` interfaces
+The state schema is defined as a Python **TypedDict**. Every node receives the full state dict and returns a partial dict of updates. LangGraph merges the partial dict using **reducers**. The built-in **add_messages** reducer appends to a messages list rather than replacing it — this is the fundamental primitive that enables multi-turn conversation within a graph.
 
-The state schema is a **Python TypedDict**. Every node receives the full state dict and returns a partial dict of updates. LangGraph merges updates using **reducers**. The built-in \`add_messages\` reducer appends to a messages list rather than replacing it — this is the fundamental primitive for multi-turn conversation.
+## The Supervisor Pattern
 
-**The Supervisor Pattern**
+The **Supervisor pattern** introduces a router node that sits above all specialist agents. It reads the latest message in state and decides which agent should handle the next step. The supervisor does not perform work itself — it dispatches. Specialist agents perform work and return results by appending to the messages list. The graph loops back to the supervisor after each agent completes.
 
-The Supervisor is a **router node** that sits above all specialist agents. It reads the latest message in state and decides which agent handles the next step. The supervisor does not perform work — it dispatches.
+For a Researcher-Writer pipeline: the supervisor first routes to the Researcher node. The Researcher uses web search tools, appends a structured research summary to messages, and returns. The supervisor reads that summary and routes to the Writer. The Writer drafts a report and appends the draft. The supervisor may route back to the Researcher for a gap-fill pass, or terminate with the final draft.
 
-For a Researcher-Writer pipeline:
+## Shared State and Message Passing
 
-1. Supervisor routes to the **Researcher** node
-2. Researcher uses web-search tools, appends a structured research summary to \`messages\`
-3. Supervisor reads the summary, routes to the **Writer**
-4. Writer drafts a report, appends the draft to \`messages\`
-5. Supervisor routes back for a gap-fill pass, or terminates via \`END\`
-
-**Shared State and Message Passing**
-
-The state TypedDict carries all inter-agent communication. A minimal schema:
+The state **TypedDict** carries all inter-agent communication. A minimal schema:
 
 \`\`\`python
 from typing import TypedDict, Annotated
@@ -66,55 +58,52 @@ class AgentState(TypedDict):
     report_draft: str
 \`\`\`
 
-Agents read from \`messages\` (a list of \`HumanMessage\`, \`AIMessage\`, \`ToolMessage\`) and return new messages appended by the reducer.
+Each agent reads from messages — a list of HumanMessage, AIMessage, and ToolMessage objects — and returns new messages appended by the reducer. Agents never call each other directly; all communication flows through shared state.
 
-> [!IMPORTANT] Agents never call each other directly — all communication flows through shared state. No direct agent-to-agent calls.
+## Checkpointers for State Persistence
 
-**Checkpointers for State Persistence**
+A **checkpointer** persists the full state snapshot at every superstep. Options:
 
-A checkpointer persists the full state snapshot at every superstep:
+- **MemorySaver** — in-memory dict, suitable for development and testing
+- **SqliteSaver** — persists to disk, survives process restarts, single-process only
+- **PostgresSaver** — production choice, supports concurrent writers, horizontally scalable
 
-| Checkpointer | Storage | Use Case |
-|---|---|---|
-| \`MemorySaver\` | Python dict in memory | Development, single-process, short-lived |
-| \`SqliteSaver\` | SQLite file on disk | Survives restarts, single-server |
-| \`PostgresSaver\` | PostgreSQL table | Production, multi-process, cloud |
+The checkpointer is passed at compile time: graph.compile(checkpointer=SqliteSaver.from_conn_string("checkpoints.db")). Every invoke or stream call accepts a config dict with a **thread_id** — same thread_id resumes an existing session; a new thread_id starts a fresh execution.
 
-> [!TIP] At runtime, every \`invoke\`/\`stream\` call accepts a \`config\` dict with a \`thread_id\`. Same \`thread_id\` resumes the session; a new \`thread_id\` starts fresh.
+## Human-in-the-Loop
 
-**Human-in-the-Loop**
+LangGraph's **interrupt_before** and **interrupt_after** mechanisms pause execution at a named node boundary. When compiled with interrupt_before=["writer"], execution halts before the Writer node runs. The caller can inspect state, modify it via graph.update_state(), and resume by calling invoke again with the same thread_id.
 
-\`interrupt_before=["writer"]\` pauses execution before the Writer node fires and returns control to the caller. The caller can:
-- Inspect current state
-- Modify it via \`graph.update_state()\`
-- Resume by calling \`invoke\` with the same \`thread_id\`
+> [!TIP] Use interrupt_before=["writer"] to show users the research summary and get approval before committing to a full report draft — a zero-cost way to add a human quality gate.
 
-> [!NOTE] This is the approval checkpoint pattern — show the user the research summary before committing to a full draft.
+## Error Handling and Fallback Routing
 
-**Error Routing**
+The supervisor's routing function can inspect the last message for error markers. If the Researcher returns a low-confidence result, the supervisor routes to a **Fallback node** or **RetryResearcher node** with a revised query. LangGraph's conditional edges accept a Python function returning the next node name as a string.
 
-The supervisor's routing function inspects the last message for error markers. A Python function returning the next node name as a string controls all branching — error routing is just another conditional edge that returns \`"fallback"\` or \`"retry_researcher"\` instead of \`"writer"\`.`,
+> [!WARNING] Add a max_iterations counter in state and route to END when it exceeds a threshold. Without it, a misbehaving supervisor can loop indefinitely between specialist agents.`,
 
     quickFire: [
-      { q: 'What is a LangGraph StateGraph?', a: 'A directed graph where nodes are Python functions that transform state and edges (including conditional edges) determine control flow based on state values.' },
-      { q: 'What does the add_messages reducer do?', a: 'It appends new messages to the existing messages list in state rather than replacing the entire list — enables multi-turn accumulation across nodes.' },
-      { q: 'What is the Supervisor pattern?', a: 'A router node that reads the current state and dispatches to specialist agent nodes based on what step is needed next; it does not perform work itself.' },
-      { q: 'How do agents communicate in LangGraph?', a: 'Through the shared TypedDict state — each agent appends to the messages list; no direct agent-to-agent calls exist.' },
-      { q: 'What is MemorySaver vs SqliteSaver?', a: 'MemorySaver is an in-memory checkpointer for dev and testing; SqliteSaver persists to disk and survives process restarts; both use thread_id as the session key.' },
-      { q: 'What is a thread_id in LangGraph?', a: 'A string key passed in the run config that scopes the checkpointer state — same thread_id resumes an existing session; new thread_id starts a fresh one.' },
-      { q: 'How does interrupt_before work?', a: 'Compiled with interrupt_before=["node_name"], the graph pauses before that node runs and returns control to the caller; resume by calling invoke again on the same thread_id.' },
-      { q: 'What is a conditional edge in LangGraph?', a: 'An edge whose target node is determined by a Python function that reads state and returns the next node name as a string — the mechanism for all routing logic.' },
-      { q: 'How do you run two agents in parallel in LangGraph?', a: 'Add both node names as targets in a list from a conditional or unconditional edge — LangGraph executes them as a parallel superstep and merges their state updates.' },
-      { q: 'What is a superstep in LangGraph?', a: 'One round of execution across all nodes that fire in the same batch — parallel nodes execute within a single superstep; the checkpointer snapshots state after each superstep.' },
-      { q: 'How do you terminate a LangGraph graph?', a: 'Route the supervisor conditional edge to END (the special LangGraph terminal node) when the task is complete.' },
-      { q: 'What Python type annotation enables the add_messages reducer on a field?', a: 'Annotated[list[BaseMessage], add_messages] — the Annotated type from typing combined with the add_messages reducer function from langgraph.graph.message.' },
+      { q: 'What is a LangGraph StateGraph?', a: 'A **directed graph** where nodes are Python functions that transform **state** and edges (including **conditional edges**) determine control flow based on state values.' },
+      { q: 'What does the add_messages reducer do?', a: 'It **appends** new messages to the existing messages list in state rather than replacing the entire list — enables **multi-turn accumulation** across nodes.' },
+      { q: 'What is the Supervisor pattern?', a: 'A **router node** that reads the current state and dispatches to **specialist agent nodes** based on what step is needed next; it does not perform work itself.' },
+      { q: 'How do agents communicate in LangGraph?', a: 'Through the **shared TypedDict state** — each agent appends to the messages list; **no direct agent-to-agent calls** exist.' },
+      { q: 'What is MemorySaver vs SqliteSaver?', a: '**MemorySaver** is an in-memory checkpointer for dev and testing; **SqliteSaver** persists to disk and survives process restarts; both use **thread_id** as the session key.' },
+      { q: 'What is a thread_id in LangGraph?', a: 'A string key that **scopes the checkpointer state** — same **thread_id** resumes an existing session; a new **thread_id** starts a fresh one.' },
+      { q: 'How does interrupt_before work?', a: 'Compiled with **interrupt_before=["node_name"]**, the graph **pauses** before that node runs and returns control to the caller; resume by calling **invoke** again on the same **thread_id**.' },
+      { q: 'What is a conditional edge in LangGraph?', a: 'An edge whose target node is determined by a **Python function** that reads state and returns the **next node name** as a string — the mechanism for all **routing logic**.' },
+      { q: 'How do you run two agents in parallel in LangGraph?', a: 'Add both node names as targets in a list from a single edge — LangGraph executes them as a **parallel superstep** and merges their **state updates** via reducers.' },
+      { q: 'What is a superstep in LangGraph?', a: 'One round of execution across all nodes that fire in the same batch — parallel nodes execute within a single **superstep**; the **checkpointer** snapshots state after each superstep.' },
+      { q: 'How do you terminate a LangGraph graph?', a: 'Route the supervisor **conditional edge** to **END** (the special LangGraph terminal node) when the task is complete.' },
+      { q: 'What Python type annotation enables the add_messages reducer on a field?', a: '**Annotated[list[BaseMessage], add_messages]** — the `Annotated` type from **typing** combined with the **add_messages** reducer from `langgraph.graph.message`.' },
     ],
     keyQuestions: [
       {
         question: 'Design a multi-agent system where a Researcher agent gathers data from the web, and a Writer agent drafts a report. How do they communicate, and how do you handle state?',
-        answer: `The standard LangGraph answer is the **Supervisor pattern** with a shared TypedDict state. The graph has four nodes: **Supervisor**, **Researcher**, **Writer**, and **END**.
+        answer: `The standard LangGraph answer is the **Supervisor pattern** with a shared **TypedDict** state. The graph has four nodes: Supervisor, Researcher, Writer, and END. The Supervisor is the routing hub; Researcher and Writer are the specialist workers.
 
-**State Schema**
+## State Design
+
+Define a **TypedDict** state with an **add_messages** reducer plus domain-specific flags:
 
 \`\`\`python
 from typing import TypedDict, Annotated, Literal
@@ -129,13 +118,13 @@ class ReportState(TypedDict):
     next: str  # which node supervisor targets
 \`\`\`
 
-**Node Responsibilities**
+## Agent Nodes
 
-- **Researcher** — binds a web-search tool to an LLM, runs the ReAct loop, returns \`{"messages": [...], "research_complete": True, "research_summary": summary}\`
-- **Writer** — reads \`research_summary\` and \`messages\`, calls LLM with a drafting prompt, returns \`{"messages": [...], "report_draft": draft}\`
-- **Supervisor** — reads state, returns \`{"next": "researcher" | "writer" | "end"}\`
+The **Researcher** node binds a web search tool (Tavily, SerpAPI) to an LLM, runs the ReAct loop, and returns updated state with research_complete=True and research_summary filled. The **Writer** node reads research_summary and messages, calls the LLM with a drafting prompt, and returns updated state with report_draft filled.
 
-**Graph Construction**
+The **Supervisor** node reads state and returns {"next": "researcher" | "writer" | "end"} based on the flags.
+
+## Graph Construction
 
 \`\`\`python
 from langgraph.graph import StateGraph, END
@@ -155,43 +144,52 @@ workflow.add_edge("writer", "supervisor")
 graph = workflow.compile(checkpointer=SqliteSaver.from_conn_string("sessions.db"))
 \`\`\`
 
-> [!IMPORTANT] The loop — supervisor dispatches → specialist acts → supervisor re-evaluates — continues until the supervisor returns "end". Communication between agents is entirely through state; neither node calls the other directly.
+This loop — supervisor dispatches, specialist acts, supervisor re-evaluates — continues until the supervisor returns "end".
 
-> [!TIP] The checkpointer makes every superstep durable — if the process crashes mid-report, invoke with the same \`thread_id\` resumes from the last checkpoint.`,
+> [!NOTE] Communication between agents is entirely through state: the Writer reads what the Researcher deposited into messages and research_summary. Neither node calls the other directly.
+
+> [!TIP] The **checkpointer** makes every superstep durable — if the process crashes mid-report, calling invoke with the same thread_id resumes from the last checkpoint.`,
       },
       {
         question: 'How does state persistence work in LangGraph? What is the difference between MemorySaver and SqliteSaver?',
-        answer: `LangGraph's persistence model **snapshots the full state TypedDict after every superstep**. The snapshot is keyed by \`(thread_id, checkpoint_id)\` where \`thread_id\` is caller-supplied and \`checkpoint_id\` is an incrementing counter.
+        answer: `LangGraph's persistence model snapshots the full state **TypedDict** after every superstep. The snapshot is keyed by (thread_id, checkpoint_id) — thread_id is caller-supplied, checkpoint_id is an incrementing counter. When you call invoke or stream with a config containing thread_id, LangGraph loads the latest checkpoint for that thread, resumes execution, and writes a new checkpoint after each superstep.
 
-**Checkpointer Comparison**
+## Checkpointer Comparison
 
-| Checkpointer | Durability | Multi-process | Use Case |
-|---|---|---|---|
-| \`MemorySaver\` | Lost on exit | No | Dev, testing, short-lived |
-| \`SqliteSaver\` | Disk, survives restart | No (write serialization) | Single-server production |
-| \`PostgresSaver\` | PostgreSQL, row-level locking | Yes | Web-facing, horizontally scaled |
+- **MemorySaver** — stores snapshots in a Python dict in process memory. Zero-configuration, no dependencies. State disappears on process exit. Cannot be shared across multiple processes.
 
-**How Resume Works**
+- **SqliteSaver** — persists checkpoints to a SQLite file on disk. Survives process restarts. Suitable for single-server deployments, local CLI agents, and desktop applications. SQLite's write serialization makes it unsuitable for high-concurrency multi-process scenarios.
 
-When you call \`invoke\` or \`stream\` with a \`config\` containing \`thread_id\`, LangGraph:
-1. Loads the **latest checkpoint** for that \`thread_id\`
-2. Resumes execution from that state
-3. Writes a new checkpoint after each superstep completes
+- **PostgresSaver** (langgraph-checkpoint-postgres) — the production choice. Uses a PostgreSQL table, supports concurrent writers via row-level locking, works across horizontally scaled worker processes. Schema is managed automatically; configuration is a standard psycopg connection string.
 
-> [!TIP] The practical rule: \`MemorySaver\` during local development, \`SqliteSaver\` for single-process production tools (CLI agents, desktop apps), \`PostgresSaver\` for any web-facing multi-process deployment. The interface is **identical across all three** — swapping the checkpointer at compile time is a one-line change with no graph logic changes.`,
+\`\`\`python
+# Development
+from langgraph.checkpoint.memory import MemorySaver
+graph = workflow.compile(checkpointer=MemorySaver())
+
+# Single-process production
+from langgraph.checkpoint.sqlite import SqliteSaver
+graph = workflow.compile(checkpointer=SqliteSaver.from_conn_string("sessions.db"))
+
+# Multi-process production
+from langgraph.checkpoint.postgres import PostgresSaver
+graph = workflow.compile(checkpointer=PostgresSaver.from_conn_string(DATABASE_URL))
+\`\`\`
+
+> [!IMPORTANT] The interface is identical across all three checkpointers — swapping them at compile time is a one-line change with no graph logic changes required.
+
+The practical rule: use **MemorySaver** during local development, **SqliteSaver** for single-process production tools (CLI agents, desktop apps), and **PostgresSaver** for any web-facing multi-process deployment.`,
       },
       {
         question: 'How do you run the Researcher and Writer agents in parallel instead of sequentially?',
-        answer: `LangGraph executes nodes **in parallel** when they are all listed as destinations from the same source edge.
+        answer: `LangGraph executes nodes **in parallel** when they are all listed as destinations from the same source edge. Rather than routing sequentially through the Supervisor, you fan out from a single orchestrator node by listing multiple node names as edge targets.
 
-> [!WARNING] True parallelism only makes sense when both agents can run on independent inputs. In the Researcher-then-Writer case, the Writer needs the Researcher's output — so they are inherently sequential.
+## Parallel Fan-Out Pattern
 
-**Parallel Fan-Out Pattern (Independent Agents)**
-
-For genuinely independent work — for example, a FactChecker and CitationFinder both running on the same initial query:
+For genuinely independent work — for example, a **FactChecker** and a **CitationFinder** both running on the same initial query — parallel execution looks like:
 
 \`\`\`python
-workflow.add_node("fork", fork_node)           # fans out
+workflow.add_node("fork", fork_node)           # no-op, just fans out
 workflow.add_node("fact_checker", fc_node)
 workflow.add_node("citation_finder", cf_node)
 workflow.add_node("merger", merger_node)
@@ -200,15 +198,19 @@ workflow.add_edge("fact_checker", "merger")
 workflow.add_edge("citation_finder", "merger")
 \`\`\`
 
-LangGraph executes \`fact_checker\` and \`citation_finder\` as a **single superstep**. Their state updates are both passed to the \`merger\` node after both complete. The \`add_messages\` reducer handles concurrent appends safely.
+LangGraph executes fact_checker and citation_finder as a **single superstep**. Their state updates are both passed to the merger node after both complete. The **add_messages** reducer handles concurrent appends to the messages list safely — LangGraph merges the partial state dicts before the next node runs.
 
-> [!NOTE] For the Researcher-Writer case specifically, the canonical answer is sequential with a checkpoint between them — the Writer's quality depends entirely on the Researcher's output. Save parallel fan-out for genuinely independent subtasks like multi-source retrieval, concurrent tool calls, or segment-level analysis.`,
+> [!WARNING] For the Researcher-Writer case specifically, the canonical answer is sequential with a checkpoint between them, not parallel. The Writer's quality depends entirely on the Researcher's output — introducing parallelism means the Writer drafts without research context, which defeats the purpose.
+
+> [!TIP] Save parallel fan-out for genuinely independent subtasks: multi-source retrieval, concurrent tool calls, or segment-level analysis. When tasks have data dependencies, keep them sequential.`,
       },
       {
         question: 'How do you add a human approval checkpoint between the Researcher and Writer stages?',
-        answer: `Use \`interrupt_before\` to **pause graph execution** at a named node boundary and return control to the caller.
+        answer: `LangGraph's **interrupt_before** mechanism pauses graph execution at a named node boundary and returns control to the caller with the current state. The caller inspects state, optionally modifies it, and resumes by calling invoke or stream again on the same **thread_id**.
 
-**Compile with interrupt:**
+## Compiling with an Interrupt
+
+To add an approval gate between Researcher and Writer, compile with interrupt_before=["writer"]:
 
 \`\`\`python
 graph = workflow.compile(
@@ -217,25 +219,26 @@ graph = workflow.compile(
 )
 \`\`\`
 
-When the Supervisor routes to Writer, **execution halts before the Writer node fires**. The \`invoke\` call returns with the current state — including \`research_summary\` the Researcher deposited. Your API handler displays this to the user for approval.
+When the Supervisor routes to Writer, execution halts before the Writer node fires. The invoke call returns with the current state — including the research_summary the Researcher deposited.
 
-**Resume with approval (no changes):**
+## Resuming After Approval
 
 \`\`\`python
 config = {"configurable": {"thread_id": session_id}}
-result = graph.invoke(None, config=config)  # None = no new input, just resume
-\`\`\`
 
-**Resume with user modifications:**
+# Resume with no changes (user approved)
+result = graph.invoke(None, config=config)
 
-\`\`\`python
+# Resume with modifications (user refined the research brief)
 graph.update_state(config, {"research_summary": refined_summary})
 result = graph.invoke(None, config=config)
 \`\`\`
 
-> [!NOTE] \`interrupt_after=["researcher"]\` is the symmetric alternative — it halts after the Researcher node completes (state update already committed) rather than before the Writer starts. For an approval gate where the human reviews research before writing begins, \`interrupt_before=["writer"]\` is the idiomatic choice.
+To reject and terminate — simply do not call invoke again. The checkpointed state remains but the thread goes no further.
 
-> [!TIP] To reject and terminate, simply do not call \`invoke\` again — the checkpointed state remains but the thread goes no further.`,
+> [!NOTE] interrupt_after=["researcher"] is the symmetric alternative: it halts after the Researcher node completes (state update already committed) rather than before the Writer starts. For an approval gate where the human reviews research before writing begins, interrupt_before=["writer"] is the idiomatic choice.
+
+> [!TIP] Use graph.get_state(config) to retrieve the current state and display it to the user before asking for approval — the research summary, citations, and any metadata the Researcher stored are all accessible.`,
       },
     ],
     tips: [
@@ -268,211 +271,155 @@ result = graph.invoke(None, config=config)
       { type: 'architecture', caption: 'Checkpoint + Webhook Resume Pattern', image: '/diagrams/agentic/async-checkpoint-webhook.png' },
       { type: 'workflow',     caption: 'Retry Counter and Circuit Breaker',   image: '/diagrams/agentic/async-retry-state.png' },
     ],
-    introduction: `**The Core Problem**
+    introduction: `Standard LLM tool use assumes the tool returns within the inference timeout window — typically a few seconds. A data pipeline, a batch job, a video transcoding task, or a model fine-tuning run can take five minutes to an hour. Bridging that gap without holding an open server connection requires patterns at the intersection of agentic orchestration and distributed systems.
 
-Standard LLM tool use assumes the tool returns within the **inference timeout window** — typically a few seconds. A data pipeline, batch job, video transcoding task, or model fine-tuning run can take 5 minutes to an hour. Inference infrastructure (API servers, load balancers, connection pools) has hard timeouts typically in the **30-60 second range**. A 5-minute pipeline run violates every timeout at every layer of the stack.
+## The Fundamental Mismatch
 
-> [!IMPORTANT] The solution is never to hold the connection open. The agent must initiate the task, record that it started, immediately release the connection, and resume from a checkpoint when the task completes.
+LLMs are designed for **synchronous request-response** cycles. Inference infrastructure (API servers, load balancers, connection pools) is built around this assumption with hard timeouts typically in the 30-60 second range. A 5-minute pipeline run violates every timeout at every layer of the stack.
 
-Three things are required:
-- A **checkpointer** to persist agent state
-- A **notification mechanism** (webhook or poll) so the agent knows when the task is done
-- **Idempotent tool invocations** so safe retry is possible if the agent crashes
+The solution is never to hold the connection open. Instead, the agent must:
+- Initiate the long-running task
+- Record that it has been initiated (store **job_id** in state)
+- Immediately release the connection
+- Resume from a **checkpointer** snapshot when the task completes
 
-**Pattern 1: Checkpoint-Suspend-Webhook-Resume**
+This requires: a **checkpointer** to persist agent state, a **webhook** mechanism for the external task to notify completion, and **idempotent** tool invocations so safe retry is possible.
 
-This is the **canonical pattern** for LangGraph. The tool invocation node:
-1. Starts the external pipeline (HTTP call to trigger the job)
-2. Receives a \`job_id\`, stores it in agent state
-3. Triggers a graph interrupt — the graph **suspends**
-4. Caller returns current state with a "pipeline started" status
+## Pattern 1: Checkpoint-Suspend-Webhook-Resume
 
-When the pipeline completes, it sends a **webhook** to your application. The webhook handler:
-1. Reads the \`job_id\`, looks up the \`thread_id\` for that job
-2. Writes the result into agent state via \`graph.update_state()\`
-3. Calls \`graph.invoke()\` with the same \`thread_id\`
-
-The graph resumes exactly where it was suspended — the next node reads the completed result from state as if no time had passed.
-
-**State Schema for This Pattern**
+This is the canonical pattern for LangGraph. The tool invocation node starts the external pipeline, receives a **job_id**, stores it in state, then triggers a graph interrupt. The graph suspends. When the external pipeline completes, it sends a webhook to your application server. The webhook handler looks up the thread_id for that job_id, writes the result into agent state via graph.update_state(), and calls graph.invoke() with the same thread_id.
 
 \`\`\`python
 class PipelineState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     job_id: str | None
-    idempotency_key: str | None
     job_status: Literal["idle", "running", "complete", "failed"]
     pipeline_result: dict | None
+    idempotency_key: str | None
     started_at: str | None
 \`\`\`
 
-**Pattern 2: Async Polling**
+> [!IMPORTANT] Generate the **idempotency key** in state before triggering the pipeline. If the agent crashes and replays, the same key is passed to the pipeline service, which returns the existing job_id rather than starting a second run.
 
-When webhooks are not available (third-party services that only expose status endpoints):
+## Pattern 2: Async Polling
 
-- Agent starts the job, stores the \`job_id\`, routes to a **Poller node**
-- Poller checks the status endpoint, loops back on "running" via conditional edge
-- Use **exponential backoff** between polls to prevent hammering the endpoint
+When webhooks are not available (third-party services that only expose status endpoints), a **polling node** checks the status endpoint and loops back until complete, using exponential backoff between polls. The trade-off: polling holds a live execution thread. For jobs longer than a few minutes, the checkpoint-suspend-webhook pattern is superior.
 
-> [!WARNING] Polling holds a long-running graph execution thread. For jobs longer than a few minutes, the **checkpoint-suspend-webhook pattern is superior** because no thread is held.
+## Pattern 3: SSE Streaming for User Experience
 
-**Pattern 3: SSE Streaming for User Experience**
+**Server-Sent Events (SSE)** provide a standard mechanism for pushing progress updates from server to browser. When the pipeline is triggered, the server sends a stream: "status: pipeline started", "status: 20% complete", "status: complete, resuming agent". The agent logic is decoupled from the SSE stream — the webhook-resume path handles actual graph resumption.
 
-Regardless of agent state management, users should never stare at a spinner. **Server-Sent Events (SSE)** provide a standard mechanism for pushing progress updates:
+## Durable Execution: Temporal and Step Functions
 
-- Server sends a stream of events: "status: pipeline started", "status: 20% complete", "status: complete"
-- Agent logic is **decoupled** from the SSE stream — a background task emits progress events while the webhook-resume path handles actual graph resumption
+For workflows spanning hours or days, LangGraph checkpointers are often insufficient — they are optimized for conversation-length persistence. **Temporal** and **AWS Step Functions** provide durable execution primitives: activity retries with configurable policies, workflow versioning, event history replay, and saga patterns for multi-step compensation.
 
-\`\`\`
-GET /api/sessions/{thread_id}/progress
-Content-Type: text/event-stream
-
-data: {"status": "running", "pct": 20}
-data: {"status": "running", "pct": 60}
-data: {"status": "complete"}
-\`\`\`
-
-**Pattern 4: Durable Execution — Temporal and Step Functions**
-
-For workflows spanning **hours or days**, LangGraph checkpointers are often insufficient — they are optimized for conversation-length persistence, not workflow-engine durability.
-
-| Tool | Best For |
-|---|---|
-| **Temporal** | Exactly-once execution, saga patterns, multi-hour failures |
-| **AWS Step Functions** | Managed retries, event history replay, workflow versioning |
-| **LangGraph checkpointers** | Conversation-length sessions, minutes-to-hours |
-
-**Idempotency — The Non-Negotiable Requirement**
-
-Every tool invocation in an async system **must be idempotent**. If the agent process crashes after triggering the pipeline but before recording the \`job_id\`, resuming from the checkpoint will trigger the pipeline again.
-
-> [!IMPORTANT] Generate an **idempotency key** (UUID) in the agent before the tool call and store it in state. Pass it to the tool server, which deduplicates on it. This eliminates the "we triggered the pipeline twice" failure mode that shows up in every production agentic system.`,
+> [!TIP] Use Temporal or Step Functions when you need exactly-once execution guarantees, multi-hour fault tolerance, or saga-pattern compensation logic — LangGraph checkpoints are not designed for workflow-engine durability at that scale.`,
 
     quickFire: [
-      { q: 'Why can you not hold an LLM context thread open for a 5-minute tool call?', a: 'Inference infrastructure has hard timeouts (30-60 seconds) at every layer -- API servers, load balancers, and connection pools are all built for synchronous request-response latency.' },
-      { q: 'What are the three things required for checkpoint-suspend-webhook-resume?', a: 'A checkpointer to persist state, a webhook endpoint so the external task can notify completion, and idempotent tool invocations so safe retry is possible.' },
-      { q: 'What is the difference between interrupt_before and interrupt_after for the suspend pattern?', a: 'interrupt_before halts before the named node fires (state from previous node is visible); interrupt_after halts after the node completes and its state updates are committed.' },
-      { q: 'Why is polling inferior to webhooks for long-running jobs?', a: 'Polling holds a live thread (or requires repeated scheduled calls) and adds latency; webhooks resume the agent immediately when the job completes with no thread held.' },
-      { q: 'What is an idempotency key in the context of async tool calls?', a: 'A UUID generated by the agent before calling the tool, stored in state, and passed to the tool server -- the server deduplicates on it so retries after crashes do not trigger the job twice.' },
-      { q: 'When should you use Temporal instead of LangGraph checkpointers?', a: 'When durability requirements span hours or days, when exactly-once side-effect guarantees are needed, or when multi-step compensation (saga pattern) is required -- LangGraph checkpointers are optimized for conversation-length sessions, not workflow-engine durability.' },
-      { q: 'What state fields belong in a PipelineState TypedDict for this pattern?', a: 'job_id, job_status (idle/running/complete/failed), pipeline_result, started_at, and an idempotency_key -- plus messages for LLM conversation continuity.' },
-      { q: 'How does the webhook handler resume a suspended LangGraph graph?', a: 'It looks up the thread_id for the job_id, calls graph.update_state(config, {"job_status": "complete", "pipeline_result": result}), then calls graph.invoke(None, config=config) to resume.' },
-      { q: 'What is SSE and why is it the right UX choice for long-running operations?', a: 'Server-Sent Events -- a standard HTTP streaming protocol for server-to-client push. A single persistent HTTP connection delivers progress events in real time without WebSocket complexity.' },
-      { q: 'What exponential backoff policy makes sense for a polling node?', a: 'Start at 2 seconds, double each attempt up to a 60-second ceiling, with jitter (randomize by +/- 10%) to prevent thundering-herd spikes when many jobs complete simultaneously.' },
+      { q: 'Why can you not hold an LLM context thread open for a 5-minute tool call?', a: 'Inference infrastructure has **hard timeouts (30–60 seconds)** at every layer — API servers, load balancers, and connection pools are all built for **synchronous request-response** latency.' },
+      { q: 'What are the three things required for checkpoint-suspend-webhook-resume?', a: 'A **checkpointer** to persist state, a **webhook endpoint** so the external task can notify completion, and **idempotent** tool invocations so safe retry is possible.' },
+      { q: 'What is the difference between interrupt_before and interrupt_after for the suspend pattern?', a: '**interrupt_before** halts before the named node fires (prior state is visible); **interrupt_after** halts after the node completes and its **state updates** are committed.' },
+      { q: 'Why is polling inferior to webhooks for long-running jobs?', a: '**Polling** holds a live thread and adds latency; **webhooks** resume the agent immediately when the job completes with **no thread held**.' },
+      { q: 'What is an idempotency key in the context of async tool calls?', a: 'A **UUID** generated by the agent before the tool call, stored in state, and passed to the tool server — the server **deduplicates** on it so retries after crashes do not trigger the job twice.' },
+      { q: 'When should you use Temporal instead of LangGraph checkpointers?', a: 'When durability spans **hours or days**, when **exactly-once** side-effect guarantees are needed, or when multi-step compensation (**saga pattern**) is required.' },
+      { q: 'What state fields belong in a PipelineState TypedDict for this pattern?', a: '**job_id**, **job_status** (idle/running/complete/failed), **pipeline_result**, **started_at**, and an **idempotency_key** — plus messages for LLM conversation continuity.' },
+      { q: 'How does the webhook handler resume a suspended LangGraph graph?', a: 'It looks up the **thread_id** for the **job_id**, calls **graph.update_state()** with the result, then calls **graph.invoke(None, config=config)** to resume.' },
+      { q: 'What is SSE and why is it the right UX choice for long-running operations?', a: '**Server-Sent Events** — a standard HTTP streaming protocol for **server-to-client push**. A single persistent HTTP connection delivers progress events in real time without **WebSocket** complexity.' },
+      { q: 'What exponential backoff policy makes sense for a polling node?', a: 'Start at **2 seconds**, double each attempt up to a **60-second ceiling**, with **jitter** (±10%) to prevent **thundering-herd** spikes when many jobs complete simultaneously.' },
     ],
     keyQuestions: [
       {
         question: 'How do you handle long-running asynchronous tool calls? For example, if an agent triggers a data pipeline that takes 5 minutes, how do you manage the agent\'s state and the user experience?',
-        answer: `The **checkpoint-suspend-webhook-resume pattern** is the correct answer. The key insight: the agent must never hold an open connection waiting for the pipeline — instead it triggers, suspends, and resumes.
+        answer: `The **checkpoint-suspend-webhook-resume** pattern is the correct answer. The key insight: the agent must never hold an open connection waiting for the pipeline — instead it triggers, suspends, and resumes.
 
-**Step 1 — Generate idempotency key before triggering**
+## Step 1: Generate Idempotency Key
 
-Generate a UUID in the agent and store it in state before making the external call. On crash and replay, the same key is passed to the pipeline service, which returns the existing \`job_id\` rather than starting a second run.
+Generate an **idempotency key** (UUID) and store it in state before triggering the pipeline. If the agent crashes and replays, the same key is passed to the pipeline service, which returns the existing job_id rather than starting a second run.
 
-**Step 2 — Trigger and suspend**
+## Step 2: Trigger and Suspend
 
-\`\`\`python
-# In the trigger node:
-result = pipeline_api.start(idempotency_key=state["idempotency_key"])
-return {
-    "job_id": result["job_id"],
-    "job_status": "running",
-    "started_at": datetime.utcnow().isoformat()
-}
-# Graph hits interrupt_after=["trigger_pipeline"] — execution halts
-# The calling HTTP request returns: {"status": "pipeline started", "job_id": "..."}
-\`\`\`
+The pipeline trigger node calls the external pipeline HTTP API with the idempotency key, receives a job_id, and stores both in state with job_status="running". The graph then hits interrupt_after=["trigger_pipeline"] and execution halts. The calling HTTP request returns to the user with status "pipeline started".
 
-**Step 3 — Webhook resumes the graph**
+## Step 3: Webhook Resume
+
+When the external pipeline completes, it sends a POST to your webhook endpoint with the job_id and result payload:
 
 \`\`\`python
-# In the webhook handler:
+# Webhook handler resumes a suspended graph
 config = {"configurable": {"thread_id": thread_id}}
-graph.update_state(config, {"job_status": "complete", "pipeline_result": result})
-graph.invoke(None, config=config)  # resumes at the node after the suspended point
+graph.update_state(config, {
+    "job_status": "complete",
+    "pipeline_result": result
+})
+graph.invoke(None, config=config)
 \`\`\`
 
-**User Experience Layer (SSE)**
+The graph resumes at the node after the suspended point. The next node reads pipeline_result from state and proceeds with downstream LLM analysis.
 
-An SSE stream runs **in parallel** with the webhook path:
+## SSE for User Experience
 
-\`\`\`
-GET /api/sessions/{thread_id}/progress
-data: {"status": "running", "pct": 20, "message": "Fetching schema metadata (1/4)"}
-data: {"status": "running", "pct": 60, "message": "Building feature table (3/4)"}
-data: {"status": "complete"}
-\`\`\`
+An **SSE stream** runs in parallel with the webhook path. When the pipeline trigger fires, the server opens an SSE channel keyed to the session. A background process monitors job status — polling the jobs table or subscribing to a **Redis pub/sub** channel that the webhook handler publishes to — and emits progress events like data: {status: running, pct: 20}. The frontend renders a live progress bar.
 
-The frontend renders a live progress bar. When the webhook fires, the SSE stream emits "complete" and the frontend transitions to the resumed agent output.
-
-> [!TIP] This correctly separates the **agent control plane** (LangGraph state + checkpointer) from the **real-time UX plane** (SSE) — no threads held, no polling loops in the hot path.`,
+> [!NOTE] This architecture cleanly separates the agent **control plane** (LangGraph state + checkpointer) from the real-time **UX plane** (SSE), with no threads held and no polling loops in the hot path.`,
       },
       {
         question: 'What happens if the agent process crashes while waiting for the 5-minute pipeline? How do you recover?',
-        answer: `Recovery depends on the crash point. There are **three distinct failure windows**, each with a different recovery path.
+        answer: `Recovery depends on the crash point. There are three distinct failure windows, each with a different recovery path.
 
-**Crash Window 1: Before job_id is stored in state**
+## Crash Before job_id Is Stored
 
-The LangGraph checkpoint does not include the \`job_id\`. On resume, the trigger node replays. This is the **idempotency key's job** — the trigger node generates the key before calling the pipeline, stores it in state, and that key is committed to the checkpoint before the external call goes out. On replay, the same key is passed and the pipeline service returns the existing \`job_id\` rather than starting a new run.
-
-> [!TIP] Structure the trigger node as two atomic steps: first \`update_state\` with the \`idempotency_key\` only; second call the pipeline; third \`update_state\` with \`job_id\`. The checkpointer writes after each call, so the key is durable before the external call fires.
-
-**Crash Window 2: While suspended waiting for webhook**
-
-The checkpoint preserves \`job_id\` and \`job_status="running"\`. The pipeline continues unaware of the crash. When the webhook arrives, the handler looks up \`thread_id\` by \`job_id\` and calls \`update_state\` plus \`invoke\`. Zero loss.
-
-**Crash Window 3: Webhook handler crashes before invoke completes**
-
-\`job_status\` was written but \`invoke\` did not finish. On the next webhook retry, the graph resumes from the committed state. A **reconciliation cron job** is the safety net:
+The LangGraph checkpoint does not include the job_id. Resuming the thread replays the pipeline trigger node. This is the **idempotency key's** job — the trigger node generates the key before calling the pipeline and stores it in state. That key is committed to the checkpoint before the external call goes out. On replay, the same key is passed to the pipeline service, which returns the existing job_id rather than starting a new run.
 
 \`\`\`python
-# Runs every 10 minutes:
-stale_jobs = db.query(
-    "SELECT job_id, thread_id FROM jobs WHERE job_status = 'running' "
-    "AND started_at < NOW() - INTERVAL '1 hour'"
-)
-for job in stale_jobs:
-    status = pipeline_api.check_status(job["job_id"])
-    if status == "complete":
-        resume_graph(job["thread_id"], result=pipeline_api.get_result(job["job_id"]))
+# Structure the trigger node as atomic steps — commit key before calling pipeline
+graph.update_state(config, {"idempotency_key": key})   # Step 1: durable
+job_id = pipeline_client.start(idempotency_key=key)     # Step 2: external call
+graph.update_state(config, {"job_id": job_id, "job_status": "running"})  # Step 3
 \`\`\`
 
-> [!IMPORTANT] Build the reconciliation job from **day one**, not after the first production incident. Webhooks fail; reconciliation is the safety net that catches missed completions.`,
+> [!IMPORTANT] The checkpointer writes after each update_state call, so the idempotency key is durable before the external call fires. This ordering guarantee is what makes replay safe.
+
+## Crash While Suspended (Waiting for Webhook)
+
+The checkpoint preserves job_id and job_status="running". The pipeline continues unaware of the crash. When the webhook arrives, the handler looks up the thread_id by job_id (stored in a jobs table) and calls update_state plus invoke. The fresh process loads the checkpoint and resumes normally. Zero loss.
+
+## Crash of the Webhook Handler
+
+The job_status was written to the checkpoint by update_state but invoke did not finish. On the next invoke attempt — triggered by a webhook retry, or by a background reconciliation job — the graph resumes from the committed state.
+
+> [!TIP] The **reconciliation job** is the safety net — it scans jobs where job_status="running" and started_at is older than (pipeline_max_duration + buffer), checks the external pipeline status endpoint, and fires the webhook handler logic manually for any completed jobs with missed webhook delivery. Build this from day one, not after the first production incident.
+
+The practical deployment pattern: **webhook handler + reconciliation cron job** running every 10 minutes. Webhooks fail; reconciliation catches missed completions.`,
       },
       {
         question: 'How would you design the user experience so the user knows what is happening during a 5-minute wait?',
-        answer: `The UX for a long-running async operation has **three layers**: immediate acknowledgment, continuous progress feedback, and a crisp completion transition.
+        answer: `The UX for a long-running async operation has three layers: **immediate acknowledgment**, **continuous progress feedback**, and a **crisp completion transition**.
 
-**Layer 1 — Immediate Acknowledgment (< 200ms)**
+## Immediate Acknowledgment
 
-When the user triggers the action, the response must return within 200ms — before the pipeline is even contacted. Return a session token the frontend uses to subscribe to progress.
+When the user triggers the action, the response must return within 200ms — before the pipeline is even contacted. The response confirms "request received, pipeline starting" and returns a **session token** or thread_id the frontend can use to subscribe to progress.
 
-> [!IMPORTANT] Never make the user wait for the pipeline trigger call itself. Acknowledge first, execute async.
+> [!IMPORTANT] Never make the user wait for the pipeline trigger call itself. The HTTP response that initiates the pipeline and the HTTP response to the user are two separate calls.
 
-**Layer 2 — Continuous Progress (SSE)**
+## Continuous Progress
 
-\`\`\`
-GET /api/sessions/{thread_id}/progress
-Content-Type: text/event-stream
+The frontend opens an **SSE connection** to GET /api/sessions/{thread_id}/progress immediately after receiving the session token. The server maintains a status record in Redis or a jobs table. As the pipeline emits progress events, the SSE stream pushes them to the client:
 
-data: {"status": "running", "pct": 25, "label": "Fetching schema metadata (1 of 4)"}
-data: {"status": "running", "pct": 50, "label": "Running data quality checks (2 of 4)"}
-data: {"status": "running", "pct": 75, "label": "Building feature table (3 of 4)"}
-data: {"status": "complete"}
-\`\`\`
+- "Fetching schema metadata (step 1 of 4)"
+- "Running data quality checks (step 2 of 4)"
+- "Building feature table (step 3 of 4)"
 
-If the external pipeline does not emit granular progress, emit **time-based pseudo-progress**: "Started 1 minute ago, estimated 4 minutes remaining" based on historical average duration. A determinate progress bar beats an indeterminate spinner even when the estimate is approximate.
+If the external pipeline does not emit granular progress, emit **time-based pseudo-progress**: "Started 1 minute ago, estimated 4 minutes remaining" based on historical average duration. A determinate progress bar is far better than an indeterminate spinner even when approximate.
 
-**Layer 3 — Completion Transition**
+## Completion Transition
 
-When the pipeline finishes and the agent resumes, the SSE stream emits a completion event with the agent's next output. The frontend transitions from the progress view to the agent response — **no page reload, no manual refresh**.
+When the pipeline finishes and the agent resumes, the SSE stream emits a completion event with the agent's next output. The frontend transitions from the progress view to the agent response in a single smooth state update — no page reload, no manual refresh button. If the user has navigated away, push a browser notification and display a badge on the session tab.
 
-- If the user has navigated away: push a **browser notification** (if permissions were granted)
-- Always show a badge on the session tab
+## Error States
 
-**Error States**
+If the pipeline fails, the SSE stream emits an error event with a **human-readable message**: "Data quality check failed: 12% of records have null user_id — see report." The agent's error-handling node generates an actionable suggestion.
 
-> [!WARNING] Never show a raw stack trace or timeout error to the user. The SSE stream emits a human-readable message ("Data quality check failed: 12% of records have null user_id — see report") and the agent's error-handling node generates an actionable suggestion.`,
+> [!WARNING] Never show a raw stack trace or timeout error to the user. All infrastructure errors must be translated into human-readable messages with a suggested next action before reaching the UI.`,
       },
     ],
     tips: [
@@ -585,16 +532,16 @@ Three memory types serve different roles:
 > [!IMPORTANT] Conflating these memory types into a single undifferentiated message list is the architectural mistake that causes context management to fail at scale.`,
 
     quickFire: [
-      { q: 'What is the context window limit for Claude 3.5 Sonnet and GPT-4o?', a: '128K tokens for both Claude 3.5 Sonnet and GPT-4o; Claude 3.5 Sonnet goes to 200K. A multi-day power-user conversation can exceed this within hours.' },
-      { q: 'What does trim_messages() do in LangGraph?', a: 'Trims a message list to a maximum token count using a chosen strategy (last, first) while optionally preserving the system message -- returns the trimmed list without modifying state directly.' },
-      { q: 'What is the add_messages reducer and why does it matter for context management?', a: 'It appends new messages to state rather than replacing the list -- context management nodes must explicitly return a replacement list (not an append) to trim or summarize old messages.' },
-      { q: 'What is episodic memory in an agent context?', a: 'A record of past events and exchanges, scoped to what happened and when -- best stored in a vector DB with timestamp metadata and retrieved by semantic similarity.' },
-      { q: 'What is semantic memory in an agent context?', a: 'Factual propositions about the world or user ("prefers Python", "uses PostgreSQL 15") -- best stored in the LangGraph Store or a user profile table, retrieved deterministically by key.' },
-      { q: 'What is the LangGraph Store API used for?', a: 'Cross-thread, cross-session persistent storage independent of thread_id -- used for user preferences, long-term facts, and procedural knowledge that must persist across all sessions for a user.' },
-      { q: 'What is the difference between a checkpointer and a Store in LangGraph?', a: 'Checkpointers scope state to a single thread_id (one conversation); the Store is a global key-value namespace accessible across all threads and sessions -- orthogonal persistence scopes.' },
-      { q: 'What is a running summary in the summarization strategy?', a: 'A single string field in agent state that accumulates a compressed history of prior exchanges; each summarization call extends it rather than starting over, preventing the summary itself from growing unboundedly.' },
-      { q: 'Why is vector DB retrieval superior to summarization for long-term recall?', a: 'Summarization loses information permanently; vector DB stores everything and retrieves on demand by semantic similarity, so no past exchange is truly lost.' },
-      { q: 'What is the hybrid context management architecture?', a: 'Recent messages verbatim in the window, medium-term exchanges compressed into a rolling summary in state, long-term episodic exchanges offloaded to vector DB and retrieved by similarity at the start of each turn.' },
+      { q: 'What is the context window limit for Claude 3.5 Sonnet and GPT-4o?', a: '**128K tokens** for both; Claude 3.5 Sonnet goes to **200K**. A multi-day power-user conversation can exceed this **within hours**.' },
+      { q: 'What does trim_messages() do in LangGraph?', a: 'Trims a message list to a **maximum token count** using a chosen strategy (last, first) while optionally **preserving the system message** — returns the trimmed list without modifying state directly.' },
+      { q: 'What is the add_messages reducer and why does it matter for context management?', a: 'It **appends** new messages to state rather than replacing the list — context management nodes must explicitly return a **replacement list** (not an append) to trim or summarize old messages.' },
+      { q: 'What is episodic memory in an agent context?', a: 'A record of past events and exchanges, scoped to **what happened and when** — best stored in a **vector DB** with timestamp metadata and retrieved by **semantic similarity**.' },
+      { q: 'What is semantic memory in an agent context?', a: 'Factual propositions about the world or user ("prefers Python", "uses PostgreSQL 15") — best stored in the **LangGraph Store** or a user profile table, retrieved **deterministically by key**.' },
+      { q: 'What is the LangGraph Store API used for?', a: '**Cross-thread, cross-session** persistent storage independent of **thread_id** — used for user preferences, long-term facts, and procedural knowledge that persists across all sessions.' },
+      { q: 'What is the difference between a checkpointer and a Store in LangGraph?', a: '**Checkpointers** scope state to a single **thread_id** (one conversation); the **Store** is a global key-value namespace accessible across all threads and sessions — **orthogonal persistence scopes**.' },
+      { q: 'What is a running summary in the summarization strategy?', a: 'A string field in agent state that accumulates a **compressed history** of prior exchanges; each summarization call **extends** it rather than starting over, preventing unbounded growth.' },
+      { q: 'Why is vector DB retrieval superior to summarization for long-term recall?', a: '**Summarization** loses information permanently; **vector DB** stores everything and retrieves on demand by **semantic similarity**, so no past exchange is truly lost.' },
+      { q: 'What is the hybrid context management architecture?', a: '**Recent messages** verbatim in the window, medium-term exchanges in a **rolling summary**, long-term episodic exchanges offloaded to **vector DB** and retrieved by similarity at the start of each turn.' },
     ],
     keyQuestions: [
       {

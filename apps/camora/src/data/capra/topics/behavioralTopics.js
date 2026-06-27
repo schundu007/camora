@@ -7236,49 +7236,141 @@ Set the expectation early. Stakeholders are far more forgiving of honest re-scop
       category: 'ai-eng',
       questions: 3,
       description: 'Behavioral questions specific to AI/ML engineering roles — communicating model accuracy shortfalls to leadership, estimating iterative agentic workflows, and balancing shipping speed against evals and guardrails.',
-      introduction: `Behavioral interviews for AI engineering roles carry a twist that most candidates underestimate: the "result" in your STAR story is probabilistic. In traditional software engineering, you shipped a feature, latency dropped 40%, done. In AI engineering, you shipped a model, accuracy improved from 61% to 74% on your eval set, then degraded to 68% in production after two weeks because the input distribution shifted. Interviewers at companies hiring for AI roles know this reality, and they are specifically testing whether you know it too.
+      introduction: `Behavioral interviews for AI engineering roles carry a twist that most candidates underestimate: the "result" in your **STAR framework** story is **probabilistic**. In traditional software engineering, you shipped a feature, latency dropped 40%, done. In AI engineering, you shipped a model, accuracy improved from 61% to 74% on your **eval dataset**, then degraded to 68% in production after two weeks because the input distribution shifted. Interviewers at companies hiring for AI roles know this reality, and they are specifically testing whether you know it too.
 
-The core tensions AI engineering behavioral questions probe are different from standard ones. You will face questions about communicating uncertainty to non-technical stakeholders, about estimation in a domain where a single prompt change can swing quality by 20 points, and about the tradeoff between shipping under business pressure and building the evaluation infrastructure needed to ship safely. These are not abstract philosophical questions — they reflect real recurring pain points on every AI product team.
+## What These Questions Actually Test
 
-What interviewers are assessing in this category goes beyond technical depth. They want to see that you can translate model quality into business impact language, that you treat evaluation as an engineering discipline rather than an afterthought, and that you have a structured way to handle the inherent unpredictability of LLM-based systems. A candidate who can only talk about perplexity scores and loss curves will struggle; a candidate who can connect those curves to user experience and business outcomes will stand out.
+The core tensions AI engineering behavioral questions probe are different from standard ones:
 
-The STAR framework still applies here, but the "Result" section requires extra care. Quantify where you can — accuracy improvements, latency reductions, incident rates — but also narrate the path: what you learned, what you changed, what you shipped as a result. AI engineering results are often multi-step journeys, not single events, and structuring your answer to reflect that reality signals genuine experience.`,
+- **Communicating uncertainty** to non-technical stakeholders
+- **Estimating work** in a domain where a single prompt change can swing quality by 20 points
+- **Tradeoffs** between shipping under business pressure and building the evaluation infrastructure needed to ship safely
+
+## What Interviewers Are Assessing
+
+Beyond technical depth, interviewers want to see that you:
+- Translate model quality into **business impact language** — not just perplexity scores and loss curves
+- Treat **evaluation as an engineering discipline**, not an afterthought
+- Have a structured way to handle the inherent unpredictability of LLM-based systems
+
+> [!TIP] A candidate who can connect accuracy curves to user experience and business outcomes will stand out far more than one who speaks only in ML metrics.
+
+## Structuring Your STAR Stories
+
+The **STAR framework** still applies here, but the "Result" section requires extra care:
+
+- **Quantify** where you can — accuracy improvements, latency reductions, incident rates
+- **Narrate the path** — what you learned, what you changed, what you shipped as a result
+- **Acknowledge uncertainty** — AI engineering results are often multi-step journeys, not single events
+
+> [!IMPORTANT] AI engineering results are probabilistic. Structuring your STAR story to reflect iterative learning and course-correction signals genuine experience — don't present a falsely clean narrative.`,
       keyQuestions: [
         {
           question: 'Tell me about a time an AI feature you were building was not hitting the required accuracy. How did you communicate this to leadership, and how did you pivot?',
-          answer: `The first thing to clarify in any accuracy shortfall story is what "required accuracy" actually means, because the gap between the business metric and the ML metric is often where the real problem hides. Required accuracy is a business requirement expressed as a number — say, "fewer than 5% of document classifications should require human review." The ML metric you are optimizing, say precision-recall on your validation set, is a proxy. When your proxy looks good but the business metric is still failing, the story gets interesting, and that complexity is exactly what interviewers want to hear.
+          answer: `The first thing to clarify in any accuracy shortfall story is what "required accuracy" actually means — the gap between the **business metric** and the **ML metric** is often where the real problem hides.
 
-In my case, I was building a document-routing classifier for an internal legal operations tool. The requirement from the product team was a 95% auto-route rate, meaning the model could confidently classify and route 95 of every 100 incoming documents without a human. After three weeks of iteration, we hit 89% on our held-out eval set and plateau'd. The business had already announced a GA date, and my manager was fielding pressure from the legal ops director. I had two choices: stay quiet and hope the last 6 points appeared before launch, or surface the gap clearly while it was still actionable.
+## The Situation
 
-I scheduled a 30-minute sync with my manager and the product lead. The framing I used was deliberate: I did not open with "our precision is 0.87." I opened with "right now, 11 out of every 100 incoming documents will require manual review on day one, which adds roughly 3 hours of paralegal time per day at the volumes we are expecting." That reframe — from ML metric to user-impact — shifted the conversation from technical defensiveness to collaborative problem-solving. Leadership could reason about 3 hours of paralegal time; they could not reason about precision-recall curves.
+I was building a document-routing classifier for an internal legal operations tool. The requirement from the product team was a **95% auto-route rate** — the model could confidently classify and route 95 of every 100 incoming documents without a human. After three weeks of iteration, we hit 89% on our held-out **eval dataset** and plateaued. The business had already announced a GA date.
 
-For the pivot, I came prepared with three options and their tradeoffs. Option one was a scope reduction: launch with high-confidence document types only (contracts and NDAs were already at 97% accuracy) and add remaining types in phases. Option two was a threshold relaxation: lower the confidence cutoff and accept a higher human-review rate of 15% as a temporary launch state, with a commitment to improve over the next two sprints. Option three was a data-quality fix: our analysis showed that 60% of misclassified documents lacked a clear subject line, and a structured intake form could address this without any model changes. We went with a combination of options one and three: phased scope plus the intake form, which brought the auto-route rate to 93% within three weeks of launch on the reduced document set.
+## How I Communicated It
 
-The meta-lesson for telling this story well: leadership does not want a problem dump. They want options with honest tradeoffs. If you present "we are missing accuracy" with no proposed path forward, you create anxiety and lose credibility. If you present "here are three paths, here is my recommendation, here is what I need from you to execute," you position yourself as a decision-driver rather than a status reporter.`
+I scheduled a 30-minute sync with my manager and the product lead. The framing was deliberate:
+
+- **Not this:** "Our precision is 0.87"
+- **But this:** "Right now, 11 out of every 100 incoming documents will require manual review on day one, which adds roughly 3 hours of paralegal time per day at the volumes we're expecting"
+
+That reframe — from ML metric to **user-impact** — shifted the conversation from technical defensiveness to collaborative problem-solving.
+
+## Three Options with Tradeoffs
+
+I came prepared with three options:
+
+- **Option 1 — Scope reduction:** Launch with high-confidence document types only (contracts and NDAs were already at 97% accuracy), add remaining types in phases
+- **Option 2 — Threshold relaxation:** Lower the confidence cutoff, accept a 15% human-review rate as a temporary launch state, commit to improving over two sprints
+- **Option 3 — Data-quality fix:** 60% of misclassified documents lacked a clear subject line; a structured intake form could address this without any model changes
+
+We went with a combination of options 1 and 3: phased scope plus the intake form, which brought the auto-route rate to **93% within three weeks** on the reduced document set.
+
+> [!TIP] Leadership does not want a problem dump — they want options with honest tradeoffs. Present "here are three paths, here is my recommendation, here is what I need from you to execute" — not just "we are missing accuracy."
+
+> [!IMPORTANT] Always use the **accuracy threshold** as a business outcome ("3 hours of paralegal time"), not as a model metric ("F1 of 0.87"). Non-technical stakeholders can reason about time and cost, not precision-recall curves.`
         },
         {
           question: 'How do you estimate story points or sprint timelines for agentic workflows, given that prompt engineering and evals are highly iterative and unpredictable?',
-          answer: `Standard story pointing breaks for LLM work for a fundamental reason: the unit of work is not a deterministic transformation. Writing a REST endpoint that persists data to PostgreSQL has bounded complexity once you understand the schema. Writing an agent that reliably extracts structured data from unstructured legal contracts does not — a single formatting edge case can send your pass rate from 90% to 60%, and you will not know it exists until you have run your eval suite. This non-determinism means that effort estimation needs a different model entirely.
+          answer: `Standard story pointing breaks for LLM work for a fundamental reason: the unit of work is **not a deterministic transformation**.
 
-The framework I use separates AI stories into two buckets before any estimation happens. Bucket one is infrastructure: everything deterministic — the API wrapper, the database schema, the tool definitions, the retry logic, the logging pipeline. These stories point exactly like any other backend work. Bucket two is LLM behavior: the prompt, the eval suite, the output parser, the guardrails. These stories get time-boxed spikes instead of points. A spike has a fixed duration — typically two days — and a definition of done that is an eval result, not a shipped feature. "Spend two days iterating on the extraction prompt; we ship this story when the structured-output eval passes at 85% or better on the 50-document test set."
+## Two-Bucket Framework
 
-This spike-first approach does two things. It forces you to write the evals before you write the prompt, which is the right order of operations — if you do not know what success looks like quantitatively, you will iterate forever. It also gives you honest signal for timeline communication. After the spike, you know whether the problem is tractable in two more sprints or whether it needs a fundamentally different approach. That honest signal is far more valuable than a story point estimate that will be wrong by a factor of three.
+Before any estimation, separate AI stories into two buckets:
 
-For agentic workflows specifically — LangGraph-style state machines, multi-tool agents, systems where the LLM is the control plane — complexity drivers include tool reliability (what happens when an external API call fails mid-chain?), state accumulation (does the agent behave correctly on step 12 after 11 previous steps have mutated context?), and edge case discovery rate (the longer the task graph, the more edges there are, and you will find edge cases in production that your eval suite never covered). I add an explicit "edge case budget" of one sprint per major agent capability, reserved for the first month of production traffic. This is not padding — it is a realistic acknowledgment that agentic systems reveal complexity at runtime that is invisible at design time.
+- **Bucket 1 — Infrastructure:** Everything deterministic — the API wrapper, database schema, tool definitions, retry logic, logging pipeline. These stories point exactly like any other backend work.
+- **Bucket 2 — LLM behavior:** The prompt, **eval dataset**, output parser, guardrails. These get **time-boxed spikes** instead of points.
 
-When communicating to stakeholders, I present AI sprint timelines with explicit confidence intervals rather than point estimates. Something like: "If the extraction problem is as tractable as similar work we have done, we can ship in three sprints. If we hit a data-quality wall — which happened on the last project — plan for five. We will know which scenario we are in after the first spike." That framing builds stakeholder trust because it is honest and it gives them a decision point, not a false certainty.`
+A spike has a fixed duration (typically 2 days) and a definition of done that is an **eval result**, not a shipped feature: "Spend two days iterating on the extraction prompt; we ship this story when the structured-output eval passes at 85% or better on the 50-document test set."
+
+\`\`\`
+Sprint Planning Structure
+Story Type        | Estimation   | Done When
+─────────────────────────────────────────────────────
+API wrapper       | 3 pts        | Tests pass
+DB schema         | 2 pts        | Migration deployed
+Prompt iteration  | 2-day spike  | eval_score >= 0.85
+Output parser     | 2-day spike  | 95% parse success
+Guardrail logic   | 1-day spike  | 0 policy violations
+\`\`\`
+
+> [!TIP] Write the evals before you write the prompt — this is the right order of operations. If you don't know what success looks like quantitatively, you'll iterate forever. The spike forces that definition upfront.
+
+## Agentic Workflow Complexity Drivers
+
+For **LangGraph-style** state machines and multi-tool agents, complexity drivers include:
+
+- **Tool reliability** — what happens when an external API call fails mid-chain?
+- **State accumulation** — does the agent behave correctly on step 12 after 11 previous steps have mutated context?
+- **Edge case discovery rate** — the longer the task graph, the more edges, and you'll find cases in production your eval suite never covered
+
+I add an explicit **"edge case budget"** of one sprint per major agent capability, reserved for the first month of production traffic. This is not padding — it is a realistic acknowledgment that agentic systems reveal complexity at runtime that is invisible at design time.
+
+## Communicating to Stakeholders
+
+Present AI sprint timelines with explicit **confidence intervals** rather than point estimates: "If the extraction problem is as tractable as similar work we've done, we can ship in three sprints. If we hit a data-quality wall — which happened on the last project — plan for five. We'll know which scenario we're in after the first spike."
+
+> [!IMPORTANT] That framing builds trust because it is honest and gives stakeholders a decision point, not a false certainty.`
         },
         {
           question: 'How do you balance the need to ship quickly with the need to build robust guardrails and evals?',
-          answer: `The framing of this question as a balance is itself a useful signal to address: the best AI engineering teams do not experience evals and shipping speed as a tradeoff, because they have learned that teams that skip evals consistently pay the cost in production incidents. The question then becomes not "how much eval can we skip to ship faster?" but "what is the minimum viable eval suite that catches the failure modes that matter most for this specific system?"
+          answer: `The framing of this question as a "balance" is itself a useful signal to address: the best AI engineering teams do not experience evals and shipping speed as a tradeoff — teams that skip evals consistently pay the cost in production incidents.
 
-The "eval-first" philosophy I operate from is simple: write your eval suite before you write your first prompt. This sounds counterintuitive because you cannot evaluate something that does not exist yet, but the act of writing evals forces you to define what success looks like quantitatively before you start iterating. Teams that write evals after shipping face the same problem as teams that write tests after shipping — by the time you are adding coverage, you have already shipped bugs and the pressure to move on to the next feature is overwhelming.
+## Eval-First Philosophy
 
-For minimum viable guardrails, I think in terms of blast radius. A customer-facing financial agent that can initiate wire transfers needs a fundamentally different guardrail stack than an internal search tool that retrieves documents. For the financial agent: output schema validation to ensure every response has a required structured field before any action is taken, a confidence threshold below which the agent defers to a human, a rate limit per user, and a full audit log of every decision with the prompt and output. For the internal search tool: schema validation and a basic content filter, nothing more. The difference is not laziness on the search tool — it is a deliberate risk-proportional investment.
+Write your **eval dataset** before you write your first prompt. This sounds counterintuitive — you cannot evaluate something that doesn't exist — but it forces you to define what success looks like quantitatively before you start iterating. Teams that write evals after shipping face the same problem as teams that write tests after shipping: by the time you're adding coverage, you've already shipped bugs.
 
-The pattern I rely on most for shipping quickly without sacrificing safety is shadow mode deployment. You ship the new AI system to 1-5% of traffic in a read-only or logged-but-not-executed mode for the first week. Real production inputs run through the model, real outputs are logged and compared to the existing system's behavior, but no user-facing action is taken. This gives you a week of real distribution data against your eval suite at essentially zero risk. You find the edge cases that your eval set missed — and you always find them — before they cause a user-visible incident.
+## Guardrails Proportional to Blast Radius
 
-Modern tooling makes the eval layer much cheaper to build than it was even two years ago. Promptfoo lets you define an eval suite in YAML and run it in CI on every prompt change. DeepEval and Ragas provide off-the-shelf metrics for RAG faithfulness, answer relevance, and hallucination detection. If you are not running evals in CI, you are doing prompt engineering in the dark, and every production incident is a delayed eval result. Teams that treat evals as a first-class engineering artifact — owned by the same engineers who own the model, living in the same repo, gating every prompt change — are the teams that can actually ship quickly and safely, because they have replaced gut-feel decisions with measurement.`
+For minimum viable guardrails, think in terms of **blast radius**:
+
+- **Customer-facing financial agent** (can initiate wire transfers): output schema validation, confidence threshold for human deferral, rate limit per user, full audit log of every decision with prompt and output
+- **Internal search tool** (retrieves documents): schema validation and basic content filter, nothing more
+
+> [!IMPORTANT] The difference is not laziness on the search tool — it is a **deliberate risk-proportional investment**. Over-engineering guardrails on low-risk tools wastes engineering time that should go toward eval coverage on high-risk ones.
+
+## Shadow Mode Deployment
+
+The pattern I rely on most for shipping quickly without sacrificing safety is **shadow mode** deployment:
+
+- Ship the new AI system to 1-5% of traffic in **read-only or logged-but-not-executed mode** for the first week
+- Real production inputs run through the model, real outputs are logged and compared to the existing system's behavior
+- No user-facing action is taken
+
+This gives you a week of real distribution data against your eval suite at essentially zero risk. You find the edge cases your eval set missed — and you always find them — before they cause a user-visible incident.
+
+## Modern Eval Tooling
+
+- **Promptfoo** — define an eval suite in YAML and run it in CI on every prompt change
+- **DeepEval** and Ragas — off-the-shelf metrics for RAG faithfulness, answer relevance, and hallucination detection
+
+> [!TIP] If you are not running evals in CI, you are doing prompt engineering in the dark, and every production incident is a delayed eval result. Teams that treat evals as a first-class engineering artifact — living in the same repo, gating every prompt change — are the teams that can actually ship quickly and safely.`
         },
       ],
       tips: [
