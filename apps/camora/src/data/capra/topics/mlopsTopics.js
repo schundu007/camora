@@ -45,35 +45,35 @@ export const mlopsTopics = [
     description: 'End-to-end machine-learning lifecycle as an engineering discipline — data ingestion, feature engineering, training, evaluation, registration, deployment, monitoring, retraining. Covers CI for ML (data validation, model tests), CD for ML (canary, shadow, A/B), Google MLOps maturity 0/1/2, and 2026 platforms.',
     introduction: `## Why MLOps Exists
 
-**MLOps** is the discipline of applying DevOps principles to machine-learning systems. Where DevOps versions code and configuration, MLOps versions **code, data, features, models, and the training pipeline itself**. The goal is to shorten the cycle from idea to production model and then keep that model performing reliably over time.
+MLOps is the discipline of applying DevOps principles to machine-learning systems. Where DevOps versions code and configuration, MLOps versions code, data, features, models, and the training pipeline itself. The goal is to shorten the cycle from idea to production model and then keep that model performing reliably over time.
 
 A model trained once and never retouched will degrade. Data distributions shift, labels become stale, upstream schemas change, and business rules evolve. Without systematic processes, teams discover model failures from user complaints rather than monitoring dashboards. MLOps builds the discipline that catches these failures early and closes the loop from detection back to retraining.
 
 ## The Eight-Stage Lifecycle
 
-- **Data ingestion** — raw data from operational sources (Kafka, CDC, batch exports, REST APIs) flows into a data lake or warehouse where schema is enforced and lineage is recorded
-- **Feature engineering** — transforms raw rows into model inputs across offline batch (training) and low-latency online (inference) paths; this is exactly the problem feature stores solve
-- **Training** — produces an artifact tracked in an experiment store with full reproducibility metadata: dataset hash, git SHA, container digest, random seeds
-- **Evaluation** — gates the artifact against a frozen holdout set, per-segment fairness slices, and business-metric proxies before registration
-- **Registration** — artifact enters the model registry with stage, signature, and lineage attached
-- **Deployment** — moves the registered artifact into serving via **canary** (small real traffic), **shadow** (mirrored, predictions never returned), or **A/B** (split users for statistical comparison)
-- **Monitoring** — watches operational signals (latency, error rate) and model-quality signals (input drift, output distribution, delayed performance)
-- **Retraining** — triggered when signals cross thresholds, completing the closed loop that distinguishes MLOps from one-off model training
+- Data ingestion — raw data from operational sources (Kafka, CDC, batch exports, REST APIs) flows into a data lake or warehouse where schema is enforced and lineage is recorded
+- Feature engineering — transforms raw rows into model inputs across offline batch (training) and low-latency online (inference) paths; this is exactly the problem feature stores solve
+- Training — produces an artifact tracked in an experiment store with full reproducibility metadata: dataset hash, git SHA, container digest, random seeds
+- Evaluation — gates the artifact against a frozen holdout set, per-segment fairness slices, and business-metric proxies before registration
+- Registration — artifact enters the model registry with stage, signature, and lineage attached
+- Deployment — moves the registered artifact into serving via canary (small real traffic), shadow (mirrored, predictions never returned), or A/B (split users for statistical comparison)
+- Monitoring — watches operational signals (latency, error rate) and model-quality signals (input drift, output distribution, delayed performance)
+- Retraining — triggered when signals cross thresholds, completing the closed loop that distinguishes MLOps from one-off model training
 
 ## Google MLOps Maturity Levels
 
-- **Level 0 — Manual**: data scientists work in notebooks, hand off pickle files, engineers re-implement feature pipelines. Most companies live here.
-- **Level 1 — Pipeline automation**: training code runs on schedule or data trigger, models flow through a registry, continuous training with manual deployment gates.
-- **Level 2 — CI/CD automation**: new code → new training pipeline → new registered model → automatic deployment. The standard for high-volume recommendation, search, and ads systems.
+- Level 0 — Manual: data scientists work in notebooks, hand off pickle files, engineers re-implement feature pipelines. Most companies live here.
+- Level 1 — Pipeline automation: training code runs on schedule or data trigger, models flow through a registry, continuous training with manual deployment gates.
+- Level 2 — CI/CD automation: new code → new training pipeline → new registered model → automatic deployment. The standard for high-volume recommendation, search, and ads systems.
 
 ## The 2026 Platform Landscape
 
-- **Databricks** — Lakehouse + MLflow + Feature Store + Model Serving; dominates Spark/Delta Lake teams
-- **Vertex AI** (GCP), **SageMaker** (AWS), **Azure ML** — integrated managed pipelines per cloud
-- **Open-source stack** — MLflow + Kubeflow Pipelines + Feast + KServe + Evidently; popular for cloud-agnostic setups
-- **Weights & Biases** — experiment tracking and model registry with strong UX for deep learning teams
+- Databricks — Lakehouse + MLflow + Feature Store + Model Serving; dominates Spark/Delta Lake teams
+- Vertex AI (GCP), SageMaker (AWS), Azure ML — integrated managed pipelines per cloud
+- Open-source stack — MLflow + Kubeflow Pipelines + Feast + KServe + Evidently; popular for cloud-agnostic setups
+- Weights & Biases — experiment tracking and model registry with strong UX for deep learning teams
 
-> [!TIP] MLOps maturity is a function of **release cadence**, not tooling sophistication. A team retraining quarterly does not need Level 2 automation; a team retraining hourly cannot survive without it.`,
+> [!TIP] MLOps maturity is a function of release cadence, not tooling sophistication. A team retraining quarterly does not need Level 2 automation; a team retraining hourly cannot survive without it.`,
     quickFire: [
       { q: 'Define MLOps in one sentence.', a: 'DevOps principles applied to ML -- versioning code, data, features, and models while automating training, deployment, and monitoring.' },
       { q: 'What are the eight MLOps lifecycle stages?', a: 'Data ingestion, feature engineering, training, evaluation, registration, deployment, monitoring, retraining.' },
@@ -287,37 +287,37 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Centralized service for computing, storing, and serving features for both training and inference — eliminates training-serving skew and enables feature reuse. Feast (OSS), Tecton (commercial), Hopsworks, SageMaker FS, Vertex FS, Databricks FS.',
     introduction: `## The Core Problem: Training-Serving Skew
 
-A **feature store** is a centralized system that computes, stores, and serves ML features consistently to two consumers: the training pipeline (offline) and the inference service (online). It exists to solve a single critical problem — **training-serving skew** — and then earns its keep by enabling feature reuse across teams and models.
+A feature store is a centralized system that computes, stores, and serves ML features consistently to two consumers: the training pipeline (offline) and the inference service (online). It exists to solve a single critical problem — training-serving skew — and then earns its keep by enabling feature reuse across teams and models.
 
-**Training-serving skew** is the most common ML production failure. A data scientist computes a feature in SQL on the warehouse — average transaction value over the last 30 days. An engineer re-implements it in the production service using streaming aggregations. Subtle differences in window boundaries, timezone handling, or null semantics produce features that disagree by a few percent. The model, trained on the warehouse version, performs worse in production than in offline evaluation — but the gap is nearly invisible in logs because no one is comparing feature values across environments.
+Training-serving skew is the most common ML production failure. A data scientist computes a feature in SQL on the warehouse — average transaction value over the last 30 days. An engineer re-implements it in the production service using streaming aggregations. Subtle differences in window boundaries, timezone handling, or null semantics produce features that disagree by a few percent. The model, trained on the warehouse version, performs worse in production than in offline evaluation — but the gap is nearly invisible in logs because no one is comparing feature values across environments.
 
 ## Architecture: Four Components
 
 Every feature store has four logical components:
 
-- **Feature definition registry** — stores feature logic as code (Python decorator, SQL transform, or YAML spec) that is versioned and shared
-- **Offline store** — holds historical feature values for training and batch scoring in a warehouse or lake (BigQuery, Snowflake, Delta Lake, Iceberg on S3)
-- **Online store** — holds the latest feature values for low-latency serving in a key-value store (Redis, DynamoDB, Bigtable, Cassandra) at single-digit-millisecond read latency
-- **Materialization engine** — computes features (batch via Spark or dbt, streaming via Flink or Spark Streaming) and writes both stores consistently
+- Feature definition registry — stores feature logic as code (Python decorator, SQL transform, or YAML spec) that is versioned and shared
+- Offline store — holds historical feature values for training and batch scoring in a warehouse or lake (BigQuery, Snowflake, Delta Lake, Iceberg on S3)
+- Online store — holds the latest feature values for low-latency serving in a key-value store (Redis, DynamoDB, Bigtable, Cassandra) at single-digit-millisecond read latency
+- Materialization engine — computes features (batch via Spark or dbt, streaming via Flink or Spark Streaming) and writes both stores consistently
 
 ## Point-in-Time Correctness
 
-**Point-in-time correctness** is the technical heart of feature store design. When training a model on a label event from 14 days ago, every feature value joined to that event must reflect what it was **at that moment** — not its current value.
+Point-in-time correctness is the technical heart of feature store design. When training a model on a label event from 14 days ago, every feature value joined to that event must reflect what it was at that moment — not its current value.
 
 A naive join leaks future information into the training set. The model appears to perform well on a test set because it saw data it would not have had at inference time — then it collapses in production.
 
-Feature stores implement **point-in-time joins** (also called **as-of joins**): for each label event at time T, fetch the feature row with the latest timestamp ≤ T.
+Feature stores implement point-in-time joins (also called as-of joins): for each label event at time T, fetch the feature row with the latest timestamp ≤ T.
 
 ## The 2026 Vendor Landscape
 
-- **Feast** (OSS) — originated at Gojek 2018, open-sourced 2019; bring-your-own-infrastructure model (you supply offline + online stores)
-- **Tecton** (commercial) — founded by the Uber Michelangelo team; managed infra, sub-50ms serving, streaming support, built-in monitoring
-- **Hopsworks** — strong for regulated and on-premises deployments
-- **Cloud-native** — Databricks Feature Store, Vertex AI Feature Store, SageMaker Feature Store — default for teams committed to those platforms
+- Feast (OSS) — originated at Gojek 2018, open-sourced 2019; bring-your-own-infrastructure model (you supply offline + online stores)
+- Tecton (commercial) — founded by the Uber Michelangelo team; managed infra, sub-50ms serving, streaming support, built-in monitoring
+- Hopsworks — strong for regulated and on-premises deployments
+- Cloud-native — Databricks Feature Store, Vertex AI Feature Store, SageMaker Feature Store — default for teams committed to those platforms
 
 ## When to Use a Feature Store
 
-> [!TIP] A feature store is justified when **multiple models share features**, online inference runs at high QPS with latency SLOs, streaming features must be consistent, or multiple teams need shared governance.
+> [!TIP] A feature store is justified when multiple models share features, online inference runs at high QPS with latency SLOs, streaming features must be consistent, or multiple teams need shared governance.
 
 It is over-engineering for a single team with one batch model and three features. The boundary: more than one team with more than one online model.`,
     quickFire: [
@@ -520,42 +520,42 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Centralized versioned store for trained models — the boundary between research and production. Covers staging lifecycle, lineage, model cards, and the 2026 registry landscape (MLflow as default OSS, W&B Models, Vertex/SageMaker registries, Hugging Face Hub for foundation models).',
     introduction: `## What a Registry Stores
 
-A **model registry** is a versioned catalog of trained model artifacts — the formal boundary between the research environment and the production deployment pipeline. Without a registry, "the production model" is whatever pickle file an engineer last uploaded to S3 with a timestamped filename.
+A model registry is a versioned catalog of trained model artifacts — the formal boundary between the research environment and the production deployment pipeline. Without a registry, "the production model" is whatever pickle file an engineer last uploaded to S3 with a timestamped filename.
 
 Every model version carries:
-- **Artifact reference** — pointer to weights in object storage plus a cryptographic hash
-- **Version number** — monotonically increasing, immutable
-- **Lifecycle stage** — None → Staging → Production → Archived
-- **Model signature** — input and output schema enforced at deploy time
-- **Lineage** — training run ID, dataset version, git SHA, hyperparameters, metrics, environment digest
-- **Model card** — intended use, training data, performance by slice, limitations
+- Artifact reference — pointer to weights in object storage plus a cryptographic hash
+- Version number — monotonically increasing, immutable
+- Lifecycle stage — None → Staging → Production → Archived
+- Model signature — input and output schema enforced at deploy time
+- Lineage — training run ID, dataset version, git SHA, hyperparameters, metrics, environment digest
+- Model card — intended use, training data, performance by slice, limitations
 
 ## The Promotion Lifecycle
 
-A model enters the registry after training with stage **None**. After automated tests pass (signature verification, holdout evaluation, behavioral tests), it is promoted to **Staging**. Human approval or an automated gate promotes it to **Production**, where the serving layer polls for the current version or receives a webhook notification. The previous Production version moves to **Archived** — retained for rollback but not actively served.
+A model enters the registry after training with stage None. After automated tests pass (signature verification, holdout evaluation, behavioral tests), it is promoted to Staging. Human approval or an automated gate promotes it to Production, where the serving layer polls for the current version or receives a webhook notification. The previous Production version moves to Archived — retained for rollback but not actively served.
 
 > [!TIP] Rollback is a registry operation: promote the previous Archived version back to Production. The serving layer picks it up automatically — no manual file swaps.
 
 ## MLflow in Depth
 
-**MLflow** is the dominant open-source registry, originated at Databricks in 2018, donated to LF AI and Data in 2020. Four components:
+MLflow is the dominant open-source registry, originated at Databricks in 2018, donated to LF AI and Data in 2020. Four components:
 
-- **Tracking** — experiments, runs, parameters, metrics, artifacts
-- **Models** — the MLmodel standardized format that packages weights and their loading flavor
-- **Model Registry** — versioned catalog with stages/aliases
-- **Projects** — reproducible code packaging (less widely adopted)
+- Tracking — experiments, runs, parameters, metrics, artifacts
+- Models — the MLmodel standardized format that packages weights and their loading flavor
+- Model Registry — versioned catalog with stages/aliases
+- Projects — reproducible code packaging (less widely adopted)
 
-The **pyfunc flavor** is the lowest-common-denominator interface — any MLflow model can be called as a Python predict function regardless of the underlying framework.
+The pyfunc flavor is the lowest-common-denominator interface — any MLflow model can be called as a Python predict function regardless of the underlying framework.
 
-**MLflow 2.x** deprecated hard-coded stages in favor of **aliases** (\`champion\`, \`challenger\`, \`production-blue\`), enabling multiple concurrent production versions. **MLflow 3.0** added Prompts and Evaluation as first-class objects and deepened autologging for LangChain, LlamaIndex, and Anthropic.
+MLflow 2.x deprecated hard-coded stages in favor of aliases (\`champion\`, \`challenger\`, \`production-blue\`), enabling multiple concurrent production versions. MLflow 3.0 added Prompts and Evaluation as first-class objects and deepened autologging for LangChain, LlamaIndex, and Anthropic.
 
 ## The 2026 Landscape
 
-- **Weights & Biases Models** — strongest deep-learning workflow: lineage graphs, visual comparison, native W&B integration
-- **Vertex AI Model Registry**, **SageMaker Model Registry**, **Azure ML** — pragmatic default for cloud-committed teams
-- **Hugging Face Hub** — de facto registry for foundation model weights: open and gated models, standardized model cards, dataset lineage
+- Weights & Biases Models — strongest deep-learning workflow: lineage graphs, visual comparison, native W&B integration
+- Vertex AI Model Registry, SageMaker Model Registry, Azure ML — pragmatic default for cloud-committed teams
+- Hugging Face Hub — de facto registry for foundation model weights: open and gated models, standardized model cards, dataset lineage
 
-> [!IMPORTANT] The registry is **governance infrastructure**. Its value is auditability: an organization should be able to answer "what is in production, why, and what would we roll back to?" in seconds.`,
+> [!IMPORTANT] The registry is governance infrastructure. Its value is auditability: an organization should be able to answer "what is in production, why, and what would we roll back to?" in seconds.`,
     quickFire: [
       { q: 'What is a model registry in one sentence?', a: 'A versioned catalog of trained model artifacts with lifecycle stages, lineage, signatures, and model cards -- the boundary between research and production.' },
       { q: 'What are the standard model registry stages?', a: 'None, Staging, Production, Archived. MLflow 2.x replaced hard-coded stages with flexible aliases like champion and challenger.' },
@@ -784,32 +784,32 @@ Production model serving is the discipline of taking a registered model artifact
 
 Production requirements cluster into six areas:
 
-- **Low and predictable latency** — meeting p50 and p99 SLOs with cold-start mitigation
-- **Autoscaling** — horizontal pod scaling on request rate or GPU utilization, with scale-to-zero for cost efficiency
-- **Multi-framework support** — same infrastructure handles sklearn, XGBoost, PyTorch, TensorFlow, ONNX, and LLMs
-- **GPU efficiency** — batching inflight requests, sharing GPU memory across multiple small models, hardware partitioning
-- **Observability** — per-request latency, per-model throughput, prediction logging, canary-level traffic splitting
-- **Controlled rollout** — canary, shadow, and A/B traffic management at the serving layer
+- Low and predictable latency — meeting p50 and p99 SLOs with cold-start mitigation
+- Autoscaling — horizontal pod scaling on request rate or GPU utilization, with scale-to-zero for cost efficiency
+- Multi-framework support — same infrastructure handles sklearn, XGBoost, PyTorch, TensorFlow, ONNX, and LLMs
+- GPU efficiency — batching inflight requests, sharing GPU memory across multiple small models, hardware partitioning
+- Observability — per-request latency, per-model throughput, prediction logging, canary-level traffic splitting
+- Controlled rollout — canary, shadow, and A/B traffic management at the serving layer
 
 ## KServe
 
-**KServe** (formerly KFServing) is the dominant Kubernetes-native model serving framework. It defines an \`InferenceService\` Custom Resource Definition (CRD) that declares the model URI, framework runtime, autoscaling configuration, and canary split in a single YAML manifest.
+KServe (formerly KFServing) is the dominant Kubernetes-native model serving framework. It defines an \`InferenceService\` Custom Resource Definition (CRD) that declares the model URI, framework runtime, autoscaling configuration, and canary split in a single YAML manifest.
 
-Two modes: **individual deployments** (one pod per model) and **ModelMesh** (many small models share a pool of pods, reducing overhead for large catalogs). Serverless mode uses Knative for scale-to-zero. KServe is the default serving layer in Kubeflow and is CNCF-incubating.
+Two modes: individual deployments (one pod per model) and ModelMesh (many small models share a pool of pods, reducing overhead for large catalogs). Serverless mode uses Knative for scale-to-zero. KServe is the default serving layer in Kubeflow and is CNCF-incubating.
 
 ## BentoML
 
-**BentoML** is a Python-first framework where developers write a Python class with decorated API endpoints, and BentoML handles packaging and deployment. A **Bento** is the versioned, immutable artifact — model weights, code, and dependencies combined. **Yatai** is BentoML's Kubernetes operator.
+BentoML is a Python-first framework where developers write a Python class with decorated API endpoints, and BentoML handles packaging and deployment. A Bento is the versioned, immutable artifact — model weights, code, and dependencies combined. Yatai is BentoML's Kubernetes operator.
 
 > [!TIP] BentoML is the right choice for Python-native teams who want to stay in Python and avoid writing YAML-heavy serving configurations.
 
 ## NVIDIA Triton
 
-**NVIDIA Triton Inference Server** is the GPU-optimized multi-framework runtime supporting TensorFlow, PyTorch, ONNX, TensorRT, OpenVINO, and Python backends. Key features:
+NVIDIA Triton Inference Server is the GPU-optimized multi-framework runtime supporting TensorFlow, PyTorch, ONNX, TensorRT, OpenVINO, and Python backends. Key features:
 
-- **Dynamic batching** — coalescing concurrent requests into one GPU forward pass
-- **Model concurrency** — multiple model instances within one Triton process
-- **Ensemble pipelines** — multi-step inference graphs
+- Dynamic batching — coalescing concurrent requests into one GPU forward pass
+- Model concurrency — multiple model instances within one Triton process
+- Ensemble pipelines — multi-step inference graphs
 
 Triton is the default for high-throughput GPU inference outside of LLM workloads.
 
@@ -819,11 +819,11 @@ Three mechanisms for sharing GPU resources — ordered by isolation quality:
 
 | Mechanism | Level | Isolation | Hardware |
 |-----------|-------|-----------|----------|
-| **MIG** (Multi-Instance GPU) | Hardware partition | Full (memory + compute) | A100/H100 only |
-| **MPS** (Multi-Process Service) | Software sharing | Partial (no memory isolation) | Any NVIDIA GPU |
-| **Time-slicing** | Context switching | None | Any NVIDIA GPU |
+| MIG (Multi-Instance GPU) | Hardware partition | Full (memory + compute) | A100/H100 only |
+| MPS (Multi-Process Service) | Software sharing | Partial (no memory isolation) | Any NVIDIA GPU |
+| Time-slicing | Context switching | None | Any NVIDIA GPU |
 
-> [!WARNING] For multi-tenant serving, **MIG** is the correct production choice when hardware supports it. Time-slicing causes unpredictable latency spikes due to context switching with no memory isolation.`,
+> [!WARNING] For multi-tenant serving, MIG is the correct production choice when hardware supports it. Time-slicing causes unpredictable latency spikes due to context switching with no memory isolation.`,
     quickFire: [
       { q: 'What is KServe and what does InferenceService provide?', a: 'CNCF-incubating Kubernetes-native model serving framework. InferenceService CRD declares model URI, framework, autoscaling, and canary split in a single manifest.' },
       { q: 'What is BentoML and when is it the right choice?', a: 'Python-first serving framework -- you write Python classes with API decorators and BentoML packages and deploys them. Right for Python-native teams who want code over YAML.' },
@@ -1050,32 +1050,32 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Detecting when production models degrade — covariate shift, concept drift, label drift, prior probability shift. Detection methods (KS test, PSI, JS divergence, embedding distance), 2026 monitoring vendor landscape (Evidently, Arize, Fiddler, WhyLabs, Datadog, Aporia), retraining triggers, delayed-label problem.',
     introduction: `## The Four Drift Types
 
-A model deployed to production assumes the world it was trained on continues to exist. "**Drift**" is the umbrella term for distribution shifts that degrade predictions.
+A model deployed to production assumes the world it was trained on continues to exist. "Drift" is the umbrella term for distribution shifts that degrade predictions.
 
-- **Covariate shift** — P(X) changes while P(Y|X) remains constant. Input feature distributions shift (e.g., mobile payments dominating 2026 traffic vs. desktop-heavy 2024 training data). The model's logic is still valid but it has never seen these inputs. Detectable from input data alone, no labels required.
-- **Concept drift** — P(Y|X) itself changes. The same inputs now map to different correct outputs (fraudsters adapted their patterns). Requires ground truth labels to detect directly — leads to the delayed-label problem.
-- **Label drift (prior probability shift)** — P(Y) changes. Fraud rate goes from 1% to 3%; calibrated probabilities tuned for 1% now systematically underestimate risk.
-- **Performance decay** — the outcome symptom: model quality degrades against ground truth. The other three types are causes. Monitoring should detect causes early, before decay reaches users.
+- Covariate shift — P(X) changes while P(Y|X) remains constant. Input feature distributions shift (e.g., mobile payments dominating 2026 traffic vs. desktop-heavy 2024 training data). The model's logic is still valid but it has never seen these inputs. Detectable from input data alone, no labels required.
+- Concept drift — P(Y|X) itself changes. The same inputs now map to different correct outputs (fraudsters adapted their patterns). Requires ground truth labels to detect directly — leads to the delayed-label problem.
+- Label drift (prior probability shift) — P(Y) changes. Fraud rate goes from 1% to 3%; calibrated probabilities tuned for 1% now systematically underestimate risk.
+- Performance decay — the outcome symptom: model quality degrades against ground truth. The other three types are causes. Monitoring should detect causes early, before decay reaches users.
 
 ## Detection Methods
 
 | Method | Best For | Formula/Notes |
 |--------|----------|---------------|
-| **PSI** (Population Stability Index) | Tabular features | < 0.1 stable, 0.1–0.25 moderate, > 0.25 significant |
-| **KS test** | Continuous distributions | Two-sample non-parametric comparison |
-| **Jensen-Shannon divergence** | Categorical / binned features | Symmetric bounded version of KL divergence |
-| **MMD** (Maximum Mean Discrepancy) | High-dimensional embeddings | Kernel-based, no binning required |
-| **Domain classifier** | Any feature type | Train classifier to distinguish reference vs current; high accuracy = drift present |
+| PSI (Population Stability Index) | Tabular features | < 0.1 stable, 0.1–0.25 moderate, > 0.25 significant |
+| KS test | Continuous distributions | Two-sample non-parametric comparison |
+| Jensen-Shannon divergence | Categorical / binned features | Symmetric bounded version of KL divergence |
+| MMD (Maximum Mean Discrepancy) | High-dimensional embeddings | Kernel-based, no binning required |
+| Domain classifier | Any feature type | Train classifier to distinguish reference vs current; high accuracy = drift present |
 
 ## The 2026 Monitoring Landscape
 
-- **Evidently AI** (OSS) — most widely adopted for tabular drift monitoring with prebuilt dashboards and CI integration
-- **Arize AI** — leads on embedding and LLM observability
-- **Fiddler AI** — strong in regulated finance with explainability integration
-- **WhyLabs** — provides whylogs, a lightweight profiling library for distributed pipeline stages
-- **Cloud-native** — SageMaker Model Monitor, Vertex AI Model Monitoring, Azure ML Data Drift Monitor
+- Evidently AI (OSS) — most widely adopted for tabular drift monitoring with prebuilt dashboards and CI integration
+- Arize AI — leads on embedding and LLM observability
+- Fiddler AI — strong in regulated finance with explainability integration
+- WhyLabs — provides whylogs, a lightweight profiling library for distributed pipeline stages
+- Cloud-native — SageMaker Model Monitor, Vertex AI Model Monitoring, Azure ML Data Drift Monitor
 
-> [!WARNING] The **delayed-label problem** is the hardest practical challenge: many real systems receive labels weeks or months after prediction (loan default at 60 days, churn at billing period). Without recent labels you cannot compute current performance directly. Mitigations: input drift monitoring, predicted-distribution monitoring, early proxy signals, and a manually-labeled reference panel.`,
+> [!WARNING] The delayed-label problem is the hardest practical challenge: many real systems receive labels weeks or months after prediction (loan default at 60 days, churn at billing period). Without recent labels you cannot compute current performance directly. Mitigations: input drift monitoring, predicted-distribution monitoring, early proxy signals, and a manually-labeled reference panel.`,
     quickFire: [
       { q: 'What is covariate shift?', a: 'P(X) changes -- input feature distributions shift -- while P(Y|X) remains constant. Detectable from input data without labels.' },
       { q: 'What is concept drift?', a: 'P(Y|X) changes -- the same inputs map to different correct outputs. Requires labels to detect directly.' },
@@ -1307,52 +1307,52 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'LLMOps as the LLM-shaped subset of MLOps — prompt versioning, evaluation harnesses, RAG observability, cost/token tracking, output guardrails. 2026 tooling: LangSmith, Promptfoo, Helicone, Patronus, OpenAI Evals, Guardrails AI, NeMo Guardrails.',
     introduction: `## What Changes Compared to Classical MLOps
 
-**LLMOps** is what MLOps becomes when the artifact you ship is not a set of learned weights but a system built on top of foundation models — prompts, retrieval pipelines, tool definitions, and orchestration logic.
+LLMOps is what MLOps becomes when the artifact you ship is not a set of learned weights but a system built on top of foundation models — prompts, retrieval pipelines, tool definitions, and orchestration logic.
 
-In classical MLOps the primary artifact is a **trained model**; training produces it; deployment puts it behind an endpoint. In LLMOps the primary artifacts are **prompts and retrieval configuration**; you orchestrate a foundation model rather than train from scratch; quality is determined by prompt design and retrieval quality, not weight optimization.
+In classical MLOps the primary artifact is a trained model; training produces it; deployment puts it behind an endpoint. In LLMOps the primary artifacts are prompts and retrieval configuration; you orchestrate a foundation model rather than train from scratch; quality is determined by prompt design and retrieval quality, not weight optimization.
 
 This shifts the entire evaluation problem: you cannot use a standard holdout set with deterministic metrics because LLM outputs are open-ended text.
 
 The three pillars of LLMOps:
-- **Prompt versioning** — prompts as code, versioned and tested in CI
-- **Evaluation** — subjective quality measurement at scale
-- **Observability** — full-chain tracing from query through retrieval through generation
+- Prompt versioning — prompts as code, versioned and tested in CI
+- Evaluation — subjective quality measurement at scale
+- Observability — full-chain tracing from query through retrieval through generation
 
 ## Prompts as Code
 
-A prompt is a **versioned artifact with tests**. It lives in a repository, is reviewed in PRs, and is tested before merging.
+A prompt is a versioned artifact with tests. It lives in a repository, is reviewed in PRs, and is tested before merging.
 
-Tooling: **LangSmith Prompts**, **MLflow 3 Prompts**, PromptLayer, Humanloop, W&B Weave — provide a registry for prompt versions with lineage back to eval results. **Promptfoo** is the leading open-source CLI for running eval suites against prompts in CI.
+Tooling: LangSmith Prompts, MLflow 3 Prompts, PromptLayer, Humanloop, W&B Weave — provide a registry for prompt versions with lineage back to eval results. Promptfoo is the leading open-source CLI for running eval suites against prompts in CI.
 
 ## Evaluation Methodology
 
 | Approach | Best For | Limitation |
 |----------|----------|------------|
-| **Reference-based** | Narrow tasks (extraction, classification) | Requires known-correct answers |
-| **LLM-as-judge** | Open-ended generation at scale | Verbosity bias, position bias, model-family bias |
-| **Human evaluation** | Ground truth calibration | Expensive, slow |
-| **Pairwise preference** | Reducing absolute-score bias | Technique behind ChatBot Arena |
-| **Behavioral / red-team** | Jailbreaks, hallucinations, PII leakage | Requires adversarial test design |
+| Reference-based | Narrow tasks (extraction, classification) | Requires known-correct answers |
+| LLM-as-judge | Open-ended generation at scale | Verbosity bias, position bias, model-family bias |
+| Human evaluation | Ground truth calibration | Expensive, slow |
+| Pairwise preference | Reducing absolute-score bias | Technique behind ChatBot Arena |
+| Behavioral / red-team | Jailbreaks, hallucinations, PII leakage | Requires adversarial test design |
 
 ## RAG Observability and Cost Tracking
 
-RAG systems add a retrieval layer whose quality directly determines answer quality. The **four Ragas metrics**:
+RAG systems add a retrieval layer whose quality directly determines answer quality. The four Ragas metrics:
 
-- **Faithfulness** — is the answer grounded in retrieved context?
-- **Answer relevance** — does it address the query?
-- **Context precision** — are retrieved chunks relevant?
-- **Context recall** — did retrieval find the answer?
+- Faithfulness — is the answer grounded in retrieved context?
+- Answer relevance — does it address the query?
+- Context precision — are retrieved chunks relevant?
+- Context recall — did retrieval find the answer?
 
-For cost tracking: **LiteLLM** and **Helicone** provide proxy-level cost tracking across providers. **Prompt caching** (Anthropic, OpenAI) reduces costs by **80-90%** on repeated prompt prefixes.
+For cost tracking: LiteLLM and Helicone provide proxy-level cost tracking across providers. Prompt caching (Anthropic, OpenAI) reduces costs by 80-90% on repeated prompt prefixes.
 
 ## Guardrails
 
 LLM outputs can leak PII, generate unsafe content, or produce malformed structured outputs:
 
-- **Guardrails AI** — Pythonic schema-and-rule validation layer
-- **NVIDIA NeMo Guardrails** — programmable dialog flow control
-- **LlamaGuard** (Meta) — fine-tuned safety classifier
-- **Bedrock Guardrails**, **Azure Content Safety** — cloud-native managed options`,
+- Guardrails AI — Pythonic schema-and-rule validation layer
+- NVIDIA NeMo Guardrails — programmable dialog flow control
+- LlamaGuard (Meta) — fine-tuned safety classifier
+- Bedrock Guardrails, Azure Content Safety — cloud-native managed options`,
     quickFire: [
       { q: 'What is LLMOps and how does it differ from MLOps?', a: 'MLOps applied to LLM-based applications -- the artifacts are prompts, retrieval configs, and tools rather than trained weights, so evaluation and versioning concerns are different.' },
       { q: 'What are the three pillars of LLMOps?', a: 'Prompt versioning (prompts as code with CI tests), evaluation (quality measurement at scale), and observability (full-chain tracing through retrieval and generation).' },
@@ -1428,25 +1428,25 @@ Model routing assigns requests to the cheapest model that can handle them satisf
       },
       {
         question: 'If we want to update the system prompt for our core agent, how do you mathematically prove to me that the new prompt is better than the old one before we merge the PR?',
-        answer: `Saying a new prompt "looks better" is subjective and unreproducible. A PR that changes the system prompt for a production agent needs the same rigor as a PR that changes a sorting algorithm: **quantitative evidence** that the change improves the target metrics and does not regress any existing ones.
+        answer: `Saying a new prompt "looks better" is subjective and unreproducible. A PR that changes the system prompt for a production agent needs the same rigor as a PR that changes a sorting algorithm: quantitative evidence that the change improves the target metrics and does not regress any existing ones.
 
 ## Step 1: Build the Eval Dataset First
 
-Build an **eval dataset** before writing the new prompt. The dataset has three categories:
+Build an eval dataset before writing the new prompt. The dataset has three categories:
 
-- **Golden QA pairs** — hand-curated examples where the correct answer is unambiguous, covering the core use cases the agent handles
-- **Adversarial inputs** — prompt injections, edge-case queries, queries outside the agent's scope, known failure cases from the old prompt
-- **Regression cases** — drawn from production logs, labeled by humans or a judge model, covering the long tail of real queries
+- Golden QA pairs — hand-curated examples where the correct answer is unambiguous, covering the core use cases the agent handles
+- Adversarial inputs — prompt injections, edge-case queries, queries outside the agent's scope, known failure cases from the old prompt
+- Regression cases — drawn from production logs, labeled by humans or a judge model, covering the long tail of real queries
 
 Minimum of 50-100 examples for statistical power; 200+ is better for catching subtle regressions.
 
 ## Step 2: Choose the Right Metrics
 
-For narrow extractive tasks (classification, structured extraction), **ROUGE** and **BLEU** provide reference-based scores. For open-ended generation — which covers most agentic tasks — these fail because they penalize valid paraphrases. Use **LLM-as-judge** instead.
+For narrow extractive tasks (classification, structured extraction), ROUGE and BLEU provide reference-based scores. For open-ended generation — which covers most agentic tasks — these fail because they penalize valid paraphrases. Use LLM-as-judge instead.
 
 ## Step 3: LLM-as-Judge Rubric
 
-Use a strong judge model — **Claude Opus** or **GPT-4o**, never the same model family as the one being evaluated — to score each output:
+Use a strong judge model — Claude Opus or GPT-4o, never the same model family as the one being evaluated — to score each output:
 
 \`\`\`python
 from deepeval import assert_test
@@ -1476,7 +1476,7 @@ def test_new_prompt():
     assert_test(test_case, [correctness_metric, helpfulness_metric])
 \`\`\`
 
-> [!TIP] Run in both **pairwise mode** (given query Q, which response is better: old prompt or new prompt?) and **single-pass absolute scoring** mode. Pairwise is more reliable for catching small differences; single-pass gives absolute metric values to track over time.
+> [!TIP] Run in both pairwise mode (given query Q, which response is better: old prompt or new prompt?) and single-pass absolute scoring mode. Pairwise is more reliable for catching small differences; single-pass gives absolute metric values to track over time.
 
 ## Step 4: Promptfoo for Side-by-Side CI Comparison
 
@@ -1501,16 +1501,16 @@ defaultTest:
       threshold: 0.8
 \`\`\`
 
-Run with promptfoo eval — produces a side-by-side diff table with per-example scores and aggregate metric summaries designed to post as a **CI comment**.
+Run with promptfoo eval — produces a side-by-side diff table with per-example scores and aggregate metric summaries designed to post as a CI comment.
 
 ## Step 5: RAG-Specific Metrics
 
-For **RAG-backed agents**, **Ragas** provides four metrics computable without human labels:
+For RAG-backed agents, Ragas provides four metrics computable without human labels:
 
-- **Faithfulness** — does the answer contain only claims present in retrieved context?
-- **Answer relevance** — does the answer address the query?
-- **Context precision** — are retrieved chunks relevant?
-- **Context recall** — do retrieved chunks contain the information needed to answer?
+- Faithfulness — does the answer contain only claims present in retrieved context?
+- Answer relevance — does the answer address the query?
+- Context precision — are retrieved chunks relevant?
+- Context recall — do retrieved chunks contain the information needed to answer?
 
 \`\`\`python
 from ragas import evaluate
@@ -1525,7 +1525,7 @@ print(result)
 
 ## Step 6: Statistical Significance
 
-> [!IMPORTANT] With N=100 examples and a 3-point improvement in mean LLM-judge score, you must verify the improvement is real, not noise. Use the **Wilcoxon signed-rank test** — non-parametric, appropriate because LLM judge scores are ordinal rather than continuous — to test whether the distribution of per-example score differences is significantly positive.
+> [!IMPORTANT] With N=100 examples and a 3-point improvement in mean LLM-judge score, you must verify the improvement is real, not noise. Use the Wilcoxon signed-rank test — non-parametric, appropriate because LLM judge scores are ordinal rather than continuous — to test whether the distribution of per-example score differences is significantly positive.
 
 \`\`\`python
 from scipy.stats import wilcoxon
@@ -1702,22 +1702,22 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'LLM inference is unique — KV cache, continuous batching, GPU memory bound. Covers vLLM (PagedAttention), HuggingFace TGI, NVIDIA TensorRT-LLM, SGLang (RadixAttention), llama.cpp, quantization (FP16/FP8/INT8/GPTQ/AWQ/GGUF), throughput-vs-latency, multi-tenant LLM hosting via LiteLLM.',
     introduction: `## Why LLM Inference Is Its Own Discipline
 
-LLM inference is architecturally unlike serving any other model. Autoregressive generation introduces constraints — **KV cache memory pressure, two-phase computation, variable sequence lengths** — that make naive serving approaches fail catastrophically at scale.
+LLM inference is architecturally unlike serving any other model. Autoregressive generation introduces constraints — KV cache memory pressure, two-phase computation, variable sequence lengths — that make naive serving approaches fail catastrophically at scale.
 
 Inference runs in two phases with different bottlenecks:
-- **Prefill** — processes the entire prompt in parallel; compute-bound (like a forward pass of any neural net); fast
-- **Decode** — generates one token at a time autoregressively; each step must read the **full KV cache** for all attention layers; **memory-bandwidth-bound**; dominates wall-clock time for long outputs
+- Prefill — processes the entire prompt in parallel; compute-bound (like a forward pass of any neural net); fast
+- Decode — generates one token at a time autoregressively; each step must read the full KV cache for all attention layers; memory-bandwidth-bound; dominates wall-clock time for long outputs
 
-The **KV cache** stores key and value attention activations for every generated token. Its size scales with layers, attention heads, head dimension, sequence length, and batch size — a 70B model serving a 4K context request uses multiple **GB of GPU memory per request** for KV cache alone. **GPU memory is the throughput ceiling** for LLM serving, not compute.
+The KV cache stores key and value attention activations for every generated token. Its size scales with layers, attention heads, head dimension, sequence length, and batch size — a 70B model serving a 4K context request uses multiple GB of GPU memory per request for KV cache alone. GPU memory is the throughput ceiling for LLM serving, not compute.
 
-**Naive batching** wastes this resource: shorter requests hold up the entire batch until the longest one completes. **Continuous batching** (inflight batching) solves this by dropping completed requests and adding new ones at every decode step, keeping GPU utilization near 100%. This single technique produces **5-10x throughput improvement** over static batching.
+Naive batching wastes this resource: shorter requests hold up the entire batch until the longest one completes. Continuous batching (inflight batching) solves this by dropping completed requests and adding new ones at every decode step, keeping GPU utilization near 100%. This single technique produces 5-10x throughput improvement over static batching.
 
 ## The 2026 Serving Landscape
 
-- **vLLM** (UC Berkeley, 2023) — dominant open-source engine. Core innovation: **PagedAttention** stores KV cache in non-contiguous physical memory pages (like OS virtual memory), eliminating fragmentation and enabling near-100% GPU memory utilization. Supports continuous batching, prefix caching, speculative decoding, tensor and pipeline parallelism. Default choice for self-hosted open-weight LLMs.
-- **TensorRT-LLM** (NVIDIA) — pre-compiles a model graph for a specific GPU architecture with kernel fusion and hardware-specific optimizations. Highest throughput per GPU-dollar on NVIDIA hardware, but requires a build step per model-GPU combination.
-- **SGLang** (UC Berkeley, late 2023) — **RadixAttention** stores KV cache in a prefix tree, enabling cross-request KV cache sharing for requests with common prefixes (system prompts, RAG context). Large win for chatbot and agent workloads.
-- **llama.cpp** — C++ engine for CPU and Apple Silicon inference, powering Ollama and LM Studio. Not a production server; foundation of the edge and developer ecosystem.
+- vLLM (UC Berkeley, 2023) — dominant open-source engine. Core innovation: PagedAttention stores KV cache in non-contiguous physical memory pages (like OS virtual memory), eliminating fragmentation and enabling near-100% GPU memory utilization. Supports continuous batching, prefix caching, speculative decoding, tensor and pipeline parallelism. Default choice for self-hosted open-weight LLMs.
+- TensorRT-LLM (NVIDIA) — pre-compiles a model graph for a specific GPU architecture with kernel fusion and hardware-specific optimizations. Highest throughput per GPU-dollar on NVIDIA hardware, but requires a build step per model-GPU combination.
+- SGLang (UC Berkeley, late 2023) — RadixAttention stores KV cache in a prefix tree, enabling cross-request KV cache sharing for requests with common prefixes (system prompts, RAG context). Large win for chatbot and agent workloads.
+- llama.cpp — C++ engine for CPU and Apple Silicon inference, powering Ollama and LM Studio. Not a production server; foundation of the edge and developer ecosystem.
 
 ## Quantization
 
@@ -1725,18 +1725,18 @@ Running 70B models in FP16 demands multiple H100s. Quantization reduces memory f
 
 | Format | Bits | Notes |
 |--------|------|-------|
-| **FP8** | 8 | Native on H100/B100; halves FP16 memory with minimal accuracy impact |
-| **INT8** | 8 | Widely supported across frameworks |
-| **GPTQ** | 4 | Post-training quantization using calibration data |
-| **AWQ** | 4 | Activation-Aware Weight Quantization; protects activation-sensitive weights; better quality than GPTQ at same bit width |
-| **GGUF** | 2–8 | llama.cpp container format; powers Ollama and LM Studio |
+| FP8 | 8 | Native on H100/B100; halves FP16 memory with minimal accuracy impact |
+| INT8 | 8 | Widely supported across frameworks |
+| GPTQ | 4 | Post-training quantization using calibration data |
+| AWQ | 4 | Activation-Aware Weight Quantization; protects activation-sensitive weights; better quality than GPTQ at same bit width |
+| GGUF | 2–8 | llama.cpp container format; powers Ollama and LM Studio |
 
 ## Throughput vs Latency
 
-Higher batch size increases **throughput** (tokens/sec/GPU) but raises p99 latency. Lower batch size reduces latency but wastes GPU. Two techniques improve the tradeoff:
-- **Continuous batching** — keeps GPU busy without waiting for slow requests
-- **Speculative decoding** — draft model proposes tokens; target model verifies in parallel; reduces latency without throughput loss
-- **Prefix caching** — reduces TTFT for requests with shared prefixes by skipping prefill entirely`,
+Higher batch size increases throughput (tokens/sec/GPU) but raises p99 latency. Lower batch size reduces latency but wastes GPU. Two techniques improve the tradeoff:
+- Continuous batching — keeps GPU busy without waiting for slow requests
+- Speculative decoding — draft model proposes tokens; target model verifies in parallel; reduces latency without throughput loss
+- Prefix caching — reduces TTFT for requests with shared prefixes by skipping prefill entirely`,
     quickFire: [
       { q: 'What are the two phases of LLM inference and what bottlenecks each?', a: 'Prefill (process prompt in parallel, compute-bound) and decode (generate one token at a time, memory-bandwidth-bound because it reads the full KV cache per step).' },
       { q: 'What is the KV cache and why does it dominate GPU memory?', a: 'Cached key and value attention activations per generated token. Scales with layers, heads, sequence length, and batch size -- multiple GB per request for large models.' },
@@ -2002,9 +2002,9 @@ The Three Pillars of MLOps
 
 MLOps sits at the intersection of three disciplines:
 
-- **Dev** — data scientists and ML engineers building models, writing feature pipelines, running experiments, and selecting architectures
-- **Ops** — platform and infrastructure engineers deploying models, maintaining serving infrastructure, scaling endpoints, and enforcing SLAs
-- **Data** — data engineers building reliable ingestion, transformation, and feature store pipelines that feed both training and inference
+- Dev — data scientists and ML engineers building models, writing feature pipelines, running experiments, and selecting architectures
+- Ops — platform and infrastructure engineers deploying models, maintaining serving infrastructure, scaling endpoints, and enforcing SLAs
+- Data — data engineers building reliable ingestion, transformation, and feature store pipelines that feed both training and inference
 
 When any pillar is weak, the entire system degrades. A great model trained on bad data pipelines will fail in production. A well-trained model deployed without monitoring will decay silently.
 
@@ -2028,13 +2028,13 @@ MLOps Roles and Team Topology
 
 Four roles appear consistently across MLOps teams:
 
-**Data Scientist** — owns problem framing, feature selection, model architecture, and offline evaluation. Primarily works in the inner loop. Interfaces with the platform via experiment tracking (MLflow) and the feature store.
+Data Scientist — owns problem framing, feature selection, model architecture, and offline evaluation. Primarily works in the inner loop. Interfaces with the platform via experiment tracking (MLflow) and the feature store.
 
-**ML Engineer** — bridges data science and production engineering. Productionizes feature pipelines, optimizes models for inference, writes the training job code that runs in CI, and owns the model serving layer.
+ML Engineer — bridges data science and production engineering. Productionizes feature pipelines, optimizes models for inference, writes the training job code that runs in CI, and owns the model serving layer.
 
-**MLOps Engineer / Platform Engineer** — owns the ML platform itself: Kubeflow or Vertex AI pipelines, feature store (Feast), model registry, monitoring infrastructure, and the CI/CD pipeline that orchestrates training. Analogous to a DevOps engineer but ML-aware.
+MLOps Engineer / Platform Engineer — owns the ML platform itself: Kubeflow or Vertex AI pipelines, feature store (Feast), model registry, monitoring infrastructure, and the CI/CD pipeline that orchestrates training. Analogous to a DevOps engineer but ML-aware.
 
-**Data Engineer** — builds and maintains the data pipelines that supply raw data to feature engineering. Owns data quality SLAs, catalog metadata, and data contracts.
+Data Engineer — builds and maintains the data pipelines that supply raw data to feature engineering. Owns data quality SLAs, catalog metadata, and data contracts.
 
 At smaller organizations these roles collapse. At hyperscalers they split further (e.g., a dedicated ML Infrastructure team).
 
@@ -2042,31 +2042,31 @@ Tool Landscape
 
 The MLOps tool ecosystem maps roughly to pipeline stages:
 
-**Experiment Tracking**: MLflow (open source, language-agnostic), Weights and Biases (W&B), Neptune
+Experiment Tracking: MLflow (open source, language-agnostic), Weights and Biases (W&B), Neptune
 
-**Pipeline Orchestration**: Kubeflow Pipelines, Vertex AI Pipelines, Apache Airflow with ML operators, Prefect, ZenML
+Pipeline Orchestration: Kubeflow Pipelines, Vertex AI Pipelines, Apache Airflow with ML operators, Prefect, ZenML
 
-**Feature Stores**: Feast (open source), Tecton, Vertex AI Feature Store, Azure ML Feature Store
+Feature Stores: Feast (open source), Tecton, Vertex AI Feature Store, Azure ML Feature Store
 
-**Model Registry**: MLflow Model Registry, Azure ML Model Registry, SageMaker Model Registry, Hugging Face Hub
+Model Registry: MLflow Model Registry, Azure ML Model Registry, SageMaker Model Registry, Hugging Face Hub
 
-**Model Serving**: KServe (formerly KFServing), Triton Inference Server, BentoML, Seldon Core, Azure ML Online Endpoints
+Model Serving: KServe (formerly KFServing), Triton Inference Server, BentoML, Seldon Core, Azure ML Online Endpoints
 
-**Data Versioning**: DVC (Data Version Control), LakeFS, Delta Lake
+Data Versioning: DVC (Data Version Control), LakeFS, Delta Lake
 
-**Monitoring**: Evidently AI, Arize, WhyLabs, Fiddler
+Monitoring: Evidently AI, Arize, WhyLabs, Fiddler
 
-**Infrastructure**: Azure ML CLI v2, SageMaker Pipelines SDK, Google Cloud Vertex AI SDK, Terraform for ML infra
+Infrastructure: Azure ML CLI v2, SageMaker Pipelines SDK, Google Cloud Vertex AI SDK, Terraform for ML infra
 
 Security, Compliance, and Model Maintenance
 
 MLOps adds three compliance concerns absent from traditional DevOps:
 
-**Model lineage** — regulators in finance and healthcare demand reproducibility: given a model version, you must be able to reconstruct the exact training data snapshot, code commit, and hyperparameters. This requires immutable dataset versioning and a model registry that stores lineage metadata.
+Model lineage — regulators in finance and healthcare demand reproducibility: given a model version, you must be able to reconstruct the exact training data snapshot, code commit, and hyperparameters. This requires immutable dataset versioning and a model registry that stores lineage metadata.
 
-**Data governance** — training data may contain PII. Data access must be audited, and models trained on sensitive data may need to be retrained or deleted when users invoke right-to-erasure (GDPR Article 17).
+Data governance — training data may contain PII. Data access must be audited, and models trained on sensitive data may need to be retrained or deleted when users invoke right-to-erasure (GDPR Article 17).
 
-**Model decay** — unlike software, a deployed model requires ongoing maintenance even with zero code changes. Scheduled retraining, drift detection thresholds, and champion/challenger testing are operational requirements that never existed in traditional DevOps.`,
+Model decay — unlike software, a deployed model requires ongoing maintenance even with zero code changes. Scheduled retraining, drift detection thresholds, and champion/challenger testing are operational requirements that never existed in traditional DevOps.`,
     quickFire: [
       { q: 'What is the primary reason DevOps practices alone are insufficient for ML systems?', a: `Models have three inputs (code, data, hyperparameters), not one. Data drift and concept drift can silently degrade a model without any code change, so traditional build-and-deploy pipelines have no mechanism to detect or respond to it.` },
       { q: 'What is training-serving skew?', a: `Training-serving skew occurs when the feature values computed at inference time differ from those used during training, due to different code paths, different aggregation windows, or data pipeline inconsistencies. It is one of the most common causes of production degradation.` },
@@ -4299,17 +4299,17 @@ The pipeline is defined in YAML (GitHub Actions), with each stage as a separate 
     color: '#84cc16',
     questions: 6,
     description: 'Securing agent access to internal data sources — SQL injection prevention, MCP tool definitions, JWT-scoped permissions, row-level security, and audit logging for agentic queries against databases like Snowflake.',
-    introduction: `Giving an agent access to query internal databases introduces a security surface that is fundamentally harder to lock down than API security on human-initiated requests. When an agent writes a query, it decides based on a natural language instruction that may have been **manipulated by a user prompt injection** — creating a direct path from untrusted user input to your most sensitive internal data.
+    introduction: `Giving an agent access to query internal databases introduces a security surface that is fundamentally harder to lock down than API security on human-initiated requests. When an agent writes a query, it decides based on a natural language instruction that may have been manipulated by a user prompt injection — creating a direct path from untrusted user input to your most sensitive internal data.
 
 ## The Attack Surface
 
 The attack surface has two entry points:
-- **The tool definition** — a poorly scoped definition lets the agent access tables it should never touch
-- **The tool input** — an implementation that concatenates user-supplied values into SQL queries is vulnerable to **prompt injection leading to SQL injection**
+- The tool definition — a poorly scoped definition lets the agent access tables it should never touch
+- The tool input — an implementation that concatenates user-supplied values into SQL queries is vulnerable to prompt injection leading to SQL injection
 
 ## MCP Tool Definitions as the First Security Layer
 
-**MCP (Model Context Protocol)** is the emerging standard for defining agent tools in 2026. An MCP tool definition specifies the tool schema as **JSON Schema** — the parameter names, types, and constraints the agent must conform to when calling the tool.
+MCP (Model Context Protocol) is the emerging standard for defining agent tools in 2026. An MCP tool definition specifies the tool schema as JSON Schema — the parameter names, types, and constraints the agent must conform to when calling the tool.
 
 \`\`\`python
 # MCP tool definition — no raw_sql parameter exists, so agent cannot pass SQL directly
@@ -4331,27 +4331,27 @@ The attack surface has two entry points:
 }
 \`\`\`
 
-A query_snowflake tool that does not declare a raw_sql parameter **cannot be called with raw SQL** — the schema validation rejects it before any implementation code runs.
+A query_snowflake tool that does not declare a raw_sql parameter cannot be called with raw SQL — the schema validation rejects it before any implementation code runs.
 
 ## Parameterized Queries: The Last Programmatic Defense
 
-Even with a strict MCP schema, the tool must build SQL using **parameterized queries** — cursor.execute with %s placeholders in Python, or Snowflake bind parameters — never string concatenation. If the agent passes a filter value containing SQL syntax, parameterization prevents it from altering the query structure.
+Even with a strict MCP schema, the tool must build SQL using parameterized queries — cursor.execute with %s placeholders in Python, or Snowflake bind parameters — never string concatenation. If the agent passes a filter value containing SQL syntax, parameterization prevents it from altering the query structure.
 
 > [!IMPORTANT] Schema validation is client-side and can be bypassed in compromised environments. Parameterized queries in the tool implementation are the last programmatic defense before the database executes.
 
 ## JWT-Scoped Credentials
 
-Rather than using a shared database credential for all agent calls, the agent authenticates via a **short-lived JWT** (15-minute TTL) issued by your auth service at session start. The **JWT claims** contain allowed_schemas, allowed_tables, and read_only: true. The tool validates these claims before executing.
+Rather than using a shared database credential for all agent calls, the agent authenticates via a short-lived JWT (15-minute TTL) issued by your auth service at session start. The JWT claims contain allowed_schemas, allowed_tables, and read_only: true. The tool validates these claims before executing.
 
 ## Row-Level Security
 
-**Row-level security** in Snowflake and PostgreSQL filters rows based on session context rather than query content. A Snowflake row access policy reads the session context variable set from the JWT claims at connection time and appends a WHERE clause limiting rows to the allowed tenant or data scope — enforced by the database independent of query logic.
+Row-level security in Snowflake and PostgreSQL filters rows based on session context rather than query content. A Snowflake row access policy reads the session context variable set from the JWT claims at connection time and appends a WHERE clause limiting rows to the allowed tenant or data scope — enforced by the database independent of query logic.
 
 ## Audit Logging
 
-Every agent query should be logged with: agent ID, user ID, JWT claims used, parameterized SQL executed, rows returned, and execution time. **Anomaly detection** on this log stream — queries returning more than 10,000 rows, queries hitting atypical tables, high-frequency bursts — surfaces data exfiltration attempts that pass all other controls.
+Every agent query should be logged with: agent ID, user ID, JWT claims used, parameterized SQL executed, rows returned, and execution time. Anomaly detection on this log stream — queries returning more than 10,000 rows, queries hitting atypical tables, high-frequency bursts — surfaces data exfiltration attempts that pass all other controls.
 
-> [!WARNING] Use an **allowlist**, not a blocklist, for table access. A blocklist must enumerate every sensitive table; any new table added to the database is accessible by default. An allowlist requires explicit inclusion, so new tables are blocked by default.`,
+> [!WARNING] Use an allowlist, not a blocklist, for table access. A blocklist must enumerate every sensitive table; any new table added to the database is accessible by default. An allowlist requires explicit inclusion, so new tables are blocked by default.`,
     quickFire: [
       { q: 'What is an MCP tool definition?', a: 'A JSON Schema specification of the parameters an agent tool accepts, validated before the tool implementation runs. It is the first security layer preventing malicious or malformed tool calls.' },
       { q: 'Why are parameterized queries essential even in MCP-defined tools?', a: 'Because the agent\'s filter values arrive as untrusted input at runtime. Parameterized queries ensure those values cannot alter the SQL query structure regardless of their content.' },
@@ -4367,11 +4367,11 @@ Every agent query should be logged with: agent ID, user ID, JWT claims used, par
     keyQuestions: [
       {
         question: 'Walk me through how you would securely give an agent access to query our internal Snowflake database without exposing us to SQL injection or data leaks.',
-        answer: `The solution has **seven distinct security layers** that compose into a defense-in-depth architecture. Each layer is independently valuable; all seven together make exploitation require simultaneous failure of multiple independent controls.
+        answer: `The solution has seven distinct security layers that compose into a defense-in-depth architecture. Each layer is independently valuable; all seven together make exploitation require simultaneous failure of multiple independent controls.
 
 ## Layer 1: MCP Tool Definition
 
-The agent never writes raw SQL. Expose a query_snowflake **MCP tool** with a strict JSON Schema: allowed_tables accepts an array constrained to an enum of permitted table names; filter accepts a typed object; limit accepts an integer with a maximum of 1000. The agent cannot call this tool with a raw SQL string because the schema does not declare one.
+The agent never writes raw SQL. Expose a query_snowflake MCP tool with a strict JSON Schema: allowed_tables accepts an array constrained to an enum of permitted table names; filter accepts a typed object; limit accepts an integer with a maximum of 1000. The agent cannot call this tool with a raw SQL string because the schema does not declare one.
 
 ## Layer 2: Parameterized Queries
 
@@ -4394,7 +4394,7 @@ def query_snowflake_tool(allowed_tables: list, filter: dict, limit: int):
 
 ## Layer 3: JWT-Scoped Credentials
 
-The agent authenticates via a **short-lived JWT** (15-minute TTL). The **JWT claims** contain allowed_schemas, allowed_tables, and read_only: true. The tool verifies the JWT signature and checks that the requested table is in allowed_tables before proceeding. A valid JWT for a sales analytics agent cannot authorize access to the HR schema even if MCP schema validation is bypassed.
+The agent authenticates via a short-lived JWT (15-minute TTL). The JWT claims contain allowed_schemas, allowed_tables, and read_only: true. The tool verifies the JWT signature and checks that the requested table is in allowed_tables before proceeding. A valid JWT for a sales analytics agent cannot authorize access to the HR schema even if MCP schema validation is bypassed.
 
 ## Layer 4: Read-Only Snowflake Role
 
@@ -4407,7 +4407,7 @@ GRANT SELECT ON TABLE sales.product_catalog TO ROLE agent_reader;
 
 ## Layer 5: Row-Level Security
 
-A Snowflake row access policy reads the **session context variable** set from JWT claims at connection time and appends WHERE tenant_id = current_tenant(). A sales agent only sees sales schema rows; a customer support agent only sees its assigned customer segment.
+A Snowflake row access policy reads the session context variable set from JWT claims at connection time and appends WHERE tenant_id = current_tenant(). A sales agent only sees sales schema rows; a customer support agent only sees its assigned customer segment.
 
 ## Layer 6: Query Complexity Limits
 
@@ -4429,15 +4429,15 @@ audit_log.write({
 })
 \`\`\`
 
-> [!IMPORTANT] The audit log is **append-only** and stored in a separate schema where the agent role has no access. Anomaly alerts fire when any query returns more than 10,000 rows, accesses a table outside the session JWT, or when query frequency exceeds 100/minute from a single session.`,
+> [!IMPORTANT] The audit log is append-only and stored in a separate schema where the agent role has no access. Anomaly alerts fire when any query returns more than 10,000 rows, accesses a table outside the session JWT, or when query frequency exceeds 100/minute from a single session.`,
       },
       {
         question: 'How does MCP (Model Context Protocol) enforce tool-level security boundaries for an agent?',
-        answer: `MCP's security model is built on a **capability-based access model**: an agent can only call tools that appear in its tool list for the session, and each tool's inputs are constrained by a **JSON Schema** definition that is validated before the tool implementation runs.
+        answer: `MCP's security model is built on a capability-based access model: an agent can only call tools that appear in its tool list for the session, and each tool's inputs are constrained by a JSON Schema definition that is validated before the tool implementation runs.
 
 ## Process Architecture
 
-The **MCP tool server** runs as a separate process or container from the agent orchestrator. It exposes a list of tool definitions over a transport (stdio, HTTP with SSE, or WebSocket). When the agent session is initialized, the orchestrator fetches this list and presents it to the LLM as the set of available tools. The LLM cannot invoke arbitrary code or call tools outside this list — there is no escape hatch in the protocol.
+The MCP tool server runs as a separate process or container from the agent orchestrator. It exposes a list of tool definitions over a transport (stdio, HTTP with SSE, or WebSocket). When the agent session is initialized, the orchestrator fetches this list and presents it to the LLM as the set of available tools. The LLM cannot invoke arbitrary code or call tools outside this list — there is no escape hatch in the protocol.
 
 ## Schema Validation at Two Layers
 
@@ -4451,11 +4451,11 @@ User Input → LLM generates tool call
      [Parameterized query → Database]
 \`\`\`
 
-> [!IMPORTANT] Defense in depth means the tool implementation **re-validates its inputs** and checks the JWT claims independently of the MCP client validation. If client-side schema validation is somehow bypassed, the server-side check catches it.
+> [!IMPORTANT] Defense in depth means the tool implementation re-validates its inputs and checks the JWT claims independently of the MCP client validation. If client-side schema validation is somehow bypassed, the server-side check catches it.
 
 ## Session-Level Tool Scoping
 
-The orchestrator enforces a **per-session tool capability set** that controls which tools appear in the LLM tool list for a given session:
+The orchestrator enforces a per-session tool capability set that controls which tools appear in the LLM tool list for a given session:
 
 - Customer support agent: query_order_history, create_support_ticket
 - Sales agent: query_sales_data, generate_report
@@ -4496,11 +4496,11 @@ A vulnerability in the tool implementation cannot directly compromise the agent 
 
 ## Three Distinct Loop Types
 
-- **Retry loops** — a tool returns an error (API timeout, validation failure, malformed response) and the LLM re-calls it expecting the error to resolve itself. Without a **retry counter** in the agent state, this continues until a framework timeout fires.
+- Retry loops — a tool returns an error (API timeout, validation failure, malformed response) and the LLM re-calls it expecting the error to resolve itself. Without a retry counter in the agent state, this continues until a framework timeout fires.
 
-- **Semantic loops** — a tool returns a successful result, but the agent keeps re-calling it with slightly different parameters hoping to get different information from a result that is correct but not what the agent expected.
+- Semantic loops — a tool returns a successful result, but the agent keeps re-calling it with slightly different parameters hoping to get different information from a result that is correct but not what the agent expected.
 
-- **Dependency loops** — in multi-agent systems, agent A waits for a result from agent B, which itself waits for a result from agent A. Neither makes progress without external intervention.
+- Dependency loops — in multi-agent systems, agent A waits for a result from agent B, which itself waits for a result from agent A. Neither makes progress without external intervention.
 
 ## Three Prevention Layers
 
@@ -4519,7 +4519,7 @@ Layer 3: LLM-level instructions ("call escalate_to_human if stuck")
 
 ## Pydantic Self-Healing
 
-**Pydantic self-healing** is a particularly important pattern for structured tool output. When a tool returns malformed JSON or a schema mismatch, naive retry sends the same prompt and gets the same malformed output. Self-healing instead sends a **correction prompt** that includes the specific ValidationError message, giving the LLM the information to fix the structural issue rather than repeat the same mistake.
+Pydantic self-healing is a particularly important pattern for structured tool output. When a tool returns malformed JSON or a schema mismatch, naive retry sends the same prompt and gets the same malformed output. Self-healing instead sends a correction prompt that includes the specific ValidationError message, giving the LLM the information to fix the structural issue rather than repeat the same mistake.
 
 > [!TIP] Self-healing retries are themselves counted against the per-tool retry limit — Pydantic self-healing cannot itself become an infinite loop.`,
     quickFire: [
@@ -4537,11 +4537,11 @@ Layer 3: LLM-level instructions ("call escalate_to_human if stuck")
     keyQuestions: [
       {
         question: 'How do you prevent an agent from getting stuck in an infinite loop when an API tool fails?',
-        answer: `Prevention requires **three independent layers** so that no single failure mode can produce an infinite loop. Each layer addresses a different failure class.
+        answer: `Prevention requires three independent layers so that no single failure mode can produce an infinite loop. Each layer addresses a different failure class.
 
 ## Layer 1: State-Level Retry Counting
 
-In a LangGraph agent, the **TypedDict** state includes tool_retries: dict with a default of empty dict. Every tool call node increments the counter before calling the tool — unconditionally, so the counter is always accurate even if the call succeeds.
+In a LangGraph agent, the TypedDict state includes tool_retries: dict with a default of empty dict. Every tool call node increments the counter before calling the tool — unconditionally, so the counter is always accurate even if the call succeeds.
 
 \`\`\`python
 from typing import TypedDict, Annotated
@@ -4580,11 +4580,11 @@ result = graph.invoke(
 )
 \`\`\`
 
-When this limit is exceeded, LangGraph raises a GraphRecursionError that the caller catches and converts to a graceful failure response. Set this at **2-3x the 99th percentile step count** from production traces of successful runs — not an arbitrary low value.
+When this limit is exceeded, LangGraph raises a GraphRecursionError that the caller catches and converts to a graceful failure response. Set this at 2-3x the 99th percentile step count from production traces of successful runs — not an arbitrary low value.
 
 ## Layer 3: Pydantic Self-Healing for Structured Output
 
-When the tool returns a response that fails **Pydantic** validation, self-healing constructs a correction prompt with the specific error message:
+When the tool returns a response that fails Pydantic validation, self-healing constructs a correction prompt with the specific error message:
 
 \`\`\`python
 from pydantic import BaseModel, ValidationError
@@ -4607,7 +4607,7 @@ def parse_with_healing(raw_output: str, retries: int) -> ToolOutput:
 
 ## Exponential Backoff (Inside Tool Implementation)
 
-Backoff lives **inside the tool** for transient infrastructure errors (429, 503, 504) — invisible to the agent:
+Backoff lives inside the tool for transient infrastructure errors (429, 503, 504) — invisible to the agent:
 
 \`\`\`python
 import random, time
@@ -4640,11 +4640,11 @@ def record_failure(tool_name: str, redis_client):
     redis_client.expire(key, 300)  # 5-minute window
 \`\`\`
 
-> [!NOTE] The circuit breaker prevents a broken external dependency from causing every **concurrent** agent run to exhaust its retry budget before failing. After 3 consecutive failures across different runs within 5 minutes, subsequent calls short-circuit to an immediate error response.`,
+> [!NOTE] The circuit breaker prevents a broken external dependency from causing every concurrent agent run to exhaust its retry budget before failing. After 3 consecutive failures across different runs within 5 minutes, subsequent calls short-circuit to an immediate error response.`,
       },
       {
         question: 'How would you distinguish between a genuine retry (transient failure) and a semantic loop (agent is stuck thinking)?',
-        answer: `The distinction determines the correct response: a **transient failure** warrants a retry with backoff; a **semantic loop** warrants escalation or a fundamentally different approach. Treating a semantic loop as a transient failure causes the agent to exhaust its retry budget generating identical outputs rather than escalating.
+        answer: `The distinction determines the correct response: a transient failure warrants a retry with backoff; a semantic loop warrants escalation or a fundamentally different approach. Treating a semantic loop as a transient failure causes the agent to exhaust its retry budget generating identical outputs rather than escalating.
 
 ## Transient Failures: Infrastructure Layer
 
@@ -4655,11 +4655,11 @@ Transient failures have distinctive HTTP status signatures:
 - 504 — gateway timeout
 - Connection reset errors
 
-These are expected to resolve with time. The tool implementation handles them with **exponential backoff** internally. From the agent perspective, the tool either eventually succeeds or returns a structured error with category "transient".
+These are expected to resolve with time. The tool implementation handles them with exponential backoff internally. From the agent perspective, the tool either eventually succeeds or returns a structured error with category "transient".
 
 ## Semantic Failures: Agent Logic Layer
 
-Semantic failures look different: the tool returns **HTTP 200** with a structurally valid response, but the response does not contain the information the agent expected. The agent's subsequent messages attempt to extract useful information from the result, fail, and then re-call the tool with minor input variations. The tool is working correctly; the agent's model of what the tool does is incorrect, or the information it wants genuinely does not exist.
+Semantic failures look different: the tool returns HTTP 200 with a structurally valid response, but the response does not contain the information the agent expected. The agent's subsequent messages attempt to extract useful information from the result, fail, and then re-call the tool with minor input variations. The tool is working correctly; the agent's model of what the tool does is incorrect, or the information it wants genuinely does not exist.
 
 ## Programmatic Detection: Three Signals
 
@@ -4692,13 +4692,13 @@ def detect_semantic_loop(call_history: list, messages: list, embedder) -> bool:
 
 ## Response to a Detected Semantic Loop
 
-When the combination threshold is crossed, the correct response is **escalation, not retry**:
+When the combination threshold is crossed, the correct response is escalation, not retry:
 
 - Pause via LangGraph interrupt_before
 - Surface the accumulated state to a human reviewer: what was tried, what results were returned, why the agent is stuck
 - Ask the human to provide missing information, reframe the task, or confirm the task is impossible
 
-> [!IMPORTANT] Human-in-the-loop escalation is preferable to automatic termination for semantic loops because the retrieved information and attempted steps are **valuable context** that helps a human quickly diagnose why the agent got stuck. Always include the original user request, the sequence of tool calls with inputs and outputs, and the agent's last assessment of why it is stuck.`,
+> [!IMPORTANT] Human-in-the-loop escalation is preferable to automatic termination for semantic loops because the retrieved information and attempted steps are valuable context that helps a human quickly diagnose why the agent got stuck. Always include the original user request, the sequence of tool calls with inputs and outputs, and the agent's last assessment of why it is stuck.`,
       },
     ],
     tips: [

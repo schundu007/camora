@@ -177,16 +177,16 @@ training_lineage {
     keyQuestions: [
       {
         question: 'How does dataset versioning work and why is immutability important for ML reproducibility?',
-        answer: `**Why Immutability Matters**
+        answer: `Why Immutability Matters
 
 If training data can be modified after a model is trained on it, you can never reproduce that training run:
 - Bug found in model → need to retrain → dataset has been updated → you are training on different data
 - Regulatory audit requires proof of what the model was trained on → impossible if data was overwritten
 - Two researchers training "on the same dataset" get different results → dataset was modified between runs
 
-**How Iceberg Versioning Works**
+How Iceberg Versioning Works
 
-Apache Iceberg separates **metadata** from **data files**:
+Apache Iceberg separates metadata from data files:
 \`\`\`
 S3 layout:
   /datasets/ds-abc123/
@@ -199,29 +199,29 @@ S3 layout:
       part-0003.parquet  (new in v2)
 \`\`\`
 
-Publishing a new version is **atomic**: write new data files, then atomically commit a new metadata pointer. The old metadata still points to old files — both versions are readable simultaneously.
+Publishing a new version is atomic: write new data files, then atomically commit a new metadata pointer. The old metadata still points to old files — both versions are readable simultaneously.
 
-**Training jobs pin to a version ID**, not a path:
+Training jobs pin to a version ID, not a path:
 \`\`\`python
 dataset = DataLakeClient.load(dataset_id="ds-abc123", version="v1")
 # Returns Parquet reader pointing to exactly the files in v1
 # Even if v2 is published mid-training, this job still reads v1
 \`\`\`
 
-**Time travel** lets you query historical state:
+Time travel lets you query historical state:
 \`\`\`sql
 SELECT * FROM dataset VERSION AS OF '2025-01-01'
 \`\`\``,
       },
       {
         question: 'How do you deduplicate a trillion-document text corpus efficiently?',
-        answer: `**Why Deduplication Matters**
+        answer: `Why Deduplication Matters
 
 Language models memorize repeated content. A document appearing 100 times in training data is weighted 100x heavier than a unique document. This degrades generalization and causes the model to regurgitate training data verbatim.
 
-**MinHash LSH Algorithm**
+MinHash LSH Algorithm
 
-**Step 1: MinHash signature per document**
+Step 1: MinHash signature per document
 \`\`\`
 For each document:
   1. Tokenize into k-grams (e.g., 5-word shingles)
@@ -230,7 +230,7 @@ For each document:
   Result: 128-dimensional integer vector = document signature
 \`\`\`
 
-**Step 2: LSH banding to find candidates**
+Step 2: LSH banding to find candidates
 \`\`\`
 Split the 128-dimensional signature into B bands of R rows each
   (e.g., 32 bands × 4 rows)
@@ -244,18 +244,18 @@ Probability two documents with Jaccard similarity J end up in
   With B=32, R=4: documents with J≥0.8 collide with >99% probability
 \`\`\`
 
-**Step 3: Exact comparison within candidate pairs**
+Step 3: Exact comparison within candidate pairs
 - Compute exact Jaccard similarity for candidate pairs
 - If similarity > threshold (e.g., 0.8), mark as near-duplicate
 - Keep one document per duplicate cluster (typically the longest)
 
-**Scale**: 1 trillion documents processed in ~12 hours on a 500-node Spark cluster.
+Scale: 1 trillion documents processed in ~12 hours on a 500-node Spark cluster.
 
-**Exact deduplication** (identical documents): SHA-256 hash of normalized text → group by hash → keep one. Much cheaper and catches copy-paste duplicates.`,
+Exact deduplication (identical documents): SHA-256 hash of normalized text → group by hash → keep one. Much cheaper and catches copy-paste duplicates.`,
       },
       {
         question: 'How do you design storage optimized for ML training access patterns?',
-        answer: `**ML Training Access Pattern vs OLTP**
+        answer: `ML Training Access Pattern vs OLTP
 
 | Property | OLTP (web app) | ML Training |
 |----------|---------------|-------------|
@@ -265,16 +265,16 @@ Probability two documents with Jaccard similarity J end up in
 | File size | Doesn't matter | Critical — avoid millions of tiny files |
 | Latency | <10ms per query | Throughput: GB/s matters more |
 
-**Storage Optimizations**
+Storage Optimizations
 
-**1. File size: target 128MB–1GB Parquet files**
+1. File size: target 128MB–1GB Parquet files
 \`\`\`
 Bad:  1 million × 1KB files = 1M S3 API calls per training epoch
 Good: 1000 × 1GB files = 1000 S3 API calls per epoch
 \`\`\`
 Pack rows into large Parquet row groups (128MB). Small files kill throughput because each requires a separate S3 GET request with its own latency.
 
-**2. Parallel data loading**
+2. Parallel data loading
 \`\`\`python
 # Each GPU worker loads a non-overlapping shard
 dataset = IcebergDataset(version_id)
@@ -283,12 +283,12 @@ loader = DataLoader(shard, num_workers=8, prefetch_factor=4)
 \`\`\`
 Each GPU worker reads different files → N_GPUS × file_throughput aggregate read rate.
 
-**3. Storage tier selection**
+3. Storage tier selection
 - S3 Express One Zone: 10x lower latency, 8x higher throughput vs standard S3. Use for hot training datasets.
 - S3 Standard: active datasets not in current training runs.
 - S3 Glacier: archived dataset versions older than 1 year.
 
-**4. Shuffle at dataset creation time, not training time**
+4. Shuffle at dataset creation time, not training time
 - Shuffling during training requires random access, which destroys sequential read performance.
 - Shuffle once when publishing the dataset version (using a fixed random seed for reproducibility).
 - Store pre-shuffled — training jobs read sequentially and get a random sample naturally.`,
@@ -453,11 +453,11 @@ entity_resolution_log {
     keyQuestions: [
       {
         question: 'How do you implement transitive relationship inference efficiently on a large graph?',
-        answer: `**The Problem with Full Materialization**
+        answer: `The Problem with Full Materialization
 
 For a relationship like "is_ancestor_of" in an org chart with 1M employees, materializing all transitive pairs is O(n^2) = 1 trillion rows. Not feasible.
 
-**Option 1: BFS at query time (for shallow hierarchies)**
+Option 1: BFS at query time (for shallow hierarchies)
 \`\`\`python
 def find_ancestors(entity_id, depth_limit=10):
     visited = set()
@@ -475,14 +475,14 @@ def find_ancestors(entity_id, depth_limit=10):
 \`\`\`
 Works for trees with max depth ~20 and fan-out ~10. Fails for dense graphs or deep hierarchies.
 
-**Option 2: Precomputed closure for specific predicates**
+Option 2: Precomputed closure for specific predicates
 
 For important transitive predicates (e.g., "subsidiary_of" for company hierarchies):
 - Run batch job nightly that BFS-expands and materializes the closure
 - Store as a separate "derived_triples" table with a "inferred=true" flag
 - Trades storage for query latency
 
-**Option 3: Landmark-based approximate path**
+Option 3: Landmark-based approximate path
 
 Pre-compute shortest paths from K=1000 landmark nodes to all others.
 \`\`\`
@@ -491,24 +491,24 @@ For query: is entity A reachable from entity B via relation R?
 \`\`\`
 Exact for landmark queries, approximate for others. O(K × n) storage vs O(n^2).
 
-**Best practice**: use BFS at query time for depth < 5; precomputed closure for critical high-traffic predicates; landmark index for "is reachable" queries on large graphs.`,
+Best practice: use BFS at query time for depth < 5; precomputed closure for critical high-traffic predicates; landmark index for "is reachable" queries on large graphs.`,
       },
       {
         question: 'How do you do entity resolution when the same real-world entity has thousands of name variations?',
-        answer: `**The Entity Resolution Pipeline**
+        answer: `The Entity Resolution Pipeline
 
-**Stage 1: Blocking (candidate generation)**
+Stage 1: Blocking (candidate generation)
 
 Without blocking, comparing every pair of entities is O(n^2) — infeasible at 100M entities.
 
 Blocking strategies:
-- **Exact token match**: entities sharing at least one token go into the same block (e.g., "Apple Inc" and "Apple Computer" share "Apple")
-- **Embedding ANN**: embed entity label + description, find nearest neighbors in embedding space
-- **Phonetic blocking**: Soundex/Metaphone groups similar-sounding names
+- Exact token match: entities sharing at least one token go into the same block (e.g., "Apple Inc" and "Apple Computer" share "Apple")
+- Embedding ANN: embed entity label + description, find nearest neighbors in embedding space
+- Phonetic blocking: Soundex/Metaphone groups similar-sounding names
 
 Combine methods to maximize recall (find all true positives) before the expensive comparison step.
 
-**Stage 2: Candidate scoring**
+Stage 2: Candidate scoring
 
 For each candidate pair (A, B), compute features:
 \`\`\`
@@ -519,7 +519,7 @@ For each candidate pair (A, B), compute features:
 - Alias overlap: does A's canonical label appear in B's alias list?
 \`\`\`
 
-**Stage 3: Classification**
+Stage 3: Classification
 
 Fine-tuned BERT cross-encoder:
 \`\`\`
@@ -528,21 +528,21 @@ Output: P(same_entity) = 0.03  → keep separate
 \`\`\`
 Cross-encoder (reads both entities together) significantly outperforms bi-encoder (embeds separately) for the final classification step.
 
-**Stage 4: Clustering and merging**
+Stage 4: Clustering and merging
 
 Connected components of "same entity" pairs form clusters. Within each cluster, elect a canonical entity (highest confidence, most complete) and merge others into it, preserving all aliases and source URIs.
 
-**Human review queue**: pairs with 0.4 < P(same) < 0.7 routed to human annotators — typically 5-10% of candidates.`,
+Human review queue: pairs with 0.4 < P(same) < 0.7 routed to human annotators — typically 5-10% of candidates.`,
       },
       {
         question: 'How do you shard a knowledge graph across machines while minimizing cross-shard query hops?',
-        answer: `**The Sharding Challenge**
+        answer: `The Sharding Challenge
 
 A multi-hop traversal query that starts on node A and follows 3 edges must not cross 3 machine boundaries — each cross-shard hop adds network latency and increases the chance of failure.
 
-**Naive sharding (hash on entity ID)**: randomly distributes entities across shards. A 3-hop traversal is nearly certain to cross 3 different shards. Terrible for graph traversal.
+Naive sharding (hash on entity ID): randomly distributes entities across shards. A 3-hop traversal is nearly certain to cross 3 different shards. Terrible for graph traversal.
 
-**Community-based sharding**
+Community-based sharding
 
 Use graph community detection (Louvain algorithm) to find densely connected clusters:
 \`\`\`
@@ -553,11 +553,11 @@ Use graph community detection (Louvain algorithm) to find densely connected clus
    - Accept some write duplication for read locality
 \`\`\`
 
-**Why it works**: most real-world knowledge graphs have community structure — tech companies cluster with other tech companies and their employees, not randomly distributed. A query about Apple's subsidiaries is likely to stay within a "tech industry" shard.
+Why it works: most real-world knowledge graphs have community structure — tech companies cluster with other tech companies and their employees, not randomly distributed. A query about Apple's subsidiaries is likely to stay within a "tech industry" shard.
 
-**Metrics to optimize**: minimize the fraction of edges that cross shard boundaries (cross-edge fraction). Good community detection achieves <15% cross-edge rate.
+Metrics to optimize: minimize the fraction of edges that cross shard boundaries (cross-edge fraction). Good community detection achieves <15% cross-edge rate.
 
-**In practice**: JanusGraph uses a "vertex-cut" partitioning that allows a vertex to appear on multiple partitions with writes going to all copies — this avoids single-machine hot spots for highly-connected "hub" entities like country nodes that connect to millions of other entities.`,
+In practice: JanusGraph uses a "vertex-cut" partitioning that allows a vertex to appear on multiple partitions with writes going to all copies — this avoids single-machine hot spots for highly-connected "hub" entities like country nodes that connect to millions of other entities.`,
       },
     ],
 
@@ -728,11 +728,11 @@ column_profiles (
     keyQuestions: [
       {
         question: 'How do you detect that a feature distribution has drifted enough to affect model performance?',
-        answer: `**Why Rule-Based Checks Miss Drift**
+        answer: `Why Rule-Based Checks Miss Drift
 
 A rule check "null_rate must be below 1%" will pass even if the feature distribution has completely changed shape — all values present, no nulls, but the model is now operating out of distribution.
 
-**Kolmogorov-Smirnov Test for Continuous Features**
+Kolmogorov-Smirnov Test for Continuous Features
 
 The KS statistic measures the maximum difference between two empirical CDFs:
 \`\`\`
@@ -746,7 +746,7 @@ D = 1.0: completely different distributions
 
 In practice: use a p-value threshold (p < 0.01) AND a minimum effect size (D > 0.05) to trigger alerts. P-value alone flags trivially small differences as significant in large datasets.
 
-**Chi-Squared Test for Categorical Features**
+Chi-Squared Test for Categorical Features
 
 \`\`\`
 For a categorical feature "device_type":
@@ -757,17 +757,17 @@ For a categorical feature "device_type":
   If chi_squared > critical_value → reject null hypothesis of same distribution
 \`\`\`
 
-**Reference Distribution Choice**
+Reference Distribution Choice
 
 - Production monitoring: compare against rolling 28-day window
 - ML feature monitoring: compare against the training data snapshot stored when the model was trained
 - The training snapshot comparison is more meaningful for model performance: a feature that was 60% mobile during training but is now 45% mobile will degrade model accuracy even if current vs last-week is stable
 
-**Drift severity scoring**: map D statistic to a severity tier for prioritized alerting rather than binary pass/fail. Small drift (D=0.05-0.10) gets a warning; large drift (D>0.20) pages on-call immediately.`,
+Drift severity scoring: map D statistic to a severity tier for prioritized alerting rather than binary pass/fail. Small drift (D=0.05-0.10) gets a warning; large drift (D>0.20) pages on-call immediately.`,
       },
       {
         question: 'How do you trace a data quality issue upstream to its root cause in a complex DAG pipeline?',
-        answer: `**The Lineage Graph**
+        answer: `The Lineage Graph
 
 Every pipeline registers its input and output datasets on startup:
 \`\`\`
@@ -782,7 +782,7 @@ raw_events → user_features_daily → ml_features.user_activity_daily → model
 user_profiles ↗                                                      ↘ predictions
 \`\`\`
 
-**Root Cause Algorithm (Backward BFS)**
+Root Cause Algorithm (Backward BFS)
 
 When a quality check fails on table T:
 \`\`\`
@@ -794,7 +794,7 @@ When a quality check fails on table T:
 3. The earliest upstream node with a quality issue is the likely root cause
 \`\`\`
 
-**In practice**:
+In practice:
 \`\`\`
 ml_features.user_activity_daily → FAIL (drift in user_id null rate)
   ↑ upstream: user_profiles → FAIL (row count dropped 40%)
@@ -804,7 +804,7 @@ ml_features.user_activity_daily → FAIL (drift in user_id null rate)
 Root cause candidate: crm_sync pipeline stopped ingesting
 \`\`\`
 
-**Automated incident report generated**:
+Automated incident report generated:
 - Failing table: ml_features.user_activity_daily
 - Root cause candidate: crm_sync (no data ingested since 14:00)
 - Affected models: model_v2 (in production, serving 100% traffic)
@@ -960,14 +960,14 @@ tenant_cache_config {
     keyQuestions: [
       {
         question: 'How do you choose the similarity threshold between "close enough to reuse" and "different enough to re-query"?',
-        answer: `**Why the Threshold Matters**
+        answer: `Why the Threshold Matters
 
 At cosine similarity 0.99: nearly identical queries match. High precision, very low recall.
 At cosine similarity 0.70: semantically related but different questions match. Low precision, high recall.
 
 "What is the capital of France?" vs "What is the capital of Germany?" often scores 0.82-0.88 because of shared syntactic structure — returning the wrong answer with high confidence.
 
-**Empirical Calibration Approach**
+Empirical Calibration Approach
 
 \`\`\`
 1. Collect 1000 pairs of real user queries from your application logs
@@ -978,7 +978,7 @@ At cosine similarity 0.70: semantically related but different questions match. L
    = wrong answer rate < 2%)
 \`\`\`
 
-**Domain-Specific Thresholds**
+Domain-Specific Thresholds
 
 Different question types have different error costs:
 \`\`\`
@@ -996,11 +996,11 @@ Customer support FAQs:
   are semantically equivalent for support purposes
 \`\`\`
 
-**Continuous monitoring**: track the "cache hit accuracy rate" by sampling cached hits and evaluating whether the returned response was appropriate (using a lightweight LLM judge or human evaluation). Auto-raise threshold if accuracy drops below 95%.`,
+Continuous monitoring: track the "cache hit accuracy rate" by sampling cached hits and evaluating whether the returned response was appropriate (using a lightweight LLM judge or human evaluation). Auto-raise threshold if accuracy drops below 95%.`,
       },
       {
         question: 'How do you prevent the semantic cache from leaking one tenant\'s data to another?',
-        answer: `**Why Application-Layer Isolation Is Insufficient**
+        answer: `Why Application-Layer Isolation Is Insufficient
 
 If you store all tenants in one shared Qdrant collection and filter by tenant_id at query time:
 \`\`\`python
@@ -1014,7 +1014,7 @@ results = collection.search(
 
 A bug in the filter condition, a query parameter injection, or a library vulnerability could return results from other tenants. The consequences in a B2B SaaS context are severe: company A sees company B's proprietary chatbot responses.
 
-**Collection-Level Isolation (Recommended)**
+Collection-Level Isolation (Recommended)
 
 \`\`\`python
 # Each tenant gets a dedicated Qdrant collection
@@ -1030,12 +1030,12 @@ results = client.search(
 
 A misconfigured filter cannot leak across collections — they are physically separate indexes.
 
-**Tradeoffs**:
+Tradeoffs:
 - 500 tenants × 1 collection each = 500 Qdrant collections
 - Qdrant supports thousands of collections — not a scaling concern
 - Segment-level memory isolation: each collection uses its own HNSW index, preventing any data mixing at the storage layer
 
-**Additional safeguards**:
+Additional safeguards:
 - Tenant ID verified from authenticated JWT before any cache operation — never taken from request body
 - Cache entry includes tenant_id in the stored payload as a double-check; log and alert on any retrieval where payload tenant_id != authenticated tenant_id
 - Regular automated penetration tests: attempt cross-tenant lookups and verify they return empty results`,
@@ -1207,7 +1207,7 @@ artifacts {
     keyQuestions: [
       {
         question: 'How do you store millions of metric data points per training run efficiently for fast retrieval and comparison?',
-        answer: `**The Storage Problem**
+        answer: `The Storage Problem
 
 A typical deep learning training run logs:
 \`\`\`
@@ -1220,7 +1220,7 @@ Total per run: ~50K metric points
 100 concurrent runs: 5M points per run duration
 \`\`\`
 
-**Why PostgreSQL Fails**
+Why PostgreSQL Fails
 
 Compare 50 runs on val_loss over 100K steps:
 \`\`\`sql
@@ -1232,7 +1232,7 @@ ORDER BY run_id, step;
 -- Result: 10-30 second query
 \`\`\`
 
-**Why ClickHouse Wins**
+Why ClickHouse Wins
 
 ClickHouse stores each column separately. A query reading only (step, value) reads exactly those two columns from disk — other columns are not touched:
 \`\`\`sql
@@ -1244,14 +1244,14 @@ ORDER BY run_id, step;
 -- Result: 50-200ms for the same query
 \`\`\`
 
-**Additional optimizations**:
+Additional optimizations:
 - Partition by month: old data is stored in cold partitions that are rarely queried
 - Sort key: (run_id, key, step) — queries for a specific run's specific metric are a sequential scan within the sort key
 - Compression: ClickHouse compresses float columns with delta encoding + LZ4 — metric time series that generally decrease (loss) achieve 10-20x compression ratio`,
       },
       {
         question: 'How do you implement content-addressed artifact storage to ensure reproducibility?',
-        answer: `**Content-Addressed Storage Principle**
+        answer: `Content-Addressed Storage Principle
 
 The storage key is derived from the file content, not from the path or run ID:
 \`\`\`python
@@ -1268,7 +1268,7 @@ def content_hash(file_path):
 # e.g.: "artifacts/3a/7f/3a7f2c1d9b..."
 \`\`\`
 
-**Deduplication**
+Deduplication
 
 Before uploading a 500GB checkpoint:
 \`\`\`python
@@ -1287,14 +1287,14 @@ else:
 
 In a hyperparameter search with 50 runs all starting from the same pretrained base model checkpoint, only ONE copy of that checkpoint is stored. Typical deduplication savings: 40-70%.
 
-**Immutability guarantee**
+Immutability guarantee
 
 Once a file is written to a content-addressed location, it can never be overwritten — a different file would have a different hash and go to a different key. This guarantees that:
 - Any run_id → artifact_id → content_hash chain is permanent
 - The artifact retrieved today is byte-for-byte identical to what was uploaded at training time
 - Artifact corruption is detectable: re-hash on download and compare
 
-**Retention with content-addressed storage**
+Retention with content-addressed storage
 
 An artifact is only deleted from S3 when NO run references its content_hash — reference counting:
 \`\`\`sql
@@ -1454,7 +1454,7 @@ model_versions {
     keyQuestions: [
       {
         question: 'How does learned cardinality estimation improve on traditional statistics-based methods?',
-        answer: `**Why Traditional Cardinality Estimation Fails**
+        answer: `Why Traditional Cardinality Estimation Fails
 
 Traditional optimizers estimate join output cardinality using the independence assumption:
 \`\`\`
@@ -1471,7 +1471,7 @@ Example: orders join products join categories
 
 Errors compound: 5 joins with 2x error each → 32x error on final cardinality.
 
-**Learned Cardinality Estimation**
+Learned Cardinality Estimation
 
 Train a model to predict |output| given:
 - Query predicates (column, operator, value)
@@ -1489,20 +1489,20 @@ label = actual_row_count_from_execution_log  # 48,291
 # Model predicts: 51,203 (vs traditional estimate of 3,200)
 \`\`\`
 
-**Key techniques**:
-- **Multi-set convolution** (MSCN): encode each predicate as a set, combine with set convolution
-- **Histogram learning**: replace coarse histograms with a learned density estimator per column
-- **Join correlation learning**: explicitly model correlations between joined columns using co-occurrence statistics from historical query logs
+Key techniques:
+- Multi-set convolution (MSCN): encode each predicate as a set, combine with set convolution
+- Histogram learning: replace coarse histograms with a learned density estimator per column
+- Join correlation learning: explicitly model correlations between joined columns using co-occurrence statistics from historical query logs
 
-**In practice**: learned cardinality estimators reduce estimation error by 10-100x for complex multi-join queries, but require 1M+ historical query executions to train effectively.`,
+In practice: learned cardinality estimators reduce estimation error by 10-100x for complex multi-join queries, but require 1M+ historical query executions to train effectively.`,
       },
       {
         question: 'How do you safely A/B test a new query optimizer version without causing production regressions?',
-        answer: `**The Challenge**
+        answer: `The Challenge
 
 An optimizer regression can turn a 100ms query into a 60-second timeout. With 1000 queries/sec, even a 0.1% regression rate is 1 bad query/second — enough to cascade and cause system-wide slowdowns.
 
-**Shadow Mode (Pre-Deployment)**
+Shadow Mode (Pre-Deployment)
 
 \`\`\`
 For 1% of production queries:
@@ -1517,7 +1517,7 @@ After 7 days: if estimated speedup > 20% for shadow queries → proceed to canar
 
 Shadow mode costs: 1% extra query optimizer time (milliseconds) per query.
 
-**Canary Deployment**
+Canary Deployment
 
 \`\`\`
 Phase 1: 5% of queries → new optimizer model
@@ -1532,7 +1532,7 @@ Phase 2: If passing → 25% traffic
 Phase 3: If passing → 100% traffic
 \`\`\`
 
-**Automated Rollback**
+Automated Rollback
 
 \`\`\`python
 if regression_rate > 0.001 or p99_latency_ratio > 1.2:
@@ -1542,7 +1542,7 @@ if regression_rate > 0.001 or p99_latency_ratio > 1.2:
     # New model traffic immediately drops to 0%
 \`\`\`
 
-**Per-query regression protection** (defense in depth):
+Per-query regression protection (defense in depth):
 
 Even after full deployment, each query has a latency budget:
 \`\`\`
@@ -1704,7 +1704,7 @@ feature_monitoring {
     keyQuestions: [
       {
         question: 'How do you ensure point-in-time correctness when generating training data from feature stores?',
-        answer: `**Why Point-in-Time Correctness Matters**
+        answer: `Why Point-in-Time Correctness Matters
 
 Imagine training a churn prediction model:
 \`\`\`
@@ -1717,7 +1717,7 @@ CORRECT: use value at 2025-01-01 → 15 days (user was still somewhat active bef
 
 Using the wrong (current) feature teaches the model: "if days_since_last_purchase is high, the user churned." But in production, you only have access to current features, and users with high days_since_last_purchase may just be infrequent buyers, not churners. The model overestimates churn.
 
-**Offline Store Schema**
+Offline Store Schema
 
 The offline store stores every historical value with timestamps:
 \`\`\`
@@ -1731,7 +1731,7 @@ user_purchase_features (Delta Lake table):
   123         (current)                    180
 \`\`\`
 
-**Point-in-Time Join (ASOF Join)**
+Point-in-Time Join (ASOF Join)
 
 \`\`\`sql
 -- Entity dataframe: training labels with timestamps
@@ -1748,11 +1748,11 @@ ORDER BY f.event_timestamp DESC               -- most recent before label time
 
 Result: user_id=123 gets days_since_last_purchase=15 (the value at 2025-01-01), not 180 (the current value).
 
-**In Feast/Tecton**: this is the \`get_historical_features(entity_df, feature_refs)\` API — it automatically performs the point-in-time join under the hood.`,
+In Feast/Tecton: this is the \`get_historical_features(entity_df, feature_refs)\` API — it automatically performs the point-in-time join under the hood.`,
       },
       {
         question: 'How do you guarantee the same feature value is computed identically in batch (Spark) and streaming (Flink)?',
-        answer: `**The Training-Serving Skew Problem**
+        answer: `The Training-Serving Skew Problem
 
 Even with "the same logic," subtle differences cause skew:
 \`\`\`
@@ -1773,7 +1773,7 @@ Difference: if a purchase arrives 10 seconds late in the stream,
   (event time already outside window).
 \`\`\`
 
-**Solution: Unified Feature Definition DSL**
+Solution: Unified Feature Definition DSL
 
 Define features once in a declarative spec:
 \`\`\`python
@@ -1793,11 +1793,11 @@ class user_purchase_features:
 \`\`\`
 
 The platform transpiles this to:
-- **Spark SQL** for offline: \`WHERE purchase_time BETWEEN label_timestamp - 30 DAYS AND label_timestamp\`
-- **Flink**: watermark-based event-time window with 30-day size
+- Spark SQL for offline: \`WHERE purchase_time BETWEEN label_timestamp - 30 DAYS AND label_timestamp\`
+- Flink: watermark-based event-time window with 30-day size
 - Both use \`as_of\` as the reference time — same semantics guaranteed
 
-**Validation**: run shadow evaluation — compute both batch and streaming values for the same entity at the same timestamp, alert when they diverge by more than 1%. Treat any divergence as a P1 bug.`,
+Validation: run shadow evaluation — compute both batch and streaming values for the same entity at the same timestamp, alert when they diverge by more than 1%. Treat any divergence as a P1 bug.`,
       },
     ],
 
@@ -1960,7 +1960,7 @@ asset_embeddings {
     keyQuestions: [
       {
         question: 'How do you implement cross-modal search that lets a text query return relevant images?',
-        answer: `**The Key Insight: Shared Embedding Space**
+        answer: `The Key Insight: Shared Embedding Space
 
 CLIP (Contrastive Language-Image Pre-training) trains two encoders jointly:
 - Text encoder: "a photo of a cat" → float[1024]
@@ -1974,7 +1974,7 @@ Image of a cat         → encoder_I → [0.31, -0.09, 0.79, ...] ← similar
 Image of a dog         → encoder_I → [-0.5, 0.4, -0.2, ...]   ← different
 \`\`\`
 
-**Cross-Modal Search Flow**
+Cross-Modal Search Flow
 
 \`\`\`python
 # User query: text searching for images
@@ -1998,7 +1998,7 @@ def cross_modal_search(text_query: str, modality_filter: str = "image"):
     return [result.payload for result in results]
 \`\`\`
 
-**ImageBind Extension**
+ImageBind Extension
 
 ImageBind extends CLIP to 6 modalities (image, text, audio, video, depth, IMU) all in one shared embedding space:
 - Audio query → find visually similar images
@@ -2009,7 +2009,7 @@ All using the same vector index, same cosine similarity search.`,
       },
       {
         question: 'How do you combine vector similarity search with structured metadata filters efficiently?',
-        answer: `**The Two-Paradigm Problem**
+        answer: `The Two-Paradigm Problem
 
 Traditional databases: filter by structured metadata
 \`\`\`sql
@@ -2023,9 +2023,9 @@ ANN search in 1024-dim space → returns top-20 most similar vectors
 -- Fast: uses HNSW graph. Returns approximate set of similar items.
 \`\`\`
 
-**Problem**: combining both is non-trivial.
+Problem: combining both is non-trivial.
 
-**Approach 1: Post-filtering (ANN first, metadata after)**
+Approach 1: Post-filtering (ANN first, metadata after)
 \`\`\`
 1. ANN search for top-K=1000 similar vectors
 2. Apply metadata filter to the 1000 results
@@ -2035,9 +2035,9 @@ Problem: if only 1% of corpus matches the filter, need K=2000 to get 20 results.
 Worst case: need to scan the entire index.
 \`\`\`
 
-**Approach 2: Pre-filtering (metadata filter limits ANN search space)**
+Approach 2: Pre-filtering (metadata filter limits ANN search space)
 
-Qdrant, Weaviate, and Pinecone support **payload indexing**:
+Qdrant, Weaviate, and Pinecone support payload indexing:
 \`\`\`python
 # Qdrant: filter is applied BEFORE the ANN graph traversal
 results = qdrant.search(
@@ -2053,11 +2053,11 @@ results = qdrant.search(
 # Result: correct filtered ANN, not post-hoc filtering
 \`\`\`
 
-**When pre-filtering is slow**: if the filter is very selective (only 100 matching points out of 1B), HNSW graph is useless (the graph is built for the full corpus). Fall back to:
+When pre-filtering is slow: if the filter is very selective (only 100 matching points out of 1B), HNSW graph is useless (the graph is built for the full corpus). Fall back to:
 - Brute-force scan of the 100 matching points
 - Or partition vectors by common filter values (one HNSW index per license type)
 
-**Best practice**: store all frequently-filtered metadata fields in the vector payload and use Qdrant's payload index — achieves combined query latency of 50-200ms for 1B vectors with moderate selectivity filters.`,
+Best practice: store all frequently-filtered metadata fields in the vector payload and use Qdrant's payload index — achieves combined query latency of 50-200ms for 1B vectors with moderate selectivity filters.`,
       },
     ],
 
@@ -2229,7 +2229,7 @@ model_evaluation_gates {
     keyQuestions: [
       {
         question: 'How do you implement atomic model promotion from staging to production to ensure zero-downtime deployment?',
-        answer: `**The Challenge**
+        answer: `The Challenge
 
 At any moment, hundreds of serving instances are processing requests using model_v6.
 You want to promote model_v7 to production.
@@ -2237,7 +2237,7 @@ Two failure modes to avoid:
 1. A gap where no model is loaded (downtime)
 2. A period where some instances serve v6 and others serve v7 without knowing about the split (uncontrolled A/B)
 
-**The Deployment State Machine**
+The Deployment State Machine
 
 \`\`\`
 Registry database state (atomic transition):
@@ -2254,7 +2254,7 @@ Step 3 (promote): { primary: v7, canary: null, canary_pct: 0 }
   → v6 deployment record created with stage=archived
 \`\`\`
 
-**How Serving Instances Handle This**
+How Serving Instances Handle This
 
 \`\`\`python
 class ModelServer:
@@ -2286,11 +2286,11 @@ class ModelServer:
         return self.loaded_models[version_id].predict(request)
 \`\`\`
 
-**Zero downtime guaranteed**: models are loaded BEFORE routing config changes, so every request is served by a model that is already loaded in memory.`,
+Zero downtime guaranteed: models are loaded BEFORE routing config changes, so every request is served by a model that is already loaded in memory.`,
       },
       {
         question: 'How do you manage model weights that are hundreds of gigabytes in a content-addressed artifact store?',
-        answer: `**Content-Addressed Storage for Large Model Files**
+        answer: `Content-Addressed Storage for Large Model Files
 
 \`\`\`
 Traditional (path-addressed):
@@ -2306,7 +2306,7 @@ Content-addressed:
   Total: ~500GB, 3x cheaper
 \`\`\`
 
-**Chunked Upload for Large Files**
+Chunked Upload for Large Files
 
 \`\`\`python
 def upload_model(local_path: str) -> str:
@@ -2333,7 +2333,7 @@ def upload_model(local_path: str) -> str:
     return content_hash
 \`\`\`
 
-**LoRA / Adapter Storage for Fine-Tuned Models**
+LoRA / Adapter Storage for Fine-Tuned Models
 
 \`\`\`
 base_model (LLaMA-3-70B): sha256-base → 140GB in S3
@@ -2516,7 +2516,7 @@ annotators {
     keyQuestions: [
       {
         question: 'How does the active learning loop reduce total labeling cost while maintaining dataset quality?',
-        answer: `**Why Not Label Everything?**
+        answer: `Why Not Label Everything?
 
 If you have 1M images and label them all, you spend:
 - 1M × $0.50/label = $500K
@@ -2524,7 +2524,7 @@ If you have 1M images and label them all, you spend:
 
 But 700K of those images are "easy" — the model would have correctly guessed them after training on the first 300K. You paid $350K to label examples that added little information.
 
-**The Active Learning Loop**
+The Active Learning Loop
 
 \`\`\`
 Round 0: Hand-label 10K seed examples (random sample)
@@ -2546,13 +2546,13 @@ Round 3: Auto-label remaining 40K with model_v2
          Savings: 89%
 \`\`\`
 
-**Quality preservation**: the model only auto-labels items it is confident about (threshold 0.95). Misclassification rate on auto-labeled items is typically < 2%, comparable to inter-annotator disagreement rate on the same items. Items where the model is uncertain (0.60-0.95) are queued for human labeling, not auto-labeled.
+Quality preservation: the model only auto-labels items it is confident about (threshold 0.95). Misclassification rate on auto-labeled items is typically < 2%, comparable to inter-annotator disagreement rate on the same items. Items where the model is uncertain (0.60-0.95) are queued for human labeling, not auto-labeled.
 
-**When to not use active learning**: tasks where model confidence is unreliable (subtle medical diagnoses), tasks where false negatives are catastrophic (safety-critical detection), or very early in a project before the model has enough training data to produce reliable confidence scores.`,
+When to not use active learning: tasks where model confidence is unreliable (subtle medical diagnoses), tasks where false negatives are catastrophic (safety-critical detection), or very early in a project before the model has enough training data to produce reliable confidence scores.`,
       },
       {
         question: 'How do you detect and handle low-quality annotators in a crowdsourced labeling pipeline?',
-        answer: `**Honeypot Items**
+        answer: `Honeypot Items
 
 A honeypot library is maintained by experts who create items with known-correct labels:
 \`\`\`
@@ -2563,7 +2563,7 @@ Library: 10,000 images with expert-verified labels
 
 When a new batch is uploaded to the platform, 5% of task slots are filled with honeypot items from the library. Annotators cannot distinguish honeypots from real items — they look identical.
 
-**Quality Score Calculation**
+Quality Score Calculation
 
 \`\`\`python
 def update_annotator_quality(annotator_id, honeypot_result):
@@ -2581,15 +2581,15 @@ def update_annotator_quality(annotator_id, honeypot_result):
         flag_for_probation(annotator_id)
 \`\`\`
 
-**Multi-Signal Quality Detection**
+Multi-Signal Quality Detection
 
 Honeypots alone miss some quality issues:
-- **Speed cheating**: annotator completes tasks in 2 seconds each (minimum is 15s for a bounding box task) → flag for review
-- **Pattern cheating**: annotator always selects the top-left bounding box, or always chooses "Class A" → detect with statistical uniformity test
-- **Disagreement rate**: annotator disagrees with majority consensus more than 30% of the time → flag for review
-- **Task abandonment**: annotator claims tasks but never submits → automatic timeout and suspension
+- Speed cheating: annotator completes tasks in 2 seconds each (minimum is 15s for a bounding box task) → flag for review
+- Pattern cheating: annotator always selects the top-left bounding box, or always chooses "Class A" → detect with statistical uniformity test
+- Disagreement rate: annotator disagrees with majority consensus more than 30% of the time → flag for review
+- Task abandonment: annotator claims tasks but never submits → automatic timeout and suspension
 
-**Calibration for Edge Cases**
+Calibration for Edge Cases
 
 Some items are genuinely ambiguous — even expert annotators disagree. Distinguish:
 - Annotator error: honeypot item (unambiguous) labeled wrong
@@ -2758,16 +2758,16 @@ fidelity_evaluations {
     keyQuestions: [
       {
         question: 'How do you evaluate whether synthetic data is statistically faithful to real data?',
-        answer: `**Why Fidelity Evaluation Matters**
+        answer: `Why Fidelity Evaluation Matters
 
 A synthetic dataset that does not match the real distribution produces a model trained on the wrong distribution:
 - Model learns to predict "high income → likely to default on loan"
 - But synthetic income was generated independently of credit score (correlation lost)
 - Model misses the real pattern: high-income, low-credit-score is the actual default risk
 
-**Four Evaluation Dimensions**
+Four Evaluation Dimensions
 
-**1. Marginal Distribution Fidelity (KS Test per column)**
+1. Marginal Distribution Fidelity (KS Test per column)
 \`\`\`python
 from scipy.stats import ks_2samp
 
@@ -2778,7 +2778,7 @@ for column in all_columns:
 # Target: KS test pass rate > 90%
 \`\`\`
 
-**2. Correlation Structure Fidelity**
+2. Correlation Structure Fidelity
 \`\`\`python
 real_corr = real_df.corr()
 synthetic_corr = synthetic_df.corr()
@@ -2787,7 +2787,7 @@ frobenius_distance = np.linalg.norm(real_corr - synthetic_corr, 'fro')
 # Normalized to [0, 1]; target < 0.1 (very similar)
 \`\`\`
 
-**3. ML Utility (TSTR Test)**
+3. ML Utility (TSTR Test)
 \`\`\`python
 # Train on Synthetic, Test on Real
 model_S = train_classifier(X=synthetic_X, y=synthetic_y)
@@ -2801,7 +2801,7 @@ accuracy_gap = trtr_accuracy - tstr_accuracy
 # Target: accuracy_gap < 0.05 (within 5% of real data utility)
 \`\`\`
 
-**4. Privacy Score (Membership Inference AUC)**
+4. Privacy Score (Membership Inference AUC)
 \`\`\`python
 # Adversary tries to guess: "was this row in the training set?"
 # AUC = 0.5: cannot distinguish (fully private)
@@ -2814,7 +2814,7 @@ mi_auc = evaluate_auc(adversary, known_train_rows, known_holdout_rows)
       },
       {
         question: 'How do you prevent the synthetic data generator from amplifying biases in the real training data?',
-        answer: `**The Bias Amplification Problem**
+        answer: `The Bias Amplification Problem
 
 If the real training data contains a bias (e.g., women are underrepresented in high-salary rows by 10 percentage points), a naive synthetic generator learns this bias as a feature of the distribution and reproduces it exactly — or amplifies it if the correlation is imperfect.
 
@@ -2832,7 +2832,7 @@ Synthetic data (naive CTGAN):
 
 A model trained on the synthetic data learns a stronger gender-salary bias than the real data warranted.
 
-**Detection**
+Detection
 
 \`\`\`python
 def check_bias_amplification(real_df, synthetic_df, protected_attrs, label_col):
@@ -2851,15 +2851,15 @@ def check_bias_amplification(real_df, synthetic_df, protected_attrs, label_col):
     return results
 \`\`\`
 
-**Mitigation Techniques**
+Mitigation Techniques
 
-1. **Fairness constraints during generation**: add a fairness regularization term to the GAN loss that penalizes demographic parity differences exceeding the real data baseline
+1. Fairness constraints during generation: add a fairness regularization term to the GAN loss that penalizes demographic parity differences exceeding the real data baseline
 
-2. **Reweighting training examples**: upweight underrepresented groups in the training data before fitting the generator so the generator learns a less biased distribution
+2. Reweighting training examples: upweight underrepresented groups in the training data before fitting the generator so the generator learns a less biased distribution
 
-3. **Post-generation resampling**: after generating synthetic data, resample to match target demographic distributions (e.g., 50/50 gender split in high-salary rows) — simple but changes the marginal distribution
+3. Post-generation resampling: after generating synthetic data, resample to match target demographic distributions (e.g., 50/50 gender split in high-salary rows) — simple but changes the marginal distribution
 
-4. **Human review requirement**: any generator with bias amplification > 0.05 for a protected attribute requires human review and explicit approval before the synthetic dataset can be used in model training`,
+4. Human review requirement: any generator with bias amplification > 0.05 for a protected attribute requires human review and explicit approval before the synthetic dataset can be used in model training`,
       },
     ],
 
@@ -3016,7 +3016,7 @@ embedding_models {
     keyQuestions: [
       {
         question: 'How do you migrate a billion-document embedding index from one model to another without downtime?',
-        answer: `**Why Migration Is Disruptive**
+        answer: `Why Migration Is Disruptive
 
 When switching from model A (768-dim) to model B (1536-dim):
 - Embeddings from model A and model B are NOT comparable — different dimensions, different semantic spaces
@@ -3024,7 +3024,7 @@ When switching from model A (768-dim) to model B (1536-dim):
 - You must re-embed ALL 1B documents before the new index is useful
 - During re-embedding (hours to days), users still need search to work
 
-**The Shadow Population Strategy**
+The Shadow Population Strategy
 
 \`\`\`
 Phase 1: Shadow embedding (no user impact)
@@ -3055,11 +3055,11 @@ Phase 4: Full cutover (atomic config change)
   - Delete index_model_A after rollback window expires
 \`\`\`
 
-**Key risk**: during canary, a user may search with model B embedding but get results from index_model_A (if the config is not consistent per request). Solve by: route the SAME model version to BOTH embedding and index lookup for each request — maintain (user_id → model_version) sticky routing during the canary period.`,
+Key risk: during canary, a user may search with model B embedding but get results from index_model_A (if the config is not consistent per request). Solve by: route the SAME model version to BOTH embedding and index lookup for each request — maintain (user_id → model_version) sticky routing during the canary period.`,
       },
       {
         question: 'How do you optimize GPU batch size for maximum throughput vs minimum memory usage?',
-        answer: `**The GPU Memory Math**
+        answer: `The GPU Memory Math
 
 For a BERT-large model (340M params) at float16:
 \`\`\`
@@ -3075,7 +3075,7 @@ Max batch size (80GB A100): 79GB / 25MB ≈ 3,160 sequences
 Practical batch size (leave 20% headroom): ~2,048 sequences
 \`\`\`
 
-**Throughput vs Memory Tradeoff**
+Throughput vs Memory Tradeoff
 
 \`\`\`
 Batch size 1:   1 forward pass = 1 embedding
@@ -3089,7 +3089,7 @@ But: latency per batch increases with batch size
   Batch 2048: 200ms → 0.10ms per doc (500x improvement)
 \`\`\`
 
-**Adaptive Batch Sizing**
+Adaptive Batch Sizing
 
 \`\`\`python
 def find_optimal_batch_size(model, gpu_memory_gb, target_utilization=0.85):
@@ -3107,7 +3107,7 @@ def find_optimal_batch_size(model, gpu_memory_gb, target_utilization=0.85):
     return int(lo * target_utilization)  # Leave headroom
 \`\`\`
 
-**Variable-length documents**: pack documents into batches by total token count (not document count) using a dynamic batching algorithm — prevents one long document from forcing the rest of the batch to be tiny due to padding.`,
+Variable-length documents: pack documents into batches by total token count (not document count) using a dynamic batching algorithm — prevents one long document from forcing the rest of the batch to be tiny due to padding.`,
       },
     ],
 

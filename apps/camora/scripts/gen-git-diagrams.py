@@ -8,9 +8,9 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'git-for-devops')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -41,7 +41,7 @@ def base_graph(name, title):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir='LR',
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -241,7 +241,7 @@ def cn(g, name, label, c='navy', lost=False):
     style = 'filled,dashed' if lost else 'filled'
     g.node(name, label, shape='circle', style=style,
            fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2],
-           fontname='Helvetica Neue Bold', fontsize='11',
+           fontname='Helvetica Bold', fontsize='11',
            width='0.42', height='0.42', fixedsize='true', penwidth='2.0')
 
 
@@ -249,7 +249,7 @@ def bp(g, name, label, c='green'):
     """Branch pointer label box."""
     g.node(name, label, shape='box', style='filled,rounded',
            fillcolor=C[c][0], color=C[c][1], fontcolor=C[c][2],
-           fontname='Helvetica Neue', fontsize='10',
+           fontname='Helvetica', fontsize='10',
            height='0.28', margin='0.12,0.04', penwidth='1.2')
 
 
@@ -263,7 +263,7 @@ def diag_rebase_before_after():
 
     with g.subgraph(name='cluster_before') as b:
         b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
-               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#475569', margin='18')
         cn(b, 'bA', 'A', 'gray')
         cn(b, 'bB', 'B', 'navy')
@@ -282,7 +282,7 @@ def diag_rebase_before_after():
     with g.subgraph(name='cluster_after') as a:
         a.attr(label='After: git switch banana && git rebase main',
                style='rounded,filled', fillcolor='#f0fdf4',
-               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#86efac', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#166534', margin='18')
         cn(a, 'aA', 'A', 'gray')
         cn(a, 'aB', 'B', 'navy')
@@ -294,7 +294,7 @@ def diag_rebase_before_after():
         bp(a, 'aMain', 'main', 'navy')
         bp(a, 'aBanana', 'banana', 'purple')
         a.node('aLost', '"lost"', shape='plaintext', fontcolor='#94a3b8',
-               fontname='Helvetica Neue', fontsize='10')
+               fontname='Helvetica', fontsize='10')
         ce(a, 'aA', 'aB', '#3b82f6')
         ce(a, 'aB', 'aC', '#3b82f6')
         ce(a, 'aC', 'aD_', '#6366f1')
@@ -314,7 +314,7 @@ def diag_merge_before_after():
 
     with g.subgraph(name='cluster_before') as b:
         b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
-               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#475569', margin='18')
         cn(b, 'bA', 'A', 'gray')
         cn(b, 'bB', 'B', 'navy')
@@ -333,7 +333,7 @@ def diag_merge_before_after():
     with g.subgraph(name='cluster_after') as a:
         a.attr(label='After: git switch main && git merge banana',
                style='rounded,filled', fillcolor='#f0fdf4',
-               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#86efac', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#166534', margin='18')
         cn(a, 'aA', 'A', 'gray')
         cn(a, 'aB', 'B', 'navy')
@@ -344,7 +344,7 @@ def diag_merge_before_after():
         bp(a, 'aMain', 'main', 'navy')
         bp(a, 'aBanana', 'banana', 'purple')
         a.node('aMlbl', 'merge commit\n(two parents: C and E)', shape='plaintext',
-               fontcolor='#166534', fontname='Helvetica Neue', fontsize='10')
+               fontcolor='#166534', fontname='Helvetica', fontsize='10')
         ce(a, 'aA', 'aB', '#3b82f6')
         ce(a, 'aB', 'aC', '#3b82f6')
         ce(a, 'aA', 'aD', '#6366f1')
@@ -364,7 +364,7 @@ def diag_squash_before_after():
 
     with g.subgraph(name='cluster_before') as b:
         b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
-               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#475569', margin='18')
         cn(b, 'bA', 'A', 'gray')
         cn(b, 'bB', 'B', 'navy')
@@ -383,7 +383,7 @@ def diag_squash_before_after():
     with g.subgraph(name='cluster_after') as a:
         a.attr(label='After: git switch main && git merge --squash banana && git commit',
                style='rounded,filled', fillcolor='#fffbeb',
-               color='#fcd34d', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#fcd34d', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#92400e', margin='18')
         cn(a, 'aA', 'A', 'gray')
         cn(a, 'aB', 'B', 'navy')
@@ -394,7 +394,7 @@ def diag_squash_before_after():
         bp(a, 'aMain', 'main', 'navy')
         bp(a, 'aBanana', 'banana', 'purple')
         a.node('aDElbl', 'D+E squashed\ninto one commit\n(one parent: C)', shape='plaintext',
-               fontcolor='#92400e', fontname='Helvetica Neue', fontsize='10')
+               fontcolor='#92400e', fontname='Helvetica', fontsize='10')
         ce(a, 'aA', 'aB', '#3b82f6')
         ce(a, 'aB', 'aC', '#3b82f6')
         ce(a, 'aA', 'aD', '#6366f1')
@@ -414,7 +414,7 @@ def diag_fast_forward_before_after():
     with g.subgraph(name='cluster_before') as b:
         b.attr(label='Before (main is behind, no divergence)', style='rounded,filled',
                fillcolor='#f8fafc', color='#cbd5e1', fontsize='13',
-               fontname='Helvetica Neue Bold', fontcolor='#475569', margin='18')
+               fontname='Helvetica Bold', fontcolor='#475569', margin='18')
         cn(b, 'bA', 'A', 'navy')
         cn(b, 'bB', 'B', 'navy')
         cn(b, 'bC', 'C', 'navy')
@@ -432,7 +432,7 @@ def diag_fast_forward_before_after():
     with g.subgraph(name='cluster_after') as a:
         a.attr(label='After: git switch main && git merge banana (no new commit created)',
                style='rounded,filled', fillcolor='#f0fdf4',
-               color='#86efac', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#86efac', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#166534', margin='18')
         cn(a, 'aA', 'A', 'navy')
         cn(a, 'aB', 'B', 'navy')
@@ -442,7 +442,7 @@ def diag_fast_forward_before_after():
         bp(a, 'aMain', 'main', 'navy')
         bp(a, 'aBanana', 'banana', 'purple')
         a.node('aFFnote', 'main pointer just\nadvanced to E\nNo merge commit', shape='plaintext',
-               fontcolor='#166534', fontname='Helvetica Neue', fontsize='10')
+               fontcolor='#166534', fontname='Helvetica', fontsize='10')
         ce(a, 'aA', 'aB', '#3b82f6')
         ce(a, 'aB', 'aC', '#3b82f6')
         ce(a, 'aC', 'aD', '#3b82f6')
@@ -460,7 +460,7 @@ def diag_cherry_pick_before_after():
 
     with g.subgraph(name='cluster_before') as b:
         b.attr(label='Before', style='rounded,filled', fillcolor='#f8fafc',
-               color='#cbd5e1', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#cbd5e1', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#475569', margin='18')
         cn(b, 'bA', 'A', 'gray')
         cn(b, 'bB', 'B', 'navy')
@@ -470,7 +470,7 @@ def diag_cherry_pick_before_after():
         bp(b, 'bMain', 'main', 'navy')
         bp(b, 'bBanana', 'banana', 'purple')
         b.node('bDlbl', 'want this\ncommit', shape='plaintext',
-               fontcolor='#6366f1', fontname='Helvetica Neue', fontsize='10')
+               fontcolor='#6366f1', fontname='Helvetica', fontsize='10')
         ce(b, 'bA', 'bB', '#3b82f6')
         ce(b, 'bB', 'bC', '#3b82f6')
         ce(b, 'bA', 'bD', '#6366f1')
@@ -482,7 +482,7 @@ def diag_cherry_pick_before_after():
     with g.subgraph(name='cluster_after') as a:
         a.attr(label="After: git cherry-pick <D's commit hash>",
                style='rounded,filled', fillcolor='#fdf4ff',
-               color='#d8b4fe', fontsize='13', fontname='Helvetica Neue Bold',
+               color='#d8b4fe', fontsize='13', fontname='Helvetica Bold',
                fontcolor='#6b21a8', margin='18')
         cn(a, 'aA', 'A', 'gray')
         cn(a, 'aB', 'B', 'navy')
@@ -493,7 +493,7 @@ def diag_cherry_pick_before_after():
         bp(a, 'aMain', 'main', 'navy')
         bp(a, 'aBanana', 'banana', 'purple')
         a.node('aD_lbl', "D' = same changes as D\nnew commit SHA\napplied on top of C", shape='plaintext',
-               fontcolor='#9d174d', fontname='Helvetica Neue', fontsize='10')
+               fontcolor='#9d174d', fontname='Helvetica', fontsize='10')
         ce(a, 'aA', 'aB', '#3b82f6')
         ce(a, 'aB', 'aC', '#3b82f6')
         ce(a, 'aA', 'aD', '#6366f1')

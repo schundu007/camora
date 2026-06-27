@@ -167,13 +167,13 @@ sentiment_metrics {
     keyQuestions: [
       {
         question: 'How does aspect-based sentiment analysis work, and how is it different from standard sentiment classification?',
-        answer: `**Standard sentiment classification** assigns a single label (positive/negative/neutral) to an entire document. It cannot distinguish "I love the screen but hate the battery" — the overall score might average out to neutral, losing both signals.
+        answer: `Standard sentiment classification assigns a single label (positive/negative/neutral) to an entire document. It cannot distinguish "I love the screen but hate the battery" — the overall score might average out to neutral, losing both signals.
 
-**Aspect-Based Sentiment Analysis (ABSA)** identifies:
-1. **Aspect categories** — what feature is being discussed (battery_life, screen, price, customer_service)
-2. **Opinion polarity per aspect** — positive, negative, or neutral for each aspect found
+Aspect-Based Sentiment Analysis (ABSA) identifies:
+1. Aspect categories — what feature is being discussed (battery_life, screen, price, customer_service)
+2. Opinion polarity per aspect — positive, negative, or neutral for each aspect found
 
-**How it works (modern approach)**:
+How it works (modern approach):
 \`\`\`
 Input: "The camera is stunning but battery drains in 4 hours."
 
@@ -188,54 +188,54 @@ Step 2 — Polarity classification per aspect:
 Output: [{aspect: "camera", sentiment: "positive"}, {aspect: "battery_life", sentiment: "negative"}]
 \`\`\`
 
-**Training approach**: Fine-tune a BERT-class model with aspect-category prompting — prepend "[ASPECT: battery_life]" to the text, then classify polarity. Train one classifier that handles all aspects via the prompt, rather than one model per aspect.
+Training approach: Fine-tune a BERT-class model with aspect-category prompting — prepend "[ASPECT: battery_life]" to the text, then classify polarity. Train one classifier that handles all aspects via the prompt, rather than one model per aspect.
 
-**Why this matters for the system design**: ABSA outputs are significantly richer than document-level scores, which drives the data model (jsonb aspects array per result), the aggregation schema (aspect_breakdown in metrics), and the dashboard UI. Candidates who raise ABSA early signal product thinking, not just NLP implementation.`,
+Why this matters for the system design: ABSA outputs are significantly richer than document-level scores, which drives the data model (jsonb aspects array per result), the aggregation schema (aspect_breakdown in metrics), and the dashboard UI. Candidates who raise ABSA early signal product thinking, not just NLP implementation.`,
       },
       {
         question: 'How do you detect a sentiment crisis in real time while avoiding false alarms?',
-        answer: `**The naive alert**: "alert when score drops below X" produces too many false alarms — a single viral negative post can spike the volume temporarily, then recover. A threshold on absolute score triggers at the wrong moment.
+        answer: `The naive alert: "alert when score drops below X" produces too many false alarms — a single viral negative post can spike the volume temporarily, then recover. A threshold on absolute score triggers at the wrong moment.
 
-**Better approach: Flink CEP sliding-window alert**:
+Better approach: Flink CEP sliding-window alert:
 \`\`\`
 Rule: "score drops by more than 15 percentage points compared to the 7-day baseline
        AND post volume is above 500 in the past hour
        AND condition persists for at least 20 minutes"
 \`\`\`
 
-**Components**:
-- **Baseline computation**: 7-day rolling average score per entity, pre-computed by the hourly aggregation job
-- **Flink CEP pattern**: sliding window of 20 minutes; evaluate score vs baseline on each new metric bucket; alert only if the drop persists (not a spike-and-recover)
-- **Volume gating**: suppress alerts for entities with fewer than N posts per hour — small volumes make sentiment scores noisy and unreliable
-- **Deduplication**: a single crisis generates many individual negative posts; deduplicate alerts by entity + time window so the same crisis does not fire 50 alerts
+Components:
+- Baseline computation: 7-day rolling average score per entity, pre-computed by the hourly aggregation job
+- Flink CEP pattern: sliding window of 20 minutes; evaluate score vs baseline on each new metric bucket; alert only if the drop persists (not a spike-and-recover)
+- Volume gating: suppress alerts for entities with fewer than N posts per hour — small volumes make sentiment scores noisy and unreliable
+- Deduplication: a single crisis generates many individual negative posts; deduplicate alerts by entity + time window so the same crisis does not fire 50 alerts
 
-**Alert payload**: Include the delta (score before vs now), top 5 negative posts driving the shift, and a link to the drill-down dashboard. Ops teams need context, not just a number.
+Alert payload: Include the delta (score before vs now), top 5 negative posts driving the shift, and a link to the drill-down dashboard. Ops teams need context, not just a number.
 
-**Suppression window**: After an alert fires, suppress re-alerts on the same entity for 2 hours unless the severity increases — prevents alert fatigue during an ongoing crisis.`,
+Suppression window: After an alert fires, suppress re-alerts on the same entity for 2 hours unless the severity increases — prevents alert fatigue during an ongoing crisis.`,
       },
       {
         question: 'How do you handle entity disambiguation when multiple brands have similar names?',
-        answer: `**The problem**: A post mentioning "Apple" could be about Apple Inc., an apple orchard, or the FANG stock ticker. A post mentioning "Delta" could be Delta Air Lines, Delta Dental, or the COVID variant.
+        answer: `The problem: A post mentioning "Apple" could be about Apple Inc., an apple orchard, or the FANG stock ticker. A post mentioning "Delta" could be Delta Air Lines, Delta Dental, or the COVID variant.
 
-**Three-layer disambiguation**:
+Three-layer disambiguation:
 
-**Layer 1 — String matching against alias table**:
+Layer 1 — String matching against alias table:
 - Each entity has a curated list of aliases: ["Apple", "Apple Inc.", "AAPL", "$AAPL", "Apple Computer"]
 - Exact match against this list returns high-confidence attribution (confidence > 0.9)
 - Fast: O(1) hash lookup; covers ~70% of mentions
 
-**Layer 2 — Context-based NER model**:
+Layer 2 — Context-based NER model:
 - For ambiguous matches, a lightweight NER model classifies entity type: ORG vs PRODUCT vs LOCATION vs OTHER
 - Input: post text + surrounding context window
 - "Apple released a new iPhone" → ORG (Apple Inc.)
 - "I picked a fresh apple from the tree" → OTHER (not a brand mention)
 
-**Layer 3 — Embedding similarity**:
+Layer 3 — Embedding similarity:
 - For long-tail or misspelled mentions, compute embedding similarity against pre-computed entity embeddings
 - "Appel stock surged" → closest entity: Apple Inc. (spelling error)
 - Threshold: only attribute if similarity > 0.85 to avoid false positives
 
-**Multi-entity posts**: A single post can mention multiple entities ("Comparing Apple and Samsung cameras"). Extract all entities independently, then split the sentiment analysis into per-entity attribution using dependency parsing to identify which opinion spans relate to which entity.`,
+Multi-entity posts: A single post can mention multiple entities ("Comparing Apple and Samsung cameras"). Extract all entities independently, then split the sentiment analysis into per-entity attribution using dependency parsing to identify which opinion spans relate to which entity.`,
       },
     ],
 
@@ -390,9 +390,9 @@ video_chapters {
     keyQuestions: [
       {
         question: 'How do you detect scene boundaries efficiently without processing every frame?',
-        answer: `**Scene boundary detection** identifies moments where the visual content changes significantly — a cut from an interview to a chart, or a transition between speakers.
+        answer: `Scene boundary detection identifies moments where the visual content changes significantly — a cut from an interview to a chart, or a transition between speakers.
 
-**Efficient approach — histogram difference**:
+Efficient approach — histogram difference:
 \`\`\`
 Sample 1 frame per second (not every frame at 30fps)
 For each pair of consecutive frames:
@@ -404,16 +404,16 @@ Cost: ~1/30th of processing every frame
 Accuracy: detects ~85% of hard cuts
 \`\`\`
 
-**Handling gradual transitions** (fades, dissolves):
+Handling gradual transitions (fades, dissolves):
 - Hard cuts: single large distance spike
 - Fades: sustained distance increase over multiple frames
 - Use a sliding window detector to distinguish spike (cut) from sustained rise (fade)
 
-**ML-based refinement**:
+ML-based refinement:
 - Run a lightweight CNN (MobileNet-class) on boundary candidates to confirm they are real transitions vs camera flash or motion blur
 - Only run the expensive model on the ~5% of frames flagged by the histogram detector
 
-**Practical parameters**:
+Practical parameters:
 - 1 frame/second gives second-level precision, sufficient for chapters
 - 2 frames/second for sports or action content (faster cuts)
 - Threshold tuned per content category: music videos have many fast cuts; lectures have few
@@ -422,9 +422,9 @@ This two-stage approach (cheap detector → expensive confirmer) reduces GPU cos
       },
       {
         question: 'How do you implement semantic video search — a user types "explain indexing" and gets the right 30-second segment?',
-        answer: `**The challenge**: Video content is not naturally indexed for text search. The solution is to build a segment-level embedding index over transcripts and visual labels.
+        answer: `The challenge: Video content is not naturally indexed for text search. The solution is to build a segment-level embedding index over transcripts and visual labels.
 
-**Offline indexing (at processing time)**:
+Offline indexing (at processing time):
 \`\`\`
 For each transcript segment (e.g., 30-second chunks):
   1. Embed the segment text with a text encoder (e.g., E5-large or OpenAI embeddings)
@@ -433,7 +433,7 @@ For each transcript segment (e.g., 30-second chunks):
   4. Record (video_id, start_ms, end_ms) as the payload
 \`\`\`
 
-**Online search (at query time)**:
+Online search (at query time):
 \`\`\`
 Query: "explain database indexing"
   Step 1 — Embed query: encode query text with the same text encoder
@@ -443,12 +443,12 @@ Query: "explain database indexing"
   Step 5 — Return: (video_id, title, start_ms, matched_text, score)
 \`\`\`
 
-**Hybrid search** (often better than pure semantic):
+Hybrid search (often better than pure semantic):
 - Run BM25 keyword search and vector semantic search in parallel
 - Merge results using Reciprocal Rank Fusion (RRF)
 - Keyword search catches exact term matches ("B-tree index") that semantic search might miss
 
-**Latency breakdown**:
+Latency breakdown:
 - Query embedding: ~10ms (GPU)
 - ANN retrieval from vector index: ~20ms
 - Cross-encoder re-ranking (top 50): ~80ms on GPU
@@ -456,14 +456,14 @@ Query: "explain database indexing"
       },
       {
         question: 'How do you generate video chapters automatically?',
-        answer: `**Automatic chapter generation** identifies natural topic boundaries and creates titled segments that help viewers navigate long videos.
+        answer: `Automatic chapter generation identifies natural topic boundaries and creates titled segments that help viewers navigate long videos.
 
-**Inputs available after other tiers complete**:
+Inputs available after other tiers complete:
 - Full timestamped transcript
 - Scene list with visual labels per scene
 - Topic classification per scene
 
-**Approach — LLM with structured context**:
+Approach — LLM with structured context:
 \`\`\`
 Prompt (simplified):
   "Here is a transcript of a video with scene timestamps and labels.
@@ -482,12 +482,12 @@ Output:
    ...]
 \`\`\`
 
-**For long videos (> 2 hours)**:
+For long videos (> 2 hours):
 - Context window exceeded → hierarchical summarization
 - Split into 20-minute chunks, generate sub-chapters per chunk
 - Second LLM call merges sub-chapters into top-level chapters
 
-**Quality signals**:
+Quality signals:
 - Chapter titles that are too generic ("Introduction", "Conclusion") are penalized
 - Use ROUGE similarity against transcript text to ensure titles are grounded in content
 - A/B test: auto-generated chapters vs creator-written chapters for viewer engagement`,
@@ -651,12 +651,12 @@ crowd_analytics {
     keyQuestions: [
       {
         question: 'How does person re-identification work across cameras without using facial recognition?',
-        answer: `**The problem**: A shoplifter detected by camera 1 walks off screen. Camera 2 picks up a person nearby. Are they the same person? Without facial recognition, how do you link them?
+        answer: `The problem: A shoplifter detected by camera 1 walks off screen. Camera 2 picks up a person nearby. Are they the same person? Without facial recognition, how do you link them?
 
-**Re-identification (Re-ID) approach**:
+Re-identification (Re-ID) approach:
 Re-ID uses full-body appearance features (clothing color, texture, body proportions, gait) rather than face biometrics.
 
-**How it works**:
+How it works:
 \`\`\`
 Step 1 — Feature extraction (per detected person, per camera):
   Input: cropped bounding box image of person
@@ -680,25 +680,25 @@ Step 4 — Temporal filtering:
   Camera 1 and camera 2 at opposite ends of building: filter by time needed to walk between them
 \`\`\`
 
-**Limitations vs facial recognition**:
+Limitations vs facial recognition:
 - Accuracy degrades when clothing changes or two people have similar appearance
 - Works best within a single session (same clothing); does not work across days
 - Acceptable for most security use cases; does not meet forensic standards
 
-**Privacy advantage**: Re-ID embeddings cannot be reverse-engineered to reconstruct a face or identify an individual outside the system — GDPR considers this pseudonymous rather than biometric data in most interpretations.`,
+Privacy advantage: Re-ID embeddings cannot be reverse-engineered to reconstruct a face or identify an individual outside the system — GDPR considers this pseudonymous rather than biometric data in most interpretations.`,
       },
       {
         question: 'How do you reduce false positive alerts to avoid operator fatigue?',
-        answer: `**The problem**: An uncalibrated loitering detector will alert every time someone waits for a friend, checks their phone, or stands in a queue. 50 false alerts per hour per location means operators stop trusting the system.
+        answer: `The problem: An uncalibrated loitering detector will alert every time someone waits for a friend, checks their phone, or stands in a queue. 50 false alerts per hour per location means operators stop trusting the system.
 
-**Multi-layer false positive reduction**:
+Multi-layer false positive reduction:
 
-**Layer 1 — Confidence threshold tuning per environment**:
+Layer 1 — Confidence threshold tuning per environment:
 - Retail store: loitering threshold 0.85 (high precision needed)
 - Parking lot at night: threshold 0.70 (accept more sensitivity, lower foot traffic)
 - Transit hub: suppress loitering alerts near benches (expected behavior)
 
-**Layer 2 — Context-aware rules**:
+Layer 2 — Context-aware rules:
 \`\`\`
 Rule: loitering = person in zone for > 5 minutes
 Suppression contexts:
@@ -708,28 +708,28 @@ Suppression contexts:
   - Staff zones → suppress for badged employees
 \`\`\`
 
-**Layer 3 — Alert deduplication**:
+Layer 3 — Alert deduplication:
 - Same person loitering generates one alert, not one per minute
 - Alert stays open until person leaves the zone or operator resolves it
 - Cooldown window: no new alert for same zone within 15 minutes of a resolved false positive
 
-**Layer 4 — Feedback-driven calibration**:
+Layer 4 — Feedback-driven calibration:
 - Operators mark alerts as true/false positive
 - After 50 false positives for a specific rule+location, system auto-raises threshold by 0.05
 - Weekly fine-tuning run on local false-positive data improves the edge model for that site
 
-**Measurement**: Track precision (TP / (TP+FP)) per location per rule type. Surface to operations manager. Target: above 80% precision per alert type.`,
+Measurement: Track precision (TP / (TP+FP)) per location per rule type. Surface to operations manager. Target: above 80% precision per alert type.`,
       },
       {
         question: 'How do you handle the bandwidth cost of 10,000 camera streams?',
-        answer: `**Raw cost**:
+        answer: `Raw cost:
 \`\`\`
 10,000 cameras * 5Mbps (1080p30 H.264) = 50Gbps continuous
 50Gbps * 3600s/hr * $0.02/GB egress = ~$3.6M/hour in cloud egress alone
 \`\`\`
 This is obviously infeasible. The solution is edge-first processing.
 
-**Edge filtering reduces bandwidth by ~99%**:
+Edge filtering reduces bandwidth by ~99%:
 \`\`\`
 At the edge (Jetson Orin NX per camera cluster):
   - Motion gating: skip frames with no motion detected → 60-80% frame reduction
@@ -743,12 +743,12 @@ Upload to cloud:
   - Bandwidth: ~450Mbps sustained vs 50,000Mbps raw → 99.1% reduction
 \`\`\`
 
-**Continuous recording stays local**:
+Continuous recording stays local:
 - Full video written to local NVR (72-hour rolling buffer)
 - Only accessible by on-site staff with physical access or over authenticated VPN
 - If an event requires forensic review of non-flagged footage, operator requests on-site pull
 
-**Heartbeat and health telemetry**:
+Heartbeat and health telemetry:
 - Edge agent sends 1KB heartbeat every 30 seconds (camera health, event count, model confidence stats)
 - Total telemetry: 10,000 cameras * 1KB * 120/hour = 1.2GB/hour — negligible`,
       },
@@ -911,28 +911,28 @@ recommendation_logs {
     keyQuestions: [
       {
         question: 'How do you handle the cold start problem for new users?',
-        answer: `**Cold start** occurs when a new user has no interaction history — collaborative filtering has nothing to work with.
+        answer: `Cold start occurs when a new user has no interaction history — collaborative filtering has nothing to work with.
 
-**Three-phase approach as the user accumulates history**:
+Three-phase approach as the user accumulates history:
 
-**Phase 1 — Anonymous (0 interactions)**:
+Phase 1 — Anonymous (0 interactions):
 - Serve popularity-based recommendations: bestsellers in broad categories
 - Inject contextual signals: device type, location (infer from IP for regional products), time of day
 - If user came from a search query or ad, use the query/ad category as a strong signal
 - Show diverse items to gather initial engagement signals
 
-**Phase 2 — Early session (1–5 interactions)**:
+Phase 2 — Early session (1–5 interactions):
 - After the first click or purchase, use item-to-item similarity immediately
 - User viewed a power drill → "customers also bought" candidates feed the next recommendation
 - No CF model needed yet — item similarity is effective with a single data point
 - Onboarding quiz (optional): "What are you shopping for?" — user-selected categories seed the candidate pool
 
-**Phase 3 — Enough history (5+ interactions)**:
+Phase 3 — Enough history (5+ interactions):
 - User embedding computed from the interaction sequence using a session model (e.g., BERT4Rec or SASRec)
 - This embedding is used for ANN retrieval in the full CF space
 - Full personalization kicks in
 
-**New item cold start** (new product with no purchase history):
+New item cold start (new product with no purchase history):
 - Content-based embedding from product title, description, images (CLIP for images, text encoder for description)
 - Find similar items in the content embedding space
 - Surface to users whose history contains similar items
@@ -940,9 +940,9 @@ recommendation_logs {
       },
       {
         question: 'How does the two-stage candidate generation and ranking pipeline work end to end?',
-        answer: `**Why two stages?** Scoring all 50M products for every user at every page load is impossible. The two-stage approach reduces the problem from 50M to ~500 candidates for the expensive ranker.
+        answer: `Why two stages? Scoring all 50M products for every user at every page load is impossible. The two-stage approach reduces the problem from 50M to ~500 candidates for the expensive ranker.
 
-**Stage 1 — Candidate Generation (target: < 10ms, retrieve ~500 items)**:
+Stage 1 — Candidate Generation (target: < 10ms, retrieve ~500 items):
 \`\`\`
 Source A — Collaborative Filtering (user embedding ANN):
   Retrieve user embedding from feature store (1ms Redis read)
@@ -962,7 +962,7 @@ Source C — Category trending:
 Merge + Deduplicate: union of A+B+C, remove seen items → ~400-500 candidates
 \`\`\`
 
-**Stage 2 — Ranking (target: < 30ms, score 500 candidates)**:
+Stage 2 — Ranking (target: < 30ms, score 500 candidates):
 \`\`\`
 Features assembled per candidate (in parallel):
   - User features: embedding, segment, recency (from Redis, 2ms)
@@ -984,7 +984,7 @@ Business rule filters (post-ranking):
 Result: top-20 items by score after filters → serve to user
 \`\`\`
 
-**Total latency**: 1ms (user embedding) + 5ms (ANN + co-purchase + trending) + 8ms (ranker) + 2ms (filters) + 5ms (network/serialization) = ~21ms → well within 50ms SLA.`,
+Total latency: 1ms (user embedding) + 5ms (ANN + co-purchase + trending) + 8ms (ranker) + 2ms (filters) + 5ms (network/serialization) = ~21ms → well within 50ms SLA.`,
       },
     ],
 
@@ -1144,11 +1144,11 @@ screening_decisions {
     keyQuestions: [
       {
         question: 'How do you detect and mitigate bias in resume screening without removing useful signals?',
-        answer: `**The bias problem**: Historical hiring data reflects historical biases. If historically a company hired fewer women into engineering, a model trained on "good hire" data will score women's resumes lower, perpetuating the bias at machine speed and scale.
+        answer: `The bias problem: Historical hiring data reflects historical biases. If historically a company hired fewer women into engineering, a model trained on "good hire" data will score women's resumes lower, perpetuating the bias at machine speed and scale.
 
-**Two-stage approach: redaction then monitoring**
+Two-stage approach: redaction then monitoring
 
-**Stage 1 — Pre-scoring redaction**:
+Stage 1 — Pre-scoring redaction:
 Remove signals that correlate with protected class without adding legitimate job-relevant information:
 \`\`\`
 Name → hash (preserves deduplication, removes gender/ethnicity signal)
@@ -1158,12 +1158,12 @@ Address → strip to country level (local candidates get no bonus; remote work m
 Schools → optional: redact if "prestigious school" correlates with socioeconomic status
 \`\`\`
 
-**What to keep** (relevant signals that overlap with demographics but are legitimate):
+What to keep (relevant signals that overlap with demographics but are legitimate):
 - Skills, experience, and accomplishments (relevant even if correlated)
 - Employment gaps (relevant for recent activity; explain in interview)
 - Certifications (legitimate qualifications)
 
-**Stage 2 — Outcome monitoring** (4/5ths rule):
+Stage 2 — Outcome monitoring (4/5ths rule):
 \`\`\`
 Weekly: compute acceptance rate by inferred demographic group
   (inferred from name tokens that were not redacted from logs, or from self-reported EEO data)
@@ -1177,13 +1177,13 @@ Actions on violation:
   - Temporarily require human review for affected group
 \`\`\`
 
-**The nuance**: Redaction removes bias sources at input; monitoring catches bias that leaks through proxy features. Both layers are necessary because redacting name does not remove bias encoded in educational institution or zip code.`,
+The nuance: Redaction removes bias sources at input; monitoring catches bias that leaks through proxy features. Both layers are necessary because redacting name does not remove bias encoded in educational institution or zip code.`,
       },
       {
         question: 'How do you explain why a candidate was ranked 47th rather than 3rd?',
-        answer: `**Explainability is required** for recruiter trust, regulatory compliance (EU AI Act), and candidate appeals.
+        answer: `Explainability is required for recruiter trust, regulatory compliance (EU AI Act), and candidate appeals.
 
-**Score decomposition approach**:
+Score decomposition approach:
 \`\`\`
 Overall score = weighted sum of component scores:
   Skill match:       weight 0.40, score 0.92 → contribution 0.37
@@ -1193,7 +1193,7 @@ Overall score = weighted sum of component scores:
   Overall: 0.82
 \`\`\`
 
-**Per-requirement match explanations**:
+Per-requirement match explanations:
 \`\`\`
 For each job requirement, compute match score and cite the resume span:
 
@@ -1210,10 +1210,10 @@ Required: "Python or Go proficiency"
   → Match score: 1.0 (exact match)
 \`\`\`
 
-**Counterfactual explanations** (why NOT in top 10?):
+Counterfactual explanations (why NOT in top 10?):
 "This candidate ranked 47th because 46 candidates had stronger people management signals. If this candidate had shown team leadership experience, their score would increase from 0.82 to an estimated 0.94, placing them in the top 5."
 
-**Implementation**: Integrated gradients or SHAP values attribute the neural ranker's score to input features. For the embedding similarity component, cosine similarity breakdown by skill sub-embedding provides the cited evidence spans.`,
+Implementation: Integrated gradients or SHAP values attribute the neural ranker's score to input features. For the embedding similarity component, cosine similarity breakdown by skill sub-embedding provides the cited evidence spans.`,
       },
     ],
 
@@ -1373,11 +1373,11 @@ audit_log {
     keyQuestions: [
       {
         question: 'How do you prevent the AI from missing a genuine emergency?',
-        answer: `**The core risk**: A patient describes chest tightness as "a little pressure, probably nothing." The system scores it as primary care. The patient is having a heart attack.
+        answer: `The core risk: A patient describes chest tightness as "a little pressure, probably nothing." The system scores it as primary care. The patient is having a heart attack.
 
-**Defense in depth approach**:
+Defense in depth approach:
 
-**Layer 1 — Red flag hard rules** (highest priority, override all model outputs):
+Layer 1 — Red flag hard rules (highest priority, override all model outputs):
 \`\`\`
 Patterns that trigger immediate emergency escalation:
   "chest pain" + any of: radiation, sweating, nausea, jaw pain → EMERGENCY
@@ -1388,25 +1388,25 @@ Patterns that trigger immediate emergency escalation:
 \`\`\`
 These run as a fast-path pattern matcher before the neural classifier, with zero tolerance for false negatives.
 
-**Layer 2 — Conservative classifier calibration**:
+Layer 2 — Conservative classifier calibration:
 - Set the decision threshold asymmetrically: classify as emergency if P(emergency) > 0.30, not > 0.50
 - Accepting higher false positive rate (unnecessary ER visits) to guarantee low false negative rate
 - Clinical target: emergency sensitivity > 99%, accepting specificity of 85-90%
 
-**Layer 3 — Uncertainty escalation**:
+Layer 3 — Uncertainty escalation:
 - If classifier uncertainty is high (entropy > threshold), default to the more urgent tier
 - "I'm not sure whether this is urgent care or emergency" → route to urgent care, not primary care
 
-**Layer 4 — Calibration monitoring**:
+Layer 4 — Calibration monitoring:
 - Track clinician override rates: if clinicians upgrade 15% of "urgent care" assessments to emergency on arrival, that is a signal the threshold needs adjustment
 - Weekly model calibration review with clinical oversight committee`,
       },
       {
         question: 'How do you handle regulatory requirements for AI in healthcare?',
-        answer: `**US FDA — Software as a Medical Device (SaMD)**:
+        answer: `US FDA — Software as a Medical Device (SaMD):
 A triage system that influences clinical care decisions is Class II SaMD at minimum (Class III if it recommends specific treatments).
 
-**Key requirements**:
+Key requirements:
 \`\`\`
 Pre-market:
   510(k) clearance: demonstrate substantial equivalence to a predicate device
@@ -1420,7 +1420,7 @@ Post-market:
   Algorithm change protocol: some changes require new 510(k) submission
 \`\`\`
 
-**HIPAA technical safeguards**:
+HIPAA technical safeguards:
 \`\`\`
 Encryption at rest: AES-256 for all PHI in databases and S3
 Encryption in transit: TLS 1.3 minimum for all API calls
@@ -1429,7 +1429,7 @@ Audit logs: immutable record of all PHI access, retained 6 years
 Business Associate Agreements: required with AWS, any third-party AI provider
 \`\`\`
 
-**Architectural implications**:
+Architectural implications:
 - Model version locked at session start and stored with every assessment for recall traceability
 - Differential suggestions gated to providers only — patients see care level recommendation, not disease guesses
 - No training on patient data without explicit consent and IRB approval
@@ -1594,18 +1594,18 @@ review_history {
     keyQuestions: [
       {
         question: 'How does the SM-2 spaced repetition algorithm work?',
-        answer: `**SM-2** (SuperMemo 2) was developed by Piotr Wozniak in 1987 and is the basis for most modern spaced repetition tools including Anki.
+        answer: `SM-2 (SuperMemo 2) was developed by Piotr Wozniak in 1987 and is the basis for most modern spaced repetition tools including Anki.
 
-**Core idea**: Schedule each card's next review based on how well you recalled it. Good recall → longer interval before next review. Poor recall → shorter interval, review again soon.
+Core idea: Schedule each card's next review based on how well you recalled it. Good recall → longer interval before next review. Poor recall → shorter interval, review again soon.
 
-**Parameters per card**:
+Parameters per card:
 \`\`\`
 interval (I):    days until next review
 ease_factor (EF): multiplier for interval (default 2.5, range 1.3–3.0)
 repetitions (n):  number of successful reviews
 \`\`\`
 
-**Algorithm on each review**:
+Algorithm on each review:
 \`\`\`
 Student rates response: 0=total blackout, 1=wrong, 2=hard, 3=ok, 4=good, 5=perfect
 
@@ -1625,7 +1625,7 @@ Update ease factor:
   EF never goes below 1.3
 \`\`\`
 
-**Example progression for a card**:
+Example progression for a card:
 \`\`\`
 Review 1: rating=4 → I=1 day, EF=2.50
 Review 2: rating=4 → I=6 days, EF=2.50
@@ -1634,13 +1634,13 @@ Review 4: rating=3 → I=37 days, EF=2.36  (harder, EF drops)
 Review 5: rating=5 → I=93 days, EF=2.46  (perfect recall, EF recovers)
 \`\`\`
 
-**Why this works**: Cards with high recall rate get exponentially longer intervals (6 → 15 → 37 → 93 days). Hard cards get frequent reviews. The EF per-card captures individual difficulty, so the hardest concept you have stays on a shorter cycle.`,
+Why this works: Cards with high recall rate get exponentially longer intervals (6 → 15 → 37 → 93 days). Hard cards get frequent reviews. The EF per-card captures individual difficulty, so the hardest concept you have stays on a shorter cycle.`,
       },
       {
         question: 'How do you generate high-quality flashcards from an unstructured document?',
-        answer: `**The pipeline: chunk → extract → generate → score → cluster**
+        answer: `The pipeline: chunk → extract → generate → score → cluster
 
-**Step 1 — Semantic chunking**:
+Step 1 — Semantic chunking:
 \`\`\`
 Split document at paragraph and section boundaries
 Target: 400-600 tokens per chunk
@@ -1648,7 +1648,7 @@ Prepend section heading to each chunk for context:
   "Section: Photosynthesis — [chunk text here]"
 \`\`\`
 
-**Step 2 — LLM card generation prompt**:
+Step 2 — LLM card generation prompt:
 \`\`\`
 System: You are an expert flashcard creator. Generate 3-5 high-quality
   question-answer flashcards from the following text. Focus on:
@@ -1661,7 +1661,7 @@ User: [chunk text]
 Output: JSON array of {front, back, card_type, difficulty}
 \`\`\`
 
-**Step 3 — Quality scoring**:
+Step 3 — Quality scoring:
 \`\`\`
 Second LLM call rates each card on:
   specificity (0-1): Is the question specific enough to have one correct answer?
@@ -1672,20 +1672,20 @@ Average score < 0.7 → flag for human review
 Score < 0.5 → reject automatically
 \`\`\`
 
-**Step 4 — Duplicate detection**:
+Step 4 — Duplicate detection:
 \`\`\`
 Embed all generated cards
 Cosine similarity > 0.90 between two cards → keep higher-scored one, discard duplicate
 \`\`\`
 
-**Step 5 — Topic clustering**:
+Step 5 — Topic clustering:
 \`\`\`
 K-means on card embeddings (k = num_cards / 10)
 Assign cluster label as topic_cluster field
 Review sessions interleave cards from different clusters to improve discrimination
 \`\`\`
 
-**Result**: From a 50-page PDF, generate 200-300 raw cards, filter to ~150 high-quality approved cards, organized into 15-20 topic clusters.`,
+Result: From a 50-page PDF, generate 200-300 raw cards, filter to ~150 high-quality approved cards, organized into 15-20 topic clusters.`,
       },
     ],
 
@@ -1853,9 +1853,9 @@ copyright_checks {
     keyQuestions: [
       {
         question: 'How does the generation model work and why is it GPU-intensive?',
-        answer: `**Modern music generation models** use one of two approaches:
+        answer: `Modern music generation models use one of two approaches:
 
-**Approach 1 — Diffusion models** (e.g., Google MusicLM, Stability Audio):
+Approach 1 — Diffusion models (e.g., Google MusicLM, Stability Audio):
 \`\`\`
 Start with random noise in the audio latent space
 Iteratively denoise over N steps (typically 50-200 steps)
@@ -1869,7 +1869,7 @@ GPU intensity:
   - Time: ~5-15 seconds on A100 for 30-second audio at 50 steps
 \`\`\`
 
-**Approach 2 — Autoregressive token generation** (e.g., Suno, Audiocraft):
+Approach 2 — Autoregressive token generation (e.g., Suno, Audiocraft):
 \`\`\`
 Encode audio as discrete tokens using a neural codec (EnCodec)
 Generate token sequences autoregressively like a language model
@@ -1881,18 +1881,18 @@ GPU intensity:
   - Faster than diffusion but still requires large GPU for quality
 \`\`\`
 
-**Why this matters for system design**:
+Why this matters for system design:
 - Low parallelism per GPU: 1-4 jobs max per GPU vs 50+ for text generation
 - Cold model loading time: loading 4GB weights from disk takes 30-60 seconds → keep workers warm
 - No token streaming like text LLMs: audio must be fully generated before it can play (or use progressive generation with chunked delivery)`,
       },
       {
         question: 'How do you detect copyright infringement in AI-generated audio?',
-        answer: `**The legal risk**: If the generation model memorized copyrighted songs during training, it might reproduce them — even if the user did not ask for a specific song. The system must detect this before delivering the output.
+        answer: `The legal risk: If the generation model memorized copyrighted songs during training, it might reproduce them — even if the user did not ask for a specific song. The system must detect this before delivering the output.
 
-**Acoustic fingerprinting approach** (similar to how Shazam identifies songs):
+Acoustic fingerprinting approach (similar to how Shazam identifies songs):
 
-**Offline indexing** (pre-built database):
+Offline indexing (pre-built database):
 \`\`\`
 For every song in the protected catalog (millions of songs):
   Extract acoustic fingerprint:
@@ -1902,7 +1902,7 @@ For every song in the protected catalog (millions of songs):
   Store in an inverted index: hash → [(song_id, timestamp), ...]
 \`\`\`
 
-**Online checking** (for each generated track):
+Online checking (for each generated track):
 \`\`\`
 Generate acoustic fingerprint of the new track
 Query the inverted index for each fingerprint hash
@@ -1914,12 +1914,12 @@ If similarity 0.60-0.85 → flag for human review
 If similarity < 0.60 → clear for delivery
 \`\`\`
 
-**Limitations and mitigations**:
+Limitations and mitigations:
 - Pitch-shifted versions may evade fingerprinting → add pitch-invariant features (chroma features)
 - New releases not in database yet → use a music distributor API to keep database current
 - Melodies can be similar without copyright violation (12-bar blues is not copyrightable) → threshold tuning with legal guidance
 
-**Why not use embedding similarity**:
+Why not use embedding similarity:
 Fingerprinting is faster (milliseconds vs seconds) and more precise for exact/near-exact matches. Embedding similarity is better for semantic similarity but produces too many false positives for copyright detection where only substantial similarity matters.`,
       },
     ],
@@ -2094,9 +2094,9 @@ safety_checks {
     keyQuestions: [
       {
         question: 'How does latent diffusion work, and why can you generate 4 images nearly as fast as 1?',
-        answer: `**Latent Diffusion Models (LDMs)** — the architecture behind Stable Diffusion — operate in a compressed latent space rather than pixel space, making them 8-16x more memory-efficient than pixel-space diffusion.
+        answer: `Latent Diffusion Models (LDMs) — the architecture behind Stable Diffusion — operate in a compressed latent space rather than pixel space, making them 8-16x more memory-efficient than pixel-space diffusion.
 
-**How it works**:
+How it works:
 \`\`\`
 Step 1 — Encode: image (512x512x3 pixels) → latent (64x64x4)
   Compression by VAE encoder: 8x spatial reduction, 3→4 channels
@@ -2113,7 +2113,7 @@ Step 3 — Decode: latent (64x64x4) → image (512x512x3)
   VAE decoder reconstructs full-resolution pixel image
 \`\`\`
 
-**Why 4 images barely costs more than 1**:
+Why 4 images barely costs more than 1:
 \`\`\`
 Each diffusion step = one UNet forward pass
 Batch inference: process N latents in parallel on GPU
@@ -2125,16 +2125,16 @@ Memory: each latent = 64*64*4*2bytes = 128KB
   4 latents = 512KB → negligible vs model weights (4-8GB)
 \`\`\`
 
-**Practical implication for system design**:
+Practical implication for system design:
 Never generate images one at a time if the user wants variants. Schedule batch_size=4 jobs as a single GPU task. The user gets 4 options for the marginal cost of 30% extra GPU time, dramatically improving UX while keeping costs nearly the same per-job.`,
       },
       {
         question: 'How do you enforce content safety without blocking legitimate creative requests?',
-        answer: `**The challenge**: "sunset over the ocean" is clearly safe. "explicit adult content" is clearly blocked. Between these extremes is a large gray zone: fantasy violence, artistic nudity, dark themes, political satire, and horror — all of which have legitimate creative applications.
+        answer: `The challenge: "sunset over the ocean" is clearly safe. "explicit adult content" is clearly blocked. Between these extremes is a large gray zone: fantasy violence, artistic nudity, dark themes, political satire, and horror — all of which have legitimate creative applications.
 
-**Multi-stage safety system**:
+Multi-stage safety system:
 
-**Stage 1 — Prompt classification** (before GPU, synchronous, <50ms):
+Stage 1 — Prompt classification (before GPU, synchronous, <50ms):
 \`\`\`
 Binary classifier (fine-tuned BERT or LLM):
   Input: prompt text + negative_prompt
@@ -2147,7 +2147,7 @@ Action thresholds:
   trademark_score > 0.80 → allow generation but watermark as "may contain trademark"
 \`\`\`
 
-**Stage 2 — Output image classification** (after GPU, <200ms per image):
+Stage 2 — Output image classification (after GPU, <200ms per image):
 \`\`\`
 Vision classifier on each generated image:
   CLIP-based NSFW detector: compare image embedding to NSFW concept embeddings
@@ -2158,12 +2158,12 @@ Action thresholds:
   All 4 images filtered → return error "content policy violation" and refund credits
 \`\`\`
 
-**Avoiding over-blocking legitimate requests**:
+Avoiding over-blocking legitimate requests:
 - Artist mode toggle for professional accounts (unlocks more latitude on violence/gore for horror/game art)
 - False positive reporting: users appeal blocked prompts; human reviewer checks and adjusts thresholds
 - Monthly calibration: review precision/recall of both classifiers; adjust thresholds to maintain <1% false positive rate for safe content
 
-**What the system does NOT block**:
+What the system does NOT block:
 - Artistic nudity in classical/fine art style (threshold calibrated against historical art datasets)
 - Fantasy violence in clearly non-photorealistic styles (cartoon/animated)
 - Political satire of public figures in clearly satirical contexts`,
@@ -2330,9 +2330,9 @@ dialogue_history {
     keyQuestions: [
       {
         question: 'How do you maintain character consistency when LLMs tend to drift from the persona?',
-        answer: `**Character drift** is when an NPC starts responding in ways inconsistent with their persona — using modern slang, breaking the fourth wall, discussing topics outside their knowledge, or becoming universally helpful regardless of relationship level.
+        answer: `Character drift is when an NPC starts responding in ways inconsistent with their persona — using modern slang, breaking the fourth wall, discussing topics outside their knowledge, or becoming universally helpful regardless of relationship level.
 
-**Prevention — strong system prompt structure**:
+Prevention — strong system prompt structure:
 \`\`\`
 System prompt (compiled once per NPC persona):
 "You are Garrett Ironforge, a village blacksmith in the medieval town of Ashford.
@@ -2344,7 +2344,7 @@ RELATIONSHIP: This player has a FRIENDLY relationship level with you. Treat them
 EMOTIONAL STATE: Currently NEUTRAL. You have no strong feelings about this player at this moment."
 \`\`\`
 
-**Detection — post-generation classifier**:
+Detection — post-generation classifier:
 \`\`\`
 After each NPC response, run a fast binary classifier:
   "Does this response break character for [NPC name] given their persona?"
@@ -2355,7 +2355,7 @@ After each NPC response, run a fast binary classifier:
   Max 1 retry to stay within latency budget
 \`\`\`
 
-**Emotional state enforcement**:
+Emotional state enforcement:
 \`\`\`
 Hostile state → response must not offer help proactively
 Friendly state → response can share more information
@@ -2366,34 +2366,34 @@ After response, classify the emotional tone:
   If mismatched → rewrite the emotional framing (not the content)
 \`\`\`
 
-**Quality monitoring**: Sample 1% of NPC conversations for human review weekly. Track character consistency score per NPC. Flag NPCs with consistency below 90% for prompt revision.`,
+Quality monitoring: Sample 1% of NPC conversations for human review weekly. Track character consistency score per NPC. Flag NPCs with consistency below 90% for prompt revision.`,
       },
       {
         question: 'How do you scale to 100,000 simultaneous NPC conversations?',
-        answer: `**The math**:
+        answer: `The math:
 \`\`\`
 100,000 conversations × 5 messages/min = 500,000 messages/min = 8,333 LLM requests/sec
 At $0.001 per request = $8.33/sec = $30K/hour at peak
 \`\`\`
 This is why cost and latency optimization are both critical.
 
-**Architecture for 8,333 requests/sec**:
+Architecture for 8,333 requests/sec:
 
-**Tier 1 — Fast model routing**:
+Tier 1 — Fast model routing:
 \`\`\`
 Standard NPC responses → fast model (Haiku/GPT-4o-mini): 700ms, $0.0003/request
 Important story NPCs → full model (Sonnet/GPT-4o): 1.5s, $0.003/request
 Route by NPC importance tier set in persona definition
 \`\`\`
 
-**Tier 2 — Request batching**:
+Tier 2 — Request batching:
 \`\`\`
 Aggregate NPC requests every 50ms
 Send batches of 20-50 requests per API call
 Batch inference is 3-5x more GPU-efficient than individual requests
 \`\`\`
 
-**Tier 3 — Response caching for common questions**:
+Tier 3 — Response caching for common questions:
 \`\`\`
 Question: "What do you sell?"
 This question asked to the blacksmith NPC 50 times in the last hour
@@ -2402,7 +2402,7 @@ Cache key: hash(npc_id + question_embedding_bucket + relationship_tier)
 Cache hit rate: ~30% for generic questions
 \`\`\`
 
-**Tier 4 — Conversation TTL and cleanup**:
+Tier 4 — Conversation TTL and cleanup:
 \`\`\`
 Active conversations in Redis with 10-minute TTL
 Inactive conversations auto-expired: no cleanup job needed
@@ -2410,7 +2410,7 @@ Player leaves the NPC → conversation ends → Redis key expires
 Prevents memory accumulation from abandoned conversations
 \`\`\`
 
-**Result**: With fast model routing (60% of traffic) + 30% cache hit rate, effective cost is ~$0.0005/request average → ~$4.20/sec at 8,333 rps → $15K/hour. Still significant, but 2x cheaper than naive routing.`,
+Result: With fast model routing (60% of traffic) + 30% cache hit rate, effective cost is ~$0.0005/request average → ~$4.20/sec at 8,333 rps → $15K/hour. Still significant, but 2x cheaper than naive routing.`,
       },
     ],
 
@@ -2566,9 +2566,9 @@ human_corrections {
     keyQuestions: [
       {
         question: 'How does the OCR recognition pipeline work end to end?',
-        answer: `**Modern neural OCR pipeline**:
+        answer: `Modern neural OCR pipeline:
 
-**Step 1 — Text Detection** (where is text on the page?):
+Step 1 — Text Detection (where is text on the page?):
 \`\`\`
 Model: CRAFT (Character Region Awareness For Text) or DBNet
 Input: full page image
@@ -2577,14 +2577,14 @@ Key insight: detect individual characters first, then group into words and lines
 Runs on GPU: ~50ms for a standard page
 \`\`\`
 
-**Step 2 — Region Cropping**:
+Step 2 — Region Cropping:
 \`\`\`
 Extract each detected text region as a cropped image patch
 Normalize to fixed height (32px) preserving aspect ratio
 These patches are the input to the recognition model
 \`\`\`
 
-**Step 3 — Text Recognition** (what does the text say?):
+Step 3 — Text Recognition (what does the text say?):
 \`\`\`
 Model: CRNN (CNN + BiLSTM + CTC Loss)
   CNN: extract visual features from the 32px-height patch
@@ -2599,7 +2599,7 @@ Beam search decoding:
   Example: "3niom" → "Snion" vs standard argmax might produce "3niom"
 \`\`\`
 
-**Step 4 — Post-processing**:
+Step 4 — Post-processing:
 \`\`\`
 Word-level language model scoring: does this word exist in the vocabulary?
   Low-probability word + similar high-probability alternative → substitute
@@ -2607,16 +2607,16 @@ Punctuation and spacing restoration for languages without spaces
 Confidence aggregation: min(char confidences) is a good word confidence estimate
 \`\`\`
 
-**Handwriting vs printed text**:
+Handwriting vs printed text:
 - Separate model branches: handwriting uses transformer architecture (TrOCR) rather than CRNN
 - Route by detected handwriting probability from the text detection model
 - Handwriting is 5-10x more compute intensive and 10-20 points lower accuracy than printed text`,
       },
       {
         question: 'How do you extract structured data from tables in scanned documents?',
-        answer: `**Table extraction** is a two-sub-problem: (1) detect and segment the table, (2) parse it into a structured grid.
+        answer: `Table extraction is a two-sub-problem: (1) detect and segment the table, (2) parse it into a structured grid.
 
-**Step 1 — Table detection**:
+Step 1 — Table detection:
 \`\`\`
 Object detection model (fine-tuned on document datasets):
   Input: full document page
@@ -2625,7 +2625,7 @@ Object detection model (fine-tuned on document datasets):
   Accuracy: 95%+ on well-structured printed tables
 \`\`\`
 
-**Step 2 — Cell segmentation**:
+Step 2 — Cell segmentation:
 \`\`\`
 For each detected table region:
   Line detection (Hough transform): find horizontal and vertical table rules
@@ -2636,7 +2636,7 @@ For tables without visible lines (whitespace-separated columns):
   Row boundaries inferred from horizontal whitespace gaps
 \`\`\`
 
-**Step 3 — Per-cell OCR**:
+Step 3 — Per-cell OCR:
 \`\`\`
 Run recognition model on each cropped cell
 Align cells into a grid by (row_index, col_index)
@@ -2651,12 +2651,12 @@ Output:
 ]
 \`\`\`
 
-**Confidence per cell**:
+Confidence per cell:
 - Cells with low OCR confidence flagged for human review
 - Critical cells in financial documents (totals, amounts) have lower acceptance thresholds
 - Customer-configurable confidence threshold per field type via API parameter
 
-**Verification check**: For invoice tables, sum columns and verify against extracted total — if the sum of extracted line items matches the extracted total, both are validated; discrepancy flags for human review.`,
+Verification check: For invoice tables, sum columns and verify against extracted total — if the sum of extracted line items matches the extracted total, both are validated; discrepancy flags for human review.`,
       },
     ],
 
@@ -2821,9 +2821,9 @@ disease_diagnoses {
     keyQuestions: [
       {
         question: 'How does the disease detection model work, and how do you handle low-quality field photos?',
-        answer: `**Disease detection from crop photos** is a multi-label image classification task trained on annotated disease images.
+        answer: `Disease detection from crop photos is a multi-label image classification task trained on annotated disease images.
 
-**Model architecture**:
+Model architecture:
 \`\`\`
 Base: EfficientNet-B4 or ViT-B/16 fine-tuned on PlantVillage + PlantDoc datasets
   + private labeled data from platform users (annotated by agronomists)
@@ -2838,7 +2838,7 @@ Threshold per class:
   confidence < 0.50 → do not report
 \`\`\`
 
-**Handling low-quality field photos**:
+Handling low-quality field photos:
 \`\`\`
 Image quality assessment (runs first, before disease classification):
   Blur detection: Laplacian variance < threshold → "Photo is blurry, please retake"
@@ -2849,24 +2849,24 @@ If quality is acceptable, run disease classification
 If quality is marginal, run classification but add: "requires_expert_review: true"
 \`\`\`
 
-**Agronomist confidence calibration**:
+Agronomist confidence calibration:
 - Model trained to match agronomist confidence levels, not just binary correct/wrong
 - If 5 agronomists review an image and 3 say Northern Blight (60%), 2 say uncertain (40%):
   model should output confidence ~0.60, not 0.95 or 0.20
 - Calibration prevents the system from being overconfident on ambiguous images
 
-**On-device model** (offline mode):
+On-device model (offline mode):
 - TFLite INT8 quantized model: 15MB, covers 50 most common diseases
 - Inference: 1.5 seconds on mid-range Android (Snapdragon 660)
 - Accuracy: ~5% lower than cloud model but sufficient for common high-prevalence diseases`,
       },
       {
         question: 'How do you generate irrigation recommendations that account for both soil moisture and weather forecasts?',
-        answer: `**The problem with simple schedules**: "Water every 3 days" ignores whether it rained yesterday (field is already saturated) or whether a heat wave is coming (field will dry faster than normal).
+        answer: `The problem with simple schedules: "Water every 3 days" ignores whether it rained yesterday (field is already saturated) or whether a heat wave is coming (field will dry faster than normal).
 
-**Evapotranspiration (ET) model approach**:
+Evapotranspiration (ET) model approach:
 
-**Step 1 — Calculate crop water demand (ET0)**:
+Step 1 — Calculate crop water demand (ET0):
 \`\`\`
 Penman-Monteith equation inputs (from weather API + local sensor):
   Temperature (max, min, mean)
@@ -2884,7 +2884,7 @@ Crop coefficient (Kc) adjusts for specific crop and growth stage:
 Crop ET (ETc) = ET0 × Kc → actual crop water need per day
 \`\`\`
 
-**Step 2 — Compare with soil moisture**:
+Step 2 — Compare with soil moisture:
 \`\`\`
 Soil moisture sensor reading: 28% volumetric water content
 Field capacity for this soil type: 35%
@@ -2895,7 +2895,7 @@ Threshold: if available water < 50%, irrigation is recommended
 Deficit: (35% - 28%) * root_zone_depth_mm = irrigation amount needed
 \`\`\`
 
-**Step 3 — Incorporate 7-day forecast**:
+Step 3 — Incorporate 7-day forecast:
 \`\`\`
 Forecast shows 15mm rain on Day 3
 Adjusted recommendation:
@@ -2906,7 +2906,7 @@ Adjusted recommendation:
   Day 6: forecast is dry; check sensor reading; if < 50% threshold, irrigate
 \`\`\`
 
-**Output to farmer**:
+Output to farmer:
 "Do not irrigate for the next 3 days. Rain of 15mm is forecast on [date].
 On [Day 6], check your soil moisture. If the reading is below 25%, apply 30mm of water.
 Your maize is at peak water demand (silking stage), so do not let soil moisture drop below 50% of field capacity."

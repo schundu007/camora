@@ -57,10 +57,10 @@ export const extraCodingTopics = [
 
     introduction: `Prefix Sum is a preprocessing technique that transforms an array into a cumulative sum array, enabling any range sum query to be answered in constant time. The core idea is simple: if you know the sum from index 0 to j and from 0 to i-1, then the sum from i to j is just prefix[j+1] - prefix[i].
 
-**Why This Matters:**
+Why This Matters:
 This pattern appears in a surprising number of interview problems disguised as subarray sum questions. Problems involving "subarray sum equals K," divisibility conditions on subarrays, or counting subarrays with certain properties almost always benefit from prefix sums combined with hash maps.
 
-**Key Insight:** When you pair prefix sums with a hash map that counts how many times each prefix sum value has occurred, you can solve subarray sum problems in O(n) that would otherwise require O(n^2) brute force enumeration of all subarrays.`,
+Key Insight: When you pair prefix sums with a hash map that counts how many times each prefix sum value has occurred, you can solve subarray sum problems in O(n) that would otherwise require O(n^2) brute force enumeration of all subarrays.`,
 
     whenToUse: [
       'Need to answer multiple range sum queries on a static array',
@@ -155,10 +155,10 @@ This pattern appears in a surprising number of interview problems disguised as s
 
     introduction: `Kadane's Algorithm is an elegant O(n) approach to the Maximum Subarray problem. The idea is to maintain a running sum as you scan left to right: at each position, you decide whether to extend the current subarray or start fresh from the current element. The answer is the largest running sum encountered during the scan.
 
-**Why This Matters:**
+Why This Matters:
 The Maximum Subarray problem is one of the most frequently asked interview questions and forms the basis for a family of problems involving contiguous subarray optimization. Variants include circular arrays, maximum product subarrays, and best sightseeing pairs.
 
-**Key Insight:** The decision at each index is local: if the running sum so far is negative, it can only hurt any future subarray, so you discard it and start over. This greedy choice leads to a globally optimal answer, which is provable via dynamic programming: dp[i] = max(nums[i], dp[i-1] + nums[i]).`,
+Key Insight: The decision at each index is local: if the running sum so far is negative, it can only hurt any future subarray, so you discard it and start over. This greedy choice leads to a globally optimal answer, which is provable via dynamic programming: dp[i] = max(nums[i], dp[i-1] + nums[i]).`,
 
     whenToUse: [
       'Finding the maximum (or minimum) sum contiguous subarray',
@@ -251,10 +251,10 @@ The Maximum Subarray problem is one of the most frequently asked interview quest
 
     introduction: `A Monotonic Stack is a stack where elements are maintained in either strictly increasing or strictly decreasing order. When a new element violates the ordering, elements are popped until the invariant is restored. This technique is the go-to approach for "next greater element" and "next smaller element" problems.
 
-**Why This Matters:**
+Why This Matters:
 Without a monotonic stack, finding the next greater element for every position requires O(n^2) brute force. The monotonic stack solves this in a single O(n) pass because each element is pushed and popped at most once. This pattern appears frequently in problems involving temperature spans, stock prices, histogram areas, and visibility.
 
-**Key Insight:** The stack at any point contains elements that are "waiting" for their answer. When a new element arrives that is greater (or smaller) than the stack's top, we have found the answer for that waiting element, so we pop it and record the result.`,
+Key Insight: The stack at any point contains elements that are "waiting" for their answer. When a new element arrives that is greater (or smaller) than the stack's top, we have found the answer for that waiting element, so we pop it and record the result.`,
 
     whenToUse: [
       'Finding the next greater or next smaller element for each position in an array',
@@ -351,10 +351,10 @@ Without a monotonic stack, finding the next greater element for every position r
 
     introduction: `A Monotonic Queue (typically implemented as a deque) maintains elements in sorted order and supports efficient insertion and deletion from both ends. It is the definitive technique for sliding window maximum and minimum problems, reducing what would be an O(n*k) brute force to O(n).
 
-**Why This Matters:**
+Why This Matters:
 Sliding Window Maximum is a classic hard problem that tests whether you understand how to maintain auxiliary data structures alongside a sliding window. The monotonic deque ensures that the front always holds the current window's maximum (or minimum), and stale elements are removed from the front when they leave the window.
 
-**Key Insight:** When a new element enters the window that is larger than elements at the back of the deque, those back elements can never be the maximum for any future window position, so they are discarded. This pruning keeps the deque sorted and ensures amortized O(1) per operation.`,
+Key Insight: When a new element enters the window that is larger than elements at the back of the deque, those back elements can never be the maximum for any future window position, so they are discarded. This pruning keeps the deque sorted and ensures amortized O(1) per operation.`,
 
     whenToUse: [
       'Finding the maximum or minimum in every sliding window of size k',
@@ -443,10 +443,10 @@ Sliding Window Maximum is a classic hard problem that tests whether you understa
 
     introduction: `In-place linked list reversal is one of the most fundamental pointer manipulation techniques. The core operation involves iterating through nodes and reversing the direction of each "next" pointer so that the list (or a portion of it) runs in the opposite direction. This is done using three pointers: previous, current, and next.
 
-**Why This Matters:**
+Why This Matters:
 Linked list reversal appears directly in interviews and also serves as a building block for more advanced problems like reversing nodes in k-groups, checking palindromes, and reordering lists. Mastering this pattern demonstrates fluency with pointer manipulation and in-place algorithms.
 
-**Key Insight:** The reversal works by visiting each node exactly once and flipping its next pointer to point backward. You need three pointers to avoid losing the reference to the rest of the list: prev (already reversed), curr (being processed), and next_node (saved before flipping).`,
+Key Insight: The reversal works by visiting each node exactly once and flipping its next pointer to point backward. You need three pointers to avoid losing the reference to the rest of the list: prev (already reversed), curr (being processed), and next_node (saved before flipping).`,
 
     whenToUse: [
       'Reversing an entire linked list',
@@ -536,10 +536,10 @@ Linked list reversal appears directly in interviews and also serves as a buildin
 
     introduction: `The Fast & Slow Pointers technique (also called Floyd's Tortoise and Hare) uses two pointers that traverse a sequence at different speeds. The slow pointer moves one step at a time while the fast pointer moves two steps. This simple idea solves cycle detection, middle-finding, and several other structural problems elegantly.
 
-**Why This Matters:**
+Why This Matters:
 Cycle detection in linked lists is a classic interview question, but the pattern extends beyond linked lists. It applies to any problem with a cyclic structure: detecting cycles in sequences (Happy Number), finding duplicate numbers, and identifying the start of a cycle. The O(1) space usage is what makes this technique special compared to hash set approaches.
 
-**Key Insight:** If a cycle exists, the fast pointer will eventually "lap" the slow pointer and they will meet inside the cycle. To find where the cycle begins, reset one pointer to the start and move both at the same speed - they meet at the cycle entrance. This works because of a mathematical relationship between the distances traveled.`,
+Key Insight: If a cycle exists, the fast pointer will eventually "lap" the slow pointer and they will meet inside the cycle. To find where the cycle begins, reset one pointer to the start and move both at the same speed - they meet at the cycle entrance. This works because of a mathematical relationship between the distances traveled.`,
 
     whenToUse: [
       'Detecting if a linked list has a cycle',
@@ -618,10 +618,10 @@ Cycle detection in linked lists is a classic interview question, but the pattern
 
     introduction: `Divide and Conquer is a fundamental algorithmic paradigm that solves a problem by breaking it into smaller subproblems of the same type, solving each subproblem recursively, and then combining the results. Classic examples include merge sort, quicksort, and binary search, but the pattern extends to tree construction, geometric algorithms, and matrix multiplication.
 
-**Why This Matters:**
+Why This Matters:
 Many efficient algorithms are based on divide and conquer. Understanding this paradigm helps you recognize when a problem has optimal substructure that allows recursive decomposition. Interview problems that involve building balanced structures (BSTs from sorted data), spatial decomposition (Quad Trees), or efficiently combining partial results often use this approach.
 
-**Key Insight:** The efficiency gain comes from reducing work at each level. If you split a problem of size n into two subproblems of size n/2 and the combine step takes O(n), you get O(n log n) total work. The Master Theorem formalizes this: T(n) = aT(n/b) + O(n^d) determines the overall complexity based on a, b, and d.`,
+Key Insight: The efficiency gain comes from reducing work at each level. If you split a problem of size n into two subproblems of size n/2 and the combine step takes O(n), you get O(n log n) total work. The Master Theorem formalizes this: T(n) = aT(n/b) + O(n^d) determines the overall complexity based on a, b, and d.`,
 
     whenToUse: [
       'Problems that can be decomposed into independent subproblems of the same structure',
@@ -701,10 +701,10 @@ Many efficient algorithms are based on divide and conquer. Understanding this pa
 
     introduction: `Merge Sort is a divide-and-conquer sorting algorithm that splits the array in half, recursively sorts each half, and merges the two sorted halves. It guarantees O(n log n) time in all cases (best, average, worst) and is stable, preserving the relative order of equal elements.
 
-**Why This Matters:**
+Why This Matters:
 Beyond sorting, the merge step is a powerful technique for counting inversions, reverse pairs, and other cross-boundary relationships. Merge sort is also the preferred algorithm for sorting linked lists because it does not require random access. Interview problems often test your ability to adapt the merge step to count something while sorting.
 
-**Key Insight:** During the merge step, when an element from the right half is placed before elements remaining in the left half, you can count how many elements in the left half are "greater" - this is the basis for inversion counting and reverse pairs. The merge step gives you a structured way to count cross-boundary relationships.`,
+Key Insight: During the merge step, when an element from the right half is placed before elements remaining in the left half, you can count how many elements in the left half are "greater" - this is the basis for inversion counting and reverse pairs. The merge step gives you a structured way to count cross-boundary relationships.`,
 
     whenToUse: [
       'Sorting when worst-case O(n log n) is required (quicksort degrades to O(n^2))',
@@ -783,10 +783,10 @@ Beyond sorting, the merge step is a powerful technique for counting inversions, 
 
     introduction: `QuickSort uses a pivot element to partition the array into elements less than and greater than the pivot, then recursively sorts each partition. QuickSelect adapts this idea to find the k-th smallest (or largest) element in O(n) average time by only recursing into the partition that contains the target index.
 
-**Why This Matters:**
+Why This Matters:
 QuickSort is the most commonly used sorting algorithm in practice due to its excellent average-case performance and cache efficiency. QuickSelect is the optimal solution for "k-th largest element" problems, providing O(n) average time compared to O(n log n) for sorting or O(n log k) for a heap. Both algorithms test your understanding of partitioning, which is a versatile technique.
 
-**Key Insight:** The partition operation is the workhorse. After one partition, the pivot is in its final sorted position. For QuickSelect, you only need to recurse into the partition containing index k, halving the problem size on average, which yields O(n) average time by the geometric series argument.`,
+Key Insight: The partition operation is the workhorse. After one partition, the pivot is in its final sorted position. For QuickSelect, you only need to recurse into the partition containing index k, halving the problem size on average, which yields O(n) average time by the geometric series argument.`,
 
     whenToUse: [
       'General-purpose sorting when average O(n log n) is sufficient and O(n^2) worst case is acceptable',
@@ -866,10 +866,10 @@ QuickSort is the most commonly used sorting algorithm in practice due to its exc
 
     introduction: `Bucket Sort distributes elements into a fixed number of buckets based on some criterion (value range, frequency, etc.), processes each bucket independently, and concatenates the results. When elements are uniformly distributed, this achieves O(n) average time, beating comparison-based sorts' O(n log n) lower bound.
 
-**Why This Matters:**
+Why This Matters:
 In interviews, bucket sort appears in problems involving frequency-based ordering (Top K Frequent, Sort by Frequency) and gap-based problems (Maximum Gap). The key insight is that when you can map elements to a bounded number of buckets, you bypass the comparison sort lower bound. Counting sort and radix sort are special cases of this paradigm.
 
-**Key Insight:** The power of bucket sort lies in the bucketing function. By choosing the right mapping (value ranges, frequencies, digit values), you can solve problems that seem to require sorting in O(n) time. For Maximum Gap, the pigeonhole principle guarantees the answer spans at least one empty bucket, so you only need to check bucket boundaries.`,
+Key Insight: The power of bucket sort lies in the bucketing function. By choosing the right mapping (value ranges, frequencies, digit values), you can solve problems that seem to require sorting in O(n) time. For Maximum Gap, the pigeonhole principle guarantees the answer spans at least one empty bucket, so you only need to check bucket boundaries.`,
 
     whenToUse: [
       'Sorting when the value range or number of distinct values is bounded',
@@ -958,10 +958,10 @@ In interviews, bucket sort appears in problems involving frequency-based orderin
 
     introduction: `Tree traversals are the fundamental operations for visiting every node in a tree. The four main traversals are: preorder (root, left, right), inorder (left, root, right), postorder (left, right, root), and level-order (breadth-first, level by level). Each traversal reveals different structural properties of the tree.
 
-**Why This Matters:**
+Why This Matters:
 Nearly every tree problem in interviews requires a traversal as its backbone. Inorder traversal of a BST produces sorted output. Preorder traversal reconstructs the tree. Postorder traversal computes bottom-up aggregates (heights, diameters). Level-order traversal processes nodes layer by layer. Choosing the right traversal is the first step to solving any tree problem.
 
-**Key Insight:** The three DFS traversals (preorder, inorder, postorder) differ only in when you process the current node relative to the recursive calls. Once you internalize this, you can adapt any traversal to solve different problems by choosing when to do the "work" (before, between, or after visiting children).`,
+Key Insight: The three DFS traversals (preorder, inorder, postorder) differ only in when you process the current node relative to the recursive calls. Once you internalize this, you can adapt any traversal to solve different problems by choosing when to do the "work" (before, between, or after visiting children).`,
 
     whenToUse: [
       'Processing all nodes in a tree or extracting information from the tree structure',
@@ -1061,10 +1061,10 @@ Nearly every tree problem in interviews requires a traversal as its backbone. In
 
     introduction: `A Binary Search Tree (BST) maintains the invariant that for every node, all values in its left subtree are smaller and all values in its right subtree are larger. This ordering enables O(log n) search, insertion, and deletion in balanced trees. Ordered sets (like Java's TreeSet or C++'s std::set) are self-balancing BSTs that guarantee these bounds.
 
-**Why This Matters:**
+Why This Matters:
 BST problems test your understanding of tree invariants and how to exploit ordered structure. Interview problems range from basic BST operations (trim, validate) to using ordered sets as building blocks for scheduling, interval, and streaming problems. Languages with built-in ordered sets (Java TreeMap, C++ set/map) give you powerful tools for problems requiring sorted dynamic collections.
 
-**Key Insight:** The BST property means an inorder traversal produces elements in sorted order. This is the foundation for range queries, finding predecessors/successors, and validating BST correctness. When you need a dynamic sorted collection with O(log n) operations, think BST or ordered set.`,
+Key Insight: The BST property means an inorder traversal produces elements in sorted order. This is the foundation for range queries, finding predecessors/successors, and validating BST correctness. When you need a dynamic sorted collection with O(log n) operations, think BST or ordered set.`,
 
     whenToUse: [
       'Need a dynamic collection that supports sorted order operations',
@@ -1147,10 +1147,10 @@ BST problems test your understanding of tree invariants and how to exploit order
 
     introduction: `The Two Heaps pattern uses a max-heap for the smaller half of elements and a min-heap for the larger half. By keeping these two heaps balanced (sizes differ by at most 1), the median is always available at the top of one or both heaps. This enables O(log n) insertions and O(1) median queries on a streaming dataset.
 
-**Why This Matters:**
+Why This Matters:
 "Find Median from Data Stream" is one of the most popular hard interview questions and the Two Heaps pattern is its canonical solution. The same pattern appears in sliding window median problems and optimization problems like IPO where you need to efficiently access both the smallest and largest elements from two different perspectives.
 
-**Key Insight:** The max-heap holds elements less than or equal to the median, and the min-heap holds elements greater than the median. The median is either the top of the max-heap (odd total count) or the average of both tops (even count). The balancing step after each insertion ensures the size difference never exceeds 1.`,
+Key Insight: The max-heap holds elements less than or equal to the median, and the min-heap holds elements greater than the median. The median is either the top of the max-heap (odd total count) or the average of both tops (even count). The balancing step after each insertion ensures the size difference never exceeds 1.`,
 
     whenToUse: [
       'Finding the median of a data stream (running median)',
@@ -1229,10 +1229,10 @@ BST problems test your understanding of tree invariants and how to exploit order
 
     introduction: `The Top K Elements pattern involves finding the k elements that rank highest (or lowest) according to some criterion. The three main approaches are: a min-heap of size k (O(n log k)), QuickSelect (O(n) average), and bucket sort (O(n) for frequency problems). The heap approach is the most versatile and commonly expected in interviews.
 
-**Why This Matters:**
+Why This Matters:
 "Top K" is one of the most common interview question patterns. It appears as Top K Frequent Elements, K Closest Points, Kth Largest in a Stream, and many variants. The heap-based approach demonstrates understanding of priority queues, and choosing the right approach (heap vs QuickSelect vs bucket sort) shows algorithmic maturity.
 
-**Key Insight:** To find the top k largest elements, use a min-heap of size k. Each new element is compared with the heap's minimum: if larger, it replaces the minimum. After processing all elements, the heap contains exactly the k largest. This is counterintuitive - you use a min-heap to find maximums - because you are maintaining a heap of "the best k so far" and the min-heap lets you efficiently evict the worst of the best.`,
+Key Insight: To find the top k largest elements, use a min-heap of size k. Each new element is compared with the heap's minimum: if larger, it replaces the minimum. After processing all elements, the heap contains exactly the k largest. This is counterintuitive - you use a min-heap to find maximums - because you are maintaining a heap of "the best k so far" and the min-heap lets you efficiently evict the worst of the best.`,
 
     whenToUse: [
       'Finding the k largest or k smallest elements in a collection',
@@ -1312,10 +1312,10 @@ BST problems test your understanding of tree invariants and how to exploit order
 
     introduction: `K-Way Merge is the technique for efficiently merging k sorted sequences or finding elements by rank across multiple sorted sources. The core idea is to use a min-heap that always contains the smallest unprocessed element from each of the k sources. By repeatedly extracting the minimum and replacing it with the next element from the same source, you merge all sources in O(n log k) time.
 
-**Why This Matters:**
+Why This Matters:
 Merge K Sorted Lists is a frequently asked interview question and the pattern extends to problems like finding the k-th smallest element in a matrix, finding k pairs with smallest sums, and finding the smallest range that covers elements from all lists. The min-heap approach is elegant and generalizes the two-way merge from merge sort to k-way.
 
-**Key Insight:** The min-heap acts as a "tournament" among the k sources. At any moment, the heap contains at most k elements (one frontier element from each source), and extracting the minimum takes O(log k). Since you process n total elements, the overall time is O(n log k), which is much better than repeatedly scanning all k lists.`,
+Key Insight: The min-heap acts as a "tournament" among the k sources. At any moment, the heap contains at most k elements (one frontier element from each source), and extracting the minimum takes O(log k). Since you process n total elements, the overall time is O(n log k), which is much better than repeatedly scanning all k lists.`,
 
     whenToUse: [
       'Merging k sorted linked lists or arrays into one sorted sequence',
@@ -1396,10 +1396,10 @@ Merge K Sorted Lists is a frequently asked interview question and the pattern ex
 
     introduction: `Data Structure Design problems ask you to build a custom class that supports a specific set of operations, each with a required time complexity. These problems test your ability to combine standard data structures (hash maps, linked lists, heaps, stacks, arrays) creatively to meet all constraints simultaneously.
 
-**Why This Matters:**
+Why This Matters:
 These problems are favorites at top tech companies because they test both your data structure knowledge and your design skills. Problems like LRU Cache, Insert Delete GetRandom O(1), and Time Based Key-Value Store are among the most frequently asked interview questions. They require you to identify which combination of data structures satisfies all the operation constraints.
 
-**Key Insight:** The secret is to identify the bottleneck operation and choose the data structure that makes it efficient, then add auxiliary structures to support the remaining operations. For example, LRU Cache needs O(1) access (hash map) and O(1) eviction of the least recently used (doubly linked list) - neither alone suffices, but together they do.`,
+Key Insight: The secret is to identify the bottleneck operation and choose the data structure that makes it efficient, then add auxiliary structures to support the remaining operations. For example, LRU Cache needs O(1) access (hash map) and O(1) eviction of the least recently used (doubly linked list) - neither alone suffices, but together they do.`,
 
     whenToUse: [
       'When a problem asks you to design a class with multiple operations at specific time complexities',
@@ -1494,10 +1494,10 @@ These problems are favorites at top tech companies because they test both your d
 
     introduction: `Union Find (also called Disjoint Set Union or DSU) is a data structure that tracks a collection of disjoint sets and supports two operations: find (which set does an element belong to?) and union (merge two sets). With path compression and union by rank optimizations, both operations run in nearly O(1) amortized time - specifically O(alpha(n)) where alpha is the inverse Ackermann function.
 
-**Why This Matters:**
+Why This Matters:
 Union Find is the go-to data structure for connectivity problems: determining if two nodes are connected, counting connected components, and detecting cycles in undirected graphs. It is simpler and more efficient than BFS/DFS for problems that only require connectivity information (not paths). It also appears in minimum spanning tree algorithms (Kruskal's) and network analysis.
 
-**Key Insight:** Each set is represented as a tree rooted at a "representative" element. Find follows parent pointers to the root (with path compression flattening the tree along the way). Union links one root to the other (with rank-based merging to keep trees balanced). These two optimizations together make the amortized cost nearly constant.`,
+Key Insight: Each set is represented as a tree rooted at a "representative" element. Find follows parent pointers to the root (with path compression flattening the tree along the way). Union links one root to the other (with rank-based merging to keep trees balanced). These two optimizations together make the amortized cost nearly constant.`,
 
     whenToUse: [
       'Determining if two elements are in the same connected component',
@@ -1588,10 +1588,10 @@ Union Find is the go-to data structure for connectivity problems: determining if
 
     introduction: `Topological Sort produces a linear ordering of vertices in a Directed Acyclic Graph (DAG) such that for every directed edge (u, v), vertex u appears before vertex v. The two main algorithms are Kahn's Algorithm (BFS with in-degree tracking) and DFS-based ordering (post-order reversal).
 
-**Why This Matters:**
+Why This Matters:
 Topological sort is essential for dependency resolution: course prerequisites, build systems, task scheduling, and compilation order. Interview problems often disguise dependency graphs as topological sort problems. Detecting whether a valid ordering exists is equivalent to checking if the graph is a DAG (no cycles).
 
-**Key Insight:** Kahn's algorithm works by repeatedly removing nodes with no incoming edges (in-degree 0). If all nodes are eventually removed, the graph is a DAG and the removal order is a valid topological sort. If some nodes remain (their in-degree never reaches 0), the graph has a cycle and no valid ordering exists.`,
+Key Insight: Kahn's algorithm works by repeatedly removing nodes with no incoming edges (in-degree 0). If all nodes are eventually removed, the graph is a DAG and the removal order is a valid topological sort. If some nodes remain (their in-degree never reaches 0), the graph has a cycle and no valid ordering exists.`,
 
     whenToUse: [
       'Course scheduling with prerequisites (Course Schedule, Course Schedule II)',
@@ -1682,10 +1682,10 @@ Topological sort is essential for dependency resolution: course prerequisites, b
 
     introduction: `Shortest path algorithms find the path with minimum total weight between nodes in a weighted graph. The three primary algorithms are: Dijkstra's (non-negative weights, O((V+E) log V) with a priority queue), Bellman-Ford (handles negative weights, O(VE)), and BFS (unweighted graphs, O(V+E)). Modified Dijkstra's is the most commonly tested in interviews.
 
-**Why This Matters:**
+Why This Matters:
 Shortest path problems appear frequently in interviews, often disguised as network routing, minimum cost travel, or optimization on grids. The key skill is recognizing which algorithm to apply based on the edge weight characteristics (non-negative, possibly negative, unit weights) and constraints (limited stops, time-varying costs).
 
-**Key Insight:** Dijkstra's algorithm works because it greedily processes the closest unvisited node. Once a node is finalized (dequeued from the priority queue), its shortest distance is guaranteed. This greedy property fails with negative edges (where a longer path through a negative edge might be shorter), which is when you need Bellman-Ford. For grid problems with varying "effort" costs, modified Dijkstra on the grid is the standard approach.`,
+Key Insight: Dijkstra's algorithm works because it greedily processes the closest unvisited node. Once a node is finalized (dequeued from the priority queue), its shortest distance is guaranteed. This greedy property fails with negative edges (where a longer path through a negative edge might be shorter), which is when you need Bellman-Ford. For grid problems with varying "effort" costs, modified Dijkstra on the grid is the standard approach.`,
 
     whenToUse: [
       'Finding shortest/cheapest path in a graph with non-negative edge weights (Dijkstra)',
@@ -1777,10 +1777,10 @@ Shortest path problems appear frequently in interviews, often disguised as netwo
 
     introduction: `The Knapsack pattern is one of the most important families of dynamic programming problems. In the classic formulation, you have items with weights and values, and a knapsack with limited capacity; the goal is to maximize value without exceeding the weight limit. The 0/1 variant means each item can be used at most once; the unbounded variant allows unlimited copies.
 
-**Why This Matters:**
+Why This Matters:
 Knapsack DP appears in many disguises: partition problems (can you split an array into two equal-sum subsets?), coin change problems (minimum coins to make a target sum), target sum problems (how many ways to assign +/- signs to reach a target), and subset selection under constraints. Recognizing the knapsack structure is key to formulating the correct DP recurrence.
 
-**Key Insight:** The 0/1 knapsack recurrence is dp[i][w] = max(dp[i-1][w], dp[i-1][w-weight[i]] + value[i]). The first term represents not taking item i; the second represents taking it. For the unbounded knapsack (Coin Change), the recurrence uses dp[i][w-weight[i]] instead of dp[i-1][w-weight[i]] because the same item can be reused. Space optimization reduces 2D DP to 1D by iterating capacity in the right order.`,
+Key Insight: The 0/1 knapsack recurrence is dp[i][w] = max(dp[i-1][w], dp[i-1][w-weight[i]] + value[i]). The first term represents not taking item i; the second represents taking it. For the unbounded knapsack (Coin Change), the recurrence uses dp[i][w-weight[i]] instead of dp[i-1][w-weight[i]] because the same item can be reused. Space optimization reduces 2D DP to 1D by iterating capacity in the right order.`,
 
     whenToUse: [
       'Selecting items subject to a capacity/weight/sum constraint to maximize or minimize a value',
@@ -1873,10 +1873,10 @@ Knapsack DP appears in many disguises: partition problems (can you split an arra
 
     introduction: `String DP problems involve two strings (or one string compared with itself) and use a 2D DP table where dp[i][j] represents the answer for the first i characters of string A and first j characters of string B. Classic problems include Longest Common Subsequence, Edit Distance, and Longest Palindromic Subsequence.
 
-**Why This Matters:**
+Why This Matters:
 String DP is one of the most common DP subcategories in interviews. Problems like Edit Distance and Longest Common Subsequence are asked frequently and have clean, well-known recurrences. Understanding the 2D table structure and how transitions work between adjacent cells is essential for handling the many variants that appear.
 
-**Key Insight:** Most string DP problems share a common structure: at each cell (i, j), you consider what happens when characters match vs when they do not. For LCS, a match extends the diagonal; a mismatch takes the better of (left, top). For Edit Distance, a match extends the diagonal for free; a mismatch takes the best of (insert, delete, replace) which correspond to (left+1, top+1, diagonal+1). Once you see this pattern, many string DP problems become variations of the same template.`,
+Key Insight: Most string DP problems share a common structure: at each cell (i, j), you consider what happens when characters match vs when they do not. For LCS, a match extends the diagonal; a mismatch takes the better of (left, top). For Edit Distance, a match extends the diagonal for free; a mismatch takes the best of (insert, delete, replace) which correspond to (left+1, top+1, diagonal+1). Once you see this pattern, many string DP problems become variations of the same template.`,
 
     whenToUse: [
       'Finding the longest common subsequence between two strings',
@@ -1970,10 +1970,10 @@ String DP is one of the most common DP subcategories in interviews. Problems lik
 
     introduction: `Grid DP involves solving optimization or counting problems on a 2D grid where you move from one cell to adjacent cells (typically down and right). The DP state is usually dp[i][j] = the optimal value or count of paths to reach cell (i, j). This pattern naturally extends to problems with obstacles, varying costs, and more complex movement rules.
 
-**Why This Matters:**
+Why This Matters:
 Grid DP problems are among the most common interview DP questions because they are visual and intuitive. Unique Paths, Minimum Path Sum, and Triangle are frequently asked and serve as excellent introductions to 2D DP. More advanced variants like Burst Balloons and Maximum Profit in Job Scheduling test deeper DP skills.
 
-**Key Insight:** In a standard grid DP, cell (i, j) can only be reached from (i-1, j) or (i, j-1), giving the recurrence dp[i][j] = f(dp[i-1][j], dp[i][j-1]). The function f depends on the problem: addition for path counting, min for minimum cost, max for maximum value. The base case is typically the first row and first column, which can only be reached one way.`,
+Key Insight: In a standard grid DP, cell (i, j) can only be reached from (i-1, j) or (i, j-1), giving the recurrence dp[i][j] = f(dp[i-1][j], dp[i][j-1]). The function f depends on the problem: addition for path counting, min for minimum cost, max for maximum value. The base case is typically the first row and first column, which can only be reached one way.`,
 
     whenToUse: [
       'Counting the number of paths from top-left to bottom-right of a grid',
@@ -2068,10 +2068,10 @@ Grid DP problems are among the most common interview DP questions because they a
 
     introduction: `Segment Trees are tree-based data structures that enable efficient range queries (sum, min, max over a range) and point or range updates on an array, both in O(log n) time. Each node stores the aggregate for a segment of the array, and queries combine results from O(log n) segments. Binary Indexed Trees (Fenwick Trees) are a simpler alternative for prefix-sum-based range queries with point updates.
 
-**Why This Matters:**
+Why This Matters:
 Segment trees appear in hard interview and competitive programming problems where you need to handle dynamic range queries - operations on a mutable array where both queries and updates happen frequently. Problems like Range Sum Query Mutable, Count of Smaller Numbers After Self, and The Skyline Problem require these advanced data structures. While they are less common in typical interviews, knowing them signals strong algorithmic depth.
 
-**Key Insight:** A segment tree recursively divides the array into halves, forming a balanced binary tree of height O(log n). Each node stores the aggregate for its range. A range query decomposes into at most O(log n) disjoint segments. A point update propagates up O(log n) ancestors. Lazy propagation extends this to range updates in O(log n) by deferring updates to children.`,
+Key Insight: A segment tree recursively divides the array into halves, forming a balanced binary tree of height O(log n). Each node stores the aggregate for its range. A range query decomposes into at most O(log n) disjoint segments. A point update propagates up O(log n) ancestors. Lazy propagation extends this to range updates in O(log n) by deferring updates to children.`,
 
     whenToUse: [
       'Range sum/min/max queries with point updates on a mutable array',
@@ -2154,10 +2154,10 @@ Segment trees appear in hard interview and competitive programming problems wher
 
     introduction: `Cyclic Sort is a specialized in-place sorting technique that works when the input consists of numbers in a known contiguous range, typically [1, n] or [0, n]. The core idea is deceptively simple: iterate through the array and place each number at its "correct" index (i.e., the value i should sit at index i-1). When a number is not at its correct position, you swap it there. After one pass of such placements, any index whose value does not match reveals a missing or duplicate number.
 
-**Why This Matters:**
+Why This Matters:
 Many interview problems ask you to find missing numbers, duplicate numbers, or corrupt pairs in an array of integers in the range [1, n]. The brute-force approach uses a hash set for O(n) time and O(n) space. Sorting gives O(n log n) time. Cyclic Sort achieves O(n) time with O(1) space by leveraging the fact that each value has a predetermined "home" index.
 
-**Key Insight:** Because the values are bounded within a known range that maps directly to array indices, you can treat the array itself as a hash table. Each swap places at least one element in its final position, so the total number of swaps across the entire pass is at most n, giving O(n) overall time despite the nested-looking while loop.`,
+Key Insight: Because the values are bounded within a known range that maps directly to array indices, you can treat the array itself as a hash table. Each swap places at least one element in its final position, so the total number of swaps across the entire pass is at most n, giving O(n) overall time despite the nested-looking while loop.`,
 
     whenToUse: [
       'Array contains numbers in a contiguous range [1, n] or [0, n]',
@@ -2246,10 +2246,10 @@ Many interview problems ask you to find missing numbers, duplicate numbers, or c
 
     introduction: `Island and Matrix Traversal problems represent a major category of graph problems where the graph is implicitly defined by a 2D grid. Each cell is a node, and edges connect adjacent cells (typically 4-directional: up, down, left, right). The fundamental operation is traversing connected components: starting from a cell, visit all reachable cells that satisfy some condition, marking them as visited along the way.
 
-**Why This Matters:**
+Why This Matters:
 Grid traversal problems are among the most common medium-difficulty interview questions. They test your ability to translate a visual 2D problem into a graph traversal, handle boundaries correctly, and choose between DFS and BFS based on the problem requirements. The "Number of Islands" problem alone is one of the top 10 most asked questions at major tech companies.
 
-**Key Insight:** Every grid traversal follows the same skeleton: iterate over all cells, and when you find an unvisited cell meeting the starting condition, launch a DFS or BFS to explore its entire connected component. The difference between problems lies in what counts as "connected," what you track during traversal (size, perimeter, boundary status), and whether you need shortest path (BFS) or just reachability (DFS or BFS).`,
+Key Insight: Every grid traversal follows the same skeleton: iterate over all cells, and when you find an unvisited cell meeting the starting condition, launch a DFS or BFS to explore its entire connected component. The difference between problems lies in what counts as "connected," what you track during traversal (size, perimeter, boundary status), and whether you need shortest path (BFS) or just reachability (DFS or BFS).`,
 
     whenToUse: [
       'Counting connected components in a grid (number of islands)',
@@ -2336,10 +2336,10 @@ Grid traversal problems are among the most common medium-difficulty interview qu
 
     introduction: `Palindromic DP encompasses a family of dynamic programming problems centered on finding, counting, or transforming palindromes within strings. The two fundamental variants are palindromic substrings (contiguous characters) and palindromic subsequences (characters that maintain relative order but need not be contiguous). Both share a common DP structure where you build solutions for longer strings from solutions to shorter ones.
 
-**Why This Matters:**
+Why This Matters:
 Palindrome problems are interview favorites because they elegantly demonstrate the power of dynamic programming. The Longest Palindromic Subsequence problem illustrates the gap between subsequences and substrings. The Minimum Deletions to Make Palindrome problem shows how LPS relates to edit distance. Palindromic Partitioning combines palindrome detection with interval DP, making it a challenging but instructive problem.
 
-**Key Insight:** For subsequences, define dp[i][j] as the length of the longest palindromic subsequence in s[i..j]. If s[i] == s[j], the characters can bookend a palindrome: dp[i][j] = dp[i+1][j-1] + 2. Otherwise, dp[i][j] = max(dp[i+1][j], dp[i][j-1]). This recurrence covers all palindromic subsequence variants. For substrings, dp[i][j] is a boolean indicating whether s[i..j] is a palindrome: true if s[i] == s[j] and dp[i+1][j-1] is true.`,
+Key Insight: For subsequences, define dp[i][j] as the length of the longest palindromic subsequence in s[i..j]. If s[i] == s[j], the characters can bookend a palindrome: dp[i][j] = dp[i+1][j-1] + 2. Otherwise, dp[i][j] = max(dp[i+1][j], dp[i][j-1]). This recurrence covers all palindromic subsequence variants. For substrings, dp[i][j] is a boolean indicating whether s[i..j] is a palindrome: true if s[i] == s[j] and dp[i+1][j-1] is true.`,
 
     whenToUse: [
       'Finding the longest palindromic subsequence in a string',
@@ -2420,10 +2420,10 @@ Palindrome problems are interview favorites because they elegantly demonstrate t
 
     introduction: `Fibonacci DP refers to a broad class of dynamic programming problems where the recurrence relation has a Fibonacci-like structure: each state depends on a small, fixed number of previous states. The classic Fibonacci sequence (F(n) = F(n-1) + F(n-2)) is the simplest example, but this pattern extends to problems like counting the number of ways to climb stairs, computing minimum costs along a sequence, and deciding whether to include or skip elements.
 
-**Why This Matters:**
+Why This Matters:
 Fibonacci-style DP problems are the gentlest introduction to dynamic programming and appear frequently in interviews at all levels. They build intuition for the DP thought process: identify the state, write the recurrence, determine base cases, and optimize space. Once you recognize the pattern, problems like Climbing Stairs, House Robber, and Jump Game become straightforward applications of the same template.
 
-**Key Insight:** The defining characteristic is that each state depends on only a constant number of prior states (typically 1-3). This means the DP can always be space-optimized from O(n) to O(1) by keeping only the needed previous values in variables, similar to how you compute Fibonacci numbers with just two variables.`,
+Key Insight: The defining characteristic is that each state depends on only a constant number of prior states (typically 1-3). This means the DP can always be space-optimized from O(n) to O(1) by keeping only the needed previous values in variables, similar to how you compute Fibonacci numbers with just two variables.`,
 
     whenToUse: [
       'Counting the number of ways to reach a target using fixed step sizes',
@@ -2505,10 +2505,10 @@ Fibonacci-style DP problems are the gentlest introduction to dynamic programming
 
     introduction: `An Ordered Set (also called a TreeSet in Java or SortedList in Python's sortedcontainers) is a data structure that maintains elements in sorted order while supporting efficient insertion, deletion, and lookup operations -- all in O(log n) time. It also supports order-based queries like finding the predecessor/successor of a value, range queries, and rank queries that are impossible with hash sets.
 
-**Why This Matters:**
+Why This Matters:
 A category of interview problems requires maintaining a dynamically changing collection where you need sorted-order access. Problems like "132 Pattern" need to efficiently find the largest element smaller than a threshold. Calendar scheduling problems need to quickly determine if a new interval overlaps any existing interval. Sliding window problems with sorted-order constraints need fast insertion and removal as the window moves.
 
-**Key Insight:** The ordered set sits between the hash set (O(1) access but no order) and a sorted array (sorted order but O(n) insertion/deletion). When a problem needs both dynamic updates and sorted-order queries, the ordered set provides the balanced O(log n) trade-off. In languages without a built-in sorted set with rank queries (like Python), the sortedcontainers library or a balanced BST serves this role.`,
+Key Insight: The ordered set sits between the hash set (O(1) access but no order) and a sorted array (sorted order but O(n) insertion/deletion). When a problem needs both dynamic updates and sorted-order queries, the ordered set provides the balanced O(log n) trade-off. In languages without a built-in sorted set with rank queries (like Python), the sortedcontainers library or a balanced BST serves this role.`,
 
     whenToUse: [
       'Need to maintain a dynamic collection in sorted order',
@@ -2588,10 +2588,10 @@ A category of interview problems requires maintaining a dynamically changing col
 
     introduction: `Multi-threaded coding problems test your understanding of concurrent programming primitives: mutexes, semaphores, condition variables, and barriers. Unlike typical algorithmic problems, these require you to coordinate multiple threads of execution that run simultaneously and may interleave unpredictably. The challenge is ensuring correctness (no deadlocks, no race conditions, correct ordering) while maximizing parallelism.
 
-**Why This Matters:**
+Why This Matters:
 Concurrency questions are increasingly common at top tech companies, especially for senior and systems-focused roles. Problems like "Print FizzBuzz" and "Print in Order" test whether you truly understand synchronization mechanisms beyond just using them in frameworks. "Dining Philosophers" is a classic deadlock-avoidance problem that tests your knowledge of resource ordering. "Web Crawler Multithreaded" tests practical producer-consumer design.
 
-**Key Insight:** Most concurrency interview problems reduce to one of a few coordination patterns: (1) ordering -- ensuring events happen in a specific sequence across threads, (2) mutual exclusion -- ensuring only one thread accesses a shared resource at a time, (3) producer-consumer -- safely passing data between threads, or (4) resource allocation -- preventing deadlock when multiple threads need multiple resources. Identify which pattern applies, then choose the simplest synchronization primitive that solves it.`,
+Key Insight: Most concurrency interview problems reduce to one of a few coordination patterns: (1) ordering -- ensuring events happen in a specific sequence across threads, (2) mutual exclusion -- ensuring only one thread accesses a shared resource at a time, (3) producer-consumer -- safely passing data between threads, or (4) resource allocation -- preventing deadlock when multiple threads need multiple resources. Identify which pattern applies, then choose the simplest synchronization primitive that solves it.`,
 
     whenToUse: [
       'Problems explicitly requiring multiple threads to cooperate on a task',
@@ -2673,10 +2673,10 @@ Concurrency questions are increasingly common at top tech companies, especially 
 
     introduction: `Custom Data Structure problems ask you to design a class that supports a specific set of operations, each with a required time complexity. These problems test your knowledge of how standard data structures (hash maps, doubly linked lists, heaps, stacks) can be combined to achieve guarantees that no single structure provides alone. For example, an LRU Cache needs O(1) get and put, which requires combining a hash map (for O(1) key lookup) with a doubly linked list (for O(1) eviction of the least recently used item).
 
-**Why This Matters:**
+Why This Matters:
 Design-a-data-structure problems are extremely popular in interviews at FAANG companies. LRU Cache is arguably the single most-asked design question. These problems test a deeper understanding than just using built-in data structures: you must understand the internal mechanics well enough to compose them into something new. They also test your ability to handle edge cases, maintain invariants across operations, and write clean object-oriented code under pressure.
 
-**Key Insight:** The secret to these problems is identifying which primitive operations each method requires and choosing a combination of data structures that covers all of them. O(1) random access means hash map. O(1) insertion/deletion at known positions means doubly linked list. O(1) min/max means maintaining an auxiliary stack or heap. O(1) random selection means array-based storage. The art is combining these without breaking any of the time guarantees.`,
+Key Insight: The secret to these problems is identifying which primitive operations each method requires and choosing a combination of data structures that covers all of them. O(1) random access means hash map. O(1) insertion/deletion at known positions means doubly linked list. O(1) min/max means maintaining an auxiliary stack or heap. O(1) random selection means array-based storage. The art is combining these without breaking any of the time guarantees.`,
 
     whenToUse: [
       'The problem asks you to design a class with specific method signatures and time complexities',
@@ -2762,10 +2762,10 @@ Design-a-data-structure problems are extremely popular in interviews at FAANG co
 
     introduction: `"Knowing What to Track" is a meta-pattern that appears across many problems involving frequency counting, character matching, and constraint validation. The core technique is maintaining a hash map (or array for fixed alphabets) that tracks the frequency or state of relevant elements as you process the input. The insight is recognizing what information you need to track and how to update it efficiently as your window or pointer moves.
 
-**Why This Matters:**
+Why This Matters:
 A large class of string and array problems -- including anagram detection, permutation checking, minimum window substring, and valid sudoku -- all reduce to the same fundamental operation: maintaining and comparing frequency maps. These problems appear constantly in interviews and are often solved with the sliding window pattern, but the key differentiator is knowing exactly what state to track and how to compare it efficiently.
 
-**Key Insight:** Instead of rebuilding the frequency map from scratch each time your window or search position changes, maintain it incrementally: add the new element entering your scope and remove the element leaving it. To compare two frequency maps efficiently, maintain a counter of "matched" categories that updates in O(1) with each addition or removal. This avoids the O(26) or O(k) comparison that would otherwise dominate the inner loop.`,
+Key Insight: Instead of rebuilding the frequency map from scratch each time your window or search position changes, maintain it incrementally: add the new element entering your scope and remove the element leaving it. To compare two frequency maps efficiently, maintain a counter of "matched" categories that updates in O(1) with each addition or removal. This avoids the O(26) or O(k) comparison that would otherwise dominate the inner loop.`,
 
     whenToUse: [
       'Finding all anagrams of a pattern in a string',
@@ -2846,10 +2846,10 @@ A large class of string and array problems -- including anagram detection, permu
 
     introduction: `Matrix-as-Graph problems go beyond simple connected component discovery (covered in Island Traversal) to focus on shortest paths, minimum distances, and level-order propagation in grids. The key distinction is that these problems typically require BFS because they involve finding the minimum number of steps, the shortest path to an exit, or propagating a "wavefront" from multiple sources simultaneously.
 
-**Why This Matters:**
+Why This Matters:
 While Island Traversal problems only need reachability (DFS or BFS both work), Matrix-as-Graph problems specifically require BFS for correctness because BFS naturally finds shortest paths in unweighted graphs. Multi-source BFS, where you start from multiple cells simultaneously, is a particularly powerful technique that appears in problems like "01 Matrix" (nearest 0 for each cell) and "Rotting Oranges" (minimum time to rot all oranges).
 
-**Key Insight:** In an unweighted grid graph, BFS from a single source finds shortest paths from that source. Multi-source BFS (initializing the queue with all source cells at distance 0) finds shortest distances from the nearest source for every cell. This runs in O(m*n) -- the same as single-source BFS -- because each cell is still processed exactly once. For weighted grids, you need Dijkstra's algorithm with a priority queue instead of a regular queue.`,
+Key Insight: In an unweighted grid graph, BFS from a single source finds shortest paths from that source. Multi-source BFS (initializing the queue with all source cells at distance 0) finds shortest distances from the nearest source for every cell. This runs in O(m*n) -- the same as single-source BFS -- because each cell is still processed exactly once. For weighted grids, you need Dijkstra's algorithm with a priority queue instead of a regular queue.`,
 
     whenToUse: [
       'Finding the shortest path from a source to a destination in a grid',
@@ -2932,10 +2932,10 @@ While Island Traversal problems only need reachability (DFS or BFS both work), M
 
     introduction: `Shortest Path Algorithms solve the fundamental problem of finding minimum-cost paths in weighted graphs. The three classic algorithms each address different scenarios: Dijkstra's algorithm handles single-source shortest paths in graphs with non-negative edge weights (O((V+E) log V) with a priority queue). Bellman-Ford handles single-source shortest paths even with negative weights and can detect negative cycles (O(V*E)). Floyd-Warshall computes all-pairs shortest paths (O(V^3)).
 
-**Why This Matters:**
+Why This Matters:
 Weighted graph shortest path problems are a staple of technical interviews, especially at senior levels. "Network Delay Time" directly tests Dijkstra's algorithm. "Cheapest Flights Within K Stops" adds a constraint that requires modified Bellman-Ford or BFS. "Path with Maximum Probability" twists the standard problem by maximizing a product instead of minimizing a sum. Understanding which algorithm applies to which scenario is as important as knowing the implementations.
 
-**Key Insight:** The choice of algorithm depends on the graph properties and the question being asked. Non-negative weights and single source? Use Dijkstra. Negative weights or bounded relaxation steps? Use Bellman-Ford. All-pairs shortest paths? Use Floyd-Warshall. Many interview problems disguise themselves as generic graph problems but reduce to one of these three once you identify the weight structure and query type.`,
+Key Insight: The choice of algorithm depends on the graph properties and the question being asked. Non-negative weights and single source? Use Dijkstra. Negative weights or bounded relaxation steps? Use Bellman-Ford. All-pairs shortest paths? Use Floyd-Warshall. Many interview problems disguise themselves as generic graph problems but reduce to one of these three once you identify the weight structure and query type.`,
 
     whenToUse: [
       'Finding the shortest (minimum cost) path from a source to all other nodes in a weighted graph',
@@ -3018,10 +3018,10 @@ Weighted graph shortest path problems are a staple of technical interviews, espe
 
     introduction: `A Minimum Spanning Tree (MST) is a subset of edges in a connected, weighted, undirected graph that connects all vertices with the minimum total edge weight and without forming any cycles. Two classic algorithms solve this problem: Kruskal's algorithm sorts all edges by weight and greedily adds them using Union-Find to avoid cycles (O(E log E)). Prim's algorithm grows the MST from a starting vertex, always adding the cheapest edge that connects a new vertex (O((V+E) log V) with a priority queue).
 
-**Why This Matters:**
+Why This Matters:
 MST problems test your understanding of greedy algorithms and graph structure. While the core MST problem is straightforward, interview variants add twists: connecting points in 2D space (where you must construct the edges), finding critical edges whose removal would increase the MST cost, or distributing resources to minimize total connection cost. These problems combine MST algorithms with Union-Find and sometimes binary search or edge enumeration.
 
-**Key Insight:** Both Kruskal's and Prim's are greedy algorithms but approach the problem differently. Kruskal's is edge-centric: sort edges globally and add the cheapest non-cycle-forming edge. It pairs naturally with Union-Find for cycle detection. Prim's is vertex-centric: grow a tree from a seed vertex by always adding the cheapest edge to an unvisited vertex. Kruskal's is often simpler to implement for interview problems because Union-Find is a well-known pattern, and many problems provide an edge list rather than an adjacency list.`,
+Key Insight: Both Kruskal's and Prim's are greedy algorithms but approach the problem differently. Kruskal's is edge-centric: sort edges globally and add the cheapest non-cycle-forming edge. It pairs naturally with Union-Find for cycle detection. Prim's is vertex-centric: grow a tree from a seed vertex by always adding the cheapest edge to an unvisited vertex. Kruskal's is often simpler to implement for interview problems because Union-Find is a well-known pattern, and many problems provide an edge list rather than an adjacency list.`,
 
     whenToUse: [
       'Connecting all nodes in a graph with minimum total edge weight',

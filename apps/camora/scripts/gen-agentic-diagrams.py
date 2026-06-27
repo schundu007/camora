@@ -164,8 +164,9 @@ def gen_langgraph_state_flow():
 
 # ─── 3. Async Checkpoint + Webhook ───────────────────────────────────────────
 def gen_async_checkpoint_webhook():
+    # 3×3 grid layout: keeps balanced aspect ratio instead of a flat 9-node LR strip
     g = graphviz.Digraph('async_checkpoint', format='png')
-    g.attr(rankdir='LR', label='Async Long-Running Tool: Checkpoint + Webhook Pattern',
+    g.attr(rankdir='TB', label='Async Long-Running Tool: Checkpoint + Webhook Pattern',
            labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b', **BASE_GRAPH)
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
@@ -179,6 +180,19 @@ def gen_async_checkpoint_webhook():
     node(g, 'api', 'Agent API\nresume(thread_id)', 'slate')
     node(g, 'resume', 'Agent Resumes\nwith tool result', 'agent')
     node(g, 'sse', 'SSE Stream\nto UI', 'good')
+
+    # Row 1 on same rank so they spread horizontally
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('agent'); s.node('tool_call'); s.node('checkpoint')
+    # Row 2
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('suspend'); s.node('pipeline'); s.node('webhook')
+    # Row 3
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('api'); s.node('resume'); s.node('sse')
 
     edge(g, 'agent', 'tool_call', '1. call')
     edge(g, 'tool_call', 'checkpoint', '2. save job_id')

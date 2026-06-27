@@ -56,12 +56,12 @@ visualizations: [
 
       introduction: `Arrays and Hash Maps are the foundation of nearly every coding interview. Understanding these data structures deeply will help you solve 40-50% of all LeetCode problems.
 
-**Why This Matters:**
+Why This Matters:
 - Arrays provide O(1) random access and are the basis for most algorithms
 - Hash Maps (dictionaries) provide O(1) average lookup, insertion, and deletion
 - Together, they let you reduce O(n²) brute force solutions to O(n)
 
-**Key Insight:** When you see a problem requiring "find if X exists" or "count occurrences," your first thought should be hash maps.`,
+Key Insight: When you see a problem requiring "find if X exists" or "count occurrences," your first thought should be hash maps.`,
 
       whenToUse: [
         'Need O(1) lookup for previously seen elements (Two Sum pattern)',
@@ -437,10 +437,10 @@ visualizations: [
 
       introduction: `Binary Search is a fundamental algorithm that reduces search time from O(n) to O(log n) by repeatedly dividing the search space in half. It's one of the most important patterns to master.
 
-**The Key Insight:**
-Binary search works on any **monotonic** property—not just sorted arrays. If you can define a predicate function that goes from False to True (or True to False) as you move through the search space, you can binary search.
+The Key Insight:
+Binary search works on any monotonic property—not just sorted arrays. If you can define a predicate function that goes from False to True (or True to False) as you move through the search space, you can binary search.
 
-**Why It's Powerful:**
+Why It's Powerful:
 - Reduces search from O(n) to O(log n)—for 1 billion elements, that's 30 operations vs 1 billion
 - Works on answer spaces ("What's the minimum X such that condition holds?")
 - Can find boundaries (leftmost/rightmost occurrence)`,
@@ -811,12 +811,12 @@ visualizations: [
 
       introduction: `Two Pointers is a technique that uses two index variables to traverse a data structure, typically reducing time complexity from O(n²) to O(n). It's essential for array and linked list problems.
 
-**Three Main Variants:**
-1. **Opposite Direction**: Start from both ends, move toward center (e.g., Two Sum on sorted array)
-2. **Same Direction**: Both pointers move in same direction at different speeds (e.g., slow/fast for cycle detection)
-3. **Sliding Window**: Special case where pointers define a window (covered separately)
+Three Main Variants:
+1. Opposite Direction: Start from both ends, move toward center (e.g., Two Sum on sorted array)
+2. Same Direction: Both pointers move in same direction at different speeds (e.g., slow/fast for cycle detection)
+3. Sliding Window: Special case where pointers define a window (covered separately)
 
-**The Key Insight:**
+The Key Insight:
 Two pointers work when you can eliminate possibilities by moving one pointer—either the current pair is optimal, or moving a pointer will definitely not make it worse.`,
 
       whenToUse: [
@@ -1201,14 +1201,14 @@ visualizations: [
 
       introduction: `Sliding Window is one of the most important patterns for string and subarray problems. It processes contiguous elements efficiently by maintaining a "window" that slides across the data.
 
-**Two Types:**
-1. **Fixed-Size Window**: Window size is constant (e.g., "max sum of k consecutive elements")
-2. **Variable-Size Window**: Window expands and shrinks based on conditions (e.g., "shortest substring containing all characters")
+Two Types:
+1. Fixed-Size Window: Window size is constant (e.g., "max sum of k consecutive elements")
+2. Variable-Size Window: Window expands and shrinks based on conditions (e.g., "shortest substring containing all characters")
 
-**The Key Insight:**
+The Key Insight:
 Instead of recomputing the entire window from scratch at each step, we incrementally update by adding the new element and removing the old one. This reduces O(n*k) to O(n).
 
-**Template for Variable Window:**
+Template for Variable Window:
 Expand the right pointer to include more elements. When a condition is violated, shrink from the left until valid again. Track the optimal window throughout.`,
 
       whenToUse: [
@@ -1616,13 +1616,13 @@ visualizations: [
 
       introduction: `Stacks follow Last-In-First-Out (LIFO) principle. They're essential for problems involving nested structures, parsing, and finding relationships between elements.
 
-**Key Applications:**
-1. **Matching Brackets**: Validate nested structures (parentheses, HTML tags)
-2. **Monotonic Stack**: Find next greater/smaller element in O(n)
-3. **Expression Evaluation**: Parse and compute mathematical expressions
-4. **Undo Operations**: Track state changes for backtracking
+Key Applications:
+1. Matching Brackets: Validate nested structures (parentheses, HTML tags)
+2. Monotonic Stack: Find next greater/smaller element in O(n)
+3. Expression Evaluation: Parse and compute mathematical expressions
+4. Undo Operations: Track state changes for backtracking
 
-**The Monotonic Stack Pattern:**
+The Monotonic Stack Pattern:
 A monotonic stack maintains elements in increasing or decreasing order. When a new element breaks the monotonicity, we pop elements and process them. This lets us find "next greater" or "next smaller" elements in O(n) total time.`,
 
       whenToUse: [
@@ -2035,12 +2035,12 @@ visualizations: [
 
       introduction: `Linked Lists test your ability to manipulate pointers and think about data structures. Unlike arrays, linked lists don't have random access but allow O(1) insertion/deletion at known positions.
 
-**Key Concepts:**
-- **Singly Linked**: Each node points to next (forward traversal only)
-- **Doubly Linked**: Each node points to both next and previous
-- **Dummy Head**: A fake head node that simplifies edge cases
+Key Concepts:
+- Singly Linked: Each node points to next (forward traversal only)
+- Doubly Linked: Each node points to both next and previous
+- Dummy Head: A fake head node that simplifies edge cases
 
-**Critical Insight:**
+Critical Insight:
 Most linked list problems become easier if you:
 1. Use a dummy head to avoid special-casing empty list or head changes
 2. Draw out the pointer changes before coding
@@ -2429,17 +2429,17 @@ visualizations: [
 
       introduction: `Trees are hierarchical data structures essential for interviews. Most tree problems require recursive thinking—solving for the current node using solutions from subtrees.
 
-**Key Tree Types:**
-- **Binary Tree**: Each node has at most 2 children
-- **Binary Search Tree (BST)**: Left subtree < node < right subtree
-- **Balanced Trees**: AVL, Red-Black (rarely implemented in interviews)
-- **N-ary Trees**: Nodes can have any number of children
+Key Tree Types:
+- Binary Tree: Each node has at most 2 children
+- Binary Search Tree (BST): Left subtree < node < right subtree
+- Balanced Trees: AVL, Red-Black (rarely implemented in interviews)
+- N-ary Trees: Nodes can have any number of children
 
-**Traversal Orders:**
-- **Preorder**: Root → Left → Right (copying trees, prefix expressions)
-- **Inorder**: Left → Root → Right (BST gives sorted order!)
-- **Postorder**: Left → Right → Root (deleting trees, postfix expressions)
-- **Level-order (BFS)**: Level by level using queue`,
+Traversal Orders:
+- Preorder: Root → Left → Right (copying trees, prefix expressions)
+- Inorder: Left → Root → Right (BST gives sorted order!)
+- Postorder: Left → Right → Root (deleting trees, postfix expressions)
+- Level-order (BFS): Level by level using queue`,
 
       whenToUse: [
         'Problems involving hierarchical relationships',
@@ -2821,17 +2821,17 @@ visualizations: [
 
       introduction: `Graphs model relationships between entities. Master graph traversal and you'll solve 15-20% of interview problems. Grids are graphs too—each cell connects to its neighbors.
 
-**Graph Representations:**
-- **Adjacency List**: {node: [neighbors]} - Best for sparse graphs, O(V+E) space
-- **Adjacency Matrix**: grid[i][j] = 1 if edge - Best for dense graphs, O(V²) space
-- **Edge List**: [(u, v, weight)] - Good for some algorithms like Kruskal's
+Graph Representations:
+- Adjacency List: {node: [neighbors]} - Best for sparse graphs, O(V+E) space
+- Adjacency Matrix: grid[i][j] = 1 if edge - Best for dense graphs, O(V²) space
+- Edge List: [(u, v, weight)] - Good for some algorithms like Kruskal's
 
-**Key Algorithms:**
-- **DFS**: Explore as deep as possible (recursion/stack)
-- **BFS**: Explore level by level (queue) - shortest path in unweighted graphs
-- **Topological Sort**: Order tasks with dependencies (DAG only)
-- **Union-Find**: Track connected components efficiently
-- **Dijkstra's**: Shortest path in weighted graphs`,
+Key Algorithms:
+- DFS: Explore as deep as possible (recursion/stack)
+- BFS: Explore level by level (queue) - shortest path in unweighted graphs
+- Topological Sort: Order tasks with dependencies (DAG only)
+- Union-Find: Track connected components efficiently
+- Dijkstra's: Shortest path in weighted graphs`,
 
       whenToUse: [
         'Finding connected components (Number of Islands)',
@@ -3334,18 +3334,18 @@ visualizations: [
 
       introduction: `Dynamic Programming (DP) is one of the most important and challenging topics in coding interviews. It's used when a problem has overlapping subproblems and optimal substructure.
 
-**Two Approaches:**
-1. **Top-Down (Memoization)**: Start with the main problem, recursively solve subproblems, cache results
-2. **Bottom-Up (Tabulation)**: Start with base cases, build up to the solution iteratively
+Two Approaches:
+1. Top-Down (Memoization): Start with the main problem, recursively solve subproblems, cache results
+2. Bottom-Up (Tabulation): Start with base cases, build up to the solution iteratively
 
-**Common DP Patterns:**
-- **1D DP**: State depends on previous element(s) - dp[i]
-- **2D DP**: State depends on two dimensions - dp[i][j]
-- **Knapsack**: Include/exclude items with capacity constraint
-- **LCS/LIS**: Subsequence problems
-- **State Machine**: Multiple states to track (e.g., buy/sell stock)
+Common DP Patterns:
+- 1D DP: State depends on previous element(s) - dp[i]
+- 2D DP: State depends on two dimensions - dp[i][j]
+- Knapsack: Include/exclude items with capacity constraint
+- LCS/LIS: Subsequence problems
+- State Machine: Multiple states to track (e.g., buy/sell stock)
 
-**Key Insight:** If you can express a problem as "the optimal solution to problem of size n uses optimal solutions to smaller problems," it's likely DP.`,
+Key Insight: If you can express a problem as "the optimal solution to problem of size n uses optimal solutions to smaller problems," it's likely DP.`,
 
       whenToUse: [
         'Optimization problems (min/max of something)',
@@ -3786,17 +3786,17 @@ visualizations: [
 
       introduction: `A heap is a complete binary tree that satisfies the heap property: every parent is smaller (min-heap) or larger (max-heap) than its children. It provides O(log n) insert/delete and O(1) access to min/max.
 
-**Key Operations:**
-- **Push**: O(log n) - Add element and bubble up
-- **Pop**: O(log n) - Remove root and heapify down
-- **Peek**: O(1) - Access min/max without removing
-- **Heapify**: O(n) - Convert array to heap
+Key Operations:
+- Push: O(log n) - Add element and bubble up
+- Pop: O(log n) - Remove root and heapify down
+- Peek: O(1) - Access min/max without removing
+- Heapify: O(n) - Convert array to heap
 
-**Common Patterns:**
-- **Top-K Largest**: Use min-heap of size K (counterintuitive!)
-- **Top-K Smallest**: Use max-heap of size K
-- **Merge K Sorted**: Use min-heap to track smallest from each list
-- **Two Heaps**: Track median with max-heap (smaller half) + min-heap (larger half)`,
+Common Patterns:
+- Top-K Largest: Use min-heap of size K (counterintuitive!)
+- Top-K Smallest: Use max-heap of size K
+- Merge K Sorted: Use min-heap to track smallest from each list
+- Two Heaps: Track median with max-heap (smaller half) + min-heap (larger half)`,
 
       whenToUse: [
         'Finding K largest/smallest elements',
@@ -4148,18 +4148,18 @@ visualizations: [
 
       introduction: `Backtracking is a systematic way to explore all possible solutions by building candidates incrementally and abandoning ("pruning") candidates that cannot lead to a valid solution.
 
-**The Backtracking Template:**
-1. **Choose**: Make a choice from available options
-2. **Explore**: Recursively explore with that choice
-3. **Unchoose**: Undo the choice (backtrack) and try next option
+The Backtracking Template:
+1. Choose: Make a choice from available options
+2. Explore: Recursively explore with that choice
+3. Unchoose: Undo the choice (backtrack) and try next option
 
-**Key Problem Types:**
-- **Subsets**: All 2^n combinations (include or exclude each element)
-- **Permutations**: All n! orderings (use each element exactly once)
-- **Combinations**: All ways to choose k from n (order doesn't matter)
-- **Constraint Satisfaction**: Find solutions meeting constraints (N-Queens, Sudoku)
+Key Problem Types:
+- Subsets: All 2^n combinations (include or exclude each element)
+- Permutations: All n! orderings (use each element exactly once)
+- Combinations: All ways to choose k from n (order doesn't matter)
+- Constraint Satisfaction: Find solutions meeting constraints (N-Queens, Sudoku)
 
-**Pruning is Critical:** Early termination of invalid paths dramatically improves performance from exponential worst case.`,
+Pruning is Critical: Early termination of invalid paths dramatically improves performance from exponential worst case.`,
 
       whenToUse: [
         'Generate all permutations, combinations, or subsets',
@@ -4622,8 +4622,8 @@ Greedy algorithms are powerful because they're typically:
 • Space efficient (often O(1))
 
 However, greedy doesn't always work. Two properties must hold:
-1. **Greedy Choice Property**: A locally optimal choice leads to a globally optimal solution
-2. **Optimal Substructure**: The optimal solution contains optimal solutions to subproblems
+1. Greedy Choice Property: A locally optimal choice leads to a globally optimal solution
+2. Optimal Substructure: The optimal solution contains optimal solutions to subproblems
 
 Classic greedy success stories: Huffman coding, Dijkstra's shortest path, Kruskal's/Prim's MST, Activity Selection.
 
@@ -5412,12 +5412,12 @@ class Trie:
       introduction: `Bit manipulation involves operating directly on the binary representation of numbers using bitwise operators. It's one of the most efficient techniques - operating at the hardware level with O(1) operations.
 
 Master these operators:
-• **AND (&)**: Both bits must be 1 → 1 & 1 = 1, otherwise 0
-• **OR (|)**: At least one bit is 1 → 0 | 1 = 1
-• **XOR (^)**: Different bits → 1 ^ 0 = 1, same bits → 1 ^ 1 = 0
-• **NOT (~)**: Flip all bits → ~0 = 1111...1
-• **Left shift (<<)**: Multiply by 2^n → 1 << 3 = 8
-• **Right shift (>>)**: Divide by 2^n → 8 >> 2 = 2
+• AND (&): Both bits must be 1 → 1 & 1 = 1, otherwise 0
+• OR (|): At least one bit is 1 → 0 | 1 = 1
+• XOR (^): Different bits → 1 ^ 0 = 1, same bits → 1 ^ 1 = 0
+• NOT (~): Flip all bits → ~0 = 1111...1
+• Left shift (<<): Multiply by 2^n → 1 << 3 = 8
+• Right shift (>>): Divide by 2^n → 8 >> 2 = 2
 
 The magic of XOR:
 • a ^ a = 0 (any number XOR itself is 0)
@@ -5695,16 +5695,16 @@ def missingNumber_math(nums):
       introduction: `Math and geometry problems test your understanding of fundamental algorithms and mathematical reasoning. These problems often have elegant O(1) or O(log n) solutions once you know the right formula or technique.
 
 Key mathematical concepts:
-• **GCD/LCM**: Foundation for fraction simplification, coprime checks
-• **Prime Numbers**: Sieve of Eratosthenes, primality testing
-• **Modular Arithmetic**: Essential for avoiding overflow in large calculations
-• **Fast Exponentiation**: O(log n) power calculation via binary method
+• GCD/LCM: Foundation for fraction simplification, coprime checks
+• Prime Numbers: Sieve of Eratosthenes, primality testing
+• Modular Arithmetic: Essential for avoiding overflow in large calculations
+• Fast Exponentiation: O(log n) power calculation via binary method
 
 Geometry concepts:
-• **Cross Product**: Determine orientation (clockwise/counterclockwise)
-• **Dot Product**: Project vectors, find angles
-• **Line Intersection**: Parametric equations, determinant method
-• **Convex Hull**: Graham scan, Jarvis march
+• Cross Product: Determine orientation (clockwise/counterclockwise)
+• Dot Product: Project vectors, find angles
+• Line Intersection: Parametric equations, determinant method
+• Convex Hull: Graham scan, Jarvis march
 
 Common interview patterns:
 • Digit manipulation (reverse integer, palindrome number)
@@ -6009,17 +6009,17 @@ def gcd_array(arr):
       introduction: `Matrix problems involve 2D arrays and test your ability to navigate, transform, and search within grid structures. These problems are common because they combine array manipulation with spatial reasoning.
 
 Key traversal patterns:
-• **Row-major**: Process row by row (standard iteration)
-• **Column-major**: Process column by column
-• **Diagonal**: Process along diagonals
-• **Spiral**: Outside-in or inside-out circular pattern
-• **Layer by layer**: Process outer ring, then inner rings
+• Row-major: Process row by row (standard iteration)
+• Column-major: Process column by column
+• Diagonal: Process along diagonals
+• Spiral: Outside-in or inside-out circular pattern
+• Layer by layer: Process outer ring, then inner rings
 
 Common operations:
-• **Rotation**: 90°, 180°, 270° rotations
-• **Transpose**: Swap rows and columns
-• **Search**: Binary search on sorted matrix
-• **Path finding**: DFS/BFS for connected components
+• Rotation: 90°, 180°, 270° rotations
+• Transpose: Swap rows and columns
+• Search: Binary search on sorted matrix
+• Path finding: DFS/BFS for connected components
 
 Matrix in disguise problems:
 • Game boards (Sudoku, Tic-Tac-Toe, Game of Life)
@@ -6374,8 +6374,8 @@ visualizations: [
       introduction: `Recursion is a problem-solving technique where a function calls itself to solve smaller instances of the same problem. It's the foundation for understanding trees, graphs, divide and conquer, and dynamic programming.
 
 Every recursive solution has two essential parts:
-• **Base Case(s)**: The simplest case(s) that can be solved directly without recursion
-• **Recursive Case**: Breaking the problem into smaller subproblems and calling the function on them
+• Base Case(s): The simplest case(s) that can be solved directly without recursion
+• Recursive Case: Breaking the problem into smaller subproblems and calling the function on them
 
 The magic of recursion: you trust that the recursive call works correctly, then just handle how to combine results.
 
@@ -6917,14 +6917,14 @@ private void backtrack(String digits, int index, StringBuilder current,
 3. Custom comparators enable complex sorting logic
 
 Comparison-based sorting (O(n log n) lower bound):
-• **Merge Sort**: Stable, guaranteed O(n log n), but O(n) space
-• **Quick Sort**: In-place, average O(n log n), worst O(n²)
-• **Heap Sort**: In-place, guaranteed O(n log n), not stable
+• Merge Sort: Stable, guaranteed O(n log n), but O(n) space
+• Quick Sort: In-place, average O(n log n), worst O(n²)
+• Heap Sort: In-place, guaranteed O(n log n), not stable
 
 Non-comparison sorting (can beat O(n log n)):
-• **Counting Sort**: O(n + k) for integers in range [0, k]
-• **Radix Sort**: O(d × (n + k)) for d-digit numbers
-• **Bucket Sort**: O(n) average for uniformly distributed data
+• Counting Sort: O(n + k) for integers in range [0, k]
+• Radix Sort: O(d × (n + k)) for d-digit numbers
+• Bucket Sort: O(n) average for uniformly distributed data
 
 Stability: A sort is stable if equal elements maintain their relative order. Important when sorting by multiple keys.
 
@@ -7226,16 +7226,16 @@ def findKthLargest_heap(nums, k):
       introduction: `Interval problems involve operations on ranges or segments, often requiring merging, insertion, or conflict detection. These problems appear frequently in scheduling, calendar, and resource allocation contexts.
 
 Key concepts:
-• **Overlap detection**: Two intervals [a, b] and [c, d] overlap if a < d AND c < b
-• **Sorting strategy**: Sort by start time (merging) or end time (scheduling)
-• **Sweep line**: Process events (start/end) in sorted order
+• Overlap detection: Two intervals [a, b] and [c, d] overlap if a < d AND c < b
+• Sorting strategy: Sort by start time (merging) or end time (scheduling)
+• Sweep line: Process events (start/end) in sorted order
 
 Common patterns:
-1. **Merge Intervals**: Combine overlapping intervals
-2. **Insert Interval**: Add new interval and merge if needed
-3. **Meeting Rooms**: Can all meetings fit? How many rooms needed?
-4. **Interval Scheduling**: Maximize non-overlapping intervals (greedy)
-5. **Minimum Removals**: Remove fewest intervals to eliminate overlaps
+1. Merge Intervals: Combine overlapping intervals
+2. Insert Interval: Add new interval and merge if needed
+3. Meeting Rooms: Can all meetings fit? How many rooms needed?
+4. Interval Scheduling: Maximize non-overlapping intervals (greedy)
+5. Minimum Removals: Remove fewest intervals to eliminate overlaps
 
 The key insight: sorting transforms interval problems into linear scans. Sort by start time for merging, end time for scheduling/greedy selection.
 
@@ -7530,10 +7530,10 @@ Binary Search Basics:
 • O(log n) time, O(1) space
 
 Beyond basic search, binary search applies to:
-• **Search on answer space**: Find minimum/maximum valid answer
-• **Search for boundary**: First/last occurrence, insertion point
-• **Peak finding**: Find local maximum/minimum in unsorted data
-• **Rotated arrays**: Modified binary search
+• Search on answer space: Find minimum/maximum valid answer
+• Search for boundary: First/last occurrence, insertion point
+• Peak finding: Find local maximum/minimum in unsorted data
+• Rotated arrays: Modified binary search
 
 The key insight: Binary search works whenever you can make a binary decision that eliminates half the search space. This extends far beyond sorted arrays!
 
@@ -7811,11 +7811,11 @@ def binary_search_left(nums, target):
       introduction: `A Queue is a linear data structure that follows the First-In-First-Out (FIFO) principle -- the element added first is removed first, like a line at a checkout counter. Queues are fundamental to breadth-first search, level-order traversal, and any scenario where processing order matters.
 
 Queue variants each solve different problems:
-- **Standard Queue**: Simple FIFO with enqueue and dequeue
-- **Deque (Double-Ended Queue)**: Insert and remove from both ends in O(1)
-- **Priority Queue**: Elements dequeued by priority (implemented via heaps)
-- **Circular Queue**: Fixed-size queue using modular arithmetic to wrap around
-- **Monotonic Deque**: Maintains elements in sorted order for sliding window problems
+- Standard Queue: Simple FIFO with enqueue and dequeue
+- Deque (Double-Ended Queue): Insert and remove from both ends in O(1)
+- Priority Queue: Elements dequeued by priority (implemented via heaps)
+- Circular Queue: Fixed-size queue using modular arithmetic to wrap around
+- Monotonic Deque: Maintains elements in sorted order for sliding window problems
 
 In interviews, queues appear in two major contexts. First, BFS and level-order traversal: exploring nodes layer by layer (shortest path, rotting oranges). Second, buffering and scheduling: task schedulers, rate limiters, and sliding window problems all rely on queue semantics.
 
@@ -8113,10 +8113,10 @@ def leastInterval(tasks, n):
 The list is organized into 10 categories: Array (9), Binary (5), Dynamic Programming (11), Graph (8), Interval (5), Linked List (6), Matrix (4), String (10), Tree (14), and Heap (3). Each problem was selected because it teaches a fundamental pattern that recurs across many other problems.
 
 Why the Blind 75 works:
-- **Pattern coverage**: Every major interview pattern is represented at least once
-- **Time efficiency**: 75 problems is achievable in 2-4 weeks of focused practice
-- **Battle-tested**: Thousands of engineers have used this list to land FAANG offers
-- **Difficulty balance**: Mix of Medium and Hard that mirrors real interview difficulty
+- Pattern coverage: Every major interview pattern is represented at least once
+- Time efficiency: 75 problems is achievable in 2-4 weeks of focused practice
+- Battle-tested: Thousands of engineers have used this list to land FAANG offers
+- Difficulty balance: Mix of Medium and Hard that mirrors real interview difficulty
 
 The Blind 75 is best suited for candidates who already have basic data structure knowledge and want a focused review before interviews. For those starting from scratch, consider the Ascend 100 which includes foundational Easy problems.`,
 
@@ -8290,15 +8290,15 @@ The Blind 75 is best suited for candidates who already have basic data structure
       introduction: `The Ascend 100 is our carefully curated list of 100 problems designed to take you from fundamentals to interview-ready in the most efficient path possible. Unlike the Blind 75 which focuses on breadth, the Ascend 100 emphasizes progressive difficulty with deeper pattern coverage.
 
 The list is structured in three tiers:
-- **Tier 1 (Easy, 35 problems)**: Build your foundation with arrays, strings, hash maps, and basic tree traversal. Every problem teaches a reusable pattern.
-- **Tier 2 (Medium, 50 problems)**: Core interview patterns including two pointers, sliding window, BFS/DFS, dynamic programming, and graph algorithms.
-- **Tier 3 (Hard, 15 problems)**: Advanced techniques for top-tier companies -- segment trees, monotonic stacks, advanced DP, and complex graph problems.
+- Tier 1 (Easy, 35 problems): Build your foundation with arrays, strings, hash maps, and basic tree traversal. Every problem teaches a reusable pattern.
+- Tier 2 (Medium, 50 problems): Core interview patterns including two pointers, sliding window, BFS/DFS, dynamic programming, and graph algorithms.
+- Tier 3 (Hard, 15 problems): Advanced techniques for top-tier companies -- segment trees, monotonic stacks, advanced DP, and complex graph problems.
 
 What makes Ascend 100 different:
-- **Progressive difficulty**: Each problem builds on patterns from previous ones
-- **Company-weighted**: Selected based on frequency at FAANG and top-tier companies
-- **Pattern-focused**: Grouped by pattern so you build deep understanding
-- **Time-boxed**: Each problem has a target time, training you for interview pacing
+- Progressive difficulty: Each problem builds on patterns from previous ones
+- Company-weighted: Selected based on frequency at FAANG and top-tier companies
+- Pattern-focused: Grouped by pattern so you build deep understanding
+- Time-boxed: Each problem has a target time, training you for interview pacing
 
 After completing the Ascend 100, you should recognize which pattern applies to any new problem within 2-3 minutes.`,
 

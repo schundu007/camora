@@ -27,14 +27,14 @@ export const sqlTopics = [
     questions: 8,
     description: 'Core query building blocks: SELECT, filtering, sorting, grouping, and aggregate functions.',
 
-    introduction: `SQL Fundamentals form the backbone of every database interaction you will ever write. Mastering **SELECT**, **WHERE**, **ORDER BY**, **GROUP BY**, and **HAVING** is non-negotiable for any data role or backend engineering interview. These clauses follow a strict logical execution order that differs from the order you write them in.
+    introduction: `SQL Fundamentals form the backbone of every database interaction you will ever write. Mastering SELECT, WHERE, ORDER BY, GROUP BY, and HAVING is non-negotiable for any data role or backend engineering interview. These clauses follow a strict logical execution order that differs from the order you write them in.
 
-**Logical Execution Order:**
+Logical Execution Order:
 FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> DISTINCT -> ORDER BY -> LIMIT/OFFSET
 
 Understanding this order explains why you cannot reference a column alias in WHERE (SELECT runs after WHERE) but you can use it in ORDER BY.
 
-**Aggregate functions** — **COUNT**, **SUM**, **AVG**, **MAX**, **MIN** — collapse multiple rows into a single value per group. When combined with GROUP BY, they become the primary tool for summarizing data. The HAVING clause acts as a WHERE for aggregated results, filtering groups after aggregation.
+Aggregate functions — COUNT, SUM, AVG, MAX, MIN — collapse multiple rows into a single value per group. When combined with GROUP BY, they become the primary tool for summarizing data. The HAVING clause acts as a WHERE for aggregated results, filtering groups after aggregation.
 
 \`\`\`sql
 -- Find departments with more than 5 employees earning above 50K on average
@@ -47,7 +47,7 @@ ORDER BY avg_salary DESC
 LIMIT 10;
 \`\`\`
 
-**DISTINCT** removes duplicate rows from the result set, while **LIMIT** and **OFFSET** control pagination. Together, these building blocks let you express the vast majority of data retrieval logic.`,
+DISTINCT removes duplicate rows from the result set, while LIMIT and OFFSET control pagination. Together, these building blocks let you express the vast majority of data retrieval logic.`,
 
     whenToUse: [
       'Retrieving specific columns or calculated values from one or more tables',
@@ -149,7 +149,7 @@ CREATE TABLE orders (
     keyQuestions: [
       {
         question: 'Explain the SQL logical execution order and why it matters',
-        answer: `**Execution Order** (different from written order):
+        answer: `Execution Order (different from written order):
 \`\`\`
 1. FROM / JOIN     — identify source tables
 2. WHERE           — filter individual rows
@@ -161,17 +161,17 @@ CREATE TABLE orders (
 8. LIMIT / OFFSET  — paginate
 \`\`\`
 
-**Why It Matters**:
+Why It Matters:
 - You can't use a column alias in WHERE (SELECT hasn't run yet): \`WHERE total > 100\` fails if \`total\` is defined in SELECT
 - You CAN use a column alias in ORDER BY (it runs after SELECT)
 - HAVING can reference aggregate functions because it runs after GROUP BY
 - WHERE is more efficient than HAVING for row-level filters because it reduces data before aggregation
 
-**Common Interview Trick**: "Why does this query fail?" — Almost always because the candidate is referencing an alias or aggregate in the wrong clause.`
+Common Interview Trick: "Why does this query fail?" — Almost always because the candidate is referencing an alias or aggregate in the wrong clause.`
       },
       {
         question: 'What is the difference between WHERE and HAVING?',
-        answer: `**WHERE**: Filters individual rows BEFORE grouping. Cannot use aggregate functions.
+        answer: `WHERE: Filters individual rows BEFORE grouping. Cannot use aggregate functions.
 \`\`\`sql
 -- Filter employees with salary > 100K, then count per department
 SELECT department, COUNT(*) FROM employees
@@ -179,7 +179,7 @@ WHERE salary > 100000
 GROUP BY department;
 \`\`\`
 
-**HAVING**: Filters groups AFTER aggregation. Can use aggregate functions.
+HAVING: Filters groups AFTER aggregation. Can use aggregate functions.
 \`\`\`sql
 -- Show only departments with more than 5 employees
 SELECT department, COUNT(*) AS emp_count FROM employees
@@ -187,19 +187,19 @@ GROUP BY department
 HAVING COUNT(*) > 5;
 \`\`\`
 
-**Performance**: WHERE is always preferred when possible because it reduces the number of rows BEFORE the expensive GROUP BY operation. Use HAVING only when you need to filter on aggregated results.
+Performance: WHERE is always preferred when possible because it reduces the number of rows BEFORE the expensive GROUP BY operation. Use HAVING only when you need to filter on aggregated results.
 
-**Interview Tip**: If asked "filter departments with average salary > 100K", you MUST use HAVING because AVG(salary) is an aggregate that requires GROUP BY first.`
+Interview Tip: If asked "filter departments with average salary > 100K", you MUST use HAVING because AVG(salary) is an aggregate that requires GROUP BY first.`
       },
       {
         question: 'How do you handle NULL values in SQL?',
-        answer: `**Key Rules**:
+        answer: `Key Rules:
 - NULL = NULL is NOT true (it's unknown). Use IS NULL / IS NOT NULL
 - NULL in arithmetic: 5 + NULL = NULL (any operation with NULL produces NULL)
 - NULL in aggregates: COUNT(*) counts all rows; COUNT(col) skips NULLs; SUM/AVG ignore NULLs
 - NULL in comparisons: WHERE col = NULL never matches — use WHERE col IS NULL
 
-**Handling NULLs**:
+Handling NULLs:
 \`\`\`sql
 -- COALESCE: return first non-NULL value
 SELECT COALESCE(phone, email, 'No contact') AS contact FROM users;
@@ -211,7 +211,7 @@ SELECT total / NULLIF(count, 0) AS average FROM stats;
 SELECT * FROM t1 WHERE col IS DISTINCT FROM 'value';
 \`\`\`
 
-**Interview Gotcha**: \`NOT IN (subquery)\` behaves unexpectedly with NULLs. If the subquery returns any NULL value, the entire NOT IN returns no rows. Use NOT EXISTS instead.`
+Interview Gotcha: \`NOT IN (subquery)\` behaves unexpectedly with NULLs. If the subquery returns any NULL value, the entire NOT IN returns no rows. Use NOT EXISTS instead.`
       }
     ],
 
@@ -233,15 +233,15 @@ SELECT * FROM t1 WHERE col IS DISTINCT FROM 'value';
     questions: 8,
     description: 'INNER, LEFT, RIGHT, FULL OUTER, SELF, and CROSS joins — combining data across tables.',
 
-    introduction: `**Joins** are the mechanism for combining rows from two or more tables based on a related column. They are arguably the single most important SQL concept for interviews because nearly every real-world query involves multiple tables.
+    introduction: `Joins are the mechanism for combining rows from two or more tables based on a related column. They are arguably the single most important SQL concept for interviews because nearly every real-world query involves multiple tables.
 
-**The Core Join Types:**
-- **INNER JOIN** returns only rows with matches in both tables. This is the default and most common join.
-- **LEFT JOIN** (LEFT OUTER JOIN) returns all rows from the left table plus matching rows from the right. Non-matching right-side columns become NULL.
-- **RIGHT JOIN** mirrors LEFT JOIN — all rows from the right table, NULLs for non-matching left rows.
-- **FULL OUTER JOIN** returns all rows from both tables, with NULLs where there is no match on either side.
-- **SELF JOIN** joins a table to itself, useful for hierarchical data or row comparisons within the same table.
-- **CROSS JOIN** produces the Cartesian product — every row from table A paired with every row from table B.
+The Core Join Types:
+- INNER JOIN returns only rows with matches in both tables. This is the default and most common join.
+- LEFT JOIN (LEFT OUTER JOIN) returns all rows from the left table plus matching rows from the right. Non-matching right-side columns become NULL.
+- RIGHT JOIN mirrors LEFT JOIN — all rows from the right table, NULLs for non-matching left rows.
+- FULL OUTER JOIN returns all rows from both tables, with NULLs where there is no match on either side.
+- SELF JOIN joins a table to itself, useful for hierarchical data or row comparisons within the same table.
+- CROSS JOIN produces the Cartesian product — every row from table A paired with every row from table B.
 
 \`\`\`sql
 -- LEFT JOIN: all employees, including those with no department assigned
@@ -256,7 +256,7 @@ JOIN employees m ON e.manager_id = m.id
 WHERE e.salary > m.salary;
 \`\`\`
 
-**Join Optimization:** The database engine chooses between nested loop, hash join, and merge join strategies. Ensuring join columns are indexed is the single biggest performance lever. For large tables, the difference between an indexed and unindexed join can be orders of magnitude.`,
+Join Optimization: The database engine chooses between nested loop, hash join, and merge join strategies. Ensuring join columns are indexed is the single biggest performance lever. For large tables, the difference between an indexed and unindexed join can be orders of magnitude.`,
 
     whenToUse: [
       'Combining data from two or more related tables using foreign keys',
@@ -314,7 +314,7 @@ WHERE e.salary > m.salary;
         question: 'What is the difference between putting a condition in ON vs WHERE for a LEFT JOIN?',
         answer: `This is one of the most commonly misunderstood SQL concepts.
 
-**Condition in ON** — applied DURING the join:
+Condition in ON — applied DURING the join:
 \`\`\`sql
 SELECT e.name, d.department_name
 FROM employees e
@@ -322,7 +322,7 @@ LEFT JOIN departments d ON e.dept_id = d.id AND d.location = 'NYC';
 \`\`\`
 Result: ALL employees appear. NYC departments are matched; non-NYC departments show as NULL (the LEFT JOIN preserves left-side rows).
 
-**Condition in WHERE** — applied AFTER the join:
+Condition in WHERE — applied AFTER the join:
 \`\`\`sql
 SELECT e.name, d.department_name
 FROM employees e
@@ -331,20 +331,20 @@ WHERE d.location = 'NYC';
 \`\`\`
 Result: Only employees in NYC departments appear. The WHERE clause filters out rows where d.location is NULL, effectively converting the LEFT JOIN into an INNER JOIN.
 
-**Rule of Thumb**: For INNER JOINs, it doesn't matter. For OUTER JOINs, put the condition in ON if you want to preserve all left/right rows, and in WHERE if you want to filter the final result.`
+Rule of Thumb: For INNER JOINs, it doesn't matter. For OUTER JOINs, put the condition in ON if you want to preserve all left/right rows, and in WHERE if you want to filter the final result.`
       },
       {
         question: 'How do you find records that exist in one table but not another?',
         answer: `Three approaches, each with different performance characteristics:
 
-**1. LEFT JOIN + IS NULL** (most common in interviews):
+1. LEFT JOIN + IS NULL (most common in interviews):
 \`\`\`sql
 SELECT c.name FROM customers c
 LEFT JOIN orders o ON c.id = o.customer_id
 WHERE o.id IS NULL;
 \`\`\`
 
-**2. NOT EXISTS** (often fastest):
+2. NOT EXISTS (often fastest):
 \`\`\`sql
 SELECT c.name FROM customers c
 WHERE NOT EXISTS (
@@ -352,34 +352,34 @@ WHERE NOT EXISTS (
 );
 \`\`\`
 
-**3. NOT IN** (simplest but dangerous with NULLs):
+3. NOT IN (simplest but dangerous with NULLs):
 \`\`\`sql
 SELECT c.name FROM customers c
 WHERE c.id NOT IN (SELECT customer_id FROM orders);
 \`\`\`
 
-**Performance**: NOT EXISTS typically performs best because it short-circuits on the first match. NOT IN can be problematic: if the subquery returns ANY NULL, the entire result is empty (a common interview trap). LEFT JOIN + IS NULL is clear and predictable.
+Performance: NOT EXISTS typically performs best because it short-circuits on the first match. NOT IN can be problematic: if the subquery returns ANY NULL, the entire result is empty (a common interview trap). LEFT JOIN + IS NULL is clear and predictable.
 
-**Recommendation**: Use NOT EXISTS for correctness and performance. Mention all three approaches in an interview to show breadth.`
+Recommendation: Use NOT EXISTS for correctness and performance. Mention all three approaches in an interview to show breadth.`
       },
       {
         question: 'What are the three join algorithms and when does the optimizer choose each?',
-        answer: `**1. Nested Loop Join** — O(n × m):
+        answer: `1. Nested Loop Join — O(n × m):
 - For each row in the outer table, scan the inner table for matches
 - Best for: small tables, or when inner table has an index on the join column
 - The optimizer uses this when one table is very small
 
-**2. Hash Join** — O(n + m):
+2. Hash Join — O(n + m):
 - Build a hash table from the smaller table, then probe it with the larger table
 - Best for: large unsorted tables with equality joins
 - Requires memory to hold the hash table (can spill to disk)
 
-**3. Merge Join (Sort-Merge)** — O(n log n + m log m):
+3. Merge Join (Sort-Merge) — O(n log n + m log m):
 - Sort both tables on the join column, then merge like merge sort
 - Best for: large tables that are already sorted or have indexes on the join column
 - Very efficient for equality and range joins on sorted data
 
-**Performance Tips**:
+Performance Tips:
 - Add indexes on join columns to enable nested loop or merge join
 - For large analytical queries, hash joins are typically fastest
 - Use EXPLAIN ANALYZE to see which algorithm the optimizer chose
@@ -405,13 +405,13 @@ WHERE c.id NOT IN (SELECT customer_id FROM orders);
     questions: 7,
     description: 'Nested queries, correlated subqueries, EXISTS, IN, Common Table Expressions, and recursive CTEs.',
 
-    introduction: `**Subqueries** are queries nested inside another query. They allow you to break complex logic into composable steps, use the result of one query as input to another, and express conditions that reference aggregated or filtered data from the same or different tables.
+    introduction: `Subqueries are queries nested inside another query. They allow you to break complex logic into composable steps, use the result of one query as input to another, and express conditions that reference aggregated or filtered data from the same or different tables.
 
-**Types of Subqueries:**
-- **Scalar subquery** returns a single value and can be used anywhere a literal value is expected.
-- **Row subquery** returns a single row with multiple columns.
-- **Table subquery** returns a full result set, used in FROM or with IN/EXISTS.
-- **Correlated subquery** references columns from the outer query and re-executes for each outer row — powerful but potentially expensive.
+Types of Subqueries:
+- Scalar subquery returns a single value and can be used anywhere a literal value is expected.
+- Row subquery returns a single row with multiple columns.
+- Table subquery returns a full result set, used in FROM or with IN/EXISTS.
+- Correlated subquery references columns from the outer query and re-executes for each outer row — powerful but potentially expensive.
 
 \`\`\`sql
 -- Correlated subquery: employees earning above their department average
@@ -435,7 +435,7 @@ JOIN dept_avg d ON e.department_id = d.department_id
 WHERE e.salary > d.avg_sal;
 \`\`\`
 
-**Common Table Expressions (CTEs)** declared with the **WITH** clause provide named temporary result sets that exist for the duration of a single query. They improve readability and allow you to reference the same derived table multiple times. **Recursive CTEs** extend this by referencing themselves, enabling traversal of hierarchical data such as org charts or category trees.
+Common Table Expressions (CTEs) declared with the WITH clause provide named temporary result sets that exist for the duration of a single query. They improve readability and allow you to reference the same derived table multiple times. Recursive CTEs extend this by referencing themselves, enabling traversal of hierarchical data such as org charts or category trees.
 
 \`\`\`sql
 -- Recursive CTE: organizational hierarchy
@@ -517,7 +517,7 @@ SELECT * FROM org_tree ORDER BY depth, name;
     questions: 8,
     description: 'ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, NTILE, running totals, and moving averages with PARTITION BY.',
 
-    introduction: `**Window functions** perform calculations across a set of rows that are related to the current row — without collapsing those rows into a single output like GROUP BY does. They are the single most powerful SQL feature for analytics and are heavily tested in interviews.
+    introduction: `Window functions perform calculations across a set of rows that are related to the current row — without collapsing those rows into a single output like GROUP BY does. They are the single most powerful SQL feature for analytics and are heavily tested in interviews.
 
 Every window function has the form:
 \`\`\`
@@ -528,17 +528,17 @@ function_name(...) OVER (
 )
 \`\`\`
 
-**Ranking Functions:**
-- **ROW_NUMBER()** assigns a unique sequential integer to each row within its partition. No ties — row order is arbitrary for equal values.
-- **RANK()** assigns the same rank to ties but leaves gaps (1, 1, 3).
-- **DENSE_RANK()** assigns the same rank to ties with no gaps (1, 1, 2).
-- **NTILE(n)** divides the partition into n roughly equal buckets.
+Ranking Functions:
+- ROW_NUMBER() assigns a unique sequential integer to each row within its partition. No ties — row order is arbitrary for equal values.
+- RANK() assigns the same rank to ties but leaves gaps (1, 1, 3).
+- DENSE_RANK() assigns the same rank to ties with no gaps (1, 1, 2).
+- NTILE(n) divides the partition into n roughly equal buckets.
 
-**Offset Functions:**
-- **LAG(col, n)** accesses the value from the nth preceding row. Perfect for comparing current vs previous.
-- **LEAD(col, n)** accesses the value from the nth following row.
+Offset Functions:
+- LAG(col, n) accesses the value from the nth preceding row. Perfect for comparing current vs previous.
+- LEAD(col, n) accesses the value from the nth following row.
 
-**Aggregate Windows:**
+Aggregate Windows:
 Any aggregate (SUM, AVG, COUNT, MAX, MIN) can be used as a window function to compute running or sliding calculations.
 
 \`\`\`sql
@@ -618,12 +618,12 @@ WHERE rnk <= 3;
 | RANK | 1, 2, 2, 4 | Same rank for ties, gaps after (skips 3) |
 | DENSE_RANK | 1, 2, 2, 3 | Same rank for ties, no gaps |
 
-**When to Use Each**:
-- **ROW_NUMBER**: Deduplication (\`WHERE rn = 1\`), top-N per group, pagination. Most common in interviews.
-- **RANK**: When you need to know the actual position including ties (e.g., "3rd place is skipped because of a tie at 2nd")
-- **DENSE_RANK**: When you need consecutive ranks (e.g., "find the 3rd highest salary" — DENSE_RANK ensures 3rd exists even with ties)
+When to Use Each:
+- ROW_NUMBER: Deduplication (\`WHERE rn = 1\`), top-N per group, pagination. Most common in interviews.
+- RANK: When you need to know the actual position including ties (e.g., "3rd place is skipped because of a tie at 2nd")
+- DENSE_RANK: When you need consecutive ranks (e.g., "find the 3rd highest salary" — DENSE_RANK ensures 3rd exists even with ties)
 
-**Interview Classic — Nth Highest Salary**:
+Interview Classic — Nth Highest Salary:
 \`\`\`sql
 SELECT DISTINCT salary FROM (
     SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
@@ -634,7 +634,7 @@ WHERE rnk = N;
       },
       {
         question: 'How do you compute a running total and a 7-day moving average?',
-        answer: `**Running Total** — cumulative sum ordered by date:
+        answer: `Running Total — cumulative sum ordered by date:
 \`\`\`sql
 SELECT date, revenue,
        SUM(revenue) OVER (ORDER BY date) AS running_total
@@ -642,7 +642,7 @@ FROM daily_sales;
 \`\`\`
 Default frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW.
 
-**7-Day Moving Average** — average of current row + 6 preceding rows:
+7-Day Moving Average — average of current row + 6 preceding rows:
 \`\`\`sql
 SELECT date, revenue,
        AVG(revenue) OVER (
@@ -652,15 +652,15 @@ SELECT date, revenue,
 FROM daily_sales;
 \`\`\`
 
-**Critical Distinction**: ROWS vs RANGE
-- **ROWS**: Counts physical rows. \`ROWS BETWEEN 6 PRECEDING\` means exactly 6 rows before.
-- **RANGE**: Groups by value. \`RANGE BETWEEN INTERVAL '7 DAYS' PRECEDING\` handles gaps in dates correctly.
+Critical Distinction: ROWS vs RANGE
+- ROWS: Counts physical rows. \`ROWS BETWEEN 6 PRECEDING\` means exactly 6 rows before.
+- RANGE: Groups by value. \`RANGE BETWEEN INTERVAL '7 DAYS' PRECEDING\` handles gaps in dates correctly.
 
 For financial/analytics interviews, always clarify: "Should the average include exactly 7 calendar days, or exactly 7 data points?" This determines whether you use ROWS or RANGE.`
       },
       {
         question: 'How do you find the top N items per group using window functions?',
-        answer: `**Pattern**: ROW_NUMBER + PARTITION BY + subquery filter
+        answer: `Pattern: ROW_NUMBER + PARTITION BY + subquery filter
 
 \`\`\`sql
 -- Top 3 highest-paid employees per department
@@ -675,9 +675,9 @@ SELECT * FROM (
 WHERE rn <= 3;
 \`\`\`
 
-**Why Subquery?**: Window functions execute after WHERE, so you can't filter on \`rn\` directly in the same query level — wrap it in a subquery or CTE.
+Why Subquery?: Window functions execute after WHERE, so you can't filter on \`rn\` directly in the same query level — wrap it in a subquery or CTE.
 
-**Handling Ties**: If you want ALL employees tied at 3rd place (not just one), use DENSE_RANK instead of ROW_NUMBER:
+Handling Ties: If you want ALL employees tied at 3rd place (not just one), use DENSE_RANK instead of ROW_NUMBER:
 \`\`\`sql
 -- Include all ties at rank 3
 SELECT * FROM (
@@ -691,7 +691,7 @@ SELECT * FROM (
 WHERE rnk <= 3;
 \`\`\`
 
-**Performance Tip**: Adding an index on (department, salary DESC) can significantly speed up the partitioned window operation.`
+Performance Tip: Adding an index on (department, salary DESC) can significantly speed up the partitioned window operation.`
       }
     ],
 
@@ -713,15 +713,15 @@ WHERE rnk <= 3;
     questions: 5,
     description: 'UNION, UNION ALL, INTERSECT, and EXCEPT for combining and comparing result sets.',
 
-    introduction: `**Set operations** combine the results of two or more SELECT statements into a single result set. They operate on complete rows and require that all participating queries produce the same number of columns with compatible data types.
+    introduction: `Set operations combine the results of two or more SELECT statements into a single result set. They operate on complete rows and require that all participating queries produce the same number of columns with compatible data types.
 
-**UNION** merges two result sets and removes duplicate rows. This involves an implicit DISTINCT step, which requires sorting or hashing.
+UNION merges two result sets and removes duplicate rows. This involves an implicit DISTINCT step, which requires sorting or hashing.
 
-**UNION ALL** merges result sets without removing duplicates. It is faster than UNION because it skips the deduplication step. Always prefer UNION ALL when you know there are no duplicates or when duplicates are acceptable.
+UNION ALL merges result sets without removing duplicates. It is faster than UNION because it skips the deduplication step. Always prefer UNION ALL when you know there are no duplicates or when duplicates are acceptable.
 
-**INTERSECT** returns only rows that appear in both result sets — the set intersection.
+INTERSECT returns only rows that appear in both result sets — the set intersection.
 
-**EXCEPT** (called MINUS in Oracle) returns rows from the first query that do not appear in the second — the set difference.
+EXCEPT (called MINUS in Oracle) returns rows from the first query that do not appear in the second — the set difference.
 
 \`\`\`sql
 -- UNION ALL: combine current and archived orders
@@ -807,25 +807,25 @@ Set operations follow operator precedence: INTERSECT binds tighter than UNION/EX
     questions: 6,
     description: 'Schema definition (CREATE, ALTER, DROP) and data manipulation (INSERT, UPDATE, DELETE), plus indexes and constraints.',
 
-    introduction: `**DDL (Data Definition Language)** and **DML (Data Manipulation Language)** are the two fundamental categories of SQL statements that define your schema and modify your data.
+    introduction: `DDL (Data Definition Language) and DML (Data Manipulation Language) are the two fundamental categories of SQL statements that define your schema and modify your data.
 
-**DDL Statements** define and modify database structure:
-- **CREATE TABLE** defines a new table with columns, data types, and constraints.
-- **ALTER TABLE** modifies an existing table — add/drop columns, rename, change types, add constraints.
-- **DROP TABLE** permanently removes a table and all its data.
+DDL Statements define and modify database structure:
+- CREATE TABLE defines a new table with columns, data types, and constraints.
+- ALTER TABLE modifies an existing table — add/drop columns, rename, change types, add constraints.
+- DROP TABLE permanently removes a table and all its data.
 
-**DML Statements** modify data within tables:
-- **INSERT INTO** adds new rows.
-- **UPDATE** modifies existing rows matching a condition.
-- **DELETE FROM** removes rows matching a condition.
+DML Statements modify data within tables:
+- INSERT INTO adds new rows.
+- UPDATE modifies existing rows matching a condition.
+- DELETE FROM removes rows matching a condition.
 
-**Constraints** enforce data integrity rules at the database level:
-- **PRIMARY KEY** — uniquely identifies each row, implicitly NOT NULL and UNIQUE.
-- **FOREIGN KEY** — ensures referential integrity between tables.
-- **UNIQUE** — prevents duplicate values in a column or column combination.
-- **NOT NULL** — prevents NULL values.
-- **CHECK** — validates that values satisfy a boolean expression.
-- **DEFAULT** — provides a value when none is specified on INSERT.
+Constraints enforce data integrity rules at the database level:
+- PRIMARY KEY — uniquely identifies each row, implicitly NOT NULL and UNIQUE.
+- FOREIGN KEY — ensures referential integrity between tables.
+- UNIQUE — prevents duplicate values in a column or column combination.
+- NOT NULL — prevents NULL values.
+- CHECK — validates that values satisfy a boolean expression.
+- DEFAULT — provides a value when none is specified on INSERT.
 
 \`\`\`sql
 CREATE TABLE orders (
@@ -843,7 +843,7 @@ CREATE INDEX idx_orders_customer ON orders(customer_id);
 CREATE INDEX idx_orders_status_date ON orders(status, created_at);
 \`\`\`
 
-**Indexes** are the primary tool for query performance. A **B-tree index** (the default) speeds up equality and range lookups. A **composite index** on (A, B, C) supports queries filtering on A, or A+B, or A+B+C (leftmost prefix rule), but not B alone. Understanding when to add — and when not to add — indexes is critical for system design interviews.`,
+Indexes are the primary tool for query performance. A B-tree index (the default) speeds up equality and range lookups. A composite index on (A, B, C) supports queries filtering on A, or A+B, or A+B+C (leftmost prefix rule), but not B alone. Understanding when to add — and when not to add — indexes is critical for system design interviews.`,
 
     whenToUse: [
       'Designing a database schema for a new application or feature',
@@ -914,7 +914,7 @@ CREATE INDEX idx_orders_status_date ON orders(status, created_at);
 
     introduction: `Easy SQL interview problems test your fluency with the fundamental operations. They appear frequently in phone screens and as warm-up questions in on-site interviews. While the logic is straightforward, interviewers watch for clean syntax, awareness of edge cases (especially NULLs), and the ability to write correct queries quickly without trial and error.
 
-**Pattern: Second/Nth Highest Value**
+Pattern: Second/Nth Highest Value
 A classic question that tests subqueries or window functions.
 \`\`\`sql
 -- Second highest salary (handles ties and missing values)
@@ -932,13 +932,13 @@ WHERE rnk = 2
 LIMIT 1;
 \`\`\`
 
-**Pattern: Finding Duplicates**
+Pattern: Finding Duplicates
 GROUP BY + HAVING COUNT(*) > 1 is the standard approach.
 \`\`\`sql
 SELECT email FROM users GROUP BY email HAVING COUNT(*) > 1;
 \`\`\`
 
-**Pattern: Records With No Match**
+Pattern: Records With No Match
 LEFT JOIN + IS NULL or NOT EXISTS to find orphaned records.
 \`\`\`sql
 -- Customers who never placed an order
@@ -948,7 +948,7 @@ LEFT JOIN orders o ON c.id = o.customer_id
 WHERE o.id IS NULL;
 \`\`\`
 
-**Pattern: Date Comparisons**
+Pattern: Date Comparisons
 Self-join or LAG to compare consecutive rows.
 \`\`\`sql
 -- Rising temperature: days warmer than the previous day
@@ -1032,7 +1032,7 @@ These patterns recur across dozens of problems. Once you recognize the pattern, 
 
     introduction: `Hard SQL interview problems test your ability to combine multiple techniques — window functions, CTEs, self-joins, and creative grouping — into a single coherent query. These problems appear in senior engineering, data engineering, and analytics interviews where SQL mastery is expected.
 
-**Pattern: Top N Per Group**
+Pattern: Top N Per Group
 Department top 3 salaries is the canonical example. Use DENSE_RANK partitioned by department, then filter.
 \`\`\`sql
 WITH ranked AS (
@@ -1044,7 +1044,7 @@ SELECT department, name, salary
 FROM ranked WHERE rnk <= 3;
 \`\`\`
 
-**Pattern: Median Calculation**
+Pattern: Median Calculation
 SQL has no built-in MEDIAN in most databases. Use ROW_NUMBER or PERCENTILE_CONT.
 \`\`\`sql
 -- Median using ROW_NUMBER
@@ -1059,7 +1059,7 @@ FROM ordered
 WHERE rn IN (FLOOR((total + 1) / 2.0), CEIL((total + 1) / 2.0));
 \`\`\`
 
-**Pattern: Gaps and Islands**
+Pattern: Gaps and Islands
 Identify consecutive groups in data — for example, consecutive login days or continuous number sequences. The classic technique uses the difference between ROW_NUMBER and the value to create group identifiers.
 \`\`\`sql
 -- Find consecutive login streaks
@@ -1078,7 +1078,7 @@ GROUP BY user_id, grp
 HAVING COUNT(*) >= 3;
 \`\`\`
 
-**Pattern: Pivot Tables**
+Pattern: Pivot Tables
 Transform rows into columns using conditional aggregation.
 \`\`\`sql
 SELECT product,
@@ -1090,7 +1090,7 @@ FROM sales
 GROUP BY product;
 \`\`\`
 
-**Pattern: Hierarchical Queries**
+Pattern: Hierarchical Queries
 Recursive CTEs for traversing org charts, category trees, or bill-of-materials structures.
 
 These problems require combining two or three patterns in a single query. The key to solving them is decomposing the problem into steps and building up the query incrementally, often with CTEs.`,

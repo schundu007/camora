@@ -100,8 +100,8 @@ It appears simple on the surface, but interviewers expect you to go deep on:
 • How to avoid collisions across distributed servers
 
 This guide covers two approaches:
-• **Basic implementation** — simple but has scalability flaws
-• **Advanced implementation** — uses ZooKeeper for collision-free ID generation
+• Basic implementation — simple but has scalability flaws
+• Advanced implementation — uses ZooKeeper for collision-free ID generation
 
 Being able to discuss the flaws of the basic approach and how the advanced approach solves them demonstrates the depth of understanding most candidates lack.`,
 
@@ -192,16 +192,16 @@ Being able to discuss the flaws of the basic approach and how the advanced appro
           question: 'How does Base62 encoding work and why 7 characters?',
           answer: `Base62 uses alphanumeric characters [a-z, A-Z, 0-9] = 62 possible characters per position.
 
-**Math:**
+Math:
 • 6 characters: 62⁶ = 56.8 billion unique URLs
 • 7 characters: 62⁷ = 3.52 trillion unique URLs
 
-**At our scale (500M new URLs/month):**
+At our scale (500M new URLs/month):
 • 500M × 12 × 5 years = 30 billion URLs over 5 years
 • 7 characters provides 3.52 trillion / 30 billion = 117x headroom
 • 6 characters would only give 56.8B / 30B = 1.9x headroom — too tight
 
-**Encoding process:**
+Encoding process:
 1. Get a unique integer ID (from counter or KGS)
 2. Repeatedly divide by 62, map remainder to character
 3. Example: ID 125 → 125 / 62 = 2 remainder 1 → "cb"
@@ -212,38 +212,38 @@ Avoid special characters (/, +, =) as they require URL percent-encoding.`
           question: 'How do you handle hash collisions?',
           answer: `Collisions are the #1 correctness risk in a URL shortener. Three strategies:
 
-**1. Counter-based (no collisions by design):**
+1. Counter-based (no collisions by design):
 • Auto-increment counter → Base62 encode
 • Each ID is unique, so each short code is unique
 • ZooKeeper allocates ranges of 1M IDs to each app server — zero coordination per request
 
-**2. MD5 hash + collision check:**
+2. MD5 hash + collision check:
 • MD5(long_url) → Base62 encode → take first 7 chars
 • Check DB if code exists: if collision, append suffix and retry
 • Problem: at 30B URLs, birthday paradox makes collisions frequent (~1 in 62⁷ per pair)
 
-**3. Pre-generated Key Service (KGS):**
+3. Pre-generated Key Service (KGS):
 • Pre-generate millions of random unique 7-char keys in a separate DB
 • App servers atomically pop keys from the pool — zero collisions
 • If a server crashes, lost keys are acceptable given 3.5 trillion total
 
-**Recommendation:** Counter with ZooKeeper for simplicity and guaranteed uniqueness.`
+Recommendation: Counter with ZooKeeper for simplicity and guaranteed uniqueness.`
         },
         {
           question: 'Should we use 301 or 302 redirects?',
           answer: `This is a critical design decision with major implications:
 
-**301 Permanent Redirect:**
+301 Permanent Redirect:
 • Browser caches the redirect — subsequent visits skip our server entirely
 • Pros: Reduces server load by 50-80%, better for SEO
 • Cons: Cannot track every click (cached redirects are invisible), cannot change target URL later
 
-**302 Temporary Redirect:**
+302 Temporary Redirect:
 • Browser re-requests our server every time
 • Pros: Full click analytics, can change target URL anytime
 • Cons: Every click hits our server — at 20K QPS this is significant load
 
-**Recommendation:**
+Recommendation:
 • Use 302 if analytics/tracking is a core feature (like Bitly)
 • Use 301 if pure URL shortening without tracking (like TinyURL)
 • Hybrid: 301 with async analytics via JavaScript pixel or Kafka event on first visit`
@@ -252,58 +252,58 @@ Avoid special characters (/, +, =) as they require URL percent-encoding.`
           question: 'SQL or NoSQL for the URL store?',
           answer: `The URL shortener data model is a simple key-value lookup (short_code → long_url), which influences the DB choice:
 
-**NoSQL (Cassandra/DynamoDB):**
+NoSQL (Cassandra/DynamoDB):
 • Horizontal scaling out of the box — add nodes to handle more traffic
 • High write throughput (~200 writes/sec is trivial, scales to millions)
 • No schema constraints — easy to add fields later
 • Partition by short_code for even distribution
 • Trade-off: no JOINs, limited query flexibility
 
-**SQL (PostgreSQL with sharding):**
+SQL (PostgreSQL with sharding):
 • ACID transactions for custom alias reservation
 • Rich querying for analytics (JOINs, aggregations)
 • Well-understood operational model
 • Trade-off: sharding adds complexity, limited single-node write throughput (~50K/s)
 
-**Recommendation:** NoSQL (DynamoDB or Cassandra) for the URL mapping table.
+Recommendation: NoSQL (DynamoDB or Cassandra) for the URL mapping table.
 Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
         },
         {
           question: 'What caching strategy should we use?',
           answer: `With 20K read QPS and a 100:1 read-to-write ratio, caching is essential:
 
-**Pattern:** Cache-aside (lazy loading)
+Pattern: Cache-aside (lazy loading)
 1. Check Redis cache for short_code → long_url
 2. On hit: return immediately (sub-ms latency)
 3. On miss: query DB, populate cache with TTL, return result
 
-**Sizing (80/20 rule — Pareto principle):**
+Sizing (80/20 rule — Pareto principle):
 • Daily requests: 20K/s × 86,400 = 1.73 billion redirects/day
 • 20% of URLs serve 80% of traffic
 • Unique URLs accessed daily: ~1.73B / avg_hits ≈ 340M unique
 • Cache 20% hottest: 340M × 0.2 × 500 bytes = ~34 GB (fits in one Redis node)
 • More conservatively: cache top 20% of all daily URLs = ~170 GB (Redis cluster)
 
-**Eviction:** LRU (Least Recently Used) — cold URLs evict automatically
-**TTL:** 24 hours for standard URLs, no TTL for custom aliases
-**Warm-up:** Pre-load top 1000 URLs on server startup from analytics data`
+Eviction: LRU (Least Recently Used) — cold URLs evict automatically
+TTL: 24 hours for standard URLs, no TTL for custom aliases
+Warm-up: Pre-load top 1000 URLs on server startup from analytics data`
         },
         {
           question: 'How do you build an analytics pipeline without slowing down redirects?',
-          answer: `**Critical rule:** Never write analytics synchronously on the redirect path — it would add 5-20ms latency per redirect.
+          answer: `Critical rule: Never write analytics synchronously on the redirect path — it would add 5-20ms latency per redirect.
 
-**Async pipeline:**
+Async pipeline:
 1. On redirect: publish a click event to Kafka (non-blocking, <1ms)
    • Event: { short_code, timestamp, IP, User-Agent, Referer, country }
 2. Kafka consumers batch-process events every 5 seconds
 3. Aggregate data written to ClickHouse or Redshift
 4. Power dashboards: total clicks, unique visitors, geographic distribution, referrer breakdown
 
-**Real-time counters (optional):**
+Real-time counters (optional):
 • Redis INCR on key clicks:{short_code} for approximate real-time count
 • Periodically flush Redis counters to the data warehouse
 
-**Data lifecycle:**
+Data lifecycle:
 • Hot data (last 30 days): in ClickHouse for fast queries
 • Warm data (30 days - 1 year): compressed in Redshift
 • Cold data (1+ years): archived to S3 Parquet files`
@@ -312,93 +312,93 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
           question: 'How do custom aliases work and what are the edge cases?',
           answer: `Custom aliases let users choose their own short codes (e.g., short.ly/my-brand).
 
-**Implementation:**
+Implementation:
 1. User submits custom alias via POST /api/v1/shorten with custom_alias parameter
 2. Server validates: 3-20 chars, alphanumeric + hyphens only, no reserved words
 3. Check if alias already exists in DB (must be globally unique)
 4. If available: store mapping and return. If taken: return 409 Conflict
 
-**Edge cases:**
-• **Reserved words:** Block aliases like "api", "admin", "health", "login" — maintain a blacklist
-• **Trademark squatting:** First-come-first-served, optionally offer paid premium aliases
-• **Case sensitivity:** Treat "MyBrand" and "mybrand" as the same to avoid confusion
-• **Length limits:** Min 3 chars (avoid single-char exhaustion), max 20 chars
-• **Expiration:** Custom aliases should not expire by default (unlike auto-generated)
+Edge cases:
+• Reserved words: Block aliases like "api", "admin", "health", "login" — maintain a blacklist
+• Trademark squatting: First-come-first-served, optionally offer paid premium aliases
+• Case sensitivity: Treat "MyBrand" and "mybrand" as the same to avoid confusion
+• Length limits: Min 3 chars (avoid single-char exhaustion), max 20 chars
+• Expiration: Custom aliases should not expire by default (unlike auto-generated)
 
-**Storage:** Custom aliases stored in the same table as auto-generated codes — same lookup path.`
+Storage: Custom aliases stored in the same table as auto-generated codes — same lookup path.`
         },
         {
           question: 'How does URL expiration and cleanup work?',
           answer: `Two complementary approaches:
 
-**1. Lazy deletion (on read):**
+1. Lazy deletion (on read):
 • When a redirect request comes in, check if expires_at < now()
 • If expired: return 404 Not Found, optionally delete from cache
 • Zero extra infrastructure — piggybacks on existing read path
 
-**2. Background cleanup job:**
+2. Background cleanup job:
 • Cron job runs during low-traffic hours (2-5 AM)
 • Queries: SELECT * FROM urls WHERE expires_at < now() LIMIT 10000
 • Deletes in batches to avoid lock contention and long transactions
 • Also cleans up cache entries: DEL short:{code}
 
-**Important design decisions:**
-• **Never recycle short codes** — reusing a code could serve stale cached redirects from browsers or CDNs
-• **Default TTL:** No expiration for standard URLs, 30 days for anonymous/free-tier users
-• **Grace period:** Keep expired URLs for 7 days in "soft deleted" state before hard delete
-• **Archive:** Move expired URL metadata to cold storage for compliance/audit trails`
+Important design decisions:
+• Never recycle short codes — reusing a code could serve stale cached redirects from browsers or CDNs
+• Default TTL: No expiration for standard URLs, 30 days for anonymous/free-tier users
+• Grace period: Keep expired URLs for 7 days in "soft deleted" state before hard delete
+• Archive: Move expired URL metadata to cold storage for compliance/audit trails`
         },
         {
           question: 'How do you scale reads to handle 20K redirects/sec?',
           answer: `Reads dominate at 100:1 ratio. Scaling strategy from bottom up:
 
-**Layer 1: CDN (handles 80% of traffic)**
+Layer 1: CDN (handles 80% of traffic)
 • Popular short URLs cached at CDN edge (CloudFront/Cloudflare)
 • 301 redirect responses cached with TTL of 1 hour
 • CDN serves redirects in <50ms from nearest edge location
 • Reduces load to origin by 80%: 20K → 4K QPS hitting our servers
 
-**Layer 2: Redis Cache (handles 90% of remaining)**
+Layer 2: Redis Cache (handles 90% of remaining)
 • Cache-aside pattern for hot URLs
 • 80% cache hit rate → only 400 QPS reach the database
 • Redis cluster: 3 nodes with 170GB total for 20% hot URLs
 
-**Layer 3: Read Replicas**
+Layer 3: Read Replicas
 • Primary DB handles writes (200/s)
 • 3-5 read replicas handle cache misses (400/s spread across replicas)
 • Replicas can be in different AZs for resilience
 
-**Layer 4: Database Sharding (for growth)**
+Layer 4: Database Sharding (for growth)
 • Consistent hash on short_code across N shards
 • Start with 4 shards (~4TB each for 15TB over 5 years)
 • Pre-provision for 16 shards as traffic grows
 
-**Result:** 20K QPS → CDN handles 16K, Redis handles 3.6K, DB handles 400.`
+Result: 20K QPS → CDN handles 16K, Redis handles 3.6K, DB handles 400.`
         },
         {
           question: 'How do you generate unique IDs across distributed servers?',
           answer: `Three production-proven approaches:
 
-**1. ZooKeeper Range Allocation (recommended):**
+1. ZooKeeper Range Allocation (recommended):
 • ZooKeeper assigns ranges of 1M sequential IDs to each app server
 • Server generates IDs independently within its range — zero per-request coordination
 • When range exhausted: request new range from ZooKeeper (~1 contact per 1M requests)
 • If server crashes and loses remaining range: acceptable loss given 3.5 trillion total IDs
 • Each ID is Base62-encoded to produce the 7-char short code
 
-**2. Snowflake IDs:**
+2. Snowflake IDs:
 • 64-bit ID: 41 bits timestamp | 10 bits machine ID | 12 bits sequence
 • Each machine generates 4,096 IDs/millisecond independently
 • IDs are time-sortable (useful for analytics)
 • Base62 encode for the short code
 
-**3. Pre-generated Key Service (KGS):**
+3. Pre-generated Key Service (KGS):
 • Dedicated service pre-generates millions of random 7-char keys
 • Keys stored in "unused" table, moved to "used" on allocation
 • App servers batch-fetch 1000 keys at a time — cached locally
 • Zero collision handling needed
 
-**Trade-off:** ZooKeeper gives sequential (predictable) codes. KGS gives random (non-guessable) codes. Choose based on security requirements.`
+Trade-off: ZooKeeper gives sequential (predictable) codes. KGS gives random (non-guessable) codes. Choose based on security requirements.`
         }
       ],
 
@@ -478,7 +478,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
           name: 'Base62 Counter Encoding',
           description: `Assign each URL an auto-incrementing integer ID, then encode it as a Base62 string.
 
-**How it works:**
+How it works:
 • Use characters [a-z, A-Z, 0-9] — 62 possible characters
 • 7 characters → 62⁷ = ~3.5 trillion unique short URLs
 • Time complexity: O(1) for fixed-length conversion`,
@@ -489,12 +489,12 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
           name: 'MD5 Hashing + Truncation',
           description: `Compute MD5 hash (128 bits) of the long URL, then Base62-encode and truncate.
 
-**How it works:**
+How it works:
 • MD5 produces a 128-bit hash → Base62 gives >21 characters
 • Take the first 6-7 characters as the short code
 • Deterministic: same input always produces same output
 
-**Limitation:** Truncation introduces collision risk (~1 in 62⁷ per pair). Must handle with retry + append strategy.`,
+Limitation: Truncation introduces collision risk (~1 in 62⁷ per pair). Must handle with retry + append strategy.`,
           pros: ['Deterministic — same long URL always maps to same short code', 'No central counter needed — stateless generation', 'Works well for deduplication of identical URLs'],
           cons: ['Truncation causes collisions — must handle with retry + append', 'MD5 produces 21+ chars, truncating to 6-7 loses entropy', 'Collision resolution adds complexity and latency on write path']
         },
@@ -502,7 +502,7 @@ Use a separate analytics data warehouse (ClickHouse/Redshift) for reporting.`
           name: 'Pre-generated Key Service (KGS)',
           description: `A dedicated service pre-generates millions of unique random keys in advance.
 
-**How it works:**
+How it works:
 • Store unused keys in a database
 • On each URL creation, atomically pop a key from the unused pool
 • Move used keys to a separate "used" table
@@ -527,15 +527,15 @@ This gives O(1) key generation with zero collision handling.`,
 • ALB or Nginx
 • Distributes traffic using round-robin or least-connections` },
         { name: 'API Servers (Stateless)', description: `Horizontally scalable application servers with no session state.
-• **Write path:** validate input → generate short code → store mapping
-• **Read path:** cache lookup → DB fallback → 301 redirect` },
+• Write path: validate input → generate short code → store mapping
+• Read path: cache lookup → DB fallback → 301 redirect` },
         { name: 'Cache Layer (Redis/Memcached)', description: `In-memory cache using cache-aside pattern.
 • Stores hot short_code → long_url mappings
 • 80/20 rule: cache top 20% URLs to serve 80% of traffic
 • LRU eviction, TTL of 1 day` },
         { name: 'Data Store (NoSQL/SQL)', description: `Primary persistent storage for URL mappings.
-• **Preferred:** NoSQL (Cassandra/DynamoDB) for high write throughput
-• **Alternative:** PostgreSQL with consistent hash sharding
+• Preferred: NoSQL (Cassandra/DynamoDB) for high write throughput
+• Alternative: PostgreSQL with consistent hash sharding
 • 3x replication for durability` },
         { name: 'Analytics Pipeline (Async)', description: `Captures click events asynchronously — never blocks redirects.
 • Kafka queue with metadata (IP, User-Agent, Referer, timestamp)
@@ -550,11 +550,11 @@ This gives O(1) key generation with zero collision handling.`,
           topic: 'Caching Strategy',
           detail: `Use cache-aside pattern with Redis or Memcached.
 
-**Read flow:**
+Read flow:
 • Check cache first — O(1) lookup
 • On miss: query DB, then populate cache with TTL of 1 day
 
-**Key principles:**
+Key principles:
 • Apply 80/20 rule — cache top 20% URLs to serve 80% of traffic
 • LRU eviction when memory is full
 • Use bloom filter before cache lookup to avoid thrashing on single-access URLs
@@ -562,23 +562,23 @@ This gives O(1) key generation with zero collision handling.`,
         },
         {
           topic: 'Database Partitioning',
-          detail: `**Avoid:** Range-based partitioning (by first character) — causes hot partitions.
+          detail: `Avoid: Range-based partitioning (by first character) — causes hot partitions.
 
-**Use instead:** Consistent hashing on short_code as partition key.
+Use instead: Consistent hashing on short_code as partition key.
 • Distributes data and traffic uniformly across shards
 • Each shard has read replicas with leader-follower replication
 • Connection pooling (PgBouncer/ProxySQL) handles thousands of concurrent connections
 
-**Sizing:** For 15TB over 5 years, start with 4 shards (~4TB each) and pre-provision for 16.`
+Sizing: For 15TB over 5 years, start with 4 shards (~4TB each) and pre-provision for 16.`
         },
         {
           topic: 'Rate Limiting & Security',
-          detail: `**Rate limiting:**
+          detail: `Rate limiting:
 • Implement at API gateway layer (not in app code)
 • Token bucket algorithm: N requests/minute per API key or IP
 • Prevents DDoS and resource abuse
 
-**Security measures:**
+Security measures:
 • Scan URLs against malware/phishing blacklists (VirusTotal, Google Safe Browsing)
 • Sanitize input to prevent XSS in custom aliases
 • Use JWT tokens for authenticated endpoints
@@ -586,17 +586,17 @@ This gives O(1) key generation with zero collision handling.`,
         },
         {
           topic: 'Analytics & Monitoring',
-          detail: `**Rule:** Never write analytics synchronously on the redirect path — it would double latency.
+          detail: `Rule: Never write analytics synchronously on the redirect path — it would double latency.
 
-**Async pipeline:**
+Async pipeline:
 • Publish click events to Kafka (IP, User-Agent, Referer, timestamp)
 • Batch process with Spark Streaming → aggregate hourly
 • Write to data warehouse (Redshift/Snowflake) for dashboards
 
-**Data lifecycle:**
+Data lifecycle:
 • Archive cold data (last_visited > 3 years) to S3
 
-**Key metrics to monitor:**
+Key metrics to monitor:
 • QPS, cache hit ratio, p99 latency, error rate
 • Use centralized logging (Datadog/ELK)`
         }
@@ -607,17 +607,17 @@ This gives O(1) key generation with zero collision handling.`,
       tradeoffDecisions: [
         { choice: '301 vs 302 Redirect', picked: '301 Permanent Redirect', reason: `301 tells the browser to cache the redirect. Subsequent visits skip our server, reducing load.
 
-**Trade-off:** If the target URL changes, cached 301s in browsers won't update. Use 302 if you need server-side analytics on every request.
+Trade-off: If the target URL changes, cached 301s in browsers won't update. Use 302 if you need server-side analytics on every request.
 
-**Recommendation:** 301 + async analytics is the preferred approach.` },
+Recommendation: 301 + async analytics is the preferred approach.` },
         { choice: 'NoSQL vs SQL for URL store', picked: 'NoSQL (Cassandra/DynamoDB)', reason: `URL shortener data is non-relational — it's a simple key-value lookup.
 
-**Why NoSQL wins:**
+Why NoSQL wins:
 • Horizontal scaling out of the box
 • High write throughput
 • Flexible schema
 
-**Trade-off:** No JOINs for analytics (solve with a separate data warehouse). SQL with sharding is viable but requires more operational effort.` },
+Trade-off: No JOINs for analytics (solve with a separate data warehouse). SQL with sharding is viable but requires more operational effort.` },
         { choice: 'Sync vs Async Analytics', picked: 'Async via Kafka', reason: `Redirect latency must stay under 100ms.
 
 • Synchronous DB write on every click adds 5-20ms
@@ -625,13 +625,13 @@ This gives O(1) key generation with zero collision handling.`,
 
 Kafka decouples click capture from processing.
 
-**Trade-off:** Analytics data lags 5-10 minutes behind real-time. Acceptable for dashboards, not for real-time abuse detection.` },
+Trade-off: Analytics data lags 5-10 minutes behind real-time. Acceptable for dashboards, not for real-time abuse detection.` },
         { choice: 'Consistency vs Availability', picked: 'Eventual Consistency (AP)', reason: `Per CAP theorem, we prioritize availability — the redirect must always work.
 
 • A new short URL may take milliseconds to propagate across regions
 • Brief window where a just-created URL returns 404 in other regions
 
-**Mitigation:** Sticky sessions or direct-to-source routing for new URLs.` }
+Mitigation: Sticky sessions or direct-to-source routing for new URLs.` }
       ],
 
       // ── Common Follow-up Interview Questions ──
@@ -639,50 +639,50 @@ Kafka decouples click capture from processing.
       interviewFollowups: [
         { question: 'How do you handle duplicate long URLs?', answer: `Store an inverted index (long_url → short_code) alongside the primary mapping.
 
-**How it works:**
+How it works:
 • Before generating a new code, check if the long URL already exists
 • If found, return the existing short code
 • Deduplication can reduce storage by 30-40%
 
-**Trade-off:** 2x storage for the inverted index, but saves on total URL count.` },
+Trade-off: 2x storage for the inverted index, but saves on total URL count.` },
         { question: 'How do you prevent abuse and malicious URLs?', answer: `Multi-layer defense:
 
-• **Rate limiting** — N shortens/minute per API key or IP (token bucket algorithm)
-• **URL scanning** — Check against malware/phishing blacklists (VirusTotal, Google Safe Browsing)
-• **CAPTCHA** — Trigger after repeated failures from same source
-• **Anomaly detection** — Flag accounts with sudden 100x spike in creation rate` },
+• Rate limiting — N shortens/minute per API key or IP (token bucket algorithm)
+• URL scanning — Check against malware/phishing blacklists (VirusTotal, Google Safe Browsing)
+• CAPTCHA — Trigger after repeated failures from same source
+• Anomaly detection — Flag accounts with sudden 100x spike in creation rate` },
         { question: 'How do you clean up expired URLs?', answer: `Two approaches combined:
 
-**1. Lazy deletion:**
+1. Lazy deletion:
 • On redirect, check expires_at timestamp
 • Return 404 if expired
 
-**2. Background cleanup:**
+2. Background cleanup:
 • Runs during low-traffic hours (2-5 AM)
 • Deletes expired rows in batches to avoid lock contention
 • Archive cold data (last_visited > 3 years) to S3
 
-**Important:** Never recycle short codes — reuse causes broken links.` },
-        { question: 'What happens when the database is down?', answer: `**For reads (redirects):**
+Important: Never recycle short codes — reuse causes broken links.` },
+        { question: 'What happens when the database is down?', answer: `For reads (redirects):
 • Cache layer (Redis) serves 80%+ of traffic independently
 • Cache misses return 503 until DB recovers
 
-**For writes:**
+For writes:
 • Queue new shorten requests in Kafka
 • Process when DB is back (with TTL for stale requests)
 
-**Failover strategy:**
+Failover strategy:
 • Leader-follower replication with automated failover (Patroni / DynamoDB global tables)
 • Target: RTO < 60 seconds, RPO near zero` },
         { question: 'How do you scale from 200 to 200,000 write QPS?', answer: `Progressive scaling strategy:
 
-• **Step 1:** Vertical scaling — bigger DB instance (up to ~5K QPS)
-• **Step 2:** Read replicas — offload redirect reads from primary
-• **Step 3:** Database sharding — consistent hash on short_code across N shards
-• **Step 4:** KGS with pre-allocated key ranges — eliminates coordination overhead
-• **Step 5:** Geographic distribution — multiple regions with local DBs and async replication
+• Step 1: Vertical scaling — bigger DB instance (up to ~5K QPS)
+• Step 2: Read replicas — offload redirect reads from primary
+• Step 3: Database sharding — consistent hash on short_code across N shards
+• Step 4: KGS with pre-allocated key ranges — eliminates coordination overhead
+• Step 5: Geographic distribution — multiple regions with local DBs and async replication
 
-**Key principle:** Benchmark before adding complexity at each stage.` }
+Key principle: Benchmark before adding complexity at each stage.` }
       ],
 
       // ── Code Implementations ──
@@ -1161,42 +1161,42 @@ follows {
           question: 'What is the fan-out problem and how does the hybrid approach solve it?',
           answer: `The fan-out problem is the core challenge: when a user tweets, how do you deliver it to all their followers?
 
-**1. Fan-out on Write (Push Model):**
+1. Fan-out on Write (Push Model):
 • When user tweets, push tweetId to every follower's timeline cache (Redis sorted set)
 • Pros: Timeline reads are O(1) — just fetch pre-computed cache
 • Cons: Celebrity with 100M followers = 100M cache writes per tweet. At 6K tweets/sec globally, this is unsustainable
 
-**2. Fan-out on Read (Pull Model):**
+2. Fan-out on Read (Pull Model):
 • Timeline generated on request: fetch recent tweets from all followed users, merge and rank
 • Pros: No write amplification — one write regardless of follower count
 • Cons: If user follows 500 people, timeline read requires 500 queries + merge + sort = high latency
 
-**3. Hybrid Approach (what Twitter actually does):**
+3. Hybrid Approach (what Twitter actually does):
 • Fan-out on write for users with < 10K followers (~99.9% of users)
 • Fan-out on read for celebrities (> 10K followers)
 • Timeline read: merge pre-computed cache + real-time pull from followed celebrities
 • This limits write amplification while keeping reads fast for the majority
 
-**The math:** 500M tweets/day, ~99.9% from non-celebrities with avg 300 followers = ~150B cache writes/day (manageable). The 0.1% celebrity tweets are pulled on demand.`
+The math: 500M tweets/day, ~99.9% from non-celebrities with avg 300 followers = ~150B cache writes/day (manageable). The 0.1% celebrity tweets are pulled on demand.`
         },
         {
           question: 'How does the celebrity problem work and what is the threshold?',
           answer: `The celebrity problem is the specific failure mode of pure fan-out on write:
 
-**The problem:**
+The problem:
 • A user with 100M followers posts a tweet
 • Fan-out on write = 100M Redis ZADD operations per tweet
 • At ~100K writes/sec per Redis node, this takes 1,000 seconds (16+ minutes)
 • During this time, some followers see the tweet and others do not — inconsistent experience
 • If the celebrity tweets 5 times in an hour, the fan-out queue grows unboundedly
 
-**The threshold (configurable):**
+The threshold (configurable):
 • Twitter uses approximately 10K followers as the boundary
 • Below 10K: fan-out on write (push to all followers' caches)
 • Above 10K: fan-out on read (stored in a celebrity tweet cache, pulled at read time)
 • This threshold can be tuned based on infrastructure capacity
 
-**Why 10K?**
+Why 10K?
 • 10K writes per tweet is fast — takes <1 second to fan out
 • 500M daily tweets x 0.1% from celebrities = only 500K celebrity tweets/day
 • Each timeline read merges ~5-20 celebrity tweet lists (most users follow few celebrities)
@@ -1206,7 +1206,7 @@ follows {
           question: 'How does timeline ranking work beyond chronological order?',
           answer: `Modern Twitter uses ML-ranked timelines, not pure chronological:
 
-**Ranking signals (features for the ML model):**
+Ranking signals (features for the ML model):
 • Engagement prediction: P(like), P(retweet), P(reply), P(click)
 • Author relationship: how often you interact with this person
 • Content relevance: topic similarity to your interests
@@ -1214,20 +1214,20 @@ follows {
 • Social proof: how many people in your network engaged with this tweet
 • Media: tweets with images/video get engagement boost
 
-**Timeline assembly pipeline:**
+Timeline assembly pipeline:
 1. Candidate generation: pull ~500 candidate tweets from timeline cache + celebrity pull + trending
 2. Feature extraction: compute features for each candidate (pre-computed + real-time)
 3. Scoring: ML model (gradient-boosted trees or neural net) scores each candidate
 4. Ranking: sort by score, deduplicate, remove blocked/muted content
 5. Return top 20 with cursor for pagination
 
-**Latency budget:** Total < 200ms
+Latency budget: Total < 200ms
 • Cache fetch: 10ms
 • Feature extraction: 50ms
 • ML scoring: 50ms
 • Final ranking + hydration: 50ms
 
-**Cache invalidation:** When engagement counts change significantly (tweet goes viral), invalidate and re-rank on next request.`
+Cache invalidation: When engagement counts change significantly (tweet goes viral), invalidate and re-rank on next request.`
         },
         {
           question: 'How do Snowflake IDs work and why are they critical for Twitter?',
@@ -1236,21 +1236,21 @@ follows {
 • Globally unique: no coordination needed across data centers
 • High throughput: 4,096 IDs per millisecond per machine
 
-**64-bit structure:**
+64-bit structure:
 | 1 bit unused | 41 bits timestamp | 10 bits machine ID | 12 bits sequence |
 
-**Breakdown:**
+Breakdown:
 • 41 bits timestamp: milliseconds since custom epoch (Twitter epoch: 2010-11-04) = ~69 years of IDs
 • 10 bits machine ID: 1,024 unique machines across data centers
 • 12 bits sequence: 4,096 unique IDs per millisecond per machine
 
-**Why not UUID?**
+Why not UUID?
 • UUIDs are 128-bit (16 bytes) — Snowflake is 64-bit (8 bytes) = 50% less storage
 • UUIDs are not time-sortable — cannot use as clustering key for efficient range scans
 • UUID index fragmentation in B-trees — random insertion causes poor cache locality
 • Snowflake IDs enable efficient cursor-based pagination: "fetch tweets with ID > cursor"
 
-**Clock skew handling:**
+Clock skew handling:
 • If system clock moves backward, the generator waits until the clock catches up
 • NTP synchronization across machines keeps clocks aligned within ~10ms
 • Machine ID prevents collision even with identical timestamps`
@@ -1259,34 +1259,34 @@ follows {
           question: 'How does tweet search work and what is Earlybird?',
           answer: `Twitter built a custom search engine called Earlybird (now part of their search infrastructure):
 
-**Architecture:**
+Architecture:
 1. Tweet ingestion: new tweets flow through Kafka to the search indexing pipeline
 2. Near-real-time indexing: tweets are searchable within ~10 seconds of creation
 3. Inverted index: each term maps to a list of tweet IDs (posting list)
 4. Sharded by time: recent tweets on fast SSD nodes, older tweets on larger HDD nodes
 
-**Search query flow:**
+Search query flow:
 1. User submits search query (e.g., "#SystemDesign interview")
 2. Query parser: tokenize, handle hashtags, mentions, phrases, operators (from:, since:)
 3. Scatter query to all index shards in parallel
 4. Each shard returns top-K results ranked by relevance + recency + engagement
 5. Merge results across shards, re-rank globally, return top results
 
-**Ranking factors:**
+Ranking factors:
 • Text relevance (BM25 score)
 • Recency (time decay — exponential, tweets older than 7 days score much lower)
 • Engagement (likes, retweets, replies)
 • Author authority (verified status, follower count)
 • Personalization (your past interactions with similar content)
 
-**Scale:** ~500M tweets/day indexed, serving millions of search queries per second.
+Scale: ~500M tweets/day indexed, serving millions of search queries per second.
 Twitter moved from Lucene-based Earlybird to a custom engine for better control over real-time indexing latency.`
         },
         {
           question: 'How does Twitter detect trending topics in real-time?',
           answer: `Trends detection requires identifying hashtags/topics that are spiking unusually fast:
 
-**Pipeline:**
+Pipeline:
 1. Stream processor (Kafka + Flink/Heron) consumes all tweets in real-time
 2. Extract features: hashtags, keywords, named entities from each tweet
 3. Count occurrences using Count-Min Sketch (probabilistic data structure — O(1) update, fixed memory)
@@ -1294,18 +1294,18 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
 5. Spike detection: if current_count / baseline > threshold (e.g., 5x), mark as trending
 6. Apply time decay: older spikes fade, newer ones rise
 
-**Why Count-Min Sketch?**
+Why Count-Min Sketch?
 • Fixed memory regardless of vocabulary size (e.g., 10MB for millions of terms)
 • O(1) update and query time
 • Approximate counts with bounded error — acceptable for trending detection
 • Alternative: exact counting with Redis INCR, but memory grows linearly with vocabulary
 
-**Geographic segmentation:**
+Geographic segmentation:
 • Separate trending lists per country/city
 • A topic trending in Japan may not be trending globally
 • GeoDNS routes users to regional trending service
 
-**Anti-gaming:**
+Anti-gaming:
 • Detect coordinated bot activity (same content from many accounts created recently)
 • Velocity check: if 90% of tweets come from accounts < 30 days old, flag as suspicious
 • Human review for sensitive topics before promotion to trending page`
@@ -1314,28 +1314,28 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           question: 'What caching architecture does the timeline service use?',
           answer: `The timeline cache is the most performance-critical component in the entire system:
 
-**Data structure: Redis Sorted Sets**
+Data structure: Redis Sorted Sets
 • Each user has a sorted set: timeline:{userId}
 • Members are tweet IDs, scores are Snowflake IDs (which encode timestamps)
 • ZADD timeline:{userId} {snowflakeId} {tweetId} — O(log N) insert
 • ZREVRANGE timeline:{userId} 0 19 — O(log N + 20) for top 20 tweets
 
-**Cache sizing:**
+Cache sizing:
 • 200M DAU x 800 tweets per timeline x 8 bytes per entry = ~1.28 TB
 • Redis cluster: 50-100 nodes with 16-32 GB each
 • Only active users have cached timelines — inactive users' caches expire after 7 days
 
-**Cache population:**
+Cache population:
 • Fan-out service writes to cache on each tweet from non-celebrities
 • Cache miss on timeline read: regenerate from DB (fetch recent tweets from followed users)
 • Cache warm-up: when a user logs in after being away, pre-fetch and cache their timeline
 
-**Eviction:**
+Eviction:
 • Each sorted set is capped at 800 entries (ZREMRANGEBYRANK to trim)
 • LRU eviction at the Redis level for inactive users
 • TTL of 7 days on timeline keys for users who stop logging in
 
-**Multi-tier caching:**
+Multi-tier caching:
 • L1: Application-level local cache (Guava/Caffeine) — 100 most recent timelines per server
 • L2: Redis cluster — all active user timelines
 • L3: Database — full tweet history for cache misses`
@@ -1344,7 +1344,7 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           question: 'How does tweet deletion propagate through the system?',
           answer: `Tweet deletion is surprisingly complex in a distributed system with caches and fan-out:
 
-**Propagation steps:**
+Propagation steps:
 1. User deletes tweet via DELETE /api/tweets/{id}
 2. Tweet marked as deleted in primary DB (soft delete: deleted_at = now())
 3. Remove from author's profile cache
@@ -1354,42 +1354,42 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
 6. Invalidate CDN-cached tweet embeds (oEmbed)
 7. Remove from trending/analytics pipelines
 
-**The challenge:**
+The challenge:
 • Deletion fan-out can be slower than creation fan-out (lower priority queue)
 • During the propagation window (seconds to minutes), some users still see the deleted tweet
 • Embedded tweets on external websites may show cached versions
 • Retweets of the deleted tweet show "This tweet has been deleted"
 
-**Consistency trade-off:**
+Consistency trade-off:
 • Eventual consistency is acceptable — users understand "deleting" takes a moment
 • Hard delete from DB happens after 30 days (for compliance, abuse investigations)
 • Media files deleted from S3 after the hard delete window
 
-**Edge case:** If a celebrity with 100M followers deletes a tweet that was fan-out on read (not in caches), deletion is instant — just mark the tweet as deleted in the DB, and timeline reads will filter it out.`
+Edge case: If a celebrity with 100M followers deletes a tweet that was fan-out on read (not in caches), deletion is instant — just mark the tweet as deleted in the DB, and timeline reads will filter it out.`
         },
         {
           question: 'How do you handle media in tweets (images, video)?',
           answer: `Media handling is a separate pipeline from text tweets to avoid blocking:
 
-**Upload flow:**
+Upload flow:
 1. Client uploads media first via POST /api/media/upload (before tweeting)
 2. Media service stores in S3, transcodes video to multiple resolutions (1080p, 720p, 480p)
 3. Returns mediaId to the client
 4. Client creates tweet referencing mediaIds — POST /api/tweets with mediaIds[]
 5. Tweet stored with mediaUrl references, not the actual media bytes
 
-**CDN strategy:**
+CDN strategy:
 • All media served through CDN (CloudFront/Akamai) — never from origin S3
 • Images: WebP format with responsive sizes (thumbnail 150px, small 680px, large 1200px)
 • Videos: HLS adaptive bitrate streaming with multiple quality levels
 • CDN cache TTL: 30 days for media (content-addressable — never changes)
 
-**Timeline performance:**
+Timeline performance:
 • Only thumbnails loaded initially (lazy loading for full images)
 • Video auto-play with sound off (first 3 seconds pre-buffered)
 • Blurhash placeholders shown while images load
 
-**Storage:**
+Storage:
 • 150M media tweets/day x 200KB average = 30 TB/day
 • S3 lifecycle: Standard (30 days) -> S3-IA (1 year) -> Glacier (archive)
 • Content-addressable dedup: identical images shared across retweets stored once`
@@ -1398,30 +1398,30 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           question: 'How do you implement rate limiting at Twitter scale?',
           answer: `Rate limiting protects the system at 3.5M+ QPS and prevents abuse:
 
-**Multi-layer rate limiting:**
+Multi-layer rate limiting:
 
-**1. API Gateway (per-user, per-endpoint):**
+1. API Gateway (per-user, per-endpoint):
 • Token bucket algorithm: each user gets N tokens per time window
 • Limits: tweet creation (300/3hr), timeline reads (900/15min), search (450/15min)
 • Implemented at the API gateway (Envoy/Kong) — before requests reach application servers
 • Uses Redis for distributed counter: INCR ratelimit:{userId}:{endpoint}:{window}
 
-**2. Fan-out rate limiting (per-account):**
+2. Fan-out rate limiting (per-account):
 • Celebrity accounts with high follower counts: limit fan-out to 1 tweet/10 seconds
 • Prevents a single celebrity from overwhelming the fan-out queue
 • Backpressure via Kafka consumer lag monitoring
 
-**3. IP-level rate limiting (anti-DDoS):**
+3. IP-level rate limiting (anti-DDoS):
 • Sliding window counter at the edge (CDN/WAF level)
 • Block IPs exceeding 1000 requests/minute
 • CAPTCHA challenge for suspicious patterns
 
-**4. Content-based rate limiting:**
+4. Content-based rate limiting:
 • Detect and throttle duplicate content (same text from multiple accounts = spam)
 • New accounts (< 30 days) have stricter limits (50 tweets/day vs 300)
 • Accounts with spam flags: rate limited to 10 tweets/day
 
-**Response:** Return 429 Too Many Requests with Retry-After header and X-Rate-Limit-Remaining header so clients can self-throttle.`
+Response: Return 429 Too Many Requests with Retry-After header and X-Rate-Limit-Remaining header so clients can self-throttle.`
         }
       ],
 
@@ -1549,19 +1549,19 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           diagramSrc: '/diagrams/twitter/deep-dive-fanout.png',
           detail: `The hybrid fan-out is Twitter's most important architectural decision, combining push and pull models:
 
-**Fan-out on Write (push) for regular users (<10K followers):**
+Fan-out on Write (push) for regular users (<10K followers):
 - When a user tweets, the fan-out service enqueues a task per follower
 - Each task: ZADD timeline:{followerId} {snowflakeId} {tweetId} in Redis
 - Workers process fan-out queue at ~500K writes/sec across the cluster
 - Timeline is pre-computed: read is a simple ZREVRANGE — O(log N + K) for K tweets
 
-**Fan-out on Read (pull) for celebrities (>10K followers):**
+Fan-out on Read (pull) for celebrities (>10K followers):
 - Celebrity tweets stored in a dedicated cache: celebrity_tweets:{userId}
 - On timeline read: fetch user's pre-computed timeline + fetch recent tweets from followed celebrities
 - Merge the two lists, sort by Snowflake ID, return top K results
 - Celebrity tweet lists are small (last 200 tweets each) and heavily cached
 
-**Fan-out service architecture:**
+Fan-out service architecture:
 - Kafka topic partitioned by authorId for fan-out tasks
 - Consumer groups with 1,000+ workers process tasks in parallel
 - Backpressure: if consumer lag > 5 seconds, shed load on non-essential fan-outs (e.g., inactive users)
@@ -1572,25 +1572,25 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           diagramSrc: '/diagrams/twitter/deep-dive-earlybird.png',
           detail: `Twitter's custom real-time search engine, designed for the unique requirements of tweet search:
 
-**Why not just Elasticsearch?**
+Why not just Elasticsearch?
 - Tweets are extremely time-sensitive: 90% of search value is in the last 7 days
 - Need to index 500M new tweets/day with <10 second latency to searchability
 - Standard Lucene segment merging creates unpredictable latency spikes
 
-**Earlybird architecture:**
+Earlybird architecture:
 - In-memory inverted index for recent tweets (last 7 days) on SSD-backed servers
 - Segments organized by time: newest segment always in RAM, older segments on SSD
 - Each segment is immutable once full — no merge overhead
 - Sharded by time range across server tiers: real-time (0-24hr), recent (1-7d), archive (7d+)
 
-**Query execution:**
+Query execution:
 1. Parse query: tokenize, expand hashtags, handle operators (from:, since:, until:)
 2. Scatter to all shards in the appropriate time tier
 3. Each shard scores documents: BM25 text score x recency decay x engagement boost
 4. Gather and merge results, re-rank globally with personalization
 5. Return top results with highlighted matching terms
 
-**Optimizations:**
+Optimizations:
 - Posting lists stored in Snowflake ID order for efficient cursor-based iteration
 - Skip lists for fast intersection of posting lists
 - Early termination: stop scanning once enough high-quality results found`
@@ -1600,26 +1600,26 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           diagramSrc: '/diagrams/twitter/deep-dive-snowflake.png',
           detail: `Snowflake is Twitter's globally distributed unique ID generator, now open-sourced and widely adopted:
 
-**Why custom IDs?**
+Why custom IDs?
 - Auto-increment requires a single source of truth (coordination bottleneck)
 - UUIDs are 128-bit, not time-sortable, and fragment B-tree indexes
 - Need: globally unique, time-sortable, 64-bit, high throughput, no coordination
 
-**64-bit layout:**
+64-bit layout:
 - Bit 0: always 0 (sign bit, keeps IDs positive in signed long)
 - Bits 1-41: timestamp in milliseconds since epoch (69.7 years from custom epoch)
 - Bits 42-51: machine/worker ID (1,024 unique workers)
 - Bits 52-63: sequence number (4,096 per millisecond per worker)
 
-**Throughput:** 4,096 IDs/ms x 1,000ms x 1,024 workers = 4.19 billion IDs/second globally
+Throughput: 4,096 IDs/ms x 1,000ms x 1,024 workers = 4.19 billion IDs/second globally
 
-**Deployment:**
+Deployment:
 - Each data center has a pool of Snowflake workers
 - Worker ID assigned via ZooKeeper lease to prevent duplicates
 - Application servers call local Snowflake service via Thrift RPC (sub-ms latency)
 - If clock drifts backward (NTP correction), worker blocks until clock catches up
 
-**Impact on database performance:**
+Impact on database performance:
 - Snowflake IDs are monotonically increasing within a worker — optimal for B-tree insert (always append to end)
 - Time-sortable: SELECT * FROM tweets WHERE id > :cursor ORDER BY id DESC — uses index efficiently
 - 8 bytes vs 16 bytes (UUID) saves 50% on primary key storage and index memory`
@@ -1629,32 +1629,32 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
           diagramSrc: '/diagrams/twitter/deep-dive-ranking.png',
           detail: `Twitter's timeline evolved from pure reverse-chronological to ML-ranked in 2016:
 
-**Candidate generation (500 candidates):**
+Candidate generation (500 candidates):
 - Source 1: Pre-computed timeline from Redis (fan-out cache) — ~200 candidates
 - Source 2: Celebrity tweets pulled in real-time — ~50 candidates
 - Source 3: "In case you missed it" — high-engagement tweets from last 48 hours — ~100 candidates
 - Source 4: Trending/recommended tweets outside your follow graph — ~150 candidates
 
-**Feature extraction (per candidate):**
+Feature extraction (per candidate):
 - Author features: follower count, verification status, your past interaction frequency
 - Tweet features: age, media type, engagement counts (likes, retweets, replies)
 - User features: topics of interest, active hours, device type, location
 - Social features: how many of your follows engaged with this tweet
 
-**Scoring model:**
+Scoring model:
 - Gradient-boosted decision trees (LightGBM) predicting P(engage)
 - Engagement = weighted sum of P(like) x 1 + P(retweet) x 2 + P(reply) x 3 + P(click) x 0.5
 - Model retrained daily on latest engagement data
 - A/B testing framework validates model changes before full rollout
 
-**Serving latency:** Feature extraction (50ms) + model inference (30ms) + post-processing (20ms) = ~100ms total`
+Serving latency: Feature extraction (50ms) + model inference (30ms) + post-processing (20ms) = ~100ms total`
         },
         {
           topic: 'Trends Detection with Stream Processing',
           diagramSrc: '/diagrams/twitter/deep-dive-trends.png',
           detail: `Trending topics must be detected within minutes of a spike — classic stream processing problem:
 
-**Pipeline architecture:**
+Pipeline architecture:
 1. All tweets flow into Kafka topic tweets-stream (500M/day = ~6K/sec)
 2. Flink/Heron stream processor extracts tokens: hashtags, mentions, keywords, named entities
 3. Each token fed into a Count-Min Sketch (CMS) with 5-minute tumbling windows
@@ -1663,18 +1663,18 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
 6. Apply geographic filtering: compute per-country trends using GeoIP of tweet author
 7. Anti-spam filter removes candidates driven primarily by bot accounts
 
-**Count-Min Sketch sizing:**
+Count-Min Sketch sizing:
 - Width: 10,000 counters, Depth: 7 hash functions
 - Memory: ~280KB per sketch — tracks millions of unique tokens
 - Error rate: < 0.01% overcounting (acceptable for trending detection)
 
-**Time decay:**
+Time decay:
 - Trending score = spike_magnitude x time_decay_factor
 - time_decay = e^(-lambda x age_in_hours), lambda = 0.5
 - A trend from 2 hours ago scores 37% of its peak; from 4 hours ago, 13%
 - This ensures trending page always shows fresh content
 
-**Output:** Top 10 trending topics per region, updated every 5 minutes, served from a dedicated Redis cache`
+Output: Top 10 trending topics per region, updated every 5 minutes, served from a dedicated Redis cache`
         }
       ],
       comparisonTables: [
@@ -1812,19 +1812,19 @@ Twitter moved from Lucene-based Earlybird to a custom engine for better control 
       interviewFollowups: [
         {
           question: 'How do you handle a celebrity with 50 million followers posting a tweet?',
-          answer: `This is the classic Twitter challenge. With **fan-out on write**, posting one tweet means **50 million Redis writes** — this would take minutes and overwhelm the system.\n\n**Solution:** The hybrid fan-out model. Celebrities (>10K followers) are excluded from fan-out on write. Their tweets are stored only in the tweets table. When a follower opens their feed, the feed service:\n1. Reads their pre-built timeline (regular users' tweets)\n2. Queries the celebrity tweet cache for recent tweets from followed celebrities\n3. Merges and ranks both sets\n\nThis adds ~50ms to feed reads (vs instant for pure fan-out-on-write) but eliminates the 50M write problem entirely.`
+          answer: `This is the classic Twitter challenge. With fan-out on write, posting one tweet means 50 million Redis writes — this would take minutes and overwhelm the system.\n\nSolution: The hybrid fan-out model. Celebrities (>10K followers) are excluded from fan-out on write. Their tweets are stored only in the tweets table. When a follower opens their feed, the feed service:\n1. Reads their pre-built timeline (regular users' tweets)\n2. Queries the celebrity tweet cache for recent tweets from followed celebrities\n3. Merges and ranks both sets\n\nThis adds ~50ms to feed reads (vs instant for pure fan-out-on-write) but eliminates the 50M write problem entirely.`
         },
         {
           question: 'How would you implement real-time trending topics?',
-          answer: `Use a **stream processing pipeline** with sliding window counters:\n\n1. Every tweet publishes hashtags/keywords to a **Kafka topic**\n2. Stream processor (Flink/Storm) maintains **per-hashtag counters** in 5-minute buckets\n3. Trending score = **velocity** (rate of change), not absolute count. A hashtag jumping from 100→10K in 5 minutes ranks higher than one steady at 50K\n4. **Geo-filtering**: separate counter sets per city/country for local trends\n5. Cache trending results in Redis with **30-second TTL**\n6. Anti-gaming: filter out bot-generated hashtags using account age, post frequency, IP clustering`
+          answer: `Use a stream processing pipeline with sliding window counters:\n\n1. Every tweet publishes hashtags/keywords to a Kafka topic\n2. Stream processor (Flink/Storm) maintains per-hashtag counters in 5-minute buckets\n3. Trending score = velocity (rate of change), not absolute count. A hashtag jumping from 100→10K in 5 minutes ranks higher than one steady at 50K\n4. Geo-filtering: separate counter sets per city/country for local trends\n5. Cache trending results in Redis with 30-second TTL\n6. Anti-gaming: filter out bot-generated hashtags using account age, post frequency, IP clustering`
         },
         {
           question: 'How does the social graph (follow/follower) scale?',
-          answer: `The follow graph has **billions of edges** (user A follows user B). Options:\n\n**Adjacency list in Redis:** Store follower list per user as a Redis set. SMEMBERS for fan-out, SCARD for follower count. Fast but memory-heavy at scale.\n\n**Graph database:** Neo4j or TAO (Facebook's graph store). Good for traversals like "mutual followers" or "followers of followers".\n\n**Twitter's actual approach:** MySQL tables for follow relationships (followerId, followeeId) with indexes on both columns. Fan-out service reads follower list during tweet posting. Cached in Redis for active users.\n\n**Key optimization:** Follower lists are **read-heavy** (read during every tweet post) so aggressively cached. Unfollow is eventually consistent — the unfollowed user's tweets may appear in the feed for a few seconds after unfollowing.`
+          answer: `The follow graph has billions of edges (user A follows user B). Options:\n\nAdjacency list in Redis: Store follower list per user as a Redis set. SMEMBERS for fan-out, SCARD for follower count. Fast but memory-heavy at scale.\n\nGraph database: Neo4j or TAO (Facebook's graph store). Good for traversals like "mutual followers" or "followers of followers".\n\nTwitter's actual approach: MySQL tables for follow relationships (followerId, followeeId) with indexes on both columns. Fan-out service reads follower list during tweet posting. Cached in Redis for active users.\n\nKey optimization: Follower lists are read-heavy (read during every tweet post) so aggressively cached. Unfollow is eventually consistent — the unfollowed user's tweets may appear in the feed for a few seconds after unfollowing.`
         },
         {
           question: 'How do you handle tweet deletion and edit history?',
-          answer: `**Deletion:** Soft delete — set \`deleted_at\` timestamp. Tweet removed from:\n1. Author's profile (immediate)\n2. Pre-built timelines (async fan-out of delete event)\n3. Search index (async removal from Elasticsearch)\n4. CDN caches (purge media URLs)\n\nTimelines may show "This tweet was deleted" briefly until the delete propagates.\n\n**Edit history (new feature):** Store edits as versioned records. Original tweet immutable, each edit creates a new version. Display shows latest version with "edited" indicator. Retweets/quotes reference the original tweetId, not a specific version.`
+          answer: `Deletion: Soft delete — set \`deleted_at\` timestamp. Tweet removed from:\n1. Author's profile (immediate)\n2. Pre-built timelines (async fan-out of delete event)\n3. Search index (async removal from Elasticsearch)\n4. CDN caches (purge media URLs)\n\nTimelines may show "This tweet was deleted" briefly until the delete propagates.\n\nEdit history (new feature): Store edits as versioned records. Original tweet immutable, each edit creates a new version. Display shows latest version with "edited" indicator. Retweets/quotes reference the original tweetId, not a specific version.`
         },
       ],
       tips: [
@@ -2028,19 +2028,19 @@ rides {
           question: 'How does surge pricing work technically?',
           answer: `Surge pricing dynamically adjusts fares when demand exceeds supply in a geographic area.
 
-**Implementation**:
+Implementation:
 1. Divide city into hexagonal cells (~1 km²)
 2. For each cell, compute: surge_multiplier = demand / supply
 3. Apply smoothing: rolling average over 5-minute windows to prevent oscillation
 4. Cap multiplier at a configurable maximum (typically 5-8x)
 5. Cache surge multipliers in Redis with 60-second TTL
 
-**Pricing Flow**:
+Pricing Flow:
 • Rider opens app → client fetches surge multiplier for pickup cell
 • Show upfront price = base_fare + (distance × per_mile × surge) + (time × per_min × surge)
 • Lock the surge multiplier at booking time (rider sees exact price)
 
-**Anti-gaming Measures**:
+Anti-gaming Measures:
 • Gradual ramp-up/down to prevent drivers from waiting for higher surge
 • Geographic smoothing — neighboring cells influence each other
 • Time-decay: surge drops faster than it rises
@@ -2050,19 +2050,19 @@ rides {
           question: 'How is ETA calculated accurately?',
           answer: `ETA calculation combines multiple data sources:
 
-**Data Sources**:
+Data Sources:
 1. Historical travel times per road segment (time-of-day, day-of-week adjusted)
 2. Real-time traffic from active driver GPS traces
 3. Road network graph (OpenStreetMap or proprietary)
 4. Live incidents (accidents, road closures)
 
-**Algorithm**:
+Algorithm:
 • Model the city as a weighted directed graph (intersections = nodes, roads = edges)
 • Edge weights = estimated travel time (not distance)
 • Use Contraction Hierarchies or A* for route planning
 • Adjust edge weights with real-time traffic multipliers
 
-**Accuracy at Scale**:
+Accuracy at Scale:
 • Uber reports ETA accuracy within 2 minutes for 95% of rides
 • Separate models per city (NYC traffic ≠ Mumbai)
 • ML model trained on millions of historical trips
@@ -2072,19 +2072,19 @@ rides {
           question: 'How does the matching algorithm optimize driver assignment?',
           answer: `The matching engine minimizes total wait time across all pending requests.
 
-**Single-request Matching**:
+Single-request Matching:
 1. Query Redis GEOSEARCH for drivers within expanding radius (1km → 3km → 5km)
 2. Filter by: availability, vehicle type, rating threshold, acceptance rate
 3. Score each candidate: score = w1/distance + w2×rating + w3×acceptance_rate
 4. Send to top-ranked driver, wait 15s for acceptance; if declined, try next
 
-**Batch Matching (High-Demand Periods)**:
+Batch Matching (High-Demand Periods):
 • Collect ride requests over a 2-second window
 • Model as bipartite graph: riders ↔ drivers
 • Use the Hungarian algorithm for minimum-cost assignment
 • Batch matching improves efficiency by 20-30%
 
-**Multi-Ride (UberPool)**:
+Multi-Ride (UberPool):
 • Solve Vehicle Routing Problem variant
 • Detour constraint: existing rider's trip extended by max 25%
 • Dynamic insertion: check if new pickup/dropoff fits active route`
@@ -2093,11 +2093,11 @@ rides {
           question: 'How do we ensure payment reliability and fare accuracy?',
           answer: `Payment processing involves pre-authorization, real-time metering, and settlement.
 
-**Pre-Ride**: Pre-authorize estimated fare, tokenized card storage (PCI compliant)
-**During Ride**: Fare = base + (distance × rate) + (time × rate) × surge. Distance from GPS trace, toll detection automatic.
-**Post-Ride**: Calculate final fare, charge rider, driver payout = fare − 20-25% commission, weekly batch payouts.
+Pre-Ride: Pre-authorize estimated fare, tokenized card storage (PCI compliant)
+During Ride: Fare = base + (distance × rate) + (time × rate) × surge. Distance from GPS trace, toll detection automatic.
+Post-Ride: Calculate final fare, charge rider, driver payout = fare − 20-25% commission, weekly batch payouts.
 
-**Fraud Prevention**:
+Fraud Prevention:
 • Detect fake GPS locations (impossible speed between updates)
 • Flag trips with unusual patterns (circular routes, very short rides)
 • Velocity checks: max 3 rides in 10 minutes per rider
@@ -2105,62 +2105,62 @@ rides {
         },
         {
           question: 'How does the system handle safety features?',
-          answer: `**Real-time Safety**:
+          answer: `Real-time Safety:
 • Share trip with trusted contacts via live tracking URL
 • In-app emergency button: GPS snapshot + audio recording
 • Unusual route detection: alert rider if driver deviates from optimal path
 • RideCheck: if trip stops unexpectedly for 5+ min, check on both parties
 
-**Trip Verification**:
+Trip Verification:
 • PIN verification: 4-digit code to start trip (prevents wrong pickups)
 • Photo verification: periodic driver selfie matched against profile
 
-**Post-Trip**:
+Post-Trip:
 • Bidirectional ratings with mandatory feedback below 3 stars
 • Drivers below 4.6 get warnings; below 4.4 face deactivation
 • Insurance claim system integrated with trip GPS data`
         },
         {
           question: 'How does Uber handle city-specific regulations?',
-          answer: `**Regulatory Config Service**: Each city has a config specifying max surge multiplier, insurance requirements, driver licensing, airport geofenced zones.
+          answer: `Regulatory Config Service: Each city has a config specifying max surge multiplier, insurance requirements, driver licensing, airport geofenced zones.
 
-**Dynamic Geofencing**: Define zones where rides cannot start/end, airport queuing areas, event pickup/dropoff points.
+Dynamic Geofencing: Define zones where rides cannot start/end, airport queuing areas, event pickup/dropoff points.
 
-**Tax & Compliance**: Different tax rates per jurisdiction, e-receipt generation with legally required fields, real-time tax calculation in fare.
+Tax & Compliance: Different tax rates per jurisdiction, e-receipt generation with legally required fields, real-time tax calculation in fare.
 
-**Data Residency**: GDPR data within EU, per-country retention policies, right-to-deletion with cascading purge.`
+Data Residency: GDPR data within EU, per-country retention policies, right-to-deletion with cascading purge.`
         },
         {
           question: 'How do we handle service failures gracefully?',
           answer: `Failures directly strand real people, so graceful degradation is critical.
 
-**Failure Modes**:
-1. **Matching down**: Show "high demand", active rides unaffected, fallback to nearest-driver
-2. **Location down**: Client stores GPS locally, replays on reconnect, use last-known location
-3. **Payment down**: Complete ride, charge async via durable Kafka queue
-4. **DB failover**: Read replicas for history, Redis cluster auto-failover for location
+Failure Modes:
+1. Matching down: Show "high demand", active rides unaffected, fallback to nearest-driver
+2. Location down: Client stores GPS locally, replays on reconnect, use last-known location
+3. Payment down: Complete ride, charge async via durable Kafka queue
+4. DB failover: Read replicas for history, Redis cluster auto-failover for location
 
-**Circuit Breaker**: Open after 5 failures in 30s, half-open every 10s, fallback per dependency.`
+Circuit Breaker: Open after 5 failures in 30s, half-open every 10s, fallback per dependency.`
         },
         {
           question: 'How does demand prediction and driver positioning work?',
-          answer: `**Prediction Model**: Features include time-of-day, weather, events, historical patterns. GBDT or LSTM per city, predict demand per S2 cell per 15-min window, retrained weekly.
+          answer: `Prediction Model: Features include time-of-day, weather, events, historical patterns. GBDT or LSTM per city, predict demand per S2 cell per 15-min window, retrained weekly.
 
-**Driver Positioning**: Show demand heat maps, incentive bonuses for repositioning to underserved areas.
+Driver Positioning: Show demand heat maps, incentive bonuses for repositioning to underserved areas.
 
-**Event-Based**: Integrate with Ticketmaster/sports APIs, predict surge at event end ± 30 min, position drivers before concerts.`
+Event-Based: Integrate with Ticketmaster/sports APIs, predict surge at event end ± 30 min, position drivers before concerts.`
         },
         {
           question: 'How would you design Uber for a new city launch?',
           answer: `Bootstrapping both supply and demand simultaneously is the key challenge.
 
-**Technical**: Provision S2 cells, import road network, calibrate ETA model, configure payment/tax/compliance.
+Technical: Provision S2 cells, import road network, calibrate ETA model, configure payment/tax/compliance.
 
-**Cold Start Supply**: Guarantee minimum hourly earnings, referral bonuses, partner with taxi companies.
+Cold Start Supply: Guarantee minimum hourly earnings, referral bonuses, partner with taxi companies.
 
-**Cold Start Demand**: Promo codes, geo-targeted ads, partner with hotels/airports, launch focused zone first.
+Cold Start Demand: Promo codes, geo-targeted ads, partner with hotels/airports, launch focused zone first.
 
-**Scaling**: Phase 1 downtown+airport → Phase 2 suburbs → Phase 3 full city. Expand when drivers busy 60%+ of online time.`
+Scaling: Phase 1 downtown+airport → Phase 2 suburbs → Phase 3 full city. Expand when drivers busy 60%+ of online time.`
         },
       ],
 
@@ -3102,15 +3102,15 @@ Quick quality first: 360p available in minutes, 4K later`
         screenshotUrl: '/logos/whatsapp.png',
       },
 
-      introduction: `WhatsApp is the world's most widely used messaging application, connecting over **2 billion** monthly active users across **180+ countries**. At its peak, the system delivers over **100 billion messages per day** with sub-second latency, making it one of the most demanding distributed systems ever built.
+      introduction: `WhatsApp is the world's most widely used messaging application, connecting over 2 billion monthly active users across 180+ countries. At its peak, the system delivers over 100 billion messages per day with sub-second latency, making it one of the most demanding distributed systems ever built.
 
-This is one of the most popular system design interview questions because it tests a wide range of skills: real-time communication (persistent **WebSocket** connections), delivery guarantees (messages must never be lost, even when users are offline for days), strong ordering (messages within a conversation must appear in the correct sequence), and **end-to-end encryption** (the server itself cannot read message content).
+This is one of the most popular system design interview questions because it tests a wide range of skills: real-time communication (persistent WebSocket connections), delivery guarantees (messages must never be lost, even when users are offline for days), strong ordering (messages within a conversation must appear in the correct sequence), and end-to-end encryption (the server itself cannot read message content).
 
-What makes messaging fundamentally different from other systems like social media feeds or search engines? Feed systems are read-heavy and can tolerate **eventual consistency** - if a tweet appears 5 seconds late, nobody notices. Messaging is **write-heavy** and demands strong delivery guarantees. If a message is lost, duplicated, or arrives out of order, the user experience breaks immediately. Users expect the "double check mark" system to be perfectly reliable: one grey check = sent to server, two grey checks = delivered to recipient device, two blue checks = read by recipient.
+What makes messaging fundamentally different from other systems like social media feeds or search engines? Feed systems are read-heavy and can tolerate eventual consistency - if a tweet appears 5 seconds late, nobody notices. Messaging is write-heavy and demands strong delivery guarantees. If a message is lost, duplicated, or arrives out of order, the user experience breaks immediately. Users expect the "double check mark" system to be perfectly reliable: one grey check = sent to server, two grey checks = delivered to recipient device, two blue checks = read by recipient.
 
-The scale challenge is immense: **1 billion daily active users** maintaining persistent connections, each sending ~50 messages per day, with presence updates (online/last seen) creating an additional **33 million QPS** heartbeat load. The system must handle graceful degradation during network partitions, seamless offline-to-online transitions, group messaging fan-out to up to **1,024 members**, and media transfers (images, video, documents) - all while maintaining end-to-end encryption using the **Signal Protocol**.
+The scale challenge is immense: 1 billion daily active users maintaining persistent connections, each sending ~50 messages per day, with presence updates (online/last seen) creating an additional 33 million QPS heartbeat load. The system must handle graceful degradation during network partitions, seamless offline-to-online transitions, group messaging fan-out to up to 1,024 members, and media transfers (images, video, documents) - all while maintaining end-to-end encryption using the Signal Protocol.
 
-In this design, we will walk through capacity estimation, the core messaging architecture, how to scale WebSocket connections across thousands of servers, the message delivery pipeline with guaranteed **at-least-once** semantics, presence tracking at massive scale, group messaging strategies, and media handling.`,
+In this design, we will walk through capacity estimation, the core messaging architecture, how to scale WebSocket connections across thousands of servers, the message delivery pipeline with guaranteed at-least-once semantics, presence tracking at massive scale, group messaging strategies, and media handling.`,
 
       // ── Back-of-Envelope Estimation ──
       estimation: {
@@ -3373,26 +3373,26 @@ Why Kafka? Three key reasons:
           question: 'How does the tick/checkmark delivery status system work?',
           answer: `The tick system requires a careful state machine with server-side tracking:
 
-**Single grey tick (SENT):**
+Single grey tick (SENT):
 - Client sends message -> chat server receives it, persists to Cassandra, assigns sequence number
 - Server immediately sends SENT ACK back to sender via WebSocket
 - This only means "server has your message" - not that the recipient received it
 
-**Double grey ticks (DELIVERED):**
+Double grey ticks (DELIVERED):
 - Recipient's device receives the message via WebSocket (or on reconnect from offline queue)
 - Recipient's client automatically sends a DELIVERED ACK back to the server (no user action needed)
 - Server updates message_status row: status=DELIVERED, deliveredAt=now()
 - Server forwards the DELIVERED receipt to the sender via their WebSocket connection
 - Sender's client updates the UI to show double grey ticks
 
-**Double blue ticks (READ):**
+Double blue ticks (READ):
 - Recipient opens the conversation and the message becomes visible on screen
 - Client sends READ ACK to server (batched: all visible messages marked read at once)
 - Server updates message_status: status=READ, readAt=now()
 - Server forwards READ receipt to sender via WebSocket
 - Sender sees blue ticks
 
-**Edge cases handled:**
+Edge cases handled:
 - Sender offline when receipt arrives: receipt is queued and delivered on reconnect
 - Group messages: DELIVERED when delivered to ALL members, READ per individual member
 - User has read receipts disabled: server never sends READ status, only DELIVERED
@@ -3402,7 +3402,7 @@ Why Kafka? Three key reasons:
           question: 'How do you handle group messaging at scale (up to 1,024 members)?',
           answer: `Group messaging introduces a fan-out challenge that requires careful design:
 
-**Fan-out on Write (small groups, up to ~100 members):**
+Fan-out on Write (small groups, up to ~100 members):
 - Sender sends one message to the server with the groupId
 - Server assigns a sequence number within the group's conversation
 - Server performs fan-out: creates a delivery task for each of the N group members
@@ -3410,18 +3410,18 @@ Why Kafka? Three key reasons:
 - For offline members: add to each member's offline_queue + push notification
 - Write amplification: 1 message becomes N deliveries, but each delivery is cheap
 
-**Fan-out on Read (large groups, 100-1,024 members):**
+Fan-out on Read (large groups, 100-1,024 members):
 - Sender's message is stored once in the group's message partition in Cassandra
 - Online members receive a lightweight notification: "new message in group X at sequence Y"
 - Each member's client pulls the actual message content when they open the group chat
 - This avoids storing N copies and reduces write load significantly
 
-**Hybrid approach (what WhatsApp actually does):**
+Hybrid approach (what WhatsApp actually does):
 - Messages up to ~256 members: fan-out on write for instant delivery
 - Messages to 256-1,024 members: fan-out on write for online members, lazy pull for offline
 - Delivery receipts in large groups: aggregated (e.g., "delivered to 847/1024 members") rather than individual tracking to prevent receipt explosion
 
-**Encryption in groups:**
+Encryption in groups:
 - Sender Keys protocol: sender generates one symmetric key per group, shares it with all members
 - Message encrypted once with the sender key, all members can decrypt
 - When a member leaves, sender key is rotated and redistributed`
@@ -3430,31 +3430,31 @@ Why Kafka? Three key reasons:
           question: 'How do you implement end-to-end encryption so the server cannot read messages?',
           answer: `WhatsApp uses the Signal Protocol (formerly TextSecure) for end-to-end encryption:
 
-**Key setup (happens once per user pair):**
+Key setup (happens once per user pair):
 1. Each user generates identity keys, signed pre-keys, and one-time pre-keys on device
 2. Pre-key bundles are uploaded to the server during registration
 3. When User A wants to message User B for the first time, A fetches B's pre-key bundle from server
 4. A performs X3DH (Extended Triple Diffie-Hellman) key agreement to derive a shared secret
 5. This shared secret initializes the Double Ratchet algorithm for the session
 
-**Message encryption (every message):**
+Message encryption (every message):
 1. The Double Ratchet derives a unique encryption key for each message (forward secrecy)
 2. Message is encrypted with AES-256-CBC using the derived key
 3. Even if one message key is compromised, past and future messages remain secure
 4. HMAC-SHA256 provides message authentication (tamper detection)
 
-**Server's role (it never sees plaintext):**
+Server's role (it never sees plaintext):
 - Stores and forwards encrypted blobs - it cannot decrypt them
 - Stores public pre-key bundles for key exchange
 - Handles message routing, delivery tracking, and push notifications
 - Metadata (who messaged whom, when) is visible to the server, but not content
 
-**Group encryption:**
+Group encryption:
 - Uses Sender Keys protocol: sender generates a symmetric chain key per group
 - Sender encrypts message once, all group members can decrypt with the shared sender key
 - Key rotation when members join/leave to maintain forward secrecy
 
-**Challenges:**
+Challenges:
 - Multi-device: each device has its own identity key, so messages are encrypted per-device
 - Key verification: QR code or 60-digit number comparison for out-of-band verification
 - Backup encryption: cloud backups must be separately encrypted with a user-provided password`
@@ -3463,7 +3463,7 @@ Why Kafka? Three key reasons:
           question: 'What database would you choose for messages and why?',
           answer: `The message store is the most critical database decision in the entire system:
 
-**Primary choice: Apache Cassandra (or ScyllaDB for better performance)**
+Primary choice: Apache Cassandra (or ScyllaDB for better performance)
 Why Cassandra wins for messages:
 - Write-optimized: LSM-tree storage engine handles 580K+ writes/sec natively
 - Partition by conversationId: all messages in a chat live on the same node, enabling fast sequential reads
@@ -3472,12 +3472,12 @@ Why Cassandra wins for messages:
 - Tunable consistency: use LOCAL_QUORUM for writes (durability) and LOCAL_ONE for reads (speed)
 - Built-in TTL: disappearing messages handled natively
 
-**Why NOT other databases:**
+Why NOT other databases:
 - MySQL/PostgreSQL: excellent for user metadata and group settings, but single-node write throughput caps at ~50K/s. Sharding adds enormous complexity
 - MongoDB: decent write performance but lacks Cassandra's partition-aware data model. Hot partitions for popular group chats
 - DynamoDB: viable alternative to Cassandra with similar partition-key model, but vendor lock-in and cost at 580K WPS is significant
 
-**Hybrid approach (recommended):**
+Hybrid approach (recommended):
 - Cassandra: message content and delivery status (write-heavy, partition by conversationId)
 - MySQL/PostgreSQL: user profiles, conversation metadata, group settings (read-heavy, relational queries)
 - Redis: presence/session state, recent message cache, typing indicators (ephemeral, sub-ms latency)
@@ -3487,7 +3487,7 @@ Why Cassandra wins for messages:
           question: 'How do you handle media messages (images, videos, documents)?',
           answer: `Media handling requires a separate pipeline from text messages:
 
-**Upload flow:**
+Upload flow:
 1. Client encrypts the media file locally using a random AES-256 key
 2. Client uploads encrypted file via resumable chunked upload (256KB chunks) to the media service
 3. Media service stores encrypted blob in S3 with a unique mediaId
@@ -3495,18 +3495,18 @@ Why Cassandra wins for messages:
 5. Client sends a text message via normal messaging flow containing: mediaId, encryption key (encrypted with recipient's public key), thumbnail, file metadata (size, type, duration)
 6. Recipient receives the message, downloads the encrypted media from S3 via CDN, decrypts locally
 
-**Why separate upload from message?**
+Why separate upload from message?
 - Media upload can take 10+ seconds on slow networks. The text message containing the media reference is tiny and delivers instantly
 - Upload can be retried independently without resending the message
 - Server can rate-limit large uploads without affecting text messaging
 
-**Resumable uploads (critical for mobile networks):**
+Resumable uploads (critical for mobile networks):
 - Each upload gets a resumable upload token
 - If upload is interrupted (network switch, app backgrounded), client resumes from last successful chunk
 - Server tracks which chunks have been received and reassembles on completion
 - Upload tokens expire after 24 hours
 
-**Storage optimization:**
+Storage optimization:
 - Media files stored with content-addressable hashing (SHA-256 of encrypted blob)
 - If the same encrypted file is forwarded to multiple chats, it is stored only once
 - Automatic cleanup: media older than configurable TTL (e.g., 90 days for free tier) can be moved to cold storage (S3 Glacier)
@@ -3516,12 +3516,12 @@ Why Cassandra wins for messages:
           question: 'How do you design the presence system to handle 33 million heartbeats per second?',
           answer: `Presence (online/offline/last seen) generates more QPS than messaging itself:
 
-**The problem:**
+The problem:
 - 1 billion online users each send a heartbeat every 30 seconds = 33M updates/sec
 - Every user wants to see presence status for their contacts (potentially 500+ contacts)
 - Naive approach: write to database on every heartbeat = instant database meltdown
 
-**Solution: Redis-based presence with pub/sub fan-out**
+Solution: Redis-based presence with pub/sub fan-out
 
 1. Heartbeat handling:
    - Client sends heartbeat every 30 seconds via WebSocket (piggybacked on the existing connection, no extra connection)
@@ -3547,12 +3547,12 @@ Why Cassandra wins for messages:
           question: 'How do you ensure message ordering within a conversation?',
           answer: `Message ordering is a core correctness requirement that cannot be compromised:
 
-**The problem:**
+The problem:
 - Multiple senders in a group chat may send messages concurrently from different regions
 - Network delays mean messages can arrive at the server out of order
 - Client clocks are unreliable (clock skew can be minutes or even hours)
 
-**Solution: Server-assigned monotonic sequence numbers**
+Solution: Server-assigned monotonic sequence numbers
 
 1. Each conversation has an atomic counter (maintained in Redis or a coordination service)
 2. When a message arrives at the server, it atomically increments the counter: INCR seq:{conversationId}
@@ -3560,14 +3560,14 @@ Why Cassandra wins for messages:
 4. Messages are stored in Cassandra with sequenceNum as the clustering key (DESC for efficient "latest first" queries)
 5. Clients display messages sorted by sequenceNum, NOT by client timestamp
 
-**Handling concurrent writes:**
+Handling concurrent writes:
 - For 1:1 chats: contention is minimal (only 2 possible senders), Redis INCR handles this trivially
 - For group chats: the sequence counter becomes a hot key. Solutions:
   a. Shard the counter by conversationId across multiple Redis nodes (consistent hashing)
   b. Use a batched counter: pre-allocate ranges (e.g., server-5 gets sequence 1000-1099) to reduce contention
   c. Accept micro-reordering within the same second for very active groups
 
-**Consistency guarantees:**
+Consistency guarantees:
 - Within a conversation: total ordering via sequence numbers (linearizable)
 - Across conversations: no ordering guarantee needed (each conversation is independent)
 - On reconnection: client provides its last known sequenceNum, server sends all messages after that number
@@ -3701,114 +3701,114 @@ Why Cassandra wins for messages:
           diagramSrc: '/diagrams/whatsapp/deep-dive-ordering.png',
           detail: `Ordering is the hardest correctness problem in distributed messaging.
 
-**Within a conversation:**
-- Server assigns **monotonic sequence numbers** via atomic **Redis INCR** on key seq:{conversationId}
-- **Cassandra** stores messages with **sequenceNum** as clustering key (DESC for efficient "latest first" reads)
+Within a conversation:
+- Server assigns monotonic sequence numbers via atomic Redis INCR on key seq:{conversationId}
+- Cassandra stores messages with sequenceNum as clustering key (DESC for efficient "latest first" reads)
 - Clients display messages sorted by sequenceNum, never by client timestamp (clocks are unreliable)
-- On reconnection, client provides **lastSequenceNum** and receives all messages after it
+- On reconnection, client provides lastSequenceNum and receives all messages after it
 
-**Conflict resolution:**
+Conflict resolution:
 - Two users typing simultaneously in a group: both messages get unique sequence numbers, no conflict
-- Network partition causes message to arrive at two servers: **client-generated UUID** deduplicates
-- Sequence counter is a **hot key** for popular groups: pre-allocate ranges per chat server to reduce contention`
+- Network partition causes message to arrive at two servers: client-generated UUID deduplicates
+- Sequence counter is a hot key for popular groups: pre-allocate ranges per chat server to reduce contention`
         },
         {
           topic: 'Presence System at 33 Million QPS',
           diagramSrc: '/diagrams/whatsapp/deep-dive-presence.png',
           detail: `Presence generates more load than messaging itself and requires careful optimization.
 
-**Architecture:**
-- **Redis cluster** with **100+ shards** handles all presence state (HSET/HGET with TTL)
-- Each chat server batches heartbeats from its **100K connections** and pipelines updates to Redis (reduces 100K individual writes to **1 batch per second**)
-- Presence changes propagated via **Redis pub/sub** to subscribers (only users in active conversations)
+Architecture:
+- Redis cluster with 100+ shards handles all presence state (HSET/HGET with TTL)
+- Each chat server batches heartbeats from its 100K connections and pipelines updates to Redis (reduces 100K individual writes to 1 batch per second)
+- Presence changes propagated via Redis pub/sub to subscribers (only users in active conversations)
 
-**Optimizations that make it feasible:**
-- **Lazy presence**: only track users active in last 24 hours (reduces working set by **60%**)
-- Sampling for contact lists: batch poll 100 users every **60 seconds** instead of real-time
-- **Bloom filter** check before Redis query: skip users with no online contacts
-- Separate "typing" from "presence" - typing indicators are pure **WebSocket**, never hit Redis`
+Optimizations that make it feasible:
+- Lazy presence: only track users active in last 24 hours (reduces working set by 60%)
+- Sampling for contact lists: batch poll 100 users every 60 seconds instead of real-time
+- Bloom filter check before Redis query: skip users with no online contacts
+- Separate "typing" from "presence" - typing indicators are pure WebSocket, never hit Redis`
         },
         {
           topic: 'Hot/Cold Storage Separation',
           diagramSrc: '/diagrams/whatsapp/deep-dive-hot-cold.png',
-          detail: `Message access patterns have extreme recency bias - **95% of reads** are for the last **48 hours**.
+          detail: `Message access patterns have extreme recency bias - 95% of reads are for the last 48 hours.
 
-**Hot tier (Cassandra SSD cluster):**
-- Messages from the last **30 days**
-- All active **offline_queue** entries
-- High IOPS **SSDs**, replicated across **3 availability zones**
+Hot tier (Cassandra SSD cluster):
+- Messages from the last 30 days
+- All active offline_queue entries
+- High IOPS SSDs, replicated across 3 availability zones
 - Serves the vast majority of read/write traffic
 
-**Warm tier (Cassandra HDD cluster):**
-- Messages from 30 days to **1 year**
+Warm tier (Cassandra HDD cluster):
+- Messages from 30 days to 1 year
 - Lower-cost storage, same schema, accessed only when user scrolls far back in history
-- Read latency is higher (**10-50ms** vs **1-5ms**) but acceptable for historical browsing
+- Read latency is higher (10-50ms vs 1-5ms) but acceptable for historical browsing
 
-**Cold tier (S3 + Glacier):**
+Cold tier (S3 + Glacier):
 - Messages older than 1 year, exported in compressed encrypted batches
-- Media files older than **90 days** automatically transitioned via **S3 lifecycle policies**
+- Media files older than 90 days automatically transitioned via S3 lifecycle policies
 - Accessed only for legal compliance or user-initiated full history export
 
-**Data movement:** Background job continuously migrates data from hot -> warm -> cold based on message timestamp.`
+Data movement: Background job continuously migrates data from hot -> warm -> cold based on message timestamp.`
         },
         {
           topic: 'Group Messaging Fan-out Strategies',
           diagramSrc: '/diagrams/whatsapp/deep-dive-group-fanout.png',
-          detail: `Group messaging creates a classic **fan-out problem** with different tradeoffs at different scales.
+          detail: `Group messaging creates a classic fan-out problem with different tradeoffs at different scales.
 
-**Fan-out on Write (groups up to ~100 members):**
+Fan-out on Write (groups up to ~100 members):
 - Server delivers the message to every member individually
 - Pros: instant delivery, simple client logic (just receive messages)
-- Cons: **write amplification** (1 message = 100 deliveries), higher server load
+- Cons: write amplification (1 message = 100 deliveries), higher server load
 
-**Fan-out on Read (groups with 100-1,024 members):**
+Fan-out on Read (groups with 100-1,024 members):
 - Server stores message once in the group partition
 - Sends lightweight "new message" notification to online members
 - Clients pull the actual message when user opens the group
 - Pros: minimal write amplification, efficient storage
 - Cons: slightly higher read latency, client must manage sync state
 
-**WhatsApp hybrid:** **Fan-out on write** for online members (instant delivery), **fan-out on read** for offline members (lazy sync on reconnect). Delivery receipts aggregated as "delivered to X of Y members" to prevent **O(N^2)** receipt traffic in large groups.`
+WhatsApp hybrid: Fan-out on write for online members (instant delivery), fan-out on read for offline members (lazy sync on reconnect). Delivery receipts aggregated as "delivered to X of Y members" to prevent O(N^2) receipt traffic in large groups.`
         },
         {
           topic: 'Cross-Region Message Delivery',
           diagramSrc: '/diagrams/whatsapp/deep-dive-cross-region.png',
-          detail: `With users in **180+ countries**, messages frequently cross continental boundaries.
+          detail: `With users in 180+ countries, messages frequently cross continental boundaries.
 
-**Regional architecture:**
-- Each major region (US-East, US-West, EU, Asia-Pacific, South America) has its own **Kafka cluster** and **Cassandra ring**
-- Users connect to the nearest region via **GeoDNS** routing
-- Intra-region messages route through the local Kafka cluster (latency: **~50ms**)
+Regional architecture:
+- Each major region (US-East, US-West, EU, Asia-Pacific, South America) has its own Kafka cluster and Cassandra ring
+- Users connect to the nearest region via GeoDNS routing
+- Intra-region messages route through the local Kafka cluster (latency: ~50ms)
 
-**Cross-region routing:**
+Cross-region routing:
 - When sender and recipient are in different regions, the local Kafka cluster forwards to the remote region's relay topic
-- **Kafka MirrorMaker** (or custom relay service) asynchronously replicates cross-region topics
-- Cross-region latency: **150-300ms** depending on physical distance (acceptable for messaging, unlike real-time video)
+- Kafka MirrorMaker (or custom relay service) asynchronously replicates cross-region topics
+- Cross-region latency: 150-300ms depending on physical distance (acceptable for messaging, unlike real-time video)
 
-**Consistency across regions:**
-- Sequence numbers are assigned in the sender's region and are **globally unique** (region prefix + counter)
+Consistency across regions:
+- Sequence numbers are assigned in the sender's region and are globally unique (region prefix + counter)
 - If both users in a 1:1 chat are in different regions, one region is designated as the "home" region for that conversation
-- Presence data is replicated across regions with **eventual consistency** (1-2 second lag is acceptable for online/offline status)`
+- Presence data is replicated across regions with eventual consistency (1-2 second lag is acceptable for online/offline status)`
         },
         {
           topic: 'Resumable Media Uploads',
           diagramSrc: '/diagrams/whatsapp/deep-dive-media-upload.png',
-          detail: `Mobile networks are unreliable - **30%** of media uploads are interrupted at least once.
+          detail: `Mobile networks are unreliable - 30% of media uploads are interrupted at least once.
 
-**Chunked upload protocol:**
-1. Client requests an upload session: POST /api/media/upload/init -> returns **uploadToken** + chunkSize (**256KB**)
+Chunked upload protocol:
+1. Client requests an upload session: POST /api/media/upload/init -> returns uploadToken + chunkSize (256KB)
 2. Client splits encrypted file into chunks and uploads sequentially: PUT /api/media/upload/{token}/chunk/{n}
-3. Server stores each chunk in a temporary staging area (local disk or **S3 multipart upload**)
+3. Server stores each chunk in a temporary staging area (local disk or S3 multipart upload)
 4. If upload is interrupted, client resumes: GET /api/media/upload/{token}/status -> returns lastChunkReceived
 5. Client resumes from chunk lastChunkReceived + 1
-6. On completion, server assembles chunks into final encrypted blob in **S3**
+6. On completion, server assembles chunks into final encrypted blob in S3
 
-**Optimizations:**
-- Parallel chunk upload (up to **3 concurrent**) on fast networks
-- **Adaptive chunk size**: larger chunks on WiFi (**1MB**), smaller on cellular (**256KB**)
-- Upload tokens expire after **24 hours** - client must restart if expired
-- Server validates **SHA-256** checksum of each chunk for integrity
-- **Content-addressable storage**: if the identical encrypted blob already exists in S3, skip storage and return existing URL`
+Optimizations:
+- Parallel chunk upload (up to 3 concurrent) on fast networks
+- Adaptive chunk size: larger chunks on WiFi (1MB), smaller on cellular (256KB)
+- Upload tokens expire after 24 hours - client must restart if expired
+- Server validates SHA-256 checksum of each chunk for integrity
+- Content-addressable storage: if the identical encrypted blob already exists in S3, skip storage and return existing URL`
         }
       ],
 
@@ -3817,70 +3817,70 @@ Why Cassandra wins for messages:
         {
           name: 'Consistent Hashing for Connection Routing',
           diagramSrc: '/diagrams/whatsapp/algo-consistent-hashing.png',
-          description: `Route each user to a specific chat server using **consistent hashing** on userId.
+          description: `Route each user to a specific chat server using consistent hashing on userId.
 
-**How it works:**
-- Chat servers are placed on a **hash ring** at multiple **virtual node** positions
+How it works:
+- Chat servers are placed on a hash ring at multiple virtual node positions
 - When a user connects, hash(userId) determines which chat server they are assigned to
-- The mapping is stored in **Redis**: userId -> serverId for **O(1)** lookup by other servers
-- When a server is added/removed, only **~1/N** of users need to be remapped (minimal disruption)
+- The mapping is stored in Redis: userId -> serverId for O(1) lookup by other servers
+- When a server is added/removed, only ~1/N of users need to be remapped (minimal disruption)
 
-**Example:** With **10,000 chat servers** and **256 virtual nodes** each, the hash ring has **2.56M** positions. Adding one server only remaps **~0.01%** of users.`,
+Example: With 10,000 chat servers and 256 virtual nodes each, the hash ring has 2.56M positions. Adding one server only remaps ~0.01% of users.`,
           pros: ['Minimal remapping when servers are added/removed (only 1/N users affected)', 'Even distribution of connections across servers with virtual nodes', 'Simple O(1) lookup for message routing between servers', 'No central coordinator needed - any server can compute the mapping'],
           cons: ['Hot spots possible if a celebrity user drives disproportionate traffic to one server', 'Virtual nodes add memory overhead for the hash ring (manageable at ~100MB)', 'Server removal causes connection storm as affected users reconnect simultaneously']
         },
         {
           name: 'Fan-out on Write vs Fan-out on Read (Group Messages)',
           diagramSrc: '/diagrams/whatsapp/algo-fanout.png',
-          description: `Two opposing strategies for delivering group messages to **N members**.
+          description: `Two opposing strategies for delivering group messages to N members.
 
-**Fan-out on Write:**
-- When a message is sent, the server immediately creates **N delivery tasks** (one per member)
-- Each member's chat server receives the message and delivers via **WebSocket**
+Fan-out on Write:
+- When a message is sent, the server immediately creates N delivery tasks (one per member)
+- Each member's chat server receives the message and delivers via WebSocket
 - Best for small groups where instant delivery matters
 
-**Fan-out on Read:**
+Fan-out on Read:
 - Message stored once in the group partition
 - Members are notified "new message available" and pull it when they open the group
-- Best for large groups where **write amplification** is prohibitive
+- Best for large groups where write amplification is prohibitive
 
-**Hybrid (recommended):**
+Hybrid (recommended):
 - Fan-out on write for online members (instant delivery)
 - Fan-out on read for offline members (pull on reconnect)
-- Threshold at **~100 members** to switch strategies`,
+- Threshold at ~100 members to switch strategies`,
           pros: ['Fan-out on Write: instant delivery, simple client', 'Fan-out on Read: minimal write amplification, storage-efficient', 'Hybrid combines best of both: fast for online users, efficient for offline'],
           cons: ['Fan-out on Write: O(N) write amplification per message in large groups', 'Fan-out on Read: higher client complexity, slight delivery delay', 'Hybrid: more complex server logic to manage two codepaths']
         },
         {
           name: 'Message Queue with ACK-based Guaranteed Delivery',
           diagramSrc: '/diagrams/whatsapp/algo-ack-delivery.png',
-          description: `Ensure every message is delivered **at least once** using an acknowledgment protocol.
+          description: `Ensure every message is delivered at least once using an acknowledgment protocol.
 
-**How it works:**
-1. Server persists message to **Cassandra** AND enqueues in **offline_queue** for recipient
-2. If recipient is online: deliver via **WebSocket**, wait for client ACK
+How it works:
+1. Server persists message to Cassandra AND enqueues in offline_queue for recipient
+2. If recipient is online: deliver via WebSocket, wait for client ACK
 3. On ACK received: remove from offline_queue (message confirmed delivered)
-4. If no ACK within **30 seconds**: retry delivery (up to **3 times**)
-5. If recipient goes offline: message stays in offline_queue with **30-day TTL**
-6. On reconnection: flush entire offline_queue to client, wait for **batch ACK**
+4. If no ACK within 30 seconds: retry delivery (up to 3 times)
+5. If recipient goes offline: message stays in offline_queue with 30-day TTL
+6. On reconnection: flush entire offline_queue to client, wait for batch ACK
 
-**Idempotency:** Client-generated **UUID** (messageId) ensures that retries do not create duplicate messages. Client maintains a set of recently received messageIds and silently drops duplicates.`,
+Idempotency: Client-generated UUID (messageId) ensures that retries do not create duplicate messages. Client maintains a set of recently received messageIds and silently drops duplicates.`,
           pros: ['Zero message loss: every message is either delivered or persisted for later delivery', 'Automatic retry with exponential backoff handles transient failures', 'Client-side deduplication via UUID prevents duplicate display on retry'],
           cons: ['At-least-once semantics means the client must handle deduplication logic', 'Offline queue can grow very large for users offline for days (mitigated by 30-day TTL)', 'ACK round-trip adds ~50ms to the delivery pipeline']
         },
         {
           name: 'Double Ratchet Algorithm (Signal Protocol)',
           diagramSrc: '/diagrams/whatsapp/algo-double-ratchet.png',
-          description: `Provides **end-to-end encryption** with **forward secrecy** and **break-in recovery**.
+          description: `Provides end-to-end encryption with forward secrecy and break-in recovery.
 
-**How it works:**
-- Initial key agreement via **X3DH** (Extended Triple Diffie-Hellman) using **pre-key bundles**
-- Each message uses a unique encryption key derived from a **ratcheting chain**
-- The "**double ratchet**" combines a **Diffie-Hellman ratchet** (new DH keys per round-trip) with a **symmetric-key ratchet** (KDF chain for each message)
-- **Forward secrecy**: compromising the current key does not reveal past messages
-- **Break-in recovery**: even if current state is compromised, future messages become secure after the next DH ratchet step
+How it works:
+- Initial key agreement via X3DH (Extended Triple Diffie-Hellman) using pre-key bundles
+- Each message uses a unique encryption key derived from a ratcheting chain
+- The "double ratchet" combines a Diffie-Hellman ratchet (new DH keys per round-trip) with a symmetric-key ratchet (KDF chain for each message)
+- Forward secrecy: compromising the current key does not reveal past messages
+- Break-in recovery: even if current state is compromised, future messages become secure after the next DH ratchet step
 
-**Performance:** Key derivation is fast (**~0.1ms** per message). The main overhead is the initial **X3DH handshake** (**~5ms**) which happens only once per user pair.`,
+Performance: Key derivation is fast (~0.1ms per message). The main overhead is the initial X3DH handshake (~5ms) which happens only once per user pair.`,
           pros: ['Forward secrecy: past messages remain secure even if keys are later compromised', 'Break-in recovery: future messages become secure after next DH exchange', 'Per-message keys: compromise of one message does not affect any other message', 'Proven security model: used by Signal, WhatsApp, and other major messaging apps'],
           cons: ['Complexity: implementing correctly is extremely difficult (use battle-tested libraries like libsignal)', 'Multi-device support requires encrypting each message N times (once per device)', 'Key management overhead: pre-key bundles must be replenished and distributed', 'Cannot do server-side search or content moderation on encrypted messages']
         }
@@ -4078,27 +4078,27 @@ Why Cassandra wins for messages:
       interviewFollowups: [
         {
           question: 'How do you handle the thundering herd when a chat server crashes with 100K connections?',
-          answer: `When a chat server dies, all **100K clients** disconnect simultaneously and attempt to reconnect. Without mitigation, they all hit the load balancer at once, potentially cascading the failure.\n\n**Solution:** Clients use **exponential backoff with jitter**: base delay of 1s, doubled each retry (1s, 2s, 4s, 8s...) up to **30s max**, plus a random jitter of 0-50% of the delay. This spreads reconnections over ~30 seconds instead of a single spike.\n\nThe connection router detects the dead server via health checks and stops routing new connections to it. In-flight messages are safe because they were already persisted to **Cassandra** before the crash. **Redis** presence entries auto-expire via **TTL (60s)**, so stale "online" status self-heals.`
+          answer: `When a chat server dies, all 100K clients disconnect simultaneously and attempt to reconnect. Without mitigation, they all hit the load balancer at once, potentially cascading the failure.\n\nSolution: Clients use exponential backoff with jitter: base delay of 1s, doubled each retry (1s, 2s, 4s, 8s...) up to 30s max, plus a random jitter of 0-50% of the delay. This spreads reconnections over ~30 seconds instead of a single spike.\n\nThe connection router detects the dead server via health checks and stops routing new connections to it. In-flight messages are safe because they were already persisted to Cassandra before the crash. Redis presence entries auto-expire via TTL (60s), so stale "online" status self-heals.`
         },
         {
           question: 'How would you implement disappearing messages?',
-          answer: `Add an \`expiresAt\` timestamp field to the messages table. When a user enables disappearing messages for a conversation, all new messages get \`expiresAt = sentAt + TTL\` (e.g., **24 hours**, **7 days**).\n\n**Server-side:** **Cassandra** supports **native TTL** — messages auto-delete when TTL expires. No cleanup job needed.\n\n**Client-side:** The app checks \`expiresAt\` before rendering each message and removes expired ones from the local **SQLite** database. A background timer triggers periodic cleanup.\n\n**Edge case:** Screenshots cannot be prevented technically. WhatsApp shows a notification when someone screenshots a "view once" message, but cannot block it.`
+          answer: `Add an \`expiresAt\` timestamp field to the messages table. When a user enables disappearing messages for a conversation, all new messages get \`expiresAt = sentAt + TTL\` (e.g., 24 hours, 7 days).\n\nServer-side: Cassandra supports native TTL — messages auto-delete when TTL expires. No cleanup job needed.\n\nClient-side: The app checks \`expiresAt\` before rendering each message and removes expired ones from the local SQLite database. A background timer triggers periodic cleanup.\n\nEdge case: Screenshots cannot be prevented technically. WhatsApp shows a notification when someone screenshots a "view once" message, but cannot block it.`
         },
         {
           question: 'How do you implement message search with end-to-end encryption?',
-          answer: `Since the server cannot read message content (E2E encrypted), **server-side search is impossible**. All search must happen client-side.\n\n**Implementation:** After decryption, messages are indexed locally using **SQLite FTS5** (Full-Text Search) on the device. The search index is rebuilt incrementally as new messages arrive.\n\n**Trade-off:** Search only works on the current device and is limited to messages that have been synced locally. For multi-device, each device maintains its own search index. There is no way to search messages that have been deleted from the device.`
+          answer: `Since the server cannot read message content (E2E encrypted), server-side search is impossible. All search must happen client-side.\n\nImplementation: After decryption, messages are indexed locally using SQLite FTS5 (Full-Text Search) on the device. The search index is rebuilt incrementally as new messages arrive.\n\nTrade-off: Search only works on the current device and is limited to messages that have been synced locally. For multi-device, each device maintains its own search index. There is no way to search messages that have been deleted from the device.`
         },
         {
           question: 'What happens when a user blocks another user?',
-          answer: `A \`blocked_users\` table stores (userId, blockedUserId). When User A blocks User B:\n\n1. **Messages:** Server drops any messages from B → A silently (no error to B, B still sees single grey tick)\n2. **Presence:** A appears as "offline" to B always. B's \`lastSeen\` is hidden from A\n3. **Group chats:** Both can still see messages in shared groups (blocking is 1:1 only)\n4. **No notification:** B is never notified that they've been blocked — messages just never get delivered\n5. **Calls:** All calls from B to A are silently rejected\n\nThe block check happens at the message routing layer before enqueueing, so blocked messages never consume queue storage.`
+          answer: `A \`blocked_users\` table stores (userId, blockedUserId). When User A blocks User B:\n\n1. Messages: Server drops any messages from B → A silently (no error to B, B still sees single grey tick)\n2. Presence: A appears as "offline" to B always. B's \`lastSeen\` is hidden from A\n3. Group chats: Both can still see messages in shared groups (blocking is 1:1 only)\n4. No notification: B is never notified that they've been blocked — messages just never get delivered\n5. Calls: All calls from B to A are silently rejected\n\nThe block check happens at the message routing layer before enqueueing, so blocked messages never consume queue storage.`
         },
         {
           question: 'How does multi-device sync work (WhatsApp Web)?',
-          answer: `WhatsApp moved from a **lead device model** (phone must be online) to a **multi-device architecture** in 2021.\n\n**How it works:** Each device has its own **Signal Protocol** identity key pair. When sending a message, the sender encrypts it **N times** — once for each of the recipient's registered devices. Each copy uses a different encryption session.\n\n**Sync:** Messages are stored per-device in the **offline queue**. When a new device is linked, it receives a history sync from the primary device (encrypted backup of recent messages, not from the server).\n\n**Limit:** Maximum **4 linked devices** per account. Each device independently maintains **WebSocket** connections and receives messages directly from the server.`
+          answer: `WhatsApp moved from a lead device model (phone must be online) to a multi-device architecture in 2021.\n\nHow it works: Each device has its own Signal Protocol identity key pair. When sending a message, the sender encrypts it N times — once for each of the recipient's registered devices. Each copy uses a different encryption session.\n\nSync: Messages are stored per-device in the offline queue. When a new device is linked, it receives a history sync from the primary device (encrypted backup of recent messages, not from the server).\n\nLimit: Maximum 4 linked devices per account. Each device independently maintains WebSocket connections and receives messages directly from the server.`
         },
         {
           question: 'How do you handle message ordering across unreliable networks?',
-          answer: `**Problem:** Network delays can cause messages to arrive at the server out of the order they were sent.\n\n**Solution:** Server-assigned monotonic sequence numbers using **Redis INCR** per conversation. Each message gets \`sequenceNum = INCR(conv:{conversationId})\`. The client displays messages sorted by \`sequenceNum\`, not by client timestamp or arrival order.\n\n**Why not client timestamps?** Device clocks can be wrong by minutes or hours. Two users with different clock settings would see messages in different orders. Server-assigned sequence numbers guarantee a single global order per conversation.\n\n**Concurrent messages:** If two users send at the exact same instant, the Redis INCR serializes them — one gets seq 42, the other gets seq 43. Both see the same order.`
+          answer: `Problem: Network delays can cause messages to arrive at the server out of the order they were sent.\n\nSolution: Server-assigned monotonic sequence numbers using Redis INCR per conversation. Each message gets \`sequenceNum = INCR(conv:{conversationId})\`. The client displays messages sorted by \`sequenceNum\`, not by client timestamp or arrival order.\n\nWhy not client timestamps? Device clocks can be wrong by minutes or hours. Two users with different clock settings would see messages in different orders. Server-assigned sequence numbers guarantee a single global order per conversation.\n\nConcurrent messages: If two users send at the exact same instant, the Redis INCR serializes them — one gets seq 42, the other gets seq 43. Both see the same order.`
         },
       ],
       tips: [
@@ -4526,19 +4526,19 @@ Key optimization: The 150px thumbnail is generated first and returned immediatel
           question: 'How does feed generation work with the hybrid fan-out approach?',
           answer: `Instagram uses a hybrid fan-out model to balance latency and write amplification:
 
-**Fan-out on Write (for regular users with <10K followers):**
+Fan-out on Write (for regular users with <10K followers):
 1. When a user publishes a post, the Fan-out Service fetches their follower list
 2. For each follower, the postId is inserted into their pre-computed feed cache (Redis sorted set, scored by timestamp)
 3. Each follower feed cache is capped at ~500 posts to bound memory
 4. Write amplification: 1 post = N feed cache inserts (acceptable for N < 10K)
 
-**Fan-out on Read (for celebrity accounts with 10K+ followers):**
+Fan-out on Read (for celebrity accounts with 10K+ followers):
 1. When a celebrity posts, the postId is NOT pushed to any follower cache
 2. Instead, a celebrity posts index is maintained per celebrity (recent 100 posts)
 3. When a follower reads their feed, the Feed Service merges their cached feed with recent posts from followed celebrities
 4. This merge happens at read time but is fast because there are typically <20 followed celebrities
 
-**Hybrid merge at read time:**
+Hybrid merge at read time:
 1. Get pre-computed feed from Redis (fan-out on write posts)
 2. Get recent posts from followed celebrity accounts (fan-out on read)
 3. Merge both lists, remove duplicates
@@ -4551,29 +4551,29 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How does the CDN architecture handle 230 GB/s of image egress?',
           answer: `Instagram uses a multi-tier CDN architecture to serve images with a 95% cache hit rate:
 
-**Tier 1 -- Edge PoPs (Point of Presence):**
+Tier 1 -- Edge PoPs (Point of Presence):
 - Hundreds of edge locations worldwide (via CDN provider like Akamai/Fastly + Meta own edge)
 - Stores the most popular images (top 20% by access frequency)
 - 95% of requests are served here with <50ms latency
 - Cache key: {postId}/{resolution}/{format} -- predictable, no query strings
 - TTL: 30 days for photos (they never change once published)
 
-**Tier 2 -- Regional Caches (Origin Shield):**
+Tier 2 -- Regional Caches (Origin Shield):
 - 10-20 regional cache clusters (US-East, US-West, EU, Asia-Pacific, etc.)
 - Catches edge misses before they hit origin -- 4% of requests hit here
 - Reduces origin load by 20x compared to no shield
 
-**Tier 3 -- Origin (S3):**
+Tier 3 -- Origin (S3):
 - Only ~1% of requests reach origin storage
 - S3 with cross-region replication for durability
 - Origin bandwidth: ~12 GB/s (1% of 230 GB/s total egress)
 
-**Cache warming strategy:**
+Cache warming strategy:
 - When a new post is published, the 640px version is proactively pushed to edge PoPs in the poster region
 - Celebrity posts are pushed to all major PoPs globally
 - Stories are cached aggressively because they are viewed repeatedly within 24 hours
 
-**Format negotiation:**
+Format negotiation:
 - CDN checks the Accept header: serve WebP to supporting browsers, JPEG as fallback
 - Saves ~30% bandwidth for WebP-capable clients (majority of modern mobile/desktop)`
         },
@@ -4581,12 +4581,12 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How does the image processing and resizing pipeline work at scale?',
           answer: `Processing 100M images per day (1,200 QPS) requires a highly parallelized pipeline:
 
-**Architecture:**
+Architecture:
 - Image Processing Queue: Kafka topic partitioned by userId for ordering guarantees
 - Worker fleet: 500+ processing servers with GPU acceleration for ML tasks
 - Each worker handles ~3 images/second (resize + encode + moderate)
 
-**Processing steps per image:**
+Processing steps per image:
 1. Decode original (JPEG/PNG/HEIC) into raw pixel buffer
 2. Auto-orient using EXIF data (mobile photos often have rotation metadata)
 3. Resize to 4 versions using Lanczos resampling (highest quality):
@@ -4600,7 +4600,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
 7. Run content moderation ML model (nudity detection, violence, spam text overlay)
 8. Upload all versions to S3 Processed bucket
 
-**Pre-generate vs resize-on-fly:**
+Pre-generate vs resize-on-fly:
 - Instagram pre-generates all 4 sizes at upload time (not on-demand)
 - Why: 100:1 read-to-write ratio means each image is viewed hundreds of times
 - Pre-generating costs ~285 TB/day storage but saves billions of on-the-fly resize operations
@@ -4610,7 +4610,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How would you design the Explore page recommendation engine?',
           answer: `The Explore page surfaces content from accounts the user does NOT follow:
 
-**Candidate Generation (broad funnel -- millions of posts down to ~10K):**
+Candidate Generation (broad funnel -- millions of posts down to ~10K):
 1. Collaborative filtering: Users similar to you engaged with these posts
    - Build user embeddings from interaction history (likes, saves, follows, time spent)
    - Find nearest neighbors in embedding space using approximate nearest neighbor (ANN) search
@@ -4620,12 +4620,12 @@ The threshold between push and pull (10K followers) is tunable based on system l
 3. Trending: Posts with rapidly increasing engagement velocity in the user region/language
 4. Topic clusters: Map user interests to topic categories (food, travel, fitness, etc.)
 
-**Ranking (narrow funnel -- 10K down to ~50 displayed):**
+Ranking (narrow funnel -- 10K down to ~50 displayed):
 - ML ranking model scores each candidate post
 - Features: post engagement rate, poster quality score, visual quality score, freshness, diversity
 - Multi-objective optimization: maximize engagement while maintaining content diversity
 
-**Serving architecture:**
+Serving architecture:
 - Candidate generation runs offline (every few hours) and stores candidates per user in a feature store
 - Ranking happens online at request time (must be <100ms)
 - Results cached per user with 15-minute TTL`
@@ -4634,29 +4634,29 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How does the Stories architecture handle 500M stories/day with 24-hour TTL?',
           answer: `Stories are fundamentally different from posts -- ephemeral, viewed sequentially, with a fixed 24-hour lifespan:
 
-**Storage model:**
+Storage model:
 - Each story stored in Redis as a sorted set entry: ZADD user:{userId}:stories {expiresAt} {storyId}
 - Story media (image/short video) stored in S3 with a 48-hour object lifecycle rule
 - Story metadata (storyId, mediaUrl, type, viewCount) in Cassandra partitioned by userId
 
-**Story tray (the ring at top of feed):**
+Story tray (the ring at top of feed):
 1. When user opens the app, fetch followed users story status in batch
 2. For each followed userId: ZRANGEBYSCORE user:{userId}:stories NOW() +INF
 3. Sort the story tray: unseen stories first, then close friends, then recency
 4. Prefetch the first story media for the top 5 users in the tray
 
-**Posting a story:**
+Posting a story:
 1. Client uploads media to S3 via pre-signed URL
 2. Story record created in Cassandra + ZADD to Redis sorted set
 3. No fan-out to follower feeds -- stories are pulled on-demand from the tray
 
-**Auto-expiration:**
+Auto-expiration:
 - Redis sorted sets naturally support range queries by timestamp
 - Background cleanup job runs every 5 minutes: ZREMRANGEBYSCORE 0 {NOW}
 - S3 lifecycle policy auto-deletes media after 48 hours
 - Story highlights: user can pin stories to persistent storage, removing the TTL
 
-**View tracking:**
+View tracking:
 - Each story view recorded asynchronously via Kafka
 - View list stored in Cassandra: story_views (storyId, viewerUserId, viewedAt)
 - View counts are eventually consistent (batch incremented every 30 seconds)`
@@ -4665,23 +4665,23 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How do you store and query the social graph (follow relationships)?',
           answer: `The social graph is the backbone of Instagram -- it determines whose content appears in your feed:
 
-**Data model:**
+Data model:
 - follows table: (followerId, followeeId, createdAt, status)
 - Status: ACTIVE (public account follow), PENDING (private account request)
 - Denormalized counters: followerCount and followingCount on users table (updated async)
 
-**Why not a graph database?**
+Why not a graph database?
 - Graph databases excel at multi-hop traversals but Instagram primarily needs 1-hop queries
 - "Who does user X follow?" and "Who follows user X?" are simple key-value lookups
 - At Instagram scale (100B+ follow edges), sharded PostgreSQL is more operationally proven
 
-**Sharding strategy:**
+Sharding strategy:
 - Shard follows table by followerId (outgoing edges)
 - "Who does X follow?" is a single-shard query (fast)
 - "Who follows X?" requires scatter-gather -- mitigated by a reverse index sharded by followeeId
 - Follower list cached in Redis for active users
 
-**Celebrity accounts (10M+ followers):**
+Celebrity accounts (10M+ followers):
 - Follower list too large to cache in Redis (~80MB for 10M userIds)
 - Only cache the count + most recent 1,000 followers
 - Full list materialized in Cassandra (partition by followeeId, clustered by createdAt DESC)`
@@ -4690,23 +4690,23 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How do you scale likes and comments to handle viral posts?',
           answer: `A viral post can receive millions of likes in minutes -- naive counting creates a database hot key:
 
-**Like system:**
+Like system:
 - likes table: (postId, userId, createdAt) -- compound PK prevents double-likes
 - Like count NOT incremented synchronously per like
 - Instead: buffered in Redis (INCR post:{postId}:likes) and flushed to DB every 5 seconds
 - Redis absorbs the burst: 100K likes/minute = only 12 DB writes/minute for the count
 
-**Comment system:**
+Comment system:
 - comments table: (commentId, postId, userId, text, createdAt) partitioned by postId
 - Displayed in Top Comments (ranked by likes) and Newest (chronological) order
 - For viral posts: only load top 20 comments initially, paginate the rest
 
-**Hot key mitigation for celebrity posts:**
+Hot key mitigation for celebrity posts:
 - Solution 1: Write-behind buffer -- Redis absorbs writes, DB gets batched updates
 - Solution 2: Counter sharding -- split post:{postId}:likes into N shards, sum on read
 - Solution 3: Approximate counts -- for posts with >100K likes, show "1.2M" not exact count
 
-**Notification fan-out:**
+Notification fan-out:
 - Likes do NOT generate push notifications for every like
 - Batch notifications ("Alice and 47 others liked your photo") sent every 15 minutes
 - Comments generate individual notifications (higher signal value)`
@@ -4715,19 +4715,19 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'How would you handle content moderation at 100M uploads per day?',
           answer: `Content moderation is a multi-layered pipeline processing every upload before it appears in feeds:
 
-**Layer 1 -- Automated ML screening (every upload, <2 seconds):**
+Layer 1 -- Automated ML screening (every upload, <2 seconds):
 - Image classification model (CNN) detects: nudity, violence, hate symbols, self-harm, spam
 - Score > 0.95: auto-reject. Score 0.7-0.95: flag for human review. Score < 0.7: auto-approve
 
-**Layer 2 -- Proactive scanning (post-publication):**
+Layer 2 -- Proactive scanning (post-publication):
 - Periodic re-scan with updated ML models
 - Cross-reference against known banned content hashes (PhotoDNA/CSAM databases)
 
-**Layer 3 -- User reports:**
+Layer 3 -- User reports:
 - Report queue prioritized by: number of reports, reporter trust score, content virality
 - Human moderators review within 24 hours
 
-**Scale numbers:**
+Scale numbers:
 - 100M uploads/day = 1,157 uploads/sec to moderate
 - ML inference: ~100ms per image on GPU -- need ~200 GPU workers at 60% utilization
 - Human review queue: ~5-10% flagged = 5-10M reviews/day`
@@ -4736,27 +4736,27 @@ The threshold between push and pull (10K followers) is tunable based on system l
           question: 'What database choices would you make for Instagram?',
           answer: `Instagram data has diverse access patterns requiring a polyglot persistence strategy:
 
-**PostgreSQL -- User profiles, posts metadata, follows (social graph):**
+PostgreSQL -- User profiles, posts metadata, follows (social graph):
 - Strong consistency for user profiles, relational queries for social graph
 - Sharded by userId using Vitess or Citus for horizontal scaling
 - Instagram famously ran on a single PostgreSQL instance for years before sharding
 - Handles: ~50K write QPS, ~500K read QPS (with read replicas)
 
-**Cassandra -- Feed cache, like/comment events, story views:**
+Cassandra -- Feed cache, like/comment events, story views:
 - Write-optimized (LSM-tree) for high-throughput event streams
 - Feed cache: partition by userId, clustering by postTimestamp DESC
 - Handles: ~200K write QPS for feed updates and engagement events
 
-**Redis -- Feed cache (hot tier), stories tray, counters:**
+Redis -- Feed cache (hot tier), stories tray, counters:
 - Sub-millisecond reads for feed serving (500K-1M QPS)
 - Sorted sets for story TTL management
 - Counter sharding for viral post like counts
 - Memory budget: ~50TB across cluster (500M DAU x 100KB avg feed cache)
 
-**Elasticsearch -- Search (users, hashtags, locations):**
+Elasticsearch -- Search (users, hashtags, locations):
 - Full-text search with fuzzy matching, autocomplete, geo-search
 
-**S3 -- All media assets (photos, videos, stories):**
+S3 -- All media assets (photos, videos, stories):
 - Lifecycle policies: Standard to Infrequent Access (1 year) to Glacier (3 years)
 - CDN origin for all image serving`
         }
@@ -4904,19 +4904,19 @@ The threshold between push and pull (10K followers) is tunable based on system l
           diagramSrc: '/diagrams/instagram/deep-dive-image-pipeline.png',
           detail: `The image processing pipeline is the most critical background system at Instagram -- every one of the 100M daily uploads must pass through it.
 
-**Pipeline architecture:**
+Pipeline architecture:
 - Kafka-based queue with 3 consumer groups: resize, transcode, moderate (run in parallel)
 - Resize group: generates 4 JPEG sizes + 4 WebP sizes = 8 output files per image
 - Transcode group: handles video uploads (H.264 + HLS segmentation for adaptive playback)
 - Moderate group: runs CNN classification model on GPU workers
 
-**Throughput math:**
+Throughput math:
 - 100M images/day = 1,157 images/sec
 - Each image produces 8 resized versions: 9,260 file writes/sec to S3
 - Processing time per image: ~800ms (resize) + ~100ms (moderation) = ~1 second total
 - With 60% utilization: need ~2,000 worker cores for resize, ~200 GPU workers for moderation
 
-**Failure handling:**
+Failure handling:
 - Dead letter queue for images that fail processing 3 times
 - Fallback: serve original resolution until processing completes
 - Circuit breaker: if processing queue depth > 1M, stop accepting non-priority uploads temporarily`
@@ -4926,22 +4926,22 @@ The threshold between push and pull (10K followers) is tunable based on system l
           diagramSrc: '/diagrams/instagram/deep-dive-cdn.png',
           detail: `CDN caching is the single most important optimization at Instagram -- without it, S3 would need to handle 500K-1M image requests per second.
 
-**Three-tier cache hierarchy:**
+Three-tier cache hierarchy:
 1. L1 -- Edge PoPs: 95% hit rate, <50ms latency, hundreds of locations
 2. L2 -- Regional Origin Shield: 4% of requests, <100ms latency, 10-20 locations
 3. L3 -- Origin S3: 1% of requests, 100-300ms latency, 3 regions
 
-**Cache invalidation (rare for Instagram):**
+Cache invalidation (rare for Instagram):
 - Photos are immutable once published -- never need invalidation
 - Profile picture changes: new URL generated, old one naturally expires from cache
 - Post deletion: CDN entry expires naturally (TTL 30 days), URL returns 404 from origin
 
-**Cache key design:**
+Cache key design:
 - Format: /{postId}/{width}_{height}.{format}?v={version}
 - Predictable keys enable pre-warming without database lookups
 - Version query param allows forced refresh after reprocessing
 
-**CDN cost optimization:**
+CDN cost optimization:
 - WebP saves ~30% bandwidth vs JPEG (negotiate via Accept header)
 - Lazy loading: client only requests images visible in viewport
 - Progressive JPEG: renders low-quality preview immediately, sharpens as data arrives
@@ -4952,25 +4952,25 @@ The threshold between push and pull (10K followers) is tunable based on system l
           diagramSrc: '/diagrams/instagram/feed-generation-flow.png',
           detail: `The feed system is the core of Instagram experience -- getting it wrong means slow feeds or wasted compute.
 
-**The celebrity problem:**
+The celebrity problem:
 - A user with 100M followers posts once. Fan-out on write = 100M Redis inserts.
 - At 10us per insert, that is 1,000 seconds (16+ minutes) to propagate one post.
 - Meanwhile, followers are refreshing feeds and not seeing the new post.
 
-**Hybrid solution:**
+Hybrid solution:
 - Follower count < 10K: fan-out on write (push to all follower feed caches immediately)
 - Follower count >= 10K: fan-out on read (pull at feed read time)
 - The 10K threshold means ~99% of users use push (most users have <10K followers)
 - Only ~1% of users (celebrities/brands) use pull, but they generate ~30% of feed content
 
-**Feed assembly at read time:**
+Feed assembly at read time:
 1. ZREVRANGE user:{userId}:feed 0 19 -- get top 20 posts from pre-computed cache
 2. For each followed celebrity: GET celebrity:{celebId}:recent -- last 50 posts
 3. Merge and deduplicate by postId
 4. ML ranking pass: score by P(engagement) using user features + post features
 5. Cache the ranked feed with 5-minute TTL
 
-**Feed cache memory budget:**
+Feed cache memory budget:
 - 500M DAU x ~500 postIds per feed cache x 8 bytes per postId = ~2 TB
 - Redis cluster with 50+ shards handles this with room for sessions, stories, counters`
         },
@@ -4979,25 +4979,25 @@ The threshold between push and pull (10K followers) is tunable based on system l
           diagramSrc: '/diagrams/instagram/deep-dive-stories.png',
           detail: `Stories handle 500M uploads per day with automatic 24-hour deletion -- a fundamentally different storage pattern than permanent posts.
 
-**Why Stories need separate infrastructure:**
+Why Stories need separate infrastructure:
 - Write-once, read-many (within 24h), then delete -- permanent storage is wasteful
 - Story media is typically smaller (compressed image or short video clip)
 - Story ordering is strictly chronological (no ranking needed)
 - View tracking is per-story, not per-post (different data model)
 
-**Redis sorted set model:**
+Redis sorted set model:
 - Key: user:{userId}:stories
 - Score: expiresAt timestamp (createdAt + 24 hours)
 - Value: storyId
 - Query active stories: ZRANGEBYSCORE user:{userId}:stories NOW() +INF
 - Cleanup expired: ZREMRANGEBYSCORE user:{userId}:stories 0 NOW() (runs every 5 minutes)
 
-**S3 lifecycle for story media:**
+S3 lifecycle for story media:
 - Upload to S3 with object tags: { type: 'story', expiresAt: timestamp }
 - S3 lifecycle rule: delete objects with type=story older than 48 hours
 - 48h instead of 24h: grace period for users saving to highlights
 
-**Story tray optimization:**
+Story tray optimization:
 - The top-of-feed story tray checks story status for ~500 followed accounts
 - Naive: 500 Redis queries per feed load. Optimized: batch pipeline of 500 ZCARD commands
 - Further optimization: maintain a separate set user:{userId}:activeStoryUsers with TTL
@@ -5008,7 +5008,7 @@ The threshold between push and pull (10K followers) is tunable based on system l
           diagramSrc: '/diagrams/instagram/deep-dive-explore.png',
           detail: `The Explore page drives content discovery for 200M+ daily visitors, surfacing posts from accounts users do not follow.
 
-**Two-phase recommendation pipeline:**
+Two-phase recommendation pipeline:
 
 Phase 1 -- Offline candidate generation (runs every 4-6 hours):
 - User embedding model: maps each user to a 128-dimensional vector based on interaction history
@@ -5024,12 +5024,12 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
 - Top 50 posts selected, diversified to avoid showing too many posts of same type
 - Results cached per user with 15-minute TTL
 
-**Cold start for new users:**
+Cold start for new users:
 - No interaction history = no user embedding
 - Fall back to: global trending, interest onboarding selections, demographic-based defaults
 - Rapidly build user profile from first 10-20 interactions (likes, scrolls, time spent)
 
-**Feedback loop:**
+Feedback loop:
 - Track impressions, clicks, likes, saves, time spent on each Explore post
 - Retrain models daily with fresh engagement data
 - A/B test ranking model variants continuously`
@@ -5197,27 +5197,27 @@ Phase 2 -- Online ranking (runs at request time, <100ms budget):
       interviewFollowups: [
         {
           question: 'How would you handle a viral post that gets millions of likes in minutes?',
-          answer: `A viral post creates a "hot key" problem at multiple layers:\n\n**Like writes (could spike to 500K/sec for viral):**\n- Likes written to Cassandra (write-optimized, no row locking) — handles burst natively\n- Redis INCR for real-time approximate count (client shows this immediately via optimistic UI)\n- Kafka batches counter updates to PostgreSQL every 5 seconds — converts 500K individual increments into 1 batch UPDATE\n\n**Feed reads (everyone loading feed to see the viral post):**\n- If poster is a celebrity: post cached in Memcached, millions of reads served from one cache entry\n- If poster is a regular user who went viral: their post was already pushed to followers' feed caches via fan-out on write\n- CDN caches the image at 200+ edge PoPs — S3 origin hit rate drops to <0.1% for viral images\n\n**Notification throttling:**\n- Rate-limit like notifications: batch into "Alice and 1,000 others liked your post" instead of individual push notifications\n- Suppress individual like notifications after 100 likes, switch to aggregate summary every 15 minutes`
+          answer: `A viral post creates a "hot key" problem at multiple layers:\n\nLike writes (could spike to 500K/sec for viral):\n- Likes written to Cassandra (write-optimized, no row locking) — handles burst natively\n- Redis INCR for real-time approximate count (client shows this immediately via optimistic UI)\n- Kafka batches counter updates to PostgreSQL every 5 seconds — converts 500K individual increments into 1 batch UPDATE\n\nFeed reads (everyone loading feed to see the viral post):\n- If poster is a celebrity: post cached in Memcached, millions of reads served from one cache entry\n- If poster is a regular user who went viral: their post was already pushed to followers' feed caches via fan-out on write\n- CDN caches the image at 200+ edge PoPs — S3 origin hit rate drops to <0.1% for viral images\n\nNotification throttling:\n- Rate-limit like notifications: batch into "Alice and 1,000 others liked your post" instead of individual push notifications\n- Suppress individual like notifications after 100 likes, switch to aggregate summary every 15 minutes`
         },
         {
           question: 'How do you prevent the feed from showing stale content?',
-          answer: `Feed staleness is the fundamental tension between pre-computing for speed and showing fresh content:\n\n**Short cache TTL:** Pre-computed feeds cached for only 5 minutes in Redis. After TTL expires, the next feed read triggers re-computation with fresh data.\n\n**Real-time injection:** High-priority events (post from close friend, trending content) are injected into existing feed caches via Kafka consumers — bypassing the 5-minute wait.\n\n**Invalidation triggers:**\n- User unfollows someone: ZREM their posts from the feed cache immediately\n- User blocks someone: purge all blocked user's content from cache\n- Post deleted by author: fan-out a delete event to remove postId from all feed caches that contain it\n\n**Chronological fallback:** The "Following" feed tab shows pure chronological order without caching or ranking — always fresh, always complete.`
+          answer: `Feed staleness is the fundamental tension between pre-computing for speed and showing fresh content:\n\nShort cache TTL: Pre-computed feeds cached for only 5 minutes in Redis. After TTL expires, the next feed read triggers re-computation with fresh data.\n\nReal-time injection: High-priority events (post from close friend, trending content) are injected into existing feed caches via Kafka consumers — bypassing the 5-minute wait.\n\nInvalidation triggers:\n- User unfollows someone: ZREM their posts from the feed cache immediately\n- User blocks someone: purge all blocked user's content from cache\n- Post deleted by author: fan-out a delete event to remove postId from all feed caches that contain it\n\nChronological fallback: The "Following" feed tab shows pure chronological order without caching or ranking — always fresh, always complete.`
         },
         {
           question: 'How would you implement hashtag search and trending hashtags?',
-          answer: `**Hashtag indexing:** When a post is created, hashtags are extracted from the caption and indexed in Elasticsearch: document = {postId, hashtags[], createdAt, engagementScore}.\n\n**Hashtag search:** Query Elasticsearch with hashtag term, results ranked by engagement score with recency boost.\n\n**Trending detection:** A streaming pipeline (Kafka Streams or Flink) computes hashtag velocity:\n- Sliding window: count hashtag occurrences in the last 1 hour, 4 hours, 24 hours\n- Trending score = (current_velocity - baseline_velocity) / baseline_velocity\n- Hashtags with trending score > 3x baseline are flagged as "trending"\n- Baseline is the same day/time last week (accounts for daily and weekly patterns)\n\n**Content safety:** Trending hashtags checked against a blocklist. Hijacked hashtags (legitimate tag taken over by spam) detected by sudden content-type shift.`
+          answer: `Hashtag indexing: When a post is created, hashtags are extracted from the caption and indexed in Elasticsearch: document = {postId, hashtags[], createdAt, engagementScore}.\n\nHashtag search: Query Elasticsearch with hashtag term, results ranked by engagement score with recency boost.\n\nTrending detection: A streaming pipeline (Kafka Streams or Flink) computes hashtag velocity:\n- Sliding window: count hashtag occurrences in the last 1 hour, 4 hours, 24 hours\n- Trending score = (current_velocity - baseline_velocity) / baseline_velocity\n- Hashtags with trending score > 3x baseline are flagged as "trending"\n- Baseline is the same day/time last week (accounts for daily and weekly patterns)\n\nContent safety: Trending hashtags checked against a blocklist. Hijacked hashtags (legitimate tag taken over by spam) detected by sudden content-type shift.`
         },
         {
           question: 'How do you handle private accounts in the feed pipeline?',
-          answer: `Private accounts add access control to every read path:\n\n**Follow request flow:** POST /api/follow/{userId} returns status: PENDING. The account owner must approve. Only after approval is the follow relationship written with status: ACTIVE.\n\n**Feed fan-out:** Private account posts are fanned out only to ACTIVE followers (not PENDING). The fan-out service checks follow status before ZADD to feed cache.\n\n**Direct access:** When visiting a private profile, the API checks the follow status. If not ACTIVE, return profile metadata only (username, bio, post count) — no posts, no stories.\n\n**Search/Explore exclusion:** Private account posts are never indexed in Elasticsearch and never appear in the Explore page or trending hashtag results.\n\n**Visibility change:** If a user switches from public to private, existing posts remain in followers' feed caches but are removed from Explore/search indexes via a background job.`
+          answer: `Private accounts add access control to every read path:\n\nFollow request flow: POST /api/follow/{userId} returns status: PENDING. The account owner must approve. Only after approval is the follow relationship written with status: ACTIVE.\n\nFeed fan-out: Private account posts are fanned out only to ACTIVE followers (not PENDING). The fan-out service checks follow status before ZADD to feed cache.\n\nDirect access: When visiting a private profile, the API checks the follow status. If not ACTIVE, return profile metadata only (username, bio, post count) — no posts, no stories.\n\nSearch/Explore exclusion: Private account posts are never indexed in Elasticsearch and never appear in the Explore page or trending hashtag results.\n\nVisibility change: If a user switches from public to private, existing posts remain in followers' feed caches but are removed from Explore/search indexes via a background job.`
         },
         {
           question: 'What happens when a user deletes a post?',
-          answer: `Post deletion must propagate across multiple systems:\n\n1. **Database:** Soft-delete the post row: UPDATE posts SET isDeleted = true, deletedAt = now()\n2. **Feed caches:** Publish delete event to Kafka topic: feed-updates. Fan-out consumers remove the postId from all follower feed caches: ZREM feed:{followerId} {postId}\n3. **CDN:** Send purge request to CDN for all image URLs associated with the post\n4. **S3:** Schedule media deletion after 30-day grace period (accidental deletion recovery + legal hold)\n5. **Elasticsearch:** Remove post from search index immediately\n6. **Likes/Comments:** Orphaned — they reference a deleted postId and are never displayed. Cleaned up by background job weekly\n7. **Notifications:** Remove any pending notifications referencing this post\n\n**Consistency:** The user sees immediate deletion (optimistic UI). Background propagation takes 1-5 seconds to reach all feed caches. During this window, some followers may still see the post — acceptable eventual consistency for a social media system.`
+          answer: `Post deletion must propagate across multiple systems:\n\n1. Database: Soft-delete the post row: UPDATE posts SET isDeleted = true, deletedAt = now()\n2. Feed caches: Publish delete event to Kafka topic: feed-updates. Fan-out consumers remove the postId from all follower feed caches: ZREM feed:{followerId} {postId}\n3. CDN: Send purge request to CDN for all image URLs associated with the post\n4. S3: Schedule media deletion after 30-day grace period (accidental deletion recovery + legal hold)\n5. Elasticsearch: Remove post from search index immediately\n6. Likes/Comments: Orphaned — they reference a deleted postId and are never displayed. Cleaned up by background job weekly\n7. Notifications: Remove any pending notifications referencing this post\n\nConsistency: The user sees immediate deletion (optimistic UI). Background propagation takes 1-5 seconds to reach all feed caches. During this window, some followers may still see the post — acceptable eventual consistency for a social media system.`
         },
         {
           question: 'How would you design Instagram for multi-data-center failover?',
-          answer: `Instagram operates across multiple data centers for both availability and latency:\n\n**Active-active architecture:**\n- Users routed to nearest data center via GeoDNS\n- Each DC has full PostgreSQL shard replicas (read replicas) and Redis cache instances\n- Writes go to the primary DC for each shard (single-leader replication)\n- Cross-DC replication lag: 50-200ms (acceptable for social media)\n\n**Failover scenario (DC goes down):**\n1. GeoDNS detects health check failures, reroutes traffic to nearest surviving DC within 30 seconds\n2. Read replicas in surviving DC promoted to primary for affected shards\n3. Redis feed caches rebuilt from database (cold start, ~30 second degradation in feed quality)\n4. CDN continues serving images from edge PoPs — zero impact on media delivery\n5. RPO: ~1 second of writes may be lost during unplanned failover\n\n**Data consistency tradeoffs:**\n- User auth tokens: replicated synchronously (critical path)\n- Follow graph and feed caches: eventual consistency (rebuild from source on failover)\n- Like/comment counts: async aggregation, minor temporary inaccuracies acceptable`
+          answer: `Instagram operates across multiple data centers for both availability and latency:\n\nActive-active architecture:\n- Users routed to nearest data center via GeoDNS\n- Each DC has full PostgreSQL shard replicas (read replicas) and Redis cache instances\n- Writes go to the primary DC for each shard (single-leader replication)\n- Cross-DC replication lag: 50-200ms (acceptable for social media)\n\nFailover scenario (DC goes down):\n1. GeoDNS detects health check failures, reroutes traffic to nearest surviving DC within 30 seconds\n2. Read replicas in surviving DC promoted to primary for affected shards\n3. Redis feed caches rebuilt from database (cold start, ~30 second degradation in feed quality)\n4. CDN continues serving images from edge PoPs — zero impact on media delivery\n5. RPO: ~1 second of writes may be lost during unplanned failover\n\nData consistency tradeoffs:\n- User auth tokens: replicated synchronously (critical path)\n- Follow graph and feed caches: eventual consistency (rebuild from source on failover)\n- Like/comment counts: async aggregation, minor temporary inaccuracies acceptable`
         },
       ],
       // ── Tips ──
@@ -5709,58 +5709,58 @@ Changes are pushed through notification service, client then fetches full delta.
         },
         { question: 'How does content-addressed deduplication work at scale?', answer: `Every file is split into 4MB blocks, and each block is identified by its SHA-256 hash. When uploading, the client sends block hashes first (not data). The server checks which hashes already exist in the block store. Only missing blocks are uploaded.
 
-**Cross-user dedup**: When 1M users upload the same PDF, it is stored ONCE with 1M references. Storage savings can be 40-60% for enterprise accounts.
+Cross-user dedup: When 1M users upload the same PDF, it is stored ONCE with 1M references. Storage savings can be 40-60% for enterprise accounts.
 
-**Security concern**: Hash probing — an attacker sends hashes to check if specific content exists. Mitigation: require authentication, rate-limit hash checks, use per-user encryption for sensitive content.
+Security concern: Hash probing — an attacker sends hashes to check if specific content exists. Mitigation: require authentication, rate-limit hash checks, use per-user encryption for sensitive content.
 
-**Garbage collection**: Reference counting on blocks. When last file referencing a block is deleted, block is eligible for GC. Run GC as a background job with safety margin (30 days).` },
-        { question: 'How do you handle large file uploads (50GB+)?', answer: `**Chunked upload**: Split file into 4MB blocks, upload each with CRC32 checksum. Server acknowledges each block individually.
+Garbage collection: Reference counting on blocks. When last file referencing a block is deleted, block is eligible for GC. Run GC as a background job with safety margin (30 days).` },
+        { question: 'How do you handle large file uploads (50GB+)?', answer: `Chunked upload: Split file into 4MB blocks, upload each with CRC32 checksum. Server acknowledges each block individually.
 
-**Resumability**: If network drops at block 500 of 1000, client resumes from block 501. The server tracks which blocks have been received per upload session.
+Resumability: If network drops at block 500 of 1000, client resumes from block 501. The server tracks which blocks have been received per upload session.
 
-**Parallel upload**: Upload 4-8 blocks concurrently to saturate bandwidth. Each block goes to the block store independently.
+Parallel upload: Upload 4-8 blocks concurrently to saturate bandwidth. Each block goes to the block store independently.
 
-**Bandwidth optimization**: If file was previously uploaded (any user), server already has all blocks — upload completes instantly with just metadata update (zero data transfer).` },
-        { question: 'How does the sync engine handle offline edits?', answer: `**Local-first architecture**: Client maintains a local SQLite database tracking file metadata, block hashes, and sync cursor position.
+Bandwidth optimization: If file was previously uploaded (any user), server already has all blocks — upload completes instantly with just metadata update (zero data transfer).` },
+        { question: 'How does the sync engine handle offline edits?', answer: `Local-first architecture: Client maintains a local SQLite database tracking file metadata, block hashes, and sync cursor position.
 
-**Offline editing**: User edits files normally. File watcher detects changes, computes new block hashes, marks files as pending sync.
+Offline editing: User edits files normally. File watcher detects changes, computes new block hashes, marks files as pending sync.
 
-**Reconnection sync**: When network returns, client sends its cursor position to the server. Server returns all changes since that cursor. Client merges remote changes with local pending changes.
+Reconnection sync: When network returns, client sends its cursor position to the server. Server returns all changes since that cursor. Client merges remote changes with local pending changes.
 
-**Conflict detection**: If same file was edited both locally and remotely while offline, create a conflict copy (Dropbox approach) rather than silently overwriting. User resolves manually.` },
-        { question: 'What chunking strategy should we use — fixed vs content-defined?', answer: `**Fixed-size (4MB blocks)**: Simple, good for random access. Used by Dropbox. Shift by one byte → two completely different blocks if content changes before the first boundary.
+Conflict detection: If same file was edited both locally and remotely while offline, create a conflict copy (Dropbox approach) rather than silently overwriting. User resolves manually.` },
+        { question: 'What chunking strategy should we use — fixed vs content-defined?', answer: `Fixed-size (4MB blocks): Simple, good for random access. Used by Dropbox. Shift by one byte → two completely different blocks if content changes before the first boundary.
 
-**Content-defined (Rabin fingerprinting)**: Boundaries determined by content, not position. Inserting bytes at the start only affects the first chunk, not all subsequent ones. Better dedup for text files.
+Content-defined (Rabin fingerprinting): Boundaries determined by content, not position. Inserting bytes at the start only affects the first chunk, not all subsequent ones. Better dedup for text files.
 
-**Trade-off**: Content-defined is better for text files (insertion doesn't cascade), fixed is simpler and better for binary. Dropbox chose fixed-size for simplicity at scale.
+Trade-off: Content-defined is better for text files (insertion doesn't cascade), fixed is simpler and better for binary. Dropbox chose fixed-size for simplicity at scale.
 
-**Block size trade-off**: Smaller blocks (1MB) = better dedup + more metadata overhead. Larger blocks (16MB) = less metadata + worse dedup. 4MB is the sweet spot.` },
-        { question: 'How do you design sharing and access control?', answer: `**Permission model**: Owner, Editor (read-write), Viewer (read-only). Can share by email (user-specific) or by link (anyone with link).
+Block size trade-off: Smaller blocks (1MB) = better dedup + more metadata overhead. Larger blocks (16MB) = less metadata + worse dedup. 4MB is the sweet spot.` },
+        { question: 'How do you design sharing and access control?', answer: `Permission model: Owner, Editor (read-write), Viewer (read-only). Can share by email (user-specific) or by link (anyone with link).
 
-**Share links**: Generate unique URL with optional password and expiry. Link contains a signed token that encodes fileId + permission level.
+Share links: Generate unique URL with optional password and expiry. Link contains a signed token that encodes fileId + permission level.
 
-**Shared folders**: All files in shared folder inherit the folder's permission. Shared files appear in the recipient's root namespace.
+Shared folders: All files in shared folder inherit the folder's permission. Shared files appear in the recipient's root namespace.
 
-**Access check**: Every file operation (read, write, delete) checks permission in the sharing service. Cache ACLs in Redis for low-latency checks.
+Access check: Every file operation (read, write, delete) checks permission in the sharing service. Cache ACLs in Redis for low-latency checks.
 
-**Enterprise**: Admin can restrict external sharing, enforce 2FA for access, audit trail of all share events.` },
-        { question: 'How do you ensure 99.99% durability — never lose a file?', answer: `**Multi-layer durability**:
+Enterprise: Admin can restrict external sharing, enforce 2FA for access, audit trail of all share events.` },
+        { question: 'How do you ensure 99.99% durability — never lose a file?', answer: `Multi-layer durability:
 1. Block store (S3/GCS): 11 nines durability (99.999999999%), 3x replication across AZs
 2. Metadata DB (MySQL): Synchronous replication with automated failover
 3. Client-side cache: User's local copy is a backup of last-synced state
 
-**Write-ahead logging**: Metadata changes are WAL'd before acknowledging to client. DB crash → replay WAL on recovery.
+Write-ahead logging: Metadata changes are WAL'd before acknowledging to client. DB crash → replay WAL on recovery.
 
-**Integrity checks**: Block hash verified on upload (CRC32 + SHA-256) and on download. Detect bit rot with periodic background scrubbing.
+Integrity checks: Block hash verified on upload (CRC32 + SHA-256) and on download. Detect bit rot with periodic background scrubbing.
 
-**Versioning**: Keep all file versions for 30 days (free) or unlimited (business). Even if user accidentally deletes a file, it is recoverable.` },
-        { question: 'How does ransomware protection work?', answer: `**Detection**: Anomaly detection flags when a device rapidly modifies/encrypts thousands of files in minutes (unusual pattern).
+Versioning: Keep all file versions for 30 days (free) or unlimited (business). Even if user accidentally deletes a file, it is recoverable.` },
+        { question: 'How does ransomware protection work?', answer: `Detection: Anomaly detection flags when a device rapidly modifies/encrypts thousands of files in minutes (unusual pattern).
 
-**Prevention**: Automatic version retention — even if encrypted files sync to cloud, previous unencrypted versions are preserved for 30 days.
+Prevention: Automatic version retention — even if encrypted files sync to cloud, previous unencrypted versions are preserved for 30 days.
 
-**Recovery**: Admin can roll back an entire account or folder to a specific point in time (before the ransomware attack).
+Recovery: Admin can roll back an entire account or folder to a specific point in time (before the ransomware attack).
 
-**Alert system**: Notify user and admin when suspicious bulk file modification detected. Optionally auto-pause sync for affected device.` },
+Alert system: Notify user and admin when suspicious bulk file modification detected. Optionally auto-pause sync for affected device.` },
       ],
 
       basicImplementation: {
@@ -6159,26 +6159,26 @@ watch_history {
           question: 'How does adaptive bitrate streaming work?',
           answer: `Adaptive bitrate (ABR) streaming is the core technology that enables Netflix to deliver consistent quality across variable network conditions:
 
-**How it works:**
+How it works:
 1. Each title is encoded into multiple quality levels (bitrate ladders): 235 kbps (mobile) to 16 Mbps (4K HDR)
 2. Video is split into small segments (2-4 seconds each), each available at every quality level
 3. The client player continuously measures available bandwidth and buffer fullness
 4. Before requesting each segment, the ABR algorithm selects the optimal quality level
 5. Quality can change between segments seamlessly -- the viewer experiences smooth adaptation
 
-**Netflix ABR algorithm:**
+Netflix ABR algorithm:
 - Buffer-Based Adaptation (BBA): decisions based primarily on buffer occupancy, not bandwidth prediction
 - Low buffer (<10s): request lowest quality to avoid rebuffer
 - Medium buffer (10-30s): gradually increase quality based on bandwidth
 - High buffer (>30s): request highest sustainable quality
 - Hysteresis band: require sustained improvement before upgrading to prevent oscillation
 
-**Per-shot encoding (Netflix innovation):**
+Per-shot encoding (Netflix innovation):
 - Not all scenes need the same bitrate -- a dark talking-head scene compresses well, action scenes need more bits
 - Netflix analyzes each shot independently and allocates bits where they matter most
 - Result: same visual quality at 20% lower bitrate, or better quality at the same bitrate
 
-**Protocols:**
+Protocols:
 - DASH (Dynamic Adaptive Streaming over HTTP): primary format for most devices
 - HLS (HTTP Live Streaming): used for Apple devices (iOS, tvOS, Safari)
 - Both use HTTP -- works through firewalls, benefits from CDN caching`
@@ -6187,7 +6187,7 @@ watch_history {
           question: 'How does the video encoding pipeline produce 1,200+ versions per title?',
           answer: `The encoding pipeline is one of the most compute-intensive systems at Netflix:
 
-**Why 1,200+ versions?**
+Why 1,200+ versions?
 - 10+ resolution levels: 320x240 to 3840x2160 (4K)
 - 4+ codecs: H.264 (universal), H.265/HEVC (modern devices), VP9 (Chrome/Android), AV1 (newest, 20% better compression)
 - 5+ bitrate points per resolution
@@ -6195,7 +6195,7 @@ watch_history {
 - Multiple subtitle languages (burned-in for some regions)
 - Combination: 10 resolutions x 4 codecs x 5 bitrates x audio variants = 1,200+ files
 
-**Pipeline stages:**
+Pipeline stages:
 1. Ingest: Receive studio master (8K/4K ProRes, 100+ Mbps) -- stored in S3 origin
 2. Analysis: Scene detection, shot boundary identification, complexity scoring per shot
 3. Per-shot encoding: Each shot gets its own quality ladder based on complexity
@@ -6205,7 +6205,7 @@ watch_history {
 7. Manifest generation: Create DASH/HLS manifests referencing all encoded segments
 8. Upload to origin S3 and trigger CDN placement
 
-**Scale:**
+Scale:
 - New content: ~1,000+ hours of new content per week
 - Encoding farm: thousands of GPU-accelerated workers on AWS
 - Time per title: 24-72 hours for a 2-hour movie (all versions in parallel)
@@ -6215,7 +6215,7 @@ watch_history {
           question: 'How does the Open Connect CDN architecture work?',
           answer: `Open Connect is Netflix's custom-built CDN -- the largest single-purpose CDN in the world:
 
-**Architecture (three tiers):**
+Architecture (three tiers):
 1. ISP-embedded OCAs (Open Connect Appliances): physical servers installed inside ISP data centers
    - Custom FreeBSD-based software on commodity hardware
    - Each OCA: 100+ TB SSD storage, 100 Gbps network capacity
@@ -6232,14 +6232,14 @@ watch_history {
    - Source of truth for all encoded content
    - CDN fill happens overnight during off-peak hours
 
-**Content placement algorithm (ML-driven):**
+Content placement algorithm (ML-driven):
 - Predict which titles will be popular in each region (based on viewing patterns, new releases, trending)
 - Pre-position predicted popular content during overnight off-peak hours (2 AM - 8 AM local)
 - Each OCA stores 3,000-5,000 titles (most popular for that ISP/region)
 - Hot content (top 100 titles) replicated to ALL OCAs globally
 - Long-tail content only on regional OCAs + origin
 
-**ISP partnership model:**
+ISP partnership model:
 - Netflix provides hardware for FREE to ISPs
 - ISPs benefit: reduced transit costs (content served locally, not pulled from external networks)
 - Netflix benefits: better streaming quality + lower bandwidth costs
@@ -6249,7 +6249,7 @@ watch_history {
           question: 'How does the recommendation engine power 80% of content discovery?',
           answer: `Netflix's recommendation system is responsible for 80% of the content that subscribers watch:
 
-**Two-stage pipeline:**
+Two-stage pipeline:
 
 Stage 1 -- Candidate Generation (offline, runs every few hours):
 - Collaborative filtering: matrix factorization on the user-title interaction matrix
@@ -6267,13 +6267,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 - Multi-objective: maximize P(click) x P(watch >10 min) x P(complete)
 - Diversity constraint: no more than 2 titles from same genre in a row
 
-**Personalized artwork (unique to Netflix):**
+Personalized artwork (unique to Netflix):
 - Each title has 10+ artwork variants (different characters, scenes, moods)
 - The recommendation engine selects which artwork to show each user
 - A user who watches lots of comedy sees the funny scene; a romance fan sees the love interest
 - Increases CTR by 20-30% compared to a single artwork per title
 
-**Home page assembly:**
+Home page assembly:
 - Each row is a separate recommendation algorithm (Continue Watching, Trending, Top 10, Because You Watched X)
 - Row ordering is personalized -- the most engaging rows appear first
 - Results pre-computed hourly and cached per profile in EVCache`
@@ -6282,26 +6282,26 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How would you design the content catalog and search system?',
           answer: `The content catalog serves 17,000+ titles with rich metadata and must support instant search across 190 countries:
 
-**Content metadata store:**
+Content metadata store:
 - Primary store: MySQL/PostgreSQL for structured metadata (title, cast, genre, ratings, licensing)
 - Denormalized into EVCache (Memcached-based) for sub-millisecond reads at browse time
 - Each title has: 20+ metadata fields, multiple language localizations, licensing restrictions by country
 - Update frequency: metadata changes are rare (new releases, license changes) -- eventual consistency is fine
 
-**Search architecture (Elasticsearch):**
+Search architecture (Elasticsearch):
 - Index: title, cast, director, genre, description, keywords in all supported languages
 - Personalized ranking: same search query returns different order per profile (based on viewing history)
 - Autocomplete: pre-computed suggestions for top 10K queries, updated daily
 - Fuzzy matching: handles typos with edit distance 2 (e.g., "brakign bad" matches "Breaking Bad")
 - Multi-language: separate analyzers per language (tokenization, stemming rules differ)
 
-**Content availability (licensing):**
+Content availability (licensing):
 - A title may be available in US but not EU, or only until a certain date
 - License table: (titleId, countryCode, availableFrom, availableTo)
 - All browse/search queries filter by user's country and current date
 - Active session grace period: if license expires mid-stream, allow completion
 
-**API response optimization:**
+API response optimization:
 - Home page returns ~40 rows x 40 titles = 1,600 title cards
 - Only send minimal data initially: titleId, artwork URL, title text
 - Full metadata (synopsis, cast, episodes) loaded on-demand when user selects a title
@@ -6311,25 +6311,25 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How do user profiles and preferences work across devices?',
           answer: `Netflix supports up to 5 profiles per account, each with independent preferences:
 
-**Profile data model:**
+Profile data model:
 - Profile: (profileId, accountId, name, avatar, maturityRating, language, subtitlePrefs)
 - Watch history: (profileId, titleId, position, duration, watchedAt, completed) -- stored in Cassandra
 - Ratings: (profileId, titleId, thumbsUp/thumbsDown) -- used by recommendation engine
 - My List: (profileId, titleId, addedAt) -- user-curated watchlist
 
-**Cross-device sync:**
+Cross-device sync:
 - Watch position saved to Cassandra every 30 seconds during playback
 - On any device: playback service returns last known position for resume
 - Cassandra chosen for: high write throughput (270K writes/sec), eventual consistency acceptable (2-3 second lag between devices is fine)
 - Regional Cassandra clusters with cross-region async replication
 
-**Maturity controls:**
+Maturity controls:
 - Each profile has a maturity rating cap (G, PG, PG-13, R, etc.)
 - Content filtered at the API layer before sending to client
 - Kids profiles have restricted UI and no access to account settings
 - PIN protection for mature profiles
 
-**Session management:**
+Session management:
 - Account can have up to 4 concurrent streams (depends on plan tier)
 - Session registry tracks: (accountId, profileId, deviceId, startedAt, lastHeartbeat)
 - Heartbeat every 30 seconds -- session considered dead after 2 missed heartbeats
@@ -6339,7 +6339,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How does Netflix handle offline downloads?',
           answer: `Offline downloads allow subscribers to watch content without an internet connection:
 
-**Download flow:**
+Download flow:
 1. User selects a title and quality level (Low/Medium/High)
 2. Client requests download manifest from API: GET /api/download/{titleId}?quality=HD
 3. Server checks: subscription valid, title downloadable (some licenses prohibit), device download count within limit
@@ -6349,19 +6349,19 @@ Stage 2 -- Ranking (online, at request time, <200ms):
    - 7 days from download (must start watching within a week)
    - 48 hours from first play (once started, must finish within 2 days)
 
-**DRM for offline:**
+DRM for offline:
 - Widevine L1 (Android): hardware-backed DRM, highest security
 - FairPlay (iOS): Apple's DRM framework
 - License includes: content key, expiry times, playback restrictions
 - License renewal: if online when expiry approaches, client silently renews
 - If offline at expiry: content becomes unplayable, must go online to renew
 
-**Storage management:**
+Storage management:
 - Client app tracks: downloaded titles, storage used, expiry dates
 - Smart downloads: auto-delete watched episodes, auto-download next episode
 - Quality adapts to available storage: suggest lower quality if device storage is low
 
-**Concurrency limits:**
+Concurrency limits:
 - Download limits per plan tier (e.g., 6 active downloads for Premium)
 - Tracked server-side per account
 - Deleting a download on one device frees a slot immediately`
@@ -6370,25 +6370,25 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How does Netflix handle multi-device streaming and concurrency?',
           answer: `With 230M+ accounts across TVs, phones, tablets, and laptops, device management is critical:
 
-**Concurrent stream enforcement:**
+Concurrent stream enforcement:
 - Plan tiers: Basic (1 stream), Standard (2), Premium (4)
 - Centralized session registry in EVCache (Memcached): {accountId} -> [{profileId, deviceId, streamId, startedAt, lastHeartbeat}]
 - Each active stream sends heartbeat every 30 seconds
 - Session considered stale after 60 seconds without heartbeat
 
-**Stream start flow:**
+Stream start flow:
 1. Client requests playback: GET /api/playback/{titleId}
 2. Playback service queries session registry for active streams on this account
 3. If under limit: create new session, return manifest URL
 4. If at limit: return error with option to force-stop an existing stream
 5. User can view active devices and terminate sessions remotely
 
-**Device registration:**
+Device registration:
 - Each device gets a unique deviceId on first app install
 - Device fingerprint: device type, OS version, screen resolution, supported codecs, DRM capabilities
 - Used for: selecting optimal encoding (no 4K to a phone), DRM license type, download limits
 
-**Adaptive quality per device:**
+Adaptive quality per device:
 - TV/desktop: up to 4K HDR (16 Mbps)
 - Tablet: up to 1080p (5 Mbps)
 - Phone: up to 720p (3 Mbps) -- saves bandwidth and battery
@@ -6398,13 +6398,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How does Netflix optimize video quality with per-shot encoding?',
           answer: `Per-shot encoding is Netflix's innovation that delivers better quality at lower bitrate:
 
-**The problem with fixed bitrate ladders:**
+The problem with fixed bitrate ladders:
 - Traditional encoding: every scene gets the same bitrate (e.g., 5 Mbps for 1080p)
 - But a dark dialogue scene compresses to near-perfect quality at 1 Mbps
 - While an action sequence with fast motion needs 8 Mbps for the same quality
 - Fixed bitrate wastes bandwidth on simple scenes and starves complex ones
 
-**Netflix per-shot approach:**
+Netflix per-shot approach:
 1. Scene detection: identify shot boundaries in the source video (cut, fade, dissolve)
 2. Complexity analysis: rate each shot for spatial complexity (detail, texture) and temporal complexity (motion, scene changes)
 3. Per-shot encoding: allocate bits proportionally to complexity
@@ -6413,13 +6413,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 4. Quality constraint: every shot must meet minimum VMAF score (Visual Multimethod Assessment Fusion)
 5. Result: same average bitrate, but much better perceptual quality
 
-**VMAF (Video Multimethod Assessment Fusion):**
+VMAF (Video Multimethod Assessment Fusion):
 - Netflix-developed quality metric that correlates with human perception better than PSNR or SSIM
 - Scores from 0-100: <40 is unwatchable, 60-70 is acceptable, 80+ is excellent
 - Every encoded version is VMAF-scored before deployment
 - Versions below threshold are re-encoded with higher bitrate
 
-**Impact:**
+Impact:
 - 20% bandwidth savings at equivalent quality (or better quality at same bandwidth)
 - Particularly effective for animation (many simple frames) and dark scenes (compression-friendly)
 - Enabled Netflix to deliver 4K HDR at 16 Mbps instead of the 25+ Mbps needed with traditional encoding`
@@ -6428,14 +6428,14 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           question: 'How does Netflix use microservices architecture and chaos engineering?',
           answer: `Netflix pioneered microservices and chaos engineering -- both are fundamental to their 99.99% availability:
 
-**Microservices architecture:**
+Microservices architecture:
 - 1,000+ microservices running on AWS (control plane)
 - Each service owns its data and API: User Service, Playback Service, Browse Service, Recommendation Service, etc.
 - Communication: synchronous (gRPC/REST) for request-response, asynchronous (Kafka) for events
 - Service mesh: Zuul (API gateway), Eureka (service discovery), Ribbon (client-side load balancing)
 - Each service independently deployable, scalable, and owned by a dedicated team
 
-**Chaos Engineering (Simian Army):**
+Chaos Engineering (Simian Army):
 - Chaos Monkey: randomly terminates production instances during business hours
   - Forces every service to handle instance failures gracefully
   - If your service cannot survive an instance death, Chaos Monkey will find out in production
@@ -6446,13 +6446,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
   - Tests timeout handling and circuit breaker patterns
 - Conformity Monkey: identifies instances that do not follow best practices (no auto-scaling group, no health check)
 
-**Circuit breaker pattern (Hystrix):**
+Circuit breaker pattern (Hystrix):
 - Every service-to-service call is wrapped in a circuit breaker
 - If downstream service fails >50% of requests: circuit opens, requests fail fast with fallback
 - Fallback strategies: return cached data, return default values, graceful degradation
 - Example: if Recommendation Service is down, show generic "Popular on Netflix" rows instead
 
-**Result:** Netflix can survive the failure of any single service, any AWS availability zone, or even an entire AWS region without visible impact on subscribers.`
+Result: Netflix can survive the failure of any single service, any AWS availability zone, or even an entire AWS region without visible impact on subscribers.`
         }
       ],
 
@@ -6605,19 +6605,19 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/deep-dive-abr.png',
           detail: `Adaptive bitrate streaming is the foundation of Netflix's viewing experience -- it ensures every viewer gets the best possible quality for their network conditions.
 
-**How segment-based streaming works:**
+How segment-based streaming works:
 - Video is split into 2-4 second segments (GOP-aligned for seamless quality switching)
 - Each segment is available at 10+ quality levels (bitrate ladder from 235 kbps to 16 Mbps)
 - Client downloads a manifest file (MPD for DASH, M3U8 for HLS) listing all segment URLs at all qualities
 - Before requesting each segment, the ABR algorithm selects the quality level
 
-**Buffer-Based Adaptation (BBA) -- Netflix's approach:**
+Buffer-Based Adaptation (BBA) -- Netflix's approach:
 - Low buffer (<5s): emergency mode, request lowest quality to avoid rebuffer
 - Growing buffer (5-30s): gradually increase quality, matching rate to measured throughput
 - Full buffer (>30s): request maximum sustainable quality
 - Hysteresis: require 3 consecutive segments at sustained bandwidth before upgrading (prevents oscillation)
 
-**Key metrics (Quality of Experience):**
+Key metrics (Quality of Experience):
 - Startup time: time from play button to first frame (<3 seconds target)
 - Rebuffer ratio: percentage of playback time spent buffering (<0.1% target)
 - Bitrate: average streaming quality (higher is better, but stability matters more)
@@ -6628,13 +6628,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/deep-dive-transcoding.png',
           detail: `The encoding pipeline transforms a single studio master into 1,200+ playback-ready versions:
 
-**Why so many versions?**
+Why so many versions?
 - 10+ resolutions: 320x240, 480x360, 640x480, 720x480, 960x540, 1280x720, 1920x1080, 2560x1440, 3840x2160
 - 4 codecs: H.264 (universal compatibility), H.265 (50% better compression, most modern devices), VP9 (Chrome/Android, royalty-free), AV1 (newest, 20% better than H.265)
 - 5+ bitrate points per resolution-codec combination
 - Multiple audio: stereo, 5.1, Dolby Atmos in multiple languages
 
-**Per-shot encoding pipeline:**
+Per-shot encoding pipeline:
 1. Shot detection: identify scene boundaries using visual difference metrics
 2. Complexity analysis: score each shot for spatial detail and temporal motion
 3. Bitrate allocation: assign variable bitrate per shot based on complexity
@@ -6643,7 +6643,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 6. Assembly: stitch encoded shots back into complete segments
 7. Manifest generation: create DASH/HLS manifests with segment URLs
 
-**Compute cost:**
+Compute cost:
 - Encoding a 2-hour movie across all versions: ~10,000 CPU-hours
 - Netflix's encoding farm: estimated at 100K+ CPU cores on AWS
 - GPU acceleration for AV1 encoding (30x faster than CPU)
@@ -6654,13 +6654,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/deep-dive-open-connect.png',
           detail: `Open Connect is the world's largest single-purpose CDN, handling 15% of all global internet traffic:
 
-**Hardware: Open Connect Appliances (OCAs):**
+Hardware: Open Connect Appliances (OCAs):
 - Custom-designed servers running FreeBSD
 - Each OCA: 36+ NVMe SSDs (100+ TB storage), 100 Gbps network interface
 - A single OCA can serve 80+ Gbps of sustained throughput
 - Software stack: nginx-based serving, custom caching logic, health reporting
 
-**Three-tier deployment:**
+Three-tier deployment:
 1. ISP-embedded (95% of traffic): OCAs installed inside ISP data centers
    - Content is literally inside the last-mile network
    - Zero transit cost for ISPs (traffic stays local)
@@ -6671,14 +6671,14 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 3. Origin on AWS S3 (1% of traffic): complete content library
    - Only serves cache misses and CDN fill operations
 
-**Content fill algorithm:**
+Content fill algorithm:
 - Every night during off-peak hours (2-8 AM local time), OCAs pull new/popular content from origin
 - ML model predicts what will be popular in each region over the next 24 hours
 - Hot content (top 100 titles): replicated to ALL 17,000+ OCAs globally
 - Warm content (top 1,000): replicated to regional OCAs
 - Long-tail content: stored only at origin + nearby IXP OCAs
 
-**Steering algorithm (how clients find the right OCA):**
+Steering algorithm (how clients find the right OCA):
 - Client DNS query -> Netflix DNS resolver -> returns IP of optimal OCA
 - Selection factors: client IP (ISP identification), OCA health/load, geographic proximity
 - If primary OCA is overloaded, client is steered to next-best OCA
@@ -6689,7 +6689,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/deep-dive-recommendations.png',
           detail: `The recommendation engine drives 80% of content watched on Netflix:
 
-**Collaborative filtering (primary signal):**
+Collaborative filtering (primary signal):
 - Build a user-title interaction matrix: rows = users, columns = titles, values = engagement score
 - Matrix factorization (ALS -- Alternating Least Squares): decompose into user vectors and title vectors
 - User embedding: 128-dimensional vector capturing viewing preferences
@@ -6697,20 +6697,20 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 - Prediction: dot product of user and title vectors = predicted engagement score
 - Train on billions of viewing events using Spark on AWS EMR
 
-**Content-based filtering (complementary signal):**
+Content-based filtering (complementary signal):
 - Each title tagged with 1,000+ micro-genres and attributes
 - Examples: "Dark Scandinavian Crime Dramas", "Feel-Good Movies with Strong Female Lead"
 - Tags assigned by human taggers (Netflix employs hundreds) + ML classification
 - Content embedding captures these tags as a vector
 - Match user's past preferences to content vectors for similarity
 
-**Personalized artwork (unique competitive advantage):**
+Personalized artwork (unique competitive advantage):
 - Each title has 10-20 artwork variants showing different characters, scenes, or moods
 - A/B testing determines which artwork drives highest CTR for different user segments
 - Result: a thriller fan sees the suspenseful scene, a comedy fan sees the funny scene -- same title, different hook
 - Increases CTR by 20-30%
 
-**Home page assembly:**
+Home page assembly:
 - 40+ row algorithms run independently: Continue Watching, Top 10, Because You Watched X, Trending, New Releases
 - Row ordering personalized per profile using a separate ranking model
 - Pre-computed hourly and cached in EVCache (Netflix's memcached fork)
@@ -6721,7 +6721,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/deep-dive-chaos.png',
           detail: `Netflix pioneered chaos engineering -- the discipline of proactively injecting failures to build resilient systems:
 
-**The Simian Army:**
+The Simian Army:
 - Chaos Monkey: randomly terminates production EC2 instances during business hours
   - Purpose: ensure every service can survive instance failures without manual intervention
   - Runs continuously -- no service is exempt
@@ -6736,14 +6736,14 @@ Stage 2 -- Ranking (online, at request time, <200ms):
 - Conformity Monkey: scans for instances not following best practices
   - No auto-scaling group, no health check, no tags = flagged for review
 
-**Circuit breaker pattern (Hystrix/Resilience4j):**
+Circuit breaker pattern (Hystrix/Resilience4j):
 - Every remote call wrapped in a circuit breaker with configurable thresholds
 - Closed (normal): requests flow through, failures counted
 - Open (>50% failure rate): requests fail fast immediately, return fallback
 - Half-open (after timeout): send a test request to check if service recovered
 - Fallback examples: cached recommendations, generic content rows, static error pages
 
-**Cultural impact:**
+Cultural impact:
 - "Everything fails" is a core Netflix engineering principle
 - New services cannot launch without chaos testing
 - Failure injection is automated and continuous, not a one-time exercise
@@ -6880,13 +6880,13 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/algo-cdn-routing.png',
           description: `Route each playback request to the optimal Open Connect Appliance using weighted consistent hashing on (clientIP, contentId).
 
-**How it works:**
+How it works:
 - OCAs are placed on a hash ring with weights proportional to their available bandwidth and health score
 - When a playback request arrives, hash(clientIP + contentId) determines the initial OCA candidate
 - The steering service checks if the candidate OCA has the requested content and is healthy
 - If not, walk clockwise on the ring to the next OCA that satisfies both conditions
 
-**Real-time adjustments:**
+Real-time adjustments:
 - OCA health scores are updated every 30 seconds based on CPU, bandwidth utilization, and error rate
 - Unhealthy OCAs are temporarily removed from the ring (zero weight)
 - This allows seamless mid-stream redirection at the next segment boundary`,
@@ -6898,14 +6898,14 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/algo-recommendation.png',
           description: `Netflix uses a two-stage pipeline to balance computational cost with personalization quality.
 
-**Stage 1: Candidate Generation (filter 17,000 titles to ~2,000)**
+Stage 1: Candidate Generation (filter 17,000 titles to ~2,000)
 - Multiple independent retrieval models each produce candidate lists:
   - Matrix factorization: factorize the 260M x 17K user-item interaction matrix into low-dimensional embeddings
   - Content embeddings: neural network maps title features (genre, cast, plot) into a vector space
   - Trending: popularity-weighted by region and time window
 - Union of all candidates produces ~2,000 titles per user
 
-**Stage 2: Ranking (score and order the 2,000 candidates)**
+Stage 2: Ranking (score and order the 2,000 candidates)
 - Deep learning model scores each candidate for this specific user
 - Features: user embedding, item embedding, context (time, device, recency of last watch)
 - Objective: maximize P(watch > 70% of title) -- not just clicks, but meaningful engagement
@@ -6918,7 +6918,7 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/algo-abr.png',
           description: `Netflix ABR decides which quality level to request for each 4-second video segment based primarily on the playback buffer level.
 
-**Algorithm (simplified):**
+Algorithm (simplified):
 1. Measure current buffer level B (seconds of video buffered ahead)
 2. Measure TCP throughput T for the last N segment downloads (moving average)
 3. Select quality level Q:
@@ -6927,9 +6927,9 @@ Stage 2 -- Ranking (online, at request time, <200ms):
    - If B < B_low: Q = lowest quality where bitrate < T * 0.8 (downgrade with safety margin)
    - If B < B_critical (3s): Q = minimum quality (emergency -- prevent rebuffering)
 
-**Hysteresis band:** The gap between B_low and B_high creates a dead zone where quality does not change. This prevents the yo-yo effect of constantly switching quality on a borderline connection.
+Hysteresis band: The gap between B_low and B_high creates a dead zone where quality does not change. This prevents the yo-yo effect of constantly switching quality on a borderline connection.
 
-**Startup strategy:**
+Startup strategy:
 - Start at medium quality (720p) to achieve <3s time-to-first-frame
 - Rapidly upgrade over next 30 seconds as buffer fills`,
           pros: ['Buffer-based is more stable than bandwidth-based (buffer changes slowly, bandwidth is noisy)', 'Hysteresis prevents annoying quality oscillation on borderline connections', 'Emergency downgrade prevents rebuffering -- the worst user experience', 'Startup optimization prioritizes time-to-first-frame over initial quality'],
@@ -6940,14 +6940,14 @@ Stage 2 -- Ranking (online, at request time, <200ms):
           diagramSrc: '/diagrams/netflix/algo-matrix-factorization.png',
           description: `Map users and titles into a shared low-dimensional embedding space where similar users and similar titles are close together.
 
-**How it works:**
+How it works:
 - Construct a 260M x 17K interaction matrix M where M[user][title] = engagement score
 - Factorize M into two matrices: U (260M x d) and V (17K x d) where d = 100-300 dimensions
 - U[i] is user i's embedding vector; V[j] is title j's embedding vector
 - Predicted engagement = dot_product(U[i], V[j])
 - Training: minimize ||M - U*V^T||^2 + regularization using ALS (Alternating Least Squares)
 
-**Why ALS over SGD?**
+Why ALS over SGD?
 - ALS is embarrassingly parallelizable: fix U, solve for V in parallel across titles
 - Netflix's user-item matrix is extremely sparse (~0.1% of entries non-zero)
 - ALS handles implicit feedback (watched/not watched) naturally via weighted loss`,
@@ -6979,27 +6979,27 @@ Stage 2 -- Ranking (online, at request time, <200ms):
       interviewFollowups: [
         {
           question: 'How would you handle a massive new release like a new season of Stranger Things?',
-          answer: `A major release is the hardest CDN challenge because millions of users request the same never-before-cached content simultaneously.\n\n**Pre-release preparation (6-12 hours before):**\n- Pre-position all encoded variants on ALL OCAs worldwide -- not just predicted popular regions\n- Stagger the global rollout by timezone: release at midnight local time per region\n- Allocate extra origin shield capacity to absorb any cache misses\n\n**Release moment:**\n- Content catalog service flips the availability flag\n- Recommendation pipeline pushes the title to "New Releases" and "Trending" rows\n- Push notification to users who have the previous season in their watch history\n\n**Thundering herd mitigation:**\n- Origin shield collapses duplicate cache miss requests -- 1,000 OCA fetches become 1 S3 read\n- Rate-limit origin fetches per title to prevent S3 overload\n- If an OCA is overloaded, steering service redistributes to alternate OCAs at the same ISP or nearby IXP\n\n**Monitoring:** Real-time dashboards track rebuffer rate, start time, and quality distribution per region.`
+          answer: `A major release is the hardest CDN challenge because millions of users request the same never-before-cached content simultaneously.\n\nPre-release preparation (6-12 hours before):\n- Pre-position all encoded variants on ALL OCAs worldwide -- not just predicted popular regions\n- Stagger the global rollout by timezone: release at midnight local time per region\n- Allocate extra origin shield capacity to absorb any cache misses\n\nRelease moment:\n- Content catalog service flips the availability flag\n- Recommendation pipeline pushes the title to "New Releases" and "Trending" rows\n- Push notification to users who have the previous season in their watch history\n\nThundering herd mitigation:\n- Origin shield collapses duplicate cache miss requests -- 1,000 OCA fetches become 1 S3 read\n- Rate-limit origin fetches per title to prevent S3 overload\n- If an OCA is overloaded, steering service redistributes to alternate OCAs at the same ISP or nearby IXP\n\nMonitoring: Real-time dashboards track rebuffer rate, start time, and quality distribution per region.`
         },
         {
           question: 'How does Netflix handle personalized artwork (different thumbnails for different users)?',
-          answer: `Netflix stores 10-20 different thumbnail images per title, and an ML model selects which one to show each user.\n\n**How it works:**\n1. Creative team produces multiple thumbnail variants emphasizing different aspects: romance, action, comedy, star actor\n2. Each variant is tagged with features: dominant genre, featured actor, visual style\n3. Artwork selection model maps (user_embedding, artwork_features) to P(click)\n4. Thumbnail with highest predicted click probability for this user is shown\n\n**Example:** For "Good Will Hunting":\n- Romance fan sees Matt Damon and Minnie Driver together\n- Drama fan sees Robin Williams in a therapy scene\n- Cerebral film fan sees Matt Damon writing equations on a chalkboard\n\n**Infrastructure:** Artwork selection runs during the hourly recommendation pipeline. Selected thumbnail URLs stored in recommendation cache -- no real-time ML inference needed.`
+          answer: `Netflix stores 10-20 different thumbnail images per title, and an ML model selects which one to show each user.\n\nHow it works:\n1. Creative team produces multiple thumbnail variants emphasizing different aspects: romance, action, comedy, star actor\n2. Each variant is tagged with features: dominant genre, featured actor, visual style\n3. Artwork selection model maps (user_embedding, artwork_features) to P(click)\n4. Thumbnail with highest predicted click probability for this user is shown\n\nExample: For "Good Will Hunting":\n- Romance fan sees Matt Damon and Minnie Driver together\n- Drama fan sees Robin Williams in a therapy scene\n- Cerebral film fan sees Matt Damon writing equations on a chalkboard\n\nInfrastructure: Artwork selection runs during the hourly recommendation pipeline. Selected thumbnail URLs stored in recommendation cache -- no real-time ML inference needed.`
         },
         {
           question: 'What happens when a user switches devices mid-movie (e.g., phone to TV)?',
-          answer: `Cross-device resume is powered by watch_history in Cassandra, updated every 30 seconds.\n\n**Flow:**\n1. User watches on phone: client reports position every 30s to Cassandra\n2. User pauses: final position update sent immediately\n3. User opens TV app: client requests playback with profileId\n4. Playback service reads latest position from Cassandra\n5. TV player seeks to that position and begins buffering\n\n**Edge cases:**\n- Both devices active: last-write-wins in Cassandra. Most recent progress update wins\n- Network lag: position might be up to 30 seconds stale. Better to resume slightly earlier than skip content\n- Different quality: TV might play 4K while phone played 720p. Manifest returns all options, TV ABR selects\n\n**Multi-region:** Cassandra replicates across AWS regions with ~1 second eventual consistency lag -- negligible in practice.`
+          answer: `Cross-device resume is powered by watch_history in Cassandra, updated every 30 seconds.\n\nFlow:\n1. User watches on phone: client reports position every 30s to Cassandra\n2. User pauses: final position update sent immediately\n3. User opens TV app: client requests playback with profileId\n4. Playback service reads latest position from Cassandra\n5. TV player seeks to that position and begins buffering\n\nEdge cases:\n- Both devices active: last-write-wins in Cassandra. Most recent progress update wins\n- Network lag: position might be up to 30 seconds stale. Better to resume slightly earlier than skip content\n- Different quality: TV might play 4K while phone played 720p. Manifest returns all options, TV ABR selects\n\nMulti-region: Cassandra replicates across AWS regions with ~1 second eventual consistency lag -- negligible in practice.`
         },
         {
           question: 'How would you design Netflix for live streaming (e.g., live sports)?',
-          answer: `Live streaming fundamentally changes the architecture because content cannot be pre-positioned.\n\n**Key differences from VOD:**\n- No pre-encoding: must transcode in real-time (sub-second latency)\n- No push CDN: content flows through CDN in real-time\n- No per-shot encoding: no time for multi-pass quality optimization\n- Massive simultaneous demand: all viewers watch the same content at once\n\n**Architecture changes needed:**\n1. Live ingest: receive feed via RTMP/SRT, transcode in real-time with GPU encoding\n2. Low-latency segments: reduce from 4s to 1-2s (or CMAF chunked transfer for sub-second)\n3. CDN topology: multicast-tree -- origin to regional fanout to ISP OCAs\n4. Edge caching: live segments cached ~30 seconds (DVR window), then evicted\n\n**Trade-off:** Netflix's architecture is optimized for the opposite workload. Adding live requires significant infrastructure changes.`
+          answer: `Live streaming fundamentally changes the architecture because content cannot be pre-positioned.\n\nKey differences from VOD:\n- No pre-encoding: must transcode in real-time (sub-second latency)\n- No push CDN: content flows through CDN in real-time\n- No per-shot encoding: no time for multi-pass quality optimization\n- Massive simultaneous demand: all viewers watch the same content at once\n\nArchitecture changes needed:\n1. Live ingest: receive feed via RTMP/SRT, transcode in real-time with GPU encoding\n2. Low-latency segments: reduce from 4s to 1-2s (or CMAF chunked transfer for sub-second)\n3. CDN topology: multicast-tree -- origin to regional fanout to ISP OCAs\n4. Edge caching: live segments cached ~30 seconds (DVR window), then evicted\n\nTrade-off: Netflix's architecture is optimized for the opposite workload. Adding live requires significant infrastructure changes.`
         },
         {
           question: 'How does Netflix handle offline downloads with DRM?',
-          answer: `Offline downloads require persistent DRM licenses that work without internet.\n\n**Download flow:**\n1. User requests download with quality preference\n2. Server checks: subscription active, download count within limit (15-25 titles), content downloadable in region\n3. Server generates offline DRM license: 48-hour playback window, 7-day download window, device-bound\n4. Client downloads encrypted video segments to local storage\n5. DRM license stored in device's trusted execution environment\n\n**Playback without internet:** Client decrypts using stored license -- no server needed. When license expires, must reconnect to renew.\n\n**Anti-piracy:** Content encrypted with AES-128 bound to device hardware ID. Cannot transfer to other devices. Widevine L1 (hardware DRM) required for HD/4K.`
+          answer: `Offline downloads require persistent DRM licenses that work without internet.\n\nDownload flow:\n1. User requests download with quality preference\n2. Server checks: subscription active, download count within limit (15-25 titles), content downloadable in region\n3. Server generates offline DRM license: 48-hour playback window, 7-day download window, device-bound\n4. Client downloads encrypted video segments to local storage\n5. DRM license stored in device's trusted execution environment\n\nPlayback without internet: Client decrypts using stored license -- no server needed. When license expires, must reconnect to renew.\n\nAnti-piracy: Content encrypted with AES-128 bound to device hardware ID. Cannot transfer to other devices. Widevine L1 (hardware DRM) required for HD/4K.`
         },
         {
           question: 'How does Netflix implement A/B testing at scale?',
-          answer: `Netflix runs hundreds of concurrent A/B tests across recommendations, UI, streaming, and infrastructure.\n\n**Architecture:**\n- Each user deterministically assigned to experiment groups via hash(userId, experimentId)\n- Consistent assignment: same group for entire experiment duration\n- Experiments can target segments: new users, heavy viewers, specific regions\n\n**What gets tested:** Recommendation algorithms, UI layouts, artwork variants, streaming parameters, encoding quality\n\n**Metrics:**\n- Primary: retention (did user renew next month?)\n- Secondary: hours watched, titles started, search-to-play rate\n- Requires 2+ weeks and millions of users for statistical significance\n\n**Key insight:** Netflix treats EVERYTHING as testable, including chaos engineering parameters.`
+          answer: `Netflix runs hundreds of concurrent A/B tests across recommendations, UI, streaming, and infrastructure.\n\nArchitecture:\n- Each user deterministically assigned to experiment groups via hash(userId, experimentId)\n- Consistent assignment: same group for entire experiment duration\n- Experiments can target segments: new users, heavy viewers, specific regions\n\nWhat gets tested: Recommendation algorithms, UI layouts, artwork variants, streaming parameters, encoding quality\n\nMetrics:\n- Primary: retention (did user renew next month?)\n- Secondary: hours watched, titles started, search-to-play rate\n- Requires 2+ weeks and millions of users for statistical significance\n\nKey insight: Netflix treats EVERYTHING as testable, including chaos engineering parameters.`
         },
       ],
       // -- Interview Tips --
@@ -7435,20 +7435,20 @@ cart {
           question: 'How do you design the product catalog to handle 12M+ products with diverse attributes?',
           answer: `The product catalog is the foundation of the entire platform and must handle extreme heterogeneity:
 
-**Schema-per-category approach:**
+Schema-per-category approach:
 - Products have wildly different attributes: a laptop has RAM and CPU, a shirt has size and color
 - Use a base products table with common fields (ASIN, title, price, sellerId, images)
 - Store category-specific attributes in a JSONB column for flexibility
 - DynamoDB is ideal: schemaless, handles diverse product structures natively
 - Each product identified by ASIN (Amazon Standard Identification Number) — a unique 10-character alphanumeric ID
 
-**Read optimization:**
+Read optimization:
 - Product detail pages are read-heavy (100:1 read-to-write ratio)
 - Cache hot products in Redis with 5-minute TTL (top 1% of products = 50% of traffic)
 - Use CDN for product images with aggressive caching (images rarely change)
 - Denormalize seller info, review summary, and pricing into the product record to avoid joins
 
-**Write path (seller updates):**
+Write path (seller updates):
 - Seller Portal writes to DynamoDB, triggers Change Data Capture (CDC) via DynamoDB Streams
 - CDC events update Elasticsearch index, invalidate Redis cache, and update recommendation features
 - Bulk imports from sellers are rate-limited and processed asynchronously via SQS queue
@@ -7458,24 +7458,24 @@ cart {
           question: 'How does the shopping cart work at scale across devices and sessions?',
           answer: `The cart is deceptively complex — it must persist across devices, handle inventory changes, and support high write throughput:
 
-**Storage choice: DynamoDB**
+Storage choice: DynamoDB
 - Key: userId (partition key), items stored as a list in a single item
 - Single-digit millisecond reads and writes at any scale
 - Global Tables for multi-region replication (cart accessible from any region)
 - TTL on cart items: auto-expire abandoned carts after 90 days
 
-**Cart does NOT reserve inventory:**
+Cart does NOT reserve inventory:
 - Reserving inventory at cart-add time would lock stock for millions of browsing users
 - Instead, inventory is checked at checkout time (optimistic approach)
 - If an item goes out of stock between cart-add and checkout, show a warning and suggest alternatives
 - Price at add time is stored as a snapshot but recalculated at checkout (prices change frequently)
 
-**Merge strategy for anonymous and authenticated users:**
+Merge strategy for anonymous and authenticated users:
 - Anonymous users get a session-based cart (stored with sessionId as key)
 - On login, merge session cart with persisted cart: keep higher quantity for duplicates
 - Conflict resolution: authenticated cart wins for items in both, session cart items are appended
 
-**High-throughput during sales:**
+High-throughput during sales:
 - Cart service is stateless, scales horizontally behind ALB
 - DynamoDB auto-scales provisioned capacity based on traffic patterns
 - Pre-scale capacity 2 hours before known events (Prime Day, Black Friday)
@@ -7485,28 +7485,28 @@ cart {
           question: 'How does the checkout flow work across multiple distributed services?',
           answer: `Checkout is a distributed transaction spanning 5+ services — the Saga pattern with an orchestrator is essential:
 
-**Orchestrator-based Saga (AWS Step Functions):**
+Orchestrator-based Saga (AWS Step Functions):
 
-1. **Validate Cart** — Cart Service confirms all items still exist, recalculates prices
+1. Validate Cart — Cart Service confirms all items still exist, recalculates prices
    - Compensation: None (read-only step)
-2. **Reserve Inventory** — Inventory Service atomically decrements available stock
+2. Reserve Inventory — Inventory Service atomically decrements available stock
    - Compensation: Release reserved inventory
-3. **Authorize Payment** — Payment Service places a hold on the customer card (no capture yet)
+3. Authorize Payment — Payment Service places a hold on the customer card (no capture yet)
    - Compensation: Void the authorization
-4. **Create Order** — Order Service creates order record with PENDING status
+4. Create Order — Order Service creates order record with PENDING status
    - Compensation: Cancel order, mark as FAILED
-5. **Capture Payment** — Payment Service captures the authorized amount
+5. Capture Payment — Payment Service captures the authorized amount
    - Compensation: Refund the captured amount
-6. **Trigger Fulfillment** — Publish order.confirmed event to Kafka
+6. Trigger Fulfillment — Publish order.confirmed event to Kafka
    - Compensation: Cancel fulfillment, return inventory to warehouse
 
-**Why orchestrator over choreography?**
+Why orchestrator over choreography?
 - Orchestrator (Step Functions) maintains a state machine with clear visibility into each step
 - Failed steps trigger compensations in reverse order automatically
 - Dead letter queue catches permanently failed sagas for manual review
 - Full audit trail of every state transition for compliance
 
-**Idempotency is critical:**
+Idempotency is critical:
 - Every step uses an idempotency key derived from the checkout session ID
 - If the network fails mid-saga, the client retries with the same session ID
 - Each service checks its idempotency store before processing (Redis with 24hr TTL)
@@ -7516,29 +7516,29 @@ cart {
           question: 'How do you handle inventory management and prevent race conditions during flash sales?',
           answer: `Inventory consistency is the hardest problem in e-commerce — overselling destroys customer trust:
 
-**Multi-strategy approach based on demand level:**
+Multi-strategy approach based on demand level:
 
-1. **Normal traffic — Optimistic Locking:**
+1. Normal traffic — Optimistic Locking:
    - Inventory table has a version column
    - UPDATE inventory SET quantity = quantity - 1, version = version + 1 WHERE productId = ? AND warehouseId = ? AND quantity >= 1 AND version = ?
    - If version mismatch (concurrent update), retry with backoff (up to 3 retries)
    - Works well when contention is low (99% of products)
 
-2. **High-demand items — Redis Atomic Decrement:**
+2. High-demand items — Redis Atomic Decrement:
    - Pre-load inventory count into Redis: SET inv:{productId} 100
    - Atomic decrement: result = DECR inv:{productId}
    - If result < 0: item sold out, INCR to restore, return error
    - Redis handles 100K+ DECR operations per second on a single key
    - Async sync back to database every 5 seconds
 
-3. **Flash sales (Prime Day) — Pre-allocated Pools:**
+3. Flash sales (Prime Day) — Pre-allocated Pools:
    - Partition total inventory into regional pools before the sale
    - Each region has its own Redis counter: inv:{productId}:{region}
    - Eliminates cross-region contention entirely
    - If one region sells out, overflow requests route to nearest region with stock
    - Reconciliation job rebalances pools every 60 seconds
 
-**Reservation with TTL:**
+Reservation with TTL:
 - Inventory reserved at checkout start, released if checkout not completed within 15 minutes
 - Redis EXPIRE on reservation key provides automatic cleanup
 - Prevents the "holding stock hostage" problem where users start checkout but never finish`
@@ -7547,12 +7547,12 @@ cart {
           question: 'How do you ensure payment idempotency and prevent double charges?',
           answer: `Double-charging a customer is one of the worst possible bugs — idempotency must be built into every layer:
 
-**Client-side idempotency key generation:**
+Client-side idempotency key generation:
 - Frontend generates a UUID v4 for each checkout attempt: X-Idempotency-Key header
 - Same key sent on retries (network timeout, 5xx errors)
 - Different key for genuinely new purchase attempts
 
-**Server-side idempotency enforcement:**
+Server-side idempotency enforcement:
 1. Payment service receives request with idempotency key
 2. Check Redis: EXISTS idempotency:{key}
 3. If exists: return the cached response (same status, same payment ID) — no processing
@@ -7560,18 +7560,18 @@ cart {
 5. Process the payment, store result: SET idempotency:{key} {response_json} EX 86400
 6. Return response to client
 
-**Database-level protection:**
+Database-level protection:
 - Unique constraint on (orderId, paymentAttemptId) in the payments table
 - Even if Redis fails, the database rejects duplicate inserts
 - Optimistic locking on order.paymentStatus prevents concurrent capture attempts
 
-**Authorization vs Capture separation:**
+Authorization vs Capture separation:
 - Authorization (hold) at checkout: funds reserved on the customer card
 - Capture (charge) at fulfillment: actual money transfer when item ships
 - If fulfillment fails, void the authorization (no charge to customer)
 - Auth hold expires after 7 days (card network rules) — capture must happen before expiry
 
-**Reconciliation as safety net:**
+Reconciliation as safety net:
 - Nightly job compares payment gateway records with internal ledger
 - Flags discrepancies: authorized but never captured, captured but no order record
 - Auto-resolves simple cases (void stale authorizations), escalates complex ones to ops team`
@@ -7580,27 +7580,27 @@ cart {
           question: 'How do you build search and filtering across 12M+ products in under 200ms?',
           answer: `Product search is the primary discovery mechanism — it must be fast, relevant, and handle complex queries:
 
-**Elasticsearch cluster architecture:**
+Elasticsearch cluster architecture:
 - 12M products indexed across 20+ shards (partitioned by category for relevance)
 - 3 replicas per shard for availability and read throughput
 - Separate indices for different product verticals (electronics, books, clothing)
 - Each index has custom analyzers for product-specific tokenization
 
-**Query processing pipeline:**
-1. **Query understanding:** "iPhone 15 case red" parsed to brand:Apple, category:phone-cases, color:red
-2. **Spell correction:** "samgsung" corrected to "samsung" (using query log frequency + edit distance)
-3. **Synonym expansion:** "laptop" also matches "notebook computer"
-4. **Filter-then-score:** Apply category, price range, Prime eligibility as filters FIRST (cached, fast), then score remaining docs
-5. **BM25 + custom ranking:** BM25 for text relevance, boosted by sales velocity, review rating, and freshness
-6. **Learning-to-rank:** ML model reranks top 1000 results using 200+ features (click-through rate, conversion rate, return rate)
-7. **Personalization:** Boost results based on user purchase history and browsing behavior
+Query processing pipeline:
+1. Query understanding: "iPhone 15 case red" parsed to brand:Apple, category:phone-cases, color:red
+2. Spell correction: "samgsung" corrected to "samsung" (using query log frequency + edit distance)
+3. Synonym expansion: "laptop" also matches "notebook computer"
+4. Filter-then-score: Apply category, price range, Prime eligibility as filters FIRST (cached, fast), then score remaining docs
+5. BM25 + custom ranking: BM25 for text relevance, boosted by sales velocity, review rating, and freshness
+6. Learning-to-rank: ML model reranks top 1000 results using 200+ features (click-through rate, conversion rate, return rate)
+7. Personalization: Boost results based on user purchase history and browsing behavior
 
-**Faceted search (sidebar filters):**
+Faceted search (sidebar filters):
 - Aggregations computed alongside search results: brand counts, price range histogram, rating distribution
 - Pre-computed facets for top categories cached in Redis (updated every 15 minutes)
 - Dynamic facets based on search context: searching "laptop" shows RAM and screen size facets
 
-**Performance optimizations:**
+Performance optimizations:
 - Query result cache: 60% hit rate for popular queries (Redis, 5-minute TTL)
 - Warm cache before Prime Day with predicted popular queries
 - Timeout at 200ms: if query exceeds budget, return partial results with "more results available" flag
@@ -7610,30 +7610,30 @@ cart {
           question: 'How does the recommendation engine work at Amazon scale?',
           answer: `Amazon credits recommendations with driving 35% of revenue — it is a core infrastructure concern, not a nice-to-have:
 
-**Collaborative filtering (primary approach):**
+Collaborative filtering (primary approach):
 - Item-to-item collaborative filtering: find items frequently purchased together
 - Build item similarity matrix from purchase history
 - Pre-computed offline in batch (Spark/EMR), stored in DynamoDB for real-time lookup
 - Update daily with incremental computation on new purchases
 
-**Content-based filtering (cold start):**
+Content-based filtering (cold start):
 - For new products with no purchase history, use product attributes for similarity
 - TF-IDF on product descriptions, category matching, brand affinity
 - Gradually blend with collaborative filtering as purchase data accumulates
 
-**Real-time personalization:**
+Real-time personalization:
 - User recent browsing session feeds into a real-time scoring model
 - Features: items viewed in last 30 minutes, cart contents, search queries
 - Lightweight ML model (logistic regression or small neural net) scores candidate items
 - Served from a low-latency feature store (Redis + DynamoDB)
 
-**Multiple recommendation surfaces:**
+Multiple recommendation surfaces:
 - "Frequently bought together" — item-item co-purchase matrix
 - "Customers who viewed this also viewed" — item-item co-view matrix
 - "Recommended for you" (homepage) — user-item collaborative filtering + content
 - "Inspired by your browsing history" — real-time session-based scoring
 
-**A/B testing infrastructure:**
+A/B testing infrastructure:
 - Every recommendation algorithm change is A/B tested on 1-5% of traffic
 - Primary metric: revenue per session, secondary: click-through rate, add-to-cart rate
 - Experimentation platform runs 1000+ concurrent A/B tests across Amazon`
@@ -7642,38 +7642,38 @@ cart {
           question: 'How do you design the order fulfillment pipeline from checkout to delivery?',
           answer: `Order fulfillment is a multi-stage event-driven pipeline connecting digital systems to physical warehouses:
 
-**Event-driven architecture (Kafka):**
+Event-driven architecture (Kafka):
 - order.confirmed event triggers the entire fulfillment chain
 - Each stage publishes events consumed by downstream services
 - Loose coupling: adding a new fulfillment center requires zero code changes
 
-**Pipeline stages:**
-1. **Order Routing** — Determine which warehouse fulfills the order
+Pipeline stages:
+1. Order Routing — Determine which warehouse fulfills the order
    - Factors: inventory availability, distance to customer, shipping cost, warehouse load
    - Algorithm: weighted scoring across all factors, select optimal warehouse
    - Split orders across warehouses if no single one has all items
 
-2. **Pick and Pack** — Warehouse Management System (WMS) integration
+2. Pick and Pack — Warehouse Management System (WMS) integration
    - Generate pick list for warehouse workers (optimize walking path)
    - Barcode scan verification at pack station
    - Weight check: packed weight must match expected weight (fraud prevention)
 
-3. **Ship Label Generation** — Carrier integration (UPS, FedEx, USPS, Amazon Logistics)
+3. Ship Label Generation — Carrier integration (UPS, FedEx, USPS, Amazon Logistics)
    - Select carrier based on delivery speed, cost, and destination
    - Generate shipping label with tracking number
    - Publish shipment.created event with carrier and tracking info
 
-4. **Tracking Updates** — Real-time status from carrier APIs
+4. Tracking Updates — Real-time status from carrier APIs
    - Poll carrier tracking APIs every 15 minutes (or receive webhook updates)
    - Status transitions: PICKED, PACKED, SHIPPED, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED
    - Push notifications to customer at each status change
 
-5. **Delivery Confirmation** — Carrier confirms delivery
+5. Delivery Confirmation — Carrier confirms delivery
    - Photo proof of delivery stored in S3
    - delivery.confirmed event triggers review request email (after 3-day delay)
    - Start return window timer (30 days for most items)
 
-**Handling failures:**
+Handling failures:
 - If warehouse cannot fulfill (damaged inventory): reroute to next-nearest warehouse
 - If carrier loses package: auto-initiate replacement after 7 days with no tracking update
 - If customer refuses delivery: trigger return flow, re-inventory item at nearest warehouse`
@@ -7682,13 +7682,13 @@ cart {
           question: 'How do you handle Prime Day traffic spikes (10-100x normal load)?',
           answer: `Prime Day is Amazon biggest engineering challenge — 10x or more normal traffic compressed into 48 hours:
 
-**Pre-scaling (weeks before):**
+Pre-scaling (weeks before):
 - Capacity planning: analyze previous Prime Day traffic patterns, add 50% buffer
 - Pre-provision EC2 instances, DynamoDB capacity, ElastiCache nodes
 - Pre-warm CDN caches with product images and static assets
 - Load test the full checkout flow at 2x expected peak
 
-**Traffic management during the event:**
+Traffic management during the event:
 - Virtual waiting room for flash deals: queue customers, release in batches
 - Rate limiting per customer: max 10 add-to-cart per second, max 3 checkout attempts per minute
 - Graceful degradation tiers:
@@ -7697,19 +7697,19 @@ cart {
   - Tier 3 (critical): Static product pages from CDN, checkout only for items already in cart
   - Tier 4 (emergency): Serve high traffic page, queue all requests
 
-**Inventory pre-allocation:**
+Inventory pre-allocation:
 - Partition deal inventory by region before the sale starts
 - Each region has its own Redis counter — no cross-region contention
 - Popular deals get dedicated Redis clusters (isolated from other traffic)
 - When a deal sells out, remove from listing within 2 seconds (CDC to Elasticsearch)
 
-**Database protection:**
+Database protection:
 - Read replicas handle 95% of product page reads
 - Write traffic (orders, inventory) routed to primary with connection pooling
 - Circuit breaker on non-critical services (recommendations, analytics, wishlists)
 - If payment gateway latency exceeds 3 seconds, queue orders for async processing
 
-**Post-event:**
+Post-event:
 - Downscale infrastructure over 6 hours (not instantly — handle stragglers)
 - Reconciliation job: verify all inventory counts match across Redis and database
 - Analyze performance: identify bottlenecks for next year preparation`
@@ -7718,7 +7718,7 @@ cart {
           question: 'How do you choose between SQL and DynamoDB for different parts of the system?',
           answer: `Amazon architecture uses a polyglot persistence strategy — different databases for different access patterns:
 
-**DynamoDB (NoSQL) — for high-throughput, key-value access:**
+DynamoDB (NoSQL) — for high-throughput, key-value access:
 - Product catalog: Partition key = ASIN, schemaless attributes
   - Why: 12M+ products with wildly different schemas, single-digit ms reads at any scale
 - Shopping cart: Partition key = userId, cart items as a list attribute
@@ -7726,7 +7726,7 @@ cart {
 - Session store: Partition key = sessionId, TTL for auto-expiry
   - Why: Simple key-value access pattern, auto-scaling, no joins needed
 
-**PostgreSQL (SQL) — for complex queries and strong consistency:**
+PostgreSQL (SQL) — for complex queries and strong consistency:
 - Orders: Requires ACID transactions (order + order_items in one transaction)
   - Why: Must guarantee order creation is atomic, support complex queries (order history, filtering by status)
 - Inventory: Requires strong consistency with optimistic locking
@@ -7734,16 +7734,16 @@ cart {
 - User accounts: Relational data with joins (user, addresses, payment methods, order history)
   - Why: Complex queries for customer service tools, strong consistency for account operations
 
-**Elasticsearch — for full-text search:**
+Elasticsearch — for full-text search:
 - Product search index: Denormalized product data for fast retrieval
   - Why: BM25 ranking, faceted filtering, spell correction — none of this exists in DynamoDB or PostgreSQL
   - Fed by CDC from DynamoDB Streams (product updates) and PostgreSQL WAL (inventory/pricing changes)
 
-**Redis — for ephemeral high-speed data:**
+Redis — for ephemeral high-speed data:
 - Inventory counters (flash sales), query result cache, rate limiting, session cache
   - Why: Sub-millisecond latency, atomic operations (DECR for inventory), TTL for auto-cleanup
 
-**Key principle:** Each service owns its database. The Product Service uses DynamoDB, the Order Service uses PostgreSQL, the Search Service uses Elasticsearch. Data flows between them via events (Kafka/CDC), not shared databases.`
+Key principle: Each service owns its database. The Product Service uses DynamoDB, the Order Service uses PostgreSQL, the Search Service uses Elasticsearch. Data flows between them via events (Kafka/CDC), not shared databases.`
         },
       ],
 
@@ -8189,12 +8189,12 @@ presence {
           question: 'How does Operational Transformation (OT) work and why does Google use it?',
           answer: `OT is the algorithm that makes real-time collaborative editing possible — it transforms concurrent operations so all clients converge to the same document state:
 
-**The core problem:**
+The core problem:
 - User A inserts "X" at position 5, User B inserts "Y" at position 3
 - Both started from the same document state (revision 10)
 - Without transformation, applying both operations produces different results depending on order
 
-**How OT resolves this:**
+How OT resolves this:
 1. Both operations arrive at the server with baseRevision: 10
 2. Server processes A first (arbitrary but deterministic choice), assigns revision 11
 3. When processing B (also based on rev 10), server transforms B against A:
@@ -8205,13 +8205,13 @@ presence {
    - A's position becomes 5+1=6 (shifted right by B's insert)
 5. Both clients apply the transformed operations and converge to identical state
 
-**Transform function types:**
+Transform function types:
 - INSERT vs INSERT: Adjust position based on which comes first
 - INSERT vs DELETE: If delete range includes insert position, split the delete
 - DELETE vs DELETE: Handle overlapping ranges, merge if adjacent
 - FORMAT vs INSERT/DELETE: Adjust format range boundaries
 
-**Why Google chose OT over CRDT:**
+Why Google chose OT over CRDT:
 - OT produces more intuitive merge results for text editing
 - Operations are compact (type + position + content) vs CRDT's larger data structures
 - Central server provides a single source of truth for operation ordering
@@ -8221,7 +8221,7 @@ presence {
           question: 'What are the tradeoffs between OT and CRDT for conflict resolution?',
           answer: `This is one of the most important architectural decisions in collaborative editing — each approach has fundamental tradeoffs:
 
-**Operational Transformation (OT):**
+Operational Transformation (OT):
 - Requires a central server to establish a canonical operation order
 - Operations are small and bandwidth-efficient (just the delta)
 - Transform complexity is O(N^2) in the worst case (N concurrent operations)
@@ -8229,7 +8229,7 @@ presence {
 - Server assigns sequential revision numbers — total ordering is straightforward
 - Composition optimization: batch multiple operations into one for efficiency
 
-**CRDT (Conflict-free Replicated Data Types):**
+CRDT (Conflict-free Replicated Data Types):
 - No central coordinator needed — operations commute by construction
 - Convergence is mathematically guaranteed regardless of operation order
 - Each character gets a unique ID (fractional index or tree position)
@@ -8237,12 +8237,12 @@ presence {
 - Better for peer-to-peer and offline-heavy scenarios
 - Used by Figma (for canvas objects), Notion (hybrid), and Yjs (open-source library)
 
-**When to choose which:**
+When to choose which:
 - OT: Centralized SaaS product with reliable server connectivity (Google Docs model)
 - CRDT: Peer-to-peer collaboration, offline-first apps, or when you need decentralized sync
 - Hybrid: Some systems use OT for the server-client protocol but CRDT-like structures internally
 
-**Practical considerations:**
+Practical considerations:
 - OT is harder to implement correctly (many subtle edge cases in transform functions)
 - CRDT garbage collection is complex (tombstones for deleted characters accumulate)
 - For a system design interview: recommend OT with central server for simplicity and proven track record`
@@ -8251,26 +8251,26 @@ presence {
           question: 'How do you handle conflict resolution when multiple users edit the same paragraph?',
           answer: `Conflict resolution is the core correctness challenge — even with OT, there are subtle scenarios:
 
-**Server-side conflict resolution flow:**
+Server-side conflict resolution flow:
 1. Server maintains a linear revision history: rev 1, rev 2, rev 3, ...
 2. Each client sends operations with their last-known baseRevision
 3. If baseRevision equals current server revision: apply directly, assign next revision
 4. If baseRevision is behind (client missed some operations): transform the incoming operation against all operations between baseRevision and current revision
 5. After transformation, apply the result and broadcast to all clients
 
-**Client-side handling:**
+Client-side handling:
 1. Client applies operations locally immediately (optimistic UI)
 2. Sends operation to server, keeps it in a "pending" buffer
 3. When server acknowledges, remove from pending buffer
 4. When receiving remote operations, transform pending operations against received ones
 5. Apply transformed remote operation to local document
 
-**The three states of a client operation:**
-- **Synchronized:** No pending operations, client matches server state exactly
-- **Awaiting ACK:** One operation sent to server, waiting for confirmation
-- **Awaiting ACK with buffer:** Additional operations queued while waiting for ACK
+The three states of a client operation:
+- Synchronized: No pending operations, client matches server state exactly
+- Awaiting ACK: One operation sent to server, waiting for confirmation
+- Awaiting ACK with buffer: Additional operations queued while waiting for ACK
 
-**Character-level interleaving prevention:**
+Character-level interleaving prevention:
 - When two users type in the same location, OT ensures one user's text appears before the other
 - Tie-breaking: use userId comparison (deterministic) to decide which insert goes first
 - Result: User A's text appears contiguously, then User B's — no interleaving`
@@ -8279,29 +8279,29 @@ presence {
           question: 'How do you synchronize cursor positions and selections across all editors?',
           answer: `Cursor synchronization is the visual feedback that makes collaboration feel real-time:
 
-**Presence protocol (via WebSocket):**
+Presence protocol (via WebSocket):
 - Each client sends cursor updates: { userId, cursorPosition, selectionStart, selectionEnd }
 - Updates are throttled to every 50ms (20 updates/second max) to prevent flooding
 - Each collaborator is assigned a unique color (from a predefined palette)
 
-**Position tracking challenge:**
+Position tracking challenge:
 - Cursor positions are character indices, which change when other users insert or delete text
 - When a remote operation inserts 5 characters before your cursor: your cursor must shift right by 5
 - Solution: Transform cursor positions using the same OT transform functions as text operations
 
-**Optimization for documents with many editors:**
+Optimization for documents with many editors:
 - Only show cursors for editors who are within the current viewport
 - Group distant editors into a count badge: "3 others editing below"
 - Reduce cursor update frequency for editors far from the viewport (every 500ms instead of 50ms)
 - Typing indicator: show "User A is typing..." when receiving rapid operations from a user
 
-**Presence heartbeat:**
+Presence heartbeat:
 - Clients send heartbeat every 30 seconds via WebSocket
 - Server removes stale cursors after 60 seconds of no heartbeat
 - Color is recycled when a user disconnects (assigned to next joiner)
 - "X users viewing" badge for users with document open but not actively editing
 
-**Implementation detail:**
+Implementation detail:
 - Cursor positions stored in Redis with TTL (ephemeral, not persisted to database)
 - On document load, server sends current presence state with all active cursors
 - Cursor updates are broadcast via WebSocket but NOT stored in the operation log (they are ephemeral)`
@@ -8310,13 +8310,13 @@ presence {
           question: 'How does offline editing work and how do you sync when reconnecting?',
           answer: `Offline editing is critical for mobile users and unreliable networks — users must never lose work:
 
-**Offline operation buffering:**
+Offline operation buffering:
 1. Client detects disconnection (WebSocket close event or heartbeat timeout)
 2. All new operations are queued in IndexedDB (persistent local storage)
 3. Operations applied locally immediately — the user sees their edits in real-time
 4. Document state diverges from server state while offline
 
-**Reconnection sync protocol:**
+Reconnection sync protocol:
 1. Client reconnects via WebSocket, sends last known revision number (e.g., rev 42)
 2. Server sends all operations from rev 42 to current (e.g., rev 78) — 36 missed operations
 3. Client transforms its buffered offline operations against each of the 36 server operations sequentially
@@ -8324,12 +8324,12 @@ presence {
 5. Client sends its transformed offline operations to the server
 6. Server validates, assigns new revision numbers, broadcasts to other clients
 
-**Edge cases handled:**
+Edge cases handled:
 - Very long offline period (hours): Large batch of operations to transform. Client may show a "syncing" indicator during the process
 - Conflicting offline edits (two users edited same paragraph offline): OT resolves deterministically — both converge, though the result may surprise one user
 - Structural conflicts (one user deleted a section, another edited it): Deleted content is restored with edits applied, or edits are discarded with notification to the user
 
-**Data durability:**
+Data durability:
 - IndexedDB stores both the current document snapshot and the operation queue
 - Even if the browser crashes, offline changes are recoverable on next open
 - Periodic local snapshots (every 60 seconds) reduce the number of operations to replay`
@@ -8338,30 +8338,30 @@ presence {
           question: 'How do you design the permission model for sharing and access control?',
           answer: `Permissions are critical for enterprise adoption and must be enforced at every layer:
 
-**Permission levels (hierarchical):**
-1. **Owner** — Full control: delete document, transfer ownership, manage all permissions
-2. **Editor** — Can edit content, add comments, and see version history
-3. **Commenter** — Can view content and add comments/suggestions, but cannot edit
-4. **Viewer** — Read-only access, can see content but not modify or comment
+Permission levels (hierarchical):
+1. Owner — Full control: delete document, transfer ownership, manage all permissions
+2. Editor — Can edit content, add comments, and see version history
+3. Commenter — Can view content and add comments/suggestions, but cannot edit
+4. Viewer — Read-only access, can see content but not modify or comment
 
-**Sharing mechanisms:**
+Sharing mechanisms:
 - Direct share: Grant permission to a specific email/Google account
 - Link sharing: Generate a shareable URL with configurable access level
 - Domain restriction: Limit link access to a specific organization domain
 - Public: Anyone with the link can access (used for published documents)
 
-**Real-time permission enforcement:**
+Real-time permission enforcement:
 - Permissions checked at WebSocket connection time and on every operation
 - If permission is revoked while a user is connected: server sends PERMISSION_REVOKED event, client switches to read-only mode instantly
 - Editor-to-viewer downgrade: client disables the editing UI, shows notification
 - Permission changes are broadcast to all connected clients via WebSocket
 
-**Server-side enforcement:**
+Server-side enforcement:
 - Every operation includes the userId — server verifies permission before applying
 - Viewers receive operations (to see real-time updates) but cannot send operations
 - Commenters can only send COMMENT operations, not INSERT/DELETE/FORMAT
 
-**Enterprise features:**
+Enterprise features:
 - Audit log: Track who accessed/edited the document and when
 - Expiring access: Share link valid for 7 days, then auto-revoke
 - Watermarking: Viewer sees their email embedded in the document (leaker identification)`
@@ -8370,30 +8370,30 @@ presence {
           question: 'How do you implement version history and allow restoring previous versions?',
           answer: `Version history is essential for trust — users need to know they can always undo mistakes:
 
-**Operation log as the source of truth:**
+Operation log as the source of truth:
 - Every operation is appended to an immutable log: (documentId, revision, userId, operation, timestamp)
 - Stored in Cassandra (append-only, partition by documentId, cluster by revision)
 - The operation log enables replaying the entire document history from scratch
 
-**Periodic snapshots for performance:**
+Periodic snapshots for performance:
 - Full document snapshot saved every 100 operations or every 5 minutes (whichever comes first)
 - Stored in GCS/S3 as compressed blobs
 - To reconstruct document at revision N: load nearest snapshot before N, replay operations from snapshot to N
 - Without snapshots, loading version history for a document with 1M operations would require replaying all 1M — impractical
 
-**Version grouping for the UI:**
+Version grouping for the UI:
 - Users do not want to see every keystroke — group operations into meaningful revisions
 - Grouping heuristic: operations by the same user within 30 seconds of each other form one revision
 - Each grouped revision shows: author, timestamp, and a diff summary ("Added 3 paragraphs, deleted 1")
 - Named versions: users can manually name a version ("Final Draft", "v2 after feedback")
 
-**Restore mechanism:**
+Restore mechanism:
 - Restore creates a NEW revision (does not delete history) that sets the document to the target state
 - This is implemented as a large INSERT operation that replaces all content
 - The restore operation goes through OT like any other — concurrent editors see the restore happen
 - All active editors receive the restored content via their WebSocket connections
 
-**Storage optimization:**
+Storage optimization:
 - Keep full operation log for 30 days (hot storage)
 - After 30 days: keep only snapshots (one per hour) + diff summaries
 - After 1 year: keep daily snapshots only (cold storage)`
@@ -8402,35 +8402,35 @@ presence {
           question: 'How does the real-time sync protocol work over WebSocket?',
           answer: `The sync protocol is the heart of the collaboration system — it must be reliable, ordered, and efficient:
 
-**Connection establishment:**
+Connection establishment:
 1. Client opens document: HTTP GET /api/doc/{id} returns latest snapshot + current revision number
 2. Client establishes WebSocket connection: /ws/doc/{id}/collaborate
 3. Server authenticates, checks permissions, adds client to the document's collaboration session
 4. Server sends current presence state (all active cursors and their positions)
 5. Client is now ready to send/receive operations from the current revision forward
 
-**Operation protocol (client to server):**
+Operation protocol (client to server):
 - Client sends: { type: 'operation', baseRevision: 42, ops: [{insert: 'hello', position: 15}] }
 - Server validates permission, transforms if needed, assigns revision 43
 - Server responds with ACK: { type: 'ack', revision: 43 }
 - Client moves to synchronized state
 
-**Operation broadcast (server to client):**
+Operation broadcast (server to client):
 - Server sends to all other clients: { type: 'operation', userId: 'abc', revision: 43, ops: [...] }
 - Each receiving client transforms their pending operations against this received operation
 - Client applies the transformed operation to their local document
 
-**Heartbeat and connection health:**
+Heartbeat and connection health:
 - Client sends ping every 30 seconds, server responds with pong
 - If no pong received within 10 seconds: client assumes disconnect, buffers operations locally
 - Server removes disconnected client from presence after 60 seconds
 
-**Batching optimization:**
+Batching optimization:
 - Fast typists generate 5-10 operations per second (one per keystroke)
 - Client batches operations: collect for 50ms, compose into single operation, send as one
 - This reduces WebSocket traffic by 5-10x and server transform load proportionally
 
-**Reconnection:**
+Reconnection:
 - Client reconnects with last acknowledged revision number
 - Server sends all operations since that revision (catch-up)
 - Client transforms and applies, then sends any buffered offline operations`
@@ -8439,33 +8439,33 @@ presence {
           question: 'How do you store documents and what database choices make sense?',
           answer: `Document storage has three distinct concerns with different access patterns:
 
-**1. Operation Log — Cassandra (or Cloud Spanner)**
+1. Operation Log — Cassandra (or Cloud Spanner)
 - Append-only writes: 500K+ operations per second globally
 - Partition by documentId, cluster by revision number (ascending)
 - Each operation is small (~100 bytes): type, position, content, userId, timestamp
 - Read pattern: range scan from revision X to current (for catch-up and history)
 - Why Cassandra: write-optimized LSM-tree, linear scaling, partition-aware queries
 
-**2. Document Snapshots — GCS/S3 (Object Storage)**
+2. Document Snapshots — GCS/S3 (Object Storage)
 - Periodic full snapshots of document content (every 100 ops or 5 minutes)
 - Snapshot is a complete document state: content + formatting + metadata
 - Compressed with gzip (~70% reduction for text documents)
 - Read pattern: load latest snapshot when opening a document (infrequent, latency-tolerant)
 - Why object storage: cheap, durable, no query requirements
 
-**3. Document Metadata — Cloud Spanner (or PostgreSQL)**
+3. Document Metadata — Cloud Spanner (or PostgreSQL)
 - Relational data: ownership, sharing permissions, collaborator list, document settings
 - Strong consistency required (permission changes must be immediately enforced)
 - Queries: "list my documents", "find shared with me", "recently edited"
 - Why Spanner/PostgreSQL: ACID transactions, rich queries, foreign key relationships
 
-**Active document state — In-memory (on collaboration server)**
+Active document state — In-memory (on collaboration server)
 - Currently open documents are loaded into memory on the collaboration server
 - The in-memory state includes: current content, pending operations buffer, connected clients
 - Sticky sessions via consistent hashing ensure all clients for one document hit the same server
 - On server failure: new server loads latest snapshot + replays operation log from Cassandra
 
-**Why not a single database?**
+Why not a single database?
 - Operations require extreme write throughput (Cassandra)
 - Snapshots are large blobs best stored in object storage
 - Metadata needs relational queries and strong consistency (Spanner)
@@ -8475,35 +8475,35 @@ presence {
           question: 'How do you handle collaboration awareness and rich presence features?',
           answer: `Collaboration awareness goes beyond just showing cursors — it creates the feeling of working together:
 
-**Active collaborator list:**
+Active collaborator list:
 - When a user opens a document, they are added to the active collaborator list
 - The list is displayed in the document header: avatars of all current viewers/editors
 - Clicking an avatar scrolls to that user's cursor position
 - Badge shows count when more than 5 collaborators: "User A, B, C, +12 others"
 
-**Cursor and selection rendering:**
+Cursor and selection rendering:
 - Each collaborator gets a unique color (consistent across sessions via hash of userId)
 - Cursor: colored vertical bar with the user's name label above it
 - Selection: colored highlight showing the selected text range
 - Transform cursor/selection positions when remote operations change the document
 
-**Typing indicators:**
+Typing indicators:
 - When a user types rapidly (>2 operations per second), show "User A is typing..." near their cursor
 - Auto-expires after 3 seconds of inactivity
 - Useful for coordination: see that someone is actively editing a paragraph before you start editing it
 
-**Follow mode:**
+Follow mode:
 - Click "Follow User A" to have your viewport automatically scroll to follow their cursor
 - Useful for presentations and code reviews
 - Disengages automatically when you start editing
 
-**Comment and suggestion threads:**
+Comment and suggestion threads:
 - Anchored to specific text ranges (tracked like cursor positions, transformed on edits)
 - Real-time updates: new comments appear instantly for all collaborators
 - Suggestion mode: proposed edits shown as colored diffs, can be accepted/rejected by editors
 - Notification: @mentions trigger email/push notifications to tagged users
 
-**Activity feed:**
+Activity feed:
 - Side panel showing recent activity: "User A edited paragraph 3", "User B added a comment"
 - Useful for catching up on changes made while you were away`
         },
@@ -8511,30 +8511,30 @@ presence {
           question: 'How do you scale WebSocket servers for millions of concurrent editing sessions?',
           answer: `Scaling real-time collaboration requires careful architecture around WebSocket connection management:
 
-**Sticky sessions per document:**
+Sticky sessions per document:
 - All clients editing the same document must connect to the SAME collaboration server
 - This is critical because the OT engine maintains in-memory state for each document
 - Route using consistent hashing: hash(documentId) -> serverId
 - WebSocket gateway (Envoy/HAProxy) applies the routing rule at connection time
 
-**Server capacity planning:**
+Server capacity planning:
 - Each server handles ~10K concurrent WebSocket connections
 - Each active document session consumes ~1MB of memory (document state + operation buffer + client list)
 - A server with 32GB RAM can handle ~10K documents and ~10K connections
 - 5,000 servers for 50M concurrent connections
 
-**Document session lifecycle:**
+Document session lifecycle:
 - When first client opens a document: server loads latest snapshot from GCS, replays recent ops from Cassandra
 - Document stays in memory while any client is connected (hot state)
 - When last client disconnects: flush final snapshot to GCS, evict from memory after 5 minutes (grace period for reconnection)
 - If the collaboration server crashes: clients reconnect to a new server, which reloads from snapshot + op log
 
-**Horizontal scaling strategy:**
+Horizontal scaling strategy:
 - Add/remove servers dynamically based on connection count
 - Consistent hashing with virtual nodes minimizes document migration when scaling
 - During rebalancing: old server keeps document hot, new server loads from storage, clients seamlessly redirect
 
-**Multi-region deployment:**
+Multi-region deployment:
 - Users connect to the nearest region for low-latency presence/cursor updates
 - Operations are replicated to the "home region" of the document for OT processing
 - Cross-region latency (100-200ms) is acceptable for text operations but noticeable for cursor sync
@@ -8974,35 +8974,35 @@ refunds {
           question: 'How do you achieve exactly-once payment processing with idempotency keys?',
           answer: `Exactly-once processing is the single most important guarantee in a payment system — double charges destroy trust:
 
-**Client-side idempotency key generation:**
+Client-side idempotency key generation:
 - Client generates a UUID v4 for each payment attempt and sends it as X-Idempotency-Key header
 - On network timeout or 5xx error, the client retries with THE SAME key
 - For a genuinely new payment attempt (user clicks "Pay" again), generate a NEW key
 
-**Server-side idempotency enforcement (3-layer protection):**
+Server-side idempotency enforcement (3-layer protection):
 
-1. **Redis fast path (sub-millisecond):**
+1. Redis fast path (sub-millisecond):
    - On request: GET idempotency:{key} from Redis
    - If found: return cached response immediately (no processing)
    - If not found: SET idempotency:{key} "processing" EX 86400 (24hr TTL, NX flag for atomicity)
    - If SET fails (another thread processing same key): wait 100ms, retry GET
 
-2. **Database constraint (safety net):**
+2. Database constraint (safety net):
    - Unique constraint on (merchantId, idempotencyKey) in the payments table
    - Even if Redis fails, the database INSERT rejects duplicates
    - This is the last line of defense against double charges
 
-3. **State machine protection:**
+3. State machine protection:
    - Payment status transitions: CREATED -> AUTHORIZED -> CAPTURED -> SETTLED
    - Each transition is guarded: cannot capture an already-captured payment
    - Optimistic locking with version numbers prevents concurrent state changes
 
-**After successful processing:**
+After successful processing:
 - Store the full response in Redis: SET idempotency:{key} {response_json} EX 86400
 - Any retry with the same key returns this cached response
 - Response includes the same paymentId, status, and amount — client cannot distinguish from original
 
-**Edge case — processing crash:**
+Edge case — processing crash:
 - If server crashes between "SET processing" and actual processing: key is locked for 24hrs
 - Solution: use a shorter processing lock (60 seconds) with a separate completed lock (24 hours)
 - Reconciliation job detects "stuck in processing" keys and cleans up after 5 minutes`
@@ -9011,16 +9011,16 @@ refunds {
           question: 'How does double-entry bookkeeping work in a payment ledger?',
           answer: `Double-entry bookkeeping is the industry standard for financial systems — every movement of money creates exactly two entries that balance:
 
-**The fundamental invariant:**
+The fundamental invariant:
 Sum of all DEBIT entries = Sum of all CREDIT entries (always, with zero exceptions)
 
-**Account types:**
+Account types:
 - ASSET accounts: Money the platform holds (Stripe balance, bank accounts)
 - LIABILITY accounts: Money owed to others (merchant payables, customer refunds pending)
 - REVENUE accounts: Platform earnings (processing fees)
 - EXPENSE accounts: Platform costs (interchange fees to card networks)
 
-**Example: Customer pays $100, merchant receives $97, Stripe keeps $3 fee:**
+Example: Customer pays $100, merchant receives $97, Stripe keeps $3 fee:
 
 Step 1 — Payment captured:
   DEBIT  stripe_clearing_account  $100 (asset increases — we received money)
@@ -9032,13 +9032,13 @@ Step 2 — Merchant payout:
   DEBIT  customer_payable           $3 (remaining liability cleared)
   CREDIT platform_revenue           $3 (revenue recognized — Stripe fee)
 
-**Why this matters:**
+Why this matters:
 - Self-auditing: If total debits != total credits, there is a bug. Period. Run this check every minute
 - Compliance: Financial auditors require double-entry for SOX, PCI, and banking regulations
 - Debugging: Every dollar can be traced from source to destination through the ledger chain
 - Reconciliation: Match internal ledger against bank statements and card network reports daily
 
-**Implementation:**
+Implementation:
 - Ledger entries are IMMUTABLE — never update or delete, only append new entries
 - Each entry references a transactionId linking the debit and credit pair
 - Use PostgreSQL with serializable isolation for ledger writes (consistency over throughput)
@@ -9048,7 +9048,7 @@ Step 2 — Merchant payout:
           question: 'How does the authorize-capture-settle flow work end to end?',
           answer: `The three-phase payment flow separates the promise to pay from the actual money movement:
 
-**Phase 1 — Authorization (instant, <1 second):**
+Phase 1 — Authorization (instant, <1 second):
 - Merchant creates PaymentIntent with amount, currency, and payment method token
 - Payment service detokenizes card via the PCI vault (HSM-backed)
 - Sends authorization request to the card network (Visa/Mastercard/Amex)
@@ -9057,19 +9057,19 @@ Step 2 — Merchant payout:
 - If approved: funds are "held" on the cardholder account (not transferred yet)
 - Authorization hold expires after 7 days (card network rules)
 
-**Phase 2 — Capture (merchant-initiated, async):**
+Phase 2 — Capture (merchant-initiated, async):
 - Merchant calls POST /v1/payment_intents/{id}/capture when ready to fulfill
 - Common pattern: authorize at checkout, capture at ship time (e-commerce)
 - Partial capture supported: authorize $100, capture only $75 (remaining $25 released)
 - Creates ledger entries: DEBIT clearing account, CREDIT merchant payable
 
-**Phase 3 — Settlement (batch, T+2):**
+Phase 3 — Settlement (batch, T+2):
 - Card network settles in batches: all captures from today are settled 2 business days later
 - Settlement means actual money transfer from issuing bank to acquiring bank to Stripe
 - Stripe credits the merchant balance after settlement
 - Merchant can then initiate a payout to their bank account
 
-**Why separate authorize and capture?**
+Why separate authorize and capture?
 - E-commerce: Only charge when the item actually ships (avoid charging for out-of-stock)
 - Hotels/car rental: Authorize estimated amount, capture actual amount at checkout
 - Subscription trials: Authorize $0.00 to verify the card is valid without charging
@@ -9079,14 +9079,14 @@ Step 2 — Merchant payout:
           question: 'How do you implement real-time fraud detection without adding latency?',
           answer: `Fraud detection must score every transaction in <100ms to stay within the 1-second authorization budget:
 
-**Real-time scoring pipeline:**
+Real-time scoring pipeline:
 1. Transaction arrives at fraud service (parallel to authorization, not sequential)
 2. Feature extraction (<10ms): pull 200+ features from the transaction and user history
 3. ML model inference (<20ms): gradient boosted tree model scores fraud probability (0.0 to 1.0)
 4. Rule engine (<5ms): hard rules override ML (e.g., blocked countries, velocity limits)
 5. Decision (<1ms): ALLOW (score < 0.3), CHALLENGE (0.3-0.7), BLOCK (> 0.7)
 
-**Key fraud signals (features):**
+Key fraud signals (features):
 - Velocity: 5 transactions from same card in 2 minutes (normal for subscriptions, suspicious for e-commerce)
 - Geolocation: Card billing address in US, IP address from Nigeria
 - Device fingerprint: Browser/device not seen before for this customer
@@ -9094,19 +9094,19 @@ Step 2 — Merchant payout:
 - Merchant risk: New merchant with no history, high-risk category (digital goods)
 - Network signals: Card number flagged by other merchants in the Stripe network
 
-**Challenge flow (3D Secure):**
+Challenge flow (3D Secure):
 - Medium-risk transactions trigger 3D Secure (3DS) authentication
 - Customer redirected to issuing bank for additional verification (OTP, biometric)
 - Shifts fraud liability from merchant to issuing bank
 - Adds 10-30 seconds to checkout but reduces chargebacks by 70%
 
-**ML model training:**
+ML model training:
 - Trained on historical chargeback data (supervised learning)
 - Retrained weekly with new fraud patterns
 - A/B tested: new model scores alongside production model, compare precision/recall
 - False positive rate target: <1% (blocking legitimate transactions loses revenue)
 
-**Async enrichment:**
+Async enrichment:
 - Some signals take too long for real-time: IP reputation lookup, address verification
 - Run these async; if they flag fraud after authorization: alert merchant, suggest manual review`
         },
@@ -9114,32 +9114,32 @@ Step 2 — Merchant payout:
           question: 'How do you achieve PCI-DSS compliance and isolate cardholder data?',
           answer: `PCI-DSS Level 1 compliance is mandatory for processing card payments — it requires a Cardholder Data Environment (CDE) isolated from all other systems:
 
-**Client-side tokenization (reduces PCI scope):**
+Client-side tokenization (reduces PCI scope):
 - Stripe.js (frontend SDK) collects card number, expiry, and CVC directly
 - Card data is sent directly from browser to Stripe PCI environment (never touches merchant server)
 - Stripe returns a token (pm_xxx) that the merchant uses for all subsequent operations
 - Result: Merchant server never sees raw card data and is exempt from most PCI requirements
 
-**PCI vault architecture:**
+PCI vault architecture:
 - Card numbers stored in an HSM-backed vault (Hardware Security Module)
 - HSMs are tamper-resistant physical devices that perform encryption/decryption
 - Card numbers encrypted at rest with AES-256, keys managed exclusively by HSMs
 - Only the token service can request decryption, and only for active payment processing
 
-**Network isolation:**
+Network isolation:
 - CDE runs in a dedicated VPC with no internet access
 - Communication only via internal APIs through a strict API gateway
 - All traffic encrypted with mutual TLS (mTLS)
 - Separate authentication system — CDE credentials are distinct from main platform
 
-**Access controls:**
+Access controls:
 - No developer has access to production card data
-- Debugging uses tokenized/masked data: **** **** **** 4242
+- Debugging uses tokenized/masked data: xxxx xxxx xxxx 4242
 - Audit log records every access to the CDE (who, when, what)
 - Quarterly penetration testing by approved scanning vendor (ASV)
 - Annual on-site audit by QSA (Qualified Security Assessor)
 
-**Key rotation:**
+Key rotation:
 - Encryption keys rotated every 90 days
 - Old keys retained for decrypting existing data, new keys used for new encryptions
 - HSM generates keys internally — keys never exist in plaintext outside the HSM`
@@ -9148,7 +9148,7 @@ Step 2 — Merchant payout:
           question: 'How do you build a reliable webhook delivery system for payment events?',
           answer: `Webhooks notify merchants of payment events (payment.succeeded, refund.created) — reliability is critical because merchants depend on them for fulfillment:
 
-**Webhook delivery pipeline:**
+Webhook delivery pipeline:
 1. Payment event occurs (e.g., payment captured successfully)
 2. Event persisted to events table with unique eventId (immutable, append-only)
 3. Event published to Kafka topic: payment.events
@@ -9156,7 +9156,7 @@ Step 2 — Merchant payout:
 5. POST to merchant URL with event payload + Stripe-Signature header (HMAC-SHA256)
 6. Merchant responds with 2xx = success, anything else = retry
 
-**Retry policy with exponential backoff:**
+Retry policy with exponential backoff:
 - Attempt 1: immediate
 - Attempt 2: 5 minutes later
 - Attempt 3: 30 minutes later
@@ -9165,17 +9165,17 @@ Step 2 — Merchant payout:
 - After 5 failures: mark webhook as failing, alert merchant via email, continue retrying for 72 hours
 - After 72 hours: disable webhook endpoint, require merchant to manually re-enable
 
-**Signature verification (prevent spoofing):**
+Signature verification (prevent spoofing):
 - Stripe-Signature header contains: timestamp + HMAC-SHA256(timestamp + payload, webhook_secret)
 - Merchant verifies: recompute HMAC with their webhook secret, compare with header
 - Timestamp prevents replay attacks: reject events older than 5 minutes
 
-**Ordering and idempotency:**
+Ordering and idempotency:
 - Events may arrive out of order (retry of event 1 arrives after event 2)
 - Each event has a monotonic eventId — merchant should check if already processed
 - Merchant response is idempotent: processing the same event twice produces the same result
 
-**Monitoring:**
+Monitoring:
 - Dashboard shows webhook delivery rate, failure rate, and average latency per merchant
 - Alert if a merchant endpoint has >50% failure rate for 1 hour
 - Automatic circuit breaker: stop sending to consistently failing endpoints to protect webhook infrastructure`
@@ -9184,29 +9184,29 @@ Step 2 — Merchant payout:
           question: 'How do you handle reconciliation between your ledger and external systems?',
           answer: `Reconciliation ensures the internal ledger matches reality — bank statements, card network reports, and merchant balances:
 
-**Three-way reconciliation (daily):**
-1. **Internal ledger** — All debit/credit entries from the double-entry bookkeeping system
-2. **Card network settlement reports** — Daily batch files from Visa/Mastercard showing settled transactions
-3. **Bank statements** — Actual money movements in/out of Stripe bank accounts
+Three-way reconciliation (daily):
+1. Internal ledger — All debit/credit entries from the double-entry bookkeeping system
+2. Card network settlement reports — Daily batch files from Visa/Mastercard showing settled transactions
+3. Bank statements — Actual money movements in/out of Stripe bank accounts
 
-**Automated reconciliation pipeline:**
+Automated reconciliation pipeline:
 1. Settlement files arrive from card networks at T+2 (2 business days after capture)
 2. Match each settlement line item to an internal ledger entry by transaction reference
 3. Verify amounts match (within acceptable tolerance for currency rounding: 1 cent)
 4. Flag mismatches as exceptions for manual review
 
-**Common mismatch types:**
-- **Timing differences:** Transaction captured on Day 1, settled on Day 3 — legitimate, auto-resolve
-- **Partial capture:** Authorized $100, captured $75 — verify remaining $25 was released
-- **Chargeback:** Bank reversed $50 — verify internal ledger has a corresponding reversal entry
-- **Currency conversion:** FX rate at capture vs settlement may differ slightly — within tolerance
+Common mismatch types:
+- Timing differences: Transaction captured on Day 1, settled on Day 3 — legitimate, auto-resolve
+- Partial capture: Authorized $100, captured $75 — verify remaining $25 was released
+- Chargeback: Bank reversed $50 — verify internal ledger has a corresponding reversal entry
+- Currency conversion: FX rate at capture vs settlement may differ slightly — within tolerance
 
-**Reconciliation for merchant balances:**
+Reconciliation for merchant balances:
 - Sum of all ledger entries for a merchant account = current balance
 - Compare with the balance stored in the accounts table
 - Any discrepancy triggers immediate investigation (possible bug in ledger logic)
 
-**Automation rate target: 99.5%**
+Automation rate target: 99.5%
 - 99.5% of transactions reconcile automatically with no human intervention
 - 0.5% flagged as exceptions, resolved by the finance operations team within 24 hours
 - Monthly: run full balance verification across all accounts (sum of ledger = sum of balances)`
@@ -9215,7 +9215,7 @@ Step 2 — Merchant payout:
           question: 'How do you handle refunds and chargebacks in the ledger?',
           answer: `Refunds and chargebacks require precise reversal entries in the ledger — money must flow back correctly:
 
-**Refund flow (merchant-initiated):**
+Refund flow (merchant-initiated):
 1. Merchant calls POST /v1/refunds with paymentId and amount (full or partial)
 2. Validate: amount <= original captured amount, payment status = CAPTURED
 3. Create refund record with idempotency check (prevent duplicate refunds)
@@ -9227,13 +9227,13 @@ Step 2 — Merchant payout:
 7. Update refund status: PENDING -> SUCCEEDED
 8. Send webhook: refund.succeeded to merchant
 
-**Partial refund handling:**
+Partial refund handling:
 - Original payment: $100, refund: $30
 - Ledger entries reverse only $30
 - Remaining $70 stays in merchant payable
 - Multiple partial refunds allowed up to original amount
 
-**Chargeback flow (customer-initiated via their bank):**
+Chargeback flow (customer-initiated via their bank):
 1. Customer disputes charge with their issuing bank
 2. Card network notifies Stripe: chargeback received for transaction X
 3. Immediately debit merchant balance by the disputed amount + chargeback fee ($15)
@@ -9244,7 +9244,7 @@ Step 2 — Merchant payout:
 8. If merchant wins: reverse the debit, refund the chargeback fee
 9. If merchant loses: debit becomes permanent
 
-**Chargeback prevention:**
+Chargeback prevention:
 - Fraud scoring reduces fraudulent transactions (fewer chargebacks)
 - Clear billing descriptors: customer sees "ACME STORE" not "STRIPE*123" on their statement
 - Proactive refunds: if fraud is detected after capture, refund before customer files chargeback
@@ -9254,38 +9254,38 @@ Step 2 — Merchant payout:
           question: 'How do you implement distributed transactions using the Saga pattern for payments?',
           answer: `Payment processing spans multiple services that must coordinate reliably — the Saga pattern replaces traditional distributed transactions:
 
-**Why not two-phase commit (2PC)?**
+Why not two-phase commit (2PC)?
 - 2PC requires all participants to hold locks until the coordinator commits
 - If the coordinator crashes, all participants are stuck holding locks indefinitely
 - Cross-service 2PC is fragile and creates tight coupling
 - Card network APIs do not support 2PC — they are request/response only
 
-**Saga pattern with orchestrator:**
+Saga pattern with orchestrator:
 - A central orchestrator (state machine) manages the payment flow step by step
 - Each step has a forward action and a compensation (rollback) action
 - If any step fails, the orchestrator runs compensations in reverse order
 
-**Payment saga steps:**
-1. **Create PaymentIntent** — Record intent in database
+Payment saga steps:
+1. Create PaymentIntent — Record intent in database
    - Compensation: Mark as CANCELLED
-2. **Score Fraud** — ML model scores risk
+2. Score Fraud — ML model scores risk
    - Compensation: None (read-only)
-3. **Authorize Card** — Card network holds funds
+3. Authorize Card — Card network holds funds
    - Compensation: Void authorization
-4. **Create Ledger Entries** — Double-entry bookkeeping records
+4. Create Ledger Entries — Double-entry bookkeeping records
    - Compensation: Create reversal entries
-5. **Capture Funds** — Card network transfers money
+5. Capture Funds — Card network transfers money
    - Compensation: Issue refund
-6. **Send Webhook** — Notify merchant of success
+6. Send Webhook — Notify merchant of success
    - Compensation: Send failure webhook
 
-**State machine implementation:**
+State machine implementation:
 - Each PaymentIntent has a status field tracking its position in the saga
 - Status transitions are atomic (single database UPDATE with optimistic locking)
 - Orchestrator polls for in-progress sagas that have been stuck for >5 minutes (crash recovery)
 - Dead letter queue for permanently failed sagas requiring manual intervention
 
-**Saga vs 2PC comparison:**
+Saga vs 2PC comparison:
 - Saga: Eventually consistent, higher availability, works across external APIs
 - 2PC: Strongly consistent, lower availability, requires all participants to support protocol
 - For payments: Saga is the industry standard because card networks are external`
@@ -9294,21 +9294,21 @@ Step 2 — Merchant payout:
           question: 'How do you design recurring billing and subscription management?',
           answer: `Recurring billing adds a time dimension to payments — the system must reliably charge customers on a schedule without manual intervention:
 
-**Subscription lifecycle state machine:**
+Subscription lifecycle state machine:
 - TRIALING: Free trial period, card authorized but not charged (dollar-zero auth to verify card validity)
 - ACTIVE: Regular billing cycle, charges processed automatically
 - PAST_DUE: Payment failed, retrying with smart retry logic
 - CANCELED: Customer or merchant canceled, no further charges
 - PAUSED: Temporarily suspended, resume without re-entering payment details
 
-**Billing engine (cron-based with distributed locking):**
+Billing engine (cron-based with distributed locking):
 1. Daily job scans for subscriptions due for billing (next_billing_date <= today)
 2. Distributed lock per subscription prevents double-billing across multiple workers
 3. Create PaymentIntent with the subscription amount and stored payment method
 4. If payment succeeds: advance next_billing_date, send receipt
 5. If payment fails: enter smart retry flow
 
-**Smart retry logic (Stripe Billing approach):**
+Smart retry logic (Stripe Billing approach):
 - Attempt 1: Immediately on billing date
 - Attempt 2: 3 days later (card may have been temporarily declined)
 - Attempt 3: 5 days after attempt 2 (end of grace period)
@@ -9316,13 +9316,13 @@ Step 2 — Merchant payout:
 - After final failure: cancel subscription, send cancellation notice
 - Success rate: approx 15% of initially-failed payments recover through smart retry
 
-**Proration for plan changes:**
+Proration for plan changes:
 - Customer upgrades mid-cycle from ten dollars per month to twenty dollars per month with 15 days remaining
 - Proration: credit unused portion on old plan, charge proportional amount on new plan
 - Net charge: difference applied immediately or on next billing date
 - Downgrade: credit applied to next invoice (no immediate refund)
 
-**Invoice generation:**
+Invoice generation:
 - Each billing cycle generates an immutable invoice record
 - Invoice includes: line items, tax calculations, discounts, proration adjustments
 - Invoices stored permanently for financial compliance and customer access
@@ -9728,15 +9728,15 @@ url_frontier {
           question: 'How does the inverted index work and why is it the core data structure?',
           answer: `The inverted index is the single most important data structure in search — it enables sub-second lookups across 100 billion pages:
 
-**Structure:**
+Structure:
 - Forward index: doc_id maps to [list of words] — useful for building, not for querying
 - Inverted index: word maps to [list of (doc_id, frequency, positions)] — this is what serves queries
 - Each entry in the posting list includes: document ID, term frequency, character positions, and field weights (title vs body)
 
-**Example:**
+Example:
 "distributed" maps to [(doc42, freq:3, pos:[15,89,201], title_boost:2.0), (doc1337, freq:1, pos:[45], title_boost:0)]
 
-**Query processing with the inverted index:**
+Query processing with the inverted index:
 1. Parse query: "distributed systems" becomes ["distributed", "systems"]
 2. Retrieve posting list for "distributed" (say 50K documents)
 3. Retrieve posting list for "systems" (say 80K documents)
@@ -9744,7 +9744,7 @@ url_frontier {
 5. Score by BM25 (term frequency, document length normalization) + PageRank + proximity bonus
 6. Return top 10 results
 
-**Critical optimizations:**
+Critical optimizations:
 - Skip lists: jump forward in posting lists during intersection (O(n+m) instead of naive O(n*m))
 - Variable-byte encoding: compress doc IDs using delta encoding (reduce posting list size by 70%)
 - Tiered index: top 1% of pages in memory (hot), next 10% on SSD (warm), rest on disk (cold)
@@ -9755,19 +9755,19 @@ url_frontier {
           question: 'How does PageRank work and how is it computed at web scale?',
           answer: `PageRank models the web as a graph and computes importance based on link structure — it remains a key ranking signal:
 
-**Core intuition:**
+Core intuition:
 - A page is important if many important pages link to it
 - Each page distributes its rank equally across all outbound links
 - A "random surfer" follows links randomly, with 15% chance of jumping to any page
 
-**Mathematical formulation:**
+Mathematical formulation:
 PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 - d = damping factor (0.85) — probability of following a link vs random jump
 - N = total number of pages
 - Ti = pages that link to page A
 - C(Ti) = number of outbound links from page Ti
 
-**Computation at scale (100B+ pages):**
+Computation at scale (100B+ pages):
 1. Build the web graph from crawl data: extract all (source_url, target_url) pairs
 2. Initialize all pages with equal rank: 1/N
 3. Iterative computation using MapReduce/Spark:
@@ -9776,13 +9776,13 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 4. Repeat for 50-100 iterations until convergence (rank changes < epsilon)
 5. Store final PageRank scores indexed by doc_id for fast lookup during ranking
 
-**Practical considerations:**
+Practical considerations:
 - Dangling pages (no outbound links): redistribute their rank evenly across all pages
 - Spider traps (pages linking only to each other): the damping factor (random jump) prevents infinite loops
 - PageRank manipulation (link farms): detect unnatural link patterns, penalize participating pages
 - Computation frequency: recomputed weekly (full web graph), incremental updates for new/changed pages
 
-**Modern usage:**
+Modern usage:
 - PageRank alone is no longer sufficient — it is one of 200+ signals in the ML ranking model
 - But it remains a powerful prior: a page with high PageRank starts with a significant relevance boost`
         },
@@ -9790,12 +9790,12 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How do you design the web crawler architecture to crawl 20 billion pages per day?',
           answer: `The web crawler is the input pipeline — it discovers, fetches, and feeds pages to the indexer at massive scale:
 
-**Distributed crawler architecture:**
+Distributed crawler architecture:
 - 50,000+ crawler worker machines distributed across multiple datacenters
 - Each worker fetches ~5 pages per second (limited by network and politeness rules)
 - 50K workers x 5 pages/sec x 86,400 sec = ~21.6B pages/day
 
-**URL Frontier (priority queue):**
+URL Frontier (priority queue):
 - Maintains the queue of URLs to crawl, prioritized by importance and freshness
 - Priority score = PageRank x freshness_need x change_frequency
 - News sites: recrawl every 5-15 minutes (highest priority)
@@ -9803,19 +9803,19 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 - Long-tail sites: recrawl weekly or monthly
 - Frontier is sharded across machines by domain hash for parallel processing
 
-**Politeness and rate limiting:**
+Politeness and rate limiting:
 - Respect robots.txt: parse and cache directives per domain
 - Rate limit per domain: max 1 request per second per domain (prevent overloading target servers)
 - Distributed rate limiting: all workers for the same domain coordinate via shared state
 - User-Agent string identifies Googlebot so site operators can allow/block
 
-**Deduplication:**
+Deduplication:
 - URL normalization: strip tracking params, resolve redirects, canonicalize
 - Content deduplication: compute SimHash (locality-sensitive hash) of page content
 - If SimHash matches an already-indexed page: skip indexing (saves compute and storage)
 - ~30% of crawled pages are duplicates or near-duplicates
 
-**Crawl pipeline:**
+Crawl pipeline:
 1. URL Frontier dequeues highest-priority URL
 2. DNS resolution (cached locally, TTL respected)
 3. HTTP fetch with timeout (30 seconds max, handle redirects up to 5 hops)
@@ -9828,36 +9828,36 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How does query parsing and understanding work?',
           answer: `Query understanding transforms raw user input into a structured search intent — it is critical for result quality:
 
-**Query processing pipeline (runs in <20ms):**
+Query processing pipeline (runs in <20ms):
 
-1. **Tokenization:** Split query into terms, handle special characters
+1. Tokenization: Split query into terms, handle special characters
    - "machine learning" becomes ["machine", "learning"]
    - Quoted phrases preserved: "machine learning" treated as exact phrase match
 
-2. **Spelling correction (<5ms):**
+2. Spelling correction (<5ms):
    - Edit distance (Levenshtein): "machien learninh" corrected to "machine learning"
    - N-gram model: probability of correction given context
    - Query log mining: if 90% of users who searched "pytorch lightening" clicked results for "pytorch lightning", suggest the correction
    - "Did you mean?" shown when correction confidence > 0.8
 
-3. **Query expansion:**
+3. Query expansion:
    - Synonyms: "car" expanded to "car OR automobile OR vehicle"
    - Stemming: "running" matches "run", "runs", "runner"
    - Acronyms: "NYC" expanded to "New York City"
    - Expansion is weighted: original term boosted 2x over synonyms
 
-4. **Intent detection:**
+4. Intent detection:
    - Navigational: "facebook login" — user wants a specific page (boost exact URL match)
    - Informational: "how does photosynthesis work" — user wants explanatory content
    - Transactional: "buy iPhone 15 pro" — user wants to purchase (show shopping results)
    - Local: "pizza near me" — trigger location-based results
 
-5. **Entity recognition:**
+5. Entity recognition:
    - "Apple stock price" — entity: Apple Inc. (not the fruit), intent: finance widget
    - "Taylor Swift age" — entity: person, intent: knowledge panel
    - Entity linking to Knowledge Graph for rich result formatting
 
-**Personalization layer:**
+Personalization layer:
 - User in San Francisco searching "weather" gets SF weather without specifying location
 - User who frequently searches for Python programming gets code results for "python" (not snake)
 - Personalization is a light boost (10-20%), not a complete reranking — avoid filter bubbles`
@@ -9866,14 +9866,14 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How does the multi-stage ranking pipeline work?',
           answer: `Ranking determines result quality — it uses a funnel approach to balance quality with latency:
 
-**Stage 1 — Initial Retrieval (BM25 + PageRank): ~10,000 candidates in <50ms**
+Stage 1 — Initial Retrieval (BM25 + PageRank): ~10,000 candidates in <50ms
 - Query the inverted index across all shards in parallel
 - Score each document using BM25 (term frequency, inverse document frequency, document length normalization)
 - Boost by pre-computed PageRank score
 - Each shard returns its top-K results, aggregator merges and deduplicates
 - This stage is FAST because BM25 uses pre-computed statistics from the index
 
-**Stage 2 — ML Re-ranking: ~1,000 candidates in <100ms**
+Stage 2 — ML Re-ranking: ~1,000 candidates in <100ms
 - Feed 10K candidates into a machine learning model (gradient boosted trees or neural ranker)
 - 200+ features per document:
   - Text relevance: BM25 score, phrase match, title match
@@ -9884,14 +9884,14 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 - Model trained on human-labeled relevance judgments + click-through data
 - Output: re-ranked list of 1K documents
 
-**Stage 3 — Personalization + Blending: ~100 final results in <20ms**
+Stage 3 — Personalization + Blending: ~100 final results in <20ms
 - Apply user personalization: search history, location, language preference
 - Blend in special results: news carousel, image pack, knowledge panel, shopping results
 - Insert ads at designated positions (clearly labeled)
 - Diversify results: avoid showing 10 results from the same domain
 - Generate snippets: extract the most relevant passage from each document for the result page
 
-**Latency budget:**
+Latency budget:
 - Total: <200ms from query to response
 - Query parsing: <20ms
 - Index retrieval: <50ms (parallel across shards)
@@ -9902,25 +9902,25 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How does spell correction and autocomplete work at scale?',
           answer: `Spell correction and autocomplete are critical for user experience — over 10% of queries contain typos:
 
-**Spell correction approaches:**
+Spell correction approaches:
 
-1. **Edit distance (Levenshtein):**
+1. Edit distance (Levenshtein):
    - Compute minimum edits (insert, delete, replace) to transform misspelling into a dictionary word
    - "distributd" is edit distance 1 from "distributed" (missing 'e')
    - Expensive for large dictionaries: use BK-tree or SymSpell for fast lookup
 
-2. **N-gram model:**
+2. N-gram model:
    - Break words into character n-grams: "distributed" becomes ["dis", "ist", "str", "tri", ...]
    - Find candidate corrections with high n-gram overlap
    - Rank by language model probability: P("distributed systems") >> P("distributd systems")
 
-3. **Query log mining (most powerful):**
+3. Query log mining (most powerful):
    - Millions of users have typed the same misspelling before
    - Track: query -> clicked result -> reformulated query
    - If 95% of "pytorch lightening" searches reformulate to "pytorch lightning": high-confidence correction
    - This captures domain-specific corrections that dictionaries miss
 
-**Autocomplete (search suggestions):**
+Autocomplete (search suggestions):
 - Pre-computed from popular query logs: top 10 suggestions for each prefix
 - Stored in a distributed trie (prefix tree) sharded by first 2 characters
 - Trie replicated to all datacenters for <50ms latency
@@ -9928,7 +9928,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
 - Personalized: blend global popular queries with user's own search history
 - Filtering: remove offensive, dangerous, or legally problematic suggestions
 
-**Scale considerations:**
+Scale considerations:
 - Autocomplete must respond in <50ms (faster than user typing speed)
 - Trie for English alone: ~500M unique query prefixes
 - Global replication: trie is ~50GB, replicated to every datacenter
@@ -9938,37 +9938,37 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How do you design the distributed indexing pipeline?',
           answer: `The indexing pipeline transforms raw crawled pages into searchable index shards — it runs continuously:
 
-**Pipeline stages (Kafka + MapReduce/Dataflow):**
+Pipeline stages (Kafka + MapReduce/Dataflow):
 
-1. **Content Extraction:**
+1. Content Extraction:
    - Parse HTML, extract visible text (strip scripts, CSS, ads, navigation)
    - Extract metadata: title, meta description, Open Graph tags, structured data (JSON-LD)
    - Detect language using character n-gram models
    - Identify main content vs boilerplate using DOM analysis
 
-2. **Tokenization and Analysis:**
+2. Tokenization and Analysis:
    - Language-specific tokenization (English: whitespace + stemming, Chinese: word segmentation)
    - Remove stop words for indexing (but keep for phrase matching)
    - Compute term frequencies and document length for BM25
 
-3. **Link Graph Update:**
+3. Link Graph Update:
    - Extract all outbound links from the page
    - Update the web graph used for PageRank computation
    - Compute anchor text signals (text used in links pointing to a page)
 
-4. **Index Building:**
+4. Index Building:
    - Create posting list entries: (term -> doc_id, frequency, positions)
    - Compress posting lists with variable-byte encoding
    - Build skip lists for fast intersection during query time
    - Merge new entries with existing index segments (LSM-tree style)
 
-5. **Index Distribution:**
+5. Index Distribution:
    - New index segments pushed to serving nodes
    - Hot swap: serving node loads new segment while still serving old one
    - Atomic switch: queries start using new segment once fully loaded
    - Old segment retained for rollback (TTL: 24 hours)
 
-**Document-partitioned sharding:**
+Document-partitioned sharding:
 - 100B pages distributed across ~10,000 index shards
 - Each shard contains the full inverted index for ~10M pages
 - Query hits ALL shards in parallel (scatter-gather)
@@ -9979,41 +9979,41 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How do you implement caching strategy for search queries?',
           answer: `Caching is essential for handling 100K+ QPS — without it, the index servers would be overwhelmed:
 
-**Multi-layer caching architecture:**
+Multi-layer caching architecture:
 
-1. **Query result cache (Redis/Memcached):**
+1. Query result cache (Redis/Memcached):
    - Cache key: normalized query string + location + language
    - Cache value: serialized search results (top 100 results with snippets)
    - Hit rate: ~60% (power law distribution: 20% of queries = 80% of traffic)
    - TTL: 5 minutes for general queries, 1 minute for time-sensitive queries
    - Invalidation: time-based only (re-compute when TTL expires)
 
-2. **Posting list cache (in-memory on index servers):**
+2. Posting list cache (in-memory on index servers):
    - Hot terms (top 10K most queried terms) kept in memory
    - Cache the decompressed posting lists for instant access
    - Hit rate: ~80% of term lookups served from memory
    - Eviction: LRU with frequency-based priority
 
-3. **Autocomplete cache (edge CDN):**
+3. Autocomplete cache (edge CDN):
    - Popular query prefixes cached at CDN edge locations globally
    - <10ms response time for cached prefixes
    - Updated hourly from the autocomplete trie
 
-4. **DNS-level cache:**
+4. DNS-level cache:
    - Client browsers cache DNS resolution for google.com
    - CDN edge resolves to nearest datacenter
 
-**Cache warming strategy:**
+Cache warming strategy:
 - Before deploying new index: pre-warm caches with top 100K queries
 - On new index server startup: proactively execute popular queries to fill posting list cache
 - After cache flush (maintenance): gradual traffic ramp-up over 10 minutes to rebuild cache
 
-**When NOT to cache:**
+When NOT to cache:
 - Rare queries (long tail): not worth cache space, serve directly from index
 - Time-sensitive queries (breaking news, stock prices): very short TTL or bypass cache
 - Personalized queries: cache the base results, apply personalization layer on top
 
-**Cache sizing:**
+Cache sizing:
 - Query result cache: ~500GB across Redis cluster (10M cached queries x 50KB avg)
 - Posting list cache: ~1TB per index server in RAM (hot terms)
 - Total caching infrastructure: ~20TB across the serving fleet`
@@ -10022,28 +10022,28 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How do you balance freshness vs relevance in search results?',
           answer: `Freshness and relevance are often in tension — a brand new page may be timely but unverified, while an old authoritative page may be outdated:
 
-**Tiered freshness strategy:**
+Tiered freshness strategy:
 
-1. **Real-time tier (minutes):**
+1. Real-time tier (minutes):
    - Breaking news, live events, trending topics
    - Dedicated "fresh index" built from real-time crawl of news sources
    - Pages indexed within minutes of publication
    - Lower quality bar (PageRank threshold relaxed) because freshness matters more
    - Blended into main results with a freshness boost
 
-2. **Near-real-time tier (hours):**
+2. Near-real-time tier (hours):
    - Popular sites with frequent updates (Reddit, Wikipedia, Stack Overflow)
    - Incremental index updates every 1-4 hours via change detection
    - Change detection: compare content hash with last indexed version
    - Only re-index pages that actually changed (saves 70% of processing)
 
-3. **Batch tier (daily to weekly):**
+3. Batch tier (daily to weekly):
    - The long tail of the web (billions of pages that rarely change)
    - Full re-crawl on a schedule based on change frequency prediction
    - ML model predicts: "this page changes every 3 days on average"
    - Schedule next crawl accordingly to optimize freshness within crawl budget
 
-**Query-time freshness signals:**
+Query-time freshness signals:
 - QDF (Query Deserves Freshness): detect queries about recent events
   - Spike in query volume for a term signals that fresh results are needed
   - Example: "election results" during election week gets massive freshness boost
@@ -10052,7 +10052,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
   - For QDF queries: strong decay (old pages penalized heavily)
   - For evergreen queries: weak or no decay (old authoritative pages fine)
 
-**Freshness verification:**
+Freshness verification:
 - Fresh does not mean good: a brand new spam page should not rank highly
 - Combine freshness with quality signals: PageRank, domain authority, content quality
 - New pages from established domains (nytimes.com) get more freshness trust than unknown domains`
@@ -10061,7 +10061,7 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
           question: 'How does the inverted index handle multi-word and phrase queries?',
           answer: `Phrase queries ("exact match phrases") and proximity scoring require more than simple term intersection:
 
-**Phrase matching with positional index:**
+Phrase matching with positional index:
 - Standard inverted index stores: term -> [(doc_id, frequency)]
 - Positional index adds character positions: term -> [(doc_id, frequency, positions:[5, 23, 89])]
 - For phrase query "distributed systems":
@@ -10071,24 +10071,24 @@ PR(A) = (1-d)/N + d * SUM(PR(Ti)/C(Ti)) for all pages Ti linking to A
   4. For each common doc: check if "systems" appears at position "distributed_pos + 1"
   5. Only docs with adjacent positions are phrase matches
 
-**Proximity scoring (near-phrase matching):**
+Proximity scoring (near-phrase matching):
 - Even when not an exact phrase, words appearing close together are more relevant
 - "distributed systems design" matches docs where all three words appear within 10 words of each other
 - Proximity score: 1 / (min_span_length) — tighter span gets higher score
 - BM25 does not capture proximity; it is an additional ranking signal
 
-**Skip list optimization for phrase queries:**
+Skip list optimization for phrase queries:
 - Positional posting lists can be very long (common words appear millions of times)
 - Skip lists allow jumping forward: if "distributed" at position 100 in doc42, skip to find "systems" near position 101
 - Block-level position index: positions stored in blocks of 128, skip entire blocks that cannot contain a match
 
-**Stop words in phrases:**
+Stop words in phrases:
 - Stop words ("the", "a", "of") are normally removed from the index to save space
 - But phrase queries need them: "to be or not to be" requires stop words
 - Solution: keep a separate positional index for stop words, used only for phrase queries
 - Alternative: store stop word positions as gaps in the regular positional index
 
-**Compound queries:**
+Compound queries:
 - "distributed systems" AND python — phrase match on first two terms, regular match on third
 - "distributed systems" OR "cloud computing" — union of two phrase matches
 - Query parser converts user input into a boolean expression of terms and phrases
@@ -10481,61 +10481,61 @@ device_tokens {
       keyQuestions: [
         {
           question: 'How do we handle different priority levels?',
-          answer: `**Priority Queues**:
-- **URGENT** (OTP, security alerts): Dedicated high-priority queue, process immediately, bypass rate limits
-- **NORMAL** (order updates, messages): Standard queue, process within seconds
-- **BATCH** (marketing, digests): Low-priority queue, aggregate and send in batches
+          answer: `Priority Queues:
+- URGENT (OTP, security alerts): Dedicated high-priority queue, process immediately, bypass rate limits
+- NORMAL (order updates, messages): Standard queue, process within seconds
+- BATCH (marketing, digests): Low-priority queue, aggregate and send in batches
 
-**Implementation**:
+Implementation:
 
 ![Priority queue routing](/diagrams/systemdesign/priority-queue-routing.png)
 
-**SLA by Priority**:
+SLA by Priority:
 - Urgent: p99 < 1 second
 - Normal: p99 < 5 seconds
 - Batch: Within scheduled window (hourly/daily)`
         },
         {
           question: 'How do we ensure reliable delivery?',
-          answer: `**At-Least-Once Delivery**:
+          answer: `At-Least-Once Delivery:
 1. Persist notification to database (PENDING)
 2. Enqueue to message queue (Kafka/SQS)
 3. Worker dequeues and sends to provider
 4. Update status to SENT
 5. Provider webhook confirms DELIVERED
 
-**Retry Strategy**:
+Retry Strategy:
 - Immediate retry for transient failures (3 attempts)
 - Exponential backoff: 1s, 5s, 30s, 5min, 30min
 - Dead letter queue after max retries
 - Alert on high failure rates
 
-**Delivery Tracking**:
+Delivery Tracking:
 \`\`\`
 PENDING → QUEUED → SENT → DELIVERED
                      ↓
                    FAILED → RETRY → (DELIVERED | DLQ)
 \`\`\`
 
-**Provider Failover**:
+Provider Failover:
 - Primary: SendGrid/Twilio/FCM
 - Secondary: Mailgun/Nexmo/APNS
 - Auto-switch on provider outage`
         },
         {
           question: 'How do we handle user preferences and rate limiting?',
-          answer: `**Preference Checks** (before sending):
+          answer: `Preference Checks (before sending):
 1. Is channel enabled for this user?
 2. Is user in quiet hours? → Delay if not urgent
 3. Is category unsubscribed? → Skip
 4. Has user exceeded rate limit? → Queue for later
 
-**Rate Limiting**:
+Rate Limiting:
 - Per-user limits: Max 5 push/hour (non-urgent)
 - Per-category limits: Max 1 marketing email/day
 - Global limits: Prevent spam during incidents
 
-**Quiet Hours**:
+Quiet Hours:
 \`\`\`javascript
 function shouldDelay(user, notification) {
   if (notification.priority === 'URGENT') return false;
@@ -10549,30 +10549,30 @@ const userTime = convertToTimezone(now(), user.timezone);
 }
 \`\`\`yaml
 
-**Unsubscribe**:
+Unsubscribe:
 - One-click unsubscribe in emails (CAN-SPAM)
 - Category-level opt-out (marketing vs transactional)
 - Global opt-out option`
         },
         {
           question: 'How do we scale to 10B notifications/day?',
-          answer: `**Scale Calculation**:
+          answer: `Scale Calculation:
 - 10B/day = 115K notifications/second
 - Peak: 3x average = 350K/second
 
-**Architecture for Scale**:
-1. **Kafka partitions**: 100+ partitions per priority
-2. **Worker pools**: Auto-scale based on queue depth
-3. **Database sharding**: Partition by user_id
-4. **Connection pooling**: Reuse provider connections
+Architecture for Scale:
+1. Kafka partitions: 100+ partitions per priority
+2. Worker pools: Auto-scale based on queue depth
+3. Database sharding: Partition by user_id
+4. Connection pooling: Reuse provider connections
 
-**Optimizations**:
+Optimizations:
 - Batch API calls to providers (FCM supports 500/request)
 - Pre-render templates at send time
 - Skip delivery for inactive users
 - Compress payloads for push notifications
 
-**Cost Optimization**:
+Cost Optimization:
 - SMS most expensive ($0.01/msg) - use sparingly
 - Push notifications essentially free
 - Email: $0.0001/msg with SendGrid
@@ -10580,73 +10580,73 @@ const userTime = convertToTimezone(now(), user.timezone);
         },
         {
           question: 'How does push notification delivery differ across platforms?',
-          answer: `**Apple Push Notification service (APNs)**:
+          answer: `Apple Push Notification service (APNs):
 - HTTP/2 protocol with persistent connections
 - Max payload: 4 KB
 - Requires device token + TLS certificate
 - Rate limit: ~2,000/sec per connection (multiple connections allowed)
 - Feedback service reports invalid tokens
 
-**Firebase Cloud Messaging (FCM)**:
+Firebase Cloud Messaging (FCM):
 - Supports Android, iOS (via APNs proxy), and Web Push
 - Max payload: 4 KB
 - Supports topic-based messaging (send to all subscribers of a topic)
 - Batch API: Up to 500 messages per request
 - No hard rate limit but implements backoff on errors
 
-**Web Push**:
+Web Push:
 - Uses VAPID (Voluntary Application Server Identification)
 - Max payload: ~4 KB
 - Requires service worker on the client
 - Browser-specific push services (Google, Mozilla, Microsoft)
 
-**Key Design Decision**: Abstract all platforms behind a unified push sender interface. Each platform worker manages its own connection pool, retry logic, and token validation.`
+Key Design Decision: Abstract all platforms behind a unified push sender interface. Each platform worker manages its own connection pool, retry logic, and token validation.`
         },
         {
           question: 'How do we implement notification deduplication?',
           answer: `Users receiving the same notification twice is a common failure mode, especially with at-least-once delivery guarantees.
 
-**Deduplication Strategies**:
+Deduplication Strategies:
 
-**1. Idempotency Key**:
+1. Idempotency Key:
 - Every notification request includes a unique idempotency_key
 - Before processing, check Redis: EXISTS dedup:{idempotency_key}
 - If exists: skip. If not: SET with TTL of 24 hours
 
-**2. Content-Based Dedup**:
+2. Content-Based Dedup:
 - Hash of (userId + templateId + data) = content fingerprint
 - Prevent sending identical content within a time window
 
-**3. Rate-Based Dedup**:
+3. Rate-Based Dedup:
 - Max 1 notification of same type per user per hour
 - Uses sliding window counter in Redis
 
-**4. Queue-Level Dedup**:
+4. Queue-Level Dedup:
 - Kafka consumer group ensures each message processed by exactly one worker
 - Idempotent consumer pattern: track processed message offsets
 
-**Trade-off**: Dedup adds ~1ms Redis lookup per notification. At 115K/sec, this requires a dedicated Redis cluster.`
+Trade-off: Dedup adds ~1ms Redis lookup per notification. At 115K/sec, this requires a dedicated Redis cluster.`
         },
         {
           question: 'How do we handle notification batching and digests?',
           answer: `Sending every individual event as a separate notification causes fatigue. Batching combines related notifications into digests.
 
-**Batching Types**:
+Batching Types:
 
-**1. Time-Based Batching**:
+1. Time-Based Batching:
 - Collect notifications for 5-60 minutes, then send digest
 - Example: "3 people liked your post" instead of 3 separate notifications
 
-**2. Count-Based Batching**:
+2. Count-Based Batching:
 - Send digest after N notifications accumulate
 - Example: After 10 new followers, send "You have 10 new followers"
 
-**3. Smart Digest (ML-Based)**:
+3. Smart Digest (ML-Based):
 - ML model predicts optimal send time per user
 - Features: past open times, timezone, device activity patterns
 - Maximize open rate by sending when user is most likely to engage
 
-**Implementation**:
+Implementation:
 - Batch buffer: Redis hash per userId per notification type
 - Flush trigger: timer OR count threshold OR priority override
 - Urgent notifications always bypass batching`
@@ -10655,34 +10655,34 @@ const userTime = convertToTimezone(now(), user.timezone);
           question: 'How do we implement provider failover for high availability?',
           answer: `No single provider has 100% uptime. Multi-vendor setup with automatic failover ensures delivery.
 
-**Provider Configuration**:
+Provider Configuration:
 - Push: Primary FCM + Secondary APNs direct
 - Email: Primary SendGrid + Secondary Amazon SES + Tertiary Mailgun
 - SMS: Primary Twilio + Secondary Vonage (Nexmo)
 
-**Circuit Breaker Pattern**:
+Circuit Breaker Pattern:
 1. Track error rate per provider (sliding 1-minute window)
 2. If error rate > 30%: Open circuit, route to secondary
 3. After 5 minutes: Half-open, send 10% traffic to test recovery
 4. If recovery confirmed: Close circuit, restore primary
 
-**Cost Consideration**: SES ($0.10/1000 emails) vs SendGrid ($0.50/1000). Use cheaper provider as primary when both available.`
+Cost Consideration: SES ($0.10/1000 emails) vs SendGrid ($0.50/1000). Use cheaper provider as primary when both available.`
         },
         {
           question: 'How do we track delivery, open, and click rates?',
-          answer: `**Tracking Events**:
-1. **Sent**: Worker called provider API successfully
-2. **Delivered**: Provider webhook confirms delivery (FCM receipt, SendGrid delivered event)
-3. **Opened**: Tracking pixel loaded in email, or app reports notification tap
-4. **Clicked**: User clicked deep link in notification
-5. **Dismissed**: User swiped away without tapping
+          answer: `Tracking Events:
+1. Sent: Worker called provider API successfully
+2. Delivered: Provider webhook confirms delivery (FCM receipt, SendGrid delivered event)
+3. Opened: Tracking pixel loaded in email, or app reports notification tap
+4. Clicked: User clicked deep link in notification
+5. Dismissed: User swiped away without tapping
 
-**Email Open Tracking**:
+Email Open Tracking:
 - Invisible 1x1 pixel: /track/open/{notificationId}.png
 - When loaded, record open event in Kafka
 - Limitation: Apple Mail privacy blocks image loading
 
-**Aggregation Pipeline**:
+Aggregation Pipeline:
 - Raw events -> Kafka -> Flink (1-min windows) -> ClickHouse
 - Dashboard: delivery rate, open rate, CTR per template and channel
 - Alert: if delivery rate drops below 95% in 5-minute window`
@@ -10691,22 +10691,22 @@ const userTime = convertToTimezone(now(), user.timezone);
           question: 'How do we handle notification localization globally?',
           answer: `A global system must deliver messages in the user's preferred language.
 
-**Template with i18n**:
+Template with i18n:
 - Templates stored with placeholders: "Hello {{name}}, {{body}}"
 - Translation files per locale: en-US, es-MX, ja-JP, etc.
 - Template engine selects locale from user preference
 
-**Locale Resolution Order**:
+Locale Resolution Order:
 1. User-set language preference
 2. App/device language setting
 3. Country of registration (fallback)
 
-**SMS Considerations**:
+SMS Considerations:
 - GSM-7 for Latin scripts: 160 chars/segment
 - UCS-2 for CJK characters: 70 chars/segment (2x cost)
 - Keep SMS under 160 chars for single-segment delivery
 
-**Dynamic Content**:
+Dynamic Content:
 - Dates formatted per locale (en-US: "Jan 5" vs de-DE: "5. Jan.")
 - Currency formatting ($10.00 vs 10,00 EUR)
 - Number formatting (1,000.50 vs 1.000,50)`
@@ -10826,9 +10826,9 @@ const userTime = convertToTimezone(now(), user.timezone);
           topic: 'Priority Queue Architecture',
           detail: `Use separate Kafka topics per priority level with different consumer group sizes.
 
-**URGENT (P0)**: OTP codes, security alerts, fraud warnings. Dedicated consumer group with 10x workers. Bypass rate limits and quiet hours. Target: <1 second delivery.
-**NORMAL (P1)**: Order updates, message notifications. Standard consumer group. Respect rate limits. Target: <5 seconds.
-**BATCH (P2)**: Marketing emails, weekly digests. Low-priority consumers, process during off-peak hours. Respect unsubscribes.
+URGENT (P0): OTP codes, security alerts, fraud warnings. Dedicated consumer group with 10x workers. Bypass rate limits and quiet hours. Target: <1 second delivery.
+NORMAL (P1): Order updates, message notifications. Standard consumer group. Respect rate limits. Target: <5 seconds.
+BATCH (P2): Marketing emails, weekly digests. Low-priority consumers, process during off-peak hours. Respect unsubscribes.
 
 Each priority level has independent auto-scaling based on queue depth. Urgent queue workers are always warm (no cold start).`
         },
@@ -10836,28 +10836,28 @@ Each priority level has independent auto-scaling based on queue depth. Urgent qu
           topic: 'Device Token Lifecycle Management',
           detail: `Push tokens become stale when users uninstall apps, get new devices, or clear app data.
 
-**Token Refresh**: On each app launch, client registers current push token. Server compares with stored token and updates if changed.
-**Invalid Token Detection**: When APNs/FCM returns "InvalidRegistration" or "Unregistered", mark token as invalid immediately. After 3 consecutive failures, remove token.
-**Multi-Device**: Users may have 2-5 devices (phone, tablet, watch). Send to all active devices, let OS handle dedup.
-**Token Storage**: Redis hash per userId mapping deviceId to push token and platform. TTL: 90 days since last activity.`
+Token Refresh: On each app launch, client registers current push token. Server compares with stored token and updates if changed.
+Invalid Token Detection: When APNs/FCM returns "InvalidRegistration" or "Unregistered", mark token as invalid immediately. After 3 consecutive failures, remove token.
+Multi-Device: Users may have 2-5 devices (phone, tablet, watch). Send to all active devices, let OS handle dedup.
+Token Storage: Redis hash per userId mapping deviceId to push token and platform. TTL: 90 days since last activity.`
         },
         {
           topic: 'Email Deliverability',
           detail: `Email delivery depends heavily on sender reputation and authentication.
 
-**Authentication**: SPF (authorized sending IPs), DKIM (cryptographic signature), DMARC (policy for failed auth). All three required for inbox placement.
-**IP Warm-up**: New sending IPs start with low volume (100 emails/day), gradually increase over 4-6 weeks to build reputation.
-**Dedicated vs Shared IPs**: Transactional emails (order confirmations) use dedicated IPs. Marketing emails use separate IPs to protect transactional reputation.
-**Bounce Management**: Hard bounces (invalid address) removed immediately. Soft bounces retried 3 times over 72 hours then suppressed.`
+Authentication: SPF (authorized sending IPs), DKIM (cryptographic signature), DMARC (policy for failed auth). All three required for inbox placement.
+IP Warm-up: New sending IPs start with low volume (100 emails/day), gradually increase over 4-6 weeks to build reputation.
+Dedicated vs Shared IPs: Transactional emails (order confirmations) use dedicated IPs. Marketing emails use separate IPs to protect transactional reputation.
+Bounce Management: Hard bounces (invalid address) removed immediately. Soft bounces retried 3 times over 72 hours then suppressed.`
         },
         {
           topic: 'In-App Notification Center',
           detail: `The in-app notification inbox stores read/unread notifications with pagination.
 
-**Storage**: Cassandra partitioned by userId, clustered by timestamp descending. Each user's notifications co-located for fast range queries.
-**Unread Count**: Redis counter per userId incremented on send, decremented on read. Powers the badge count on the app icon.
-**Real-Time Push**: WebSocket connection pushes new in-app notifications instantly. Falls back to polling every 30 seconds if WebSocket unavailable.
-**Retention**: Keep last 90 days of notifications. Older notifications archived to S3 for compliance.`
+Storage: Cassandra partitioned by userId, clustered by timestamp descending. Each user's notifications co-located for fast range queries.
+Unread Count: Redis counter per userId incremented on send, decremented on read. Powers the badge count on the app icon.
+Real-Time Push: WebSocket connection pushes new in-app notifications instantly. Falls back to polling every 30 seconds if WebSocket unavailable.
+Retention: Keep last 90 days of notifications. Older notifications archived to S3 for compliance.`
         }
       ],
       comparisonTables: [
@@ -11146,38 +11146,38 @@ rate_limit_logs {
       keyQuestions: [
         {
           question: 'Which rate limiting algorithm should we use?',
-          answer: `**Token Bucket** (Recommended for most APIs):
+          answer: `Token Bucket (Recommended for most APIs):
 - Tokens accumulate at steady rate into bucket
 - Each request consumes token(s)
 - Allows bursts up to bucket capacity
 - Example: 100 tokens/min, bucket size 150 allows burst of 150
 
-**Sliding Window Log**:
+Sliding Window Log:
 - Track timestamp of each request in sorted set
 - Count requests in rolling window
 - Most accurate but memory intensive
 - O(log n) per operation with Redis sorted sets
 
-**Fixed Window Counter**:
+Fixed Window Counter:
 - Simple: count requests per time window
 - Problem: 2x burst at window boundaries
 - User could send 100 req at 0:59 + 100 at 1:00
 
-**Leaky Bucket**:
+Leaky Bucket:
 - Requests queue, processed at fixed rate
 - Smooths traffic but adds latency
 - Good for streaming/consistent throughput
 
-**Sliding Window Counter** (Hybrid):
+Sliding Window Counter (Hybrid):
 - Combines fixed window with weighted previous window
 - Formula: count = current + (previous × overlap%)
 - Lower memory than log, more accurate than fixed`
         },
         {
           question: 'How do we implement distributed rate limiting?',
-          answer: `**Challenge**: Multiple servers need consistent view of rate limits.
+          answer: `Challenge: Multiple servers need consistent view of rate limits.
 
-**Solution 1: Centralized Redis**
+Solution 1: Centralized Redis
 - All servers check/update Redis
 - Use Lua scripts for atomicity:
 \`\`\`lua
@@ -11195,77 +11195,77 @@ end
 return {0, tokens}  -- denied
 \`\`\`yaml
 
-**Solution 2: Local Cache + Sync**
+Solution 2: Local Cache + Sync
 - Each server has local counter
 - Periodically sync to Redis
 - Faster but less accurate
 - Use for high-volume, approximate limits
 
-**Solution 3: Sticky Sessions**
+Solution 3: Sticky Sessions
 - Route same user to same server
 - Local rate limiting becomes accurate
 - Reduces Redis dependency`
         },
         {
           question: 'How do we handle race conditions?',
-          answer: `**Problem**: Two requests check limit simultaneously, both see 1 token, both consume it → overshooting limit.
+          answer: `Problem: Two requests check limit simultaneously, both see 1 token, both consume it → overshooting limit.
 
-**Solution 1: Redis Lua Scripts (Recommended)**
+Solution 1: Redis Lua Scripts (Recommended)
 - Atomic check-and-decrement
 - Single-threaded Redis execution
 - No race conditions possible
 
-**Solution 2: Redis Transactions (MULTI/EXEC)**
+Solution 2: Redis Transactions (MULTI/EXEC)
 - WATCH key for changes
 - Retry if modified during transaction
 
-**Solution 3: Distributed Locks (Redlock)**
+Solution 3: Distributed Locks (Redlock)
 - Acquire lock before check
 - Higher latency, use sparingly
 
-**Best Practice**: Always use Lua scripts for rate limiting - they're atomic, fast, and eliminate race conditions.`
+Best Practice: Always use Lua scripts for rate limiting - they're atomic, fast, and eliminate race conditions.`
         },
         {
           question: 'What happens when Redis is unavailable?',
-          answer: `**Fail Open** (Allow requests):
+          answer: `Fail Open (Allow requests):
 - Better user experience
 - Risk of system overload
 - Use for non-critical rate limits
 
-**Fail Closed** (Deny requests):
+Fail Closed (Deny requests):
 - Protects backend systems
 - Frustrates users during outages
 - Use for critical protection (DDoS)
 
-**Hybrid Approach** (Recommended):
+Hybrid Approach (Recommended):
 - Local fallback rate limiting
 - Each server has approximate limit
 - Degraded accuracy, maintained protection
 - Example: If Redis down, allow 10 req/min per server
 
-**Circuit Breaker**:
+Circuit Breaker:
 - After N Redis failures, switch to local
 - Periodically check Redis recovery
 - Auto-switch back when available`
         },
         {
           question: 'How do we estimate storage requirements?',
-          answer: `**Token Bucket Storage**:
+          answer: `Token Bucket Storage:
 - Per user: key (50 bytes) + tokens (8 bytes) + timestamp (8 bytes)
 - ~100 bytes per user bucket
 - 10M users = 1 GB Redis memory
 
-**Sliding Window Log**:
+Sliding Window Log:
 - Per request: timestamp in sorted set (16 bytes)
 - 1000 requests/user × 10M users = 160 GB (too expensive!)
 - Solution: Use sliding window counter instead
 
-**Sliding Window Counter**:
+Sliding Window Counter:
 - 2 counters per user per rule
 - ~50 bytes per user per rule
 - 10M users × 5 rules = 2.5 GB
 
-**Practical Example (10M users)**:
+Practical Example (10M users):
 - Token bucket: ~1 GB Redis
 - 5 rate limit rules: ~2.5 GB
 - With replication: 3x = 7.5 GB
@@ -11275,13 +11275,13 @@ return {0, tokens}  -- denied
           question: 'How do we handle multi-dimensional rate limiting?',
           answer: `Real APIs need limits across multiple dimensions simultaneously.
 
-**Dimensions**:
+Dimensions:
 - Per-user: 1000 requests/minute for Pro tier
 - Per-IP: 100 requests/minute (catch unauthenticated abuse)
 - Per-endpoint: /api/search limited to 30/min (expensive operation)
 - Global: Total API at 100K/min (protect backend capacity)
 
-**Implementation**:
+Implementation:
 Each request checks multiple rate limit keys in a single Redis pipeline:
 1. EVALSHA token_bucket_script user:123:api 1000 60
 2. EVALSHA token_bucket_script ip:1.2.3.4 100 60
@@ -11290,80 +11290,80 @@ Each request checks multiple rate limit keys in a single Redis pipeline:
 
 All four checks executed in a single Redis PIPELINE roundtrip (~1ms total). Request is allowed only if ALL checks pass. Response headers reflect the most restrictive limit.
 
-**Hierarchical Limits**:
+Hierarchical Limits:
 Enterprise customers may have org-level limits shared across all API keys: org:acme = 50K/min, with per-key sub-limits of 10K/min each.`
         },
         {
           question: 'How do we implement the sliding window counter algorithm?',
           answer: `Sliding window counter is the best balance of accuracy, memory, and performance.
 
-**Problem with Fixed Window**:
+Problem with Fixed Window:
 A user with a 100 req/min limit can send 100 requests at 0:59 and 100 at 1:00 — 200 requests in 2 seconds.
 
-**Sliding Window Counter Formula**:
+Sliding Window Counter Formula:
 Instead of tracking every request timestamp (expensive), use weighted combination of two fixed windows:
 
 count = requests_in_current_window + (requests_in_previous_window x overlap_percentage)
 
-**Example** (at time 1:15, window = 1 minute):
+Example (at time 1:15, window = 1 minute):
 - Current window (1:00-2:00): 30 requests
 - Previous window (0:00-1:00): 80 requests
 - Time into current window: 15 seconds = 25% through
 - Overlap of previous window: 75%
 - Estimated count: 30 + (80 x 0.75) = 90 requests
 
-**Redis Implementation**:
+Redis Implementation:
 Two keys per user per window:
 - rate:user:123:window:1 = 80 (previous)
 - rate:user:123:window:2 = 30 (current)
 Each key has TTL of 2x window size. Increment current window with INCR + EXPIRE.
 
-**Accuracy**: Within 0.003% error of exact sliding window log, at 1/100th the memory cost.`
+Accuracy: Within 0.003% error of exact sliding window log, at 1/100th the memory cost.`
         },
         {
           question: 'How do we expose rate limit information to API clients?',
           answer: `Standard HTTP headers communicate rate limit status to clients, enabling them to self-throttle.
 
-**Standard Headers** (RFC 6585 + draft-ietf-httpapi-ratelimit-headers):
+Standard Headers (RFC 6585 + draft-ietf-httpapi-ratelimit-headers):
 - X-RateLimit-Limit: 1000 (max requests in window)
 - X-RateLimit-Remaining: 742 (requests left)
 - X-RateLimit-Reset: 1619472000 (UTC epoch when window resets)
 - Retry-After: 30 (seconds to wait before retrying, on 429)
 
-**Response on Rate Limit Hit**:
+Response on Rate Limit Hit:
 HTTP 429 Too Many Requests
 { "error": "rate_limit_exceeded", "message": "Rate limit of 1000 requests per minute exceeded", "retryAfter": 30 }
 
-**Client Best Practices**:
+Client Best Practices:
 - Implement exponential backoff on 429 responses
 - Track remaining quota and pre-emptively slow down at 10% remaining
 - Use Retry-After header value, not arbitrary delays
 
-**Multiple Limits**:
+Multiple Limits:
 When multiple limits apply (per-user + per-endpoint), return the most restrictive limit in headers. Optionally include X-RateLimit-Policy header describing which rule triggered.`
         },
         {
           question: 'How do we dynamically update rate limit rules without downtime?',
           answer: `Rate limit rules must be changeable in real-time without restarting any services.
 
-**Architecture**:
+Architecture:
 1. Admin updates rule via API: PUT /api/ratelimit/rules/123 { limit: 2000 }
 2. Rule stored in config database (PostgreSQL)
 3. Change event published to Redis Pub/Sub channel: "rules:updated"
 4. All gateway nodes subscribe to channel, receive update within seconds
 5. Gateways update local rule cache
 
-**Rule Propagation**:
+Rule Propagation:
 - Local cache TTL: 60 seconds (stale rules acceptable for short period)
 - Redis Pub/Sub provides near-instant propagation
 - On gateway startup: fetch all rules from config DB
 
-**Gradual Rollout**:
+Gradual Rollout:
 - New rules can be applied to a percentage of traffic first
 - A/B test: 10% of users get new limits, monitor error rates
 - If 429 rate spikes unexpectedly, auto-rollback to previous rule
 
-**Rule Priority**:
+Rule Priority:
 Rules evaluated in order: specific overrides general.
 1. Per-API-key override (highest priority)
 2. Per-endpoint limit
@@ -11374,22 +11374,22 @@ Rules evaluated in order: specific overrides general.
           question: 'How do we implement rate limiting for WebSocket connections?',
           answer: `WebSocket connections are long-lived, making traditional per-request rate limiting insufficient.
 
-**Connection-Level Limits**:
+Connection-Level Limits:
 - Max concurrent connections per user: 5
 - Max connections per IP: 50
 - Enforced at connection time, not per message
 
-**Message-Level Limits**:
+Message-Level Limits:
 - Max messages per connection per second: 10
 - Max payload size per message: 64 KB
 - Enforced per message using in-memory counter on the WebSocket server
 
-**Implementation**:
+Implementation:
 - Connection counter: Redis INCR ws:user:{id}:conns with TTL
 - Message counter: Local sliding window (no Redis for per-message checks)
 - On limit exceeded: send rate limit error frame, then close connection after 3 violations
 
-**Backpressure**: If client sends faster than server processes, buffer up to 100 messages. Beyond that, drop messages and notify client. This prevents a single malicious client from exhausting server memory.`
+Backpressure: If client sends faster than server processes, buffer up to 100 messages. Beyond that, drop messages and notify client. This prevents a single malicious client from exhausting server memory.`
         }
       ],
 
@@ -11522,39 +11522,39 @@ Rules evaluated in order: specific overrides general.
           topic: 'Lua Scripts for Atomic Rate Limiting',
           detail: `Redis Lua scripts execute atomically on a single thread, eliminating race conditions.
 
-**Token Bucket Lua Script**: Read current tokens and last refill time, calculate new tokens based on elapsed time, check if enough tokens available, deduct if allowed. All in one atomic operation — no TOCTOU (time-of-check-time-of-use) bugs.
+Token Bucket Lua Script: Read current tokens and last refill time, calculate new tokens based on elapsed time, check if enough tokens available, deduct if allowed. All in one atomic operation — no TOCTOU (time-of-check-time-of-use) bugs.
 
-**Performance**: Lua scripts add ~0.1ms overhead vs raw Redis commands. At 500K ops/sec, this is negligible. Scripts are SHA-cached after first load (EVALSHA), avoiding repeated script transmission.
+Performance: Lua scripts add ~0.1ms overhead vs raw Redis commands. At 500K ops/sec, this is negligible. Scripts are SHA-cached after first load (EVALSHA), avoiding repeated script transmission.
 
-**Testing**: Unit test Lua scripts with redis-mock. Integration test with real Redis to validate atomicity under concurrent load.`
+Testing: Unit test Lua scripts with redis-mock. Integration test with real Redis to validate atomicity under concurrent load.`
         },
         {
           topic: 'Local Rate Limiting as First Defense',
           detail: `Local in-memory rate limiting on each gateway node provides sub-microsecond checks without network calls.
 
-**Implementation**: Each gateway maintains a local token bucket for hot keys (top 50K). Requests check local bucket first. If local bucket allows, request proceeds. Redis check happens asynchronously to sync global state.
+Implementation: Each gateway maintains a local token bucket for hot keys (top 50K). Requests check local bucket first. If local bucket allows, request proceeds. Redis check happens asynchronously to sync global state.
 
-**Trade-off**: With N gateway nodes, local limits allow up to N times the intended limit globally. Mitigation: set local limit to global_limit / N with 20% headroom.
+Trade-off: With N gateway nodes, local limits allow up to N times the intended limit globally. Mitigation: set local limit to global_limit / N with 20% headroom.
 
-**Use Case**: Perfect for DDoS protection where approximate limiting is acceptable. Not suitable for billing-critical limits where exact counts matter.`
+Use Case: Perfect for DDoS protection where approximate limiting is acceptable. Not suitable for billing-critical limits where exact counts matter.`
         },
         {
           topic: 'Sliding Window Log vs Counter Trade-offs',
-          detail: `**Sliding Window Log**: Store every request timestamp in a Redis sorted set. Exact counting but O(n) memory where n is requests in window. At 1000 req/min per user x 10M users = 10B entries. Impractical at scale.
+          detail: `Sliding Window Log: Store every request timestamp in a Redis sorted set. Exact counting but O(n) memory where n is requests in window. At 1000 req/min per user x 10M users = 10B entries. Impractical at scale.
 
-**Sliding Window Counter**: Two fixed-window counters with weighted interpolation. O(1) memory per user per rule. Accuracy within 0.003% of exact. The clear winner for production systems.
+Sliding Window Counter: Two fixed-window counters with weighted interpolation. O(1) memory per user per rule. Accuracy within 0.003% of exact. The clear winner for production systems.
 
-**When to use Log**: Only for very low-volume, high-value operations (password reset attempts, API key creation) where exact counting justifies the memory cost.`
+When to use Log: Only for very low-volume, high-value operations (password reset attempts, API key creation) where exact counting justifies the memory cost.`
         },
         {
           topic: 'Rate Limiting at the Edge (CDN/WAF)',
           detail: `First-line rate limiting at CDN/edge protects origin servers from volumetric attacks.
 
-**Cloudflare Rate Limiting**: Configurable per-URL rules, 10K+ rules per zone. Sub-millisecond enforcement at 200+ edge locations globally. Handles DDoS before traffic reaches origin.
+Cloudflare Rate Limiting: Configurable per-URL rules, 10K+ rules per zone. Sub-millisecond enforcement at 200+ edge locations globally. Handles DDoS before traffic reaches origin.
 
-**AWS WAF Rate-Based Rules**: Count requests per IP per 5-minute window. Block IPs exceeding threshold. Integrated with CloudFront and ALB.
+AWS WAF Rate-Based Rules: Count requests per IP per 5-minute window. Block IPs exceeding threshold. Integrated with CloudFront and ALB.
 
-**Architecture**: Edge rate limiting catches broad abuse (DDoS, scraping). Application-level rate limiting (Redis) handles per-user/per-API-key limits with business logic awareness.`
+Architecture: Edge rate limiting catches broad abuse (DDoS, scraping). Application-level rate limiting (Redis) handles per-user/per-API-key limits with business logic awareness.`
         }
       ],
       comparisonTables: [
@@ -11958,25 +11958,25 @@ queue_positions {
           question: 'How do we implement real-time seat map updates?',
           answer: `The seat map must reflect availability changes within 500ms so users don't select already-held seats.
 
-**Architecture**:
+Architecture:
 1. Seat status changes (HELD, SOLD, RELEASED) publish events to Redis Pub/Sub
 2. WebSocket servers subscribe to event channel
 3. Connected clients receive delta updates (not full seat map)
 4. Client updates local seat map state
 
-**Optimization**:
+Optimization:
 - Pre-compute seat map snapshot every 500ms as JSON
 - Cache in CDN with 1-second TTL for initial page load
 - WebSocket deltas for real-time updates after initial load
 - At 14M concurrent users, only ~10K are actively shopping — rest see cached snapshot
 
-**Payload**: Delta update is tiny: { seatId: "A-15", status: "HELD" } = ~50 bytes. Full map: ~16 MB. Delta updates reduce bandwidth by 99.99%.`
+Payload: Delta update is tiny: { seatId: "A-15", status: "HELD" } = ~50 bytes. Full map: ~16 MB. Delta updates reduce bandwidth by 99.99%.`
         },
         {
           question: 'How does the payment flow work within the hold window?',
           answer: `The hold window creates a time-boxed transaction that must complete before seats are released.
 
-**Hold + Payment Flow**:
+Hold + Payment Flow:
 1. User selects seats -> Redis SETNX creates hold (TTL: 10 minutes)
 2. Client displays countdown timer
 3. User enters payment details (2-5 minutes typically)
@@ -11987,82 +11987,82 @@ queue_positions {
 8. On payment success: UPDATE seats SET status=SOLD WHERE status=HELD AND holdId=X
 9. On payment failure: Release hold immediately (DEL Redis key)
 
-**Idempotency**: Checkout request includes holdId. Same holdId always returns same result. Prevents double-charge on client retry.
+Idempotency: Checkout request includes holdId. Same holdId always returns same result. Prevents double-charge on client retry.
 
-**Edge Case**: Payment takes exactly 10 minutes. The hold expires mid-payment. Backend catches this: payment succeeds but seat update fails (HELD -> AVAILABLE already happened). Immediately refund the charge.
+Edge Case: Payment takes exactly 10 minutes. The hold expires mid-payment. Backend catches this: payment succeeds but seat update fails (HELD -> AVAILABLE already happened). Immediately refund the charge.
 
-**Stripe Integration**: Use PaymentIntent with confirm: false initially. Confirm only after verifying hold is still valid. This avoids charging for expired holds.`
+Stripe Integration: Use PaymentIntent with confirm: false initially. Confirm only after verifying hold is still valid. This avoids charging for expired holds.`
         },
         {
           question: 'How do we prevent scalper bots from buying all tickets?',
           answer: `Bots are the #1 threat to fair ticket distribution. Multi-layered defense required.
 
-**Layer 1 — Queue Entry**:
+Layer 1 — Queue Entry:
 - CAPTCHA (reCAPTCHA v3) at queue join with risk score
 - Device fingerprinting (canvas, WebGL, screen resolution)
 - Block known automation tools (Selenium, Puppeteer, PhantomJS)
 
-**Layer 2 — Behavioral Analysis**:
+Layer 2 — Behavioral Analysis:
 - Click timing patterns (bots have inhuman precision)
 - Mouse movement analysis (bots move in straight lines)
 - Session duration anomalies (bots are too fast)
 
-**Layer 3 — Account Verification**:
+Layer 3 — Account Verification:
 - Verified Fan program: pre-register with identity
 - One queue position per verified identity (SSN/phone)
 - Purchase limits: max 4-6 tickets per account per event
 
-**Layer 4 — Post-Purchase**:
+Layer 4 — Post-Purchase:
 - Non-transferable tickets (name on ticket must match ID)
 - Mobile-only entry (no printable PDFs that can be resold)
 - Cancel suspicious bulk purchases retroactively
 
-**Effectiveness**: Verified Fan + CAPTCHA + behavioral analysis blocks ~95% of bots. The remaining 5% are sophisticated enough to bypass, but purchase limits contain damage.`
+Effectiveness: Verified Fan + CAPTCHA + behavioral analysis blocks ~95% of bots. The remaining 5% are sophisticated enough to bypass, but purchase limits contain damage.`
         },
         {
           question: 'How does the best-available seat algorithm work?',
           answer: `When users don't want to choose specific seats, the system selects the best available.
 
-**Algorithm Goals**:
+Algorithm Goals:
 - Best view/value for the customer
 - Keep groups together (adjacent seats)
 - Fill sections evenly (avoid leaving single isolated seats)
 - Maximize venue revenue (fill expensive sections first)
 
-**Implementation**:
+Implementation:
 1. Rank all available seats by desirability score:
    score = (section_rank x 0.4) + (row_rank x 0.3) + (center_bonus x 0.2) + (aisle_bonus x 0.1)
 2. Find contiguous blocks of N seats (for group requests)
 3. Among contiguous blocks, pick highest total score
 4. Apply "orphan seat" penalty: never leave a single empty seat between two occupied seats
 
-**Orphan Prevention**: If selecting seats A1-A3 would leave A4 as the only empty seat in the row, include A4 in the suggestion or skip to a different block.
+Orphan Prevention: If selecting seats A1-A3 would leave A4 as the only empty seat in the row, include A4 in the suggestion or skip to a different block.
 
-**Performance**: Pre-compute seat rankings per event. Finding best N contiguous seats is O(seats_per_section) with a sliding window — sub-millisecond for a 1000-seat section.`
+Performance: Pre-compute seat rankings per event. Finding best N contiguous seats is O(seats_per_section) with a sliding window — sub-millisecond for a 1000-seat section.`
         },
         {
           question: 'How do we handle event cancellation and mass refunds?',
           answer: `Event cancellation triggers a mass refund workflow for potentially 80K+ ticket holders.
 
-**Cancellation Flow**:
+Cancellation Flow:
 1. Event organizer triggers cancellation via admin portal
 2. System marks event status as CANCELLED
 3. Disable all new purchases immediately
 4. Queue all bookings for refund processing
 
-**Batch Refund Processing**:
+Batch Refund Processing:
 - Don't process all 80K refunds simultaneously (overwhelms Stripe)
 - Batch into groups of 1000, process with 5-second intervals
 - Rate: ~200 refunds/sec via Stripe = 80K refunds in ~7 minutes
 - Each refund is idempotent (retry-safe with idempotency key)
 
-**Customer Communication**:
+Customer Communication:
 1. Immediate email: "Event cancelled, refund processing"
 2. Push notification with same message
 3. Status update in booking history
 4. Refund confirmation email when money returned (3-5 business days)
 
-**Partial Cancellation** (rescheduled event):
+Partial Cancellation (rescheduled event):
 - Offer ticket transfer to new date
 - If user declines: process refund
 - Handle price difference if new date has different pricing`
@@ -12071,52 +12071,52 @@ queue_positions {
           question: 'How do we shard the database for high-demand events?',
           answer: `During a high-demand on-sale, a single database cannot handle the read/write load for one event.
 
-**Sharding Strategy**:
-- **Shard by eventId**: All seats for one event on the same shard
+Sharding Strategy:
+- Shard by eventId: All seats for one event on the same shard
 - This ensures seat transactions never cross shards
 - Hot events get dedicated database instances
 
-**Per-Event Isolation**:
+Per-Event Isolation:
 - Normal events: shared shard (many events per database)
 - High-demand events (>100K expected users): dedicated PostgreSQL instance
 - Provisioned 24 hours before on-sale with pre-loaded seat inventory
 
-**Read Scaling**:
+Read Scaling:
 - Seat map reads from Redis cache (not DB)
 - 1-second TTL, updated by DB change stream
 - CDN caches the snapshot for non-logged-in users
 - Only seat hold/purchase operations hit the database
 
-**Connection Pooling**:
+Connection Pooling:
 - PgBouncer in front of each shard
 - Max 1000 connections per shard
 - At 10K concurrent shoppers, each executing 1 query/sec = 10K QPS per shard (well within PostgreSQL capacity)
 
-**Cleanup**: Dedicated instance deprovisioned 24 hours after event. Booking data migrated to archive shard.`
+Cleanup: Dedicated instance deprovisioned 24 hours after event. Booking data migrated to archive shard.`
         },
         {
           question: 'How do we implement the Verified Fan presale program?',
           answer: `Verified Fan ensures real fans get access before general on-sale.
 
-**Registration Phase** (weeks before on-sale):
+Registration Phase (weeks before on-sale):
 1. Fans register on Ticketmaster with identity verification
 2. System collects: email, phone, Spotify listening history, past purchases
 3. Fans ranked by "fan score" (concert attendance, streaming hours, merchandise purchases)
 4. Top fans receive presale access codes via email/SMS
 
-**Presale Mechanics**:
+Presale Mechanics:
 - Unique access code required to enter presale queue
 - Code is single-use and tied to the verified identity
 - Presale typically 24-48 hours before general on-sale
 - Lower traffic: 500K users vs 14M for general sale
 
-**Technical Implementation**:
+Technical Implementation:
 - Access codes stored in Redis set: SISMEMBER presale:{eventId} {code}
 - Code consumed on first use: SREM from set
 - Presale inventory is a subset of total seats (e.g., 30% of venue)
 - Remaining 70% released for general on-sale
 
-**Benefits**: Bots cannot register as verified fans (identity required). Genuine fans get first access. Reduced traffic during general on-sale.`
+Benefits: Bots cannot register as verified fans (identity required). Genuine fans get first access. Reduced traffic during general on-sale.`
         }
       ],
 
@@ -12424,12 +12424,12 @@ user_history {
       keyQuestions: [
         {
           question: 'Which data structure should we use?',
-          answer: `**Trie (Prefix Tree)** - Recommended:
+          answer: `Trie (Prefix Tree) - Recommended:
 - O(m) lookup where m = prefix length
 - Naturally supports prefix matching
 - Space efficient with compression (Patricia Trie)
 
-**Example Trie**:
+Example Trie:
 \`\`\`
         root
        /  |  \\
@@ -12445,19 +12445,19 @@ e   r
 \`\`\`
 "apple", "armor", "bat", "cars"
 
-**Pre-computed Suggestions**:
+Pre-computed Suggestions:
 - Store top 10 suggestions at each trie node
 - Avoid real-time computation
 - Update in background from analytics
 
-**Alternative: Inverted Index**
+Alternative: Inverted Index
 - Better for fuzzy matching
 - Higher latency than trie
 - Use for spell correction layer`
         },
         {
           question: 'How do we rank suggestions?',
-          answer: `**Ranking Formula**:
+          answer: `Ranking Formula:
 \`\`\`
 score = w1 × frequency +
         w2 × recency +
@@ -12466,37 +12466,37 @@ score = w1 × frequency +
         w5 × query_quality
 \`\`\`
 
-**Factors**:
-- **Frequency**: Historical search count (log scale)
-- **Recency**: Time decay for recent searches
-- **Trending**: Velocity of search growth
-- **Personalization**: User's past searches/clicks
-- **Query Quality**: Length, click-through rate
+Factors:
+- Frequency: Historical search count (log scale)
+- Recency: Time decay for recent searches
+- Trending: Velocity of search growth
+- Personalization: User's past searches/clicks
+- Query Quality: Length, click-through rate
 
-**Trending Detection**:
+Trending Detection:
 \`\`\`
 trending_score = current_rate / baseline_rate
 if trending_score > 3: boost significantly
 \`\`\`
 
-**Personalization** (when userId provided):
+Personalization (when userId provided):
 - Boost queries user has searched before
 - Boost categories user engages with
 - Blend: 70% global + 30% personal`
         },
         {
           question: 'How do we handle 100K requests/second?',
-          answer: `**Caching Strategy**:
+          answer: `Caching Strategy:
 
 ![Typeahead cache hierarchy](/diagrams/systemdesign/typeahead-cache.png)
 
-**Cache Hit Rates**:
+Cache Hit Rates:
 - Single character prefixes ("a", "b"): 99%+ CDN hit
 - 2-3 characters: 90%+ CDN hit
 - 4+ characters: 50-70% hit
 - Long tail: Pass through to service
 
-**Optimization**:
+Optimization:
 - Pre-warm cache with top 1000 prefixes
 - Cache suggestions for 5-10 minutes
 - Use consistent hashing for service sharding
@@ -12504,40 +12504,40 @@ if trending_score > 3: boost significantly
         },
         {
           question: 'How do we update suggestions in real-time?',
-          answer: `**Data Pipeline**:
+          answer: `Data Pipeline:
 \`\`\`
 Search Logs → Kafka → Flink → Aggregator → Trie Updater
                               (1 min windows)
 \`\`\`yaml
 
-**Update Frequency**:
+Update Frequency:
 - Trending queries: Every 1-5 minutes
 - Normal queries: Every hour
 - New products/content: On publish
 
-**Trie Update Strategy**:
+Trie Update Strategy:
 1. Build new trie version in background
 2. Atomic swap when ready
 3. Propagate to all nodes via message queue
 
-**Handling Breaking News**:
+Handling Breaking News:
 - Separate "trending" index updated in real-time
 - Merge trending results with static suggestions
 - Higher boost for trending items`
         },
         {
           question: 'How do we handle spell correction in typeahead?',
-          answer: `**Edit Distance (Levenshtein)**:
+          answer: `Edit Distance (Levenshtein):
 - For each prefix, compute edit distance to known queries
 - Edit distance 1: one character insertion, deletion, or substitution
 
-**Practical Approach**:
+Practical Approach:
 1. Build secondary index of common misspellings from search logs
 2. Map misspelling to correct query: "spotfy" -> "spotify"
 3. Use phonetic algorithms (Soundex, Metaphone) for pronunciation matches
 4. BK-tree data structure for efficient edit distance search
 
-**Hybrid Strategy**:
+Hybrid Strategy:
 - First: exact prefix match from trie (0ms)
 - If fewer than 5 results: fuzzy match with edit distance 1 (2ms)
 - If still few results: try edit distance 2 (5ms)
@@ -12545,88 +12545,88 @@ Search Logs → Kafka → Flink → Aggregator → Trie Updater
         },
         {
           question: 'How do we implement personalized suggestions?',
-          answer: `**Personalization Signals**:
+          answer: `Personalization Signals:
 - User recent searches (last 7 days)
 - Click-through history (which suggestions selected)
 - Category preferences (derived from browse behavior)
 
-**Architecture**:
+Architecture:
 - Global trie: shared across all users (pre-computed top-K)
 - Per-user overlay: Redis hash with recent searches and weighted categories
 - Merge: 70% global suggestions + 30% personalized reranking
 
-**Example**:
+Example:
 User who frequently searches for Python programming:
 - Global: "java" -> Java island, Java coffee, Java programming
 - Personalized: "java" -> Java programming, Java vs Python, Java tutorials
 
-**Privacy**: Personalization tied to authenticated session only. Shared devices see global results. Incognito disables personalization.
+Privacy: Personalization tied to authenticated session only. Shared devices see global results. Incognito disables personalization.
 
-**Cold Start**: New users get 100% global results. After 10 searches, personalization gradually increases to 30% weight.`
+Cold Start: New users get 100% global results. After 10 searches, personalization gradually increases to 30% weight.`
         },
         {
           question: 'How do we shard the trie for horizontal scaling?',
-          answer: `**Sharding Strategy**: Shard by prefix range (first 1-2 characters):
+          answer: `Sharding Strategy: Shard by prefix range (first 1-2 characters):
 - Shard A: prefixes starting with a-b
 - Shard B: prefixes starting with c-d
 - Total: ~13 shard groups for 26 letters
 
-**Load Balancing**:
+Load Balancing:
 Not all prefixes are equally popular. "s" gets 3x more queries than "z".
 - Option 1: Uneven sharding (popular prefixes get dedicated shards)
 - Option 2: Consistent hashing on full prefix (better distribution)
 
-**Replication**:
+Replication:
 Each shard has 3 replicas for availability. Read requests load-balanced across replicas. Writes (trie updates) go to primary, async replicated.
 
-**Hot Prefix Handling**:
+Hot Prefix Handling:
 Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (4+ chars) reach the trie service.`
         },
         {
           question: 'How do we handle multi-language typeahead?',
-          answer: `**Language Detection**:
+          answer: `Language Detection:
 - User locale setting as primary signal
 - Browser Accept-Language header as fallback
 - Build separate tries per language
 
-**CJK (Chinese/Japanese/Korean) Challenges**:
+CJK (Chinese/Japanese/Korean) Challenges:
 - No word boundaries in Chinese/Japanese
 - Pinyin input for Chinese: romanized pronunciation
 - Need separate Pinyin trie mapping to Chinese characters
 - Japanese: handle Hiragana, Katakana, Kanji, Romaji input
 
-**Implementation**:
+Implementation:
 - Route to language-specific trie based on locale
 - Support transliteration: "tokyo" matches English and Japanese
 - Bilingual suggestions for multi-language markets
 
-**Index Size**: English trie: ~10 GB. Adding 10 languages: ~50 GB total.`
+Index Size: English trie: ~10 GB. Adding 10 languages: ~50 GB total.`
         },
         {
           question: 'How do we prevent offensive content in suggestions?',
-          answer: `**Content Safety Layers**:
+          answer: `Content Safety Layers:
 
-**1. Static Blocklist**: Curated list of offensive terms, slurs, sensitive queries. Post-filter on suggestion output. Updated weekly.
+1. Static Blocklist: Curated list of offensive terms, slurs, sensitive queries. Post-filter on suggestion output. Updated weekly.
 
-**2. ML Content Classifier**: Binary classifier on candidate suggestions before returning. Catches novel offensive content not on blocklist.
+2. ML Content Classifier: Binary classifier on candidate suggestions before returning. Catches novel offensive content not on blocklist.
 
-**3. Trending Query Review**: New trending terms queued for human review. Held from suggestions for 30 minutes until approved. Prevents gaming.
+3. Trending Query Review: New trending terms queued for human review. Held from suggestions for 30 minutes until approved. Prevents gaming.
 
-**4. Contextual Filtering**: Safe search mode (default for minors). Region-specific filtering for local regulations. Block self-harm, violence, illegal content.`
+4. Contextual Filtering: Safe search mode (default for minors). Region-specific filtering for local regulations. Block self-harm, violence, illegal content.`
         },
         {
           question: 'How do we measure and optimize typeahead quality?',
-          answer: `**Key Metrics**:
+          answer: `Key Metrics:
 
-**Suggestion Selection Rate (SSR)**: % of queries where user clicks a suggestion vs types full query. Target: >50%.
+Suggestion Selection Rate (SSR): % of queries where user clicks a suggestion vs types full query. Target: >50%.
 
-**Mean Reciprocal Rank (MRR)**: Average 1/position of selected suggestion. MRR 0.5 = typically position 2. Target: >0.6.
+Mean Reciprocal Rank (MRR): Average 1/position of selected suggestion. MRR 0.5 = typically position 2. Target: >0.6.
 
-**Keystroke Savings**: (query_length - prefix_length_at_selection) / query_length. Example: typed "spo", selected "spotify" = 57% savings. Target: >40%.
+Keystroke Savings: (query_length - prefix_length_at_selection) / query_length. Example: typed "spo", selected "spotify" = 57% savings. Target: >40%.
 
-**Latency P99**: Must be <100ms. Target: P50 <30ms, P99 <50ms.
+Latency P99: Must be <100ms. Target: P50 <30ms, P99 <50ms.
 
-**A/B Testing**: Test ranking weights, suggestion count, update frequency. Each experiment 1-2 weeks with 5% traffic. Primary metric: SSR.`
+A/B Testing: Test ranking weights, suggestion count, update frequency. Each experiment 1-2 weeks with 5% traffic. Primary metric: SSR.`
         }
       ],
 
@@ -12773,13 +12773,13 @@ Single-character prefixes generate 99% CDN cache hits. Only long-tail prefixes (
         keyChallenge: 'Maintaining 5M+ concurrent WebSocket connections while delivering 1.5B messages/day with sub-100ms latency and full-text search across years of history.',
       },
 
-      introduction: `Slack and Discord are team communication platforms that have transformed workplace collaboration. Slack serves **47 million daily active users** sending **1.5 billion messages per day**, while Discord has grown to **200 million monthly active users**.
+      introduction: `Slack and Discord are team communication platforms that have transformed workplace collaboration. Slack serves 47 million daily active users sending 1.5 billion messages per day, while Discord has grown to 200 million monthly active users.
 
-The key challenges are: managing **5 million+ concurrent WebSocket connections** across a distributed gateway fleet, ensuring message ordering within channels, handling channel fan-out for groups with thousands of members, full-text search across years of message history, and building a presence system that scales to millions of simultaneous status updates.
+The key challenges are: managing 5 million+ concurrent WebSocket connections across a distributed gateway fleet, ensuring message ordering within channels, handling channel fan-out for groups with thousands of members, full-text search across years of message history, and building a presence system that scales to millions of simultaneous status updates.
 
-What makes team chat different from 1:1 messaging (WhatsApp)? Team chat has **channels** that can have thousands of members, requiring efficient fan-out. It also requires rich integrations (bots, slash commands, webhooks), threaded conversations, and compliance features like message retention policies and e-discovery.
+What makes team chat different from 1:1 messaging (WhatsApp)? Team chat has channels that can have thousands of members, requiring efficient fan-out. It also requires rich integrations (bots, slash commands, webhooks), threaded conversations, and compliance features like message retention policies and e-discovery.
 
-Slack's engineering team has shared key architectural decisions: migrating from MySQL to **Vitess** for horizontal sharding, using **Flannel** (their edge cache) to reduce backend load, and building a custom **Channel Server** that keeps hot channel state in memory. Discord took a different path, migrating from Cassandra to **ScyllaDB** after hitting tail latency issues at scale.`,
+Slack's engineering team has shared key architectural decisions: migrating from MySQL to Vitess for horizontal sharding, using Flannel (their edge cache) to reduce backend load, and building a custom Channel Server that keeps hot channel state in memory. Discord took a different path, migrating from Cassandra to ScyllaDB after hitting tail latency issues at scale.`,
 
       estimation: {
         title: 'Capacity Planning',
@@ -12927,156 +12927,156 @@ user_presence {
       keyQuestions: [
         {
           question: 'How do we manage WebSocket connections at scale?',
-          answer: `Slack maintains **5M+ concurrent WebSocket connections** across a fleet of 100+ stateless gateway servers.
+          answer: `Slack maintains 5M+ concurrent WebSocket connections across a fleet of 100+ stateless gateway servers.
 
-**Gateway Architecture:**
-Each gateway node handles ~50K connections using an event-driven model (epoll/kqueue). Gateways are stateless -- they don't store which user is on which server. Instead, a **Connection Registry** (Redis cluster) maps userId to gatewayId.
+Gateway Architecture:
+Each gateway node handles ~50K connections using an event-driven model (epoll/kqueue). Gateways are stateless -- they don't store which user is on which server. Instead, a Connection Registry (Redis cluster) maps userId to gatewayId.
 
-**Connection Lifecycle:**
+Connection Lifecycle:
 1. Client connects to any gateway via load balancer (round-robin)
 2. Gateway authenticates JWT, registers connection in Redis: \`user:{id} -> gateway:{node}\`
 3. Gateway subscribes to Redis Pub/Sub channels for all the user's channels
 4. On disconnect: remove from registry, unsubscribe from Pub/Sub
 
-**Key Design Decisions:**
-- **No sticky sessions** -- any gateway can serve any user. This simplifies scaling and failover.
-- **Heartbeat every 30 seconds** -- detect stale connections. If 3 heartbeats missed, close connection and clean up registry.
-- **HTTP long-polling fallback** -- for corporate firewalls that block WebSockets. Uses 30-second polling interval.
-- **Connection draining** -- before restarting a gateway, send RECONNECT message to all clients. Clients reconnect to another gateway within 5 seconds using exponential backoff.`
+Key Design Decisions:
+- No sticky sessions -- any gateway can serve any user. This simplifies scaling and failover.
+- Heartbeat every 30 seconds -- detect stale connections. If 3 heartbeats missed, close connection and clean up registry.
+- HTTP long-polling fallback -- for corporate firewalls that block WebSockets. Uses 30-second polling interval.
+- Connection draining -- before restarting a gateway, send RECONNECT message to all clients. Clients reconnect to another gateway within 5 seconds using exponential backoff.`
         },
         {
           question: 'How does message ordering work across distributed servers?',
           answer: `Message ordering is critical in chat -- users in the same channel must see messages in the same sequence.
 
-**Approach: Per-Channel Sequence Numbers**
+Approach: Per-Channel Sequence Numbers
 Each channel has a monotonically increasing sequence counter. When a message is sent:
 1. Message Service acquires a per-channel lock (Redis INCR on \`channel:{id}:seq\`)
 2. Assigns the next sequence number
 3. Persists message with sequence number
 4. Broadcasts to channel members
 
-**Why not rely on timestamps?**
+Why not rely on timestamps?
 Clock skew across servers can cause messages to appear out of order. Two messages sent 50ms apart might get timestamps that suggest the opposite order. Sequence numbers provide a total order per channel.
 
-**Slack's Approach (Vitess):**
-Slack uses **Vitess** (MySQL sharding layer) with channels as the sharding key. All messages for a channel land on the same shard, making sequence generation a simple auto-increment within a transaction. This co-locates all channel data for efficient range queries.
+Slack's Approach (Vitess):
+Slack uses Vitess (MySQL sharding layer) with channels as the sharding key. All messages for a channel land on the same shard, making sequence generation a simple auto-increment within a transaction. This co-locates all channel data for efficient range queries.
 
-**Discord's Approach (ScyllaDB):**
-Discord uses **Snowflake IDs** (timestamp + worker + sequence) which are roughly time-ordered. Within a channel partition in ScyllaDB, messages are ordered by Snowflake ID. This gives approximate ordering without coordination, with server-side sorting for exact display order.`
+Discord's Approach (ScyllaDB):
+Discord uses Snowflake IDs (timestamp + worker + sequence) which are roughly time-ordered. Within a channel partition in ScyllaDB, messages are ordered by Snowflake ID. This gives approximate ordering without coordination, with server-side sorting for exact display order.`
         },
         {
           question: 'How did Slack migrate to Vitess for sharding?',
-          answer: `Slack's MySQL database hit limits at ~1B messages. They migrated to **Vitess**, a horizontal sharding layer for MySQL.
+          answer: `Slack's MySQL database hit limits at ~1B messages. They migrated to Vitess, a horizontal sharding layer for MySQL.
 
-**Why Vitess over Cassandra/DynamoDB?**
+Why Vitess over Cassandra/DynamoDB?
 - Slack had years of MySQL expertise and tooling
-- Vitess provides **transparent sharding** -- application code sees a single MySQL interface
+- Vitess provides transparent sharding -- application code sees a single MySQL interface
 - Supports cross-shard queries (needed for search, analytics)
 - MySQL's strong consistency model fits chat (no lost messages)
 
-**Sharding Strategy:**
-- **Shard key: channel_id** -- all messages for a channel on one shard
+Sharding Strategy:
+- Shard key: channel_id -- all messages for a channel on one shard
 - This means channel message queries never cross shards
 - ~256 shards initially, expandable to thousands
 - VTGate routes queries to correct shard transparently
 
-**Migration Process:**
+Migration Process:
 1. Set up Vitess cluster alongside existing MySQL
 2. Use Vitess VReplication for live data migration
 3. Shadow-read traffic: send reads to both old and new, compare results
 4. Cut over writes to Vitess
 5. Decommission old MySQL primary
 
-**Performance Impact:**
-- P99 query latency dropped from 50ms to **11ms**
+Performance Impact:
+- P99 query latency dropped from 50ms to 11ms
 - Write throughput increased 10x
 - Can scale horizontally by adding shards without application changes`
         },
         {
           question: 'Why did Discord migrate from Cassandra to ScyllaDB?',
-          answer: `Discord stored **trillions of messages** in Cassandra but hit severe performance issues as they scaled.
+          answer: `Discord stored trillions of messages in Cassandra but hit severe performance issues as they scaled.
 
-**Problems with Cassandra:**
-- **GC pauses**: Java-based Cassandra had unpredictable garbage collection pauses (up to 10 seconds)
-- **Tail latency**: P99 read latency spiked to 200ms+ during compaction
-- **Hot partitions**: Popular channels (millions of messages) caused partition-level hotspots
-- **Compaction storms**: SSTable compaction consumed all disk I/O periodically
+Problems with Cassandra:
+- GC pauses: Java-based Cassandra had unpredictable garbage collection pauses (up to 10 seconds)
+- Tail latency: P99 read latency spiked to 200ms+ during compaction
+- Hot partitions: Popular channels (millions of messages) caused partition-level hotspots
+- Compaction storms: SSTable compaction consumed all disk I/O periodically
 
-**Why ScyllaDB?**
-- **C++ implementation** -- no GC pauses, predictable latency
-- **Shard-per-core architecture** -- each CPU core owns a portion of data, eliminating contention
-- **Compatible with Cassandra** -- uses same CQL protocol, minimal code changes
-- **Better compaction** -- incremental compaction avoids I/O storms
+Why ScyllaDB?
+- C++ implementation -- no GC pauses, predictable latency
+- Shard-per-core architecture -- each CPU core owns a portion of data, eliminating contention
+- Compatible with Cassandra -- uses same CQL protocol, minimal code changes
+- Better compaction -- incremental compaction avoids I/O storms
 
-**Migration Results:**
-- P99 read latency dropped from 200ms to **4ms**
-- P99 write latency dropped from 40ms to **1.5ms**
-- Reduced cluster size from 177 Cassandra nodes to **72 ScyllaDB nodes**
+Migration Results:
+- P99 read latency dropped from 200ms to 4ms
+- P99 write latency dropped from 40ms to 1.5ms
+- Reduced cluster size from 177 Cassandra nodes to 72 ScyllaDB nodes
 - Tail latency during compaction became negligible
 
-**Data Model (unchanged):**
+Data Model (unchanged):
 Partition key: channel_id, Clustering key: message_id (Snowflake, time-sorted). Messages within a channel are co-located and sorted by time, enabling efficient range scans for history loading.`
         },
         {
           question: 'How does the presence system scale to millions of users?',
           answer: `Presence (online/away/offline status) generates massive traffic -- every user's status must be tracked and broadcast to relevant peers.
 
-**The Problem:**
+The Problem:
 With 5M concurrent users, naive broadcasting of every status change to all contacts would generate billions of events per minute.
 
-**Slack's Presence Architecture:**
-1. **Heartbeat-based detection**: Client sends heartbeat every 30 seconds. If 3 heartbeats missed, mark as offline.
-2. **Redis TTL for state**: Each user's presence stored in Redis with 90-second TTL. Heartbeat refreshes TTL.
-3. **Lazy evaluation**: Don't push presence changes. Instead, clients **pull** presence for visible users.
-4. **Subscription-based updates**: Client subscribes to presence changes only for users visible in the sidebar.
-5. **Batch broadcasting**: Aggregate presence changes over 5-second windows and broadcast as a batch.
+Slack's Presence Architecture:
+1. Heartbeat-based detection: Client sends heartbeat every 30 seconds. If 3 heartbeats missed, mark as offline.
+2. Redis TTL for state: Each user's presence stored in Redis with 90-second TTL. Heartbeat refreshes TTL.
+3. Lazy evaluation: Don't push presence changes. Instead, clients pull presence for visible users.
+4. Subscription-based updates: Client subscribes to presence changes only for users visible in the sidebar.
+5. Batch broadcasting: Aggregate presence changes over 5-second windows and broadcast as a batch.
 
-**Optimization -- "Presence Fanout Budget":**
+Optimization -- "Presence Fanout Budget":
 - For workspaces under 1K users: broadcast all changes immediately
 - For large workspaces (10K+): only broadcast to users who have the sidebar open
 - For enterprise (100K+): presence is fetched on-demand, never pushed
 
-This approach reduced presence traffic by **95%** compared to naive broadcast.`
+This approach reduced presence traffic by 95% compared to naive broadcast.`
         },
         {
           question: 'How does channel fan-out work for message delivery?',
           answer: `When a message is sent to a channel with 10K members, delivering it to all online members is a fan-out problem.
 
-**Push vs Pull Fan-out:**
-**Push (write fan-out):** On message send, push to every online member's WebSocket.
+Push vs Pull Fan-out:
+Push (write fan-out): On message send, push to every online member's WebSocket.
 - Pros: Instant delivery, simple client code
 - Cons: Expensive for large channels -- 10K pushes per message
 
-**Pull (read fan-out):** Store message in channel, clients poll for new messages.
+Pull (read fan-out): Store message in channel, clients poll for new messages.
 - Pros: Cheap writes, works well for channels with many lurkers
 - Cons: Higher latency, wastes bandwidth polling idle channels
 
-**Slack's Hybrid Approach:**
-- **Small channels (<1K members):** Push via Redis Pub/Sub. Each gateway subscribes to the channel topic. On new message, Redis fans out to all subscribed gateways, which push to their connected members.
-- **Large channels (1K+ members):** Write to channel store, push only to **active** members (those who have the channel open). Lurkers get unread badges via a lightweight counter update.
-- **@here/@channel mentions in large channels:** Trigger push notifications to all members regardless of active state.
+Slack's Hybrid Approach:
+- Small channels (<1K members): Push via Redis Pub/Sub. Each gateway subscribes to the channel topic. On new message, Redis fans out to all subscribed gateways, which push to their connected members.
+- Large channels (1K+ members): Write to channel store, push only to active members (those who have the channel open). Lurkers get unread badges via a lightweight counter update.
+- @here/@channel mentions in large channels: Trigger push notifications to all members regardless of active state.
 
 Each gateway maintains a local mapping of channelId to connected userIds, so the final fan-out is a local in-memory lookup.`
         },
         {
           question: 'How does message search work at scale?',
-          answer: `Slack indexes **billions of messages** across millions of workspaces in Elasticsearch for full-text search.
+          answer: `Slack indexes billions of messages across millions of workspaces in Elasticsearch for full-text search.
 
-**Indexing Pipeline:**
+Indexing Pipeline:
 1. Message persisted to Vitess (primary store)
 2. Change Data Capture (CDC) event emitted to Kafka
 3. Search Indexer consumes from Kafka, writes to Elasticsearch
 4. Indexing lag: 1-5 seconds (acceptable for search)
 
-**Elasticsearch Index Design:**
-- **Shard by workspace_id**: All messages for a workspace on the same set of shards
-- **Time-based index rotation**: Monthly indices (messages-2024-01, messages-2024-02)
-- **Hot-warm-cold architecture**: Recent months on SSDs, older months on cheaper storage
+Elasticsearch Index Design:
+- Shard by workspace_id: All messages for a workspace on the same set of shards
+- Time-based index rotation: Monthly indices (messages-2024-01, messages-2024-02)
+- Hot-warm-cold architecture: Recent months on SSDs, older months on cheaper storage
 
-**Access Control:**
+Access Control:
 Search results are filtered by the requesting user's channel membership. This is enforced at query time using a terms filter on channel_id. Users only see messages from channels they belong to.
 
-**Performance:**
+Performance:
 - P50 search latency: ~50ms
 - P99 search latency: ~200ms
 - Highlighting and snippet generation adds ~10ms`
@@ -13085,45 +13085,45 @@ Search results are filtered by the requesting user's channel membership. This is
           question: 'How are notifications delivered to offline users?',
           answer: `When a user is offline (no active WebSocket), they need push notifications for important messages.
 
-**Notification Decision Pipeline:**
+Notification Decision Pipeline:
 1. Message arrives at Message Service
 2. Check recipient's connection status in Redis registry
 3. If online: deliver via WebSocket (done)
 4. If offline: evaluate notification rules
 
-**Notification Rules (per channel per user):**
-- **All messages**: Push for every message (default for DMs)
-- **Mentions only**: Push only for @user, @here, @channel
-- **Nothing**: No push (muted channels)
-- **DND schedule**: Suppress during configured hours
+Notification Rules (per channel per user):
+- All messages: Push for every message (default for DMs)
+- Mentions only: Push only for @user, @here, @channel
+- Nothing: No push (muted channels)
+- DND schedule: Suppress during configured hours
 
-**Batching and Deduplication:**
+Batching and Deduplication:
 If a user receives 10 messages in a channel within 30 seconds, send ONE push notification ("10 new messages in #engineering") instead of 10 separate pushes. This prevents notification fatigue.
 
-**Delivery:**
+Delivery:
 Kafka notification topic -> Notification Worker -> Check preferences -> Deduplicate -> Send via APNs (iOS) / FCM (Android). Email fallback if push not delivered within 2 minutes.`
         },
         {
           question: 'How does file sharing work at scale?',
           answer: `Slack processes millions of file uploads daily. Files must be scanned, stored, and served with proper access control.
 
-**Upload Flow (Pre-signed URL pattern):**
+Upload Flow (Pre-signed URL pattern):
 1. Client requests upload URL: POST /api/files/upload-url
 2. Server generates pre-signed S3 URL (expires in 15 minutes)
 3. Client uploads directly to S3 (bypasses application servers)
 4. S3 triggers Lambda for post-processing
 5. Client notifies server of completion with file metadata
 
-**Post-Processing Pipeline:**
-- **Virus scanning**: ClamAV scan before making file available
-- **Thumbnail generation**: For images, generate 3 sizes (small/medium/large)
-- **Preview generation**: For PDFs/docs, generate preview images
-- **Metadata extraction**: File type, dimensions, duration (for audio/video)
+Post-Processing Pipeline:
+- Virus scanning: ClamAV scan before making file available
+- Thumbnail generation: For images, generate 3 sizes (small/medium/large)
+- Preview generation: For PDFs/docs, generate preview images
+- Metadata extraction: File type, dimensions, duration (for audio/video)
 
-**Access Control:**
+Access Control:
 Files inherit the access permissions of the channel where they were shared. S3 URLs are signed with short TTLs (1 hour) and regenerated on each access.
 
-**Storage Tiers:**
+Storage Tiers:
 - Hot (< 30 days): S3 Standard with CloudFront CDN
 - Warm (30 days - 1 year): S3 Infrequent Access
 - Cold (> 1 year): S3 Glacier (Enterprise plans only)
@@ -13133,27 +13133,27 @@ Files inherit the access permissions of the channel where they were shared. S3 U
           question: 'How is rate limiting implemented to prevent abuse?',
           answer: `Rate limiting is essential to prevent bots, integrations, and bad actors from overwhelming the system.
 
-**Multi-Layer Rate Limiting:**
+Multi-Layer Rate Limiting:
 
-**Layer 1 -- API Gateway (global):**
+Layer 1 -- API Gateway (global):
 - Token bucket per API key: 20 requests/second (Tier 1), 100/s (Tier 4)
 - Separate limits for read vs write endpoints
 - 429 Too Many Requests response with Retry-After header
 
-**Layer 2 -- WebSocket Gateway:**
+Layer 2 -- WebSocket Gateway:
 - Message send rate: 1 message/second per user per channel
 - Typing indicator: 1 event per 3 seconds per user
 - Connection rate: Max 10 reconnects per minute per user
 
-**Layer 3 -- Bot/Integration Rate Limits:**
+Layer 3 -- Bot/Integration Rate Limits:
 - Per-bot: 1 message/second per channel
 - Per-workspace: 30 bot messages/minute total
 - Burst allowance: 5 messages instantly, then 1/second
 
-**Implementation:**
+Implementation:
 Rate limits use Redis with the sliding window algorithm. If the window count exceeds the limit, reject the request.
 
-**Backpressure:**
+Backpressure:
 When a channel receives messages faster than members can consume, the gateway applies backpressure: batch messages into groups of 5 and send as a single WebSocket frame. This prevents overwhelming slow clients.`
         }
       ],
@@ -13405,11 +13405,11 @@ When a channel receives messages faster than members can consume, the gateway ap
         keyChallenge: 'Serving sub-200ms proximity search results across 7.74M businesses with real-time aggregate ratings computed from 330M reviews.',
       },
 
-      introduction: `Yelp is the dominant local business discovery platform with **178 million unique monthly visitors**, **330 million cumulative reviews**, and **7.74 million claimed business listings**. Users search for nearby restaurants, shops, and services based on location, category, and ratings.
+      introduction: `Yelp is the dominant local business discovery platform with 178 million unique monthly visitors, 330 million cumulative reviews, and 7.74 million claimed business listings. Users search for nearby restaurants, shops, and services based on location, category, and ratings.
 
-The key challenges are: efficient **proximity search** using geospatial indexing (QuadTree vs Geohash), maintaining accurate **aggregate ratings** without recomputing from scratch on every read, handling massive volumes of **user-generated content** (reviews, photos), and detecting **fake reviews** at scale using ML models.
+The key challenges are: efficient proximity search using geospatial indexing (QuadTree vs Geohash), maintaining accurate aggregate ratings without recomputing from scratch on every read, handling massive volumes of user-generated content (reviews, photos), and detecting fake reviews at scale using ML models.
 
-What makes Yelp's search fundamentally different from a standard text search engine? Every query has a **geographic component** -- results must be within a certain radius of the user. This requires specialized spatial data structures (QuadTree, Geohash, or PostGIS) that can efficiently answer "find all businesses within 5km of this point" while also filtering by category, price, and rating.
+What makes Yelp's search fundamentally different from a standard text search engine? Every query has a geographic component -- results must be within a certain radius of the user. This requires specialized spatial data structures (QuadTree, Geohash, or PostGIS) that can efficiently answer "find all businesses within 5km of this point" while also filtering by category, price, and rating.
 
 At Yelp's scale, the geospatial index must support ~344 searches per second with sub-200ms latency, while the review system must handle continuous ingestion and fraud detection across 330M+ reviews.`,
 
@@ -13547,90 +13547,90 @@ user_actions {
           question: 'QuadTree vs Geohash -- which is better for proximity search?',
           answer: `Both are valid approaches for geospatial indexing, but they have different trade-offs.
 
-**QuadTree:**
+QuadTree:
 A tree data structure that recursively divides 2D space into four quadrants. Each leaf node contains businesses in that area. Denser areas (cities) get subdivided more deeply than sparse areas (rural).
 
-**How search works:** Start at root, descend into the quadrant containing the user's location, then expand to neighboring quadrants until enough results are found or the search radius is covered.
+How search works: Start at root, descend into the quadrant containing the user's location, then expand to neighboring quadrants until enough results are found or the search radius is covered.
 
-**Geohash:**
+Geohash:
 Encodes lat/lng into a string where longer prefixes mean more precision. "9q8yy" represents a ~1km cell in San Francisco. Nearby locations share common prefixes.
 
-**How search works:** Compute the user's geohash, then query for all businesses with the same prefix. Also query 8 neighboring cells to handle boundary cases.
+How search works: Compute the user's geohash, then query for all businesses with the same prefix. Also query 8 neighboring cells to handle boundary cases.
 
-**Key Differences:**
+Key Differences:
 QuadTree adapts to density -- Manhattan gets deep trees, rural Kansas gets shallow ones. Geohash has fixed-size cells regardless of density. For Yelp's 7.74M businesses, a QuadTree fits in ~1.71GB of memory and provides O(log n) lookup. Geohash is simpler to implement with standard database indexes.
 
-**Recommendation:** QuadTree as the primary in-memory index for search servers, with Geohash stored in the database for simple prefix queries and caching.`
+Recommendation: QuadTree as the primary in-memory index for search servers, with Geohash stored in the database for simple prefix queries and caching.`
         },
         {
           question: 'How does the radius search algorithm work?',
           answer: `The core challenge is efficiently finding all businesses within a given radius of the user's location.
 
-**Step 1: Candidate Generation (QuadTree)**
+Step 1: Candidate Generation (QuadTree)
 Starting from the user's coordinates, traverse the QuadTree to find all leaf nodes that intersect with the search circle. This narrows 7.74M businesses down to a few thousand candidates in O(log n) time.
 
-**Step 2: Exact Distance Filtering (Haversine)**
+Step 2: Exact Distance Filtering (Haversine)
 For each candidate, compute the exact distance using the Haversine formula. This accounts for the Earth's curvature, which matters at larger radii (5km+).
 
-**Step 3: Apply Filters**
+Step 3: Apply Filters
 Filter candidates by category, price range, rating, and "open now" status. These filters are applied in-memory on the candidate set.
 
-**Step 4: Ranking**
+Step 4: Ranking
 Sort remaining results by a weighted score combining: distance (40%), rating (30%), review count (15%), and profile completeness (15%).
 
-**Edge Case -- Cell Boundaries:**
+Edge Case -- Cell Boundaries:
 A business 100 meters from the user might fall in a different QuadTree leaf or Geohash cell. Solution: always query adjacent cells (8 neighbors for Geohash, or overlapping QuadTree nodes).
 
-**Dynamic Radius Expansion:**
+Dynamic Radius Expansion:
 If a search for "pizza within 1km" returns fewer than 5 results, automatically expand to 2km, then 5km. This prevents empty results in low-density areas.`
         },
         {
           question: 'How does Haversine distance calculation work?',
           answer: `The Haversine formula calculates the great-circle distance between two points on a sphere (the Earth), given their latitude and longitude.
 
-**Why not Euclidean distance?**
+Why not Euclidean distance?
 At small scales (<1km), Euclidean approximation works fine. But at larger distances, the Earth's curvature matters. Euclidean distance between San Francisco and New York would be significantly wrong.
 
-**The Formula:**
+The Formula:
 a = sin2(dlat/2) + cos(lat1) * cos(lat2) * sin2(dlng/2)
 distance = 2 * R * arcsin(sqrt(a))
 where R = 6,371 km (Earth's radius)
 
-**Performance at Scale:**
+Performance at Scale:
 Computing Haversine for every business in the database would be too slow. The two-phase approach (QuadTree for candidates, Haversine for exact distance) ensures we only compute Haversine for a small candidate set (~1K businesses).
 
-**Optimization -- Bounding Box Pre-filter:**
+Optimization -- Bounding Box Pre-filter:
 Before Haversine, apply a simple bounding box check: reject any business where abs(lat_diff) > radius/111km or abs(lng_diff) > radius/(111km * cos(lat)). This eliminates 90%+ of candidates with simple arithmetic before the expensive trig functions.
 
-**Accuracy:** Haversine assumes a perfect sphere. For sub-meter accuracy, use Vincenty's formula (ellipsoidal model), but Haversine is sufficient for Yelp's use case.`
+Accuracy: Haversine assumes a perfect sphere. For sub-meter accuracy, use Vincenty's formula (ellipsoidal model), but Haversine is sufficient for Yelp's use case.`
         },
         {
           question: 'How are edge cases at cell boundaries handled?',
           answer: `Cell boundary issues are the most common pitfall in geospatial system design interviews.
 
-**The Problem:**
+The Problem:
 A user standing at the edge of a Geohash cell might be 50 meters from a restaurant that falls in a different cell. If we only query the user's cell, we miss nearby results.
 
-**Solution 1: Query 8 Neighbors (Geohash)**
+Solution 1: Query 8 Neighbors (Geohash)
 Always query the user's cell plus all 8 surrounding cells. This creates a 3x3 grid that covers the entire search area for typical radii.
 
-**Solution 2: Overlapping QuadTree Traversal**
+Solution 2: Overlapping QuadTree Traversal
 When traversing the QuadTree, check if the search circle intersects with any adjacent quadrant. If the user is within the search radius of a quadrant boundary, descend into both quadrants.
 
-**Solution 3: Multi-Resolution Geohash**
+Solution 3: Multi-Resolution Geohash
 Use a shorter Geohash prefix (fewer characters = larger cell) to cast a wider net, then filter by exact distance. For example, "9q8y" covers ~5km vs "9q8yy" covering ~1km.
 
-**Handling the International Date Line:**
+Handling the International Date Line:
 Businesses near the 180th meridian (e.g., in Fiji or New Zealand) have longitude values that wrap from +180 to -180. Standard range queries fail here. Solution: normalize coordinates to [0, 360] or use a modular arithmetic approach.
 
-**Polar Regions:**
+Polar Regions:
 Near the poles, longitude lines converge, making rectangular bounding boxes extremely wide. Use adaptive cell sizing or switch to an S2-based index for polar accuracy.`
         },
         {
           question: 'How does dynamic radius expansion work?',
           answer: `In low-density areas, a 1km search might return zero results. Dynamic radius expansion ensures users always see relevant results.
 
-**Algorithm:**
+Algorithm:
 1. Start with the user's requested radius (default: 5km)
 2. Execute search query with this radius
 3. If results < minimum threshold (e.g., 5 businesses):
@@ -13639,123 +13639,123 @@ Near the poles, longitude lines converge, making rectangular bounding boxes extr
    - Cap at maximum radius (50km)
 4. If results > maximum page size, use the original radius
 
-**Implementation Optimization:**
+Implementation Optimization:
 Rather than re-querying from scratch on each expansion, use concentric ring queries:
 - Ring 1: 0-5km (initial query)
 - Ring 2: 5-10km (query only the delta)
 - Ring 3: 10-20km (query only the delta)
 Merge results from all rings until we have enough.
 
-**QuadTree Advantage:**
+QuadTree Advantage:
 The QuadTree naturally supports this pattern. Start traversal from the leaf containing the user, then expand to siblings, then parent's siblings, etc. Each level of the tree doubles the search area.
 
-**User Experience:**
+User Experience:
 Display results grouped by distance: "Nearby (within 1km)", "A bit farther (1-5km)", "Worth the drive (5-20km)". This sets expectations when results require radius expansion.
 
-**Performance:** Even with expansion, search stays under 200ms because the QuadTree traversal is O(log n) and in-memory.`
+Performance: Even with expansion, search stays under 200ms because the QuadTree traversal is O(log n) and in-memory.`
         },
         {
           question: 'How does the "open now" real-time filter work?',
           answer: `Filtering by "open now" is one of the most requested features but is surprisingly complex to implement correctly.
 
-**The Problem:**
+The Problem:
 Each business has operating hours stored as structured data (e.g., Mon: 9:00-17:00). But hours vary by day, may span midnight (bars: 20:00-02:00), and change for holidays. Computing "open now" for thousands of search results must be fast.
 
-**Approach 1: Compute at Query Time**
+Approach 1: Compute at Query Time
 For each business in the search results, evaluate the current day/time against the hours schedule. This is O(1) per business but adds ~10ms for 1000 results.
 
-**Approach 2: Pre-compute with Short TTL**
+Approach 2: Pre-compute with Short TTL
 Every 5 minutes, a background job computes is_open for all 7.74M businesses and stores it as a boolean flag. Search queries filter on this flag. The flag is refreshed every 5 minutes, so accuracy is within 5 minutes.
 
-**Handling Complex Schedules:**
-- **Midnight spanning**: Bar hours "20:00-02:00" stored as two intervals: 20:00-23:59 and 00:00-02:00
-- **Holiday hours**: Override table keyed by (business_id, date) checked first
-- **Temporary closures**: "Closed for renovation" flag overrides all hours
-- **Time zones**: All hours stored in the business's local timezone. Search converts user's UTC time to business's timezone before comparison.
+Handling Complex Schedules:
+- Midnight spanning: Bar hours "20:00-02:00" stored as two intervals: 20:00-23:59 and 00:00-02:00
+- Holiday hours: Override table keyed by (business_id, date) checked first
+- Temporary closures: "Closed for renovation" flag overrides all hours
+- Time zones: All hours stored in the business's local timezone. Search converts user's UTC time to business's timezone before comparison.
 
-**Recommendation:** Pre-compute every 5 minutes for search filtering (fast), compute exactly at query time for the business detail page (accurate).`
+Recommendation: Pre-compute every 5 minutes for search filtering (fast), compute exactly at query time for the business detail page (accurate).`
         },
         {
           question: 'How does review spam detection work?',
           answer: `Fake reviews are Yelp's biggest trust challenge. Their recommendation engine filters ~25% of all reviews as potentially fake.
 
-**Fraud Signals (Features for ML Model):**
-- **Account age**: New accounts posting multiple reviews quickly
-- **Review velocity**: 5+ reviews in one day from one account
-- **Linguistic patterns**: Generic text, copy-pasted templates, excessive superlatives
-- **Geographic anomaly**: Review from a country the user has never visited
-- **Device/IP reputation**: Multiple accounts from same device or IP
-- **Social graph**: Reviewer has no friends, no profile photo, no check-ins
+Fraud Signals (Features for ML Model):
+- Account age: New accounts posting multiple reviews quickly
+- Review velocity: 5+ reviews in one day from one account
+- Linguistic patterns: Generic text, copy-pasted templates, excessive superlatives
+- Geographic anomaly: Review from a country the user has never visited
+- Device/IP reputation: Multiple accounts from same device or IP
+- Social graph: Reviewer has no friends, no profile photo, no check-ins
 
-**ML Classification Pipeline:**
+ML Classification Pipeline:
 1. New review submitted
 2. Extract features (account, behavioral, linguistic, geographic)
 3. Run through gradient-boosted classifier (XGBoost)
 4. Output: spam_probability (0.0 to 1.0)
 5. If > 0.95: auto-reject. If > 0.7: hold for human review. If < 0.7: publish.
 
-**Organized Campaigns:**
+Organized Campaigns:
 Detect coordinated fake review campaigns by looking for clusters: multiple reviews for the same business from accounts created within the same week, with similar writing styles.
 
-**Business Owner Incentives:**
+Business Owner Incentives:
 Yelp penalizes businesses caught soliciting fake reviews by adding a "Consumer Alert" banner. This deters manipulation more effectively than just removing reviews.`
         },
         {
           question: 'How does hot-spot caching work for popular businesses?',
           answer: `A tiny fraction of businesses (popular restaurants, tourist attractions) receive a disproportionate share of traffic. Caching these hot spots is critical.
 
-**Traffic Distribution (Power Law):**
+Traffic Distribution (Power Law):
 ~1% of businesses (77K) receive ~50% of all page views. These are the "hot" businesses that must be cached aggressively.
 
-**Multi-Layer Cache:**
+Multi-Layer Cache:
 
-**Layer 1: CDN Edge Cache**
+Layer 1: CDN Edge Cache
 Business profile pages and photos cached at CloudFront/Cloudflare edge locations. TTL: 10 minutes for business data, 24 hours for photos. Handles 80% of read traffic.
 
-**Layer 2: Application Cache (Redis)**
+Layer 2: Application Cache (Redis)
 Business details, recent reviews, and aggregate ratings cached in Redis. TTL: 5 minutes. Cache key: business:{id}. On cache miss, fetch from database and populate cache.
 
-**Layer 3: Search Result Cache**
+Layer 3: Search Result Cache
 Common search queries cached: "pizza near 94105", "coffee shops downtown". Cache key includes: query + geohash(4 chars) + sort + filters. TTL: 2 minutes (short due to location sensitivity).
 
-**Cache Invalidation:**
+Cache Invalidation:
 - New review: invalidate business cache (rating changes)
 - Business update: invalidate business cache + search cache for that area
 - Use Kafka CDC events from the database to trigger invalidation
 
-**Hot Business Protection:**
+Hot Business Protection:
 For viral businesses (e.g., restaurant featured on a TV show), pre-warm the cache and increase TTL to 30 minutes. Use a "stale-while-revalidate" pattern to serve slightly stale data while refreshing in the background.`
         },
         {
           question: 'How does search ranking work?',
           answer: `Yelp's search ranking combines multiple signals to determine which businesses appear first.
 
-**Ranking Signals (weighted):**
+Ranking Signals (weighted):
 
-**1. Distance (30-40% weight):**
+1. Distance (30-40% weight):
 Closer businesses rank higher. Uses distance decay function: score = 1 / (1 + distance_km). A business 0.5km away scores 0.67, one 5km away scores 0.17.
 
-**2. Rating Quality (25-30% weight):**
+2. Rating Quality (25-30% weight):
 Not just average rating -- uses Bayesian average to penalize businesses with few reviews. A 5.0 rating from 2 reviews ranks lower than a 4.5 from 500 reviews.
 Bayesian: weighted_rating = (v/(v+m)) * R + (m/(v+m)) * C
 where v=review count, m=minimum reviews threshold, R=average rating, C=global mean.
 
-**3. Review Recency (10-15% weight):**
+3. Review Recency (10-15% weight):
 Recent reviews weighted more heavily. A restaurant that was great 5 years ago but terrible recently should rank lower.
 
-**4. Business Completeness (10% weight):**
+4. Business Completeness (10% weight):
 Profiles with photos, hours, menu, and claimed owner status rank higher. Signals that the business is active and trustworthy.
 
-**5. User Personalization (5-10% weight):**
+5. User Personalization (5-10% weight):
 Based on user's past searches, check-ins, and review history. If user frequently visits Italian restaurants, Italian results get a slight boost.
 
-**Implementation:** Elasticsearch custom scoring function combines all signals into a single relevance score. Top 20 results returned per page.`
+Implementation: Elasticsearch custom scoring function combines all signals into a single relevance score. Top 20 results returned per page.`
         },
         {
           question: 'How does the photo CDN and gallery work?',
           answer: `Yelp hosts billions of user-uploaded photos. Efficient storage, processing, and delivery are critical for page load performance.
 
-**Upload Pipeline:**
+Upload Pipeline:
 1. User uploads photo via mobile app or web
 2. Photo sent to upload service (pre-signed S3 URL)
 3. Post-processing Lambda triggered:
@@ -13765,20 +13765,20 @@ Based on user's past searches, check-ins, and review history. If user frequently
    - Compute perceptual hash for duplicate detection
 4. Store all sizes in S3 with CDN distribution
 
-**CDN Strategy:**
+CDN Strategy:
 - CloudFront with regional edge caches (100+ PoPs worldwide)
 - Photos are immutable -- once uploaded, URL never changes
 - Cache TTL: 30 days (photos rarely change)
 - Lazy loading: thumbnails load first, full-size on click
 
-**Photo Ranking:**
+Photo Ranking:
 Not all photos are equal. The "primary photo" for a business listing is selected by:
 1. Photo quality score (ML model: sharpness, lighting, composition)
 2. Number of "helpful" votes from users
 3. Recency (newer photos preferred)
 4. Diversity (show food, interior, exterior -- not 10 food shots)
 
-**Storage Optimization:**
+Storage Optimization:
 - WebP format for modern browsers (30% smaller than JPEG)
 - Progressive JPEG fallback for older browsers
 - Deduplication via perceptual hashing (same photo uploaded by different users)
@@ -14005,13 +14005,13 @@ Not all photos are equal. The "primary photo" for a business listing is selected
         keyChallenge: 'Processing 1.6 billion swipes per day (18.5K/sec) with real-time match detection while generating personalized recommendation stacks for 75M monthly users using geospatial indexing.',
       },
 
-      introduction: `Tinder is the world's most popular dating app with **75 million monthly active users** and **26 million daily active users** across **190+ countries**. Users swipe right to like or left to pass on potential matches. When two users mutually like each other, they "match" and can start chatting.
+      introduction: `Tinder is the world's most popular dating app with 75 million monthly active users and 26 million daily active users across 190+ countries. Users swipe right to like or left to pass on potential matches. When two users mutually like each other, they "match" and can start chatting.
 
-The scale is staggering: **1.6 billion swipes per day** (18.5K swipes/sec), **75 billion+ all-time matches**, and the system must generate fresh, personalized recommendation stacks for millions of concurrent users based on location, preferences, and an attractiveness scoring system.
+The scale is staggering: 1.6 billion swipes per day (18.5K swipes/sec), 75 billion+ all-time matches, and the system must generate fresh, personalized recommendation stacks for millions of concurrent users based on location, preferences, and an attractiveness scoring system.
 
-Key challenges include: finding nearby users efficiently using **S2 geospatial cells** (Google's library, used by Tinder), generating personalized recommendations at massive scale with a scoring system that balances attractiveness tiers, detecting mutual matches in real-time using **Redis** for O(1) lookup, preventing swipe deduplication, and managing profile photos across a global CDN.
+Key challenges include: finding nearby users efficiently using S2 geospatial cells (Google's library, used by Tinder), generating personalized recommendations at massive scale with a scoring system that balances attractiveness tiers, detecting mutual matches in real-time using Redis for O(1) lookup, preventing swipe deduplication, and managing profile photos across a global CDN.
 
-What makes Tinder's architecture unique compared to other geospatial apps (Uber, Yelp)? The recommendation system must consider **mutual compatibility** -- it's not enough that User A likes User B's profile; the system should predict whether User B would also like User A. This bidirectional matching requirement drives the ELO/progressive taxation scoring system.`,
+What makes Tinder's architecture unique compared to other geospatial apps (Uber, Yelp)? The recommendation system must consider mutual compatibility -- it's not enough that User A likes User B's profile; the system should predict whether User B would also like User A. This bidirectional matching requirement drives the ELO/progressive taxation scoring system.`,
 
       estimation: {
         title: 'Capacity Planning',
@@ -14181,47 +14181,47 @@ recommendation_queue {
       keyQuestions: [
         {
           question: 'How does S2 geosharding work for finding nearby users?',
-          answer: `Tinder uses Google's **S2 Geometry Library** for geospatial indexing, which is more sophisticated than simple Geohash.
+          answer: `Tinder uses Google's S2 Geometry Library for geospatial indexing, which is more sophisticated than simple Geohash.
 
-**What is S2?**
+What is S2?
 S2 projects the Earth's surface onto a cube, then unwraps each face into a quadtree. Each cell has a unique 64-bit ID. Cells at the same level have roughly equal area (unlike Geohash, which distorts near the poles).
 
-**How Tinder uses S2:**
+How Tinder uses S2:
 1. Each user's location is mapped to an S2 cell at level 12 (~3.3km cells)
 2. Users are indexed by their S2 cell ID in the database
 3. For a 10km radius search, compute the S2 cell covering (set of cells that cover a 10km circle)
 4. Query all users in those cells, then filter by exact distance
 
-**Why S2 over Geohash?**
-- **No polar distortion**: Geohash cells become very elongated near the poles. S2 cells maintain consistent area.
-- **Hierarchical**: Can quickly zoom in/out by changing cell level (level 10 = ~30km, level 14 = ~400m)
-- **Efficient coverings**: S2 can represent a circular search area with fewer cells than Geohash's rectangular approximation
+Why S2 over Geohash?
+- No polar distortion: Geohash cells become very elongated near the poles. S2 cells maintain consistent area.
+- Hierarchical: Can quickly zoom in/out by changing cell level (level 10 = ~30km, level 14 = ~400m)
+- Efficient coverings: S2 can represent a circular search area with fewer cells than Geohash's rectangular approximation
 
-**Database Sharding by S2 Cell:**
+Database Sharding by S2 Cell:
 Users are sharded by their S2 cell level 6 (~80km regions). All users in the same geographic region are on the same shard, making proximity queries shard-local.`
         },
         {
           question: 'How does the recommendation algorithm work?',
           answer: `Tinder's recommendation system is a two-stage pipeline: candidate generation followed by ranking.
 
-**Stage 1: Candidate Generation**
+Stage 1: Candidate Generation
 Generate a pool of ~10K potential profiles for the user:
 1. Query users in the same S2 cell region (same geographic area)
 2. Filter by mutual preferences: age range overlap, gender match, interested_in match
 3. Exclude already-swiped users (check against swipe log)
 4. Filter by last-active time (only show users active in last 7 days)
 
-**Stage 2: Ranking (ELO-like Scoring)**
+Stage 2: Ranking (ELO-like Scoring)
 Rank candidates by predicted mutual interest using a scoring model:
-- **ELO score similarity**: Users with similar attractiveness scores are shown to each other
-- **Distance weight**: Closer users ranked higher (exponential decay)
-- **Activity recency**: Recently active users boosted
-- **Profile completeness**: Users with more photos and bio text ranked higher
+- ELO score similarity: Users with similar attractiveness scores are shown to each other
+- Distance weight: Closer users ranked higher (exponential decay)
+- Activity recency: Recently active users boosted
+- Profile completeness: Users with more photos and bio text ranked higher
 
-**Pre-computation:**
+Pre-computation:
 Recommendations are generated as a batch job (every few hours) and stored in a Redis sorted set per user. When the user opens the app, the stack is served instantly. When depleted, a new batch is triggered.
 
-**Diversity Rules:**
+Diversity Rules:
 - Don't show 10 profiles of the same "type" consecutively
 - Mix high-confidence matches with exploratory profiles
 - Boost new users (cold start) by showing them to more people initially`
@@ -14230,167 +14230,167 @@ Recommendations are generated as a batch job (every few hours) and stored in a R
           question: 'How does real-time match detection work with Redis?',
           answer: `Match detection must be instant -- when User A likes User B, if User B already liked User A, both should be notified within 1 second.
 
-**Redis-Based O(1) Match Detection:**
+Redis-Based O(1) Match Detection:
 
-**On LIKE swipe:**
+On LIKE swipe:
 1. Record the like: \`SADD user:{swiperId}:likes {targetId}\`
 2. Check for reciprocal: \`SISMEMBER user:{targetId}:likes {swiperId}\`
 3. If SISMEMBER returns true -> MATCH FOUND
 
-**Match Creation (atomic):**
+Match Creation (atomic):
 1. Create match record in database
 2. Send push notification to both users
 3. Remove both users from each other's recommendation queues
 4. Open chat channel for the match
 
-**Why Redis Sets?**
+Why Redis Sets?
 - SADD is O(1) -- constant time regardless of how many likes a user has
 - SISMEMBER is O(1) -- instant reciprocal check
 - Memory efficient: 26M DAU x avg 200 pending likes x 8 bytes = ~50 GB (fits in Redis cluster)
 
-**Durability:**
+Durability:
 Redis is the hot path for speed, but likes are also asynchronously persisted to Cassandra for durability. If Redis loses data, the swipe log in Cassandra can rebuild the like sets.
 
-**Race Condition Handling:**
+Race Condition Handling:
 If both users swipe right simultaneously, both will attempt to create a match. Use Redis SETNX on \`match:{min(id1,id2)}:{max(id1,id2)}\` as a distributed lock to ensure only one match record is created.`
         },
         {
           question: 'How does progressive taxation / ELO scoring work?',
           answer: `Tinder originally used an ELO-like system (now replaced by a more nuanced ML model) to ensure users see profiles at their "level."
 
-**The Core Idea:**
+The Core Idea:
 Every user has a hidden attractiveness score. The system tries to show you profiles with similar scores, creating a fair marketplace where you're likely to match.
 
-**How Scores Update:**
+How Scores Update:
 - When a high-scored user swipes right on you: your score increases significantly
 - When a low-scored user swipes right on you: your score increases slightly
 - When you receive a left-swipe: your score decreases (weighted by swiper's score)
 - This is analogous to chess ELO: beating a grandmaster gives more points than beating a beginner
 
-**Progressive Taxation:**
+Progressive Taxation:
 To prevent score stagnation and give new users a fair chance:
 - Scores decay slowly over time (inactive users lose points)
 - New users start with a "boost period" where they're shown to more people
 - Very high-scored users are occasionally shown lower-scored profiles (exploration)
 - The algorithm ensures everyone gets some right-swipes to maintain engagement
 
-**Why Not Pure Score Matching?**
+Why Not Pure Score Matching?
 If you only showed score-800 users to other score-800 users, you'd create echo chambers. Instead, 70% of recommendations match the user's tier, and 30% are "exploratory" from adjacent tiers.
 
-**Current Approach:**
+Current Approach:
 Tinder has moved toward ML-based ranking that considers more signals: photo quality, bio text quality, response rate in chats, and behavioral patterns.`
         },
         {
           question: 'How is swipe deduplication handled?',
           answer: `With 1.6B swipes/day, ensuring a user never sees the same profile twice is critical for the experience.
 
-**The Problem:**
+The Problem:
 When generating recommendations, we must exclude all profiles the user has already swiped on (liked or passed). At scale, a user might have swiped on 50K+ profiles over their lifetime.
 
-**Approach 1: Bloom Filter (Space-Efficient)**
+Approach 1: Bloom Filter (Space-Efficient)
 Store a Bloom filter per user containing all swiped profile IDs.
 - False positive rate: ~1% (acceptable -- user occasionally misses a profile they could see)
 - False negatives: zero (never shows a profile already swiped on)
 - Memory: ~100 KB per user for 50K swipes = ~2.5 TB for 26M DAU
 - Check time: O(k) where k = number of hash functions (typically 7)
 
-**Approach 2: Redis Sorted Set**
+Approach 2: Redis Sorted Set
 Store all swiped IDs in a Redis sorted set keyed by user ID.
 - ZRANGEBYSCORE to check membership: O(log n)
 - Memory: 8 bytes per ID x 50K swipes = 400 KB per user = ~10 TB for 26M DAU
 - More memory-intensive but allows "undo last swipe" (Rewind feature)
 
-**Approach 3: Database Query (Fallback)**
+Approach 3: Database Query (Fallback)
 For recommendation batch generation, query the swipe log: SELECT targetId FROM swipes WHERE swiperId = X. Index on (swiperId, targetId). Used during batch generation, not real-time.
 
-**Recommendation:** Bloom filter for real-time filtering during recommendation serving, Redis sorted set for users with premium Rewind feature, database for batch regeneration.`
+Recommendation: Bloom filter for real-time filtering during recommendation serving, Redis sorted set for users with premium Rewind feature, database for batch regeneration.`
         },
         {
           question: 'How does cross-region matching work?',
           answer: `Tinder operates in 190+ countries with users traveling and matching across regions.
 
-**Challenge:**
+Challenge:
 Users are sharded by S2 cell (geographic region). When a user in New York wants to match with someone in nearby New Jersey, the query must cross shard boundaries.
 
-**Architecture:**
-1. **Primary shard**: User data lives on the shard for their home S2 cell
-2. **Search radius**: When searching, compute S2 cell covering for the radius
-3. **Multi-shard fan-out**: If the covering spans multiple shards, query all relevant shards in parallel
-4. **Merge results**: Combine and rank results from all shards
+Architecture:
+1. Primary shard: User data lives on the shard for their home S2 cell
+2. Search radius: When searching, compute S2 cell covering for the radius
+3. Multi-shard fan-out: If the covering spans multiple shards, query all relevant shards in parallel
+4. Merge results: Combine and rank results from all shards
 
-**Tinder Passport (Premium Feature):**
+Tinder Passport (Premium Feature):
 Allows users to set their location to any city. Implementation:
 - Store "virtual location" alongside actual location
 - Index the user in the virtual location's S2 cell for discovery
 - Clear virtual location when Passport mode ends
 
-**Latency Optimization:**
+Latency Optimization:
 Cross-region queries are slower (~200ms vs ~50ms local). Mitigate by:
 - Pre-computing recommendation stacks that include nearby region users
 - Caching cross-region results for 1 hour
 - Prioritizing local results but supplementing with adjacent regions
 
-**Data Sovereignty:**
+Data Sovereignty:
 Some countries require user data to stay within their borders. For these regions, shards must be in local data centers, and cross-region queries are restricted.`
         },
         {
           question: 'How does the profile photo CDN work?',
           answer: `Tinder serves billions of profile photo views daily. Photos are the most bandwidth-intensive part of the system.
 
-**Upload Pipeline:**
+Upload Pipeline:
 1. User selects photo in app
 2. Client compresses to max 1MB and uploads to upload service
 3. Upload service runs NSFW detection ML model (reject explicit content)
 4. Generate 4 resolutions: thumbnail (100px), card (400px), full (800px), original
 5. Store all sizes in S3, create CDN distribution
 
-**CDN Architecture:**
+CDN Architecture:
 - CloudFront with 400+ edge locations worldwide
 - Photos are immutable (new upload = new URL)
 - Cache TTL: 7 days (photos rarely change)
 - Cache hit rate: ~95% (most users view the same popular profiles)
 
-**Smart Pre-loading:**
+Smart Pre-loading:
 The client pre-loads photos for the next 3-5 profiles in the recommendation stack. By the time the user swipes to the next profile, photos are already in the device cache. This creates the feeling of instant loading.
 
-**Bandwidth Optimization:**
+Bandwidth Optimization:
 - WebP format for Android (30% smaller than JPEG)
 - HEIC format for iOS
 - Progressive loading: show blurred placeholder while full image loads
 - Adaptive quality based on network speed (lower quality on 3G)
 
-**Storage:** 75M users x 5 photos x 4 sizes x 50KB avg = ~75 TB total. Monthly bandwidth: ~500 TB from CDN.`
+Storage: 75M users x 5 photos x 4 sizes x 50KB avg = ~75 TB total. Monthly bandwidth: ~500 TB from CDN.`
         },
         {
           question: 'How does chat after match work?',
           answer: `Once two users match, they can exchange messages. The chat system must handle millions of active match conversations.
 
-**Architecture:**
+Architecture:
 Chat uses a simplified version of the Slack/WhatsApp messaging pattern:
 1. WebSocket connection for real-time message delivery
 2. Cassandra for message persistence (partitioned by match_id)
 3. Redis for online presence and typing indicators
 
-**Message Flow:**
+Message Flow:
 1. User sends message via WebSocket
 2. Server validates: match exists, user is a member, not blocked
 3. Message persisted to Cassandra partition: match:{matchId}
 4. If recipient online: push via WebSocket
 5. If recipient offline: send push notification via APNs/FCM
 
-**Key Differences from Full Chat (Slack):**
+Key Differences from Full Chat (Slack):
 - Only 1:1 conversations (no groups, no channels)
 - No threading, no reactions, no file sharing (just text + GIFs)
 - Simpler presence: just online/offline (no away/DND)
 - Messages ephemeral by default (not indexed, not searchable)
 
-**Scale Considerations:**
+Scale Considerations:
 - ~26M new matches/day, but only ~30% result in conversation
 - Average conversation: 10-20 messages
 - Most conversations die within 48 hours
 - Storage is modest: ~8M active convos x 20 msgs x 200 bytes = ~32 GB/day
 
-**Safety Features:**
+Safety Features:
 - ML-based harassment detection (flag aggressive messages)
 - Photo sharing blocked by default (prevent unsolicited images)
 - Unmatch immediately deletes chat history for both users`
@@ -14399,25 +14399,25 @@ Chat uses a simplified version of the Slack/WhatsApp messaging pattern:
           question: 'How is abuse prevention handled?',
           answer: `With 75M users, abuse prevention is critical for user safety and platform trust.
 
-**Fake Profile Detection:**
-- **Photo verification**: User takes a selfie matching a specific pose, ML compares to profile photos
-- **Liveness check**: Requires blinking or head movement to prove it's not a static image
-- **Reverse image search**: Check if profile photos appear on other sites (stock photos, stolen images)
-- **Behavioral signals**: Fake profiles swipe right on everyone, never message, or send identical messages to all matches
+Fake Profile Detection:
+- Photo verification: User takes a selfie matching a specific pose, ML compares to profile photos
+- Liveness check: Requires blinking or head movement to prove it's not a static image
+- Reverse image search: Check if profile photos appear on other sites (stock photos, stolen images)
+- Behavioral signals: Fake profiles swipe right on everyone, never message, or send identical messages to all matches
 
-**Bot Detection:**
+Bot Detection:
 - Swipe rate anomaly: bots swipe faster than humans (>100 swipes/minute)
 - Session duration: bots have unnaturally long continuous sessions
 - CAPTCHA triggered after suspicious patterns
 - Device fingerprinting: detect emulators and automation tools
 
-**Report and Block System:**
+Report and Block System:
 1. User reports another user with category (inappropriate photos, harassment, spam, fake profile)
 2. Report triggers immediate review queue
 3. If user accumulates 3+ reports in 24 hours: auto-shadow-ban (user can still use app but is invisible to others)
 4. Human reviewer makes final decision (permanent ban, warning, or dismiss)
 
-**Proactive Safety:**
+Proactive Safety:
 - ML scans all messages for harassment keywords and patterns
 - Detect "moved to another platform" messages (potential scam indicator)
 - Underage detection from face analysis (flag for review)
@@ -14427,30 +14427,30 @@ Chat uses a simplified version of the Slack/WhatsApp messaging pattern:
           question: 'How do you handle cold start for new users?',
           answer: `New users have no swipe history, no ELO score, and no behavioral data. The system must provide great recommendations from day one.
 
-**The Cold Start Problem:**
+The Cold Start Problem:
 - No swipe history to learn preferences from
 - No ELO score to determine appropriate matches
 - No activity data to predict engagement patterns
 
-**Solution: Initial Boost Period**
+Solution: Initial Boost Period
 New users get a "new user boost" for the first 48 hours:
-1. **Increased visibility**: New profiles shown to 3x more users than established ones
-2. **Diverse exposure**: Show new user to a wide range of ELO tiers to quickly calibrate their score
-3. **Initial ELO**: Start at the median score (500/1000), rapidly adjust based on early swipe data
+1. Increased visibility: New profiles shown to 3x more users than established ones
+2. Diverse exposure: Show new user to a wide range of ELO tiers to quickly calibrate their score
+3. Initial ELO: Start at the median score (500/1000), rapidly adjust based on early swipe data
 
-**Preference Bootstrapping:**
+Preference Bootstrapping:
 - Use stated preferences (age range, distance, gender) for initial filtering
 - After 50 swipes, the system has enough data to start personalizing
 - After 200 swipes, recommendation quality approaches steady-state
 
-**Photo Quality Signal:**
+Photo Quality Signal:
 Even without behavioral data, the ML model can assess profile quality:
 - Number of photos (more = better)
 - Photo quality (resolution, lighting, faces detected)
 - Bio completeness and length
 - These signals bootstrap the initial attractiveness estimate
 
-**Feedback Loop:**
+Feedback Loop:
 The first 24 hours of swipe data from other users seeing the new profile provides rapid ELO calibration. If 40% of viewers swipe right, the score is adjusted up significantly. This makes the cold start period short (~48 hours to stable recommendations).`
         }
       ],
@@ -14869,45 +14869,45 @@ listening_history {
       keyQuestions: [
         {
           question: 'How does audio streaming work?',
-          answer: `**Adaptive Bitrate Streaming**:
+          answer: `Adaptive Bitrate Streaming:
 - Store each track in multiple qualities: 96, 160, 320 kbps (Ogg Vorbis)
 - Client starts with low quality, upgrades based on bandwidth
 - HTTP byte-range requests for seeking
 
-**Streaming Flow**:
+Streaming Flow:
 
 ![Audio streaming path](/diagrams/systemdesign/audio-streaming-path.png)
 
-**Gapless Playback**:
+Gapless Playback:
 - Pre-buffer next track while current plays
 - Crossfade overlap: Download end of current + start of next
 - Start buffering next track at 70% of current
 
-**CDN Strategy**:
+CDN Strategy:
 - Popular tracks (top 1%) cached at edge: 99% hit rate
 - Long-tail tracks: Fetch from origin on demand
 - Regional CDN nodes for latency optimization`
         },
         {
           question: 'How does the recommendation system work?',
-          answer: `**Recommendation Approaches**:
+          answer: `Recommendation Approaches:
 
-**1. Collaborative Filtering**:
+1. Collaborative Filtering:
 - "Users who liked X also liked Y"
 - Matrix factorization on user-track interactions
 - Find similar users, recommend their tracks
 
-**2. Content-Based**:
+2. Content-Based:
 - Audio features: tempo, energy, danceability, key
 - Genre/style similarity
 - Artist similarity graph
 
-**3. Contextual**:
+3. Contextual:
 - Time of day (workout music at 6am)
 - Day of week (party music on Saturday)
 - Recent listening (mood continuation)
 
-**Discover Weekly Pipeline**:
+Discover Weekly Pipeline:
 \`\`\`
 User Listening History
         ↓
@@ -14922,21 +14922,21 @@ Diversity Injection → Mix genres/artists
 30 tracks → Discover Weekly playlist
 \`\`\`
 
-**Daily Mix**:
+Daily Mix:
 - Cluster user's listening into genres/moods
 - Create 6 mixes per cluster
 - Update daily with fresh tracks`
         },
         {
           question: 'How do we handle offline playback?',
-          answer: `**Download Process**:
+          answer: `Download Process:
 1. User selects playlist/album for offline
 2. Client requests download tokens for each track
 3. Server validates subscription and generates time-limited tokens
 4. Client downloads encrypted audio files
 5. Store with DRM wrapper in local database
 
-**DRM (Digital Rights Management)**:
+DRM (Digital Rights Management):
 \`\`\`
 Encrypted Audio File + License Key
         ↓
@@ -14948,35 +14948,35 @@ License Server validates:
 Returns decryption key (valid for 30 days)
 \`\`\`yaml
 
-**Offline Sync**:
+Offline Sync:
 - Background sync when on WiFi
 - Track sync status: PENDING, DOWNLOADING, READY, ERROR
 - Prioritize recently played/added tracks
 - Auto-remove after 30 days without going online
 
-**Storage Management**:
+Storage Management:
 - User sets max storage limit
 - Auto-cleanup: Remove least recently played when full
 - Quality setting affects storage size`
         },
         {
           question: 'How does Spotify Connect work?',
-          answer: `**Multi-device Control**:
+          answer: `Multi-device Control:
 - Any device can control playback on any other device
 - Real-time sync of play state across devices
 
-**Architecture**:
+Architecture:
 
 ![Spotify Connect](/diagrams/systemdesign/spotify-connect.png)
 
-**Protocol**:
+Protocol:
 1. Devices register with Connect service via WebSocket
 2. Control device sends command (play, pause, skip)
 3. Service updates player state
 4. Playback device receives state change
 5. Playback device streams audio
 
-**Challenges**:
+Challenges:
 - Network latency between devices
 - Handoff: Transfer playback to different device
 - State sync: All devices see same state`
@@ -14985,70 +14985,70 @@ Returns decryption key (valid for 30 days)
           question: 'How does Spotify handle royalty tracking for 1B+ daily streams?',
           answer: `Every stream must be accurately counted and attributed for royalty payments to labels and artists.
 
-**Stream Counting Rules**:
+Stream Counting Rules:
 - A stream counts only after 30 seconds of playback
 - Skip before 30s = no royalty
 - Repeat plays count (no dedup within reason)
 
-**Data Pipeline**:
+Data Pipeline:
 1. Client sends play event to Kafka: { userId, trackId, timestamp, durationMs, context }
 2. Flink streaming job validates: duration >= 30s, user has valid session
 3. Aggregated hourly by track/territory/subscription tier
 4. Batch job generates monthly royalty reports per label
 
-**Scale**: 1B+ events/day flowing through Kafka with 7-day retention. Aggregated into Hadoop/Spark for monthly settlement. Each event ~100 bytes = ~100 GB/day raw event data.
+Scale: 1B+ events/day flowing through Kafka with 7-day retention. Aggregated into Hadoop/Spark for monthly settlement. Each event ~100 bytes = ~100 GB/day raw event data.
 
-**Audit Trail**: Every stream is immutable in the event log. Labels can dispute counts using the same dataset. Revenue split: ~70% to rights holders, ~30% to Spotify.`
+Audit Trail: Every stream is immutable in the event log. Labels can dispute counts using the same dataset. Revenue split: ~70% to rights holders, ~30% to Spotify.`
         },
         {
           question: 'How does the search system handle 100M+ tracks?',
-          answer: `**Architecture**:
+          answer: `Architecture:
 Spotify uses Elasticsearch for full-text search across tracks, artists, albums, playlists, and podcasts.
 
-**Index Design**:
+Index Design:
 - Separate indices per entity type (tracks, artists, albums, playlists)
 - Track index: ~100M documents x ~500 bytes = ~50 GB
 - Sharded across 20+ nodes for parallel query execution
 
-**Query Processing**:
+Query Processing:
 1. User types "the we" → client debounces 150ms
 2. Prefix query sent to search service
 3. Elasticsearch multi-match across title, artist, album fields
 4. Results boosted by: popularity score (0-100), recency, user affinity
 5. Return top 10 per entity type in <50ms
 
-**Fuzzy Matching**:
+Fuzzy Matching:
 - Phonetic analysis (Metaphone) for pronunciation-based matching
 - N-gram tokenizer for partial matching ("bea" matches "Beatles")
 - Spell correction via edit distance
 
-**Personalization**:
+Personalization:
 - Boost artists/genres the user listens to frequently
 - Boost tracks in user's library
 - Regional popularity weighting (K-pop boosted in Korea)`
         },
         {
           question: 'How does Spotify handle the cold start problem for new users?',
-          answer: `**New User Strategy**:
+          answer: `New User Strategy:
 When a user has zero listening history, recommendations must still feel relevant.
 
-**Onboarding Flow**:
+Onboarding Flow:
 1. Ask user to select 3+ favorite artists (seed preferences)
 2. Ask genre preferences (pop, hip-hop, rock, etc.)
 3. Use demographic signals: age, country, language, device type
 
-**Initial Recommendations**:
+Initial Recommendations:
 - Use selected artists as seeds for collaborative filtering
 - Genre popularity charts for their region
 - "Sounds of [Country]" playlists
 - Editorial curated playlists (Today's Top Hits, RapCaviar)
 
-**Rapid Personalization**:
+Rapid Personalization:
 - After 10 streams: basic taste profile emerges
 - After 50 streams: collaborative filtering becomes effective
 - After 200 streams: full personalization active
 
-**New Track Cold Start** (different problem):
+New Track Cold Start (different problem):
 - No listening data exists for brand new releases
 - Use audio feature analysis (tempo, energy, key, valence)
 - Place near similar-sounding tracks in embedding space
@@ -15059,44 +15059,44 @@ When a user has zero listening history, recommendations must still feel relevant
           question: 'How does the audio ingestion pipeline work?',
           answer: `When a label uploads a new track, it goes through a multi-stage processing pipeline.
 
-**Ingestion Flow**:
+Ingestion Flow:
 1. Label uploads master audio (WAV/FLAC, 16-24 bit, 44.1-96 kHz) via Spotify for Artists
-2. **Validation**: Check file integrity, duration, metadata completeness
-3. **Audio Analysis**: ML models extract features — tempo (BPM), key, energy, danceability, speechiness, loudness, valence
-4. **Transcoding**: Encode to 3 quality tiers:
+2. Validation: Check file integrity, duration, metadata completeness
+3. Audio Analysis: ML models extract features — tempo (BPM), key, energy, danceability, speechiness, loudness, valence
+4. Transcoding: Encode to 3 quality tiers:
    - 96 kbps Ogg Vorbis (mobile, data saver)
    - 160 kbps Ogg Vorbis (free tier default)
    - 320 kbps Ogg Vorbis (premium)
-5. **DRM Wrapping**: Encrypt with Widevine DRM keys
-6. **CDN Distribution**: Upload to S3/GCS origin, pre-warm popular regions
-7. **Index Update**: Add to search index, catalog DB, recommendation graph
+5. DRM Wrapping: Encrypt with Widevine DRM keys
+6. CDN Distribution: Upload to S3/GCS origin, pre-warm popular regions
+7. Index Update: Add to search index, catalog DB, recommendation graph
 
-**Processing Time**: 5-15 minutes from upload to globally available
-**Storage**: Each track stored in 3 qualities = ~21 MB total (7 MB average per quality)
-**Throughput**: ~100K new tracks/week ingested`
+Processing Time: 5-15 minutes from upload to globally available
+Storage: Each track stored in 3 qualities = ~21 MB total (7 MB average per quality)
+Throughput: ~100K new tracks/week ingested`
         },
         {
           question: 'How does Spotify ensure gapless playback between tracks?',
           answer: `Gapless playback means zero silence between consecutive tracks — critical for live albums, classical music, and DJ mixes.
 
-**Pre-buffering Strategy**:
+Pre-buffering Strategy:
 1. At 70% of current track duration, client requests next track metadata
 2. At 80%, client begins downloading first 10 seconds of next track from CDN
 3. At 95%, audio decoder has both track endings loaded in memory
 4. Crossfade buffer: last 100ms of current + first 100ms of next track
 
-**Implementation**:
+Implementation:
 - Client maintains a playback queue with pre-fetched audio chunks
 - Two audio decoders run in parallel during transition
 - Precise timing using audio sample count (not wall clock)
 - Crossfade duration configurable: 0s (gapless), 1-12s (crossfade)
 
-**Challenges**:
+Challenges:
 - Network interruption during pre-buffer: fall back to small gap
 - Track quality switch (WiFi to cellular): re-encode boundary
 - Podcast chapters have different handling (no crossfade)
 
-**CDN Optimization**:
+CDN Optimization:
 - Next track often from same album = same CDN edge node
 - Pre-fetch hint sent to CDN to warm cache
 - Average pre-buffer latency: 50-200ms per track`
@@ -15105,30 +15105,30 @@ When a user has zero listening history, recommendations must still feel relevant
           question: 'How does Spotify scale its recommendation engine across 675M users?',
           answer: `Spotify's recommendation system blends three approaches, each with different scale characteristics.
 
-**1. Collaborative Filtering (Batch)**:
+1. Collaborative Filtering (Batch):
 - User-track interaction matrix: 675M users x 100M tracks (extremely sparse)
 - Alternating Least Squares (ALS) on Spark cluster
 - Runs weekly on 10,000+ cores, produces 128-dim user/track embeddings
 - Storage: 675M user vectors x 512 bytes = ~345 GB
 
-**2. Content-Based (Near Real-Time)**:
+2. Content-Based (Near Real-Time):
 - Audio feature vectors from CNN analysis of raw audio
 - Genre/mood classification from 4,000+ micro-genres
 - Updated when new tracks are ingested
 - Enables instant recommendations for new releases
 
-**3. Natural Language Processing**:
+3. Natural Language Processing:
 - Crawl blogs, reviews, social media for artist/track descriptions
 - Word2Vec embeddings capture cultural context
 - "Summer vibes" or "workout music" mapped to audio features
 
-**Serving Architecture**:
+Serving Architecture:
 - Pre-compute Discover Weekly for all active users (Sunday batch job)
 - Daily Mix playlists updated every 24 hours
 - Radio/autoplay: real-time inference using approximate nearest neighbor (ANN) search on embeddings
 - ANN index (Annoy library, built in-house) supports <10ms lookup across 100M vectors
 
-**Scale**: 675M users x 6 Daily Mixes + 1 Discover Weekly = ~4.7 billion personalized playlists refreshed weekly.`
+Scale: 675M users x 6 Daily Mixes + 1 Discover Weekly = ~4.7 billion personalized playlists refreshed weekly.`
         }
       ],
 
@@ -15227,63 +15227,63 @@ When a user has zero listening history, recommendations must still feel relevant
           diagramSrc: '/diagrams/spotify/deep-dive-streaming.svg',
           detail: `Spotify encodes every track in 3 quality tiers: 96kbps (data saver), 160kbps (free default), 320kbps (premium). The client dynamically switches based on network conditions.
 
-**How ABR Works**:
+How ABR Works:
 - Client monitors download speed over a sliding 5-second window
 - If throughput drops below 1.5x the current bitrate, downgrade quality
 - If throughput exceeds 2x a higher tier for 10 seconds, upgrade
 - Buffer target: maintain 30 seconds of audio ahead of playback position
 
-**Codec Choice**: Ogg Vorbis for desktop/mobile (better quality per bit than MP3), AAC for web player. Premium subscribers can access lossless FLAC (24-bit/44.1kHz) since late 2025.`
+Codec Choice: Ogg Vorbis for desktop/mobile (better quality per bit than MP3), AAC for web player. Premium subscribers can access lossless FLAC (24-bit/44.1kHz) since late 2025.`
         },
         {
           topic: 'CDN Strategy and Audio Delivery',
           diagramSrc: '/diagrams/spotify/deep-dive-connect.svg',
           detail: `With 11K concurrent streams/sec, CDN is critical for low-latency delivery.
 
-**Tiered Caching**:
-- **Edge nodes** (100+ global PoPs): Cache top 1% tracks (1M tracks = ~21 TB per edge)
-- **Regional origins**: Cache top 10% tracks per region
-- **Central origin (S3/GCS)**: Full catalog (~2 PB)
+Tiered Caching:
+- Edge nodes (100+ global PoPs): Cache top 1% tracks (1M tracks = ~21 TB per edge)
+- Regional origins: Cache top 10% tracks per region
+- Central origin (S3/GCS): Full catalog (~2 PB)
 
-**Cache Hit Rates**: Top 1% of tracks serve 80% of traffic (Pareto distribution). Edge cache hit rate: ~95%. Regional: ~99%. Only ~1% of requests reach central origin.
+Cache Hit Rates: Top 1% of tracks serve 80% of traffic (Pareto distribution). Edge cache hit rate: ~95%. Regional: ~99%. Only ~1% of requests reach central origin.
 
-**Pre-warming**: New releases from top artists pre-pushed to all edge nodes before release date (midnight local time releases).`
+Pre-warming: New releases from top artists pre-pushed to all edge nodes before release date (midnight local time releases).`
         },
         {
           topic: 'DRM and Content Protection',
           diagramSrc: '/diagrams/spotify/deep-dive-royalty.svg',
           detail: `Premium content requires Digital Rights Management to prevent piracy.
 
-**Widevine DRM** (Google): Used across Android, Chrome, smart TVs. Three security levels: L1 (hardware TEE), L2 (software), L3 (basic).
+Widevine DRM (Google): Used across Android, Chrome, smart TVs. Three security levels: L1 (hardware TEE), L2 (software), L3 (basic).
 
-**License Flow**:
+License Flow:
 1. Client requests license from Spotify license server with device certificate
 2. Server validates: active subscription, device count limit (6 offline devices)
 3. Returns content decryption key (valid for 30 days offline)
 4. Client decrypts audio in secure playback path
 
-**Offline Downloads**: Encrypted files stored locally with license keys. Must go online every 30 days to renew licenses. If subscription lapses, downloaded tracks become unplayable.`
+Offline Downloads: Encrypted files stored locally with license keys. Must go online every 30 days to renew licenses. If subscription lapses, downloaded tracks become unplayable.`
         },
         {
           topic: 'Playlist Infrastructure',
           detail: `With 4B+ playlists and 675M users, playlists are one of the most write-heavy features.
 
-**Data Model**: Playlist tracks stored in Cassandra, partitioned by playlistId. Each playlist is an ordered list supporting insert-at-position and reorder.
+Data Model: Playlist tracks stored in Cassandra, partitioned by playlistId. Each playlist is an ordered list supporting insert-at-position and reorder.
 
-**Collaborative Playlists**: Use snapshot_id (version hash) for optimistic concurrency. Each modification returns a new snapshot_id. Concurrent edits detected by snapshot mismatch.
+Collaborative Playlists: Use snapshot_id (version hash) for optimistic concurrency. Each modification returns a new snapshot_id. Concurrent edits detected by snapshot mismatch.
 
-**Scalability**: Average playlist has ~50 tracks, but editorial playlists like "Today's Top Hits" have millions of followers receiving updates. Fan-out of playlist updates to follower feeds uses the same push/pull hybrid as social feeds.`
+Scalability: Average playlist has ~50 tracks, but editorial playlists like "Today's Top Hits" have millions of followers receiving updates. Fan-out of playlist updates to follower feeds uses the same push/pull hybrid as social feeds.`
         },
         {
           topic: 'Listening Analytics Pipeline',
           diagramSrc: '/diagrams/spotify/deep-dive-discover-weekly.svg',
           detail: `Every play event feeds into Spotify's analytics for royalties, recommendations, and Spotify Wrapped.
 
-**Pipeline**: Client events -> Kafka (partitioned by userId) -> Flink (stream processing) -> Data Lake (S3 Parquet) -> Spark (batch aggregation) -> BigQuery/Redshift (reporting).
+Pipeline: Client events -> Kafka (partitioned by userId) -> Flink (stream processing) -> Data Lake (S3 Parquet) -> Spark (batch aggregation) -> BigQuery/Redshift (reporting).
 
-**Key Metrics**: Streams per track, skip rate, completion rate, save rate, playlist add rate. These power the popularity score (0-100) displayed on every track.
+Key Metrics: Streams per track, skip rate, completion rate, save rate, playlist add rate. These power the popularity score (0-100) displayed on every track.
 
-**Spotify Wrapped**: Annual personalized summary requires aggregating a full year of listening data for 675M users. Pre-computed in November using massive Spark jobs, results cached and served as static JSON per user.`
+Spotify Wrapped: Annual personalized summary requires aggregating a full year of listening data for 675M users. Pre-computed in November using massive Spark jobs, results cached and served as static JSON per user.`
         }
       ],
       comparisonTables: [
@@ -15442,13 +15442,13 @@ When a user has zero listening history, recommendations must still feel relevant
         keyChallenge: 'Preventing double-bookings using optimistic locking while handling 386 search queries/sec across 8M+ listings with real-time availability calendar checks.',
       },
 
-      introduction: `Airbnb is the world's largest accommodation marketplace with **200+ million users**, **8 million+ active listings**, and **533 million nights booked per year**, generating **$12.2 billion in revenue**. The system enables hosts to list properties and guests to search, book, and review stays.
+      introduction: `Airbnb is the world's largest accommodation marketplace with 200+ million users, 8 million+ active listings, and 533 million nights booked per year, generating $12.2 billion in revenue. The system enables hosts to list properties and guests to search, book, and review stays.
 
-Key challenges include **complex search** combining geolocation, date availability, amenity filters, and pricing; **preventing double-bookings** using optimistic locking with soft-hold patterns; managing a **payment pipeline** that authorizes at booking, captures at check-in, and settles to the host after the stay; and handling **dual-sided reviews** where both guest and host rate each other.
+Key challenges include complex search combining geolocation, date availability, amenity filters, and pricing; preventing double-bookings using optimistic locking with soft-hold patterns; managing a payment pipeline that authorizes at booking, captures at check-in, and settles to the host after the stay; and handling dual-sided reviews where both guest and host rate each other.
 
-What makes Airbnb's booking system fundamentally harder than a simple e-commerce checkout? Unlike buying a product (where inventory is fungible), each listing-date combination is unique. Two guests cannot book the same property for overlapping dates. This requires **serializable isolation** on the availability calendar to prevent race conditions, while still allowing high-throughput search across millions of listings.
+What makes Airbnb's booking system fundamentally harder than a simple e-commerce checkout? Unlike buying a product (where inventory is fungible), each listing-date combination is unique. Two guests cannot book the same property for overlapping dates. This requires serializable isolation on the availability calendar to prevent race conditions, while still allowing high-throughput search across millions of listings.
 
-Airbnb's search is also uniquely complex: every query combines **geospatial filtering** (properties near a location), **temporal filtering** (available for specific dates), **attribute filtering** (amenities, property type, price), and **relevance ranking** (quality score, conversion rate, host responsiveness).`,
+Airbnb's search is also uniquely complex: every query combines geospatial filtering (properties near a location), temporal filtering (available for specific dates), attribute filtering (amenities, property type, price), and relevance ranking (quality score, conversion rate, host responsiveness).`,
 
       estimation: {
         title: 'Capacity Planning',
@@ -15654,7 +15654,7 @@ reviews {
           question: 'How does double-booking prevention work with optimistic locking?',
           answer: `Double-booking is the most critical correctness requirement. Two guests must never book the same property for overlapping dates.
 
-**Optimistic Locking Approach:**
+Optimistic Locking Approach:
 Each availability row has a version number. The booking flow:
 1. Read availability rows for the date range (SELECT ... WHERE listingId = X AND date BETWEEN checkin AND checkout-1)
 2. Verify all dates have status = AVAILABLE
@@ -15665,180 +15665,180 @@ Each availability row has a version number. The booking flow:
 4. If affected_rows != expected_nights: ROLLBACK (someone else booked first)
 5. If affected_rows == expected_nights: COMMIT and proceed to payment
 
-**Why Optimistic over Pessimistic?**
+Why Optimistic over Pessimistic?
 - Pessimistic locking (SELECT FOR UPDATE) holds row locks during the entire booking flow including payment processing (10-30 seconds)
 - Optimistic locking only holds locks during the brief UPDATE, allowing higher throughput
 - At 17 bookings/sec, lock contention on popular listings is manageable with optimistic approach
 
-**Handling Concurrent Bookings:**
+Handling Concurrent Bookings:
 If two guests try to book overlapping dates simultaneously, only one UPDATE succeeds (the one whose version matches). The other gets a version mismatch and retries. The user sees "Sorry, these dates are no longer available."
 
-**Database Choice:** PostgreSQL with SERIALIZABLE isolation level for the availability table. Sharded by listingId so all dates for a listing are on the same shard.`
+Database Choice: PostgreSQL with SERIALIZABLE isolation level for the availability table. Sharded by listingId so all dates for a listing are on the same shard.`
         },
         {
           question: 'How does the soft-hold pattern with TTL work?',
           answer: `For Instant Book listings, dates must be temporarily held while the guest completes payment. This prevents another guest from booking the same dates during the 10-minute payment window.
 
-**Soft-Hold Flow:**
+Soft-Hold Flow:
 1. Guest clicks "Reserve" -> server creates a soft-hold on the dates
 2. Availability status changes from AVAILABLE to HELD with a 10-minute TTL
 3. Guest enters payment details and confirms
 4. On payment success: HELD -> BOOKED (permanent)
 5. On payment failure or timeout: HELD -> AVAILABLE (released)
 
-**Implementation:**
+Implementation:
 The HELD status includes a hold_expires_at timestamp:
 UPDATE availability SET status = 'HELD', hold_expires_at = NOW() + '10 minutes'
 WHERE listingId = X AND date IN (...) AND status = 'AVAILABLE'
 
-**Cleanup:**
+Cleanup:
 A background job runs every minute to release expired holds:
 UPDATE availability SET status = 'AVAILABLE', hold_expires_at = NULL
 WHERE status = 'HELD' AND hold_expires_at < NOW()
 
-**Why Not Lock the Full Payment Duration?**
+Why Not Lock the Full Payment Duration?
 Payment processing involves external services (Stripe) and can take 5-30 seconds. Holding database locks for that long would cause contention. The soft-hold pattern decouples the lock from the payment flow.
 
-**Request-to-Book (non-Instant Book):**
+Request-to-Book (non-Instant Book):
 No hold is created. The host reviews the request and manually approves. Availability is checked again at approval time. If dates are no longer available, the request is auto-declined.`
         },
         {
           question: 'How does the payment authorization flow work?',
           answer: `Airbnb's payment flow is more complex than standard e-commerce because money flows from guest to platform to host over days.
 
-**Payment Timeline:**
-1. **Authorization** (at booking): Stripe authorizes the full amount on the guest's card. No money moves yet. This reserves the credit limit for 7 days.
-2. **Capture** (24 hours before check-in): Airbnb captures the authorized amount, moving money from guest's card to Airbnb's escrow account.
-3. **Host payout** (24 hours after check-in): Airbnb transfers the host's share (listing price minus service fee) to the host's bank account.
-4. **Platform fee**: Airbnb retains the guest service fee (5-15%) and host service fee (3%).
+Payment Timeline:
+1. Authorization (at booking): Stripe authorizes the full amount on the guest's card. No money moves yet. This reserves the credit limit for 7 days.
+2. Capture (24 hours before check-in): Airbnb captures the authorized amount, moving money from guest's card to Airbnb's escrow account.
+3. Host payout (24 hours after check-in): Airbnb transfers the host's share (listing price minus service fee) to the host's bank account.
+4. Platform fee: Airbnb retains the guest service fee (5-15%) and host service fee (3%).
 
-**Why Auth + Capture Instead of Direct Charge?**
+Why Auth + Capture Instead of Direct Charge?
 - If the guest cancels before capture, the authorization is voided (no charge, no refund fees)
 - The host has 24 hours before check-in to cancel without the guest being charged
 - Reduces disputes and chargebacks
 
-**Split Payment:**
+Split Payment:
 A single booking creates multiple payment events:
 - Guest pays: $500 (authorized at booking, captured before check-in)
 - Platform keeps: $75 guest fee + $15 host fee = $90
 - Host receives: $500 - $15 = $485 (24 hours after check-in)
 
-**Multi-Currency:**
+Multi-Currency:
 - Guest pays in their local currency (e.g., EUR)
 - Converted to USD at booking-time exchange rate (locked in)
 - Host receives payout in their local currency (e.g., JPY)
 - Second conversion at payout time (host bears FX risk between booking and payout)
 
-**Idempotency:** Every payment API call includes an idempotency key. If the client retries due to network timeout, Stripe returns the same response without charging twice.`
+Idempotency: Every payment API call includes an idempotency key. If the client retries due to network timeout, Stripe returns the same response without charging twice.`
         },
         {
           question: 'How does search relevance ranking work?',
           answer: `Airbnb's search must balance multiple signals to show the most relevant and bookable listings.
 
-**Two-Stage Search Pipeline:**
+Two-Stage Search Pipeline:
 
-**Stage 1: Candidate Retrieval (Elasticsearch)**
+Stage 1: Candidate Retrieval (Elasticsearch)
 Query Elasticsearch with geo-distance filter, property type, amenities, price range, and guest capacity. Returns ~1000 candidate listing IDs in ~50ms.
 
-**Stage 2: Availability Check + Ranking (Application Layer)**
+Stage 2: Availability Check + Ranking (Application Layer)
 For each candidate, check the availability calendar for the requested date range. Filter out listings with blocked/booked dates. Then rank by a weighted scoring function.
 
-**Ranking Signals:**
-1. **Quality Score (30%)**: Listing photos, description completeness, amenity count, host response rate
-2. **Booking Probability (25%)**: ML model predicting likelihood of conversion based on listing attributes and user preferences
-3. **Price Competitiveness (20%)**: How the listing's price compares to similar listings in the area
-4. **Distance (15%)**: Proximity to the searched location
-5. **Host Quality (10%)**: Superhost status, response rate, acceptance rate, review scores
+Ranking Signals:
+1. Quality Score (30%): Listing photos, description completeness, amenity count, host response rate
+2. Booking Probability (25%): ML model predicting likelihood of conversion based on listing attributes and user preferences
+3. Price Competitiveness (20%): How the listing's price compares to similar listings in the area
+4. Distance (15%): Proximity to the searched location
+5. Host Quality (10%): Superhost status, response rate, acceptance rate, review scores
 
-**Personalization:**
+Personalization:
 - User's past booking history influences ranking (prefer similar property types)
 - Price sensitivity: show budget options to price-sensitive users
 - First-time vs returning: new users see popular/safe options, returning users see diverse options
 
-**A/B Testing:**
+A/B Testing:
 Airbnb runs hundreds of concurrent search ranking experiments. Each query includes an experiment assignment that determines which ranking model to use.`
         },
         {
           question: 'How does the availability calendar work at scale?',
           answer: `The availability calendar is the most queried data in Airbnb -- every search result requires a date-range availability check.
 
-**Data Model:**
+Data Model:
 One row per listing per date in the availability table:
 - 8M listings x 365 days = 2.92 billion rows
 - Each row: listingId, date, status (AVAILABLE/BLOCKED/BOOKED), price override, minNights, version
 - Size: ~292 GB total
 
-**Query Patterns:**
-1. **Search availability check**: "Is listing X available for dates Y-Z?"
+Query Patterns:
+1. Search availability check: "Is listing X available for dates Y-Z?"
    SELECT COUNT(*) FROM availability WHERE listingId = X AND date BETWEEN Y AND Z AND status = 'AVAILABLE'
    HAVING COUNT(*) = (Z - Y)  -- all dates must be available
 
-2. **Calendar view**: "Show me listing X's calendar for March"
+2. Calendar view: "Show me listing X's calendar for March"
    SELECT date, status, price FROM availability WHERE listingId = X AND date BETWEEN '2026-03-01' AND '2026-03-31'
 
-3. **Booking update**: "Mark dates as BOOKED" (with optimistic locking)
+3. Booking update: "Mark dates as BOOKED" (with optimistic locking)
 
-**Performance Optimization:**
-- **Partition by listingId**: All dates for a listing on the same database shard
-- **Index on (listingId, date)**: Efficient range queries
-- **Redis cache**: Cache next-30-days availability for hot listings (TTL: 5 minutes)
-- **Materialized view**: Pre-compute "available next weekend" for common search queries
+Performance Optimization:
+- Partition by listingId: All dates for a listing on the same database shard
+- Index on (listingId, date): Efficient range queries
+- Redis cache: Cache next-30-days availability for hot listings (TTL: 5 minutes)
+- Materialized view: Pre-compute "available next weekend" for common search queries
 
-**Calendar Sync (iCal):**
+Calendar Sync (iCal):
 Hosts can sync their Airbnb calendar with other platforms (Booking.com, VRBO) via iCal export/import. A background job polls external iCal URLs every 15 minutes and updates availability accordingly.`
         },
         {
           question: 'How does dynamic pricing work?',
           answer: `Airbnb offers "Smart Pricing" that automatically adjusts listing prices based on demand signals.
 
-**Demand Signals:**
-- **Search volume**: High search-to-booking ratio for an area indicates high demand
-- **Local events**: Concerts, conferences, sports events drive spikes (data from Eventbrite, Ticketmaster APIs)
-- **Seasonality**: Historical booking patterns by month/day-of-week
-- **Competitor pricing**: Prices of similar nearby listings
-- **Booking pace**: How quickly dates are being booked (faster pace = higher demand)
+Demand Signals:
+- Search volume: High search-to-booking ratio for an area indicates high demand
+- Local events: Concerts, conferences, sports events drive spikes (data from Eventbrite, Ticketmaster APIs)
+- Seasonality: Historical booking patterns by month/day-of-week
+- Competitor pricing: Prices of similar nearby listings
+- Booking pace: How quickly dates are being booked (faster pace = higher demand)
 
-**Pricing Model:**
-1. **Base price**: Host's default nightly rate
-2. **Demand multiplier**: 0.8x to 3.0x based on demand signals
-3. **Occupancy adjustment**: Lower prices for dates that are approaching with low occupancy
-4. **Weekend premium**: Typically 10-20% higher on Friday/Saturday
-5. **Length-of-stay discount**: 10% off for 7+ nights, 20% off for 28+ nights
+Pricing Model:
+1. Base price: Host's default nightly rate
+2. Demand multiplier: 0.8x to 3.0x based on demand signals
+3. Occupancy adjustment: Lower prices for dates that are approaching with low occupancy
+4. Weekend premium: Typically 10-20% higher on Friday/Saturday
+5. Length-of-stay discount: 10% off for 7+ nights, 20% off for 28+ nights
 
-**Implementation:**
+Implementation:
 A batch ML pipeline runs daily to compute suggested prices for every listing-date combination for the next 90 days. Hosts can accept, modify, or ignore suggestions.
 
-**Gap Night Pricing:**
+Gap Night Pricing:
 If a listing is booked Mon-Wed and Fri-Sun, Thursday is a "gap night." The system automatically discounts gap nights by 20-30% to increase occupancy.
 
-**Ceiling/Floor:**
+Ceiling/Floor:
 Hosts set minimum and maximum prices. Smart Pricing never exceeds these bounds, giving hosts control while optimizing occupancy.`
         },
         {
           question: 'How do split payments work (guest to platform to host)?',
           answer: `Airbnb acts as a payment intermediary, holding funds in escrow and splitting them between the platform and the host.
 
-**Payment Entities:**
-- **Guest**: Pays the full booking amount (nightly rate x nights + cleaning fee + service fee)
-- **Platform (Airbnb)**: Retains guest service fee (5-15% of subtotal) + host service fee (3%)
-- **Host**: Receives nightly rate x nights + cleaning fee - host service fee
+Payment Entities:
+- Guest: Pays the full booking amount (nightly rate x nights + cleaning fee + service fee)
+- Platform (Airbnb): Retains guest service fee (5-15% of subtotal) + host service fee (3%)
+- Host: Receives nightly rate x nights + cleaning fee - host service fee
 
-**Flow with Stripe Connect:**
-Airbnb uses **Stripe Connect** (platform payments) to manage this three-way flow:
+Flow with Stripe Connect:
+Airbnb uses Stripe Connect (platform payments) to manage this three-way flow:
 1. Guest charged via Stripe PaymentIntent (destination: Airbnb's platform account)
 2. Funds held in Airbnb's escrow account
 3. On check-in + 24 hours: Stripe Transfer to host's connected account
 4. Airbnb's fees automatically retained during the transfer
 
-**Refund Scenarios:**
-- **Full refund (before cancellation deadline)**: Reverse the PaymentIntent, guest gets full refund
-- **Partial refund (after deadline)**: Refund percentage based on cancellation policy (Flexible: 100%, Moderate: 50%, Strict: 0%)
-- **Dispute resolution**: If guest and host disagree, Airbnb mediates and decides the split
+Refund Scenarios:
+- Full refund (before cancellation deadline): Reverse the PaymentIntent, guest gets full refund
+- Partial refund (after deadline): Refund percentage based on cancellation policy (Flexible: 100%, Moderate: 50%, Strict: 0%)
+- Dispute resolution: If guest and host disagree, Airbnb mediates and decides the split
 
-**Multi-Currency Example:**
+Multi-Currency Example:
 Guest in Germany pays 450 EUR. Converted to $500 USD at booking time. Host in Japan receives 72,000 JPY (converted from $485 USD after 3% host fee). Airbnb retains $90 in fees.
 
-**Payout Schedule:**
+Payout Schedule:
 - Standard: 24 hours after check-in via bank transfer (ACH/wire)
 - Instant payout (premium): Available immediately via debit card (1% fee)`
         },
@@ -15846,39 +15846,39 @@ Guest in Germany pays 450 EUR. Converted to $500 USD at booking time. Host in Ja
           question: 'How do idempotency keys prevent duplicate bookings?',
           answer: `Network failures can cause clients to retry booking requests. Without idempotency, a guest could be charged twice for the same booking.
 
-**The Problem:**
+The Problem:
 1. Guest clicks "Confirm Booking"
 2. Request reaches server, booking created, payment charged
 3. Network timeout -- client never receives response
 4. Client retries the same request
 5. Without idempotency: second booking created, guest charged again
 
-**Solution: Idempotency Keys**
+Solution: Idempotency Keys
 Every booking request includes a unique idempotency_key (client-generated UUID):
 
 POST /api/bookings
 { listingId: 123, checkin: "2026-05-01", checkout: "2026-05-05", idempotencyKey: "abc-123-def" }
 
-**Server-Side Implementation:**
+Server-Side Implementation:
 1. Before processing, check if idempotency_key exists in the database
 2. If found: return the cached response from the original request
 3. If not found: process the booking, store the response keyed by idempotency_key
 
-**Database Schema:**
+Database Schema:
 idempotency_keys { key: varchar UNIQUE, response: jsonb, created_at: timestamp }
 TTL: 24 hours (keys expire after a day)
 
-**Stripe Integration:**
+Stripe Integration:
 Stripe's API also supports idempotency keys. Airbnb passes the same key to Stripe, ensuring the payment is also idempotent. Even if Airbnb retries the Stripe call, the guest is only charged once.
 
-**Edge Case -- Partial Failure:**
+Edge Case -- Partial Failure:
 If the booking is created but the payment fails, the idempotency key stores the error response. On retry, the server sees the failed state and re-attempts payment (not booking creation).`
         },
         {
           question: 'How does the review integrity system work?',
           answer: `Airbnb's dual-sided review system is designed to prevent retaliation and encourage honest feedback.
 
-**Dual-Blind Review Process:**
+Dual-Blind Review Process:
 1. After checkout, both guest and host are prompted to leave reviews
 2. Reviews are submitted independently -- neither party can see the other's review
 3. Both reviews are published simultaneously after:
@@ -15886,28 +15886,28 @@ If the booking is created but the payment fails, the idempotency key stores the 
    - 14-day deadline expires (whichever comes first)
 4. This prevents retaliatory reviews (host can't see guest's bad review and respond with their own)
 
-**Review Requirements:**
+Review Requirements:
 - Only possible after a completed stay (no "review bombing")
 - Rating: 1-5 stars across categories (cleanliness, accuracy, communication, location, check-in, value)
 - Text content: 50 character minimum, 10,000 character maximum
 - Photos: optional, reviewed for appropriateness
 
-**Aggregate Rating Calculation:**
+Aggregate Rating Calculation:
 Business average uses a Bayesian approach (same as Yelp) to prevent new listings with one 5-star review from outranking established listings.
 
-**Fraud Prevention:**
+Fraud Prevention:
 - Reviews from flagged accounts (fake bookings, suspicious patterns) are hidden
 - NLP analysis detects review manipulation (overly positive formulaic text)
 - Hosts cannot offer incentives for positive reviews (policy violation = account suspension)
 
-**Host Response:**
+Host Response:
 Hosts can post a public response to any review (not a counter-review, just a response). This appears below the guest's review and is visible to future guests.`
         },
         {
           question: 'How does Elasticsearch geo search work for listings?',
           answer: `Airbnb's search combines geospatial filtering with attribute filtering and full-text search, all in Elasticsearch.
 
-**Index Design:**
+Index Design:
 Each listing is indexed as an Elasticsearch document with a geo_point field for location:
 - geo_point: { lat, lng }
 - propertyType, amenities, maxGuests, bedrooms (keyword/integer fields)
@@ -15915,23 +15915,23 @@ Each listing is indexed as an Elasticsearch document with a geo_point field for 
 - pricePerNight (float, for range queries)
 - avgRating, reviewCount (for boosting)
 
-**Geo-Distance Query:**
+Geo-Distance Query:
 Find listings within 25km of a search location:
 - geo_distance filter: { distance: "25km", location: { lat: 37.7, lon: -122.4 } }
 - Combined with bool query for amenities, price range, guest count
 - Sorted by _score (relevance) with geo_distance used as a scoring factor
 
-**Availability Integration:**
+Availability Integration:
 Elasticsearch does NOT store availability data (it changes too frequently). Instead:
 1. Elasticsearch returns candidate IDs (fast, ~50ms)
 2. Application layer checks availability in PostgreSQL for those candidates (parallel batch query, ~100ms)
 3. Filter out unavailable listings
 4. Re-rank remaining results
 
-**Why Not Store Availability in ES?**
+Why Not Store Availability in ES?
 Updating 2.92B availability rows in Elasticsearch would be prohibitively expensive. The calendar data changes with every booking, host update, and iCal sync. Keeping ES in sync would require millions of document updates per day.
 
-**Performance:**
+Performance:
 - Elasticsearch query: ~50ms for geo + filters on 8M documents
 - Availability check: ~100ms for batch query on ~1000 candidates
 - Total search latency: ~200-300ms (well within 500ms target)`
@@ -16351,13 +16351,13 @@ driver_locations {
       keyQuestions: [
         {
           question: 'How does driver dispatch and matching work?',
-          answer: `**Dispatch Optimization Goals**:
+          answer: `Dispatch Optimization Goals:
 - Minimize delivery time for customer
 - Maximize driver utilization (earnings)
 - Balance load across available drivers
 - Consider batching (multiple orders per trip)
 
-**Matching Algorithm**:
+Matching Algorithm:
 \`\`\`
 For each unassigned order:
   1. Find available drivers within radius
@@ -16373,19 +16373,19 @@ For each unassigned order:
   4. Assign to highest-score driver
 \`\`\`
 
-**Batch Delivery**:
+Batch Delivery:
 - Driver picks up from 2-3 restaurants
 - Delivery order optimized for total distance
 - Each customer sees their own ETA
 - Max 2 additional stops typically
 
-**Real-time Reoptimization**:
+Real-time Reoptimization:
 - Reassign if driver cancels
 - Rebalance during demand spikes`
         },
         {
           question: 'How do we predict accurate ETAs?',
-          answer: `**ETA Components**:
+          answer: `ETA Components:
 \`\`\`
 Total ETA = Driver to Restaurant +
             Food Prep Time +
@@ -16394,7 +16394,7 @@ Total ETA = Driver to Restaurant +
 Each component has uncertainty → confidence interval
 \`\`\`
 
-**ML Model Features**:
+ML Model Features:
 - Restaurant historical prep times by item
 - Current order queue length
 - Time of day / day of week
@@ -16403,7 +16403,7 @@ Each component has uncertainty → confidence interval
 - Driver's current location and speed
 - Number of stops if batched
 
-**Model Output**:
+Model Output:
 \`\`\`json
 {
   "eta_minutes": 35,
@@ -16417,14 +16417,14 @@ Each component has uncertainty → confidence interval
 }
 \`\`\`
 
-**Continuous Learning**:
+Continuous Learning:
 - Compare predicted vs actual delivery times
 - A/B test model improvements
 - Per-restaurant prep time calibration`
         },
         {
           question: 'How do we handle real-time tracking?',
-          answer: `**Driver Location Updates**:
+          answer: `Driver Location Updates:
 \`\`\`
 Driver App → API Gateway → Location Service → Kafka → Consumers
                                                   ↓
@@ -16432,12 +16432,12 @@ Driver App → API Gateway → Location Service → Kafka → Consumers
                                             (Location History)
 \`\`\`
 
-**Update Frequency**:
+Update Frequency:
 - Driver app: GPS every 5 seconds
 - Customer app: Poll or WebSocket push every 5 seconds
 - Batch location writes (5-10 at a time)
 
-**Tracking Data Flow**:
+Tracking Data Flow:
 \`\`\`
 1. Driver app sends location
 2. Location service validates and publishes to Kafka
@@ -16446,7 +16446,7 @@ Driver App → API Gateway → Location Service → Kafka → Consumers
 5. Push notification if major ETA change
 \`\`\`
 
-**Optimizations**:
+Optimizations:
 - Client-side interpolation between updates
 - Snap to roads for cleaner visualization
 - Reduce frequency when driver stationary
@@ -16454,13 +16454,13 @@ Driver App → API Gateway → Location Service → Kafka → Consumers
         },
         {
           question: 'How do we handle peak demand (surge)?',
-          answer: `**Demand Prediction**:
+          answer: `Demand Prediction:
 - Historical patterns (dinner rush, weekends, events)
 - Weather (rain = more orders)
 - Special events (Super Bowl, holidays)
 - Proactive driver incentives to increase supply
 
-**Surge Management**:
+Surge Management:
 \`\`\`
 If demand > supply by X%:
   1. Increase delivery fees (demand pricing)
@@ -16470,34 +16470,34 @@ If demand > supply by X%:
   5. Priority to loyal customers
 \`\`\`
 
-**Driver Supply**:
+Driver Supply:
 - Push notifications to offline drivers
 - Bonus incentives for peak hours
 - Predictive scheduling (guaranteed hourly rate)
 - Heat maps showing high-demand areas
 
-**Graceful Degradation**:
+Graceful Degradation:
 - Queue orders if dispatch overwhelmed
 - Limit orders per restaurant
 - Expand delivery radius to find more drivers`
         },
         {
           question: 'How does the three-sided marketplace balance work?',
-          answer: `**Three Stakeholders with Competing Incentives**:
+          answer: `Three Stakeholders with Competing Incentives:
 \`\`\`
 Customer: Wants fast delivery, low fees, accurate ETAs
 Restaurant: Wants high order volume, reasonable commissions, reliable pickups
 Dasher: Wants high earnings, short distances, consistent work
 \`\`\`
 
-**Balancing Mechanisms**:
-- **Dynamic delivery fees**: Higher fees when demand exceeds supply, funding Dasher bonuses
-- **Commission tiers**: 15-30% restaurant commission based on visibility and marketing services
-- **Dasher pay model**: Base pay + tips + peak bonuses + challenge incentives
-- **Priority access**: Restaurants with higher commission get better search placement
-- **Dasher Top Dasher program**: Consistent acceptance rate earns scheduling priority
+Balancing Mechanisms:
+- Dynamic delivery fees: Higher fees when demand exceeds supply, funding Dasher bonuses
+- Commission tiers: 15-30% restaurant commission based on visibility and marketing services
+- Dasher pay model: Base pay + tips + peak bonuses + challenge incentives
+- Priority access: Restaurants with higher commission get better search placement
+- Dasher Top Dasher program: Consistent acceptance rate earns scheduling priority
 
-**Marketplace Health Metrics**:
+Marketplace Health Metrics:
 \`\`\`
 Supply-demand ratio = Available Dashers / Pending Orders
   > 1.2: Healthy (reduce incentives)
@@ -16505,12 +16505,12 @@ Supply-demand ratio = Available Dashers / Pending Orders
   < 0.8: Undersupplied (activate surge + driver incentives)
 \`\`\`
 
-**Flywheel Effect**:
+Flywheel Effect:
 More customers -> more orders -> more restaurant partners -> more Dashers -> faster delivery -> more customers`
         },
         {
           question: 'How does menu management and kitchen prep time estimation work?',
-          answer: `**Menu Sync Architecture**:
+          answer: `Menu Sync Architecture:
 \`\`\`
 Restaurant POS --> Middleware API --> Menu Service --> Search Index
                          |                    |
@@ -16518,12 +16518,12 @@ Restaurant POS --> Middleware API --> Menu Service --> Search Index
                     Check item photos    (TTL: 5 min)
 \`\`\`
 
-**Real-time Availability**:
+Real-time Availability:
 - POS integration (Toast, Square, Olo) pushes item availability changes
 - Restaurant tablet allows manual 86ing (marking items unavailable)
 - Automatic 86 if item causes 3+ cancellations in 1 hour
 
-**Kitchen Prep Time Prediction**:
+Kitchen Prep Time Prediction:
 \`\`\`
 prep_time = base_prep_time(items)
           + queue_factor(current_orders_in_kitchen)
@@ -16531,28 +16531,28 @@ prep_time = base_prep_time(items)
           + historical_adjustment(restaurant, time_of_day)
 \`\`\`
 
-**ML Features for Prep Time**:
+ML Features for Prep Time:
 - Historical prep times per item per restaurant
 - Current kitchen load (orders in PREPARING state)
 - Day of week and time of day patterns
 - Special events or holidays
 - Number of unique items in order (more variety = longer)
 
-**Menu Search and Discovery**:
+Menu Search and Discovery:
 - Elasticsearch indexes all menu items with cuisine tags
 - Search by dish name, cuisine type, dietary restrictions
 - Personalized recommendations based on order history`
         },
         {
           question: 'How does order tracking work end-to-end?',
-          answer: `**Status Machine**:
+          answer: `Status Machine:
 \`\`\`
 PLACED -> CONFIRMED -> PREPARING -> READY -> PICKED_UP -> EN_ROUTE -> DELIVERED
   |          |           |         |          |           |
   +--CANCELLED (at any point before PICKED_UP)
 \`\`\`
 
-**Real-time Data Flow**:
+Real-time Data Flow:
 \`\`\`
 Dasher App --> Location Service --> Kafka --> Consumers
  (GPS/5s)                                      |
@@ -16565,20 +16565,20 @@ Dasher App --> Location Service --> Kafka --> Consumers
                               (history)    (push to customer)
 \`\`\`
 
-**Customer-Facing Updates**:
+Customer-Facing Updates:
 - Map view with Dasher location (interpolated between GPS updates)
 - Step-by-step status: "Your order is being prepared" then "Dasher is heading to restaurant"
 - ETA recalculated on every GPS update
 - Push notifications for major transitions (picked up, arriving)
 
-**Snap-to-Road**:
+Snap-to-Road:
 - Raw GPS coordinates snapped to road network using OSRM/Google Roads API
 - Client-side interpolation creates smooth animation between 5-second updates
 - Geofencing triggers automatic status updates (within 100m of restaurant = arrived)`
         },
         {
           question: 'How does payment splitting and tip handling work?',
-          answer: `**Payment Flow**:
+          answer: `Payment Flow:
 \`\`\`
 Order Placed -> Payment Auth (hold) -> Delivery Confirmed -> Capture
                                          |
@@ -16589,7 +16589,7 @@ Order Placed -> Payment Auth (hold) -> Delivery Confirmed -> Capture
                           commission)          bonuses)
 \`\`\`
 
-**Revenue Split**:
+Revenue Split:
 \`\`\`
 Customer pays: $35 subtotal + $5.99 delivery fee + $3 tip = $43.99
   Restaurant: $35 - 25% commission = $26.25
@@ -16597,13 +16597,13 @@ Customer pays: $35 subtotal + $5.99 delivery fee + $3 tip = $43.99
   DoorDash: $8.75 commission + $5.99 delivery fee - $4.00 Dasher base = $10.74
 \`\`\`
 
-**Tip Handling**:
+Tip Handling:
 - Pre-tip at checkout (suggested: 15%, 20%, 25%)
 - Post-delivery tip adjustment window (1 hour)
 - 100% of tips go to Dasher (regulatory requirement)
 - Tips do not affect base pay calculation
 
-**Refund Scenarios**:
+Refund Scenarios:
 - Missing items: Partial refund + DoorDash credits
 - Wrong order: Full refund, restaurant charged
 - Late delivery (>15 min past ETA): Credit toward next order
@@ -16611,7 +16611,7 @@ Customer pays: $35 subtotal + $5.99 delivery fee + $3 tip = $43.99
         },
         {
           question: 'How does search ranking for restaurant discovery work?',
-          answer: `**Search Ranking Pipeline**:
+          answer: `Search Ranking Pipeline:
 \`\`\`
 User Query -> Candidate Retrieval -> Feature Extraction -> ML Ranking -> Results
                    |                       |                  |
@@ -16619,7 +16619,7 @@ User Query -> Candidate Retrieval -> Feature Extraction -> ML Ranking -> Results
             (geo + text)           + user preferences    + business rules
 \`\`\`
 
-**Ranking Signals**:
+Ranking Signals:
 \`\`\`
 Restaurant Features:
   - Distance from user
@@ -16641,19 +16641,19 @@ Context Features:
   - Promotional boost factor
 \`\`\`
 
-**Personalization**:
+Personalization:
 - Collaborative filtering: "Users who ordered from X also ordered from Y"
 - Reorder suggestions based on frequency and recency
 - New restaurant exploration boost (10% of results are novel)
 
-**A/B Testing**:
+A/B Testing:
 - Ranking model changes tested on 5% traffic segments
 - Primary metric: conversion rate (search to order)
 - Guardrail metrics: restaurant diversity, delivery time`
         },
         {
           question: 'How does the driver matching algorithm optimize for batched orders?',
-          answer: `**Batch Order Optimization**:
+          answer: `Batch Order Optimization:
 \`\`\`
 Goal: Maximize deliveries/hour while keeping ETA within promise
 
@@ -16664,7 +16664,7 @@ Constraints:
   - Restaurants within 0.5 mile radius
 \`\`\`
 
-**Matching Algorithm (runs every 30 seconds)**:
+Matching Algorithm (runs every 30 seconds):
 \`\`\`
 1. Collect all unassigned orders in zone
 2. Build candidate batches:
@@ -16680,12 +16680,12 @@ Constraints:
    - Minimize total weighted distance
 \`\`\`
 
-**Route Optimization**:
+Route Optimization:
 - TSP solver for optimal pickup/dropoff ordering
 - Real-time traffic data from Google Maps / Mapbox
 - Dynamic rerouting if traffic conditions change
 
-**Communication to Customer**:
+Communication to Customer:
 \`\`\`
 "Your Dasher is picking up another order nearby.
  This adds approximately 5 minutes to your delivery."
@@ -16805,71 +16805,71 @@ Constraints:
       deepDiveTopics: [
         {
           topic: 'Dispatch Engine Internals',
-          detail: `The dispatch engine is the heart of the platform, running an optimization loop every **30 seconds** across each geographic zone.
+          detail: `The dispatch engine is the heart of the platform, running an optimization loop every 30 seconds across each geographic zone.
 
-**Architecture:** A dedicated microservice with in-memory state of all active Dashers and pending orders. Each zone (typically a metro area) has its own dispatch instance to avoid cross-zone coordination latency.
+Architecture: A dedicated microservice with in-memory state of all active Dashers and pending orders. Each zone (typically a metro area) has its own dispatch instance to avoid cross-zone coordination latency.
 
-**Scoring function:** For each (order, Dasher) pair, compute: score = w1 x distance_to_restaurant + w2 x direction_alignment + w3 x dasher_rating + w4 x vehicle_suitability + w5 x batch_compatibility. Weights are tuned via A/B testing.
+Scoring function: For each (order, Dasher) pair, compute: score = w1 x distance_to_restaurant + w2 x direction_alignment + w3 x dasher_rating + w4 x vehicle_suitability + w5 x batch_compatibility. Weights are tuned via A/B testing.
 
-**Hungarian algorithm:** Once all scores are computed, the assignment is solved as a bipartite matching problem using the Hungarian algorithm (O(n^3)). For zones with 500+ pending orders, a greedy approximation runs in O(n log n) with <2% suboptimality.
+Hungarian algorithm: Once all scores are computed, the assignment is solved as a bipartite matching problem using the Hungarian algorithm (O(n^3)). For zones with 500+ pending orders, a greedy approximation runs in O(n log n) with <2% suboptimality.
 
-**Reassignment:** If a Dasher declines (15-second window), the order is immediately re-dispatched with a higher base pay incentive. After 3 declines, the system widens the search radius by 50%.`
+Reassignment: If a Dasher declines (15-second window), the order is immediately re-dispatched with a higher base pay incentive. After 3 declines, the system widens the search radius by 50%.`
         },
         {
           topic: 'ETA Prediction ML Pipeline',
-          detail: `ETA accuracy is the single most impactful metric for customer satisfaction. The platform trains a **gradient-boosted tree ensemble** updated daily.
+          detail: `ETA accuracy is the single most impactful metric for customer satisfaction. The platform trains a gradient-boosted tree ensemble updated daily.
 
-**Three-component model:** Total ETA = pickup_time_model + prep_time_model + delivery_time_model. Each is a separate ML model because the features and error profiles differ.
+Three-component model: Total ETA = pickup_time_model + prep_time_model + delivery_time_model. Each is a separate ML model because the features and error profiles differ.
 
-**Prep time model features:** Restaurant historical prep times (by item category), current kitchen queue depth, time of day, day of week, order complexity (number of unique items), and a restaurant-specific bias term learned over 30 days of data.
+Prep time model features: Restaurant historical prep times (by item category), current kitchen queue depth, time of day, day of week, order complexity (number of unique items), and a restaurant-specific bias term learned over 30 days of data.
 
-**Delivery time model features:** Driving distance (not straight-line), real-time traffic from map provider, weather conditions, Dasher speed history, and building access complexity (apartment vs house).
+Delivery time model features: Driving distance (not straight-line), real-time traffic from map provider, weather conditions, Dasher speed history, and building access complexity (apartment vs house).
 
-**Confidence intervals:** The model outputs not just a point estimate but a [p10, p50, p90] range. The customer sees the p50, but dispatch uses the p90 to avoid overpromising. Post-delivery, predicted vs actual is logged and fed back into retraining.
+Confidence intervals: The model outputs not just a point estimate but a [p10, p50, p90] range. The customer sees the p50, but dispatch uses the p90 to avoid overpromising. Post-delivery, predicted vs actual is logged and fed back into retraining.
 
-**Accuracy target:** Within 5 minutes of actual for 80% of deliveries, measured weekly per metro area.`
+Accuracy target: Within 5 minutes of actual for 80% of deliveries, measured weekly per metro area.`
         },
         {
           topic: 'Geospatial Indexing for Nearby Search',
           detail: `Finding restaurants and Dashers within a radius requires efficient geospatial queries at 20K+ QPS.
 
-**Geohash-based indexing:** The world is divided into geohash cells (precision 6 = ~1.2 km). Each restaurant and active Dasher is stored in a Redis sorted set keyed by geohash prefix. A radius query expands to the target cell plus 8 neighbors.
+Geohash-based indexing: The world is divided into geohash cells (precision 6 = ~1.2 km). Each restaurant and active Dasher is stored in a Redis sorted set keyed by geohash prefix. A radius query expands to the target cell plus 8 neighbors.
 
-**Driver location in Redis:** Active Dashers update their location every 5 seconds. Redis GEOADD stores (longitude, latitude) with GEORADIUS queries returning Dashers within N miles in <1ms.
+Driver location in Redis: Active Dashers update their location every 5 seconds. Redis GEOADD stores (longitude, latitude) with GEORADIUS queries returning Dashers within N miles in <1ms.
 
-**Restaurant proximity:** Pre-computed at ingestion time. Each restaurant has a geohash stored in Elasticsearch for compound queries (geo + cuisine + rating + open status).
+Restaurant proximity: Pre-computed at ingestion time. Each restaurant has a geohash stored in Elasticsearch for compound queries (geo + cuisine + rating + open status).
 
-**Hot zone detection:** Real-time aggregation of order density per geohash cell. Cells with demand/supply ratio > 1.5 trigger Dasher repositioning incentives ("Drive to this zone for +$3/delivery").
+Hot zone detection: Real-time aggregation of order density per geohash cell. Cells with demand/supply ratio > 1.5 trigger Dasher repositioning incentives ("Drive to this zone for +$3/delivery").
 
-**Optimization:** During peak hours, the search radius starts small (2 miles) and expands only if no Dashers found. This prevents assigning distant Dashers when closer ones may become available in seconds.`
+Optimization: During peak hours, the search radius starts small (2 miles) and expands only if no Dashers found. This prevents assigning distant Dashers when closer ones may become available in seconds.`
         },
         {
           topic: 'Fraud Detection and Prevention',
           detail: `Fraud costs food delivery platforms hundreds of millions annually across customer refund abuse, driver delivery fraud, and restaurant manipulation.
 
-**Customer fraud signals:** Refund rate > 30%, multiple accounts from same device fingerprint, delivery address is a P.O. box or vacant lot, claims "never received" but GPS shows Dasher at location for 2+ minutes.
+Customer fraud signals: Refund rate > 30%, multiple accounts from same device fingerprint, delivery address is a P.O. box or vacant lot, claims "never received" but GPS shows Dasher at location for 2+ minutes.
 
-**Driver fraud signals:** Marking delivered without GPS proximity to address, suspiciously short delivery times (impossible given distance), photos that don't match the delivery location, frequent "customer unavailable" claims.
+Driver fraud signals: Marking delivered without GPS proximity to address, suspiciously short delivery times (impossible given distance), photos that don't match the delivery location, frequent "customer unavailable" claims.
 
-**ML fraud model:** A real-time gradient-boosted classifier scores each refund request (0.0 to 1.0 fraud probability). Features include account age, order history, claim frequency, device fingerprint, and behavioral biometrics. Scores > 0.8 trigger automatic denial with human review.
+ML fraud model: A real-time gradient-boosted classifier scores each refund request (0.0 to 1.0 fraud probability). Features include account age, order history, claim frequency, device fingerprint, and behavioral biometrics. Scores > 0.8 trigger automatic denial with human review.
 
-**Restaurant fraud:** Inflating prep times to avoid penalties, marking items unavailable during busy periods to reduce workload, duplicate charge attempts. Detected via statistical comparison against peer restaurants in the same category and zone.
+Restaurant fraud: Inflating prep times to avoid penalties, marking items unavailable during busy periods to reduce workload, duplicate charge attempts. Detected via statistical comparison against peer restaurants in the same category and zone.
 
-**Prevention measures:** Delivery photo proof, GPS geofencing at dropoff, OTP verification for high-value orders, graduated trust tiers for new accounts.`
+Prevention measures: Delivery photo proof, GPS geofencing at dropoff, OTP verification for high-value orders, graduated trust tiers for new accounts.`
         },
         {
           topic: 'Real-time Event Streaming with Kafka',
           detail: `Kafka is the central nervous system connecting all services in the platform.
 
-**Topic design:** Separate topics for orders (state changes), driver_locations (GPS updates), dispatch_events (assignments), payments (transactions), and notifications (push/SMS). Each topic is partitioned by entity ID (order_id or driver_id) to maintain ordering.
+Topic design: Separate topics for orders (state changes), driver_locations (GPS updates), dispatch_events (assignments), payments (transactions), and notifications (push/SMS). Each topic is partitioned by entity ID (order_id or driver_id) to maintain ordering.
 
-**Location ingestion:** 20K GPS updates/sec from active Dashers. Partitioned by driver_id (100 partitions). Consumer groups: ETA service, tracking service, analytics pipeline, and fraud detection.
+Location ingestion: 20K GPS updates/sec from active Dashers. Partitioned by driver_id (100 partitions). Consumer groups: ETA service, tracking service, analytics pipeline, and fraud detection.
 
-**Order event sourcing:** Every order state transition is an immutable event: ORDER_PLACED, RESTAURANT_CONFIRMED, PREP_STARTED, READY_FOR_PICKUP, DASHER_ASSIGNED, PICKED_UP, DELIVERED. This enables replay for debugging and audit trails.
+Order event sourcing: Every order state transition is an immutable event: ORDER_PLACED, RESTAURANT_CONFIRMED, PREP_STARTED, READY_FOR_PICKUP, DASHER_ASSIGNED, PICKED_UP, DELIVERED. This enables replay for debugging and audit trails.
 
-**Consumer lag monitoring:** If any consumer group falls behind by >30 seconds, alerts fire. For the tracking service, even 10-second lag means customers see stale Dasher positions.
+Consumer lag monitoring: If any consumer group falls behind by >30 seconds, alerts fire. For the tracking service, even 10-second lag means customers see stale Dasher positions.
 
-**Retention:** Location data retained for 24 hours in Kafka, then archived to TimescaleDB. Order events retained for 7 days, then to S3 for long-term analytics. Total Kafka throughput: ~50K events/sec across all topics.`
+Retention: Location data retained for 24 hours in Kafka, then archived to TimescaleDB. Order events retained for 7 days, then to S3 for long-term analytics. Total Kafka throughput: ~50K events/sec across all topics.`
         }
       ],
 
@@ -17144,12 +17144,12 @@ trending_topics {
       keyQuestions: [
         {
           question: 'How do we efficiently count hashtags at this scale?',
-          answer: `**The Problem**:
+          answer: `The Problem:
 - 6K tweets/second = millions of hashtags to count
 - Can't store exact counts for every hashtag (memory explosion)
 - Need approximate counts with bounded error
 
-**Count-Min Sketch**:
+Count-Min Sketch:
 \`\`\`
 Structure:
 - 2D array of counters [d rows × w columns]
@@ -17164,12 +17164,12 @@ Query(item):
   return min(counters[i][hash_i(item) % w] for i in 0..d)
 \`\`\`
 
-**Properties**:
+Properties:
 - Space: O(w × d) regardless of unique items
 - Error: ε = e/w, probability δ = e^(-d)
 - Typical: w=10K, d=7 → <0.1% error
 
-**Windowed Counting** — slide every 5 minutes; each window is its own Count-Min sketch:
+Windowed Counting — slide every 5 minutes; each window is its own Count-Min sketch:
 
 | Window         | Sketch           |
 | -------------- | ---------------- |
@@ -17180,19 +17180,19 @@ Query(item):
 - Total count = sum of window counts
 - Trend = compare recent window vs older windows
 
-**Memory Usage**:
+Memory Usage:
 - Single sketch: 10K × 7 × 4 bytes = 280KB
 - 3 time windows: 840KB per region
 - 100 regions: ~84MB total`
         },
         {
           question: 'How do we detect "trending" vs just "popular"?',
-          answer: `**The Key Insight**:
+          answer: `The Key Insight:
 - "Trending" = rising faster than expected
 - A topic with 1M tweets isn't trending if it always gets 1M
 - A topic with 10K tweets IS trending if it normally gets 100
 
-**Anomaly Detection Algorithm**:
+Anomaly Detection Algorithm:
 \`\`\`
 For each topic in current window:
   current_rate = tweets_in_window / window_duration
@@ -17204,7 +17204,7 @@ For each topic in current window:
     trend_score = z_score × log(current_count)  # scale by volume
 \`\`\`
 
-**Time Decay**:
+Time Decay:
 \`\`\`
 decayed_score = raw_score × e^(-λt)
 
@@ -17215,7 +17215,7 @@ Where:
 Effect: Topics that started trending recently rank higher
 \`\`\`
 
-**Velocity Tracking**:
+Velocity Tracking:
 \`\`\`json
 {
   "topic": "#WorldCup",
@@ -17227,26 +17227,26 @@ Effect: Topics that started trending recently rank higher
 }
 \`\`\`
 
-**Preventing False Positives**:
+Preventing False Positives:
 - Minimum absolute count threshold (ignore if < 100 tweets)
 - Minimum unique users (anti-bot)
 - Blacklist certain evergreen topics`
         },
         {
           question: 'How do we filter spam and manipulation?',
-          answer: `**Spam Patterns to Detect**:
+          answer: `Spam Patterns to Detect:
 
-1. **Bot Networks**:
+1. Bot Networks:
    - Multiple accounts tweeting same hashtag simultaneously
    - Accounts created recently
    - Similar tweet text across accounts
 
-2. **Coordinated Campaigns**:
+2. Coordinated Campaigns:
    - Sudden spike from specific user segments
    - Tweets from same IP ranges
    - Similar posting patterns
 
-**Multi-Layer Filtering**:
+Multi-Layer Filtering:
 \`\`\`
 Layer 1: Account Quality
   - Account age (< 30 days = suspicious)
@@ -17264,7 +17264,7 @@ Layer 3: Network Analysis
   - Unusual geographic patterns
 \`\`\`
 
-**Weighted Counting**:
+Weighted Counting:
 \`\`\`
 Instead of: count += 1
 
@@ -17277,7 +17277,7 @@ Where credibility considers:
   - Verification status
 \`\`\`yaml
 
-**Real-time vs Batch**:
+Real-time vs Batch:
 - Real-time: Basic rate limiting, known bot lists
 - Batch (hourly): Network analysis, retroactive cleanup`
         }
@@ -17356,61 +17356,61 @@ Where credibility considers:
           topic: 'Count-Min Sketch Internals and Tuning',
           detail: `The Count-Min Sketch is the core data structure enabling memory-efficient counting at scale.
 
-**Structure:** A 2D array of **d rows x w columns** with d independent hash functions. For trending, typical configuration: w=10,000, d=7 gives **<0.1% error probability**.
+Structure: A 2D array of d rows x w columns with d independent hash functions. For trending, typical configuration: w=10,000, d=7 gives <0.1% error probability.
 
-**Memory efficiency:** A single sketch uses only **280 KB** (10K x 7 x 4 bytes). With 3 time windows across 100 regions, total memory is **~84 MB** -- orders of magnitude less than exact counting.
+Memory efficiency: A single sketch uses only 280 KB (10K x 7 x 4 bytes). With 3 time windows across 100 regions, total memory is ~84 MB -- orders of magnitude less than exact counting.
 
-**Windowed counting:** Maintain separate sketches for each 5-minute window. The trend score compares the current window against the previous two. Oldest window is discarded and replaced, creating a **sliding window** effect with tumbling window simplicity.
+Windowed counting: Maintain separate sketches for each 5-minute window. The trend score compares the current window against the previous two. Oldest window is discarded and replaced, creating a sliding window effect with tumbling window simplicity.
 
-**Trade-off:** Over-counting is possible (never under-counts). For trending detection, slight over-counting is acceptable since we care about **relative velocity**, not absolute counts.`
+Trade-off: Over-counting is possible (never under-counts). For trending detection, slight over-counting is acceptable since we care about relative velocity, not absolute counts.`
         },
         {
           topic: 'Anomaly Detection for Trend Scoring',
           detail: `Distinguishing "trending" from "popular" requires statistical anomaly detection, not just frequency counting.
 
-**Z-score method:** For each topic, compute z_score = (current_rate - baseline) / std_dev. A z-score > 3.0 indicates the topic is growing **3 standard deviations** above its historical norm.
+Z-score method: For each topic, compute z_score = (current_rate - baseline) / std_dev. A z-score > 3.0 indicates the topic is growing 3 standard deviations above its historical norm.
 
-**Time-of-day baselines:** Sports hashtags spike during game hours, political hashtags during news cycles. Baselines are segmented by **hour-of-day** and **day-of-week** to avoid false positives from predictable patterns.
+Time-of-day baselines: Sports hashtags spike during game hours, political hashtags during news cycles. Baselines are segmented by hour-of-day and day-of-week to avoid false positives from predictable patterns.
 
-**Velocity tracking:** Track not just count but **acceleration** -- how fast the count is growing. A topic at 5,000 tweets/min that was at 2,000 tweets/min five minutes ago has acceleration of **2.5x**, which is a strong trending signal even if absolute volume is moderate.
+Velocity tracking: Track not just count but acceleration -- how fast the count is growing. A topic at 5,000 tweets/min that was at 2,000 tweets/min five minutes ago has acceleration of 2.5x, which is a strong trending signal even if absolute volume is moderate.
 
-**Time decay:** Apply exponential decay: decayed_score = raw_score x e^(-0.1 x t) where t = hours since first trending. This naturally rotates stale trends off the list.`
+Time decay: Apply exponential decay: decayed_score = raw_score x e^(-0.1 x t) where t = hours since first trending. This naturally rotates stale trends off the list.`
         },
         {
           topic: 'Multi-Layer Spam and Bot Filtering',
           detail: `At 500M tweets/day, even 1% spam can pollute trending results with 5M fake signals.
 
-**Layer 1 -- Inline (< 1ms):** Rate limit per user-hashtag pair (max 5 tweets/min), check against known bot lists (updated hourly), and apply **credibility-weighted counting** where new accounts contribute 0.1x weight vs verified accounts at 1.0x.
+Layer 1 -- Inline (< 1ms): Rate limit per user-hashtag pair (max 5 tweets/min), check against known bot lists (updated hourly), and apply credibility-weighted counting where new accounts contribute 0.1x weight vs verified accounts at 1.0x.
 
-**Layer 2 -- Near-real-time (< 1 min):** Detect coordinated behavior using **graph clustering** on co-tweeting patterns. If 50 accounts tweet the same hashtag within 10 seconds from similar IP ranges, flag as coordinated campaign.
+Layer 2 -- Near-real-time (< 1 min): Detect coordinated behavior using graph clustering on co-tweeting patterns. If 50 accounts tweet the same hashtag within 10 seconds from similar IP ranges, flag as coordinated campaign.
 
-**Layer 3 -- Batch (hourly):** Run ML models on tweet text similarity, account creation date clustering, and network topology analysis. Retroactively remove fraudulent trend entries and adjust historical baselines.
+Layer 3 -- Batch (hourly): Run ML models on tweet text similarity, account creation date clustering, and network topology analysis. Retroactively remove fraudulent trend entries and adjust historical baselines.
 
-**Weighted counting:** Instead of count += 1, use count += credibility_score. This single change eliminates most bot manipulation without blocking any accounts.`
+Weighted counting: Instead of count += 1, use count += credibility_score. This single change eliminates most bot manipulation without blocking any accounts.`
         },
         {
           topic: 'Hierarchical Regional Aggregation',
           detail: `Trends must be computed at city, country, and global levels simultaneously.
 
-**Architecture:** Each Flink job handles one **geographic partition** (based on tweet geotag or user profile location). City-level counts are aggregated into country-level, which aggregate into global.
+Architecture: Each Flink job handles one geographic partition (based on tweet geotag or user profile location). City-level counts are aggregated into country-level, which aggregate into global.
 
-**Regional baselines:** A hashtag trending in a single city (e.g., local sports team) should not require global volume. Each region has its own baseline, so **100 tweets in a small city** can trend locally while needing **100,000+ globally**.
+Regional baselines: A hashtag trending in a single city (e.g., local sports team) should not require global volume. Each region has its own baseline, so 100 tweets in a small city can trend locally while needing 100,000+ globally.
 
-**Cross-region deduplication:** The same world event trends in all regions simultaneously. Use **topic clustering** (NLP-based) to identify that #WorldCup, #CopaDelMundo, and #WM2026 are the same story, presenting them as one trend with regional names.
+Cross-region deduplication: The same world event trends in all regions simultaneously. Use topic clustering (NLP-based) to identify that #WorldCup, #CopaDelMundo, and #WM2026 are the same story, presenting them as one trend with regional names.
 
-**Latency:** Intra-region aggregation completes in **< 1 minute**. Global aggregation adds **~2 minutes** due to cross-region data transfer.`
+Latency: Intra-region aggregation completes in < 1 minute. Global aggregation adds ~2 minutes due to cross-region data transfer.`
         },
         {
           topic: 'Breaking News Fast-Path Detection',
-          detail: `Standard 5-minute windows are too slow for major breaking events that can generate **millions of tweets per minute**.
+          detail: `Standard 5-minute windows are too slow for major breaking events that can generate millions of tweets per minute.
 
-**Emergency mode trigger:** When any topic exceeds **10x its 1-hour baseline** within a single 1-minute micro-window, activate the fast path. This switches from 5-minute to **30-second** aggregation windows for that topic.
+Emergency mode trigger: When any topic exceeds 10x its 1-hour baseline within a single 1-minute micro-window, activate the fast path. This switches from 5-minute to 30-second aggregation windows for that topic.
 
-**Burst detection:** Use a **CUSUM (Cumulative Sum)** algorithm that detects sustained increases. Unlike z-score which reacts to single spikes, CUSUM accumulates deviations and triggers when the cumulative sum exceeds a threshold -- catching events that build over 2-3 minutes.
+Burst detection: Use a CUSUM (Cumulative Sum) algorithm that detects sustained increases. Unlike z-score which reacts to single spikes, CUSUM accumulates deviations and triggers when the cumulative sum exceeds a threshold -- catching events that build over 2-3 minutes.
 
-**Human-in-the-loop:** For politically sensitive topics (elections, crises), the fast path can route to a **curation team** that adds context labels ("Election", "Developing Story") before the trend is displayed to all users.
+Human-in-the-loop: For politically sensitive topics (elections, crises), the fast path can route to a curation team that adds context labels ("Election", "Developing Story") before the trend is displayed to all users.
 
-**Example:** During the 2024 Super Bowl, #SuperBowl generated **8 million tweets** in the first hour. The fast path detected it within **45 seconds** of kickoff.`
+Example: During the 2024 Super Bowl, #SuperBowl generated 8 million tweets in the first hour. The fast path detected it within 45 seconds of kickoff.`
         }
       ],
 
@@ -17727,9 +17727,9 @@ paste_views {
       keyQuestions: [
         {
           question: 'How do we generate unique short URLs?',
-          answer: `**Options for Key Generation**:
+          answer: `Options for Key Generation:
 
-**Option 1: Base62 Encoding of Counter**
+Option 1: Base62 Encoding of Counter
 \`\`\`
 counter = auto_increment_id  // 1, 2, 3...
 key = base62_encode(counter) // "1", "2"... "a", "b"... "10"...
@@ -17738,7 +17738,7 @@ Pros: Simple, no collisions, sequential
 Cons: Predictable (can enumerate), single point of failure
 \`\`\`
 
-**Option 2: Random Generation + Collision Check**
+Option 2: Random Generation + Collision Check
 \`\`\`
 loop:
   key = random_base62(7)  // 62^7 = 3.5 trillion combinations
@@ -17749,7 +17749,7 @@ Pros: Unpredictable, distributed friendly
 Cons: Need collision handling, DB lookup on write
 \`\`\`
 
-**Option 3: Pre-generated Key Pool (Recommended)**
+Option 3: Pre-generated Key Pool (Recommended)
 
 A background job generates keys in batches into an \`unused_keys\` table:
 
@@ -17772,7 +17772,7 @@ RETURNING key;
 Pros: No collision at write time, fast.
 Cons: Need background job, key inventory management.
 
-**URL Length Analysis**:
+URL Length Analysis:
 \`\`\`
 7 characters, Base62 = 62^7 = 3.52 trillion
 100K pastes/day = 36.5M/year
@@ -17781,7 +17781,7 @@ Will last: 96,000+ years (more than enough!)
         },
         {
           question: 'Where do we store the paste content?',
-          answer: `**Option 1: In Database (Small Pastes)**
+          answer: `Option 1: In Database (Small Pastes)
 \`\`\`
 For pastes < 1KB:
   Store directly in pastes table as TEXT column
@@ -17789,7 +17789,7 @@ For pastes < 1KB:
   Cons: DB bloat, max row size limits
 \`\`\`
 
-**Option 2: Object Storage (Recommended)**
+Option 2: Object Storage (Recommended)
 
 Write path:
 
@@ -17801,7 +17801,7 @@ S3 features we use:
 - Cross-region replication
 - Pre-signed URLs for direct access
 
-**Content Deduplication**:
+Content Deduplication:
 \`\`\`
 // Before upload
 content_hash = SHA256(content)
@@ -17816,7 +17816,7 @@ else:
   upload_to_s3(content)
 \`\`\`
 
-**CDN for Reads**:
+CDN for Reads:
 \`\`\`
 Client → CDN → Origin (S3/API)
 
@@ -17826,9 +17826,9 @@ Cache-Control: public, max-age=31536000
         },
         {
           question: 'How do we handle paste expiration?',
-          answer: `**TTL Options**:
+          answer: `TTL Options:
 
-**Option 1: Background Cleanup Job**
+Option 1: Background Cleanup Job
 \`\`\`
 Every hour:
   DELETE FROM pastes
@@ -17842,7 +17842,7 @@ Pros: Simple
 Cons: Expired content accessible until job runs
 \`\`\`
 
-**Option 2: S3 Lifecycle Rules (Better)**
+Option 2: S3 Lifecycle Rules (Better)
 \`\`\`
 S3 Lifecycle Policy:
   Rule: Delete objects where tag:expires_at < now
@@ -17858,7 +17858,7 @@ Pros: S3 handles deletion automatically
 Cons: Need to sync DB metadata cleanup
 \`\`\`
 
-**Option 3: Lazy Deletion (Most Common)**
+Option 3: Lazy Deletion (Most Common)
 \`\`\`
 On read:
   paste = db.find(key)
@@ -17873,7 +17873,7 @@ Pros: No background job needed
 Cons: Storage not immediately reclaimed
 \`\`\`
 
-**Recommended: Lazy + Background**
+Recommended: Lazy + Background
 - Lazy deletion for immediate 404 on expired
 - Background job for storage cleanup (cost)`
         }
@@ -17940,46 +17940,46 @@ Cons: Storage not immediately reclaimed
           topic: 'Key Generation Strategies',
           detail: `Generating unique short URLs is the core design challenge for Pastebin.
 
-**Pre-generated key pool (recommended):** A background job generates random 7-character Base62 keys in batches (e.g., 10K at a time) and stores them in an \`unused_keys\` table. On paste creation, an API server atomically claims a key. This eliminates collision checking at write time.
+Pre-generated key pool (recommended): A background job generates random 7-character Base62 keys in batches (e.g., 10K at a time) and stores them in an \`unused_keys\` table. On paste creation, an API server atomically claims a key. This eliminates collision checking at write time.
 
-**Counter-based:** Use a distributed counter (ZooKeeper or Redis INCR) and Base62-encode the result. Simple and collision-free, but keys are **predictable** (sequential) and the counter is a single point of failure.
+Counter-based: Use a distributed counter (ZooKeeper or Redis INCR) and Base62-encode the result. Simple and collision-free, but keys are predictable (sequential) and the counter is a single point of failure.
 
-**Hash-based:** SHA-256 the content, take first 7 chars in Base62. Content-addressable (same content = same URL) but requires collision handling. At 1M pastes/day, collision probability is negligible but must still be handled.
+Hash-based: SHA-256 the content, take first 7 chars in Base62. Content-addressable (same content = same URL) but requires collision handling. At 1M pastes/day, collision probability is negligible but must still be handled.
 
-**Recommendation:** Pre-generated pool for production, counter-based for MVPs.`
+Recommendation: Pre-generated pool for production, counter-based for MVPs.`
         },
         {
           topic: 'Content Deduplication with SHA-256',
           detail: `Many pastes contain identical content (popular code snippets, error messages, etc.).
 
-**Approach:** Before uploading to S3, compute SHA-256 of the content. Check if a paste with the same hash already exists. If so, create a new short URL pointing to the **same S3 object** -- saving storage and upload time.
+Approach: Before uploading to S3, compute SHA-256 of the content. Check if a paste with the same hash already exists. If so, create a new short URL pointing to the same S3 object -- saving storage and upload time.
 
-**Impact:** Deduplication can reduce storage by **15-30%** in practice. The hash lookup adds < 1ms (indexed column) and the storage savings compound over years.
+Impact: Deduplication can reduce storage by 15-30% in practice. The hash lookup adds < 1ms (indexed column) and the storage savings compound over years.
 
-**Trade-off:** Deleting a paste requires reference counting. Only remove the S3 object when zero URLs point to it.`
+Trade-off: Deleting a paste requires reference counting. Only remove the S3 object when zero URLs point to it.`
         },
         {
           topic: 'CDN Caching for Immutable Content',
           detail: `Paste content is immutable once created -- the perfect CDN use case.
 
-**Cache headers:** \`Cache-Control: public, max-age=31536000, immutable\` for paste content. Since URLs map to fixed content, aggressive caching is safe.
+Cache headers: \`Cache-Control: public, max-age=31536000, immutable\` for paste content. Since URLs map to fixed content, aggressive caching is safe.
 
-**CDN hit rate:** Popular pastes (shared on social media, linked from Stack Overflow) get **99%+ CDN hit rates**. The CDN handles viral traffic without hitting origin.
+CDN hit rate: Popular pastes (shared on social media, linked from Stack Overflow) get 99%+ CDN hit rates. The CDN handles viral traffic without hitting origin.
 
-**Edge cases:** Password-protected pastes are served with \`Cache-Control: private, no-store\`. Expired pastes return 404 with a short TTL so the CDN removes them quickly.
+Edge cases: Password-protected pastes are served with \`Cache-Control: private, no-store\`. Expired pastes return 404 with a short TTL so the CDN removes them quickly.
 
-**Cost:** CloudFront or CloudFlare costs are dominated by bandwidth. At 10M reads/day x 10 KB average, that is ~100 GB/day or ~$10/month on CloudFront.`
+Cost: CloudFront or CloudFlare costs are dominated by bandwidth. At 10M reads/day x 10 KB average, that is ~100 GB/day or ~$10/month on CloudFront.`
         },
         {
           topic: 'Expiration and Cleanup Strategies',
           detail: `75% of pastes have expiration dates, requiring systematic cleanup.
 
-**Three-layer cleanup:**
-1. **Lazy deletion:** On read, check if expired. If so, return 404 and mark for cleanup. Handles the read path immediately.
-2. **S3 Lifecycle Rules:** Tag S3 objects with expiration date. S3 automatically deletes expired objects -- zero custom code.
-3. **Background sweeper:** Hourly job scans metadata table for expired pastes in batches of 10K. Deletes DB rows and releases keys back to the pool.
+Three-layer cleanup:
+1. Lazy deletion: On read, check if expired. If so, return 404 and mark for cleanup. Handles the read path immediately.
+2. S3 Lifecycle Rules: Tag S3 objects with expiration date. S3 automatically deletes expired objects -- zero custom code.
+3. Background sweeper: Hourly job scans metadata table for expired pastes in batches of 10K. Deletes DB rows and releases keys back to the pool.
 
-**Key recycling:** Released keys go back to the \`unused_keys\` pool after a **30-day grace period** (to prevent URL reuse while cached versions exist).`
+Key recycling: Released keys go back to the \`unused_keys\` pool after a 30-day grace period (to prevent URL reuse while cached versions exist).`
         }
       ],
 
@@ -18320,43 +18320,43 @@ Bloom filter for fast "definitely not seen" checks before expensive hash lookups
           topic: 'URL Frontier Architecture',
           detail: `The URL frontier is the heart of the crawler -- a two-level queue system managing priority and politeness.
 
-**Front queues (priority):** URLs are classified into High (high PageRank, news sites), Medium (regular pages), and Low (new discoveries). A priority selector picks from queues based on configured weights (e.g., 50% High, 35% Medium, 15% Low).
+Front queues (priority): URLs are classified into High (high PageRank, news sites), Medium (regular pages), and Low (new discoveries). A priority selector picks from queues based on configured weights (e.g., 50% High, 35% Medium, 15% Low).
 
-**Back queues (per-domain):** Each domain gets its own queue with a \`nextFetchTime\` timestamp. A URL can only be dequeued when the current time exceeds \`nextFetchTime\`. After each fetch, \`nextFetchTime\` advances by the crawl-delay from robots.txt (default 1 second).
+Back queues (per-domain): Each domain gets its own queue with a \`nextFetchTime\` timestamp. A URL can only be dequeued when the current time exceeds \`nextFetchTime\`. After each fetch, \`nextFetchTime\` advances by the crawl-delay from robots.txt (default 1 second).
 
-**Selection flow:** Priority selector picks a URL -> routes to the appropriate domain back-queue -> fetcher only pops if \`nextFetchTime\` has passed. This ensures **high-priority pages are fetched first** while **no single domain is overwhelmed**.`
+Selection flow: Priority selector picks a URL -> routes to the appropriate domain back-queue -> fetcher only pops if \`nextFetchTime\` has passed. This ensures high-priority pages are fetched first while no single domain is overwhelmed.`
         },
         {
           topic: 'SimHash Near-Duplicate Detection',
           detail: `The web is full of near-duplicates: syndicated articles, template pages, URL variations. SimHash detects these efficiently.
 
-**How it works:** Convert page content to a set of features (word n-grams). Hash each feature and combine using weighted bit voting to produce a **64-bit fingerprint**. Two pages are near-duplicates if their SimHash fingerprints differ by **<= 3 bits** (Hamming distance).
+How it works: Convert page content to a set of features (word n-grams). Hash each feature and combine using weighted bit voting to produce a 64-bit fingerprint. Two pages are near-duplicates if their SimHash fingerprints differ by <= 3 bits (Hamming distance).
 
-**At scale:** Store 10B fingerprints (80 GB). Use **bit-partitioning**: split the 64-bit hash into blocks and index by block. Two hashes differing by k bits must match in at least one block, enabling **O(1) lookups** instead of comparing all pairs.
+At scale: Store 10B fingerprints (80 GB). Use bit-partitioning: split the 64-bit hash into blocks and index by block. Two hashes differing by k bits must match in at least one block, enabling O(1) lookups instead of comparing all pairs.
 
-**Impact:** SimHash catches **~20% of crawled pages** as near-duplicates, saving enormous storage and indexing cost.`
+Impact: SimHash catches ~20% of crawled pages as near-duplicates, saving enormous storage and indexing cost.`
         },
         {
           topic: 'Adaptive Re-Crawl Scheduling',
           detail: `Not all pages change at the same rate. News sites update hourly; corporate pages update monthly.
 
-**Change detection:** On each re-crawl, compare the new content hash to the stored hash. Track the **change frequency** per URL: changes / total re-crawls.
+Change detection: On each re-crawl, compare the new content hash to the stored hash. Track the change frequency per URL: changes / total re-crawls.
 
-**Scheduling formula:** next_crawl_interval = base_interval / change_frequency. A page that changes 80% of the time gets re-crawled 5x more often than one that changes 10% of the time.
+Scheduling formula: next_crawl_interval = base_interval / change_frequency. A page that changes 80% of the time gets re-crawled 5x more often than one that changes 10% of the time.
 
-**Categories:** News: every 1-4 hours. Active blogs: daily. Corporate: weekly. Archives: monthly. Dead pages: removed after 3 consecutive 404s.
+Categories: News: every 1-4 hours. Active blogs: daily. Corporate: weekly. Archives: monthly. Dead pages: removed after 3 consecutive 404s.
 
-**Budget allocation:** Allocate crawl budget proportionally: 50% to frequently-changing pages, 30% to important pages (high PageRank), 20% to discovery.`
+Budget allocation: Allocate crawl budget proportionally: 50% to frequently-changing pages, 30% to important pages (high PageRank), 20% to discovery.`
         },
         {
           topic: 'Crawl Trap Detection and Avoidance',
           detail: `Malicious or poorly-designed sites can trap crawlers in infinite loops.
 
-**Calendar traps:** Dynamic calendars with infinite date URLs (e.g., /calendar/2025/01, /calendar/2025/02, ...). Detected by URL pattern analysis: if a site generates > 10,000 URLs matching the same regex pattern, cap it.
+Calendar traps: Dynamic calendars with infinite date URLs (e.g., /calendar/2025/01, /calendar/2025/02, ...). Detected by URL pattern analysis: if a site generates > 10,000 URLs matching the same regex pattern, cap it.
 
-**Session ID traps:** Each visit generates a new session ID in the URL, creating infinite unique URLs pointing to the same content. Detected by SimHash: all pages have identical fingerprints despite different URLs.
+Session ID traps: Each visit generates a new session ID in the URL, creating infinite unique URLs pointing to the same content. Detected by SimHash: all pages have identical fingerprints despite different URLs.
 
-**Mitigations:** Max depth per domain (typically 15 levels), max pages per domain (100K), URL length limit (2048 chars), and a domain blacklist for known trap sites.`
+Mitigations: Max depth per domain (typically 15 levels), max pages per domain (100K), URL length limit (2048 chars), and a domain blacklist for known trap sites.`
         }
       ],
 
@@ -18665,16 +18665,16 @@ feed_cache {
       keyQuestions: [
         {
           question: 'Push vs Pull: How do we handle fan-out?',
-          answer: `**The Celebrity Problem**:
+          answer: `The Celebrity Problem:
 - User with 10M followers posts
 - Push model: Write to 10M feeds (expensive, slow)
 - Pull model: Each of 10M users queries at read time (hot spot)
 
-**Solution: Hybrid Fan-out**
+Solution: Hybrid Fan-out
 
 ![Hybrid fan-out — push for normal users, pull for celebrities](/diagrams/systemdesign/hybrid-fanout.png)
 
-**Push for Normal Users**:
+Push for Normal Users:
 \`\`\`
 def on_post_created(post):
     followers = get_followers(post.user_id)
@@ -18685,7 +18685,7 @@ def on_post_created(post):
             feed_cache.add(follower_id, post)
 \`\`\`
 
-**Pull for Celebrities**:
+Pull for Celebrities:
 \`\`\`
 def get_feed(user_id):
     # Get pre-computed feed items (from push)
@@ -18703,16 +18703,16 @@ def get_feed(user_id):
     return rank_posts(all_candidates, user_id)
 \`\`\`
 
-**Additional Optimization**:
+Additional Optimization:
 - Don't push to inactive users (haven't logged in 7+ days)
 - Priority push: close friends first, acquaintances later
 - Batch writes to same user (avoid hot keys)`
         },
         {
           question: 'How does the ranking algorithm work?',
-          answer: `**Goal**: Maximize user engagement (time spent, interactions)
+          answer: `Goal: Maximize user engagement (time spent, interactions)
 
-**Features for ML Model**:
+Features for ML Model:
 \`\`\`
 Post Features:
   - post_age_hours
@@ -18733,26 +18733,26 @@ Context Features:
   - device_type
 \`\`\`
 
-**Ranking Pipeline**:
+Ranking Pipeline:
 
-1. **Candidate generation** (from 1000+ posts)
+1. Candidate generation (from 1000+ posts)
    - Pre-filtered by eligibility (privacy, blocked)
    - Recent posts from followed accounts
    - Suggested posts (explore)
-2. **Light ranker** (score all 1000 candidates)
+2. Light ranker (score all 1000 candidates)
    - Simple logistic regression
    - Fast: ~0.1 ms per post
    - Output: top 200 candidates
-3. **Heavy ranker** (score top 200)
+3. Heavy ranker (score top 200)
    - Deep neural network (GBDT + embeddings)
    - Expensive: ~1 ms per post
    - Output: final ranked list
-4. **Business rules**
+4. Business rules
    - Diversity: max 2 posts from same creator
    - Recency: boost very new posts
    - Quality: demote clickbait
 
-**Optimization Target**:
+Optimization Target:
 \`\`\`
 Score = P(like) × weight_like +
         P(comment) × weight_comment +
@@ -18764,9 +18764,9 @@ Weights tuned to balance engagement metrics
         },
         {
           question: 'How do we handle real-time feed updates?',
-          answer: `**Challenge**: User is viewing feed, friend posts → show it immediately
+          answer: `Challenge: User is viewing feed, friend posts → show it immediately
 
-**Option 1: Polling (Simple)**
+Option 1: Polling (Simple)
 \`\`\`
 Every 30 seconds:
   GET /api/feed/updates?since=timestamp
@@ -18775,16 +18775,16 @@ Every 30 seconds:
     show "X new posts" banner
 \`\`\`
 
-**Option 2: WebSocket (Better)**
+Option 2: WebSocket (Better)
 
 ![Real-time feed update via Kafka and WS fleet](/diagrams/systemdesign/realtime-feed-update.png)
 
-**Scaling WebSockets**:
+Scaling WebSockets:
 - Partition users across WS servers
 - Use Redis Pub/Sub for cross-server messages
 - Graceful degradation: fall back to polling if WS fails
 
-**Smart Notifications**:
+Smart Notifications:
 \`\`\`
 Don't push every post immediately.
 Instead:
@@ -18795,159 +18795,159 @@ Instead:
         },
         {
           question: 'How does Facebook TAO (social graph) work?',
-          answer: `Facebook built **TAO** (The Associations and Objects) as a distributed graph data store optimized for the social graph.
+          answer: `Facebook built TAO (The Associations and Objects) as a distributed graph data store optimized for the social graph.
 
-**Data Model**:
+Data Model:
 - Objects: users, posts, photos, comments (nodes)
 - Associations: friendships, likes, comments, follows (edges)
 - Each association is directional with a type and timestamp
 
-**Architecture**:
+Architecture:
 - TAO sits between application servers and MySQL shards
 - Provides a graph-aware caching layer
 - Cache hit rate: >99.9% for reads
 
-**Query Patterns**:
+Query Patterns:
 - assoc_get(user:123, FRIEND): Get all friends of user 123
 - assoc_count(post:456, LIKE): Count likes on post 456
 - assoc_range(user:123, FRIEND, 0, 50): Paginate friends
 
-**Scale**: TAO handles billions of reads/sec across thousands of cache servers. The social graph has 2.1B+ nodes and hundreds of billions of edges.`
+Scale: TAO handles billions of reads/sec across thousands of cache servers. The social graph has 2.1B+ nodes and hundreds of billions of edges.`
         },
         {
           question: 'How does the feed cache work in Redis?',
           answer: `Each active user has a pre-computed feed cache in Redis containing their most recent feed items.
 
-**Cache Structure**:
+Cache Structure:
 - Key: feed:{userId}
 - Value: sorted set of {postId, score, timestamp}
 - Size: ~50 items per user (~10 KB)
 - TTL: 5 minutes for active users, evicted for inactive (7+ days)
 
-**Write Path (Fan-out)**:
+Write Path (Fan-out):
 When a normal user (<10K followers) posts:
 1. Get follower list from TAO
 2. For each follower: ZADD feed:{followerId} {score} {postId}
 3. Trim to top 500 items: ZREMRANGEBYRANK
 
-**Read Path**:
+Read Path:
 1. Check Redis cache for top 200 post IDs
 2. If cache miss: reconstruct from friends recent posts (expensive ~500ms)
 3. Merge with celebrity posts (pull)
 4. Send merged candidates to ranking service
 
-**Memory**: 2.1B active users x 10 KB = ~21 TB Redis cluster with thousands of shards.`
+Memory: 2.1B active users x 10 KB = ~21 TB Redis cluster with thousands of shards.`
         },
         {
           question: 'How does content ranking avoid filter bubbles?',
           answer: `Pure engagement optimization creates echo chambers. Several techniques counteract this.
 
-**Diversity Rules**:
+Diversity Rules:
 - Max 2 posts from same creator per feed page
 - At least 1 post from different content category per 5 posts
 - Inject 10-20% content from weaker connections (acquaintances)
 
-**Quality Signals** (beyond engagement):
+Quality Signals (beyond engagement):
 - Dwell time: Time spent reading indicates genuine interest
 - Survey responses: Periodic "Was this post worth your time?" surveys
 - Informed engagement: Weight comments higher than likes (higher effort)
 
-**Anti-Clickbait**:
+Anti-Clickbait:
 - Detect clickbait headlines via NLP classifier
 - Penalize posts with high click rate but low dwell time
 - Demote posts from pages with misleading content history
 
-**User Controls**:
+User Controls:
 - "See less like this" feedback directly impacts personal model
 - "Favorites" list: always show posts from selected friends
 - Chronological mode toggle: bypass ranking entirely
 
-**Trade-off**: Diversity injection reduces short-term engagement by ~5% but improves long-term retention.`
+Trade-off: Diversity injection reduces short-term engagement by ~5% but improves long-term retention.`
         },
         {
           question: 'How does privacy enforcement work in the feed pipeline?',
           answer: `Privacy is the hardest constraint. A "Friends Only" post must never appear in a non-friend feed.
 
-**Privacy Check Points**:
-1. **At fan-out time**: Only push to users matching the audience
+Privacy Check Points:
+1. At fan-out time: Only push to users matching the audience
    - PUBLIC: push to all followers
    - FRIENDS: push only to friends
    - CUSTOM: check custom audience list
-2. **At read time**: Re-check privacy before rendering
+2. At read time: Re-check privacy before rendering
    - User may have unfriended since fan-out
    - Post may have been edited to more restrictive audience
 
-**Block List Enforcement**:
+Block List Enforcement:
 - Blocked user posts filtered at read time (not at fan-out)
 - Use bloom filter for quick negative check: "is this user definitely NOT blocked?"
 - Bloom filter: 99.9% accurate, eliminates most checks
 
-**Performance Impact**: Privacy checks add ~2ms per feed request.
+Performance Impact: Privacy checks add ~2ms per feed request.
 
-**GDPR Compliance**: Right to deletion requires purging user posts from all feed caches within 72 hours via background scanning job.`
+GDPR Compliance: Right to deletion requires purging user posts from all feed caches within 72 hours via background scanning job.`
         },
         {
           question: 'How does Facebook handle Stories (24-hour ephemeral content)?',
           answer: `Stories are 24-hour ephemeral posts displayed in a carousel above the feed.
 
-**Storage**:
+Storage:
 - Cassandra cluster with 24-hour TTL (auto-deleted)
 - Media: photos/videos in S3 with 24-hour expiration policy
 
-**Feed Integration**:
+Feed Integration:
 - Stories tray fetched separately from main feed
 - Ranked by: recency, closeness (close friends first), unseen (unwatched first)
 - Top 5 stories media pre-loaded for instant playback
 
-**Fan-out**: Push-based for all users (24-hour lifetime bounds fan-out cost). Immediate push to all friends story trays on post.
+Fan-out: Push-based for all users (24-hour lifetime bounds fan-out cost). Immediate push to all friends story trays on post.
 
-**Scale**: 500M+ daily story users. ~50 friend stories visible per user. Total stories storage: ~10 TB at any moment (constantly expiring).`
+Scale: 500M+ daily story users. ~50 friend stories visible per user. Total stories storage: ~10 TB at any moment (constantly expiring).`
         },
         {
           question: 'How does media delivery work for photos and videos in the feed?',
           answer: `The feed is media-heavy: 200M+ photos uploaded daily, plus videos and links.
 
-**Photo Pipeline**:
+Photo Pipeline:
 1. Upload to temporary storage
 2. Generate thumbnails: 4 sizes (75px, 320px, 720px, 1080px)
 3. Compress with WebP (30% smaller than JPEG)
 4. Store all sizes in S3 with CDN distribution
 5. Feed renders appropriate size based on device viewport
 
-**Video Strategy**:
+Video Strategy:
 - Autoplay on scroll (muted by default)
 - Adaptive bitrate streaming (HLS): 240p, 480p, 720p, 1080p
 - Pre-buffer: start loading video 2 positions before viewport
 - Separate video CDN from photo CDN
 
-**Lazy Loading**:
+Lazy Loading:
 - Feed loads text + low-res placeholders first
 - Full resolution images loaded on scroll
 - Videos load only when within 2 positions of viewport
 
-**CDN Strategy**: Photos: 99%+ cache hit (immutable). Videos: 95% for popular content.`
+CDN Strategy: Photos: 99%+ cache hit (immutable). Videos: 95% for popular content.`
         },
         {
           question: 'How does the social graph affect feed personalization?',
           answer: `The social graph is the foundation of feed relevance. Not all friends are equal.
 
-**Closeness Score**: ML model computes closeness between every pair of connected users:
+Closeness Score: ML model computes closeness between every pair of connected users:
 - Interaction frequency (messages, comments, tags)
 - Profile views
 - Time spent viewing each other content
 - Mutual friends overlap
 - Real-world connections (same school, workplace)
 
-**Score Range**: 0.0 (acquaintance) to 1.0 (close friend/family)
+Score Range: 0.0 (acquaintance) to 1.0 (close friend/family)
 
-**Feed Impact**:
+Feed Impact:
 - Close friends (>0.7): Posts always included in candidate set, boosted in ranking
 - Regular friends (0.3-0.7): Posts included, ranked normally
 - Acquaintances (<0.3): Posts occasionally included for diversity
 
-**Updates**: Closeness scores recomputed weekly via batch Spark job analyzing 30 days of interaction data. Stored in TAO as association metadata.
+Updates: Closeness scores recomputed weekly via batch Spark job analyzing 30 days of interaction data. Stored in TAO as association metadata.
 
-**Scale**: 2.1B users x avg 338 friends = ~710B closeness scores to maintain. Stored efficiently as TAO association attributes.`
+Scale: 2.1B users x avg 338 friends = ~710B closeness scores to maintain. Stored efficiently as TAO association attributes.`
         }
       ],
 
@@ -19043,65 +19043,65 @@ When a normal user (<10K followers) posts:
           topic: 'Hybrid Fan-Out Architecture',
           detail: `The fan-out strategy is the most critical architectural decision in the News Feed system.
 
-**Push path (normal users <10K followers):** When a user creates a post, a fan-out worker reads their follower list from TAO and writes the postId to each follower's feed cache in Redis (ZADD). To reduce write volume by ~30%, inactive users (no login in 7+ days) are skipped. Priority ordering: close friends first, then regular friends, then acquaintances in batches.
+Push path (normal users <10K followers): When a user creates a post, a fan-out worker reads their follower list from TAO and writes the postId to each follower's feed cache in Redis (ZADD). To reduce write volume by ~30%, inactive users (no login in 7+ days) are skipped. Priority ordering: close friends first, then regular friends, then acquaintances in batches.
 
-**Pull path (celebrities >10K followers):** Celebrity posts are stored in a dedicated celebrity_posts table indexed by userId. At feed read time, the system queries this table for recent posts (last 24 hours) from the user's celebrity follows and merges them with the cached feed items.
+Pull path (celebrities >10K followers): Celebrity posts are stored in a dedicated celebrity_posts table indexed by userId. At feed read time, the system queries this table for recent posts (last 24 hours) from the user's celebrity follows and merges them with the cached feed items.
 
-**Why 10K threshold?** A post from someone with 10K followers generates 10K Redis writes. At 12K posts/sec average and an average of 338 followers, that is ~4M cache writes/sec. Celebrities with 10M followers would add 10M writes per post, overwhelming the cache cluster.
+Why 10K threshold? A post from someone with 10K followers generates 10K Redis writes. At 12K posts/sec average and an average of 338 followers, that is ~4M cache writes/sec. Celebrities with 10M followers would add 10M writes per post, overwhelming the cache cluster.
 
-**Edge case:** A user grows from 9K to 11K followers. Their old posts were pushed, new posts will be pulled. The transition is handled by a daily batch job that migrates users crossing the threshold.`
+Edge case: A user grows from 9K to 11K followers. Their old posts were pushed, new posts will be pulled. The transition is handled by a daily batch job that migrates users crossing the threshold.`
         },
         {
           topic: 'Two-Phase ML Ranking Pipeline',
           detail: `The ranking system must score 1000+ candidate posts per request in under 300ms to meet the <200ms budget (with network overhead).
 
-**Phase 1 -- Light Ranker:** A logistic regression model with ~50 features scores all 1000+ candidates at ~0.1ms each. Features: post age, post type, creator follower count, user-creator interaction count. This phase is cheap enough to run on every candidate. Output: top 200 candidates.
+Phase 1 -- Light Ranker: A logistic regression model with ~50 features scores all 1000+ candidates at ~0.1ms each. Features: post age, post type, creator follower count, user-creator interaction count. This phase is cheap enough to run on every candidate. Output: top 200 candidates.
 
-**Phase 2 -- Heavy Ranker:** A deep neural network (gradient-boosted decision trees + embedding layers) with 500+ features scores the top 200 candidates at ~1ms each. Features include text embeddings, image content signals, user behavioral sequences, and cross-features (user interest x post topic similarity).
+Phase 2 -- Heavy Ranker: A deep neural network (gradient-boosted decision trees + embedding layers) with 500+ features scores the top 200 candidates at ~1ms each. Features include text embeddings, image content signals, user behavioral sequences, and cross-features (user interest x post topic similarity).
 
-**Multi-objective optimization:** The heavy ranker predicts four probabilities: P(like), P(comment), P(share), P(dwell > 30 seconds). Final score = P(like) x w1 + P(comment) x w2 + P(share) x w3 + P(dwell) x w4. Weights are tuned via online A/B testing to balance engagement metrics.
+Multi-objective optimization: The heavy ranker predicts four probabilities: P(like), P(comment), P(share), P(dwell > 30 seconds). Final score = P(like) x w1 + P(comment) x w2 + P(share) x w3 + P(dwell) x w4. Weights are tuned via online A/B testing to balance engagement metrics.
 
-**Feature caching:** User features are precomputed hourly and stored in a feature store. Post features are computed at write time. Only user-post cross features (affinity, recency of interaction) are computed at request time, minimizing inference cost.`
+Feature caching: User features are precomputed hourly and stored in a feature store. Post features are computed at write time. Only user-post cross features (affinity, recency of interaction) are computed at request time, minimizing inference cost.`
         },
         {
           topic: 'Social Graph (TAO) Architecture',
           detail: `TAO (The Associations and Objects) is Facebook's custom distributed graph data store, purpose-built for the social graph.
 
-**Data model:** Two primitives -- Objects (users, posts, photos, comments as nodes) and Associations (friendships, likes, follows as directed edges with type and timestamp). Each association has an inverse for efficient bidirectional queries.
+Data model: Two primitives -- Objects (users, posts, photos, comments as nodes) and Associations (friendships, likes, follows as directed edges with type and timestamp). Each association has an inverse for efficient bidirectional queries.
 
-**Two-tier caching:** Leader cache ensures read-after-write consistency within the same data center. Follower caches replicate from the leader for read throughput. Cache hit rate exceeds 99.9%, meaning <0.1% of reads hit MySQL.
+Two-tier caching: Leader cache ensures read-after-write consistency within the same data center. Follower caches replicate from the leader for read throughput. Cache hit rate exceeds 99.9%, meaning <0.1% of reads hit MySQL.
 
-**Sharding:** Objects are sharded by object ID across MySQL instances. Each shard handles a range of IDs. TAO routes queries to the correct shard transparently.
+Sharding: Objects are sharded by object ID across MySQL instances. Each shard handles a range of IDs. TAO routes queries to the correct shard transparently.
 
-**Query patterns:** assoc_get(user:123, FRIEND) returns all friends. assoc_count(post:456, LIKE) returns like count. assoc_range supports pagination. These primitives enable all social features without exposing SQL complexity.
+Query patterns: assoc_get(user:123, FRIEND) returns all friends. assoc_count(post:456, LIKE) returns like count. assoc_range supports pagination. These primitives enable all social features without exposing SQL complexity.
 
-**Scale:** TAO handles billions of reads per second across thousands of cache servers. The social graph contains 2.1B+ nodes and hundreds of billions of edges. The system is replicated across multiple data centers with eventual consistency for cross-DC reads.`
+Scale: TAO handles billions of reads per second across thousands of cache servers. The social graph contains 2.1B+ nodes and hundreds of billions of edges. The system is replicated across multiple data centers with eventual consistency for cross-DC reads.`
         },
         {
           topic: 'Feed Cache Lifecycle and Memory Management',
           detail: `With 2.1B daily active users, feed cache memory management is critical -- storing 10 KB per user requires ~21 TB of Redis.
 
-**Active users (logged in last 7 days):** Feed is cached in Redis as a sorted set (post IDs sorted by ranking score). Cache is updated on every fan-out event (friend posts). Top 500 items retained, older items evicted via ZREMRANGEBYRANK.
+Active users (logged in last 7 days): Feed is cached in Redis as a sorted set (post IDs sorted by ranking score). Cache is updated on every fan-out event (friend posts). Top 500 items retained, older items evicted via ZREMRANGEBYRANK.
 
-**Inactive users:** Feed is evicted from cache entirely to save memory. A returning user after 7+ days triggers a cold read: reconstruct feed by querying friends' recent posts from MySQL, merging celebrity posts, and running the ranking pipeline. Cold reads take ~500ms vs <10ms for cached feeds.
+Inactive users: Feed is evicted from cache entirely to save memory. A returning user after 7+ days triggers a cold read: reconstruct feed by querying friends' recent posts from MySQL, merging celebrity posts, and running the ranking pipeline. Cold reads take ~500ms vs <10ms for cached feeds.
 
-**Cache warmup:** A background ML model predicts which inactive users are likely to return (based on historical login patterns, day of week, and notification engagement). Feeds for likely-returning users are pre-computed before they actually open the app, reducing perceived latency.
+Cache warmup: A background ML model predicts which inactive users are likely to return (based on historical login patterns, day of week, and notification engagement). Feeds for likely-returning users are pre-computed before they actually open the app, reducing perceived latency.
 
-**TTL strategy:** Individual feed items have a 5-minute TTL but are refreshed by fan-out events. The overall feed key has no TTL for active users -- it is evicted only after 7 days of inactivity. This approach saves ~40% memory compared to caching all 3B MAU.`
+TTL strategy: Individual feed items have a 5-minute TTL but are refreshed by fan-out events. The overall feed key has no TTL for active users -- it is evicted only after 7 days of inactivity. This approach saves ~40% memory compared to caching all 3B MAU.`
         },
         {
           topic: 'Anti-Misinformation and Content Integrity',
           detail: `The News Feed ranking system integrates content integrity signals to reduce the spread of harmful content.
 
-**Velocity-based circuit breaker:** When a post's share rate exceeds 10x its predicted rate based on historical patterns, distribution is throttled pending automated review. This prevents viral misinformation from reaching millions before fact-checkers can respond.
+Velocity-based circuit breaker: When a post's share rate exceeds 10x its predicted rate based on historical patterns, distribution is throttled pending automated review. This prevents viral misinformation from reaching millions before fact-checkers can respond.
 
-**Integrity classifier:** An ML model trained on labeled misinformation data scores each post on a 0.0-1.0 integrity scale. Posts scoring below 0.3 are demoted in ranking (reduced distribution by 80%). Posts below 0.1 are removed and reviewed by human moderators.
+Integrity classifier: An ML model trained on labeled misinformation data scores each post on a 0.0-1.0 integrity scale. Posts scoring below 0.3 are demoted in ranking (reduced distribution by 80%). Posts below 0.1 are removed and reviewed by human moderators.
 
-**Third-party fact-checking:** Posts flagged by independent fact-checkers receive a warning overlay. Users who try to share flagged content see an interstitial warning. Sharing rates drop ~95% after fact-check labels are applied.
+Third-party fact-checking: Posts flagged by independent fact-checkers receive a warning overlay. Users who try to share flagged content see an interstitial warning. Sharing rates drop ~95% after fact-check labels are applied.
 
-**Ranking demotion signals:** Content from pages with repeated misinformation strikes receives a persistent ranking penalty. Clickbait detection (high click rate but <5 second dwell time) triggers automatic demotion. Engagement bait patterns ("Like if you agree!") are classified and penalized.
+Ranking demotion signals: Content from pages with repeated misinformation strikes receives a persistent ranking penalty. Clickbait detection (high click rate but <5 second dwell time) triggers automatic demotion. Engagement bait patterns ("Like if you agree!") are classified and penalized.
 
-**Transparency:** Users can tap "Why am I seeing this?" on any post to see which signals contributed to its ranking position.`
+Transparency: Users can tap "Why am I seeing this?" on any post to see which signals contributed to its ranking position.`
         }
       ],
 
@@ -19384,9 +19384,9 @@ node_registry {
       keyQuestions: [
         {
           question: 'How do we partition data across nodes?',
-          answer: `**Consistent Hashing**:
+          answer: `Consistent Hashing:
 
-**Problem with Simple Hashing**:
+Problem with Simple Hashing:
 \`\`\`
 node = hash(key) % num_nodes
 
@@ -19395,13 +19395,13 @@ When node count changes:
   Most keys get reassigned (expensive!)
 \`\`\`
 
-**Consistent Hash Ring**:
+Consistent Hash Ring:
 
 ![Consistent hash ring — keys walk clockwise to nearest node](/diagrams/systemdesign/consistent-hash-ring.png)
 
 Each key maps to a position on a ring (0..2^64); to find its node, hash the key and walk clockwise to the first node. Adding or removing a node only moves keys between adjacent nodes (K/N keys move, not K).
 
-**Virtual Nodes**:
+Virtual Nodes:
 \`\`\`
 Problem: Uneven distribution with few nodes
 Solution: Each physical node → many virtual nodes
@@ -19416,7 +19416,7 @@ Benefits:
         },
         {
           question: 'How do we handle replication for fault tolerance?',
-          answer: `**Replication Strategy**:
+          answer: `Replication Strategy:
 \`\`\`
 N = Total replicas (typically 3)
 W = Write quorum (how many acks needed)
@@ -19430,11 +19430,11 @@ Examples:
   N=3, W=3, R=1: Read-optimized (writes slower)
 \`\`\`
 
-**Write Path**:
+Write Path:
 
 ![Write quorum (N=3, W=2)](/diagrams/systemdesign/write-quorum.png)
 
-**Hinted Handoff**:
+Hinted Handoff:
 \`\`\`
 If Replica2 is down:
   1. Write to temporary node (hint)
@@ -19444,7 +19444,7 @@ If Replica2 is down:
         },
         {
           question: 'How do we handle conflicts with concurrent writes?',
-          answer: `**The Problem**:
+          answer: `The Problem:
 \`\`\`
 Client A writes key=5 to Replica1
 Client B writes key=7 to Replica2 (concurrent)
@@ -19452,7 +19452,7 @@ Client B writes key=7 to Replica2 (concurrent)
 Which value is correct? Both replicas have different values!
 \`\`\`
 
-**Solution 1: Last-Write-Wins (LWW)**
+Solution 1: Last-Write-Wins (LWW)
 \`\`\`
 Each write has timestamp
 On conflict: highest timestamp wins
@@ -19461,7 +19461,7 @@ Pros: Simple
 Cons: May lose data (later timestamp isn't always "correct")
 \`\`\`
 
-**Solution 2: Vector Clocks**
+Solution 2: Vector Clocks
 \`\`\`
 Each replica maintains a version vector:
   { "Replica1": 3, "Replica2": 2, "Replica3": 2 }
@@ -19475,7 +19475,7 @@ Compare vectors:
   If A || B: Concurrent (conflict!)
 \`\`\`
 
-**Conflict Resolution**:
+Conflict Resolution:
 \`\`\`
 When conflict detected:
   Option 1: Return both versions to client (Amazon cart)
@@ -19483,7 +19483,7 @@ When conflict detected:
   Option 3: CRDTs (conflict-free replicated data types)
 \`\`\`
 
-**Read Repair**:
+Read Repair:
 \`\`\`
 On read (R=2):
   Query Replica1 → value=5, version=[1,0,0]
@@ -19495,7 +19495,7 @@ On read (R=2):
         },
         {
           question: 'How do we detect and handle node failures?',
-          answer: `**Gossip Protocol**:
+          answer: `Gossip Protocol:
 \`\`\`
 Every second, each node:
   1. Randomly pick another node
@@ -19507,14 +19507,14 @@ Node status: ALIVE → SUSPECT → DEAD
   - Multiple nodes agree → DEAD
 \`\`\`
 
-**Failure Detection Flow** (gossip protocol):
+Failure Detection Flow (gossip protocol):
 
 - Node A gossips to Node B: "I see A=1, B=1, C=1".
 - Node B replies: "I see A=1, B=1, C=0" — C missed its heartbeat.
 - Both now know C might be dead.
 - After multiple gossip rounds across the cluster, C is confirmed dead.
 
-**Recovery**:
+Recovery:
 \`\`\`
 When node recovers:
   1. Download latest partition map
@@ -19591,48 +19591,48 @@ Merkle Tree sync:
           topic: 'LSM-Tree Storage Engine',
           detail: `The LSM (Log-Structured Merge) tree is the dominant storage engine for write-heavy KV stores.
 
-**Write path:** Write to in-memory **MemTable** (red-black tree or skip list) + append to **Write-Ahead Log** (WAL) for durability. When MemTable reaches ~64 MB, flush to disk as an immutable **SSTable** (Sorted String Table).
+Write path: Write to in-memory MemTable (red-black tree or skip list) + append to Write-Ahead Log (WAL) for durability. When MemTable reaches ~64 MB, flush to disk as an immutable SSTable (Sorted String Table).
 
-**Read path:** Check MemTable first (hot data), then **Bloom filters** for each SSTable on disk. Bloom filter says "definitely not here" or "maybe here" -- eliminates 99% of unnecessary disk reads.
+Read path: Check MemTable first (hot data), then Bloom filters for each SSTable on disk. Bloom filter says "definitely not here" or "maybe here" -- eliminates 99% of unnecessary disk reads.
 
-**Compaction:** Background process merges multiple SSTables into fewer, larger ones. **Leveled compaction** (used by LevelDB/RocksDB) limits read amplification by ensuring each level has non-overlapping key ranges. **Size-tiered compaction** (used by Cassandra) is simpler but can spike disk I/O.
+Compaction: Background process merges multiple SSTables into fewer, larger ones. Leveled compaction (used by LevelDB/RocksDB) limits read amplification by ensuring each level has non-overlapping key ranges. Size-tiered compaction (used by Cassandra) is simpler but can spike disk I/O.
 
-**Performance:** Writes are always sequential (append-only), achieving **10x higher write throughput** than B-trees. Reads may require checking multiple SSTables, but Bloom filters keep actual disk reads to 1-2 per query.`
+Performance: Writes are always sequential (append-only), achieving 10x higher write throughput than B-trees. Reads may require checking multiple SSTables, but Bloom filters keep actual disk reads to 1-2 per query.`
         },
         {
           topic: 'Consistent Hashing Deep Dive',
           detail: `Consistent hashing is the foundation of data distribution in every modern KV store.
 
-**Hash ring:** Map the key space to a circular ring [0, 2^64). Each node is placed at multiple points on the ring (virtual nodes). A key is assigned to the first node encountered walking clockwise from hash(key).
+Hash ring: Map the key space to a circular ring [0, 2^64). Each node is placed at multiple points on the ring (virtual nodes). A key is assigned to the first node encountered walking clockwise from hash(key).
 
-**Virtual nodes:** Each physical node owns 100-256 virtual nodes. Benefits: **even key distribution** (the law of large numbers), **smooth rebalancing** (adding a node moves ~1/N of keys from each existing node, not all from one), and **heterogeneous hardware** (stronger machines get more virtual nodes).
+Virtual nodes: Each physical node owns 100-256 virtual nodes. Benefits: even key distribution (the law of large numbers), smooth rebalancing (adding a node moves ~1/N of keys from each existing node, not all from one), and heterogeneous hardware (stronger machines get more virtual nodes).
 
-**Replication:** The key is stored on the primary node plus the next N-1 nodes clockwise on the ring. Rack-awareness ensures replicas are on **different physical racks** to survive rack failures.
+Replication: The key is stored on the primary node plus the next N-1 nodes clockwise on the ring. Rack-awareness ensures replicas are on different physical racks to survive rack failures.
 
-**Example:** With 100 nodes and 256 virtual nodes each, the ring has 25,600 positions. Adding one node remaps only **~1%** of keys.`
+Example: With 100 nodes and 256 virtual nodes each, the ring has 25,600 positions. Adding one node remaps only ~1% of keys.`
         },
         {
           topic: 'Vector Clocks for Conflict Resolution',
           detail: `When two clients write the same key concurrently to different replicas, which write wins?
 
-**Vector clock:** Each replica maintains a version vector: \`{ R1: 3, R2: 2, R3: 2 }\`. On write at R1, increment R1's counter. Compare vectors: if A dominates B in all positions, A is causally after B. If neither dominates, they are **concurrent** -- a conflict.
+Vector clock: Each replica maintains a version vector: \`{ R1: 3, R2: 2, R3: 2 }\`. On write at R1, increment R1's counter. Compare vectors: if A dominates B in all positions, A is causally after B. If neither dominates, they are concurrent -- a conflict.
 
-**Resolution strategies:**
-- **Last-Write-Wins (LWW):** Use timestamps. Simple but can silently lose data. Used by Cassandra.
-- **Return both to client:** Let the application merge (used by DynamoDB/Dynamo for shopping carts).
-- **CRDTs:** Conflict-free replicated data types that auto-merge (counters, sets, registers).
+Resolution strategies:
+- Last-Write-Wins (LWW): Use timestamps. Simple but can silently lose data. Used by Cassandra.
+- Return both to client: Let the application merge (used by DynamoDB/Dynamo for shopping carts).
+- CRDTs: Conflict-free replicated data types that auto-merge (counters, sets, registers).
 
-**Read repair:** During a quorum read (R=2), if replicas return different versions, the coordinator sends the latest version to stale replicas, healing the divergence transparently.`
+Read repair: During a quorum read (R=2), if replicas return different versions, the coordinator sends the latest version to stale replicas, healing the divergence transparently.`
         },
         {
           topic: 'Merkle Trees for Anti-Entropy',
           detail: `After network partitions or node recovery, replicas may diverge. Merkle trees detect exactly which keys differ.
 
-**Structure:** A binary tree where leaf nodes are hashes of individual key-value pairs, and internal nodes are hashes of their children. Two replicas compare tree roots -- if they match, all data is identical. If not, traverse down to find differing branches.
+Structure: A binary tree where leaf nodes are hashes of individual key-value pairs, and internal nodes are hashes of their children. Two replicas compare tree roots -- if they match, all data is identical. If not, traverse down to find differing branches.
 
-**Efficiency:** Comparing two replicas with 1M keys requires exchanging only **~20 hashes** (log2(1M) tree levels) instead of comparing all keys. Only the differing keys are transferred.
+Efficiency: Comparing two replicas with 1M keys requires exchanging only ~20 hashes (log2(1M) tree levels) instead of comparing all keys. Only the differing keys are transferred.
 
-**When used:** Periodically (e.g., every hour) or on node recovery. Not used for real-time consistency -- that is handled by quorum reads/writes and read repair.`
+When used: Periodically (e.g., every hour) or on node recovery. Not used for real-time consistency -- that is handled by quorum reads/writes and read repair.`
         }
       ],
 
@@ -19988,7 +19988,7 @@ Decimal: 1234567890123456789`,
       keyQuestions: [
         {
           question: 'Why not just use UUIDs?',
-          answer: `**UUID (128-bit)**:
+          answer: `UUID (128-bit):
 \`\`\`
 550e8400-e29b-41d4-a716-446655440000
 
@@ -20003,7 +20003,7 @@ Cons:
 - Poor cache locality (random distribution)
 \`\`\`
 
-**Snowflake (64-bit)**:
+Snowflake (64-bit):
 \`\`\`
 1234567890123456789
 
@@ -20018,13 +20018,13 @@ Cons:
 - Limited to 69 years and 1024 machines
 \`\`\`
 
-**When to use which**:
+When to use which:
 - UUID: User-generated content, offline-first apps
 - Snowflake: Tweets, orders, anything needing time ordering`
         },
         {
           question: 'How does the Snowflake algorithm work?',
-          answer: `**ID Structure** (64 bits total):
+          answer: `ID Structure (64 bits total):
 
 | Bits     | Field      | Width   | Capacity        |
 | -------- | ---------- | ------- | --------------- |
@@ -20033,7 +20033,7 @@ Cons:
 | 21–12    | machine    | 10 bits | 1024 machines   |
 | 11–0     | sequence   | 12 bits | 4096 ids/ms     |
 
-**Generation Algorithm**:
+Generation Algorithm:
 \`\`\`python
 class SnowflakeGenerator:
     EPOCH = 1288834974657  # Custom epoch (Nov 4, 2010)
@@ -20066,7 +20066,7 @@ class SnowflakeGenerator:
                self.sequence
 \`\`\`
 
-**Extracting Components**:
+Extracting Components:
 \`\`\`python
 def parse_id(snowflake_id):
     timestamp = (snowflake_id >> 22) + EPOCH
@@ -20077,7 +20077,7 @@ def parse_id(snowflake_id):
         },
         {
           question: 'How do we handle clock skew?',
-          answer: `**The Problem**:
+          answer: `The Problem:
 \`\`\`
 Server clock can drift or jump backwards due to:
 - NTP synchronization
@@ -20088,7 +20088,7 @@ Server clock can drift or jump backwards due to:
 If timestamp goes backwards, we could generate duplicate IDs!
 \`\`\`
 
-**Solution 1: Reject and Wait**
+Solution 1: Reject and Wait
 \`\`\`python
 if current_time < last_timestamp:
     if (last_timestamp - current_time) < 5ms:
@@ -20099,7 +20099,7 @@ if current_time < last_timestamp:
         raise ClockSkewError("Clock moved backwards")
 \`\`\`
 
-**Solution 2: Use Logical Clock**
+Solution 2: Use Logical Clock
 \`\`\`
 Instead of wall clock:
   - Track (physical_time, logical_counter)
@@ -20109,7 +20109,7 @@ Instead of wall clock:
 Hybrid Logical Clocks (HLC)
 \`\`\`
 
-**Solution 3: Add More Randomness**
+Solution 3: Add More Randomness
 \`\`\`
 Some systems (like ULID) add random bits:
   - 48 bits timestamp
@@ -20118,7 +20118,7 @@ Some systems (like ULID) add random bits:
 Collision probability tiny even with clock issues
 \`\`\`
 
-**Best Practices**:
+Best Practices:
 - Use NTP with multiple reliable sources
 - Monitor for clock drift
 - Have alerts for backwards jumps
@@ -20126,7 +20126,7 @@ Collision probability tiny even with clock issues
         },
         {
           question: 'How do we assign machine IDs?',
-          answer: `**Option 1: Configuration File**
+          answer: `Option 1: Configuration File
 \`\`\`
 # machine_config.yaml
 machine_id: 42
@@ -20136,14 +20136,14 @@ Simple, but:
 - Risk of duplicate assignment
 \`\`\`
 
-**Option 2: ZooKeeper/etcd**
+Option 2: ZooKeeper/etcd
 
 1. Server starts and connects to ZooKeeper.
 2. Server creates a sequential ephemeral node, e.g. \`/snowflake/machines/machine-0000000042\`.
 3. The sequence number from the path becomes the \`machine_id\` (= 42).
 4. If the server dies, the ephemeral node is deleted automatically and the ID can be reused after the lease expires.
 
-**Option 3: Database Counter**
+Option 3: Database Counter
 \`\`\`sql
 -- On server startup
 INSERT INTO machine_ids (hostname, assigned_at)
@@ -20153,7 +20153,7 @@ RETURNING id;
 -- Use RETURNING id as machine_id
 \`\`\`
 
-**Option 4: MAC Address + PID**
+Option 4: MAC Address + PID
 \`\`\`
 machine_id = (MAC_ADDRESS[last 6 bytes] XOR PID) % 1024
 
@@ -20225,51 +20225,51 @@ No coordination, but:
           topic: 'Snowflake Bit Layout and Trade-offs',
           detail: `The 64-bit layout is a careful balance of time range, machine count, and throughput.
 
-**Standard layout:** 1 sign (always 0) + 41 timestamp (69 years) + 10 machine (1,024) + 12 sequence (4,096/ms).
+Standard layout: 1 sign (always 0) + 41 timestamp (69 years) + 10 machine (1,024) + 12 sequence (4,096/ms).
 
-**Alternative layouts:** Instagram uses 41 timestamp + 13 shard + 10 sequence. Discord uses 42 timestamp + 5 worker + 5 process + 12 sequence. Each customizes the bit allocation to their scale profile.
+Alternative layouts: Instagram uses 41 timestamp + 13 shard + 10 sequence. Discord uses 42 timestamp + 5 worker + 5 process + 12 sequence. Each customizes the bit allocation to their scale profile.
 
-**Custom epoch:** Start from a recent date (e.g., your company founding) rather than Unix epoch to maximize the 69-year window. Twitter uses Nov 4, 2010 as its epoch.
+Custom epoch: Start from a recent date (e.g., your company founding) rather than Unix epoch to maximize the 69-year window. Twitter uses Nov 4, 2010 as its epoch.
 
-**Key insight:** The timestamp occupying the most significant bits means IDs are **naturally sorted by creation time** in any B-tree index, giving excellent database performance.`
+Key insight: The timestamp occupying the most significant bits means IDs are naturally sorted by creation time in any B-tree index, giving excellent database performance.`
         },
         {
           topic: 'Clock Skew Handling Strategies',
           detail: `Clock skew is the Achilles heel of timestamp-based ID generation.
 
-**NTP drift:** Server clocks can drift by milliseconds per hour. NTP corrections can jump the clock **backwards**, which would generate duplicate IDs if unchecked.
+NTP drift: Server clocks can drift by milliseconds per hour. NTP corrections can jump the clock backwards, which would generate duplicate IDs if unchecked.
 
-**Strategy 1 -- Wait:** If clock moves back by < 5ms, simply sleep until time catches up. Adds tiny latency but is safe.
+Strategy 1 -- Wait: If clock moves back by < 5ms, simply sleep until time catches up. Adds tiny latency but is safe.
 
-**Strategy 2 -- Reject:** For larger jumps (> 5ms), throw an error and alert. The service is temporarily unavailable but no duplicates are generated.
+Strategy 2 -- Reject: For larger jumps (> 5ms), throw an error and alert. The service is temporarily unavailable but no duplicates are generated.
 
-**Strategy 3 -- Hybrid Logical Clocks (HLC):** Combine physical time with a logical counter. If physical time goes backwards, increment the logical counter instead. Always moves forward. Used by CockroachDB.
+Strategy 3 -- Hybrid Logical Clocks (HLC): Combine physical time with a logical counter. If physical time goes backwards, increment the logical counter instead. Always moves forward. Used by CockroachDB.
 
-**Best practice:** Run NTP with multiple reliable sources, monitor clock offset, and use the wait strategy for small drifts.`
+Best practice: Run NTP with multiple reliable sources, monitor clock offset, and use the wait strategy for small drifts.`
         },
         {
           topic: 'Machine ID Assignment at Scale',
           detail: `With 1,024 possible machine IDs, assignment must be collision-free.
 
-**ZooKeeper approach:** On startup, create a sequential ephemeral node under /snowflake/machines/. The sequence number becomes the machine ID. Ephemeral nodes auto-delete on crash, freeing the ID. A lease mechanism prevents rapid reuse.
+ZooKeeper approach: On startup, create a sequential ephemeral node under /snowflake/machines/. The sequence number becomes the machine ID. Ephemeral nodes auto-delete on crash, freeing the ID. A lease mechanism prevents rapid reuse.
 
-**Datacenter + Machine split:** Split the 10 bits into 5 datacenter bits (32 DCs) + 5 machine bits (32 per DC). This prevents cross-DC collisions even if ZooKeeper is partitioned.
+Datacenter + Machine split: Split the 10 bits into 5 datacenter bits (32 DCs) + 5 machine bits (32 per DC). This prevents cross-DC collisions even if ZooKeeper is partitioned.
 
-**Kubernetes:** Use StatefulSet ordinal as machine ID. Pod my-generator-42 gets machine_id=42. Stable identity across restarts.
+Kubernetes: Use StatefulSet ordinal as machine ID. Pod my-generator-42 gets machine_id=42. Stable identity across restarts.
 
-**Cloud auto-scaling:** Pre-allocate ID ranges to auto-scaling groups. Each group claims a range (e.g., 0-99, 100-199) and distributes within.`
+Cloud auto-scaling: Pre-allocate ID ranges to auto-scaling groups. Each group claims a range (e.g., 0-99, 100-199) and distributes within.`
         },
         {
           topic: 'Alternatives: UUID v7 and ULID',
           detail: `Snowflake is not the only option. Newer standards offer different trade-offs.
 
-**UUID v7 (2024 standard):** 128-bit with 48-bit Unix timestamp + 80-bit random. Time-sortable like Snowflake, universally unique without coordination. Trade-off: 16 bytes vs 8 bytes storage per ID.
+UUID v7 (2024 standard): 128-bit with 48-bit Unix timestamp + 80-bit random. Time-sortable like Snowflake, universally unique without coordination. Trade-off: 16 bytes vs 8 bytes storage per ID.
 
-**ULID:** 128-bit, 48-bit timestamp + 80-bit random, Crockford Base32 encoded. Lexicographically sortable as strings. Good for systems that need string IDs.
+ULID: 128-bit, 48-bit timestamp + 80-bit random, Crockford Base32 encoded. Lexicographically sortable as strings. Good for systems that need string IDs.
 
-**MongoDB ObjectId:** 96-bit, 32-bit timestamp + 40-bit random + 24-bit counter. Built into MongoDB driver.
+MongoDB ObjectId: 96-bit, 32-bit timestamp + 40-bit random + 24-bit counter. Built into MongoDB driver.
 
-**When to choose Snowflake:** Internal systems needing compact (8-byte) time-sorted IDs at very high throughput. Choose UUID v7 when cross-system uniqueness matters and 16 bytes is acceptable.`
+When to choose Snowflake: Internal systems needing compact (8-byte) time-sorted IDs at very high throughput. Choose UUID v7 when cross-system uniqueness matters and 16 bytes is acceptable.`
         }
       ],
 
@@ -20629,9 +20629,9 @@ sources {
       keyQuestions: [
         {
           question: 'How do we ingest articles from 50K+ sources?',
-          answer: `**Ingestion Sources**:
+          answer: `Ingestion Sources:
 
-1. **RSS/Atom Feeds** (preferred)
+1. RSS/Atom Feeds (preferred)
 \`\`\`
 Poll each source's RSS feed based on update frequency:
 - Major outlets (CNN, BBC): Every 5 minutes
@@ -20641,7 +20641,7 @@ Poll each source's RSS feed based on update frequency:
 Adaptive polling: Increase frequency if source is actively publishing
 \`\`\`
 
-2. **Web Crawling** (fallback)
+2. Web Crawling (fallback)
 \`\`\`
 For sources without RSS:
 - Crawl homepage for new article links
@@ -20649,21 +20649,21 @@ For sources without RSS:
 - Respect robots.txt and rate limits
 \`\`\`
 
-**Ingestion Pipeline**:
+Ingestion Pipeline:
 
 ![News article ingestion pipeline](/diagrams/systemdesign/news-ingestion.png)
 
-**Handling Volume**:
+Handling Volume:
 - Kafka queue for async processing
 - Distributed crawlers (100+ workers)
 - Prioritize major sources during breaking news`
         },
         {
           question: 'How do we cluster similar articles into stories?',
-          answer: `**The Problem**:
+          answer: `The Problem:
 100 articles about "Election Results" → should be ONE story with 100 sources
 
-**Solution: Embedding-Based Clustering**:
+Solution: Embedding-Based Clustering:
 \`\`\`
 1. Generate embedding for each article:
    - Title + first 200 words
@@ -20681,7 +20681,7 @@ For sources without RSS:
    - Create/update story
 \`\`\`
 
-**Clustering Algorithm**:
+Clustering Algorithm:
 \`\`\`
 def cluster_article(new_article):
     embedding = generate_embedding(new_article)
@@ -20704,7 +20704,7 @@ def cluster_article(new_article):
         create_story(new_article)
 \`\`\`
 
-**Headline Selection**:
+Headline Selection:
 \`\`\`
 For a story with 50 articles, which headline to show?
 - Prefer high-authority sources (AP, Reuters)
@@ -20715,7 +20715,7 @@ For a story with 50 articles, which headline to show?
         },
         {
           question: 'How do we rank stories in the feed?',
-          answer: `**Ranking Signals**:
+          answer: `Ranking Signals:
 
 \`\`\`
 Story Score = Freshness × Authority × Engagement × Relevance
@@ -20727,7 +20727,7 @@ Where:
   Relevance = personalization_score(user, story)
 \`\`\`
 
-**Freshness Decay**:
+Freshness Decay:
 \`\`\`
 def freshness_score(story):
     hours_old = (now - story.updated_at).hours
@@ -20742,7 +20742,7 @@ def freshness_score(story):
         return 0.3 * exp(-hours_old / 48)  # Exponential decay
 \`\`\`
 
-**Authority Score**:
+Authority Score:
 \`\`\`
 Source authority computed like PageRank:
 - Links from other news sources
@@ -20753,7 +20753,7 @@ Source authority computed like PageRank:
 Pre-computed daily, stored with source
 \`\`\`
 
-**Personalization**:
+Personalization:
 \`\`\`
 User profile:
   - Explicit: followed topics, saved sources
@@ -20765,7 +20765,7 @@ Relevance = cosine_similarity(
 )
 \`\`\`
 
-**Breaking News Boost**:
+Breaking News Boost:
 \`\`\`
 if story.article_count grew > 10x in last hour:
     story.score *= 2.0  # Trending boost
@@ -20776,9 +20776,9 @@ if story involves major entity (president, CEO):
         },
         {
           question: 'How does deduplication work with SimHash and MinHash?',
-          answer: `**The Problem**: Same story rewritten by 100 outlets — need to detect near-duplicates, not just exact copies.
+          answer: `The Problem: Same story rewritten by 100 outlets — need to detect near-duplicates, not just exact copies.
 
-**SimHash (Locality-Sensitive Hashing)**:
+SimHash (Locality-Sensitive Hashing):
 \`\`\`
 1. Tokenize article into weighted features (TF-IDF)
 2. For each feature, compute a standard hash (64-bit)
@@ -20789,7 +20789,7 @@ Advantage: O(1) comparison, compact storage
 Used for: Fast first-pass dedup before clustering
 \`\`\`
 
-**MinHash (Jaccard Similarity Estimation)**:
+MinHash (Jaccard Similarity Estimation):
 \`\`\`
 1. Convert article into a set of shingles (3-word phrases)
 2. Apply k independent hash functions to the set
@@ -20800,7 +20800,7 @@ Advantage: Probabilistically accurate similarity estimation
 Used for: Story clustering — articles with Jaccard > 0.5 are candidates
 \`\`\`
 
-**Pipeline Integration**:
+Pipeline Integration:
 \`\`\`
 New article arrives:
   1. Compute SimHash → check bloom filter for exact dupes → skip if found
@@ -20816,7 +20816,7 @@ SimHash handles trivial duplicates at ingestion speed; MinHash handles paraphras
         },
         {
           question: 'How do we detect trending and breaking news?',
-          answer: `**Velocity-Based Detection**:
+          answer: `Velocity-Based Detection:
 \`\`\`
 For each story cluster, track article arrival velocity:
 
@@ -20830,7 +20830,7 @@ elif trend_score > 3:
     mark_as_TRENDING
 \`\`\`
 
-**Sliding Window Counters**:
+Sliding Window Counters:
 \`\`\`
 Redis sorted set per story cluster:
   ZADD story:{id}:velocity {timestamp} {article_id}
@@ -20840,7 +20840,7 @@ Redis sorted set per story cluster:
 5-minute windows, checked every 30 seconds
 \`\`\`
 
-**Breaking News Pipeline**:
+Breaking News Pipeline:
 \`\`\`
 1. Velocity detector fires BREAKING event → Kafka
 2. Breaking news consumer:
@@ -20851,7 +20851,7 @@ Redis sorted set per story cluster:
 3. Breaking status auto-expires after 4 hours without new velocity
 \`\`\`
 
-**Entity-Based Signals**:
+Entity-Based Signals:
 \`\`\`
 High-importance entities boost trending detection:
   - Head of state mentioned → lower velocity threshold
@@ -20861,7 +20861,7 @@ High-importance entities boost trending detection:
         },
         {
           question: 'How does personalization work without creating filter bubbles?',
-          answer: `**User Interest Model**:
+          answer: `User Interest Model:
 \`\`\`
 user_profile = {
   explicit: [followed topics, saved sources, language],
@@ -20874,7 +20874,7 @@ user_profile = {
 }
 \`\`\`
 
-**Two-Stage Personalization**:
+Two-Stage Personalization:
 \`\`\`
 Stage 1 — Candidate Generation (offline, every 15 min):
   - Retrieve top 500 stories from followed categories
@@ -20888,7 +20888,7 @@ Stage 2 — Real-time Re-ranking (online, per request):
                + 0.1 * engagement_velocity
 \`\`\`
 
-**Filter Bubble Prevention**:
+Filter Bubble Prevention:
 \`\`\`
 Diversity constraints applied post-ranking:
   1. Max 3 consecutive stories from same category
@@ -20898,7 +20898,7 @@ Diversity constraints applied post-ranking:
   5. Opposing-viewpoint injection for political/opinion stories
 \`\`\`
 
-**Measuring Bubble Risk**:
+Measuring Bubble Risk:
 \`\`\`
 diversity_score = unique_categories_clicked / total_clicks (30-day window)
 if diversity_score < 0.3:
@@ -20907,7 +20907,7 @@ if diversity_score < 0.3:
         },
         {
           question: 'How do we build source authority scoring?',
-          answer: `**Authority Signals**:
+          answer: `Authority Signals:
 \`\`\`
 source_authority = weighted_sum(
   0.3 * citation_score,     # How often other sources cite this one
@@ -20918,7 +20918,7 @@ source_authority = weighted_sum(
 )
 \`\`\`
 
-**Citation Graph (PageRank Variant)**:
+Citation Graph (PageRank Variant):
 \`\`\`
 Build a citation graph between sources:
   - Source A links to Source B's article → edge A→B
@@ -20928,7 +20928,7 @@ Build a citation graph between sources:
 Recomputed weekly from crawl data
 \`\`\`
 
-**Factual Accuracy Tracking**:
+Factual Accuracy Tracking:
 \`\`\`
 Track corrections, retractions, and fact-check verdicts:
   - Integrate with fact-checking organizations (IFCN)
@@ -20938,7 +20938,7 @@ Track corrections, retractions, and fact-check verdicts:
 accuracy_score = 1.0 - (corrections / total_articles) * penalty_weight
 \`\`\`
 
-**Dynamic Authority Adjustment**:
+Dynamic Authority Adjustment:
 \`\`\`
 Authority is not static:
   - New source starts at 0.3 (probationary)
@@ -20949,7 +20949,7 @@ Authority is not static:
         },
         {
           question: 'How do we extract content from articles efficiently?',
-          answer: `**Content Extraction Pipeline**:
+          answer: `Content Extraction Pipeline:
 \`\`\`
 Raw HTML → Readability Algorithm → Clean Text + Metadata
 
@@ -20962,7 +20962,7 @@ Raw HTML → Readability Algorithm → Clean Text + Metadata
 5. Language detection (fastText model)
 \`\`\`
 
-**NLP Processing**:
+NLP Processing:
 \`\`\`
 For each extracted article:
   1. Named Entity Recognition (NER):
@@ -20983,7 +20983,7 @@ For each extracted article:
      - 768-dim vector for similarity search
 \`\`\`
 
-**Performance at Scale**:
+Performance at Scale:
 \`\`\`
 58 articles/sec ingestion rate:
   - Content fetching: 100+ async workers with connection pooling
@@ -20994,7 +20994,7 @@ For each extracted article:
         },
         {
           question: 'How do we handle multi-language and cross-lingual stories?',
-          answer: `**Per-Language Processing**:
+          answer: `Per-Language Processing:
 \`\`\`
 Separate pipelines per language group:
   - Language detection at ingestion (fastText, 99%+ accuracy)
@@ -21003,7 +21003,7 @@ Separate pipelines per language group:
   - Separate Elasticsearch indices per language
 \`\`\`
 
-**Cross-Lingual Story Linking**:
+Cross-Lingual Story Linking:
 \`\`\`
 Same event covered in English, Spanish, French, etc.:
 
@@ -21022,7 +21022,7 @@ Hybrid approach recommended: embeddings for clustering,
 entities for verification
 \`\`\`
 
-**Country-Specific Feeds**:
+Country-Specific Feeds:
 \`\`\`
 Feed generation considers:
   1. User's country → prefer local sources
@@ -21038,7 +21038,7 @@ source_relevance(user, source) =
         },
         {
           question: 'How do we make the feed cacheable while keeping it fresh?',
-          answer: `**Caching Strategy**:
+          answer: `Caching Strategy:
 \`\`\`
 Three tiers of cacheability:
 
@@ -21059,7 +21059,7 @@ Tier 3 — Personalized Feeds (unique per user):
   - Redis cache of candidate set with 15-min TTL
 \`\`\`
 
-**Cache Invalidation for Breaking News**:
+Cache Invalidation for Breaking News:
 \`\`\`
 When BREAKING story detected:
   1. Publish invalidation event to all edge caches
@@ -21073,7 +21073,7 @@ Latency from event → user sees it:
   - Push notification: ~5 seconds
 \`\`\`
 
-**Feed Freshness Metrics**:
+Feed Freshness Metrics:
 \`\`\`
 Monitor and alert on:
   - p50 story age in feed (target: < 2 hours)
@@ -21482,7 +21482,7 @@ leaderboard_snapshots {
       keyQuestions: [
         {
           question: 'Why Redis Sorted Sets?',
-          answer: `**Redis Sorted Set Operations**:
+          answer: `Redis Sorted Set Operations:
 \`\`\`
 ZADD leaderboard:game1 1500 player123  # O(log N)
   Add/update player score
@@ -21500,7 +21500,7 @@ ZCARD leaderboard:game1                # O(1)
   Get total number of players
 \`\`\`
 
-**Why It Works**:
+Why It Works:
 \`\`\`
 Sorted Set uses Skip List internally:
 - Insert: O(log N)
@@ -21513,7 +21513,7 @@ For 100M players:
 - All fits in memory!
 \`\`\`
 
-**Compared to SQL**:
+Compared to SQL:
 \`\`\`sql
 -- Getting rank in SQL requires counting:
 SELECT COUNT(*) + 1 as rank
@@ -21525,7 +21525,7 @@ WHERE score > (SELECT score FROM scores WHERE player_id = ?)
         },
         {
           question: 'How do we handle multiple leaderboards?',
-          answer: `**Key Naming Convention**:
+          answer: `Key Naming Convention:
 \`\`\`
 leaderboard:{game_id}:{timeframe}
 
@@ -21536,7 +21536,7 @@ Examples:
   leaderboard:valorant:ranked:season3
 \`\`\`
 
-**Time-Based Reset**:
+Time-Based Reset:
 \`\`\`python
 # Daily leaderboard
 def get_daily_key(game_id):
@@ -21554,7 +21554,7 @@ def reset_weekly_leaderboard(game_id):
     # New key is empty, old key kept for history
 \`\`\`
 
-**Composite Leaderboards**:
+Composite Leaderboards:
 \`\`\`
 For complex scoring (kills x 10 + assists x 5 + wins x 100):
 
@@ -21568,9 +21568,9 @@ Option 2: Store components, compute on read (slower)
         },
         {
           question: 'How do we scale for very large leaderboards?',
-          answer: `**Problem**: 100M players in single sorted set can be slow
+          answer: `Problem: 100M players in single sorted set can be slow
 
-**Solution 1: Approximate Ranking**
+Solution 1: Approximate Ranking
 \`\`\`
 For players outside top 1000:
   - Don't store in main sorted set
@@ -21589,7 +21589,7 @@ def get_approximate_rank(score, total_players):
             return total_players * (100 - percentile) / 100
 \`\`\`
 
-**Solution 2: Sharded Leaderboards**
+Solution 2: Sharded Leaderboards
 
 | Shard | Score range  | Players |
 | ----- | ------------ | ------- |
@@ -21599,7 +21599,7 @@ def get_approximate_rank(score, total_players):
 
 Global rank = offset[shard] + rank_within_shard.
 
-**Solution 3: Top-K Only**
+Solution 3: Top-K Only
 \`\`\`
 Only maintain sorted set for top 10,000 players
 Everyone else just knows they're "not in top 10K"
@@ -21613,9 +21613,9 @@ On score update:
         },
         {
           question: 'How do we handle high write throughput?',
-          answer: `**Problem**: During game events, millions of score updates
+          answer: `Problem: During game events, millions of score updates
 
-**Solution 1: Batch Updates**
+Solution 1: Batch Updates
 \`\`\`
 Instead of individual ZADD:
   - Buffer updates for 100ms
@@ -21627,13 +21627,13 @@ for update in buffer:
 pipeline.execute()  # Single round trip
 \`\`\`
 
-**Solution 2: Local Aggregation**
+Solution 2: Local Aggregation
 
 ![Write aggregation — per-server local buffer flushes to Redis every 1s](/diagrams/systemdesign/write-aggregation.png)
 
 When multiple updates land for the same player within a flush window, keep only the highest score.
 
-**Solution 3: Write-Behind Cache**
+Solution 3: Write-Behind Cache
 \`\`\`
 In-memory sorted set (local) → async sync to Redis
 
@@ -21646,7 +21646,7 @@ Cons:
   - Recovery complexity
 \`\`\`
 
-**Redis Cluster Mode**:
+Redis Cluster Mode:
 \`\`\`
 Shard by leaderboard key:
   - Different games go to different shards
@@ -21656,9 +21656,9 @@ Shard by leaderboard key:
         },
         {
           question: 'How do we handle ZADD vs ZINCRBY for score updates?',
-          answer: `**Two approaches for updating scores**:
+          answer: `Two approaches for updating scores:
 
-**ZADD — Absolute Score (Replace)**:
+ZADD — Absolute Score (Replace):
 \`\`\`
 ZADD leaderboard:game1 1500 player123
   - Sets player123's score to exactly 1500
@@ -21671,7 +21671,7 @@ Best for:
   - Leaderboards where only latest score matters
 \`\`\`
 
-**ZINCRBY — Incremental Score (Add)**:
+ZINCRBY — Incremental Score (Add):
 \`\`\`
 ZINCRBY leaderboard:game1 50 player123
   - Adds 50 to player123's current score
@@ -21684,7 +21684,7 @@ Best for:
   - Event-based scoring (each action adds points)
 \`\`\`
 
-**Important Consideration**:
+Important Consideration:
 \`\`\`
 ZINCRBY is atomic but ZADD with MAX is not natively supported.
 For "keep highest score":
@@ -21701,9 +21701,9 @@ Choose based on game mechanics. Most competitive leaderboards use ZADD GT (best 
         },
         {
           question: 'How do we implement around-me ranking?',
-          answer: `**The Problem**: Player wants to see who is ranked just above and below them.
+          answer: `The Problem: Player wants to see who is ranked just above and below them.
 
-**Redis Implementation**:
+Redis Implementation:
 \`\`\`python
 def get_around_me(game_id, player_id, range_size=5):
     key = f"leaderboard:{game_id}:alltime"
@@ -21728,10 +21728,10 @@ def get_around_me(game_id, player_id, range_size=5):
     }
 \`\`\`
 
-**Complexity**: O(log N) for ZREVRANK + O(log N + M) for ZREVRANGE = O(log N + M)
+Complexity: O(log N) for ZREVRANK + O(log N + M) for ZREVRANGE = O(log N + M)
 For 100M players: ~27 operations (log2(100M)) — sub-millisecond.
 
-**Edge Cases**:
+Edge Cases:
 \`\`\`
 1. Player at rank 1 (top of leaderboard):
    - No players above → start = 0, show only players below
@@ -21749,9 +21749,9 @@ For 100M players: ~27 operations (log2(100M)) — sub-millisecond.
         },
         {
           question: 'How do we handle tie-breaking?',
-          answer: `**The Problem**: Two players with score 1500 — who ranks higher?
+          answer: `The Problem: Two players with score 1500 — who ranks higher?
 
-**Strategy 1: Timestamp Tie-Breaking (Composite Score)**:
+Strategy 1: Timestamp Tie-Breaking (Composite Score):
 \`\`\`
 Encode timestamp into the score:
   composite_score = score * 10^10 + (MAX_TIMESTAMP - timestamp)
@@ -21765,7 +21765,7 @@ Example:
 Redis sees them as different scores — no tie!
 \`\`\`
 
-**Strategy 2: Secondary Sort Key**:
+Strategy 2: Secondary Sort Key:
 \`\`\`
 Store secondary sort in a separate hash:
   ZADD leaderboard:game1 1500 player_a
@@ -21777,7 +21777,7 @@ On display, break ties by checking timestamps.
 Slower but cleaner data model.
 \`\`\`
 
-**Strategy 3: Fractional Scores**:
+Strategy 3: Fractional Scores:
 \`\`\`
 Use fractional part for tie-breaking:
   score = integer_score + (1.0 - timestamp / MAX_TIMESTAMP)
@@ -21789,11 +21789,11 @@ Works with Redis float scores (ZADD accepts doubles)
 Risk: floating point precision issues at large scale
 \`\`\`
 
-**Recommendation**: Strategy 1 (composite integer score) — most reliable, no precision issues, native Redis integer comparison.`
+Recommendation: Strategy 1 (composite integer score) — most reliable, no precision issues, native Redis integer comparison.`
         },
         {
           question: 'How do we implement time-windowed leaderboards efficiently?',
-          answer: `**Multiple Concurrent Windows**:
+          answer: `Multiple Concurrent Windows:
 \`\`\`
 On every score update, write to ALL active windows:
 
@@ -21817,7 +21817,7 @@ def update_score(game_id, player_id, score):
     pipe.execute()  # Single round trip, 4 commands
 \`\`\`
 
-**Automatic Expiry**:
+Automatic Expiry:
 \`\`\`
 # Old daily boards expire after 7 days
 redis.expire(f"lb:{game_id}:daily:2024-06-01", 7 * 86400)
@@ -21828,7 +21828,7 @@ redis.expire(f"lb:{game_id}:weekly:2024-W22", 30 * 86400)
 # Season boards snapshotted to PostgreSQL before expiry
 \`\`\`
 
-**Snapshot Before Reset**:
+Snapshot Before Reset:
 \`\`\`
 At end of each period:
   1. ZREVRANGE top 1000 with scores
@@ -21837,7 +21837,7 @@ At end of each period:
   4. New period key starts empty — first score creates it
 \`\`\`
 
-**Memory Management**:
+Memory Management:
 \`\`\`
 Active keys at any time:
   - 1 all-time per game
@@ -21852,7 +21852,7 @@ Most daily boards are small (only active players that day)
         },
         {
           question: 'How do we persist and recover leaderboard data?',
-          answer: `**Redis Persistence Options**:
+          answer: `Redis Persistence Options:
 \`\`\`
 1. RDB Snapshots (point-in-time):
    - Save to disk every N seconds if M keys changed
@@ -21870,7 +21870,7 @@ Most daily boards are small (only active players that day)
    - RDB for fast restart (load RDB, then replay AOF tail)
 \`\`\`
 
-**PostgreSQL Backup Strategy**:
+PostgreSQL Backup Strategy:
 \`\`\`
 Async backup pipeline:
   1. Every score update → Kafka topic
@@ -21888,7 +21888,7 @@ Recovery procedure:
   4. ZADD each record back into Redis
 \`\`\`
 
-**Sentinel for High Availability**:
+Sentinel for High Availability:
 \`\`\`
 Redis Sentinel cluster:
   - 1 master + 2 replicas
@@ -21899,9 +21899,9 @@ Redis Sentinel cluster:
         },
         {
           question: 'How do we implement a friends leaderboard?',
-          answer: `**The Challenge**: Each player has a unique friends list — can't use a single sorted set.
+          answer: `The Challenge: Each player has a unique friends list — can't use a single sorted set.
 
-**Option 1: On-the-Fly Computation**:
+Option 1: On-the-Fly Computation:
 \`\`\`python
 def get_friends_leaderboard(player_id, game_id):
     # Get friend list (from social graph service)
@@ -21926,10 +21926,10 @@ def get_friends_leaderboard(player_id, game_id):
     return rankings[:50]  # Top 50 friends
 \`\`\`
 
-**Complexity**: O(F) Redis commands (pipelined = 1 round trip) where F = friends count.
+Complexity: O(F) Redis commands (pipelined = 1 round trip) where F = friends count.
 For 200 friends: ~200 ZSCORE in one pipeline — very fast.
 
-**Option 2: ZINTERSTORE (Redis-side)**:
+Option 2: ZINTERSTORE (Redis-side):
 \`\`\`
 # Create a temporary set with just friend IDs
 SADD temp:friends:player123 friend1 friend2 friend3 ...
@@ -21944,7 +21944,7 @@ ZREVRANGE temp:result 0 49 WITHSCORES
 DEL temp:friends:player123 temp:result
 \`\`\`yaml
 
-**Recommendation**: Option 1 for small friend lists (<500), Option 2 for very large friend lists. Cache the result for 30 seconds since friend leaderboards don't need to be real-time.`
+Recommendation: Option 1 for small friend lists (<500), Option 2 for very large friend lists. Cache the result for 30 seconds since friend leaderboards don't need to be real-time.`
         }
       ],
 
@@ -22378,7 +22378,7 @@ bookings {
       keyQuestions: [
         {
           question: 'How do we model and store inventory?',
-          answer: `**The Challenge**:
+          answer: `The Challenge:
 \`\`\`
 Naive approach: Store each room individually
   30M rooms x 365 days = 10.9 billion rows
@@ -22388,7 +22388,7 @@ Better: Store availability count per room TYPE per date
   5 room types x 2M hotels x 365 days = 3.6B rows (still huge)
 \`\`\`
 
-**Inventory Model**:
+Inventory Model:
 \`\`\`
 Instead of tracking individual rooms:
   "Room 101 is booked June 15"
@@ -22406,7 +22406,7 @@ room_inventory {
 }
 \`\`\`
 
-**Sparse Storage**:
+Sparse Storage:
 \`\`\`
 Don't store dates with no changes:
   - Only store dates with bookings or price changes
@@ -22417,7 +22417,7 @@ Query: SELECT available FROM room_inventory
        -- If no row: all rooms available
 \`\`\`
 
-**Pre-aggregated Search**:
+Pre-aggregated Search:
 \`\`\`
 For search results, pre-compute:
   hotel_availability_cache {
@@ -22432,7 +22432,7 @@ Search query filters hotels BEFORE checking exact availability
         },
         {
           question: 'How do we prevent double-bookings?',
-          answer: `**The Problem**:
+          answer: `The Problem:
 \`\`\`
 User A and User B try to book last room simultaneously:
   Both read: available = 1
@@ -22440,7 +22440,7 @@ User A and User B try to book last room simultaneously:
   Result: 2 bookings for 1 room!
 \`\`\`
 
-**Solution 1: Pessimistic Locking**
+Solution 1: Pessimistic Locking
 \`\`\`sql
 BEGIN TRANSACTION;
 
@@ -22464,7 +22464,7 @@ IF all_dates_have_availability:
 COMMIT;
 \`\`\`
 
-**Solution 2: Optimistic Locking with Version**
+Solution 2: Optimistic Locking with Version
 \`\`\`sql
 -- Read current state
 SELECT available, version FROM room_inventory WHERE ...
@@ -22481,7 +22481,7 @@ WHERE room_type_id = 123
 -- If rows_affected = 0, retry or fail
 \`\`\`
 
-**Solution 3: Reservation Hold**
+Solution 3: Reservation Hold
 
 1. User starts checkout → create HOLD (10 min TTL).
 2. Inventory decremented for the HOLD.
@@ -22492,7 +22492,7 @@ This prevents the "someone else booked while you paid" race.`
         },
         {
           question: 'How do we handle search at scale?',
-          answer: `**Search Requirements**:
+          answer: `Search Requirements:
 \`\`\`
 "Hotels in NYC, June 15-17, 2 guests, under $200/night"
 
@@ -22503,11 +22503,11 @@ Need to:
 4. Rank by relevance, reviews, price
 \`\`\`
 
-**Two-Phase Search**:
+Two-Phase Search:
 
 ![Hotel search — Elasticsearch filter, DB exact availability, ranking](/diagrams/systemdesign/hotel-search-pipeline.png)
 
-**Caching Strategy**:
+Caching Strategy:
 \`\`\`
 Hotel details: Cache aggressively (changes rarely)
   CDN + Redis, TTL = 1 hour
@@ -22522,11 +22522,11 @@ Search results: Cache by query hash
         },
         {
           question: 'How does the reservation state machine work?',
-          answer: `**Booking States**:
+          answer: `Booking States:
 
 ![Booking state machine — HOLD, CONFIRMED, COMPLETED, with EXPIRED and CANCELLED branches](/diagrams/systemdesign/booking-state-machine.png)
 
-**State Transitions**:
+State Transitions:
 \`\`\`
 HOLD → CONFIRMED:
   Trigger: Payment succeeds
@@ -22546,7 +22546,7 @@ CONFIRMED → CANCELLED:
   Action: Process refund per policy, restore inventory
 \`\`\`
 
-**Implementation with Redis TTL**:
+Implementation with Redis TTL:
 \`\`\`python
 def create_hold(user_id, room_type_id, dates):
     hold_id = generate_uuid()
@@ -22575,7 +22575,7 @@ def create_hold(user_id, room_type_id, dates):
     return hold_id
 \`\`\`
 
-**Expired Hold Cleanup**:
+Expired Hold Cleanup:
 \`\`\`
 Background job runs every 30 seconds:
   SELECT id, room_type_id, dates FROM bookings
@@ -22588,7 +22588,7 @@ Background job runs every 30 seconds:
         },
         {
           question: 'How does dynamic pricing work?',
-          answer: `**Pricing Factors**:
+          answer: `Pricing Factors:
 \`\`\`
 room_price(room_type, date) =
   base_rate
@@ -22600,7 +22600,7 @@ room_price(room_type, date) =
   - promotional_discount(user, hotel)
 \`\`\`
 
-**Demand Multiplier**:
+Demand Multiplier:
 \`\`\`
 Based on search-to-book conversion for the area:
   demand = searches_for_date / available_rooms_in_area
@@ -22611,7 +22611,7 @@ Based on search-to-book conversion for the area:
   if demand < 0.5: multiplier = 0.8  (low demand, discount)
 \`\`\`
 
-**Occupancy-Based Pricing**:
+Occupancy-Based Pricing:
 \`\`\`
 As hotel fills up, price increases:
   occupancy = booked_rooms / total_rooms
@@ -22623,7 +22623,7 @@ As hotel fills up, price increases:
   95-100%: base_rate x 2.00 (last rooms premium)
 \`\`\`
 
-**Competitor Rate Monitoring**:
+Competitor Rate Monitoring:
 \`\`\`
 Crawl competitor prices daily:
   - Same hotel on Expedia, Hotels.com, direct website
@@ -22637,9 +22637,9 @@ Price quotes have 15-minute TTL:
         },
         {
           question: 'How do we handle the payment saga for bookings?',
-          answer: `**The Problem**: Booking involves multiple steps that can fail independently.
+          answer: `The Problem: Booking involves multiple steps that can fail independently.
 
-**Saga Pattern**:
+Saga Pattern:
 \`\`\`
 Step 1: Reserve Inventory     → Compensate: Release inventory
 Step 2: Charge Payment        → Compensate: Refund payment
@@ -22649,7 +22649,7 @@ Step 4: Send Confirmation     → Compensate: Send cancellation
 If any step fails, execute compensating actions in reverse order.
 \`\`\`
 
-**Orchestrated Saga Implementation**:
+Orchestrated Saga Implementation:
 \`\`\`
 Booking Orchestrator:
 
@@ -22673,7 +22673,7 @@ Booking Orchestrator:
     return SUCCESS  # Don't fail booking for notification issue
 \`\`\`
 
-**Idempotency**:
+Idempotency:
 \`\`\`
 Every step must be idempotent for safe retries:
   - Inventory hold: check if hold already exists before creating
@@ -22689,15 +22689,15 @@ Server checks: if idempotency_key exists in cache,
         },
         {
           question: 'How do we handle rate parity across channels?',
-          answer: `**The Problem**: Same hotel room listed on Booking.com, Expedia, Hotels.com, and the hotel's own website — prices must be consistent.
+          answer: `The Problem: Same hotel room listed on Booking.com, Expedia, Hotels.com, and the hotel's own website — prices must be consistent.
 
-**Channel Manager Architecture**:
+Channel Manager Architecture:
 
 ![Hotel channel manager fanout to OTAs](/diagrams/systemdesign/channel-manager.png)
 
 All channels get the same availability count, base price (may differ by commission), and restrictions (min stay, closed dates).
 
-**Inventory Sync Protocol**:
+Inventory Sync Protocol:
 \`\`\`
 When a booking happens on ANY channel:
   1. Channel sends booking notification → Channel Manager
@@ -22709,7 +22709,7 @@ Risk: During the 30-second window, another channel
 might sell the same room → overbooking
 \`\`\`
 
-**Rate Parity Enforcement**:
+Rate Parity Enforcement:
 \`\`\`
 Price consistency rules:
   - Base rate must be identical across all channels
@@ -22726,7 +22726,7 @@ Monitoring:
         },
         {
           question: 'How do we handle cancellations and refunds?',
-          answer: `**Cancellation Policies**:
+          answer: `Cancellation Policies:
 \`\`\`
 Three common policy types:
 
@@ -22748,7 +22748,7 @@ Three common policy types:
      < 24 hours: No refund
 \`\`\`
 
-**Cancellation Processing**:
+Cancellation Processing:
 \`\`\`python
 def cancel_booking(booking_id, user_id):
     booking = db.get_booking(booking_id)
@@ -22788,9 +22788,9 @@ def cancel_booking(booking_id, user_id):
         },
         {
           question: 'How do we build inventory search at scale?',
-          answer: `**The Challenge**: 500M searches/day, each needing geo-filter + availability check + price.
+          answer: `The Challenge: 500M searches/day, each needing geo-filter + availability check + price.
 
-**Pre-Computed Availability Index**:
+Pre-Computed Availability Index:
 \`\`\`
 Background job (runs every 5 minutes):
   For each hotel:
@@ -22809,7 +22809,7 @@ Background job (runs every 5 minutes):
     }
 \`\`\`
 
-**Search Query Execution**:
+Search Query Execution:
 \`\`\`
 {
   "query": {
@@ -22827,7 +22827,7 @@ Background job (runs every 5 minutes):
 Returns 500 candidates in ~50ms
 \`\`\`
 
-**Stale Index Mitigation**:
+Stale Index Mitigation:
 \`\`\`
 Pre-computed index can be 5 min stale:
   - OK for search results page (approximate)
@@ -22844,9 +22844,9 @@ This two-phase approach:
         },
         {
           question: 'How do we ensure idempotency in the booking flow?',
-          answer: `**The Problem**: Network timeout after payment → user retries → double charge.
+          answer: `The Problem: Network timeout after payment → user retries → double charge.
 
-**Idempotency Key Pattern**:
+Idempotency Key Pattern:
 \`\`\`
 Client generates a UUID before starting checkout:
   POST /api/bookings
@@ -22870,7 +22870,7 @@ Server checks Redis:
   return result
 \`\`\`
 
-**Payment Idempotency**:
+Payment Idempotency:
 \`\`\`
 Stripe natively supports idempotency:
   stripe.PaymentIntent.create(
@@ -22883,7 +22883,7 @@ If retried with same key, Stripe returns original charge
 → No double charging
 \`\`\`
 
-**Database-Level Idempotency**:
+Database-Level Idempotency:
 \`\`\`sql
 -- Unique constraint on idempotency_key prevents duplicate bookings
 CREATE UNIQUE INDEX idx_booking_idempotency
@@ -22897,7 +22897,7 @@ ON CONFLICT (idempotency_key) DO NOTHING
 RETURNING *;
 \`\`\`
 
-**End-to-End Idempotency Chain**:
+End-to-End Idempotency Chain:
 \`\`\`
 Client → API (idempotency_key)
          → Inventory (hold_id is idempotent)
@@ -23342,7 +23342,7 @@ tiles {
       keyQuestions: [
         {
           question: 'How do map tiles work?',
-          answer: `**Tile Pyramid** — total tiles at zoom \`z\` = 4^z:
+          answer: `Tile Pyramid — total tiles at zoom \`z\` = 4^z:
 
 | Zoom | Tile count                |
 | ---- | ------------------------- |
@@ -23353,7 +23353,7 @@ tiles {
 | 18   | 68 billion                |
 | 22   | 17 trillion (not all exist) |
 
-**Tile Coordinates**:
+Tile Coordinates:
 \`\`\`
 URL: /tiles/{z}/{x}/{y}.png
 
@@ -23365,7 +23365,7 @@ Example: /tiles/15/5241/12661.png
   Zoom 15, specific tile in that grid
 \`\`\`
 
-**Rendering Strategy**:
+Rendering Strategy:
 \`\`\`
 Option 1: Pre-render all tiles (static maps)
   - Billions of tiles x 22 zoom levels
@@ -23386,7 +23386,7 @@ Option 3: Vector tiles (modern approach)
   - Better for complex features
 \`\`\`
 
-**CDN Caching**:
+CDN Caching:
 \`\`\`
 Cache-Control: public, max-age=86400
 
@@ -23396,7 +23396,7 @@ Invalidate specific tiles when map data updates
         },
         {
           question: 'How does routing/directions work?',
-          answer: `**Road Graph**:
+          answer: `Road Graph:
 \`\`\`
 Graph = (Nodes, Edges)
   Nodes = Intersections (lat, lng)
@@ -23410,7 +23410,7 @@ Edge weight factors:
   - Restrictions (no left turn, one-way)
 \`\`\`
 
-**Shortest Path Algorithms**:
+Shortest Path Algorithms:
 \`\`\`
 Dijkstra's Algorithm: O(E + V log V)
   - Correct, but slow for large graphs
@@ -23422,7 +23422,7 @@ A* Algorithm: O(E + V log V) but faster in practice
   - Still slow for very long routes
 \`\`\`
 
-**Contraction Hierarchies (used at scale)**:
+Contraction Hierarchies (used at scale):
 
 Preprocessing (hours, done offline):
 1. Rank nodes by importance.
@@ -23436,7 +23436,7 @@ Query (milliseconds):
 
 Result: ~100× faster than Dijkstra. Cross-country route: <1 ms query time.
 
-**Real-time Traffic Integration**:
+Real-time Traffic Integration:
 \`\`\`
 For each edge (road segment):
   base_time = distance / speed_limit
@@ -23449,7 +23449,7 @@ Routing uses current weights
         },
         {
           question: 'How does real-time traffic work?',
-          answer: `**Data Collection**:
+          answer: `Data Collection:
 \`\`\`
 Millions of phones with Google Maps open:
   - Send anonymized location updates
@@ -23457,11 +23457,11 @@ Millions of phones with Google Maps open:
   - Aggregated, not individual tracking
 \`\`\`
 
-**Traffic Processing Pipeline**:
+Traffic Processing Pipeline:
 
 ![Real-time traffic pipeline — phone GPS to Flink to traffic DB to tile service](/diagrams/systemdesign/traffic-pipeline.png)
 
-**ETA Calculation**:
+ETA Calculation:
 \`\`\`
 ETA = sum of (segment_length / segment_speed)
       for each segment in route
@@ -23476,9 +23476,9 @@ Confidence interval:
         },
         {
           question: 'How do contraction hierarchies achieve sub-millisecond routing?',
-          answer: `**The Key Insight**: Most nodes in a road graph are unimportant (residential streets). Important nodes (highway junctions) connect long-distance routes.
+          answer: `The Key Insight: Most nodes in a road graph are unimportant (residential streets). Important nodes (highway junctions) connect long-distance routes.
 
-**Preprocessing Phase (Offline, ~2-4 hours)**:
+Preprocessing Phase (Offline, ~2-4 hours):
 \`\`\`
 1. Order nodes by importance:
    - Highway junctions > arterial intersections > local streets
@@ -23496,7 +23496,7 @@ Confidence interval:
    - Each node has an "importance level"
 \`\`\`
 
-**Query Phase (Online, <1ms)**:
+Query Phase (Online, <1ms):
 \`\`\`
 Bidirectional Dijkstra with one rule:
   "Only traverse edges going UP in importance"
@@ -23516,7 +23516,7 @@ Why it's fast:
   - At 1 microsecond per node: ~1ms total
 \`\`\`
 
-**Real-time Traffic Overlay**:
+Real-time Traffic Overlay:
 \`\`\`
 Problem: CH preprocessing assumes static edge weights.
 Traffic changes weights every 2 minutes.
@@ -23533,7 +23533,7 @@ where traffic matters most, CH for the highway portion.
         },
         {
           question: 'How does the tile serving CDN architecture work?',
-          answer: `**Tile Serving Pipeline**:
+          answer: `Tile Serving Pipeline:
 \`\`\`
 Client request: GET /tiles/15/5241/12661.png
 
@@ -23553,7 +23553,7 @@ Client request: GET /tiles/15/5241/12661.png
 Cache-Control: public, max-age=86400, s-maxage=604800
 \`\`\`
 
-**CDN Cache Strategy**:
+CDN Cache Strategy:
 \`\`\`
 Hot tiles (city centers, zoom 10-16):
   - Pre-warmed in CDN cache
@@ -23572,7 +23572,7 @@ Vector tiles (mobile):
   - Supports dark mode, custom colors
 \`\`\`
 
-**Global CDN Architecture**:
+Global CDN Architecture:
 \`\`\`
 200+ edge locations worldwide
   - Each edge: ~100TB SSD cache
@@ -23588,7 +23588,7 @@ Tile invalidation:
         },
         {
           question: 'How do offline maps work?',
-          answer: `**Region Download**:
+          answer: `Region Download:
 \`\`\`
 User selects a region (city, state, country):
 
@@ -23604,7 +23604,7 @@ Package sizes:
   - Country (Japan): ~1.5 GB
 \`\`\`
 
-**Graph Partitioning for Download**:
+Graph Partitioning for Download:
 \`\`\`
 1. Define bounding box for requested region
 2. Extract all road segments within the box
@@ -23614,7 +23614,7 @@ Package sizes:
 5. Compress and package for download
 \`\`\`
 
-**On-Device Routing**:
+On-Device Routing:
 \`\`\`
 Same CH algorithm runs on phone:
   - Sub-graph loaded into memory
@@ -23632,7 +23632,7 @@ Staleness handling:
   - Prompt for update if data > 30 days old
 \`\`\`
 
-**Differential Updates**:
+Differential Updates:
 \`\`\`
 Instead of re-downloading entire region:
   - Server computes diff since last download
@@ -23643,7 +23643,7 @@ Instead of re-downloading entire region:
         },
         {
           question: 'How does POI search and geocoding work?',
-          answer: `**POI Search Architecture**:
+          answer: `POI Search Architecture:
 \`\`\`
 Query: "coffee shops near me"
 
@@ -23677,7 +23677,7 @@ Query: "coffee shops near me"
          + 0.1 * photo_quality_score
 \`\`\`
 
-**Geocoding (Address → Coordinates)**:
+Geocoding (Address → Coordinates):
 \`\`\`
 Input: "1600 Amphitheatre Parkway, Mountain View, CA"
 
@@ -23696,7 +23696,7 @@ Reverse geocoding (Coordinates → Address):
   - Interpolate house number from road geometry
 \`\`\`
 
-**S2 Geometry Library**:
+S2 Geometry Library:
 \`\`\`
 Google's spatial indexing system:
   - Divides Earth's surface into hierarchical cells
@@ -23712,7 +23712,7 @@ Used for:
         },
         {
           question: 'How does ETA prediction work?',
-          answer: `**ETA Computation**:
+          answer: `ETA Computation:
 \`\`\`
 Basic ETA = sum of (segment_length / segment_speed)
             for each segment in the route
@@ -23723,7 +23723,7 @@ Where segment_speed comes from (priority order):
   3. Road speed limit (fallback)
 \`\`\`
 
-**ML-Enhanced ETA**:
+ML-Enhanced ETA:
 \`\`\`
 Features for ETA model:
   - Route distance and segment count
@@ -23740,7 +23740,7 @@ Model output:
   - Updated every 2 minutes during navigation
 \`\`\`
 
-**Live ETA Updates During Navigation**:
+Live ETA Updates During Navigation:
 \`\`\`
 While driving:
   1. Track actual progress vs estimated progress
@@ -23755,7 +23755,7 @@ ETA recalculation frequency:
   - Immediately on incident reported ahead
 \`\`\`
 
-**Historical Pattern Database**:
+Historical Pattern Database:
 \`\`\`
 For each road segment, store:
   speed_pattern[day_of_week][hour] = avg_speed
@@ -23772,9 +23772,9 @@ Used when real-time data is unavailable.
         },
         {
           question: 'How does map-matching work for traffic data?',
-          answer: `**The Problem**: GPS coordinates from phones are noisy (5-20m accuracy) and don't fall exactly on roads.
+          answer: `The Problem: GPS coordinates from phones are noisy (5-20m accuracy) and don't fall exactly on roads.
 
-**Map-Matching Algorithm**:
+Map-Matching Algorithm:
 \`\`\`
 Input: Sequence of GPS points (lat, lng, timestamp)
 Output: Sequence of road segments the device traveled on
@@ -23789,7 +23789,7 @@ Hidden Markov Model (HMM) approach:
 Viterbi algorithm finds most likely sequence of road segments.
 \`\`\`
 
-**Example**:
+Example:
 \`\`\`
 GPS point at (37.7749, -122.4194) with 10m accuracy:
   Candidate roads:
@@ -23805,7 +23805,7 @@ Previous GPS point was on Market Street:
 HMM selects: Market Street (highest combined probability)
 \`\`\`
 
-**Speed Computation from Matched Points**:
+Speed Computation from Matched Points:
 \`\`\`
 After map-matching:
   Point A on segment X at time T1
@@ -23826,7 +23826,7 @@ Filter out:
         },
         {
           question: 'How does S2 geometry enable spatial indexing?',
-          answer: `**S2 Cell System**:
+          answer: `S2 Cell System:
 \`\`\`
 Earth's surface → Cube → 6 faces → Hilbert curve subdivision
 
@@ -23845,7 +23845,7 @@ Each cell has a 64-bit ID:
   - Hierarchical: parent cell ID is a prefix of child cell IDs
 \`\`\`
 
-**Why S2 for Maps**:
+Why S2 for Maps:
 \`\`\`
 1. Spatial indexing:
    - Store POIs with their S2 cell IDs
@@ -23867,7 +23867,7 @@ Each cell has a 64-bit ID:
    - Much faster than computing distances for all entities
 \`\`\`
 
-**Implementation in Database**:
+Implementation in Database:
 \`\`\`
 -- Store S2 cell ID with each POI
 CREATE TABLE places (
@@ -24320,7 +24320,7 @@ recordings {
       keyQuestions: [
         {
           question: 'What is an SFU and why use it?',
-          answer: `**The N² Problem**:
+          answer: `The N² Problem:
 \`\`\`
 Peer-to-Peer (P2P):
   5 participants = each sends 4 streams = 20 streams total
@@ -24330,13 +24330,13 @@ Peer-to-Peer (P2P):
   Doesn't scale!
 \`\`\`
 
-**SFU (Selective Forwarding Unit)**:
+SFU (Selective Forwarding Unit):
 
 ![SFU topology — each peer uploads 1 stream, SFU forwards to N-1](/diagrams/systemdesign/sfu-topology.png)
 
 Each participant uploads exactly 1 stream; the SFU forwards it to the other N-1 recipients. Upload bandwidth stays constant at 1 stream regardless of meeting size.
 
-**SFU vs MCU**:
+SFU vs MCU:
 \`\`\`
 SFU (Selective Forwarding Unit):
   - Forwards streams as-is
@@ -24351,7 +24351,7 @@ MCU (Multipoint Control Unit):
   - Older approach, less flexible
 \`\`\`
 
-**Simulcast**:
+Simulcast:
 \`\`\`
 Sender encodes 3 quality levels:
   High: 1080p @ 2 Mbps
@@ -24365,7 +24365,7 @@ SFU sends appropriate quality to each receiver
         },
         {
           question: 'How does WebRTC signaling work?',
-          answer: `**WebRTC Overview**:
+          answer: `WebRTC Overview:
 \`\`\`
 WebRTC = Web Real-Time Communication
   - Browser API for peer-to-peer media
@@ -24373,14 +24373,14 @@ WebRTC = Web Real-Time Communication
   - We provide signaling (how peers find each other)
 \`\`\`
 
-**Signaling Flow**:
+Signaling Flow:
 
 1. Alice creates an SDP "offer" describing her media; sends it to the signaling server, which forwards to the SFU.
 2. The SFU creates an SDP "answer" describing its media and sends it back via signaling.
 3. ICE candidate exchange — both sides advertise reachable IP:port pairs ("I can be reached at IP:port").
 4. Direct media connection established using the best available path.
 
-**SDP (Session Description Protocol)**:
+SDP (Session Description Protocol):
 \`\`\`
 v=0
 o=- 123456 2 IN IP4 127.0.0.1
@@ -24394,7 +24394,7 @@ a=rtpmap:96 VP8/90000
 Describes: codecs, ports, encryption, etc.
 \`\`\`
 
-**NAT Traversal (STUN/TURN)**:
+NAT Traversal (STUN/TURN):
 \`\`\`
 Most users are behind NAT (private IP)
 
@@ -24409,7 +24409,7 @@ TURN: "Relay my traffic through server"
         },
         {
           question: 'How do we handle large meetings (100+ participants)?',
-          answer: `**Challenges**:
+          answer: `Challenges:
 \`\`\`
 100 participants:
   - 100 video streams to decode (CPU intensive)
@@ -24417,7 +24417,7 @@ TURN: "Relay my traffic through server"
   - Bandwidth: 100 × 100 Kbps = 10 Mbps minimum
 \`\`\`
 
-**Optimization 1: Tile-based rendering**
+Optimization 1: Tile-based rendering
 \`\`\`
 Only render visible tiles:
   - User sees 3×3 grid = 9 videos
@@ -24427,13 +24427,13 @@ Only render visible tiles:
 "Pagination" for video
 \`\`\`
 
-**Optimization 2: Active speaker detection**
+Optimization 2: Active speaker detection
 
 ![Active speaker layout — HD main feed plus LD thumbnails](/diagrams/systemdesign/active-speaker-layout.png)
 
 The SFU detects the active speaker via audio levels and automatically promotes that participant's stream to HD while keeping all others at low-quality thumbnail bitrate.
 
-**Optimization 3: Cascaded SFUs**
+Optimization 3: Cascaded SFUs
 \`\`\`
 For 1000 participants across globe:
   - Single SFU can't handle all
@@ -24445,7 +24445,7 @@ SFU(US-West) ←→ SFU(US-East) ←→ SFU(Europe)
 Each user connects to nearest SFU
 \`\`\`
 
-**Optimization 4: Audio-only mode**
+Optimization 4: Audio-only mode
 \`\`\`
 For very large meetings (webinars):
   - Only host/panelists have video
@@ -24517,61 +24517,61 @@ For very large meetings (webinars):
           diagramSrc: '/diagrams/zoom/deep-dive-sfu.svg',
           detail: `The SFU is the core innovation that makes large video meetings possible.
 
-**Selective forwarding:** Each participant uploads ONE stream to the SFU. The SFU forwards copies to other participants without decoding or re-encoding, using minimal CPU. This is fundamentally different from an MCU which mixes all streams into one composite.
+Selective forwarding: Each participant uploads ONE stream to the SFU. The SFU forwards copies to other participants without decoding or re-encoding, using minimal CPU. This is fundamentally different from an MCU which mixes all streams into one composite.
 
-**Simulcast:** Each sender encodes 3 quality layers simultaneously: High (1080p, 2.5 Mbps), Medium (480p, 500 Kbps), Low (180p, 100 Kbps). The SFU selects which layer to forward based on the recipient's bandwidth and whether the sender is the active speaker or a thumbnail.
+Simulcast: Each sender encodes 3 quality layers simultaneously: High (1080p, 2.5 Mbps), Medium (480p, 500 Kbps), Low (180p, 100 Kbps). The SFU selects which layer to forward based on the recipient's bandwidth and whether the sender is the active speaker or a thumbnail.
 
-**Bandwidth savings:** In a 9-person meeting without simulcast, each person downloads 8 x 2.5 Mbps = 20 Mbps. With simulcast (1 HD active speaker + 7 low thumbnails): 2.5 + 7 x 0.1 = **3.2 Mbps** -- a 6x reduction.`
+Bandwidth savings: In a 9-person meeting without simulcast, each person downloads 8 x 2.5 Mbps = 20 Mbps. With simulcast (1 HD active speaker + 7 low thumbnails): 2.5 + 7 x 0.1 = 3.2 Mbps -- a 6x reduction.`
         },
         {
           topic: 'Cascaded SFU Architecture for Global Meetings',
           diagramSrc: '/diagrams/zoom/deep-dive-cascaded-sfu.svg',
           detail: `A single SFU cannot serve a meeting spanning US, Europe, and Asia with <150ms latency.
 
-**Cascaded SFUs:** Deploy regional SFU clusters (US-West, US-East, EU, Asia). Participants connect to the nearest SFU. SFUs relay streams between each other over dedicated backbone links with <50ms inter-SFU latency.
+Cascaded SFUs: Deploy regional SFU clusters (US-West, US-East, EU, Asia). Participants connect to the nearest SFU. SFUs relay streams between each other over dedicated backbone links with <50ms inter-SFU latency.
 
-**Tree topology:** For a meeting with participants in 3 regions, one SFU is elected as the "root." Each participant's stream traverses at most 2 SFU hops (local -> root -> remote). This limits latency while avoiding N-squared SFU-to-SFU connections.
+Tree topology: For a meeting with participants in 3 regions, one SFU is elected as the "root." Each participant's stream traverses at most 2 SFU hops (local -> root -> remote). This limits latency while avoiding N-squared SFU-to-SFU connections.
 
-**Failover:** If a regional SFU fails, participants reconnect to the next nearest SFU within 2-3 seconds via ICE restart. The meeting continues without interruption for other regions.`
+Failover: If a regional SFU fails, participants reconnect to the next nearest SFU within 2-3 seconds via ICE restart. The meeting continues without interruption for other regions.`
         },
         {
           topic: 'Adaptive Bitrate and Congestion Control',
           diagramSrc: '/diagrams/zoom/simulcast-flow.svg',
           detail: `Network conditions change constantly during a meeting. The system must adapt in real-time.
 
-**Google Congestion Control (GCC):** WebRTC's built-in algorithm estimates available bandwidth by monitoring packet loss and round-trip time. When congestion is detected, the encoder reduces bitrate within 1-2 seconds.
+Google Congestion Control (GCC): WebRTC's built-in algorithm estimates available bandwidth by monitoring packet loss and round-trip time. When congestion is detected, the encoder reduces bitrate within 1-2 seconds.
 
-**Simulcast layer switching:** The SFU monitors each recipient's bandwidth. If a recipient's connection degrades, the SFU switches them from the High layer to Medium or Low -- instantly, with no re-negotiation needed. When bandwidth recovers, it switches back.
+Simulcast layer switching: The SFU monitors each recipient's bandwidth. If a recipient's connection degrades, the SFU switches them from the High layer to Medium or Low -- instantly, with no re-negotiation needed. When bandwidth recovers, it switches back.
 
-**FEC (Forward Error Correction):** Add redundant packets so that 5-10% packet loss can be recovered without retransmission. This adds ~10% bandwidth overhead but eliminates visible artifacts (frozen frames, audio glitches).
+FEC (Forward Error Correction): Add redundant packets so that 5-10% packet loss can be recovered without retransmission. This adds ~10% bandwidth overhead but eliminates visible artifacts (frozen frames, audio glitches).
 
-**Jitter buffer:** Client-side buffer absorbs network jitter (variable packet arrival times). Too small = choppy audio. Too large = added latency. Adaptive jitter buffers auto-tune between 20-200ms based on measured jitter.`
+Jitter buffer: Client-side buffer absorbs network jitter (variable packet arrival times). Too small = choppy audio. Too large = added latency. Adaptive jitter buffers auto-tune between 20-200ms based on measured jitter.`
         },
         {
           topic: 'Recording Architecture',
           diagramSrc: '/diagrams/zoom/video-stream-flow.svg',
           detail: `Cloud recording requires a "ghost participant" that captures all streams.
 
-**Recording bot:** A headless client joins the meeting as a participant, receiving all audio/video streams from the SFU. It records the raw RTP packets to a local buffer.
+Recording bot: A headless client joins the meeting as a participant, receiving all audio/video streams from the SFU. It records the raw RTP packets to a local buffer.
 
-**Composition:** The recording service composites multiple video streams into a single video file using a layout engine (gallery view or active speaker view). This is CPU-intensive -- approximately 1.5x real-time for transcoding.
+Composition: The recording service composites multiple video streams into a single video file using a layout engine (gallery view or active speaker view). This is CPU-intensive -- approximately 1.5x real-time for transcoding.
 
-**Storage:** Raw recordings are stored in S3 during the meeting, then transcoded to MP4 (H.264 + AAC) post-meeting. A 1-hour meeting with 720p produces approximately **500 MB** of compressed video.
+Storage: Raw recordings are stored in S3 during the meeting, then transcoded to MP4 (H.264 + AAC) post-meeting. A 1-hour meeting with 720p produces approximately 500 MB of compressed video.
 
-**Transcription:** Audio is streamed to a speech-to-text service (Whisper or custom model) for real-time captions and post-meeting transcripts. Accuracy: ~95% for clear English.`
+Transcription: Audio is streamed to a speech-to-text service (Whisper or custom model) for real-time captions and post-meeting transcripts. Accuracy: ~95% for clear English.`
         },
         {
           topic: 'NAT Traversal with STUN/TURN',
           diagramSrc: '/diagrams/zoom/deep-dive-nat-traversal.svg',
           detail: `~85% of users are behind NAT (Network Address Translation) and cannot receive direct UDP connections.
 
-**STUN (Session Traversal Utilities for NAT):** Helps the client discover its public IP and port. Works for most NATs by exchanging probes with a STUN server. Lightweight -- just a few UDP packets during setup.
+STUN (Session Traversal Utilities for NAT): Helps the client discover its public IP and port. Works for most NATs by exchanging probes with a STUN server. Lightweight -- just a few UDP packets during setup.
 
-**TURN (Traversal Using Relays around NAT):** When STUN fails (symmetric NAT, corporate firewalls), all media is relayed through a TURN server. This works universally but adds latency (~20-50ms) and bandwidth cost (server must forward all media).
+TURN (Traversal Using Relays around NAT): When STUN fails (symmetric NAT, corporate firewalls), all media is relayed through a TURN server. This works universally but adds latency (~20-50ms) and bandwidth cost (server must forward all media).
 
-**Statistics:** ~85% of connections succeed with STUN only. ~13% need TURN relay. ~2% fail and fall back to TCP/443 tunneling (for firewalls blocking UDP entirely).
+Statistics: ~85% of connections succeed with STUN only. ~13% need TURN relay. ~2% fail and fall back to TCP/443 tunneling (for firewalls blocking UDP entirely).
 
-**TURN infrastructure:** Zoom operates TURN servers in every major region. Each TURN server can relay ~10 Gbps of media traffic. Total TURN infrastructure: ~15% of total platform bandwidth.`
+TURN infrastructure: Zoom operates TURN servers in every major region. Each TURN server can relay ~10 Gbps of media traffic. Total TURN infrastructure: ~15% of total platform bandwidth.`
         }
       ],
 
@@ -24979,7 +24979,7 @@ posts {
       keyQuestions: [
         {
           question: 'How do we compute connection degrees?',
-          answer: `**Connection Degrees**:
+          answer: `Connection Degrees:
 \`\`\`
 1st degree: Direct connections (friends)
 2nd degree: Friends of friends
@@ -24988,7 +24988,7 @@ posts {
 "You and John have 15 mutual connections"
 \`\`\`
 
-**Challenge**:
+Challenge:
 \`\`\`
 User with 500 connections:
   1st degree: 500 (stored)
@@ -24998,7 +24998,7 @@ User with 500 connections:
 Can't precompute 2nd/3rd degree for everyone
 \`\`\`
 
-**Solution: Real-time Computation**
+Solution: Real-time Computation
 \`\`\`
 // Finding 2nd degree connections
 def get_2nd_degree(user_id, limit=100):
@@ -25018,7 +25018,7 @@ def get_2nd_degree(user_id, limit=100):
     return second_degree[:limit]
 \`\`\`
 
-**Mutual Connections**:
+Mutual Connections:
 \`\`\`
 // "You and John have 15 mutual connections"
 def get_mutual_connections(user_a, user_b):
@@ -25030,7 +25030,7 @@ def get_mutual_connections(user_a, user_b):
 SINTER connections:user_a connections:user_b
 \`\`\`
 
-**Graph Database Option**:
+Graph Database Option:
 \`\`\`
 // LinkedIn uses custom graph DB (Liquid)
 // Can query: "2nd degree with skill:Python"
@@ -25043,7 +25043,7 @@ RETURN stranger LIMIT 100
         },
         {
           question: 'How does job-candidate matching work?',
-          answer: `**Two-Sided Matching**:
+          answer: `Two-Sided Matching:
 \`\`\`
 Jobs → Candidates (recruiter search)
 Candidates → Jobs (job recommendations)
@@ -25051,7 +25051,7 @@ Candidates → Jobs (job recommendations)
 Both need efficient, relevant matching
 \`\`\`
 
-**Feature Extraction**:
+Feature Extraction:
 \`\`\`
 Job Features:
   - Required skills (normalized)
@@ -25070,7 +25070,7 @@ Candidate Features:
   - Career trajectory embedding
 \`\`\`
 
-**Matching Score**:
+Matching Score:
 \`\`\`
 score(job, candidate) =
     skill_match × 0.4 +
@@ -25083,7 +25083,7 @@ score(job, candidate) =
 skill_match = |job.skills ∩ candidate.skills| / |job.skills|
 \`\`\`
 
-**ML Enhancement**:
+ML Enhancement:
 \`\`\`
 Train on historical data:
   - Which jobs did similar candidates apply to?
@@ -25096,7 +25096,7 @@ Embedding Model:
   - Similarity = cosine(job_vec, candidate_vec)
 \`\`\`
 
-**Indexing for Search**:
+Indexing for Search:
 \`\`\`
 Elasticsearch for filtering:
   - Location, skills, experience (structured filters)
@@ -25107,7 +25107,7 @@ Then re-rank top 1000 with ML model
         },
         {
           question: 'How does the LinkedIn feed work?',
-          answer: `**Feed Content Sources**:
+          answer: `Feed Content Sources:
 \`\`\`
 1. Connection activity (posts, new jobs, work anniversaries)
 2. Followed companies/influencers
@@ -25116,7 +25116,7 @@ Then re-rank top 1000 with ML model
 5. Job recommendations
 \`\`\`
 
-**Fan-out Strategy** (similar to Facebook):
+Fan-out Strategy (similar to Facebook):
 \`\`\`
 On post creation:
   - Connections < 10K: Push to connections' feeds
@@ -25127,14 +25127,14 @@ Why different?
   - Influencers would create too many writes
 \`\`\`
 
-**Ranking Signals**:
+Ranking Signals:
 
-- **Content quality** — engagement (likes, comments, shares), dwell time on similar content, author credibility.
-- **Relevance** — shared skills/industry with author, connection strength (frequent interactions), topic relevance to your interests.
-- **Freshness** — time decay (newer = better), but suppress repeated content.
-- **Business goals** — mix in sponsored content, surface job recommendations, promote engagement (comments > likes).
+- Content quality — engagement (likes, comments, shares), dwell time on similar content, author credibility.
+- Relevance — shared skills/industry with author, connection strength (frequent interactions), topic relevance to your interests.
+- Freshness — time decay (newer = better), but suppress repeated content.
+- Business goals — mix in sponsored content, surface job recommendations, promote engagement (comments > likes).
 
-**"Who Viewed Your Profile"**:
+"Who Viewed Your Profile":
 \`\`\`
 Async processing pipeline:
   Profile view → Kafka → View Counter Service
@@ -25214,45 +25214,45 @@ Privacy: Option to view anonymously (hides viewer)
           topic: 'Social Graph Storage and Traversal',
           detail: `LinkedIn's graph of 100B+ edges is too large for a single database. The custom graph store uses adjacency list representation.
 
-**Storage:** Each member's connections stored as a sorted list of member IDs. The entire graph is partitioned across ~100 shards by member ID hash. Each shard fits in memory (~20 GB per shard).
+Storage: Each member's connections stored as a sorted list of member IDs. The entire graph is partitioned across ~100 shards by member ID hash. Each shard fits in memory (~20 GB per shard).
 
-**2nd-degree query:** To find mutual connections between members A and B: fetch A's adjacency list (500 IDs) and B's adjacency list (500 IDs), then compute the set intersection. With sorted lists, this is O(n+m) = ~1,000 comparisons in <10ms.
+2nd-degree query: To find mutual connections between members A and B: fetch A's adjacency list (500 IDs) and B's adjacency list (500 IDs), then compute the set intersection. With sorted lists, this is O(n+m) = ~1,000 comparisons in <10ms.
 
-**3rd-degree:** Much more expensive. For "People You May Know," pre-compute top candidates offline using graph algorithms (triangle counting, Jaccard similarity) and cache per member. Refresh daily.`
+3rd-degree: Much more expensive. For "People You May Know," pre-compute top candidates offline using graph algorithms (triangle counting, Jaccard similarity) and cache per member. Refresh daily.`
         },
         {
           topic: 'Job-Candidate Matching with ML',
           detail: `Matching 15M active jobs to 310M members requires sophisticated ML ranking.
 
-**Feature engineering:** Member features (skills, experience years, industry, location, seniority) and job features (required skills, company size, industry, salary range) are combined into a feature vector.
+Feature engineering: Member features (skills, experience years, industry, location, seniority) and job features (required skills, company size, industry, salary range) are combined into a feature vector.
 
-**Model:** A deep learning model trained on historical successful placements predicts the probability of a member applying AND being hired. Features include: skill overlap score, experience match, location proximity, company connection strength (do they know someone there?).
+Model: A deep learning model trained on historical successful placements predicts the probability of a member applying AND being hired. Features include: skill overlap score, experience match, location proximity, company connection strength (do they know someone there?).
 
-**Serving:** Pre-compute top 100 job recommendations per active member daily. Cache in a per-member recommendation store. Real-time re-ranking on job search using the same model with the search query as additional context.
+Serving: Pre-compute top 100 job recommendations per active member daily. Cache in a per-member recommendation store. Real-time re-ranking on job search using the same model with the search query as additional context.
 
-**Cold start:** New members get recommendations based on their stated skills and job title. New jobs are boosted in relevance for 48 hours to gather initial interaction signals.`
+Cold start: New members get recommendations based on their stated skills and job title. New jobs are boosted in relevance for 48 hours to gather initial interaction signals.`
         },
         {
           topic: 'Professional Feed Ranking',
           detail: `LinkedIn's feed must balance engagement with professional relevance -- unlike Facebook, memes and clickbait are demoted.
 
-**Content classifier:** An NLP model scores each post on a "professional relevance" scale. Posts about career advice, industry news, and job changes score high. Personal life content and political rants score low.
+Content classifier: An NLP model scores each post on a "professional relevance" scale. Posts about career advice, industry news, and job changes score high. Personal life content and political rants score low.
 
-**Ranking signals:** P(like) x weight_like + P(comment) x weight_comment + P(share) x weight_share + professional_score x weight_professional. Comment weight is highest because LinkedIn values conversation.
+Ranking signals: P(like) x weight_like + P(comment) x weight_comment + P(share) x weight_share + professional_score x weight_professional. Comment weight is highest because LinkedIn values conversation.
 
-**Diversity rules:** No more than 2 consecutive posts from the same author. Mix post types (text, image, article, job change). Ensure industry diversity -- don't show all tech posts to a tech worker.
+Diversity rules: No more than 2 consecutive posts from the same author. Mix post types (text, image, article, job change). Ensure industry diversity -- don't show all tech posts to a tech worker.
 
-**Creator-side optimization:** LinkedIn shows posts to a small test audience first (100-500 views), measures engagement, then decides whether to distribute more widely. This is why LinkedIn posts sometimes "go viral" 24 hours after posting.`
+Creator-side optimization: LinkedIn shows posts to a small test audience first (100-500 views), measures engagement, then decides whether to distribute more widely. This is why LinkedIn posts sometimes "go viral" 24 hours after posting.`
         },
         {
           topic: 'Search Across Multiple Entity Types',
           detail: `LinkedIn search spans members (1.2B), companies (69M), jobs (15M), and posts (billions).
 
-**Federated search:** A single search query is dispatched to multiple specialized indexes: people search (Elasticsearch with member profiles), job search (separate index optimized for skill matching), company search, and content search. Results are merged and re-ranked.
+Federated search: A single search query is dispatched to multiple specialized indexes: people search (Elasticsearch with member profiles), job search (separate index optimized for skill matching), company search, and content search. Results are merged and re-ranked.
 
-**Personalization signals:** The same query "product manager" returns different results for different searchers. A recruiter sees candidates. A job seeker sees job listings. A networker sees connections. Personalization is applied as a re-ranking layer on top of relevance scores.
+Personalization signals: The same query "product manager" returns different results for different searchers. A recruiter sees candidates. A job seeker sees job listings. A networker sees connections. Personalization is applied as a re-ranking layer on top of relevance scores.
 
-**Typeahead:** Pre-computed suggestions based on the searcher's network. "J" might suggest "John Smith" (1st connection) before "Jane Doe" (2nd connection). Network proximity is a strong signal.`
+Typeahead: Pre-computed suggestions based on the searcher's network. "J" might suggest "John Smith" (1st connection) before "Jane Doe" (2nd connection). Network proximity is a strong signal.`
         }
       ],
 
@@ -25594,15 +25594,15 @@ aggregated_clicks (OLAP store) {
       keyQuestions: [
         {
           question: 'How do we handle exactly-once processing?',
-          answer: `**The Challenge**: Clicks must be counted exactly once for accurate billing.
+          answer: `The Challenge: Clicks must be counted exactly once for accurate billing.
 
-**Solution: Kafka + Idempotent Consumers**:
+Solution: Kafka + Idempotent Consumers:
 - Each click event has a unique click_id
 - Kafka provides at-least-once delivery
 - Consumer deduplicates using click_id in a Redis set (TTL 24h)
 - Flink/Spark Streaming with checkpointing for fault tolerance
 
-**Watermark Strategy for Late Events**:
+Watermark Strategy for Late Events:
 - Use event-time processing with watermarks
 - Allow up to 5 minutes of late data
 - Late events trigger incremental aggregation updates
@@ -25610,20 +25610,20 @@ aggregated_clicks (OLAP store) {
         },
         {
           question: 'How do we detect click fraud?',
-          answer: `**Real-time Fraud Detection Pipeline**:
+          answer: `Real-time Fraud Detection Pipeline:
 
-**Rule-based filters** (inline, low latency):
+Rule-based filters (inline, low latency):
 - Same user clicking same ad > 5 times in 1 minute
 - Click-through rate anomaly (>10x normal)
 - Known bot user-agents
 - Data center IP ranges
 
-**ML-based detection** (near real-time):
+ML-based detection (near real-time):
 - Feature extraction: click patterns, timing, device fingerprint
 - Trained model flags suspicious clicks with confidence score
 - Clicks below threshold are filtered before aggregation
 
-**Architecture**: Click -> Kafka -> Fraud Filter (rules) -> Clean Stream -> Aggregator
+Architecture: Click -> Kafka -> Fraud Filter (rules) -> Clean Stream -> Aggregator
                                    -> ML Pipeline (async) -> Flag retrospectively`
         }
       ],
@@ -25634,50 +25634,50 @@ aggregated_clicks (OLAP store) {
           diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-exactly-once.png',
           detail: `Billing accuracy demands exactly-once semantics -- no click can be double-counted or lost.
 
-**Kafka at-least-once:** Kafka guarantees each message is delivered at least once. Consumers may see duplicates during rebalancing or failure recovery.
+Kafka at-least-once: Kafka guarantees each message is delivered at least once. Consumers may see duplicates during rebalancing or failure recovery.
 
-**Flink exactly-once:** Flink uses **checkpointing** (snapshots of operator state to durable storage) combined with **two-phase commit sinks**. On recovery, Flink replays from the last checkpoint, and the sink ensures no duplicate writes.
+Flink exactly-once: Flink uses checkpointing (snapshots of operator state to durable storage) combined with two-phase commit sinks. On recovery, Flink replays from the last checkpoint, and the sink ensures no duplicate writes.
 
-**Deduplication layer:** Each click has a unique click_id. A **sliding-window Bloom filter** in Redis (24-hour TTL) catches duplicates that slip through Kafka rebalancing. The Bloom filter uses ~2 GB for 500M daily clicks with <1% false positive rate.
+Deduplication layer: Each click has a unique click_id. A sliding-window Bloom filter in Redis (24-hour TTL) catches duplicates that slip through Kafka rebalancing. The Bloom filter uses ~2 GB for 500M daily clicks with <1% false positive rate.
 
-**Reconciliation:** A batch job runs hourly, re-counting clicks from Kafka raw logs and comparing with stream aggregates. Discrepancies trigger alerts and automatic adjustment.`
+Reconciliation: A batch job runs hourly, re-counting clicks from Kafka raw logs and comparing with stream aggregates. Discrepancies trigger alerts and automatic adjustment.`
         },
         {
           topic: 'Lambda Architecture for Accuracy',
           diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-lambda.png',
           detail: `Combining real-time streaming with batch processing gives both speed and accuracy.
 
-**Speed layer (Flink):** Processes clicks in real-time with sub-minute latency. Provides approximate aggregates for dashboards. Optimized for low latency over perfect accuracy.
+Speed layer (Flink): Processes clicks in real-time with sub-minute latency. Provides approximate aggregates for dashboards. Optimized for low latency over perfect accuracy.
 
-**Batch layer (Spark):** Runs hourly/daily over complete click logs in S3. Produces exact aggregates by deduplicating perfectly and applying full ML fraud detection.
+Batch layer (Spark): Runs hourly/daily over complete click logs in S3. Produces exact aggregates by deduplicating perfectly and applying full ML fraud detection.
 
-**Serving layer (ClickHouse):** Stores both real-time and batch-corrected aggregates. Dashboard queries prefer batch results when available, falling back to streaming for the most recent windows.
+Serving layer (ClickHouse): Stores both real-time and batch-corrected aggregates. Dashboard queries prefer batch results when available, falling back to streaming for the most recent windows.
 
-**Convergence:** Within 1 hour, batch catches up to streaming. Discrepancies are typically <0.1% -- within acceptable billing tolerance.`
+Convergence: Within 1 hour, batch catches up to streaming. Discrepancies are typically <0.1% -- within acceptable billing tolerance.`
         },
         {
           topic: 'Click Fraud Detection Pipeline',
           diagramSrc: '/diagrams/ad-click-aggregation/click-pipeline-flow.svg',
           detail: `Click fraud costs advertisers billions annually. Detection operates at two speeds.
 
-**Inline rules (<10ms):** Same user clicking same ad >5 times/minute. Known bot user-agents. Data center IP ranges. Click-through rate anomaly (>10x normal). These are simple, fast, and catch ~70% of fraud.
+Inline rules (<10ms): Same user clicking same ad >5 times/minute. Known bot user-agents. Data center IP ranges. Click-through rate anomaly (>10x normal). These are simple, fast, and catch ~70% of fraud.
 
-**Async ML model (<5 min):** Feature extraction on click patterns (timing, device fingerprint, geographic anomalies). A gradient-boosted tree model trained on labeled fraud data. Catches sophisticated fraud like click farms and attribution manipulation.
+Async ML model (<5 min): Feature extraction on click patterns (timing, device fingerprint, geographic anomalies). A gradient-boosted tree model trained on labeled fraud data. Catches sophisticated fraud like click farms and attribution manipulation.
 
-**Retroactive adjustment:** When ML detects fraud after billing, the system issues automatic credit adjustments to advertisers within 24 hours. All adjustments are logged in the ledger with full audit trail.`
+Retroactive adjustment: When ML detects fraud after billing, the system issues automatic credit adjustments to advertisers within 24 hours. All adjustments are logged in the ledger with full audit trail.`
         },
         {
           topic: 'Time-Window Aggregation with Watermarks',
           diagramSrc: '/diagrams/ad-click-aggregation/deep-dive-windows.png',
           detail: `Late-arriving events are inevitable in distributed systems. Watermarks define when to close a window.
 
-**Event time vs processing time:** Clicks are aggregated by event time (when the click happened) not processing time (when the server received it). This ensures consistent aggregates even when events arrive out of order.
+Event time vs processing time: Clicks are aggregated by event time (when the click happened) not processing time (when the server received it). This ensures consistent aggregates even when events arrive out of order.
 
-**Watermarks:** A watermark at time T means "all events before T have arrived." Flink advances the watermark based on the minimum event time across all Kafka partitions minus an allowed lateness (5 minutes).
+Watermarks: A watermark at time T means "all events before T have arrived." Flink advances the watermark based on the minimum event time across all Kafka partitions minus an allowed lateness (5 minutes).
 
-**Late events:** Events arriving after the watermark trigger incremental updates to already-emitted aggregates. Events more than 5 minutes late go to a dead letter queue for manual reconciliation.
+Late events: Events arriving after the watermark trigger incremental updates to already-emitted aggregates. Events more than 5 minutes late go to a dead letter queue for manual reconciliation.
 
-**Window types:** Tumbling windows (non-overlapping 1-min, 5-min, hourly, daily) for billing. Sliding windows for real-time dashboard smoothing.`
+Window types: Tumbling windows (non-overlapping 1-min, 5-min, hourly, daily) for billing. Sliding windows for real-time dashboard smoothing.`
         }
       ],
 
@@ -26013,30 +26013,30 @@ trending_queries (real-time) {
       keyQuestions: [
         {
           question: 'How does the Trie work for autocomplete?',
-          answer: `**Trie with Cached Top-K**:
+          answer: `Trie with Cached Top-K:
 - Each node stores a prefix and pointers to children
 - At each node, cache the top-K most popular completions
 - On query "goo", traverse to node 'g'->'o'->'o' and return cached top-K
 - This makes lookup O(prefix_length) regardless of total queries
 
-**Updating Top-K**:
+Updating Top-K:
 - When a search happens, increment frequency in a separate store
 - Periodically (every few minutes) rebuild top-K caches
 - Use a min-heap of size K at each node for efficient updates
 
-**Memory Optimization**:
+Memory Optimization:
 - Only cache top-K at popular prefix nodes (not every node)
 - Use compressed tries (merge single-child chains)
 - Shard trie by first 2 characters across servers`
         },
         {
           question: 'How do we handle trending queries?',
-          answer: `**Time-Decay Scoring**:
+          answer: `Time-Decay Scoring:
 - score = frequency * decay_factor^(hours_since_event)
 - Recent searches weighted much higher than old ones
 - A query searched 1000 times today ranks above one searched 5000 times last month
 
-**Real-time Trending Pipeline**:
+Real-time Trending Pipeline:
 1. Search logs -> Kafka topic
 2. Flink aggregates counts in sliding windows (5 min, 1 hour)
 3. If current_rate > 10x historical_average, mark as trending
@@ -26050,45 +26050,45 @@ trending_queries (real-time) {
           topic: 'Trie Data Structure with Cached Top-K',
           detail: `The trie (prefix tree) is the core data structure enabling O(prefix_length) lookups.
 
-**Structure:** Each node represents a character. A path from root to any node represents a prefix. At each **popular** prefix node, cache the top-K most frequent completions (e.g., top 10).
+Structure: Each node represents a character. A path from root to any node represents a prefix. At each popular prefix node, cache the top-K most frequent completions (e.g., top 10).
 
-**Lookup:** For prefix "goo", traverse root->'g'->'o'->'o' in 3 steps. Return the cached top-K at that node. No need to search the entire subtree.
+Lookup: For prefix "goo", traverse root->'g'->'o'->'o' in 3 steps. Return the cached top-K at that node. No need to search the entire subtree.
 
-**Memory optimization:** Compressed trie (merge single-child chains like "gle" into one node). Only cache top-K at prefixes with >100 queries (skip rare prefixes). Shard by first 2 characters across servers (26x26 = 676 shards).
+Memory optimization: Compressed trie (merge single-child chains like "gle" into one node). Only cache top-K at prefixes with >100 queries (skip rare prefixes). Shard by first 2 characters across servers (26x26 = 676 shards).
 
-**Rebuild:** Every 15 minutes, rebuild the trie from aggregated query frequency counts. The old trie serves reads while the new one is built, then atomically swap.`
+Rebuild: Every 15 minutes, rebuild the trie from aggregated query frequency counts. The old trie serves reads while the new one is built, then atomically swap.`
         },
         {
           topic: 'Real-Time Trending Overlay',
           detail: `Standard trie rebuilds every 15 minutes, too slow for breaking events.
 
-**Architecture:** A separate Flink streaming job monitors query logs in real-time. When a query's rate exceeds 10x its historical baseline (similar to trending detection), it is added to a **trending overlay** in Redis.
+Architecture: A separate Flink streaming job monitors query logs in real-time. When a query's rate exceeds 10x its historical baseline (similar to trending detection), it is added to a trending overlay in Redis.
 
-**Serving:** At query time, the system merges results from the static trie and the trending overlay. Trending suggestions get a score boost to appear above static results.
+Serving: At query time, the system merges results from the static trie and the trending overlay. Trending suggestions get a score boost to appear above static results.
 
-**Lifecycle:** Trending queries are promoted to the main trie at the next rebuild. The overlay is ephemeral -- entries expire after 1 hour if they stop trending.
+Lifecycle: Trending queries are promoted to the main trie at the next rebuild. The overlay is ephemeral -- entries expire after 1 hour if they stop trending.
 
-**Example:** During a breaking news event, the trending overlay surfaces "#breaking" suggestions within 2 minutes, while the trie rebuild would take 15 minutes.`
+Example: During a breaking news event, the trending overlay surfaces "#breaking" suggestions within 2 minutes, while the trie rebuild would take 15 minutes.`
         },
         {
           topic: 'Personalized Re-Ranking',
           detail: `Global suggestions work well but personal relevance improves user experience.
 
-**Approach:** Maintain a lightweight per-user history (last 100 queries) in Redis. At query time, re-rank the global top-K by boosting suggestions that match the user's recent search history or known interests.
+Approach: Maintain a lightweight per-user history (last 100 queries) in Redis. At query time, re-rank the global top-K by boosting suggestions that match the user's recent search history or known interests.
 
-**Privacy:** User history is stored as anonymized query hashes, not raw text. The system can provide personalization without knowing the actual query content.
+Privacy: User history is stored as anonymized query hashes, not raw text. The system can provide personalization without knowing the actual query content.
 
-**Cache impact:** Personalization reduces cache hit rates (different users see different suggestions). Mitigate by applying personalization as a client-side re-ranking of the global top-K, keeping the server-side cache shared.`
+Cache impact: Personalization reduces cache hit rates (different users see different suggestions). Mitigate by applying personalization as a client-side re-ranking of the global top-K, keeping the server-side cache shared.`
         },
         {
           topic: 'Content Filtering and Safety',
           detail: `Autocomplete must not suggest offensive, harmful, or legally problematic queries.
 
-**Blocklist:** A curated blocklist of terms that must never appear in suggestions (hate speech, adult content, defamation). Applied as a post-filter on every suggestion response.
+Blocklist: A curated blocklist of terms that must never appear in suggestions (hate speech, adult content, defamation). Applied as a post-filter on every suggestion response.
 
-**ML classifier:** An async classifier scans new popular queries as they emerge. Queries flagged as potentially harmful are reviewed before being added to the trie.
+ML classifier: An async classifier scans new popular queries as they emerge. Queries flagged as potentially harmful are reviewed before being added to the trie.
 
-**Legal compliance:** Autocomplete suggestions can create legal liability (defamation, right to be forgotten). Implement a takedown request workflow for individuals and organizations.`
+Legal compliance: Autocomplete suggestions can create legal liability (defamation, right to be forgotten). Implement a takedown request workflow for individuals and organizations.`
         }
       ],
 
@@ -26396,13 +26396,13 @@ cart_items {
       keyQuestions: [
         {
           question: 'How do we prevent overselling during flash sales?',
-          answer: `**Inventory Reservation Pattern**:
+          answer: `Inventory Reservation Pattern:
 1. User clicks "Buy" -> Reserve inventory (decrement available, increment reserved)
 2. Reservation has TTL (e.g., 10 minutes)
 3. Payment succeeds -> Confirm reservation (decrement reserved)
 4. Payment fails or TTL expires -> Release reservation (decrement reserved, increment available)
 
-**Implementation with Optimistic Locking**:
+Implementation with Optimistic Locking:
 \`\`\`sql
 UPDATE inventory
 SET quantity = quantity - 1, version = version + 1
@@ -26410,7 +26410,7 @@ WHERE product_id = ? AND quantity > 0 AND version = ?
 \`\`\`yaml
 If version mismatch, retry. If quantity = 0, sold out.
 
-**For extreme flash sales (>10K TPS per item)**:
+For extreme flash sales (>10K TPS per item):
 - Pre-shard inventory tokens into Redis
 - Each token = right to purchase 1 unit
 - LPOP from token list (atomic, O(1))
@@ -26418,17 +26418,17 @@ If version mismatch, retry. If quantity = 0, sold out.
         },
         {
           question: 'How is the checkout flow designed?',
-          answer: `**Saga Pattern for Distributed Checkout**:
-1. **Reserve Inventory** -> Success -> Continue
-2. **Process Payment** -> Success -> Continue
-3. **Create Order** -> Success -> Continue
-4. **Send Confirmation** -> Done
+          answer: `Saga Pattern for Distributed Checkout:
+1. Reserve Inventory -> Success -> Continue
+2. Process Payment -> Success -> Continue
+3. Create Order -> Success -> Continue
+4. Send Confirmation -> Done
 
-**Compensating Transactions** (if any step fails):
+Compensating Transactions (if any step fails):
 - Payment fails -> Release inventory reservation
 - Order creation fails -> Refund payment + release inventory
 
-**Why Saga over 2PC**:
+Why Saga over 2PC:
 - No distributed locks (better performance)
 - Each service owns its data
 - Eventual consistency is acceptable (user sees "Processing...")
@@ -26654,7 +26654,7 @@ messages {
       keyQuestions: [
         {
           question: 'How do we handle message delivery for offline users?',
-          answer: `**Message Queue per User**:
+          answer: `Message Queue per User:
 - Each user has a persistent message queue (Cassandra or Redis Streams)
 - When sender sends message:
   1. Store in messages table
@@ -26662,32 +26662,32 @@ messages {
   3. If online: push via WebSocket immediately
   4. If offline: queue message + trigger push notification
 
-**On Reconnect**:
+On Reconnect:
 - Client sends last_received_message_id
 - Server replays all queued messages since that ID
 - Client ACKs each message -> server updates delivery status
 
-**Why This Works**:
+Why This Works:
 - No message loss even during network partitions
 - Client-side dedup using message_id prevents duplicates
 - Push notifications ensure user opens app to receive`
         },
         {
           question: 'How does group messaging scale?',
-          answer: `**Fan-out on Write (for groups < 256)**:
+          answer: `Fan-out on Write (for groups < 256):
 - Sender sends message to group
 - Server writes message once to messages table
 - Server fans out to each participant:
   - Online: WebSocket push
   - Offline: Queue + push notification
 
-**Optimization for Large Groups**:
+Optimization for Large Groups:
 - Don't fan-out immediately; use lazy delivery
 - Store message in group timeline
 - Each member pulls unread messages on connect
 - Reduces write amplification for large groups
 
-**Message Ordering**:
+Message Ordering:
 - Each message gets monotonically increasing sequence_id per conversation
 - Client displays messages sorted by sequence_id
 - Server uses Lamport timestamps for distributed ordering`
@@ -26898,7 +26898,7 @@ alert_rules {
       keyQuestions: [
         {
           question: 'How is time-series data stored efficiently?',
-          answer: `**Time-Series Compression**:
+          answer: `Time-Series Compression:
 - Delta-of-delta encoding for timestamps (most intervals are regular)
   - Raw: 1000, 1010, 1020, 1030
   - Delta: 10, 10, 10 -> Delta-of-delta: 0, 0, 0 (1-2 bits each!)
@@ -26906,29 +26906,29 @@ alert_rules {
   - If values change slowly, XOR of consecutive values has many leading zeros
   - Store only the meaningful bits
 
-**Storage Layout**:
+Storage Layout:
 - Data partitioned into time blocks (e.g., 2-hour chunks)
 - Each block: metric_name + tag_set -> compressed data points
 - Recent data in memory, older data on disk
 - Downsampling: 1s resolution for 48h, 1m for 30d, 1h for 13mo
 
-**Result**: 16 bytes/point raw -> ~1.4 bytes/point compressed (10x savings)`
+Result: 16 bytes/point raw -> ~1.4 bytes/point compressed (10x savings)`
         },
         {
           question: 'How does the alerting pipeline work?',
-          answer: `**Alert Evaluation Flow**:
+          answer: `Alert Evaluation Flow:
 1. Alert Manager reads rules from config store
 2. Every evaluation_interval, query the metrics store
 3. Apply condition (e.g., avg > threshold for window)
 4. State machine: OK -> PENDING -> FIRING -> RESOLVED
 
-**Avoiding Alert Storms**:
+Avoiding Alert Storms:
 - Evaluation window prevents single-spike alerts
 - Hysteresis: different thresholds for trigger vs resolve
 - Alert grouping: batch related alerts
 - Rate limiting on notifications
 
-**High Availability**:
+High Availability:
 - Multiple alert evaluators with leader election
 - Only leader sends notifications (prevent duplicates)
 - If leader dies, follower takes over within seconds
@@ -27151,13 +27151,13 @@ merchants {
       keyQuestions: [
         {
           question: 'How does idempotency prevent double charges?',
-          answer: `**Idempotency Key Pattern**:
+          answer: `Idempotency Key Pattern:
 - Client includes unique idempotency_key with each request
 - Server checks if key exists in database before processing
 - If exists: return cached response (no reprocessing)
 - If new: process payment, store result keyed by idempotency_key
 
-**Implementation**:
+Implementation:
 \`\`\`
 1. INSERT into idempotency_keys (key, status=PROCESSING)
 2. If INSERT fails (duplicate) -> return cached result
@@ -27166,16 +27166,16 @@ merchants {
 5. Return response to client
 \`\`\`yaml
 
-**Edge Cases**:
+Edge Cases:
 - Client timeout + retry: idempotency key catches duplicate
 - Server crash mid-processing: status=PROCESSING detected on retry, check with payment network
 - Network error to payment network: mark as UNKNOWN, reconcile later`
         },
         {
           question: 'What is the payment processing flow?',
-          answer: `**Two-Phase Payment Flow**:
+          answer: `Two-Phase Payment Flow:
 
-**Phase 1: Authorization**
+Phase 1: Authorization
 1. Merchant sends payment request
 2. Gateway tokenizes card data (PCI compliance)
 3. Send auth request to card network (Visa/MC)
@@ -27183,14 +27183,14 @@ merchants {
 5. Bank approves/declines, places hold on funds
 6. Gateway returns auth result to merchant
 
-**Phase 2: Capture & Settlement**
+Phase 2: Capture & Settlement
 1. Merchant captures authorized payment (can be partial)
 2. Gateway batches captured payments
 3. Daily settlement: Gateway sends batch to acquirer
 4. Acquirer settles with card networks
 5. Funds transferred to merchant account (T+2 days)
 
-**Double-Entry Ledger**:
+Double-Entry Ledger:
 Every payment creates balanced debit + credit entries:
 - Authorization: Hold on customer account
 - Capture: Debit customer, Credit merchant (pending)
@@ -27392,14 +27392,14 @@ quadtree_node {
       keyQuestions: [
         {
           question: 'How does Geohash-based proximity search work?',
-          answer: `**Geohash Encoding**:
+          answer: `Geohash Encoding:
 - Divide world into grid cells, encode each cell as a string
 - Longer string = more precise location
   - 4 chars: ~20km cell
   - 5 chars: ~5km cell
   - 6 chars: ~1.2km cell
 
-**Search Algorithm**:
+Search Algorithm:
 1. Compute geohash of user's location (e.g., "9q8yyk")
 2. For given radius, determine required precision level
 3. Find the user's cell + 8 neighboring cells (handles edge cases)
@@ -27407,24 +27407,24 @@ quadtree_node {
 5. Filter results by exact distance calculation
 6. Sort by distance and return top results
 
-**Why Neighbors Matter**:
+Why Neighbors Matter:
 - A business 100m away might be in an adjacent geohash cell
 - Always query the 8 surrounding cells to avoid missing results
 - This is cheap: only 9 prefix queries vs millions of distance calculations`
         },
         {
           question: 'Geohash vs Quadtree: which should we use?',
-          answer: `**Geohash** (database-friendly):
+          answer: `Geohash (database-friendly):
 - Pros: Works with standard DB indexes, easy to implement, cache-friendly
 - Cons: Fixed grid (ocean cells same size as city cells)
 - Best for: Read-heavy with database storage
 
-**Quadtree** (memory-efficient):
+Quadtree (memory-efficient):
 - Pros: Adaptive density (more nodes where more businesses), efficient memory
 - Cons: Harder to distribute, requires in-memory structure
 - Best for: In-memory spatial index on single server
 
-**Recommendation**: Use Geohash for most cases
+Recommendation: Use Geohash for most cases
 - Store geohash in database, create B-tree index on prefix
 - Combine with in-memory cache of popular areas
 - Quadtree only if you need adaptive density and can fit data in memory`
@@ -27617,37 +27617,37 @@ Two main approaches exist: counter-based (using a distributed counter like ZooKe
       keyQuestions: [
         {
           question: 'How do we generate unique short codes?',
-          answer: `**Approach 1: Counter + Base62 (Recommended)**
+          answer: `Approach 1: Counter + Base62 (Recommended)
 - Use ZooKeeper/Redis to allocate ID ranges to each server
 - Each server independently converts counter to Base62
 - 7 chars of Base62 = 62^7 = 3.5 trillion unique URLs
 - No collisions, no coordination per request
 
-**Approach 2: Hash-based**
+Approach 2: Hash-based
 - Hash long URL with MD5/SHA256, take first 7 chars (Base62)
 - Collision possible: check DB, rehash if collision
 - Simpler setup but collision handling adds complexity
 
-**Base62 Encoding**:
+Base62 Encoding:
 - Characters: a-z (26) + A-Z (26) + 0-9 (10) = 62
 - Counter 12345 -> Base62 "3d7"
 - Avoids special characters that break URLs`
         },
         {
           question: 'Should we use 301 or 302 redirect?',
-          answer: `**301 Permanent Redirect**:
+          answer: `301 Permanent Redirect:
 - Browser caches the redirect
 - Subsequent visits skip our server entirely
 - Better for user latency
 - Bad for analytics (can't count repeat visits)
 
-**302 Temporary Redirect**:
+302 Temporary Redirect:
 - Browser always hits our server first
 - Every visit is tracked
 - Slightly more latency for users
 - Better for analytics and expiring URLs
 
-**Recommendation**: Use 302 if analytics matter, 301 if performance is priority. Many services use 302 by default for tracking.`
+Recommendation: Use 302 if analytics matter, 301 if performance is priority. Many services use 302 by default for tracking.`
         }
       ],
 
@@ -27855,19 +27855,19 @@ Count-Min Sketch {
       keyQuestions: [
         {
           question: 'What data structure should we use for top-K?',
-          answer: `**Option 1: Redis Sorted Set (Recommended for exact)**
+          answer: `Option 1: Redis Sorted Set (Recommended for exact)
 - ZADD: O(log N) score update
 - ZREVRANGE 0 K: O(log N + K) top-K query
 - ZREVRANK: O(log N) individual rank
 - Memory: ~100M items * 30 bytes = ~3GB (fits in memory)
 
-**Option 2: Min-Heap of size K (for streaming)**
+Option 2: Min-Heap of size K (for streaming)
 - Maintain heap of K largest items
 - New item: compare with heap min, swap if larger
 - O(log K) per update, O(K log K) to get sorted top-K
 - Good when you only need top-K, not arbitrary ranks
 
-**Option 3: Count-Min Sketch + Heap (approximate)**
+Option 3: Count-Min Sketch + Heap (approximate)
 - CMS estimates frequencies in constant space
 - Maintain min-heap of K items with highest CMS estimates
 - O(1) per update, slight overcount possible
@@ -27875,7 +27875,7 @@ Count-Min Sketch {
         },
         {
           question: 'How do we handle time-windowed leaderboards?',
-          answer: `**Approach: Separate Sorted Sets per Window**
+          answer: `Approach: Separate Sorted Sets per Window
 \`\`\`
 topk:songs:alltime      -- never expires
 topk:songs:weekly:2024-W23  -- expires after 2 weeks
@@ -27883,17 +27883,17 @@ topk:songs:daily:2024-06-05  -- expires after 7 days
 topk:songs:hourly:2024-06-05-14  -- expires after 48 hours
 \`\`\`
 
-**On Score Update**:
+On Score Update:
 1. ZADD to all active windows atomically (MULTI/EXEC)
 2. Set TTL on time-windowed keys
 
-**Window Rotation**:
+Window Rotation:
 - New time window = new Redis key (empty)
 - Old window stops receiving writes
 - Old window kept for read access until TTL
 - No expensive "reset" operation needed
 
-**Combining Windows**:
+Combining Windows:
 - "This week's top" = ZUNIONSTORE across 7 daily keys
 - Computed on-demand or pre-computed periodically`
         }

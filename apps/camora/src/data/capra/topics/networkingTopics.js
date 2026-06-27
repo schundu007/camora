@@ -106,25 +106,25 @@ export const networkingTopics = [
         image: '/diagrams/networking/osi-model-encapsulation.png',
       },
     ],
-    introduction: `The **OSI model** is a conceptual framework dividing network communication into seven layers:
-- **Layer 1 — Physical**: bits and signals (cables, radio, fiber)
-- **Layer 2 — Data Link**: MAC addressing, Ethernet frames, switches
-- **Layer 3 — Network**: IP addressing and routing (routers, VPC route tables)
-- **Layer 4 — Transport**: TCP (reliable, ordered) and UDP (connectionless)
-- **Layer 5 — Session**: session establishment and teardown
-- **Layer 6 — Presentation**: encoding, encryption (TLS spans L4-L6)
-- **Layer 7 — Application**: HTTP, HTTPS, DNS, SMTP, gRPC
+    introduction: `The OSI model is a conceptual framework dividing network communication into seven layers:
+- Layer 1 — Physical: bits and signals (cables, radio, fiber)
+- Layer 2 — Data Link: MAC addressing, Ethernet frames, switches
+- Layer 3 — Network: IP addressing and routing (routers, VPC route tables)
+- Layer 4 — Transport: TCP (reliable, ordered) and UDP (connectionless)
+- Layer 5 — Session: session establishment and teardown
+- Layer 6 — Presentation: encoding, encryption (TLS spans L4-L6)
+- Layer 7 — Application: HTTP, HTTPS, DNS, SMTP, gRPC
 
-The **TCP/IP model** (the actual Internet stack) collapses OSI into four layers: **Link** (OSI 1-2), **Internet** (OSI 3), **Transport** (OSI 4), **Application** (OSI 5-7).
+The TCP/IP model (the actual Internet stack) collapses OSI into four layers: Link (OSI 1-2), Internet (OSI 3), Transport (OSI 4), Application (OSI 5-7).
 
-**Encapsulation** means each layer wraps the payload above with its own header as data travels down the stack, and strips headers traveling up (**decapsulation**). An HTTP request becomes: Application HTTP payload wrapped in Transport TCP segment wrapped in Network IP packet wrapped in Link Ethernet frame.
+Encapsulation means each layer wraps the payload above with its own header as data travels down the stack, and strips headers traveling up (decapsulation). An HTTP request becomes: Application HTTP payload wrapped in Transport TCP segment wrapped in Network IP packet wrapped in Link Ethernet frame.
 
 ## Layers that matter most for DevOps
 
 Understanding which layer a problem lives at determines the right tools and fixes:
-- **Layer 3** — IP routing, VPC routing tables, Security Groups (stateful packet filter), ICMP
-- **Layer 4** — TCP ports, NACLs (stateless L4 rules), TCP load balancers, connection tracking
-- **Layer 7** — HTTP, ALB (application load balancer), WAF rules, application authentication
+- Layer 3 — IP routing, VPC routing tables, Security Groups (stateful packet filter), ICMP
+- Layer 4 — TCP ports, NACLs (stateless L4 rules), TCP load balancers, connection tracking
+- Layer 7 — HTTP, ALB (application load balancer), WAF rules, application authentication
 
 "Cannot reach the server" at Layer 3 (routing) requires different tools than "SSL handshake failed" at Layer 6 (TLS) or "authentication rejected" at Layer 7.`,
     whenToUse: [
@@ -614,29 +614,29 @@ Cloudfront behaviors map URL patterns to cache policies and origins. You can ser
     keyQuestions: [
       {
         question: 'How would you architect a CloudFront distribution to serve both static assets and a dynamic API through the same domain?',
-        answer: `Use **CloudFront behaviors** (ordered routing rules) to route different URL patterns to different origins with different cache policies.
+        answer: `Use CloudFront behaviors (ordered routing rules) to route different URL patterns to different origins with different cache policies.
 
 ## Architecture
 
 Domain: cdn.example.com → CloudFront distribution
 
-**Behavior 1 — /api/* (most specific)**
+Behavior 1 — /api/* (most specific)
 - Origin: ALB at api.example.com
 - Cache policy: CachingDisabled (all requests forwarded to origin)
 - Origin request policy: include all headers (preserve Authorization, Content-Type)
 - TTL: 0
 
-**Behavior 2 — /static/***
+Behavior 2 — /static/*
 - Origin: S3 bucket
 - Cache policy: long TTL (max-age=31536000, 1 year)
 - Cache key: URL only (no headers, no cookies)
 
-**Behavior 3 — /* (default)**
+Behavior 3 — /* (default)
 - Origin: ALB at web.example.com (SSR HTML)
 - Cache policy: short TTL (max-age=60s) or CachingDisabled
 - Cache key: URL + Accept-Language header (for language variants)
 
-Enable **origin shield** on the S3 origin to consolidate misses for popular assets.
+Enable origin shield on the S3 origin to consolidate misses for popular assets.
 
 ## Versioned assets
 
@@ -648,7 +648,7 @@ Deploy static JS/CSS with content-hash filenames (main.abc123.js). Long TTL is s
 aws cloudfront create-invalidation --distribution-id E123 --paths "/index.html" "/api/*"
 \`\`\`yaml
 
-**Result**: static assets cached at edges indefinitely (low cost, low latency), API always fresh (bypass cache), HTML pages short TTL with fast invalidation capability.`,
+Result: static assets cached at edges indefinitely (low cost, low latency), API always fresh (bypass cache), HTML pages short TTL with fast invalidation capability.`,
       },
     ],
     references: [
@@ -688,31 +688,31 @@ aws cloudfront create-invalidation --distribution-id E123 --paths "/index.html" 
         image: '/diagrams/networking/aws-vpc-design-connectivity.png',
       },
     ],
-    introduction: `A **VPC (Virtual Private Cloud)** is an isolated virtual network in AWS. Every VPC has a CIDR block (e.g., 10.0.0.0/16) defining its address space. Subnets are subdivisions of the VPC CIDR, each tied to one Availability Zone.
+    introduction: `A VPC (Virtual Private Cloud) is an isolated virtual network in AWS. Every VPC has a CIDR block (e.g., 10.0.0.0/16) defining its address space. Subnets are subdivisions of the VPC CIDR, each tied to one Availability Zone.
 
 ## Subnet types
 
-- **Public subnets** — route table has a route to an **Internet Gateway (IGW)**. Resources need a public or Elastic IP for direct internet connectivity.
-- **Private subnets** — no IGW route. Outbound internet access goes through a **NAT Gateway** deployed in a public subnet. Inbound internet access is not possible.
-- **Isolated subnets** — no internet route at all. Used for databases (RDS, ElastiCache) and internal services.
+- Public subnets — route table has a route to an Internet Gateway (IGW). Resources need a public or Elastic IP for direct internet connectivity.
+- Private subnets — no IGW route. Outbound internet access goes through a NAT Gateway deployed in a public subnet. Inbound internet access is not possible.
+- Isolated subnets — no internet route at all. Used for databases (RDS, ElastiCache) and internal services.
 
 ## CIDR planning
 
-CIDR is **hard to undo** — plan carefully upfront. AWS reserves 5 IPs per subnet (network address, VPC router, DNS, future use, broadcast). A /24 has 251 usable IPs; a /28 has only 11. ECS tasks, Lambda VPC functions, and Kubernetes pods each consume an ENI IP. Plan for **2-3x your expected peak**.
+CIDR is hard to undo — plan carefully upfront. AWS reserves 5 IPs per subnet (network address, VPC router, DNS, future use, broadcast). A /24 has 251 usable IPs; a /28 has only 11. ECS tasks, Lambda VPC functions, and Kubernetes pods each consume an ENI IP. Plan for 2-3x your expected peak.
 
 Avoid CIDR conflicts with on-premises networks if you plan VPN or Direct Connect.
 
 ## Multi-tier architecture
 
-- **Public subnet** — ALB, NAT Gateway, bastion host
-- **Private-app subnet** — ECS tasks, EC2 application servers
-- **Private-data subnet** — RDS, ElastiCache (no internet route)
+- Public subnet — ALB, NAT Gateway, bastion host
+- Private-app subnet — ECS tasks, EC2 application servers
+- Private-data subnet — RDS, ElastiCache (no internet route)
 
 Security groups chain the tiers: ALB SG allows 0.0.0.0/0:443 → app SG allows only from ALB SG → data SG allows only from app SG.
 
 ## NAT Gateway per AZ
 
-A NAT Gateway is **single-AZ**. If you use one NAT Gateway for all private subnets, an AZ failure takes out internet connectivity for all private subnets. Best practice: deploy one NAT Gateway per AZ and configure each AZ's private route table to use its local NAT Gateway.`,
+A NAT Gateway is single-AZ. If you use one NAT Gateway for all private subnets, an AZ failure takes out internet connectivity for all private subnets. Best practice: deploy one NAT Gateway per AZ and configure each AZ's private route table to use its local NAT Gateway.`,
     whenToUse: [
       'Designing a multi-tier VPC for a new AWS workload from scratch',
       'Explaining why private subnets still need a NAT Gateway for outbound internet',
@@ -720,11 +720,11 @@ A NAT Gateway is **single-AZ**. If you use one NAT Gateway for all private subne
       'Avoiding cross-AZ NAT Gateway traffic costs by deploying per-AZ NAT',
     ],
     keyConcepts: [
-      { term: 'Internet Gateway (IGW)', definition: '**Horizontally scaled, redundant** gateway attached to a VPC. Resources in public subnets use it for inbound and outbound internet traffic (requires Elastic IP or public IP).' },
-      { term: 'NAT Gateway', definition: '**Managed NAT device** in a public subnet. Allows private subnet resources to initiate outbound internet connections without exposing inbound ports. **Single-AZ** — deploy one per AZ for HA.' },
-      { term: 'Route table', definition: '**Per-subnet routing rules**. Main route table applies to all unassociated subnets. Custom route tables for public (with IGW route) and private (with NAT route) subnets.' },
-      { term: 'VPC Endpoint', definition: '**Private connection** between VPC and AWS services (S3, DynamoDB, SSM) without internet. **Gateway endpoints** (S3, DynamoDB) are free. **Interface endpoints** use PrivateLink (per-hour + data cost).' },
-      { term: 'Security group vs NACL', definition: '**Security groups**: stateful, instance-level, allow rules only, evaluated as a set. **NACLs**: stateless, subnet-level, allow and deny rules, evaluated in order by rule number.' },
+      { term: 'Internet Gateway (IGW)', definition: 'Horizontally scaled, redundant gateway attached to a VPC. Resources in public subnets use it for inbound and outbound internet traffic (requires Elastic IP or public IP).' },
+      { term: 'NAT Gateway', definition: 'Managed NAT device in a public subnet. Allows private subnet resources to initiate outbound internet connections without exposing inbound ports. Single-AZ — deploy one per AZ for HA.' },
+      { term: 'Route table', definition: 'Per-subnet routing rules. Main route table applies to all unassociated subnets. Custom route tables for public (with IGW route) and private (with NAT route) subnets.' },
+      { term: 'VPC Endpoint', definition: 'Private connection between VPC and AWS services (S3, DynamoDB, SSM) without internet. Gateway endpoints (S3, DynamoDB) are free. Interface endpoints use PrivateLink (per-hour + data cost).' },
+      { term: 'Security group vs NACL', definition: 'Security groups: stateful, instance-level, allow rules only, evaluated as a set. NACLs: stateless, subnet-level, allow and deny rules, evaluated in order by rule number.' },
     ],
     pitfalls: [
       'Choosing a VPC CIDR that overlaps with on-premises networks — VPC peering and VPN/Direct Connect require non-overlapping CIDRs. Use RFC 1918 ranges not used by corporate networks.',
@@ -734,7 +734,7 @@ A NAT Gateway is **single-AZ**. If you use one NAT Gateway for all private subne
     keyQuestions: [
       {
         question: 'Design the VPC architecture for a three-tier web application that must be highly available across two AZs.',
-        answer: `**VPC CIDR**: 10.0.0.0/16 (65,536 addresses)
+        answer: `VPC CIDR: 10.0.0.0/16 (65,536 addresses)
 
 ## Subnets
 
@@ -752,53 +752,53 @@ AZ-b:
 
 ## Gateways
 
-- **Internet Gateway**: attached to VPC (shared across both AZs)
-- **NAT Gateway AZ-a**: deployed in 10.0.0.0/24 (public-a), has Elastic IP
-- **NAT Gateway AZ-b**: deployed in 10.0.1.0/24 (public-b), has Elastic IP
+- Internet Gateway: attached to VPC (shared across both AZs)
+- NAT Gateway AZ-a: deployed in 10.0.0.0/24 (public-a), has Elastic IP
+- NAT Gateway AZ-b: deployed in 10.0.1.0/24 (public-b), has Elastic IP
 
 ## Route tables
 
-- **public-rt**: 0.0.0.0/0 → IGW (associated with both public subnets)
-- **private-app-a-rt**: 0.0.0.0/0 → NAT-Gateway-AZ-a
-- **private-app-b-rt**: 0.0.0.0/0 → NAT-Gateway-AZ-b
-- **private-data-rt**: no internet route (fully isolated)
+- public-rt: 0.0.0.0/0 → IGW (associated with both public subnets)
+- private-app-a-rt: 0.0.0.0/0 → NAT-Gateway-AZ-a
+- private-app-b-rt: 0.0.0.0/0 → NAT-Gateway-AZ-b
+- private-data-rt: no internet route (fully isolated)
 
 ## Security groups
 
-- **alb-sg**: inbound 443 from 0.0.0.0/0; outbound 8080 to app-sg
-- **app-sg**: inbound 8080 from alb-sg; outbound 5432 to data-sg, 443 to internet (for AWS API calls)
-- **data-sg**: inbound 5432 from app-sg only
+- alb-sg: inbound 443 from 0.0.0.0/0; outbound 8080 to app-sg
+- app-sg: inbound 8080 from alb-sg; outbound 5432 to data-sg, 443 to internet (for AWS API calls)
+- data-sg: inbound 5432 from app-sg only
 
 If AZ-a fails, AZ-b continues fully independently. Each AZ has its own NAT Gateway, so a NAT failure is contained to one AZ.
 
-**Cost note**: two NAT Gateways cost ~$65/month base plus data transfer. For dev environments, use a single NAT Gateway to save cost and accept reduced redundancy.`,
+Cost note: two NAT Gateways cost ~$65/month base plus data transfer. For dev environments, use a single NAT Gateway to save cost and accept reduced redundancy.`,
       },
       {
         question: 'What is the difference between VPC peering, Transit Gateway, and PrivateLink? When do you use each?',
         answer: `## VPC Peering
 
-A **direct private link** between two specific VPCs (same or different accounts/regions). Traffic routes through the AWS backbone. **Non-transitive**: if A peers B and B peers C, A cannot reach C through B. Requires non-overlapping CIDRs. Same-AZ traffic is free; cross-AZ and cross-region incur transfer costs.
+A direct private link between two specific VPCs (same or different accounts/regions). Traffic routes through the AWS backbone. Non-transitive: if A peers B and B peers C, A cannot reach C through B. Requires non-overlapping CIDRs. Same-AZ traffic is free; cross-AZ and cross-region incur transfer costs.
 
-**Best for**: small number of VPC pairs, simple mesh topologies, precise routing control.
+Best for: small number of VPC pairs, simple mesh topologies, precise routing control.
 
 ## Transit Gateway
 
-A **hub-and-spoke routing service**. Attach multiple VPCs (and VPNs, Direct Connect) to one TGW. Each VPC only needs one attachment; TGW routes between all attached networks. Supports thousands of VPCs, route domains (for isolation), and cross-region peering.
+A hub-and-spoke routing service. Attach multiple VPCs (and VPNs, Direct Connect) to one TGW. Each VPC only needs one attachment; TGW routes between all attached networks. Supports thousands of VPCs, route domains (for isolation), and cross-region peering.
 
-**Cost**: per-hour attachment cost plus data processing fee.
-**Best for**: large multi-VPC architectures, hybrid cloud (on-premises + AWS), complex routing policies.
+Cost: per-hour attachment cost plus data processing fee.
+Best for: large multi-VPC architectures, hybrid cloud (on-premises + AWS), complex routing policies.
 
 ## PrivateLink
 
-Exposes a **specific service** (behind an NLB) to other VPCs via interface endpoints (private IPs in the consumer VPC). The service never enters the consumer VPC — only the endpoint IP does. Works across accounts and regions without peering or CIDR constraints.
+Exposes a specific service (behind an NLB) to other VPCs via interface endpoints (private IPs in the consumer VPC). The service never enters the consumer VPC — only the endpoint IP does. Works across accounts and regions without peering or CIDR constraints.
 
-**Best for**: SaaS integrations, sharing one service across accounts/VPCs without full network peering, AWS service access (SSM, Secrets Manager) that stays off the internet.
+Best for: SaaS integrations, sharing one service across accounts/VPCs without full network peering, AWS service access (SSM, Secrets Manager) that stays off the internet.
 
 ## Summary
 
-- **VPC Peering** — few VPCs, simple full-mesh
-- **Transit Gateway** — many VPCs, hub-and-spoke, on-premises connectivity
-- **PrivateLink** — expose one service (not a full network) to other VPCs/accounts`,
+- VPC Peering — few VPCs, simple full-mesh
+- Transit Gateway — many VPCs, hub-and-spoke, on-premises connectivity
+- PrivateLink — expose one service (not a full network) to other VPCs/accounts`,
       },
     ],
     references: [
@@ -832,26 +832,26 @@ Exposes a **specific service** (behind an NLB) to other VPCs via interface endpo
         image: '/diagrams/networking/service-mesh-architecture.png',
       },
     ],
-    introduction: `A **service mesh** is an infrastructure layer that handles service-to-service communication in a microservices architecture. It uses a **sidecar proxy pattern**: a proxy (Envoy) is injected into every pod. All inbound and outbound traffic from the application flows through the sidecar, transparent to the application code.
+    introduction: `A service mesh is an infrastructure layer that handles service-to-service communication in a microservices architecture. It uses a sidecar proxy pattern: a proxy (Envoy) is injected into every pod. All inbound and outbound traffic from the application flows through the sidecar, transparent to the application code.
 
 ## Control plane vs data plane
 
-- **Control plane (Istiod)** — distributes configuration to all sidecars: service endpoints, traffic policies (retries, timeouts, circuit breakers), and certificates for mTLS
-- **Data plane (sidecars)** — enforces policies on every request
+- Control plane (Istiod) — distributes configuration to all sidecars: service endpoints, traffic policies (retries, timeouts, circuit breakers), and certificates for mTLS
+- Data plane (sidecars) — enforces policies on every request
 
 ## Key capabilities
 
-- **mTLS** — each sidecar gets a short-lived certificate from the mesh CA; all service-to-service traffic is automatically encrypted and mutually authenticated
-- **Traffic management** — weighted routing (canary, A/B), retries, timeouts, circuit breaking, fault injection for chaos testing
-- **Observability** — L7 metrics for every service pair (request rate, error rate, p99 latency), distributed traces via OpenTelemetry, access logs — without any application instrumentation
+- mTLS — each sidecar gets a short-lived certificate from the mesh CA; all service-to-service traffic is automatically encrypted and mutually authenticated
+- Traffic management — weighted routing (canary, A/B), retries, timeouts, circuit breaking, fault injection for chaos testing
+- Observability — L7 metrics for every service pair (request rate, error rate, p99 latency), distributed traces via OpenTelemetry, access logs — without any application instrumentation
 
 ## Istio vs Linkerd vs Cilium
 
-- **Istio** — Envoy sidecar; powerful, feature-rich, higher resource usage (~50-100 MB RAM per sidecar)
-- **Linkerd** — Rust micro-proxy; lighter, simpler, less feature-rich
-- **Cilium** — eBPF kernel programs instead of sidecar proxies; near-zero overhead, no proxy containers, fewer features
+- Istio — Envoy sidecar; powerful, feature-rich, higher resource usage (~50-100 MB RAM per sidecar)
+- Linkerd — Rust micro-proxy; lighter, simpler, less feature-rich
+- Cilium — eBPF kernel programs instead of sidecar proxies; near-zero overhead, no proxy containers, fewer features
 
-**Sidecar overhead**: each Envoy adds ~0.5-2ms latency per hop. For high-throughput latency-sensitive services, eBPF (Cilium) eliminates this at the cost of some feature richness.`,
+Sidecar overhead: each Envoy adds ~0.5-2ms latency per hop. For high-throughput latency-sensitive services, eBPF (Cilium) eliminates this at the cost of some feature richness.`,
     whenToUse: [
       'Implementing zero-trust networking for microservices without modifying application code',
       'Getting L7 observability (request rate, error rate, latency) across all services automatically',
@@ -859,11 +859,11 @@ Exposes a **specific service** (behind an NLB) to other VPCs via interface endpo
       'Replacing custom retry/timeout code in services with mesh-level policies',
     ],
     keyConcepts: [
-      { term: 'Sidecar proxy', definition: '**Envoy container** injected into every pod by a mutating webhook. All pod network traffic flows through the proxy via iptables REDIRECT rules. Application code is unchanged.' },
-      { term: 'mTLS in mesh', definition: 'Each sidecar gets a **short-lived certificate** from the mesh CA (SPIFFE/SPIRE standard). Sidecars authenticate each other and encrypt all traffic automatically. No application code changes needed.' },
-      { term: 'VirtualService (Istio)', definition: 'Defines **routing rules**: weight-based (canary), header-based (A/B), fault injection (delay/abort), retries, and timeouts. Applied on top of existing Kubernetes Services.' },
-      { term: 'DestinationRule (Istio)', definition: 'Configures **post-routing behavior**: load balancing algorithm, circuit breaker settings (outlier detection), and TLS settings to the destination.' },
-      { term: 'eBPF service mesh (Cilium)', definition: 'Uses **eBPF kernel programs** instead of sidecar proxies. Near-zero overhead, no proxy containers, policies enforced in the kernel networking stack.' },
+      { term: 'Sidecar proxy', definition: 'Envoy container injected into every pod by a mutating webhook. All pod network traffic flows through the proxy via iptables REDIRECT rules. Application code is unchanged.' },
+      { term: 'mTLS in mesh', definition: 'Each sidecar gets a short-lived certificate from the mesh CA (SPIFFE/SPIRE standard). Sidecars authenticate each other and encrypt all traffic automatically. No application code changes needed.' },
+      { term: 'VirtualService (Istio)', definition: 'Defines routing rules: weight-based (canary), header-based (A/B), fault injection (delay/abort), retries, and timeouts. Applied on top of existing Kubernetes Services.' },
+      { term: 'DestinationRule (Istio)', definition: 'Configures post-routing behavior: load balancing algorithm, circuit breaker settings (outlier detection), and TLS settings to the destination.' },
+      { term: 'eBPF service mesh (Cilium)', definition: 'Uses eBPF kernel programs instead of sidecar proxies. Near-zero overhead, no proxy containers, policies enforced in the kernel networking stack.' },
     ],
     pitfalls: [
       'Forgetting that mTLS in the mesh does not encrypt traffic before the sidecar — intra-pod traffic (between app container and sidecar on loopback) is plaintext. Not an issue in practice but worth knowing for threat models.',
@@ -877,7 +877,7 @@ Exposes a **specific service** (behind an NLB) to other VPCs via interface endpo
 
 ## 1. Certificate issuance
 
-When a pod starts, Istio's mutating webhook injects an Envoy sidecar. The sidecar's init container rewrites iptables rules to intercept all traffic. The sidecar authenticates to Istiod using the pod's Kubernetes service account JWT and receives a **short-lived X.509 certificate** from Istio's CA. The certificate's SPIFFE URI encodes the service identity: spiffe://cluster.local/ns/default/sa/my-service.
+When a pod starts, Istio's mutating webhook injects an Envoy sidecar. The sidecar's init container rewrites iptables rules to intercept all traffic. The sidecar authenticates to Istiod using the pod's Kubernetes service account JWT and receives a short-lived X.509 certificate from Istio's CA. The certificate's SPIFFE URI encodes the service identity: spiffe://cluster.local/ns/default/sa/my-service.
 
 ## 2. Outbound mTLS
 
@@ -885,11 +885,11 @@ When service A calls service B, the app connects to 127.0.0.1:servicePort. iptab
 
 ## 3. Inbound mTLS
 
-Service B's sidecar receives the connection on port 15006. It **validates the client certificate** against the Istio CA. If valid, it forwards the decrypted request to the application on localhost:appPort.
+Service B's sidecar receives the connection on port 15006. It validates the client certificate against the Istio CA. If valid, it forwards the decrypted request to the application on localhost:appPort.
 
 ## 4. Policy enforcement
 
-The sidecar enforces **AuthorizationPolicy** rules: "only allow requests from service A's SPIFFE identity to endpoint /api/v1/.*". Applied at the sidecar level, not in the application.
+The sidecar enforces AuthorizationPolicy rules: "only allow requests from service A's SPIFFE identity to endpoint /api/v1/.*". Applied at the sidecar level, not in the application.
 
 The application code never sees TLS — it sends and receives plaintext on localhost. The mesh handles encryption, authentication, and authorization transparently.`,
       },
@@ -926,20 +926,20 @@ The application code never sees TLS — it sends and receives plaintext on local
         image: '/diagrams/networking/network-debugging-tools-by-layer.png',
       },
     ],
-    introduction: `Effective network debugging follows a **structured layered approach**: start at the lowest layer that could explain the symptom and work upward. Form a hypothesis about which layer is failing, then choose the tool that confirms or refutes it.
+    introduction: `Effective network debugging follows a structured layered approach: start at the lowest layer that could explain the symptom and work upward. Form a hypothesis about which layer is failing, then choose the tool that confirms or refutes it.
 
 ## Debugging ladder by layer
 
-- **Layer 1-2 (Physical/Link)**: \`ip -s link show\` — check error counters, drops, collisions. \`ethtool eth0\` — link speed, duplex, PHY errors.
-- **Layer 3 (IP)**: \`ping\` (ICMP reachability), \`ip route get\` (routing decision), \`traceroute\` / \`mtr\` (path and per-hop latency).
-- **Layer 4 (TCP)**: \`nc -zv host port\` (can we connect?), \`ss -tulpn\` (what is listening?), \`tcpdump\` (what is on the wire?).
-- **Layer 7 (Application)**: \`curl -v\` (HTTP), \`openssl s_client\` (TLS), \`dig\` (DNS).
+- Layer 1-2 (Physical/Link): \`ip -s link show\` — check error counters, drops, collisions. \`ethtool eth0\` — link speed, duplex, PHY errors.
+- Layer 3 (IP): \`ping\` (ICMP reachability), \`ip route get\` (routing decision), \`traceroute\` / \`mtr\` (path and per-hop latency).
+- Layer 4 (TCP): \`nc -zv host port\` (can we connect?), \`ss -tulpn\` (what is listening?), \`tcpdump\` (what is on the wire?).
+- Layer 7 (Application): \`curl -v\` (HTTP), \`openssl s_client\` (TLS), \`dig\` (DNS).
 
 ## Key tools
 
-**mtr** combines traceroute and ping: continuously probes each hop and shows real-time loss% and latency. Essential for finding which hop is dropping packets.
+mtr combines traceroute and ping: continuously probes each hop and shows real-time loss% and latency. Essential for finding which hop is dropping packets.
 
-**ss** (socket statistics) is the production standard. Common invocations:
+ss (socket statistics) is the production standard. Common invocations:
 - \`ss -s\` — summary of connection counts
 - \`ss -tulpn\` — all listening sockets with process names and PIDs
 - \`ss -t state established\` — all established TCP connections
@@ -947,10 +947,10 @@ The application code never sees TLS — it sends and receives plaintext on local
 
 ## Cloud-specific tools
 
-- **VPC Flow Logs** — per-ENI accept/reject records; invaluable for diagnosing security group/NACL issues
-- **Route53 Resolver Query Logs** — DNS queries from VPC resources
-- **CloudFront access logs** — edge cache behavior and error codes
-- **CloudWatch Network Monitor** — continuous network latency and packet loss metrics`,
+- VPC Flow Logs — per-ENI accept/reject records; invaluable for diagnosing security group/NACL issues
+- Route53 Resolver Query Logs — DNS queries from VPC resources
+- CloudFront access logs — edge cache behavior and error codes
+- CloudWatch Network Monitor — continuous network latency and packet loss metrics`,
     whenToUse: [
       'Systematically diagnosing a network connectivity issue in production',
       'Using mtr to find which network hop is causing packet loss',
@@ -958,11 +958,11 @@ The application code never sees TLS — it sends and receives plaintext on local
       'Building a network debugging runbook for an on-call team',
     ],
     keyConcepts: [
-      { term: 'mtr', definition: '**Combines traceroute and ping**. Continuously probes each hop and shows real-time loss% and latency. Essential for finding which specific hop is dropping or delaying packets.' },
-      { term: 'VPC Flow Logs', definition: '**AWS per-ENI network logs**: source IP, destination IP, port, protocol, bytes, and ACCEPT/REJECT action. Stored in CloudWatch Logs or S3. Query with Logs Insights to diagnose SG/NACL issues.' },
-      { term: 'ss -tulpn', definition: 'List all **listening TCP/UDP sockets** with process name and PID. Faster than netstat. Use to verify a service is listening on the expected port and interface (0.0.0.0 vs 127.0.0.1).' },
-      { term: 'tcpdump filtering', definition: '**BPF filter syntax**: host 10.0.1.5 and port 5432 and tcp — combines IP, port, and protocol filters. Use not port 22 to exclude SSH noise.' },
-      { term: 'MTU issues', definition: '**Maximum Transmission Unit**. AWS instances use MTU 9001 (jumbo frames) within a VPC. Crossing an IGW or VPN drops to 1500. PMTUD (Path MTU Discovery) uses ICMP type 3 code 4 — blocking ICMP causes silent packet drops.' },
+      { term: 'mtr', definition: 'Combines traceroute and ping. Continuously probes each hop and shows real-time loss% and latency. Essential for finding which specific hop is dropping or delaying packets.' },
+      { term: 'VPC Flow Logs', definition: 'AWS per-ENI network logs: source IP, destination IP, port, protocol, bytes, and ACCEPT/REJECT action. Stored in CloudWatch Logs or S3. Query with Logs Insights to diagnose SG/NACL issues.' },
+      { term: 'ss -tulpn', definition: 'List all listening TCP/UDP sockets with process name and PID. Faster than netstat. Use to verify a service is listening on the expected port and interface (0.0.0.0 vs 127.0.0.1).' },
+      { term: 'tcpdump filtering', definition: 'BPF filter syntax: host 10.0.1.5 and port 5432 and tcp — combines IP, port, and protocol filters. Use not port 22 to exclude SSH noise.' },
+      { term: 'MTU issues', definition: 'Maximum Transmission Unit. AWS instances use MTU 9001 (jumbo frames) within a VPC. Crossing an IGW or VPN drops to 1500. PMTUD (Path MTU Discovery) uses ICMP type 3 code 4 — blocking ICMP causes silent packet drops.' },
     ],
     pitfalls: [
       'Diagnosing connectivity issues on the wrong host — check both ends of the connection. A security group on the source instance may block outbound; a NACL on the target subnet may block inbound.',
@@ -998,8 +998,8 @@ If nslookup fails, CoreDNS is not resolving the name. Check CoreDNS pods and Con
 kubectl exec -n source-ns source-pod -- nc -zv my-service.target-ns.svc.cluster.local 80 -w 3
 \`\`\`
 
-- **Connection refused** — pod is listening on wrong port or not listening at all
-- **Connection timed out** — NetworkPolicy is blocking traffic
+- Connection refused — pod is listening on wrong port or not listening at all
+- Connection timed out — NetworkPolicy is blocking traffic
 
 ## Step 4 — NetworkPolicy check
 
@@ -1024,7 +1024,7 @@ If packets arrive but get no response, it is an app issue. If no packets arrive,
 kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
 \`\`\`yaml
 
-**Common root causes**: NetworkPolicy blocks cross-namespace traffic, Service selector typo, CoreDNS returning wrong IP, port number mismatch.`,
+Common root causes: NetworkPolicy blocks cross-namespace traffic, Service selector typo, CoreDNS returning wrong IP, port number mismatch.`,
       },
     ],
     references: [
@@ -1067,29 +1067,29 @@ kubectl logs -n kube-system -l k8s-app=calico-node --tail=50
 
 ## Network vs application latency
 
-**Network latency** (propagation + transmission delay) is largely physics: ~1ms per 100km in fiber, ~70ms New York to London. **Application latency** adds queuing delay, processing time, and database round trips on top of network latency.
+Network latency (propagation + transmission delay) is largely physics: ~1ms per 100km in fiber, ~70ms New York to London. Application latency adds queuing delay, processing time, and database round trips on top of network latency.
 
 ## Percentile distributions matter
 
 Average latency hides outliers. Use percentiles:
-- **p50** — median; half of requests are faster
-- **p99** — 1% of requests are slower than this value
-- **p99.9 (tail latency)** — often 5-10x p99; the worst users experience
+- p50 — median; half of requests are faster
+- p99 — 1% of requests are slower than this value
+- p99.9 (tail latency) — often 5-10x p99; the worst users experience
 
-In **fan-out systems** (one request calls 10 downstream services), the overall p99 approaches the p99.9 of each individual service. Reducing tail latency matters more than improving average latency in microservices.
+In fan-out systems (one request calls 10 downstream services), the overall p99 approaches the p99.9 of each individual service. Reducing tail latency matters more than improving average latency in microservices.
 
 ## Queuing theory — Little's Law
 
-L = λW (L = items in system, λ = arrival rate, W = time per item). When arrival rate exceeds service rate, the queue grows unboundedly and latency spikes. This explains why a service at **80% CPU shows 2-3x latency** vs 50% CPU — queuing effects are nonlinear near saturation.
+L = λW (L = items in system, λ = arrival rate, W = time per item). When arrival rate exceeds service rate, the queue grows unboundedly and latency spikes. This explains why a service at 80% CPU shows 2-3x latency vs 50% CPU — queuing effects are nonlinear near saturation.
 
 ## Common latency sources (cloud)
 
-- **DNS resolution** — 5-50ms on first request to a new hostname
-- **TCP handshake** — ~1 RTT (3-way handshake)
-- **TLS handshake** — 1-2 RTTs (TLS 1.2) or 1 RTT (TLS 1.3)
-- **Database queries** — dominant for most OLTP applications
-- **Cross-AZ traffic** — 1-2ms within the same AWS region
-- **Cross-region traffic** — 40-200ms depending on geography`,
+- DNS resolution — 5-50ms on first request to a new hostname
+- TCP handshake — ~1 RTT (3-way handshake)
+- TLS handshake — 1-2 RTTs (TLS 1.2) or 1 RTT (TLS 1.3)
+- Database queries — dominant for most OLTP applications
+- Cross-AZ traffic — 1-2ms within the same AWS region
+- Cross-region traffic — 40-200ms depending on geography`,
     whenToUse: [
       'Diagnosing a p99 latency spike that does not show up in the average',
       'Explaining why a service at 70% CPU shows 3x more latency than at 30% CPU',
@@ -1097,11 +1097,11 @@ L = λW (L = items in system, λ = arrival rate, W = time per item). When arriva
       'Understanding why fan-out patterns amplify tail latency',
     ],
     keyConcepts: [
-      { term: 'p99 latency', definition: '**99th percentile** — 1% of requests are slower than this value. Use p99 and p99.9 for SLOs. Averages hide the long tail that users experience during spikes.' },
-      { term: 'Queuing delay', definition: 'Time waiting for the server to free up capacity. **Grows nonlinearly** as utilisation approaches 100%. At 90% CPU, queuing delay often exceeds actual processing time.' },
-      { term: 'RTT (Round Trip Time)', definition: 'Time for a packet to travel from source to destination and back. Propagation delay is ~5ms per 1000km in fiber. **TLS handshake adds 1-2 RTTs** before data flows.' },
-      { term: 'Connection keep-alive', definition: '**Reusing TCP connections** across HTTP requests eliminates the 3-way handshake and TLS renegotiation per request. Essential for high-throughput services.' },
-      { term: 'Hedged requests', definition: 'Sending a **duplicate request** to a second backend after a small timeout (e.g., 5ms), then using whichever responds first. Effectively eliminates tail latency at the cost of extra backend load (~1% overhead).' },
+      { term: 'p99 latency', definition: '99th percentile — 1% of requests are slower than this value. Use p99 and p99.9 for SLOs. Averages hide the long tail that users experience during spikes.' },
+      { term: 'Queuing delay', definition: 'Time waiting for the server to free up capacity. Grows nonlinearly as utilisation approaches 100%. At 90% CPU, queuing delay often exceeds actual processing time.' },
+      { term: 'RTT (Round Trip Time)', definition: 'Time for a packet to travel from source to destination and back. Propagation delay is ~5ms per 1000km in fiber. TLS handshake adds 1-2 RTTs before data flows.' },
+      { term: 'Connection keep-alive', definition: 'Reusing TCP connections across HTTP requests eliminates the 3-way handshake and TLS renegotiation per request. Essential for high-throughput services.' },
+      { term: 'Hedged requests', definition: 'Sending a duplicate request to a second backend after a small timeout (e.g., 5ms), then using whichever responds first. Effectively eliminates tail latency at the cost of extra backend load (~1% overhead).' },
     ],
     pitfalls: [
       'Using average latency in SLOs — a system with 10ms average but 2000ms p99 appears healthy by average but is failing 1% of users. Always use percentile-based SLOs.',
@@ -1111,39 +1111,39 @@ L = λW (L = items in system, λ = arrival rate, W = time per item). When arriva
     keyQuestions: [
       {
         question: 'Your API p99 latency is 2000ms but p50 is 50ms. What are the most likely causes and how do you diagnose?',
-        answer: `A large p50-to-p99 gap indicates **tail latency** — most requests are fast but a small fraction are very slow. Likely causes:
+        answer: `A large p50-to-p99 gap indicates tail latency — most requests are fast but a small fraction are very slow. Likely causes:
 
 ## 1. Garbage collection pauses (JVM, Go)
 
 GC stop-the-world events freeze all threads for 50-500ms. Requests in-flight during GC become the slow tail.
-- **Diagnose**: correlate GC logs with latency spikes; look for JVM pause_ms or Go runtime.gc.pause_ns metrics
-- **Fix**: tune GC (G1GC MaxGCPauseMillis, Go GOGC), reduce object allocation, increase heap
+- Diagnose: correlate GC logs with latency spikes; look for JVM pause_ms or Go runtime.gc.pause_ns metrics
+- Fix: tune GC (G1GC MaxGCPauseMillis, Go GOGC), reduce object allocation, increase heap
 
 ## 2. Lock contention
 
 A shared resource (mutex, DB row lock) causes occasional serialization.
-- **Diagnose**: thread dump during spike (jstack PID), or async-profiler for lock contention flame graphs
-- **Fix**: reduce lock scope, use lock-free data structures
+- Diagnose: thread dump during spike (jstack PID), or async-profiler for lock contention flame graphs
+- Fix: reduce lock scope, use lock-free data structures
 
 ## 3. Cold cache misses
 
 The 99th percentile request hits an empty cache entry.
-- **Diagnose**: correlate cache hit rate with latency percentiles; check Redis latency histogram
-- **Fix**: cache warm-up on startup, stale-while-revalidate
+- Diagnose: correlate cache hit rate with latency percentiles; check Redis latency histogram
+- Fix: cache warm-up on startup, stale-while-revalidate
 
 ## 4. Network tail events
 
 Packet retransmissions (TCP retransmit timer defaults to 200ms) or TCP slow start on new connections.
-- **Diagnose**: \`ss -tio | grep retrans\`, /proc/net/tcp retransmit counters, tcpdump for SYN retransmissions
-- **Fix**: connection keep-alive to avoid new TCP handshakes, tune TCP retransmit timeout
+- Diagnose: \`ss -tio | grep retrans\`, /proc/net/tcp retransmit counters, tcpdump for SYN retransmissions
+- Fix: connection keep-alive to avoid new TCP handshakes, tune TCP retransmit timeout
 
 ## 5. Resource saturation
 
 Database connection pool exhausted — requests queue waiting for a connection.
-- **Diagnose**: monitor active vs total pool connections; if active == max, requests are queuing
-- **Fix**: increase pool size or reduce query duration
+- Diagnose: monitor active vs total pool connections; if active == max, requests are queuing
+- Fix: increase pool size or reduce query duration
 
-**Best diagnostic tool**: distributed tracing (Jaeger, Tempo). Sample a slow request trace — each span shows exactly where time was spent. The widest span is the bottleneck.`,
+Best diagnostic tool: distributed tracing (Jaeger, Tempo). Sample a slow request trace — each span shows exactly where time was spent. The widest span is the bottleneck.`,
       },
     ],
     references: [
@@ -7884,23 +7884,23 @@ spec:
         image: '/diagrams/linkdiags/router-vs-switch.png',
       },
     ],
-    introduction: `**Router** and **Switch** are both network devices but operate at different OSI layers and serve different purposes.
+    introduction: `Router and Switch are both network devices but operate at different OSI layers and serve different purposes.
 
 ## Router — Layer 3 (Network Layer)
-- Operates at **Layer 3 (Network Layer)**
-- Uses **IP addresses** to make forwarding decisions
-- Connects **DIFFERENT networks** together
+- Operates at Layer 3 (Network Layer)
+- Uses IP addresses to make forwarding decisions
+- Connects DIFFERENT networks together
 - Routes packets between Network A and Network B
 - Example: home router connecting your LAN (192.168.1.0/24) to the internet
-- Maintains a **routing table** of known networks and next-hop paths
+- Maintains a routing table of known networks and next-hop paths
 
 ## Switch — Layer 2 (Data Link Layer)
-- Operates at **Layer 2 (Data Link Layer)**
-- Uses **MAC addresses** to make forwarding decisions
-- Connects devices within the **SAME network**
+- Operates at Layer 2 (Data Link Layer)
+- Uses MAC addresses to make forwarding decisions
+- Connects devices within the SAME network
 - Forwards Ethernet frames between devices on the same subnet
 - Example: office switch connecting desktops, printers, servers on 192.168.1.0/24
-- Maintains a **MAC address table** (CAM table) mapping MAC → port
+- Maintains a MAC address table (CAM table) mapping MAC → port
 
 ## Key Difference Table
 
@@ -7913,11 +7913,11 @@ spec:
 | Device | Packet | Frame |
 
 ## Quick Tip
-- **Router** = go OUTSIDE the network (between networks)
-- **Switch** = connect INSIDE the network (within a network)
+- Router = go OUTSIDE the network (between networks)
+- Switch = connect INSIDE the network (within a network)
 
 ## Modern L3 Switches
-Modern **Layer 3 switches** combine both capabilities — switching (L2) within VLANs and routing (L3) between VLANs. They are common in enterprise data centers for inter-VLAN routing without a dedicated router.`,
+Modern Layer 3 switches combine both capabilities — switching (L2) within VLANs and routing (L3) between VLANs. They are common in enterprise data centers for inter-VLAN routing without a dedicated router.`,
     whenToUse: [
       'Explaining why a home router connects you to the internet (different networks) but a switch just connects your local devices',
       'Designing a network topology — routers at the perimeter/between subnets, switches within each subnet',
@@ -7939,15 +7939,15 @@ Modern **Layer 3 switches** combine both capabilities — switching (L2) within 
     keyQuestions: [
       {
         question: 'What is the difference between a router and a switch?',
-        answer: `A **router** operates at Layer 3 (Network Layer) and uses IP addresses to route packets between different networks. It connects Network A to Network B — for example, connecting your home LAN (192.168.1.0/24) to the internet. Routers maintain a routing table of known network prefixes and next-hop paths.
+        answer: `A router operates at Layer 3 (Network Layer) and uses IP addresses to route packets between different networks. It connects Network A to Network B — for example, connecting your home LAN (192.168.1.0/24) to the internet. Routers maintain a routing table of known network prefixes and next-hop paths.
 
-A **switch** operates at Layer 2 (Data Link Layer) and uses MAC addresses to forward Ethernet frames between devices within the same network. It connects multiple devices on the same subnet — for example, desktops and servers on 192.168.1.0/24. Switches maintain a MAC address table mapping MAC addresses to ports.
+A switch operates at Layer 2 (Data Link Layer) and uses MAC addresses to forward Ethernet frames between devices within the same network. It connects multiple devices on the same subnet — for example, desktops and servers on 192.168.1.0/24. Switches maintain a MAC address table mapping MAC addresses to ports.
 
 Quick memory rule: Router = go outside the network (between networks). Switch = connect inside the network (within a network).`,
       },
       {
         question: 'When would you use a Layer 3 switch instead of a router?',
-        answer: `A **Layer 3 switch** is used for **inter-VLAN routing** within a data center or campus network. When you have multiple VLANs (e.g., VLAN 10 for servers, VLAN 20 for workstations) and need traffic to flow between them, an L3 switch routes between VLANs at wire speed using dedicated ASICs — much faster than a general-purpose router for this use case.
+        answer: `A Layer 3 switch is used for inter-VLAN routing within a data center or campus network. When you have multiple VLANs (e.g., VLAN 10 for servers, VLAN 20 for workstations) and need traffic to flow between them, an L3 switch routes between VLANs at wire speed using dedicated ASICs — much faster than a general-purpose router for this use case.
 
 Choose an L3 switch when:
 - You need high-speed inter-VLAN routing within a single data center
@@ -7961,12 +7961,12 @@ Keep a dedicated router when:
       },
       {
         question: 'How does a switch learn which MAC address is on which port?',
-        answer: `Switches use **MAC learning** to build their CAM (Content Addressable Memory) table dynamically:
+        answer: `Switches use MAC learning to build their CAM (Content Addressable Memory) table dynamically:
 
-1. When a frame arrives on a port, the switch reads the **source MAC address** and records it in the CAM table mapped to that port.
+1. When a frame arrives on a port, the switch reads the source MAC address and records it in the CAM table mapped to that port.
 2. When the switch needs to forward a frame to a destination MAC, it looks up the CAM table.
-3. If the destination MAC is known, it forwards only to that port (**unicast forwarding**).
-4. If the destination MAC is unknown, it **floods** the frame to all ports except the source port.
+3. If the destination MAC is known, it forwards only to that port (unicast forwarding).
+4. If the destination MAC is unknown, it floods the frame to all ports except the source port.
 5. CAM table entries age out after an inactivity timeout (typically 300 seconds) to handle devices that move ports.
 
 This is why a new device on the network causes a brief flood until the switch learns its MAC address.`,
@@ -7975,11 +7975,11 @@ This is why a new device on the network causes a brief flood until the switch le
         question: 'In AWS, what plays the role of a router and what plays the role of a switch?',
         answer: `In AWS VPC networking:
 
-**Router equivalent**: The **VPC route table** acts as the router. Each subnet is associated with a route table that determines where traffic is sent — to the internet gateway, NAT gateway, VPC peering connection, Transit Gateway, or local within the VPC. The implicit local route (e.g., 10.0.0.0/16 → local) routes traffic between subnets.
+Router equivalent: The VPC route table acts as the router. Each subnet is associated with a route table that determines where traffic is sent — to the internet gateway, NAT gateway, VPC peering connection, Transit Gateway, or local within the VPC. The implicit local route (e.g., 10.0.0.0/16 → local) routes traffic between subnets.
 
-**Switch equivalent**: Within a single subnet, AWS handles the Layer 2 switching transparently. Instances in the same subnet communicate directly via the VPC's underlying fabric without explicit routing — similar to being on the same switch.
+Switch equivalent: Within a single subnet, AWS handles the Layer 2 switching transparently. Instances in the same subnet communicate directly via the VPC's underlying fabric without explicit routing — similar to being on the same switch.
 
-**Security Groups** are stateful L3/L4 filters attached to instances (like per-host ACLs), while **NACLs** are stateless L4 filters at the subnet boundary.`,
+Security Groups are stateful L3/L4 filters attached to instances (like per-host ACLs), while NACLs are stateless L4 filters at the subnet boundary.`,
       },
     ],
     references: [
@@ -8015,10 +8015,10 @@ This is why a new device on the network causes a brief flood until the switch le
       },
     ],
     introduction: `## Underlay Network
-The **underlay** is the real physical network infrastructure — the actual switches, routers, cables, and IP addressing that physically exists. It provides basic IP connectivity between nodes. The underlay only needs to route IP packets between endpoints; it has no knowledge of the virtual networks running on top.
+The underlay is the real physical network infrastructure — the actual switches, routers, cables, and IP addressing that physically exists. It provides basic IP connectivity between nodes. The underlay only needs to route IP packets between endpoints; it has no knowledge of the virtual networks running on top.
 
 ## Overlay Network
-An **overlay** is a virtual network built on top of the underlay using **encapsulation**. Overlay protocols wrap (encapsulate) original network frames inside another protocol's packets, creating logical tunnels across the physical network.
+An overlay is a virtual network built on top of the underlay using encapsulation. Overlay protocols wrap (encapsulate) original network frames inside another protocol's packets, creating logical tunnels across the physical network.
 
 ## Encapsulation Protocols
 
@@ -8030,18 +8030,18 @@ An **overlay** is a virtual network built on top of the underlay using **encapsu
 | IP-in-IP | IP packet in IP | Protocol 4 | Simple tunneling |
 
 ## VXLAN — Most Widely Used
-**VXLAN (Virtual Extensible LAN)** is the dominant overlay protocol:
+VXLAN (Virtual Extensible LAN) is the dominant overlay protocol:
 - Encapsulates L2 Ethernet frames inside UDP packets
-- Adds **50-byte overhead** (14 VXLAN + 8 UDP + 20 IP + 14 Ethernet outer)
-- Default UDP port **4789**
-- Uses 24-bit **VNI (VXLAN Network Identifier)** — supports 16 million virtual networks vs VLAN's 4096
+- Adds 50-byte overhead (14 VXLAN + 8 UDP + 20 IP + 14 Ethernet outer)
+- Default UDP port 4789
+- Uses 24-bit VNI (VXLAN Network Identifier) — supports 16 million virtual networks vs VLAN's 4096
 
 ## Kubernetes Use
 Kubernetes CNI plugins use overlay networking to connect pods across nodes:
-- **Flannel**: simple VXLAN overlay, all pods in one flat network
-- **Calico**: can use VXLAN or IP-in-IP overlay, or pure BGP underlay routing
-- **Weave**: VXLAN or encrypted overlay
-- **Cilium**: eBPF-based, supports VXLAN overlay or native routing`,
+- Flannel: simple VXLAN overlay, all pods in one flat network
+- Calico: can use VXLAN or IP-in-IP overlay, or pure BGP underlay routing
+- Weave: VXLAN or encrypted overlay
+- Cilium: eBPF-based, supports VXLAN overlay or native routing`,
     whenToUse: [
       'Designing Kubernetes pod networking — choosing between VXLAN overlay (simpler) vs BGP underlay (better performance)',
       'Building multi-tenant cloud networks where different customers need isolated L2 segments across shared physical infrastructure',
@@ -8064,15 +8064,15 @@ Kubernetes CNI plugins use overlay networking to connect pods across nodes:
     keyQuestions: [
       {
         question: 'What is the difference between overlay and underlay networking?',
-        answer: `The **underlay** is the physical network — real routers, switches, cables, and IP addresses. It provides basic IP connectivity between physical or virtual machines. The underlay has no knowledge of virtual networks running on top of it.
+        answer: `The underlay is the physical network — real routers, switches, cables, and IP addresses. It provides basic IP connectivity between physical or virtual machines. The underlay has no knowledge of virtual networks running on top of it.
 
-The **overlay** is a virtual network built on top of the underlay using encapsulation. Overlay protocols (VXLAN, GRE, Geneve) wrap original network packets inside new packet headers, creating logical tunnels that make physically distant endpoints appear directly connected.
+The overlay is a virtual network built on top of the underlay using encapsulation. Overlay protocols (VXLAN, GRE, Geneve) wrap original network packets inside new packet headers, creating logical tunnels that make physically distant endpoints appear directly connected.
 
 Analogy: the underlay is the road system; the overlay is a dedicated private lane painted on top of the same roads. Traffic on the private lane follows the road system but appears isolated from other traffic.`,
       },
       {
         question: 'How does VXLAN work and why is it used in Kubernetes?',
-        answer: `**VXLAN (Virtual Extensible LAN)** encapsulates an entire L2 Ethernet frame inside a UDP packet. Each VXLAN packet has:
+        answer: `VXLAN (Virtual Extensible LAN) encapsulates an entire L2 Ethernet frame inside a UDP packet. Each VXLAN packet has:
 - Outer Ethernet + IP + UDP headers (routing across the underlay)
 - VXLAN header with a 24-bit VNI (identifies the virtual network)
 - Inner Ethernet frame (the original L2 traffic)
@@ -8081,17 +8081,17 @@ Total overhead: 50 bytes. Default UDP port: 4789.
 
 Kubernetes uses VXLAN because pods need a flat L2 network where any pod can reach any other pod by IP, regardless of which physical node they run on. Without overlay networking, pods on different nodes would be on different L2 segments. VXLAN creates the illusion of a single flat L2 network across all nodes.
 
-CNI plugins like **Flannel** deploy a VTEP (VXLAN Tunnel Endpoint) on each node. When Pod A on Node 1 sends a packet to Pod B on Node 2, the VTEP on Node 1 encapsulates it in VXLAN/UDP and sends it to Node 2's VTEP, which decapsulates and delivers it to Pod B.`,
+CNI plugins like Flannel deploy a VTEP (VXLAN Tunnel Endpoint) on each node. When Pod A on Node 1 sends a packet to Pod B on Node 2, the VTEP on Node 1 encapsulates it in VXLAN/UDP and sends it to Node 2's VTEP, which decapsulates and delivers it to Pod B.`,
       },
       {
         question: 'What are the tradeoffs between VXLAN overlay and BGP-based underlay routing for Kubernetes?',
-        answer: `**VXLAN overlay** (Flannel, Calico in VXLAN mode):
+        answer: `VXLAN overlay (Flannel, Calico in VXLAN mode):
 - Simpler to set up — works on any IP network without router configuration
 - No dependency on the physical network — works in clouds where you cannot configure BGP
 - Overhead: 50-byte encapsulation per packet, CPU cost for encap/decap
 - Best for: most Kubernetes deployments, cloud environments, teams without network team access
 
-**BGP underlay routing** (Calico in BGP mode, Cilium with native routing):
+BGP underlay routing (Calico in BGP mode, Cilium with native routing):
 - No encapsulation overhead — pods use real routable IPs
 - Better performance for high-throughput, low-latency workloads
 - Requires the physical network to support BGP and advertise pod CIDRs
@@ -8133,22 +8133,22 @@ Choose overlay for simplicity and portability. Choose underlay routing when perf
     visualizations: [],
     introduction: `IPv6 uses 128-bit addresses written as eight 16-bit groups in colon-hex notation (e.g., 2001:0db8:85a3::8a2e:0370:7334). Leading zeros in each group can be omitted, and one consecutive run of all-zero groups can be replaced with ::.
 
-**Address types:**
+Address types:
 - Link-local (fe80::/10): auto-configured, not routable, used on-link for NDP. Every interface has one.
 - Global unicast (2000::/3): globally routable, equivalent to IPv4 public addresses.
 - Unique local (fc00::/7): like RFC 1918, not globally routable.
 - Multicast (ff00::/8): replaces IPv4 broadcast. NDP uses multicast for neighbor discovery.
 - Anycast: same address assigned to multiple nodes; routing delivers to nearest.
 
-**Address configuration:**
+Address configuration:
 - SLAAC (Stateless Address Autoconfiguration): host generates its own address from the link-local prefix + EUI-64 (derived from MAC). No DHCP server needed. Router sends RA (Router Advertisement) with prefix.
 - DHCPv6: like DHCPv4 but stateful. Assigns addresses from a pool. Required when you need to control specific assignments.
 
-**NDP (Neighbor Discovery Protocol):** replaces ARP. Uses ICMPv6 multicast instead of broadcast. Key messages: Router Solicitation (RS), Router Advertisement (RA), Neighbor Solicitation (NS), Neighbor Advertisement (NA).
+NDP (Neighbor Discovery Protocol): replaces ARP. Uses ICMPv6 multicast instead of broadcast. Key messages: Router Solicitation (RS), Router Advertisement (RA), Neighbor Solicitation (NS), Neighbor Advertisement (NA).
 
-**Dual-stack** runs IPv4 and IPv6 simultaneously. A host gets both addresses and prefers IPv6 (Happy Eyeballs RFC 8305). **NAT64** + **DNS64** translates IPv6-only client connections to IPv4 backends — the DNS64 resolver synthesizes AAAA records for IPv4-only destinations.
+Dual-stack runs IPv4 and IPv6 simultaneously. A host gets both addresses and prefers IPv6 (Happy Eyeballs RFC 8305). NAT64 + DNS64 translates IPv6-only client connections to IPv4 backends — the DNS64 resolver synthesizes AAAA records for IPv4-only destinations.
 
-**Kubernetes dual-stack** (stable in 1.23): pods and services get both IPv4 and IPv6 addresses. Requires two pod CIDRs, two service CIDRs, and a CNI that supports dual-stack (Calico, Cilium).`,
+Kubernetes dual-stack (stable in 1.23): pods and services get both IPv4 and IPv6 addresses. Requires two pod CIDRs, two service CIDRs, and a CNI that supports dual-stack (Calico, Cilium).`,
     whenToUse: [
       'Explaining why modern cloud environments prefer IPv6 for scale (AWS assigns /56 blocks to VPCs)',
       'Debugging NDP failures when IPv6 hosts cannot reach the gateway',
@@ -8227,18 +8227,18 @@ Main operational change: firewall rules and network policies must be written for
     visualizations: [],
     introduction: `QUIC (originally Google Quick UDP Internet Connections, now standardized as RFC 9000) is a multiplexed transport protocol built over UDP. It is the transport layer for HTTP/3 (RFC 9114).
 
-**Why QUIC?** TCP + TLS has two fundamental problems at scale:
-1. **Head-of-line blocking**: TCP delivers bytes in order. One lost packet stalls all data behind it, even data from unrelated requests.
-2. **Slow connection setup**: TCP handshake (1 RTT) + TLS 1.3 handshake (1 RTT) = 2 RTTs before the first byte of application data.
+Why QUIC? TCP + TLS has two fundamental problems at scale:
+1. Head-of-line blocking: TCP delivers bytes in order. One lost packet stalls all data behind it, even data from unrelated requests.
+2. Slow connection setup: TCP handshake (1 RTT) + TLS 1.3 handshake (1 RTT) = 2 RTTs before the first byte of application data.
 
-**QUIC solves both:**
-- **Multiplexed streams**: QUIC runs multiple independent byte streams over one connection. A lost packet only blocks the stream it belongs to, not other streams.
-- **0-RTT / 1-RTT handshake**: QUIC merges the transport and TLS handshakes into a single 1-RTT exchange. With session resumption, 0-RTT allows data in the first packet (with replay caveats).
-- **Connection migration**: QUIC connections are identified by a Connection ID, not the (IP, port) tuple. A mobile client can switch from Wi-Fi to LTE and maintain the same QUIC connection.
+QUIC solves both:
+- Multiplexed streams: QUIC runs multiple independent byte streams over one connection. A lost packet only blocks the stream it belongs to, not other streams.
+- 0-RTT / 1-RTT handshake: QUIC merges the transport and TLS handshakes into a single 1-RTT exchange. With session resumption, 0-RTT allows data in the first packet (with replay caveats).
+- Connection migration: QUIC connections are identified by a Connection ID, not the (IP, port) tuple. A mobile client can switch from Wi-Fi to LTE and maintain the same QUIC connection.
 
-**QUIC packet structure**: encrypted at the QUIC layer (not just TLS). Even QUIC headers are partially encrypted to prevent middlebox ossification. Only the Connection ID and packet number are visible.
+QUIC packet structure: encrypted at the QUIC layer (not just TLS). Even QUIC headers are partially encrypted to prevent middlebox ossification. Only the Connection ID and packet number are visible.
 
-**Deployment**: Cloudflare, Google, Facebook, and Akamai carry significant QUIC traffic. In Kubernetes, HTTP/3 Ingress support is available in nginx-ingress (experimental) and Envoy (stable). gRPC over HTTP/3 is in progress.`,
+Deployment: Cloudflare, Google, Facebook, and Akamai carry significant QUIC traffic. In Kubernetes, HTTP/3 Ingress support is available in nginx-ingress (experimental) and Envoy (stable). gRPC over HTTP/3 is in progress.`,
     whenToUse: [
       'Explaining why HTTP/3 uses UDP instead of TCP',
       'Justifying QUIC for mobile applications with frequent network changes',
@@ -8310,16 +8310,16 @@ Caveat: connection migration requires that the server's IP does not change. For 
     visualizations: [],
     introduction: `eBPF (extended Berkeley Packet Filter) allows safely running sandboxed programs in the Linux kernel without modifying kernel source code. Originally designed for packet filtering (classic BPF in tcpdump), eBPF now powers networking, observability, and security in production at scale.
 
-**eBPF program types for networking:**
-- **XDP (eXpress Data Path)**: attaches at the lowest point in the network driver, before the kernel networking stack allocates an sk_buff. Three modes: DRV (driver-native, fastest), SKB (generic, slower), HW (offloaded to NIC). Actions: XDP_DROP, XDP_PASS, XDP_TX (hairpin), XDP_REDIRECT.
-- **TC (Traffic Control)**: attaches at the tc ingress/egress hook. Has access to sk_buff metadata. Used for NAT, packet mangling, and policy after sk_buff allocation.
-- **Socket programs**: sk_filter for per-socket packet filtering, sockops for TCP socket option manipulation, sk_msg for redirecting between sockets.
+eBPF program types for networking:
+- XDP (eXpress Data Path): attaches at the lowest point in the network driver, before the kernel networking stack allocates an sk_buff. Three modes: DRV (driver-native, fastest), SKB (generic, slower), HW (offloaded to NIC). Actions: XDP_DROP, XDP_PASS, XDP_TX (hairpin), XDP_REDIRECT.
+- TC (Traffic Control): attaches at the tc ingress/egress hook. Has access to sk_buff metadata. Used for NAT, packet mangling, and policy after sk_buff allocation.
+- Socket programs: sk_filter for per-socket packet filtering, sockops for TCP socket option manipulation, sk_msg for redirecting between sockets.
 
-**BPF maps**: kernel data structures shared between eBPF programs and user space. Types: hash, array, LRU hash, per-CPU variants, ring buffer. Used for connection tracking, rate limit counters, policy rules, and observability data export.
+BPF maps: kernel data structures shared between eBPF programs and user space. Types: hash, array, LRU hash, per-CPU variants, ring buffer. Used for connection tracking, rate limit counters, policy rules, and observability data export.
 
-**Cilium**: Kubernetes CNI that uses eBPF to replace kube-proxy (iptables) entirely. Policy enforcement, load balancing, encryption (WireGuard/IPSec), and observability (Hubble) are all implemented as eBPF programs. At 1M iptables rules, iptables lookups are O(n); eBPF hash maps are O(1).
+Cilium: Kubernetes CNI that uses eBPF to replace kube-proxy (iptables) entirely. Policy enforcement, load balancing, encryption (WireGuard/IPSec), and observability (Hubble) are all implemented as eBPF programs. At 1M iptables rules, iptables lookups are O(n); eBPF hash maps are O(1).
 
-**bpftrace**: high-level tracing language for writing eBPF probes. Single-line network debugging: bpftrace -e 'tracepoint:net:net_dev_queue { @[args->name] = count(); }' — counts packets per interface in real time.`,
+bpftrace: high-level tracing language for writing eBPF probes. Single-line network debugging: bpftrace -e 'tracepoint:net:net_dev_queue { @[args->name] = count(); }' — counts packets per interface in real time.`,
     whenToUse: [
       'Explaining why Cilium outperforms iptables-based kube-proxy at scale',
       'Debugging network performance with bpftrace one-liners',
@@ -8398,18 +8398,18 @@ Key advantage over iptables DROP: iptables operates after sk_buff allocation (CP
     visualizations: [],
     introduction: `mTLS (mutual TLS) extends standard TLS so both the client and server present and validate certificates. It provides cryptographic service-to-service identity — neither side can be impersonated without the corresponding private key.
 
-**mTLS handshake additions vs TLS:**
+mTLS handshake additions vs TLS:
 1. Server sends CertificateRequest after its own Certificate message.
 2. Client responds with its certificate and a CertificateVerify (signature over the handshake transcript using its private key).
 3. Server validates the client certificate against its trusted CA.
 
-**SPIFFE (Secure Production Identity Framework for Everyone):** a CNCF standard that defines workload identity. A SPIFFE ID is a URI: spiffe://trust-domain/path (e.g., spiffe://example.com/ns/payments/sa/billing-service). The X.509 certificate encoding a SPIFFE ID is called an SVID (SPIFFE Verifiable Identity Document).
+SPIFFE (Secure Production Identity Framework for Everyone): a CNCF standard that defines workload identity. A SPIFFE ID is a URI: spiffe://trust-domain/path (e.g., spiffe://example.com/ns/payments/sa/billing-service). The X.509 certificate encoding a SPIFFE ID is called an SVID (SPIFFE Verifiable Identity Document).
 
-**SPIRE (SPIFFE Runtime Environment):** the reference implementation. The SPIRE Server is the CA; SPIRE Agents run on each node and attest workloads (by UID, binary hash, Kubernetes service account, or cloud metadata). On attestation, the agent issues a short-lived SVID (typically 1 hour). SVIDs are automatically rotated before expiry.
+SPIRE (SPIFFE Runtime Environment): the reference implementation. The SPIRE Server is the CA; SPIRE Agents run on each node and attest workloads (by UID, binary hash, Kubernetes service account, or cloud metadata). On attestation, the agent issues a short-lived SVID (typically 1 hour). SVIDs are automatically rotated before expiry.
 
-**Istio integration:** Istio's control plane (istiod) is a SPIFFE-compatible CA. It issues SVIDs to each Envoy sidecar. PeerAuthentication policy enforces mTLS: STRICT (reject plaintext), PERMISSIVE (allow both — for migration). Authorization policy uses SPIFFE IDs for allow/deny decisions at L7.
+Istio integration: Istio's control plane (istiod) is a SPIFFE-compatible CA. It issues SVIDs to each Envoy sidecar. PeerAuthentication policy enforces mTLS: STRICT (reject plaintext), PERMISSIVE (allow both — for migration). Authorization policy uses SPIFFE IDs for allow/deny decisions at L7.
 
-**Certificate pinning:** pins a specific certificate or public key instead of trusting any cert from a CA. More brittle but eliminates CA compromise risk. Used for critical internal APIs.`,
+Certificate pinning: pins a specific certificate or public key instead of trusting any cert from a CA. More brittle but eliminates CA compromise risk. Used for critical internal APIs.`,
     whenToUse: [
       'Designing zero-trust service-to-service authentication in microservices',
       'Explaining why Istio/Linkerd use short-lived certs instead of long-lived API keys',
@@ -8493,18 +8493,18 @@ Important: PERMISSIVE does not mean insecure mTLS — the mTLS connections are s
     visualizations: [],
     introduction: `Network observability provides visibility into what traffic is flowing where — without full packet capture. Modern network observability stacks use flow records, metrics, and structured logs rather than raw PCAP.
 
-**Flow record protocols:**
-- **NetFlow v9 / IPFIX (RFC 7011):** Cisco-originated, now standardized. Network devices export flow records (5-tuple + byte/packet counts + timestamps) to a collector. IPFIX is the IETF standardization of NetFlow v9.
-- **sFlow:** samples 1-in-N packets rather than tracking all flows. Lower overhead, suitable for high-speed links. Less accurate for small flows.
-- **VPC Flow Logs (AWS/GCP/Azure):** cloud-managed flow logging. AWS VPC Flow Logs write to CloudWatch Logs or S3. Fields: srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, action (ACCEPT/REJECT). Enable per-ENI, per-subnet, or per-VPC. Critical for security incident investigation.
+Flow record protocols:
+- NetFlow v9 / IPFIX (RFC 7011): Cisco-originated, now standardized. Network devices export flow records (5-tuple + byte/packet counts + timestamps) to a collector. IPFIX is the IETF standardization of NetFlow v9.
+- sFlow: samples 1-in-N packets rather than tracking all flows. Lower overhead, suitable for high-speed links. Less accurate for small flows.
+- VPC Flow Logs (AWS/GCP/Azure): cloud-managed flow logging. AWS VPC Flow Logs write to CloudWatch Logs or S3. Fields: srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, action (ACCEPT/REJECT). Enable per-ENI, per-subnet, or per-VPC. Critical for security incident investigation.
 
-**Kubernetes-native observability:**
-- **Hubble (Cilium):** exports L3/L4/L7 flow records from eBPF ring buffers. DNS queries, HTTP method/path/status, TCP RSTs, drop reasons — all without sidecar overhead. Queried via hubble observe CLI or Hubble UI.
-- **Prometheus + kube-state-metrics + node-exporter:** metrics-based. Track interface bytes/packets/errors, TCP socket states (ss -s), conntrack table utilization.
+Kubernetes-native observability:
+- Hubble (Cilium): exports L3/L4/L7 flow records from eBPF ring buffers. DNS queries, HTTP method/path/status, TCP RSTs, drop reasons — all without sidecar overhead. Queried via hubble observe CLI or Hubble UI.
+- Prometheus + kube-state-metrics + node-exporter: metrics-based. Track interface bytes/packets/errors, TCP socket states (ss -s), conntrack table utilization.
 
-**Distributed tracing:** correlates network calls with application spans. Jaeger/Tempo track latency across microservice calls. Istio injects trace headers (X-B3-TraceId) automatically.
+Distributed tracing: correlates network calls with application spans. Jaeger/Tempo track latency across microservice calls. Istio injects trace headers (X-B3-TraceId) automatically.
 
-**Anomaly detection patterns:** baseline normal traffic profiles (bytes/s per service pair, connection counts, error rates). Alert on: sudden bandwidth spikes, new service-to-service connections, abnormal port usage, high TCP RST rates, or REJECT spikes in VPC flow logs.`,
+Anomaly detection patterns: baseline normal traffic profiles (bytes/s per service pair, connection counts, error rates). Alert on: sudden bandwidth spikes, new service-to-service connections, abnormal port usage, high TCP RST rates, or REJECT spikes in VPC flow logs.`,
     whenToUse: [
       'Investigating a security incident — which external IPs communicated with a compromised host?',
       'Capacity planning — which service pairs generate the most East-West traffic?',
@@ -8596,15 +8596,15 @@ Hubble UI provides a service map showing which services communicate and their er
     visualizations: [],
     introduction: `WireGuard is a modern, cryptographically opinionated VPN protocol built into the Linux kernel (5.6+). It is designed to be simpler, faster, and more secure than IPSec or OpenVPN.
 
-**Cryptographic design (no negotiation):** WireGuard does not negotiate algorithms. It uses a fixed modern suite: X25519 for key exchange, ChaCha20-Poly1305 for encryption/authentication, and BLAKE2s for hashing. No cipher suites, no downgrade attacks.
+Cryptographic design (no negotiation): WireGuard does not negotiate algorithms. It uses a fixed modern suite: X25519 for key exchange, ChaCha20-Poly1305 for encryption/authentication, and BLAKE2s for hashing. No cipher suites, no downgrade attacks.
 
-**Peers and allowed IPs:** WireGuard is connectionless — there are no sessions. Each peer is identified by its public key and configured with AllowedIPs (the IP ranges it routes to/from). When a packet arrives, WireGuard looks up the source IP in the AllowedIPs of known peers and validates the packet signature. Invalid packets are dropped silently.
+Peers and allowed IPs: WireGuard is connectionless — there are no sessions. Each peer is identified by its public key and configured with AllowedIPs (the IP ranges it routes to/from). When a packet arrives, WireGuard looks up the source IP in the AllowedIPs of known peers and validates the packet signature. Invalid packets are dropped silently.
 
-**Roaming / stealth:** WireGuard endpoints do not respond to unauthenticated packets. A WireGuard server is invisible to port scanners — no response to probes without a valid handshake. The client always initiates.
+Roaming / stealth: WireGuard endpoints do not respond to unauthenticated packets. A WireGuard server is invisible to port scanners — no response to probes without a valid handshake. The client always initiates.
 
-**Kernel implementation:** the userspace implementation is wg-quick; the kernel module handles all crypto in kernel space (or hardware offload). The entire implementation is ~4,000 lines of code (vs OpenVPN's ~70,000 or StrongSwan IPSec's ~300,000).
+Kernel implementation: the userspace implementation is wg-quick; the kernel module handles all crypto in kernel space (or hardware offload). The entire implementation is ~4,000 lines of code (vs OpenVPN's ~70,000 or StrongSwan IPSec's ~300,000).
 
-**Kubernetes use:** Cilium and Flannel both support WireGuard for transparent pod-to-pod encryption. Cilium activates WireGuard per-node with --enable-wireguard. All inter-node pod traffic is encrypted without application changes. Tailscale uses WireGuard as its underlying protocol.`,
+Kubernetes use: Cilium and Flannel both support WireGuard for transparent pod-to-pod encryption. Cilium activates WireGuard per-node with --enable-wireguard. All inter-node pod traffic is encrypted without application changes. Tailscale uses WireGuard as its underlying protocol.`,
     whenToUse: [
       'Selecting a VPN protocol for cloud-to-on-premises connectivity',
       'Explaining why Cilium WireGuard encryption adds less overhead than IPSec',
@@ -8663,17 +8663,17 @@ Trade-off: WireGuard's simplicity means less flexibility. No built-in certificat
     visualizations: [],
     introduction: `Network chaos engineering deliberately injects network failures — latency, packet loss, bandwidth limits, corruption, reordering — to verify that distributed systems behave correctly under adverse conditions.
 
-**Linux tc netem (network emulator):**
+Linux tc netem (network emulator):
 tc qdisc add dev eth0 root netem delay 100ms 20ms distribution normal
 tc qdisc add dev eth0 root netem loss 1% 25%  # correlated loss
 tc qdisc add dev eth0 root netem corrupt 0.1%
 tc qdisc add dev eth0 root netem duplicate 1% reorder 5% 50%
 
-**Toxiproxy (Shopify):** a TCP proxy that injects network conditions at the application layer. Supports: latency, slow_close, timeout, bandwidth, slicer (chunked delivery), reset_peer. Configurable via HTTP API — ideal for integration tests. Run as a sidecar in CI/CD.
+Toxiproxy (Shopify): a TCP proxy that injects network conditions at the application layer. Supports: latency, slow_close, timeout, bandwidth, slicer (chunked delivery), reset_peer. Configurable via HTTP API — ideal for integration tests. Run as a sidecar in CI/CD.
 
-**Chaos Mesh (CNCF):** Kubernetes-native chaos engineering. NetworkChaos CRD supports: network partition, delay, loss, corrupt, bandwidth, duplicate. Applies faults using tc and iptables under the hood via a privileged DaemonSet. Faults can be targeted to specific pod label selectors and namespaces.
+Chaos Mesh (CNCF): Kubernetes-native chaos engineering. NetworkChaos CRD supports: network partition, delay, loss, corrupt, bandwidth, duplicate. Applies faults using tc and iptables under the hood via a privileged DaemonSet. Faults can be targeted to specific pod label selectors and namespaces.
 
-**What to test:**
+What to test:
 - Timeout behavior: does the service return an error within its declared timeout? Does it release resources?
 - Retry storms: under 50% packet loss, do retries amplify load on downstream services?
 - Circuit breaker activation: does the circuit open under sustained failure rates?
@@ -8748,17 +8748,17 @@ Then point your application at localhost:5432. The Toxiproxy HTTP API allows dyn
     visualizations: [],
     introduction: `CNI (Container Network Interface) is the standard interface between a container runtime and a network plugin. When a pod is created, the kubelet calls the CNI binary to allocate an IP, configure routes, and set up network policy. When a pod is deleted, CNI cleans up.
 
-**Major CNI plugins:**
+Major CNI plugins:
 
-**Flannel:** the simplest CNI. VXLAN overlay by default (can also use host-gw for pure L3 routing on the same subnet). No NetworkPolicy support — requires a separate policy engine (Calico policy-only mode). Best for: small clusters, learning environments, or when simplicity outweighs features.
+Flannel: the simplest CNI. VXLAN overlay by default (can also use host-gw for pure L3 routing on the same subnet). No NetworkPolicy support — requires a separate policy engine (Calico policy-only mode). Best for: small clusters, learning environments, or when simplicity outweighs features.
 
-**Calico:** L3 routing with BGP. In BGP mode, Calico advertises pod CIDRs via BGP directly on the physical network — no overlay overhead. In VXLAN mode, works like Flannel but with full NetworkPolicy. eBPF dataplane available (replaces iptables). Supports: GlobalNetworkPolicy, HostEndpoint policy, Egress gateway. Best for: bare-metal, on-premises, performance-sensitive workloads.
+Calico: L3 routing with BGP. In BGP mode, Calico advertises pod CIDRs via BGP directly on the physical network — no overlay overhead. In VXLAN mode, works like Flannel but with full NetworkPolicy. eBPF dataplane available (replaces iptables). Supports: GlobalNetworkPolicy, HostEndpoint policy, Egress gateway. Best for: bare-metal, on-premises, performance-sensitive workloads.
 
-**Cilium:** eBPF-native. Replaces kube-proxy for Service load balancing. Hubble provides L3/L4/L7 observability. Supports: L7 NetworkPolicy (HTTP method/path, gRPC service/method, Kafka topic), transparent encryption (WireGuard/IPSec), multi-cluster (ClusterMesh), bandwidth management. Best for: large-scale clusters, zero-trust security, observability.
+Cilium: eBPF-native. Replaces kube-proxy for Service load balancing. Hubble provides L3/L4/L7 observability. Supports: L7 NetworkPolicy (HTTP method/path, gRPC service/method, Kafka topic), transparent encryption (WireGuard/IPSec), multi-cluster (ClusterMesh), bandwidth management. Best for: large-scale clusters, zero-trust security, observability.
 
-**Antrea:** based on Open vSwitch (OVS). Tight VMware/vSphere integration. Supports NetworkPolicy with Antrea-native policies (ANP). Flows exported via IPFIX. Best for: VMware environments, vSphere with Tanzu.
+Antrea: based on Open vSwitch (OVS). Tight VMware/vSphere integration. Supports NetworkPolicy with Antrea-native policies (ANP). Flows exported via IPFIX. Best for: VMware environments, vSphere with Tanzu.
 
-**Multus:** meta-CNI that chains multiple CNI plugins. Pods can have multiple network interfaces (eth0 from Cilium + net1 from SR-IOV for high-performance workloads). Required for telco/NFV deployments.`,
+Multus: meta-CNI that chains multiple CNI plugins. Pods can have multiple network interfaces (eth0 from Cilium + net1 from SR-IOV for high-performance workloads). Required for telco/NFV deployments.`,
     whenToUse: [
       'Selecting a CNI plugin for a new Kubernetes cluster',
       'Explaining why Cilium outperforms Calico BGP at 100k+ Services',
@@ -8841,19 +8841,19 @@ Multus is required for OpenShift Telco/RAN deployments and is part of the CNCF r
     visualizations: [],
     introduction: `IPSec (Internet Protocol Security) is a suite of protocols for authenticating and encrypting IP traffic. It operates at Layer 3, making it transport-agnostic — any TCP/UDP/ICMP traffic is protected transparently.
 
-**IPSec modes:**
-- **Transport mode:** encrypts only the IP payload (TCP/UDP segment). Original IP header is preserved. Used for host-to-host or host-to-gateway communication.
-- **Tunnel mode:** encrypts the entire original IP packet and wraps it in a new IP header. Used for site-to-site VPNs — the original packet is hidden inside the tunnel. The new outer IP header routes between VPN gateways.
+IPSec modes:
+- Transport mode: encrypts only the IP payload (TCP/UDP segment). Original IP header is preserved. Used for host-to-host or host-to-gateway communication.
+- Tunnel mode: encrypts the entire original IP packet and wraps it in a new IP header. Used for site-to-site VPNs — the original packet is hidden inside the tunnel. The new outer IP header routes between VPN gateways.
 
-**IPSec protocols:**
-- **ESP (Encapsulating Security Payload):** provides confidentiality (encryption), integrity, and optional authentication. The standard choice for VPNs.
-- **AH (Authentication Header):** provides integrity and authentication but no encryption. Rarely used alone; incompatible with NAT (AH covers the outer IP header, which NAT modifies).
+IPSec protocols:
+- ESP (Encapsulating Security Payload): provides confidentiality (encryption), integrity, and optional authentication. The standard choice for VPNs.
+- AH (Authentication Header): provides integrity and authentication but no encryption. Rarely used alone; incompatible with NAT (AH covers the outer IP header, which NAT modifies).
 
-**IKE (Internet Key Exchange):** negotiates and manages IPSec SAs (Security Associations).
-- **IKEv1:** two phases. Phase 1: establishes IKE SA (authenticated channel). Phase 2: negotiates IPSec SA (encryption parameters for data). Main mode (6 messages) or aggressive mode (3 messages, less secure).
-- **IKEv2:** single exchange, faster, more reliable NAT traversal, built-in EAP support, dead peer detection. Preferred for all new deployments.
+IKE (Internet Key Exchange): negotiates and manages IPSec SAs (Security Associations).
+- IKEv1: two phases. Phase 1: establishes IKE SA (authenticated channel). Phase 2: negotiates IPSec SA (encryption parameters for data). Main mode (6 messages) or aggressive mode (3 messages, less secure).
+- IKEv2: single exchange, faster, more reliable NAT traversal, built-in EAP support, dead peer detection. Preferred for all new deployments.
 
-**AWS Site-to-Site VPN:** managed IPSec VPN. Creates two tunnels (active/standby) between a Virtual Private Gateway (VGW) or Transit Gateway and the customer gateway (on-premises device). Uses IKEv2 by default (IKEv1 available). Pre-shared keys or certificates. BGP optional for dynamic routing.`,
+AWS Site-to-Site VPN: managed IPSec VPN. Creates two tunnels (active/standby) between a Virtual Private Gateway (VGW) or Transit Gateway and the customer gateway (on-premises device). Uses IKEv2 by default (IKEv1 available). Pre-shared keys or certificates. BGP optional for dynamic routing.`,
     whenToUse: [
       'Designing hybrid cloud connectivity between on-premises data center and AWS/GCP',
       'Debugging AWS Site-to-Site VPN phase 1 or phase 2 negotiation failures',
@@ -8935,21 +8935,21 @@ Step 5 — Verify BGP: if using BGP routing, check that BGP session is UP after 
     visualizations: [],
     introduction: `Classic DNS (RFC 1035, 1987) transmits queries and responses in plaintext over UDP/TCP port 53. Anyone on the network path — ISP, Wi-Fi operator, government — can observe which domains are queried. DNS over TLS (DoT) and DNS over HTTPS (DoH) address this by encrypting DNS traffic.
 
-**DNS over TLS (DoT — RFC 7858):**
+DNS over TLS (DoT — RFC 7858):
 - DNS queries sent over a persistent TLS connection on TCP port 853.
 - The resolver authenticates with a certificate (PKIX or DANE).
 - Traffic is distinguishable from other traffic (port 853 is DNS-specific). Network operators can identify and block or filter it.
 - Supported by: Android 9+ (Private DNS), Linux systemd-resolved (systemd 239+), Unbound, Knot Resolver.
 
-**DNS over HTTPS (DoH — RFC 8484):**
+DNS over HTTPS (DoH — RFC 8484):
 - DNS queries sent as HTTPS requests on TCP/443 (POST /dns-query or GET with dns= parameter).
 - Traffic is indistinguishable from normal HTTPS traffic — cannot be blocked without blocking all HTTPS to the resolver's IP.
 - Supported by: Firefox (uses Cloudflare DoH by default unless enterprise policy disables it), Chrome, iOS/macOS 14+, Edge.
 - Resolver URL examples: https://cloudflare-dns.com/dns-query, https://dns.google/dns-query.
 
-**DNSSEC vs DoH:** different problem spaces. DNSSEC validates that DNS responses have not been tampered with (data integrity, not confidentiality). DoH/DoT encrypts the query/response channel (confidentiality from the network path). Both can be used together.
+DNSSEC vs DoH: different problem spaces. DNSSEC validates that DNS responses have not been tampered with (data integrity, not confidentiality). DoH/DoT encrypts the query/response channel (confidentiality from the network path). Both can be used together.
 
-**Enterprise challenges:** corporate DNS filtering (Pi-hole, corporate resolver for internal domains) relies on intercepting port-53 DNS. DoH bypasses this — browsers sending DoH to Cloudflare never hit the corporate resolver. Enterprises must: detect DoH traffic (block DoH resolvers at firewall), deploy enterprise DoH resolvers, or use browser policy (DoH managed policy via MDM).`,
+Enterprise challenges: corporate DNS filtering (Pi-hole, corporate resolver for internal domains) relies on intercepting port-53 DNS. DoH bypasses this — browsers sending DoH to Cloudflare never hit the corporate resolver. Enterprises must: detect DoH traffic (block DoH resolvers at firewall), deploy enterprise DoH resolvers, or use browser policy (DoH managed policy via MDM).`,
     whenToUse: [
       'Explaining why Firefox defaults to DoH and how enterprises can override it',
       'Designing a privacy-preserving DNS architecture for users on public Wi-Fi',

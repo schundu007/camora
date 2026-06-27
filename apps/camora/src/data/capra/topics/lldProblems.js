@@ -1984,11 +1984,11 @@ class Split(ABC):
         self.amount = 0.0
 
     @abstractmethod
-    def set_amount(self, total: float, **kwargs):
+    def set_amount(self, total: float, kwargs):
         pass
 
 class EqualSplit(Split):
-    def set_amount(self, total: float, **kwargs):
+    def set_amount(self, total: float, kwargs):
         num_users = kwargs.get('num_users', 1)
         self.amount = round(total / num_users, 2)
 
@@ -3169,7 +3169,7 @@ class Vector2D:
         return math.isclose(self.x, other.x) and math.isclose(self.y, other.y)
 
     def magnitude(self) -> float:
-        return math.sqrt(self.x ** 2 + self.y ** 2)
+        return math.sqrt(self.x  2 + self.y  2)
 
     def normalize(self) -> 'Vector2D':
         mag = self.magnitude()

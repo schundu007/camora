@@ -58,71 +58,71 @@ export const systemDesignPatterns = [
       'In interviews, connect WAL to replication — the replica replays the leader\'s log',
     ],
 
-    introduction: `The **Write-Ahead Log** (WAL) is one of the most fundamental patterns in data systems. The rule is simple: before any change is applied to the actual data structures on disk, a record of that change is appended to a sequential, append-only log file. If the process crashes after writing the log but before updating the data, the system can replay the log on startup and reach a consistent state. This deceptively simple idea underpins virtually every durable storage system built in the last four decades.
+    introduction: `The Write-Ahead Log (WAL) is one of the most fundamental patterns in data systems. The rule is simple: before any change is applied to the actual data structures on disk, a record of that change is appended to a sequential, append-only log file. If the process crashes after writing the log but before updating the data, the system can replay the log on startup and reach a consistent state. This deceptively simple idea underpins virtually every durable storage system built in the last four decades.
 
-Every major database — PostgreSQL, MySQL/InnoDB, SQLite, and all LSM-tree engines — relies on a WAL for **durability** and **atomicity**. Without it, a crash during a partial write could leave data pages in a corrupted, half-written state that is impossible to recover from deterministically. **PostgreSQL** uses 16MB WAL segment files and supports both synchronous and asynchronous replication through WAL shipping. **RocksDB** (used by Meta, CockroachDB, and TiKV) writes WAL entries in 32KB blocks with per-block checksums to detect corruption. **SQLite** offers both rollback journal and WAL modes, with WAL mode enabling concurrent readers and a single writer.
+Every major database — PostgreSQL, MySQL/InnoDB, SQLite, and all LSM-tree engines — relies on a WAL for durability and atomicity. Without it, a crash during a partial write could leave data pages in a corrupted, half-written state that is impossible to recover from deterministically. PostgreSQL uses 16MB WAL segment files and supports both synchronous and asynchronous replication through WAL shipping. RocksDB (used by Meta, CockroachDB, and TiKV) writes WAL entries in 32KB blocks with per-block checksums to detect corruption. SQLite offers both rollback journal and WAL modes, with WAL mode enabling concurrent readers and a single writer.
 
-Beyond single-node crash recovery, the WAL pattern extends naturally to **replication**. A follower can subscribe to the leader's log stream and apply the same sequence of changes, producing an identical copy. Kafka's commit log, etcd's Raft log, and PostgreSQL streaming replication all follow this principle. **Amazon Aurora** took this further by making the WAL the replication unit itself — the database ships only WAL records to storage nodes, which reconstruct data pages locally, reducing network traffic by up to 7x compared to shipping full pages.
+Beyond single-node crash recovery, the WAL pattern extends naturally to replication. A follower can subscribe to the leader's log stream and apply the same sequence of changes, producing an identical copy. Kafka's commit log, etcd's Raft log, and PostgreSQL streaming replication all follow this principle. Amazon Aurora took this further by making the WAL the replication unit itself — the database ships only WAL records to storage nodes, which reconstruct data pages locally, reducing network traffic by up to 7x compared to shipping full pages.
 
-**When to use WAL**: Any system that needs crash recovery, durability guarantees, or change-based replication. **When NOT to use WAL**: Purely in-memory caches where data loss on crash is acceptable (e.g., Memcached), or append-only immutable stores where data is written once and never modified. Systems with extreme write latency requirements may also skip fsync on every commit in favor of group commit, trading a small durability window for throughput.`,
+When to use WAL: Any system that needs crash recovery, durability guarantees, or change-based replication. When NOT to use WAL: Purely in-memory caches where data loss on crash is acceptable (e.g., Memcached), or append-only immutable stores where data is written once and never modified. Systems with extreme write latency requirements may also skip fsync on every commit in favor of group commit, trading a small durability window for throughput.`,
 
     keyQuestions: [
       {
         question: 'How does a write-ahead log guarantee durability after a crash?',
-        answer: `**Core guarantee**: If the WAL entry has been fsynced to disk, the change is durable — even if the process crashes before the actual data file is updated.
+        answer: `Core guarantee: If the WAL entry has been fsynced to disk, the change is durable — even if the process crashes before the actual data file is updated.
 
-**Write path with WAL**:
+Write path with WAL:
 A client write follows three steps in order: (1) append the change to the WAL and fsync it to disk — sequential I/O, fast; (2) update the in-memory data structure (memtable or buffer pool); (3) eventually a background checkpoint flushes the in-memory state to the on-disk data files. Crashes between steps are recoverable because the WAL on disk is the durable record.
 
-**Crash recovery**:
+Crash recovery:
 1. On startup the system reads the WAL from the last checkpoint
 2. It replays every committed entry that was not yet reflected in data files
 3. It discards any uncommitted (partial) entries
 4. The data files are now consistent with all committed transactions
 
-**Why sequential?** WAL appends are sequential writes — no random seeks. Modern SSDs and HDDs can sustain very high throughput for sequential I/O, making the per-transaction cost low.
+Why sequential? WAL appends are sequential writes — no random seeks. Modern SSDs and HDDs can sustain very high throughput for sequential I/O, making the per-transaction cost low.
 
-**Group commit** batches multiple transactions' WAL writes into a single fsync, amortizing the expensive disk flush across many commits. PostgreSQL uses this to achieve tens of thousands of commits per second.`
+Group commit batches multiple transactions' WAL writes into a single fsync, amortizing the expensive disk flush across many commits. PostgreSQL uses this to achieve tens of thousands of commits per second.`
       },
       {
         question: 'What is the relationship between WAL, LSM trees, and SSTables?',
-        answer: `**LSM-tree architecture** (used by LevelDB, RocksDB, Cassandra, HBase):
+        answer: `LSM-tree architecture (used by LevelDB, RocksDB, Cassandra, HBase):
 
 An LSM-tree write goes WAL (sequential append on disk) → Memtable (in-memory sorted structure). When the memtable fills, it is flushed to a Sorted String Table (SSTable). Level 0 holds the freshly-flushed SSTables (unsorted relative to each other); compaction merges them into Level 1 (sorted, non-overlapping ranges), then Level 2, Level 3, and so on, with each level holding progressively more data.
 
-**Role of WAL in LSM trees**:
+Role of WAL in LSM trees:
 - The memtable lives in RAM — a crash would lose it
 - WAL persists every write before the memtable update
 - On recovery: replay WAL → rebuild memtable → resume
 - Once a memtable is flushed to an SSTable on disk, its WAL segment can be deleted
 
-**Compaction**: Background process that merges SSTables across levels, removing duplicates and tombstones. This is what makes reads efficient despite the write-optimized structure.
+Compaction: Background process that merges SSTables across levels, removing duplicates and tombstones. This is what makes reads efficient despite the write-optimized structure.
 
-**Trade-off**: LSM trees optimize for writes (sequential WAL + memtable) at the cost of read amplification (may need to check multiple levels). B-trees (PostgreSQL, MySQL) optimize for reads at the cost of random writes.`
+Trade-off: LSM trees optimize for writes (sequential WAL + memtable) at the cost of read amplification (may need to check multiple levels). B-trees (PostgreSQL, MySQL) optimize for reads at the cost of random writes.`
       },
       {
         question: 'How is WAL used for replication in distributed databases?',
-        answer: `**Log-based replication**: The leader's WAL becomes the replication stream.
+        answer: `Log-based replication: The leader's WAL becomes the replication stream.
 
 The Leader's WAL is the replication stream: as Leader writes WAL → DB, a continuous WAL stream is sent to each Follower; each Follower writes its own WAL → DB. Multiple followers receive the same stream in parallel.
 
-**PostgreSQL streaming replication**:
+PostgreSQL streaming replication:
 1. Leader writes to its WAL as normal
 2. WAL sender process ships WAL records to replicas in real time
 3. Replica's WAL receiver writes records to its own WAL
 4. Replica's recovery process replays the WAL to update data files
 
-**Synchronous vs asynchronous**:
-- **Synchronous**: Leader waits for at least one replica to fsync the WAL record before acknowledging the client. Guarantees no data loss on leader failure, but adds latency.
-- **Asynchronous**: Leader acknowledges immediately. Faster, but failover can lose recent writes.
+Synchronous vs asynchronous:
+- Synchronous: Leader waits for at least one replica to fsync the WAL record before acknowledging the client. Guarantees no data loss on leader failure, but adds latency.
+- Asynchronous: Leader acknowledges immediately. Faster, but failover can lose recent writes.
 
-**Kafka's commit log** follows the same principle — producers append to a partition log, consumers replay it from their last committed offset. The log IS the database.`
+Kafka's commit log follows the same principle — producers append to a partition log, consumers replay it from their last committed offset. The log IS the database.`
       },
       {
         question: 'What is checkpointing and why is it necessary?',
-        answer: `**Problem**: Without checkpointing the WAL grows forever, and recovery takes longer and longer because the entire log must be replayed.
+        answer: `Problem: Without checkpointing the WAL grows forever, and recovery takes longer and longer because the entire log must be replayed.
 
-**Checkpoint process**:
+Checkpoint process:
 \`\`\`
 WAL:  [E1][E2][E3][E4][E5][E6][E7][E8][E9]
                          ▲
@@ -134,20 +134,20 @@ After checkpoint:
   - Recovery only replays E6-E9
 \`\`\`
 
-**How it works**:
+How it works:
 1. The system periodically flushes all dirty pages (in-memory changes) to the data files on disk
 2. It records which WAL position (LSN) is now fully reflected in the data files
 3. WAL entries before that LSN are safe to delete
 
-**Fuzzy checkpointing**: Does not stop all writes during the checkpoint. Instead it notes which pages are dirty, flushes them in the background, and records the oldest WAL position that any dirty page depends on.
+Fuzzy checkpointing: Does not stop all writes during the checkpoint. Instead it notes which pages are dirty, flushes them in the background, and records the oldest WAL position that any dirty page depends on.
 
-**Key insight for interviews**: Checkpointing is a space vs recovery-time trade-off. More frequent checkpoints = smaller WAL, faster recovery, but more I/O overhead during normal operation.`
+Key insight for interviews: Checkpointing is a space vs recovery-time trade-off. More frequent checkpoints = smaller WAL, faster recovery, but more I/O overhead during normal operation.`
       },
       {
         question: 'What is group commit and how does it improve WAL performance?',
-        answer: `**The problem**: Calling fsync after every single transaction commit is expensive. Each fsync forces a disk flush, which on a spinning disk takes ~5-10ms (limiting throughput to ~100-200 commits/s) and on an SSD still costs ~50-200 microseconds of latency.
+        answer: `The problem: Calling fsync after every single transaction commit is expensive. Each fsync forces a disk flush, which on a spinning disk takes ~5-10ms (limiting throughput to ~100-200 commits/s) and on an SSD still costs ~50-200 microseconds of latency.
 
-**Group commit optimization**:
+Group commit optimization:
 \`\`\`
 Without group commit:
   Tx1: write WAL → fsync → ACK    (5ms)
@@ -162,23 +162,23 @@ With group commit:
   Total: 5ms for 3 transactions (3x throughput)
 \`\`\`
 
-**How it works in PostgreSQL**:
+How it works in PostgreSQL:
 1. Transactions write their WAL records to the WAL buffer (in memory)
 2. The first transaction to request a commit triggers a timer (commit_delay, default 0)
 3. During the delay window, additional transactions append to the same buffer
 4. One fsync flushes all accumulated WAL records together
 5. All waiting transactions are acknowledged simultaneously
 
-**Configuration**: PostgreSQL's \`synchronous_commit\` setting controls the trade-off:
+Configuration: PostgreSQL's \`synchronous_commit\` setting controls the trade-off:
 - \`on\`: Wait for local WAL fsync (default, safe)
 - \`remote_write\`: Wait for replica to receive but not fsync (faster, small risk)
 - \`off\`: Do not wait for fsync at all (fastest, risk of losing last ~600ms of commits on crash)
 
-**Real-world impact**: PostgreSQL with group commit can sustain 50,000+ commits/second on modern SSDs, compared to a few hundred without it. RocksDB uses a similar technique with its WAL write batch grouping.`
+Real-world impact: PostgreSQL with group commit can sustain 50,000+ commits/second on modern SSDs, compared to a few hundred without it. RocksDB uses a similar technique with its WAL write batch grouping.`
       },
       {
         question: 'How do WAL implementations differ across PostgreSQL, RocksDB, and SQLite?',
-        answer: `**PostgreSQL WAL**:
+        answer: `PostgreSQL WAL:
 \`\`\`
   Segment size:  16MB files (configurable at compile time)
   Format:        Binary records with LSN, transaction ID, and redo data
@@ -188,7 +188,7 @@ With group commit:
   Use case:      OLTP workloads with strong ACID requirements
 \`\`\`
 
-**RocksDB WAL (used by CockroachDB, TiKV, Meta)**:
+RocksDB WAL (used by CockroachDB, TiKV, Meta):
 \`\`\`
   Block size:    32KB blocks within WAL files
   Format:        Block-based with per-block CRC32 checksums
@@ -198,7 +198,7 @@ With group commit:
   Use case:      Write-heavy workloads, embedded key-value storage
 \`\`\`
 
-**SQLite WAL mode**:
+SQLite WAL mode:
 \`\`\`
   File:          Single -wal file alongside the main database
   Readers:       Can read main DB while writer appends to WAL
@@ -207,7 +207,7 @@ With group commit:
   Use case:      Embedded databases, mobile apps, edge computing
 \`\`\`
 
-**Key differences**:
+Key differences:
 | Property | PostgreSQL | RocksDB | SQLite |
 |----------|-----------|---------|--------|
 | Architecture | B-tree pages | LSM tree | B-tree pages |
@@ -218,7 +218,7 @@ With group commit:
       },
       {
         question: 'When should you use WAL and when should you avoid it?',
-        answer: `**Use WAL when**:
+        answer: `Use WAL when:
 \`\`\`
 1. ACID durability is required
    Any database storing financial transactions, user data, or
@@ -237,7 +237,7 @@ With group commit:
    in time, not just the last backup.
 \`\`\`
 
-**Avoid WAL when**:
+Avoid WAL when:
 \`\`\`
 1. In-memory caches without persistence
    Memcached, Redis in pure cache mode — data loss on crash is acceptable,
@@ -252,7 +252,7 @@ With group commit:
    the last few seconds of data rather than paying fsync latency.
 \`\`\`
 
-**Comparison with related patterns**:
+Comparison with related patterns:
 \`\`\`
   WAL vs Event Sourcing:
     WAL = internal implementation detail, events are redo records
@@ -271,9 +271,9 @@ With group commit:
       },
       {
         question: 'How do disk-level failures affect WAL reliability, and how do databases mitigate them?',
-        answer: `**The core danger**: WAL assumes that once fsync returns success, the data is on durable media. But disks can lie — some drives, controllers, and filesystems report fsync success before data actually reaches persistent storage.
+        answer: `The core danger: WAL assumes that once fsync returns success, the data is on durable media. But disks can lie — some drives, controllers, and filesystems report fsync success before data actually reaches persistent storage.
 
-**Failure modes**:
+Failure modes:
 \`\`\`
 1. Write reordering:
    OS or disk controller reorders writes for performance
@@ -296,7 +296,7 @@ With group commit:
    → Valid CRC but wrong data at wrong offset
 \`\`\`
 
-**Mitigation strategies used by production databases**:
+Mitigation strategies used by production databases:
 \`\`\`
 PostgreSQL:
   - full_page_writes: On first modification after checkpoint,
@@ -315,25 +315,25 @@ SQLite:
   - Page-level checksums (optional)
 \`\`\`
 
-**Hardware-level defense**: Use enterprise SSDs with power-loss protection (capacitors that flush in-flight writes to NAND on power failure). Avoid consumer drives in production databases. Enable filesystem barriers (default on ext4/XFS).
+Hardware-level defense: Use enterprise SSDs with power-loss protection (capacitors that flush in-flight writes to NAND on power failure). Avoid consumer drives in production databases. Enable filesystem barriers (default on ext4/XFS).
 
-**Interview takeaway**: A WAL is only as reliable as the underlying storage. Always mention checksums, full-page writes, and the assumption that fsync must actually flush to durable media for the WAL guarantee to hold.`
+Interview takeaway: A WAL is only as reliable as the underlying storage. Always mention checksums, full-page writes, and the assumption that fsync must actually flush to durable media for the WAL guarantee to hold.`
       },
       {
         question: 'How does Amazon Aurora rethink the WAL for cloud-native databases?',
-        answer: `**Traditional approach (PostgreSQL on EC2)**: the Primary ships WAL records to Replica 1 and Replica 2, while also writing data pages synchronously to EBS plus shipping WAL for replication. Total network I/O per write: WAL to disk (EBS) + WAL to replica 1 + WAL to replica 2 + data pages to EBS — roughly 4× amplification.
+        answer: `Traditional approach (PostgreSQL on EC2): the Primary ships WAL records to Replica 1 and Replica 2, while also writing data pages synchronously to EBS plus shipping WAL for replication. Total network I/O per write: WAL to disk (EBS) + WAL to replica 1 + WAL to replica 2 + data pages to EBS — roughly 4× amplification.
 
-**Aurora's insight — "the log IS the database"**: the Primary sends only WAL records to a shared storage layer (6 copies across 3 AZs); storage nodes reconstruct data pages from the WAL locally; read replicas read directly from the same shared storage (cached). Total network I/O per write: a single quorum write of WAL to storage (4 of 6) — about 1× amplification, and no data-page shipping at all.
+Aurora's insight — "the log IS the database": the Primary sends only WAL records to a shared storage layer (6 copies across 3 AZs); storage nodes reconstruct data pages from the WAL locally; read replicas read directly from the same shared storage (cached). Total network I/O per write: a single quorum write of WAL to storage (4 of 6) — about 1× amplification, and no data-page shipping at all.
 
-**Key design decisions**:
-1. **Only ship redo log records** — never ship data pages over the network. Storage nodes materialize pages locally by applying WAL records. This reduces network traffic by ~7x.
-2. **Quorum writes** — write to 4 of 6 storage nodes (across 3 AZs) before acknowledging. Can tolerate an entire AZ failure plus one additional node.
-3. **Background page materialization** — storage nodes asynchronously apply log records to create data pages. Reads that hit a page not yet materialized trigger on-demand application of pending log records.
-4. **Read replicas share storage** — up to 15 read replicas access the same storage volume with ~10-20ms replication lag (just the time to apply new WAL records to their buffer cache).
+Key design decisions:
+1. Only ship redo log records — never ship data pages over the network. Storage nodes materialize pages locally by applying WAL records. This reduces network traffic by ~7x.
+2. Quorum writes — write to 4 of 6 storage nodes (across 3 AZs) before acknowledging. Can tolerate an entire AZ failure plus one additional node.
+3. Background page materialization — storage nodes asynchronously apply log records to create data pages. Reads that hit a page not yet materialized trigger on-demand application of pending log records.
+4. Read replicas share storage — up to 15 read replicas access the same storage volume with ~10-20ms replication lag (just the time to apply new WAL records to their buffer cache).
 
-**Impact on checkpointing**: Aurora eliminates traditional checkpointing entirely. Since the storage layer continuously applies WAL records, there is no need for the database to periodically flush dirty pages. This removes checkpoint-related I/O spikes.
+Impact on checkpointing: Aurora eliminates traditional checkpointing entirely. Since the storage layer continuously applies WAL records, there is no need for the database to periodically flush dirty pages. This removes checkpoint-related I/O spikes.
 
-**Interview takeaway**: Aurora demonstrates that the WAL can be more than a recovery mechanism — it can be the entire replication and storage protocol. This is a powerful example of how rethinking a fundamental pattern for the cloud yields dramatic improvements.`
+Interview takeaway: Aurora demonstrates that the WAL can be more than a recovery mechanism — it can be the entire replication and storage protocol. This is a powerful example of how rethinking a fundamental pattern for the cloud yields dramatic improvements.`
       },
     ],
 
@@ -388,18 +388,18 @@ Recovery Flow:
       'In interviews, explain how gossip handles network partitions gracefully — each partition continues gossiping internally',
     ],
 
-    introduction: `The **Gossip Protocol** (also called epidemic protocol) is a peer-to-peer communication mechanism inspired by how rumors spread through a social network. Each node periodically selects a random subset of peers and exchanges its local state. Over successive rounds, information propagates exponentially until every node in the cluster converges on a shared view. Three variants exist: **push** (send what you know), **pull** (ask what others know), and **push-pull** (exchange both ways, which is the most common in practice).
+    introduction: `The Gossip Protocol (also called epidemic protocol) is a peer-to-peer communication mechanism inspired by how rumors spread through a social network. Each node periodically selects a random subset of peers and exchanges its local state. Over successive rounds, information propagates exponentially until every node in the cluster converges on a shared view. Three variants exist: push (send what you know), pull (ask what others know), and push-pull (exchange both ways, which is the most common in practice).
 
-Gossip is valued for its **decentralization** — there is no coordinator, no single point of failure, and no leader election required for membership management. Systems like **Cassandra**, **DynamoDB**, **Consul**, and **Serf** rely on gossip for cluster membership, failure detection, and lightweight metadata propagation. **HashiCorp Consul** uses two gossip pools: a LAN pool for intra-datacenter communication and a WAN pool for cross-datacenter federation. **Cassandra** gossips every second, exchanging node health, schema versions, token ownership, and load information across the entire cluster without any central coordinator.
+Gossip is valued for its decentralization — there is no coordinator, no single point of failure, and no leader election required for membership management. Systems like Cassandra, DynamoDB, Consul, and Serf rely on gossip for cluster membership, failure detection, and lightweight metadata propagation. HashiCorp Consul uses two gossip pools: a LAN pool for intra-datacenter communication and a WAN pool for cross-datacenter federation. Cassandra gossips every second, exchanging node health, schema versions, token ownership, and load information across the entire cluster without any central coordinator.
 
-The mathematical property that makes gossip powerful is **logarithmic convergence**: in a cluster of N nodes with fan-out k, information reaches every node in approximately O(log N) rounds. For a 1,000-node cluster gossiping every second, full propagation takes roughly 10 seconds — without any centralized broadcast. The gossip interval can be tuned as low as 10ms for latency-sensitive environments, achieving propagation across a large datacenter in roughly 3 seconds.
+The mathematical property that makes gossip powerful is logarithmic convergence: in a cluster of N nodes with fan-out k, information reaches every node in approximately O(log N) rounds. For a 1,000-node cluster gossiping every second, full propagation takes roughly 10 seconds — without any centralized broadcast. The gossip interval can be tuned as low as 10ms for latency-sensitive environments, achieving propagation across a large datacenter in roughly 3 seconds.
 
-**When to use gossip**: Large clusters (hundreds to thousands of nodes) that need membership tracking, failure detection, or metadata propagation where brief inconsistency windows are acceptable. **When NOT to use gossip**: When you need strong consistency guarantees (use consensus protocols like Raft or Paxos), when cluster size is small enough for direct heartbeating (under 10 nodes), or when you need real-time, deterministic propagation rather than probabilistic convergence.`,
+When to use gossip: Large clusters (hundreds to thousands of nodes) that need membership tracking, failure detection, or metadata propagation where brief inconsistency windows are acceptable. When NOT to use gossip: When you need strong consistency guarantees (use consensus protocols like Raft or Paxos), when cluster size is small enough for direct heartbeating (under 10 nodes), or when you need real-time, deterministic propagation rather than probabilistic convergence.`,
 
     keyQuestions: [
       {
         question: 'How does gossip-based failure detection work?',
-        answer: `**Mechanism**: Each node maintains a heartbeat counter and gossips it to random peers. If a node's heartbeat has not incremented for a configured timeout, it is marked as suspected/down.
+        answer: `Mechanism: Each node maintains a heartbeat counter and gossips it to random peers. If a node's heartbeat has not incremented for a configured timeout, it is marked as suspected/down.
 
 \`\`\`
 Round 1: Node A gossips to B and D
@@ -414,46 +414,46 @@ Detection:
     D is marked SUSPECT → then DOWN after T2
 \`\`\`
 
-**SWIM Protocol** (Scalable Weakly-consistent Infection-style Membership):
+SWIM Protocol (Scalable Weakly-consistent Infection-style Membership):
 1. Node A picks random target B and sends PING
 2. If B responds with ACK, B is alive
 3. If B does not respond, A asks k random nodes to PING B (indirect probe)
 4. If none get ACK from B, A marks B as suspect
 5. Suspicion is disseminated via the gossip channel (piggybacked)
 
-**Advantages over heartbeat-to-all**:
+Advantages over heartbeat-to-all:
 - O(1) network load per node per round (fixed fan-out)
 - No centralized failure detector
 - Partitioned nodes are detected by the reachable partition
 
-**Tuning**: Higher fan-out (k) and shorter gossip interval → faster detection, more bandwidth. Typical: k=3, interval=1s, suspect timeout=10s.`
+Tuning: Higher fan-out (k) and shorter gossip interval → faster detection, more bandwidth. Typical: k=3, interval=1s, suspect timeout=10s.`
       },
       {
         question: 'How does Cassandra use gossip for cluster management?',
-        answer: `**Cassandra's gossip layer** handles three responsibilities:
+        answer: `Cassandra's gossip layer handles three responsibilities:
 
 Each Cassandra node carries its own metadata — token assignment and current state — and gossips bidirectionally with peers. Example three-node cluster: Node A (token 1, state NORMAL) gossips with Node B (token 50, NORMAL); B gossips with Node C (token 100, JOINING); C also gossips back to A, completing the mesh. There is no central coordinator; every node eventually learns every other node's token and state through these pairwise exchanges.
 
-**1. Membership and topology**:
+1. Membership and topology:
 - Every node knows every other node's token range, data center, rack
 - New nodes announce themselves via gossip → cluster discovers them
 - Seed nodes bootstrap the initial gossip contact list
 
-**2. State propagation**:
+2. State propagation:
 - Schema changes, token assignments, load information
 - Each piece of state has a version number; highest version wins
 - Cramer's gossip digest exchange: nodes send digests first, then request only stale data
 
-**3. Failure detection**:
-- Cassandra uses the **phi-accrual failure detector** on top of gossip heartbeats
+3. Failure detection:
+- Cassandra uses the phi-accrual failure detector on top of gossip heartbeats
 - Rather than a binary alive/dead, phi represents a suspicion level (0 to infinity)
 - When phi exceeds a threshold (default: 8), the node is considered down
 
-**Consistency note**: Gossip is eventually consistent — during a short window after a topology change, different nodes may have different views. This is acceptable because Cassandra's read/write paths use quorum, not the gossip membership directly.`
+Consistency note: Gossip is eventually consistent — during a short window after a topology change, different nodes may have different views. This is acceptable because Cassandra's read/write paths use quorum, not the gossip membership directly.`
       },
       {
         question: 'What is the convergence time for gossip and how do you analyze it?',
-        answer: `**Key formula**: With N nodes and fan-out k, the expected rounds for all nodes to receive a message is approximately:
+        answer: `Key formula: With N nodes and fan-out k, the expected rounds for all nodes to receive a message is approximately:
 
 \`\`\`
   Rounds ≈ log_k(N) × C
@@ -461,7 +461,7 @@ Each Cassandra node carries its own metadata — token assignment and current st
   where C is a small constant (typically 2-3 for high probability)
 \`\`\`
 
-**Example analysis (1000-node cluster, fan-out k=3, interval=1s)**:
+Example analysis (1000-node cluster, fan-out k=3, interval=1s):
 \`\`\`
   Round 0:  1 node has info
   Round 1:  1 + 3 = 4 nodes
@@ -474,22 +474,22 @@ Each Cassandra node carries its own metadata — token assignment and current st
   With safety margin: ~10-15 seconds
 \`\`\`
 
-**Bandwidth analysis**:
+Bandwidth analysis:
 - Each gossip message: digest of all node states ≈ N × state_size
 - For 1000 nodes × 100 bytes/state = 100KB per gossip message
 - Each node sends k=3 messages/round = 300KB/s per node
 - Total cluster bandwidth: 1000 × 300KB/s = 300MB/s (manageable)
 
-**Optimizations**:
-- **Digest exchange**: Only send full state for entries the peer is behind on
-- **Cramer protocol**: Three-way handshake — SYN (digests) → ACK (needed data) → ACK2 (requested data)
-- **Piggybacking**: Attach membership updates to application-level messages`
+Optimizations:
+- Digest exchange: Only send full state for entries the peer is behind on
+- Cramer protocol: Three-way handshake — SYN (digests) → ACK (needed data) → ACK2 (requested data)
+- Piggybacking: Attach membership updates to application-level messages`
       },
       {
         question: 'What are the trade-offs of gossip vs centralized coordination (e.g., ZooKeeper)?',
-        answer: `**Gossip (decentralized)**: every node is equal and there is no coordinator. Each node exchanges state with random peers — A talks to B, B talks to C, both talk to D — and information propagates pairwise across the mesh.
+        answer: `Gossip (decentralized): every node is equal and there is no coordinator. Each node exchanges state with random peers — A talks to B, B talks to C, both talk to D — and information propagates pairwise across the mesh.
 
-**Centralized (ZooKeeper / etcd)**: every node (A, B, C) reads from and writes to a single coordination service (a ZooKeeper / etcd quorum). The coordinator is the single source of truth; member nodes do not gossip with each other.
+Centralized (ZooKeeper / etcd): every node (A, B, C) reads from and writes to a single coordination service (a ZooKeeper / etcd quorum). The coordinator is the single source of truth; member nodes do not gossip with each other.
 
 | Property | Gossip | Centralized |
 |----------|--------|-------------|
@@ -500,15 +500,15 @@ Each Cassandra node carries its own metadata — token assignment and current st
 | Bandwidth | O(N) per node per round | O(1) per node (watch) |
 | Use case | Membership, metadata | Leader election, config, locks |
 
-**When to use gossip**: Large clusters, membership tracking, metadata that tolerates brief inconsistency (Cassandra, DynamoDB, Consul).
+When to use gossip: Large clusters, membership tracking, metadata that tolerates brief inconsistency (Cassandra, DynamoDB, Consul).
 
-**When to use centralized**: Leader election, distributed locks, configuration that must be consistent (Kafka controller, HDFS NameNode, distributed transactions).
+When to use centralized: Leader election, distributed locks, configuration that must be consistent (Kafka controller, HDFS NameNode, distributed transactions).
 
-**Hybrid approach**: Many systems use both — gossip for membership and a consensus system for critical metadata (e.g., CockroachDB uses gossip for node discovery and Raft for data replication).`
+Hybrid approach: Many systems use both — gossip for membership and a consensus system for critical metadata (e.g., CockroachDB uses gossip for node discovery and Raft for data replication).`
       },
       {
         question: 'What are the three gossip dissemination variants and when do you use each?',
-        answer: `**Push gossip**:
+        answer: `Push gossip:
 \`\`\`
   Node A has new info → picks random peer B → sends info to B
   B already has it? → wasted message
@@ -519,7 +519,7 @@ Each Cassandra node carries its own metadata — token assignment and current st
   Best for: Initial rapid dissemination of urgent updates
 \`\`\`
 
-**Pull gossip**:
+Pull gossip:
 \`\`\`
   Node A picks random peer B → asks "what do you have that I don't?"
   B responds with missing updates → A integrates them
@@ -529,7 +529,7 @@ Each Cassandra node carries its own metadata — token assignment and current st
   Best for: Anti-entropy repair, catching up after downtime
 \`\`\`
 
-**Push-pull gossip** (most common in production):
+Push-pull gossip (most common in production):
 \`\`\`
   Round 1: Node A sends digest to B (push)
   Round 2: B responds with what A is missing + requests what B is missing (pull)
@@ -541,36 +541,36 @@ Each Cassandra node carries its own metadata — token assignment and current st
     ACK2: A → B  (data A has that B needs)
 \`\`\`
 
-**Cassandra uses push-pull**: Every second, each node picks 1-3 random peers and performs this three-way exchange. This converges in O(log N) rounds and handles both fresh information spread and stale state repair in a single protocol.
+Cassandra uses push-pull: Every second, each node picks 1-3 random peers and performs this three-way exchange. This converges in O(log N) rounds and handles both fresh information spread and stale state repair in a single protocol.
 
-**Comparison**:
+Comparison:
 | Variant | Messages per round | Convergence speed | Bandwidth efficiency |
 |---------|-------------------|-------------------|---------------------|
 | Push | O(k) per node | Fast initial, slow tail | Low (many redundant) |
 | Pull | O(k) per node | Slow initial, fast tail | High (targeted) |
 | Push-pull | O(k) per node | Fast throughout | Best (bidirectional) |
 
-**Interview tip**: Always mention push-pull as the practical choice. Pure push or pull are textbook models; real systems use push-pull for balanced convergence.`
+Interview tip: Always mention push-pull as the practical choice. Pure push or pull are textbook models; real systems use push-pull for balanced convergence.`
       },
       {
         question: 'How does Consul use SWIM gossip for service discovery and health checking?',
-        answer: `**Consul's two gossip pools**:
+        answer: `Consul's two gossip pools:
 
 Each datacenter runs its own LAN gossip pool: in DC1, Server A and Server B exchange gossip and Client 1 / Client 2 join the same LAN pool; DC2 mirrors that with Server D / Server E and Client 3 / Client 4. A separate WAN gossip pool spans the two datacenters but only Consul servers (A, B, D, E) participate — clients never gossip across the WAN. Servers act as gateways between LAN and WAN pools.
 
-**LAN gossip pool** (based on Serf, which implements SWIM):
+LAN gossip pool (based on Serf, which implements SWIM):
 - All nodes in a datacenter participate (servers + clients)
 - Gossip interval: 200ms (fast failure detection)
 - Used for: membership, failure detection, event broadcast
 - Every node knows every other node in its datacenter
 
-**WAN gossip pool**:
+WAN gossip pool:
 - Only Consul servers participate (not clients)
 - Gossip interval: 1 second (lower bandwidth across DCs)
 - Used for: cross-datacenter service discovery, federation
 - Servers act as gateways between LAN and WAN pools
 
-**SWIM protocol in Consul/Serf**:
+SWIM protocol in Consul/Serf:
 \`\`\`
   Period T (every 200ms):
     1. Node A selects random target B
@@ -585,13 +585,13 @@ Each datacenter runs its own LAN gossip pool: in DC1, Server A and Server B exch
     6. If B does not refute within timeout → B is marked DEAD
 \`\`\`
 
-**Key advantage over heartbeat-to-all**: Each node does O(1) work per period (probe one random target), regardless of cluster size. A 10,000-node cluster has the same per-node overhead as a 10-node cluster.
+Key advantage over heartbeat-to-all: Each node does O(1) work per period (probe one random target), regardless of cluster size. A 10,000-node cluster has the same per-node overhead as a 10-node cluster.
 
-**Piggybacking**: Membership state changes are piggybacked on SWIM protocol messages, eliminating the need for separate gossip messages for state propagation. This is a core optimization from the SWIM paper.`
+Piggybacking: Membership state changes are piggybacked on SWIM protocol messages, eliminating the need for separate gossip messages for state propagation. This is a core optimization from the SWIM paper.`
       },
       {
         question: 'How does gossip handle network partitions and node rejoining?',
-        answer: `**During a partition**: Each side of the partition continues gossiping internally. The partitioned sides independently converge on their own view, but cannot communicate across the partition boundary.
+        answer: `During a partition: Each side of the partition continues gossiping internally. The partitioned sides independently converge on their own view, but cannot communicate across the partition boundary.
 
 \`\`\`
 Before partition:
@@ -607,7 +607,7 @@ Partition occurs:
   But the views DISAGREE across the partition.
 \`\`\`
 
-**Partition heals — convergence process**:
+Partition heals — convergence process:
 \`\`\`
   1. Network restored between C and D
   2. C picks D as gossip target (random selection)
@@ -619,7 +619,7 @@ Partition occurs:
      {A:UP, B:UP, C:UP, D:UP, E:UP}
 \`\`\`
 
-**Seed nodes and bootstrapping**:
+Seed nodes and bootstrapping:
 \`\`\`
   New node joins the cluster:
     1. Contacts a seed node (well-known address)
@@ -633,13 +633,13 @@ Partition occurs:
     Multiple seed nodes provide redundancy for initial join
 \`\`\`
 
-**Split-brain risk**: Gossip itself does not prevent split-brain — it is an availability-oriented protocol. If both partitions have write-accepting nodes (as in Cassandra), conflicting writes can occur. The database's consistency model (quorum reads, read repair, vector clocks) must handle this, not the gossip layer.
+Split-brain risk: Gossip itself does not prevent split-brain — it is an availability-oriented protocol. If both partitions have write-accepting nodes (as in Cassandra), conflicting writes can occur. The database's consistency model (quorum reads, read repair, vector clocks) must handle this, not the gossip layer.
 
-**Interview insight**: Gossip provides fast convergence after a partition heals, but it does not provide safety guarantees during the partition. This is why systems like CockroachDB pair gossip with Raft — gossip for liveness, Raft for safety.`
+Interview insight: Gossip provides fast convergence after a partition heals, but it does not provide safety guarantees during the partition. This is why systems like CockroachDB pair gossip with Raft — gossip for liveness, Raft for safety.`
       },
       {
         question: 'What is the bandwidth overhead of gossip and how do you optimize it for large clusters?',
-        answer: `**Baseline analysis (push-pull gossip)**:
+        answer: `Baseline analysis (push-pull gossip):
 
 \`\`\`
 Cluster: N=1000 nodes, gossip interval=1s, fan-out k=3
@@ -658,7 +658,7 @@ Total per node: ~63KB/s ≈ 0.5 Mbps (manageable)
 Total cluster: 1000 × 63KB/s = 63MB/s bandwidth
 \`\`\`
 
-**Scaling pain points**:
+Scaling pain points:
 \`\`\`
 At N=10,000:
   Digest alone: 10,000 × 16 bytes = 160KB per message
@@ -666,13 +666,13 @@ At N=10,000:
   Total cluster: 38 Gbps — expensive!
 \`\`\`
 
-**Optimization strategies**:
+Optimization strategies:
 
-1. **Digest compression**: Only send entries with version > peer's last known version, not the full member list. This reduces digest size dramatically when most nodes are stable.
+1. Digest compression: Only send entries with version > peer's last known version, not the full member list. This reduces digest size dramatically when most nodes are stable.
 
-2. **Cramer protocol** (used by Cassandra): Three-way handshake minimizes full-state transfers. Digests are compact (node_id + version only), full state sent only for stale entries.
+2. Cramer protocol (used by Cassandra): Three-way handshake minimizes full-state transfers. Digests are compact (node_id + version only), full state sent only for stale entries.
 
-3. **Hierarchical gossip**: Large clusters split into sub-groups. Representatives gossip between groups.
+3. Hierarchical gossip: Large clusters split into sub-groups. Representatives gossip between groups.
 \`\`\`
   Cluster of 10,000 nodes:
     10 racks × 1,000 nodes each
@@ -681,11 +681,11 @@ At N=10,000:
     Two-level convergence: O(log 1000) + O(log 10)
 \`\`\`
 
-4. **Piggybacking on application messages**: Attach membership updates to regular request/response traffic, reducing dedicated gossip bandwidth.
+4. Piggybacking on application messages: Attach membership updates to regular request/response traffic, reducing dedicated gossip bandwidth.
 
-5. **Adaptive fan-out**: Increase fan-out during state changes (new node joining, failure detected) and decrease during stability.
+5. Adaptive fan-out: Increase fan-out during state changes (new node joining, failure detected) and decrease during stability.
 
-**Real-world benchmarks**: Consul's Serf library handles 10,000+ nodes with sub-second convergence and <1% CPU overhead per node. Cassandra clusters of 1,000+ nodes use ~0.5MB/s of gossip bandwidth per node.`
+Real-world benchmarks: Consul's Serf library handles 10,000+ nodes with sub-second convergence and <1% CPU overhead per node. Cassandra clusters of 1,000+ nodes use ~0.5MB/s of gossip bandwidth per node.`
       },
     ],
 
@@ -745,40 +745,40 @@ Gossip Message (ACK):
       'Clock pruning is needed in practice — drop the oldest entry when the vector exceeds a size limit',
     ],
 
-    introduction: `**Vector clocks** solve one of the hardest problems in distributed systems: determining the order of events when there is no shared global clock. In a single-process system, events are trivially ordered by wall-clock time. In a distributed system, clocks drift, network delays vary, and two nodes can perform conflicting operations at the "same" time. Leslie Lamport formalized the "happens-before" relationship in 1978, and vector clocks (introduced by Fidge and Mattern in 1988) extended this to detect **concurrency** — something Lamport clocks alone cannot do.
+    introduction: `Vector clocks solve one of the hardest problems in distributed systems: determining the order of events when there is no shared global clock. In a single-process system, events are trivially ordered by wall-clock time. In a distributed system, clocks drift, network delays vary, and two nodes can perform conflicting operations at the "same" time. Leslie Lamport formalized the "happens-before" relationship in 1978, and vector clocks (introduced by Fidge and Mattern in 1988) extended this to detect concurrency — something Lamport clocks alone cannot do.
 
-A vector clock is a map from node ID to a counter. Each node increments its own counter on every local event. When a message is sent, the sender's full vector clock is attached. The receiver merges the incoming vector with its own by taking the element-wise maximum. This gives every event a **causal history** — you can compare two vector clocks and determine if one **happened before** the other or if they are **concurrent** (and therefore potentially conflicting).
+A vector clock is a map from node ID to a counter. Each node increments its own counter on every local event. When a message is sent, the sender's full vector clock is attached. The receiver merges the incoming vector with its own by taking the element-wise maximum. This gives every event a causal history — you can compare two vector clocks and determine if one happened before the other or if they are concurrent (and therefore potentially conflicting).
 
-Systems like **Riak** (which switched from vector clocks to dotted version vectors in Riak 2.0 for better precision) and the original **Amazon Dynamo** paper proposed this pattern for detecting write conflicts. Notably, the actual **DynamoDB** and **Cassandra** implementations have moved away from vector clocks in production: Cassandra uses last-writer-wins with wall-clock timestamps, and modern DynamoDB uses finer-grained conflict handling. **CockroachDB** and **YugabyteDB** use **Hybrid Logical Clocks** (HLCs) instead, which combine physical time with logical counters to achieve both causal ordering and compact O(1) size.
+Systems like Riak (which switched from vector clocks to dotted version vectors in Riak 2.0 for better precision) and the original Amazon Dynamo paper proposed this pattern for detecting write conflicts. Notably, the actual DynamoDB and Cassandra implementations have moved away from vector clocks in production: Cassandra uses last-writer-wins with wall-clock timestamps, and modern DynamoDB uses finer-grained conflict handling. CockroachDB and YugabyteDB use Hybrid Logical Clocks (HLCs) instead, which combine physical time with logical counters to achieve both causal ordering and compact O(1) size.
 
-**When to use vector clocks**: Systems that must detect concurrent writes and present conflicts to the application for resolution (shopping carts, collaborative editing, multi-master databases). **When NOT to use**: When you need a total order of events (use Lamport clocks or HLCs), when conflict resolution can be handled by last-writer-wins (simpler but lossy), or when the number of writers per key is very large (vector size grows linearly with writer count).`,
+When to use vector clocks: Systems that must detect concurrent writes and present conflicts to the application for resolution (shopping carts, collaborative editing, multi-master databases). When NOT to use: When you need a total order of events (use Lamport clocks or HLCs), when conflict resolution can be handled by last-writer-wins (simpler but lossy), or when the number of writers per key is very large (vector size grows linearly with writer count).`,
 
     keyQuestions: [
       {
         question: 'How do vector clocks determine causality between events?',
-        answer: `**Rules**:
+        answer: `Rules:
 
-1. **Local event on node i**: increment VC[i]
-2. **Send message**: increment VC[i], attach VC to message
-3. **Receive message**: VC = max(local_VC, msg_VC) for each entry, then increment VC[i]
+1. Local event on node i: increment VC[i]
+2. Send message: increment VC[i], attach VC to message
+3. Receive message: VC = max(local_VC, msg_VC) for each entry, then increment VC[i]
 
-**Comparison**:
-- VC(a) < VC(b) if every entry in a <= corresponding entry in b, and at least one is strictly less → a **happened before** b
-- If neither a < b nor b < a → a and b are **concurrent**
+Comparison:
+- VC(a) < VC(b) if every entry in a <= corresponding entry in b, and at least one is strictly less → a happened before b
+- If neither a < b nor b < a → a and b are concurrent
 
 Worked example with three nodes A, B, C. A starts at vector clock [1,0,0] and sends a message to B; on receive B becomes [1,1,0]. B sends to C; C becomes [1,1,1]. Meanwhile A's next local event makes it [2,0,0], and a message from C to B with VC [1,2,0] arrives. B merges by element-wise max: max([2,0,0],[1,2,0]) = [2,2,0], then increments its own component: [2,3,0]. The merge rule (element-wise max + increment local) is what propagates partial-order information.
 
-**Detecting conflicts**: Client writes to key K via Node A → VC = [2,0,0]. Another client writes via Node B → VC = [0,2,0]. Neither dominates the other → **concurrent writes detected**. The system stores both versions and lets the next reader resolve the conflict.`
+Detecting conflicts: Client writes to key K via Node A → VC = [2,0,0]. Another client writes via Node B → VC = [0,2,0]. Neither dominates the other → concurrent writes detected. The system stores both versions and lets the next reader resolve the conflict.`
       },
       {
         question: 'What is the difference between Lamport clocks and vector clocks?',
-        answer: `**Lamport Clock**: Single integer counter per node.
+        answer: `Lamport Clock: Single integer counter per node.
 - Rule: on event, counter++. On receive, counter = max(local, received) + 1.
-- Gives **total order** but CANNOT detect concurrency.
+- Gives total order but CANNOT detect concurrency.
 - If L(a) < L(b), it does NOT mean a happened before b.
 
-**Vector Clock**: Array of counters, one per node.
-- Gives **partial order** and CAN detect concurrency.
+Vector Clock: Array of counters, one per node.
+- Gives partial order and CAN detect concurrency.
 - If VC(a) < VC(b), then a definitely happened before b.
 - If VC(a) || VC(b) (incomparable), they are concurrent.
 
@@ -802,11 +802,11 @@ Vector:
 | Concurrency detection | No | Yes |
 | Use case | Total ordering (Paxos log) | Conflict detection (Dynamo) |
 
-**In practice**: Lamport/hybrid logical clocks are used where you need a total order (transaction ordering in CockroachDB). Vector clocks are used where you need to detect and resolve conflicts (shopping carts in DynamoDB).`
+In practice: Lamport/hybrid logical clocks are used where you need a total order (transaction ordering in CockroachDB). Vector clocks are used where you need to detect and resolve conflicts (shopping carts in DynamoDB).`
       },
       {
         question: 'How does DynamoDB use version vectors for conflict resolution?',
-        answer: `**DynamoDB's approach** (simplified from the Dynamo paper):
+        answer: `DynamoDB's approach (simplified from the Dynamo paper):
 
 \`\`\`
 Write 1: Client sets key="cart" via Node A
@@ -823,7 +823,7 @@ Concurrent Write 3: Another client reads stale {A:1},
   VC: {A:1, B:1}
 \`\`\`
 
-**Conflict detection on read**:
+Conflict detection on read:
 \`\`\`
   {A:2} vs {A:1, B:1}
   A: 2 > 1 but B: 0 < 1
@@ -831,30 +831,30 @@ Concurrent Write 3: Another client reads stale {A:1},
   → Return BOTH versions to client as "siblings"
 \`\`\`
 
-**Resolution strategies**:
-1. **Application-level merge**: Client merges siblings (e.g., union of cart items → ["book","pen","hat"])
-2. **Last-writer-wins (LWW)**: Use wall-clock timestamp — simple but loses data
-3. **CRDTs**: Conflict-free data types that merge automatically (counters, sets)
+Resolution strategies:
+1. Application-level merge: Client merges siblings (e.g., union of cart items → ["book","pen","hat"])
+2. Last-writer-wins (LWW): Use wall-clock timestamp — simple but loses data
+3. CRDTs: Conflict-free data types that merge automatically (counters, sets)
 
-**Practical issue — clock bloat**: If many nodes write to the same key, the vector grows. Solutions:
-- **Dotted version vectors**: Track exactly which dot (node, counter) created each sibling — avoids false conflicts from read-then-write patterns
-- **Clock pruning**: Remove entries from nodes that haven't written recently (risks false concurrency but bounds vector size)`
+Practical issue — clock bloat: If many nodes write to the same key, the vector grows. Solutions:
+- Dotted version vectors: Track exactly which dot (node, counter) created each sibling — avoids false conflicts from read-then-write patterns
+- Clock pruning: Remove entries from nodes that haven't written recently (risks false concurrency but bounds vector size)`
       },
       {
         question: 'What are the limitations of vector clocks and what alternatives exist?',
-        answer: `**Limitations**:
+        answer: `Limitations:
 
-1. **Size**: Vector grows with number of writers — O(N) per key
+1. Size: Vector grows with number of writers — O(N) per key
    - 100 nodes × 8 bytes each = 800 bytes overhead per version
    - For hot keys written by many nodes, this adds up
 
-2. **Sibling explosion**: Concurrent writes produce siblings; if clients do not resolve them promptly, siblings accumulate
+2. Sibling explosion: Concurrent writes produce siblings; if clients do not resolve them promptly, siblings accumulate
 
-3. **Clock pruning is lossy**: Dropping old entries can cause false concurrency detection
+3. Clock pruning is lossy: Dropping old entries can cause false concurrency detection
 
-4. **No total order**: Cannot order concurrent events without additional mechanism
+4. No total order: Cannot order concurrent events without additional mechanism
 
-**Alternatives**:
+Alternatives:
 
 | Mechanism | Used by |
 |---|---|
@@ -865,21 +865,21 @@ Concurrent Write 3: Another client reads stale {A:1},
 | Raft / Paxos log | etcd, Consul (total order) |
 | Lamport timestamps | Spanner (TrueTime + Lamport) |
 
-**Hybrid Logical Clocks (HLC)**: Combine a physical timestamp with a logical counter. O(1) size, give causal ordering within a bounded clock-skew window, and enable snapshot reads. CockroachDB uses HLCs so that transactions can be globally ordered without vector overhead.
+Hybrid Logical Clocks (HLC): Combine a physical timestamp with a logical counter. O(1) size, give causal ordering within a bounded clock-skew window, and enable snapshot reads. CockroachDB uses HLCs so that transactions can be globally ordered without vector overhead.
 
-**Interview takeaway**: Vector clocks are the textbook answer for conflict detection, but modern systems often prefer HLCs (total order, small size) or CRDTs (automatic merge, no conflicts).`
+Interview takeaway: Vector clocks are the textbook answer for conflict detection, but modern systems often prefer HLCs (total order, small size) or CRDTs (automatic merge, no conflicts).`
       },
       {
         question: 'What are dotted version vectors and how do they improve on vector clocks?',
-        answer: `**Problem with standard vector clocks**: When a client reads a value, modifies it, and writes it back through a different coordinator node, the vector clock grows unnecessarily. The read-modify-write pattern creates "false siblings" — versions that appear concurrent but are actually causally related.
+        answer: `Problem with standard vector clocks: When a client reads a value, modifies it, and writes it back through a different coordinator node, the vector clock grows unnecessarily. The read-modify-write pattern creates "false siblings" — versions that appear concurrent but are actually causally related.
 
-**Example of false sibling with vector clocks**: (1) a client reads key K and gets value v1 with VC \`{A:1}\`; (2) the client writes v2 via Node B, producing VC \`{A:1, B:1}\`; (3) another client reads K and is handed both v1 and v2 as siblings — \`{A:1}\` and \`{A:1, B:1}\` look concurrent because the B entry is new, even though v2 is in fact a descendant of v1. Standard vector-clock merging cannot tell the two cases apart and creates false concurrency.
+Example of false sibling with vector clocks: (1) a client reads key K and gets value v1 with VC \`{A:1}\`; (2) the client writes v2 via Node B, producing VC \`{A:1, B:1}\`; (3) another client reads K and is handed both v1 and v2 as siblings — \`{A:1}\` and \`{A:1, B:1}\` look concurrent because the B entry is new, even though v2 is in fact a descendant of v1. Standard vector-clock merging cannot tell the two cases apart and creates false concurrency.
 
-**Dotted version vectors (DVV)** solve this by tracking exactly which "dot" (node, counter pair) produced each version. With a standard per-value VC, v1=\`{A:1}\` and v2=\`{A:1, B:1}\` are ambiguous — is v2 an update of v1, or a sibling? With a dotted version vector kept per key, key K carries the context \`{A:1, B:1}\` (its causal history), and v2 is recorded as having been created by dot (B,1). The context proves v2 descends from v1, so v1 can be safely discarded — no false sibling.
+Dotted version vectors (DVV) solve this by tracking exactly which "dot" (node, counter pair) produced each version. With a standard per-value VC, v1=\`{A:1}\` and v2=\`{A:1, B:1}\` are ambiguous — is v2 an update of v1, or a sibling? With a dotted version vector kept per key, key K carries the context \`{A:1, B:1}\` (its causal history), and v2 is recorded as having been created by dot (B,1). The context proves v2 descends from v1, so v1 can be safely discarded — no false sibling.
 
-**Riak 2.0 switched from vector clocks to DVV** specifically to eliminate sibling explosion caused by the read-modify-write pattern. The result was dramatically fewer false conflicts in production workloads.
+Riak 2.0 switched from vector clocks to DVV specifically to eliminate sibling explosion caused by the read-modify-write pattern. The result was dramatically fewer false conflicts in production workloads.
 
-**Key differences**:
+Key differences:
 | Property | Vector Clock | Dotted Version Vector |
 |----------|-------------|----------------------|
 | Tracks | Causal history per version | Causal context per key + creation dot per version |
@@ -887,11 +887,11 @@ Concurrent Write 3: Another client reads stale {A:1},
 | Size | One VC per sibling | One context per key + one dot per sibling |
 | Used by | Original Dynamo paper, Voldemort | Riak 2.0+ |
 
-**Interview tip**: If asked about vector clocks in practice, mention that Riak moved to DVV to fix real production problems with sibling explosion. This shows awareness that textbook algorithms often need practical refinements.`
+Interview tip: If asked about vector clocks in practice, mention that Riak moved to DVV to fix real production problems with sibling explosion. This shows awareness that textbook algorithms often need practical refinements.`
       },
       {
         question: 'How do Hybrid Logical Clocks (HLCs) work and why did CockroachDB choose them over vector clocks?',
-        answer: `**HLC combines physical time with logical counter**:
+        answer: `HLC combines physical time with logical counter:
 \`\`\`
   HLC = (physical_time, logical_counter)
 
@@ -910,7 +910,7 @@ Concurrent Write 3: Another client reads stale {A:1},
      HLC = (pt, lc)
 \`\`\`
 
-**Why CockroachDB chose HLC over vector clocks**:
+Why CockroachDB chose HLC over vector clocks:
 \`\`\`
   Vector clocks:
     Size: O(N) where N = number of writing nodes
@@ -924,13 +924,13 @@ Concurrent Write 3: Another client reads stale {A:1},
     Does NOT provide: concurrency detection (trade-off!)
 \`\`\`
 
-**CockroachDB's use case**:
-- Needs **total ordering** for serializable transactions
+CockroachDB's use case:
+- Needs total ordering for serializable transactions
 - Does not need concurrency detection (uses pessimistic locking instead)
-- HLC timestamps enable **snapshot reads** at any point in time
+- HLC timestamps enable snapshot reads at any point in time
 - Bounded clock skew (NTP keeps clocks within ~100-250ms) ensures correctness with a "clock skew wait" mechanism
 
-**Comparison for interview**:
+Comparison for interview:
 | Property | Vector Clock | HLC |
 |----------|-------------|-----|
 | Size | O(N) per key | O(1) constant |
@@ -940,13 +940,13 @@ Concurrent Write 3: Another client reads stale {A:1},
 | Real-time correlation | No | Yes (physical timestamp) |
 | Used by | Riak, Voldemort | CockroachDB, YugabyteDB |
 
-**Key insight**: The choice between vector clocks and HLCs depends on your conflict resolution strategy. If you use optimistic concurrency (detect conflicts, resolve via application logic), vector clocks are necessary. If you use pessimistic concurrency (serializable transactions, locks), HLCs provide a compact total order without the overhead.`
+Key insight: The choice between vector clocks and HLCs depends on your conflict resolution strategy. If you use optimistic concurrency (detect conflicts, resolve via application logic), vector clocks are necessary. If you use pessimistic concurrency (serializable transactions, locks), HLCs provide a compact total order without the overhead.`
       },
       {
         question: 'Why did Cassandra choose last-writer-wins instead of vector clocks?',
-        answer: `**Cassandra's design decision**: Rather than tracking causal history per key, Cassandra uses **last-writer-wins (LWW)** with wall-clock timestamps at the **cell level** (individual column values, not entire rows).
+        answer: `Cassandra's design decision: Rather than tracking causal history per key, Cassandra uses last-writer-wins (LWW) with wall-clock timestamps at the cell level (individual column values, not entire rows).
 
-**How LWW works in Cassandra**:
+How LWW works in Cassandra:
 \`\`\`
   Write 1: UPDATE users SET name='Alice', email='a@co.com'
            WHERE id=42  (timestamp: 1000)
@@ -961,15 +961,15 @@ Concurrent Write 3: Another client reads stale {A:1},
   No conflict at the row level — each cell resolved independently
 \`\`\`
 
-**Why this works for Cassandra's use case**:
-1. **Cell-level granularity**: Most concurrent writes touch different columns of the same row. Cell-level LWW resolves these without any conflict.
-2. **Simpler operations**: No need to return siblings to the client for resolution. Every read returns exactly one value per cell.
-3. **No vector bloat**: With thousands of nodes potentially writing to the same key, vector clocks would grow very large and create performance problems.
-4. **Acceptable data loss**: For most Cassandra workloads (time-series, logging, user profiles), losing the "older" of two concurrent writes to the same cell is an acceptable trade-off.
+Why this works for Cassandra's use case:
+1. Cell-level granularity: Most concurrent writes touch different columns of the same row. Cell-level LWW resolves these without any conflict.
+2. Simpler operations: No need to return siblings to the client for resolution. Every read returns exactly one value per cell.
+3. No vector bloat: With thousands of nodes potentially writing to the same key, vector clocks would grow very large and create performance problems.
+4. Acceptable data loss: For most Cassandra workloads (time-series, logging, user profiles), losing the "older" of two concurrent writes to the same cell is an acceptable trade-off.
 
-**The DataStax argument**: "The fundamental difference between Cassandra and the systems requiring vector clocks is that Cassandra supports cell-level resolution. When two writes are concurrent, the conflict is limited to specific cells, not entire objects. This eliminates most of the scenarios where vector clocks add value."
+The DataStax argument: "The fundamental difference between Cassandra and the systems requiring vector clocks is that Cassandra supports cell-level resolution. When two writes are concurrent, the conflict is limited to specific cells, not entire objects. This eliminates most of the scenarios where vector clocks add value."
 
-**When LWW is dangerous**:
+When LWW is dangerous:
 \`\`\`
   Counter increment (NOT idempotent):
     Client A: READ count=10, WRITE count=11 (ts=1000)
@@ -980,13 +980,13 @@ Concurrent Write 3: Another client reads stale {A:1},
   a conflict-free replicated counter (not LWW)
 \`\`\`
 
-**Clock skew risk**: LWW depends on clocks being reasonably synchronized. If Node A's clock is 5 seconds ahead, its writes always win even if they are actually older. Production Cassandra deployments must run NTP and monitor clock drift.`
+Clock skew risk: LWW depends on clocks being reasonably synchronized. If Node A's clock is 5 seconds ahead, its writes always win even if they are actually older. Production Cassandra deployments must run NTP and monitor clock drift.`
       },
       {
         question: 'How do CRDTs eliminate the need for conflict detection entirely?',
-        answer: `**Conflict-free Replicated Data Types (CRDTs)** are data structures mathematically guaranteed to converge when replicas merge, regardless of the order operations are applied. They eliminate the "detect conflict → resolve conflict" cycle entirely.
+        answer: `Conflict-free Replicated Data Types (CRDTs) are data structures mathematically guaranteed to converge when replicas merge, regardless of the order operations are applied. They eliminate the "detect conflict → resolve conflict" cycle entirely.
 
-**Two families of CRDTs**:
+Two families of CRDTs:
 \`\`\`
   State-based CRDTs (CvRDTs):
     Each replica maintains full state
@@ -1001,7 +1001,7 @@ Concurrent Write 3: Another client reads stale {A:1},
     Example: add(x), increment()
 \`\`\`
 
-**G-Counter (grow-only counter)** — simplest CRDT:
+G-Counter (grow-only counter) — simplest CRDT:
 \`\`\`
   3 nodes: A, B, C
   Each maintains a vector: {A:0, B:0, C:0}
@@ -1017,7 +1017,7 @@ Concurrent Write 3: Another client reads stale {A:1},
   This works regardless of merge order!
 \`\`\`
 
-**OR-Set (observed-remove set)** — add/remove elements:
+OR-Set (observed-remove set) — add/remove elements:
 \`\`\`
   Add element with unique tag: add("apple", tag=uuid1)
   Remove element: remove all tags for "apple"
@@ -1029,13 +1029,13 @@ Concurrent Write 3: Another client reads stale {A:1},
     "Add wins" semantics (most recent add is preserved)
 \`\`\`
 
-**Real-world CRDT usage**:
-- **Redis CRDT** (Redis Enterprise): Active-active geo-distributed Redis with CRDT-based conflict resolution for strings, sets, sorted sets, and counters
-- **Figma**: Uses CRDTs for real-time collaborative design canvas
-- **Apple Notes**: Uses CRDTs for conflict-free sync across devices
-- **Riak**: Supports CRDT data types (counters, sets, maps, flags)
+Real-world CRDT usage:
+- Redis CRDT (Redis Enterprise): Active-active geo-distributed Redis with CRDT-based conflict resolution for strings, sets, sorted sets, and counters
+- Figma: Uses CRDTs for real-time collaborative design canvas
+- Apple Notes: Uses CRDTs for conflict-free sync across devices
+- Riak: Supports CRDT data types (counters, sets, maps, flags)
 
-**Comparison with vector clocks**:
+Comparison with vector clocks:
 | Property | Vector Clocks | CRDTs |
 |----------|-------------|-------|
 | Conflict detection | Yes (returns siblings) | Not needed (auto-merge) |
@@ -1099,18 +1099,18 @@ Stored per key-value pair:
       'For range-partitioned data, each token range has its own Merkle tree',
     ],
 
-    introduction: `A **Merkle tree** (hash tree) is a binary tree where every leaf node contains the hash of a data block and every internal node contains the hash of its two children. The root hash therefore represents a cryptographic fingerprint of the entire dataset. If even a single byte changes anywhere in the data, the root hash changes. Named after Ralph Merkle who patented the concept in 1979, this structure has become one of the most widely used data structures in distributed computing, version control, and cryptography.
+    introduction: `A Merkle tree (hash tree) is a binary tree where every leaf node contains the hash of a data block and every internal node contains the hash of its two children. The root hash therefore represents a cryptographic fingerprint of the entire dataset. If even a single byte changes anywhere in the data, the root hash changes. Named after Ralph Merkle who patented the concept in 1979, this structure has become one of the most widely used data structures in distributed computing, version control, and cryptography.
 
-This structure enables **efficient difference detection**: two replicas can compare their root hashes to know instantly whether they agree. If they disagree, they walk down the tree, comparing child hashes at each level, until they find exactly which data blocks differ. This reduces the work of finding inconsistencies from O(N) — comparing every record — to O(log N), examining only the path from root to the differing leaves. For a dataset with 1 billion records, this means comparing roughly 30 hashes instead of 1 billion records.
+This structure enables efficient difference detection: two replicas can compare their root hashes to know instantly whether they agree. If they disagree, they walk down the tree, comparing child hashes at each level, until they find exactly which data blocks differ. This reduces the work of finding inconsistencies from O(N) — comparing every record — to O(log N), examining only the path from root to the differing leaves. For a dataset with 1 billion records, this means comparing roughly 30 hashes instead of 1 billion records.
 
-**Cassandra** and **DynamoDB** use Merkle trees for **anti-entropy repair**: a background process that detects and fixes inconsistencies between replicas. **Git** uses a Merkle DAG (directed acyclic graph) where every object — blob, tree, commit — is identified by the SHA-1 hash of its contents, enabling efficient diff and deduplication. **Bitcoin** stores the Merkle root of all transactions in each block header, allowing lightweight SPV clients to verify individual transactions with just 11 hashes for a block containing 2,000 transactions. **IPFS** (InterPlanetary File System) uses Merkle DAGs for content-addressed storage, where files are automatically deduplicated and verified.
+Cassandra and DynamoDB use Merkle trees for anti-entropy repair: a background process that detects and fixes inconsistencies between replicas. Git uses a Merkle DAG (directed acyclic graph) where every object — blob, tree, commit — is identified by the SHA-1 hash of its contents, enabling efficient diff and deduplication. Bitcoin stores the Merkle root of all transactions in each block header, allowing lightweight SPV clients to verify individual transactions with just 11 hashes for a block containing 2,000 transactions. IPFS (InterPlanetary File System) uses Merkle DAGs for content-addressed storage, where files are automatically deduplicated and verified.
 
-**When to use Merkle trees**: Synchronizing large datasets between replicas, content-addressed storage, tamper detection, and efficient verification of data subsets. **When NOT to use**: Small datasets where full comparison is cheap, frequently-changing data where tree rebuild cost dominates (consider incremental hashing instead), or systems where the O(N) build cost is unacceptable and comparisons are rare.`,
+When to use Merkle trees: Synchronizing large datasets between replicas, content-addressed storage, tamper detection, and efficient verification of data subsets. When NOT to use: Small datasets where full comparison is cheap, frequently-changing data where tree rebuild cost dominates (consider incremental hashing instead), or systems where the O(N) build cost is unacceptable and comparisons are rare.`,
 
     keyQuestions: [
       {
         question: 'How does a Merkle tree detect differences between replicas efficiently?',
-        answer: `**Structure** (a binary Merkle tree over four data blocks D1-D4):
+        answer: `Structure (a binary Merkle tree over four data blocks D1-D4):
 
 | Level | Nodes |
 |---|---|
@@ -1120,7 +1120,7 @@ This structure enables **efficient difference detection**: two replicas can comp
 
 Each leaf hashes a data block; each internal node hashes the concatenation of its children's hashes.
 
-**Comparison protocol between Replica A and Replica B**:
+Comparison protocol between Replica A and Replica B:
 \`\`\`
 Step 1: Compare root hashes
   A.root = abc123    B.root = abc999
@@ -1139,7 +1139,7 @@ Result: Only D4 needs synchronization
   For N blocks: O(log N) comparisons instead of O(N)
 \`\`\`
 
-**In Cassandra's anti-entropy**:
+In Cassandra's anti-entropy:
 - Each node builds a Merkle tree over its token range
 - Nodes exchange root hashes periodically
 - On mismatch, they walk the tree to find differing keys
@@ -1147,24 +1147,24 @@ Result: Only D4 needs synchronization
       },
       {
         question: 'How does Cassandra use Merkle trees for anti-entropy repair?',
-        answer: `**Cassandra's repair process**:
+        answer: `Cassandra's repair process:
 
 Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–1000. Each builds a Merkle tree over all keys in that range. They exchange root hashes; if the roots differ, they walk the tree level by level, narrowing the divergence (e.g. "keys 501–750 differ"). Once the differing keys are identified, both nodes stream just those keys to each other to converge — only the differences cross the wire.
 
-**Implementation details**:
-1. **Tree depth**: Configurable; deeper trees = more precision but more memory
-2. **Partition**: Each token range gets its own Merkle tree
-3. **Build time**: Requires a full scan of the data — expensive
-4. **Incremental repair** (Cassandra 4.0+): Only repair data written since last repair, using timestamps rather than full Merkle rebuild
+Implementation details:
+1. Tree depth: Configurable; deeper trees = more precision but more memory
+2. Partition: Each token range gets its own Merkle tree
+3. Build time: Requires a full scan of the data — expensive
+4. Incremental repair (Cassandra 4.0+): Only repair data written since last repair, using timestamps rather than full Merkle rebuild
 
-**When repair runs**:
+When repair runs:
 - Manually triggered: \`nodetool repair\`
 - Should run within gc_grace_seconds (default 10 days) to prevent zombie data from tombstone expiration
 - Full repair scans all data; incremental uses sstable metadata`
       },
       {
         question: 'How are Merkle trees used in Git and blockchain?',
-        answer: `**Git — Merkle DAG** (directed acyclic graph):
+        answer: `Git — Merkle DAG (directed acyclic graph):
 
 \`commit c3\` points to \`tree t3\`, which contains:
 - \`blob b1\` (\`file1.txt\`) — SHA \`a1b2c3\`
@@ -1175,12 +1175,12 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
 - \`blob b1\` — same SHA \`a1b2c3\`, reused via content addressing.
 - \`blob b4\` (old \`file2.txt\`).
 
-- Every object is **content-addressed**: SHA-1 of its contents
+- Every object is content-addressed: SHA-1 of its contents
 - Identical files across commits share the same blob (deduplication)
 - Changing one file creates new blob → new tree → new commit, but unchanged files stay the same
 - \`git diff\` between commits: compare tree hashes recursively
 
-**Bitcoin — Merkle root in block header**: each Bitcoin block header contains four fields — \`prev_block_hash\`, \`merkle_root\`, \`timestamp\`, and \`nonce\`. The \`merkle_root\` field is the root of a Merkle tree built over the block's transactions.
+Bitcoin — Merkle root in block header: each Bitcoin block header contains four fields — \`prev_block_hash\`, \`merkle_root\`, \`timestamp\`, and \`nonce\`. The \`merkle_root\` field is the root of a Merkle tree built over the block's transactions.
 
 | Level | Nodes |
 |---|---|
@@ -1188,23 +1188,23 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
 | Pair hashes | \`H(Tx1+Tx2)\`, \`H(Tx3+Tx4)\` |
 | Root (= block header's \`merkle_root\`) | \`H(H(Tx1+Tx2) + H(Tx3+Tx4))\` |
 
-**SPV (Simplified Payment Verification)**: A lightweight client can verify a transaction is in a block by requesting just the Merkle path (log N hashes) from a full node, instead of downloading the entire block.`
+SPV (Simplified Payment Verification): A lightweight client can verify a transaction is in a block by requesting just the Merkle path (log N hashes) from a full node, instead of downloading the entire block.`
       },
       {
         question: 'What are the trade-offs of Merkle trees for data synchronization?',
-        answer: `**Advantages**:
+        answer: `Advantages:
 - O(log N) difference detection vs O(N) full comparison
 - Tamper-evident: any change is detectable at the root
 - Space-efficient verification: only the path is needed, not the full data
 - Reusable: subtrees that match are skipped entirely
 
-**Disadvantages**:
-- **Build cost**: Constructing the tree requires hashing all data — O(N)
-- **Memory**: Full tree in memory = O(N) hash nodes
-- **Stale trees**: If data changes frequently, the tree must be rebuilt or incrementally updated
-- **Hash function cost**: Cryptographic hashes (SHA-256) are CPU-intensive for large datasets
+Disadvantages:
+- Build cost: Constructing the tree requires hashing all data — O(N)
+- Memory: Full tree in memory = O(N) hash nodes
+- Stale trees: If data changes frequently, the tree must be rebuilt or incrementally updated
+- Hash function cost: Cryptographic hashes (SHA-256) are CPU-intensive for large datasets
 
-**Optimization strategies**:
+Optimization strategies:
 \`\`\`
 1. Incremental update:
    Change D4 → recompute H4, H34, Root  (only O(log N) hashes)
@@ -1220,13 +1220,13 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
    Hash leaves in parallel, merge upward
 \`\`\`
 
-**Interview insight**: Emphasize that the tree is a read-time optimization for comparison. The build cost is amortized because the tree is rebuilt periodically (not on every write) and comparisons happen much more frequently than full rebuilds.`
+Interview insight: Emphasize that the tree is a read-time optimization for comparison. The build cost is amortized because the tree is rebuilt periodically (not on every write) and comparisons happen much more frequently than full rebuilds.`
       },
       {
         question: 'How does IPFS use Merkle DAGs for content-addressed storage?',
-        answer: `**IPFS (InterPlanetary File System)** uses Merkle DAGs (directed acyclic graphs) as its core data structure. Unlike a binary tree, a Merkle DAG allows nodes to have any number of children, making it suitable for representing file systems, directories, and large files.
+        answer: `IPFS (InterPlanetary File System) uses Merkle DAGs (directed acyclic graphs) as its core data structure. Unlike a binary tree, a Merkle DAG allows nodes to have any number of children, making it suitable for representing file systems, directories, and large files.
 
-**Content addressing in IPFS**:
+Content addressing in IPFS:
 \`\`\`
   Traditional addressing: "get file from server X at path /foo/bar"
   Content addressing:     "get file with hash QmXyz..."
@@ -1235,7 +1235,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   they have the same hash → automatic deduplication.
 \`\`\`
 
-**How a large file is stored**:
+How a large file is stored:
 \`\`\`
   File (10MB) → split into 256KB chunks
     Chunk 1 → hash: Qm1aaa
@@ -1250,7 +1250,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   Verify each chunk's hash → tamper-proof transfer
 \`\`\`
 
-**Directory structure as Merkle DAG**:
+Directory structure as Merkle DAG:
 \`\`\`
   project/ (QmDir)
     ├── README.md    → QmReadme
@@ -1263,17 +1263,17 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   But QmReadme, QmUtil, QmPkg are unchanged → reused!
 \`\`\`
 
-**Key properties**:
-- **Deduplication**: Identical files/blocks across the entire network share one copy
-- **Integrity**: Every block is verified by its hash — no man-in-the-middle tampering
-- **Immutability**: A CID (Content Identifier) always refers to the exact same data
-- **Efficient sync**: Like Git, only changed blocks need to be transferred
+Key properties:
+- Deduplication: Identical files/blocks across the entire network share one copy
+- Integrity: Every block is verified by its hash — no man-in-the-middle tampering
+- Immutability: A CID (Content Identifier) always refers to the exact same data
+- Efficient sync: Like Git, only changed blocks need to be transferred
 
-**Comparison with Git**: Git also uses a Merkle DAG (blobs, trees, commits) but is optimized for source code history. IPFS generalizes this to arbitrary files and adds peer-to-peer distribution.`
+Comparison with Git: Git also uses a Merkle DAG (blobs, trees, commits) but is optimized for source code history. IPFS generalizes this to arbitrary files and adds peer-to-peer distribution.`
       },
       {
         question: 'What is the difference between a Merkle tree and a Merkle Patricia Trie, and why does Ethereum use the latter?',
-        answer: `**Merkle Tree** (binary, used by Bitcoin):
+        answer: `Merkle Tree (binary, used by Bitcoin):
 \`\`\`
   Structure: Fixed binary tree
   Leaves: Transaction hashes
@@ -1282,7 +1282,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   Use case: Verify a transaction is in a block
 \`\`\`
 
-**Merkle Patricia Trie** (used by Ethereum):
+Merkle Patricia Trie (used by Ethereum):
 \`\`\`
   Structure: Trie (prefix tree) with Merkle hashing at every node
   Leaves: Account state (balance, nonce, code, storage root)
@@ -1291,7 +1291,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   Use case: World state database (all accounts and their state)
 \`\`\`
 
-**Why Ethereum needs a trie, not a simple Merkle tree**:
+Why Ethereum needs a trie, not a simple Merkle tree:
 \`\`\`
   Bitcoin: Block contains a flat list of transactions.
     → Binary Merkle tree over the list is sufficient.
@@ -1304,7 +1304,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
     → A trie supports all three with Merkle hashing for verification
 \`\`\`
 
-**Patricia optimization**:
+Patricia optimization:
 \`\`\`
   Naive trie: Each hex character is a node → deep tree
     Key: 0xABCD → A → B → C → D → value (4 nodes)
@@ -1318,13 +1318,13 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
     Leaf node: remaining key suffix + value
 \`\`\`
 
-**State root**: The root hash of the Merkle Patricia Trie is included in every block header. Light clients can verify any account's state by requesting a Merkle proof — a path from the root to the leaf — without downloading the full state (~100GB+).
+State root: The root hash of the Merkle Patricia Trie is included in every block header. Light clients can verify any account's state by requesting a Merkle proof — a path from the root to the leaf — without downloading the full state (~100GB+).
 
-**Performance trade-off**: The trie structure requires many random disk reads for lookups (each level is a separate node). Ethereum clients like Geth optimize with LRU caches and flat key-value storage under the hood, using the trie structure only for computing state roots.`
+Performance trade-off: The trie structure requires many random disk reads for lookups (each level is a separate node). Ethereum clients like Geth optimize with LRU caches and flat key-value storage under the hood, using the trie structure only for computing state roots.`
       },
       {
         question: 'How do you choose the right hash function and tree depth for a Merkle tree?',
-        answer: `**Hash function selection**:
+        answer: `Hash function selection:
 \`\`\`
   Cryptographic hashes (high security, slower):
     SHA-256: 32 bytes, used by Bitcoin, IPFS, most blockchains
@@ -1337,7 +1337,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
     CRC32:       4 bytes, fast but high collision rate
 \`\`\`
 
-**When to use each**:
+When to use each:
 \`\`\`
   Need tamper detection (blockchain, file transfer)?
     → SHA-256 or BLAKE3 (cryptographic)
@@ -1351,7 +1351,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
     → xxHash (~10GB/s per core for non-cryptographic)
 \`\`\`
 
-**Tree depth and branching factor**:
+Tree depth and branching factor:
 \`\`\`
   Binary tree (branching factor 2):
     Depth = log2(N)
@@ -1372,7 +1372,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
     if any key differs) but much smaller tree
 \`\`\`
 
-**Practical guidelines**:
+Practical guidelines:
 | Dataset size | Recommended approach | Proof size |
 |-------------|---------------------|------------|
 | <10K items | Full comparison may be faster than tree build | N/A |
@@ -1380,11 +1380,11 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
 | 1M-1B items | Bucketed leaves (reduce tree size) | ~1KB |
 | >1B items | Hierarchical trees with lazy rebuilding | Varies |
 
-**Cassandra's choice**: Uses MurmurHash3 (fast, non-cryptographic) with configurable tree depth. The tree covers a token range, not individual keys, reducing build time at the cost of bucket-level precision.`
+Cassandra's choice: Uses MurmurHash3 (fast, non-cryptographic) with configurable tree depth. The tree covers a token range, not individual keys, reducing build time at the cost of bucket-level precision.`
       },
       {
         question: 'How does incremental Merkle tree updating work and when is it preferable to full rebuilds?',
-        answer: `**Full rebuild** — recompute the entire tree from scratch:
+        answer: `Full rebuild — recompute the entire tree from scratch:
 \`\`\`
   Cost: O(N) hash computations (hash every leaf + all internal nodes)
   When: After a batch import, periodic anti-entropy (Cassandra nodetool repair)
@@ -1392,7 +1392,7 @@ Two Cassandra replicas (Node A and Node B) own the same token range, e.g. 1–10
   Disadvantage: Expensive — a 1B-key Cassandra node takes hours for full repair
 \`\`\`
 
-**Incremental update** — recompute only the affected path. When leaf \`D4\` changes:
+Incremental update — recompute only the affected path. When leaf \`D4\` changes:
 
 1. \`H4 = hash(new D4)\` (leaf level).
 2. \`H34 = hash(H3 + H4)\` (parent).
@@ -1409,7 +1409,7 @@ After \`D4\` changes, only the path from \`D4\` to the root is recomputed (\`*\`
 | Leaves | \`H1\`, \`H2\` (unchanged) | \`H3\` (unchanged), \`H4*\` (recomputed from new \`D4\`) |
 | Data | \`D1\`, \`D2\` | \`D3\`, \`D4*\` (changed) |
 
-**Dirty-flag optimization** for batched changes:
+Dirty-flag optimization for batched changes:
 \`\`\`
   Multiple changes arrive: D2, D4, D7 modified
   Mark subtrees as dirty (do NOT recompute immediately)
@@ -1423,7 +1423,7 @@ After \`D4\` changes, only the path from \`D4\` to the root is recomputed (\`*\`
   Cost: O(k × log N) where k = number of changed leaves
 \`\`\`
 
-**Cassandra incremental repair (4.0+)**:
+Cassandra incremental repair (4.0+):
 \`\`\`
   Old approach: Full repair — rebuild Merkle tree over all data
     Duration: Hours for large nodes (100GB+)
@@ -1434,12 +1434,12 @@ After \`D4\` changes, only the path from \`D4\` to the root is recomputed (\`*\`
     Trade-off: Requires tracking repair state per range
 \`\`\`
 
-**When to prefer full rebuild**:
+When to prefer full rebuild:
 - After disaster recovery or node replacement
 - When >50% of data has changed since last comparison
 - When incremental state tracking has been lost
 
-**When to prefer incremental**:
+When to prefer incremental:
 - Routine anti-entropy in stable clusters
 - Real-time comparison systems (e.g., sync protocols)
 - Large datasets where full rebuild is prohibitively expensive`
@@ -1497,30 +1497,30 @@ Anti-Entropy Protocol:
       'Discuss manual vs automatic resolution — some systems require human intervention after split-brain',
     ],
 
-    introduction: `**Split-brain** occurs when a network partition divides a cluster into two (or more) subclusters, and each subcluster independently believes it is the active, authoritative partition. In a leader-follower system, this means two nodes simultaneously act as leader, accepting writes that may conflict with each other. When the partition heals, the system discovers divergent data that cannot be automatically reconciled. This is arguably the most feared failure mode in distributed systems because the consequences are often silent and catastrophic.
+    introduction: `Split-brain occurs when a network partition divides a cluster into two (or more) subclusters, and each subcluster independently believes it is the active, authoritative partition. In a leader-follower system, this means two nodes simultaneously act as leader, accepting writes that may conflict with each other. When the partition heals, the system discovers divergent data that cannot be automatically reconciled. This is arguably the most feared failure mode in distributed systems because the consequences are often silent and catastrophic.
 
-This is not a theoretical concern — it has caused major production incidents across the industry. **GitHub** experienced a 24-hour outage in 2018 caused by a split-brain in their MySQL cluster after a network partition. **Redis Sentinel** is notoriously vulnerable to split-brain in two-node configurations without proper quorum settings. **Elasticsearch** clusters have suffered split-brain when the minimum_master_nodes setting was misconfigured. Even **Kafka** has had documented issues (KAFKA-7128) where lagging high-water marks during ISR expansion could lead to committed data loss — a form of split-brain at the data level.
+This is not a theoretical concern — it has caused major production incidents across the industry. GitHub experienced a 24-hour outage in 2018 caused by a split-brain in their MySQL cluster after a network partition. Redis Sentinel is notoriously vulnerable to split-brain in two-node configurations without proper quorum settings. Elasticsearch clusters have suffered split-brain when the minimum_master_nodes setting was misconfigured. Even Kafka has had documented issues (KAFKA-7128) where lagging high-water marks during ISR expansion could lead to committed data loss — a form of split-brain at the data level.
 
-Preventing split-brain requires a mechanism to ensure that at most one leader can operate at any time. The three main approaches are **quorum-based election** (Raft/Paxos — only the majority partition can elect a leader), **fencing tokens** (a monotonically increasing number that storage systems use to reject stale leaders), and **STONITH** (physically shutting down the suspected-dead node before promoting a new leader). The most reliable defense is layered: consensus for election, fencing tokens for storage-level enforcement, and STONITH as physical backstop.
+Preventing split-brain requires a mechanism to ensure that at most one leader can operate at any time. The three main approaches are quorum-based election (Raft/Paxos — only the majority partition can elect a leader), fencing tokens (a monotonically increasing number that storage systems use to reject stale leaders), and STONITH (physically shutting down the suspected-dead node before promoting a new leader). The most reliable defense is layered: consensus for election, fencing tokens for storage-level enforcement, and STONITH as physical backstop.
 
-**When to worry about split-brain**: Any system with a single leader/primary that accepts writes and has automatic failover. **When split-brain is not a concern**: Leaderless systems like Cassandra (all nodes accept writes, conflicts resolved by LWW or vector clocks), or read-only replicas where no writes can conflict.`,
+When to worry about split-brain: Any system with a single leader/primary that accepts writes and has automatic failover. When split-brain is not a concern: Leaderless systems like Cassandra (all nodes accept writes, conflicts resolved by LWW or vector clocks), or read-only replicas where no writes can conflict.`,
 
     keyQuestions: [
       {
         question: 'Walk through a split-brain scenario step by step',
-        answer: `**Setup**: Primary-Replica database with automatic failover.
+        answer: `Setup: Primary-Replica database with automatic failover.
 
-**Normal operation**: Client → Primary (Node A), with replication A → Replica (Node B).
+Normal operation: Client → Primary (Node A), with replication A → Replica (Node B).
 
-**Step 1 — network partition**: Node A (with Client X) ends up in Partition 1; Node B (with Client Y) ends up in Partition 2; the link between them is severed.
+Step 1 — network partition: Node A (with Client X) ends up in Partition 1; Node B (with Client Y) ends up in Partition 2; the link between them is severed.
 
-**Step 2**: Node B cannot reach A, assumes A is dead, and promotes itself to Primary.
+Step 2: Node B cannot reach A, assumes A is dead, and promotes itself to Primary.
 
-**Step 3 — split-brain**: there are now two primaries. Client X writes \`UPDATE balance SET amount=100\` to A; Client Y writes \`UPDATE balance SET amount=50\` to B. Both writes succeed independently.
+Step 3 — split-brain: there are now two primaries. Client X writes \`UPDATE balance SET amount=100\` to A; Client Y writes \`UPDATE balance SET amount=50\` to B. Both writes succeed independently.
 
-**Step 4 — partition heals**: A.balance = 100, B.balance = 50. Neither can be trusted; the data has diverged.
+Step 4 — partition heals: A.balance = 100, B.balance = 50. Neither can be trusted; the data has diverged.
 
-**Consequences**:
+Consequences:
 - Conflicting writes on the same rows
 - Auto-increment IDs may collide
 - Unique constraints violated across partitions
@@ -1528,7 +1528,7 @@ Preventing split-brain requires a mechanism to ensure that at most one leader ca
       },
       {
         question: 'How do quorum-based systems prevent split-brain?',
-        answer: `**Key insight**: A leader requires votes from a **majority** (quorum) of nodes. In a partition, at most one side has a majority.
+        answer: `Key insight: A leader requires votes from a majority (quorum) of nodes. In a partition, at most one side has a majority.
 
 \`\`\`
 5-node cluster: A, B, C, D, E
@@ -1543,7 +1543,7 @@ Right side: CAN elect leader (3 >= 3) ✓
 Only ONE partition can have a leader!
 \`\`\`
 
-**Raft protocol**:
+Raft protocol:
 1. Leader sends heartbeats to all followers
 2. If follower receives no heartbeat for election_timeout, it starts an election
 3. Candidate requests votes; needs majority to win
@@ -1552,36 +1552,36 @@ Only ONE partition can have a leader!
 
 In the {A, B} partition the old leader A keeps sending heartbeats to B but cannot collect 3 ACKs (only 2 nodes are reachable), so its writes never commit and A eventually steps down after timeout. In the {C, D, E} partition, C wins the election with 3 votes, accepts writes, and commits them with the 3-node quorum. When the partition heals, A discovers C's higher term, reverts its uncommitted entries, and becomes a follower of C.
 
-**This is why consensus clusters use odd numbers**: 3, 5, 7 nodes. Even numbers (e.g., 4) can result in a 2-2 tie where neither side has a majority.`
+This is why consensus clusters use odd numbers: 3, 5, 7 nodes. Even numbers (e.g., 4) can result in a 2-2 tie where neither side has a majority.`
       },
       {
         question: 'What is STONITH and when is it used?',
-        answer: `**STONITH**: "Shoot The Other Node In The Head" — forcibly power off or isolate the old primary before promoting a new one.
+        answer: `STONITH: "Shoot The Other Node In The Head" — forcibly power off or isolate the old primary before promoting a new one.
 
-**Normal**: Client → Primary A → (replication) → Standby B.
+Normal: Client → Primary A → (replication) → Standby B.
 
-**Failure detected (A unreachable)** — Step 1: STONITH sends a power-off command to A via IPMI/BMC, kills the VM, or fences A from the SAN (revoking its disk access). Once confirmed, A cannot write to storage. Step 2: B is promoted to Primary and becomes the only writer.
+Failure detected (A unreachable) — Step 1: STONITH sends a power-off command to A via IPMI/BMC, kills the VM, or fences A from the SAN (revoking its disk access). Once confirmed, A cannot write to storage. Step 2: B is promoted to Primary and becomes the only writer.
 
-**STONITH mechanisms**:
-1. **IPMI/BMC**: Send hardware power-off command over management network
-2. **VM fencing**: Hypervisor kills the VM (VMware, KVM)
-3. **SAN fencing**: Revoke the old primary's access to shared storage
-4. **Network fencing**: Block the old primary's network at the switch level
+STONITH mechanisms:
+1. IPMI/BMC: Send hardware power-off command over management network
+2. VM fencing: Hypervisor kills the VM (VMware, KVM)
+3. SAN fencing: Revoke the old primary's access to shared storage
+4. Network fencing: Block the old primary's network at the switch level
 
-**Why STONITH is necessary**:
+Why STONITH is necessary:
 - The old primary might NOT actually be dead — it could be slow, network-isolated, or experiencing a GC pause
 - Without STONITH, it could wake up and resume writing
 - STONITH guarantees that even if the "dead" node is alive, it CANNOT interfere
 
-**Used by**: Pacemaker/Corosync (Linux HA), Oracle RAC, PostgreSQL Patroni (optional), cloud load balancers.
+Used by: Pacemaker/Corosync (Linux HA), Oracle RAC, PostgreSQL Patroni (optional), cloud load balancers.
 
-**Limitation**: STONITH requires out-of-band access (management network, hypervisor API). If the fencing mechanism itself fails, the operator must intervene manually.`
+Limitation: STONITH requires out-of-band access (management network, hypervisor API). If the fencing mechanism itself fails, the operator must intervene manually.`
       },
       {
         question: 'How do you handle split-brain resolution after it has occurred?',
-        answer: `**The hard truth**: Once split-brain has occurred and both sides accepted writes, there is no fully automatic, lossless resolution. Some data will be lost or require manual intervention.
+        answer: `The hard truth: Once split-brain has occurred and both sides accepted writes, there is no fully automatic, lossless resolution. Some data will be lost or require manual intervention.
 
-**Resolution strategies**:
+Resolution strategies:
 
 \`\`\`
 Strategy 1: Last-Writer-Wins (LWW)
@@ -1608,7 +1608,7 @@ Strategy 4: Discard minority partition's writes
   - Used by: Raft (uncommitted entries in old leader)
 \`\`\`
 
-**Prevention is better than cure**:
+Prevention is better than cure:
 
 | Prevention Mechanism | Approach |
 |---|---|
@@ -1618,11 +1618,11 @@ Strategy 4: Discard minority partition's writes
 | Lease-based leadership | Timed validity |
 | Witness / tiebreaker node | Keep total node count odd |
 
-**Interview takeaway**: Always discuss split-brain prevention, not just resolution. Say: "I would use a consensus protocol with odd-numbered quorum so split-brain cannot happen, rather than trying to resolve it after the fact."`
+Interview takeaway: Always discuss split-brain prevention, not just resolution. Say: "I would use a consensus protocol with odd-numbered quorum so split-brain cannot happen, rather than trying to resolve it after the fact."`
       },
       {
         question: 'How do lease-based systems prevent split-brain, and what are the clock synchronization risks?',
-        answer: `**Lease-based leadership**: A leader holds a time-limited lease. It can only act as leader while the lease is valid. Before the lease expires, it must renew; if it fails to renew, it must stop all operations.
+        answer: `Lease-based leadership: A leader holds a time-limited lease. It can only act as leader while the lease is valid. Before the lease expires, it must renew; if it fails to renew, it must stop all operations.
 
 \`\`\`
   t=0:  Leader A acquires lease (valid until t=10)
@@ -1637,7 +1637,7 @@ Strategy 4: Discard minority partition's writes
     (assuming clocks are reasonably synchronized)
 \`\`\`
 
-**Clock synchronization risks**:
+Clock synchronization risks:
 \`\`\`
   Scenario: A's clock is 2 seconds behind real time
     A thinks: "It's t=13, lease valid until t=15, I'm fine"
@@ -1649,13 +1649,13 @@ Strategy 4: Discard minority partition's writes
   of size = max_clock_skew between old and new leader
 \`\`\`
 
-**Mitigation strategies**:
-1. **Conservative lease duration**: Set lease_duration >> max_clock_skew. If NTP keeps clocks within 250ms, use lease durations of 10-30 seconds.
-2. **Leader stops early**: The leader stops accepting writes safety_margin seconds before lease expiry. E.g., lease=10s, stop writing at t=8s.
-3. **Google Spanner's TrueTime**: Uses GPS and atomic clocks to bound clock uncertainty to ~7ms. Spanner adds a deliberate wait (the "commit-wait") of 2 * uncertainty before committing, ensuring no overlap.
-4. **Fencing tokens as defense-in-depth**: Even with clock-based leases, use fencing tokens at the storage layer. If the lease mechanism fails due to clock skew, the storage layer catches the stale write.
+Mitigation strategies:
+1. Conservative lease duration: Set lease_duration >> max_clock_skew. If NTP keeps clocks within 250ms, use lease durations of 10-30 seconds.
+2. Leader stops early: The leader stops accepting writes safety_margin seconds before lease expiry. E.g., lease=10s, stop writing at t=8s.
+3. Google Spanner's TrueTime: Uses GPS and atomic clocks to bound clock uncertainty to ~7ms. Spanner adds a deliberate wait (the "commit-wait") of 2 * uncertainty before committing, ensuring no overlap.
+4. Fencing tokens as defense-in-depth: Even with clock-based leases, use fencing tokens at the storage layer. If the lease mechanism fails due to clock skew, the storage layer catches the stale write.
 
-**Comparison**:
+Comparison:
 | System | Lease mechanism | Clock dependency |
 |--------|----------------|-----------------|
 | Chubby/Bigtable | Lock service with master leases | High (requires bounded skew) |
@@ -1663,13 +1663,13 @@ Strategy 4: Discard minority partition's writes
 | Spanner | TrueTime leases | Low (GPS+atomic clock, ~7ms) |
 | Raft | Term-based (no lease needed) | None (pure logical) |
 
-**Interview tip**: If asked about lease-based approaches, always mention the clock skew risk and say you would add fencing tokens as a safety net, since clock-based guarantees are only as strong as the clock synchronization infrastructure.`
+Interview tip: If asked about lease-based approaches, always mention the clock skew risk and say you would add fencing tokens as a safety net, since clock-based guarantees are only as strong as the clock synchronization infrastructure.`
       },
       {
         question: 'How does Elasticsearch handle the split-brain problem, and what went wrong historically?',
-        answer: `**The infamous Elasticsearch split-brain**: Before version 7.0, Elasticsearch required manual configuration of \`discovery.zen.minimum_master_nodes\` to prevent split-brain. The default was 1, meaning a single node could elect itself master — leading to frequent split-brain in production.
+        answer: `The infamous Elasticsearch split-brain: Before version 7.0, Elasticsearch required manual configuration of \`discovery.zen.minimum_master_nodes\` to prevent split-brain. The default was 1, meaning a single node could elect itself master — leading to frequent split-brain in production.
 
-**The classic Elasticsearch split-brain scenario**:
+The classic Elasticsearch split-brain scenario:
 \`\`\`
   3-node cluster: A (master), B, C
   minimum_master_nodes = 1 (unsafe default!)
@@ -1692,7 +1692,7 @@ Strategy 4: Discard minority partition's writes
     potentially corrupted shard data
 \`\`\`
 
-**The fix (minimum_master_nodes = N/2 + 1)**:
+The fix (minimum_master_nodes = N/2 + 1):
 \`\`\`
   3-node cluster: minimum_master_nodes = 2
 
@@ -1704,21 +1704,21 @@ Strategy 4: Discard minority partition's writes
   Only ONE master — split-brain prevented!
 \`\`\`
 
-**Elasticsearch 7.0+ auto-configuration**:
+Elasticsearch 7.0+ auto-configuration:
 - Removed the manual \`minimum_master_nodes\` setting entirely
 - Introduced automatic quorum calculation based on cluster size
 - Uses a voting configuration that requires majority by default
 - Significantly reduced split-brain incidents in the wild
 
-**Lessons learned**:
-1. **Unsafe defaults kill**: Any default that allows split-brain will cause split-brain in production
-2. **Manual configuration is error-prone**: Operators forget to update minimum_master_nodes when scaling
-3. **Automation is essential**: Elasticsearch 7.0's auto-quorum was a major reliability improvement
-4. **Defense in depth**: Even with auto-quorum, monitor for multiple master-eligible nodes claiming leadership simultaneously`
+Lessons learned:
+1. Unsafe defaults kill: Any default that allows split-brain will cause split-brain in production
+2. Manual configuration is error-prone: Operators forget to update minimum_master_nodes when scaling
+3. Automation is essential: Elasticsearch 7.0's auto-quorum was a major reliability improvement
+4. Defense in depth: Even with auto-quorum, monitor for multiple master-eligible nodes claiming leadership simultaneously`
       },
       {
         question: 'How do two-node clusters handle split-brain, and why are they problematic?',
-        answer: `**The fundamental problem with two-node clusters**: With only two nodes, there is no majority. In a partition, each side has exactly one node (50%), and neither has a majority (>50%). No quorum-based system can determine a winner.
+        answer: `The fundamental problem with two-node clusters: With only two nodes, there is no majority. In a partition, each side has exactly one node (50%), and neither has a majority (>50%). No quorum-based system can determine a winner.
 
 \`\`\`
   2-node cluster: A and B
@@ -1730,9 +1730,9 @@ Strategy 4: Discard minority partition's writes
   → Defeats the purpose of having two nodes
 \`\`\`
 
-**Strategies for two-node configurations**:
+Strategies for two-node configurations:
 
-1. **Witness/tiebreaker node** (recommended):
+1. Witness/tiebreaker node (recommended):
 \`\`\`
   Add a lightweight third node (just votes, no data)
   A, B (data nodes) + W (witness)
@@ -1748,7 +1748,7 @@ Strategy 4: Discard minority partition's writes
     - Pacemaker quorum device
 \`\`\`
 
-2. **Disk-based quorum** (Pacemaker):
+2. Disk-based quorum (Pacemaker):
 \`\`\`
   Shared storage (SAN, NFS, cloud disk) holds a "quorum disk"
   Both nodes write heartbeats to the quorum disk
@@ -1756,7 +1756,7 @@ Strategy 4: Discard minority partition's writes
   Node that cannot → fences itself (suicide)
 \`\`\`
 
-3. **Priority-based failover** (risky):
+3. Priority-based failover (risky):
 \`\`\`
   Designate A as preferred primary
   During partition: A always wins, B always yields
@@ -1765,7 +1765,7 @@ Strategy 4: Discard minority partition's writes
   partition from crash without a third observer
 \`\`\`
 
-4. **Accept unavailability on partition**:
+4. Accept unavailability on partition:
 \`\`\`
   Both nodes go read-only during partition
   Manual intervention required to restore writes
@@ -1773,14 +1773,14 @@ Strategy 4: Discard minority partition's writes
   Acceptable for some internal services
 \`\`\`
 
-**The industry consensus**: Three nodes is the minimum for production clusters that need automatic failover. Pacemaker 3.0 (2025) and modern Kubernetes distributions standardize on three-node configurations. Two-node clusters should use a witness or accept manual failover.
+The industry consensus: Three nodes is the minimum for production clusters that need automatic failover. Pacemaker 3.0 (2025) and modern Kubernetes distributions standardize on three-node configurations. Two-node clusters should use a witness or accept manual failover.
 
-**Interview answer**: "I would always recommend a minimum of three nodes for any system requiring automatic leader election. Two-node clusters cannot achieve quorum-based split-brain prevention without a witness, and a witness is effectively a third node."
+Interview answer: "I would always recommend a minimum of three nodes for any system requiring automatic leader election. Two-node clusters cannot achieve quorum-based split-brain prevention without a witness, and a witness is effectively a third node."
 `
       },
       {
         question: 'What is the relationship between split-brain and the CAP theorem?',
-        answer: `**CAP theorem refresher**: During a network partition (P), a distributed system must choose between **Consistency** (C) and **Availability** (A). You cannot have both simultaneously when the network is partitioned.
+        answer: `CAP theorem refresher: During a network partition (P), a distributed system must choose between Consistency (C) and Availability (A). You cannot have both simultaneously when the network is partitioned.
 
 During normal operation (no partition), all systems can provide both consistency and availability — CAP is irrelevant. During a partition the choice is forced:
 
@@ -1789,7 +1789,7 @@ During normal operation (no partition), all systems can provide both consistency
 | Consistency (CP) | The minority partition stops accepting writes; no split-brain and no data divergence, but minority clients get errors | etcd, ZooKeeper, HBase |
 | Availability (AP) | Both partitions accept writes; split-brain is the trade-off, data diverges and is resolved eventually | Cassandra, DynamoDB, CouchDB |
 
-**Split-brain IS the CP/AP trade-off in action**:
+Split-brain IS the CP/AP trade-off in action:
 \`\`\`
   CP system (Raft/Paxos):
     Minority partition: "I cannot elect a leader, I refuse writes"
@@ -1801,7 +1801,7 @@ During normal operation (no partition), all systems can provide both consistency
     → Conflicts resolved via LWW, vector clocks, or CRDTs
 \`\`\`
 
-**The spectrum in practice**:
+The spectrum in practice:
 | System | Choice | Split-brain behavior |
 |--------|--------|---------------------|
 | etcd/Raft | CP | Minority partition read-only, no split-brain |
@@ -1811,9 +1811,9 @@ During normal operation (no partition), all systems can provide both consistency
 | CockroachDB | CP | Minority ranges become unavailable |
 | MongoDB | CP (default) | Minority cannot elect primary |
 
-**Key interview insight**: Split-brain is not always a "bug" — for AP systems, it is a deliberate design choice. The question is not "how to prevent split-brain" but "what trade-off does your system make during a partition?" CP systems prevent split-brain at the cost of availability. AP systems embrace split-brain at the cost of consistency.
+Key interview insight: Split-brain is not always a "bug" — for AP systems, it is a deliberate design choice. The question is not "how to prevent split-brain" but "what trade-off does your system make during a partition?" CP systems prevent split-brain at the cost of availability. AP systems embrace split-brain at the cost of consistency.
 
-**Nuance**: Most real systems are not purely CP or AP — they offer tunable consistency. Cassandra with CL=QUORUM behaves like a CP system for that operation (refuses writes without quorum), while CL=ONE behaves like AP (always writes, even during partitions).`
+Nuance: Most real systems are not purely CP or AP — they offer tunable consistency. Cassandra with CL=QUORUM behaves like a CP system for that operation (refuses writes without quorum), while CL=ONE behaves like AP (always writes, even during partitions).`
       },
     ],
 
@@ -1866,37 +1866,37 @@ Split-Brain Detection:
       'Connect it to the Dynamo paper: sloppy quorum + hinted handoff is how DynamoDB achieves "always writable"',
     ],
 
-    introduction: `**Hinted handoff** is an availability optimization used in distributed databases that follow the Dynamo model. When a write is destined for a node that is temporarily unreachable, another node in the cluster accepts the write on its behalf and stores a "hint" — a record of the intended destination. When the failed node recovers, the hinting node replays the stored writes to it, bringing it up to date. This pattern was introduced in the landmark 2007 **Amazon Dynamo paper** as a mechanism to achieve "always writable" behavior.
+    introduction: `Hinted handoff is an availability optimization used in distributed databases that follow the Dynamo model. When a write is destined for a node that is temporarily unreachable, another node in the cluster accepts the write on its behalf and stores a "hint" — a record of the intended destination. When the failed node recovers, the hinting node replays the stored writes to it, bringing it up to date. This pattern was introduced in the landmark 2007 Amazon Dynamo paper as a mechanism to achieve "always writable" behavior.
 
-This pattern works in tandem with **sloppy quorums**. In a strict quorum, a write to a key must reach its designated replica nodes. In a sloppy quorum, any node in the cluster can temporarily stand in for an unreachable replica, allowing the write to succeed. The hint ensures the data eventually reaches the correct node. The important distinction is that **DynamoDB** counts hint nodes toward the write quorum (true sloppy quorum), while **Cassandra** does not — Cassandra stores hints for convenience but still requires actual replicas to meet the consistency level.
+This pattern works in tandem with sloppy quorums. In a strict quorum, a write to a key must reach its designated replica nodes. In a sloppy quorum, any node in the cluster can temporarily stand in for an unreachable replica, allowing the write to succeed. The hint ensures the data eventually reaches the correct node. The important distinction is that DynamoDB counts hint nodes toward the write quorum (true sloppy quorum), while Cassandra does not — Cassandra stores hints for convenience but still requires actual replicas to meet the consistency level.
 
-**Amazon DynamoDB**, **Apache Cassandra**, and **Riak** all implement hinted handoff, though with different semantics. The key insight is that most node failures are short-lived — a restart, a brief network blip, a GC pause — and hinted handoff bridges that gap without the overhead of a full data rebalance or anti-entropy repair. Cassandra stores hints in a dedicated \`hints\` directory, flushing them to disk every few seconds, with a default TTL of 3 hours.
+Amazon DynamoDB, Apache Cassandra, and Riak all implement hinted handoff, though with different semantics. The key insight is that most node failures are short-lived — a restart, a brief network blip, a GC pause — and hinted handoff bridges that gap without the overhead of a full data rebalance or anti-entropy repair. Cassandra stores hints in a dedicated \`hints\` directory, flushing them to disk every few seconds, with a default TTL of 3 hours.
 
-**When to use hinted handoff**: Dynamo-style databases where write availability is prioritized over immediate consistency, and where transient failures (seconds to hours) are the common failure mode. **When NOT to use**: Systems requiring strong consistency (hints weaken read guarantees), permanent node failures (hints expire and are lost — use full streaming repair instead), or latency-critical reads where stale data from missed hint replay is unacceptable.`,
+When to use hinted handoff: Dynamo-style databases where write availability is prioritized over immediate consistency, and where transient failures (seconds to hours) are the common failure mode. When NOT to use: Systems requiring strong consistency (hints weaken read guarantees), permanent node failures (hints expire and are lost — use full streaming repair instead), or latency-critical reads where stale data from missed hint replay is unacceptable.`,
 
     keyQuestions: [
       {
         question: 'How does hinted handoff work in a Dynamo-style system?',
-        answer: `**Setup**: Key K has replica nodes [A, B, C] with replication factor 3, write quorum W=2.
+        answer: `Setup: Key K has replica nodes [A, B, C] with replication factor 3, write quorum W=2.
 
-**Normal write (all nodes up)**: Client → Coordinator. The coordinator forwards to Node A (ACK), Node B (ACK — W=2 already met) and Node C (ACK). All three replicas store the value.
+Normal write (all nodes up): Client → Coordinator. The coordinator forwards to Node A (ACK), Node B (ACK — W=2 already met) and Node C (ACK). All three replicas store the value.
 
-**Write when Node C is down**: the coordinator forwards to Node A (ACK) and Node B (ACK — W=2 met) but Node C is unreachable. The coordinator additionally hands the write to Node D, which is not a replica for K, with a hint record \`{hint: key=K, dest=C, value=..., timestamp=...}\`. When C recovers, D replays this hint to C.
+Write when Node C is down: the coordinator forwards to Node A (ACK) and Node B (ACK — W=2 met) but Node C is unreachable. The coordinator additionally hands the write to Node D, which is not a replica for K, with a hint record \`{hint: key=K, dest=C, value=..., timestamp=...}\`. When C recovers, D replays this hint to C.
 
-**Sloppy quorum**: Node D temporarily counts toward the quorum for this write, even though it is not a designated replica for K. The write succeeds because 2 ACKs are received.
+Sloppy quorum: Node D temporarily counts toward the quorum for this write, even though it is not a designated replica for K. The write succeeds because 2 ACKs are received.
 
-**Recovery (Node C comes back)**:
+Recovery (Node C comes back):
 
 1. Node D detects C is alive (via gossip).
 2. Node D replays the hint to C: "here is a write for key K that was meant for you".
 3. Node C applies the write.
 4. Node D deletes the hint.
 
-**Important**: D holds this data temporarily. D is NOT a permanent replica for K.`
+Important: D holds this data temporarily. D is NOT a permanent replica for K.`
       },
       {
         question: 'What is the difference between sloppy quorum and strict quorum?',
-        answer: `**Strict quorum**: Write must reach W of the N designated replicas.
+        answer: `Strict quorum: Write must reach W of the N designated replicas.
 \`\`\`
 Key K replicas: [A, B, C]  (N=3, W=2)
 
@@ -1910,7 +1910,7 @@ Sloppy: Must get ACK from any 2 nodes
   Availability preserved, eventual consistency
 \`\`\`
 
-**Consistency implications**:
+Consistency implications:
 \`\`\`
 With strict quorum (W + R > N):
   W=2, R=2, N=3 → guaranteed overlap
@@ -1934,18 +1934,18 @@ With sloppy quorum:
 | Failure tolerance | Up to N-W replica failures | Up to N-1 (with enough other nodes) |
 | Used by | Cassandra (default) | DynamoDB, Riak |
 
-**Key interview point**: Sloppy quorum + hinted handoff is how DynamoDB achieves "always writable." The trade-off is that reads during the hint-replay window may return stale data.`
+Key interview point: Sloppy quorum + hinted handoff is how DynamoDB achieves "always writable." The trade-off is that reads during the hint-replay window may return stale data.`
       },
       {
         question: 'What are the failure modes and limitations of hinted handoff?',
-        answer: `**Failure mode 1 — Hinting node crashes**:
+        answer: `Failure mode 1 — Hinting node crashes:
 \`\`\`
   D stores hint for C, then D crashes
   Hint is LOST → C never gets the write
   → Anti-entropy (Merkle tree) repair needed
 \`\`\`
 
-**Failure mode 2 — Hints expire**:
+Failure mode 2 — Hints expire:
 \`\`\`
   D stores hint for C
   C is down for days (past hint TTL)
@@ -1954,7 +1954,7 @@ With sloppy quorum:
   → Full repair (nodetool repair) needed
 \`\`\`
 
-**Failure mode 3 — Hint replay overload**:
+Failure mode 3 — Hint replay overload:
 \`\`\`
   C was down for hours
   D accumulated millions of hints
@@ -1963,14 +1963,14 @@ With sloppy quorum:
   → Rate-limit hint replay (Cassandra throttles this)
 \`\`\`
 
-**Failure mode 4 — Permanent failure**:
+Failure mode 4 — Permanent failure:
 \`\`\`
   Node C's disk dies, C is replaced by new node E
   E is not the same node — hints addressed to C are useless
   → Full streaming repair from other replicas to E
 \`\`\`
 
-**Best practices**:
+Best practices:
 - Set hint TTL reasonably (Cassandra default: 3 hours)
 - Monitor hint backlog size per node
 - Run anti-entropy repair periodically (regardless of hints)
@@ -1979,7 +1979,7 @@ With sloppy quorum:
       },
       {
         question: 'How does hinted handoff interact with consistency levels?',
-        answer: `**Cassandra consistency interaction**:
+        answer: `Cassandra consistency interaction:
 
 \`\`\`
 CL=ONE:
@@ -2004,13 +2004,13 @@ CL=ANY (Cassandra-specific):
   Lowest consistency, highest availability
 \`\`\`
 
-**Key distinction**: Hinted handoff does NOT change the consistency level guarantee. If you use QUORUM and need 2 ACKs, you still need 2 actual ACKs. Hints supplement — they ensure the data eventually reaches the downed replica, but they do not substitute for the quorum count.
+Key distinction: Hinted handoff does NOT change the consistency level guarantee. If you use QUORUM and need 2 ACKs, you still need 2 actual ACKs. Hints supplement — they ensure the data eventually reaches the downed replica, but they do not substitute for the quorum count.
 
-**DynamoDB**: Uses sloppy quorum where hint nodes DO count toward W, making the system "always writable" but with weaker consistency guarantees during failures.`
+DynamoDB: Uses sloppy quorum where hint nodes DO count toward W, making the system "always writable" but with weaker consistency guarantees during failures.`
       },
       {
         question: 'How do DynamoDB, Cassandra, and Riak differ in their hinted handoff implementations?',
-        answer: `**DynamoDB (original Dynamo paper)**:
+        answer: `DynamoDB (original Dynamo paper):
 \`\`\`
   Sloppy quorum: Hint nodes COUNT toward W
   Write to key K (replicas A,B,C), C is down:
@@ -2023,7 +2023,7 @@ CL=ANY (Cassandra-specific):
     "Always writable" at the cost of consistency
 \`\`\`
 
-**Cassandra**:
+Cassandra:
 \`\`\`
   Strict quorum: Hints do NOT count toward CL
   Write to key K (replicas A,B,C), C is down, CL=QUORUM:
@@ -2040,7 +2040,7 @@ CL=ANY (Cassandra-specific):
   Throttling: hinted_handoff_throttle_in_kb (default 1MB/s)
 \`\`\`
 
-**Riak**:
+Riak:
 \`\`\`
   Sloppy quorum: Similar to Dynamo
   Uses preference list — ordered set of nodes for each key
@@ -2050,7 +2050,7 @@ CL=ANY (Cassandra-specific):
   hinted handoff (temporary failure)
 \`\`\`
 
-**Key differences**:
+Key differences:
 | Property | DynamoDB | Cassandra | Riak |
 |----------|---------|-----------|------|
 | Hints count toward quorum | Yes | No | Yes |
@@ -2061,7 +2061,7 @@ CL=ANY (Cassandra-specific):
       },
       {
         question: 'How do you monitor and operationally manage hinted handoff in production?',
-        answer: `**Key metrics to monitor in Cassandra**:
+        answer: `Key metrics to monitor in Cassandra:
 
 \`\`\`
   1. Hints stored per node (JMX: StorageProxy.HintsInProgress)
@@ -2086,7 +2086,7 @@ CL=ANY (Cassandra-specific):
      Alert when hint window is breached → schedule full repair
 \`\`\`
 
-**Operational playbook**:
+Operational playbook:
 \`\`\`
   Scenario: Node C was down for 30 minutes
     Action: Hinted handoff handles this automatically
@@ -2110,7 +2110,7 @@ CL=ANY (Cassandra-specific):
     Monitor: CPU and disk I/O on recovered node during replay
 \`\`\`
 
-**Best practices**:
+Best practices:
 - Set max_hint_window to match your expected maximum transient failure duration (default 3 hours is good for most deployments)
 - Always run periodic anti-entropy repair regardless of hinted handoff — hints are a first line of defense, not a complete solution
 - Monitor hint storage size as a leading indicator of cluster health problems
@@ -2118,7 +2118,7 @@ CL=ANY (Cassandra-specific):
       },
       {
         question: 'How does hinted handoff compare with other consistency repair mechanisms?',
-        answer: `**Three-tier consistency repair system**:
+        answer: `Three-tier consistency repair system:
 
 \`\`\`
   Speed vs Coverage trade-off:
@@ -2128,7 +2128,7 @@ CL=ANY (Cassandra-specific):
   (narrowest)        (moderate)       (broadest)
 \`\`\`
 
-**Detailed comparison**:
+Detailed comparison:
 | Property | Hinted Handoff | Read Repair | Anti-Entropy (Merkle) |
 |----------|---------------|-------------|----------------------|
 | Trigger | Write to downed replica | Read detects stale data | Periodic background scan |
@@ -2138,7 +2138,7 @@ CL=ANY (Cassandra-specific):
 | Failure risk | Hint node crash loses hint | Cold data never repaired | Expensive I/O |
 | Consistency window | Hint TTL (hours) | Until next read | Until next repair cycle |
 
-**What each catches that the others miss**:
+What each catches that the others miss:
 \`\`\`
   Hinted Handoff misses:
     ✗ Hint node crashed (hint lost)
@@ -2155,16 +2155,16 @@ CL=ANY (Cassandra-specific):
     ✗ But is slow and resource-intensive
 \`\`\`
 
-**Operational rule**: You need all three layers. Disabling any one creates consistency gaps:
+Operational rule: You need all three layers. Disabling any one creates consistency gaps:
 - Without hinted handoff: Every transient failure requires full repair to fix
 - Without read repair: Frequently-read stale data goes undetected until next anti-entropy
 - Without anti-entropy: Cold data accumulates permanent inconsistencies
 
-**Comparison with consensus-based systems**: In Raft/Paxos systems (etcd, CockroachDB), there is no need for these repair mechanisms because every committed write is replicated to a majority by definition. The repair tiers are specifically needed in eventually consistent systems that trade consistency for availability.`
+Comparison with consensus-based systems: In Raft/Paxos systems (etcd, CockroachDB), there is no need for these repair mechanisms because every committed write is replicated to a majority by definition. The repair tiers are specifically needed in eventually consistent systems that trade consistency for availability.`
       },
       {
         question: 'What happens to hinted handoff during rolling upgrades and topology changes?',
-        answer: `**Rolling upgrade scenario**:
+        answer: `Rolling upgrade scenario:
 \`\`\`
   Cluster: A, B, C, D, E (Cassandra)
   Upgrading one node at a time
@@ -2184,7 +2184,7 @@ CL=ANY (Cassandra-specific):
   Mitigation: Keep upgrade time per node well under hint window
 \`\`\`
 
-**Topology changes (adding/removing nodes)**:
+Topology changes (adding/removing nodes):
 
 \`\`\`
   Adding Node F to the cluster:
@@ -2201,7 +2201,7 @@ CL=ANY (Cassandra-specific):
     (C no longer exists in the token ring)
 \`\`\`
 
-**Race condition during topology change**:
+Race condition during topology change:
 \`\`\`
   1. Node C is being decommissioned
   2. Client writes key K (replica set includes C)
@@ -2214,7 +2214,7 @@ CL=ANY (Cassandra-specific):
   ensures no data is lost in these edge cases
 \`\`\`
 
-**Best practice for topology changes**:
+Best practice for topology changes:
 - After adding a node: run \`nodetool cleanup\` on existing nodes (remove data they no longer own)
 - After removing a node: run \`nodetool repair\` on affected token ranges
 - During rolling upgrades: monitor hint accumulation and keep per-node downtime under hint TTL
@@ -2276,18 +2276,18 @@ Replay Protocol:
       'Know the performance trade-off: read repair adds latency to reads but improves consistency over time',
     ],
 
-    introduction: `**Read repair** is an opportunistic consistency mechanism in distributed databases. During a read operation, the coordinator contacts multiple replicas and compares their responses. If one or more replicas return stale data, the coordinator sends the latest version to the outdated replicas, "repairing" the inconsistency as a side effect of the read. The term "opportunistic" is key — repairs only happen when data is actually accessed, making it a lazy, demand-driven consistency mechanism.
+    introduction: `Read repair is an opportunistic consistency mechanism in distributed databases. During a read operation, the coordinator contacts multiple replicas and compares their responses. If one or more replicas return stale data, the coordinator sends the latest version to the outdated replicas, "repairing" the inconsistency as a side effect of the read. The term "opportunistic" is key — repairs only happen when data is actually accessed, making it a lazy, demand-driven consistency mechanism.
 
-This approach is a cornerstone of **eventually consistent** systems. Rather than requiring eager synchronization of all replicas on every write (which reduces availability), the system tolerates temporary inconsistency and fixes it lazily — when the data is actually accessed. This means frequently-read data converges quickly, while rarely-read data may remain stale for longer. This property makes read repair particularly effective for workloads with a Zipfian (power-law) access pattern, where a small fraction of keys accounts for most reads.
+This approach is a cornerstone of eventually consistent systems. Rather than requiring eager synchronization of all replicas on every write (which reduces availability), the system tolerates temporary inconsistency and fixes it lazily — when the data is actually accessed. This means frequently-read data converges quickly, while rarely-read data may remain stale for longer. This property makes read repair particularly effective for workloads with a Zipfian (power-law) access pattern, where a small fraction of keys accounts for most reads.
 
-**Cassandra**, **DynamoDB**, and **Riak** implement read repair as part of their read path. Cassandra optimizes this with **digest queries**: instead of fetching the full value from all replicas, it fetches the full value from one and a lightweight digest (hash) from the others. Only if the digests disagree does it fetch the full value from the mismatched replicas. Notably, **Cassandra 4.0 removed probabilistic read repair** (the old \`read_repair_chance\` setting) in favor of deterministic blocking read repair and incremental anti-entropy repair, reflecting lessons learned from production operations.
+Cassandra, DynamoDB, and Riak implement read repair as part of their read path. Cassandra optimizes this with digest queries: instead of fetching the full value from all replicas, it fetches the full value from one and a lightweight digest (hash) from the others. Only if the digests disagree does it fetch the full value from the mismatched replicas. Notably, Cassandra 4.0 removed probabilistic read repair (the old \`read_repair_chance\` setting) in favor of deterministic blocking read repair and incremental anti-entropy repair, reflecting lessons learned from production operations.
 
-**When to use read repair**: Eventually consistent databases where read latency can tolerate the overhead of multi-replica comparison, and where hot data should converge quickly without waiting for background repair. **When NOT to use**: Strong consistency systems (Raft-based databases do not need read repair since committed data is already on a majority), write-heavy workloads where reads are rare (cold data never gets repaired), or latency-sensitive reads where the digest comparison and repair write add unacceptable overhead.`,
+When to use read repair: Eventually consistent databases where read latency can tolerate the overhead of multi-replica comparison, and where hot data should converge quickly without waiting for background repair. When NOT to use: Strong consistency systems (Raft-based databases do not need read repair since committed data is already on a majority), write-heavy workloads where reads are rare (cold data never gets repaired), or latency-sensitive reads where the digest comparison and repair write add unacceptable overhead.`,
 
     keyQuestions: [
       {
         question: 'How does read repair work step by step?',
-        answer: `**Cassandra read repair with digest queries (CL=QUORUM, RF=3)**:
+        answer: `Cassandra read repair with digest queries (CL=QUORUM, RF=3):
 
 A client issues \`READ key=K\` at \`CL=QUORUM\`. The coordinator fans out three requests:
 
@@ -2299,29 +2299,29 @@ A client issues \`READ key=K\` at \`CL=QUORUM\`. The coordinator fans out three 
 
 Steps:
 
-1. **Compare digests**: \`A.digest == B.digest\` (both v2). \`A.digest != C.digest\` (C is stale).
-2. **Fetch full data from C**: \`{value: "v1", ts: 90}\`.
-3. **Determine the latest version**: \`A.ts = 100 > C.ts = 90\` → v2 wins.
-4. **Return v2 to the client immediately**.
-5. **(Async)** send v2 to Node C as a repair write. C updates key K to v2.
+1. Compare digests: \`A.digest == B.digest\` (both v2). \`A.digest != C.digest\` (C is stale).
+2. Fetch full data from C: \`{value: "v1", ts: 90}\`.
+3. Determine the latest version: \`A.ts = 100 > C.ts = 90\` → v2 wins.
+4. Return v2 to the client immediately.
+5. (Async) send v2 to Node C as a repair write. C updates key K to v2.
 
 Result: all three replicas now hold v2.
 
-**Key optimization**: Digest queries save bandwidth. Instead of transferring the full value from all replicas (which could be large), only a small hash is transferred. Full data is only fetched on mismatch.`
+Key optimization: Digest queries save bandwidth. Instead of transferring the full value from all replicas (which could be large), only a small hash is transferred. Full data is only fetched on mismatch.`
       },
       {
         question: 'What is the difference between foreground and background read repair?',
-        answer: `**Foreground (synchronous) read repair**: client read goes to the coordinator, which (1) requests data from R replicas (quorum), (2) detects mismatches, (3) repairs stale replicas, (4) only then returns the latest value to the client.
+        answer: `Foreground (synchronous) read repair: client read goes to the coordinator, which (1) requests data from R replicas (quorum), (2) detects mismatches, (3) repairs stale replicas, (4) only then returns the latest value to the client.
 - Latency: higher (waits for repair before responding).
 - Consistency: strongest (repair completes before the response).
 - Used when: \`CL=ALL\` or strong consistency is required.
 
-**Background (asynchronous) read repair**: client read goes to the coordinator, which (1) requests data from R replicas, (2) returns the latest value to the client immediately, and (3) detects mismatches and repairs asynchronously.
+Background (asynchronous) read repair: client read goes to the coordinator, which (1) requests data from R replicas, (2) returns the latest value to the client immediately, and (3) detects mismatches and repairs asynchronously.
 - Latency: lower (respond immediately, repair in background).
 - Consistency: weaker (other readers may briefly see stale data).
 - Used when: \`CL=QUORUM\` or \`ONE\` (most common).
 
-**Cassandra's approach**:
+Cassandra's approach:
 \`\`\`
 read_repair_chance:          0.0 to 1.0
   Probability of triggering background read repair
@@ -2336,11 +2336,11 @@ Note: Cassandra 4.0+ removed probabilistic read repair
 in favor of transient replication and incremental repair.
 \`\`\`
 
-**Interview point**: Background read repair is a probabilistic consistency mechanism. It works well for hot data (read often → repaired often) but cold data may stay inconsistent indefinitely without periodic full repairs.`
+Interview point: Background read repair is a probabilistic consistency mechanism. It works well for hot data (read often → repaired often) but cold data may stay inconsistent indefinitely without periodic full repairs.`
       },
       {
         question: 'How does read repair complement hinted handoff and anti-entropy?',
-        answer: `**Three-layer consistency system** (Dynamo-style databases):
+        answer: `Three-layer consistency system (Dynamo-style databases):
 
 | Layer | When | How | Scope | Speed | Limit |
 |---|---|---|---|---|---|
@@ -2350,16 +2350,16 @@ in favor of transient replication and incremental repair.
 
 Each layer catches what the previous missed: hinted handoff covers transient failures, read repair covers the rest for frequently-accessed data, and anti-entropy ensures even rarely-read data eventually converges.
 
-**Each layer catches what the previous missed**:
+Each layer catches what the previous missed:
 1. Hinted handoff handles most transient failures
 2. Read repair catches the rest for frequently-accessed data
 3. Anti-entropy ensures even rarely-read data converges
 
-**Operational reality**: You need all three. Disabling any one creates consistency gaps that grow over time.`
+Operational reality: You need all three. Disabling any one creates consistency gaps that grow over time.`
       },
       {
         question: 'What are the performance implications of read repair?',
-        answer: `**Latency impact**:
+        answer: `Latency impact:
 \`\`\`
 Normal read (no repair needed):
   Coordinator ──► R replicas ──► compare ──► return
@@ -2376,12 +2376,12 @@ Additional latency: 1-10ms typically
   (repair write is async in background mode)
 \`\`\`
 
-**Bandwidth impact**:
+Bandwidth impact:
 - Digest queries: ~32 bytes per digest vs potentially KB-MB per full value
 - Repair writes: full value sent to each stale replica
 - With 10% read_repair_chance: 10% of reads trigger extra I/O
 
-**Tuning strategies**:
+Tuning strategies:
 \`\`\`
 High consistency requirement:
   read_repair_chance = 1.0  (100% of reads)
@@ -2396,11 +2396,11 @@ Balanced:
   Reasonable convergence with moderate overhead
 \`\`\`
 
-**Monitoring**: Track the read_repair metric. If it fires frequently, it indicates a systemic inconsistency problem (e.g., failing hinted handoff, overloaded replicas dropping writes).`
+Monitoring: Track the read_repair metric. If it fires frequently, it indicates a systemic inconsistency problem (e.g., failing hinted handoff, overloaded replicas dropping writes).`
       },
       {
         question: 'How did Cassandra 4.0 change read repair and why?',
-        answer: `**What changed in Cassandra 4.0**:
+        answer: `What changed in Cassandra 4.0:
 
 \`\`\`
   Removed:
@@ -2418,7 +2418,7 @@ Balanced:
     - Incremental anti-entropy repair improvements
 \`\`\`
 
-**Why probabilistic read repair was removed**:
+Why probabilistic read repair was removed:
 \`\`\`
   Problem 1: Unpredictable overhead
     read_repair_chance = 0.1 means 10% of ALL reads
@@ -2436,7 +2436,7 @@ Balanced:
     subtle ordering issues
 \`\`\`
 
-**New approach in Cassandra 4.0+**:
+New approach in Cassandra 4.0+:
 \`\`\`
   Consistency strategy:
     1. Blocking read repair (deterministic)
@@ -2453,11 +2453,11 @@ Balanced:
        → Unchanged, handles transient failures
 \`\`\`
 
-**Migration advice**: When upgrading to Cassandra 4.0+, ensure you have a regular incremental repair schedule (e.g., daily or weekly) to replace the consistency coverage that probabilistic read repair previously provided. Without it, cold data will not converge.`
+Migration advice: When upgrading to Cassandra 4.0+, ensure you have a regular incremental repair schedule (e.g., daily or weekly) to replace the consistency coverage that probabilistic read repair previously provided. Without it, cold data will not converge.`
       },
       {
         question: 'How does read repair interact with tombstones and deletions?',
-        answer: `**The tombstone problem**: In distributed databases, a delete is not a simple removal — it creates a **tombstone** (a marker that says "this key was deleted"). Tombstones are necessary because simply removing data from one replica does not prevent it from being "resurrected" by read repair from another replica that still has the old data.
+        answer: `The tombstone problem: In distributed databases, a delete is not a simple removal — it creates a tombstone (a marker that says "this key was deleted"). Tombstones are necessary because simply removing data from one replica does not prevent it from being "resurrected" by read repair from another replica that still has the old data.
 
 \`\`\`
   Without tombstones:
@@ -2478,7 +2478,7 @@ Balanced:
     K stays deleted ✓
 \`\`\`
 
-**Tombstone lifecycle**:
+Tombstone lifecycle:
 \`\`\`
   1. Delete issued → tombstone created (ts = now)
   2. Tombstone replicated to other nodes via normal write path
@@ -2493,7 +2493,7 @@ Balanced:
   This is why repair must run within gc_grace_seconds.
 \`\`\`
 
-**Read repair and tombstone interactions**:
+Read repair and tombstone interactions:
 \`\`\`
   Scenario: Range scan returns many tombstones
     Each tombstone is compared across replicas
@@ -2507,7 +2507,7 @@ Balanced:
     and run regular compaction to purge expired tombstones
 \`\`\`
 
-**Best practices**:
+Best practices:
 - Run \`nodetool repair\` within \`gc_grace_seconds\` to prevent zombie data
 - Monitor tombstone scan counts per read — alert if consistently high
 - Use TTL for data with natural expiration instead of explicit deletes
@@ -2515,7 +2515,7 @@ Balanced:
       },
       {
         question: 'How does read repair work in DynamoDB compared to Cassandra?',
-        answer: `**DynamoDB's approach**:
+        answer: `DynamoDB's approach:
 \`\`\`
   DynamoDB handles consistency differently from Cassandra:
 
@@ -2535,7 +2535,7 @@ Balanced:
   Consistency maintenance is fully automatic and internal.
 \`\`\`
 
-**Cassandra's approach (detailed)**:
+Cassandra's approach (detailed):
 \`\`\`
   CL=ONE:
     Read from 1 replica, return immediately
@@ -2554,7 +2554,7 @@ Balanced:
     Strongest read consistency, highest latency
 \`\`\`
 
-**Comparison**:
+Comparison:
 | Property | DynamoDB | Cassandra |
 |----------|---------|-----------|
 | Read repair visibility | Hidden (internal) | Explicit (configurable) |
@@ -2563,11 +2563,11 @@ Balanced:
 | Operator control | None (managed service) | Full (CL, repair settings) |
 | Cold data repair | Automatic (internal) | Requires manual anti-entropy |
 
-**Interview insight**: DynamoDB abstracts away read repair entirely — it is a managed service where consistency maintenance is Amazon's responsibility. Cassandra gives operators full control but requires them to understand and configure the repair stack correctly. This is a key trade-off between managed and self-hosted databases.`
+Interview insight: DynamoDB abstracts away read repair entirely — it is a managed service where consistency maintenance is Amazon's responsibility. Cassandra gives operators full control but requires them to understand and configure the repair stack correctly. This is a key trade-off between managed and self-hosted databases.`
       },
       {
         question: 'What is speculative retry and how does it relate to read repair?',
-        answer: `**Speculative retry** is a latency optimization that can trigger read repair as a side effect. When a read request to a replica takes too long, the coordinator speculatively sends the same request to another replica without waiting for the slow one to respond.
+        answer: `Speculative retry is a latency optimization that can trigger read repair as a side effect. When a read request to a replica takes too long, the coordinator speculatively sends the same request to another replica without waiting for the slow one to respond.
 
 \`\`\`
   Normal read (CL=QUORUM, RF=3):
@@ -2582,7 +2582,7 @@ Balanced:
     Return result (from A + C, ignore late B)
 \`\`\`
 
-**How speculative retry triggers read repair**:
+How speculative retry triggers read repair:
 \`\`\`
   If Node A and Node C have different data:
     A returns: value=v2, ts=100
@@ -2596,7 +2596,7 @@ Balanced:
     B might also be stale → repair B too
 \`\`\`
 
-**Cassandra speculative retry policies**:
+Cassandra speculative retry policies:
 \`\`\`
   ALWAYS:
     Always send speculative request after percentile_threshold
@@ -2616,9 +2616,9 @@ Balanced:
     Useful when p99 latency is well-known
 \`\`\`
 
-**The virtuous cycle**: Speculative retry improves read latency AND triggers read repair on the speculative replica, gradually improving data consistency. The extra read that fixes latency also fixes stale data.
+The virtuous cycle: Speculative retry improves read latency AND triggers read repair on the speculative replica, gradually improving data consistency. The extra read that fixes latency also fixes stale data.
 
-**Trade-off**: Speculative retry increases read amplification (more replicas contacted per read). Under high load, this can create a feedback loop — slow reads trigger speculation, which increases load, which causes more slow reads. Monitor speculation rate and back off if it exceeds 5-10% of reads.`
+Trade-off: Speculative retry increases read amplification (more replicas contacted per read). Under high load, this can create a feedback loop — slow reads trigger speculation, which increases load, which causes more slow reads. Monitor speculation rate and back off if it exceeds 5-10% of reads.`
       },
     ],
 
@@ -2675,18 +2675,18 @@ Repair Message:
       'Connect to WAL: most WAL implementations use segmented logs internally (PostgreSQL WAL segments are 16MB)',
     ],
 
-    introduction: `A **segmented log** takes the simple concept of an append-only log and makes it practical for production systems by splitting the log into fixed-size or time-bounded **segments**. Instead of one ever-growing file, the log consists of a sequence of segment files: one "active" segment being appended to, and a series of "closed" segments that are immutable and eligible for cleanup. This seemingly simple idea is what makes durable, high-throughput log systems possible at scale.
+    introduction: `A segmented log takes the simple concept of an append-only log and makes it practical for production systems by splitting the log into fixed-size or time-bounded segments. Instead of one ever-growing file, the log consists of a sequence of segment files: one "active" segment being appended to, and a series of "closed" segments that are immutable and eligible for cleanup. This seemingly simple idea is what makes durable, high-throughput log systems possible at scale.
 
-This design solves critical operational problems. A single infinite log file is impossible to manage: it cannot be efficiently searched, it fills disks, and deleting old data requires rewriting the entire file. Segments allow old data to be **deleted** (drop entire segment files) or **compacted** (remove superseded entries) without touching the active write path. The immutability of closed segments also enables **parallel reads** — different consumers can read different segments simultaneously without lock contention.
+This design solves critical operational problems. A single infinite log file is impossible to manage: it cannot be efficiently searched, it fills disks, and deleting old data requires rewriting the entire file. Segments allow old data to be deleted (drop entire segment files) or compacted (remove superseded entries) without touching the active write path. The immutability of closed segments also enables parallel reads — different consumers can read different segments simultaneously without lock contention.
 
-**Apache Kafka** is the most prominent implementation of this pattern. Each Kafka partition is a segmented log on disk, with configurable segment size (default 1GB) and retention policies. **etcd**'s Raft log uses segments with periodic snapshots, after which old log entries are discarded (the low-water mark pattern). **PostgreSQL**'s WAL uses 16MB segments that are archived for point-in-time recovery. **Apache BookKeeper** (used by Apache Pulsar) takes segmentation further by distributing segments across a pool of storage nodes, enabling independent scaling of storage and compute.
+Apache Kafka is the most prominent implementation of this pattern. Each Kafka partition is a segmented log on disk, with configurable segment size (default 1GB) and retention policies. etcd's Raft log uses segments with periodic snapshots, after which old log entries are discarded (the low-water mark pattern). PostgreSQL's WAL uses 16MB segments that are archived for point-in-time recovery. Apache BookKeeper (used by Apache Pulsar) takes segmentation further by distributing segments across a pool of storage nodes, enabling independent scaling of storage and compute.
 
-**When to use segmented logs**: Any system that needs ordered, durable, append-only storage with controllable retention — event streaming, transaction logs, commit logs, audit trails, and CDC pipelines. **When NOT to use**: Small datasets where a single file is sufficient, workloads requiring random updates (not append-only), or systems where the operational complexity of managing segments, indexes, and retention policies is not justified by the scale.`,
+When to use segmented logs: Any system that needs ordered, durable, append-only storage with controllable retention — event streaming, transaction logs, commit logs, audit trails, and CDC pipelines. When NOT to use: Small datasets where a single file is sufficient, workloads requiring random updates (not append-only), or systems where the operational complexity of managing segments, indexes, and retention policies is not justified by the scale.`,
 
     keyQuestions: [
       {
         question: 'How does Kafka implement segmented logs for a partition?',
-        answer: `**Kafka partition on disk**:
+        answer: `Kafka partition on disk:
 \`\`\`
   partition-0/
     ├── 00000000000000000000.log   (segment: offsets 0-9999)
@@ -2700,23 +2700,23 @@ This design solves critical operational problems. A single infinite log file is 
     └── 00000000000000020000.timeindex
 \`\`\`
 
-**Segment lifecycle**:
+Segment lifecycle:
 
-1. New messages are appended to the **active segment**.
+1. New messages are appended to the active segment.
 2. When the active segment reaches \`segment.bytes=1GB\` (or \`segment.ms=7 days\`), it is closed and becomes immutable.
 3. A new active segment is created and appends continue.
 4. Closed segments are then handled by one of two cleanup policies:
-   - **\`retention.ms=7d\`** — delete segments older than 7 days.
-   - **\`cleanup.policy=compact\`** — remove superseded values, keep the latest record per key.
+   - \`retention.ms=7d\` — delete segments older than 7 days.
+   - \`cleanup.policy=compact\` — remove superseded values, keep the latest record per key.
 
-**Index file**: Sparse index mapping offset → byte position in the .log file. To find offset 10042:
+Index file: Sparse index mapping offset → byte position in the .log file. To find offset 10042:
 1. Binary search index → closest entry <= 10042 (e.g., 10040 → byte 48392)
 2. Sequential scan from byte 48392 to find 10042
 3. Sparse index keeps the index file small (one entry per ~4KB of log data)`
       },
       {
         question: 'What is the difference between log deletion and log compaction?',
-        answer: `**Deletion (\`cleanup.policy=delete\`)**:
+        answer: `Deletion (\`cleanup.policy=delete\`):
 
 | Before | After |
 |---|---|
@@ -2726,7 +2726,7 @@ This design solves critical operational problems. A single infinite log file is 
 
 Use case: event streams, metrics, logs — "I only care about the last 7 days of events." All data in old segments is lost.
 
-**Compaction (cleanup.policy=compact)**:
+Compaction (cleanup.policy=compact):
 \`\`\`
   Before compaction:
   Segment 1:
@@ -2751,7 +2751,7 @@ Use case: event streams, metrics, logs — "I only care about the last 7 days of
   - Keys with tombstone (null value) are deleted after grace period
 \`\`\`
 
-**Comparison**:
+Comparison:
 | Property | Delete | Compact |
 |----------|--------|---------|
 | Retention basis | Time/size | Per-key latest |
@@ -2762,9 +2762,9 @@ Use case: event streams, metrics, logs — "I only care about the last 7 days of
       },
       {
         question: 'How do segment indexes enable efficient reads?',
-        answer: `**Problem**: A consumer wants to read from offset 5,000,042 in a partition with millions of messages across many segments.
+        answer: `Problem: A consumer wants to read from offset 5,000,042 in a partition with millions of messages across many segments.
 
-**Step 1: Find the right segment** (O(log S) where S = number of segments):
+Step 1: Find the right segment (O(log S) where S = number of segments):
 \`\`\`
   Segments:
     00000000000000000000.log  (offsets 0 - 999,999)
@@ -2775,7 +2775,7 @@ Use case: event streams, metrics, logs — "I only care about the last 7 days of
   Segment file names = base offset → binary search
 \`\`\`
 
-**Step 2: Find position within segment** using sparse index:
+Step 2: Find position within segment using sparse index:
 \`\`\`
   00000000000005000000.index:
     Offset    Position (bytes)
@@ -2788,7 +2788,7 @@ Use case: event streams, metrics, logs — "I only care about the last 7 days of
   (next entry: 5000100 at byte 41,280)
 \`\`\`
 
-**Step 3: Sequential scan from byte 0**:
+Step 3: Sequential scan from byte 0:
 \`\`\`
   Read from byte 0, scan forward 42 messages
   to reach offset 5,000,042
@@ -2796,13 +2796,13 @@ Use case: event streams, metrics, logs — "I only care about the last 7 days of
   Total I/O: ~42 message reads (not 5 million!)
 \`\`\`
 
-**Time-based index** (.timeindex): Maps timestamp → offset, enabling "give me messages from 2pm yesterday."
+Time-based index (.timeindex): Maps timestamp → offset, enabling "give me messages from 2pm yesterday."
 
-**Page cache synergy**: Active segments and recent indexes are typically in OS page cache, making most reads memory-speed.`
+Page cache synergy: Active segments and recent indexes are typically in OS page cache, making most reads memory-speed.`
       },
       {
         question: 'How does segment size affect system performance?',
-        answer: `**Small segments** (e.g., 100MB):
+        answer: `Small segments (e.g., 100MB):
 \`\`\`
 Advantages:
   - Faster deletion (smaller files to remove)
@@ -2816,7 +2816,7 @@ Disadvantages:
   - Many tiny files can stress the filesystem
 \`\`\`
 
-**Large segments** (e.g., 4GB):
+Large segments (e.g., 4GB):
 \`\`\`
 Advantages:
   - Fewer files → fewer file descriptors
@@ -2830,7 +2830,7 @@ Disadvantages:
   - Larger index gap if segment takes a long time to fill
 \`\`\`
 
-**Kafka defaults and tuning**:
+Kafka defaults and tuning:
 \`\`\`
   segment.bytes = 1GB          (size-based rolling)
   segment.ms = 7 days          (time-based rolling)
@@ -2844,11 +2844,11 @@ Disadvantages:
     roll even when data volume is low
 \`\`\`
 
-**Operational note**: Monitor open file descriptor count. A broker with thousands of partitions and small segments can exhaust file descriptors.`
+Operational note: Monitor open file descriptor count. A broker with thousands of partitions and small segments can exhaust file descriptors.`
       },
       {
         question: 'How does Kafka tiered storage change the segmented log architecture?',
-        answer: `**Traditional Kafka storage**:
+        answer: `Traditional Kafka storage:
 \`\`\`
   All segments stored locally on broker disk:
     Broker 1:
@@ -2863,7 +2863,7 @@ Disadvantages:
   For a busy topic: 100MB/s × 86400s × 30d × 3 RF = 777TB!
 \`\`\`
 
-**Tiered storage (KIP-405, production in Kafka 3.6+)**:
+Tiered storage (KIP-405, production in Kafka 3.6+):
 \`\`\`
   Broker local disk:         Object storage (S3, GCS, Azure Blob):
     segment-3.log (ACTIVE)     segment-0.log (old, cheap)
@@ -2877,7 +2877,7 @@ Disadvantages:
   Object store: 100MB/s × 86400s × 30d = 259TB (cold, ~$6/TB/mo)
 \`\`\`
 
-**How it works**:
+How it works:
 1. Active segment is written locally (as before)
 2. When segment is closed (rolled), it becomes eligible for offloading
 3. Background thread copies closed segments to object storage
@@ -2886,7 +2886,7 @@ Disadvantages:
 6. Consumer reads: hot segments from local, cold from object store
 7. Remote log metadata (which segments are where) maintained per partition
 
-**Impact on consumers**:
+Impact on consumers:
 \`\`\`
   Consumer reading recent data (within hot retention):
     Reads from local disk → same latency as before
@@ -2897,13 +2897,13 @@ Disadvantages:
     Acceptable for batch processing, backfill, audit
 \`\`\`
 
-**Key benefit**: Decouple retention from broker disk capacity. Keep data for months or years at object storage prices without scaling broker hardware. This is a major operational simplification for Kafka at scale.`
+Key benefit: Decouple retention from broker disk capacity. Keep data for months or years at object storage prices without scaling broker hardware. This is a major operational simplification for Kafka at scale.`
       },
       {
         question: 'How do etcd and Raft use segmented logs differently from Kafka?',
-        answer: `**Kafka's segmented log**: Stores the data itself. Segments ARE the permanent record. Consumers read segments directly.
+        answer: `Kafka's segmented log: Stores the data itself. Segments ARE the permanent record. Consumers read segments directly.
 
-**etcd/Raft's segmented log**: Stores commands (state machine inputs). The log is a means to replicate commands, not the final storage.
+etcd/Raft's segmented log: Stores commands (state machine inputs). The log is a means to replicate commands, not the final storage.
 
 \`\`\`
   Kafka:
@@ -2920,7 +2920,7 @@ Disadvantages:
     Log is a MEANS to build the database
 \`\`\`
 
-**etcd's WAL and snapshot lifecycle**:
+etcd's WAL and snapshot lifecycle:
 \`\`\`
   Raft log entries:
     [1:PUT /key1=val1][2:PUT /key2=val2]...[10000:PUT /key3=val3]
@@ -2934,7 +2934,7 @@ Disadvantages:
     On recovery: load snapshot + replay entries 10001+
 \`\`\`
 
-**WAL files in etcd**:
+WAL files in etcd:
 \`\`\`
   data-dir/member/wal/
     0000000000000000-0000000000000000.wal  (first segment)
@@ -2946,7 +2946,7 @@ Disadvantages:
   On snapshot: old WAL files can be purged
 \`\`\`
 
-**BookKeeper (used by Apache Pulsar)**:
+BookKeeper (used by Apache Pulsar):
 \`\`\`
   Differs from both Kafka and etcd:
     Log segments (ledgers) are distributed across storage nodes (bookies)
@@ -2958,7 +2958,7 @@ Disadvantages:
   Disadvantage: More operational complexity (separate bookie cluster)
 \`\`\`
 
-**Comparison**:
+Comparison:
 | Property | Kafka | etcd/Raft | BookKeeper/Pulsar |
 |----------|-------|-----------|-------------------|
 | Log purpose | Primary storage | Replication mechanism | Distributed storage |
@@ -2969,7 +2969,7 @@ Disadvantages:
       },
       {
         question: 'How does log compaction handle ordering and what guarantees does it provide?',
-        answer: `**Log compaction guarantee**: For any key that appears in the log, the compacted log retains **at least the most recent value** for that key. The ordering of the retained entries is preserved — a compacted log is still ordered by offset.
+        answer: `Log compaction guarantee: For any key that appears in the log, the compacted log retains at least the most recent value for that key. The ordering of the retained entries is preserved — a compacted log is still ordered by offset.
 
 \`\`\`
   Before compaction:
@@ -2994,7 +2994,7 @@ Disadvantages:
   tracked their position by offset are not confused.
 \`\`\`
 
-**Tombstone handling in compaction**:
+Tombstone handling in compaction:
 \`\`\`
   Key A with null value = tombstone
   Tombstone is retained for delete.retention.ms (default: 24h)
@@ -3007,7 +3007,7 @@ Disadvantages:
     Keeping it for 24h gives consumers time to catch up
 \`\`\`
 
-**Compaction mechanics in Kafka**:
+Compaction mechanics in Kafka:
 \`\`\`
   Compaction runs in background (log.cleaner threads)
 
@@ -3028,16 +3028,16 @@ Disadvantages:
   Does NOT block producers or consumers
 \`\`\`
 
-**Guarantees**:
-1. **Offset preservation**: Compaction never changes an entry's offset
-2. **Ordering preservation**: Entries remain in offset order
-3. **At-least-one**: Every key has at least its latest value (or tombstone)
-4. **Tail preservation**: The active segment is never compacted (too recent)
-5. **Idempotent**: Running compaction multiple times produces the same result`
+Guarantees:
+1. Offset preservation: Compaction never changes an entry's offset
+2. Ordering preservation: Entries remain in offset order
+3. At-least-one: Every key has at least its latest value (or tombstone)
+4. Tail preservation: The active segment is never compacted (too recent)
+5. Idempotent: Running compaction multiple times produces the same result`
       },
       {
         question: 'When should you use segmented logs vs B-tree based storage?',
-        answer: `**Segmented log (LSM/append-only)**:
+        answer: `Segmented log (LSM/append-only):
 \`\`\`
   Write path: Append to active segment (sequential I/O)
   Read path: Check active segment, then older segments
@@ -3048,7 +3048,7 @@ Disadvantages:
   Penalty on: READS (may scan multiple segments)
 \`\`\`
 
-**B-tree based storage**:
+B-tree based storage:
 \`\`\`
   Write path: Find correct page, update in place (random I/O)
   Read path: Walk tree from root to leaf (O(log N))
@@ -3059,7 +3059,7 @@ Disadvantages:
   Penalty on: WRITES (random I/O for page updates)
 \`\`\`
 
-**Detailed comparison**:
+Detailed comparison:
 | Property | Segmented Log (Kafka, RocksDB) | B-tree (PostgreSQL, MySQL) |
 |----------|-------------------------------|---------------------------|
 | Write throughput | Very high (sequential append) | Moderate (random I/O) |
@@ -3070,7 +3070,7 @@ Disadvantages:
 | Concurrent readers | Easy (immutable segments) | Page-level locking |
 | Range scans | Requires merge across segments | Efficient (sorted pages) |
 
-**Decision framework**:
+Decision framework:
 \`\`\`
   Use segmented log when:
     - Write throughput is the priority
@@ -3092,7 +3092,7 @@ Disadvantages:
     Examples: RocksDB, LevelDB, Cassandra, HBase
 \`\`\`
 
-**Interview tip**: When discussing storage engine trade-offs, frame it as "segmented logs optimize the write path (sequential I/O) while B-trees optimize the read path (sorted structure). LSM trees bridge the gap by combining append-only writes with background compaction into sorted runs."`
+Interview tip: When discussing storage engine trade-offs, frame it as "segmented logs optimize the write path (sequential I/O) while B-trees optimize the read path (sorted structure). LSM trees bridge the gap by combining append-only writes with background compaction into sorted runs."`
       },
     ],
 
@@ -3145,20 +3145,20 @@ Segment Lifecycle:
       'Know the distinction: LEO (Log End Offset) = latest entry, HWM = latest committed entry; LEO >= HWM always',
     ],
 
-    introduction: `The **high-water mark** (HWM) is a critical concept in replicated log systems. It marks the position in the log up to which entries have been safely replicated to enough nodes (a quorum) to guarantee durability. Entries at or before the high-water mark are **committed** — they will not be lost even if the leader crashes. Entries after the high-water mark are **uncommitted** — they exist only on the leader (and possibly some followers) and could be lost on failover. This simple boundary between "safe" and "unsafe" data is the foundation of durability guarantees in replicated systems.
+    introduction: `The high-water mark (HWM) is a critical concept in replicated log systems. It marks the position in the log up to which entries have been safely replicated to enough nodes (a quorum) to guarantee durability. Entries at or before the high-water mark are committed — they will not be lost even if the leader crashes. Entries after the high-water mark are uncommitted — they exist only on the leader (and possibly some followers) and could be lost on failover. This simple boundary between "safe" and "unsafe" data is the foundation of durability guarantees in replicated systems.
 
-In **Apache Kafka**, the high-water mark determines which messages are visible to consumers. A producer may have written a message and received an acknowledgment, but consumers cannot read it until all in-sync replicas (ISRs) have replicated it and the HWM has advanced. This is Kafka's promise to consumers: everything they read has been replicated to every broker in the ISR and will survive a single broker failure. Kafka's KIP-101 further refined the protocol by using **leader epochs** rather than high-water marks for log truncation decisions, fixing subtle edge cases where stale HWM values could cause committed data loss during ISR expansion.
+In Apache Kafka, the high-water mark determines which messages are visible to consumers. A producer may have written a message and received an acknowledgment, but consumers cannot read it until all in-sync replicas (ISRs) have replicated it and the HWM has advanced. This is Kafka's promise to consumers: everything they read has been replicated to every broker in the ISR and will survive a single broker failure. Kafka's KIP-101 further refined the protocol by using leader epochs rather than high-water marks for log truncation decisions, fixing subtle edge cases where stale HWM values could cause committed data loss during ISR expansion.
 
-In **Raft** consensus, the equivalent concept is the **commit index**. The leader tracks which log entries have been replicated to a majority of nodes and advances the commit index accordingly. Only committed entries are applied to the state machine. The Raft commit index differs from Kafka's HWM in an important way: Raft uses a fixed majority quorum (always N/2+1), while Kafka's ISR set can shrink dynamically. This means Kafka's HWM can advance with fewer replicas, which is more available but requires careful handling of ISR changes.
+In Raft consensus, the equivalent concept is the commit index. The leader tracks which log entries have been replicated to a majority of nodes and advances the commit index accordingly. Only committed entries are applied to the state machine. The Raft commit index differs from Kafka's HWM in an important way: Raft uses a fixed majority quorum (always N/2+1), while Kafka's ISR set can shrink dynamically. This means Kafka's HWM can advance with fewer replicas, which is more available but requires careful handling of ISR changes.
 
-**When to use high-water mark**: Any replicated log system where consumers or state machines should only see committed data — distributed databases (etcd, CockroachDB), message brokers (Kafka), and replicated state machines. **When the concept does not apply**: Leaderless systems (Cassandra, DynamoDB) where there is no single log to replicate, or single-node databases where there is no replication lag to manage.`,
+When to use high-water mark: Any replicated log system where consumers or state machines should only see committed data — distributed databases (etcd, CockroachDB), message brokers (Kafka), and replicated state machines. When the concept does not apply: Leaderless systems (Cassandra, DynamoDB) where there is no single log to replicate, or single-node databases where there is no replication lag to manage.`,
 
     keyQuestions: [
       {
         question: 'How does the high-water mark work in Kafka?',
-        answer: `**Kafka's two important offsets per partition**: in the leader's log of \`[msg0][msg1][msg2][msg3][msg4][msg5][msg6]\`, the HWM (high-water mark) sits at msg4 and the LEO (log end offset) sits at msg6. Messages 0–4 are committed — replicated to all in-sync replicas (ISRs). Messages 5–6 are uncommitted — only on the leader, replication in progress.
+        answer: `Kafka's two important offsets per partition: in the leader's log of \`[msg0][msg1][msg2][msg3][msg4][msg5][msg6]\`, the HWM (high-water mark) sits at msg4 and the LEO (log end offset) sits at msg6. Messages 0–4 are committed — replicated to all in-sync replicas (ISRs). Messages 5–6 are uncommitted — only on the leader, replication in progress.
 
-**Consumer visibility**:
+Consumer visibility:
 \`\`\`
   Consumer can read: msg0 through msg4 (up to HWM)
   Consumer CANNOT read: msg5, msg6 (past HWM)
@@ -3168,7 +3168,7 @@ In **Raft** consensus, the equivalent concept is the **commit index**. The leade
   data that "disappears" → violates read consistency
 \`\`\`
 
-**HWM advancement**:
+HWM advancement:
 \`\`\`
   Leader       Follower 1    Follower 2
   [0-6]        [0-5]         [0-4]     ← LEO per replica
@@ -3182,14 +3182,14 @@ In **Raft** consensus, the equivalent concept is the **commit index**. The leade
   Consumer can now read msg5
 \`\`\`
 
-**Producer acks interaction**:
+Producer acks interaction:
 - \`acks=0\`: No acknowledgment, fire and forget
 - \`acks=1\`: Leader writes to its log, ACK immediately (before HWM advance)
 - \`acks=all\`: Wait until HWM advances past the message (all ISRs replicated)`
       },
       {
         question: 'What happens to uncommitted entries during a leader failover?',
-        answer: `**Scenario**: Leader has entries past the HWM that followers have not yet replicated.
+        answer: `Scenario: Leader has entries past the HWM that followers have not yet replicated.
 
 \`\`\`
 Before failure:
@@ -3214,9 +3214,9 @@ After F2 catches up:
   Consumer can now read message 5
 \`\`\`
 
-**Key insight**: Only committed messages (at or before HWM) are guaranteed to survive failover. This is why \`acks=all\` is important for critical data — it guarantees the message is committed before the producer receives acknowledgment.
+Key insight: Only committed messages (at or before HWM) are guaranteed to survive failover. This is why \`acks=all\` is important for critical data — it guarantees the message is committed before the producer receives acknowledgment.
 
-**Truncation**: When the old leader comes back, it must truncate its log to the HWM and replicate from the new leader:
+Truncation: When the old leader comes back, it must truncate its log to the HWM and replicate from the new leader:
 \`\`\`
   Old leader recovers: [0][1][2][3][4][5][6]
   Discovers new leader with HWM=5
@@ -3224,23 +3224,23 @@ After F2 catches up:
   Fetches from new leader to catch up
 \`\`\`
 
-**Data loss guarantee**: With \`acks=all\` and \`min.insync.replicas=2\`, a message is only acknowledged after it appears on at least 2 replicas. Even if one dies, the other has it.`
+Data loss guarantee: With \`acks=all\` and \`min.insync.replicas=2\`, a message is only acknowledged after it appears on at least 2 replicas. Even if one dies, the other has it.`
       },
       {
         question: 'How does Raft use the commit index as a high-water mark?',
-        answer: `**Raft's commit index** is the leader's high-water mark for the replicated log.
+        answer: `Raft's commit index is the leader's high-water mark for the replicated log.
 
 Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with commitIndex=3 and lastLogIndex=4. Entry 3 is replicated to a majority (2 of 3) and is committed; entry 4 is only on the leader and is uncommitted. Follower F1 has up to entry 3, F2 has up to entry 2. The leader computes commitIndex from \`matchIndex = {leader:4, F1:3, F2:2}\`: sort to \`[2, 3, 4]\`, take the majority position (median = 3), so commitIndex = 3 — provided entry 3 was written in the current term.
 
-**State machine application**: only entries at or before commitIndex are applied to the state machine (the actual database / KV store). Applied: \`[1:SET x=1][2:SET y=2][3:SET z=3]\`. Not applied: \`[4:SET w=4]\`. Client reads observe x=1, y=2, z=3; the client does not see w=4 until entry 4 is committed.
+State machine application: only entries at or before commitIndex are applied to the state machine (the actual database / KV store). Applied: \`[1:SET x=1][2:SET y=2][3:SET z=3]\`. Not applied: \`[4:SET w=4]\`. Client reads observe x=1, y=2, z=3; the client does not see w=4 until entry 4 is committed.
 
-**Safety property**: Once committed, an entry will be in every future leader's log. Raft guarantees this through its election restriction: a candidate cannot win an election unless its log is at least as up-to-date as the majority.
+Safety property: Once committed, an entry will be in every future leader's log. Raft guarantees this through its election restriction: a candidate cannot win an election unless its log is at least as up-to-date as the majority.
 
-**Difference from Kafka**: Raft's commit index is strictly consensus-based (majority rule). Kafka's HWM depends on the ISR set (which can shrink). Raft never shrinks the quorum requirement.`
+Difference from Kafka: Raft's commit index is strictly consensus-based (majority rule). Kafka's HWM depends on the ISR set (which can shrink). Raft never shrinks the quorum requirement.`
       },
       {
         question: 'How do consumers track their position relative to the high-water mark?',
-        answer: `**Kafka consumer offsets**:
+        answer: `Kafka consumer offsets:
 \`\`\`
   Partition log:
   [msg0][msg1][msg2][msg3][msg4][msg5][msg6][msg7]
@@ -3255,7 +3255,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Cannot see: msg5-7 (past HWM)
 \`\`\`
 
-**Offset tracking**:
+Offset tracking:
 \`\`\`
   __consumer_offsets topic (internal Kafka topic):
     key:   {group_id, topic, partition}
@@ -3265,7 +3265,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
   On restart/rebalance: fetch last committed offset → resume from 3
 \`\`\`
 
-**Lag monitoring**:
+Lag monitoring:
 \`\`\`
   Consumer lag = HWM - consumer_committed_offset
 
@@ -3276,18 +3276,18 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
   (consumer is falling behind)
 \`\`\`
 
-**End-to-end flow**:
+End-to-end flow:
 1. Producer writes message → appended at LEO
 2. Followers replicate → HWM advances
 3. Consumer fetches → only sees up to HWM
 4. Consumer processes and commits offset
 5. Consumer restarts → resumes from committed offset
 
-**Read-your-writes**: A producer with \`acks=all\` gets ACK after HWM advances. But a consumer in a different process may not have fetched the new HWM yet. For read-your-writes semantics, use the producer's returned offset to wait until the consumer reaches it.`
+Read-your-writes: A producer with \`acks=all\` gets ACK after HWM advances. But a consumer in a different process may not have fetched the new HWM yet. For read-your-writes semantics, use the producer's returned offset to wait until the consumer reaches it.`
       },
       {
         question: 'What is the difference between Kafka ISR-based HWM and Raft majority-based commit index?',
-        answer: `**Kafka ISR (In-Sync Replica) model**:
+        answer: `Kafka ISR (In-Sync Replica) model:
 \`\`\`
   3-broker partition: Leader, F1, F2
 
@@ -3306,7 +3306,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Prevents writing data that only exists on one node
 \`\`\`
 
-**Raft majority-based model**:
+Raft majority-based model:
 \`\`\`
   3-node cluster: Leader, F1, F2
   Quorum = majority = 2
@@ -3322,7 +3322,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
   commitIndex only advances when matchIndex[majority] increases
 \`\`\`
 
-**Key behavioral differences**:
+Key behavioral differences:
 | Property | Kafka ISR | Raft Majority |
 |----------|----------|---------------|
 | Quorum size | Dynamic (ISR can shrink) | Fixed (always N/2+1) |
@@ -3331,7 +3331,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
 | Slow follower | Removed from ISR, no impact | Blocks commit until caught up |
 | Configuration | acks, min.insync.replicas | Fixed by protocol |
 
-**Kafka's ISR trade-off**:
+Kafka's ISR trade-off:
 \`\`\`
   If min.insync.replicas=1 (unsafe!):
     ISR can shrink to just the leader
@@ -3344,13 +3344,13 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Leader crash → at least one follower has the data ✓
 \`\`\`
 
-**Interview insight**: Kafka's ISR model is more flexible (higher availability) but requires careful configuration. Raft's fixed majority is simpler and inherently safe but less forgiving of slow followers. Most production Kafka deployments use \`acks=all\` + \`min.insync.replicas=2\` + RF=3, which approximates Raft's majority guarantee.`
+Interview insight: Kafka's ISR model is more flexible (higher availability) but requires careful configuration. Raft's fixed majority is simpler and inherently safe but less forgiving of slow followers. Most production Kafka deployments use \`acks=all\` + \`min.insync.replicas=2\` + RF=3, which approximates Raft's majority guarantee.`
       },
       {
         question: 'What is the low-water mark and how does it relate to the high-water mark?',
-        answer: `**High-water mark (HWM)**: The newest committed entry — the upper boundary of safe data. Everything at or below HWM is committed and durable.
+        answer: `High-water mark (HWM): The newest committed entry — the upper boundary of safe data. Everything at or below HWM is committed and durable.
 
-**Low-water mark (LWM)**: The oldest entry that must be retained — the lower boundary of the log. Everything below LWM can be safely deleted or has already been checkpointed/snapshotted.
+Low-water mark (LWM): The oldest entry that must be retained — the lower boundary of the log. Everything below LWM can be safely deleted or has already been checkpointed/snapshotted.
 
 \`\`\`
   Log:
@@ -3367,7 +3367,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
   HWM to LEO: Uncommitted, may be lost on failover
 \`\`\`
 
-**How LWM is determined in different systems**:
+How LWM is determined in different systems:
 
 \`\`\`
   Kafka:
@@ -3389,7 +3389,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     PITR: restore from base backup + replay WAL from LWM
 \`\`\`
 
-**The relationship to garbage collection**:
+The relationship to garbage collection:
 \`\`\`
   LWM enables garbage collection of the log:
     1. Take snapshot/checkpoint (captures state at position X)
@@ -3406,11 +3406,11 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Recovery: load snapshot + replay (LWM to LEO) → fast startup
 \`\`\`
 
-**Interview takeaway**: Always mention both marks when discussing replicated logs. The HWM controls what is safe to read, while the LWM controls what is safe to delete. Together they define the "active window" of the log.`
+Interview takeaway: Always mention both marks when discussing replicated logs. The HWM controls what is safe to read, while the LWM controls what is safe to delete. Together they define the "active window" of the log.`
       },
       {
         question: 'How do leader epoch numbers improve upon the basic high-water mark for log truncation?',
-        answer: `**The problem with HWM-only truncation (Kafka pre-KIP-101)**:
+        answer: `The problem with HWM-only truncation (Kafka pre-KIP-101):
 
 \`\`\`
   Setup: Leader (L), Follower (F), RF=2, min.insync=1
@@ -3433,7 +3433,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     F (new leader): [msg0]  — msg1 is LOST despite being committed!
 \`\`\`
 
-**Leader epoch solution (KIP-101)**:
+Leader epoch solution (KIP-101):
 \`\`\`
   Each leader has an epoch number (incremented on each election)
   Leader epoch = (epoch, start_offset) pair
@@ -3458,20 +3458,20 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     didn't have msg1 in its winning epoch)
 \`\`\`
 
-**Key insight**: Instead of truncating based on a potentially stale HWM, the follower asks the current leader "what was the last offset for my last known epoch?" This gives an accurate truncation point because:
+Key insight: Instead of truncating based on a potentially stale HWM, the follower asks the current leader "what was the last offset for my last known epoch?" This gives an accurate truncation point because:
 1. The leader knows exactly which entries belong to which epoch
 2. The epoch boundary reflects actual leadership changes
 3. No stale HWM can cause incorrect truncation
 
-**Raft has this built-in**: Raft's log matching property ensures that if two logs contain an entry with the same index and term (epoch), all preceding entries are identical. This is why Raft does not need a separate HWM-based truncation mechanism — the term number IS the epoch.
+Raft has this built-in: Raft's log matching property ensures that if two logs contain an entry with the same index and term (epoch), all preceding entries are identical. This is why Raft does not need a separate HWM-based truncation mechanism — the term number IS the epoch.
 
-**Kafka's ISR model needed this fix** because the HWM propagation is asynchronous, creating a window where followers have stale HWM values. Leader epochs close this window.`
+Kafka's ISR model needed this fix because the HWM propagation is asynchronous, creating a window where followers have stale HWM values. Leader epochs close this window.`
       },
       {
         question: 'How does the high-water mark pattern apply to database replication beyond Kafka and Raft?',
-        answer: `**The HWM concept appears in many forms across distributed systems**:
+        answer: `The HWM concept appears in many forms across distributed systems:
 
-**PostgreSQL streaming replication**:
+PostgreSQL streaming replication:
 \`\`\`
   Primary:  WAL position = 0/16B3A820
   Sync standby: Flushed up to 0/16B3A820  ← HWM for sync commits
@@ -3487,7 +3487,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Lag = primary's WAL position - standby's replay position
 \`\`\`
 
-**MongoDB replica sets**:
+MongoDB replica sets:
 \`\`\`
   Oplog: Ordered sequence of operations
   Primary: latest oplog entry = ts:100
@@ -3505,7 +3505,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     Strongest guarantee, highest latency
 \`\`\`
 
-**CockroachDB (Raft per range)**:
+CockroachDB (Raft per range):
 \`\`\`
   Each range (partition) has its own Raft group
   Each Raft group has its own commit index (HWM)
@@ -3520,7 +3520,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     HWM for the transaction = both ranges committed
 \`\`\`
 
-**Cloud-native systems**:
+Cloud-native systems:
 \`\`\`
   Amazon Aurora:
     Volume epoch + protection group commits
@@ -3533,7 +3533,7 @@ Leader (term=3) holds log \`[1:SET x=1][2:SET y=2][3:SET z=3][4:SET w=4]\` with 
     HWM = Paxos majority + TrueTime commit wait
 \`\`\`
 
-**Universal principle**: Regardless of the specific technology, the high-water mark is the answer to: "What is the latest point in the log that I can guarantee will survive the loss of any single node?" Every replicated system must answer this question, and the HWM is the abstraction that does it.`
+Universal principle: Regardless of the specific technology, the high-water mark is the answer to: "What is the latest point in the log that I can guarantee will survive the loss of any single node?" Every replicated system must answer this question, and the HWM is the abstraction that does it.`
       },
     ],
 
@@ -3592,18 +3592,18 @@ Invariants:
       'Know the math: phi = -log10(P(heartbeat_not_yet_arrived | past_observations))',
     ],
 
-    introduction: `The **Phi-Accrual Failure Detector** replaces the traditional binary "alive or dead" failure detection with a continuous **suspicion level**. Instead of declaring a node dead after a fixed timeout (e.g., "no heartbeat for 10 seconds"), the phi-accrual detector maintains a statistical model of heartbeat arrival times and computes a value phi that represents how suspicious the silence is, given the historical pattern. This algorithm was introduced by Naohiro Hayashibara et al. in 2004 and has since become the standard for adaptive failure detection in production distributed systems.
+    introduction: `The Phi-Accrual Failure Detector replaces the traditional binary "alive or dead" failure detection with a continuous suspicion level. Instead of declaring a node dead after a fixed timeout (e.g., "no heartbeat for 10 seconds"), the phi-accrual detector maintains a statistical model of heartbeat arrival times and computes a value phi that represents how suspicious the silence is, given the historical pattern. This algorithm was introduced by Naohiro Hayashibara et al. in 2004 and has since become the standard for adaptive failure detection in production distributed systems.
 
-A phi value of 1 means there is approximately a 10% chance the node is still alive (the delay is unusual but not extreme). A phi of 5 means about a 0.001% chance. A phi of 8 means the probability is roughly 1 in 100 million. The application chooses a threshold: "mark the node as down when phi exceeds 8." This threshold translates directly to a **false positive rate** — how often you wrongly declare a healthy node as dead. The beauty of this approach is that a single threshold value works across vastly different network conditions.
+A phi value of 1 means there is approximately a 10% chance the node is still alive (the delay is unusual but not extreme). A phi of 5 means about a 0.001% chance. A phi of 8 means the probability is roughly 1 in 100 million. The application chooses a threshold: "mark the node as down when phi exceeds 8." This threshold translates directly to a false positive rate — how often you wrongly declare a healthy node as dead. The beauty of this approach is that a single threshold value works across vastly different network conditions.
 
-The critical advantage is **adaptiveness**. A fixed 10-second timeout works on a local network where heartbeats arrive every second, but on a congested WAN where heartbeats normally take 500ms-3s, the same timeout triggers constant false alarms. The phi-accrual detector learns the heartbeat distribution and adjusts automatically. **Apache Cassandra** uses phi-accrual with a default \`phi_convict_threshold\` of 8. **Akka** (the actor framework used by Lightbend/Play) uses it for cluster membership. The algorithm is also referenced in the original Dynamo paper and used in various service mesh implementations.
+The critical advantage is adaptiveness. A fixed 10-second timeout works on a local network where heartbeats arrive every second, but on a congested WAN where heartbeats normally take 500ms-3s, the same timeout triggers constant false alarms. The phi-accrual detector learns the heartbeat distribution and adjusts automatically. Apache Cassandra uses phi-accrual with a default \`phi_convict_threshold\` of 8. Akka (the actor framework used by Lightbend/Play) uses it for cluster membership. The algorithm is also referenced in the original Dynamo paper and used in various service mesh implementations.
 
-**When to use phi-accrual**: Distributed clusters where nodes communicate via heartbeats and network conditions vary (mixed LAN/WAN, cloud environments with variable latency, cross-datacenter communication). **When NOT to use**: Extremely small clusters (2-3 nodes) where a simple fixed timeout is sufficient and easy to tune, or systems where deterministic detection time is required (phi-accrual's adaptive nature means detection time varies with network conditions).`,
+When to use phi-accrual: Distributed clusters where nodes communicate via heartbeats and network conditions vary (mixed LAN/WAN, cloud environments with variable latency, cross-datacenter communication). When NOT to use: Extremely small clusters (2-3 nodes) where a simple fixed timeout is sufficient and easy to tune, or systems where deterministic detection time is required (phi-accrual's adaptive nature means detection time varies with network conditions).`,
 
     keyQuestions: [
       {
         question: 'How does the phi-accrual failure detector compute the suspicion level?',
-        answer: `**Step-by-step computation**:
+        answer: `Step-by-step computation:
 
 \`\`\`
 1. Collect heartbeat inter-arrival times:
@@ -3628,7 +3628,7 @@ The critical advantage is **adaptiveness**. A fixed 10-second timeout works on a
    phi = -log10(0.0000212) ≈ 4.67
 \`\`\`
 
-**Interpretation**:
+Interpretation:
 \`\`\`
   phi    P(alive)    Interpretation
   ─────────────────────────────────
@@ -3640,11 +3640,11 @@ The critical advantage is **adaptiveness**. A fixed 10-second timeout works on a
   8.0    ~10^-8      Down (Cassandra default threshold)
 \`\`\`
 
-**Window management**: The detector maintains a sliding window of recent inter-arrival times (e.g., last 1000 samples) so it adapts to changing network conditions. If the network gets slower, the mean increases and the detector becomes more tolerant.`
+Window management: The detector maintains a sliding window of recent inter-arrival times (e.g., last 1000 samples) so it adapts to changing network conditions. If the network gets slower, the mean increases and the detector becomes more tolerant.`
       },
       {
         question: 'Why is phi-accrual better than a fixed timeout for failure detection?',
-        answer: `**Fixed timeout problems**:
+        answer: `Fixed timeout problems:
 \`\`\`
 Scenario 1: LAN (heartbeats every ~1ms)
   Timeout = 10s → takes 10 seconds to detect failure
@@ -3659,7 +3659,7 @@ Scenario 3: Mixed environment
   No single timeout works for all
 \`\`\`
 
-**Phi-accrual adapts to each node**:
+Phi-accrual adapts to each node:
 \`\`\`
 Node A (LAN): μ=2ms, σ=0.5ms
   10ms without heartbeat → phi=12 → DEAD (detected in 10ms!)
@@ -3673,7 +3673,7 @@ Node C (variable): μ changes from 10ms to 200ms
   No false positives during the transition
 \`\`\`
 
-**Comparison table**:
+Comparison table:
 | Property | Fixed Timeout | Phi-Accrual |
 |----------|--------------|-------------|
 | Configuration | Timeout value per environment | Single phi threshold |
@@ -3683,31 +3683,31 @@ Node C (variable): μ changes from 10ms to 200ms
 | Cross-DC support | Needs per-DC tuning | Works automatically |
 | Complexity | Simple | Moderate (statistics) |
 
-**In practice**: Cassandra uses phi_convict_threshold=8 globally. It works correctly for both intra-DC (microseconds) and cross-DC (hundreds of ms) heartbeats without any per-node tuning.`
+In practice: Cassandra uses phi_convict_threshold=8 globally. It works correctly for both intra-DC (microseconds) and cross-DC (hundreds of ms) heartbeats without any per-node tuning.`
       },
       {
         question: 'How does Cassandra integrate phi-accrual with gossip for failure detection?',
-        answer: `**Integration architecture**:
+        answer: `Integration architecture:
 
-**Gossip layer.** Every 1 s each node picks a random peer and exchanges state. The state includes a heartbeat generation and a heartbeat version (incremented each tick). When a gossip message arrives from Node B: update B's heartbeat timestamp and feed the inter-arrival time into the phi detector.
+Gossip layer. Every 1 s each node picks a random peer and exchanges state. The state includes a heartbeat generation and a heartbeat version (incremented each tick). When a gossip message arrives from Node B: update B's heartbeat timestamp and feed the inter-arrival time into the phi detector.
 
-**Phi-Accrual failure detector** — per-node tracking, e.g.:
+Phi-Accrual failure detector — per-node tracking, e.g.:
 
 - Node B: samples = [980, 1020, 1050, 990, …]; μ = 1010 ms, σ = 28 ms; last_heartbeat = now − 1500 ms; phi = 2.1 → ALIVE.
 - Node C: samples = [1000, 5000, 1200, …]; μ = 1200 ms, σ = 400 ms; last_heartbeat = now − 15000 ms; phi = 9.2 → CONVICTED (>8) → DOWN.
 
-**Node state change.** When phi exceeds the threshold: mark Node C as DOWN in local state; gossip the DOWN status to other nodes; routing layer stops sending requests to C; if C was a replica, hinted handoff begins.
+Node state change. When phi exceeds the threshold: mark Node C as DOWN in local state; gossip the DOWN status to other nodes; routing layer stops sending requests to C; if C was a replica, hinted handoff begins.
 
-**Configuration knobs**:
+Configuration knobs:
 - \`phi_convict_threshold\`: Default 8 (increase to 12 for cross-DC with unstable links)
 - Gossip interval: 1 second (fixed)
 - Sample window: Last 1000 heartbeat arrival times
 
-**Caveat**: The detector runs independently on each node, so two nodes may disagree briefly about whether a third is alive. This is acceptable — Cassandra's read/write paths use consistency levels, not the gossip state, for correctness.`
+Caveat: The detector runs independently on each node, so two nodes may disagree briefly about whether a third is alive. This is acceptable — Cassandra's read/write paths use consistency levels, not the gossip state, for correctness.`
       },
       {
         question: 'What are the limitations and edge cases of phi-accrual detection?',
-        answer: `**Limitation 1: Normal distribution assumption**:
+        answer: `Limitation 1: Normal distribution assumption:
 \`\`\`
   Phi-accrual assumes heartbeat inter-arrival times follow
   a normal (Gaussian) distribution.
@@ -3720,7 +3720,7 @@ Node C (variable): μ changes from 10ms to 200ms
   Cassandra uses an exponential approximation for robustness.
 \`\`\`
 
-**Limitation 2: Cold start**:
+Limitation 2: Cold start:
 \`\`\`
   New node joins → no heartbeat history
   Cannot compute meaningful phi
@@ -3730,7 +3730,7 @@ Node C (variable): μ changes from 10ms to 200ms
   (typically 50-100 samples)
 \`\`\`
 
-**Limitation 3: Correlated failures**:
+Limitation 3: Correlated failures:
 \`\`\`
   Network switch failure → ALL heartbeats stop simultaneously
   Phi increases for ALL remote nodes at once
@@ -3741,7 +3741,7 @@ Node C (variable): μ changes from 10ms to 200ms
   network issue, not mass node failure"
 \`\`\`
 
-**Limitation 4: Asymmetric network issues**:
+Limitation 4: Asymmetric network issues:
 \`\`\`
   Node A can reach B but B cannot reach A
   A thinks B is alive (receiving heartbeats)
@@ -3752,7 +3752,7 @@ Node C (variable): μ changes from 10ms to 200ms
   gossip protocol (A's liveness propagated via C)
 \`\`\`
 
-**Edge case: GC pauses**:
+Edge case: GC pauses:
 \`\`\`
   Java GC pause of 10 seconds on Node B
   During pause: no heartbeats sent
@@ -3766,7 +3766,7 @@ Node C (variable): μ changes from 10ms to 200ms
       },
       {
         question: 'How do you tune the phi_convict_threshold for different environments?',
-        answer: `**The threshold directly controls the false positive rate**:
+        answer: `The threshold directly controls the false positive rate:
 
 \`\`\`
   phi_convict_threshold → approximate false positive probability:
@@ -3777,7 +3777,7 @@ Node C (variable): μ changes from 10ms to 200ms
     phi = 12 → P(false positive) ≈ 10^-12   (very conservative)
 \`\`\`
 
-**Environment-specific recommendations**:
+Environment-specific recommendations:
 \`\`\`
   Single datacenter (low-latency LAN):
     phi = 8 (default)
@@ -3805,7 +3805,7 @@ Node C (variable): μ changes from 10ms to 200ms
     False positives acceptable in non-production
 \`\`\`
 
-**How to measure if your threshold is correct**:
+How to measure if your threshold is correct:
 \`\`\`
   Monitor:
     1. False positive rate: How often a healthy node is marked DOWN
@@ -3820,11 +3820,11 @@ Node C (variable): μ changes from 10ms to 200ms
   If both are bad: check if the network is fundamentally unstable
 \`\`\`
 
-**Cassandra-specific tuning**: Edit \`phi_convict_threshold\` in cassandra.yaml. Changes take effect on restart. Monitor via JMX: \`org.apache.cassandra.net:type=FailureDetector\` exposes per-node phi values in real-time.`
+Cassandra-specific tuning: Edit \`phi_convict_threshold\` in cassandra.yaml. Changes take effect on restart. Monitor via JMX: \`org.apache.cassandra.net:type=FailureDetector\` exposes per-node phi values in real-time.`
       },
       {
         question: 'How does phi-accrual compare with other failure detection approaches used in production?',
-        answer: `**1. Fixed timeout (simplest)**:
+        answer: `1. Fixed timeout (simplest):
 \`\`\`
   If no heartbeat for T seconds → node is dead
 
@@ -3835,7 +3835,7 @@ Node C (variable): μ changes from 10ms to 200ms
            → Detection time: exactly 30 seconds (deterministic)
 \`\`\`
 
-**2. SWIM protocol (used by Consul/Serf)**:
+2. SWIM protocol (used by Consul/Serf):
 \`\`\`
   Direct probe → indirect probe → suspect → dead
 
@@ -3850,7 +3850,7 @@ Node C (variable): μ changes from 10ms to 200ms
   Cons: Fixed timeouts per phase, not adaptive to latency
 \`\`\`
 
-**3. Phi-accrual (used by Cassandra/Akka)**:
+3. Phi-accrual (used by Cassandra/Akka):
 \`\`\`
   Continuous suspicion level based on heartbeat statistics
 
@@ -3859,7 +3859,7 @@ Node C (variable): μ changes from 10ms to 200ms
   Cons: Moderate complexity, normal distribution assumption
 \`\`\`
 
-**4. Heartbeat with lease (used by ZooKeeper/Chubby)**:
+4. Heartbeat with lease (used by ZooKeeper/Chubby):
 \`\`\`
   Client maintains session with server via periodic heartbeats
   Session has a timeout (lease duration)
@@ -3871,7 +3871,7 @@ Node C (variable): μ changes from 10ms to 200ms
   Cons: Requires coordinated timeout agreement between client and server
 \`\`\`
 
-**Comparison table**:
+Comparison table:
 | Property | Fixed Timeout | SWIM | Phi-Accrual | Session/Lease |
 |----------|-------------|------|-------------|---------------|
 | Adaptiveness | None | Limited | Full | None |
@@ -3881,11 +3881,11 @@ Node C (variable): μ changes from 10ms to 200ms
 | Decentralized | No | Yes | Per-node | Server-based |
 | Best for | Simple systems | Large P2P clusters | Heterogeneous networks | Coordination services |
 
-**Key interview point**: These approaches are not mutually exclusive. Cassandra combines gossip (for dissemination) with phi-accrual (for detection). Consul combines SWIM (for membership) with gossip (for state propagation). Choose based on your network heterogeneity and accuracy requirements.`
+Key interview point: These approaches are not mutually exclusive. Cassandra combines gossip (for dissemination) with phi-accrual (for detection). Consul combines SWIM (for membership) with gossip (for state propagation). Choose based on your network heterogeneity and accuracy requirements.`
       },
       {
         question: 'How do you implement phi-accrual failure detection from scratch?',
-        answer: `**Core algorithm in pseudocode**:
+        answer: `Core algorithm in pseudocode:
 
 \`\`\`
 class PhiAccrualDetector:
@@ -3931,7 +3931,7 @@ class PhiAccrualDetector:
     return compute_phi(node_id) < threshold
 \`\`\`
 
-**Normal CDF approximation** (no external library needed):
+Normal CDF approximation (no external library needed):
 \`\`\`
   // Abramowitz and Stegun approximation
   function normal_cdf(x):
@@ -3946,7 +3946,7 @@ class PhiAccrualDetector:
     return x > 0 ? 1.0 - p : p
 \`\`\`
 
-**Practical implementation considerations**:
+Practical implementation considerations:
 \`\`\`
   1. Bootstrap period:
      Use fixed timeout for first min_samples heartbeats
@@ -3967,11 +3967,11 @@ class PhiAccrualDetector:
      Use atomic operations or per-node locks for state updates
 \`\`\`
 
-**Testing strategy**: Simulate network conditions by injecting artificial delays into heartbeat delivery. Verify that phi stays below threshold during normal operation, exceeds threshold within target detection time during simulated failures, and recovers quickly when heartbeats resume.`
+Testing strategy: Simulate network conditions by injecting artificial delays into heartbeat delivery. Verify that phi stays below threshold during normal operation, exceeds threshold within target detection time during simulated failures, and recovers quickly when heartbeats resume.`
       },
       {
         question: 'What role does phi-accrual play in the broader context of fault-tolerant system design?',
-        answer: `**Failure detection is the foundation of fault tolerance**. You cannot recover from a failure you have not detected. Phi-accrual sits at the bottom of the fault-tolerance stack:
+        answer: `Failure detection is the foundation of fault tolerance. You cannot recover from a failure you have not detected. Phi-accrual sits at the bottom of the fault-tolerance stack:
 
 \`\`\`
   Level 5: Application recovery (retry, failover, circuit breaker)
@@ -3981,21 +3981,21 @@ class PhiAccrualDetector:
   Level 1: Network communication (TCP, UDP, heartbeat messages)
 \`\`\`
 
-**How phi-accrual feeds into higher-level decisions**:
+How phi-accrual feeds into higher-level decisions:
 
-**Cassandra example** — phi-accrual detects Node C is down (\`phi > 8\`). The detection triggers, in parallel:
+Cassandra example — phi-accrual detects Node C is down (\`phi > 8\`). The detection triggers, in parallel:
 - Gossip propagates the DOWN status to all nodes.
 - Coordinator stops routing reads/writes to C.
 - Hinted handoff begins for writes destined for C.
 - Read repair skips C during consistency checks.
 - Operators alerted (monitoring integration).
 
-**Akka Cluster example** — phi-accrual detects a member as unreachable. The detection triggers, in parallel:
+Akka Cluster example — phi-accrual detects a member as unreachable. The detection triggers, in parallel:
 - Cluster singleton relocates to a reachable node.
 - Sharded entities on the unreachable node are rebalanced.
 - After the confirmation timeout the member is downed (shard regions cleaned up).
 
-**The quality of failure detection affects everything above it**:
+The quality of failure detection affects everything above it:
 \`\`\`
   Too aggressive (low threshold):
     Healthy nodes marked as dead
@@ -4016,9 +4016,9 @@ class PhiAccrualDetector:
     → Stable, responsive fault tolerance
 \`\`\`
 
-**Design principle**: Failure detection accuracy is a multiplier for system reliability. Investing in a good detector (like phi-accrual) pays dividends across the entire system. A poor detector (fixed timeout, manually tuned) creates ongoing operational burden and reliability risk.
+Design principle: Failure detection accuracy is a multiplier for system reliability. Investing in a good detector (like phi-accrual) pays dividends across the entire system. A poor detector (fixed timeout, manually tuned) creates ongoing operational burden and reliability risk.
 
-**Comparison with circuit breakers**: Circuit breakers detect failures at the request level (failed HTTP calls). Phi-accrual detects failures at the node level (missing heartbeats). They operate at different granularities and complement each other — a node can be alive (phi-accrual says UP) but its service can be failing (circuit breaker says OPEN).`
+Comparison with circuit breakers: Circuit breakers detect failures at the request level (failed HTTP calls). Phi-accrual detects failures at the node level (missing heartbeats). They operate at different granularities and complement each other — a node can be alive (phi-accrual says UP) but its service can be failing (circuit breaker says OPEN).`
       },
     ],
 
@@ -4079,18 +4079,18 @@ Update on heartbeat:
       'In interviews, compare with alternatives: saga pattern, listen-to-yourself, event sourcing',
     ],
 
-    introduction: `The **Outbox Pattern** solves one of the most common reliability problems in microservice architectures: the **dual-write problem**. When a service needs to update its database AND publish an event to a message broker, these two operations cannot be made atomic with a simple approach. If the database write succeeds but the event publish fails (or vice versa), the system ends up in an inconsistent state. This problem is so fundamental that nearly every team building event-driven microservices encounters it.
+    introduction: `The Outbox Pattern solves one of the most common reliability problems in microservice architectures: the dual-write problem. When a service needs to update its database AND publish an event to a message broker, these two operations cannot be made atomic with a simple approach. If the database write succeeds but the event publish fails (or vice versa), the system ends up in an inconsistent state. This problem is so fundamental that nearly every team building event-driven microservices encounters it.
 
-The solution is elegant: instead of writing directly to the message broker, the service writes the event to an **outbox table** in the same database, within the same transaction as the business data change. A separate process then reads the outbox table and publishes the events to the message broker. Because the business data and the outbox entry are written in a single ACID transaction, they are guaranteed to be consistent — either both succeed or both fail. This is a textbook application of the "single source of truth" principle.
+The solution is elegant: instead of writing directly to the message broker, the service writes the event to an outbox table in the same database, within the same transaction as the business data change. A separate process then reads the outbox table and publishes the events to the message broker. Because the business data and the outbox entry are written in a single ACID transaction, they are guaranteed to be consistent — either both succeed or both fail. This is a textbook application of the "single source of truth" principle.
 
-Two approaches exist for reading the outbox: **polling** (periodically query the outbox table for unpublished events) and **Change Data Capture** (CDC) with tools like **Debezium**, which tails the database's WAL and emits events for every outbox insert. CDC is the preferred production approach because it has lower latency (milliseconds vs seconds), does not require polling, and naturally preserves event ordering (WAL order = commit order). **Debezium** supports PostgreSQL (logical replication), MySQL (binlog), MongoDB (change streams), and SQL Server (CT). Companies like **Confluent**, **Wix**, **Zalando**, and **Airbnb** use the outbox pattern with Debezium as their standard event-driven integration architecture.
+Two approaches exist for reading the outbox: polling (periodically query the outbox table for unpublished events) and Change Data Capture (CDC) with tools like Debezium, which tails the database's WAL and emits events for every outbox insert. CDC is the preferred production approach because it has lower latency (milliseconds vs seconds), does not require polling, and naturally preserves event ordering (WAL order = commit order). Debezium supports PostgreSQL (logical replication), MySQL (binlog), MongoDB (change streams), and SQL Server (CT). Companies like Confluent, Wix, Zalando, and Airbnb use the outbox pattern with Debezium as their standard event-driven integration architecture.
 
-**When to use the outbox pattern**: Any microservice that needs to reliably publish events when its database state changes — order creation, payment processing, user registration, inventory updates. **When NOT to use**: If your system already uses event sourcing (the event store IS the source of truth, no dual-write problem exists), or if your workload is purely read-only with no state changes to propagate, or if the operational complexity of CDC infrastructure (Debezium, Kafka Connect) is not justified by your scale.`,
+When to use the outbox pattern: Any microservice that needs to reliably publish events when its database state changes — order creation, payment processing, user registration, inventory updates. When NOT to use: If your system already uses event sourcing (the event store IS the source of truth, no dual-write problem exists), or if your workload is purely read-only with no state changes to propagate, or if the operational complexity of CDC infrastructure (Debezium, Kafka Connect) is not justified by your scale.`,
 
     keyQuestions: [
       {
         question: 'What is the dual-write problem and why is it dangerous?',
-        answer: `**The problem**: A service must update its database AND notify other services (via message broker). These are two separate systems — no shared transaction.
+        answer: `The problem: A service must update its database AND notify other services (via message broker). These are two separate systems — no shared transaction.
 
 \`\`\`
 Naive approach (BROKEN):
@@ -4106,7 +4106,7 @@ Naive approach (BROKEN):
           → Downstream services out of sync
 \`\`\`
 
-**Reverse order is also broken**:
+Reverse order is also broken:
 \`\`\`
     1. Publish "OrderCreated" to Kafka → SUCCESS ✓
     2. INSERT INTO orders (...) → FAILS ✗
@@ -4117,13 +4117,13 @@ Naive approach (BROKEN):
           → Payment charged with no order record
 \`\`\`
 
-**Why not distributed transactions (2PC)?**
+Why not distributed transactions (2PC)?
 - Most message brokers do not support XA/2PC
 - 2PC has high latency and reduced availability
 - If the coordinator crashes, participants are stuck
 - Not practical for microservices at scale
 
-**The outbox pattern eliminates this entirely**:
+The outbox pattern eliminates this entirely:
 \`\`\`
   Single DB transaction:
     1. INSERT INTO orders (...)        → same transaction
@@ -4139,13 +4139,13 @@ Naive approach (BROKEN):
       },
       {
         question: 'How does the outbox pattern work with Change Data Capture?',
-        answer: `**Architecture with Debezium CDC**:
+        answer: `Architecture with Debezium CDC:
 
 ![Transactional outbox with Debezium CDC](/diagrams/systemdesign/outbox.png)
 
 End-to-end pipeline:
 
-1. **Order Service** runs a single ACID transaction that inserts into both \`orders\` and the \`outbox\` table:
+1. Order Service runs a single ACID transaction that inserts into both \`orders\` and the \`outbox\` table:
    \`\`\`sql
    BEGIN TRANSACTION;
      INSERT INTO orders (id, user_id, total) VALUES (...);
@@ -4153,12 +4153,12 @@ End-to-end pipeline:
        VALUES ('Order', 'order-123', 'OrderCreated', '{"orderId":"123","total":99}');
    COMMIT;
    \`\`\`
-2. The commit is durably appended to the **PostgreSQL WAL**.
-3. The **Debezium CDC connector** tails the WAL via a replication slot, detects each \`INSERT\` into \`outbox\`, transforms it into a Kafka event, and routes it to the \`orders.events\` topic.
-4. **Apache Kafka** stores the event on partition 0 of \`orders.events\` (e.g. \`[OrderCreated:123]\`).
-5. Downstream consumers — **Inventory Service** and **Payment Service** — independently consume the event.
+2. The commit is durably appended to the PostgreSQL WAL.
+3. The Debezium CDC connector tails the WAL via a replication slot, detects each \`INSERT\` into \`outbox\`, transforms it into a Kafka event, and routes it to the \`orders.events\` topic.
+4. Apache Kafka stores the event on partition 0 of \`orders.events\` (e.g. \`[OrderCreated:123]\`).
+5. Downstream consumers — Inventory Service and Payment Service — independently consume the event.
 
-**Why CDC is better than polling**:
+Why CDC is better than polling:
 | Property | Polling | CDC (Debezium) |
 |----------|---------|----------------|
 | Latency | Seconds (poll interval) | Milliseconds (real-time) |
@@ -4169,7 +4169,7 @@ End-to-end pipeline:
       },
       {
         question: 'How do you design the outbox table schema?',
-        answer: `**Recommended schema**:
+        answer: `Recommended schema:
 
 \`\`\`sql
 CREATE TABLE outbox (
@@ -4189,7 +4189,7 @@ CREATE INDEX idx_outbox_unpublished
   WHERE published_at IS NULL;
 \`\`\`
 
-**Routing with Debezium outbox SMT (Single Message Transform)**:
+Routing with Debezium outbox SMT (Single Message Transform):
 \`\`\`
   aggregate_type = 'Order' → Kafka topic: "Order.events"
   aggregate_id = 'order-123' → Kafka partition key (ordering)
@@ -4197,19 +4197,19 @@ CREATE INDEX idx_outbox_unpublished
   payload → Kafka message value
 \`\`\`
 
-**Key design decisions**:
+Key design decisions:
 
-1. **Partition key = aggregate_id**: Events for the same order always go to the same Kafka partition → ordered per aggregate
+1. Partition key = aggregate_id: Events for the same order always go to the same Kafka partition → ordered per aggregate
 
-2. **Cleanup strategy**: Delete outbox rows after publishing (or after a retention period). The outbox is a transit table, not permanent storage.
+2. Cleanup strategy: Delete outbox rows after publishing (or after a retention period). The outbox is a transit table, not permanent storage.
 
-3. **Payload format**: Include all data the consumer needs. Do not reference the source table — consumers should not query your DB.
+3. Payload format: Include all data the consumer needs. Do not reference the source table — consumers should not query your DB.
 
-4. **Idempotency key**: The outbox \`id\` serves as a deduplication key. Consumers store processed IDs and skip duplicates.`
+4. Idempotency key: The outbox \`id\` serves as a deduplication key. Consumers store processed IDs and skip duplicates.`
       },
       {
         question: 'How do consumers handle duplicate events with at-least-once delivery?',
-        answer: `**Why duplicates happen**:
+        answer: `Why duplicates happen:
 \`\`\`
   CDC publishes event to Kafka → SUCCESS
   CDC tries to record offset → CRASH before recording
@@ -4218,7 +4218,7 @@ CREATE INDEX idx_outbox_unpublished
   Result: Same event published twice to Kafka
 \`\`\`
 
-**Idempotent consumer pattern**:
+Idempotent consumer pattern:
 \`\`\`
 Consumer (Inventory Service):
 
@@ -4239,7 +4239,7 @@ Consumer (Inventory Service):
      → FOUND → SKIP (already processed)
 \`\`\`
 
-**Alternative: naturally idempotent operations**:
+Alternative: naturally idempotent operations:
 \`\`\`
   Idempotent: SET balance = 100       (same result if applied twice)
   NOT idempotent: SET balance = balance - 10  (different each time)
@@ -4250,7 +4250,7 @@ Consumer (Inventory Service):
     Applied twice → second time version check prevents update
 \`\`\`
 
-**Kafka consumer offset management**:
+Kafka consumer offset management:
 \`\`\`
   Option A: Commit offset AFTER processing (at-least-once)
     Risk: Duplicate processing on crash, but no data loss
@@ -4267,7 +4267,7 @@ Consumer (Inventory Service):
       },
       {
         question: 'How does the outbox pattern compare with event sourcing and the listen-to-yourself pattern?',
-        answer: `**Outbox Pattern**:
+        answer: `Outbox Pattern:
 \`\`\`
   Service writes business data + outbox event in one transaction
   Separate process publishes outbox events to message broker
@@ -4277,7 +4277,7 @@ Consumer (Inventory Service):
   Complexity: Moderate (outbox table + CDC/polling)
 \`\`\`
 
-**Event Sourcing**:
+Event Sourcing:
 \`\`\`
   Service writes events to an event store as the PRIMARY data
   Current state is derived by replaying events
@@ -4288,7 +4288,7 @@ Consumer (Inventory Service):
   Complexity: High (event store, projections, snapshots)
 \`\`\`
 
-**Listen-to-Yourself (publish then subscribe)**:
+Listen-to-Yourself (publish then subscribe):
 \`\`\`
   Service publishes event to message broker FIRST
   Then consumes its own event to update its database
@@ -4303,7 +4303,7 @@ Consumer (Inventory Service):
   Risk: If consumption fails, order exists in Kafka but not in DB
 \`\`\`
 
-**When to choose each**:
+When to choose each:
 \`\`\`
   Outbox Pattern:
     ✓ Existing CRUD application with relational DB
@@ -4324,11 +4324,11 @@ Consumer (Inventory Service):
     ✗ NOT suitable for financial or critical operations
 \`\`\`
 
-**Key interview point**: The outbox pattern is the pragmatic middle ground — it works with existing databases, does not require rethinking the data model (unlike event sourcing), and provides stronger guarantees than listen-to-yourself. It is the most commonly recommended pattern for adding reliable event publishing to existing microservices.`
+Key interview point: The outbox pattern is the pragmatic middle ground — it works with existing databases, does not require rethinking the data model (unlike event sourcing), and provides stronger guarantees than listen-to-yourself. It is the most commonly recommended pattern for adding reliable event publishing to existing microservices.`
       },
       {
         question: 'What are the operational challenges of running Debezium CDC in production?',
-        answer: `**Debezium architecture**:
+        answer: `Debezium architecture:
 \`\`\`
   PostgreSQL ──WAL──► Debezium Connector ──► Kafka
                       (runs in Kafka Connect)
@@ -4338,7 +4338,7 @@ Consumer (Inventory Service):
   Outbox table changes → routed to application topics
 \`\`\`
 
-**Challenge 1: Replication slot management (PostgreSQL)**:
+Challenge 1: Replication slot management (PostgreSQL):
 \`\`\`
   Debezium creates a replication slot on PostgreSQL
   If Debezium stops consuming, the slot retains WAL files
@@ -4351,7 +4351,7 @@ Consumer (Inventory Service):
     - Ensure Debezium restarts quickly after failures
 \`\`\`
 
-**Challenge 2: Schema evolution**:
+Challenge 2: Schema evolution:
 \`\`\`
   Adding a column to the outbox table changes the event structure
   Debezium detects the schema change via WAL
@@ -4364,7 +4364,7 @@ Consumer (Inventory Service):
     - Test schema changes in staging with consumer verification
 \`\`\`
 
-**Challenge 3: Connector restarts and exactly-once semantics**:
+Challenge 3: Connector restarts and exactly-once semantics:
 \`\`\`
   Debezium crashes → restarts → re-reads from last committed offset
   May re-publish events that were already published
@@ -4378,7 +4378,7 @@ Consumer (Inventory Service):
     - Processed events table on consumer side
 \`\`\`
 
-**Challenge 4: Performance and lag**:
+Challenge 4: Performance and lag:
 \`\`\`
   High write throughput → large WAL volume → Debezium lag
   Debezium is single-threaded per connector by default
@@ -4390,7 +4390,7 @@ Consumer (Inventory Service):
     - Monitor: Debezium metrics (MilliSecondsBehindSource)
 \`\`\`
 
-**Challenge 5: Outbox table cleanup**:
+Challenge 5: Outbox table cleanup:
 \`\`\`
   Outbox rows accumulate if not cleaned up
   Options:
@@ -4400,7 +4400,7 @@ Consumer (Inventory Service):
     D: Periodic cleanup job: DELETE WHERE created_at < NOW() - 7 days
 \`\`\`
 
-**Operational checklist for production Debezium**:
+Operational checklist for production Debezium:
 - Monitor replication slot lag (critical)
 - Monitor connector status (running, failed, paused)
 - Set up dead letter queue for poison messages
@@ -4409,7 +4409,7 @@ Consumer (Inventory Service):
       },
       {
         question: 'How do you handle outbox event ordering across multiple aggregates?',
-        answer: `**Within a single aggregate (e.g., one order)**:
+        answer: `Within a single aggregate (e.g., one order):
 \`\`\`
   Ordering is guaranteed:
     1. INSERT order → INSERT outbox (OrderCreated)
@@ -4423,7 +4423,7 @@ Consumer (Inventory Service):
     Consumer sees: OrderCreated → OrderPaid → OrderShipped ✓
 \`\`\`
 
-**Across different aggregates (e.g., order + inventory)**:
+Across different aggregates (e.g., order + inventory):
 \`\`\`
   Ordering is NOT guaranteed:
     Tx1: INSERT order + outbox(OrderCreated)  (commit at t=100)
@@ -4436,7 +4436,7 @@ Consumer (Inventory Service):
     Cross-aggregate ordering is inherently non-deterministic
 \`\`\`
 
-**Strategies for cross-aggregate consistency**:
+Strategies for cross-aggregate consistency:
 \`\`\`
   Strategy 1: Saga pattern
     Each event triggers the next step
@@ -4457,7 +4457,7 @@ Consumer (Inventory Service):
     not a separate inventory aggregate.
 \`\`\`
 
-**Partition key design for ordering**:
+Partition key design for ordering:
 \`\`\`
   aggregate_id as partition key:
     All events for order-123 → same partition → ordered
@@ -4471,11 +4471,11 @@ Consumer (Inventory Service):
     for customers with many orders
 \`\`\`
 
-**Interview insight**: True cross-aggregate ordering is impossible in a partitioned system without sacrificing throughput. The correct design is to ensure that operations requiring ordering belong to the same aggregate, and use sagas or process managers for cross-aggregate coordination.`
+Interview insight: True cross-aggregate ordering is impossible in a partitioned system without sacrificing throughput. The correct design is to ensure that operations requiring ordering belong to the same aggregate, and use sagas or process managers for cross-aggregate coordination.`
       },
       {
         question: 'What is the polling publisher approach and when is it acceptable over CDC?',
-        answer: `**Polling publisher** — the simpler alternative to CDC:
+        answer: `Polling publisher — the simpler alternative to CDC:
 
 \`\`\`
   Polling Loop:
@@ -4492,7 +4492,7 @@ Consumer (Inventory Service):
       SLEEP 1 second (poll interval)
 \`\`\`
 
-**When polling is acceptable**:
+When polling is acceptable:
 \`\`\`
   1. Low event volume (< 100 events/second)
      Polling overhead is negligible at this scale
@@ -4512,7 +4512,7 @@ Consumer (Inventory Service):
      CDC requires knowledge of WAL, replication, connectors
 \`\`\`
 
-**When polling is NOT acceptable**:
+When polling is NOT acceptable:
 \`\`\`
   1. High event volume (> 1000 events/second)
      Repeated SELECT queries create database load
@@ -4531,7 +4531,7 @@ Consumer (Inventory Service):
      CDC reads WAL with minimal database impact
 \`\`\`
 
-**Hybrid approach — polling with exponential backoff**:
+Hybrid approach — polling with exponential backoff:
 \`\`\`
   events = query_outbox()
   if events.length > 0:
@@ -4544,7 +4544,7 @@ Consumer (Inventory Service):
   while maintaining low latency during activity
 \`\`\`
 
-**Comparison**:
+Comparison:
 | Property | Polling | CDC (Debezium) |
 |----------|---------|----------------|
 | Latency | 1-5 seconds (poll interval) | ~100ms (real-time) |
@@ -4555,7 +4555,7 @@ Consumer (Inventory Service):
 | Reliability | Good (with retry logic) | Excellent (WAL is complete) |
 | Team expertise | Any developer | Requires CDC knowledge |
 
-**Recommendation**: Start with polling if your volume is low and latency requirements are relaxed. Migrate to CDC when scale demands it. The outbox table schema is the same for both approaches, so migration is straightforward.`
+Recommendation: Start with polling if your volume is low and latency requirements are relaxed. Migrate to CDC when scale demands it. The outbox table schema is the same for both approaches, so migration is straightforward.`
       },
     ],
 
@@ -4618,18 +4618,18 @@ Consumer Flow:
       'ZooKeeper sequential znodes and Chubby sequence numbers are forms of fencing tokens',
     ],
 
-    introduction: `**Fencing** is a safety mechanism that prevents "zombie" processes — stale leaders or lock holders that believe they still hold authority — from corrupting data. The core insight is that in a distributed system, a process can appear dead (due to a GC pause, network partition, or OS swap) and then wake up without knowing it has lost leadership. If the system has already elected a new leader, the zombie's writes must be rejected. This is not a hypothetical scenario — it happens regularly in production, especially in Java systems subject to stop-the-world GC pauses lasting seconds.
+    introduction: `Fencing is a safety mechanism that prevents "zombie" processes — stale leaders or lock holders that believe they still hold authority — from corrupting data. The core insight is that in a distributed system, a process can appear dead (due to a GC pause, network partition, or OS swap) and then wake up without knowing it has lost leadership. If the system has already elected a new leader, the zombie's writes must be rejected. This is not a hypothetical scenario — it happens regularly in production, especially in Java systems subject to stop-the-world GC pauses lasting seconds.
 
-The primary tool is the **fencing token**: a monotonically increasing number (epoch, term, or sequence number) issued with every leadership grant or lock acquisition. When a process writes to storage, it includes its fencing token. The storage layer tracks the highest token it has seen and rejects any write carrying a lower token. This guarantee holds even if the zombie does not know it has been fenced — the storage enforces the invariant unilaterally. Martin Kleppmann's famous critique of Redis Redlock highlighted that Redlock does not generate fencing tokens, making it unsuitable for correctness-critical distributed locks.
+The primary tool is the fencing token: a monotonically increasing number (epoch, term, or sequence number) issued with every leadership grant or lock acquisition. When a process writes to storage, it includes its fencing token. The storage layer tracks the highest token it has seen and rejects any write carrying a lower token. This guarantee holds even if the zombie does not know it has been fenced — the storage enforces the invariant unilaterally. Martin Kleppmann's famous critique of Redis Redlock highlighted that Redlock does not generate fencing tokens, making it unsuitable for correctness-critical distributed locks.
 
-This pattern is critical in **Raft** (term numbers), **ZooKeeper** (sequential znodes and zxid), **Google Chubby** (sequencer tokens), and any system using **distributed locks** for leader election. Kleppmann's analysis in "Designing Data-Intensive Applications" draws the fundamental distinction: a distributed lock without fencing tokens only provides a **performance optimization** (avoid duplicate work) — not a **correctness guarantee** (prevent data corruption). With fencing tokens, the lock provides both.
+This pattern is critical in Raft (term numbers), ZooKeeper (sequential znodes and zxid), Google Chubby (sequencer tokens), and any system using distributed locks for leader election. Kleppmann's analysis in "Designing Data-Intensive Applications" draws the fundamental distinction: a distributed lock without fencing tokens only provides a performance optimization (avoid duplicate work) — not a correctness guarantee (prevent data corruption). With fencing tokens, the lock provides both.
 
-**When to use fencing**: Any system where a leader or lock holder writes to shared storage and correctness depends on mutual exclusion — distributed databases, job schedulers, resource allocators, and financial transaction processors. **When NOT to use**: Purely idempotent operations where duplicate execution has no harmful side effects, or systems where the "lock" is just a best-effort throttle (e.g., rate limiting) and occasional concurrent access is acceptable.`,
+When to use fencing: Any system where a leader or lock holder writes to shared storage and correctness depends on mutual exclusion — distributed databases, job schedulers, resource allocators, and financial transaction processors. When NOT to use: Purely idempotent operations where duplicate execution has no harmful side effects, or systems where the "lock" is just a best-effort throttle (e.g., rate limiting) and occasional concurrent access is acceptable.`,
 
     keyQuestions: [
       {
         question: 'What is the zombie leader problem and how do fencing tokens solve it?',
-        answer: `**The zombie leader scenario**:
+        answer: `The zombie leader scenario:
 
 \`\`\`
 Timeline:
@@ -4646,7 +4646,7 @@ Without fencing:
   → Lost update! B's write was based on stale state.
 \`\`\`
 
-**With fencing tokens**:
+With fencing tokens:
 \`\`\`
   t=0   A acquires lock, receives token=33
   t=6   B acquires lock, receives token=34
@@ -4661,13 +4661,13 @@ Without fencing:
   Result: Zombie leader A is fenced out. Data is safe.
 \`\`\`
 
-**Key requirement**: The storage layer must participate in fencing. Client-side checking is NOT sufficient because the zombie does not know it is a zombie. The storage must independently enforce the token ordering.
+Key requirement: The storage layer must participate in fencing. Client-side checking is NOT sufficient because the zombie does not know it is a zombie. The storage must independently enforce the token ordering.
 
-**Implementation**: Add a \`token\` column or header to every write request. Storage compares incoming token against stored maximum before accepting the write.`
+Implementation: Add a \`token\` column or header to every write request. Storage compares incoming token against stored maximum before accepting the write.`
       },
       {
         question: 'How does Raft use term numbers as fencing tokens?',
-        answer: `**Raft's term number** serves as both an election counter and a fencing token.
+        answer: `Raft's term number serves as both an election counter and a fencing token.
 
 \`\`\`
 Term 1: Leader A
@@ -4694,7 +4694,7 @@ A discovers term 2:
   A steps down to follower, adopts term=2
 \`\`\`
 
-**Fencing at every layer**:
+Fencing at every layer:
 \`\`\`
 1. AppendEntries RPC:
    if request.term < receiver.currentTerm:
@@ -4714,7 +4714,7 @@ A discovers term 2:
    overwritten if they were never committed
 \`\`\`
 
-**Why term numbers work as fencing tokens**:
+Why term numbers work as fencing tokens:
 - Monotonically increasing (new election → new term)
 - Majority requirement ensures at most one leader per term
 - Every node tracks the highest term it has seen
@@ -4722,7 +4722,7 @@ A discovers term 2:
       },
       {
         question: 'How do distributed locks with fencing tokens differ from naive locks?',
-        answer: `**Naive distributed lock (UNSAFE)**:
+        answer: `Naive distributed lock (UNSAFE):
 \`\`\`
   # Using Redis SET NX (without fencing)
   LOCK:   SET mylock client_A NX EX 10
@@ -4740,7 +4740,7 @@ A discovers term 2:
   NOT concurrent execution after a pause.
 \`\`\`
 
-**Lock with fencing token (SAFE)**:
+Lock with fencing token (SAFE):
 \`\`\`
   # Using ZooKeeper sequential znode (or Redlock with token)
   A: Create /locks/mylock/seq-0033 → token=33
@@ -4752,7 +4752,7 @@ A discovers term 2:
   B: Writes to DB with token=34 → ACCEPTED ✓
 \`\`\`
 
-**Implementation in storage**:
+Implementation in storage:
 \`\`\`sql
 -- Storage table
 CREATE TABLE resources (
@@ -4771,13 +4771,13 @@ WHERE id = $resource_id
 -- If affected rows = 0 → fencing rejected the write
 \`\`\`
 
-**Martin Kleppmann's classification**:
-- Lock WITHOUT fencing = **efficiency optimization** (avoid duplicate work, tolerate occasional failure)
-- Lock WITH fencing = **correctness mechanism** (prevent data corruption, safe even under process pauses)`
+Martin Kleppmann's classification:
+- Lock WITHOUT fencing = efficiency optimization (avoid duplicate work, tolerate occasional failure)
+- Lock WITH fencing = correctness mechanism (prevent data corruption, safe even under process pauses)`
       },
       {
         question: 'What other fencing mechanisms exist beyond tokens?',
-        answer: `**1. Lease-based fencing**:
+        answer: `1. Lease-based fencing:
 \`\`\`
   Leader A gets lease: "You are leader until T=100"
   A must STOP all operations before T=100
@@ -4788,7 +4788,7 @@ WHERE id = $resource_id
   Mitigation: Use bounded clock skew (e.g., Google TrueTime)
 \`\`\`
 
-**2. STONITH (physical fencing)**:
+2. STONITH (physical fencing):
 \`\`\`
   Before promoting new leader:
     Power off old leader via IPMI/BMC
@@ -4799,7 +4799,7 @@ WHERE id = $resource_id
   Used by: Pacemaker, Oracle RAC, PostgreSQL Patroni
 \`\`\`
 
-**3. I/O fencing (SAN-level)**:
+3. I/O fencing (SAN-level):
 \`\`\`
   Shared storage (SAN/NFS) revokes access for old leader:
     old_leader_A → SCSI reservation removed
@@ -4809,7 +4809,7 @@ WHERE id = $resource_id
   Used by: clustered file systems, Oracle ASM
 \`\`\`
 
-**4. Network fencing**:
+4. Network fencing:
 \`\`\`
   SDN controller blocks old leader's network traffic:
     iptables -A OUTPUT -s old_leader_ip -j DROP
@@ -4818,7 +4818,7 @@ WHERE id = $resource_id
   Used by: cloud environments, kubernetes network policies
 \`\`\`
 
-**Comparison**:
+Comparison:
 \`\`\`
   | Mechanism         | Guarantees  | Requirements              |
   | ----------------- | ----------- | ------------------------- |
@@ -4829,13 +4829,13 @@ WHERE id = $resource_id
   | Network fencing   | Network     | SDN control               |
 \`\`\`
 
-**Best practice**: Use fencing tokens as the primary mechanism (logical, no special hardware). Add STONITH or I/O fencing as defense-in-depth for critical systems where token-based fencing cannot be implemented (e.g., legacy storage that does not check tokens).`
+Best practice: Use fencing tokens as the primary mechanism (logical, no special hardware). Add STONITH or I/O fencing as defense-in-depth for critical systems where token-based fencing cannot be implemented (e.g., legacy storage that does not check tokens).`
       },
       {
         question: 'Why did Martin Kleppmann argue that Redlock is unsafe, and how does this relate to fencing?',
-        answer: `**Kleppmann's critique (2016)**: Redis's Redlock algorithm for distributed locking is fundamentally unsafe for correctness-critical operations because it does not provide fencing tokens.
+        answer: `Kleppmann's critique (2016): Redis's Redlock algorithm for distributed locking is fundamentally unsafe for correctness-critical operations because it does not provide fencing tokens.
 
-**Redlock algorithm summary**:
+Redlock algorithm summary:
 \`\`\`
   1. Get current time T1
   2. Try to acquire lock on N/2+1 Redis instances (majority)
@@ -4845,7 +4845,7 @@ WHERE id = $resource_id
   6. Use lock, then release on all instances
 \`\`\`
 
-**The problem — no fencing token**:
+The problem — no fencing token:
 \`\`\`
   Client A: Acquires Redlock with TTL=10s
   Client A: Starts processing... enters GC pause
@@ -4862,7 +4862,7 @@ WHERE id = $resource_id
   that the storage layer can check
 \`\`\`
 
-**Antirez (Redis author) response**:
+Antirez (Redis author) response:
 \`\`\`
   Argued that Redlock IS safe if:
     1. GC pauses are bounded (known maximum pause time)
@@ -4876,7 +4876,7 @@ WHERE id = $resource_id
     because they don't depend on time at all
 \`\`\`
 
-**The resolution for practitioners**:
+The resolution for practitioners:
 \`\`\`
   Need lock for EFFICIENCY (avoid duplicate work):
     Redlock or simple Redis SETNX is fine
@@ -4890,11 +4890,11 @@ WHERE id = $resource_id
     Examples: financial transactions, leader election
 \`\`\`
 
-**Interview takeaway**: This debate is one of the most important in distributed systems engineering. Mentioning it shows deep understanding. The key lesson: distributed locks are only as safe as the fencing mechanism they use, and time-based safety (TTL) is fundamentally weaker than token-based safety (monotonic fencing).`
+Interview takeaway: This debate is one of the most important in distributed systems engineering. Mentioning it shows deep understanding. The key lesson: distributed locks are only as safe as the fencing mechanism they use, and time-based safety (TTL) is fundamentally weaker than token-based safety (monotonic fencing).`
       },
       {
         question: 'How does ZooKeeper implement fencing through sequential znodes and session semantics?',
-        answer: `**ZooKeeper's lock recipe with built-in fencing**:
+        answer: `ZooKeeper's lock recipe with built-in fencing:
 
 \`\`\`
   Lock acquisition:
@@ -4918,7 +4918,7 @@ WHERE id = $resource_id
     4. B gets fencing token from its znode version
 \`\`\`
 
-**Why this is safe for fencing**:
+Why this is safe for fencing:
 \`\`\`
   Sequential znode numbers are monotonically increasing:
     lock-0000000001 (A's token = 1)
@@ -4934,7 +4934,7 @@ WHERE id = $resource_id
     Even more granular than sequential znode numbers
 \`\`\`
 
-**Session semantics provide defense-in-depth**:
+Session semantics provide defense-in-depth:
 \`\`\`
   ZooKeeper session has a timeout (e.g., 30 seconds)
   Client must send heartbeats to maintain session
@@ -4949,7 +4949,7 @@ WHERE id = $resource_id
     Re-acquire lock with new session if needed
 \`\`\`
 
-**Comparison with etcd leases**:
+Comparison with etcd leases:
 | Property | ZooKeeper | etcd |
 |----------|----------|------|
 | Lock mechanism | Ephemeral sequential znode | Lease + key with revision |
@@ -4958,13 +4958,13 @@ WHERE id = $resource_id
 | Watch mechanism | One-time watches (re-register) | Persistent watches (gRPC stream) |
 | Consistency | Linearizable reads (sync) | Linearizable reads (default) |
 
-**Interview point**: ZooKeeper's sequential znodes are arguably the cleanest implementation of fencing tokens in practice. The monotonic sequence number is inherent to the lock mechanism — you get fencing "for free" without any additional protocol.`
+Interview point: ZooKeeper's sequential znodes are arguably the cleanest implementation of fencing tokens in practice. The monotonic sequence number is inherent to the lock mechanism — you get fencing "for free" without any additional protocol.`
       },
       {
         question: 'How do you implement fencing in a system where the storage layer cannot be modified?',
-        answer: `**The challenge**: Fencing tokens require the storage layer to check the token and reject stale writes. But what if you are using a storage system that does not support custom token checking (e.g., S3, a legacy database, or a third-party API)?
+        answer: `The challenge: Fencing tokens require the storage layer to check the token and reject stale writes. But what if you are using a storage system that does not support custom token checking (e.g., S3, a legacy database, or a third-party API)?
 
-**Strategy 1: Conditional writes (if the storage supports them)**:
+Strategy 1: Conditional writes (if the storage supports them):
 \`\`\`
   DynamoDB:
     UpdateItem with ConditionExpression:
@@ -4982,7 +4982,7 @@ WHERE id = $resource_id
     Affected rows = 0 → stale write detected ✓
 \`\`\`
 
-**Strategy 2: Proxy/gateway layer**:
+Strategy 2: Proxy/gateway layer:
 \`\`\`
   If storage cannot check tokens, add a proxy that does:
 
@@ -4998,7 +4998,7 @@ WHERE id = $resource_id
   Mitigation: Replicate proxy state with Raft/Paxos
 \`\`\`
 
-**Strategy 3: Append-only with latest-wins**:
+Strategy 3: Append-only with latest-wins:
 \`\`\`
   Instead of updating in place, append a new version:
 
@@ -5013,7 +5013,7 @@ WHERE id = $resource_id
   Works with: S3 (versioned bucket), append-only logs, immutable stores
 \`\`\`
 
-**Strategy 4: Lease-based fencing without storage cooperation**:
+Strategy 4: Lease-based fencing without storage cooperation:
 \`\`\`
   Client acquires lease with bounded duration
   Client sets "fence time" = lease_start + lease_duration - safety_margin
@@ -5026,7 +5026,7 @@ WHERE id = $resource_id
   NOT acceptable for: Safety-critical systems
 \`\`\`
 
-**Strategy 5: Idempotent operations (avoid the problem)**:
+Strategy 5: Idempotent operations (avoid the problem):
 \`\`\`
   If all operations are naturally idempotent, fencing is unnecessary:
 
@@ -5041,11 +5041,11 @@ WHERE id = $resource_id
   complement to fencing.
 \`\`\`
 
-**Recommendation order**: (1) Use storage with native conditional writes if possible. (2) Add a fencing proxy if not. (3) Use append-only + latest-token-wins for immutable stores. (4) Fall back to lease-based + clock checks only if all else fails.`
+Recommendation order: (1) Use storage with native conditional writes if possible. (2) Add a fencing proxy if not. (3) Use append-only + latest-token-wins for immutable stores. (4) Fall back to lease-based + clock checks only if all else fails.`
       },
       {
         question: 'How does fencing relate to distributed consensus and what is the layered defense model?',
-        answer: `**Fencing is the last line of defense** in a layered approach to preventing data corruption from stale leaders:
+        answer: `Fencing is the last line of defense in a layered approach to preventing data corruption from stale leaders:
 
 \`\`\`
   Layer 1: Consensus Protocol (prevention)
@@ -5070,7 +5070,7 @@ WHERE id = $resource_id
     All three together → extremely robust
 \`\`\`
 
-**Real-world examples of layered defense**:
+Real-world examples of layered defense:
 
 \`\`\`
   CockroachDB:
@@ -5092,7 +5092,7 @@ WHERE id = $resource_id
     Optional: STONITH via watchdog for hardware-level fencing
 \`\`\`
 
-**Why all three layers matter**:
+Why all three layers matter:
 \`\`\`
   Without Layer 1 (consensus):
     Multiple leaders can be elected simultaneously
@@ -5117,7 +5117,7 @@ WHERE id = $resource_id
     → Probability of data corruption: effectively zero
 \`\`\`
 
-**Interview approach**: When discussing fencing, always present it as part of this layered model. Say: "Fencing tokens are the safety net — they are the last line of defense that catches zombie processes even when consensus and lease mechanisms have failed. No single layer is sufficient; defense-in-depth is required for correctness-critical systems."`
+Interview approach: When discussing fencing, always present it as part of this layered model. Say: "Fencing tokens are the safety net — they are the last line of defense that catches zombie processes even when consensus and lease mechanisms have failed. No single layer is sufficient; defense-in-depth is required for correctness-critical systems."`
       },
     ],
 
@@ -5182,49 +5182,49 @@ Epoch-Based Fencing (Raft/Paxos):
       'In interviews, compare the trade-offs of each mechanism and explain when you would choose one over another',
     ],
 
-    introduction: `**Real-time updates** refer to the ability of a system to push fresh data to clients as soon as it changes on the server, rather than waiting for the client to poll for changes. This is critical for applications like chat, live dashboards, collaborative editors, notification systems, stock tickers, and multiplayer games where stale data directly harms user experience.
+    introduction: `Real-time updates refer to the ability of a system to push fresh data to clients as soon as it changes on the server, rather than waiting for the client to poll for changes. This is critical for applications like chat, live dashboards, collaborative editors, notification systems, stock tickers, and multiplayer games where stale data directly harms user experience.
 
-There are four primary mechanisms for delivering real-time updates: **WebSockets**, **Server-Sent Events (SSE)**, **long-polling**, and **short-polling**. Each sits at a different point on the complexity-vs-capability spectrum. WebSockets provide full-duplex, bidirectional communication over a single persistent TCP connection. SSE offers a simpler, HTTP-native, unidirectional channel from server to client. Long-polling emulates push by having the client hold an open HTTP request until the server has data. Short-polling is the simplest but least efficient — the client repeatedly asks "anything new?" on a timer.
+There are four primary mechanisms for delivering real-time updates: WebSockets, Server-Sent Events (SSE), long-polling, and short-polling. Each sits at a different point on the complexity-vs-capability spectrum. WebSockets provide full-duplex, bidirectional communication over a single persistent TCP connection. SSE offers a simpler, HTTP-native, unidirectional channel from server to client. Long-polling emulates push by having the client hold an open HTTP request until the server has data. Short-polling is the simplest but least efficient — the client repeatedly asks "anything new?" on a timer.
 
-Choosing the right mechanism depends on your requirements: **direction of data flow** (unidirectional vs bidirectional), **infrastructure constraints** (load balancers, proxies, firewalls), **scale** (number of concurrent connections), and **message ordering guarantees**. Most production systems use a **hybrid approach** — SSE or WebSockets for the primary channel with polling as a fallback, plus a server-side pub/sub backbone (Redis Pub/Sub, Kafka, or NATS) to fan out events across horizontally scaled servers.`,
+Choosing the right mechanism depends on your requirements: direction of data flow (unidirectional vs bidirectional), infrastructure constraints (load balancers, proxies, firewalls), scale (number of concurrent connections), and message ordering guarantees. Most production systems use a hybrid approach — SSE or WebSockets for the primary channel with polling as a fallback, plus a server-side pub/sub backbone (Redis Pub/Sub, Kafka, or NATS) to fan out events across horizontally scaled servers.`,
 
     keyQuestions: [
       {
         question: 'Compare WebSockets, SSE, and long-polling. When would you choose each?',
-        answer: `**WebSockets**:
+        answer: `WebSockets:
 \`\`\`
   Client ◄──────────────────► Server
          Full-duplex TCP connection
          Binary + text frames
          Custom protocol after HTTP upgrade
 \`\`\`
-- **Use when**: Bidirectional communication is required — chat, collaborative editing, multiplayer games, real-time auctions
-- **Pros**: Low latency in both directions, binary support, no HTTP overhead per message
-- **Cons**: Requires sticky sessions or shared state for horizontal scaling, not cacheable, some proxies/firewalls block the upgrade handshake, more complex server implementation
+- Use when: Bidirectional communication is required — chat, collaborative editing, multiplayer games, real-time auctions
+- Pros: Low latency in both directions, binary support, no HTTP overhead per message
+- Cons: Requires sticky sessions or shared state for horizontal scaling, not cacheable, some proxies/firewalls block the upgrade handshake, more complex server implementation
 
-**Server-Sent Events (SSE)**:
+Server-Sent Events (SSE):
 \`\`\`
   Client ◄────────────────── Server
          Unidirectional HTTP stream
          text/event-stream content type
          Built-in reconnection + last-event-id
 \`\`\`
-- **Use when**: Server-to-client push only — live feeds, notifications, dashboards, progress updates
-- **Pros**: Works over standard HTTP (no upgrade), automatic reconnection with last-event-id, works through most proxies, simpler implementation
-- **Cons**: Unidirectional only, text-only (no binary), limited to ~6 concurrent connections per domain in HTTP/1.1 (not an issue with HTTP/2), no built-in acknowledgment
+- Use when: Server-to-client push only — live feeds, notifications, dashboards, progress updates
+- Pros: Works over standard HTTP (no upgrade), automatic reconnection with last-event-id, works through most proxies, simpler implementation
+- Cons: Unidirectional only, text-only (no binary), limited to ~6 concurrent connections per domain in HTTP/1.1 (not an issue with HTTP/2), no built-in acknowledgment
 
-**Long-polling**:
+Long-polling:
 \`\`\`
   Client ──── GET /updates?since=X ────► Server
   Client ◄── (waits up to timeout) ──── Server
   Client ──── GET /updates?since=Y ────► Server
          Repeated HTTP requests, held open
 \`\`\`
-- **Use when**: SSE and WebSockets are not available (legacy browsers, corporate firewalls), or as a fallback mechanism
-- **Pros**: Works everywhere HTTP works, no special server support, stateless on the server side
-- **Cons**: Higher latency (one round-trip per update), more overhead (HTTP headers per request), harder to manage timeouts correctly
+- Use when: SSE and WebSockets are not available (legacy browsers, corporate firewalls), or as a fallback mechanism
+- Pros: Works everywhere HTTP works, no special server support, stateless on the server side
+- Cons: Higher latency (one round-trip per update), more overhead (HTTP headers per request), harder to manage timeouts correctly
 
-**Decision framework**:
+Decision framework:
 1. Need bidirectional? → WebSocket
 2. Server-to-client only? → SSE (with long-polling fallback)
 3. Hostile network environment? → Long-polling
@@ -5232,16 +5232,16 @@ Choosing the right mechanism depends on your requirements: **direction of data f
       },
       {
         question: 'How do you scale WebSocket servers horizontally?',
-        answer: `The core challenge is that a WebSocket connection is **stateful** — it is bound to a specific server process. When you scale to multiple servers, a message published on Server A must reach clients connected to Server B.
+        answer: `The core challenge is that a WebSocket connection is stateful — it is bound to a specific server process. When you scale to multiple servers, a message published on Server A must reach clients connected to Server B.
 
-**Architecture for horizontal scaling**: clients connect through a Load Balancer with sticky sessions. The LB pins each connection to one of the WS Servers (WS Server 1, 2, 3). All WS servers attach to a shared Redis Pub/Sub channel (or Kafka / NATS) so any server can publish a message and all servers can deliver it to their connected clients.
+Architecture for horizontal scaling: clients connect through a Load Balancer with sticky sessions. The LB pins each connection to one of the WS Servers (WS Server 1, 2, 3). All WS servers attach to a shared Redis Pub/Sub channel (or Kafka / NATS) so any server can publish a message and all servers can deliver it to their connected clients.
 
-**Step 1 — Sticky sessions**: The load balancer must route a WebSocket connection to the same backend server for the lifetime of that connection. Options:
+Step 1 — Sticky sessions: The load balancer must route a WebSocket connection to the same backend server for the lifetime of that connection. Options:
 - IP hash routing
 - Cookie-based affinity
 - Connection ID-based routing
 
-**Step 2 — Shared pub/sub backbone**: When an event occurs (e.g., new chat message), the originating server publishes to a shared message bus. All WS servers subscribe and forward to their connected clients.
+Step 2 — Shared pub/sub backbone: When an event occurs (e.g., new chat message), the originating server publishes to a shared message bus. All WS servers subscribe and forward to their connected clients.
 \`\`\`
   User sends message → WS Server 2
   WS Server 2 → Redis PUBLISH channel:room:42 "new message"
@@ -5249,14 +5249,14 @@ Choosing the right mechanism depends on your requirements: **direction of data f
   WS Server 3 (subscribed to room:42) → pushes to its clients
 \`\`\`
 
-**Step 3 — Connection registry**: Track which users are connected to which servers. This enables targeted delivery:
+Step 3 — Connection registry: Track which users are connected to which servers. This enables targeted delivery:
 \`\`\`
   Redis Hash: user:connections
     user_123 → ws-server-2
     user_456 → ws-server-1
 \`\`\`
 
-**Scaling considerations**:
+Scaling considerations:
 - Each server can handle ~50K-100K concurrent WebSocket connections (kernel tuning: file descriptors, TCP buffers)
 - Redis Pub/Sub fan-out adds ~1-2ms latency
 - For very high throughput, use Kafka with partitioned topics instead of Redis Pub/Sub
@@ -5266,7 +5266,7 @@ Choosing the right mechanism depends on your requirements: **direction of data f
         question: 'How do you handle reconnection and message ordering in real-time systems?',
         answer: `Connections drop constantly in production — network blips, mobile devices switching between WiFi and cellular, server deployments, and load balancer timeouts. A robust real-time system must handle reconnection gracefully without data loss.
 
-**SSE built-in reconnection**:
+SSE built-in reconnection:
 \`\`\`
   Server sends:
     id: 1042
@@ -5281,7 +5281,7 @@ Choosing the right mechanism depends on your requirements: **direction of data f
 \`\`\`
 SSE has native support for this — the browser automatically reconnects and sends the \`Last-Event-ID\` header. The server must maintain a buffer of recent events to replay.
 
-**WebSocket reconnection strategy**:
+WebSocket reconnection strategy:
 \`\`\`
   Attempt 1: wait 1s    + jitter(0, 500ms)
   Attempt 2: wait 2s    + jitter(0, 500ms)
@@ -5292,12 +5292,12 @@ SSE has native support for this — the browser automatically reconnects and sen
 \`\`\`
 Exponential backoff with jitter prevents thundering herd when many clients reconnect simultaneously after a server restart.
 
-**Message ordering guarantees**:
-1. **Per-channel ordering**: Assign a sequence number per channel/topic. Clients track the last received sequence number and request gaps on reconnect.
-2. **Causal ordering**: Use vector clocks or Lamport timestamps when multiple producers generate events that have causal relationships.
-3. **Exactly-once delivery**: Assign unique message IDs. Clients deduplicate using a sliding window of recently seen IDs.
+Message ordering guarantees:
+1. Per-channel ordering: Assign a sequence number per channel/topic. Clients track the last received sequence number and request gaps on reconnect.
+2. Causal ordering: Use vector clocks or Lamport timestamps when multiple producers generate events that have causal relationships.
+3. Exactly-once delivery: Assign unique message IDs. Clients deduplicate using a sliding window of recently seen IDs.
 
-**Gap detection and fill**:
+Gap detection and fill:
 \`\`\`
   Client tracks: last_seq = 1042
   Receives event with seq = 1045
@@ -5310,9 +5310,9 @@ This hybrid approach — streaming for real-time delivery, REST for gap filling 
       },
       {
         question: 'How does pub/sub fanout work and what are the scaling challenges?',
-        answer: `**Pub/sub fanout** is the process of distributing a single published message to all subscribers of a topic or channel. It is the backbone of most real-time systems.
+        answer: `Pub/sub fanout is the process of distributing a single published message to all subscribers of a topic or channel. It is the backbone of most real-time systems.
 
-**Basic model**:
+Basic model:
 \`\`\`
   Publisher → Topic/Channel → Subscriber 1
                             → Subscriber 2
@@ -5321,18 +5321,18 @@ This hybrid approach — streaming for real-time delivery, REST for gap filling 
                             → Subscriber N
 \`\`\`
 
-**Fanout ratio**: If a topic has N subscribers, one publish operation triggers N deliveries. A single message in a popular chat room with 10,000 members triggers 10,000 deliveries.
+Fanout ratio: If a topic has N subscribers, one publish operation triggers N deliveries. A single message in a popular chat room with 10,000 members triggers 10,000 deliveries.
 
-**Scaling challenges**:
+Scaling challenges:
 
-1. **Hot topics**: A viral post or popular channel creates massive fanout. Solutions:
+1. Hot topics: A viral post or popular channel creates massive fanout. Solutions:
    - Rate-limit publishers on hot topics
    - Switch from push to pull for high-fanout topics (followers fetch on demand)
    - Tiered delivery: push to online users, queue for offline users
 
-2. **Redis Pub/Sub limitations**: Messages are fire-and-forget — if a subscriber is disconnected, the message is lost. For durability, use Redis Streams or Kafka.
+2. Redis Pub/Sub limitations: Messages are fire-and-forget — if a subscriber is disconnected, the message is lost. For durability, use Redis Streams or Kafka.
 
-3. **Fan-out-on-write vs fan-out-on-read** (the Twitter problem):
+3. Fan-out-on-write vs fan-out-on-read (the Twitter problem):
 \`\`\`
   Fan-out-on-write (push):
     User posts tweet → write to every follower's timeline cache
@@ -5350,25 +5350,25 @@ This hybrid approach — streaming for real-time delivery, REST for gap filling 
     Merge both at read time
 \`\`\`
 
-4. **Ordering across partitions**: When using Kafka, messages in a single partition are ordered, but across partitions they are not. Use a consistent partition key (e.g., room_id) to maintain ordering within a conversation.`
+4. Ordering across partitions: When using Kafka, messages in a single partition are ordered, but across partitions they are not. Use a consistent partition key (e.g., room_id) to maintain ordering within a conversation.`
       },
       {
         question: 'How do you design a notification system that supports real-time push and offline delivery?',
-        answer: `A production notification system must handle two modes: **real-time push** for online users and **persistent storage** for offline users who will read notifications later.
+        answer: `A production notification system must handle two modes: real-time push for online users and persistent storage for offline users who will read notifications later.
 
-**Architecture**: an event source publishes to the **Notification Service**, which performs a **presence check** for the recipient and forks into two paths:
+Architecture: an event source publishes to the Notification Service, which performs a presence check for the recipient and forks into two paths:
 
-- **Online path** — push via WebSocket / SSE through the **WS Gateway**, so the client receives the notification in real-time.
-- **Offline path** — store the notification in the **Notification Store** so the client can fetch it on the next login/open.
+- Online path — push via WebSocket / SSE through the WS Gateway, so the client receives the notification in real-time.
+- Offline path — store the notification in the Notification Store so the client can fetch it on the next login/open.
 
-**Presence tracking**: Maintain a set of online users with their connection endpoints.
+Presence tracking: Maintain a set of online users with their connection endpoints.
 \`\`\`
   Redis SET online:users {user_123, user_456, ...}
   Redis HASH user:connections
     user_123 → ws-server-2:conn-abc
 \`\`\`
 
-**Notification lifecycle**:
+Notification lifecycle:
 1. Event occurs (new message, like, follow, system alert)
 2. Notification service determines recipients and their preferences
 3. For each recipient:
@@ -5376,12 +5376,12 @@ This hybrid approach — streaming for real-time delivery, REST for gap filling 
    b. If online → push via WebSocket/SSE gateway
    c. If offline → optionally trigger mobile push (APNs/FCM) or email
 
-**Batching and deduplication**:
+Batching and deduplication:
 - Group related notifications (e.g., "Alice and 5 others liked your post")
 - Debounce rapid-fire events (e.g., typing indicators)
 - Deduplicate with idempotency keys to prevent duplicate push notifications
 
-**Read status and badge counts**:
+Read status and badge counts:
 \`\`\`
   notification_id | user_id | type | read | created_at
   ────────────────┼─────────┼──────┼──────┼───────────
@@ -5398,24 +5398,24 @@ This dual-path approach ensures no notifications are lost, while online users re
         question: 'What are the trade-offs between HTTP/2 streaming, SSE, and WebSockets for server push?',
         answer: `All three enable server-initiated data delivery, but they differ fundamentally in protocol design and operational characteristics.
 
-**HTTP/2 Server Push** (largely deprecated for this use case):
+HTTP/2 Server Push (largely deprecated for this use case):
 - Originally designed to push assets (CSS, JS) alongside an HTML response
 - Not suitable for event streaming — browsers have removed support for push promises
 - Do not confuse with HTTP/2 multiplexed streams, which SSE benefits from
 
-**SSE over HTTP/2**: a single TCP connection carries multiple multiplexed streams — Stream 1 for \`SSE /events/notifications\`, Stream 3 for \`SSE /events/prices\`, Stream 5 for a regular REST request, and Stream 7 for \`SSE /events/activity\`.
+SSE over HTTP/2: a single TCP connection carries multiple multiplexed streams — Stream 1 for \`SSE /events/notifications\`, Stream 3 for \`SSE /events/prices\`, Stream 5 for a regular REST request, and Stream 7 for \`SSE /events/activity\`.
 - HTTP/2 eliminates the 6-connection-per-domain limit of HTTP/1.1
 - Multiple SSE streams share one TCP connection
 - Standard HTTP headers, cookies, and auth flow apply
 - Load balancers and CDNs understand HTTP natively
 - Built-in reconnection and event IDs
 
-**WebSockets over HTTP/2**:
+WebSockets over HTTP/2:
 - RFC 8441 defines WebSocket over HTTP/2 via CONNECT method
 - Eliminates the separate TCP connection for WebSocket
 - Not yet universally supported by all proxies and CDNs
 
-**Operational comparison**:
+Operational comparison:
 \`\`\`
   | Concern         | SSE                       | WebSocket                |
   | --------------- | ------------------------- | ------------------------ |
@@ -5430,29 +5430,29 @@ This dual-path approach ensures no notifications are lost, while online users re
   | Max connections | HTTP/2 mux                | 1 TCP per conn           |
 \`\`\`
 
-**Recommendation**: Start with SSE unless bidirectional communication is a hard requirement. SSE is operationally simpler, works with existing HTTP infrastructure, and HTTP/2 makes it highly efficient for multiple concurrent streams.`
+Recommendation: Start with SSE unless bidirectional communication is a hard requirement. SSE is operationally simpler, works with existing HTTP infrastructure, and HTTP/2 makes it highly efficient for multiple concurrent streams.`
       },
       {
         question: 'How would you design real-time updates for a collaborative document editor?',
         answer: `Collaborative editing is one of the most demanding real-time use cases because multiple users modify the same document simultaneously, and conflicts must be resolved deterministically.
 
-**Architecture**: User A and User B each edit in their browser. Each local edit goes through a WebSocket to a central **Collaboration Server** and is reflected back to peers. Each browser keeps **local state** (applied optimistically before server ACK). The Collaboration Server appends every edit to a shared **Operation Log** which is the source of truth and the basis for OT/CRDT convergence.
+Architecture: User A and User B each edit in their browser. Each local edit goes through a WebSocket to a central Collaboration Server and is reflected back to peers. Each browser keeps local state (applied optimistically before server ACK). The Collaboration Server appends every edit to a shared Operation Log which is the source of truth and the basis for OT/CRDT convergence.
 
-**Conflict resolution strategies**:
+Conflict resolution strategies:
 
-1. **Operational Transformation (OT)** — used by Google Docs:
+1. Operational Transformation (OT) — used by Google Docs:
    - Each edit is an operation: insert(pos, char), delete(pos)
    - Server transforms concurrent operations against each other
    - Guarantees convergence: all clients reach the same final state
    - Complex to implement correctly (O(n^2) transformation pairs)
 
-2. **Conflict-free Replicated Data Types (CRDTs)** — used by Figma, Notion:
+2. Conflict-free Replicated Data Types (CRDTs) — used by Figma, Notion:
    - Each character/element has a unique ID and position
    - Operations are commutative — order does not matter
    - No central server required for conflict resolution
    - Higher memory overhead (unique IDs per element)
 
-**Real-time update flow with OT**:
+Real-time update flow with OT:
 \`\`\`
   1. User A types "hello" at position 0
      → send: {op: "insert", pos: 0, text: "hello", rev: 5}
@@ -5467,50 +5467,50 @@ This dual-path approach ensures no notifications are lost, while online users re
   6. Both clients converge on "helloworld"
 \`\`\`
 
-**Presence and cursors**: Beyond document changes, show each user's cursor position, selection, and name. This requires frequent updates (every keystroke or mouse move) but tolerates data loss — use unreliable delivery (no persistence, just broadcast).
+Presence and cursors: Beyond document changes, show each user's cursor position, selection, and name. This requires frequent updates (every keystroke or mouse move) but tolerates data loss — use unreliable delivery (no persistence, just broadcast).
 
-**Persistence**: Periodically snapshot the document state to storage. The operation log can be compacted after a snapshot. This hybrid ensures fast recovery without replaying the entire operation history.`
+Persistence: Periodically snapshot the document state to storage. The operation log can be compacted after a snapshot. This hybrid ensures fast recovery without replaying the entire operation history.`
       },
       {
         question: 'How do you handle backpressure in real-time streaming systems?',
-        answer: `**Backpressure** occurs when a consumer cannot keep up with the rate of incoming messages. Without handling it, the system either drops messages, runs out of memory, or cascades failures to upstream services.
+        answer: `Backpressure occurs when a consumer cannot keep up with the rate of incoming messages. Without handling it, the system either drops messages, runs out of memory, or cascades failures to upstream services.
 
-**Where backpressure arises in real-time systems**:
+Where backpressure arises in real-time systems:
 \`\`\`
   Fast Producer → Buffer/Queue → Slow Consumer
   (1000 msg/s)    (growing!)      (100 msg/s)
 \`\`\`
 
-**Strategies for handling backpressure**:
+Strategies for handling backpressure:
 
-1. **Buffering with bounded queues**: Set a maximum buffer size. When full, apply a policy:
+1. Buffering with bounded queues: Set a maximum buffer size. When full, apply a policy:
    - Drop oldest messages (suitable for metrics, sensor data)
    - Drop newest messages (suitable for commands)
    - Block the producer (suitable for pipelines where data loss is unacceptable)
 
-2. **Rate limiting at the source**: Throttle the publisher to match consumer capacity.
+2. Rate limiting at the source: Throttle the publisher to match consumer capacity.
 \`\`\`
   Producer → Token Bucket (100 msg/s) → Queue → Consumer
 \`\`\`
 
-3. **Sampling/aggregation**: Instead of delivering every event, aggregate:
+3. Sampling/aggregation: Instead of delivering every event, aggregate:
    - Send price updates at most once per 100ms (latest value wins)
    - Batch 100 small events into one delivery
 
-4. **Consumer-driven pull**: Instead of the server pushing, let the client pull at its own pace:
+4. Consumer-driven pull: Instead of the server pushing, let the client pull at its own pace:
 \`\`\`
   Client: GET /events?after=last_id&limit=50
   Server: returns up to 50 events
   Client: processes, then requests next batch
 \`\`\`
 
-5. **Adaptive quality**: Degrade gracefully based on consumer speed:
+5. Adaptive quality: Degrade gracefully based on consumer speed:
    - Fast client: full fidelity (every tick, every keystroke)
    - Slow client: reduced fidelity (snapshots every second, summarized updates)
 
-**WebSocket backpressure**: The WebSocket API does not natively expose backpressure. Monitor the \`bufferedAmount\` property on the WebSocket object — if it grows, the network or client is not keeping up. Pause sending until the buffer drains.
+WebSocket backpressure: The WebSocket API does not natively expose backpressure. Monitor the \`bufferedAmount\` property on the WebSocket object — if it grows, the network or client is not keeping up. Pause sending until the buffer drains.
 
-**Kafka backpressure**: Consumer groups naturally handle backpressure — each consumer pulls at its own rate. If consumers fall behind, increase partitions and add consumers to the group. Monitor consumer lag as an operational metric.`
+Kafka backpressure: Consumer groups naturally handle backpressure — each consumer pulls at its own rate. If consumers fall behind, increase partitions and add consumers to the group. Monitor consumer lag as an operational metric.`
       },
     ],
 
@@ -5569,18 +5569,18 @@ Delivery Tracking:
       'In interviews, always discuss what happens when a lock holder crashes — fencing tokens or lease expiry are the safety nets',
     ],
 
-    introduction: `**Contention** occurs when multiple processes or threads attempt to access or modify the same shared resource simultaneously. In distributed systems, this manifests as concurrent writes to the same database row, simultaneous updates to the same cache key, or multiple services trying to claim the same work item from a queue.
+    introduction: `Contention occurs when multiple processes or threads attempt to access or modify the same shared resource simultaneously. In distributed systems, this manifests as concurrent writes to the same database row, simultaneous updates to the same cache key, or multiple services trying to claim the same work item from a queue.
 
-Managing contention correctly is critical because getting it wrong leads to **lost updates**, **dirty reads**, **double-processing**, and **data corruption**. The challenge is amplified in distributed systems where you cannot rely on a single-process mutex — the locks themselves must be distributed, which introduces network latency, partial failures, and the risk of lock holder crashes.
+Managing contention correctly is critical because getting it wrong leads to lost updates, dirty reads, double-processing, and data corruption. The challenge is amplified in distributed systems where you cannot rely on a single-process mutex — the locks themselves must be distributed, which introduces network latency, partial failures, and the risk of lock holder crashes.
 
-There are several strategies for managing contention, each with different trade-offs. **Optimistic locking** assumes conflicts are rare and detects them at write time using version numbers or compare-and-swap (CAS). **Pessimistic locking** assumes conflicts are common and acquires exclusive access before reading. **Distributed locks** extend pessimistic locking across machines using services like Redis or ZooKeeper. **Queue-based serialization** eliminates contention entirely by routing all operations on a resource through a single-threaded processor. The right choice depends on the contention level, the cost of retries, and the consistency requirements of your system.`,
+There are several strategies for managing contention, each with different trade-offs. Optimistic locking assumes conflicts are rare and detects them at write time using version numbers or compare-and-swap (CAS). Pessimistic locking assumes conflicts are common and acquires exclusive access before reading. Distributed locks extend pessimistic locking across machines using services like Redis or ZooKeeper. Queue-based serialization eliminates contention entirely by routing all operations on a resource through a single-threaded processor. The right choice depends on the contention level, the cost of retries, and the consistency requirements of your system.`,
 
     keyQuestions: [
       {
         question: 'How does optimistic locking work and when should you use it?',
-        answer: `**Optimistic locking** assumes that conflicts are rare. Instead of acquiring a lock before reading, you read the data along with a version number, perform your computation, and then attempt to write only if the version has not changed.
+        answer: `Optimistic locking assumes that conflicts are rare. Instead of acquiring a lock before reading, you read the data along with a version number, perform your computation, and then attempt to write only if the version has not changed.
 
-**Database-level implementation (version column)**:
+Database-level implementation (version column):
 \`\`\`
   -- Read
   SELECT balance, version FROM accounts WHERE id = 42;
@@ -5597,7 +5597,7 @@ There are several strategies for managing contention, each with different trade-
   -- If rows_affected = 0 → conflict detected, retry
 \`\`\`
 
-**Compare-and-Swap (CAS)**:
+Compare-and-Swap (CAS):
 \`\`\`
   CAS(address, expected_value, new_value)
   - Atomically: if *address == expected_value, set *address = new_value
@@ -5605,7 +5605,7 @@ There are several strategies for managing contention, each with different trade-
   - Used by: CPU instructions, Redis WATCH/MULTI, DynamoDB ConditionExpression
 \`\`\`
 
-**DynamoDB conditional write**:
+DynamoDB conditional write:
 \`\`\`
   UpdateItem:
     Key: {id: "42"}
@@ -5615,19 +5615,19 @@ There are several strategies for managing contention, each with different trade-
   -- Throws ConditionalCheckFailedException on conflict
 \`\`\`
 
-**When to use**:
+When to use:
 - Read-heavy workloads where conflicts are infrequent (<5% of writes conflict)
 - When the cost of a retry is low (re-read, recompute, re-write)
 - When you need high throughput — no lock acquisition overhead in the happy path
 
-**When NOT to use**:
+When NOT to use:
 - High contention (many writers on the same key) — retry storms waste resources
 - When the computation between read and write is expensive (e.g., calling an external API)
 - When retries have side effects that cannot be safely repeated`
       },
       {
         question: 'How do distributed locks work with Redis and what are the pitfalls?',
-        answer: `**Redis single-instance lock (SETNX)**:
+        answer: `Redis single-instance lock (SETNX):
 \`\`\`
   -- Acquire lock
   SET resource:lock unique_token NX EX 30
@@ -5643,14 +5643,14 @@ There are several strategies for managing contention, each with different trade-
   end
 \`\`\`
 
-**Why unique_token matters**: Without it, Client A's lock could expire, Client B acquires it, then Client A's delayed DEL removes Client B's lock. The token ensures only the holder can release.
+Why unique_token matters: Without it, Client A's lock could expire, Client B acquires it, then Client A's delayed DEL removes Client B's lock. The token ensures only the holder can release.
 
-**Pitfalls of single-instance Redis locks**:
-1. **Redis failover**: If the Redis primary crashes after granting a lock but before replicating to the replica, the lock is lost. Two clients may hold the "same" lock simultaneously.
-2. **Clock issues with expiry**: If the lock holder's process pauses (GC, swapping), the lock may expire before the holder completes its work.
-3. **No fencing**: Even with expiry, a slow client may continue operating after its lock expires, corrupting data.
+Pitfalls of single-instance Redis locks:
+1. Redis failover: If the Redis primary crashes after granting a lock but before replicating to the replica, the lock is lost. Two clients may hold the "same" lock simultaneously.
+2. Clock issues with expiry: If the lock holder's process pauses (GC, swapping), the lock may expire before the holder completes its work.
+3. No fencing: Even with expiry, a slow client may continue operating after its lock expires, corrupting data.
 
-**Redlock algorithm** (distributed across N Redis instances):
+Redlock algorithm (distributed across N Redis instances):
 \`\`\`
   1. Get current time T1
   2. Try to acquire lock on N/2+1 Redis instances (majority)
@@ -5662,18 +5662,18 @@ There are several strategies for managing contention, each with different trade-
   5. Effective TTL = original TTL - (T2-T1)
 \`\`\`
 
-**Redlock criticism** (Martin Kleppmann's analysis):
+Redlock criticism (Martin Kleppmann's analysis):
 - Relies on wall-clock time assumptions that can be violated by clock skew and process pauses
 - Does not provide fencing tokens, so a paused client with an expired lock can still corrupt data
 - For safety-critical locking, ZooKeeper with ephemeral nodes and fencing tokens is more robust
 
-**Best practice**: Use Redis locks for **efficiency** (preventing duplicate work) but not for **correctness** (protecting invariants). For correctness, combine locks with fencing tokens or use a consensus-based system.`
+Best practice: Use Redis locks for efficiency (preventing duplicate work) but not for correctness (protecting invariants). For correctness, combine locks with fencing tokens or use a consensus-based system.`
       },
       {
         question: 'How does ZooKeeper implement distributed locks and why is it considered safer?',
-        answer: `ZooKeeper provides distributed locks through **ephemeral sequential znodes**, which offer stronger guarantees than Redis-based locks.
+        answer: `ZooKeeper provides distributed locks through ephemeral sequential znodes, which offer stronger guarantees than Redis-based locks.
 
-**Lock acquisition protocol** — under the path \`/locks/resource-42/\`, znodes are created in sequence:
+Lock acquisition protocol — under the path \`/locks/resource-42/\`, znodes are created in sequence:
 
 | Znode | Owner | State |
 |---|---|---|
@@ -5687,12 +5687,12 @@ There are several strategies for managing contention, each with different trade-
 4. If no → set a watch on the znode with the next-lower sequence number (herd avoidance)
 5. When the watched znode is deleted, the client rechecks
 
-**Why ephemeral znodes are safer**:
+Why ephemeral znodes are safer:
 - If the lock holder crashes or loses its ZooKeeper session, the ephemeral znode is automatically deleted
 - The next waiter is notified and acquires the lock
 - No reliance on TTL or wall-clock time — session liveness is determined by heartbeats
 
-**Fencing with ZooKeeper**:
+Fencing with ZooKeeper:
 \`\`\`
   Lock znode: lock-0000000042
   Fencing token: 42 (the sequence number)
@@ -5703,7 +5703,7 @@ There are several strategies for managing contention, each with different trade-
 
 The monotonically increasing sequence number serves as a natural fencing token, which Redis locks do not provide natively.
 
-**Trade-offs vs Redis**:
+Trade-offs vs Redis:
 \`\`\`
   | Property        | ZooKeeper    | Redis        |
   | --------------- | ------------ | ------------ |
@@ -5716,21 +5716,21 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   | Best for        | Correctness  | Efficiency   |
 \`\`\`
 
-**Recommendation**: Use ZooKeeper (or etcd) when a lock violation would cause data corruption or financial loss. Use Redis when a lock violation would cause duplicate work that is wasteful but not dangerous.`
+Recommendation: Use ZooKeeper (or etcd) when a lock violation would cause data corruption or financial loss. Use Redis when a lock violation would cause duplicate work that is wasteful but not dangerous.`
       },
       {
         question: 'What is queue-based serialization and when does it outperform locking?',
-        answer: `**Queue-based serialization** eliminates contention entirely by routing all operations that affect a given resource through a single, ordered queue processed by one consumer at a time.
+        answer: `Queue-based serialization eliminates contention entirely by routing all operations that affect a given resource through a single, ordered queue processed by one consumer at a time.
 
-**Architecture**: Multiple writers (A, B, C) push operations into a queue partitioned by \`resource_id\`. Each partition is drained by a single consumer that processes its operations sequentially.
+Architecture: Multiple writers (A, B, C) push operations into a queue partitioned by \`resource_id\`. Each partition is drained by a single consumer that processes its operations sequentially.
 
-**How it works**:
+How it works:
 1. Instead of acquiring a lock and writing directly, clients enqueue their operations
 2. Operations for the same resource are routed to the same partition (via consistent hashing on resource_id)
 3. A single consumer processes operations for each partition sequentially
 4. No locks needed — serialization is achieved by single-threaded processing
 
-**Kafka-based implementation**:
+Kafka-based implementation:
 \`\`\`
   Topic: account-operations (partitions: 64)
   Partition key: account_id
@@ -5742,15 +5742,15 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   - Processed strictly in order within that partition
 \`\`\`
 
-**When queue serialization outperforms locking**:
+When queue serialization outperforms locking:
 
-1. **Extreme contention**: When many writers target the same key (e.g., a viral post's like counter), lock-based approaches spend most of their time retrying. A queue processes every operation exactly once, no retries.
+1. Extreme contention: When many writers target the same key (e.g., a viral post's like counter), lock-based approaches spend most of their time retrying. A queue processes every operation exactly once, no retries.
 
-2. **Complex operations**: When the operation between lock-acquire and lock-release is expensive (calls to external APIs, complex computations), holding a lock for that duration blocks all other writers. With a queue, the consumer processes at its own pace.
+2. Complex operations: When the operation between lock-acquire and lock-release is expensive (calls to external APIs, complex computations), holding a lock for that duration blocks all other writers. With a queue, the consumer processes at its own pace.
 
-3. **Audit requirements**: The queue naturally provides an ordered log of all operations — useful for auditing, replay, and debugging.
+3. Audit requirements: The queue naturally provides an ordered log of all operations — useful for auditing, replay, and debugging.
 
-**Trade-offs**:
+Trade-offs:
 - Adds latency (enqueue → dequeue → process) compared to direct writes
 - Queue becomes a single point of failure (mitigate with replicated queues like Kafka)
 - Backpressure: if the consumer cannot keep up, the queue grows — need monitoring and scaling strategies
@@ -5758,18 +5758,18 @@ The monotonically increasing sequence number serves as a natural fencing token, 
       },
       {
         question: 'How do you handle contention on hot keys in databases and caches?',
-        answer: `A **hot key** is a single key or row that receives a disproportionate amount of traffic. Examples: a viral tweet, a flash sale product, a global counter, or a celebrity's follower count. Hot keys create contention bottlenecks even in distributed systems because all requests funnel to a single shard or node.
+        answer: `A hot key is a single key or row that receives a disproportionate amount of traffic. Examples: a viral tweet, a flash sale product, a global counter, or a celebrity's follower count. Hot keys create contention bottlenecks even in distributed systems because all requests funnel to a single shard or node.
 
-**Database hot key mitigation**:
+Database hot key mitigation:
 
-1. **Write buffering and batching**:
+1. Write buffering and batching:
 \`\`\`
   Instead of:  1000 concurrent UPDATEs to row X
   Do:          Batch in memory, flush periodically
                UPDATE products SET stock = stock - batch_sum WHERE id = X
 \`\`\`
 
-2. **Shard splitting**: Split the hot key into N sub-keys, distribute writes, aggregate on read.
+2. Shard splitting: Split the hot key into N sub-keys, distribute writes, aggregate on read.
 \`\`\`
   counter:likes:post_42      (hot!)
   → counter:likes:post_42:0  (shard 0)
@@ -5779,33 +5779,33 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   Total = SUM of all shards (read-time aggregation)
 \`\`\`
 
-3. **Async counter updates**: Write to a fast append-only log (Kafka, Redis Stream), aggregate periodically with a background job. Accept that the displayed count is slightly stale.
+3. Async counter updates: Write to a fast append-only log (Kafka, Redis Stream), aggregate periodically with a background job. Accept that the displayed count is slightly stale.
 
-**Cache hot key mitigation**:
+Cache hot key mitigation:
 
-1. **Local caching (L1 cache)**: Cache the hot key in application-server memory. Use short TTL (1-5 seconds) to limit staleness.
+1. Local caching (L1 cache): Cache the hot key in application-server memory. Use short TTL (1-5 seconds) to limit staleness.
 \`\`\`
   Request → L1 (in-process, 1s TTL) → L2 (Redis) → Database
   Hot key served from L1, never hits Redis at all
 \`\`\`
 
-2. **Replicated cache entries**: Store the hot key under multiple sub-keys in Redis, randomly route reads.
+2. Replicated cache entries: Store the hot key under multiple sub-keys in Redis, randomly route reads.
 \`\`\`
   GET hot_key:{random(0,7)}  → spreads across 8 Redis slots
 \`\`\`
 
-3. **Probabilistic early expiration**: Each reader has a small probability of refreshing the cache before it expires, smoothing the thundering herd on expiry.
+3. Probabilistic early expiration: Each reader has a small probability of refreshing the cache before it expires, smoothing the thundering herd on expiry.
 
-**Real-world examples**:
-- **DynamoDB adaptive capacity**: Automatically isolates hot partitions and allocates additional throughput
-- **Instagram likes**: Async counter pipeline — enqueue increment, background worker batches updates
-- **Memcached at Facebook**: Hot keys replicated to dedicated memcached pools with higher capacity`
+Real-world examples:
+- DynamoDB adaptive capacity: Automatically isolates hot partitions and allocates additional throughput
+- Instagram likes: Async counter pipeline — enqueue increment, background worker batches updates
+- Memcached at Facebook: Hot keys replicated to dedicated memcached pools with higher capacity`
       },
       {
         question: 'Explain lease-based locking and how it prevents split-brain in distributed systems.',
-        answer: `A **lease** is a time-bounded lock — it grants exclusive access to a resource for a fixed duration and automatically expires if not renewed. Leases solve the fundamental problem of distributed locking: what happens when the lock holder crashes and cannot release the lock.
+        answer: `A lease is a time-bounded lock — it grants exclusive access to a resource for a fixed duration and automatically expires if not renewed. Leases solve the fundamental problem of distributed locking: what happens when the lock holder crashes and cannot release the lock.
 
-**Lease lifecycle**:
+Lease lifecycle:
 \`\`\`
   T=0s:   Client A acquires lease (TTL=30s)
   T=10s:  Client A renews lease (resets TTL to 30s)
@@ -5815,7 +5815,7 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   T=50s:  Client B acquires lease
 \`\`\`
 
-**Split-brain prevention with leases**:
+Split-brain prevention with leases:
 \`\`\`
   Scenario without leases:
     Client A holds lock, network partition occurs
@@ -5831,7 +5831,7 @@ The monotonically increasing sequence number serves as a natural fencing token, 
     Only B's writes succeed
 \`\`\`
 
-**Renewal strategy**: The lease holder must renew before expiry. Best practice:
+Renewal strategy: The lease holder must renew before expiry. Best practice:
 \`\`\`
   Renewal interval = TTL / 3
   TTL = 30s → renew every 10s
@@ -5839,12 +5839,12 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   Handles transient network blips gracefully
 \`\`\`
 
-**Applications of leases**:
-1. **Leader election**: The leader holds a lease on a "leader" key. If it fails to renew, another node becomes leader.
-2. **Cache leases** (Facebook Memcache): A client gets a lease-token when it observes a cache miss. Only the lease holder can populate the cache, preventing thundering herd.
-3. **HDFS leases**: The NameNode grants write leases on files. Only the lease holder can write. If the client dies, the lease expires and the file is available for recovery.
+Applications of leases:
+1. Leader election: The leader holds a lease on a "leader" key. If it fails to renew, another node becomes leader.
+2. Cache leases (Facebook Memcache): A client gets a lease-token when it observes a cache miss. Only the lease holder can populate the cache, preventing thundering herd.
+3. HDFS leases: The NameNode grants write leases on files. Only the lease holder can write. If the client dies, the lease expires and the file is available for recovery.
 
-**Trade-offs**:
+Trade-offs:
 - Requires reasonably synchronized clocks (the lease holder and the lock server must agree on what "30 seconds" means)
 - Short TTL → more renewal traffic, faster failover
 - Long TTL → less renewal traffic, slower failover
@@ -5852,9 +5852,9 @@ The monotonically increasing sequence number serves as a natural fencing token, 
       },
       {
         question: 'How do you choose between optimistic and pessimistic concurrency control for a given system?',
-        answer: `The choice depends on **contention level**, **cost of conflict**, **retry feasibility**, and **latency requirements**.
+        answer: `The choice depends on contention level, cost of conflict, retry feasibility, and latency requirements.
 
-**Decision framework**:
+Decision framework:
 \`\`\`
   | Contention                | Strategy        | Trade-offs                                       |
   | ------------------------- | --------------- | ------------------------------------------------ |
@@ -5864,21 +5864,21 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   |                           | (locks/leases)  | overhead even when uncontended.                  |
 \`\`\`
 
-**Choose optimistic when**:
+Choose optimistic when:
 1. Most transactions do not conflict (e.g., users editing their own profiles)
 2. The computation between read and write is fast and cheap to retry
 3. High throughput is more important than individual request latency
 4. The system uses a database that supports conditional writes (DynamoDB, PostgreSQL)
 
-**Choose pessimistic when**:
+Choose pessimistic when:
 1. Conflicts are frequent and predictable (e.g., inventory decrement during flash sale)
 2. The operation involves expensive side effects (external API calls, sending emails)
 3. Retries are not feasible or would confuse the user
 4. Strict ordering is required (e.g., financial transactions)
 
-**Hybrid approaches in practice**:
+Hybrid approaches in practice:
 
-1. **Optimistic with escalation**: Start optimistic; if a key experiences N consecutive conflicts, automatically escalate to pessimistic for that key.
+1. Optimistic with escalation: Start optimistic; if a key experiences N consecutive conflicts, automatically escalate to pessimistic for that key.
 \`\`\`
   attempt = 0
   while true:
@@ -5892,7 +5892,7 @@ The monotonically increasing sequence number serves as a natural fencing token, 
     attempt++
 \`\`\`
 
-2. **Multi-Version Concurrency Control (MVCC)**: Readers never block. Writers create new versions. Used by PostgreSQL, CockroachDB, Spanner.
+2. Multi-Version Concurrency Control (MVCC): Readers never block. Writers create new versions. Used by PostgreSQL, CockroachDB, Spanner.
 \`\`\`
   Reader at T=5 sees version at T=5 (snapshot isolation)
   Writer at T=7 creates new version
@@ -5900,9 +5900,9 @@ The monotonically increasing sequence number serves as a natural fencing token, 
   No read-write contention at all
 \`\`\`
 
-3. **Partitioned resources**: Reduce contention by partitioning the resource so different writers target different partitions (same as hot key sharding).
+3. Partitioned resources: Reduce contention by partitioning the resource so different writers target different partitions (same as hot key sharding).
 
-**Rule of thumb**: Default to optimistic. Switch to pessimistic only when you measure high conflict rates or when retries have unacceptable side effects.`
+Rule of thumb: Default to optimistic. Switch to pessimistic only when you measure high conflict rates or when retries have unacceptable side effects.`
       },
     ],
 
@@ -5968,14 +5968,14 @@ Contention Metrics:
 
     introduction: `In a monolithic application, a business operation like "place an order" can be wrapped in a single database transaction — all steps succeed or all are rolled back atomically. In a microservices architecture, this same operation spans multiple services (order service, payment service, inventory service, shipping service), each with its own database. A traditional distributed transaction using two-phase commit (2PC) is impractical at scale because it requires all participants to be available and introduces a coordinator as a single point of failure.
 
-The **saga pattern** is the standard alternative. A saga breaks a distributed transaction into a sequence of local transactions, each executed by a different service. If any step fails, the saga executes **compensating transactions** for all previously completed steps, effectively undoing the work. Unlike 2PC, a saga does not hold locks across services — it trades atomicity for availability and partition tolerance.
+The saga pattern is the standard alternative. A saga breaks a distributed transaction into a sequence of local transactions, each executed by a different service. If any step fails, the saga executes compensating transactions for all previously completed steps, effectively undoing the work. Unlike 2PC, a saga does not hold locks across services — it trades atomicity for availability and partition tolerance.
 
-There are two saga coordination approaches: **orchestration** and **choreography**. In orchestration, a central saga coordinator tells each service what to do and handles failures. In choreography, services communicate through events — each service listens for events from the previous step and publishes events for the next. Orchestration is easier to understand and debug for complex flows; choreography is more decoupled but harder to trace when things go wrong. Most production systems use orchestration for critical business flows and choreography for simpler, loosely coupled integrations.`,
+There are two saga coordination approaches: orchestration and choreography. In orchestration, a central saga coordinator tells each service what to do and handles failures. In choreography, services communicate through events — each service listens for events from the previous step and publishes events for the next. Orchestration is easier to understand and debug for complex flows; choreography is more decoupled but harder to trace when things go wrong. Most production systems use orchestration for critical business flows and choreography for simpler, loosely coupled integrations.`,
 
     keyQuestions: [
       {
         question: 'Explain the saga pattern with a concrete example of an e-commerce order flow.',
-        answer: `**Order placement saga** — a five-step distributed transaction:
+        answer: `Order placement saga — a five-step distributed transaction:
 
 \`\`\`
   Step 1: Create Order (Order Service)
@@ -5999,13 +5999,13 @@ There are two saga coordination approaches: **orchestration** and **choreography
     → Compensation: cancel shipment
 \`\`\`
 
-**Happy path**:
+Happy path:
 \`\`\`
   Create Order → Reserve Inventory → Process Payment → Confirm → Ship
        ✓              ✓                  ✓               ✓        ✓
 \`\`\`
 
-**Failure at step 3 (payment fails)**:
+Failure at step 3 (payment fails):
 \`\`\`
   Create Order → Reserve Inventory → Process Payment (FAILS!)
        ✓              ✓                  ✗
@@ -6014,7 +6014,7 @@ There are two saga coordination approaches: **orchestration** and **choreography
        ✓                    ✓
 \`\`\`
 
-**Key design decisions**:
+Key design decisions:
 - Each step publishes an event or calls the orchestrator on completion
 - Compensating transactions must be idempotent (payment refund with idempotency key)
 - Intermediate states are visible to users — the order shows as "processing" during the saga
@@ -6022,19 +6022,19 @@ There are two saga coordination approaches: **orchestration** and **choreography
       },
       {
         question: 'Compare orchestration vs choreography for saga coordination.',
-        answer: `**Orchestration** — centralized coordinator:
+        answer: `Orchestration — centralized coordinator:
 
 ![Saga orchestration](/diagrams/systemdesign/saga.png)
 
-A central **Saga Orchestrator** invokes each downstream service in turn — Order Service, Inventory Service, Payment Service, Confirmation, Ship Service. The orchestrator owns the saga definition (step sequence and compensation logic). Each service exposes "execute" and "compensate" endpoints. Orchestrator state lives in its own database, so it's easy to add new steps, change ordering, or add branching logic.
+A central Saga Orchestrator invokes each downstream service in turn — Order Service, Inventory Service, Payment Service, Confirmation, Ship Service. The orchestrator owns the saga definition (step sequence and compensation logic). Each service exposes "execute" and "compensate" endpoints. Orchestrator state lives in its own database, so it's easy to add new steps, change ordering, or add branching logic.
 
-**Choreography** — decentralized events:
+Choreography — decentralized events:
 
 ![Saga choreography](/diagrams/systemdesign/saga-choreography.png)
 
 Each service listens for the event upstream and publishes the next event itself. \`Order Service\` emits \`order.created\` → \`Inventory Service\` reacts and emits \`inventory.reserved\` → \`Payment Service\` reacts and finally emits \`payment.completed\`, which closes the loop back to Order Service. There is no central coordinator — logic is distributed across services. Adding a new step requires modifying multiple services.
 
-**Comparison**:
+Comparison:
 
 | Aspect | Orchestration | Choreography |
 |---|---|---|
@@ -6045,13 +6045,13 @@ Each service listens for the event upstream and publishes the next event itself.
 | Single point of failure | Orchestrator (mitigate with HA / replicas) | None |
 | Best for | 4+ step flows | 2-3 step flows |
 
-**Recommendation**: Use orchestration for the core business flow (order placement, account creation). Use choreography for auxiliary, loosely coupled concerns (analytics events, cache invalidation, notification triggers).`
+Recommendation: Use orchestration for the core business flow (order placement, account creation). Use choreography for auxiliary, loosely coupled concerns (analytics events, cache invalidation, notification triggers).`
       },
       {
         question: 'How do you ensure idempotency in multi-step processes?',
-        answer: `**Idempotency** means executing the same operation multiple times produces the same result as executing it once. In distributed systems, network retries, duplicate message delivery, and at-least-once semantics make idempotency essential — without it, a retried payment could charge the customer twice.
+        answer: `Idempotency means executing the same operation multiple times produces the same result as executing it once. In distributed systems, network retries, duplicate message delivery, and at-least-once semantics make idempotency essential — without it, a retried payment could charge the customer twice.
 
-**Idempotency key pattern**:
+Idempotency key pattern:
 \`\`\`
   Client generates a unique key per business operation:
     POST /payments
@@ -6064,7 +6064,7 @@ Each service listens for the event upstream and publishes the next event itself.
     3. If not found → process, store result, return response
 \`\`\`
 
-**Database implementation**:
+Database implementation:
 \`\`\`
   CREATE TABLE idempotency_keys (
     key          VARCHAR PRIMARY KEY,
@@ -6086,7 +6086,7 @@ Each service listens for the event upstream and publishes the next event itself.
   COMMIT;
 \`\`\`
 
-**Making operations naturally idempotent**:
+Making operations naturally idempotent:
 \`\`\`
   ✗ Non-idempotent: UPDATE balance SET amount = amount + 100
     (retrying adds 100 again!)
@@ -6101,7 +6101,7 @@ Each service listens for the event upstream and publishes the next event itself.
     -- Duplicate is silently ignored
 \`\`\`
 
-**Saga-specific idempotency considerations**:
+Saga-specific idempotency considerations:
 - Each saga step must be idempotent (the orchestrator may retry after a timeout)
 - Each compensating transaction must be idempotent (compensation may be triggered multiple times)
 - Use the saga_id + step_number as a natural idempotency key
@@ -6109,9 +6109,9 @@ Each service listens for the event upstream and publishes the next event itself.
       },
       {
         question: 'What are the limitations of two-phase commit (2PC) and why do sagas replace it?',
-        answer: `**Two-phase commit** is a distributed transaction protocol where a coordinator ensures all participants either commit or abort together.
+        answer: `Two-phase commit is a distributed transaction protocol where a coordinator ensures all participants either commit or abort together.
 
-**2PC protocol**:
+2PC protocol:
 \`\`\`
   Phase 1 — Prepare:
     Coordinator → Participant A: "Can you commit?"
@@ -6125,19 +6125,19 @@ Each service listens for the event upstream and publishes the next event itself.
     Both commit and release locks
 \`\`\`
 
-**Limitations**:
+Limitations:
 
-1. **Blocking protocol**: If the coordinator crashes after Phase 1 (all participants voted "yes") but before Phase 2, all participants are stuck holding locks, waiting for a decision that may never come. No participant can safely commit or abort on its own.
+1. Blocking protocol: If the coordinator crashes after Phase 1 (all participants voted "yes") but before Phase 2, all participants are stuck holding locks, waiting for a decision that may never come. No participant can safely commit or abort on its own.
 
-2. **Latency**: Requires at least 2 round-trips to all participants, plus the time participants hold locks. In a microservices architecture with services in different regions, this adds significant latency.
+2. Latency: Requires at least 2 round-trips to all participants, plus the time participants hold locks. In a microservices architecture with services in different regions, this adds significant latency.
 
-3. **Availability**: If any single participant is unavailable during the prepare phase, the entire transaction must abort. The availability of the system is the product of individual service availabilities.
+3. Availability: If any single participant is unavailable during the prepare phase, the entire transaction must abort. The availability of the system is the product of individual service availabilities.
 
-4. **Heterogeneous systems**: 2PC requires all participants to implement the same transaction protocol. In practice, different services use different databases, message queues, and external APIs — not all support XA transactions.
+4. Heterogeneous systems: 2PC requires all participants to implement the same transaction protocol. In practice, different services use different databases, message queues, and external APIs — not all support XA transactions.
 
-5. **Scale**: Lock duration increases with the number of participants. Hot rows locked by a 2PC transaction block all other transactions on those rows.
+5. Scale: Lock duration increases with the number of participants. Hot rows locked by a 2PC transaction block all other transactions on those rows.
 
-**Why sagas are preferred**:
+Why sagas are preferred:
 \`\`\`
   | Property        | 2PC          | Saga         |
   | --------------- | ------------ | ------------ |
@@ -6150,13 +6150,13 @@ Each service listens for the event upstream and publishes the next event itself.
   | Isolation       | Full         | Semantic     |
 \`\`\`
 
-**Where 2PC still makes sense**: Within a single database (PostgreSQL uses 2PC internally for multi-statement transactions). Across a small number of tightly coupled, co-located services where strong consistency is non-negotiable.`
+Where 2PC still makes sense: Within a single database (PostgreSQL uses 2PC internally for multi-statement transactions). Across a small number of tightly coupled, co-located services where strong consistency is non-negotiable.`
       },
       {
         question: 'How do you handle failure scenarios in sagas — partial failures, timeouts, and poison messages?',
         answer: `Failure handling is the most critical aspect of saga design. Every failure mode must be explicitly addressed.
 
-**Partial failure — compensating transactions**:
+Partial failure — compensating transactions:
 \`\`\`
   Saga: [Step1, Step2, Step3, Step4, Step5]
   Step3 fails:
@@ -6167,7 +6167,7 @@ Each service listens for the event upstream and publishes the next event itself.
 
 Compensations run in reverse order. Each compensation must be idempotent and must succeed eventually. If a compensation itself fails, it is retried with exponential backoff.
 
-**Timeout handling**:
+Timeout handling:
 \`\`\`
   Saga orchestrator tracks:
     step_started_at: timestamp
@@ -6180,7 +6180,7 @@ Compensations run in reverse order. Each compensation must be idempotent and mus
     4. Begin compensation for completed steps
 \`\`\`
 
-**Poison messages (messages that always fail)**:
+Poison messages (messages that always fail):
 \`\`\`
   Message → Consumer → Fails → Retry → Fails → Retry → Fails
                                                          │
@@ -6193,7 +6193,7 @@ Compensations run in reverse order. Each compensation must be idempotent and mus
 
 After N retries (typically 3-5), move the message to a dead letter queue (DLQ). This prevents a single bad message from blocking all subsequent messages in the queue.
 
-**Saga state machine**:
+Saga state machine:
 \`\`\`
   STARTED → STEP1_PENDING → STEP1_COMPLETED
     → STEP2_PENDING → STEP2_COMPLETED
@@ -6205,22 +6205,22 @@ After N retries (typically 3-5), move the message to a dead letter queue (DLQ). 
 
 Persist the state machine in the database. On recovery after a crash, the orchestrator reads the current state and resumes from where it left off.
 
-**Non-compensatable steps**: Some steps cannot be undone (e.g., sending an email, shipping a physical product). Place these as late as possible in the saga, after all steps that might fail. If a non-compensatable step must be earlier, use a "pending" state (draft the email but do not send it until the saga completes).`
+Non-compensatable steps: Some steps cannot be undone (e.g., sending an email, shipping a physical product). Place these as late as possible in the saga, after all steps that might fail. If a non-compensatable step must be earlier, use a "pending" state (draft the email but do not send it until the saga completes).`
       },
       {
         question: 'How do you achieve exactly-once processing in distributed systems?',
-        answer: `True exactly-once processing is impossible in a distributed system with unreliable networks (proven by the Two Generals problem). However, you can achieve **effectively exactly-once** by combining **at-least-once delivery** with **idempotent processing**.
+        answer: `True exactly-once processing is impossible in a distributed system with unreliable networks (proven by the Two Generals problem). However, you can achieve effectively exactly-once by combining at-least-once delivery with idempotent processing.
 
-**The equation**:
+The equation:
 \`\`\`
   Effectively exactly-once = At-least-once delivery + Idempotent consumer
 \`\`\`
 
-**At-least-once delivery**: The message system retries until it receives an acknowledgment. This guarantees no message is lost but may deliver duplicates.
+At-least-once delivery: The message system retries until it receives an acknowledgment. This guarantees no message is lost but may deliver duplicates.
 
-**Idempotent consumer**: The consumer detects and ignores duplicate messages.
+Idempotent consumer: The consumer detects and ignores duplicate messages.
 
-**Implementation pattern — transactional outbox + deduplication**:
+Implementation pattern — transactional outbox + deduplication:
 \`\`\`
   Producer Side (Outbox Pattern):
     BEGIN;
@@ -6239,7 +6239,7 @@ Persist the state machine in the database. On recovery after a crash, the orches
     COMMIT;
 \`\`\`
 
-**Kafka's exactly-once semantics**:
+Kafka's exactly-once semantics:
 \`\`\`
   Producer:
     enable.idempotence=true
@@ -6254,15 +6254,15 @@ Persist the state machine in the database. On recovery after a crash, the orches
     - Consume-transform-produce cycles are atomic
 \`\`\`
 
-**Key insight**: Exactly-once is not a property of the transport layer alone — it requires cooperation between the producer, the transport, and the consumer. The transport provides at-least-once; the consumer provides deduplication; together they achieve effectively exactly-once.
+Key insight: Exactly-once is not a property of the transport layer alone — it requires cooperation between the producer, the transport, and the consumer. The transport provides at-least-once; the consumer provides deduplication; together they achieve effectively exactly-once.
 
-**Common pitfall**: Acknowledging a message before processing it completely (at-most-once) or processing before acknowledging (at-least-once with risk of duplicates). Always process and acknowledge in the same atomic operation (database transaction).`
+Common pitfall: Acknowledging a message before processing it completely (at-most-once) or processing before acknowledging (at-least-once with risk of duplicates). Always process and acknowledge in the same atomic operation (database transaction).`
       },
       {
         question: 'How would you design a saga for a payment processing pipeline with refunds?',
-        answer: `**Payment saga with refund support** — handling the full lifecycle from authorization to settlement to potential refund.
+        answer: `Payment saga with refund support — handling the full lifecycle from authorization to settlement to potential refund.
 
-**Forward flow (authorization and capture)**:
+Forward flow (authorization and capture):
 \`\`\`
   Step 1: Validate Order
     → Check inventory, pricing, user account
@@ -6286,7 +6286,7 @@ Persist the state machine in the database. On recovery after a crash, the orches
     → Compensation: send cancellation email
 \`\`\`
 
-**Refund saga** (triggered by customer request or dispute):
+Refund saga (triggered by customer request or dispute):
 \`\`\`
   Step 1: Validate Refund Request
     → Check eligibility, time window, refund policy
@@ -6310,12 +6310,12 @@ Persist the state machine in the database. On recovery after a crash, the orches
     → Update order status to REFUNDED
 \`\`\`
 
-**Critical design decisions**:
-1. **Authorization vs capture**: Separate auth from capture. Auth is fully reversible (void). Capture triggers actual money movement and requires a refund to undo.
-2. **Partial refunds**: Support refunding a subset of items. Track refunded amounts to prevent over-refunding.
-3. **Timeout on authorization**: Payment authorizations expire (typically 7 days). The saga must capture before expiry or re-authorize.
-4. **Refund window**: Payment processors have refund time limits (60-120 days). After that, disputes go through chargeback.
-5. **Idempotency everywhere**: Network retries to the payment gateway are inevitable. Every gateway call must include an idempotency key to prevent double charges or double refunds.`
+Critical design decisions:
+1. Authorization vs capture: Separate auth from capture. Auth is fully reversible (void). Capture triggers actual money movement and requires a refund to undo.
+2. Partial refunds: Support refunding a subset of items. Track refunded amounts to prevent over-refunding.
+3. Timeout on authorization: Payment authorizations expire (typically 7 days). The saga must capture before expiry or re-authorize.
+4. Refund window: Payment processors have refund time limits (60-120 days). After that, disputes go through chargeback.
+5. Idempotency everywhere: Network retries to the payment gateway are inevitable. Every gateway call must include an idempotency key to prevent double charges or double refunds.`
       },
     ],
 
@@ -6383,16 +6383,16 @@ Dead Letter Entry:
       'In interviews, always discuss cache invalidation — it is famously the hardest problem in computer science',
     ],
 
-    introduction: `Most web applications are **read-heavy** — the ratio of reads to writes is typically 10:1 to 1000:1. A social media feed, a product catalog, a news site, or a dashboard all serve far more reads than writes. Scaling reads is therefore the most impactful optimization for most systems.
+    introduction: `Most web applications are read-heavy — the ratio of reads to writes is typically 10:1 to 1000:1. A social media feed, a product catalog, a news site, or a dashboard all serve far more reads than writes. Scaling reads is therefore the most impactful optimization for most systems.
 
-The fundamental strategies for scaling reads form a **hierarchy of caching and replication**: client-side caching (browser, mobile app), CDN edge caching, application-level caching (L1 in-process, L2 distributed cache like Redis), read replicas (database-level horizontal scaling), and denormalization or materialized views (pre-computing expensive joins). Each layer reduces load on the layers below it.
+The fundamental strategies for scaling reads form a hierarchy of caching and replication: client-side caching (browser, mobile app), CDN edge caching, application-level caching (L1 in-process, L2 distributed cache like Redis), read replicas (database-level horizontal scaling), and denormalization or materialized views (pre-computing expensive joins). Each layer reduces load on the layers below it.
 
-The challenge in all caching and replication strategies is **consistency** — how stale can the data be? A stock price that is 5 seconds old may be acceptable, but an account balance that is 5 seconds old is not. Understanding the consistency requirements of each data type in your system is the key to choosing the right scaling strategy. Patterns like **CQRS** (Command Query Responsibility Segregation) formalize this by separating the write model (optimized for consistency) from the read model (optimized for performance).`,
+The challenge in all caching and replication strategies is consistency — how stale can the data be? A stock price that is 5 seconds old may be acceptable, but an account balance that is 5 seconds old is not. Understanding the consistency requirements of each data type in your system is the key to choosing the right scaling strategy. Patterns like CQRS (Command Query Responsibility Segregation) formalize this by separating the write model (optimized for consistency) from the read model (optimized for performance).`,
 
     keyQuestions: [
       {
         question: 'Explain the caching hierarchy (L1/L2/CDN) and how requests flow through it.',
-        answer: `**Caching hierarchy** — each layer intercepts requests before they reach the database:
+        answer: `Caching hierarchy — each layer intercepts requests before they reach the database:
 
 \`\`\`
   Client ─► CDN Edge ─► Load Balancer ─► App Server ─► Redis (L2) ─► Database
@@ -6401,14 +6401,14 @@ The challenge in all caching and replication strategies is **consistency** — h
                                       (in-process)
 \`\`\`
 
-**Layer 1 — CDN (Content Delivery Network)**:
+Layer 1 — CDN (Content Delivery Network):
 - Caches at the network edge, closest to the user
 - Best for: static assets (images, JS, CSS), semi-static API responses (product catalog)
 - TTL-based invalidation or explicit purge
 - Cache hit ratio for static content: 90-99%
 - Examples: CloudFront, Cloudflare, Fastly
 
-**Layer 2 — L1 In-Process Cache (Application Server)**:
+Layer 2 — L1 In-Process Cache (Application Server):
 - Local memory cache within each application server process
 - Best for: frequently accessed, small data (configuration, feature flags, user sessions)
 - Fastest access (~microseconds) but limited by server memory
@@ -6416,18 +6416,18 @@ The challenge in all caching and replication strategies is **consistency** — h
 - Typical TTL: 1-60 seconds
 - Implementation: LRU map, Guava cache, Node.js Map with TTL
 
-**Layer 3 — L2 Distributed Cache (Redis/Memcached)**:
+Layer 3 — L2 Distributed Cache (Redis/Memcached):
 - Shared cache accessible by all application servers
 - Best for: database query results, computed aggregations, session data
 - Access time: ~1ms (network round-trip)
 - Scales horizontally (Redis Cluster, Memcached consistent hashing)
 - Cache hit ratio: 70-95% depending on data patterns
 
-**Layer 4 — Database (Source of Truth)**:
+Layer 4 — Database (Source of Truth):
 - Only reached on cache miss at all levels
 - With a well-designed caching hierarchy, database load is reduced by 90-99%
 
-**Request flow example** (fetching a product):
+Request flow example (fetching a product):
 \`\`\`
   1. CDN: Cache-Control header? HIT → return (0ms latency)
   2. CDN MISS → forward to app server
@@ -6442,7 +6442,7 @@ The challenge in all caching and replication strategies is **consistency** — h
       },
       {
         question: 'Compare cache-aside, read-through, and write-through caching patterns.',
-        answer: `**Cache-Aside (Lazy Loading)** — most common pattern:
+        answer: `Cache-Aside (Lazy Loading) — most common pattern:
 \`\`\`
   Read path:
     1. App checks cache (GET key)
@@ -6460,7 +6460,7 @@ The challenge in all caching and replication strategies is **consistency** — h
 - Cache only contains data that has been requested (no wasted memory)
 - Risk: cache stampede on popular key expiry (many requests simultaneously miss)
 
-**Read-Through** — cache manages DB reads:
+Read-Through — cache manages DB reads:
 \`\`\`
   Read path:
     1. App reads from cache (always)
@@ -6474,7 +6474,7 @@ The challenge in all caching and replication strategies is **consistency** — h
 - Cache library/provider must support DB integration
 - Used by: Hibernate L2 cache, NCache, some Redis modules
 
-**Write-Through** — cache manages DB writes:
+Write-Through — cache manages DB writes:
 \`\`\`
   Write path:
     1. App writes to cache
@@ -6489,7 +6489,7 @@ The challenge in all caching and replication strategies is **consistency** — h
 - Write latency is higher (cache + DB write)
 - Used with read-through for a complete caching layer
 
-**Write-Behind (Write-Back)**:
+Write-Behind (Write-Back):
 \`\`\`
   Write path:
     1. App writes to cache
@@ -6500,7 +6500,7 @@ The challenge in all caching and replication strategies is **consistency** — h
 - Risk of data loss if cache crashes before flushing to DB
 - Good for write-heavy workloads where slight data loss is tolerable (analytics, counters)
 
-**Comparison**:
+Comparison:
 \`\`\`
   | Pattern        | Read perf | Write perf   | Consistency |
   | -------------- | --------- | ------------ | ----------- |
@@ -6512,9 +6512,9 @@ The challenge in all caching and replication strategies is **consistency** — h
       },
       {
         question: 'How do read replicas work and how do you handle replication lag?',
-        answer: `**Read replicas** are copies of the primary database that handle read queries, distributing read load across multiple servers.
+        answer: `Read replicas are copies of the primary database that handle read queries, distributing read load across multiple servers.
 
-**Architecture**:
+Architecture:
 \`\`\`
   Writes ──► Primary DB ──► Replication Stream ──► Replica 1 (reads)
                                                  ──► Replica 2 (reads)
@@ -6522,16 +6522,16 @@ The challenge in all caching and replication strategies is **consistency** — h
   Reads  ──► Load Balancer ──► Replica 1/2/3
 \`\`\`
 
-**Replication types**:
-- **Synchronous**: Primary waits for replica acknowledgment before confirming write. Zero lag but higher write latency.
-- **Asynchronous**: Primary confirms write immediately, replica catches up later. Lower write latency but introduces replication lag.
-- **Semi-synchronous**: Primary waits for at least one replica (MySQL semi-sync).
+Replication types:
+- Synchronous: Primary waits for replica acknowledgment before confirming write. Zero lag but higher write latency.
+- Asynchronous: Primary confirms write immediately, replica catches up later. Lower write latency but introduces replication lag.
+- Semi-synchronous: Primary waits for at least one replica (MySQL semi-sync).
 
-**Replication lag** — the delay between a write on the primary and its appearance on replicas. Typical: 10ms-1s for async replication, but can spike to minutes under load.
+Replication lag — the delay between a write on the primary and its appearance on replicas. Typical: 10ms-1s for async replication, but can spike to minutes under load.
 
-**Handling replication lag**:
+Handling replication lag:
 
-1. **Read-your-writes consistency**: After a user writes data, ensure their subsequent reads see that write.
+1. Read-your-writes consistency: After a user writes data, ensure their subsequent reads see that write.
 \`\`\`
   User updates profile → response includes version=42
   User reads profile:
@@ -6539,9 +6539,9 @@ The challenge in all caching and replication strategies is **consistency** — h
     Else route to any replica
 \`\`\`
 
-2. **Monotonic reads**: Ensure a user does not see data go "backward" (reading from a stale replica after reading from an up-to-date one). Pin user sessions to a specific replica.
+2. Monotonic reads: Ensure a user does not see data go "backward" (reading from a stale replica after reading from an up-to-date one). Pin user sessions to a specific replica.
 
-3. **Lag monitoring and routing**:
+3. Lag monitoring and routing:
 \`\`\`
   Replica lag monitor:
     Replica 1: lag = 50ms   ✓ routable
@@ -6551,9 +6551,9 @@ The challenge in all caching and replication strategies is **consistency** — h
   Route reads to replicas with lag < threshold
 \`\`\`
 
-4. **Critical reads to primary**: For operations where staleness is unacceptable (checking balance before debit), always read from the primary.
+4. Critical reads to primary: For operations where staleness is unacceptable (checking balance before debit), always read from the primary.
 
-**Scaling read replicas**:
+Scaling read replicas:
 - PostgreSQL: streaming replication, up to dozens of replicas
 - MySQL: async/semi-sync replication, read-only replicas
 - Aurora: up to 15 read replicas with shared storage (near-zero lag)
@@ -6561,30 +6561,30 @@ The challenge in all caching and replication strategies is **consistency** — h
       },
       {
         question: 'What is CQRS and when should you use it?',
-        answer: `**CQRS (Command Query Responsibility Segregation)** separates the write model (commands) from the read model (queries) into different data stores, each optimized for its access pattern.
+        answer: `CQRS (Command Query Responsibility Segregation) separates the write model (commands) from the read model (queries) into different data stores, each optimized for its access pattern.
 
-**Architecture**:
+Architecture:
 ![CQRS — separate read and write models](/diagrams/systemdesign/cqrs-vs-traditional.png)
 
-Commands (writes) hit the **Write Model** (typically RDBMS, normalized for consistency). Each commit emits domain events that asynchronously update the **Read Model** (Elasticsearch, Redis, materialized views — denormalized for fast reads). Queries (reads) hit only the Read Model.
+Commands (writes) hit the Write Model (typically RDBMS, normalized for consistency). Each commit emits domain events that asynchronously update the Read Model (Elasticsearch, Redis, materialized views — denormalized for fast reads). Queries (reads) hit only the Read Model.
 
-**Write model**: Normalized, optimized for consistency and transactional integrity. Handles validations, business rules, and state transitions.
+Write model: Normalized, optimized for consistency and transactional integrity. Handles validations, business rules, and state transitions.
 
-**Read model**: Denormalized, pre-joined, optimized for specific query patterns. Can use a different database technology (Elasticsearch for search, Redis for fast lookups, materialized views for dashboards).
+Read model: Denormalized, pre-joined, optimized for specific query patterns. Can use a different database technology (Elasticsearch for search, Redis for fast lookups, materialized views for dashboards).
 
-**How sync works**: When the write model processes a command, it emits domain events. Event handlers update the read model asynchronously.
+How sync works: When the write model processes a command, it emits domain events. Event handlers update the read model asynchronously.
 
-**When to use CQRS**:
-1. **Vastly different read and write patterns**: The write model is a normalized relational schema, but reads require complex joins, aggregations, or full-text search.
-2. **Read and write scale independently**: 1000:1 read-to-write ratio — scale read infrastructure without affecting write path.
-3. **Multiple read representations**: The same data needs to be queried differently by different consumers (e.g., product data in SQL for admin, Elasticsearch for customer search, Redis for recommendations).
+When to use CQRS:
+1. Vastly different read and write patterns: The write model is a normalized relational schema, but reads require complex joins, aggregations, or full-text search.
+2. Read and write scale independently: 1000:1 read-to-write ratio — scale read infrastructure without affecting write path.
+3. Multiple read representations: The same data needs to be queried differently by different consumers (e.g., product data in SQL for admin, Elasticsearch for customer search, Redis for recommendations).
 
-**When NOT to use CQRS**:
+When NOT to use CQRS:
 1. Simple CRUD applications where reads and writes have similar patterns
 2. Small scale where a single database handles both comfortably
 3. When strong consistency is required for all reads (CQRS introduces eventual consistency between write and read models)
 
-**CQRS with Event Sourcing** (often combined):
+CQRS with Event Sourcing (often combined):
 \`\`\`
   Command → Validate → Store Event → Event Store (source of truth)
                                          │
@@ -6599,7 +6599,7 @@ The event store is append-only (immutable log of state changes). Read models are
         question: 'How do you handle cache invalidation in a distributed system?',
         answer: `Cache invalidation is famously one of the hardest problems in computer science. The challenge: cached data must reflect changes in the source of truth, but the cache and the database are separate systems with no transactional guarantee linking them.
 
-**Strategy 1 — TTL-based expiration**:
+Strategy 1 — TTL-based expiration:
 \`\`\`
   SET product:42 "{...}" EX 300   (expire after 5 minutes)
 \`\`\`
@@ -6608,7 +6608,7 @@ The event store is append-only (immutable log of state changes). Read models are
 - Good for: data that changes infrequently and where staleness is acceptable
 - Risk: stale data served for the full TTL; thundering herd on popular key expiry
 
-**Strategy 2 — Event-driven invalidation**:
+Strategy 2 — Event-driven invalidation:
 \`\`\`
   Write to DB → Publish event → Cache subscriber → DEL key
 
@@ -6621,7 +6621,7 @@ The event store is append-only (immutable log of state changes). Read models are
 - More complex infrastructure (event bus, subscriber service)
 - Risk: event delivery failure leaves stale data (mitigate with TTL as backstop)
 
-**Strategy 3 — Write-through invalidation**:
+Strategy 3 — Write-through invalidation:
 \`\`\`
   Application write path:
     1. Update database
@@ -6629,7 +6629,7 @@ The event store is append-only (immutable log of state changes). Read models are
     -- NOT: update cache key (race condition!)
 \`\`\`
 
-**Why delete, not update?** Race condition with concurrent writes:
+Why delete, not update? Race condition with concurrent writes:
 \`\`\`
   T1: Thread A writes value=100 to DB
   T2: Thread B writes value=200 to DB
@@ -6642,7 +6642,7 @@ The event store is append-only (immutable log of state changes). Read models are
   T3: Next read gets 200 from DB (correct)
 \`\`\`
 
-**Strategy 4 — Cache versioning**:
+Strategy 4 — Cache versioning:
 \`\`\`
   Key: product:42:v7
   On update: increment version → product:42:v8
@@ -6650,7 +6650,7 @@ The event store is append-only (immutable log of state changes). Read models are
   Clean up old versions asynchronously
 \`\`\`
 
-**Thundering herd prevention on cache miss**:
+Thundering herd prevention on cache miss:
 \`\`\`
   1. Lock-based: First request acquires a lock, fetches from DB,
      populates cache. Other requests wait for the lock.
@@ -6660,15 +6660,15 @@ The event store is append-only (immutable log of state changes). Read models are
      of refreshing before TTL, spreading the refresh load.
 \`\`\`
 
-**Best practice**: Use TTL as a safety net (backstop) combined with event-driven invalidation for near-real-time freshness. Never rely solely on TTL for data that changes frequently, and never rely solely on events for data where a missed event would cause serious problems.`
+Best practice: Use TTL as a safety net (backstop) combined with event-driven invalidation for near-real-time freshness. Never rely solely on TTL for data that changes frequently, and never rely solely on events for data where a missed event would cause serious problems.`
       },
       {
         question: 'How would you design a read-optimized system for a social media news feed?',
         answer: `The news feed is the canonical read-scaling problem. Users check their feed far more often than they post (100:1+ read-to-write ratio). The feed aggregates posts from all followed users, sorted by relevance or time.
 
-**Architecture — fanout-on-write with caching**: a user's post flows \`User posts → Post Service → Fanout Service → Feed Cache\` (per follower). On read, the path is \`User reads feed → Feed Service → Feed Cache\`. On a feed-cache miss the Feed Service falls back to the **Feed Generator**, which queries posts from followed users and merges them on the fly.
+Architecture — fanout-on-write with caching: a user's post flows \`User posts → Post Service → Fanout Service → Feed Cache\` (per follower). On read, the path is \`User reads feed → Feed Service → Feed Cache\`. On a feed-cache miss the Feed Service falls back to the Feed Generator, which queries posts from followed users and merges them on the fly.
 
-**Fanout-on-write**:
+Fanout-on-write:
 \`\`\`
   User A (1000 followers) posts:
     1. Store post in posts table
@@ -6681,7 +6681,7 @@ The event store is append-only (immutable log of state changes). Read models are
        LTRIM feed:user_123 0 499
 \`\`\`
 
-**Celebrity/hot-user optimization (hybrid fanout)**:
+Celebrity/hot-user optimization (hybrid fanout):
 \`\`\`
   Regular users (<10K followers): fanout-on-write
   Celebrities (>10K followers): fanout-on-read
@@ -6692,7 +6692,7 @@ The event store is append-only (immutable log of state changes). Read models are
     3. Merge, rank, and return top N
 \`\`\`
 
-**Caching layers**:
+Caching layers:
 \`\`\`
   L1: CDN — cache feed API responses for 30 seconds (Cache-Control)
   L2: Redis — per-user feed cache (list of post_ids)
@@ -6700,7 +6700,7 @@ The event store is append-only (immutable log of state changes). Read models are
   L4: Database — posts table, follows table (source of truth)
 \`\`\`
 
-**Read path optimization**:
+Read path optimization:
 \`\`\`
   GET /feed?cursor=last_post_id&limit=20
     1. Redis LRANGE feed:user_123 offset 20 → [post_ids]
@@ -6712,13 +6712,13 @@ The event store is append-only (immutable log of state changes). Read models are
   DB queries: 0 (on cache hit)
 \`\`\`
 
-**Consistency trade-off**: A new post may take 1-5 seconds to appear in all followers' feeds (async fanout). This is acceptable for a social feed but would not be for a banking transaction ledger.`
+Consistency trade-off: A new post may take 1-5 seconds to appear in all followers' feeds (async fanout). This is acceptable for a social feed but would not be for a banking transaction ledger.`
       },
       {
         question: 'What are materialized views and how do they help scale reads?',
-        answer: `A **materialized view** is a pre-computed query result stored as a physical table. Unlike a regular view (which re-executes the query on every read), a materialized view is computed once and read directly — trading storage and write-time computation for dramatically faster reads.
+        answer: `A materialized view is a pre-computed query result stored as a physical table. Unlike a regular view (which re-executes the query on every read), a materialized view is computed once and read directly — trading storage and write-time computation for dramatically faster reads.
 
-**Example — dashboard analytics**:
+Example — dashboard analytics:
 \`\`\`
   Base tables:
     orders (100M rows): order_id, user_id, product_id, amount, created_at
@@ -6739,13 +6739,13 @@ The event store is append-only (immutable log of state changes). Read models are
     REFRESH MATERIALIZED VIEW CONCURRENTLY daily_sales_by_category;
 \`\`\`
 
-**Refresh strategies**:
-1. **Periodic refresh**: Cron job refreshes every N minutes. Simple but data can be stale.
-2. **Concurrent refresh** (PostgreSQL): Refreshes without locking the view — readers see old data until refresh completes.
-3. **Incremental refresh** (Oracle, some custom implementations): Only process changes since last refresh — much faster for large datasets.
-4. **Trigger-based**: Database triggers update the materialized view on each insert/update. Low latency but high write overhead.
+Refresh strategies:
+1. Periodic refresh: Cron job refreshes every N minutes. Simple but data can be stale.
+2. Concurrent refresh (PostgreSQL): Refreshes without locking the view — readers see old data until refresh completes.
+3. Incremental refresh (Oracle, some custom implementations): Only process changes since last refresh — much faster for large datasets.
+4. Trigger-based: Database triggers update the materialized view on each insert/update. Low latency but high write overhead.
 
-**Where materialized views are used**:
+Where materialized views are used:
 \`\`\`
   | Use Case               | Materialized View            |
   | ---------------------- | ---------------------------- |
@@ -6756,7 +6756,7 @@ The event store is append-only (immutable log of state changes). Read models are
   | Feed generation        | Pre-computed user feeds      |
 \`\`\`
 
-**Custom materialized views (application-level)**:
+Custom materialized views (application-level):
 When the database's built-in materialized views are not sufficient, build your own:
 \`\`\`
   Write path:
@@ -6774,7 +6774,7 @@ This is essentially CQRS — the materialized table is the read model, updated a
         question: 'How do you use a CDN for dynamic content, not just static assets?',
         answer: `CDNs are traditionally associated with static assets (images, CSS, JS), but modern CDNs can cache dynamic API responses effectively, reducing origin load by 50-90% for read-heavy APIs.
 
-**Cacheable dynamic content examples**:
+Cacheable dynamic content examples:
 \`\`\`
   High cacheability:
     GET /api/products/42          (product details, changes rarely)
@@ -6791,7 +6791,7 @@ This is essentially CQRS — the materialized table is the read model, updated a
     GET /api/me/notifications      (real-time, per-user)
 \`\`\`
 
-**Cache-Control headers for API responses**:
+Cache-Control headers for API responses:
 \`\`\`
   // Product page (cache for 5 minutes, revalidate)
   Cache-Control: public, max-age=300, stale-while-revalidate=60
@@ -6806,7 +6806,7 @@ This is essentially CQRS — the materialized table is the read model, updated a
   Cache-Control: public, max-age=60, stale-if-error=300
 \`\`\`
 
-**Vary header for personalized caching**:
+Vary header for personalized caching:
 \`\`\`
   Vary: Accept-Language, X-Country
 
@@ -6815,7 +6815,7 @@ This is essentially CQRS — the materialized table is the read model, updated a
     /api/products/42 (ja-JP) → version B
 \`\`\`
 
-**Edge computing (Cloudflare Workers, Vercel Edge Functions)**: a request lands at the CDN Edge, which invokes an Edge Function. The function checks its local cache first; on a miss, it calls the origin API server, then caches the response back at the edge for subsequent requests.
+Edge computing (Cloudflare Workers, Vercel Edge Functions): a request lands at the CDN Edge, which invokes an Edge Function. The function checks its local cache first; on a miss, it calls the origin API server, then caches the response back at the edge for subsequent requests.
 
 Edge functions can assemble personalized responses from cached fragments:
 \`\`\`
@@ -6823,7 +6823,7 @@ Edge functions can assemble personalized responses from cached fragments:
   Only the personalized part hits the origin
 \`\`\`
 
-**API response caching with Surrogate Keys** (Fastly, Varnish):
+API response caching with Surrogate Keys (Fastly, Varnish):
 \`\`\`
   Response header: Surrogate-Key: product-42 category-electronics
 
@@ -6893,16 +6893,16 @@ Materialized View Metadata:
 
     introduction: `While most applications are read-heavy, some systems face extreme write volumes: IoT telemetry ingestion, financial transaction processing, social media interactions (likes, views, impressions), logging and metrics collection, and real-time analytics. Scaling writes is fundamentally harder than scaling reads because writes must eventually reach the source of truth, and that source of truth must maintain consistency.
 
-The primary strategies for scaling writes are: **sharding** (partitioning data across multiple database nodes so writes are distributed), **batching** (grouping many small writes into fewer large writes), **async writes** (acknowledging the write to the client before it is durably stored, using a queue as a buffer), and **append-only storage** (using data structures like LSM trees that convert expensive random writes into cheap sequential writes).
+The primary strategies for scaling writes are: sharding (partitioning data across multiple database nodes so writes are distributed), batching (grouping many small writes into fewer large writes), async writes (acknowledging the write to the client before it is durably stored, using a queue as a buffer), and append-only storage (using data structures like LSM trees that convert expensive random writes into cheap sequential writes).
 
 Each strategy has fundamental trade-offs. Sharding distributes write load but makes cross-shard queries expensive and rebalancing painful. Batching increases throughput but adds latency for individual writes. Async writes improve perceived latency but risk data loss if the buffer crashes before flushing. Understanding these trade-offs and choosing the right combination for your workload is the essence of write scaling.`,
 
     keyQuestions: [
       {
         question: 'How does database sharding work and how do you choose a shard key?',
-        answer: `**Sharding** (horizontal partitioning) distributes rows across multiple database nodes. Each node holds a subset of the data, and writes are routed to the correct node based on the shard key.
+        answer: `Sharding (horizontal partitioning) distributes rows across multiple database nodes. Each node holds a subset of the data, and writes are routed to the correct node based on the shard key.
 
-**Sharding architecture**:
+Sharding architecture:
 \`\`\`
   Application → Shard Router → Shard 1 (user_id 1-1M)
                              → Shard 2 (user_id 1M-2M)
@@ -6910,12 +6910,12 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
                              → Shard 4 (user_id 3M-4M)
 \`\`\`
 
-**Sharding strategies**:
-1. **Range-based**: Shard by ranges of the key (e.g., user_id 1-1M on shard 1). Simple but risks hot shards if data is not uniformly distributed.
-2. **Hash-based**: Shard by hash(key) % num_shards. Even distribution but range queries require scatter-gather across all shards.
-3. **Directory-based**: A lookup service maps keys to shards. Flexible but the directory is a single point of failure.
+Sharding strategies:
+1. Range-based: Shard by ranges of the key (e.g., user_id 1-1M on shard 1). Simple but risks hot shards if data is not uniformly distributed.
+2. Hash-based: Shard by hash(key) % num_shards. Even distribution but range queries require scatter-gather across all shards.
+3. Directory-based: A lookup service maps keys to shards. Flexible but the directory is a single point of failure.
 
-**Choosing a shard key — the most critical decision**:
+Choosing a shard key — the most critical decision:
 \`\`\`
   Good shard keys:
     user_id     — distributes evenly, most queries are per-user
@@ -6928,13 +6928,13 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     status      — only a few values, cannot distribute across many shards
 \`\`\`
 
-**Shard key evaluation criteria**:
-1. **Cardinality**: High cardinality (many unique values) for even distribution
-2. **Write distribution**: Writes should spread evenly across shards
-3. **Query locality**: Most queries should target a single shard (avoid scatter-gather)
-4. **Growth pattern**: The key should distribute future data evenly, not concentrate on recent shards
+Shard key evaluation criteria:
+1. Cardinality: High cardinality (many unique values) for even distribution
+2. Write distribution: Writes should spread evenly across shards
+3. Query locality: Most queries should target a single shard (avoid scatter-gather)
+4. Growth pattern: The key should distribute future data evenly, not concentrate on recent shards
 
-**Cross-shard queries** — the main cost of sharding:
+Cross-shard queries — the main cost of sharding:
 \`\`\`
   Single-shard query (fast):
     SELECT * FROM orders WHERE user_id = 42
@@ -6945,13 +6945,13 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     → Must query ALL shards and merge results (scatter-gather)
 \`\`\`
 
-**Resharding**: When you need more shards, data must be redistributed. Consistent hashing minimizes data movement. Some systems (Vitess, CockroachDB) support online resharding.`
+Resharding: When you need more shards, data must be redistributed. Consistent hashing minimizes data movement. Some systems (Vitess, CockroachDB) support online resharding.`
       },
       {
         question: 'How does batching improve write throughput and what are the trade-offs?',
-        answer: `**Batching** groups multiple individual writes into a single, larger write operation. This amortizes the fixed costs of each write (disk seek, network round-trip, transaction overhead) across many records.
+        answer: `Batching groups multiple individual writes into a single, larger write operation. This amortizes the fixed costs of each write (disk seek, network round-trip, transaction overhead) across many records.
 
-**Why batching is so effective**:
+Why batching is so effective:
 \`\`\`
   Individual writes (1000 inserts):
     1000 × (network round-trip + parse + plan + write + fsync + ack)
@@ -6964,9 +6964,9 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   100x improvement!
 \`\`\`
 
-**Batching patterns**:
+Batching patterns:
 
-1. **Application-level batching**:
+1. Application-level batching:
 \`\`\`
   Buffer writes in memory:
     buffer = []
@@ -6977,7 +6977,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
         buffer.clear()
 \`\`\`
 
-2. **Database-level batching (group commit)**:
+2. Database-level batching (group commit):
 \`\`\`
   PostgreSQL group commit:
     Multiple transactions commit in the same fsync call
@@ -6985,7 +6985,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     Amortizes fsync cost across ~100 transactions
 \`\`\`
 
-3. **Message queue batching (Kafka)**:
+3. Message queue batching (Kafka):
 \`\`\`
   Producer config:
     batch.size = 16384        (bytes per batch)
@@ -6995,7 +6995,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Result: fewer, larger network requests to brokers
 \`\`\`
 
-**Trade-offs**:
+Trade-offs:
 \`\`\`
   | Benefit             | Cost                                                |
   | ------------------- | --------------------------------------------------- |
@@ -7005,17 +7005,17 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   | Fewer connections   | Retry complexity on partial batch failure           |
 \`\`\`
 
-**Tuning**: The batch size and flush interval form a latency-throughput trade-off. Larger batches = higher throughput but more latency. For real-time systems, use small batches with short timeouts (5-10ms). For analytics/logging, use large batches with longer timeouts (1-5 seconds).`
+Tuning: The batch size and flush interval form a latency-throughput trade-off. Larger batches = higher throughput but more latency. For real-time systems, use small batches with short timeouts (5-10ms). For analytics/logging, use large batches with longer timeouts (1-5 seconds).`
       },
       {
         question: 'How does Kafka serve as a write buffer and what problems does it solve?',
-        answer: `**Kafka as a write buffer** decouples fast producers from slow consumers, absorbing write spikes that would overwhelm a database.
+        answer: `Kafka as a write buffer decouples fast producers from slow consumers, absorbing write spikes that would overwhelm a database.
 
-**Architecture**: high-volume producers (web servers, apps) push 10,000 writes/sec into a partitioned **Kafka topic**. A consumer group drains the topic into the downstream **database** (or analytics store) at its sustainable rate of ~1,000 writes/sec. Kafka absorbs the 10x mismatch — consumers drain at their own pace while producers stay un-blocked.
+Architecture: high-volume producers (web servers, apps) push 10,000 writes/sec into a partitioned Kafka topic. A consumer group drains the topic into the downstream database (or analytics store) at its sustainable rate of ~1,000 writes/sec. Kafka absorbs the 10x mismatch — consumers drain at their own pace while producers stay un-blocked.
 
-**Problems Kafka solves as a write buffer**:
+Problems Kafka solves as a write buffer:
 
-1. **Spike absorption**: Traffic spikes (flash sales, viral events) produce sudden write bursts. Kafka absorbs the burst; consumers process at a steady rate.
+1. Spike absorption: Traffic spikes (flash sales, viral events) produce sudden write bursts. Kafka absorbs the burst; consumers process at a steady rate.
 \`\`\`
   Without Kafka:
     Spike: 50K writes/s → DB max: 5K writes/s → DB overwhelmed → errors
@@ -7025,7 +7025,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     Queue depth grows during spike, drains afterward
 \`\`\`
 
-2. **Multiple consumers**: One write can feed multiple downstream systems without the producer knowing about them.
+2. Multiple consumers: One write can feed multiple downstream systems without the producer knowing about them.
 \`\`\`
   Producer → Kafka Topic → Consumer 1: Primary DB
                          → Consumer 2: Search index (Elasticsearch)
@@ -7033,11 +7033,11 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
                          → Consumer 4: Cache invalidation
 \`\`\`
 
-3. **Ordering guarantees**: Messages with the same partition key are ordered within a partition, enabling ordered processing per entity.
+3. Ordering guarantees: Messages with the same partition key are ordered within a partition, enabling ordered processing per entity.
 
-4. **Replay and recovery**: Kafka retains messages for a configurable period (days to weeks). If a consumer crashes, it can replay from its last committed offset.
+4. Replay and recovery: Kafka retains messages for a configurable period (days to weeks). If a consumer crashes, it can replay from its last committed offset.
 
-**Configuration for write buffering**:
+Configuration for write buffering:
 \`\`\`
   Topic: user-events
   Partitions: 32 (parallelism for consumers)
@@ -7053,13 +7053,13 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     max.poll.records=500 (batch size per poll)
 \`\`\`
 
-**Trade-off**: Using Kafka as a write buffer means the data in the database is eventually consistent — there is a delay between the producer writing to Kafka and the consumer writing to the database. For many use cases (analytics, search indexing, notifications) this delay is acceptable. For others (account balance), it is not.`
+Trade-off: Using Kafka as a write buffer means the data in the database is eventually consistent — there is a delay between the producer writing to Kafka and the consumer writing to the database. For many use cases (analytics, search indexing, notifications) this delay is acceptable. For others (account balance), it is not.`
       },
       {
         question: 'How do LSM trees and append-only storage optimize write performance?',
-        answer: `**LSM trees (Log-Structured Merge trees)** convert random writes into sequential writes, achieving write throughput that is 10-100x higher than traditional B-tree storage.
+        answer: `LSM trees (Log-Structured Merge trees) convert random writes into sequential writes, achieving write throughput that is 10-100x higher than traditional B-tree storage.
 
-**The random vs sequential write problem**:
+The random vs sequential write problem:
 \`\`\`
   B-tree (traditional RDBMS):
     Write → find page → update in-place → random I/O
@@ -7071,7 +7071,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     All disk writes are sequential → 10,000-100,000 writes/s
 \`\`\`
 
-**LSM tree write path**:
+LSM tree write path:
 \`\`\`
   1. Write arrives
   2. Append to Write-Ahead Log (sequential, durable)
@@ -7083,7 +7083,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   5. Background compaction merges SSTables (levels)
 \`\`\`
 
-**Compaction** — the background maintenance:
+Compaction — the background maintenance:
 \`\`\`
   Level 0: Recent SSTables (flushed from memtable)
   Level 1: Merged SSTables (compacted from L0)
@@ -7095,7 +7095,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Leveled: each level is 10x larger, non-overlapping (RocksDB default)
 \`\`\`
 
-**Write amplification** — the cost of LSM trees:
+Write amplification — the cost of LSM trees:
 \`\`\`
   A single write may be written multiple times:
     1. WAL (1x)
@@ -7106,7 +7106,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Total write amplification: 10-30x (leveled compaction)
 \`\`\`
 
-**LSM trees in practice**:
+LSM trees in practice:
 \`\`\`
   | System          | LSM Engine                |
   | --------------- | ------------------------- |
@@ -7119,13 +7119,13 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   | InfluxDB        | Custom TSM (time-series)  |
 \`\`\`
 
-**Trade-off**: LSM trees optimize writes at the cost of reads. Reading a key may require checking the memtable, then each SSTable level. Bloom filters mitigate this — they quickly determine if a key is NOT in an SSTable, avoiding unnecessary disk reads.`
+Trade-off: LSM trees optimize writes at the cost of reads. Reading a key may require checking the memtable, then each SSTable level. Bloom filters mitigate this — they quickly determine if a key is NOT in an SSTable, avoiding unnecessary disk reads.`
       },
       {
         question: 'How do you handle write conflicts in a sharded or multi-region database?',
         answer: `Write conflicts arise when two writers modify the same data concurrently, especially in systems with multiple active writers (multi-master, multi-region active-active).
 
-**Conflict types**:
+Conflict types:
 \`\`\`
   Lost update:
     T1: read balance=100 → compute 100+50=150 → write 150
@@ -7138,9 +7138,9 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     Which write wins?
 \`\`\`
 
-**Conflict resolution strategies**:
+Conflict resolution strategies:
 
-1. **Last-writer-wins (LWW)**: The write with the highest timestamp wins. Simple but can silently lose data.
+1. Last-writer-wins (LWW): The write with the highest timestamp wins. Simple but can silently lose data.
 \`\`\`
   Region A: {name: "Alice", timestamp: 1000}
   Region B: {name: "Bob",   timestamp: 1001}
@@ -7148,7 +7148,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Risk: clock skew can cause the "wrong" write to win
 \`\`\`
 
-2. **Version vectors**: Track the causal history of each write. Detect true conflicts (concurrent writes) vs resolved ones (one causally follows the other).
+2. Version vectors: Track the causal history of each write. Detect true conflicts (concurrent writes) vs resolved ones (one causally follows the other).
 \`\`\`
   No conflict (A follows B):
     B: [A:1, B:0] → A: [A:1, B:1]  (A has seen B's write)
@@ -7158,7 +7158,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     Neither dominates → conflict → application resolves
 \`\`\`
 
-3. **CRDTs (Conflict-free Replicated Data Types)**: Data structures designed so concurrent operations always merge without conflicts.
+3. CRDTs (Conflict-free Replicated Data Types): Data structures designed so concurrent operations always merge without conflicts.
 \`\`\`
   G-Counter (grow-only counter):
     Region A: {A: 5, B: 3}  → total = 8
@@ -7167,7 +7167,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     No conflict possible!
 \`\`\`
 
-4. **Application-level merge**: Store both conflicting versions, let the application or user resolve.
+4. Application-level merge: Store both conflicting versions, let the application or user resolve.
 \`\`\`
   Amazon shopping cart (Dynamo):
     Conflict: two versions of the cart exist
@@ -7175,7 +7175,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     User can fix by removing the unwanted item
 \`\`\`
 
-**Multi-region write architecture**:
+Multi-region write architecture:
 \`\`\`
   Option 1: Single-leader (write in one region, read everywhere)
     → No conflicts, but write latency for remote users
@@ -7187,34 +7187,34 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
     → No conflicts for most writes, low latency for local data
 \`\`\`
 
-**Recommendation**: Avoid multi-master for data that requires strong consistency. Use partitioned leaders — assign each user/entity to a home region, and route writes for that entity to its home region.`
+Recommendation: Avoid multi-master for data that requires strong consistency. Use partitioned leaders — assign each user/entity to a home region, and route writes for that entity to its home region.`
       },
       {
         question: 'How would you design a system to ingest millions of events per second (IoT/telemetry)?',
         answer: `Telemetry ingestion is a pure write-scaling problem. Sensors, devices, and applications generate enormous volumes of small events that must be captured, stored, and made queryable.
 
-**Architecture for high-volume ingestion** (top-down):
+Architecture for high-volume ingestion (top-down):
 
-1. **IoT devices / apps** produce millions of events per second.
-2. **Ingestion layer** — stateless and horizontally scalable. Sits behind an API Gateway / Load Balancer; ingestion workers validate, enrich, and route events.
-3. **Kafka / Kinesis** — durable, partitioned buffer.
+1. IoT devices / apps produce millions of events per second.
+2. Ingestion layer — stateless and horizontally scalable. Sits behind an API Gateway / Load Balancer; ingestion workers validate, enrich, and route events.
+3. Kafka / Kinesis — durable, partitioned buffer.
 4. The buffer fans out into two paths in parallel:
-   - **Real-time path** — stream processor (Flink, Spark) feeds real-time dashboards and alerts.
-   - **Batch path** — consumer drains into a time-series DB / data lake for historical queries and analytics.
+   - Real-time path — stream processor (Flink, Spark) feeds real-time dashboards and alerts.
+   - Batch path — consumer drains into a time-series DB / data lake for historical queries and analytics.
 
-**Ingestion optimizations**:
+Ingestion optimizations:
 
-1. **Protocol efficiency**: Use compact binary protocols (Protobuf, MessagePack) instead of JSON. 10x reduction in payload size.
+1. Protocol efficiency: Use compact binary protocols (Protobuf, MessagePack) instead of JSON. 10x reduction in payload size.
 \`\`\`
   JSON: {"device_id":"d123","temp":23.5,"ts":1705000000}  (52 bytes)
   Protobuf: [binary encoding]                              (12 bytes)
 \`\`\`
 
-2. **Client-side batching**: Devices buffer readings and send in batches (every 5-10 seconds) rather than per-reading.
+2. Client-side batching: Devices buffer readings and send in batches (every 5-10 seconds) rather than per-reading.
 
-3. **Partitioning by device_id**: Ensures all data from one device lands in the same partition, enabling per-device ordering and aggregation.
+3. Partitioning by device_id: Ensures all data from one device lands in the same partition, enabling per-device ordering and aggregation.
 
-4. **Time-partitioned storage**: Partition tables by time (hourly, daily). Old partitions can be compressed, moved to cold storage, or dropped.
+4. Time-partitioned storage: Partition tables by time (hourly, daily). Old partitions can be compressed, moved to cold storage, or dropped.
 \`\`\`
   telemetry_2024_01_15_00  (January 15, midnight hour)
   telemetry_2024_01_15_01  (January 15, 1am hour)
@@ -7222,7 +7222,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Old partitions → S3 (Parquet format, columnar, compressed)
 \`\`\`
 
-**Storage layer choices**:
+Storage layer choices:
 \`\`\`
   | System          | Write Speed   | Best For             |
   | --------------- | ------------- | -------------------- |
@@ -7233,7 +7233,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   | S3 + Parquet    | Unlimited     | Cold storage, batch  |
 \`\`\`
 
-**Key design decisions**:
+Key design decisions:
 - Accept eventual consistency — real-time dashboards showing data 5 seconds old are fine
 - Use Kafka as the durable buffer — it handles spikes and allows multiple consumers
 - Separate hot (recent, fast storage) from cold (historical, cheap storage) data
@@ -7241,11 +7241,11 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
       },
       {
         question: 'What is write amplification and how do you minimize it?',
-        answer: `**Write amplification** is the ratio of total bytes written to storage versus the logical bytes written by the application. A write amplification of 10x means for every 1 byte the application writes, 10 bytes are actually written to disk.
+        answer: `Write amplification is the ratio of total bytes written to storage versus the logical bytes written by the application. A write amplification of 10x means for every 1 byte the application writes, 10 bytes are actually written to disk.
 
-**Sources of write amplification**:
+Sources of write amplification:
 
-1. **LSM tree compaction**: Data is rewritten as it moves through compaction levels.
+1. LSM tree compaction: Data is rewritten as it moves through compaction levels.
 \`\`\`
   Logical write: 1KB
   WAL: 1KB
@@ -7258,7 +7258,7 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Worst case with leveled compaction: 10-30x
 \`\`\`
 
-2. **B-tree page splits**: Updating a single row may rewrite an entire 8-16KB page.
+2. B-tree page splits: Updating a single row may rewrite an entire 8-16KB page.
 \`\`\`
   Logical write: 100 bytes
   Page rewrite: 8192 bytes (the whole B-tree page)
@@ -7266,36 +7266,36 @@ Each strategy has fundamental trade-offs. Sharding distributes write load but ma
   Amplification: ~82x for small updates
 \`\`\`
 
-3. **Replication**: Each write is replicated to N nodes.
+3. Replication: Each write is replicated to N nodes.
 \`\`\`
   Replication factor 3: every write is amplified 3x
   Plus each replica's own internal amplification
 \`\`\`
 
-4. **Indexing**: Each secondary index requires an additional write.
+4. Indexing: Each secondary index requires an additional write.
 \`\`\`
   Table with 5 indexes:
   INSERT → 1 table write + 5 index writes = 6x amplification
 \`\`\`
 
-**Minimizing write amplification**:
+Minimizing write amplification:
 
-1. **Choose the right compaction strategy**:
+1. Choose the right compaction strategy:
 \`\`\`
   Size-tiered: lower write amplification (~5-10x), more space amplification
   Leveled: higher write amplification (~10-30x), less space amplification
   FIFO: no compaction for time-series data that is naturally ordered
 \`\`\`
 
-2. **Reduce unnecessary indexes**: Each index is a write multiplier. Only create indexes that are actively used by queries.
+2. Reduce unnecessary indexes: Each index is a write multiplier. Only create indexes that are actively used by queries.
 
-3. **Batch writes**: Larger writes amortize the per-write overhead. A 1MB batch write into a 4KB page has much lower amplification than 250 individual 4KB writes.
+3. Batch writes: Larger writes amortize the per-write overhead. A 1MB batch write into a 4KB page has much lower amplification than 250 individual 4KB writes.
 
-4. **Partition by time**: For time-series data, old partitions are immutable (no compaction needed). Only the current partition has write amplification.
+4. Partition by time: For time-series data, old partitions are immutable (no compaction needed). Only the current partition has write amplification.
 
-5. **Tune compaction**: Increase the size ratio between levels (e.g., from 10x to 20x) to reduce the number of levels and compaction events. Trade-off: larger read amplification (more files to check).
+5. Tune compaction: Increase the size ratio between levels (e.g., from 10x to 20x) to reduce the number of levels and compaction events. Trade-off: larger read amplification (more files to check).
 
-**Why it matters at scale**:
+Why it matters at scale:
 \`\`\`
   Application writes: 100 MB/s
   Write amplification: 20x
@@ -7369,16 +7369,16 @@ Batch Pipeline:
 
     introduction: `Large binary objects (blobs) — images, videos, documents, archives, database backups — present unique challenges that differ fundamentally from small, structured data. A 2GB video file cannot be handled the same way as a 500-byte JSON payload. The upload may take minutes on a slow connection, the transfer can be interrupted, the file must be stored durably and served efficiently to potentially millions of viewers, and the storage costs must be managed.
 
-The key architectural patterns for handling large blobs are: **chunked/resumable uploads** (splitting files into pieces to handle interruptions), **pre-signed URLs** (offloading upload and download traffic directly to object storage like S3, bypassing your application server), **content-addressable storage** (using the file's content hash as its key for automatic deduplication), and **CDN distribution** (caching files at edge locations close to users for fast delivery).
+The key architectural patterns for handling large blobs are: chunked/resumable uploads (splitting files into pieces to handle interruptions), pre-signed URLs (offloading upload and download traffic directly to object storage like S3, bypassing your application server), content-addressable storage (using the file's content hash as its key for automatic deduplication), and CDN distribution (caching files at edge locations close to users for fast delivery).
 
 Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine these patterns. The upload path and the download path are designed independently — uploads go directly to object storage via pre-signed URLs, while downloads are served through a CDN with aggressive caching. Asynchronous processing pipelines handle transcoding, thumbnail generation, virus scanning, and metadata extraction after the upload completes.`,
 
     keyQuestions: [
       {
         question: 'How do pre-signed URLs work and why are they essential for large file uploads?',
-        answer: `**Pre-signed URLs** are temporary, authenticated URLs generated by your backend that allow clients to upload or download files directly to/from object storage (S3, GCS, Azure Blob) without routing traffic through your application server.
+        answer: `Pre-signed URLs are temporary, authenticated URLs generated by your backend that allow clients to upload or download files directly to/from object storage (S3, GCS, Azure Blob) without routing traffic through your application server.
 
-**Upload flow with pre-signed URL**:
+Upload flow with pre-signed URL:
 \`\`\`
   1. Client → App Server: "I want to upload profile-photo.jpg (2MB)"
   2. App Server validates request, generates pre-signed URL:
@@ -7395,7 +7395,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
   7. App Server updates database with file reference
 \`\`\`
 
-**Why this is essential**:
+Why this is essential:
 \`\`\`
   Without pre-signed URLs:
     Client ──(2GB)──► App Server ──(2GB)──► S3
@@ -7414,20 +7414,20 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
     - App server remains available for other requests
 \`\`\`
 
-**Security considerations**:
+Security considerations:
 - Short expiration (5-15 minutes) limits the window of misuse
 - Restrict Content-Type to prevent uploading executable files
 - Set maximum Content-Length to prevent abuse
 - Use a separate S3 bucket for uploads (not your production bucket)
 - Validate the uploaded file asynchronously (virus scan, type verification)
 
-**Download pre-signed URLs**: Same concept in reverse — generate a temporary download URL that grants time-limited access to a private S3 object. Useful for paid content, user-specific files, or access-controlled documents.`
+Download pre-signed URLs: Same concept in reverse — generate a temporary download URL that grants time-limited access to a private S3 object. Useful for paid content, user-specific files, or access-controlled documents.`
       },
       {
         question: 'How do you implement resumable/chunked uploads for large files?',
-        answer: `**Resumable uploads** split a file into chunks that are uploaded independently. If the connection drops, only the last incomplete chunk needs to be re-uploaded, not the entire file.
+        answer: `Resumable uploads split a file into chunks that are uploaded independently. If the connection drops, only the last incomplete chunk needs to be re-uploaded, not the entire file.
 
-**Why chunked uploads are necessary**:
+Why chunked uploads are necessary:
 \`\`\`
   1GB file on a 10 Mbps connection:
     Upload time: ~14 minutes
@@ -7437,7 +7437,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
   With chunking: resume from last completed chunk
 \`\`\`
 
-**tus protocol** (open standard for resumable uploads):
+tus protocol (open standard for resumable uploads):
 \`\`\`
   Step 1 — Create upload:
     POST /uploads
@@ -7469,7 +7469,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
     ...
 \`\`\`
 
-**S3 multipart upload**:
+S3 multipart upload:
 \`\`\`
   1. CreateMultipartUpload → returns upload_id
   2. UploadPart (part 1, 5MB) → returns ETag
@@ -7481,7 +7481,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
   Cleanup: AbortMultipartUpload if abandoned
 \`\`\`
 
-**Chunk size selection**:
+Chunk size selection:
 \`\`\`
   | Chunk size       | Pros                                      | Cons                                |
   | ---------------- | ----------------------------------------- | ----------------------------------- |
@@ -7490,13 +7490,13 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
   | Adaptive         | Best of both (adjusts to network speed)   | More complex implementation         |
 \`\`\`
 
-**Best practice**: Use 5-10MB chunks as a default. Implement client-side progress tracking and server-side chunk verification (checksum per chunk). Set a timeout on incomplete uploads (clean up after 24 hours).`
+Best practice: Use 5-10MB chunks as a default. Implement client-side progress tracking and server-side chunk verification (checksum per chunk). Set a timeout on incomplete uploads (clean up after 24 hours).`
       },
       {
         question: 'What is content-addressable storage and how does it enable deduplication?',
-        answer: `**Content-addressable storage (CAS)** uses the hash of a file's content as its storage key. Two files with identical content produce the same hash, and therefore the same key — they are stored only once regardless of how many times they are uploaded.
+        answer: `Content-addressable storage (CAS) uses the hash of a file's content as its storage key. Two files with identical content produce the same hash, and therefore the same key — they are stored only once regardless of how many times they are uploaded.
 
-**How it works**:
+How it works:
 \`\`\`
   File upload:
     1. Compute hash: SHA-256(file_content) → "a3f2b8c9d4e1..."
@@ -7512,7 +7512,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
     Both users' file records point to the same blob
 \`\`\`
 
-**Deduplication in practice (Dropbox model)**:
+Deduplication in practice (Dropbox model):
 \`\`\`
   files table:
     file_id | user_id | path           | blob_hash
@@ -7528,7 +7528,7 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
     def456  | s3://blobs/de/f4/def456...   | 500 KB | 1
 \`\`\`
 
-**Block-level deduplication** (for large files):
+Block-level deduplication (for large files):
 \`\`\`
   Instead of hashing the entire file, split into fixed-size blocks:
 
@@ -7545,27 +7545,27 @@ Production systems like YouTube, Dropbox, Google Drive, and GitHub all combine t
   Saves ~96% of storage and bandwidth for the update!
 \`\`\`
 
-**Variable-length chunking** (Rabin fingerprinting): Instead of fixed-size blocks, use content-defined boundaries. This handles insertions at the beginning of the file without invalidating all subsequent block boundaries.
+Variable-length chunking (Rabin fingerprinting): Instead of fixed-size blocks, use content-defined boundaries. This handles insertions at the beginning of the file without invalidating all subsequent block boundaries.
 
-**Garbage collection**: When a blob's reference count drops to zero (all files pointing to it are deleted), the blob can be garbage collected. Use a background job that periodically scans for unreferenced blobs.
+Garbage collection: When a blob's reference count drops to zero (all files pointing to it are deleted), the blob can be garbage collected. Use a background job that periodically scans for unreferenced blobs.
 
-**Systems using CAS**: Git (content-addressable objects), Docker (image layers), IPFS (content-addressed distributed storage), Dropbox (block-level dedup), Venti (Plan 9 archival storage).`
+Systems using CAS: Git (content-addressable objects), Docker (image layers), IPFS (content-addressed distributed storage), Dropbox (block-level dedup), Venti (Plan 9 archival storage).`
       },
       {
         question: 'How do you design a media processing pipeline for uploaded files?',
         answer: `After a file is uploaded, it typically needs processing: images need thumbnails, videos need transcoding, documents need text extraction, and all files need virus scanning. This processing must be asynchronous — the user should not wait for it.
 
-**Architecture**: when an upload completes, the upload service emits a \`file.uploaded\` event onto Kafka / SQS. That event fans out to multiple processors in parallel:
+Architecture: when an upload completes, the upload service emits a \`file.uploaded\` event onto Kafka / SQS. That event fans out to multiple processors in parallel:
 
-- **Virus scanner** → quarantine or approve.
-- **Metadata extractor** → EXIF, duration, dimensions.
-- **Thumbnail generator** → multiple sizes.
-- **Video transcoder** → multiple formats/resolutions.
-- **Text extractor (OCR/PDF)** → searchable text.
+- Virus scanner → quarantine or approve.
+- Metadata extractor → EXIF, duration, dimensions.
+- Thumbnail generator → multiple sizes.
+- Video transcoder → multiple formats/resolutions.
+- Text extractor (OCR/PDF) → searchable text.
 
 Each processor updates file status in the database. The client polls or receives a WebSocket notification when processing completes.
 
-**Image processing pipeline** — original upload is an 8MB, 4000x3000 JPEG. The pipeline derives:
+Image processing pipeline — original upload is an 8MB, 4000x3000 JPEG. The pipeline derives:
 
 | Variant | Dimensions | Approx size |
 |---|---|---|
@@ -7578,7 +7578,7 @@ Each processor updates file status in the database. The client polls or receives
 
 All variants are stored in S3 under a single prefix (e.g. \`images/abc123/original.jpg\`, \`images/abc123/thumb.jpg\`, \`images/abc123/small.webp\`, \`images/abc123/medium.webp\`, ...).
 
-**Video processing pipeline** — original upload is a 2GB 4K MOV. The pipeline derives:
+Video processing pipeline — original upload is a 2GB 4K MOV. The pipeline derives:
 
 | Variant | Codec | Bitrate |
 |---|---|---|
@@ -7591,7 +7591,7 @@ All variants are stored in S3 under a single prefix (e.g. \`images/abc123/origin
 
 Processing time: minutes to hours (use spot instances).
 
-**Processing status tracking**:
+Processing status tracking:
 \`\`\`
   file_processing_jobs:
     job_id | file_id | job_type      | status     | progress | error
@@ -7602,7 +7602,7 @@ Processing time: minutes to hours (use spot instances).
     j4     | f42     | transcode_1080| queued     | 0%       | null
 \`\`\`
 
-**Key design decisions**:
+Key design decisions:
 - Use a job queue (SQS, Celery, Bull) with retry and dead-letter capabilities
 - Process in priority order: virus scan first, thumbnails second (fast user feedback), then heavy processing
 - Use serverless (Lambda) or spot instances for cost-effective video transcoding
@@ -7613,9 +7613,9 @@ Processing time: minutes to hours (use spot instances).
         question: 'How do you efficiently serve large files to millions of users via CDN?',
         answer: `Serving large files at scale requires minimizing origin load, reducing latency through edge caching, and handling partial content requests for streaming.
 
-**CDN architecture for file serving**: The user request lands at the nearest CDN Edge PoP. On a cache HIT the edge serves the file directly (2-20ms latency). On a cache MISS the edge fetches the file from the origin (S3), caches it locally for subsequent requests, and serves it to the user.
+CDN architecture for file serving: The user request lands at the nearest CDN Edge PoP. On a cache HIT the edge serves the file directly (2-20ms latency). On a cache MISS the edge fetches the file from the origin (S3), caches it locally for subsequent requests, and serves it to the user.
 
-**Range requests (essential for video streaming)**:
+Range requests (essential for video streaming):
 \`\`\`
   Client: GET /video.mp4
           Range: bytes=0-1048575    (first 1MB)
@@ -7630,7 +7630,7 @@ Processing time: minutes to hours (use spot instances).
 \`\`\`
 Range requests enable seeking in videos, resuming downloads, and parallel chunk downloads.
 
-**Adaptive bitrate streaming (HLS/DASH)**:
+Adaptive bitrate streaming (HLS/DASH):
 \`\`\`
   manifest.m3u8 (master playlist):
     #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
@@ -7650,7 +7650,7 @@ Range requests enable seeking in videos, resuming downloads, and parallel chunk 
 
 The player measures bandwidth and switches quality automatically. Each 10-second segment is a separate CDN object with its own cache lifetime.
 
-**Cache strategies for files**:
+Cache strategies for files:
 \`\`\`
   Immutable content (content-addressed):
     Cache-Control: public, max-age=31536000, immutable
@@ -7667,7 +7667,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     → Do not cache at CDN, use pre-signed URLs with short TTL
 \`\`\`
 
-**Cost optimization**:
+Cost optimization:
 - Use CDN for hot content (frequently accessed), S3 directly for cold content (rarely accessed)
 - Compress text-based files (SVG, JSON, XML) at the CDN edge (Brotli/gzip)
 - Set appropriate cache TTLs — longer TTLs = higher hit ratio = lower origin costs
@@ -7677,7 +7677,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
         question: 'How do you handle file upload validation and security?',
         answer: `File uploads are a major attack vector. Without proper validation, attackers can upload malware, web shells, oversized files that consume storage, or files that exploit image parsing vulnerabilities.
 
-**Validation layers** (defense in depth):
+Validation layers (defense in depth):
 
 \`\`\`
   Layer 1 — Client-side (UX only, not security):
@@ -7705,7 +7705,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     - Serve files from a separate domain (prevent cookie theft via uploaded HTML)
 \`\`\`
 
-**Magic byte validation**:
+Magic byte validation:
 \`\`\`
   // Check actual file type, not extension
   JPEG: starts with FF D8 FF
@@ -7718,7 +7718,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     reject("File type mismatch")
 \`\`\`
 
-**File size limits and quotas**:
+File size limits and quotas:
 \`\`\`
   Per-request limit:    100MB (reject larger uploads)
   Per-user storage:     5GB (free tier), 100GB (paid)
@@ -7731,7 +7731,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     ]
 \`\`\`
 
-**Serving uploaded files safely**:
+Serving uploaded files safely:
 \`\`\`
   Headers for serving user-uploaded content:
     Content-Disposition: attachment  (force download, don't render)
@@ -7743,23 +7743,23 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     → Isolated from main application cookies and auth
 \`\`\`
 
-**Best practice**: Treat every uploaded file as potentially malicious. Validate at every layer, scan asynchronously, store in isolation, and serve with restrictive headers.`
+Best practice: Treat every uploaded file as potentially malicious. Validate at every layer, scan asynchronously, store in isolation, and serve with restrictive headers.`
       },
       {
         question: 'How would you design a system like Dropbox for file sync across devices?',
         answer: `File sync is one of the most complex distributed systems problems — it combines large blob handling with conflict resolution, offline support, and real-time notifications.
 
-**Architecture**: Device A (laptop) and Device B (phone) each run a local filesystem with a file watcher and a sync client. Both clients talk to the cloud sync service through three components:
+Architecture: Device A (laptop) and Device B (phone) each run a local filesystem with a file watcher and a sync client. Both clients talk to the cloud sync service through three components:
 
-- **Block Server** — receives and serves content-addressed file chunks (deduplication boundary).
-- **Metadata Service** — stores the file tree, per-file version history, and per-device sync state.
-- **Notification Service** — real-time push (WebSocket / mobile push) so the other device wakes up when a peer uploads a change.
+- Block Server — receives and serves content-addressed file chunks (deduplication boundary).
+- Metadata Service — stores the file tree, per-file version history, and per-device sync state.
+- Notification Service — real-time push (WebSocket / mobile push) so the other device wakes up when a peer uploads a change.
 
-**Key components**:
+Key components:
 
-1. **File watcher**: Monitors the local filesystem for changes (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows).
+1. File watcher: Monitors the local filesystem for changes (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows).
 
-2. **Chunking engine**: Splits files into variable-length blocks using content-defined chunking (Rabin fingerprinting). This ensures that inserting bytes at the beginning of a file does not invalidate all chunks.
+2. Chunking engine: Splits files into variable-length blocks using content-defined chunking (Rabin fingerprinting). This ensures that inserting bytes at the beginning of a file does not invalidate all chunks.
 \`\`\`
   File (100MB) → [chunk1: 4.1MB, chunk2: 3.8MB, chunk3: 4.3MB, ...]
   Each chunk: hash = SHA-256(content)
@@ -7772,7 +7772,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
   Result: only ~4MB uploaded for a 1KB edit in a 100MB file
 \`\`\`
 
-3. **Metadata service**: Tracks the file tree — paths, versions, chunk lists, sharing permissions. This is a traditional database (PostgreSQL).
+3. Metadata service: Tracks the file tree — paths, versions, chunk lists, sharing permissions. This is a traditional database (PostgreSQL).
 \`\`\`
   files:
     file_id | path              | version | chunks
@@ -7781,11 +7781,11 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     f2      | /photos/cat.jpg   | 2       | [h5, h6]
 \`\`\`
 
-4. **Block server**: Stores and retrieves chunks by their content hash. Backed by S3 or similar object storage. Automatic deduplication — same content = same hash = stored once.
+4. Block server: Stores and retrieves chunks by their content hash. Backed by S3 or similar object storage. Automatic deduplication — same content = same hash = stored once.
 
-5. **Notification service**: Pushes real-time notifications when files change. Uses long-polling or WebSocket to inform devices of remote changes.
+5. Notification service: Pushes real-time notifications when files change. Uses long-polling or WebSocket to inform devices of remote changes.
 
-**Conflict resolution**:
+Conflict resolution:
 \`\`\`
   Device A (offline): edits report.pdf → version 8a
   Device B (offline): edits report.pdf → version 8b
@@ -7797,7 +7797,7 @@ The player measures bandwidth and switches quality automatically. Each 10-second
     User manually merges
 \`\`\`
 
-**Bandwidth optimization**:
+Bandwidth optimization:
 - Delta sync: only upload changed chunks
 - Compression: compress chunks before upload (LZ4 for speed)
 - Deduplication: skip upload if chunk hash already exists in cloud
@@ -7871,24 +7871,24 @@ Processing Job:
 
     introduction: `Many real-world operations take far longer than the typical HTTP request timeout (30 seconds). Report generation, video transcoding, data migration, machine learning training, PDF rendering, large data exports, and batch processing can take anywhere from seconds to hours. These operations cannot be handled within a synchronous request-response cycle.
 
-The standard pattern is to **accept the request, return immediately with a job ID, and process the work asynchronously** using a background worker. The client can then check the job's status via polling, receive updates via WebSocket, or be notified via webhook when the job completes. This decouples the user-facing API from the actual processing, allowing independent scaling and graceful handling of failures.
+The standard pattern is to accept the request, return immediately with a job ID, and process the work asynchronously using a background worker. The client can then check the job's status via polling, receive updates via WebSocket, or be notified via webhook when the job completes. This decouples the user-facing API from the actual processing, allowing independent scaling and graceful handling of failures.
 
-The challenge lies in **reliability**: workers crash, tasks get stuck, downstream services become unavailable, and duplicate processing must be prevented. A robust long-running task system needs a persistent job queue, a state machine to track task lifecycle, heartbeat monitoring to detect stuck tasks, dead letter queues for tasks that repeatedly fail, and idempotent task handlers that produce the same result even when executed multiple times.`,
+The challenge lies in reliability: workers crash, tasks get stuck, downstream services become unavailable, and duplicate processing must be prevented. A robust long-running task system needs a persistent job queue, a state machine to track task lifecycle, heartbeat monitoring to detect stuck tasks, dead letter queues for tasks that repeatedly fail, and idempotent task handlers that produce the same result even when executed multiple times.`,
 
     keyQuestions: [
       {
         question: 'How do you design an asynchronous task processing system?',
-        answer: `**Architecture** — left to right:
+        answer: `Architecture — left to right:
 
-1. **Client** issues the request.
-2. **API Server** validates and returns a \`job_id\` immediately.
-3. **Job Queue** (durable) holds queued work.
-4. **Worker Pool** drains the queue and scales independently of the API.
-5. **Result Store** persists outputs and notifies the client.
+1. Client issues the request.
+2. API Server validates and returns a \`job_id\` immediately.
+3. Job Queue (durable) holds queued work.
+4. Worker Pool drains the queue and scales independently of the API.
+5. Result Store persists outputs and notifies the client.
 
 The client polls (or subscribes) for status using the \`job_id\` until the result is available.
 
-**Request flow**:
+Request flow:
 \`\`\`
   1. Client: POST /api/reports/generate {filters: {...}}
   2. API Server:
@@ -7905,7 +7905,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
      → {status: "completed", result_url: "/api/reports/job_abc/download"}
 \`\`\`
 
-**Job queue options**:
+Job queue options:
 \`\`\`
   | Queue                    | Best For                         |
   | ------------------------ | -------------------------------- |
@@ -7917,7 +7917,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
   | PostgreSQL (SKIP LOCKED) | No additional infra              |
 \`\`\`
 
-**PostgreSQL as a job queue** (simple, no extra infrastructure):
+PostgreSQL as a job queue (simple, no extra infrastructure):
 \`\`\`
   CREATE TABLE jobs (
     id UUID PRIMARY KEY,
@@ -7951,7 +7951,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
         question: 'How do you implement task timeout, heartbeat, and stuck task recovery?',
         answer: `Tasks get stuck for many reasons: worker crashes, out-of-memory kills, infinite loops, deadlocks, or network calls that never return. Without detection and recovery, stuck tasks block the queue and waste resources.
 
-**Heartbeat pattern**:
+Heartbeat pattern:
 \`\`\`
   Worker processing a task:
     1. Pick up job, set locked_at = NOW()
@@ -7970,7 +7970,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
     -- Tasks with attempts >= max_attempts → move to dead letter queue
 \`\`\`
 
-**Visibility timeout pattern** (SQS model):
+Visibility timeout pattern (SQS model):
 \`\`\`
   1. Worker receives message (invisibility period starts: 5 minutes)
   2. Other workers cannot see this message for 5 minutes
@@ -7981,7 +7981,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
         → Another worker picks it up
 \`\`\`
 
-**Timeout strategies per task type**:
+Timeout strategies per task type:
 \`\`\`
   | Task Type              | Timeout   | Heartbeat   |
   | ---------------------- | --------- | ----------- |
@@ -7992,7 +7992,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
   | ML training job        | 24 hours  | Every 5 min |
 \`\`\`
 
-**Circuit breaker for downstream services**:
+Circuit breaker for downstream services:
 \`\`\`
   If a task fails because a downstream service is down:
     After 5 consecutive failures:
@@ -8006,7 +8006,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
       → If failure → OPEN circuit again
 \`\`\`
 
-**Monitoring alerts**:
+Monitoring alerts:
 - Queue depth growing → workers not keeping up
 - Average processing time increasing → degradation
 - Dead letter queue growing → recurring failures need investigation
@@ -8016,7 +8016,7 @@ The client polls (or subscribes) for status using the \`job_id\` until the resul
         question: 'Compare polling, webhooks, and WebSocket for notifying clients about task completion.',
         answer: `Clients need to know when their long-running task completes. Three main notification mechanisms serve this purpose, each with different trade-offs.
 
-**Polling** — client periodically asks "is it done yet?":
+Polling — client periodically asks "is it done yet?":
 \`\`\`
   Client:
     setInterval(async () => {
@@ -8038,7 +8038,7 @@ Cons:
 - Delay between completion and notification (up to poll interval)
 - Many concurrent polls can load the API server
 
-**Webhooks** — server calls client's URL when done:
+Webhooks — server calls client's URL when done:
 \`\`\`
   Client submits job:
     POST /api/jobs
@@ -8060,7 +8060,7 @@ Cons:
 - Security: how does the client verify the webhook is genuine? (HMAC signatures)
 - Not suitable for browser clients (browsers do not expose HTTP endpoints)
 
-**WebSocket** — persistent connection, server pushes updates:
+WebSocket — persistent connection, server pushes updates:
 \`\`\`
   Client:
     const ws = new WebSocket('wss://api.example.com/ws');
@@ -8084,7 +8084,7 @@ Cons:
 - Connection management (reconnection, heartbeat)
 - Not suitable for server-to-server or mobile push when app is backgrounded
 
-**Recommendation by use case**:
+Recommendation by use case:
 \`\`\`
   | Use Case                 | Best Mechanism                       |
   | ------------------------ | ------------------------------------ |
@@ -8095,15 +8095,15 @@ Cons:
   | Dashboard with many jobs | SSE (server-sent events)             |
 \`\`\`
 
-**Hybrid approach** (most robust): Return a poll URL in the initial response. Optionally accept a webhook URL. If the client connects via WebSocket, push updates. This covers all client types.`
+Hybrid approach (most robust): Return a poll URL in the initial response. Optionally accept a webhook URL. If the client connects via WebSocket, push updates. This covers all client types.`
       },
       {
         question: 'How do you implement priority queues for task scheduling?',
         answer: `Not all tasks are equally urgent. A user waiting for a PDF download is more time-sensitive than a nightly analytics job. Priority queues ensure high-priority tasks are processed before low-priority ones.
 
-**Priority implementation strategies**:
+Priority implementation strategies:
 
-1. **Separate queues per priority**:
+1. Separate queues per priority:
 \`\`\`
   Queue: high-priority    → Workers check this first
   Queue: normal-priority  → Workers check this second
@@ -8118,7 +8118,7 @@ Cons:
 Pros: Simple, prevents starvation with weighted processing
 Cons: Low-priority tasks may starve if high-priority queue is always full
 
-2. **Weighted fair queuing**:
+2. Weighted fair queuing:
 \`\`\`
   Process 70% from high, 20% from normal, 10% from low:
     Pick a random number 0-100:
@@ -8129,7 +8129,7 @@ Cons: Low-priority tasks may starve if high-priority queue is always full
 
 Prevents starvation while still favoring high-priority tasks.
 
-3. **Database-level priority (PostgreSQL)**:
+3. Database-level priority (PostgreSQL):
 \`\`\`
   SELECT * FROM jobs
   WHERE status = 'queued'
@@ -8141,7 +8141,7 @@ Prevents starvation while still favoring high-priority tasks.
   -- Within same priority, FIFO ordering
 \`\`\`
 
-4. **BullMQ priority queues**:
+4. BullMQ priority queues:
 \`\`\`
   // Lower number = higher priority
   await queue.add('task', data, { priority: 1 });  // urgent
@@ -8149,7 +8149,7 @@ Prevents starvation while still favoring high-priority tasks.
   await queue.add('task', data, { priority: 10 }); // background
 \`\`\`
 
-**Priority assignment guidelines**:
+Priority assignment guidelines:
 \`\`\`
   | Priority   | Examples                              |
   | ---------- | ------------------------------------- |
@@ -8160,7 +8160,7 @@ Prevents starvation while still favoring high-priority tasks.
   | Background | Data cleanup, cache warming           |
 \`\`\`
 
-**Dynamic priority adjustment**:
+Dynamic priority adjustment:
 \`\`\`
   Age-based priority boost:
     effective_priority = base_priority + (age_in_minutes / 10)
@@ -8172,13 +8172,13 @@ Prevents starvation while still favoring high-priority tasks.
   Prevents indefinite starvation of low-priority tasks
 \`\`\`
 
-**Dedicated workers for priority levels**: For critical tasks, reserve dedicated workers that only process the high-priority queue. This guarantees capacity even when normal queues are backed up.`
+Dedicated workers for priority levels: For critical tasks, reserve dedicated workers that only process the high-priority queue. This guarantees capacity even when normal queues are backed up.`
       },
       {
         question: 'How do you implement graceful cancellation of long-running tasks?',
         answer: `Users change their minds. A report that takes 10 minutes may no longer be needed. Without graceful cancellation, the system wastes resources processing unwanted work, and users have no way to stop it.
 
-**Cancellation architecture**:
+Cancellation architecture:
 \`\`\`
   Client: DELETE /api/jobs/abc (or POST /api/jobs/abc/cancel)
   API Server:
@@ -8194,7 +8194,7 @@ Prevents starvation while still favoring high-priority tasks.
         return
 \`\`\`
 
-**Cooperative cancellation** (worker checks for cancellation signal):
+Cooperative cancellation (worker checks for cancellation signal):
 \`\`\`
   async function processReport(jobId, data) {
     const pages = await getPages(data);
@@ -8214,7 +8214,7 @@ Prevents starvation while still favoring high-priority tasks.
   }
 \`\`\`
 
-**Cancellation of queued (not yet started) tasks**:
+Cancellation of queued (not yet started) tasks:
 \`\`\`
   If task is still in queue:
     Option 1: Remove from queue directly (if queue supports it)
@@ -8222,7 +8222,7 @@ Prevents starvation while still favoring high-priority tasks.
       Worker picks up job → check DB status → if CANCELLING → skip, acknowledge
 \`\`\`
 
-**Cancellation of external operations**:
+Cancellation of external operations:
 \`\`\`
   Task calls external API (e.g., video transcoding service):
     1. Task starts transcoding via API → receives external_job_id
@@ -8233,7 +8233,7 @@ Prevents starvation while still favoring high-priority tasks.
        c. Update status → CANCELLED
 \`\`\`
 
-**Cancellation state machine**:
+Cancellation state machine:
 \`\`\`
   QUEUED ──► CANCELLED (simple, remove from queue)
   PROCESSING ──► CANCELLING ──► CANCELLED (cooperative shutdown)
@@ -8242,27 +8242,27 @@ Prevents starvation while still favoring high-priority tasks.
   FAILED ──► (already terminal, no cancellation needed)
 \`\`\`
 
-**Cleanup on cancellation**:
+Cleanup on cancellation:
 - Delete partial results from storage (S3)
 - Release any held locks or reservations
 - Refund any consumed resources (credits, API calls) if applicable
 - Log the cancellation reason for analytics
 
-**Key principle**: Cancellation must be cooperative. You cannot safely kill a worker mid-operation (risk of corrupted state, unreleased locks, partial writes). The worker must check for the cancellation signal and clean up gracefully.`
+Key principle: Cancellation must be cooperative. You cannot safely kill a worker mid-operation (risk of corrupted state, unreleased locks, partial writes). The worker must check for the cancellation signal and clean up gracefully.`
       },
       {
         question: 'How do you design a distributed task scheduler for recurring and scheduled jobs?',
         answer: `A distributed task scheduler handles cron-like recurring jobs and one-time scheduled tasks across a cluster of workers, ensuring each job executes exactly once even when multiple scheduler instances are running.
 
-**Architecture** (top-down):
+Architecture (top-down):
 
-1. **Schedule Store** (PostgreSQL) — durable schedule definitions and \`next_run_at\` per job.
-2. **Scheduler Service** — 2+ instances for HA; leader election picks a single active scheduler at any moment.
-3. **Job Queue** (Redis / Kafka) — the active scheduler enqueues due jobs.
-4. **Worker Pool** — N workers (auto-scaling) drain the queue.
-5. **Result Store + Notification** — workers persist results and notify clients.
+1. Schedule Store (PostgreSQL) — durable schedule definitions and \`next_run_at\` per job.
+2. Scheduler Service — 2+ instances for HA; leader election picks a single active scheduler at any moment.
+3. Job Queue (Redis / Kafka) — the active scheduler enqueues due jobs.
+4. Worker Pool — N workers (auto-scaling) drain the queue.
+5. Result Store + Notification — workers persist results and notify clients.
 
-**Schedule storage**:
+Schedule storage:
 \`\`\`
   CREATE TABLE schedules (
     schedule_id    UUID PRIMARY KEY,
@@ -8289,7 +8289,7 @@ Prevents starvation while still favoring high-priority tasks.
   );
 \`\`\`
 
-**Exactly-once scheduling** (the critical challenge):
+Exactly-once scheduling (the critical challenge):
 \`\`\`
   Problem: Two scheduler instances both see next_run_at has passed
            Both enqueue the job → duplicate execution!
@@ -8305,7 +8305,7 @@ Prevents starvation while still favoring high-priority tasks.
   If rows_affected = 0 → another scheduler already enqueued this run
 \`\`\`
 
-**Scheduler service leader election**:
+Scheduler service leader election:
 \`\`\`
   Option 1: Database-based (simple)
     SELECT pg_try_advisory_lock(12345);
@@ -8320,7 +8320,7 @@ Prevents starvation while still favoring high-priority tasks.
     Most robust, automatic failover
 \`\`\`
 
-**Scheduler loop**:
+Scheduler loop:
 \`\`\`
   while true:
     // Find all schedules whose next_run_at has passed
@@ -8342,7 +8342,7 @@ Prevents starvation while still favoring high-priority tasks.
     sleep(1 second);
 \`\`\`
 
-**Handling missed runs**: If the scheduler was down and missed a scheduled run:
+Handling missed runs: If the scheduler was down and missed a scheduled run:
 \`\`\`
   Policies:
     SKIP:    Skip missed runs, schedule next future run
@@ -8350,13 +8350,13 @@ Prevents starvation while still favoring high-priority tasks.
     COALESCE: Execute one catch-up run for all missed, then resume
 \`\`\`
 
-**Production systems**: Kubernetes CronJobs, Airflow, Temporal, Celery Beat, Quartz (Java), APScheduler (Python). Each provides scheduler HA, exactly-once guarantees, and monitoring.`
+Production systems: Kubernetes CronJobs, Airflow, Temporal, Celery Beat, Quartz (Java), APScheduler (Python). Each provides scheduler HA, exactly-once guarantees, and monitoring.`
       },
       {
         question: 'How do you handle progress tracking and user experience for long-running operations?',
         answer: `Progress tracking transforms a frustrating "loading spinner" into an informative experience. Users who see concrete progress are significantly more patient and less likely to abandon or retry (which would create duplicate work).
 
-**Progress reporting architecture**:
+Progress reporting architecture:
 
 | Step | Worker | Progress Store (Redis) | Client |
 |---|---|---|---|
@@ -8365,7 +8365,7 @@ Prevents starvation while still favoring high-priority tasks.
 | 3 |  | Returns the current progress payload | Renders the bar / stage / message |
 | 4 | When done, write final state | \`SET status: completed\` | Receives the completion signal |
 
-**Granular progress reporting**:
+Granular progress reporting:
 \`\`\`
   Simple percentage:
     {progress: 0.65}  // 65%
@@ -8386,7 +8386,7 @@ Prevents starvation while still favoring high-priority tasks.
     }
 \`\`\`
 
-**Estimation accuracy**:
+Estimation accuracy:
 \`\`\`
   Naive: progress = items_processed / total_items
     Problem: not all items take the same time
@@ -8406,7 +8406,7 @@ Prevents starvation while still favoring high-priority tasks.
   ) * smoothing_factor
 \`\`\`
 
-**UX patterns for long-running tasks**:
+UX patterns for long-running tasks:
 \`\`\`
   Duration < 3s:
     → Inline loading spinner, no progress bar
@@ -8430,13 +8430,13 @@ Prevents starvation while still favoring high-priority tasks.
     → Historical duration statistics
 \`\`\`
 
-**Anti-patterns to avoid**:
+Anti-patterns to avoid:
 - Progress bars that jump from 0% to 99% and stall (bad estimation)
 - Progress that goes backward (never decrease the displayed percentage)
 - "Estimated time: 2 minutes" that turns into 20 minutes (use ranges instead)
 - No feedback at all for tasks > 3 seconds (users will retry/refresh)
 
-**Storage for progress updates**: Use Redis with TTL for transient progress data. Do not write progress to PostgreSQL on every update — the write frequency would be too high (use Redis, then write final state to PostgreSQL on completion).`
+Storage for progress updates: Use Redis with TTL for transient progress data. Do not write progress to PostgreSQL on every update — the write frequency would be too high (use Redis, then write final state to PostgreSQL on completion).`
       },
     ],
 

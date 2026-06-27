@@ -12,9 +12,9 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'devop
 os.makedirs(OUT, exist_ok=True)
 
 # Same shared style as gen-sre-diagrams.py — visual consistency across categories.
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
-            fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
+            fontsize='12', penwidth='1.5', height='0.45', margin='0.22,0.12')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -41,10 +41,10 @@ def e(g, a, b, label='', color='#475569', style='solid'):
 
 def base_graph(name, title):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.5', nodesep='0.7', ranksep='0.65',
            splines='spline', rankdir='LR',
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica', fontcolor='#1e293b')
     return g
 
 

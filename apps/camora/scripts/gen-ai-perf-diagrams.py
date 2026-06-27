@@ -10,15 +10,15 @@ os.makedirs(OUT_DIR, exist_ok=True)
 # ─── Shared style ────────────────────────────────────────────────────────────
 BASE_GRAPH = {
     'bgcolor': '#ffffff',
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'pad': '0.5',
     'nodesep': '0.55',
     'ranksep': '0.8',
-    'dpi': '180',
+    'dpi': '200',
     'splines': 'ortho',
 }
 BASE_NODE = {
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '11',
     'penwidth': '1.5',
     'height': '0.45',
@@ -27,7 +27,7 @@ BASE_NODE = {
     'shape': 'box',
 }
 BASE_EDGE = {
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '9',
     'penwidth': '1.6',
     'color': '#64748b',
@@ -61,7 +61,7 @@ def node(g, n, label, pk):
 def header_node(g, n, label):
     c = P['header']
     g.node(n, label, fillcolor=c['fill'], color=c['border'], fontcolor=c['font'],
-           fontsize='12', fontname='Helvetica Neue', penwidth='0', style='filled,rounded',
+           fontsize='12', fontname='Helvetica', penwidth='0', style='filled,rounded',
            shape='box', height='0.4', margin='0.2,0.1')
 
 def edge(g, a, b, label='', **kw):
@@ -85,11 +85,11 @@ def gpu_architecture_overview():
 
     with g.subgraph(name='cluster_gpu') as c:
         c.attr(label='GPU Die', style='filled,rounded', fillcolor='#f8fafc',
-               color='#94a3b8', fontname='Helvetica Neue', fontsize='11', penwidth='1.5')
+               color='#94a3b8', fontname='Helvetica', fontsize='11', penwidth='1.5')
 
         with c.subgraph(name='cluster_sms') as s:
             s.attr(label='132 x Streaming Multiprocessor (SM)', style='filled,rounded',
-                   fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica Neue',
+                   fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica',
                    fontsize='10', penwidth='1.2')
             node(s, 'cuda_cores', '128 FP32 CUDA Cores', 'sm')
             node(s, 'tc', '4x Tensor Core Groups\n(BF16 / FP8)', 'gpu')
@@ -102,13 +102,13 @@ def gpu_architecture_overview():
 
     with g.subgraph(name='cluster_connect') as c:
         c.attr(label='Interconnect', style='filled,rounded', fillcolor='#f0fdf4',
-               color='#16a34a', fontname='Helvetica Neue', fontsize='10', penwidth='1.2')
+               color='#16a34a', fontname='Helvetica', fontsize='10', penwidth='1.2')
         node(c, 'nvlink', 'NVLink 4.0\n900 GB/s bidi', 'nvlink')
         node(c, 'pcie', 'PCIe 5.0\n128 GB/s bidi', 'slate')
 
     with g.subgraph(name='cluster_roof') as c:
         c.attr(label='Roofline Ceilings (H100 SXM5)', style='filled,rounded', fillcolor='#fefce8',
-               color='#ca8a04', fontname='Helvetica Neue', fontsize='10', penwidth='1.2')
+               color='#ca8a04', fontname='Helvetica', fontsize='10', penwidth='1.2')
         node(c, 'fp32', 'FP32: 67 TFLOPS', 'warn')
         node(c, 'bf16', 'BF16 Tensor: 1979 TFLOPS', 'good')
         node(c, 'fp8', 'FP8 Tensor: 3958 TFLOPS', 'teal')
@@ -145,7 +145,7 @@ def cuda_memory_hierarchy():
 
     with g.subgraph(name='cluster_opt') as c:
         c.attr(label='Optimization Techniques', style='filled,rounded',
-               fillcolor='#f0f9ff', color='#0284c7', fontname='Helvetica Neue',
+               fillcolor='#f0f9ff', color='#0284c7', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'coal',   'Coalesced Access\nthread[i] -> base+i\n1 transaction/warp', 'blue')
         node(c, 'tile',   'Tiling (GEMM)\nNaive: 0.25 FLOPs/B\nT=32: 8 FLOPs/B', 'teal')
@@ -175,7 +175,7 @@ def cuda_kernel_profiling():
 
     with g.subgraph(name='cluster_nsys') as c:
         c.attr(label='Nsight Systems Findings', style='filled,rounded',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'gpu_idle', 'GPU Idle Gap\n-> CPU bottleneck', 'warn')
         node(c, 'h2d',      'H2D Transfer Stall\n-> async prefetch', 'warn')
@@ -183,7 +183,7 @@ def cuda_kernel_profiling():
 
     with g.subgraph(name='cluster_ncu') as c:
         c.attr(label='Nsight Compute Sections', style='filled,rounded',
-               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica Neue',
+               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'mem_bw',  'Memory BW < 60%\n-> coalescing issue', 'mem')
         node(c, 'tc_util', 'TC Util < 50%\n-> bad tile size', 'gpu')
@@ -192,7 +192,7 @@ def cuda_kernel_profiling():
 
     with g.subgraph(name='cluster_fix') as c:
         c.attr(label='Targeted Fixes', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'fix_coal',  'Coalesce Access\nunit-stride loads', 'good')
         node(c, 'fix_tile',  'Tile into SMEM\nboost arith intensity', 'good')
@@ -227,7 +227,7 @@ def distributed_training_nccl():
 
     with g.subgraph(name='cluster_coll') as c:
         c.attr(label='NCCL Collective Operations', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'allreduce',     'AllReduce\nSum grads all GPUs\n2P x N_gpu FLOPs', 'good')
         node(c, 'reducescatter', 'ReduceScatter\nEach GPU gets 1/N shard\n(FSDP backward)', 'teal')
@@ -237,7 +237,7 @@ def distributed_training_nccl():
 
     with g.subgraph(name='cluster_par') as c:
         c.attr(label='Parallelism Strategies', style='filled,rounded',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'dp',   'Data Parallel (DP)\nReplicate model\nAllReduce grads', 'blue')
         node(c, 'fsdp', 'FSDP\nShard params+grads+opt\nAllGather fwd / RS bwd', 'sky')
@@ -247,7 +247,7 @@ def distributed_training_nccl():
 
     with g.subgraph(name='cluster_inter') as c:
         c.attr(label='Interconnect', style='filled,rounded', fillcolor='#fef9c3',
-               color='#ca8a04', fontname='Helvetica Neue', fontsize='10', penwidth='1.2')
+               color='#ca8a04', fontname='Helvetica', fontsize='10', penwidth='1.2')
         node(c, 'nvl', 'NVLink 4.0\n900 GB/s -> TP within node', 'nvlink')
         node(c, 'ib',  'InfiniBand NDR\n50 GB/s -> PP/DP across nodes', 'warn')
 
@@ -270,7 +270,7 @@ def llm_kv_cache_batching():
 
     with g.subgraph(name='cluster_kv') as c:
         c.attr(label='KV Cache Mechanics', style='filled,rounded',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'prefill',  'Prefill Phase\nProcess prompt tokens\n(compute-bound)', 'blue')
         node(c, 'decode',   'Decode Phase\nGenerate 1 token/step\n(memory-bound)', 'indigo')
@@ -282,7 +282,7 @@ def llm_kv_cache_batching():
 
     with g.subgraph(name='cluster_batch') as c:
         c.attr(label='Batching Strategies', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'static_b',  'Static Batching\nWait for batch fill\n-> high latency', 'slow')
         node(c, 'cont_b',    'Continuous Batching\nInsert req mid-flight\n-> high throughput', 'good')
@@ -310,7 +310,7 @@ def disaggregated_prefill_decode():
 
     with g.subgraph(name='cluster_p') as c:
         c.attr(label='Prefill Fleet (compute-bound)', style='filled,rounded',
-               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'p1', 'Prefill GPU 0\nPrompt -> K,V', 'blue')
         node(c, 'p2', 'Prefill GPU 1\nPrompt -> K,V', 'blue')
@@ -318,13 +318,13 @@ def disaggregated_prefill_decode():
 
     with g.subgraph(name='cluster_xfer') as c:
         c.attr(label='KV Transfer Layer', style='filled,rounded',
-               fillcolor='#fef9c3', color='#ca8a04', fontname='Helvetica Neue',
+               fillcolor='#fef9c3', color='#ca8a04', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'kv_xfer', 'KV Cache Transfer\nNVLink / RDMA', 'warn')
 
     with g.subgraph(name='cluster_d') as c:
         c.attr(label='Decode Fleet (memory-bound)', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'd1', 'Decode GPU 0\nToken generation', 'good')
         node(c, 'd2', 'Decode GPU 1\nToken generation', 'good')
@@ -332,7 +332,7 @@ def disaggregated_prefill_decode():
 
     with g.subgraph(name='cluster_why') as c:
         c.attr(label='Why Disaggregate?', style='filled,rounded',
-               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica Neue',
+               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'co_loc',   'Coupled (vLLM v1)\nPrefill preempts decode\n-> TPOT jitter', 'rose')
         node(c, 'disagg_b', 'Disaggregated\nScale P & D independently\n-> TTFT + TPOT SLOs', 'gpu')
@@ -363,21 +363,21 @@ def speculative_decoding():
 
     with g.subgraph(name='cluster_draft') as c:
         c.attr(label='Draft Phase (fast)', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'draft_model', 'Draft Model\n(small: 1B-7B)\nautoregressive\ngamma tokens', 'good')
         node(c, 'candidates',  'Candidate Tokens\nt1, t2, ..., t_gamma', 'teal')
 
     with g.subgraph(name='cluster_verify') as c:
         c.attr(label='Verify Phase (single forward pass)', style='filled,rounded',
-               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'target_model', 'Target Model\n(large: 70B-405B)\ngamma+1 tokens\nONE pass', 'blue')
         node(c, 'accept',       'Acceptance Sampling\nalpha = min(1, p_target/p_draft)', 'indigo')
 
     with g.subgraph(name='cluster_out') as c:
         c.attr(label='Outcome', style='filled,rounded',
-               fillcolor='#fef9c3', color='#ca8a04', fontname='Helvetica Neue',
+               fillcolor='#fef9c3', color='#ca8a04', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'accept_all', 'All Accepted\ngamma+1 tokens/step\ngamma x throughput', 'good')
         node(c, 'partial',    'Partial Accept\nk+1 tokens/step\nfallback at first reject', 'warn')
@@ -403,7 +403,7 @@ def quantization_model_compression():
 
     with g.subgraph(name='cluster_prec') as c:
         c.attr(label='Precision Formats (Memory per Parameter)', style='filled,rounded',
-               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica Neue',
+               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'fp32', 'FP32 — 4 bytes\nBaseline compute', 'slow')
         node(c, 'bf16', 'BF16 — 2 bytes\nTraining standard\n1979 TFLOPS (H100 TC)', 'warn')
@@ -419,7 +419,7 @@ def quantization_model_compression():
 
     with g.subgraph(name='cluster_methods') as c:
         c.attr(label='Quantization Methods', style='filled,rounded',
-               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'ptq',  'PTQ\nNo retraining\nCalibration dataset', 'blue')
         node(c, 'qat',  'QAT\nFine-tune w/ fake quant\nBest accuracy', 'indigo')
@@ -432,7 +432,7 @@ def quantization_model_compression():
 
     with g.subgraph(name='cluster_tradeoff') as c:
         c.attr(label='Tradeoffs', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'mem_save', 'Memory: 2-8x reduction\n-> larger batch size\n-> higher throughput', 'good')
         node(c, 'acc_loss', 'Accuracy: <1% loss\nfor W4/W8 on LLMs\n(task-dependent)', 'warn')
@@ -456,7 +456,7 @@ def moe_inference_optimization():
 
     with g.subgraph(name='cluster_arch') as c:
         c.attr(label='MoE Layer (replaces dense FFN)', style='filled,rounded',
-               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica Neue',
+               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'router',  'Router\nlinear + softmax\nselects Top-K experts', 'gpu')
         node(c, 'exp1',    'Expert 1\nFFN (active)', 'good')
@@ -471,7 +471,7 @@ def moe_inference_optimization():
 
     with g.subgraph(name='cluster_models') as c:
         c.attr(label='Production MoE Models', style='filled,rounded',
-               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'mixtral', 'Mixtral 8x7B\n8 experts, Top-2\n~13B active params', 'blue')
         node(c, 'grok',    'Grok-1 (314B)\n8 experts, Top-2\n~52B active params', 'indigo')
@@ -479,7 +479,7 @@ def moe_inference_optimization():
 
     with g.subgraph(name='cluster_challenges') as c:
         c.attr(label='Inference Challenges', style='filled,rounded',
-               fillcolor='#fff7ed', color='#ea580c', fontname='Helvetica Neue',
+               fillcolor='#fff7ed', color='#ea580c', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'load_imb',  'Load Imbalance\nHot experts bottleneck\n-> capacity factor', 'rose')
         node(c, 'comm',      'Expert Parallelism\nAll2All collective\nexpensive at scale', 'warn')
@@ -502,7 +502,7 @@ def pytorch_compile_fsdp():
 
     with g.subgraph(name='cluster_compile') as c:
         c.attr(label='torch.compile Pipeline', style='filled,rounded',
-               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica Neue',
+               fillcolor='#f5f3ff', color='#7c3aed', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'eager',    'Eager PyTorch\nPython interpreter\nper op', 'slow')
         node(c, 'dynamo',   'TorchDynamo\nCapture FX Graph\nbytecode rewrite', 'gpu')
@@ -514,7 +514,7 @@ def pytorch_compile_fsdp():
 
     with g.subgraph(name='cluster_fsdp') as c:
         c.attr(label='FSDP2 — Fully Sharded Data Parallel', style='filled,rounded',
-               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica Neue',
+               fillcolor='#eff6ff', color='#2563eb', fontname='Helvetica',
                fontsize='11', penwidth='1.5')
         node(c, 'shard_p',  'Shard Params\n1/N weights per GPU\n(DTensor)', 'blue')
         node(c, 'ag_fwd',   'AllGather (Fwd)\nReconstruct layer\nbefore compute', 'sky')
@@ -526,7 +526,7 @@ def pytorch_compile_fsdp():
 
     with g.subgraph(name='cluster_amp') as c:
         c.attr(label='AMP — Mixed Precision', style='filled,rounded',
-               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica Neue',
+               fillcolor='#f0fdf4', color='#16a34a', fontname='Helvetica',
                fontsize='10', penwidth='1.2')
         node(c, 'amp_fwd',  'FP16/BF16 Fwd\nActivations + weights', 'good')
         node(c, 'grad_sc',  'GradScaler\nPrevent FP16 underflow', 'teal')

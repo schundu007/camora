@@ -170,12 +170,12 @@ frequency_caps {
     keyQuestions: [
       {
         question: 'How does second-price auction work and why is it used instead of first-price?',
-        answer: `**Second-Price (Vickrey) Auction**:
+        answer: `Second-Price (Vickrey) Auction:
 - All DSPs submit sealed bids simultaneously (they cannot see each other's bids)
 - The highest bidder wins
 - The winner pays the second-highest bid price (plus one cent), not their own bid
 
-**Example**:
+Example:
 \`\`\`
 DSP A bids: $2.50
 DSP B bids: $2.20
@@ -185,13 +185,13 @@ Winner: DSP A
 Price paid: $2.21 (second-highest + $0.01)
 \`\`\`
 
-**Why Second-Price?**
+Why Second-Price?
 - Dominant strategy: each DSP's optimal strategy is to bid exactly what the impression is worth to them
 - No need to guess competitors' bids or shade bids downward
 - Results in more efficient price discovery — DSPs don't waste resources on bid shading algorithms
 - Widely understood and trusted by the industry
 
-**First-Price Auction**:
+First-Price Auction:
 - Winner pays their own bid price
 - DSPs must shade their bids down to avoid overpaying
 - Requires sophisticated bid optimization to avoid "winner's curse"
@@ -199,12 +199,12 @@ Price paid: $2.21 (second-highest + $0.01)
       },
       {
         question: 'How do you pace an advertiser budget evenly across a day without over- or under-spending?',
-        answer: `**The Pacing Problem**:
+        answer: `The Pacing Problem:
 - $10,000 daily budget, auction rate varies by time of day (peak 9am-9pm)
 - Naive approach: spend freely until budget exhausted → all money gone by 8am
 - Goal: spend proportionally to time remaining and expected traffic
 
-**Distributed Token Bucket Approach**:
+Distributed Token Bucket Approach:
 \`\`\`
 Global Pacing Controller (runs every 100ms):
   remaining_budget = daily_budget - total_spent (from Redis)
@@ -215,7 +215,7 @@ Global Pacing Controller (runs every 100ms):
   SETEX campaign:{id}:tokens {tokens_per_server} 100ms TTL (per server)
 \`\`\`
 
-**At Auction Time (per auction server)**:
+At Auction Time (per auction server):
 \`\`\`
 tokens = DECR campaign:{id}:tokens
 if tokens < 0:
@@ -224,16 +224,16 @@ else:
   include campaign in auction, bid normally
 \`\`\`
 
-**Smoothing**:
+Smoothing:
 - Target 90% of ideal spend rate — keeps 10% reserve for high-value opportunities
 - Adjust every minute based on actual vs ideal cumulative spend curve
 - Accelerate if behind target (e.g. campaign started late), decelerate if ahead
 
-**Result**: spend follows a smooth curve across 24 hours, finishing within 2-5% of budget`,
+Result: spend follows a smooth curve across 24 hours, finishing within 2-5% of budget`,
       },
       {
         question: 'How do you make a bidding decision in under 100ms end-to-end?',
-        answer: `**Latency Budget Breakdown** (total: 80ms for DSP timeout):
+        answer: `Latency Budget Breakdown (total: 80ms for DSP timeout):
 \`\`\`
 Publisher → Exchange:          5ms  (network, nearby data center)
 Pre-auction IVT check:         3ms  (in-process ML model)
@@ -245,12 +245,12 @@ Exchange → Publisher:          5ms  (network)
 Total:                        85ms
 \`\`\`
 
-**Key Optimizations**:
-- **Connection pooling**: maintain persistent HTTP/2 connections to each DSP, eliminating TCP handshake overhead on every auction
-- **Async fan-out**: send all bid requests simultaneously, not sequentially. Do not wait for one DSP before sending to the next
-- **Partial results**: collect bids as they arrive; run auction immediately at timeout even if some DSPs haven't responded yet. Late bids are discarded
-- **In-process state**: budget tokens and frequency cap results pre-loaded into memory where possible; avoid remote calls on the critical path
-- **Co-location**: auction servers deployed in same data center as publisher ad servers — network hop to publisher is <1ms`,
+Key Optimizations:
+- Connection pooling: maintain persistent HTTP/2 connections to each DSP, eliminating TCP handshake overhead on every auction
+- Async fan-out: send all bid requests simultaneously, not sequentially. Do not wait for one DSP before sending to the next
+- Partial results: collect bids as they arrive; run auction immediately at timeout even if some DSPs haven't responded yet. Late bids are discarded
+- In-process state: budget tokens and frequency cap results pre-loaded into memory where possible; avoid remote calls on the critical path
+- Co-location: auction servers deployed in same data center as publisher ad servers — network hop to publisher is <1ms`,
       },
     ],
 
@@ -409,7 +409,7 @@ data_sources {
     keyQuestions: [
       {
         question: 'How do you push score updates to 50 million concurrent users with under 1 second latency?',
-        answer: `**Architecture: Pub/Sub Fan-Out**
+        answer: `Architecture: Pub/Sub Fan-Out
 \`\`\`
 Data Feed → Ingest Service → Kafka Topic (per game)
                                     ↓
@@ -420,33 +420,33 @@ Data Feed → Ingest Service → Kafka Topic (per game)
               Each gateway subscribes to Kafka, pushes to connected clients
 \`\`\`
 
-**Latency Budget**:
+Latency Budget:
 - Data feed → ingest server: ~50ms (varies by source)
 - Ingest → Kafka: <5ms
 - Kafka → WebSocket gateway consumer: <10ms
 - Gateway → client WebSocket push: <5ms
 - Total: ~70ms (well under 1 second)
 
-**Scaling the Gateways**:
+Scaling the Gateways:
 - Each WebSocket gateway maintains 200K–500K persistent connections
 - 50M users / 300K per gateway = ~167 gateway servers needed for a peak event
 - Gateways are stateless except for connection state — they subscribe to Kafka and push; no cross-gateway coordination needed
 - Each gateway subscribes only to Kafka topics for games its connected clients are watching
 
-**Connection Management**:
+Connection Management:
 - Clients reconnect automatically on disconnect with exponential backoff
 - Gateway sends a heartbeat ping every 30 seconds; closes connections that miss 2 pings
 - New connections get the current game state from Redis, then switch to WebSocket push for subsequent updates`,
       },
       {
         question: 'How do you handle conflicting data from multiple sources reporting different scores?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 - Official NFL data feed (priority 1) reports score as 21-14
 - Automated tracking system (priority 2) reports 20-14 (processing lag)
 - Manual entry operator (priority 3) reports 21-13 (typo)
 - Without conflict resolution, the last write wins — users see score flickering
 
-**Resolution Approach: Source Priority + Play Number Deduplication**
+Resolution Approach: Source Priority + Play Number Deduplication
 
 \`\`\`
 For each incoming event:
@@ -460,32 +460,32 @@ For each incoming event:
 Conflict log: always record all received events with source and resolution outcome
 \`\`\`
 
-**Source Priority Tiers**:
+Source Priority Tiers:
 - Priority 1: Official league data feed (contractually authoritative)
 - Priority 2: Stadium automated tracking (accurate but can lag)
 - Priority 3: Broadcast network feed (accurate, moderate lag)
 - Priority 4: Manual data entry operators (fallback when all else fails)
 
-**Score Decrease Prevention**:
+Score Decrease Prevention:
 - Scores can only increase (no sport un-scores a goal after the fact, except penalty reversal)
 - If a new event would decrease a score and is from a lower-priority source, reject it as a conflict
 - Surface conflicts to a human operator dashboard for manual review`,
       },
       {
         question: 'How do you handle the 1000x traffic spike when a major game kicks off?',
-        answer: `**The Thundering Herd Pattern**:
+        answer: `The Thundering Herd Pattern:
 - At T-0 (kickoff), 5 million users simultaneously open the app
 - All request the game state, attempt WebSocket connection, and load team rosters
 - Without mitigation: CDN miss storm → origin overload → cascading failure
 
-**Strategies**:
+Strategies:
 
-**Pre-warming (before kickoff)**:
+Pre-warming (before kickoff):
 - Auto-scale WebSocket gateways 15 minutes before scheduled start based on RSVP/notification opt-in counts
 - Cache game state, rosters, and lineups in Redis and CDN before kickoff
 - Prime database read replicas by warming connection pools
 
-**Staged Connection Admission**:
+Staged Connection Admission:
 \`\`\`
 T-5 min: open WebSocket connections for premium tier users
 T-2 min: open connections for all users (connection pool pre-warmed)
@@ -493,11 +493,11 @@ T-0:     new connection rate limited to 100K/sec (not all 5M at once)
          overflow: queue clients with an estimated wait time
 \`\`\`
 
-**CDN for Static Content**:
+CDN for Static Content:
 - Team logos, player photos, stadium images: 100% CDN-cached
 - Current game state: CDN with 1-second TTL for the first snapshot; WebSocket delivers updates after
 
-**Circuit Breakers**:
+Circuit Breakers:
 - If connection rate exceeds capacity, return a 503 with Retry-After header instead of hanging
 - Clients implement exponential backoff — spread the reconnect storm over 30 seconds instead of all at once`,
       },
@@ -649,7 +649,7 @@ pipeline_metrics {
     keyQuestions: [
       {
         question: 'How do windowing functions work and how do you handle late-arriving events?',
-        answer: `**Window Types**:
+        answer: `Window Types:
 \`\`\`
 Tumbling Window (size=1hr):
   [12:00-13:00] [13:00-14:00] [14:00-15:00]  -- non-overlapping
@@ -661,7 +661,7 @@ Session Window (gap=30min):
   Events grouped by inactivity gaps -- each user session is a dynamic window
 \`\`\`
 
-**Watermarks and Window Triggers**:
+Watermarks and Window Triggers:
 \`\`\`
 Events arrive with event_time embedded:
   event: {user_id: 42, action: "click", event_time: "13:00:02"}
@@ -679,18 +679,18 @@ The late event (12:59:55) arrives after window trigger:
   If beyond allowed lateness: route to side output for separate handling
 \`\`\`
 
-**Why Event Time Matters**:
+Why Event Time Matters:
 - Mobile app was offline for 2 hours; events arrive with old event_time
 - Processing time would put them in the wrong window
 - Event time correctly attributes them to the window where they occurred`,
       },
       {
         question: 'How do you achieve exactly-once processing with Kafka source and sink?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 - At-least-once: on failure, replay from last checkpoint — events between checkpoint and failure are reprocessed → duplicates in output
 - Exactly-once: each input event contributes to output exactly once, even across failures
 
-**Flink's Two-Phase Commit (2PC) with Kafka**:
+Flink's Two-Phase Commit (2PC) with Kafka:
 \`\`\`
 Normal operation:
   1. Flink processes events, writes to Kafka sink in a pending transaction
@@ -712,7 +712,7 @@ On failure after commit:
   4. Transaction was already committed → no double-publish
 \`\`\`
 
-**Requirements for Exactly-Once**:
+Requirements for Exactly-Once:
 - Kafka source: committed offset tied to checkpoint (not auto-commit)
 - Processing: deterministic transformations (no random, no wall-clock time)
 - Kafka sink: transactional producer with idempotent writes
@@ -720,14 +720,14 @@ On failure after commit:
       },
       {
         question: 'How do you manage terabytes of state in a distributed stream processing job?',
-        answer: `**State Backend Options**:
+        answer: `State Backend Options:
 
 | Backend      | State Location  | Max State | Latency   | Use Case                    |
 |:-------------|:----------------|:----------|:----------|:----------------------------|
 | HashMapState | JVM heap        | ~1-4 GB   | <0.1ms    | Small state, highest perf   |
 | RocksDB      | Disk + RAM      | Terabytes | 0.1-1ms   | Large state, standard prod  |
 
-**RocksDB State in Flink**:
+RocksDB State in Flink:
 \`\`\`
 Each Flink task manager has:
   - Local RocksDB instance (on SSD)
@@ -739,12 +739,12 @@ State access pattern:
   fraudState.update(...)  -- buffered in write buffer
 \`\`\`
 
-**Checkpointing Large State**:
+Checkpointing Large State:
 - Incremental checkpoints: only upload changed SST files to S3 each checkpoint
 - A 1TB state store with 1% change rate → 10GB checkpoint upload instead of 1TB
 - Checkpoint duration: 10-30 seconds for incremental vs hours for full
 
-**Operational Challenges**:
+Operational Challenges:
 - State growth: old keys accumulate (users who churned 3 years ago)
   - Solution: TTL on state entries (Flink State TTL), archive or evict inactive keys
 - Rebalancing after scaling: state must be redistributed when parallelism changes
@@ -906,11 +906,11 @@ transcoding_jobs {
     keyQuestions: [
       {
         question: 'How does adaptive bitrate streaming work and why is it essential for live video?',
-        answer: `**The Problem Without ABR**:
+        answer: `The Problem Without ABR:
 - Broadcaster sends a single 1080p stream at 8 Mbps
 - Viewer on 4G mobile has 3 Mbps available → cannot receive the stream → black screen or constant buffering
 
-**Adaptive Bitrate (HLS) Solution**:
+Adaptive Bitrate (HLS) Solution:
 \`\`\`
 Transcoding produces multiple renditions:
   1080p60 @ 8 Mbps
@@ -928,18 +928,18 @@ Master playlist (m3u8) lists all renditions:
   ...
 \`\`\`
 
-**ABR Algorithm (client side)**:
+ABR Algorithm (client side):
 1. Player starts downloading at a low quality to buffer quickly
 2. Measures download throughput for each segment
 3. If throughput > current rendition bitrate by a margin: switch up
 4. If throughput < current rendition bitrate: switch down immediately
 5. Buffer level also influences decisions — low buffer → switch down aggressively
 
-**Result**: viewer automatically gets the highest quality their connection supports, with smooth quality transitions instead of rebuffering`,
+Result: viewer automatically gets the highest quality their connection supports, with smooth quality transitions instead of rebuffering`,
       },
       {
         question: 'How do you minimize end-to-end latency from streamer camera to viewer screen?',
-        answer: `**Sources of Latency in the Pipeline**:
+        answer: `Sources of Latency in the Pipeline:
 \`\`\`
 Streamer camera capture:           33ms (30fps capture interval)
 Encoder on streamer device:        66ms (2-frame lookahead buffer)
@@ -955,7 +955,7 @@ Standard HLS total:               ~5-6 seconds (low-latency mode)
 Normal HLS (6s segments):         ~20-30 seconds
 \`\`\`
 
-**Ultra-Low Latency Techniques** (target: under 2 seconds):
+Ultra-Low Latency Techniques (target: under 2 seconds):
 - Chunked transfer encoding (CMAF): send segment data as it is generated, not after full segment is complete → player buffers from the start of a segment
 - Reduce segment duration to 0.5-1 second (increases CDN request rate)
 - Reduce player buffer to 1 segment instead of 3
@@ -1119,12 +1119,12 @@ player_ratings {
     keyQuestions: [
       {
         question: 'How do you balance match quality versus wait time?',
-        answer: `**The Fundamental Tradeoff**:
+        answer: `The Fundamental Tradeoff:
 - Perfect match: all 10 players within 10 MMR of each other, all in the same region, same queue time
 - Acceptable match: players within 200 MMR, region within 50ms latency, wait under 2 minutes
 - These goals conflict: the smaller the MMR window, the longer the wait
 
-**Progressive Expansion Algorithm**:
+Progressive Expansion Algorithm:
 \`\`\`
 When player joins queue:
   mmr_window = 50  (very tight)
@@ -1147,7 +1147,7 @@ After 300 seconds:
   latency_budget = 200ms
 \`\`\`
 
-**Match Quality Score**:
+Match Quality Score:
 \`\`\`
 quality = 1.0
   - (mmr_spread / 100) * 0.4     -- penalize large MMR differences
@@ -1157,18 +1157,18 @@ quality = 1.0
 Form match when quality > threshold (typically 0.7 for ranked, 0.5 for casual)
 \`\`\`
 
-**Practical Result**:
+Practical Result:
 - During peak hours: matches form quickly with tight quality (window stays small)
 - Off-peak or extreme MMR: system expands constraints to ensure games happen`,
       },
       {
         question: 'How does the TrueSkill rating system work for team games?',
-        answer: `**Problems with Elo in Team Games**:
+        answer: `Problems with Elo in Team Games:
 - Elo assumes 1v1 outcomes; team outcomes depend on all 10 players
 - A pro player smurfing at low Elo wins every game — Elo rises slowly because it does not model uncertainty about true skill
 - New player MMR starts at 1000 whether they are a veteran or a true beginner
 
-**TrueSkill: Bayesian Skill Rating**:
+TrueSkill: Bayesian Skill Rating:
 Each player modeled as a Gaussian distribution: Skill ~ N(mu, sigma)
 - mu: estimated skill (like Elo)
 - sigma: uncertainty about that estimate (decreases as more games are played)
@@ -1179,7 +1179,7 @@ After 10 games: N(mu=1800, sigma=200) -- narrowing in on true skill
 After 100 games: N(mu=1820, sigma=80) -- high confidence estimate
 \`\`\`
 
-**Team Skill Aggregation**:
+Team Skill Aggregation:
 \`\`\`
 Team A skill = sum of member mus
 Team A uncertainty = sqrt(sum of member sigma^2)
@@ -1189,7 +1189,7 @@ Expected win probability:
   where beta = performance variability constant
 \`\`\`
 
-**After Match**:
+After Match:
 - Winner's mu increases, sigma decreases (confirmed skill)
 - Loser's mu decreases, sigma decreases (also confirmed, just lower)
 - Both players have narrower uncertainty after each match
@@ -1352,7 +1352,7 @@ ota_campaigns {
     keyQuestions: [
       {
         question: 'Why is MQTT preferred over HTTP for IoT devices?',
-        answer: `**MQTT vs HTTP Comparison for IoT**:
+        answer: `MQTT vs HTTP Comparison for IoT:
 
 | Property              | MQTT                            | HTTP                          |
 |:----------------------|:--------------------------------|:------------------------------|
@@ -1363,7 +1363,7 @@ ota_campaigns {
 | Offline support       | QoS 1/2 with retry             | Client must retry manually    |
 | Bidirectional         | Yes (server can push)           | No (must poll or use SSE)     |
 
-**Concrete Example — Sending 1 Temperature Reading**:
+Concrete Example — Sending 1 Temperature Reading:
 \`\`\`
 HTTP POST:
   TCP handshake: 3 packets
@@ -1380,21 +1380,21 @@ MQTT PUBLISH (existing connection, QoS 0):
   Total: 1 packet, 52 bytes, 5ms latency
 \`\`\`
 
-**When HTTP is still appropriate**:
+When HTTP is still appropriate:
 - Batch uploads of large telemetry files (HTTPS multipart)
 - Device onboarding and certificate provisioning (REST API)
 - Industrial devices that only support HTTP (legacy systems)`,
       },
       {
         question: 'How does the device shadow pattern work for offline device commands?',
-        answer: `**The Problem Without Device Shadow**:
+        answer: `The Problem Without Device Shadow:
 \`\`\`
 Cloud: "Set thermostat to 22°C"  →  MQTT publish to device/commands
 Device is offline (sleeping to save battery)  →  message dropped
 Device wakes up 8 hours later  →  never receives the command
 \`\`\`
 
-**Device Shadow (Desired/Reported State)**:
+Device Shadow (Desired/Reported State):
 \`\`\`
 Cloud updates desired state:
   PUT /shadow/desired: { "setpoint": 22 }
@@ -1414,13 +1414,13 @@ Device connects after 8 hours:
   5. Shadow syncs: desired == reported, delta = {}
 \`\`\`
 
-**Version Conflict Handling**:
+Version Conflict Handling:
 - Each shadow update increments a version number
 - Device always includes the version it last saw when updating reported state
 - DynamoDB conditional write: UPDATE shadow WHERE version = expected_version
 - If versions mismatch (two updates arrived while device was offline): reject with 409, device re-reads shadow and re-applies
 
-**Benefits**:
+Benefits:
 - Commands survive indefinitely until device reconnects (not dropped)
 - Multiple pending updates are consolidated (only the latest desired state matters)
 - Device knows exactly what it needs to change without tracking command history`,
@@ -1580,7 +1580,7 @@ oncall_schedules {
     keyQuestions: [
       {
         question: 'How do you evaluate 100,000 alert rules every 30 seconds without overwhelming the time-series database?',
-        answer: `**The Problem with Pull-Based Evaluation**:
+        answer: `The Problem with Pull-Based Evaluation:
 \`\`\`
 Naive approach: every 30 seconds, for each of 100K rules:
   1. Execute PromQL query against TSDB
@@ -1591,7 +1591,7 @@ Naive approach: every 30 seconds, for each of 100K rules:
 But only 30 seconds available → TSDB is perpetually overloaded
 \`\`\`
 
-**Stream-Based Alert Evaluation**:
+Stream-Based Alert Evaluation:
 \`\`\`
 Metrics write path:
   Service → Prometheus → Kafka (parallel write) → TSDB
@@ -1607,26 +1607,26 @@ Alert evaluator fleet:
 Rule index: pre-compiled from PromQL into metric-name → rule lookups
 \`\`\`
 
-**Benefits**:
+Benefits:
 - No TSDB queries during alert evaluation — evaluation happens on the stream
 - Sub-second evaluation latency instead of 30-second poll cycles
 - Alert evaluation CPU cost is proportional to metric write rate, not rule count
 
-**State Persistence**:
+State Persistence:
 - Evaluator writes alert state (OK/PENDING/FIRING) to Redis every 5 seconds
 - On evaluator restart: read state from Redis, resume without losing pending timing
 - Kafka partition assignment ensures each metric is always evaluated by the same evaluator instance`,
       },
       {
         question: 'How do you prevent alert storms when a single root cause triggers hundreds of alerts?',
-        answer: `**The Alert Storm Problem**:
+        answer: `The Alert Storm Problem:
 - Database goes down at 2am
 - 200 services that depend on the database all start failing
 - Each service has an error rate alert and a latency alert
 - Result: 400 separate PagerDuty pages wake up 20 on-call engineers simultaneously
 - Reality: there is ONE problem (database) not 400 problems
 
-**Solution 1: Alert Grouping by Label Similarity**:
+Solution 1: Alert Grouping by Label Similarity:
 \`\`\`
 Incoming fired alerts within 5-minute window:
   {service: api-gateway, alert: high_error_rate, severity: critical}
@@ -1639,7 +1639,7 @@ Grouping: all share {region: us-east-1} label
 → Incident shows: "4 services in us-east-1 are degraded"
 \`\`\`
 
-**Solution 2: Inhibition Rules**:
+Solution 2: Inhibition Rules:
 \`\`\`
 Rule: "If database-down alert is FIRING for database db-primary,
        SUPPRESS all alerts with label {depends_on: db-primary}"
@@ -1651,7 +1651,7 @@ Effect:
   On-call engineer fixes the database → all 400 dependent alerts auto-resolve
 \`\`\`
 
-**Solution 3: Topology-Aware Grouping**:
+Solution 3: Topology-Aware Grouping:
 - Maintain a service dependency graph (populated from service mesh or config)
 - When alerts fire, walk the dependency graph upstream to find the likely root cause
 - Surface the root cause alert prominently; mark dependent alerts as "likely downstream effects"`,
@@ -1818,7 +1818,7 @@ payments {
     keyQuestions: [
       {
         question: 'How do you handle two bidders submitting bids simultaneously for the same auction?',
-        answer: `**The Race Condition**:
+        answer: `The Race Condition:
 \`\`\`
 Current price: $4,200,000
 Bidder A submits: $4,300,000 at time T
@@ -1832,7 +1832,7 @@ Without atomic protection:
   Result: lower bid B wins over higher bid A
 \`\`\`
 
-**Redis Lua Script (Atomic)**:
+Redis Lua Script (Atomic):
 \`\`\`lua
 -- Runs atomically; no other Redis commands execute during this script
 local current = redis.call('HGET', 'auction:auc-123', 'current_price')
@@ -1859,7 +1859,7 @@ end
 return {1, 'ACCEPTED', bid_amount}
 \`\`\`
 
-**Result**:
+Result:
 - Bidder A's script runs first: price → $4,300,000, A is leading
 - Bidder B's script runs next: $4,250,000 < $4,300,000 + increment → BID_TOO_LOW
 - B is notified: "Your bid was outbid. Current price is $4,300,000"
@@ -1867,7 +1867,7 @@ return {1, 'ACCEPTED', bid_amount}
       },
       {
         question: 'How does proxy (automatic) bidding work?',
-        answer: `**Proxy Bidding Flow**:
+        answer: `Proxy Bidding Flow:
 \`\`\`
 Bidder A sets proxy maximum: $5,000,000 (kept secret)
 Current price: $4,200,000
@@ -1888,13 +1888,13 @@ When bidder D bids $5,100,000:
   A is outbid; A receives push notification: "You've been outbid. Current price: $5,100,000"
 \`\`\`
 
-**Confidentiality of Proxy Maximum**:
+Confidentiality of Proxy Maximum:
 - Proxy maximum stored encrypted in the database
 - The system only bids the minimum necessary to stay in the lead
 - Other bidders never learn A's maximum from the bid history
 - If A is the only bidder, the auction ends at the starting price even if A's proxy max is $10M
 
-**Proxy vs Proxy Collision**:
+Proxy vs Proxy Collision:
 - If A (max $5M) and B (max $4.8M) both have proxies active:
   - System bids A up to $4.85M (just above B's max)
   - B's proxy max is exhausted; B is notified as outbid
@@ -2044,7 +2044,7 @@ users {
     keyQuestions: [
       {
         question: 'How do you fan out a presence update to hundreds of contacts efficiently?',
-        answer: `**The Fan-Out Problem**:
+        answer: `The Fan-Out Problem:
 \`\`\`
 User A (500 contacts) comes online
 Naive approach:
@@ -2055,7 +2055,7 @@ Naive approach:
 = 500 individual lookups + 500 individual pushes = slow and expensive
 \`\`\`
 
-**Optimized Fan-Out**:
+Optimized Fan-Out:
 \`\`\`
 Step 1: Load contact list from Redis (cached, O(1))
   contacts = SMEMBERS user:A:contacts  → [B, C, D, ..., 500 users]
@@ -2073,20 +2073,20 @@ Step 4: Each server pushes to its connected subset
   Server-1 pushes to B, E, F's WebSocket connections
 \`\`\`
 
-**Result**:
+Result:
 - 3 Kafka messages instead of 500 individual deliveries
 - Each server does O(K) pushes where K is contacts on that server
 - Fan-out is parallelized across the entire WebSocket server fleet`,
       },
       {
         question: 'How do you implement typing indicators without database writes?',
-        answer: `**Requirements**:
+        answer: `Requirements:
 - Appear within 300ms of first keystroke
 - Vanish automatically when user stops typing (no explicit "stopped typing" event needed)
 - Do not survive server restarts (ephemeral by nature)
 - Must not create database load
 
-**Redis TTL Implementation**:
+Redis TTL Implementation:
 \`\`\`
 When user starts typing:
   Client sends: POST /presence/typing { conversation_id: 42, is_typing: true }
@@ -2104,12 +2104,12 @@ When user sends message or stops typing for 5s:
           { type: "typing", user_id: 99201, is_typing: false }
 \`\`\`
 
-**Why No Database Write**:
+Why No Database Write:
 - Typing state is irrelevant the moment it changes
 - A server crash during typing: indicator vanishes (TTL expires) → looks like user stopped typing → correct behavior
 - Storing typing in DB would require cleanup jobs, create write hotspots on active conversations, and add latency
 
-**Edge Cases**:
+Edge Cases:
 - User opens two devices: both can send typing indicators; server deduplicates (if any device is typing, show typing)
 - Large group chat with 50 people typing: throttle to show at most 3 names + "and others" to avoid UI noise`,
       },
@@ -2271,7 +2271,7 @@ location_history {
     keyQuestions: [
       {
         question: 'How does H3 hexagonal indexing work for proximity queries?',
-        answer: `**The Problem with Naive Lat/Lng Queries**:
+        answer: `The Problem with Naive Lat/Lng Queries:
 \`\`\`
 SQL: SELECT * FROM drivers
   WHERE lat BETWEEN 37.7-0.05 AND 37.7+0.05
@@ -2279,7 +2279,7 @@ SQL: SELECT * FROM drivers
 -- Not a circle, and B-tree indexes cannot efficiently satisfy 2D range queries
 \`\`\`
 
-**H3 Hierarchical Hexagonal Grid**:
+H3 Hierarchical Hexagonal Grid:
 - Earth is divided into hexagons at 16 resolution levels (0=continents, 15=~1m²)
 - Resolution 9 cells are ~0.1km² — useful for rider-driver matching
 - Each location can be instantly converted to its H3 cell ID
@@ -2294,7 +2294,7 @@ h3.k_ring("8928308280fffff", k=2)
 → 19 cells covering roughly 1km radius
 \`\`\`
 
-**Proximity Query with H3**:
+Proximity Query with H3:
 \`\`\`
 1. Convert query location to H3 cell at resolution 9
 2. Get all H3 cells within k rings (k=1 covers ~300m, k=2 covers ~600m, etc.)
@@ -2307,7 +2307,7 @@ Performance:
   vs full scan of 1M rows = 500ms+
 \`\`\`
 
-**Redis GEO Alternative** (simpler for many use cases):
+Redis GEO Alternative (simpler for many use cases):
 \`\`\`
 GEOADD drivers_geo -122.419 37.774 "driver_88201"
 GEOSEARCH drivers_geo FROMLONLAT -122.419 37.774 BYRADIUS 3 km ASC COUNT 50
@@ -2316,7 +2316,7 @@ GEOSEARCH drivers_geo FROMLONLAT -122.419 37.774 BYRADIUS 3 km ASC COUNT 50
       },
       {
         question: 'How do you push smooth location animation to passengers watching a driver?',
-        answer: `**The Raw Data Problem**:
+        answer: `The Raw Data Problem:
 \`\`\`
 Driver sends GPS update every 4 seconds:
   T=0s:  lat=37.774291, lng=-122.419015  (map pin jumps here)
@@ -2326,7 +2326,7 @@ Driver sends GPS update every 4 seconds:
 Passenger sees driver teleporting every 4 seconds → terrible UX
 \`\`\`
 
-**Client-Side Linear Interpolation**:
+Client-Side Linear Interpolation:
 \`\`\`javascript
 // Client stores last two known positions:
 const prev = { lat: 37.774291, lng: -122.419015, t: 0 }
@@ -2346,12 +2346,12 @@ function animate(currentTime) {
 }
 \`\`\`
 
-**Dead Reckoning for Freshness**:
+Dead Reckoning for Freshness:
 - When next update is late (network delay), extrapolate beyond the last position
 - Use heading and speed from the last update: new_pos = last_pos + speed * heading * elapsed
 - Cap extrapolation at 10 seconds to avoid large errors if driver turns
 
-**Server-Side Smoothing** (additional option):
+Server-Side Smoothing (additional option):
 - Server applies a Kalman filter to incoming GPS readings to remove noise
 - GPS accuracy on phones is ±5-15 meters; Kalman filtering can reduce this to ±2-5 meters
 - Send filtered position + velocity vector to client for better dead reckoning`,

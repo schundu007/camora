@@ -567,16 +567,16 @@ ANALYZE table_name;   -- Refreshes statistics without locking
 
 Fix without rollback:
 
-**Option A — Add an index (non-blocking):**
+Option A — Add an index (non-blocking):
 \`\`\`sql
 CREATE INDEX CONCURRENTLY idx_name ON table(column);
 \`\`\`
 Takes minutes for large tables. Query will immediately use it once built.
 
-**Option B — Rewrite behind a feature flag:**
+Option B — Rewrite behind a feature flag:
 Deploy hotfix with optimized query behind a flag, enable it for 5%, verify latency, then roll to 100%.
 
-**Option C — Force index usage for diagnosis:**
+Option C — Force index usage for diagnosis:
 \`\`\`sql
 SET enable_seqscan = OFF;   -- Forces planner to prefer index (diagnostic only, do not leave on)
 \`\`\`
@@ -1080,10 +1080,10 @@ Step 3 — Compare snapshots in Chrome DevTools:
 Open \`Chrome DevTools > Memory tab\` → load snapshot2 → switch view to "Comparison" → load snapshot1 as baseline → sort by "# Delta" to see objects that grew between snapshots.
 
 Common findings:
-- **EventEmitter listener leak:** listeners added inside a loop or on every request without removal. Check logs for "EventEmitter memory leak detected" warnings.
-- **Closure capturing outer scope:** callbacks holding references to request objects or large arrays.
-- **Map/Set accumulating entries:** a global cache \`Map\` that never evicts old entries.
-- **Timer without clearInterval:** \`setInterval\` that captures a large object in its closure.
+- EventEmitter listener leak: listeners added inside a loop or on every request without removal. Check logs for "EventEmitter memory leak detected" warnings.
+- Closure capturing outer scope: callbacks holding references to request objects or large arrays.
+- Map/Set accumulating entries: a global cache \`Map\` that never evicts old entries.
+- Timer without clearInterval: \`setInterval\` that captures a large object in its closure.
 
 Step 4 — Fix and verify:
 - \`emitter.removeListener()\` or \`emitter.off()\` when the listener is no longer needed
@@ -1271,19 +1271,19 @@ If memory request is 4Gi but actual use is 500Mi, requests are oversized — thi
 
 Options to resolve:
 
-**Option A — Reduce memory requests on existing pods:**
+Option A — Reduce memory requests on existing pods:
 Right-size requests (\`requests.memory: 256Mi\` instead of 1Gi). Update the Deployment and pods are replaced with lower-request pods.
 
-**Option B — Add nodes via Cluster Autoscaler:**
+Option B — Add nodes via Cluster Autoscaler:
 \`\`\`bash
 kubectl logs -n kube-system -l app=cluster-autoscaler
 \`\`\`
 If CA is not enabled: scale the node group manually in EKS/GKE console.
 
-**Option C — Reduce requests on the Pending pod:**
+Option C — Reduce requests on the Pending pod:
 Edit \`resources.requests.memory\` to a value the existing nodes can satisfy.
 
-**Option D — Use a node with more memory:**
+Option D — Use a node with more memory:
 Add \`nodeSelector\` or \`nodeAffinity\` to schedule the pod on a larger instance type. Cluster Autoscaler will provision a larger instance if configured.
 
 Root cause prevention: use VPA (Vertical Pod Autoscaler) in recommendation mode to right-size requests based on actual usage patterns.`,
@@ -1345,7 +1345,7 @@ Scale-down: HPA reduces replicas when metrics drop below target. The default sca
         question: 'Your HPA is configured but the TARGETS column shows unknown/unknown. How do you fix it?',
         answer: `"unknown" means the HPA controller cannot retrieve the metric. The most common causes:
 
-**Cause 1 — Metrics Server not installed or not working:**
+Cause 1 — Metrics Server not installed or not working:
 \`\`\`bash
 kubectl top nodes                                     # If this fails, Metrics Server is broken
 kubectl get pods -n kube-system | grep metrics-server
@@ -1359,7 +1359,7 @@ helm install metrics-server metrics-server/metrics-server -n kube-system
 # Network policy blocking: metrics-server needs to reach kubelet on port 10250
 \`\`\`
 
-**Cause 2 — Resource requests not set on the target pods:**
+Cause 2 — Resource requests not set on the target pods:
 \`\`\`bash
 kubectl describe hpa <hpa-name>   # Shows "missing request for containers"
 kubectl get pods -o jsonpath='{.items[*].spec.containers[*].resources.requests}'
@@ -1372,7 +1372,7 @@ resources:
     memory: "128Mi"
 \`\`\`
 
-**Cause 3 — Custom metrics not configured (for non-CPU/memory HPA):**
+Cause 3 — Custom metrics not configured (for non-CPU/memory HPA):
 \`\`\`bash
 kubectl get apiservices | grep custom.metrics
 kubectl describe apiservice v1beta1.custom.metrics.k8s.io

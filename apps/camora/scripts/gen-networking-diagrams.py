@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -23,7 +23,7 @@ def base_graph(name, title, rankdir='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -92,7 +92,7 @@ def diag_tls_handshake():
     # TLS 1.2
     with g.subgraph(name='cluster_12') as s:
         s.attr(label='TLS 1.2  (2 RTT)', style='filled', fillcolor='#f8fafc',
-               color='#94a3b8', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#94a3b8', fontname='Helvetica Bold', fontsize='12')
         n(s, 'c12_ch',   'ClientHello\nciphers, TLS version\nclient random', 'navy')
         n(s, 'c12_sh',   'ServerHello\nchosen cipher\nserver random', 'teal')
         n(s, 'c12_cert', 'Certificate\n+ ServerKeyExchange\n(ECDHE params)', 'green')
@@ -105,7 +105,7 @@ def diag_tls_handshake():
     # TLS 1.3
     with g.subgraph(name='cluster_13') as s:
         s.attr(label='TLS 1.3  (1 RTT, 0-RTT resumption)', style='filled', fillcolor='#f0fdf4',
-               color='#22c55e', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#22c55e', fontname='Helvetica Bold', fontsize='12')
         n(s, 'c13_ch',   'ClientHello\n+ key_share (ECDHE)\n+ supported versions', 'navy')
         n(s, 'c13_sh',   'ServerHello\n+ key_share + Finished\n+ Certificate + CertVerify', 'green')
         n(s, 'c13_fin',  'Client Finished\n→ App data immediately\n(0-RTT: send early data)', 'green')
@@ -276,13 +276,13 @@ def diag_aws_vpc_design():
     g = base_graph('vpc_design', 'AWS VPC Design — Public/Private/Isolated Subnet Tiers', rankdir='TB')
     with g.subgraph(name='cluster_internet') as s:
         s.attr(label='Internet', style='filled', fillcolor='#f1f5f9', color='#94a3b8',
-               fontname='Helvetica Neue Bold', fontsize='11')
+               fontname='Helvetica Bold', fontsize='11')
         n(s, 'igw', 'Internet Gateway\n(IGW)\nstateful, free', 'gold')
 
     with g.subgraph(name='cluster_pub') as s:
         s.attr(label='Public Subnets  (10.0.1.0/24, 10.0.2.0/24)', style='filled',
                fillcolor='#eff6ff', color='#3b82f6',
-               fontname='Helvetica Neue Bold', fontsize='11')
+               fontname='Helvetica Bold', fontsize='11')
         n(s, 'alb',  'ALB\n(internet-facing)', 'teal')
         n(s, 'nat',  'NAT Gateway\n(HA per AZ)', 'gold')
         n(s, 'bastion','Bastion Host\n(optional)', 'gray')
@@ -290,14 +290,14 @@ def diag_aws_vpc_design():
     with g.subgraph(name='cluster_priv') as s:
         s.attr(label='Private Subnets  (10.0.3.0/24, 10.0.4.0/24)', style='filled',
                fillcolor='#f0fdf4', color='#22c55e',
-               fontname='Helvetica Neue Bold', fontsize='11')
+               fontname='Helvetica Bold', fontsize='11')
         n(s, 'app1', 'App servers\n(ECS / EC2)', 'green')
         n(s, 'app2', 'App servers\n(ECS / EC2)', 'green')
 
     with g.subgraph(name='cluster_isolated') as s:
         s.attr(label='Isolated Subnets  (10.0.5.0/24, 10.0.6.0/24)', style='filled',
                fillcolor='#fef3c7', color='#f59e0b',
-               fontname='Helvetica Neue Bold', fontsize='11')
+               fontname='Helvetica Bold', fontsize='11')
         n(s, 'rds',   'RDS PostgreSQL\n(Multi-AZ)', 'navy')
         n(s, 'cache', 'ElastiCache\n(Redis)', 'purple')
 
@@ -343,14 +343,14 @@ def diag_service_mesh():
     g = base_graph('svc_mesh', 'Service Mesh Architecture — Istio / Envoy Data & Control Planes', rankdir='LR')
     with g.subgraph(name='cluster_control') as s:
         s.attr(label='Control Plane (Istiod)', style='filled', fillcolor='#ede9fe',
-               color='#6366f1', fontname='Helvetica Neue Bold', fontsize='11')
+               color='#6366f1', fontname='Helvetica Bold', fontsize='11')
         n(s, 'pilot',  'Pilot\nxDS API\nservice discovery\nrouting rules', 'purple')
         n(s, 'citadel','Citadel\ncert issuance\nmTLS identity\nSPIFFE/SVID', 'purple')
         n(s, 'galley', 'Galley\nconfiguration\nvalidation', 'purple')
 
     with g.subgraph(name='cluster_dp') as s:
         s.attr(label='Data Plane (Envoy sidecars)', style='filled', fillcolor='#f0fdf4',
-               color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'svc_a',    'Service A\npod', 'navy')
         n(s, 'proxy_a',  'Envoy sidecar A\nmTLS, retries\ncircuit break\ntelemetry', 'green')
         n(s, 'svc_b',    'Service B\npod', 'navy')

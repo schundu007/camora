@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -23,7 +23,7 @@ def base_graph(name, title, rankdir='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -93,7 +93,7 @@ def diag_lambda_cold_start():
     g = base_graph('lambda_cold_start', 'Lambda Cold Start vs Warm Invocation', rankdir='TB')
     with g.subgraph(name='cluster_cold') as c:
         c.attr(label='Cold Start (first invocation)', style='filled', fillcolor='#fee2e2',
-               color='#ef4444', fontcolor='#991b1b', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#ef4444', fontcolor='#991b1b', fontname='Helvetica Bold', fontsize='12')
         n(c, 'init_env',  'Init execution\nenvironment\n(~50–500 ms)', 'red')
         n(c, 'dl_pkg',    'Download\ndeployment package', 'red')
         n(c, 'init_rt',   'Initialize runtime\n+ imports', 'red')
@@ -105,7 +105,7 @@ def diag_lambda_cold_start():
         e(c, 'init_code', 'handler1',  '')
     with g.subgraph(name='cluster_warm') as w:
         w.attr(label='Warm Invocation (reused container)', style='filled', fillcolor='#dcfce7',
-               color='#22c55e', fontcolor='#166534', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#22c55e', fontcolor='#166534', fontname='Helvetica Bold', fontsize='12')
         n(w, 'handler2', 'Execute\nhandler()\n(~1 ms overhead)', 'green')
     n(g, 'mitigations', 'Mitigations:\nProvisioned Concurrency\nSnapStart (Java)\nKeep-alive pings', 'teal')
     e(g, 'handler1',    'handler2',    'container\nreused', '#22c55e', 'dashed')
@@ -137,14 +137,14 @@ def diag_ecs_vs_fargate():
     g = base_graph('ecs_vs_fargate', 'ECS EC2 vs Fargate — Responsibility Model', rankdir='TB')
     with g.subgraph(name='cluster_ec2') as c:
         c.attr(label='ECS on EC2 — you manage', style='filled', fillcolor='#fef3c7',
-               color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Bold', fontsize='12')
         n(c, 'ec2_patch', 'OS patching\n+ AMI updates', 'gold')
         n(c, 'ec2_cap',   'Capacity planning\n+ ASG', 'gold')
         n(c, 'ec2_eni',   'ENI / network\nconfiguration', 'gold')
         n(c, 'ec2_task2', 'Task placement\nstrategy', 'gold')
     with g.subgraph(name='cluster_fg') as f:
         f.attr(label='Fargate — AWS manages', style='filled', fillcolor='#dcfce7',
-               color='#22c55e', fontcolor='#166534', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#22c55e', fontcolor='#166534', fontname='Helvetica Bold', fontsize='12')
         n(f, 'fg_host',  'Host provisioning\n+ isolation', 'green')
         n(f, 'fg_patch', 'OS/kernel patching', 'green')
         n(f, 'fg_net',   'Networking\n(vpcCNI)', 'green')
@@ -410,7 +410,7 @@ def diag_kinesis_vs_sqs():
     with g.subgraph(name='cluster_kinesis') as k:
         k.attr(label='Kinesis Data Streams — choose when:', style='filled',
                fillcolor='#dbeafe', color='#3b82f6', fontcolor='#1e40af',
-               fontname='Helvetica Neue Bold', fontsize='12')
+               fontname='Helvetica Bold', fontsize='12')
         n(k, 'k1', 'Multiple consumers\nread same records\n(replay)', 'navy')
         n(k, 'k2', 'Ordered within\npartition key', 'navy')
         n(k, 'k3', 'High-throughput\n(>10k msg/s)', 'navy')
@@ -418,7 +418,7 @@ def diag_kinesis_vs_sqs():
     with g.subgraph(name='cluster_sqs') as s:
         s.attr(label='SQS — choose when:', style='filled',
                fillcolor='#f3f4f6', color='#6b7280', fontcolor='#374151',
-               fontname='Helvetica Neue Bold', fontsize='12')
+               fontname='Helvetica Bold', fontsize='12')
         n(s, 's1', 'Task queue\n(one consumer\nper message)', 'gray')
         n(s, 's2', 'Message deleted\nafter processing', 'gray')
         n(s, 's3', 'Variable\nthroughput needs', 'gray')
@@ -450,13 +450,13 @@ def diag_rds_vs_aurora():
     g = base_graph('rds_vs_aurora', 'RDS vs Aurora — Architecture Differences', rankdir='TB')
     with g.subgraph(name='cluster_rds') as r:
         r.attr(label='RDS (MySQL / Postgres / Oracle…)', style='filled', fillcolor='#dbeafe',
-               color='#3b82f6', fontcolor='#1e40af', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#3b82f6', fontcolor='#1e40af', fontname='Helvetica Bold', fontsize='12')
         n(r, 'rds_p',  'Primary instance\n(1 EBS volume\nper AZ)', 'navy')
         n(r, 'rds_s',  'Standby instance\n(block-level\nsync rep)', 'teal')
         n(r, 'rds_ebs','EBS storage\n(replicated within\none AZ)', 'gray')
     with g.subgraph(name='cluster_aurora') as a:
         a.attr(label='Aurora (MySQL/Postgres-compatible)', style='filled', fillcolor='#dcfce7',
-               color='#22c55e', fontcolor='#166534', fontname='Helvetica Neue Bold', fontsize='12')
+               color='#22c55e', fontcolor='#166534', fontname='Helvetica Bold', fontsize='12')
         n(a, 'aur_w',  'Writer instance', 'green')
         n(a, 'aur_r1', 'Reader 1 (AZ-b)', 'green')
         n(a, 'aur_r2', 'Reader 2 (AZ-c)', 'green')

@@ -158,20 +158,20 @@ human_corrections {
     keyQuestions: [
       {
         question: 'How do you handle documents with poor scan quality?',
-        answer: `**Pre-processing Pipeline**:
+        answer: `Pre-processing Pipeline:
 Before OCR, apply these transforms in order:
 
-1. **Deskew**: detect document rotation (Hough line transform) and correct up to ±15 degrees
-2. **Binarization**: convert to black-and-white using adaptive thresholding (Sauvola) rather than global — handles uneven lighting from smartphone photos
-3. **Noise reduction**: morphological operations (erosion + dilation) remove speckle noise while preserving character strokes
-4. **Contrast enhancement**: CLAHE (Contrast Limited Adaptive Histogram Equalization) improves faded or light documents
+1. Deskew: detect document rotation (Hough line transform) and correct up to ±15 degrees
+2. Binarization: convert to black-and-white using adaptive thresholding (Sauvola) rather than global — handles uneven lighting from smartphone photos
+3. Noise reduction: morphological operations (erosion + dilation) remove speckle noise while preserving character strokes
+4. Contrast enhancement: CLAHE (Contrast Limited Adaptive Histogram Equalization) improves faded or light documents
 
-**Quality Score**:
+Quality Score:
 - Compute a quality score (sharpness via Laplacian variance, contrast ratio, noise level)
 - Route extremely poor quality (<0.3) to a "needs rescan" queue before attempting OCR
 - Include quality score in the extraction result so downstream consumers can adjust trust
 
-**Model Selection by Quality**:
+Model Selection by Quality:
 \`\`\`
 quality >= 0.8: fast cloud OCR (Textract)
 quality 0.5-0.8: fine-tuned OCR model with beam search decoding
@@ -180,14 +180,14 @@ quality < 0.5: ensemble of 3 models + voting + human review flagged
       },
       {
         question: 'How do you extract structured data from free-form tables?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 Tables in PDFs have no explicit structure — OCR returns a flat list of text fragments with coordinates. You must reconstruct rows and columns from bounding boxes.
 
-**Table Detection**:
+Table Detection:
 1. Use a layout detection model (DETR or TableTransformer) to identify table regions in the page
 2. Within the table region, detect cell boundaries from visible ruling lines or whitespace gaps
 
-**Cell Reconstruction Algorithm**:
+Cell Reconstruction Algorithm:
 \`\`\`
 1. Collect all text fragments within table bounds
 2. Cluster by Y-coordinate (row groups): fragments within 5px of same Y → same row
@@ -196,18 +196,18 @@ Tables in PDFs have no explicit structure — OCR returns a flat list of text fr
 5. Handle merged cells: a cell spanning 2 columns has X-extent overlapping 2 column clusters
 \`\`\`
 
-**Validation**:
+Validation:
 - Check that numeric columns sum correctly (invoice line items → total)
 - Flag rows where column count differs from header as extraction errors
 - For known document types, validate extracted table schema against expected template`,
       },
       {
         question: 'How does the human review feedback loop work to improve accuracy over time?',
-        answer: `**Correction Collection**:
+        answer: `Correction Collection:
 - Every human correction is stored with: original OCR value, corrected value, field name, document type, bounding box, image crop of the field
 - Corrections are tagged with confidence level at time of extraction
 
-**Active Learning Loop** (runs weekly per org):
+Active Learning Loop (runs weekly per org):
 \`\`\`
 1. Collect corrections from past week (min 100 per document type to trigger)
 2. Create training examples: (image_crop, field_name) → corrected_value
@@ -216,11 +216,11 @@ Tables in PDFs have no explicit structure — OCR returns a flat list of text fr
 5. Confidence threshold auto-adjusts: if false positive rate rises, tighten threshold
 \`\`\`
 
-**Federated Learning Consideration**:
+Federated Learning Consideration:
 - Some orgs have privacy requirements preventing document images from leaving their environment
 - In this case, gradients (not data) are aggregated to improve the shared base model without exposing document content
 
-**Measuring Improvement**:
+Measuring Improvement:
 - Track correction rate per document type per week — should trend down as model improves
 - Track human review queue depth — should shrink or remain stable as volume grows`,
       },
@@ -382,7 +382,7 @@ forecasts {
     keyQuestions: [
       {
         question: 'How do you handle seasonality and trend decomposition?',
-        answer: `**Classical Approach — STL Decomposition**:
+        answer: `Classical Approach — STL Decomposition:
 \`\`\`
 Y(t) = Trend(t) + Seasonal(t) + Residual(t)
 \`\`\`
@@ -390,7 +390,7 @@ Y(t) = Trend(t) + Seasonal(t) + Residual(t)
 - Forecast each component separately; combine for final forecast
 - Works well but assumes additive seasonality and one seasonal period
 
-**Multiple Seasonalities**:
+Multiple Seasonalities:
 - Retail demand has daily, weekly, and annual cycles simultaneously
 - Prophet (Facebook) handles multiple Fourier-series seasonalities:
 \`\`\`
@@ -398,25 +398,25 @@ S(t) = SUM_n [ a_n * sin(2π*n*t/P) + b_n * cos(2π*n*t/P) ]
 \`\`\`
 - N-BEATS uses learnable Fourier bases — no need to specify seasonal periods manually
 
-**External Regressors for Trend**:
+External Regressors for Trend:
 - Holiday indicators (binary feature per day) capture predictable spikes
 - Price elasticity (log price as a regressor) explains demand response
 - Include as covariates in the model, not hardcoded as seasonal adjustments
 
-**Handling Trend Change Points**:
+Handling Trend Change Points:
 - A new product launch, competitor entry, or macro event can break historical trend
 - Prophet detects change points automatically with a Laplace prior (sparse by default)
 - For deep learning models: upweight recent data using exponential time decay in the loss function`,
       },
       {
         question: 'How do you measure and monitor forecast accuracy in production?',
-        answer: `**Core Metrics**:
-- **MAPE** (Mean Absolute Percentage Error): interpretable, but undefined when actuals = 0
-- **sMAPE** (Symmetric MAPE): handles zero actuals, but can be misleading for large errors
-- **RMSE**: penalizes large errors more — useful when stockouts are very costly
-- **Quantile loss** (pinball loss): evaluates prediction interval calibration — must use this if you are serving intervals
+        answer: `Core Metrics:
+- MAPE (Mean Absolute Percentage Error): interpretable, but undefined when actuals = 0
+- sMAPE (Symmetric MAPE): handles zero actuals, but can be misleading for large errors
+- RMSE: penalizes large errors more — useful when stockouts are very costly
+- Quantile loss (pinball loss): evaluates prediction interval calibration — must use this if you are serving intervals
 
-**Coverage Check for Intervals**:
+Coverage Check for Intervals:
 \`\`\`
 Expected: 80% interval contains actual value 80% of the time
 Actual coverage: count(actual in [p10, p90]) / total_forecasts
@@ -424,7 +424,7 @@ If actual < expected coverage: intervals too narrow (overconfident)
 If actual >> expected coverage: intervals too wide (useless for planning)
 \`\`\`
 
-**Production Monitoring Pipeline**:
+Production Monitoring Pipeline:
 \`\`\`
 1. On each new observation, compare against all forecast horizons that targeted this timestamp
 2. Compute point error and interval coverage
@@ -433,7 +433,7 @@ If actual >> expected coverage: intervals too wide (useless for planning)
 5. Enqueue affected series for retraining
 \`\`\`
 
-**Tracking Drift vs Bias**:
+Tracking Drift vs Bias:
 - Consistent positive bias (forecast always too high) → model is not seeing a downward trend
 - Random errors with increasing variance → distribution is widening, model needs retraining
 - Step change in error → external shock, consider regime-detection and warm-start fine-tune`,
@@ -597,12 +597,12 @@ incidents {
     keyQuestions: [
       {
         question: 'How do you set dynamic thresholds that adapt to changing baselines without generating false positives?',
-        answer: `**Per-Hour-of-Week Baselines**:
+        answer: `Per-Hour-of-Week Baselines:
 - Maintain separate statistics for each of the 168 hours of the week (24 * 7)
 - A metric at Monday 9am is compared to its Monday 9am history, not its overall history
 - Eliminates the most common false positive: nighttime lows flagged as anomalous at 6am
 
-**EWMA Update Rule**:
+EWMA Update Rule:
 \`\`\`
 new_baseline = alpha * current_value + (1 - alpha) * old_baseline
 alpha = 0.1  -- slow adaptation (10-week half-life)
@@ -610,7 +610,7 @@ alpha = 0.1  -- slow adaptation (10-week half-life)
 - Low alpha: stable baseline, slower to adapt, more false positives after real traffic changes
 - High alpha: fast adaptation, fewer false positives, but can miss sustained anomalies
 
-**Robust Z-Score (handles outliers in history)**:
+Robust Z-Score (handles outliers in history):
 \`\`\`
 modified_z = 0.6745 * (x - median) / MAD
 where MAD = median(|x_i - median|)
@@ -618,17 +618,17 @@ Alert if |modified_z| > sensitivity_threshold (default: 3.5)
 \`\`\`
 Using median + MAD instead of mean + stddev prevents a single historical spike from widening the band for months.
 
-**Adapting to Sustained Load Changes**:
+Adapting to Sustained Load Changes:
 - If EWMA drift exceeds 20% over 2 hours AND no anomaly is flagged: accept as new normal and update baseline
 - Distinguish: "traffic gradually grew by 20%" (baseline drift) vs "traffic spiked 20% suddenly" (anomaly)
 - Detection: compare short EWMA (1h) vs long EWMA (7d) — divergence signals a regime change`,
       },
       {
         question: 'How do you reduce alert fatigue and avoid paging on-call for every anomaly?',
-        answer: `**The Alert Fatigue Problem**:
+        answer: `The Alert Fatigue Problem:
 A single database failure can cause: database latency high, connection pool exhaustion, API error rate up, API latency up, queue backlog growing, downstream service timeouts — potentially 50+ individual anomalies for one root cause.
 
-**Approach 1: Incident Grouping**
+Approach 1: Incident Grouping
 \`\`\`
 Within a 60-second window:
   - Group anomalies that share a service dependency path
@@ -638,17 +638,17 @@ Within a 60-second window:
 Result: 50 anomalies → 1 incident, 1 page
 \`\`\`
 
-**Approach 2: Severity-Gated Paging**
+Approach 2: Severity-Gated Paging
 - Warning: anomaly score 3.0-4.0 → write to dashboard, no page
 - Critical: anomaly score > 4.0 AND sustained > 2 minutes → page once
 - Re-page only if severity escalates or incident is not acknowledged within 15 minutes
 
-**Approach 3: Per-Metric Operator Tuning**
+Approach 3: Per-Metric Operator Tuning
 - Operators can mark specific metrics as "noisy" → system auto-increases threshold
 - Metrics marked as business-critical → system auto-decreases threshold
 - False positive feedback automatically adjusts: 3 FP dismissals → threshold increases by 0.5 sigma
 
-**Approach 4: Time-of-Day Routing**
+Approach 4: Time-of-Day Routing
 - Non-critical anomalies during business hours → Slack channel
 - Any critical anomaly at night → PagerDuty on-call escalation`,
       },
@@ -802,12 +802,12 @@ applied_tags {
     keyQuestions: [
       {
         question: 'How do you handle a taxonomy with 50,000 tags without training a 50,000-class classifier?',
-        answer: `**The Problem with Flat 50K Classification**:
+        answer: `The Problem with Flat 50K Classification:
 - Softmax over 50K classes: most classes are extremely rare — the model struggles to learn from few examples
 - Training time scales poorly; inference cost is high
 - Adding one new tag requires full retraining
 
-**Hierarchical Decomposition**:
+Hierarchical Decomposition:
 \`\`\`
 Level 1: Broad category classifier (100 categories)
   → Animals, Vehicles, People, Fashion, Food, Nature, ...
@@ -818,13 +818,13 @@ Level 2: Category-specific fine-grained classifier (500-2000 tags per category)
 \`\`\`
 Each level-2 model is smaller and faster; only the relevant one fires.
 
-**CLIP Embedding Retrieval for New Tags**:
+CLIP Embedding Retrieval for New Tags:
 - Encode all 50K tag labels as text with CLIP text encoder
 - At inference: compare image CLIP embedding to all tag embeddings via cosine similarity
 - Top-K most similar tags are candidates
 - Fine-tuned linear probe re-ranks candidates using task-specific learned weights
 
-**Active Learning for Sparse Tags**:
+Active Learning for Sparse Tags:
 - Tags with fewer than 50 examples: zero-shot CLIP only, lower confidence
 - 50-500 examples: few-shot fine-tuned probe on CLIP features
 - 500+ examples: full fine-tuned model with contrastive loss`,
@@ -985,7 +985,7 @@ interactions {
     keyQuestions: [
       {
         question: 'How do you manage multi-turn dialog state and resolve pronoun references?',
-        answer: `**Dialog State Structure** (stored in Redis per session):
+        answer: `Dialog State Structure (stored in Redis per session):
 \`\`\`json
 {
   "session_id": "sess-3c7d",
@@ -1003,14 +1003,14 @@ interactions {
 }
 \`\`\`
 
-**Anaphora Resolution**:
+Anaphora Resolution:
 Turn 3 utterance: "make it large"
 - NLU detects intent "food.order.modify_size", slot "size"="large", entity "it"=pronoun
 - Resolver: look up entity_stack, find most recent entity matching expected slot type (food_item)
 - Resolve "it" → "pepperoni pizza"
 - Construct full intent: modify pepperoni pizza size to large
 
-**Slot Filling (Clarification Requests)**:
+Slot Filling (Clarification Requests):
 \`\`\`
 User: "Order a pizza"
 Missing required slots: restaurant, size, toppings
@@ -1020,7 +1020,7 @@ User: "Dominos"
 Response: "What size pizza would you like?"
 \`\`\`
 
-**Session Timeout**:
+Session Timeout:
 - Session expires after 30 minutes of inactivity (Redis TTL)
 - User returns to fresh context; previous entity_stack is gone
 - For longer-lived context (user preferences, past orders) use durable DynamoDB store`,
@@ -1181,13 +1181,13 @@ answer_events {
     keyQuestions: [
       {
         question: 'How does knowledge tracing work and why is it better than simple accuracy tracking?',
-        answer: `**Simple Accuracy Tracking (naive)**:
+        answer: `Simple Accuracy Tracking (naive):
 \`\`\`
 mastery = correct_answers / total_answers
 \`\`\`
 Problems: ignores recency (correct 2 weeks ago counts same as correct today), ignores skill correlations, no uncertainty estimate.
 
-**Bayesian Knowledge Tracing (BKT)**:
+Bayesian Knowledge Tracing (BKT):
 A hidden Markov model with 4 parameters per skill:
 - P(L_0): probability student already knows the skill before first attempt
 - P(T): probability of learning the skill per correct attempt (transition)
@@ -1199,14 +1199,14 @@ After each answer, Bayes update:
 P(Learned | correct_answer) = P(correct | Learned) * P(Learned) / P(correct)
 \`\`\`
 
-**Deep Knowledge Tracing (DKT)**:
+Deep Knowledge Tracing (DKT):
 LSTM trained on sequences: [(skill_1, 1), (skill_2, 0), (skill_3, 1), ...]
 - Input: one-hot encoded (skill_id, correct) pairs
 - Output: mastery probability for ALL skills simultaneously
 - Captures: "mastering multiplication improves division mastery estimate"
 - Cold start: 5-10 answers sufficient because the model generalizes from millions of other students
 
-**Why DKT Wins**:
+Why DKT Wins:
 | Property | Simple Accuracy | BKT | DKT |
 |----------|----------------|-----|-----|
 | Recency weighting | No | Yes (via forgetting) | Yes |
@@ -1372,31 +1372,31 @@ support_tickets {
     keyQuestions: [
       {
         question: 'How do you decide when to escalate to a human agent?',
-        answer: `**Escalation Signal Taxonomy**:
+        answer: `Escalation Signal Taxonomy:
 
-**1. Explicit requests** (highest priority, immediate escalation):
+1. Explicit requests (highest priority, immediate escalation):
 - "Let me speak to a human"
 - "I want to talk to a real person"
 - "Get me to a manager"
 Pattern match these — do not make them wait for sentiment analysis.
 
-**2. Frustration signals** (score-based):
+2. Frustration signals (score-based):
 - Negative sentiment trend (3 consecutive negative messages)
 - Message contains: "this is ridiculous", "completely useless", "unacceptable"
 - Customer repeating the same question (semantic similarity > 0.85 between consecutive messages)
 - Typing long messages after short bot responses (indicates bot is not answering the actual question)
 
-**3. Complexity signals**:
+3. Complexity signals:
 - More than 5 distinct topics detected across the conversation
 - Account-specific question that requires database lookup the bot cannot do (e.g., "why was my specific order #12345 cancelled")
 - Legal, safety, or compliance mention (refund dispute, account fraud, data deletion request)
 
-**4. Bot failure signals**:
+4. Bot failure signals:
 - Bot confidence below 0.4 on 3 consecutive turns
 - Same knowledge base documents retrieved 3+ times in a row (circular retrieval)
 - No relevant documents found in last 2 retrieval attempts
 
-**Escalation Score (0-1)**:
+Escalation Score (0-1):
 \`\`\`python
 score = (
   0.35 * frustration_score +
@@ -1407,7 +1407,7 @@ score = (
 escalate if score > 0.65 or explicit_request_score == 1.0
 \`\`\`
 
-**Handoff**:
+Handoff:
 - Serialize full conversation history + intent + escalation reason → agent interface
 - Agent receives context without needing customer to repeat themselves
 - Bot sends: "I'm connecting you with a team member who can help. They'll have your full conversation history."`,
@@ -1567,17 +1567,17 @@ license_flags {
     keyQuestions: [
       {
         question: 'How does fill-in-the-middle (FIM) completion work?',
-        answer: `**The Problem with Prefix-Only Completion**:
+        answer: `The Problem with Prefix-Only Completion:
 Traditional language models are trained left-to-right. They can only complete code given a prefix. If a developer places the cursor in the middle of a function body, the model does not know what comes after — it might generate code that conflicts with the existing suffix.
 
-**FIM Training**:
+FIM Training:
 During training, examples are randomly rearranged into FIM format:
 \`\`\`
 <PRE> {prefix_code} <SUF> {suffix_code} <MID> {middle_code}
 \`\`\`
 The model learns to predict the middle given both prefix and suffix.
 
-**At Inference**:
+At Inference:
 \`\`\`
 Input to model:
   <PRE>
@@ -1596,12 +1596,12 @@ Model generates:
       final_price = price * (1 - discount)
 \`\`\`
 
-**Why This Matters**:
+Why This Matters:
 - Developer editing in the middle of a file is the most common use case
 - Without FIM, model generates code that may not compile or conflicts with existing suffix
 - FIM completions have ~15% higher acceptance rate than prefix-only in the same context
 
-**Implementation Note**:
+Implementation Note:
 Not all models support FIM. It must be included in the pre-training data mix (typically 50% FIM, 50% prefix-only). Cannot be added post-hoc without significant fine-tuning.`,
       },
     ],
@@ -1752,13 +1752,13 @@ summaries {
     keyQuestions: [
       {
         question: 'How do you summarize documents longer than the model context window?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 A 500-page legal contract is ~250,000 tokens. A model with a 32K token window cannot process it at once.
 
-**Approach 1: Truncation** (bad)
+Approach 1: Truncation (bad)
 - Only read first 32K tokens — misses critical clauses buried in section 40
 
-**Approach 2: Map-Reduce Summarization**
+Approach 2: Map-Reduce Summarization
 \`\`\`
 Step 1 (Map): Split document into N chunks of 4,000 tokens with 400-token overlap
   Chunk 1 → Summary_1 (300 tokens)
@@ -1772,16 +1772,16 @@ Step 2 (Reduce): Concatenate summaries → second-level summarization
   If still too long: apply reduce step recursively
 \`\`\`
 
-**Overlap Handling**:
+Overlap Handling:
 - 10% overlap between chunks prevents cutting mid-sentence
 - Deduplication in reduce step removes duplicate content surfaced by overlap
 
-**Semantic Chunking** (better than fixed-token):
+Semantic Chunking (better than fixed-token):
 - Split at paragraph or section boundaries, not at fixed token counts
 - Keeps logical units intact: "Indemnification clause" stays in one chunk
 - Uses sentence embeddings to detect topic boundaries (cosine similarity drop = natural split)
 
-**For Structured Documents** (contracts, reports with sections):
+For Structured Documents (contracts, reports with sections):
 - Parse section headers (regex or document structure API)
 - Summarize each named section independently
 - Assemble: "Section 4 (Termination): Either party may terminate with 30 days notice..."
@@ -1933,27 +1933,27 @@ calibration_jobs {
     keyQuestions: [
       {
         question: 'How do you handle very short text and code-switching?',
-        answer: `**Short Text (< 20 characters)**:
+        answer: `Short Text (< 20 characters):
 
 The fundamental problem: "Hey" is valid in 50+ languages using the Latin script. A 3-character input has almost no discriminating signal in its n-gram profile.
 
 Strategies:
-1. **Report uncertainty explicitly**: return is_reliable=false; confidence is downscaled by text_length factor; let callers decide whether to use the result
-2. **Hint language**: if context is available (user's previous messages, account locale setting), inject as a prior that biases the probability distribution
-3. **Aggregate across session**: do not detect per-message — accumulate text across a conversation before classifying; works for chat support, not for independent posts
+1. Report uncertainty explicitly: return is_reliable=false; confidence is downscaled by text_length factor; let callers decide whether to use the result
+2. Hint language: if context is available (user's previous messages, account locale setting), inject as a prior that biases the probability distribution
+3. Aggregate across session: do not detect per-message — accumulate text across a conversation before classifying; works for chat support, not for independent posts
 
 \`\`\`python
 effective_confidence = raw_confidence * min(1.0, text_length / 30.0)
 is_reliable = text_length >= 20 and effective_confidence >= 0.85
 \`\`\`
 
-**Code-Switching (mixed-language text)**:
+Code-Switching (mixed-language text):
 
 Example: "I love going to the mercado on Sundays, it's muy bonito!"
 - Latin script only, so Spanish and English are candidates
 - First half: English dominant; second half: Spanish dominant
 
-**Segment Detection Approach**:
+Segment Detection Approach:
 \`\`\`
 1. Split text into segments at sentence or clause boundaries
 2. Run detection independently on each segment
@@ -1961,7 +1961,7 @@ Example: "I love going to the mercado on Sundays, it's muy bonito!"
 4. Return: { primary: "en", secondary: "es", primary_ratio: 0.6 }
 \`\`\`
 
-**Practical Rule**: flag as mixed only if secondary language confidence > 0.4 and it differs from primary; otherwise just report the primary (many texts have proper nouns or loanwords from other languages without being truly mixed)`,
+Practical Rule: flag as mixed only if secondary language confidence > 0.4 and it differs from primary; otherwise just report the primary (many texts have proper nouns or loanwords from other languages without being truly mixed)`,
       },
     ],
 
@@ -2124,13 +2124,13 @@ ai_insights {
     keyQuestions: [
       {
         question: 'How do you generate accurate SQL from natural language while enforcing security?',
-        answer: `**NL2SQL Accuracy Challenges**:
+        answer: `NL2SQL Accuracy Challenges:
 1. Schema terminology mismatch: user says "revenue", table has column "order_total_usd"
 2. Implicit date math: "last quarter" → compute start/end dates relative to today
 3. Ambiguous table joins: "customers who bought X" → which join path through 3 tables?
 4. Aggregation intent: "show me sales by region" → SUM or COUNT, what grouping?
 
-**Solution: Schema-Annotated RAG Prompt**:
+Solution: Schema-Annotated RAG Prompt:
 \`\`\`
 AVAILABLE TABLES (retrieved by semantic search on question):
   orders (business name: "Sales Transactions")
@@ -2150,7 +2150,7 @@ USER QUESTION: What was total revenue last quarter by product category?
 Generate SQL:
 \`\`\`
 
-**Security Injection** (non-bypassable):
+Security Injection (non-bypassable):
 \`\`\`python
 # After LLM generates SQL, append security filter
 generated_sql = llm_generate(prompt)
@@ -2165,7 +2165,7 @@ secure_sql = inject_security_predicates(
 validate_readonly(secure_sql)
 \`\`\`
 
-**Feedback Loop**:
+Feedback Loop:
 - When users correct generated SQL, log the (question → corrected_sql) pair
 - After 1,000 corrections: fine-tune the NL2SQL model on customer's schema and terminology
 - Accuracy typically improves from 75% to 90%+ on domain-specific questions after fine-tuning`,
@@ -2316,10 +2316,10 @@ reply_feedback {
     keyQuestions: [
       {
         question: 'How do you match the user\'s writing style without storing their emails?',
-        answer: `**The Privacy Constraint**:
+        answer: `The Privacy Constraint:
 Email content must not be stored. But writing style requires learning from examples.
 
-**Solution: Extract Statistical Features, Discard Content**
+Solution: Extract Statistical Features, Discard Content
 
 Processing pipeline (runs client-side or on secure ephemeral server):
 \`\`\`
@@ -2336,7 +2336,7 @@ For each sent email:
   4. Discard email text
 \`\`\`
 
-**Style Profile (stored, not email content)**:
+Style Profile (stored, not email content):
 \`\`\`json
 {
   "formality_score": 0.78,
@@ -2356,7 +2356,7 @@ For each sent email:
 }
 \`\`\`
 
-**Injecting Style into Generation**:
+Injecting Style into Generation:
 \`\`\`
 System prompt injection:
 "Write in a formal professional style.

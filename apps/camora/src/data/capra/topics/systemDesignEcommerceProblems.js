@@ -190,31 +190,31 @@ order_items {
     keyQuestions: [
       {
         question: 'How do you keep grocery inventory accurate when a shopper grabs the last avocado seconds before another customer orders it?',
-        answer: `**The core challenge** is that grocery inventory changes physically in the store, not in a database. Three approaches:
+        answer: `The core challenge is that grocery inventory changes physically in the store, not in a database. Three approaches:
 
-**1. Real-time POS sync (best for chains with modern POS)**
+1. Real-time POS sync (best for chains with modern POS)
 - POS system publishes item-scan events to a message queue
 - Consumer updates Redis cache per store-SKU within ~30 seconds
 - Customers see "low stock" warnings when quantity < 3
 - Tradeoff: requires POS integration, latency is 30-60 seconds not zero
 
-**2. Safety stock buffers (simpler but less accurate)**
+2. Safety stock buffers (simpler but less accurate)
 - Never show item as available when inventory < buffer (e.g., 2 units)
 - Reduces conflict at the cost of slightly lower conversion
 - Works without POS integration, just periodic batch sync
 
-**3. Shopper marks unavailable at pick time (ground truth)**
+3. Shopper marks unavailable at pick time (ground truth)
 - No matter how good real-time sync is, shopper can always mark an item unavailable
 - Trigger substitution workflow immediately when this happens
 - This is the final safety net regardless of approach 1 or 2
 
-**In production:** Combine all three. Real-time sync for hot products, safety buffer for long-tail, shopper confirmation as ground truth. Never promise an item is available — promise the shopper will try to get it.`,
+In production: Combine all three. Real-time sync for hot products, safety buffer for long-tail, shopper confirmation as ground truth. Never promise an item is available — promise the shopper will try to get it.`,
       },
       {
         question: 'How do you handle weight-based pricing when the final price is unknown at order time?',
-        answer: `**The problem:** Customer orders 2 lbs of salmon at $12/lb = $24 expected. Shopper weighs it: 2.4 lbs. Final charge is $28.80. Customer's card must not be charged the wrong amount.
+        answer: `The problem: Customer orders 2 lbs of salmon at $12/lb = $24 expected. Shopper weighs it: 2.4 lbs. Final charge is $28.80. Customer's card must not be charged the wrong amount.
 
-**Payment authorization hold approach:**
+Payment authorization hold approach:
 \`\`\`
 1. At order placement: authorize hold for 150% of estimated price
    - 2 lbs × $12 = $24 estimate → authorize $36 hold
@@ -230,7 +230,7 @@ order_items {
    - Customer sees final itemized receipt with actual weights
 \`\`\`
 
-**Edge cases to discuss:**
+Edge cases to discuss:
 - Customer's card has insufficient funds for the 150% hold → show estimated range at checkout, not exact price
 - Multiple weight-based items → aggregate into single hold adjustment
 - Item price changes between order and pick → use price at time of pick (shopper scans barcode)
@@ -238,7 +238,7 @@ order_items {
       },
       {
         question: 'How does the shopper app workflow handle the picking process at scale?',
-        answer: `**Shopper app core loop:**
+        answer: `Shopper app core loop:
 \`\`\`
 1. Shopper accepts order batch (1-3 orders from same store)
 2. App generates optimized pick list sorted by store aisle
@@ -252,17 +252,17 @@ order_items {
 4. After all items: mark order ready, hand to driver or place in staging area
 \`\`\`
 
-**Picking sequence optimization:**
+Picking sequence optimization:
 - Store provides a planogram (map of which SKU is in which aisle)
 - App runs shortest-path through aisles for all items in the batch
 - Reduces average pick time from 60 minutes to 35 minutes per order
 
-**Offline resilience (critical for poor in-store Wi-Fi):**
+Offline resilience (critical for poor in-store Wi-Fi):
 - Download full order details on job accept (before entering store)
 - Buffer pick status updates locally, sync when connectivity returns
 - Never block a shopper action on a network call — optimistic local state
 
-**Multi-order batching:**
+Multi-order batching:
 - Two orders for same delivery window shown as interleaved pick list
 - Items grouped by aisle across both orders: pick aisle 1 items for both orders, then aisle 2, etc.
 - Shopper sees which bag each item goes into (color-coded by order)`,
@@ -443,11 +443,11 @@ merchant_settlements {
     keyQuestions: [
       {
         question: 'How do you make a credit decision in under 2 seconds without a hard credit pull?',
-        answer: `**Constraint:** Hard credit pull (traditional bureau inquiry) takes 5-10 seconds, hurts customer credit score, and is overkill for a $200 BNPL transaction.
+        answer: `Constraint: Hard credit pull (traditional bureau inquiry) takes 5-10 seconds, hurts customer credit score, and is overkill for a $200 BNPL transaction.
 
-**Two-stage ML pipeline:**
+Two-stage ML pipeline:
 
-**Stage 1: Fraud scoring (< 100ms)**
+Stage 1: Fraud scoring (< 100ms)
 Features used (no bureau needed):
 - Device fingerprint: is this device associated with fraud history?
 - Email age and reputation (new Gmail = higher risk)
@@ -457,7 +457,7 @@ Features used (no bureau needed):
 
 If fraud score > threshold → decline immediately. ~90% of fraudsters stopped here.
 
-**Stage 2: Credit scoring (< 800ms)**
+Stage 2: Credit scoring (< 800ms)
 For fraud-cleared applicants:
 \`\`\`
 Signals (in decreasing weight):
@@ -469,21 +469,21 @@ Signals (in decreasing weight):
 5. Email/phone account age signals
 \`\`\`
 
-**Decision:**
+Decision:
 - Score > 750 → instant approve, high limit
 - Score 600-750 → approve with lower limit or require down payment
 - Score < 600 → decline with reason code
 
-**Total pipeline: 100ms + 800ms = ~900ms** leaving 1.1s buffer for network and checkout rendering.
+Total pipeline: 100ms + 800ms = ~900ms leaving 1.1s buffer for network and checkout rendering.
 
-**For first-time customers (no repayment history):**
+For first-time customers (no repayment history):
 Rely more heavily on soft bureau + device signals. Approve conservatively (lower limit) and build history from their first transaction.`,
       },
       {
         question: 'How do you handle a return when the customer has already paid 2 of 4 installments?',
-        answer: `**Scenario:** Customer bought $120 item, Pay in 4 = $30 every 2 weeks. They paid installments 1 and 2 ($60 total). Now they return the item and the merchant issues a full refund.
+        answer: `Scenario: Customer bought $120 item, Pay in 4 = $30 every 2 weeks. They paid installments 1 and 2 ($60 total). Now they return the item and the merchant issues a full refund.
 
-**Refund calculation:**
+Refund calculation:
 \`\`\`
 Total paid by customer to BNPL: $60
 BNPL paid merchant at purchase: $120 (minus fee, say $110 net)
@@ -494,12 +494,12 @@ BNPL cancels installments 3 and 4 (customer owes nothing more)
 BNPL net position: received $120 from merchant refund, paid out $60 to customer = $60 recovered
 \`\`\`
 
-**Partial return (customer returns half the order):**
+Partial return (customer returns half the order):
 - Merchant refunds $60 to BNPL
 - BNPL cancels installment 4 ($30), reduces installment 3 to $0
 - Customer already paid $60, merchant refunded $60 → net zero, loan closed
 
-**Idempotent refund saga steps:**
+Idempotent refund saga steps:
 1. Receive merchant refund webhook (with idempotency key)
 2. Look up loan by merchant order ID
 3. Calculate which installments to cancel (future ones first)
@@ -512,18 +512,18 @@ Each step is idempotent — retrying the saga from any step produces the same re
       },
       {
         question: 'How do you prevent the buy-expensive-item-and-return-it-after-last-installment fraud pattern?',
-        answer: `**The scam:** Customer buys $800 laptop using BNPL. Makes all 4 payments ($200 each). Returns the laptop on day 61 (after return window... or tries to claim it as defective). Gets $800 cash back from merchant. Has effectively gotten a free $800 for the cost of paying $800 over 8 weeks with no APR.
+        answer: `The scam: Customer buys $800 laptop using BNPL. Makes all 4 payments ($200 each). Returns the laptop on day 61 (after return window... or tries to claim it as defective). Gets $800 cash back from merchant. Has effectively gotten a free $800 for the cost of paying $800 over 8 weeks with no APR.
 
-**Note:** This is largely a merchant problem, not a BNPL problem — if the merchant accepts the return and issues a refund, they bear the loss. But BNPL platforms can help:
+Note: This is largely a merchant problem, not a BNPL problem — if the merchant accepts the return and issues a refund, they bear the loss. But BNPL platforms can help:
 
-**Controls:**
-1. **Category risk scoring:** High-value electronics, luxury goods, and categories with high return rates get stricter approval criteria and lower limits for new customers
-2. **Return rate tracking per customer:** Customer who has returned 3 of last 5 BNPL purchases gets flagged; future approvals require stronger credit signals
-3. **Merchant return policy enforcement:** BNPL contract with merchants specifies return windows; merchants must honor their stated policy or bear the refund cost
-4. **Chargeback analysis:** If the same customer uses "item not as described" chargebacks repeatedly, block them from future BNPL purchases
-5. **Velocity limits:** Cap total outstanding BNPL balance per customer to prevent someone from running the scheme on 10 items simultaneously
+Controls:
+1. Category risk scoring: High-value electronics, luxury goods, and categories with high return rates get stricter approval criteria and lower limits for new customers
+2. Return rate tracking per customer: Customer who has returned 3 of last 5 BNPL purchases gets flagged; future approvals require stronger credit signals
+3. Merchant return policy enforcement: BNPL contract with merchants specifies return windows; merchants must honor their stated policy or bear the refund cost
+4. Chargeback analysis: If the same customer uses "item not as described" chargebacks repeatedly, block them from future BNPL purchases
+5. Velocity limits: Cap total outstanding BNPL balance per customer to prevent someone from running the scheme on 10 items simultaneously
 
-**What BNPL cannot do:** Force merchants to reject fraudulent returns. The relationship is: BNPL protects itself by risk-scoring customers; merchants protect themselves by their return policies and fraud detection at return time.`,
+What BNPL cannot do: Force merchants to reject fraudulent returns. The relationship is: BNPL protects itself by risk-scoring customers; merchants protect themselves by their return policies and fraud detection at return time.`,
       },
     ],
 
@@ -683,9 +683,9 @@ redemption_catalog {
     keyQuestions: [
       {
         question: 'How do you prevent a customer from spending points they do not have when two redemptions arrive simultaneously?',
-        answer: `**The problem:** Customer has 500 points. They open the app on two devices and tap "Redeem 500 points" on both simultaneously. Both requests read a balance of 500, both see sufficient points, both write a -500 redemption. Customer ends up with -500 points.
+        answer: `The problem: Customer has 500 points. They open the app on two devices and tap "Redeem 500 points" on both simultaneously. Both requests read a balance of 500, both see sufficient points, both write a -500 redemption. Customer ends up with -500 points.
 
-**Solution: Optimistic concurrency control on the ledger**
+Solution: Optimistic concurrency control on the ledger
 
 \`\`\`sql
 -- Each redemption reads the most recent event row
@@ -704,24 +704,24 @@ WHERE NOT EXISTS (
 AND (SELECT balance_after FROM point_events WHERE member_id = 550123 ORDER BY id DESC LIMIT 1) >= 500;
 \`\`\`
 
-**What happens with two concurrent requests:**
+What happens with two concurrent requests:
 - Request A reads: most recent event id=8829001, balance=500
 - Request B reads: most recent event id=8829001, balance=500
 - Request A inserts: succeeds, creates event id=8829002 with balance=0
 - Request B inserts: WHERE clause checks if id > 8829001 exists → yes, it does → INSERT 0 rows → conflict detected
 - Request B retries, re-reads balance=0, returns "insufficient balance" to user
 
-**Why not a SELECT FOR UPDATE lock?**
+Why not a SELECT FOR UPDATE lock?
 Locks work but reduce throughput under high concurrency and can cause deadlocks. Optimistic concurrency is better when conflicts are rare (which they are — most users do not redeem from two devices simultaneously).
 
-**UNIQUE constraint as backup:**
+UNIQUE constraint as backup:
 The reference_id UNIQUE constraint prevents the same redemption ID from being inserted twice, catching cases where the app retries on timeout rather than the user double-tapping.`,
       },
       {
         question: 'How do you design points expiry when different earned points expire at different times?',
-        answer: `**Requirement:** Points expire 12 months after they were earned (rolling expiry, not calendar year expiry). A customer who earned 100 points in January 2024 and 200 points in June 2024 loses the 100 points in January 2025 and the 200 points in June 2025.
+        answer: `Requirement: Points expire 12 months after they were earned (rolling expiry, not calendar year expiry). A customer who earned 100 points in January 2024 and 200 points in June 2024 loses the 100 points in January 2025 and the 200 points in June 2025.
 
-**Design: Per-earn-event expiry date**
+Design: Per-earn-event expiry date
 
 Every earn event in the ledger stores an expiry_date:
 \`\`\`
@@ -729,7 +729,7 @@ earn event on 2024-01-15: 100 points, expiry_date = 2025-01-15
 earn event on 2024-06-20: 200 points, expiry_date = 2025-06-20
 \`\`\`
 
-**Daily expiry job:**
+Daily expiry job:
 \`\`\`sql
 -- Find earn events expiring today whose points have not yet been expired
 INSERT INTO point_events (member_id, event_type, points, balance_after, reference_id)
@@ -748,17 +748,17 @@ WHERE e.event_type = 'earn'
   );
 \`\`\`
 
-**The hard case: customer redeemed some points — which ones expired?**
+The hard case: customer redeemed some points — which ones expired?
 Use FIFO (first-in, first-out) accounting: redemptions consume the oldest points first. When expiry runs, it only expires unredeemed earn events. This requires the expiry job to check remaining redeemable balance per earn batch, not just the total ledger balance.
 
-**Expiry warning to customers:**
+Expiry warning to customers:
 30 days before expiry, compute each member's expiring points (earn events with expiry_date within 30 days) and send a push notification. This is a read-only scan and does not modify the ledger.`,
       },
       {
         question: 'How do you handle a double-points promotional event for 50 million members simultaneously?',
-        answer: `**Scenario:** Starbucks announces "3x stars on all purchases today" on a national holiday. Every transaction that day earns 3x instead of 1x. This affects the earn calculation for every transaction without changing the transaction flow.
+        answer: `Scenario: Starbucks announces "3x stars on all purchases today" on a national holiday. Every transaction that day earns 3x instead of 1x. This affects the earn calculation for every transaction without changing the transaction flow.
 
-**Design: Earn rules table, not hard-coded multipliers**
+Design: Earn rules table, not hard-coded multipliers
 
 \`\`\`sql
 -- Active earn rule for the promotional day
@@ -766,25 +766,25 @@ INSERT INTO earn_rules (name, multiplier, valid_from, valid_to)
 VALUES ('Holiday 3x Stars', 3.0, '2025-07-04 00:00:00', '2025-07-04 23:59:59');
 \`\`\`
 
-**Transaction earn calculation:**
+Transaction earn calculation:
 \`\`\`
 Base rate: 1 point per $1 spent
 Active multiplier: 3.0 (from earn_rules)
 Customer spends $5 → 5 × 3 = 15 points earned
 \`\`\`
 
-**Why rules in the database, not in code:**
+Why rules in the database, not in code:
 - Marketing can create and schedule promotions without a code deploy
 - Every earn event records the earn_rule_id, so you can always explain exactly why any points were credited
 - Multiple rules can stack (double points for Gold tier + 3x holiday = 6x total) with explicit priority ordering
 
-**Traffic spike handling:**
+Traffic spike handling:
 A 3x day attracts 3x purchase volume. The earn endpoint must handle 3x QPS. Mitigations:
 - Earn events are fire-and-forget from the customer perspective: the purchase completes, points credit asynchronously
 - Use Kafka to buffer earn events; consumers process at their own pace
 - The POS/checkout system does not block on loyalty point confirmation
 
-**Idempotency is critical:** If the Kafka consumer crashes mid-processing, it will re-read events. The UNIQUE constraint on reference_id (order_id) prevents duplicate credits.`,
+Idempotency is critical: If the Kafka consumer crashes mid-processing, it will re-read events. The UNIQUE constraint on reference_id (order_id) prevents duplicate credits.`,
       },
     ],
 
@@ -964,18 +964,18 @@ driver_locations {
     keyQuestions: [
       {
         question: 'How does the Vehicle Routing Problem differ from the Traveling Salesman Problem and how do you solve it at scale?',
-        answer: `**TSP:** One salesperson, visit all N cities, minimize total distance. NP-hard for exact solution.
+        answer: `TSP: One salesperson, visit all N cities, minimize total distance. NP-hard for exact solution.
 
-**VRP:** Multiple vehicles, split N stops across them, each vehicle has capacity and time constraints. Much harder than TSP because you are solving TSP for each vehicle simultaneously while deciding the partition.
+VRP: Multiple vehicles, split N stops across them, each vehicle has capacity and time constraints. Much harder than TSP because you are solving TSP for each vehicle simultaneously while deciding the partition.
 
-**Why exact algorithms do not work at scale:**
+Why exact algorithms do not work at scale:
 - Exact solvers (branch and bound, dynamic programming) are feasible up to ~20 stops
 - A driver with 150 stops: 150! possible orderings = astronomically large
 - Production systems need solutions in seconds, not hours
 
-**Practical approach: Construction heuristic + local search**
+Practical approach: Construction heuristic + local search
 
-**Step 1: Clarke-Wright Savings (construction)**
+Step 1: Clarke-Wright Savings (construction)
 \`\`\`
 Start: each stop is its own route (N routes of 1 stop each)
 For each pair (i, j):
@@ -986,7 +986,7 @@ Sort savings descending, greedily merge until no more feasible merges
 Result: good initial solution in O(N^2 log N)
 \`\`\`
 
-**Step 2: 2-opt local search (improvement)**
+Step 2: 2-opt local search (improvement)
 \`\`\`
 For each pair of edges in a route:
   Try reversing the segment between them
@@ -994,18 +994,18 @@ For each pair of edges in a route:
 Repeat until no improving swaps exist
 \`\`\`
 
-**Tools used in production:**
+Tools used in production:
 - Google OR-Tools: open source, well-documented, handles time windows, vehicle capacity, traffic
 - Custom implementations at companies like Amazon for proprietary features (building-level access, apartment intercom codes, historical delivery success rates per address)
 
-**Time windows as hard constraints:**
+Time windows as hard constraints:
 Add to the VRP a constraint that stop i cannot be served before window_start[i] or after window_end[i]. This shrinks the feasible solution space and may force route loops. Driver must wait if they arrive early; the stop is infeasible if they cannot arrive in time.`,
       },
       {
         question: 'How do you update a driver\'s route in real time when a new package is added mid-day?',
-        answer: `**Problem:** Driver has an optimized 120-stop route and has completed 40 stops. A new package is added to their route. Re-solving the full VRP from scratch for the remaining 80 stops takes too long and produces a different route that confuses the driver.
+        answer: `Problem: Driver has an optimized 120-stop route and has completed 40 stops. A new package is added to their route. Re-solving the full VRP from scratch for the remaining 80 stops takes too long and produces a different route that confuses the driver.
 
-**Incremental insertion algorithm:**
+Incremental insertion algorithm:
 \`\`\`
 Given: active route [stop_41, stop_42, ..., stop_120]
 New stop: stop_NEW with address and time window
@@ -1021,18 +1021,18 @@ Select position with minimum cost_increase that passes time window check
 Insert stop_NEW at that position, shift sequence numbers forward
 \`\`\`
 
-**Complexity:** O(N) per insertion where N = remaining stops. For 80 remaining stops, this runs in milliseconds.
+Complexity: O(N) per insertion where N = remaining stops. For 80 remaining stops, this runs in milliseconds.
 
-**Trade-off vs full re-optimization:**
+Trade-off vs full re-optimization:
 - Incremental insertion: fast (~10ms), preserves most of the driver's planned route, minimal driver confusion
 - Full re-solve: better global optimality (~5s), but produces unfamiliar route that mid-day driver may resist
 
-**When to full re-solve:**
+When to full re-solve:
 - More than 10 new stops added in one batch (at start of day additions from late-arriving manifests)
 - Route becomes infeasible due to time window violations after multiple insertions
 - Driver explicitly requests re-optimization
 
-**Communicating changes to driver:**
+Communicating changes to driver:
 When a new stop is inserted, push a notification: "New delivery added: 456 Oak Ave, position 51 of your route. Updated ETA for current stop: 2:15 PM." Driver acknowledges in app before navigation updates.`,
       },
     ],
@@ -1210,23 +1210,23 @@ seller_financial_events {
     keyQuestions: [
       {
         question: 'How does the Buy Box algorithm decide which seller wins when multiple sellers offer the same product?',
-        answer: `**What is the Buy Box?** On a product detail page where multiple sellers offer the same item, only one seller's offer appears in the primary "Add to Cart" button. That seller "wins" the Buy Box. Other sellers appear in a secondary "Other sellers" section that most customers never click.
+        answer: `What is the Buy Box? On a product detail page where multiple sellers offer the same item, only one seller's offer appears in the primary "Add to Cart" button. That seller "wins" the Buy Box. Other sellers appear in a secondary "Other sellers" section that most customers never click.
 
-**Buy Box scoring factors (in rough priority order):**
+Buy Box scoring factors (in rough priority order):
 
-1. **Eligibility:** Seller must meet minimum account health thresholds (ODR < 1%, late shipment < 4%). Non-eligible sellers are excluded regardless of price.
+1. Eligibility: Seller must meet minimum account health thresholds (ODR < 1%, late shipment < 4%). Non-eligible sellers are excluded regardless of price.
 
-2. **Fulfillment method:** FBA (fulfilled by Amazon) preferred over FBM (seller fulfills) because FBA guarantees Prime shipping speed and Amazon controls the customer experience.
+2. Fulfillment method: FBA (fulfilled by Amazon) preferred over FBM (seller fulfills) because FBA guarantees Prime shipping speed and Amazon controls the customer experience.
 
-3. **Landed price:** Item price + shipping cost. The algorithm optimizes for buyer value, not seller revenue. A $45 item with free shipping beats a $40 item with $10 shipping.
+3. Landed price: Item price + shipping cost. The algorithm optimizes for buyer value, not seller revenue. A $45 item with free shipping beats a $40 item with $10 shipping.
 
-4. **Delivery speed:** Sellers who can promise 2-day delivery score higher than those who promise 5-7 days.
+4. Delivery speed: Sellers who can promise 2-day delivery score higher than those who promise 5-7 days.
 
-5. **Seller feedback score:** Rolling 12-month weighted score. Recent ratings count more than old ones.
+5. Seller feedback score: Rolling 12-month weighted score. Recent ratings count more than old ones.
 
-6. **In-stock reliability:** Sellers who have been in stock consistently score higher. A seller who wins the Buy Box but then goes out of stock gets penalized.
+6. In-stock reliability: Sellers who have been in stock consistently score higher. A seller who wins the Buy Box but then goes out of stock gets penalized.
 
-**Buy Box rotation:**
+Buy Box rotation:
 Not all purchases go to one seller. Amazon rotates the Buy Box across sellers with competitive scores, giving each seller a proportional share. A seller with score 85 might win 60% of Buy Box impressions vs a competitor with score 80 who wins 40%.
 
 \`\`\`
@@ -1238,14 +1238,14 @@ buy_box_score =
   w5 * account_health_score            // threshold gate, then 0-100
 \`\`\`
 
-**Why precompute rather than compute at query time:**
+Why precompute rather than compute at query time:
 Recomputing the Buy Box for every product page load across 500M products at 11K QPS would require massive database resources. Instead, precompute the winner when any listing changes and cache in Redis. The cached result serves 99.9% of reads.`,
       },
       {
         question: 'How do you handle chargebacks and A-to-Z guarantee claims between buyer and seller?',
-        answer: `**Two distinct dispute mechanisms:**
+        answer: `Two distinct dispute mechanisms:
 
-**1. Credit card chargeback (initiated by buyer with bank):**
+1. Credit card chargeback (initiated by buyer with bank):
 - Buyer tells their bank they never received the item or it was not as described
 - Bank initiates chargeback, temporarily reverses the charge on the buyer's card
 - Marketplace has 30 days to respond with evidence
@@ -1253,12 +1253,12 @@ Recomputing the Buy Box for every product page load across 500M products at 11K 
 - If marketplace wins: chargeback reversed, seller keeps payment
 - If marketplace loses: seller is debited; repeated chargebacks trigger account review
 
-**2. A-to-Z Guarantee claim (initiated by buyer with marketplace):**
+2. A-to-Z Guarantee claim (initiated by buyer with marketplace):
 - Buyer goes directly to the marketplace, not their bank
 - Common reasons: item not received, item not as described, return refused
 - Marketplace arbitrates between buyer and seller
 
-**Rule-based automatic resolutions:**
+Rule-based automatic resolutions:
 \`\`\`
 IF no shipping tracking uploaded by seller → seller loses automatically
 IF tracking shows delivered AND buyer says not received → request photo of delivery location from seller
@@ -1266,12 +1266,12 @@ IF item described as "new" but buyer received "used" → seller loses, refund is
 IF return request within policy window AND seller refused → seller loses, refund issued
 \`\`\`
 
-**Human review cases:**
+Human review cases:
 - Counterfeit allegations (requires authentication)
 - Partial damage (was it seller's packaging or carrier's fault?)
 - "Item not as described" where description is genuinely ambiguous
 
-**Financial flow:**
+Financial flow:
 1. At dispute open: hold disbursement for the order amount
 2. If buyer wins: refund to buyer, debit from seller's account balance
 3. If seller wins: release hold, disburse to seller normally
@@ -1450,9 +1450,9 @@ price_alerts {
     keyQuestions: [
       {
         question: 'How do you match the same product listed by 50 different merchants with different titles and no common identifier?',
-        answer: `**The product identity resolution problem**
+        answer: `The product identity resolution problem
 
-**Level 1: Exact identifier match (covers ~60% of products)**
+Level 1: Exact identifier match (covers ~60% of products)
 \`\`\`
 UPC: 190199057685 (barcode on the box)
 GTIN-14: 00190199057685 (GTIN is a superset of UPC)
@@ -1461,7 +1461,7 @@ ASIN: B09JQMJHXY (Amazon's internal ID — used only for Amazon-originated produ
 \`\`\`
 If any of these match, these are definitively the same product. No ML needed.
 
-**Level 2: Model number extraction (covers ~25% of remaining)**
+Level 2: Model number extraction (covers ~25% of remaining)
 Use named entity recognition to extract model numbers from titles:
 \`\`\`
 "Apple AirPods Pro 2nd Gen USB-C (MTJV3LL/A)" → model: MTJV3LL/A
@@ -1469,7 +1469,7 @@ Use named entity recognition to extract model numbers from titles:
 Same model number → same product
 \`\`\`
 
-**Level 3: ML embedding similarity (covers remaining ~15%)**
+Level 3: ML embedding similarity (covers remaining ~15%)
 For products without reliable identifiers (handmade goods, generic items, some international products):
 
 \`\`\`python
@@ -1488,19 +1488,19 @@ candidates = vector_index.query(embedding, top_k=20)
 # Merge if composite score > 0.85
 \`\`\`
 
-**False positive prevention:**
+False positive prevention:
 - Never merge products from different brands
 - Never merge products with >50% price difference (same product should not vary that much)
 - Use a confidence score; low-confidence merges go to human review queue
 
-**Continuous improvement:**
+Continuous improvement:
 When a user reports a wrong match ("these are not the same product"), that pair is added as a negative training example for the ML model.`,
       },
       {
         question: 'How do you crawl prices at scale without getting blocked by retailers?',
-        answer: `**The arms race:** Retailers block crawlers because they do not want competitors or price comparison sites creating pressure to lower prices. Crawlers adapt; retailers update their defenses.
+        answer: `The arms race: Retailers block crawlers because they do not want competitors or price comparison sites creating pressure to lower prices. Crawlers adapt; retailers update their defenses.
 
-**What retailers detect:**
+What retailers detect:
 - Same IP address making hundreds of requests → IP block
 - Same User-Agent string → User-Agent block
 - Request frequency too high (no human reads 60 pages/min) → rate limit
@@ -1508,28 +1508,28 @@ When a user reports a wrong match ("these are not the same product"), that pair 
 - Requests from data center IP ranges → IP reputation block
 - Missing cookies or session state → redirect to verify page
 
-**Defenses used in production:**
+Defenses used in production:
 
-**1. Residential proxy rotation**
+1. Residential proxy rotation
 Route requests through real consumer ISPs (Bright Data, Oxylabs). These IPs have legitimate residential reputation and are not on blocklists. Rotate IP on each request or every 10-20 requests per domain.
 
-**2. Request timing randomization**
+2. Request timing randomization
 \`\`\`
 Wait 2-10 seconds between requests to the same domain (random, not fixed)
 Vary session length: sometimes 5 pages, sometimes 20 pages
 Crawl during business hours when human traffic is high (easier to blend in)
 \`\`\`
 
-**3. Browser rendering for JS-heavy sites**
+3. Browser rendering for JS-heavy sites
 Some retailers render prices via JavaScript after page load. Use headless Playwright for these sites. Mimics real browser behavior including running all JS, setting cookies, and generating Canvas fingerprints.
 
-**4. Respectful rate limits**
+4. Respectful rate limits
 Read and respect robots.txt Crawl-delay directive. This is both ethical and legal risk mitigation. Aggressive crawlers that ignore robots.txt have lost court cases.
 
-**5. Caching to minimize crawls**
+5. Caching to minimize crawls
 If price is unlikely to change (out-of-stock product, stable price for 30 days), crawl less frequently. Save crawl capacity for high-volatility, high-traffic products.
 
-**What you cannot do:**
+What you cannot do:
 Bypass CAPTCHA via automation (ToS violation, likely illegal in some jurisdictions). For sites with mandatory CAPTCHA, accept that you cannot crawl them or use their official price feed if available.`,
       },
     ],
@@ -1707,11 +1707,11 @@ usage_events {
     keyQuestions: [
       {
         question: 'How do you handle a card decline on renewal day for 1 million subscribers without overwhelming the payment processor or support team?',
-        answer: `**The problem:** All monthly subscribers renew on the 1st. You process 1M charges simultaneously. 150K (15%) fail. 150K customers get instant cancellation emails. Support team is overwhelmed. Many were recoverable.
+        answer: `The problem: All monthly subscribers renew on the 1st. You process 1M charges simultaneously. 150K (15%) fail. 150K customers get instant cancellation emails. Support team is overwhelmed. Many were recoverable.
 
-**Solution: Event-driven billing with staggered renewals and intelligent dunning**
+Solution: Event-driven billing with staggered renewals and intelligent dunning
 
-**Step 1: Stagger renewal times throughout the day**
+Step 1: Stagger renewal times throughout the day
 \`\`\`
 Instead of all subscriptions charged at 00:00 on the 1st:
 - When subscription is created, assign a random minute within the day
@@ -1723,7 +1723,7 @@ Max charge rate: 1M / (24 * 60) = ~694 charges/min = ~11.6 charges/sec
 This is well within payment processor rate limits
 \`\`\`
 
-**Step 2: Idempotent charge with unique key**
+Step 2: Idempotent charge with unique key
 \`\`\`
 idempotency_key = f"inv-{invoice_id}-attempt-{attempt_count}"
 result = payment_processor.charge(amount, token, idempotency_key=key)
@@ -1731,7 +1731,7 @@ result = payment_processor.charge(amount, token, idempotency_key=key)
 If the service crashes and retries, same idempotency_key → processor returns cached result → no double charge
 \`\`\`
 
-**Step 3: Dunning workflow for failed charges**
+Step 3: Dunning workflow for failed charges
 \`\`\`
 Attempt 1 (renewal day, 9:15am): FAILED — insufficient_funds
   → Set subscription status = past_due
@@ -1750,17 +1750,17 @@ Attempt 3 (Day 7): SUCCESS → subscription back to active, send receipt
 Attempt 4 (Day 14): FAILED → cancel subscription, send churned email with win-back offer
 \`\`\`
 
-**Recovery rate:** A good dunning workflow recovers 30-40% of initially failed payments, turning them from churned customers into retained ones. Those are real revenue and customer retention numbers.`,
+Recovery rate: A good dunning workflow recovers 30-40% of initially failed payments, turning them from churned customers into retained ones. Those are real revenue and customer retention numbers.`,
       },
       {
         question: 'How do you calculate prorated charges when a customer upgrades their plan mid-cycle?',
-        answer: `**Scenario:**
+        answer: `Scenario:
 - Customer is on Basic plan: $30/month
 - 15 days into their 30-day billing cycle (halfway through)
 - Upgrades to Pro plan: $60/month
 - Effective immediately
 
-**Proration formula:**
+Proration formula:
 \`\`\`
 Days remaining in current period: 15
 Days in billing period: 30
@@ -1778,7 +1778,7 @@ Next renewal (Day 30):
   full Pro price = $60.00
 \`\`\`
 
-**Implementation:**
+Implementation:
 \`\`\`python
 def calculate_proration(subscription, new_plan, effective_at):
     period_days = (subscription.current_period_end -
@@ -1792,7 +1792,7 @@ def calculate_proration(subscription, new_plan, effective_at):
     return net_charge_cents  # positive = charge, negative = credit
 \`\`\`
 
-**Edge cases:**
+Edge cases:
 - Upgrade on day 1 (immediately after renewal): debit ≈ full new price, credit ≈ full old price → approximately the difference between plans
 - Upgrade on the last day: debit ≈ 0, credit ≈ 0, new plan takes effect next renewal
 - Downgrade (new plan is cheaper): net is negative → apply as credit on next invoice rather than issuing a refund
@@ -1974,12 +1974,12 @@ scan_events {
     keyQuestions: [
       {
         question: 'How does slotting optimization work and why does it dramatically affect fulfillment throughput?',
-        answer: `**The insight:** A picker walks 8 to 12 miles per shift. The order in which they visit bins determines how much productive picking they do vs how much walking they do. Slotting determines which items live in which bins, which determines how much walking is needed per pick.
+        answer: `The insight: A picker walks 8 to 12 miles per shift. The order in which they visit bins determines how much productive picking they do vs how much walking they do. Slotting determines which items live in which bins, which determines how much walking is needed per pick.
 
-**Why naive slotting fails:**
+Why naive slotting fails:
 Assign items to first available bin on arrival. The 10,000 most popular items end up randomly distributed across 500,000 bins. A picker collecting 30 items crosses the entire warehouse repeatedly. Each item requires a unique trip to a random location.
 
-**Velocity-based slotting:**
+Velocity-based slotting:
 \`\`\`
 Every night, compute picks_per_day for every SKU over last 30 days.
 
@@ -1994,7 +1994,7 @@ Zone C (200+ feet): Long-tail SKUs
   - Picked rarely; walking distance less impactful on total throughput
 \`\`\`
 
-**Co-location bonus:**
+Co-location bonus:
 \`\`\`
 If P(order contains A | order contains B) > 0.3:
   Place A and B in adjacent bins
@@ -2005,7 +2005,7 @@ Example: USB-C cables and laptop chargers often ordered together
   → Picker grabs both without moving between aisles
 \`\`\`
 
-**Measuring slotting quality:**
+Measuring slotting quality:
 - Picks per picker-hour (before vs after re-slotting)
 - Average distance traveled per pick order (total feet / number of items)
 - % of picks completed without crossing an aisle boundary
@@ -2014,10 +2014,10 @@ Amazon re-slots frequently (weekly for top items) because the top-100 list chang
       },
       {
         question: 'How do you route an order to the optimal fulfillment center across a network of 50 warehouses?',
-        answer: `**Simple approach (wrong): Route to nearest warehouse**
+        answer: `Simple approach (wrong): Route to nearest warehouse
 Problem: Nearest warehouse may be out of stock, may cause order split, or may have high shipping zone costs despite physical proximity.
 
-**Cost-minimization routing:**
+Cost-minimization routing:
 \`\`\`python
 def route_order(order_items, ship_to_zip):
     eligible_warehouses = []
@@ -2053,13 +2053,13 @@ def route_order(order_items, ship_to_zip):
     return min(eligible_warehouses, key=lambda x: x['cost'])
 \`\`\`
 
-**Key factors in cost function:**
-- **Shipping zone fee**: US shipping has 8 zones; a package to Zone 8 from Zone 1 costs 3x more than Zone 2. A warehouse 200 miles away in the same zone can be cheaper than one 50 miles away across a zone boundary.
-- **Split penalty**: Shipping one order from two warehouses costs ~40% more in total shipping and creates worse customer experience (two delivery windows). Add $5-10 explicit penalty to split options.
-- **Capacity utilization**: Overloaded warehouses get a cost penalty to steer orders away from stressed facilities.
-- **SLA commitment**: If next-day delivery promised, only warehouses that can ship same-day are eligible.
+Key factors in cost function:
+- Shipping zone fee: US shipping has 8 zones; a package to Zone 8 from Zone 1 costs 3x more than Zone 2. A warehouse 200 miles away in the same zone can be cheaper than one 50 miles away across a zone boundary.
+- Split penalty: Shipping one order from two warehouses costs ~40% more in total shipping and creates worse customer experience (two delivery windows). Add $5-10 explicit penalty to split options.
+- Capacity utilization: Overloaded warehouses get a cost penalty to steer orders away from stressed facilities.
+- SLA commitment: If next-day delivery promised, only warehouses that can ship same-day are eligible.
 
-**Performance requirement: under 100ms**
+Performance requirement: under 100ms
 - Pre-compute inventory snapshots per warehouse in Redis (update on every scan event)
 - Pre-compute shipping zone lookup table (zip → zone for each warehouse) in memory
 - Evaluate all 50 warehouses in parallel (async, not sequential)
@@ -2239,9 +2239,9 @@ commission_events {
     keyQuestions: [
       {
         question: 'How do you attribute a sale to a creator when the customer clicks a link and buys three days later from a direct search?',
-        answer: `**The attribution problem:** Customer watches Creator A's TikTok at 8pm, taps the product but does not buy. The next day they search for the product on Google, click a non-affiliate link, and buy. Creator A drove the awareness but last-touch attribution gives Google the credit.
+        answer: `The attribution problem: Customer watches Creator A's TikTok at 8pm, taps the product but does not buy. The next day they search for the product on Google, click a non-affiliate link, and buy. Creator A drove the awareness but last-touch attribution gives Google the credit.
 
-**Event log approach:**
+Event log approach:
 \`\`\`
 Event 1: 2025-06-01 20:15 — viewer_id:1001 viewed content:vid-abc, creator:creator-A
 Event 2: 2025-06-01 20:15 — viewer_id:1001 clicked product:prod-123 in content:vid-abc
@@ -2249,37 +2249,37 @@ Event 3: 2025-06-01 22:30 — viewer_id:1001 viewed content:vid-xyz, creator:cre
 Event 4: 2025-06-02 09:45 — viewer_id:1001 purchased product:prod-123 (from search/direct)
 \`\`\`
 
-**Attribution models:**
+Attribution models:
 
-**Last-touch (simplest, common default):**
+Last-touch (simplest, common default):
 - Give 100% credit to the last creator interaction before purchase
 - Event 3 wins: creator-B gets full commission
 - Problem: rewards the last touchpoint regardless of who drove awareness
 
-**First-touch:**
+First-touch:
 - Give 100% credit to the first interaction
 - Event 1 wins: creator-A gets full commission
 - Problem: ignores subsequent influencing creators
 
-**Linear (fairer for multi-creator paths):**
+Linear (fairer for multi-creator paths):
 - Split credit equally across all touchpoints in window
 - Creator-A: 50%, Creator-B: 50%
 - Problem: complex to explain to creators and more expensive
 
-**7-day attribution window:**
+7-day attribution window:
 Interactions older than 7 days are dropped. Prevents creators from claiming credit for purchases weeks after an impression.
 
-**iOS 14+ privacy challenge:**
+iOS 14+ privacy challenge:
 App Tracking Transparency means creators cannot be attributed across apps (TikTok impression → browser purchase). In-app purchase is the solution: if the entire journey happens inside the app, attribution works without cross-app tracking.
 
-**Practical recommendation:**
+Practical recommendation:
 Use last-touch as the default (simple, predictable, easy to explain to creators) with a 7-day lookback window, disclosed clearly to creators so they understand the model and can plan content cadence accordingly.`,
       },
       {
         question: 'How does live shopping inventory management work when thousands of viewers are buying simultaneously?',
-        answer: `**The problem:** Creator has 100 units of a $200 sneaker. During a live stream with 500K viewers, she holds up the shoe and says "Buy now!" 5,000 viewers tap simultaneously. The database cannot handle 5,000 concurrent reads and writes without overselling.
+        answer: `The problem: Creator has 100 units of a $200 sneaker. During a live stream with 500K viewers, she holds up the shoe and says "Buy now!" 5,000 viewers tap simultaneously. The database cannot handle 5,000 concurrent reads and writes without overselling.
 
-**Redis atomic counter approach:**
+Redis atomic counter approach:
 \`\`\`
 On stream start:
   HSET stream:30012:inventory product:55001 100  -- 100 units available
@@ -2297,12 +2297,12 @@ On each purchase attempt:
     return "Sorry, this item just sold out!"
 \`\`\`
 
-**Why Redis atomic counter works:**
+Why Redis atomic counter works:
 - HINCRBY is atomic: no two concurrent decrements can read the same value
 - Redis handles 100K+ operations per second on a single node
 - No database row lock needed during the stream
 
-**Syncing back to the database:**
+Syncing back to the database:
 \`\`\`
 Every 10 seconds:
   redis_count = HGET stream:30012:inventory product:55001
@@ -2314,7 +2314,7 @@ On stream end:
   Release any remaining allocated inventory back to main catalog
 \`\`\`
 
-**Viewer-facing countdown display:**
+Viewer-facing countdown display:
 WebSocket push from the server updates the "Only X left!" counter:
 - Subscribe all stream viewers to a Redis PubSub channel for inventory updates
 - When Redis count changes, publish to PubSub channel
@@ -2489,11 +2489,11 @@ fraud_signals {
     keyQuestions: [
       {
         question: 'How do you detect wardrobing without blocking legitimate returns from good customers?',
-        answer: `**Wardrobing definition:** Customer buys an expensive dress for a wedding, wears it, then returns it claiming "never worn / changed my mind." Retailer receives a worn item, cannot resell it as new, takes a loss.
+        answer: `Wardrobing definition: Customer buys an expensive dress for a wedding, wears it, then returns it claiming "never worn / changed my mind." Retailer receives a worn item, cannot resell it as new, takes a loss.
 
-**Detection signals (combined into a fraud score):**
+Detection signals (combined into a fraud score):
 
-**Account-level signals (precomputed, updated after each return):**
+Account-level signals (precomputed, updated after each return):
 \`\`\`
 return_rate = returns / orders  // > 50% is a red flag
 high_value_return_count          // returns of items > $100
@@ -2501,21 +2501,21 @@ recent_wardrobing_flags          // prior confirmed wardrobing incidents
 category_concentration           // returns concentrated in fashion/luxury vs random
 \`\`\`
 
-**Transaction-level signals (checked at initiation time):**
+Transaction-level signals (checked at initiation time):
 \`\`\`
 time_since_purchase_days    // clothing returned after 25-29 days (near limit) is suspicious
 weekend/holiday gap         // bought Friday before prom weekend, returned Monday
 repeat_pattern              // bought same item 3 times in 12 months, returned each time
 \`\`\`
 
-**Physical inspection signals (checked at returns center):**
+Physical inspection signals (checked at returns center):
 \`\`\`
 deodorant stains, makeup residue, pulled threads, stretched fabric
 smell from perfume or cigarette smoke (harder to automate)
 tags removed and replaced (look for tag re-attachment marks)
 \`\`\`
 
-**Policy response by risk tier:**
+Policy response by risk tier:
 \`\`\`
 Low risk (score 0-30):   Instant refund on drop-off scan, inspect afterward
 Medium risk (score 30-60): Refund issued after inspection (3-5 day delay)
@@ -2523,21 +2523,21 @@ High risk (score 60-85):  Photo proof of condition required before label generat
 Blocked (score 85+):      Return denied or limited to store credit; human review required
 \`\`\`
 
-**Why not block all high-rate returners?**
+Why not block all high-rate returners?
 A customer who returns 40% of purchases but is always legitimate (size issues, color looks different in person) is still a valuable customer. Blocking them alienates good buyers. The system blocks based on *type* of return (luxury items, near-policy-limit timing) and *physical evidence* (inspector confirms wear) not just return rate.`,
       },
       {
         question: 'How do you decide whether to restock, refurbish, or liquidate a returned item?',
-        answer: `**The decision matrix depends on condition grade × item economics:**
+        answer: `The decision matrix depends on condition grade × item economics:
 
-**Condition grades from inspector:**
+Condition grades from inspector:
 - New: Unopened box, original packaging intact
 - Like-new: Opened but unused, all components present
 - Good: Used but no visible damage, all components present
 - Fair: Visible wear, minor damage, usable
 - Poor: Significant damage, missing components, borderline unusable
 
-**Channel economics (example values):**
+Channel economics (example values):
 \`\`\`
 Channel         | Recovery %  | Cost     | Time
 Prime shelf     | 100% MSRP   | ~$2 labor| 1 day
@@ -2547,7 +2547,7 @@ Liquidation     | 10-30% MSRP | $1-5     | 1 week
 Destroy         | 0%          | $1-3     | Same day
 \`\`\`
 
-**Decision rules by grade and category:**
+Decision rules by grade and category:
 \`\`\`
 New + any category → Prime shelf (resell as new with original packaging)
 
@@ -2564,11 +2564,11 @@ Fair + item_value < $100 → Destroy (cost of processing exceeds liquidation val
 Poor + any category → Destroy or Parts salvage
 \`\`\`
 
-**Automated recommendation engine:**
+Automated recommendation engine:
 Inspector selects condition grade and defect codes. System looks up: \`recommended_channel = RULES[condition_grade][item_category][value_band]\`
 Inspector confirms or overrides. Override logged for model improvement.
 
-**Why this matters for the interview:**
+Why this matters for the interview:
 The restocking decision affects: (1) recovery rate per returned item, (2) labor cost per item, (3) customer trust (refurbished item sold as new → disaster), and (4) sustainability metrics (destruction rate). A good system optimizes all four simultaneously.`,
       },
     ],
@@ -2756,7 +2756,7 @@ invoices {
     keyQuestions: [
       {
         question: 'How do you implement a purchasing approval workflow with configurable spending limits per buyer?',
-        answer: `**The business requirement:** Company policy says:
+        answer: `The business requirement: Company policy says:
 - Any buyer can submit up to $5,000 without approval
 - Orders $5,001 - $25,000 need manager approval
 - Orders $25,001 - $100,000 need VP approval
@@ -2764,7 +2764,7 @@ invoices {
 
 These thresholds are configurable per company.
 
-**Data model:**
+Data model:
 \`\`\`sql
 -- Company approval policy (configurable by account admin)
 approval_policies {
@@ -2785,7 +2785,7 @@ po_approval_steps {
 }
 \`\`\`
 
-**Workflow on PO submission:**
+Workflow on PO submission:
 \`\`\`python
 def route_po_for_approval(po, buyer):
     applicable_levels = [
@@ -2809,7 +2809,7 @@ def route_po_for_approval(po, buyer):
     notify_approver(po.approval_steps[0].approver_id)
 \`\`\`
 
-**State machine transitions:**
+State machine transitions:
 \`\`\`
 DRAFT → PENDING_APPROVAL (on submit)
 PENDING_APPROVAL → PENDING_APPROVAL (on step N approved, step N+1 activated)
@@ -2818,7 +2818,7 @@ PENDING_APPROVAL → REJECTED (on any step rejected)
 APPROVED → SUBMITTED_TO_SUPPLIER (on EDI transmission success)
 \`\`\`
 
-**Edge cases to handle:**
+Edge cases to handle:
 - Approver is out of office → delegate to backup approver
 - Approver is the buyer themselves (conflict of interest) → escalate to approver's manager
 - PO modified after partial approval → restart approval from step 1 (amount may have changed)
@@ -2826,15 +2826,15 @@ APPROVED → SUBMITTED_TO_SUPPLIER (on EDI transmission success)
       },
       {
         question: 'How does EDI work and why do enterprise B2B customers require it?',
-        answer: `**What is EDI?** Electronic Data Interchange is a set of standard electronic formats for exchanging business documents between companies. Think of it as a structured API from the 1970s that is still widely used because it is deeply embedded in enterprise ERP systems.
+        answer: `What is EDI? Electronic Data Interchange is a set of standard electronic formats for exchanging business documents between companies. Think of it as a structured API from the 1970s that is still widely used because it is deeply embedded in enterprise ERP systems.
 
-**Why companies require EDI:**
+Why companies require EDI:
 - Their ERP system (SAP, Oracle) sends and receives purchase orders in EDI format automatically
 - If you do not support EDI, a human must re-enter the order data manually into the ERP → expensive and error-prone
 - Walmart requires EDI compliance from all suppliers; refusing means you cannot sell at Walmart
 - Healthcare, automotive, and retail industries have EDI as a contractual requirement
 
-**Key EDI transaction sets:**
+Key EDI transaction sets:
 \`\`\`
 EDI 850 — Purchase Order
   Buyer sends to supplier: "I want to buy 100 units of SKU-1234 at $9.99 each,
@@ -2855,7 +2855,7 @@ EDI 810 — Invoice
   Supplier bills buyer: "Here is your invoice for PO# 2025-00441"
 \`\`\`
 
-**Technical implementation:**
+Technical implementation:
 \`\`\`
 Inbound EDI 850 (received from buyer):
 1. File arrives via AS2 (secure HTTPS-based EDI transport) or SFTP
@@ -2875,7 +2875,7 @@ Outbound EDI 810 (invoice to buyer):
 6. Buyer's ERP auto-matches invoice to PO → triggers payment on due date
 \`\`\`
 
-**B2B platform integration choice:**
+B2B platform integration choice:
 Most companies use a middleware EDI provider (SPS Commerce, TrueCommerce, DiCentral) rather than building an EDI stack from scratch. The provider handles AS2 transport, trading partner management, and transaction translation, exposing a clean API or webhook interface to the platform.`,
       },
     ],
@@ -3059,11 +3059,11 @@ shipment_documents {
     keyQuestions: [
       {
         question: 'How do you normalize tracking events from 400+ carriers into a unified timeline?',
-        answer: `**The problem:** Carrier A says "DLVD" — what does that mean? Delivered? Delay? Carrier B says "OUT FOR DELIVERY" in English. Carrier C sends an EDI 214 with status code "X6." These must all map to the same internal concept so the platform can display a consistent timeline and trigger consistent exception rules.
+        answer: `The problem: Carrier A says "DLVD" — what does that mean? Delivered? Delay? Carrier B says "OUT FOR DELIVERY" in English. Carrier C sends an EDI 214 with status code "X6." These must all map to the same internal concept so the platform can display a consistent timeline and trigger consistent exception rules.
 
-**Three-tier normalization approach:**
+Three-tier normalization approach:
 
-**Tier 1: Exact code mapping (covers ~60% of events)**
+Tier 1: Exact code mapping (covers ~60% of events)
 \`\`\`python
 # Static mapping table maintained by data operations team
 CARRIER_STATUS_MAP = {
@@ -3081,7 +3081,7 @@ def normalize_status(carrier_id, raw_code):
     return CARRIER_STATUS_MAP.get((carrier_id, raw_code))
 \`\`\`
 
-**Tier 2: ML classifier for unmapped codes (covers ~30%)**
+Tier 2: ML classifier for unmapped codes (covers ~30%)
 When no exact mapping exists:
 \`\`\`python
 # Train a text classifier on (raw_status_text, context) → normalized_status
@@ -3095,12 +3095,12 @@ if confidence < 0.8:
     queue_for_review(event, prediction=normalized, confidence=confidence)
 \`\`\`
 
-**Tier 3: Human review for novel codes (covers ~10%)**
+Tier 3: Human review for novel codes (covers ~10%)
 - Unknown codes from new carriers or unusual events go to a data team queue
 - Human reviews, assigns normalized status
 - Decision added to Tier 1 mapping for future occurrences
 
-**Handling event deduplication:**
+Handling event deduplication:
 Same event sometimes arrives from multiple sources (carrier API + EDI + email):
 \`\`\`python
 # Deduplication key: (tracking_number, event_timestamp, event_location)
@@ -3108,17 +3108,17 @@ Same event sometimes arrives from multiple sources (carrier API + EDI + email):
 # Keep the highest-quality source (API > EDI > email > manual)
 \`\`\`
 
-**Timeline ordering challenge:**
+Timeline ordering challenge:
 Events arrive out of order (EDI update for yesterday's event arrives today). Use event_timestamp (when the event happened) for timeline ordering, not ingested_at (when we received it). For unknown timestamps (some carriers only send "today at some point"), estimate based on event sequence and historical timing patterns.`,
       },
       {
         question: 'How do you predict shipment ETAs when ocean freight can be delayed by weeks due to port congestion?',
-        answer: `**Why carrier-provided ETA is unreliable:**
+        answer: `Why carrier-provided ETA is unreliable:
 Carriers compute ETA at booking time based on the vessel schedule — nominal port calls, no adjustment for real-world conditions. Port congestion at Los Angeles in 2021-2022 caused 100+ vessel anchorage queues, with ships waiting 2-3 weeks past their scheduled arrival. The carrier still showed the original scheduled date in their system.
 
-**ML ETA prediction approach:**
+ML ETA prediction approach:
 
-**Feature engineering:**
+Feature engineering:
 \`\`\`python
 features = {
     # Current shipment state
@@ -3148,18 +3148,18 @@ predicted_eta = xgboost_model.predict(features)
 # Returns: predicted arrival date + confidence interval (e.g., June 4 ± 2 days, 85% confidence)
 \`\`\`
 
-**Training data:**
+Training data:
 - Historical shipments with known actual arrival dates
 - Carrier ETA at various points during transit (to learn how ETA evolves)
 - Port congestion data matched to historical delays
 - ~3-5 years of data to capture seasonal patterns (peak season congestion, Chinese New Year factory shutdowns)
 
-**Model update frequency:**
+Model update frequency:
 - Re-run predictions every 6 hours per active shipment (or on new tracking event)
 - Port congestion features updated every 15 minutes
 - Model retrained weekly with new actuals
 
-**Business value:**
+Business value:
 - Original carrier ETA: mean absolute error of 5.2 days
 - ML-predicted ETA: mean absolute error of 2.1 days
 - For a company with $100M in inventory, a 3-day improvement in ETA accuracy allows reducing safety stock by ~$8M (based on 28-day replenishment cycle)`,

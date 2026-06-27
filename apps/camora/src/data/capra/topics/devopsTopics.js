@@ -380,13 +380,13 @@ DevOps Handbook Quote: "We must always seek to increase the flow of work from De
 
 Concrete failure modes when you adopt tools without the Three Ways:
 
-1. **Pipeline without trust**: dev hands off to ops via Jenkins job. Ops still distrusts dev\'s code. Each release still requires manual approval. Result: pipeline automated handoffs but cycle time unchanged.
+1. Pipeline without trust: dev hands off to ops via Jenkins job. Ops still distrusts dev\'s code. Each release still requires manual approval. Result: pipeline automated handoffs but cycle time unchanged.
 
-2. **Monitoring without ownership**: ops adds dashboards and alerts; dev doesn\'t look at them. Production issues continue to go to ops. Result: feedback loop technically exists but doesn\'t close.
+2. Monitoring without ownership: ops adds dashboards and alerts; dev doesn\'t look at them. Production issues continue to go to ops. Result: feedback loop technically exists but doesn\'t close.
 
-3. **Postmortems without psychological safety**: incidents get reviewed but the unspoken question is "who screwed up?" People hide near-misses. Result: postmortems become political theater; learning doesn\'t happen.
+3. Postmortems without psychological safety: incidents get reviewed but the unspoken question is "who screwed up?" People hide near-misses. Result: postmortems become political theater; learning doesn\'t happen.
 
-4. **CI/CD without trunk-based dev**: long-lived feature branches still merge late. Integration is still painful. Result: CI runs every push but the integration pain wasn\'t the build — it was the merge conflict.
+4. CI/CD without trunk-based dev: long-lived feature branches still merge late. Integration is still painful. Result: CI runs every push but the integration pain wasn\'t the build — it was the merge conflict.
 
 The DevOps Handbook is explicit: tools enable culture; culture transcends tools. Patrick Debois (who coined "DevOps" in 2009): "DevOps is human problems with human solutions, supported by tools."
 
@@ -396,9 +396,9 @@ The interview-clean answer: tools are the LAST thing you change in a DevOps tran
         question: 'What does Westrum\'s organizational typology have to do with the Three Ways?',
         answer: `Westrum\'s typology is the empirical foundation for the Third Way. Ron Westrum (2004) studied aviation and healthcare safety and found three organizational cultures:
 
-- **Pathological** (power-oriented): information is hoarded for political gain; messengers are shot; failure leads to scapegoating.
-- **Bureaucratic** (rule-oriented): silos defend turf; rules > mission; novelty is suppressed.
-- **Generative** (performance-oriented): information flows freely; bridging between teams; failure is investigated for learning; mission > position.
+- Pathological (power-oriented): information is hoarded for political gain; messengers are shot; failure leads to scapegoating.
+- Bureaucratic (rule-oriented): silos defend turf; rules > mission; novelty is suppressed.
+- Generative (performance-oriented): information flows freely; bridging between teams; failure is investigated for learning; mission > position.
 
 Accelerate (Forsgren, Humble, Kim, 2018) ran statistical analysis on DORA survey data and found Generative cultures strongly predict software delivery performance — deploy frequency, lead time, change failure rate, MTTR all improve in Generative organizations.
 
@@ -410,21 +410,21 @@ The interview answer: Westrum + Accelerate = the empirical evidence that the Thi
         question: 'How would you diagnose a stalled DevOps transformation using the Three Ways?',
         answer: `Walk through each Way and look for the missing piece:
 
-**First Way — Flow**:
+First Way — Flow:
 - Are deploys still manual? Lead time still measured in weeks?
 - Is there a "release manager" coordinating handoffs?
 - Are environments provisioned via tickets, not IaC?
 - Are feature branches long-lived?
 - If yes to any of these → Flow is broken. The fix: trunk-based dev, CI/CD pipelines, IaC.
 
-**Second Way — Feedback**:
+Second Way — Feedback:
 - Do developers see production telemetry?
 - Are alerts going to dev or only to ops?
 - Are failed deploys auto-rolled-back?
 - Are postmortems published broadly?
 - If no to any of these → Feedback is broken. The fix: shared dashboards, dev on-call rotation, deploy markers in dashboards.
 
-**Third Way — Learning**:
+Third Way — Learning:
 - Are postmortems blameless? Do they produce action items? Do action items ship?
 - Are game days held?
 - Are retros producing process changes?
@@ -615,37 +615,37 @@ The interview test: senior DevOps engineers should be able to:
         question: 'How do you assess whether an organization is Pathological, Bureaucratic, or Generative?',
         answer: `Westrum proposed concrete diagnostic questions. The classic ones:
 
-**1. How is information handled?**
+1. How is information handled?
 - Pathological: information is power. Hoard it. Don\'t share unless required.
 - Bureaucratic: information flows in official channels only. Sharing across departments needs approval.
 - Generative: information flows freely to where it\'s needed. Sharing is rewarded.
 
-**2. How are messengers treated?**
+2. How are messengers treated?
 - Pathological: shot. Bringing bad news damages your reputation.
 - Bureaucratic: filtered through hierarchy; news may not reach decision-makers in time.
 - Generative: trained, valued. Surfacing problems early is praised.
 
-**3. How are responsibilities handled?**
+3. How are responsibilities handled?
 - Pathological: shirked. "Not my job." Blame routing.
 - Bureaucratic: narrow. Defined by job description; rule-bound.
 - Generative: shared. Anyone can flag a problem; cross-team collaboration is normal.
 
-**4. How is bridging encouraged?**
+4. How is bridging encouraged?
 - Pathological: discouraged. Cross-team contact looks suspicious.
 - Bureaucratic: tolerated. Only through designated channels.
 - Generative: encouraged. People move between teams; collaborate ad-hoc.
 
-**5. How is failure handled?**
+5. How is failure handled?
 - Pathological: scapegoating. Find someone to blame.
 - Bureaucratic: investigation focused on rule compliance. "Was the procedure followed?"
 - Generative: investigation focused on systemic learning. Blameless postmortems.
 
-**6. How are new ideas treated?**
+6. How are new ideas treated?
 - Pathological: crushed. Threat to existing power.
 - Bureaucratic: novelty creates problems for the rule system. Resist.
 - Generative: implemented. Experimentation is normal.
 
-**Practical assessment**: in 1:1s with engineers at the org, ask "what happens when something goes wrong here?" The answer usually reveals the type.
+Practical assessment: in 1:1s with engineers at the org, ask "what happens when something goes wrong here?" The answer usually reveals the type.
 
 Pathological signal: "we figure out who screwed up."
 Bureaucratic signal: "we hold a meeting to determine if proper procedure was followed."
@@ -657,13 +657,13 @@ Accelerate found Westrum scores correlate with DORA performance — Generative o
         question: 'Walk me through CALMS and how each pillar shows up.',
         answer: `Five pillars, each with concrete practices:
 
-**C — Culture**
+C — Culture
 - Shared accountability dev + ops (shared on-call, shared metrics).
 - "You build it, you run it" (Werner Vogels, AWS).
 - Blameless postmortems.
 - Generative values from Westrum.
 
-**A — Automation**
+A — Automation
 - CI/CD pipelines (build, test, deploy).
 - Infrastructure as Code (Terraform, Pulumi, Crossplane).
 - Configuration management (Ansible, Puppet).
@@ -671,7 +671,7 @@ Accelerate found Westrum scores correlate with DORA performance — Generative o
 - Toil reduction (the SRE 50% rule).
 - Self-service infrastructure provisioning.
 
-**L — Lean**
+L — Lean
 - Continuous improvement (Kaizen).
 - Eliminate waste (handoffs, wait times, rework).
 - Small batch sizes.
@@ -679,14 +679,14 @@ Accelerate found Westrum scores correlate with DORA performance — Generative o
 - Value stream mapping.
 - Theory of Constraints.
 
-**M — Measurement**
+M — Measurement
 - DORA metrics.
 - Outcome over output ("are users happy?" not "how many lines did we ship?").
 - SLI/SLO/error budgets.
 - Customer satisfaction surveys.
 - DX/SPACE metrics for developer experience.
 
-**S — Sharing**
+S — Sharing
 - Communities of practice (Spotify guilds, etc.).
 - Internal blogs / engineering wikis / TechDocs.
 - Public conference talks (Velocity, KubeCon, etc.).
@@ -694,21 +694,21 @@ Accelerate found Westrum scores correlate with DORA performance — Generative o
 - Open-source contributions.
 - Cross-team rotations.
 
-**The relationship between CALMS and Westrum**: Westrum diagnoses where you are; CALMS prescribes practices to move forward. But CALMS practices in a Pathological culture become compliance theater (postmortems performed but no learning; pipelines built but trust still missing). Culture is upstream of practice.
+The relationship between CALMS and Westrum: Westrum diagnoses where you are; CALMS prescribes practices to move forward. But CALMS practices in a Pathological culture become compliance theater (postmortems performed but no learning; pipelines built but trust still missing). Culture is upstream of practice.
 
-**Interview answer**: list the five letters; for each, give one concrete practice; explain CALMS is the operational checklist while Westrum is the cultural assessment.`,
+Interview answer: list the five letters; for each, give one concrete practice; explain CALMS is the operational checklist while Westrum is the cultural assessment.`,
       },
       {
         question: 'How do CALMS, Westrum, and DORA relate?',
         answer: `Three layers of one model — culture, practices, outcomes:
 
-**Westrum (DIAGNOSIS — culture)**:
+Westrum (DIAGNOSIS — culture):
 Pathological / Bureaucratic / Generative. Westrum is the cultural assessment. "Where are we?"
 
-**CALMS (PRESCRIPTION — practices)**:
+CALMS (PRESCRIPTION — practices):
 Culture, Automation, Lean, Measurement, Sharing. The operational pillars to move toward Generative. "What do we do?"
 
-**DORA (OUTCOMES — performance)**:
+DORA (OUTCOMES — performance):
 Deployment Frequency, Lead Time, Change Failure Rate, MTTR. The measurable results. "How is it working?"
 
 The chain:
@@ -719,7 +719,7 @@ Accelerate research is the empirical evidence linking all three:
 - DORA performance predicts business performance (revenue, customer satisfaction, employee retention).
 - The chain is statistically validated, not just plausible.
 
-**Practical implication**: you can\'t skip layers.
+Practical implication: you can\'t skip layers.
 - Trying to install CALMS practices in a Pathological culture: practices become theater.
 - Trying to improve DORA metrics without changing culture: short-term wins regress.
 - Trying to address culture without practices: vague.
@@ -729,7 +729,7 @@ The order to invest:
 2. CALMS practices on that foundation.
 3. DORA metrics measure progress.
 
-**Interview-ready summary**: Westrum tells you where you are. CALMS tells you what to do. DORA tells you if it\'s working. Accelerate is the empirical foundation showing they\'re linked.`,
+Interview-ready summary: Westrum tells you where you are. CALMS tells you what to do. DORA tells you if it\'s working. Accelerate is the empirical foundation showing they\'re linked.`,
       },
     ],
     references: [
@@ -927,28 +927,28 @@ For interview prep, you should be able to:
         question: 'How would you do a value stream mapping exercise?',
         answer: `Six steps:
 
-**1. Pick the value stream and a recent example.**
+1. Pick the value stream and a recent example.
 - Don\'t map "all of engineering" — pick one product or one customer request.
 - Pick a recent example: a feature that shipped 4 weeks ago. We\'ll trace its journey.
 
-**2. List every step from idea to value delivered.**
+2. List every step from idea to value delivered.
 - Example: Idea → Design → Code → Review → Build → Test → Stage → UAT → Prod approval → Prod deploy → Customer use → Telemetry / feedback.
 - Resist combining steps. Granular > coarse.
 
-**3. For each step, gather three numbers:**
+3. For each step, gather three numbers:
 - Lead Time (LT): wall-clock time from arriving at the step to leaving it.
 - Process Time (PT): actual hands-on work time (interview the person who did the work).
 - Wait Time (WT): time waiting (LT - PT).
 
-**4. Compute totals and the PT/LT ratio.**
+4. Compute totals and the PT/LT ratio.
 - Sum LT across the whole stream — this is your Lead Time for Changes (DORA).
 - Compute PT/LT for each step. Most steps will be 5-30%.
 
-**5. Identify the largest WT.**
+5. Identify the largest WT.
 - The longest wait is the bottleneck.
 - Common culprits: code review queues, QA queues, environment provisioning, deploy approval boards, change-advisory-board meetings.
 
-**6. Design the future-state map.**
+6. Design the future-state map.
 - For the bottleneck, propose specific changes:
   - Code review wait → smaller PRs, automated approval, review SLAs.
   - QA wait → shift-left, in-team testing.
@@ -957,73 +957,73 @@ For interview prep, you should be able to:
 - Calculate the new LT after the change.
 - The gap between current and future state is the improvement roadmap.
 
-**Tools for the exercise**:
+Tools for the exercise:
 - Whiteboard + sticky notes (first pass, in-person).
 - Mural / Miro / Lucidchart (remote collaboration).
 - LinearB, Faros AI (auto-instrument from CI/CD + ticketing data; show wait times across teams).
 
-**Cadence**:
+Cadence:
 - Initial VSM: 1 day workshop with the stream-aligned team + key partners.
 - Re-map: every quarter or after a major change.
 - DORA Lead Time: continuous metric, re-validates VSM directionally.
 
-**The interview discipline**: the punchline of VSM is almost always "85% of your time is waiting." Be specific about WHERE the waiting happens; that\'s the actionable insight.`,
+The interview discipline: the punchline of VSM is almost always "85% of your time is waiting." Be specific about WHERE the waiting happens; that\'s the actionable insight.`,
       },
       {
         question: 'Most teams\' Lead Time is dominated by code review. Why?',
         answer: `Several structural reasons:
 
-**1. Reviewers are senior engineers.**
+1. Reviewers are senior engineers.
 - Senior engineers have many demands on their time.
 - A PR sits in their queue while they finish a meeting, an interview, an incident response.
 - Even 30 min of actual review work can take 2-3 days of wall-clock time.
 
-**2. PRs are too large.**
+2. PRs are too large.
 - Larger PRs require more review time per PR.
 - Reviewers procrastinate on large PRs.
 - Result: large PRs sit longer, accumulating merge conflicts, requiring re-review.
 
-**3. Reviewers are not the team.**
+3. Reviewers are not the team.
 - "Senior engineer must approve all changes from junior engineers."
 - Centralizes review on a few people.
 - They become the bottleneck.
 
-**4. No SLA on review.**
+4. No SLA on review.
 - Reviewers don\'t feel time pressure.
 - Author waits passively.
 
-**5. Comment-driven cycles.**
+5. Comment-driven cycles.
 - Reviewer comments; author responds; reviewer comments again; multiple round-trips.
 - Each round-trip adds wait time.
 
-**Fixes** (in order of impact):
+Fixes (in order of impact):
 
-**Smaller PRs** (highest leverage):
+Smaller PRs (highest leverage):
 - Aim for < 200 lines changed per PR.
 - Stack PRs (Sapling, Graphite, ghstack) for multi-step work.
 - Trunk-based dev with frequent small merges.
 
-**Distributed review responsibility**:
+Distributed review responsibility:
 - Don\'t require senior approval for trivial changes.
 - Pair-programming as review (two engineers code together; auto-approved).
 - CODEOWNERS for distributed expertise.
 
-**Automated approvals for trivial PRs**:
+Automated approvals for trivial PRs:
 - Dependabot version bumps.
 - Pure refactors (with safety guarantees from the IDE).
 - Documentation-only changes.
 - Generated code.
 
-**Review SLAs**:
+Review SLAs:
 - Team agreement: PRs reviewed within 4 hours during work hours.
 - Track and visualize.
 - Reviewers have explicit time blocked daily for review.
 
-**Synchronous review for blocking changes**:
+Synchronous review for blocking changes:
 - For a change blocking a release, schedule a 30-min sync review session.
 - Faster than async ping-pong.
 
-**Concrete numbers**: a team I\'ve worked with reduced PR review wait from 36 hours median to 3 hours by adopting smaller PRs + 4-hour review SLA + automated approval for dependencies. Lead Time dropped from "days" to "hours" without changing anything else.
+Concrete numbers: a team I\'ve worked with reduced PR review wait from 36 hours median to 3 hours by adopting smaller PRs + 4-hour review SLA + automated approval for dependencies. Lead Time dropped from "days" to "hours" without changing anything else.
 
 The interview-clean framing: code review wait is the most common DevOps bottleneck because it\'s structural, not technical. Tools (CI/CD, IaC) don\'t fix it. Practice changes do (smaller PRs, SLAs, distributed responsibility).`,
       },
@@ -1031,12 +1031,12 @@ The interview-clean framing: code review wait is the most common DevOps bottlene
         question: 'How does VSM tie back to DORA metrics?',
         answer: `VSM is the diagnostic tool; DORA is the outcome measurement. They\'re complementary.
 
-**DORA Lead Time for Changes** is the SUM of lead times across your value stream:
+DORA Lead Time for Changes is the SUM of lead times across your value stream:
 - Lead Time (DORA) = Σ Lead Time (each step in VSM)
 
 VSM tells you WHERE the time is going. DORA gives you a single number to track over time.
 
-**Workflow**:
+Workflow:
 1. Measure DORA Lead Time monthly.
 2. If it\'s poor (Medium / Low band), do a VSM workshop.
 3. VSM reveals which step has the largest wait time.
@@ -1044,21 +1044,21 @@ VSM tells you WHERE the time is going. DORA gives you a single number to track o
 5. Re-measure DORA Lead Time.
 6. Re-do VSM if needed.
 
-**VSM also illuminates the OTHER DORA metrics**:
+VSM also illuminates the OTHER DORA metrics:
 
-- **Deployment Frequency**: VSM shows how often work moves through the final deploy stage. If "deploy" is gated by a monthly CAB meeting, Deployment Frequency is capped at monthly regardless of what else you do.
+- Deployment Frequency: VSM shows how often work moves through the final deploy stage. If "deploy" is gated by a monthly CAB meeting, Deployment Frequency is capped at monthly regardless of what else you do.
 
-- **Change Failure Rate**: VSM shows where defects enter and where they\'re caught. If defects flow all the way to staging before being caught, CFR is high. Shift-left testing visible in VSM.
+- Change Failure Rate: VSM shows where defects enter and where they\'re caught. If defects flow all the way to staging before being caught, CFR is high. Shift-left testing visible in VSM.
 
-- **MTTR**: VSM should include "incident response" as a parallel value stream from "alert fires" to "service restored." Same structure: detect → triage → mitigate → resolve. VSM the incident response itself.
+- MTTR: VSM should include "incident response" as a parallel value stream from "alert fires" to "service restored." Same structure: detect → triage → mitigate → resolve. VSM the incident response itself.
 
-**Practical example**:
+Practical example:
 - Team\'s DORA Lead Time = 12 days. Medium band.
 - VSM workshop reveals: 8 days waiting in code review.
 - Fix: smaller PRs, review SLA, distributed CODEOWNERS.
 - 3 months later: DORA Lead Time = 3 days. High band.
 
-**The key insight**: VSM is the diagnostic tool that tells you what to fix. DORA metrics tell you whether your fixes are working. Without VSM, you don\'t know what to fix; without DORA, you don\'t know if it worked. Use them together.`,
+The key insight: VSM is the diagnostic tool that tells you what to fix. DORA metrics tell you whether your fixes are working. Without VSM, you don\'t know what to fix; without DORA, you don\'t know if it worked. Use them together.`,
       },
     ],
     references: [
@@ -1245,15 +1245,15 @@ Why this matters in interviews: DORA metrics are the LINGUA FRANCA of senior Dev
         question: 'Walk me through the four DORA metrics and the bands.',
         answer: `Four metrics, two pairs:
 
-**Velocity pair:**
+Velocity pair:
 1. Deployment Frequency — how often production receives a release. Counter, not duration.
 2. Lead Time for Changes — time from commit to production. Wall-clock duration.
 
-**Stability pair:**
+Stability pair:
 3. Change Failure Rate — % of deploys that cause failure (rollback, hotfix, incident).
 4. Mean Time to Restore (MTTR) — duration from incident detection to restored service.
 
-**Bands** (2024 State of DevOps Report, classic model):
+Bands (2024 State of DevOps Report, classic model):
 
 | | Elite | High | Medium | Low |
 |---|---|---|---|---|
@@ -1274,15 +1274,15 @@ Reliability was added in 2021 as a 5th metric: does the service meet SLOs? Bridg
 
 Why the intuition is wrong:
 
-1. **Small batch size**: a deploy with 5 commits has bounded blast radius. A deploy with 500 commits is a wildcard. Faster deploys = smaller batches = lower change failure rate.
+1. Small batch size: a deploy with 5 commits has bounded blast radius. A deploy with 500 commits is a wildcard. Faster deploys = smaller batches = lower change failure rate.
 
-2. **Practice and rehearsal**: a team that deploys daily has battle-tested pipelines, runbooks, and rollback paths. A team that deploys monthly has rusty processes that fail unpredictably.
+2. Practice and rehearsal: a team that deploys daily has battle-tested pipelines, runbooks, and rollback paths. A team that deploys monthly has rusty processes that fail unpredictably.
 
-3. **Smaller blame radius**: when something does fail, "what changed in the last hour" is much smaller than "what changed in the last month." MTTR drops because debugging is bounded.
+3. Smaller blame radius: when something does fail, "what changed in the last hour" is much smaller than "what changed in the last month." MTTR drops because debugging is bounded.
 
-4. **Better feedback loops**: deploying often means production telemetry is constantly informing development. Issues are caught while context is fresh.
+4. Better feedback loops: deploying often means production telemetry is constantly informing development. Issues are caught while context is fresh.
 
-5. **Investment in safety**: teams that deploy fast HAVE TO invest in canary, feature flags, automated rollback. Teams that deploy rarely think they don\'t need this — until they do.
+5. Investment in safety: teams that deploy fast HAVE TO invest in canary, feature flags, automated rollback. Teams that deploy rarely think they don\'t need this — until they do.
 
 The pre-DORA conventional wisdom was "deploy carefully, deploy rarely." The data shows that produces the WORST outcomes — large-batch deploys with rusty pipelines + no rollback automation = high CFR + high MTTR.
 
@@ -1292,31 +1292,31 @@ The pragmatic implication: investing in pipeline reliability (canary, SLO-gated 
         question: 'My team has 99% test coverage but Change Failure Rate is still 30%. What\'s wrong?',
         answer: `Several diagnostic angles:
 
-**1. The tests are wrong.**
+1. The tests are wrong.
 - Coverage measures lines hit, not behavior verified. A test can hit a line without asserting anything meaningful.
 - Mocked-heavy tests pass while production breaks (wrong contracts).
 - Look at: assertion density (asserts per test), mutation testing pass rate.
 
-**2. The tests run too late.**
+2. The tests run too late.
 - If integration tests run only on main after merge, regressions land before they\'re caught.
 - Move integration tests to PR.
 
-**3. Production differs from staging.**
+3. Production differs from staging.
 - Staging has 100 rows, prod has 100M.
 - Staging has fake data; prod has malformed real data.
 - Staging is a single AZ; prod is multi-region.
 - Consider: load-testing in prod-like envs, production traffic replay (shadow traffic).
 
-**4. Insufficient progressive delivery.**
+4. Insufficient progressive delivery.
 - 100% deploy with no canary means any bug is 100% blast radius.
 - Add: canary with SLO gates, feature flags, automated rollback.
 - Lowering CFR is often about REDUCING THE BLAST RADIUS of bugs that ship, not preventing them.
 
-**5. Missing observability.**
+5. Missing observability.
 - "Failure" is detected by users, not by you. By the time you know, the rollback window has passed.
 - Add: deploy markers, RED metrics, alert on regression vs baseline.
 
-**6. Multiple changes per deploy.**
+6. Multiple changes per deploy.
 - A "deploy" with 50 commits is hard to attribute. Smaller batches → easier root cause.
 
 The interview-quality answer: 99% coverage is necessary but not sufficient. CFR is determined by (test quality × test scope × progressive delivery × observability × batch size). Look at all five, not just coverage.
@@ -1327,38 +1327,38 @@ The DORA-specific framing: high CFR with high test coverage usually means you\'r
         question: 'How would you start measuring DORA metrics for a team that\'s never measured them?',
         answer: `Six steps, in order:
 
-**1. Auto-instrument from existing systems** (don\'t survey).
+1. Auto-instrument from existing systems (don\'t survey).
 - Deploy Frequency: GitHub releases or CI/CD events tagged "deploy-success"
 - Lead Time: tag commits with timestamp; correlate to first prod deploy that contains the commit
 - CFR: PagerDuty incidents tagged with "deploy-related: true" / 100 deploys
 - MTTR: PagerDuty incident close - incident open for deploy-related incidents
 - Tools: Four Keys (Google Cloud open-source), Allstacks, LinearB, Faros AI, or just SQL on existing systems
 
-**2. Compute baseline for past 90 days.**
+2. Compute baseline for past 90 days.
 - Be honest about the numbers. Don\'t flatter.
 - Bucket into the four bands.
 
-**3. Share with the team transparently.**
+3. Share with the team transparently.
 - Don\'t make it punitive — make it diagnostic.
 - "We\'re a Medium performer on Deploy Frequency and Low on Lead Time."
 
-**4. Pick the WORST metric and invest there.**
+4. Pick the WORST metric and invest there.
 - Lead Time too long? → Audit where time goes (PR review, build, integration test, deploy gate). Usually one stage is the bottleneck.
 - Deploy Frequency too low? → Reduce manual approval gates; trunk-based dev.
 - CFR too high? → Add canary, feature flags, automated rollback.
 - MTTR too high? → Better observability, runbooks, on-call training.
 
-**5. Re-measure quarterly.**
+5. Re-measure quarterly.
 - Track the trend, not absolute values.
 - Look for regressions early.
 
-**6. Tie to business outcomes.**
+6. Tie to business outcomes.
 - Show leadership: DORA correlates with revenue, customer satisfaction, employee retention (Accelerate research).
 - Argue for engineering investment using these correlations.
 
-**Common pitfall**: trying to instrument all four metrics at once and getting bogged down. Instead, instrument Deploy Frequency first (easiest), then add the others incrementally.
+Common pitfall: trying to instrument all four metrics at once and getting bogged down. Instead, instrument Deploy Frequency first (easiest), then add the others incrementally.
 
-**Honesty check**: when you have the numbers, the answer to "are we Elite?" is almost always "no, we\'re Medium." That\'s fine. The metric is for direction, not status.`,
+Honesty check: when you have the numbers, the answer to "are we Elite?" is almost always "no, we\'re Medium." That\'s fine. The metric is for direction, not status.`,
       },
     ],
     references: [
@@ -1550,38 +1550,38 @@ The book is short and dense. Read it.`,
         question: 'Walk me through the four team types and three interaction modes.',
         answer: `Skelton & Pais (Team Topologies, 2019) propose four team types that maximize fast flow:
 
-**Stream-aligned team** (the default, ~80% of teams):
+Stream-aligned team (the default, ~80% of teams):
 - Aligned to one valuable stream (product, journey, capability).
 - End-to-end ownership: build, deploy, operate.
 - Empowered to deliver without waiting on other teams.
 - Two-pizza size (5-9 people).
 
-**Enabling team** (specialists who teach):
+Enabling team (specialists who teach):
 - Time-boxed engagements with stream-aligned teams.
 - Help adopt a capability (security, performance, ML).
 - Then withdraw — they\'re not the permanent operator.
 
-**Complicated Subsystem team** (specialists who own):
+Complicated Subsystem team (specialists who own):
 - Owns a subsystem requiring deep specialist knowledge.
 - Examples: video encoding pipeline, ML model training, payments integration.
 - Stream-aligned teams consume the subsystem without needing the specialist knowledge.
 
-**Platform team** (self-service):
+Platform team (self-service):
 - Provides internal services as a platform.
 - Examples: internal K8s, observability, CI/CD.
 - Treated as a PRODUCT TEAM with internal customers, roadmap, SLAs.
 
-**Three interaction modes**:
+Three interaction modes:
 
-1. **Collaboration** — two teams work closely for weeks-months on a hard problem. High cognitive load; expensive; time-boxed.
+1. Collaboration — two teams work closely for weeks-months on a hard problem. High cognitive load; expensive; time-boxed.
 
-2. **X-as-a-Service** — one team consumes another\'s self-service capability. Low cognitive load; standard for Platform teams.
+2. X-as-a-Service — one team consumes another\'s self-service capability. Low cognitive load; standard for Platform teams.
 
-3. **Facilitating** — one team helps another build a capability. Time-boxed; standard for Enabling teams.
+3. Facilitating — one team helps another build a capability. Time-boxed; standard for Enabling teams.
 
 The interaction modes aren\'t fixed — Collaboration → Facilitating → X-as-a-Service is a maturity progression. Two teams might collaborate intensely on a new capability, then the Enabling team withdraws into facilitating, then the capability becomes a self-service platform.
 
-**Anti-patterns the book names**:
+Anti-patterns the book names:
 - "DevOps team" — recreates the dev/ops silo.
 - "Pet platform" — platform team building toys nobody uses.
 - "Shadow IT" — stream-aligned team builds covert platform because the official platform is bad.
@@ -1593,30 +1593,30 @@ The interaction modes aren\'t fixed — Collaboration → Facilitating → X-as-
 
 Concrete triggers:
 
-**1. Multiple stream-aligned teams reinventing the same capability.**
+1. Multiple stream-aligned teams reinventing the same capability.
 - 6 teams have each built their own monitoring; 4 of them are subtly broken.
 - A platform-owned monitoring service eliminates duplication.
 
-**2. Cognitive load is overwhelming stream-aligned teams.**
+2. Cognitive load is overwhelming stream-aligned teams.
 - "Our checkout team has to know K8s, Prometheus, Postgres, Kafka, IaC, security, and on-call response."
 - Platform absorbs the K8s + observability + CI/CD; checkout team focuses on checkout.
 
-**3. Specialist knowledge is needed across teams.**
+3. Specialist knowledge is needed across teams.
 - Distributed tracing, mTLS, service mesh — too specialized for every team to master.
 - Platform team owns the foundation; stream-aligned teams consume.
 
-**4. Compliance/security guardrails need consistent enforcement.**
+4. Compliance/security guardrails need consistent enforcement.
 - Tagging, RBAC, secret management, IaC patterns.
 - Platform makes "the easy path = the secure path."
 
-**When NOT to create a Platform team**:
+When NOT to create a Platform team:
 
-- **Too early**: 2 teams, 1 service each. Premature platforming = building toys.
-- **Without product mindset**: platform teams that build what they want, not what users need = shadow IT emerges.
-- **Without explicit customers**: "we own the K8s cluster" with no roadmap, no internal SLAs, no user research = unused platform.
-- **As a renamed ops team**: re-creates the silo.
+- Too early: 2 teams, 1 service each. Premature platforming = building toys.
+- Without product mindset: platform teams that build what they want, not what users need = shadow IT emerges.
+- Without explicit customers: "we own the K8s cluster" with no roadmap, no internal SLAs, no user research = unused platform.
+- As a renamed ops team: re-creates the silo.
 
-**The Platform team\'s discipline**:
+The Platform team\'s discipline:
 - Have explicit internal customers.
 - Run user research, gather feedback.
 - Have a public roadmap.
@@ -1632,9 +1632,9 @@ The interview-clean answer: create a Platform team when (a) duplication or cogni
 
 The implication: your software architecture WILL mirror your org chart. If you want microservices but have monolithic teams, you\'ll get a distributed monolith.
 
-**The Inverse Conway Maneuver** (named in Team Topologies): instead of fighting Conway\'s Law, USE it. Deliberately restructure teams to enable the desired architecture.
+The Inverse Conway Maneuver (named in Team Topologies): instead of fighting Conway\'s Law, USE it. Deliberately restructure teams to enable the desired architecture.
 
-**Worked example: monolith to microservices**:
+Worked example: monolith to microservices:
 
 Wrong approach:
 - Keep teams as-is (frontend team, backend team, ops team).
@@ -1647,22 +1647,22 @@ Right approach (Inverse Conway):
 - THEN decompose the monolith along team boundaries.
 - Result: microservices that match team boundaries. Each team can deploy independently. Architecture and org match.
 
-**When to apply the Inverse Conway Maneuver**:
+When to apply the Inverse Conway Maneuver:
 
-1. **Architectural transformation**: monolith → microservices, on-prem → cloud, multi-cloud, etc. Re-org first, then re-architect.
+1. Architectural transformation: monolith → microservices, on-prem → cloud, multi-cloud, etc. Re-org first, then re-architect.
 
-2. **New product line**: standing up a new business capability. Create a stream-aligned team owning it; design the architecture around their boundaries.
+2. New product line: standing up a new business capability. Create a stream-aligned team owning it; design the architecture around their boundaries.
 
-3. **Persistent integration friction**: same handoff causing pain quarter after quarter. Sign that team boundaries don\'t match natural service boundaries. Re-org.
+3. Persistent integration friction: same handoff causing pain quarter after quarter. Sign that team boundaries don\'t match natural service boundaries. Re-org.
 
-**The hard part**: org changes are political. Engineers re-orged into new teams have to give up code they own. This is why Inverse Conway is rarely done well — leaders flinch from the political cost.
+The hard part: org changes are political. Engineers re-orged into new teams have to give up code they own. This is why Inverse Conway is rarely done well — leaders flinch from the political cost.
 
-**What NOT to do**:
+What NOT to do:
 - Re-architect without re-organizing. Conway\'s Law will reassert itself.
 - Re-organize without explaining the architectural goal. People feel arbitrary.
 - Re-organize too often. Teams need 6-12 months to gel; constant re-orgs prevent that.
 
-**Pragmatic framing**: software architecture and team structure are TWO REPRESENTATIONS OF THE SAME SYSTEM. Change them together or you change neither effectively. The Inverse Conway Maneuver is the discipline of changing both deliberately.`,
+Pragmatic framing: software architecture and team structure are TWO REPRESENTATIONS OF THE SAME SYSTEM. Change them together or you change neither effectively. The Inverse Conway Maneuver is the discipline of changing both deliberately.`,
       },
     ],
     references: [
@@ -3245,7 +3245,7 @@ Consumed by uses: ./.github/actions/setup-stack with inputs. Lighter than a reus
     path: |
       ~/.npm
       node_modules
-    key: \${{ runner.os }}-node-\${{ hashFiles('**/package-lock.json') }}
+    key: \${{ runner.os }}-node-\${{ hashFiles('/package-lock.json') }}
     restore-keys: |
       \${{ runner.os }}-node-
 \`\`\`
@@ -3330,7 +3330,7 @@ jobs:
         with: { fetch-depth: 0 }            # Turborepo needs full history
       - uses: dorny/paths-filter@<sha>
         id: f
-        with: { filters: 'infra: infra/**' }
+        with: { filters: 'infra: infra/' }
 
   build:
     needs: changed
@@ -3605,8 +3605,8 @@ jobs:
         id: filter
         with:
           filters: |
-            backend: 'apps/backend/**'
-            frontend: 'apps/frontend/**'
+            backend: 'apps/backend/'
+            frontend: 'apps/frontend/'
             infra: 'infra/**'
   backend-test:
     needs: paths
@@ -3833,8 +3833,8 @@ jobs:
         id: filter
         with:
           filters: |
-            backend:  ['apps/backend/**', 'packages/shared/**']
-            frontend: ['apps/frontend/**', 'packages/shared/**']
+            backend:  ['apps/backend/', 'packages/shared/']
+            frontend: ['apps/frontend/', 'packages/shared/']
             infra:    ['infra/**']
 
   # ─── Lint & type-check (fast, runs on everything) ────────────
@@ -18835,10 +18835,10 @@ Write a custom AppArmor profile:
   profile myapp-profile flags=(attach_disconnected,mediate_deleted) {
     #include <abstractions/base>
 
-    deny /proc/** w,
-    deny /sys/** w,
+    deny /proc/ w,
+    deny /sys/ w,
     /app/server ix,
-    /etc/myapp/** r,
+    /etc/myapp/ r,
 
     network tcp,
     deny network udp,
@@ -18853,7 +18853,7 @@ Disable AppArmor (not recommended):
 
 Default AppArmor profile (docker-default) blocks:
   - Writing to /proc/sysrq-trigger, /proc/irq, /proc/sys
-  - /sys/** writes
+  - /sys/ writes
   - Mounting filesystems
   - Loading kernel modules
 
@@ -36756,13 +36756,13 @@ profile nginx-container flags=(attach_disconnected) {
   network inet6 tcp,
 
   /usr/sbin/nginx mr,
-  /etc/nginx/** r,
-  /var/log/nginx/** w,
+  /etc/nginx/ r,
+  /var/log/nginx/ w,
   /var/run/nginx.pid w,
   /run/nginx.pid w,
-  /tmp/** rw,
+  /tmp/ rw,
 
-  deny /proc/sys/kernel/** w,
+  deny /proc/sys/kernel/ w,
   deny @{PROC}/@{pid}/mem w,
   deny @{PROC}/@{pid}/maps w,
 
@@ -43233,12 +43233,12 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'activity',
     color: '#3b82f6',
     description: 'DORA 2024 State of DevOps: 39 capabilities across 5 clusters, new AI category, 5 performance levels. How elite performers differ.',
-    introduction: '**DORA (DevOps Research and Assessment)** has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified **39 capabilities** organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new **AI capabilities cluster** — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
+    introduction: 'DORA (DevOps Research and Assessment) has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified 39 capabilities organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new AI capabilities cluster — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
     keyConcepts: [
-      { title: 'The Four Key DORA Metrics', description: '**Deployment Frequency**: how often you deploy to production. **Lead Time for Changes**: commit-to-production time. **Mean Time to Restore (MTTR)**: recovery time from production failure. **Change Failure Rate**: percentage of deployments causing incidents. Elite thresholds: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
+      { title: 'The Four Key DORA Metrics', description: 'Deployment Frequency: how often you deploy to production. Lead Time for Changes: commit-to-production time. Mean Time to Restore (MTTR): recovery time from production failure. Change Failure Rate: percentage of deployments causing incidents. Elite thresholds: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
       { title: 'AI Capabilities Cluster (New in 2024)', description: 'Six capabilities added in 2024: AI-assisted code review, test generation, documentation, code assistance (Copilot/Cursor), incident response augmentation, and AI as a team collaborator in architecture decisions. Organizations with mature AI capability scores show 1.6× higher deployment frequency and 1.4× lower change failure rates.' },
       { title: 'Core Model Capabilities (18)', description: 'Technical: continuous delivery, trunk-based development, test automation, deployment automation, shift-left security, database change management, flexible infrastructure, loosely coupled architecture, monitoring/observability. Cultural: generative organizational culture (Westrum), learning from failures (blameless postmortems), working in small batches, team autonomy, continuous learning culture.' },
-      { title: '5 Performance Clusters', description: '2024 research identifies five clusters from **Low** through **Medium**, **High**, **Thriving** to **Transformative** (previously just "Elite"). Transformative performers are AI-augmented — 2× more likely to be top performers, 50% less likely to experience burnout. Low performers take 1-6 months to deploy; elite deploy on demand multiple times per day.' },
+      { title: '5 Performance Clusters', description: '2024 research identifies five clusters from Low through Medium, High, Thriving to Transformative (previously just "Elite"). Transformative performers are AI-augmented — 2× more likely to be top performers, 50% less likely to experience burnout. Low performers take 1-6 months to deploy; elite deploy on demand multiple times per day.' },
     ],
     quickFire: [
       { q: 'What are the four DORA key metrics?', a: 'Deployment Frequency (how often to prod), Lead Time for Changes (commit-to-prod time), Mean Time to Restore (incident recovery), Change Failure Rate (% deployments causing incidents). Elite: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
@@ -43260,12 +43260,12 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'filter',
     color: '#06b6d4',
     description: 'OTel Collector: receivers, processors, exporters. Tail-based vs head-based sampling. Agent/Gateway topology. Kubernetes Operator.',
-    introduction: '**OpenTelemetry Collector** is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
+    introduction: 'OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
     keyConcepts: [
-      { title: 'Pipeline Components: Receivers → Processors → Exporters', description: '**Receivers** accept telemetry: OTLP (gRPC/HTTP), Jaeger, Zipkin, Prometheus scrape, Fluentd, StatsD. **Processors** transform data: batch, memory limiter (always first!), attribute enrichment, filter, tail-based sampling, PII redaction. **Exporters** ship to backends: OTLP, Prometheus remote write, Jaeger, Datadog, Grafana OTLP, AWS X-Ray. Each pipeline is configured per signal type (traces/metrics/logs) in YAML.' },
-      { title: 'Head-Based vs Tail-Based Sampling', description: '**Head-based**: sampling decision made at trace start — fast, zero memory overhead, cannot sample based on outcome (errors, slow spans). **Tail-based**: buffers all spans for a complete trace before deciding — enables "100% errors, 1% success" strategies. The tailsampling processor must see ALL spans for a trace, requiring sticky routing (all pods of a service → same Gateway collector via TraceID hash).' },
-      { title: 'Agent vs Gateway Topology', description: '**Agent mode**: one Collector DaemonSet per node — receives from local apps, lightweight processing (batch, attribute enrichment), forwards to Gateway. **Gateway mode**: centralized horizontally-scaled Collectors — expensive operations: tail sampling, PII redaction, rate limiting. Production pattern: App → OTel Agent (node DaemonSet) → OTel Gateway (cluster deployment with HPA) → Backend.' },
-      { title: 'Kubernetes Operator', description: '**OpenTelemetry Operator** (CNCF) manages Collector deployments as `OpenTelemetryCollector` CRDs — Deployment, DaemonSet, StatefulSet, or Sidecar modes. Auto-scaling support via HPA. **Auto-instrumentation**: injects OTel SDK into pods via mutating webhook — add annotation `instrumentation.opentelemetry.io/inject-java: "true"` and the operator adds the SDK without code changes.' },
+      { title: 'Pipeline Components: Receivers → Processors → Exporters', description: 'Receivers accept telemetry: OTLP (gRPC/HTTP), Jaeger, Zipkin, Prometheus scrape, Fluentd, StatsD. Processors transform data: batch, memory limiter (always first!), attribute enrichment, filter, tail-based sampling, PII redaction. Exporters ship to backends: OTLP, Prometheus remote write, Jaeger, Datadog, Grafana OTLP, AWS X-Ray. Each pipeline is configured per signal type (traces/metrics/logs) in YAML.' },
+      { title: 'Head-Based vs Tail-Based Sampling', description: 'Head-based: sampling decision made at trace start — fast, zero memory overhead, cannot sample based on outcome (errors, slow spans). Tail-based: buffers all spans for a complete trace before deciding — enables "100% errors, 1% success" strategies. The tailsampling processor must see ALL spans for a trace, requiring sticky routing (all pods of a service → same Gateway collector via TraceID hash).' },
+      { title: 'Agent vs Gateway Topology', description: 'Agent mode: one Collector DaemonSet per node — receives from local apps, lightweight processing (batch, attribute enrichment), forwards to Gateway. Gateway mode: centralized horizontally-scaled Collectors — expensive operations: tail sampling, PII redaction, rate limiting. Production pattern: App → OTel Agent (node DaemonSet) → OTel Gateway (cluster deployment with HPA) → Backend.' },
+      { title: 'Kubernetes Operator', description: 'OpenTelemetry Operator (CNCF) manages Collector deployments as `OpenTelemetryCollector` CRDs — Deployment, DaemonSet, StatefulSet, or Sidecar modes. Auto-scaling support via HPA. Auto-instrumentation: injects OTel SDK into pods via mutating webhook — add annotation `instrumentation.opentelemetry.io/inject-java: "true"` and the operator adds the SDK without code changes.' },
     ],
     quickFire: [
       { q: 'What are the three pipeline component types in an OTel Collector?', a: 'Receivers (accept telemetry — OTLP, Jaeger, Prometheus scrape), Processors (transform — batch, memory limiter, tail sampling, attribute enrichment), Exporters (ship to backends — OTLP, Prometheus remote write, Datadog, Jaeger). Each pipeline is declared per signal type (traces/metrics/logs) in YAML config.' },
@@ -43287,11 +43287,11 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'globe',
     color: '#14b8a6',
     description: 'Gateway API v1 (GA Oct 2023): GatewayClass/Gateway/HTTPRoute hierarchy. Role-oriented design, traffic splitting, ReferenceGrants.',
-    introduction: '**Kubernetes Gateway API** reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a **role-oriented** resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
+    introduction: 'Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a role-oriented resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
     keyConcepts: [
-      { title: 'Three-Tier Hierarchy: GatewayClass → Gateway → Routes', description: '**GatewayClass** (cluster-scoped): maps a name to a controller implementation (Envoy Gateway, Istio, Kong, Cilium). **Gateway** (namespace-scoped): instantiates a load balancer — specifies listeners (port, protocol, TLS cert ref). **HTTPRoute / GRPCRoute / TCPRoute / TLSRoute** (namespace-scoped): routing rules — hostname, path, header matching, traffic splitting via weighted BackendRefs.' },
-      { title: 'Role-Oriented Design', description: '**Infrastructure Provider** defines GatewayClasses (e.g., platform team creates cloud LB classes). **Cluster Operator** creates Gateways (selects GatewayClass, configures TLS, sets listeners). **Application Developer** creates Routes pointing to their Services — no cluster-level RBAC needed. This is a fundamental improvement over Ingress where all config was in one resource requiring elevated permissions.' },
-      { title: 'Native Traffic Management Features', description: 'HTTPRoute natively supports: hostname-based routing, path matching (exact/prefix/regex), header-based routing, query param matching, **weighted traffic splitting** (canary with 90/10 via two BackendRefs with `weight`), request/response header modification, URL rewriting, redirects, timeout configuration, and retry policies — no nginx/alb annotation sprawl.' },
+      { title: 'Three-Tier Hierarchy: GatewayClass → Gateway → Routes', description: 'GatewayClass (cluster-scoped): maps a name to a controller implementation (Envoy Gateway, Istio, Kong, Cilium). Gateway (namespace-scoped): instantiates a load balancer — specifies listeners (port, protocol, TLS cert ref). HTTPRoute / GRPCRoute / TCPRoute / TLSRoute (namespace-scoped): routing rules — hostname, path, header matching, traffic splitting via weighted BackendRefs.' },
+      { title: 'Role-Oriented Design', description: 'Infrastructure Provider defines GatewayClasses (e.g., platform team creates cloud LB classes). Cluster Operator creates Gateways (selects GatewayClass, configures TLS, sets listeners). Application Developer creates Routes pointing to their Services — no cluster-level RBAC needed. This is a fundamental improvement over Ingress where all config was in one resource requiring elevated permissions.' },
+      { title: 'Native Traffic Management Features', description: 'HTTPRoute natively supports: hostname-based routing, path matching (exact/prefix/regex), header-based routing, query param matching, weighted traffic splitting (canary with 90/10 via two BackendRefs with `weight`), request/response header modification, URL rewriting, redirects, timeout configuration, and retry policies — no nginx/alb annotation sprawl.' },
       { title: 'ReferenceGrant for Cross-Namespace Routing', description: 'A ReferenceGrant in namespace B allows resources in namespace A to reference objects in namespace B. Required when an HTTPRoute in the "ingress" namespace references Services in "app-team-1" namespace — the app team creates a ReferenceGrant granting that specific Gateway cross-namespace access. Prevents unauthorized cross-namespace traffic flows without explicit opt-in.' },
     ],
     quickFire: [
@@ -43314,12 +43314,12 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'layers',
     color: '#8b5cf6',
     description: 'CNCF Platform Engineering Whitepaper: 5 maturity levels, 13 capability domains, measuring platform ROI and developer satisfaction.',
-    introduction: '**The CNCF Platform Engineering Whitepaper** (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a **maturity model** with five levels and **13 capability domains** that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
+    introduction: 'The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
     keyConcepts: [
-      { title: '5 Maturity Levels', description: '**1. Provisional**: ad-hoc, undocumented, built for immediate need. **2. Operationalized**: documented, repeatable, but manually triggered. **3. Scalable**: self-service, automated, handles multiple teams. **4. Optimizing**: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. **5. Leading**: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
+      { title: '5 Maturity Levels', description: '1. Provisional: ad-hoc, undocumented, built for immediate need. 2. Operationalized: documented, repeatable, but manually triggered. 3. Scalable: self-service, automated, handles multiple teams. 4. Optimizing: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. 5. Leading: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
       { title: '13 Capability Domains', description: 'A mature IDP covers: (1) artifact/image store, (2) CI/CD pipelines, (3) cloud/environment provisioning, (4) developer portal, (5) IDP orchestration layer, (6) observability, (7) policy/governance, (8) RBAC/access control, (9) secrets management, (10) service catalog/registry, (11) service mesh, (12) testing frameworks, (13) toolchain selection/standardization. Not all domains need full coverage at once — prioritize by team pain points.' },
-      { title: 'Golden Paths and Cognitive Load Reduction', description: '**Golden paths** are the opinionated, pre-built workflows that let application teams deploy a new service without understanding the full infrastructure stack. A golden path bundles: Backstage template → GitHub Actions CI → ECR push → ArgoCD sync → CloudWatch dashboards pre-configured. Cognitive load reduction is the primary success metric: if developers spend less time on infrastructure, the platform is succeeding.' },
-      { title: 'Developer Portal (Backstage)', description: '**Backstage** (CNCF Incubating, originally Spotify) is the de facto developer portal. It provides: software catalog (ownership map of all services), tech docs (docs-as-code), scaffolder (golden path templates), and plugin ecosystem (Kubernetes, ArgoCD, PagerDuty, SonarQube integrations). A developer portal is the "store front" of the platform — without it, discoverability of platform capabilities is limited to Slack messages and tribal knowledge.' },
+      { title: 'Golden Paths and Cognitive Load Reduction', description: 'Golden paths are the opinionated, pre-built workflows that let application teams deploy a new service without understanding the full infrastructure stack. A golden path bundles: Backstage template → GitHub Actions CI → ECR push → ArgoCD sync → CloudWatch dashboards pre-configured. Cognitive load reduction is the primary success metric: if developers spend less time on infrastructure, the platform is succeeding.' },
+      { title: 'Developer Portal (Backstage)', description: 'Backstage (CNCF Incubating, originally Spotify) is the de facto developer portal. It provides: software catalog (ownership map of all services), tech docs (docs-as-code), scaffolder (golden path templates), and plugin ecosystem (Kubernetes, ArgoCD, PagerDuty, SonarQube integrations). A developer portal is the "store front" of the platform — without it, discoverability of platform capabilities is limited to Slack messages and tribal knowledge.' },
     ],
     quickFire: [
       { q: 'What are the 5 platform engineering maturity levels?', a: 'Provisional (ad-hoc), Operationalized (documented, repeatable), Scalable (self-service, automated), Optimizing (data-driven, DORA metrics tracked, developer feedback loops), Leading (platform as product with SLOs, roadmap, dedicated PM). Most orgs are at level 2-3; reaching 4+ requires cultural investment beyond tooling.' },
@@ -43341,12 +43341,12 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'lock',
     color: '#0891b2',
     description: 'Secrets in GitOps: SOPS+age, Sealed Secrets, External Secrets Operator (ESO). Vault integration patterns. When to use each approach.',
-    introduction: '**GitOps** stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: **encrypt in Git** (SOPS, Sealed Secrets), **reference externally** (External Secrets Operator, Vault agent), and **hybrid** (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
+    introduction: 'GitOps stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: encrypt in Git (SOPS, Sealed Secrets), reference externally (External Secrets Operator, Vault agent), and hybrid (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
     keyConcepts: [
-      { title: 'SOPS + age: Encrypted Values in Git', description: '**SOPS** (Secrets OPerationS, Mozilla) encrypts specific values within YAML/JSON/ENV files — you can read the structure, not the values. **age** is the modern encryption backend (replacing PGP). Workflow: `sops --encrypt --age <pubkey> secrets.yaml > secrets.enc.yaml` → commit encrypted file → ArgoCD/Flux decrypts at deploy using age private key in a cluster Secret. Pros: simple, works with any backend. Cons: key rotation complexity, decryption key must exist in-cluster.' },
-      { title: 'Sealed Secrets: Cluster-Bound Encryption', description: '**Sealed Secrets** (Bitnami/CNCF) generates a `SealedSecret` CRD that can only be decrypted by the controller running in a specific cluster. You encrypt with `kubeseal --cert <cluster-pub-cert>` and commit the sealed YAML. The Sealed Secrets controller decrypts it into a standard Kubernetes Secret. Pros: dead simple, GitOps-native. Cons: sealed secrets are cluster-bound (cannot share across clusters), key rotation requires re-sealing all secrets.' },
-      { title: 'External Secrets Operator (ESO)', description: '**ESO** (CNCF Incubating) syncs secrets from external stores (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, 1Password) into Kubernetes Secrets. You commit an `ExternalSecret` CRD referencing a path in the external store — no sensitive values in Git at all. ESO polls for changes and updates K8s Secrets automatically. Pros: centralized secret management, rotation handled by the external store, secrets not in Git. Cons: external store dependency, ESO must be highly available.' },
-      { title: 'Vault Integration Patterns', description: 'Three patterns for HashiCorp Vault with Kubernetes: **Vault Agent Injector** — sidecar reads Vault secrets and writes them to a shared volume as files; **Vault Secrets Operator (VSO)** — Vault\'s own CRD-based operator, similar to ESO but Vault-native; **ESO with Vault provider** — unified ESO approach works alongside other stores. Vault adds complexity but provides: dynamic short-lived credentials (database, AWS IAM roles), PKI CA, audit logging, multi-datacenter replication.' },
+      { title: 'SOPS + age: Encrypted Values in Git', description: 'SOPS (Secrets OPerationS, Mozilla) encrypts specific values within YAML/JSON/ENV files — you can read the structure, not the values. age is the modern encryption backend (replacing PGP). Workflow: `sops --encrypt --age <pubkey> secrets.yaml > secrets.enc.yaml` → commit encrypted file → ArgoCD/Flux decrypts at deploy using age private key in a cluster Secret. Pros: simple, works with any backend. Cons: key rotation complexity, decryption key must exist in-cluster.' },
+      { title: 'Sealed Secrets: Cluster-Bound Encryption', description: 'Sealed Secrets (Bitnami/CNCF) generates a `SealedSecret` CRD that can only be decrypted by the controller running in a specific cluster. You encrypt with `kubeseal --cert <cluster-pub-cert>` and commit the sealed YAML. The Sealed Secrets controller decrypts it into a standard Kubernetes Secret. Pros: dead simple, GitOps-native. Cons: sealed secrets are cluster-bound (cannot share across clusters), key rotation requires re-sealing all secrets.' },
+      { title: 'External Secrets Operator (ESO)', description: 'ESO (CNCF Incubating) syncs secrets from external stores (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault, 1Password) into Kubernetes Secrets. You commit an `ExternalSecret` CRD referencing a path in the external store — no sensitive values in Git at all. ESO polls for changes and updates K8s Secrets automatically. Pros: centralized secret management, rotation handled by the external store, secrets not in Git. Cons: external store dependency, ESO must be highly available.' },
+      { title: 'Vault Integration Patterns', description: 'Three patterns for HashiCorp Vault with Kubernetes: Vault Agent Injector — sidecar reads Vault secrets and writes them to a shared volume as files; Vault Secrets Operator (VSO) — Vault\'s own CRD-based operator, similar to ESO but Vault-native; ESO with Vault provider — unified ESO approach works alongside other stores. Vault adds complexity but provides: dynamic short-lived credentials (database, AWS IAM roles), PKI CA, audit logging, multi-datacenter replication.' },
     ],
     quickFire: [
       { q: 'Why can\'t you just commit Kubernetes Secrets to Git?', a: 'Kubernetes Secrets are base64-encoded, not encrypted — base64 is trivially reversible. Committing base64 secrets to Git exposes them to anyone with repo access and permanently in git history (even after deletion). Secrets must be encrypted before committing (SOPS/Sealed Secrets) or stored entirely outside Git (ESO/Vault) with only references committed.' },
