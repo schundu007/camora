@@ -161,6 +161,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // to /api/solve/stream so design generations name services for the
   // chosen cloud (Cosmos DB / Firestore / etc.).
   const [cloudProvider] = useCloudProvider();
+  const prevCloudProviderRef = useRef(cloudProvider);
   // designDetailLevel defaults to 'full' now that the Basic|Full toggle
   // has been removed from the system-design controls. Setter is kept
   // plumbed in case the toggle ever returns.
@@ -677,6 +678,16 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
   // ---------------------------------------------------------------------------
   // Keyboard Shortcuts
   // ---------------------------------------------------------------------------
+  // Re-run design solve when cloud provider changes (system-design mode only)
+  useEffect(() => {
+    if (prevCloudProviderRef.current === cloudProvider) return;
+    prevCloudProviderRef.current = cloudProvider;
+    if (ascendMode !== 'system-design') return;
+    const problem = currentProblem || loadedProblem;
+    if (!problem || isLoading) return;
+    handleSolve(problem, 'auto', 'detailed');
+  }, [cloudProvider, ascendMode, currentProblem, loadedProblem, isLoading, handleSolve]);
+
   const handleKeyboardSolve = useCallback(() => {
     if (currentProblem || extractedText) {
       handleSolve(currentProblem || extractedText, currentLanguage, 'detailed');
@@ -1184,7 +1195,7 @@ function CodingLayout({
   const designPane = (
     <div className="h-full overflow-auto p-4" style={{ background: 'var(--bg-elevated)' }}>
       {hasSystemDesign ? (
-        <SystemDesignPanel systemDesign={systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} onGenerateEraserDiagram={onGenerateEraserDiagram} question={currentProblem || loadedProblem} cloudProvider="auto" qaHistory={qaHistory || []} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
+        <SystemDesignPanel systemDesign={systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} onGenerateEraserDiagram={onGenerateEraserDiagram} question={currentProblem || loadedProblem} cloudProvider={cloudProvider} qaHistory={qaHistory || []} onFollowUpQuestion={onFollowUpQuestion} isProcessingFollowUp={isProcessingFollowUp} />
       ) : isLoading && loadingType === 'solve' ? (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="flex gap-1.5 mb-3">
@@ -1208,7 +1219,7 @@ function CodingLayout({
 
   const codePane = (
     <div className="h-full" style={{ background: 'var(--bg-elevated)' }}>
-      <CodeDisplay ref={codeDisplayRef} code={activeCode} language={solution?.language || streamingContent.language} complexity={activeComplexity} onLineHover={onLineHover} examples={solution?.examples} isStreaming={isLoading && loadingType === 'solve' && !solution} autoRunOutput={autoRunOutput} onExplanationsUpdate={onExplanationsUpdate} ascendMode={ascendMode} codingLanguage={codingLanguage} onLanguageChange={ascendMode === 'coding' ? onLanguageChange : undefined} detailLevel={codingDetailLevel} onDetailLevelChange={ascendMode === 'coding' ? onCodingDetailLevelChange : undefined} editorSettings={editorSettings} systemDesign={solution?.systemDesign || streamingContent.systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} question={currentProblem || loadedProblem} cloudProvider="auto" onGenerateEraserDiagram={onGenerateEraserDiagram} approaches={approaches} activeApproach={activeApproach} onApproachChange={setActiveApproach} />
+      <CodeDisplay ref={codeDisplayRef} code={activeCode} language={solution?.language || streamingContent.language} complexity={activeComplexity} onLineHover={onLineHover} examples={solution?.examples} isStreaming={isLoading && loadingType === 'solve' && !solution} autoRunOutput={autoRunOutput} onExplanationsUpdate={onExplanationsUpdate} ascendMode={ascendMode} codingLanguage={codingLanguage} onLanguageChange={ascendMode === 'coding' ? onLanguageChange : undefined} detailLevel={codingDetailLevel} onDetailLevelChange={ascendMode === 'coding' ? onCodingDetailLevelChange : undefined} editorSettings={editorSettings} systemDesign={solution?.systemDesign || streamingContent.systemDesign} eraserDiagram={eraserDiagram} autoGenerateEraser={autoGenerateEraser} question={currentProblem || loadedProblem} cloudProvider={cloudProvider} onGenerateEraserDiagram={onGenerateEraserDiagram} approaches={approaches} activeApproach={activeApproach} onApproachChange={setActiveApproach} />
     </div>
   );
 
@@ -1319,7 +1330,7 @@ function CodingLayout({
                       autoGenerateEraser={autoGenerateEraser}
                       onGenerateEraserDiagram={onGenerateEraserDiagram}
                       question={currentProblem || loadedProblem}
-                      cloudProvider="auto"
+                      cloudProvider={cloudProvider}
                       diagramOnly={true}
                     />
                   </Suspense>
