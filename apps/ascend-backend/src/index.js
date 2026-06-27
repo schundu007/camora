@@ -1181,7 +1181,9 @@ app.post('/api/admin/grant-trial', apiLimiter, authenticate, async (req, res) =>
     trialEnd.setDate(trialEnd.getDate() + parseInt(days));
 
     await query(
-      'UPDATE ascend_subscriptions SET trial_ends_at = $1 WHERE user_id = $2',
+      `INSERT INTO ascend_subscriptions (user_id, plan_type, status, trial_ends_at)
+       VALUES ($2, 'free', 'active', $1)
+       ON CONFLICT (user_id) DO UPDATE SET trial_ends_at = $1`,
       [trialEnd.toISOString(), userId]
     );
 
