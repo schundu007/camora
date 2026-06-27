@@ -199,6 +199,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [gvLoading, setGvLoading] = useState(false);
   const gvBlobRef = useRef<string | null>(null); // revoke previous object URL on unmount
   const [gvKey, setGvKey] = useState(''); // "question::provider" of last successful Graphviz render
+  const [gvZoom, setGvZoom] = useState(1);
+  const gvContainerRef = useRef<HTMLDivElement>(null);
   const [eraserImgUrl, setEraserImgUrl] = useState<string | null>(null);
   const [eraserLoading, setEraserLoading] = useState(false);
   const [eraserKey, setEraserKey] = useState('');
@@ -654,6 +656,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           const objUrl = URL.createObjectURL(blob);
           gvBlobRef.current = objUrl;
           setGvImgUrl(objUrl);
+          setGvZoom(1);
           setGvKey(`${question}::${cloudProvider}`);
         } else {
           await dialogAlert('Failed to load generated diagram image');
@@ -713,6 +716,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     handleEraserRef.current();
   }, [cloudProvider, question]);
 
+  useEffect(() => {
+    const el = gvContainerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setGvZoom(z => Math.min(3, Math.max(1, z + (e.deltaY < 0 ? 0.15 : -0.15))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [gvImgUrl]);
+
   const handleReset = useCallback(() => {
     setProblemText('');
     setResult(null);
@@ -724,6 +738,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setGvImgUrl(null);
     setGvKey('');
     setGvLoading(false);
+    setGvZoom(1);
     setEraserImgUrl(null);
     setEraserKey('');
     setEraserLoading(false);
@@ -1262,7 +1277,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     </div>
                   )}
                   {!gvLoading && gvImgUrl && (
-                    <img src={gvImgUrl} alt="Graphviz architecture diagram" className="w-full rounded-lg" />
+                    <div
+                      ref={gvContainerRef}
+                      className="overflow-auto rounded-lg"
+                      style={{ cursor: gvZoom > 1 ? 'zoom-out' : 'zoom-in' }}
+                      title="Scroll to zoom"
+                    >
+                      <img
+                        src={gvImgUrl}
+                        alt="Graphviz architecture diagram"
+                        style={{ width: `${gvZoom * 100}%`, minWidth: '100%', display: 'block' }}
+                      />
+                    </div>
                   )}
                   {!gvLoading && !gvImgUrl && (
                     <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
