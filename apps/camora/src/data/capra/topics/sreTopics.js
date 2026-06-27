@@ -12312,8 +12312,8 @@ This is achievable in 3-6 months with executive endorsement. Worth orders of mag
     color: '#ef4444',
     questions: 2,
     description: 'Diagnosing latency spikes affecting users in one region but not others in a multi-region deployment.',
-    introduction: '## Overview
-Multi-region latency issues are hard to diagnose because they span routing, replication, and infrastructure layers. Systematic scoping — which region, which endpoints, which percentage of users — is the first step before touching anything.',
+    introduction: `## Overview
+Multi-region latency issues are hard to diagnose because they span routing, replication, and infrastructure layers. Systematic scoping — which region, which endpoints, which percentage of users — is the first step before touching anything.`,
     keyQuestions: [
       {
         question: 'A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?',
@@ -12349,8 +12349,8 @@ Multi-region latency issues are hard to diagnose because they span routing, repl
     color: '#8b5cf6',
     questions: 2,
     description: 'Deploying breaking schema changes to production databases with zero downtime using the expand-contract pattern.',
-    introduction: '## Overview
-Breaking schema changes — column renames, type changes, NOT NULL additions — are among the highest-risk database operations. The expand-contract pattern decouples schema changes from code changes, eliminating the window where incompatible versions coexist.',
+    introduction: `## Overview
+Breaking schema changes — column renames, type changes, NOT NULL additions — are among the highest-risk database operations. The expand-contract pattern decouples schema changes from code changes, eliminating the window where incompatible versions coexist.`,
     keyQuestions: [
       {
         question: 'You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?',
@@ -12386,8 +12386,8 @@ Breaking schema changes — column renames, type changes, NOT NULL additions —
     color: '#f59e0b',
     questions: 3,
     description: 'Your service hits zero error budget with 2 weeks left in the sprint. Walk through the policy activation, stakeholder conversation, and recovery steps.',
-    introduction: '## Overview
-The moment the error budget hits zero is the highest-stakes SRE conversation. The policy is clear on paper; the hard part is the product conversation, correctly attributing what burned the budget, and not restarting the clock prematurely.',
+    introduction: `## Overview
+The moment the error budget hits zero is the highest-stakes SRE conversation. The policy is clear on paper; the hard part is the product conversation, correctly attributing what burned the budget, and not restarting the clock prematurely.`,
     keyQuestions: [
       {
         question: 'Your checkout service SLO is 99.95% over 30 days. On day 16, a 45-minute partial outage exhausts the remaining error budget. What do you do?',
@@ -12447,8 +12447,8 @@ Third, aspirational SLO calibration. If the service consistently exhausts budget
     color: '#ef4444',
     questions: 3,
     description: 'Walk through diagnosing and stopping a cascading failure spreading across services at 3am with incomplete information.',
-    introduction: '## Overview
-Cascading failures are the hardest incident class because symptoms are misleading — multiple services are degraded, but fixing the wrong one first makes things worse. The SRE Book Ch 22 names four patterns: server overload, resource exhaustion, retry storms, and metastable failure. Identifying which pattern you are in determines the correct first action.',
+    introduction: `## Overview
+Cascading failures are the hardest incident class because symptoms are misleading — multiple services are degraded, but fixing the wrong one first makes things worse. The SRE Book Ch 22 names four patterns: server overload, resource exhaustion, retry storms, and metastable failure. Identifying which pattern you are in determines the correct first action.`,
     keyQuestions: [
       {
         question: 'At 3am, your monitoring fires alerts on 6 services simultaneously. All show high latency and elevated error rates. What do you do in the first 10 minutes?',
@@ -12513,8 +12513,8 @@ Runbook quality. Could the on-call diagnose this without escalating? If not, the
     color: '#8b5cf6',
     questions: 2,
     description: 'An interviewer asks you to size a new service from scratch. Walk through demand forecasting, headroom calculation, and autoscaling design.',
-    introduction: '## Overview
-Capacity planning interviews test whether you can translate a vague business requirement into concrete infrastructure decisions. The NALSD framework from the SRE Book (Non-Abstract Large System Design) gives the correct sequence: calculate first, design second.',
+    introduction: `## Overview
+Capacity planning interviews test whether you can translate a vague business requirement into concrete infrastructure decisions. The NALSD framework from the SRE Book (Non-Abstract Large System Design) gives the correct sequence: calculate first, design second.`,
     keyQuestions: [
       {
         question: 'An interviewer says: "We expect 10 million daily active users on a new social feed service. Size the service." Walk through your approach.',
@@ -12569,8 +12569,8 @@ The architectural cliff at 10x, not 3x: the relational write path for post creat
     color: '#14b8a6',
     questions: 2,
     description: 'You are facilitating a postmortem for a SEV-1 that caused 2 hours of customer-facing downtime. Walk through running it without blame.',
-    introduction: '## Overview
-The postmortem facilitator\'s job is to guide the room to system-level causes without letting the conversation drift toward individual blame. Most postmortems fail not because the facts are wrong but because psychological safety breaks down — engineers get defensive, root-cause analysis gets shallow, and action items become symbolic rather than structural.',
+    introduction: `## Overview
+The postmortem facilitator\'s job is to guide the room to system-level causes without letting the conversation drift toward individual blame. Most postmortems fail not because the facts are wrong but because psychological safety breaks down — engineers get defensive, root-cause analysis gets shallow, and action items become symbolic rather than structural.`,
     keyQuestions: [
       {
         question: 'You are facilitating a postmortem for a 2-hour outage caused when an engineer deleted a production Kubernetes namespace by mistake. Three product managers are demanding accountability. How do you run the session?',
