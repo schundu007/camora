@@ -408,7 +408,7 @@ router.get('/me', authenticate, async (req, res) => {
     // gen tracking was added will have no `gen` claim — those still pass
     // (one-time backwards-compat — gone after the next round of issuances).
     const result = await query(
-      'SELECT onboarding_completed, job_roles, token_generation FROM users WHERE id = $1',
+      'SELECT onboarding_completed, job_roles, token_generation, is_admin FROM users WHERE id = $1',
       [req.user.id],
     );
     const dbUser = result.rows[0] || {};
@@ -444,6 +444,7 @@ router.get('/me', authenticate, async (req, res) => {
         ...req.user,
         onboarding_completed: dbUser.onboarding_completed || false,
         job_roles: dbUser.job_roles || [],
+        is_admin: dbUser.is_admin === true,
       },
     });
   } catch {
