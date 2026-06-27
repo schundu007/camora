@@ -32,7 +32,7 @@ export const HEAVY_TOPIC_LOADERS = {
   },
 
   'system-design': async () => {
-    const [topics, problems, problemsExtra, ai1, ai2, ai3, realtime, aiSolves, extra] = await Promise.all([
+    const [topics, problems, problemsExtra, ai1, ai2, ai3, realtime, aiSolves, ecommerce, extra] = await Promise.all([
       import('./systemDesignTopics.js'),
       import('./systemDesignProblems.js'),
       import('./systemDesignProblemsExtra.js'),
@@ -41,6 +41,7 @@ export const HEAVY_TOPIC_LOADERS = {
       import('./systemDesignAIProblems3.js'),
       import('./systemDesignRealtimeProblems.js'),
       import('./systemDesignAISolvesProblems.js'),
+      import('./systemDesignEcommerceProblems.js'),
       import('./systemDesignTopicsExtra.js'),
     ]);
 
@@ -51,6 +52,7 @@ export const HEAVY_TOPIC_LOADERS = {
       ...ai3.aiProblems3Categories,
       ...realtime.realtimeProblemCategories,
       ...aiSolves.aiSolvesProblemCategories,
+      ...ecommerce.ecommerceProblemCategories,
     ];
 
     const seenIds = new Set(problems.systemDesignProblemCategories.map((c) => c.id));
@@ -77,6 +79,7 @@ export const HEAVY_TOPIC_LOADERS = {
         ...ai3.aiProblems3CategoryMap,
         ...realtime.realtimeProblemCategoryMap,
         ...aiSolves.aiSolvesProblemCategoryMap,
+        ...ecommerce.ecommerceProblemCategoryMap,
       },
       systemDesigns: [
         ...problems.systemDesigns,
@@ -86,6 +89,7 @@ export const HEAVY_TOPIC_LOADERS = {
         ...ai3.aiProblems3Designs,
         ...realtime.realtimeDesigns,
         ...aiSolves.aiSolvesDesigns,
+        ...ecommerce.ecommerceDesigns,
       ],
       lldProblemCategories: problems.lldProblemCategories,
     };
