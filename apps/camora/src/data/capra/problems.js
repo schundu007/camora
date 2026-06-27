@@ -26,7 +26,7 @@ export const PROBLEMS = {
     leetcodeUrl: 'https://leetcode.com/problems/two-sum/',
     description: `Given an array of integers \`nums\` and an integer \`target\`, return indices of the two numbers such that they add up to \`target\`.
 
-You may assume that each input would have **exactly one solution**, and you may not use the same element twice.
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
 
 You can return the answer in any order.`,
     examples: [
@@ -177,14 +177,14 @@ public:
       'Try to use the fact that the complement of the current number to make up the target can be looked up in O(1) time.',
       'Use a hash map to store numbers you\'ve seen with their indices.',
     ],
-    approach: `**Optimal Approach: Hash Map**
+    approach: `Optimal Approach: Hash Map
 
 1. Create a hash map to store each number and its index as we iterate
 2. For each number, calculate the complement (target - current number)
 3. Check if the complement exists in the hash map
 4. If found, return both indices; otherwise, store the current number
 
-**Why this works:**
+Why this works:
 - We need O(1) lookup to find if a complement exists
 - Hash map provides exactly that capability
 - Single pass through the array is sufficient`,
@@ -197,7 +197,7 @@ public:
     category: 'Arrays & Hashing',
     tags: ['Array', 'Hash Set'],
     leetcodeUrl: 'https://leetcode.com/problems/contains-duplicate/',
-    description: `Given an integer array \`nums\`, return \`true\` if any value appears **at least twice** in the array, and return \`false\` if every element is distinct.`,
+    description: `Given an integer array \`nums\`, return \`true\` if any value appears at least twice in the array, and return \`false\` if every element is distinct.`,
     examples: [
       {
         input: 'nums = [1,2,3,1]',
@@ -317,7 +317,7 @@ public:
       'Think about what data structure allows O(1) lookup for existence checks.',
       'A Set automatically handles duplicates.',
     ],
-    approach: `**Optimal Approach: Hash Set**
+    approach: `Optimal Approach: Hash Set
 
 1. Create a hash set to track numbers we've seen
 2. Iterate through the array
@@ -335,7 +335,7 @@ public:
     leetcodeUrl: 'https://leetcode.com/problems/valid-anagram/',
     description: `Given two strings \`s\` and \`t\`, return \`true\` if \`t\` is an anagram of \`s\`, and \`false\` otherwise.
 
-An **Anagram** is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.`,
+An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.`,
     examples: [
       {
         input: 's = "anagram", t = "nagaram"',
@@ -496,7 +496,7 @@ public:
       'What if the strings have different lengths?',
       'Count the frequency of each character in both strings.',
     ],
-    approach: `**Optimal Approach: Character Counting**
+    approach: `Optimal Approach: Character Counting
 
 1. If lengths differ, return false immediately
 2. Count frequency of each character in first string
@@ -511,9 +511,9 @@ public:
     category: 'Arrays & Hashing',
     tags: ['Array', 'Hash Map', 'String', 'Sorting'],
     leetcodeUrl: 'https://leetcode.com/problems/group-anagrams/',
-    description: `Given an array of strings \`strs\`, group the **anagrams** together. You can return the answer in **any order**.
+    description: `Given an array of strings \`strs\`, group the anagrams together. You can return the answer in any order.
 
-An **Anagram** is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.`,
+An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.`,
     examples: [
       {
         input: 'strs = ["eat","tea","tan","ate","nat","bat"]',
@@ -654,7 +654,7 @@ public:
       'Sorting the characters of an anagram gives the same result.',
       'Use sorted string as a key to group anagrams together.',
     ],
-    approach: `**Optimal Approach: Sorted String as Key**
+    approach: `Optimal Approach: Sorted String as Key
 
 1. Create a hash map where key is the sorted version of string
 2. For each string, sort its characters to get the key
@@ -812,7 +812,7 @@ public:
       'The array is sorted, so you can eliminate half of the search space each iteration.',
       'Use left + (right - left) / 2 to avoid integer overflow.',
     ],
-    approach: `**Standard Binary Search**
+    approach: `Standard Binary Search
 
 1. Initialize left and right pointers to the start and end of array
 2. While left <= right:
@@ -1006,7 +1006,7 @@ func reverseList(head *ListNode) *ListNode {
       'You need to change the next pointer of each node to point to its previous node.',
       'Keep track of three pointers: prev, curr, and next.',
     ],
-    approach: `**Iterative Approach**
+    approach: `Iterative Approach
 
 1. Initialize prev as null and curr as head
 2. While curr is not null:
@@ -1152,7 +1152,7 @@ public:
       'If the current sum becomes negative, starting fresh might be better.',
       'This is a classic problem solved by Kadane\'s algorithm.',
     ],
-    approach: `**Kadane's Algorithm**
+    approach: `Kadane's Algorithm
 
 1. Initialize maxSum and currentSum to first element
 2. For each element starting from index 1:
@@ -1161,7 +1161,7 @@ public:
    - Update maxSum if currentSum is larger
 3. Return maxSum
 
-**Key Insight:** If adding current element makes sum smaller than element alone, start fresh.`,
+Key Insight: If adding current element makes sum smaller than element alone, start fresh.`,
   },
 
   'valid-parentheses': {
@@ -1334,7 +1334,7 @@ public:
       'Use a stack to keep track of opening brackets.',
       'When you see a closing bracket, check if it matches the most recent opening bracket.',
     ],
-    approach: `**Stack Approach**
+    approach: `Stack Approach
 
 1. Create mapping of closing to opening brackets
 2. For each character:
@@ -1352,7 +1352,7 @@ public:
     leetcodeUrl: 'https://leetcode.com/problems/merge-two-sorted-lists/',
     description: `You are given the heads of two sorted linked lists \`list1\` and \`list2\`.
 
-Merge the two lists into one **sorted** list. The list should be made by splicing together the nodes of the first two lists.
+Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.
 
 Return the head of the merged linked list.`,
     examples: [
@@ -1560,7 +1560,7 @@ func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
       'Use a dummy head to simplify handling edge cases.',
       'Compare values and link the smaller one to the result.',
     ],
-    approach: `**Two Pointer Merge**
+    approach: `Two Pointer Merge
 
 1. Create a dummy node to simplify edge cases
 2. While both lists have nodes:
@@ -1581,7 +1581,7 @@ func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
     leetcodeUrl: 'https://leetcode.com/problems/move-zeroes/',
     description: `Given an integer array \`nums\`, move all \`0\`'s to the end of it while maintaining the relative order of the non-zero elements.
 
-**Note** that you must do this in-place without making a copy of the array.`,
+Note that you must do this in-place without making a copy of the array.`,
     examples: [
       { input: 'nums = [0,1,0,3,12]', output: '[1,3,12,0,0]', explanation: 'Move all zeros to the end while keeping relative order of non-zeros.' },
       { input: 'nums = [0]', output: '[0]', explanation: 'Single zero stays in place.' },
@@ -1728,7 +1728,7 @@ public:
     leetcodeUrl: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/',
     description: `You are given an array \`prices\` where \`prices[i]\` is the price of a given stock on the \`ith\` day.
 
-You want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock.
+You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.
 
 Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return \`0\`.`,
     examples: [
@@ -1801,7 +1801,7 @@ public:
     category: 'Two Pointers',
     tags: ['Array', 'Two Pointers'],
     leetcodeUrl: 'https://leetcode.com/problems/remove-duplicates-from-sorted-array/',
-    description: `Given an integer array \`nums\` sorted in **non-decreasing order**, remove the duplicates **in-place** such that each unique element appears only **once**. The **relative order** of the elements should be kept the **same**.
+    description: `Given an integer array \`nums\` sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same.
 
 Return \`k\` after placing the final result in the first \`k\` slots of \`nums\`.`,
     examples: [
@@ -1883,7 +1883,7 @@ public:
     category: 'Sliding Window',
     tags: ['String', 'Hash Map', 'Sliding Window'],
     leetcodeUrl: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/',
-    description: `Given a string \`s\`, find the length of the **longest substring** without repeating characters.`,
+    description: `Given a string \`s\`, find the length of the longest substring without repeating characters.`,
     examples: [
       { input: 's = "abcabcbb"', output: '3', explanation: 'The answer is "abc", with length 3.' },
       { input: 's = "bbbbb"', output: '1', explanation: 'The answer is "b", with length 1.' },
@@ -1978,9 +1978,9 @@ public:
     category: 'Two Pointers',
     tags: ['String', 'Two Pointers'],
     leetcodeUrl: 'https://leetcode.com/problems/valid-palindrome/',
-    description: `A phrase is a **palindrome** if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.
+    description: `A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward.
 
-Given a string \`s\`, return \`true\` if it is a **palindrome**, or \`false\` otherwise.`,
+Given a string \`s\`, return \`true\` if it is a palindrome, or \`false\` otherwise.`,
     examples: [
       { input: 's = "A man, a plan, a canal: Panama"', output: 'true', explanation: '"amanaplanacanalpanama" is a palindrome.' },
       { input: 's = "race a car"', output: 'false', explanation: '"raceacar" is not a palindrome.' },
@@ -2893,7 +2893,7 @@ public:
     leetcodeUrl: 'https://leetcode.com/problems/number-of-islands/',
     description: `Given an \`m x n\` 2D binary grid \`grid\` which represents a map of \`'1'\`s (land) and \`'0'\`s (water), return the number of islands.
 
-An **island** is surrounded by water and is formed by connecting adjacent lands horizontally or vertically.`,
+An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically.`,
     examples: [
       { input: 'grid = [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]', output: '1', explanation: 'One connected island.' },
       { input: 'grid = [["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]', output: '3', explanation: 'Three separate islands.' },
