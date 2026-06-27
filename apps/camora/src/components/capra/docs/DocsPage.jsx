@@ -681,6 +681,18 @@ export default function DocsPage({ onBack }) {
     }
   };
 
+  // Cloud provider switch: swap diagramData from local cache or clear it so the
+  // static eraser image for the new provider is shown immediately (not the old AWS URL).
+  const handleSetDiagramCloudProvider = useCallback((provider) => {
+    setDiagramCloudProvider(provider);
+    const cacheKey = `${selectedTopic}-${diagramDetailLevel}-${provider}`;
+    if (diagramCache[cacheKey]) {
+      setDiagramData(diagramCache[cacheKey]);
+    } else {
+      setDiagramData(null);
+    }
+  }, [selectedTopic, diagramDetailLevel, diagramCache]);
+
   // Sidebar navigation items
   const navItems = [
     { id: 'coding', label: 'Data Structures & Algorithms', icon: 'code' },
@@ -771,8 +783,18 @@ export default function DocsPage({ onBack }) {
       topics = topics.filter(topic => roleFilteredIds.has(topic.id));
     }
 
+    const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
     return topics
-      .filter(topic => topic.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(topic => {
+        if (!words.length) return true;
+        const haystack = [
+          topic.title,
+          topic.subtitle,
+          topic.description,
+          topic.id,
+        ].filter(Boolean).join(' ').toLowerCase();
+        return words.every(w => haystack.includes(w));
+      })
       .sort((a, b) => {
         if (roleFilteredIds) {
           const aIdx = [...roleFilteredIds].indexOf(a.id);
