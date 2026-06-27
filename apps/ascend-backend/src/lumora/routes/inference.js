@@ -65,7 +65,7 @@ router.post('/conversations/:conversationId/stream', authenticate, hourBudgetGat
   try {
     // Check daily free limit for free-tier users
     const userPlan = user.plan_type || 'free';
-    if (userPlan === 'free') {
+    if (userPlan === 'free' && !user.is_admin) {
       const dailyCheck = await checkDailyFreeLimit(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
@@ -233,7 +233,7 @@ router.post('/stream', authenticate, hourBudgetGate, checkUsage('questions'), as
   try {
     // Check daily free limit for free-tier users
     const userPlan = user.plan_type || 'free';
-    if (userPlan === 'free') {
+    if (userPlan === 'free' && !user.is_admin) {
       const dailyCheck = await checkDailyFreeLimit(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
