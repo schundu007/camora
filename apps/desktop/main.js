@@ -62,6 +62,12 @@ function saveWindowState(win) {
 
 // ── Window ──────────────────────────────────────────────────────────────
 function createWindow() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+    return;
+  }
   const state = loadWindowState();
   mainWindow = new BrowserWindow({
     width: state.width, height: state.height, x: state.x, y: state.y,
@@ -83,7 +89,11 @@ function createWindow() {
   mainWindow.setContentProtection(true);
 
   mainWindow.on('close', (e) => {
-    if (!isQuitting) saveWindowState(mainWindow);
+    if (!isQuitting) {
+      e.preventDefault();
+      saveWindowState(mainWindow);
+      mainWindow.hide();
+    }
   });
   ['resize', 'move'].forEach((ev) => mainWindow.on(ev, () => saveWindowState(mainWindow)));
 
