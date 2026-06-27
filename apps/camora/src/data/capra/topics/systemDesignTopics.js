@@ -66,12 +66,16 @@ export const systemDesignTopics = [
         'Know the difference between vertical and horizontal scaling'
       ],
 
-      introduction: `System design fundamentals are the building blocks every engineer must master. These concepts -- scalability, availability, reliability, latency, throughput, and the CAP theorem -- appear in virtually every interview round and form the shared vocabulary for discussing large-scale distributed systems. Without a firm grasp of these primitives, it is impossible to reason about trade-offs or propose architectures that survive real-world production conditions.
+      introduction: `## Overview
+System design fundamentals are the building blocks every engineer must master. These concepts -- scalability, availability, reliability, latency, throughput, and the CAP theorem -- appear in virtually every interview round and form the shared vocabulary for discussing large-scale distributed systems. Without a firm grasp of these primitives, it is impossible to reason about trade-offs or propose architectures that survive real-world production conditions.
 
+## Scale in Production
 The numbers behind these concepts are staggering. Google serves over 8.5 billion searches per day (roughly 99,000 queries per second on average, with peaks far higher). Netflix streams to 260+ million subscribers across 190 countries, delivering approximately 100 million hours of video daily over a system of 1,000+ microservices. Amazon processes an estimated 7,000 orders per second during peak events like Prime Day. These systems achieve this scale because engineers deeply understand horizontal scaling, caching hierarchies, replication strategies, and the precise trade-offs between consistency and availability.
 
+## Availability and the "Nines"
 Availability is measured in "nines" -- 99.9% (three nines) allows 8.76 hours of downtime per year, while 99.999% (five nines) allows only 5.26 minutes. The jump from three nines to five nines is a 100x reduction in permitted downtime, requiring fundamentally different architectures: redundant components, automated failover, multi-region deployment, and sophisticated health checking. AWS targets 99.99% for most managed services; Google Cloud Spanner guarantees 99.999% with its TrueTime-synchronized architecture. Understanding these numbers and the engineering cost to achieve each level is what separates strong candidates from average ones.
 
+## Back-of-Envelope Estimation
 Back-of-envelope estimation is the practical application of these fundamentals. Knowing that RAM access takes ~100 nanoseconds, an SSD read takes ~100 microseconds, a same-datacenter round trip takes ~0.5 milliseconds, and a cross-continent round trip takes ~150 milliseconds lets you quickly evaluate whether a proposed architecture can meet latency requirements. Similarly, knowing that 1 million daily active users generating 10 requests each equals ~116 requests per second (with 3-5x peaks) lets you size infrastructure before writing a single line of code. These estimation skills, combined with an understanding of CAP theorem trade-offs and the PACELC extension, are the foundation upon which every system design answer is built.`,
 
       functionalRequirements: [
@@ -893,12 +897,16 @@ Interview pattern: Always state which consistency level your system needs and ju
         'NewSQL (CockroachDB, TiDB, Spanner) gives you SQL semantics with horizontal scaling — consider for greenfield distributed systems'
       ],
 
-      introduction: `Database design is the foundation of every system. The choice between SQL and NoSQL, the sharding strategy, the indexing engine, and replication topology fundamentally shape what a system can and cannot do. Getting the database wrong is the single most expensive architectural mistake — migrating a live database under traffic is orders of magnitude harder than swapping a stateless service.
+      introduction: `## Overview
+Database design is the foundation of every system. The choice between SQL and NoSQL, the sharding strategy, the indexing engine, and replication topology fundamentally shape what a system can and cannot do. Getting the database wrong is the single most expensive architectural mistake — migrating a live database under traffic is orders of magnitude harder than swapping a stateless service.
 
+## Production Reality
 In production, every major company is defined by its database choices. PostgreSQL powers Stripe's financial transaction engine (processing hundreds of billions of dollars annually with strict ACID guarantees), Discord's message metadata for 200M+ monthly active users, and Reddit's core content storage. Cassandra handles Apple's 160,000+ node deployment storing over 100 petabytes of data across iMessage, Siri, and App Store services. DynamoDB served Amazon at 151 million requests per second during Prime Day 2025, maintaining single-digit millisecond latency throughout.
 
+## The Modern Database Landscape
 The modern landscape extends well beyond the SQL-vs-NoSQL binary. Time-series databases (TimescaleDB, InfluxDB) handle IoT and observability workloads that would overwhelm general-purpose engines. NewSQL databases (CockroachDB, TiDB, Google Spanner) deliver SQL semantics with horizontal scaling — the best of both worlds, at the cost of operational complexity. Vector databases (Pinecone, Weaviate) have emerged as critical infrastructure for AI applications. Understanding when each category applies, and how they compose together in polyglot persistence architectures, is what separates strong system design candidates from average ones.
 
+## What Interviews Test
 In interviews, database questions test your ability to match requirements to technology. You need to reason about consistency vs availability, read-heavy vs write-heavy access patterns, data modeling trade-offs, and scaling strategies. The answers below cover the full spectrum — from foundational concepts like ACID and indexing to advanced topics like zero-downtime migrations, connection pooling, and quorum-based replication.`,
 
       functionalRequirements: [
@@ -1598,12 +1606,16 @@ Decision matrix:
         'Use two-tier caching (L1 in-process + L2 distributed) to minimize both latency and network overhead'
       ],
 
-      introduction: `Caching is arguably the single most impactful performance optimization in system design. By storing copies of frequently accessed data in fast, in-memory storage, a well-designed cache can reduce read latency from 50-100ms (database) to under 1ms (Redis/Memcached) — a 50-100x improvement. At scale, this is the difference between a system that handles 1,000 requests per second and one that handles 100,000. Netflix's EVCache system processes 400 million cache operations per second across 14.3 petabytes of data. Facebook's TAO cache achieves a 96.4% hit rate while serving over one quadrillion reads per day. These are not exceptional cases — they are the norm for any system operating at internet scale.
+      introduction: `## Overview
+Caching is arguably the single most impactful performance optimization in system design. By storing copies of frequently accessed data in fast, in-memory storage, a well-designed cache can reduce read latency from 50-100ms (database) to under 1ms (Redis/Memcached) — a 50-100x improvement. At scale, this is the difference between a system that handles 1,000 requests per second and one that handles 100,000. Netflix's EVCache system processes 400 million cache operations per second across 14.3 petabytes of data. Facebook's TAO cache achieves a 96.4% hit rate while serving over one quadrillion reads per day. These are not exceptional cases — they are the norm for any system operating at internet scale.
 
+## The Math Behind Hit Rates
 The math behind caching is compelling. Consider a system handling 10,000 requests per second where each database query takes 50ms. Without caching, you need a massive database cluster. With a 90% cache hit rate (where 90% of requests are served from cache at 1ms), only 1,000 requests per second reach the database — a 10x reduction in load. Push that hit rate to 99% and only 100 requests per second hit the database. This is why Netflix caches 95%+ of requests at the CDN edge through their Open Connect network, reducing origin traffic to roughly 2% of total edge traffic. Going from 0% to 90% cache hit rate is the single biggest performance lever you can pull.
 
+## The Three Hard Problems
 Despite its power, caching introduces three fundamental challenges that interviewers love to explore. First, cache invalidation: "There are only two hard things in Computer Science: cache invalidation and naming things" (Phil Karlton). Deciding when to expire or refresh cached data is genuinely difficult — too aggressive and you lose the performance benefit, too conservative and users see stale data. Second, consistency: caching inherently introduces eventual consistency, meaning reads from cache may return data that is slightly behind the database. Third, memory management: caches have finite memory, so you must choose eviction policies (LRU, LFU, FIFO) that keep the most valuable data resident while gracefully removing the least useful entries.
 
+## What Interviews Test
 In system design interviews, caching appears in virtually every problem. Whether you are designing a URL shortener, a social media feed, or an e-commerce platform, the interviewer expects you to discuss where caching fits, which strategy to use (cache-aside, write-through, write-behind, read-through), how to handle invalidation, and what happens when the cache fails. Mastering these trade-offs separates strong candidates from average ones.`,
 
       functionalRequirements: [
@@ -2742,12 +2754,16 @@ The two-tier approach is what most high-performance systems use. GitHub, Twitter
         'Connection draining and graceful shutdown are mandatory — never kill a consumer mid-processing without committing offsets'
       ],
 
-      introduction: `Message queues enable asynchronous communication between services, decoupling producers from consumers. They are the backbone of event-driven architecture and the primary mechanism for building scalable, resilient distributed systems that can absorb traffic spikes, handle failures gracefully, and process work in the background without blocking user-facing requests.
+      introduction: `## Overview
+Message queues enable asynchronous communication between services, decoupling producers from consumers. They are the backbone of event-driven architecture and the primary mechanism for building scalable, resilient distributed systems that can absorb traffic spikes, handle failures gracefully, and process work in the background without blocking user-facing requests.
 
+## Scale in Production
 The scale at which message queues operate in production is extraordinary. LinkedIn processes over 7 trillion messages per day through Apache Kafka, making it one of the largest Kafka deployments in the world. AWS SQS handles over 100 billion messages per day across its customer base. RabbitMQ powers millions of deployments worldwide and remains the most widely adopted traditional message broker. Netflix uses Kafka to process over 200 billion events daily for real-time analytics, recommendations, and system monitoring. Uber routes all trip events, driver location updates, and payment notifications through Kafka, processing trillions of messages per month across hundreds of microservices.
 
+## Architecture Families
 Message queues come in fundamentally different architectures: log-based event streams (Kafka, Redpanda, Apache Pulsar) that retain messages for replay and support multiple consumer groups, traditional message brokers (RabbitMQ, ActiveMQ) that provide flexible routing with exchanges and bindings, and fully managed cloud queues (AWS SQS/SNS, Google Pub/Sub, Azure Service Bus) that eliminate operational overhead entirely. The choice depends on whether you need event replay, complex routing, exactly-once guarantees, or simply want zero infrastructure management.
 
+## What Interviews Test
 In a system design interview, you are expected to reason about messaging patterns (pub/sub vs point-to-point), delivery semantics (at-least-once vs exactly-once), ordering guarantees (partition-level vs global), consumer group mechanics, dead letter queue strategies, backpressure handling, serialization formats, and operational concerns like consumer lag monitoring and schema evolution. Understanding these deeply — with real numbers and concrete trade-offs — separates senior candidates from those with surface-level knowledge.`,
 
       functionalRequirements: [
@@ -3884,12 +3900,16 @@ Interview framework: When asked "how would you add X to this architecture?", the
         'Idempotency keys are mandatory for payment APIs — Stripe, PayPal, and Square all require them'
       ],
 
-      introduction: `API design is how services communicate in distributed systems, and it is arguably the most important architectural decision you will make. A well-designed API is intuitive, consistent, and scales with your product. A poorly designed API creates compounding technical debt — every client that integrates with a bad API becomes a migration burden when you inevitably need to fix it. Stripe and Twilio built their reputations largely on excellent API design; developers love using them because endpoints follow predictable patterns, error messages are actionable, and documentation stays in sync with the actual implementation.
+      introduction: `## Overview
+API design is how services communicate in distributed systems, and it is arguably the most important architectural decision you will make. A well-designed API is intuitive, consistent, and scales with your product. A poorly designed API creates compounding technical debt — every client that integrates with a bad API becomes a migration burden when you inevitably need to fix it. Stripe and Twilio built their reputations largely on excellent API design; developers love using them because endpoints follow predictable patterns, error messages are actionable, and documentation stays in sync with the actual implementation.
 
+## The Three Paradigms
 The modern API landscape spans three dominant paradigms. REST (Representational State Transfer) remains the universal standard for public APIs, used by over 80% of web integrations. It leverages HTTP verbs (GET, POST, PUT, PATCH, DELETE), resource-oriented URLs, and JSON payloads. GraphQL, pioneered by Facebook in 2015 and adopted by GitHub, Shopify, and Yelp, lets clients specify exactly what data they need in a single request — eliminating the over-fetching and under-fetching problems that plague REST. In October 2024, Shopify announced that GraphQL would become their definitive API, requiring all new apps to use it by April 2025 and reducing API call volume by 80% for some integrations. gRPC, built by Google on HTTP/2 and Protocol Buffers, delivers up to 7x faster performance than REST in microservice architectures, with payloads 5-10x smaller than JSON, making it the standard for high-performance internal service communication at companies like Netflix, Square, and Cloudflare.
 
+## Production Concerns
 Beyond choosing a paradigm, production API design requires mastering pagination (cursor-based vs offset, with 177x performance differences at deep pages), versioning (URL path vs header vs query parameter, each with real trade-offs for caching and discoverability), authentication (OAuth2 for delegated third-party access, JWT for stateless sessions, API keys for server-to-server), idempotency (critical for payment processing — Stripe requires Idempotency-Key headers for all POST mutations), and rate limiting (Stripe allows 100 req/sec for Connect platforms, GitHub caps authenticated users at 5,000 req/hour). The API gateway pattern — used by Kong, AWS API Gateway, and Envoy — centralizes cross-cutting concerns like auth, rate limiting, and request transformation at the edge, keeping individual services focused on business logic.
 
+## What Interviews Test
 A strong system design interview answer demonstrates not just knowledge of these concepts but the judgment to choose the right tool for each scenario, the awareness of real-world numbers (latency budgets, throughput targets, rate limit tiers), and the ability to reason about trade-offs like REST's cacheability vs GraphQL's flexibility, or gRPC's performance vs its browser incompatibility.`,
 
       functionalRequirements: [
@@ -4826,12 +4846,16 @@ In practice, few APIs implement full HATEOAS, but including a "self" link and li
         'Connection draining is mandatory for zero-downtime deploys — always drain before removing a server from the pool'
       ],
 
-      introduction: `Load balancing is the practice of distributing incoming network traffic across a pool of backend servers so that no single machine becomes a bottleneck. It is the foundational building block of horizontal scaling, high availability, and fault tolerance in modern distributed systems. Without a load balancer, adding more servers does nothing — clients have no way to discover or reach them.
+      introduction: `## Overview
+Load balancing is the practice of distributing incoming network traffic across a pool of backend servers so that no single machine becomes a bottleneck. It is the foundational building block of horizontal scaling, high availability, and fault tolerance in modern distributed systems. Without a load balancer, adding more servers does nothing — clients have no way to discover or reach them.
 
+## Scale in Production
 The scale at which load balancers operate is staggering. AWS Network Load Balancer is engineered to handle millions of requests per second while maintaining sub-millisecond latency, auto-scaling transparently without any pre-warming. Google built Maglev, a custom software load balancer that saturates a 10 Gbps link and processes roughly 12 million packets per second on a single 8-core commodity server. Netflix routes all streaming traffic through its Zuul edge gateway backed by Eureka service discovery, distributing requests across thousands of instances spanning multiple AWS regions.
 
+## Forms and Trade-offs
 Load balancers come in many forms: hardware appliances (F5 BIG-IP), software reverse proxies (NGINX, HAProxy, Envoy), cloud-managed services (AWS ALB/NLB, GCP Cloud Load Balancing, Azure Load Balancer), and even client-side libraries (gRPC, Netflix Ribbon). The choice depends on where in the network stack you operate, what routing intelligence you need, and whether you want to manage the infrastructure yourself. In a system design interview, you are expected to reason about algorithm selection, layer 4 vs layer 7 trade-offs, health checking strategies, session persistence, SSL offloading, and global multi-region routing.
 
+## What Interviews Test
 Understanding load balancing deeply means knowing not just how traffic is distributed, but how the load balancer itself avoids becoming a single point of failure, how it integrates with auto-scaling to absorb traffic spikes, how it handles long-lived connections like WebSockets and gRPC streams, and how it enables zero-downtime deployments through connection draining and graceful shutdown.`,
 
       functionalRequirements: [
@@ -5479,12 +5503,16 @@ Trade-offs:
         'Combine per-IP (DDoS protection) with per-user (fairness) rate limiting at different layers'
       ],
 
-      introduction: `A rate limiter controls the number of requests a user or system can make within a specific time window. It is one of the most critical infrastructure components in any production API -- without rate limiting, a single abusive client can exhaust server resources, degrade experience for all users, and generate massive cloud bills. Rate limiters protect against API abuse, mitigate DDoS attacks, enforce fair usage across subscription tiers, and control costs in usage-based billing systems.
+      introduction: `## Overview
+A rate limiter controls the number of requests a user or system can make within a specific time window. It is one of the most critical infrastructure components in any production API -- without rate limiting, a single abusive client can exhaust server resources, degrade experience for all users, and generate massive cloud bills. Rate limiters protect against API abuse, mitigate DDoS attacks, enforce fair usage across subscription tiers, and control costs in usage-based billing systems.
 
+## Real-World Limits
 The scale of rate limiting in production is enormous. Stripe processes over 1,000 API calls per second per account, enforcing a default limit of 25 requests per second per endpoint and up to 100 operations per second for Connect platforms. GitHub allows 5,000 requests per hour for authenticated REST API users (60/hour for unauthenticated), plus secondary limits of 80 content-generating requests per minute. Twitter/X uses a 15-minute fixed window with 300 requests for user-context endpoints. Discord enforces a global limit of 50 requests per second using token bucket. Shopify uses leaky bucket for all storefront APIs. These limits are carefully tuned based on infrastructure capacity, abuse patterns, and business tier economics.
 
+## The Five Algorithms
 At the algorithm level, there are five main approaches: token bucket (allows controlled bursts, used by AWS and Stripe), leaky bucket (smooths traffic to a constant rate, used by Shopify), fixed window counter (simple but vulnerable to boundary spikes), sliding window log (precise but memory-intensive), and sliding window counter (a hybrid that balances accuracy with O(1) memory, used by Cloudflare). Each has distinct trade-offs in memory usage, precision, burst tolerance, and implementation complexity. In a distributed system with multiple application servers, the critical challenge is maintaining consistent rate limit state -- which is why Redis with atomic Lua scripts has become the industry standard. Cloudflare's sliding window implementation has mitigated attacks involving up to 400,000 requests per second on a single domain while maintaining service quality.
 
+## What Interviews Test
 Understanding these algorithms, their Redis implementations, and how to combine per-IP (DDoS protection), per-user (fairness), and per-endpoint (cost control) rate limiting at different layers is a core system design interview topic. The best answers also cover response headers (X-RateLimit-Remaining, Retry-After), graceful degradation when the rate limiter itself fails, and how to handle burst traffic for legitimate use cases like product launches.`,
 
       functionalRequirements: [
@@ -6168,12 +6196,16 @@ Best practice: Load Lua scripts with SCRIPT LOAD at startup, call with EVALSHA (
         'Use async events for state changes, sync REST/gRPC only when you need an immediate response'
       ],
 
-      introduction: `Microservices architecture structures an application as a collection of loosely coupled, independently deployable services, each owning its own data store and communicating over well-defined APIs. The approach enables large engineering organizations to scale development velocity by allowing autonomous teams to build, deploy, and operate their services independently, without coordinating monolithic release cycles.
+      introduction: `## Overview
+Microservices architecture structures an application as a collection of loosely coupled, independently deployable services, each owning its own data store and communicating over well-defined APIs. The approach enables large engineering organizations to scale development velocity by allowing autonomous teams to build, deploy, and operate their services independently, without coordinating monolithic release cycles.
 
+## Adoption at Scale
 The scale of microservices adoption at top companies is significant. Netflix operates over 1,000 microservices running on AWS, serving 260+ million subscribers with an architecture that handles billions of API requests per day. Amazon reportedly runs thousands of microservices, with each two-pizza team (6-8 engineers) owning one or more services end-to-end. Uber operates 4,000+ microservices, and Spotify organizes around "squads" that each own microservices aligned with product features. These organizations did not start with microservices -- Netflix began its migration from a monolithic Java application in 2009 and took over 6 years to complete it. Amazon's transition famously started with Jeff Bezos's 2002 mandate that all teams must communicate through service interfaces.
 
+## Operational Complexity
 The operational complexity of microservices is substantial. Netflix created an entire open-source ecosystem to manage it: Eureka for service discovery, Hystrix for circuit breaking (now in maintenance mode, replaced by Resilience4j), Zuul for API gateway routing, and Ribbon for client-side load balancing. The industry has since shifted toward service mesh architectures (Istio with Envoy sidecar proxies) that handle cross-cutting concerns like mTLS, retries, circuit breaking, and observability transparently at the infrastructure layer. Conway's Law -- "organizations design systems that mirror their communication structure" -- explains why microservices work well for large organizations but add unnecessary overhead for small teams.
 
+## What Interviews Test
 In system design interviews, the key is knowing WHEN to use microservices (and when not to). Martin Fowler's "monolith first" principle suggests starting with a well-structured monolith and extracting services only when clear bounded contexts emerge and team size demands it. The critical patterns to master are the Strangler Fig pattern (incremental migration), saga pattern (distributed transactions), circuit breaker (fault isolation), database-per-service (data ownership), and API gateway (unified entry point). Equally important is understanding the anti-patterns: distributed monolith (services that must deploy together), shared database (defeats the purpose of service boundaries), and nano-services (services too small to justify the overhead).`,
 
       functionalRequirements: [
@@ -6932,12 +6964,16 @@ Supporting infrastructure: Service Registry (Consul) · Config Server (Vault) ·
         'Principle of least privilege for access control'
       ],
 
-      introduction: `Security is not optional -- it is a fundamental requirement for every system. A single vulnerability can expose millions of users' data, destroy trust, and result in massive financial and legal consequences. According to IBM's 2025 Cost of a Data Breach Report, the global average cost of a data breach is $4.44 million, with breaches in the United States averaging $10.22 million. Organizations using AI and automation for security detection reduced their breach costs by an average of $2.2 million and shortened detection time by 108 days compared to those without.
+      introduction: `## Overview
+Security is not optional -- it is a fundamental requirement for every system. A single vulnerability can expose millions of users' data, destroy trust, and result in massive financial and legal consequences. According to IBM's 2025 Cost of a Data Breach Report, the global average cost of a data breach is $4.44 million, with breaches in the United States averaging $10.22 million. Organizations using AI and automation for security detection reduced their breach costs by an average of $2.2 million and shortened detection time by 108 days compared to those without.
 
+## The Threat Landscape
 The threat landscape is extensive and continuously evolving. The OWASP Top 10 for 2025 identifies Broken Access Control as the #1 web application security risk, with 3.73% of applications tested having at least one CWE in this category. Security Misconfiguration rose sharply to #2, and Software Supply Chain Failures entered at #3, reflecting the growing risk of compromised dependencies, build systems, and distribution infrastructure. Injection attacks (SQL injection with 14,000+ CVEs, XSS with 30,000+ CVEs) remain at #5 -- they are well-understood but still pervasive because developers continue to concatenate user input into queries and templates.
 
+## Lessons from Major Breaches
 High-profile breaches underscore the consequences: Equifax (2017, 147 million records, $700M settlement), Yahoo (2013-2014, 3 billion accounts), Marriott (2018, 500 million guests), and the MOVEit Transfer supply chain attack (2023, 2,700+ organizations affected). These breaches resulted from preventable vulnerabilities -- unpatched software, improper access controls, weak authentication, and failure to encrypt data at rest. Zero-trust architecture -- the principle of "never trust, always verify" -- has become the industry standard response, with 63% of organizations worldwide having implemented it partially or fully as of 2025, and 81% planning full adoption within 12 months.
 
+## What Interviews Test
 In system design interviews, security should be woven into every answer, not treated as an afterthought. Authentication (OAuth 2.0, OIDC, JWT), authorization (RBAC, ABAC), encryption (TLS 1.3 in transit, AES-256 at rest), input validation, rate limiting, and secrets management are expected components of any production architecture. Proactively mentioning defense-in-depth, the principle of least privilege, and specific OWASP mitigations demonstrates the security awareness that distinguishes senior engineers.`,
 
       functionalRequirements: [
@@ -7692,12 +7728,16 @@ Each service (A, B, C) independently validates the JWT, checks scopes, and runs 
         'Use distributed tracing for debugging microservices'
       ],
 
-      introduction: `Observability is the ability to understand a system's internal state by examining its external outputs -- metrics, logs, and traces. In a distributed system with dozens or hundreds of microservices, you cannot SSH into a server to debug problems. Without comprehensive observability, every production incident becomes a guessing game that extends Mean Time To Recovery (MTTR) and costs revenue.
+      introduction: `## Overview
+Observability is the ability to understand a system's internal state by examining its external outputs -- metrics, logs, and traces. In a distributed system with dozens or hundreds of microservices, you cannot SSH into a server to debug problems. Without comprehensive observability, every production incident becomes a guessing game that extends Mean Time To Recovery (MTTR) and costs revenue.
 
+## The Three Pillars
 The scale of observability in modern organizations is significant. According to Grafana Labs' 2025 Observability Survey, 67% of organizations use Prometheus in production, 57% use distributed tracing, and companies spend an average of 17% of their total compute infrastructure budget on observability tooling. Organizations use an average of eight observability technologies. The three pillars -- metrics, logs, and traces -- serve complementary purposes: metrics tell you WHAT is wrong (error rate spiked), traces tell you WHERE the problem is (the payment service is slow), and logs tell you WHY (a database connection pool is exhausted).
 
+## The Modern Observability Stack
 The industry is converging on OpenTelemetry (OTel) as the standard instrumentation framework. A CNCF project, OTel provides a single vendor-neutral SDK that exports metrics, logs, and traces to any backend (Prometheus, Jaeger, Datadog, Grafana). 71% of organizations use both Prometheus and OpenTelemetry in some capacity, and 41% use OTel in production. The typical modern stack is OpenTelemetry for instrumentation, Prometheus/Mimir for metrics, Grafana Loki or Elasticsearch for logs, Jaeger/Tempo for traces, and Grafana for unified visualization.
 
+## SLOs Over Thresholds
 Effective monitoring is driven by SLOs (Service Level Objectives), not arbitrary thresholds. Google's SRE book popularized the concept: instead of alerting when CPU exceeds 80% (a cause, not a symptom), alert when the error budget burn rate exceeds a threshold (indicating real user impact). An SLO of 99.9% availability gives you an error budget of 43.2 minutes of downtime per month. If you are burning through that budget faster than expected, that is actionable. This approach reduces alert fatigue -- a problem so severe that engineers at some companies ignore 90% of alerts because most are false positives.`,
 
       functionalRequirements: [
@@ -8592,12 +8632,16 @@ Grafana sits on top for unified dashboards, alerts (PagerDuty, Slack, on-call), 
         'When a node is added/removed, only K/N keys need to be remapped (K = total keys, N = total nodes)'
       ],
 
-      introduction: `Consistent hashing is a distributed hashing technique that maps both data items and server nodes onto the same circular hash space (a hash ring). When a node is added or removed, only a small fraction of keys -- approximately K/N where K is the total keys and N is the total nodes -- need to be remapped. This is dramatically superior to naive modular hashing (hash(key) % N) where adding one server reshuffles nearly every key, causing catastrophic cache miss storms in production.
+      introduction: `## Overview
+Consistent hashing is a distributed hashing technique that maps both data items and server nodes onto the same circular hash space (a hash ring). When a node is added or removed, only a small fraction of keys -- approximately K/N where K is the total keys and N is the total nodes -- need to be remapped. This is dramatically superior to naive modular hashing (hash(key) % N) where adding one server reshuffles nearly every key, causing catastrophic cache miss storms in production.
 
+## Origins and Adoption
 The technique was first described by David Karger et al. at MIT in 1997, and the paper's co-author Daniel Lewin went on to co-found Akamai Technologies based on this work. Akamai's CDN -- which today serves 15-30% of all global web traffic -- uses consistent hashing at its core to route content requests to the nearest and most appropriate cache server. The algorithm has since become a foundational building block of distributed systems: Amazon DynamoDB uses it for partition placement across storage nodes, Apache Cassandra uses a 2^64 Murmur3 hash ring with 256 virtual nodes per server by default, Redis Cluster uses 16,384 fixed hash slots (a variant of consistent hashing), and Memcached client libraries (Ketama) use it for distributing cache keys.
 
+## Virtual Nodes: The Key Innovation
 The key innovation is virtual nodes (vnodes): instead of mapping each physical server to a single point on the ring, you map it to 100-200 virtual positions spread evenly around the ring. This solves three problems: uneven data distribution when physical nodes are few, cascading load when a single node fails (load spreads to ALL remaining nodes instead of just one neighbor), and heterogeneous hardware support (a 16-CPU server gets 200 vnodes while an 8-CPU server gets 100). Google's 2016 paper "Consistent Hashing with Bounded Loads" further addresses the hot key problem by setting a load ceiling: if a node's load exceeds average_load * (1 + epsilon), the key is assigned to the next node clockwise that is below the ceiling.
 
+## What Interviews Test
 In system design interviews, consistent hashing appears whenever you need to distribute data or traffic across a variable number of servers -- CDNs, distributed caches, database sharding, load balancing with session affinity. Understanding the hash ring, virtual nodes, replication on the ring, and the trade-offs versus range-based partitioning and jump consistent hash will set your answer apart from candidates who only mention the concept by name.`,
 
       functionalRequirements: [
@@ -9483,12 +9527,16 @@ Common interview mistakes to avoid:
         'A 1% false positive rate requires ~10 bits per element'
       ],
 
-      introduction: `A Bloom filter is a space-efficient probabilistic data structure that tests whether an element is a member of a set. It can tell you with certainty that an element is not in the set (zero false negatives), but it can only say an element is probably in the set (false positives are possible). This one-sided error property makes it incredibly useful as a gatekeeper that prevents unnecessary expensive operations like disk reads, database queries, and network calls.
+      introduction: `## Overview
+A Bloom filter is a space-efficient probabilistic data structure that tests whether an element is a member of a set. It can tell you with certainty that an element is not in the set (zero false negatives), but it can only say an element is probably in the set (false positives are possible). This one-sided error property makes it incredibly useful as a gatekeeper that prevents unnecessary expensive operations like disk reads, database queries, and network calls.
 
+## How It Works
 Invented by Burton Howard Bloom in 1970, the data structure uses a bit array of m bits and k independent hash functions. To add an element, hash it with all k functions and set the corresponding bits to 1. To query, check if all k bit positions are 1 -- if any bit is 0, the element is definitely absent. The mathematics are well-understood: for a 1% false positive rate, you need approximately 10 bits per element and 7 hash functions. This means 1 million elements can be represented in just 1.2 MB, compared to ~64 MB for a HashSet storing the actual objects -- a 53x space savings.
 
+## Production Deployments
 Bloom filters are deployed extensively in production systems at massive scale. Google Chrome used a Bloom filter to check URLs against a list of known malicious sites -- every URL was checked locally first, and only if the filter returned "probably yes" was a full server query performed, protecting user privacy and reducing network traffic. Apache Cassandra and HBase use per-SSTable Bloom filters to avoid unnecessary disk reads during point lookups, typically eliminating 90%+ of disk I/O for keys that do not exist in a given SSTable. Akamai CDN uses Bloom filters to implement a "one-hit wonder" filter -- content is only cached after its second request, preventing rarely-accessed content from evicting popular cached items. Medium uses them to avoid recommending articles a user has already read. Bitcoin SPV (light) nodes use Bloom filters to request only relevant transactions from full nodes.
 
+## What Interviews Test
 In system design interviews, Bloom filters appear whenever you need to check set membership at scale with minimal memory. The key scenarios are: preventing cache penetration attacks (check before hitting the database), URL deduplication in web crawlers, recommendation deduplication, and database read optimization. Understanding the false positive math, the counting Bloom filter variant for deletion support, and newer alternatives like Cuckoo filters distinguishes strong candidates.`,
 
       functionalRequirements: [
@@ -10445,12 +10493,16 @@ Interview application: When designing any distributed system with a "does this e
         }
       ],
 
-      introduction: `Data partitioning (also called sharding) is the technique of splitting a large dataset across multiple machines so that no single node holds all the data. It is the primary mechanism for horizontal scaling of databases and storage systems. When a single PostgreSQL instance can handle ~50,000 transactions per second and store a few terabytes comfortably, but your system requires 500,000 TPS and 100 TB, partitioning becomes unavoidable.
+      introduction: `## Overview
+Data partitioning (also called sharding) is the technique of splitting a large dataset across multiple machines so that no single node holds all the data. It is the primary mechanism for horizontal scaling of databases and storage systems. When a single PostgreSQL instance can handle ~50,000 transactions per second and store a few terabytes comfortably, but your system requires 500,000 TPS and 100 TB, partitioning becomes unavoidable.
 
+## The Three Strategies
 There are three broad strategies. Hash partitioning applies a hash function to the partition key (hash(user_id) % N) for uniform distribution -- used by DynamoDB, Cassandra, and Redis Cluster. Range partitioning assigns key ranges to partitions (dates 2024-01 to 2024-03 on Shard 1) and supports efficient range queries -- used by HBase, CockroachDB, and Google Spanner. Geographic partitioning places data in the region where it is generated or most frequently accessed -- used by Uber (ride data in the originating region) and companies subject to data residency laws (GDPR requires EU user data stored in the EU). Each approach has distinct trade-offs in query flexibility, data distribution, and operational complexity.
 
+## The Partition Key: A One-Way Door
 The most critical decision in data partitioning is choosing the partition key. Instagram shards user data by user_id -- high cardinality, even distribution, and all queries for a single user hit one shard. A poor choice like sharding by country would put 50%+ of data on the US shard. DynamoDB automatically partitions based on partition key and automatically splits partitions when they exceed 10 GB storage or 3,000 read capacity units / 1,000 write capacity units. YouTube uses Vitess (a sharding proxy for MySQL) to manage thousands of shards transparently. Choosing a partition key is a one-way door -- changing it later requires migrating the entire dataset, which can take days or weeks for large systems.
 
+## What Interviews Test
 In system design interviews, data partitioning is relevant whenever the dataset exceeds what a single database can handle. The key decisions are the partition key (what field to shard by), the strategy (hash, range, or directory), how to handle cross-partition queries (scatter-gather, global secondary indexes, CQRS), and rebalancing (fixed partitions, dynamic splitting, consistent hashing). Getting these decisions right is the difference between a scalable system and a distributed monolith.`,
 
       functionalRequirements: [
@@ -11132,12 +11184,16 @@ Bottom line: Consistent hashing solves the rebalancing problem for hash-based pa
         'Partial indexes save space by indexing only a subset of rows'
       ],
 
-      introduction: `A database index is a data structure that dramatically improves the speed of data retrieval at the cost of additional storage and slower writes. Without indexes, the database must perform a full table scan -- reading every row to find matching records. For a table with 100 million rows, this means scanning hundreds of gigabytes of data for a single query, taking minutes instead of milliseconds. With a proper B-tree index, the same query touches only 3-4 tree levels (each level is one disk page read) and completes in under a millisecond.
+      introduction: `## Overview
+A database index is a data structure that dramatically improves the speed of data retrieval at the cost of additional storage and slower writes. Without indexes, the database must perform a full table scan -- reading every row to find matching records. For a table with 100 million rows, this means scanning hundreds of gigabytes of data for a single query, taking minutes instead of milliseconds. With a proper B-tree index, the same query touches only 3-4 tree levels (each level is one disk page read) and completes in under a millisecond.
 
+## Index Types
 The most common index type is the B+ tree (what databases call a "B-tree"), which maintains data in sorted order with O(log n) search, insert, and delete operations. A typical B+ tree with a branching factor of 500 can index 500 million rows in just 4 levels -- meaning any row can be found with at most 4 disk reads. Hash indexes provide O(1) lookups for exact-match queries but cannot support range queries or sorting. LSM-tree based indexes (used by RocksDB, Cassandra, LevelDB) optimize for write-heavy workloads by buffering writes in memory and flushing sorted runs to disk, achieving higher write throughput at the cost of more complex reads.
 
+## Composite and Covering Indexes
 Understanding composite indexes and the leftmost prefix rule is essential. A composite index on (user_id, created_at) can serve queries filtering on user_id alone OR on user_id + created_at, but NOT on created_at alone. The column order in a composite index is one of the most impactful performance decisions a developer makes, yet it is frequently misunderstood. Covering indexes take this further -- by including all columns a query needs, the database can satisfy the entire query from the index without ever touching the table, eliminating the most expensive part of a query: random I/O to fetch rows from the heap.
 
+## What Interviews Test
 In system design interviews, indexing decisions arise when discussing database schema design, query optimization, or performance bottlenecks. The key insight is that indexing is always a trade-off: each index speeds up specific read patterns but slows down every write operation (a table with 5 indexes performs 6 writes for every INSERT). Knowing when to index, what column order to use, when a covering index is worth the overhead, and when to use partial indexes for filtered subsets demonstrates the database expertise that distinguishes senior engineers from those who simply say "add an index."`,
 
       functionalRequirements: [
@@ -12032,10 +12088,13 @@ Decision guide:
         'Service mesh sidecar proxies (Envoy) handle inter-service communication'
       ],
 
-      introduction: `A proxy is an intermediary server that sits between a client and a server, forwarding requests and responses. Proxies are one of the most versatile tools in system design, serving roles from security and privacy to load balancing and caching. Understanding the difference between forward proxies and reverse proxies is fundamental, as they serve entirely different purposes despite sharing the concept of intermediation.
+      introduction: `## Overview
+A proxy is an intermediary server that sits between a client and a server, forwarding requests and responses. Proxies are one of the most versatile tools in system design, serving roles from security and privacy to load balancing and caching. Understanding the difference between forward proxies and reverse proxies is fundamental, as they serve entirely different purposes despite sharing the concept of intermediation.
 
+## Forward vs Reverse Proxy
 A forward proxy acts on behalf of clients, sitting between users and the internet. It is commonly used for content filtering, access control, and anonymity (think VPNs and corporate firewalls). A reverse proxy acts on behalf of servers, sitting between the internet and backend servers. It handles load balancing, SSL termination, caching, and security for the backend infrastructure.
 
+## What Interviews Test
 In system design interviews, proxies appear in almost every architecture: the load balancer is a reverse proxy, the CDN is a caching reverse proxy, the API gateway is a feature-rich reverse proxy, and the service mesh sidecar is a per-service proxy. Knowing when to operate at Layer 4 (TCP/UDP) versus Layer 7 (HTTP/application) and understanding the performance and feature trade-offs between them is essential for designing robust systems.`,
 
       functionalRequirements: [
@@ -13028,10 +13087,13 @@ Key takeaway for interviews: Connection pooling at the proxy layer is often the 
         'Always have a DNS failover plan for your critical services'
       ],
 
-      introduction: `The Domain Name System (DNS) is the internet's phone book, translating human-readable domain names (like google.com) into IP addresses (like 142.250.80.46) that computers use to communicate. Every web request, API call, and email delivery begins with a DNS lookup, making it one of the most critical pieces of internet infrastructure.
+      introduction: `## Overview
+The Domain Name System (DNS) is the internet's phone book, translating human-readable domain names (like google.com) into IP addresses (like 142.250.80.46) that computers use to communicate. Every web request, API call, and email delivery begins with a DNS lookup, making it one of the most critical pieces of internet infrastructure.
 
+## How DNS Works
 DNS operates as a hierarchical, distributed database. When you type a URL into your browser, a series of queries flows from your local resolver to root servers, TLD (Top-Level Domain) servers, and authoritative nameservers. The response is cached at multiple levels with configurable TTL (Time-To-Live) values, which is why DNS changes do not propagate instantly. Understanding this caching behavior is crucial for system design, especially during migrations and failover scenarios.
 
+## What Interviews Test
 In system design interviews, DNS appears in two main contexts: as a fundamental building block you should mention when describing how clients reach your system, and as an active component in traffic management through DNS-based load balancing, GeoDNS for geographic routing, and Anycast for high availability of the DNS infrastructure itself. Companies like Netflix, Google, and Cloudflare use sophisticated DNS strategies to route billions of requests to the optimal server.`,
 
       functionalRequirements: [
@@ -14017,10 +14079,13 @@ Monitoring DNS performance in production:
         'Always set proper Cache-Control headers; the CDN just obeys them'
       ],
 
-      introduction: `A Content Delivery Network (CDN) is a globally distributed network of servers (called edge servers or Points of Presence/PoPs) that cache and serve content from locations geographically close to end users. Instead of every user fetching content from a single origin server (potentially thousands of miles away), the CDN serves cached copies from the nearest edge, dramatically reducing latency and offloading the origin.
+      introduction: `## Overview
+A Content Delivery Network (CDN) is a globally distributed network of servers (called edge servers or Points of Presence/PoPs) that cache and serve content from locations geographically close to end users. Instead of every user fetching content from a single origin server (potentially thousands of miles away), the CDN serves cached copies from the nearest edge, dramatically reducing latency and offloading the origin.
 
+## Scale and Necessity
 CDNs are essential for serving static assets (images, CSS, JavaScript, videos) and increasingly for dynamic content as well. Cloudflare operates 300+ data centers worldwide, AWS CloudFront has 400+ edge locations, and Akamai serves 30%+ of all web traffic. Without CDNs, the modern web as we know it would not function -- page load times would be measured in seconds rather than milliseconds.
 
+## What Interviews Test
 In system design interviews, mentioning a CDN is almost always appropriate for any user-facing system. The key design decisions are whether to use a push or pull strategy, how to handle cache invalidation, how to design cache keys for content that varies by user or device, and how to architect the cache hierarchy (edge -> shield/mid-tier -> origin). These decisions directly impact user experience, origin load, and cost.`,
 
       functionalRequirements: [
@@ -15115,10 +15180,13 @@ For a smaller streaming service (1M subscribers):
         'Always test your failover mechanism -- untested failover is no failover'
       ],
 
-      introduction: `Redundancy means having duplicate components so that if one fails, another can take over. Replication is the specific technique of keeping copies of data on multiple machines. Together, they form the foundation of high availability and fault tolerance in distributed systems. Without redundancy, any single hardware failure, network partition, or software crash can bring down your entire service.
+      introduction: `## Overview
+Redundancy means having duplicate components so that if one fails, another can take over. Replication is the specific technique of keeping copies of data on multiple machines. Together, they form the foundation of high availability and fault tolerance in distributed systems. Without redundancy, any single hardware failure, network partition, or software crash can bring down your entire service.
 
+## Replication Topologies
 There are several replication topologies, each with distinct trade-offs. Leader-follower (also called primary-replica or master-slave) is the simplest: one node handles writes, followers replicate and serve reads. Multi-leader allows writes on multiple nodes for geographic distribution but introduces conflict resolution complexity. Leaderless (Dynamo-style) has no designated leader -- any node can accept reads and writes, using quorums for consistency.
 
+## What Interviews Test
 In system design interviews, redundancy and replication decisions appear in every scalable architecture. The key questions to answer are: how many replicas (typically 3), synchronous or asynchronous replication, how to handle failover, and what consistency guarantee you need. Understanding these trade-offs and being able to articulate why you chose a particular replication strategy for your design is what separates strong candidates from those who simply say "add replicas."`,
 
       functionalRequirements: [
@@ -16168,10 +16236,13 @@ Use single-leader: When strong consistency is non-negotiable
         'Connection pooling is one of the simplest and most impactful performance optimizations'
       ],
 
-      introduction: `Understanding network protocols is fundamental to system design because every interaction between components travels over a network. The choice between TCP and UDP, the HTTP version, and whether to use TLS or mTLS directly impacts your system's latency, throughput, security, and reliability. These are not abstract protocol details -- they have measurable, practical consequences.
+      introduction: `## Overview
+Understanding network protocols is fundamental to system design because every interaction between components travels over a network. The choice between TCP and UDP, the HTTP version, and whether to use TLS or mTLS directly impacts your system's latency, throughput, security, and reliability. These are not abstract protocol details -- they have measurable, practical consequences.
 
+## The Evolution of HTTP
 HTTP has evolved significantly: HTTP/1.1 introduced persistent connections but suffers from head-of-line blocking. HTTP/2 added multiplexing, header compression, and server push. HTTP/3 replaced TCP entirely with QUIC (built on UDP), eliminating transport-layer head-of-line blocking and reducing connection establishment time. Each version solves real problems that affect user experience at scale.
 
+## What Interviews Test
 For inter-service communication, gRPC (using HTTP/2 and Protocol Buffers) has become the standard for microservices due to its efficiency, strong typing, and streaming support. TLS encrypts all traffic in transit, and mTLS (mutual TLS) adds client authentication, which is essential in zero-trust architectures. In system design interviews, demonstrating knowledge of these protocols and when to use each shows that you understand the infrastructure beneath your application code.`,
 
       functionalRequirements: [
@@ -17281,10 +17352,13 @@ Interceptors are the gRPC equivalent of HTTP middleware:
         'Consider the scale of concurrent connections when choosing a protocol'
       ],
 
-      introduction: `Traditional HTTP follows a strict request-response pattern: the client asks, the server answers. But many modern applications need the server to push data to the client in real time -- chat messages, live notifications, stock price updates, collaborative editing. Three main techniques solve this problem: long polling, WebSockets, and Server-Sent Events (SSE).
+      introduction: `## Overview
+Traditional HTTP follows a strict request-response pattern: the client asks, the server answers. But many modern applications need the server to push data to the client in real time -- chat messages, live notifications, stock price updates, collaborative editing. Three main techniques solve this problem: long polling, WebSockets, and Server-Sent Events (SSE).
 
+## The Three Techniques
 Long polling is an evolution of regular polling where the server holds the request open until new data is available, then responds. It works everywhere HTTP works but has overhead from repeated connection establishment. WebSockets upgrade an HTTP connection to a persistent, full-duplex TCP connection where both sides can send messages at any time -- the gold standard for real-time bidirectional communication. Server-Sent Events (SSE) provide a simpler, unidirectional (server-to-client) streaming channel over standard HTTP, ideal for notifications and live feeds.
 
+## What Interviews Test
 In system design interviews, choosing the right real-time communication mechanism is a common discussion point. The decision depends on whether communication is unidirectional or bidirectional, the number of concurrent connections, browser/proxy compatibility requirements, and whether you need guaranteed delivery. Chat systems, live dashboards, notification systems, and collaborative editors each have different optimal solutions.`,
 
       functionalRequirements: [
@@ -18499,10 +18573,13 @@ Webhook delivery service architecture:
         'Always discuss specific consistency models (linearizable, causal, eventual) rather than just "consistent"'
       ],
 
-      introduction: `The CAP theorem, formulated by Eric Brewer in 2000 and proven by Gilbert and Lynch in 2002, states that a distributed data store can provide at most two of three guarantees: Consistency (every read receives the most recent write), Availability (every request receives a response), and Partition tolerance (the system continues operating despite network partitions between nodes). Since network partitions are inevitable in distributed systems, the practical choice is between consistency and availability during a partition.
+      introduction: `## Overview
+The CAP theorem, formulated by Eric Brewer in 2000 and proven by Gilbert and Lynch in 2002, states that a distributed data store can provide at most two of three guarantees: Consistency (every read receives the most recent write), Availability (every request receives a response), and Partition tolerance (the system continues operating despite network partitions between nodes). Since network partitions are inevitable in distributed systems, the practical choice is between consistency and availability during a partition.
 
+## PACELC: Beyond CAP
 However, CAP is often oversimplified. Real systems do not simply "choose CP or AP." Most systems make nuanced, operation-specific trade-offs. A banking system might be CP for balance transfers but AP for viewing transaction history. The PACELC theorem extends CAP by addressing what happens during normal operation (no partition): even without partitions, there is a trade-off between latency and consistency. A system might choose consistency during partitions (C) but prioritize latency during normal operation (L), making it a PC/EL system.
 
+## What Interviews Test
 In system design interviews, correctly applying CAP and PACELC demonstrates deep understanding of distributed systems trade-offs. Rather than simply labeling a system as "CP" or "AP," strong candidates discuss specific consistency models (linearizability, causal consistency, eventual consistency), explain why they chose a particular trade-off for each operation, and reference real systems (Cassandra as PA/EL, Spanner as PC/EC) to support their reasoning.`,
 
       functionalRequirements: [
@@ -19539,10 +19616,13 @@ Interview insight: Reference Spanner when discussing global strong consistency. 
         'Always discuss the trade-off between consistency and throughput in append-heavy workloads'
       ],
 
-      introduction: `Distributed file systems solve the problem of storing datasets that are far too large for any single machine. When you need to store petabytes of log data, video files, or analytical datasets, you need a system that spreads files across hundreds or thousands of commodity servers while presenting a unified namespace to applications.
+      introduction: `## Overview
+Distributed file systems solve the problem of storing datasets that are far too large for any single machine. When you need to store petabytes of log data, video files, or analytical datasets, you need a system that spreads files across hundreds or thousands of commodity servers while presenting a unified namespace to applications.
 
+## GFS and HDFS
 Google File System (GFS), described in the landmark 2003 paper, pioneered many of the ideas used in modern distributed storage. GFS was designed around Google's specific workload: large files (multi-GB), append-heavy writes, and sequential reads for batch processing. Its open-source descendant, Hadoop Distributed File System (HDFS), became the backbone of the big data revolution and remains widely deployed today.
 
+## What Interviews Test
 In system design interviews, distributed file systems appear whenever the problem involves storing or processing massive amounts of unstructured data -- think video platforms, log aggregation pipelines, data lakes, or machine learning training datasets. Understanding the master-worker architecture, chunk-based storage, and replication strategies is essential for answering these questions convincingly.`,
 
       functionalRequirements: [
@@ -20567,10 +20647,13 @@ Interview insight: When discussing storage in system design, S3 (or equivalent c
         'Always mention offset management and its implications for replayability'
       ],
 
-      introduction: `Distributed messaging systems are the backbone of modern microservice architectures, enabling services to communicate asynchronously, absorb traffic spikes, and process events at massive scale. They decouple producers from consumers, allowing each to scale independently and fail without cascading.
+      introduction: `## Overview
+Distributed messaging systems are the backbone of modern microservice architectures, enabling services to communicate asynchronously, absorb traffic spikes, and process events at massive scale. They decouple producers from consumers, allowing each to scale independently and fail without cascading.
 
+## Kafka: The Distributed Commit Log
 Apache Kafka has become the de facto standard for high-throughput event streaming. Unlike traditional message brokers that delete messages after delivery, Kafka retains messages in a distributed commit log, enabling consumers to replay events, build materialized views, and power real-time analytics pipelines. Companies like LinkedIn (where Kafka was born), Netflix, and Uber process trillions of messages per day through Kafka.
 
+## What Interviews Test
 In system design interviews, messaging systems appear in nearly every architecture: notification systems, activity feeds, log aggregation, event-driven microservices, and data pipelines. Understanding the difference between message queues (RabbitMQ) and event streams (Kafka), along with delivery semantics and partitioning strategies, is essential for senior-level interviews.`,
 
       functionalRequirements: [
@@ -21802,10 +21885,13 @@ Interview recommendation: Default to Kafka for most messaging/streaming use case
         'HTTP/2 is required for gRPC -- this can be a deployment constraint'
       ],
 
-      introduction: `Choosing the right API communication paradigm is a foundational decision in system design. The three dominant approaches -- REST, gRPC, and GraphQL -- each optimize for different use cases, and understanding their trade-offs is critical for interviews and real-world architecture.
+      introduction: `## Overview
+Choosing the right API communication paradigm is a foundational decision in system design. The three dominant approaches -- REST, gRPC, and GraphQL -- each optimize for different use cases, and understanding their trade-offs is critical for interviews and real-world architecture.
 
+## REST vs gRPC vs GraphQL
 REST (Representational State Transfer) uses HTTP verbs and resource-based URLs. It is the lingua franca of web APIs, universally understood and easy to cache, but can suffer from overfetching (returning more data than needed) and underfetching (requiring multiple round trips). gRPC uses Protocol Buffers for binary serialization and HTTP/2 for transport, delivering significantly lower latency and bandwidth for service-to-service communication. GraphQL gives clients a query language to request exactly the data they need in a single round trip, solving the over/underfetching problem but introducing query complexity.
 
+## What Interviews Test
 In a system design interview, the choice between these paradigms signals your understanding of performance constraints, developer ergonomics, and organizational scale. Most production systems use a combination: gRPC internally, REST or GraphQL for external APIs.`,
 
       functionalRequirements: [
@@ -22489,10 +22575,13 @@ Interview tip: Mention Stripe's versioning as a real-world example. It shows you
         'Always discuss backpressure when designing async systems'
       ],
 
-      introduction: `The choice between synchronous and asynchronous communication is one of the most impactful architectural decisions in distributed systems. It affects coupling, resilience, latency, and how your system behaves under failure -- all topics that interviewers love to explore.
+      introduction: `## Overview
+The choice between synchronous and asynchronous communication is one of the most impactful architectural decisions in distributed systems. It affects coupling, resilience, latency, and how your system behaves under failure -- all topics that interviewers love to explore.
 
+## Synchronous: Simple but Coupled
 Synchronous communication (request-response) means the caller waits for the callee to respond. It is simple, immediate, and easy to debug, but creates temporal coupling: if the downstream service is slow or down, the caller is blocked. REST and gRPC are the most common synchronous protocols.
 
+## Asynchronous: Resilient but Complex
 Asynchronous communication decouples the sender from the receiver using a message broker or event bus. The sender publishes a message and moves on without waiting for a response. This enables loose coupling, independent scaling, and graceful degradation, but introduces complexity in ordering, error handling, and eventual consistency. In system design interviews, knowing when to use sync vs async -- and how to combine them -- separates senior candidates from junior ones.`,
 
       functionalRequirements: [
@@ -23202,10 +23291,13 @@ Interview tip: When proposing EDA, always address: (1) how you handle ordering, 
         'In interviews, draw the N/R/W diagram to show which nodes participate'
       ],
 
-      introduction: `Quorum consensus is the mechanism by which distributed databases ensure data consistency across replicas without requiring all nodes to participate in every operation. The core idea is deceptively simple: if you write to enough nodes and read from enough nodes, the read set and write set must overlap, guaranteeing you see the latest write.
+      introduction: `## Overview
+Quorum consensus is the mechanism by which distributed databases ensure data consistency across replicas without requiring all nodes to participate in every operation. The core idea is deceptively simple: if you write to enough nodes and read from enough nodes, the read set and write set must overlap, guaranteeing you see the latest write.
 
+## The W + R > N Formula
 The quorum formula is W + R > N, where N is the total number of replicas, W is the number of nodes that must acknowledge a write, and R is the number of nodes that must respond to a read. By tuning W and R, you can trade off between consistency, latency, and availability -- a knob that Dynamo-style databases expose directly to applications.
 
+## What Interviews Test
 In system design interviews, quorum appears whenever you discuss distributed databases, replication, or consistency models. Understanding how to configure N, R, and W for different use cases -- and what happens when nodes fail -- is essential for designing systems that balance correctness with performance.`,
 
       functionalRequirements: [
@@ -24098,10 +24190,13 @@ Interview tip: When the interviewer mentions a specific database, tailor your qu
         'Multi-leader replication is needed for multi-datacenter deployments'
       ],
 
-      introduction: `Leader-follower replication (also called primary-replica or master-slave) is the most widely used data replication strategy. A single leader node accepts all writes and propagates changes to one or more follower nodes that serve reads. This architecture is the backbone of PostgreSQL, MySQL, MongoDB, and Redis replication.
+      introduction: `## Overview
+Leader-follower replication (also called primary-replica or master-slave) is the most widely used data replication strategy. A single leader node accepts all writes and propagates changes to one or more follower nodes that serve reads. This architecture is the backbone of PostgreSQL, MySQL, MongoDB, and Redis replication.
 
+## Failover and Split-Brain
 The critical challenge is what happens when the leader fails. Leader election protocols like Raft and Paxos automate the process of choosing a new leader, but getting this right is notoriously difficult. Problems like split-brain (two nodes both believe they are the leader) can cause data corruption. The choice between synchronous and asynchronous replication determines whether followers are guaranteed to have the latest data or may lag behind.
 
+## What Interviews Test
 In system design interviews, leader-follower replication appears in every database discussion, and understanding failover mechanisms, replication lag, and consensus protocols is essential. Interviewers often ask candidates to design a system that can survive leader failure without data loss -- which requires deep understanding of these concepts.`,
 
       functionalRequirements: [
@@ -24999,10 +25094,13 @@ Interview tip: When asked about leader-follower replication, reference a specifi
         'Always discuss what happens AFTER failure is detected, not just detection itself'
       ],
 
-      introduction: `Heartbeat mechanisms are the foundation of failure detection in distributed systems. A heartbeat is a periodic signal sent between nodes to indicate liveness -- if a node stops sending heartbeats, other nodes conclude it has failed and initiate recovery actions like leader election, traffic rerouting, or replica re-creation.
+      introduction: `## Overview
+Heartbeat mechanisms are the foundation of failure detection in distributed systems. A heartbeat is a periodic signal sent between nodes to indicate liveness -- if a node stops sending heartbeats, other nodes conclude it has failed and initiate recovery actions like leader election, traffic rerouting, or replica re-creation.
 
+## The Nuance of Timeouts
 While conceptually simple, getting heartbeats right is surprisingly nuanced. False positives (declaring a healthy node dead) waste resources and cause unnecessary failovers. False negatives (failing to detect a dead node) leave the system in a degraded state. The timeout value is a critical tuning parameter: too short causes flapping, too long delays recovery. Advanced systems use adaptive failure detectors like the phi accrual detector that adjust thresholds based on observed network conditions.
 
+## What Interviews Test
 In system design interviews, heartbeats appear in the context of load balancers, database clusters, service meshes, and container orchestration (Kubernetes liveness/readiness probes). Understanding the different heartbeat patterns, their failure modes, and how they integrate with the broader system architecture demonstrates practical distributed systems knowledge.`,
 
       functionalRequirements: [
@@ -25796,10 +25894,13 @@ Interview tip: Gossip protocol is the answer when asked "how do you detect failu
         'Bit rot is real: disks silently corrupt data over time, checksums are the defense'
       ],
 
-      introduction: `Checksums and cryptographic hashes are the fundamental mechanisms for ensuring data integrity in distributed systems. Every time data moves across a network, is written to disk, or is stored in a cache, there is a chance of corruption. Checksums detect these errors by computing a fingerprint of the data and verifying it later.
+      introduction: `## Overview
+Checksums and cryptographic hashes are the fundamental mechanisms for ensuring data integrity in distributed systems. Every time data moves across a network, is written to disk, or is stored in a cache, there is a chance of corruption. Checksums detect these errors by computing a fingerprint of the data and verifying it later.
 
+## The Spectrum of Hash Algorithms
 The spectrum ranges from fast, non-cryptographic checksums like CRC32 (used in disk and network protocols) to cryptographic hashes like SHA-256 (used in Git, blockchain, and content-addressable storage). In between, MD5 and SHA-1 serve as content fingerprints for caching via ETags and deduplication. Merkle trees extend checksums to enable efficient integrity verification of large datasets, as used in DynamoDB anti-entropy, Git, and BitTorrent.
 
+## What Interviews Test
 In system design interviews, checksums appear in data storage (detecting corruption), caching (ETags for conditional requests), replication (Merkle trees for consistency), and security (HMAC for tamper detection). Understanding when to use which type of checksum -- and how to implement end-to-end integrity -- is a mark of engineering maturity.`,
 
       functionalRequirements: [
@@ -26580,10 +26681,13 @@ Interview tip: Mention CAS when designing file storage, CDN, or backup systems. 
         'Use eventual consistency for high-throughput reads (feeds, analytics, counters)'
       ],
 
-      introduction: `Consistency models define the guarantees a distributed system provides about the order and visibility of operations across replicas. At one end, linearizability guarantees that every operation appears to take effect instantaneously at some point between invocation and completion -- as if there were only one copy of the data. At the other end, eventual consistency only guarantees that replicas will converge to the same value at some unspecified future time.
+      introduction: `## Overview
+Consistency models define the guarantees a distributed system provides about the order and visibility of operations across replicas. At one end, linearizability guarantees that every operation appears to take effect instantaneously at some point between invocation and completion -- as if there were only one copy of the data. At the other end, eventual consistency only guarantees that replicas will converge to the same value at some unspecified future time.
 
+## The Consistency Spectrum
 Between these extremes lies a rich spectrum: sequential consistency, causal consistency, read-your-writes, and monotonic reads. Each model trades off performance and availability for correctness guarantees. Understanding this spectrum is critical because most real systems operate somewhere in the middle, using different consistency levels for different data and operations.
 
+## What Interviews Test
 In system design interviews, this topic arises whenever you choose a database, design a replication strategy, or discuss what happens when users interact with data served from different replicas. The ability to articulate which consistency level each part of your system needs -- and why -- is a hallmark of a strong candidate.`,
 
       functionalRequirements: [
@@ -27347,10 +27451,13 @@ Interview tip: Never propose 2PC across microservices. Explain sagas with compen
         }
       ],
 
-      introduction: `Latency and throughput are the two fundamental performance metrics in system design. Latency measures how long a single operation takes (typically in milliseconds), while throughput measures how many operations the system completes per unit time (typically requests per second). Understanding the relationship between them -- and how to optimize each -- is essential for capacity planning and system design interviews.
+      introduction: `## Overview
+Latency and throughput are the two fundamental performance metrics in system design. Latency measures how long a single operation takes (typically in milliseconds), while throughput measures how many operations the system completes per unit time (typically requests per second). Understanding the relationship between them -- and how to optimize each -- is essential for capacity planning and system design interviews.
 
+## Little's Law and Back-of-Envelope Math
 Little's Law (L = lambda * W) is the cornerstone equation: the average number of items in a system equals the arrival rate times the average time each item spends in the system. This single formula lets you calculate required concurrency, estimate queue depths, and plan capacity. Combined with back-of-envelope estimation techniques, it gives you the tools to quickly size any system during an interview.
 
+## What Interviews Test
 Tail latency (p99, p99.9) is where real-world problems hide. While average latency might be 10ms, the 99th percentile might be 500ms -- and for a page that makes 50 backend calls, there is a 40% chance at least one hits the p99. Understanding tail latency, Amdahl's Law for parallelism limits, and capacity planning frameworks will make your system design answers rigorous and quantitative.`,
 
       functionalRequirements: [
@@ -28040,10 +28147,13 @@ Interview tip: State assumptions out loud, round aggressively, arrive at order o
         'Always ask what isolation level the interviewer expects -- it changes the design significantly'
       ],
 
-      introduction: `ACID (Atomicity, Consistency, Isolation, Durability) and BASE (Basically Available, Soft state, Eventual consistency) represent two philosophies for managing data in distributed systems. ACID prioritizes correctness: transactions are all-or-nothing, data constraints are always maintained, and concurrent operations are isolated from each other. BASE prioritizes availability and performance: the system is always responsive, state may be temporarily inconsistent, and replicas converge over time.
+      introduction: `## Overview
+ACID (Atomicity, Consistency, Isolation, Durability) and BASE (Basically Available, Soft state, Eventual consistency) represent two philosophies for managing data in distributed systems. ACID prioritizes correctness: transactions are all-or-nothing, data constraints are always maintained, and concurrent operations are isolated from each other. BASE prioritizes availability and performance: the system is always responsive, state may be temporarily inconsistent, and replicas converge over time.
 
+## When to Use Each
 The reality is that most modern systems use both. Your payment service needs ACID transactions (you cannot lose money), but your news feed can use BASE (showing a post 2 seconds late is fine). Understanding the isolation levels between serializable and read uncommitted, how MVCC enables concurrent reads without blocking, and why two-phase commit is problematic in microservices is essential knowledge for system design interviews.
 
+## What Interviews Test
 The choice between ACID and BASE is not about which is "better" -- it is about understanding the consistency requirements of each operation and choosing the right guarantees for the job. This nuanced perspective separates senior candidates from those who default to "just use PostgreSQL" or "just use DynamoDB" for everything.`,
 
       functionalRequirements: [
@@ -28676,12 +28786,16 @@ Interview tip: WAL is the mechanism behind ACID durability, replication, and poi
         'Denormalization is expected -- duplicate data across tables optimized for different queries'
       ],
 
-      introduction: `Apache Cassandra is a distributed, wide-column NoSQL database designed to handle massive amounts of data across many commodity servers with no single point of failure. Originally developed at Facebook to power inbox search, it was open-sourced in 2008 and became an Apache top-level project. Cassandra combines the distributed architecture of Amazon's Dynamo with the data model of Google's Bigtable, creating a system optimized for high write throughput and linear horizontal scalability.
+      introduction: `## Overview
+Apache Cassandra is a distributed, wide-column NoSQL database designed to handle massive amounts of data across many commodity servers with no single point of failure. Originally developed at Facebook to power inbox search, it was open-sourced in 2008 and became an Apache top-level project. Cassandra combines the distributed architecture of Amazon's Dynamo with the data model of Google's Bigtable, creating a system optimized for high write throughput and linear horizontal scalability.
 
+## Peer-to-Peer Architecture
 Cassandra's architecture is fundamentally peer-to-peer -- every node in the cluster is identical and there is no master or leader node. Data is distributed across the cluster using consistent hashing, where each node owns a range of the token ring. The gossip protocol propagates cluster state (which nodes are alive, their token ranges, schema versions) every second between random peers. This masterless design means any node can handle any request, and the cluster continues operating even when multiple nodes fail.
 
+## Write Path and Storage Engine
 The write path in Cassandra is designed for speed: writes go to a commit log (for durability) and a memtable (in-memory sorted structure) simultaneously. When the memtable reaches a threshold, it is flushed to disk as an immutable SSTable (Sorted String Table). Reads must potentially merge data from multiple SSTables, which is why Cassandra uses Bloom filters to skip SSTables that definitely do not contain the requested key, and key caches and row caches to avoid disk I/O. Compaction strategies (STCS, LCS, TWCS) periodically merge SSTables to reclaim space and reduce read amplification.
 
+## Tunable Consistency in Practice
 Cassandra offers tunable consistency -- you can configure the consistency level per query. Writing with consistency level ONE is fast but risky; writing with QUORUM ensures a majority of replicas acknowledge the write. The combination of write consistency and read consistency determines whether you get strong or eventual consistency (W + R > N guarantees strong consistency). This flexibility allows different operations in the same application to make different trade-offs. Netflix uses Cassandra to store billions of records for streaming history, Discord stores billions of messages, and Apple runs one of the largest Cassandra deployments in the world with over 150,000 instances.`,
 
       functionalRequirements: [
@@ -28949,12 +29063,16 @@ Compared to alternatives: Choose DynamoDB over Cassandra for serverless/fully-ma
         'Always use condition expressions for writes to prevent race conditions'
       ],
 
-      introduction: `Amazon DynamoDB is a fully managed, serverless NoSQL database service that provides single-digit millisecond performance at any scale. Launched in 2012, it evolved from Amazon's internal Dynamo system (described in the famous 2007 Dynamo paper) and has become the backbone of Amazon.com itself, handling tens of millions of requests per second during peak events like Prime Day.
+      introduction: `## Overview
+Amazon DynamoDB is a fully managed, serverless NoSQL database service that provides single-digit millisecond performance at any scale. Launched in 2012, it evolved from Amazon's internal Dynamo system (described in the famous 2007 Dynamo paper) and has become the backbone of Amazon.com itself, handling tens of millions of requests per second during peak events like Prime Day.
 
+## Design Philosophy: Predictable Performance
 DynamoDB's core design philosophy is predictable performance at any scale. Unlike traditional databases where latency increases with data size, DynamoDB maintains consistent single-digit millisecond response times whether you have 1 GB or 1 PB of data. It achieves this through automatic partitioning, SSD storage, and a distributed architecture that is entirely managed by AWS -- you never provision servers, configure replication, or manage software patches.
 
+## Data Model and Access Patterns
 The data model is built around items (rows) in tables, where each item is identified by a partition key (hash key) and an optional sort key (range key). The partition key determines which physical partition stores the item, while the sort key enables range queries within a partition. This simple but powerful model, combined with Global Secondary Indexes (GSIs) and Local Secondary Indexes (LSIs), supports a wide range of access patterns. The single-table design pattern, popularized by Rick Hougland and Alex DeBrie, takes this further by storing multiple entity types in a single table to minimize the number of requests.
 
+## What Interviews Test
 DynamoDB is the natural database choice for serverless architectures on AWS, pairing seamlessly with Lambda, API Gateway, and EventBridge. Its Streams feature provides an ordered, time-based sequence of item-level changes, enabling event-driven architectures, cross-region replication, and real-time analytics. Companies like Lyft use DynamoDB for ride matching, Airbnb for search session storage, and Capital One for customer transaction history. Understanding DynamoDB deeply is essential for any system design interview involving AWS or serverless architectures.`,
 
       functionalRequirements: [
@@ -29281,12 +29399,16 @@ The decision framework: If you are building on AWS, your access patterns are wel
         'Flink unifies batch and stream processing -- batch is just a special case of streaming'
       ],
 
-      introduction: `Apache Flink is a distributed stream processing framework for stateful computations over unbounded (streaming) and bounded (batch) data. Unlike batch-oriented frameworks like MapReduce or Spark that process data in micro-batches, Flink processes events one at a time as they arrive, enabling true real-time analytics with millisecond latency. This fundamental design choice makes Flink the gold standard for use cases where timely, correct results matter.
+      introduction: `## Overview
+Apache Flink is a distributed stream processing framework for stateful computations over unbounded (streaming) and bounded (batch) data. Unlike batch-oriented frameworks like MapReduce or Spark that process data in micro-batches, Flink processes events one at a time as they arrive, enabling true real-time analytics with millisecond latency. This fundamental design choice makes Flink the gold standard for use cases where timely, correct results matter.
 
+## Event Time Processing and Watermarks
 Flink's most powerful concept is event time processing. In the real world, events often arrive out of order or late due to network delays, mobile connectivity issues, or system failures. Flink handles this through watermarks -- special markers in the data stream that indicate "all events with a timestamp up to this point have likely arrived." This allows Flink to produce correct results even when events arrive out of order, which is impossible with systems that only use processing time (wall clock time).
 
+## Exactly-Once Semantics via Chandy-Lamport
 The framework provides exactly-once state consistency through distributed snapshots based on the Chandy-Lamport algorithm. Periodically, Flink injects barrier markers into the data stream. When an operator receives barriers from all its input channels, it snapshots its state to a durable store (like HDFS or S3). If a failure occurs, Flink restores the last completed snapshot and replays events from the source (e.g., Kafka offsets), guaranteeing that every event is processed exactly once in terms of the effect on state. This is distinct from exactly-once delivery, which requires cooperation from the sink (e.g., using Kafka transactions or idempotent writes).
 
+## What Interviews Test
 Flink is used at massive scale across the industry. Uber uses Flink for real-time surge pricing, matching riders with drivers, and fraud detection. Netflix processes billions of events per day for real-time recommendations and A/B testing. Alibaba runs one of the largest Flink deployments in the world, processing hundreds of billions of events daily during Singles' Day. Understanding Flink is essential for system design interviews involving real-time data processing, event-driven architectures, or streaming ETL.`,
 
       functionalRequirements: [
@@ -29659,12 +29781,16 @@ Architecture pattern: Kafka (message bus) -> Flink (stateful processing) -> Dyna
         'ZooKeeper is being replaced in some systems (Kafka KRaft, etcd) but its concepts are universally applicable'
       ],
 
-      introduction: `Apache ZooKeeper is a centralized, distributed coordination service that provides a simple set of primitives for building higher-level distributed system abstractions like configuration management, leader election, distributed locks, service discovery, and group membership. Originally developed at Yahoo! Research, it became a critical component of the Hadoop ecosystem and has been used in production at virtually every major tech company.
+      introduction: `## Overview
+Apache ZooKeeper is a centralized, distributed coordination service that provides a simple set of primitives for building higher-level distributed system abstractions like configuration management, leader election, distributed locks, service discovery, and group membership. Originally developed at Yahoo! Research, it became a critical component of the Hadoop ecosystem and has been used in production at virtually every major tech company.
 
+## The Znode Abstraction
 ZooKeeper's core abstraction is a hierarchical namespace (similar to a file system) of data nodes called znodes. Each znode can store a small amount of data (typically kilobytes) and have children, creating a tree structure. The key innovation is the support for ephemeral znodes (automatically deleted when the creating session ends), sequential znodes (automatically assigned incrementing suffixes), and watches (one-time notifications when a znode changes). These three primitives, combined with strong consistency guarantees, enable building complex coordination recipes.
 
+## ZAB Consensus Protocol
 ZooKeeper ensures linearizable writes and sequentially consistent reads through the ZAB (ZooKeeper Atomic Broadcast) consensus protocol. All write requests are forwarded to a single leader node, which proposes the change to the ensemble (cluster). Once a quorum (majority) of nodes acknowledges the proposal, the change is committed and applied. Read requests can be served by any node (for performance), which means reads may return slightly stale data. Clients that need the latest data can issue a sync command before the read.
 
+## What Interviews Test
 Understanding ZooKeeper is essential for system design interviews because its concepts appear everywhere: leader election in database clusters, distributed locking in microservices, service discovery in container orchestration, and configuration management in distributed applications. Even as newer systems like etcd (used by Kubernetes) and Kafka's KRaft mode emerge as alternatives, the fundamental coordination patterns that ZooKeeper pioneered remain unchanged.`,
 
       functionalRequirements: [
@@ -30061,12 +30187,16 @@ In system design interviews: Mention ZooKeeper when you need coordination primit
         'Hybrid search (vector + keyword) consistently outperforms either approach alone'
       ],
 
-      introduction: `Vector databases are specialized database systems designed to store, index, and query high-dimensional vectors (embeddings) efficiently. In the age of AI and large language models, virtually every piece of unstructured data -- text, images, audio, video -- can be converted into a vector embedding that captures its semantic meaning. Vector databases enable similarity search over these embeddings: finding the most similar items to a query vector, which is fundamentally different from the exact-match queries of traditional databases.
+      introduction: `## Overview
+Vector databases are specialized database systems designed to store, index, and query high-dimensional vectors (embeddings) efficiently. In the age of AI and large language models, virtually every piece of unstructured data -- text, images, audio, video -- can be converted into a vector embedding that captures its semantic meaning. Vector databases enable similarity search over these embeddings: finding the most similar items to a query vector, which is fundamentally different from the exact-match queries of traditional databases.
 
+## The ANN Problem
 The core challenge is the curse of dimensionality: with vectors of 768 to 1536 dimensions (common for modern embedding models like OpenAI's text-embedding-3-small), exact nearest neighbor search requires comparing the query against every vector in the database -- O(n) per query, which is impossibly slow for millions or billions of vectors. Vector databases solve this using Approximate Nearest Neighbor (ANN) algorithms that trade a small amount of accuracy (recall) for orders-of-magnitude speed improvements. The most popular algorithms are HNSW (Hierarchical Navigable Small World), IVF (Inverted File Index), and PQ (Product Quantization).
 
+## RAG and the LLM Era
 The explosion of LLMs has made vector databases critical infrastructure. Retrieval-Augmented Generation (RAG) -- the pattern of retrieving relevant documents via vector search and including them as context for an LLM -- has become the standard approach for building AI applications that need access to private or up-to-date knowledge. Without vector databases, RAG pipelines would be impractically slow. Beyond RAG, vector databases power recommendation systems, image similarity search, anomaly detection, duplicate detection, and semantic code search.
 
+## What Interviews Test
 The vector database landscape includes purpose-built systems like Pinecone (fully managed, serverless), Weaviate (open-source, multimodal), Milvus (open-source, highly scalable), and Qdrant (open-source, Rust-based). Additionally, traditional databases have added vector capabilities: pgvector for PostgreSQL, Atlas Vector Search for MongoDB, and OpenSearch's vector engine. Understanding when to use a purpose-built vector database versus an extension of your existing database is a critical design decision.`,
 
       functionalRequirements: [
