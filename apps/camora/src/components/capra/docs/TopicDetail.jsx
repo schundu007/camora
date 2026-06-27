@@ -161,12 +161,12 @@ function CapacityPlanningGrid({ estimation }) {
         const maxNum = Math.max(...nums.filter(n => n > 0));
         return (
           <div className="pt-2">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse text-sm table-fixed">
               <thead>
                 <tr className="bg-[var(--bg-elevated)]/70">
-                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display">Metric</th>
-                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[100px]">Value</th>
-                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell w-[180px]">Scale</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[13%]">Metric</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display w-[30%]">Value</th>
+                  <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden lg:table-cell w-[14%]">Scale</th>
                   <th className="text-left px-2 py-2 text-xs font-semibold text-[var(--text-primary)] border-b border-[var(--border)] landing-display hidden md:table-cell">Calculation</th>
                 </tr>
               </thead>
@@ -177,7 +177,7 @@ function CapacityPlanningGrid({ estimation }) {
                   return (
                     <tr key={i} className="hover:bg-[var(--bg-elevated)]/30 transition-colors">
                       <td className="px-2 py-1.5 font-semibold text-[var(--text-secondary)] border-b border-[var(--border)]">{row.metric}</td>
-                      <td className="px-2 py-1.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] whitespace-nowrap">{row.value}</td>
+                      <td className="px-2 py-1.5 font-bold text-[var(--text-secondary)] landing-mono border-b border-[var(--border)] break-words">{row.value}</td>
                       <td className="px-2 py-1.5 border-b border-[var(--border)] hidden lg:table-cell">
                         <div className="h-2 rounded-full bg-[var(--bg-elevated)] overflow-hidden">
                           <div className="h-full rounded-full transition-colors duration-700 bg-[var(--accent)]" style={{ width: `${pct}%` }} />
