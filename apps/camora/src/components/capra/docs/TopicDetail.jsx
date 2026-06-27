@@ -2134,7 +2134,7 @@ export default function TopicDetail({
                         pills={['Basic']}
                       />
                       <div className="pt-2">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.basicImplementation.description}</p>
+                        <div className="mb-3"><FormattedContent content={topicDetails.basicImplementation.description} /></div>
                         {topicDetails.basicImplementation.diagramSrc || topicDetails.basicImplementation.svgTemplate ? (
                           <ContentDiagram
                             src={topicDetails.basicImplementation.diagramSrc}
@@ -2152,12 +2152,12 @@ export default function TopicDetail({
                         )}
                         {topicDetails.basicImplementation.problems && (
                           <div>
-                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-1.5 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues</h4>
-                            <div className="grid grid-cols-1 gap-0.5">
+                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-2 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues with this approach</h4>
+                            <div className="grid grid-cols-1 gap-1">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2 px-1 py-1 text-xs landing-body">
-                                  <span className="text-[var(--text-muted)] mt-px flex-shrink-0">—</span>
-                                  <span className="text-[var(--text-secondary)]">{problem}</span>
+                                <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--warning, #f59e0b) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--warning, #f59e0b) 18%, transparent)' }}>
+                                  <span className="text-[var(--warning, #f59e0b)] mt-0.5 flex-shrink-0 font-bold">!</span>
+                                  <span className="text-[var(--text-secondary)]"><FormattedContent content={problem} inline /></span>
                                 </div>
                               ))}
                             </div>
@@ -2173,7 +2173,7 @@ export default function TopicDetail({
                         pills={['Advanced']}
                       />
                       <div className="pt-2">
-                        <p className="text-[var(--text-secondary)] text-sm mb-3 leading-relaxed landing-body">{topicDetails.advancedImplementation.description}</p>
+                        <div className="mb-3"><FormattedContent content={topicDetails.advancedImplementation.description} /></div>
                         {topicDetails.advancedImplementation.diagramSrc || topicDetails.advancedImplementation.svgTemplate ? (
                           <ContentDiagram
                             src={topicDetails.advancedImplementation.diagramSrc}
@@ -2191,12 +2191,12 @@ export default function TopicDetail({
                         )}
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
-                            <h4 className="text-[var(--text-primary)] text-xs font-bold mb-1.5 landing-display uppercase tracking-wider">Key Points</h4>
-                            <div className="grid grid-cols-1 gap-0.5">
+                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-2 landing-mono uppercase tracking-[0.16em]">Key architectural decisions</h4>
+                            <div className="grid grid-cols-1 gap-1">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
-                                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded text-xs landing-body">
-                                  <span className="text-[var(--accent)] mt-px flex-shrink-0">✓</span>
-                                  <span className="text-[var(--text-secondary)]">{point}</span>
+                                <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--accent) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)' }}>
+                                  <span className="text-[var(--accent)] mt-0.5 flex-shrink-0 font-bold text-xs">✓</span>
+                                  <span className="text-[var(--text-secondary)]"><FormattedContent content={point} inline /></span>
                                 </div>
                               ))}
                             </div>
