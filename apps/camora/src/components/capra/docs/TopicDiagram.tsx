@@ -35,12 +35,9 @@ export default function TopicDiagram({
         background: '#ffffff',
         border: '1px solid var(--border)',
         display: 'block',
-        width: '85%',
+        width: '100%',
         marginLeft: 'auto',
         marginRight: 'auto',
-        transform: 'scaleY(1.15)',
-        transformOrigin: 'top center',
-        marginBottom: '13%',
       }}
     >
       <img
