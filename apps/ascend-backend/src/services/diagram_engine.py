@@ -697,13 +697,19 @@ Standard clusters (left → right columns): "Edge & Security" (CDN + WAF + API G
 "Async Processing" (queue + 1-2 workers), "Observability" (metrics + logs, compact).
 
 For AI CHATBOT / RAG / AGENT / LLM questions: ADD an "AI / LLM Tier" cluster between
-Application and Data tiers with these nodes (use diagrams.programming.flowchart.Action for all):
-  Action("LLM\\\\nService")          — the language model endpoint (Claude / GPT / Gemini)
-  Action("LangGraph\\\\nOrchestrator") or Action("LangChain\\\\nChain")  — orchestration layer
-  Action("MCP\\\\nServer")           — tool/function execution via Model Context Protocol
-  Action("AI Agent\\\\nExecutor")    — agent loop / tool dispatcher
-  Action("RAG\\\\nPipeline")         — retrieval-augmented generation if applicable
-  Blank("Vector DB\\\\n(pgvector)")  — vector store for embeddings
+Application and Data tiers. Use REAL icons (NOT Action() or Blank() — they render as empty boxes):
+  Mlflow("LangGraph\\nOrchestrator") or Mlflow("LangChain\\nChain") — orchestration layer
+  Mlflow("MCP\\nServer")             — tool/function execution via Model Context Protocol
+  Mlflow("AI Agent\\nExecutor")      — agent loop / tool dispatcher
+  Mlflow("RAG\\nPipeline")           — retrieval-augmented generation if applicable
+  For LLM Service endpoint — use your provider's ML icon:
+    AWS:   Sagemaker("LLM\\nService")
+    GCP:   AIPlatform("LLM\\nService")
+    Azure: MachineLearning("LLM\\nService")
+  For Vector DB — use your provider's DB icon with label "Vector DB\\n(pgvector)":
+    AWS:   Dynamodb("Vector DB\\n(pgvector)")
+    GCP:   Firestore("Vector DB\\n(pgvector)")
+    Azure: CosmosDb("Vector DB\\n(pgvector)")
 Use AI cluster: graph_attr={CLUSTER_COLORS["ai"]}
 
 Connection discipline:
@@ -865,6 +871,8 @@ def _build_class_to_import(provider):
     # AI/LLM framework shapes
     mapping["Action"] = "from diagrams.programming.flowchart import Action"
     mapping["Blank"] = "from diagrams.generic.blank import Blank"
+    mapping["Mlflow"] = "from diagrams.onprem.mlops import Mlflow"
+    mapping["Airflow"] = "from diagrams.onprem.workflow import Airflow"
     mapping["Decision"] = "from diagrams.programming.flowchart import Decision"
     mapping["Document"] = "from diagrams.programming.flowchart import Document"
     mapping["Database"] = "from diagrams.programming.flowchart import Database"
