@@ -71,7 +71,8 @@ export const troubleshootingTopics = [
     questions: 6,
     description: 'SSH unreachable, console output, system logs, kernel panic, disk full, and rescue mode.',
     visualizations: [],
-    introduction: `An EC2 instance that does not respond to SSH can fail for reasons at multiple layers: network (security group, NACL, routing), OS (kernel panic, OOM kill of sshd, disk full), or hardware (underlying host failure). Diagnosis must start with the layers you can access without SSH — AWS console and EC2 Serial Console.
+    introduction: `## Overview
+An EC2 instance that does not respond to SSH can fail for reasons at multiple layers: network (security group, NACL, routing), OS (kernel panic, OOM kill of sshd, disk full), or hardware (underlying host failure). Diagnosis must start with the layers you can access without SSH — AWS console and EC2 Serial Console.
 
 The first tool: EC2 System Log (Actions > Monitor and troubleshoot > Get system log). This shows the kernel boot messages and early userspace output. Kernel panics, disk errors, and fsck failures are visible here even when the instance is completely unreachable.
 
@@ -166,7 +167,8 @@ Stop the instance (not reboot). Start it. This migrates to a new host.`,
     questions: 7,
     description: 'Performance Insights, slow query log, EXPLAIN, missing indexes, autovacuum, and connection storms.',
     visualizations: [],
-    introduction: `RDS CPU at 100% causes all queries to slow down proportionally and can eventually make the instance unresponsive. The root cause is almost always one of: an expensive query (missing index, full table scan), a sudden increase in query volume (traffic spike), lock contention blocking other queries and causing them to queue, or autovacuum running full scans on bloated PostgreSQL tables.
+    introduction: `## Overview
+RDS CPU at 100% causes all queries to slow down proportionally and can eventually make the instance unresponsive. The root cause is almost always one of: an expensive query (missing index, full table scan), a sudden increase in query volume (traffic spike), lock contention blocking other queries and causing them to queue, or autovacuum running full scans on bloated PostgreSQL tables.
 
 Performance Insights (available on RDS db.t3.medium and larger) is the first tool. It shows the database load broken down by wait events — what queries are waiting for (CPU, locks, I/O, network). The Top SQL tab shows which queries are consuming the most CPU time. This is the fastest way to identify the offending query.
 
@@ -259,7 +261,8 @@ If hundreds are in "idle" or "idle in transaction", deploy RDS Proxy to pool con
     questions: 6,
     description: 'HTTP 502, 503, 504 from ALB — distinguishing LB errors from backend errors and diagnosing each.',
     visualizations: [],
-    introduction: `When an ALB returns 5xx errors, the cause can be either the ALB itself (502 Bad Gateway, 503 Service Unavailable) or the backend targets (504 Gateway Timeout, 502 if backend sends an invalid response). Understanding which error code means what determines where to look.
+    introduction: `## Overview
+When an ALB returns 5xx errors, the cause can be either the ALB itself (502 Bad Gateway, 503 Service Unavailable) or the backend targets (504 Gateway Timeout, 502 if backend sends an invalid response). Understanding which error code means what determines where to look.
 
 502 Bad Gateway: the ALB established a connection to a backend target but received an invalid response — not a valid HTTP response, a reset (RST), or an incomplete response. Common causes: the backend closed the connection before sending a complete response (application crash, OOM kill mid-request), the backend sent a response the ALB cannot parse, or the Keep-Alive timeout on the backend is shorter than the ALB's Keep-Alive setting causing the backend to close a connection the ALB is trying to reuse.
 
@@ -351,7 +354,8 @@ ulimit -n       # check open file descriptor limit
     questions: 6,
     description: 'NXDOMAIN vs SERVFAIL, TTL propagation, negative caching, Kubernetes CoreDNS failures, and split-horizon issues.',
     visualizations: [],
-    introduction: `DNS failures manifest as connection errors that look like network failures but are actually name resolution failures. They are among the most common causes of production incidents because they are often invisible until they cause a cascading failure.
+    introduction: `## Overview
+DNS failures manifest as connection errors that look like network failures but are actually name resolution failures. They are among the most common causes of production incidents because they are often invisible until they cause a cascading failure.
 
 The two primary failure modes: NXDOMAIN (the name definitively does not exist in DNS — the authoritative server confirmed this) and SERVFAIL (the resolver encountered an error — nameserver unreachable, DNSSEC validation failed, or the resolver itself is broken). These require very different fixes.
 
@@ -423,7 +427,8 @@ Fix for the current incident: wait for TTL to expire (maximum = old record's TTL
     questions: 5,
     description: 'Security groups, NACLs, routing, VPC peering, NAT gateway failures, and VPC Flow Logs diagnosis.',
     visualizations: [],
-    introduction: `VPC connectivity failures are among the most common issues in AWS architectures. They often look like network timeouts but are caused by misconfigured security groups, NACLs, missing routes, or broken peering.
+    introduction: `## Overview
+VPC connectivity failures are among the most common issues in AWS architectures. They often look like network timeouts but are caused by misconfigured security groups, NACLs, missing routes, or broken peering.
 
 The key distinction between security groups and NACLs: security groups are stateful (return traffic is automatically allowed), operate at the instance level, support only allow rules, and all rules are evaluated. NACLs are stateless (you must explicitly allow return traffic on ephemeral ports), operate at the subnet level, support both allow and deny rules, and rules are evaluated in ascending order — the first matching rule wins.
 
@@ -504,7 +509,8 @@ Is the new microservice listening on 0.0.0.0:<port> (all interfaces)? If it bind
     questions: 7,
     description: 'Environment parity, config differences, data volume, external dependencies, feature flags, and infrastructure differences.',
     visualizations: [],
-    introduction: `"It works in staging but not in production" is one of the most frustrating and common failure patterns. It indicates environment parity problems — staging and production are not equivalent environments. The root causes fall into several categories.
+    introduction: `## Overview
+"It works in staging but not in production" is one of the most frustrating and common failure patterns. It indicates environment parity problems — staging and production are not equivalent environments. The root causes fall into several categories.
 
 Configuration differences: environment variables, feature flags, secrets, and service URLs that differ between staging and prod. A service URL pointing to a mock in staging but a real dependency in prod. A database connection string with different timeout or pool settings.
 
@@ -610,7 +616,8 @@ Prevent recurrence:
     questions: 6,
     description: 'Expand-contract pattern, online schema changes, column renames, index creation, and backward compatibility.',
     visualizations: [],
-    introduction: `Database schema migrations that lock tables cause downtime. For high-traffic databases, even a millisecond-level lock on a large table causes connection queue buildup that looks like an outage. Zero-downtime migrations require a disciplined approach.
+    introduction: `## Overview
+Database schema migrations that lock tables cause downtime. For high-traffic databases, even a millisecond-level lock on a large table causes connection queue buildup that looks like an outage. Zero-downtime migrations require a disciplined approach.
 
 The expand-contract (two-phase) pattern is the foundation. Phase 1 (expand): add the new structure alongside the old (new column, new table, new index) while keeping the old structure in place. Phase 2 (contract): after all code is deployed and no longer uses the old structure, remove it. This separates the deploy timeline from the migration timeline.
 
@@ -707,7 +714,8 @@ This five-phase process takes 3-5 deploys over several days but maintains zero d
     questions: 6,
     description: 'Alert silence, inhibition, scrape failures, rule misconfiguration, dead man\'s switch, and alertmanager routing.',
     visualizations: [],
-    introduction: `Silent alerts are an existential threat to reliability — the monitoring system is supposed to tell you when something breaks, but if alerts fail to fire, you discover outages from customers instead. Diagnosing why an expected alert did not fire requires checking the entire pipeline from metric collection through rule evaluation to notification routing.
+    introduction: `## Overview
+Silent alerts are an existential threat to reliability — the monitoring system is supposed to tell you when something breaks, but if alerts fail to fire, you discover outages from customers instead. Diagnosing why an expected alert did not fire requires checking the entire pipeline from metric collection through rule evaluation to notification routing.
 
 The Prometheus alert pipeline: Prometheus scrapes metrics from targets, evaluates alerting rules against the scraped data, and sends firing alerts to Alertmanager. Alertmanager routes alerts to receivers (PagerDuty, Slack, email) while applying grouping, inhibition, and silences.
 
@@ -804,7 +812,8 @@ Remediation based on finding:
     questions: 7,
     description: 'pg_stat_statements, slow query log, EXPLAIN ANALYZE, missing indexes, N+1 queries, and query rewrites.',
     visualizations: [],
-    introduction: `Slow queries are one of the most common causes of production performance degradation. They fall into several categories: missing index (full sequential scan), inefficient join (Cartesian product, wrong join type), N+1 query pattern (application code issuing one query per row of a result set), parameter sniffing causing bad plan caching, and lock contention causing queries to queue.
+    introduction: `## Overview
+Slow queries are one of the most common causes of production performance degradation. They fall into several categories: missing index (full sequential scan), inefficient join (Cartesian product, wrong join type), N+1 query pattern (application code issuing one query per row of a result set), parameter sniffing causing bad plan caching, and lock contention causing queries to queue.
 
 The diagnosis tools depend on the database. For PostgreSQL: pg_stat_statements (aggregated statistics per normalized query), slow query log (queries exceeding log_min_duration_statement milliseconds), EXPLAIN ANALYZE (actual execution plan with timing). For MySQL: slow query log (queries exceeding long_query_time), EXPLAIN FORMAT=JSON, Performance Schema.
 
@@ -933,7 +942,8 @@ Permanent fix: increase autovacuum frequency for hot tables, add BRIN or partial
     questions: 5,
     description: 'Connection pool sizing, max_connections, PgBouncer, RDS Proxy, idle connections, and leak detection.',
     visualizations: [],
-    introduction: `Database connection pools are finite resources. When the pool is exhausted, new requests queue waiting for a connection. If the wait exceeds the timeout, requests fail with "connection pool timeout" or "too many connections" errors. This is one of the most common causes of database-related outages during traffic spikes.
+    introduction: `## Overview
+Database connection pools are finite resources. When the pool is exhausted, new requests queue waiting for a connection. If the wait exceeds the timeout, requests fail with "connection pool timeout" or "too many connections" errors. This is one of the most common causes of database-related outages during traffic spikes.
 
 PostgreSQL has a max_connections parameter (default 100 on many RDS instance types). Each connection uses approximately 5-10 MB of RAM on the database server. The total effective connections must stay below max_connections across all application instances.
 
@@ -1028,7 +1038,8 @@ Long-term fix:
     questions: 7,
     description: 'Container OOMKill events, heap dumps, JVM tuning, Go pprof, Python tracemalloc, and RSS growth patterns.',
     visualizations: [],
-    introduction: `A memory leak causes a process's RSS (Resident Set Size) to grow continuously over time without a corresponding increase in load. Eventually the process exceeds its memory limit (container limit or OS free memory) and is killed by the OOM killer. In Kubernetes, this manifests as OOMKilled with exit code 137.
+    introduction: `## Overview
+A memory leak causes a process's RSS (Resident Set Size) to grow continuously over time without a corresponding increase in load. Eventually the process exceeds its memory limit (container limit or OS free memory) and is killed by the OOM killer. In Kubernetes, this manifests as OOMKilled with exit code 137.
 
 Memory leak patterns by type: heap leaks (objects allocated but never garbage collected — common in JS with retained event listeners, Java with collections that grow indefinitely), connection leaks (database/HTTP connections held open), file descriptor leaks (files opened but not closed), and native memory leaks (in JVM: metaspace, off-heap buffers; in Go: CGO allocations).
 
@@ -1119,7 +1130,8 @@ Deploy the fix and monitor the memory growth curve — it should flatten within 
     questions: 7,
     description: 'Pod restart loop diagnosis, previous logs, init containers, liveness probes, resource limits, and config errors.',
     visualizations: [],
-    introduction: `CrashLoopBackOff is a Kubernetes status indicating that a container is crashing repeatedly and Kubernetes is applying exponential backoff before restarting it again. The backoff starts at 10 seconds and doubles (20s, 40s, 80s... up to 5 minutes). It is not an error in itself — it is the container's repeated crashing that is the error.
+    introduction: `## Overview
+CrashLoopBackOff is a Kubernetes status indicating that a container is crashing repeatedly and Kubernetes is applying exponential backoff before restarting it again. The backoff starts at 10 seconds and doubles (20s, 40s, 80s... up to 5 minutes). It is not an error in itself — it is the container's repeated crashing that is the error.
 
 The container can crash for any reason: application error (panic, exception, non-zero exit code), OOM kill (container exceeded memory limit), liveness probe failure (probe configured with too aggressive thresholds), missing configuration (environment variable or config file not found), dependency not available (service it requires is not running), and permission errors (running as non-root but needing root for file access).
 
@@ -1216,7 +1228,8 @@ Start the application manually and observe the error. Useful when the crash happ
     questions: 5,
     description: 'Scheduler events, insufficient resources, taints/tolerations, affinity rules, and PVC binding failures.',
     visualizations: [],
-    introduction: `A pod stuck in Pending state means the Kubernetes scheduler has not been able to find a node to place it on. The scheduler evaluates all nodes against the pod's requirements (resources, taints, affinity, topology constraints) and assigns the pod to the first node that satisfies all constraints. If no node qualifies, the pod remains Pending indefinitely.
+    introduction: `## Overview
+A pod stuck in Pending state means the Kubernetes scheduler has not been able to find a node to place it on. The scheduler evaluates all nodes against the pod's requirements (resources, taints, affinity, topology constraints) and assigns the pod to the first node that satisfies all constraints. If no node qualifies, the pod remains Pending indefinitely.
 
 kubectl describe pod is the primary diagnostic tool. The Events section at the bottom shows exactly why the scheduler could not place the pod: "0/5 nodes are available: 3 Insufficient cpu, 2 Insufficient memory" is the most common message. It tells you exactly how many nodes failed each constraint.
 
@@ -1313,7 +1326,8 @@ Root cause prevention: use VPA (Vertical Pod Autoscaler) in recommendation mode 
     questions: 5,
     description: 'HPA metrics server, custom metrics, stabilization window, scale-down cooldown, and resource request prerequisites.',
     visualizations: [],
-    introduction: `The Horizontal Pod Autoscaler (HPA) scales a Deployment or StatefulSet based on observed metric values compared to target values. When HPA is configured but not scaling, the reason is usually one of: metrics server not installed or returning errors, no resource requests set (HPA uses requests to compute utilization percentages), metrics below the scale threshold, or the stabilization window delaying scaling.
+    introduction: `## Overview
+The Horizontal Pod Autoscaler (HPA) scales a Deployment or StatefulSet based on observed metric values compared to target values. When HPA is configured but not scaling, the reason is usually one of: metrics server not installed or returning errors, no resource requests set (HPA uses requests to compute utilization percentages), metrics below the scale threshold, or the stabilization window delaying scaling.
 
 HPA requires the Kubernetes Metrics Server to be installed and running for CPU/memory-based scaling. Custom metrics (HTTP requests per second, queue depth) require the Prometheus Adapter or KEDA. kubectl get hpa shows the current and target metrics — if the TARGETS column shows unknown/unknown, the metrics server is not returning data.
 
@@ -1411,7 +1425,8 @@ The describe output shows \`FailedGetScale\` or \`AbleToScale\` conditions with 
     questions: 6,
     description: 'Diagnose and eliminate Lambda initialization latency that spikes p99 response times.',
     visualizations: [],
-    introduction: `Lambda cold starts happen when AWS must provision a new execution environment for your function. The process has three distinct phases: first, AWS downloads your deployment package or container image to the execution host; second, it starts the language runtime (JVM, Node.js process, Python interpreter); third, it runs your initialization code — everything outside the handler function. Only after all three phases complete does your handler receive the first event.
+    introduction: `## Overview
+Lambda cold starts happen when AWS must provision a new execution environment for your function. The process has three distinct phases: first, AWS downloads your deployment package or container image to the execution host; second, it starts the language runtime (JVM, Node.js process, Python interpreter); third, it runs your initialization code — everything outside the handler function. Only after all three phases complete does your handler receive the first event.
 
 Cold start duration varies dramatically by runtime. Java and Kotlin functions are the worst offenders, often adding 1–10 seconds because the JVM itself takes time to start and class-load. Node.js and Python cold starts typically run 50–500 milliseconds — fast enough that users rarely notice. Go binaries start in under 100 milliseconds because the runtime is compiled into a single binary with no separate interpreter startup.
 
@@ -1483,7 +1498,8 @@ The practical test: query CloudWatch Logs Insights for INIT_DURATION before and 
     questions: 6,
     description: 'Identify why ECS tasks stop unexpectedly and prevent restart loops from impacting availability.',
     visualizations: [],
-    introduction: `ECS task failures fall into several distinct categories, each with different diagnostic signals and fixes. The most important first step is always reading the stopped task reason in the ECS console or via the CLI — ECS preserves this reason for a period after the task stops, and it narrows the problem space immediately.
+    introduction: `## Overview
+ECS task failures fall into several distinct categories, each with different diagnostic signals and fixes. The most important first step is always reading the stopped task reason in the ECS console or via the CLI — ECS preserves this reason for a period after the task stops, and it narrows the problem space immediately.
 
 Image pull failures happen when ECS cannot retrieve the container image. Common causes: the ECR repository does not exist, the image tag does not exist, the task execution role lacks ecr:GetAuthorizationToken or ecr:BatchGetImage permissions, or the VPC has no route to ECR endpoints (either via NAT Gateway or VPC endpoints for ECR). The stopped reason will say CannotPullContainerError with the specific ECR error embedded.
 
@@ -1557,7 +1573,8 @@ Best practice: use the ALB health check as the source of truth, configure ECS se
     questions: 6,
     description: 'Diagnose S3 request latency spikes and design prefix strategies to avoid throughput limits.',
     visualizations: [],
-    introduction: `S3 latency spikes have several distinct root causes that require different fixes. Before optimizing, it is essential to distinguish between two latency components that S3 CloudWatch surfaces separately: FirstByteLatency (time from request receipt to first response byte — pure server-side processing time) and TotalRequestLatency (full round trip including network transfer). High FirstByteLatency points to S3-side issues; high TotalRequestLatency with normal FirstByteLatency points to network or object size issues.
+    introduction: `## Overview
+S3 latency spikes have several distinct root causes that require different fixes. Before optimizing, it is essential to distinguish between two latency components that S3 CloudWatch surfaces separately: FirstByteLatency (time from request receipt to first response byte — pure server-side processing time) and TotalRequestLatency (full round trip including network transfer). High FirstByteLatency points to S3-side issues; high TotalRequestLatency with normal FirstByteLatency points to network or object size issues.
 
 S3 has published throughput limits per prefix: 3,500 PUT/COPY/POST/DELETE requests per second and 5,500 GET/HEAD requests per second, per prefix. A prefix is defined by the characters in the key name up to the first delimiter — so all objects under logs/2024/ share a prefix budget. When applications store all objects under a single prefix and exceed these limits, S3 returns 503 SlowDown errors. The fix is prefix sharding: distribute objects across multiple prefixes using a hash or timestamp component in the key name (e.g., {hash}/{date}/{filename} instead of {date}/{filename}).
 
@@ -1619,7 +1636,8 @@ Long term, consider whether S3 is the right primary index for this query pattern
     questions: 6,
     description: 'Trace IAM AccessDenied errors through policy layers to find the blocking rule.',
     visualizations: [],
-    introduction: `IAM AccessDenied errors are frustrating because the same error message can have five completely different root causes. AWS returns a generic AccessDenied response regardless of whether the denial came from an explicit Deny statement, a missing Allow, a Service Control Policy at the organization level, a permissions boundary, or a session policy restriction. Understanding the evaluation order is the foundation of effective diagnosis.
+    introduction: `## Overview
+IAM AccessDenied errors are frustrating because the same error message can have five completely different root causes. AWS returns a generic AccessDenied response regardless of whether the denial came from an explicit Deny statement, a missing Allow, a Service Control Policy at the organization level, a permissions boundary, or a session policy restriction. Understanding the evaluation order is the foundation of effective diagnosis.
 
 AWS evaluates IAM policies in a fixed order. First, it checks for an explicit Deny anywhere in the policy chain — in the identity policy, resource policy, SCP, or permissions boundary. An explicit Deny always wins, overriding any Allow. Second, it checks for an Allow in the relevant policies. If there is no explicit Deny and there is an Allow, the request proceeds. If there is no Allow, the request is implicitly denied. This means there are two types of denials: explicit (a Deny statement exists) and implicit (no Allow statement exists).
 
@@ -1679,7 +1697,8 @@ The IAM Policy Simulator cannot evaluate SCPs — it only evaluates identity and
     questions: 6,
     description: 'Optimize cross-region latency using AWS backbone routing and data gravity principles.',
     visualizations: [],
-    introduction: `Multi-region latency has a hard floor set by physics — the speed of light in fiber is approximately 200,000 km/s, meaning a round trip between us-east-1 (Virginia) and ap-southeast-1 (Singapore) has a theoretical minimum of roughly 170ms. Measured RTT is typically 230ms or higher due to routing hops on the public internet. No amount of optimization can beat this ceiling; the question is whether you are close to it or far from it.
+    introduction: `## Overview
+Multi-region latency has a hard floor set by physics — the speed of light in fiber is approximately 200,000 km/s, meaning a round trip between us-east-1 (Virginia) and ap-southeast-1 (Singapore) has a theoretical minimum of roughly 170ms. Measured RTT is typically 230ms or higher due to routing hops on the public internet. No amount of optimization can beat this ceiling; the question is whether you are close to it or far from it.
 
 Understanding baseline expectations is the first diagnostic step. us-east-1 to us-west-2 is approximately 70ms RTT. us-east-1 to eu-west-1 (Ireland) is approximately 85ms. us-east-1 to ap-southeast-1 is approximately 230ms. us-east-1 to ap-northeast-1 (Tokyo) is approximately 175ms. If your measured latency significantly exceeds these baselines, there is an optimization opportunity. If it matches, the only fix is to move compute or data closer to the user.
 
@@ -1739,7 +1758,8 @@ The trade-off framing for interviews: Option 1 is the most effective but has the
     questions: 6,
     description: 'Detect expiring certificates before they cause outages and automate renewal pipelines.',
     visualizations: [],
-    introduction: `TLS certificate expiry is one of the most preventable causes of production outages, yet it regularly brings down major services. The incident pattern is consistent: certificates are issued, initial monitoring is set up (or not), time passes, and eventually the certificate expires while attention has drifted to other things. Clients begin receiving SSL handshake errors, health checks fail, and what looked like a simple operational task becomes an urgent incident.
+    introduction: `## Overview
+TLS certificate expiry is one of the most preventable causes of production outages, yet it regularly brings down major services. The incident pattern is consistent: certificates are issued, initial monitoring is set up (or not), time passes, and eventually the certificate expires while attention has drifted to other things. Clients begin receiving SSL handshake errors, health checks fail, and what looked like a simple operational task becomes an urgent incident.
 
 What happens on expiry depends on the client. Web browsers show ERR_CERT_DATE_INVALID or a security warning page and block users by default. HTTP clients in code — curl, requests, the AWS SDK — throw certificate validation exceptions and fail. API gateways and load balancers that are configured to verify upstream certificates drop backend connections. Health checks over HTTPS fail, triggering automatic recovery mechanisms that do nothing because the certificate problem affects all instances equally.
 
@@ -1801,7 +1821,8 @@ Post-incident: enable ACM DaysToExpiry CloudWatch alarms for all certificates at
     questions: 6,
     description: 'Distinguish packet loss from latency using retransmission metrics and MTU diagnostics.',
     visualizations: [],
-    introduction: `Packet loss is particularly deceptive because TCP's reliability guarantees mean applications often do not see errors — they just see degraded throughput and increased latency as TCP retransmits lost packets and backs off its congestion window. A 1% packet loss rate can reduce TCP throughput by up to 50% on high-bandwidth connections due to retransmission timeouts and window reduction. Applications appear to work but are slow, with no obvious error to trace.
+    introduction: `## Overview
+Packet loss is particularly deceptive because TCP's reliability guarantees mean applications often do not see errors — they just see degraded throughput and increased latency as TCP retransmits lost packets and backs off its congestion window. A 1% packet loss rate can reduce TCP throughput by up to 50% on high-bandwidth connections due to retransmission timeouts and window reduction. Applications appear to work but are slow, with no obvious error to trace.
 
 The first diagnostic challenge is distinguishing packet loss from high latency. Both cause slow transfers, but they have different signals. Packet loss causes bursty retransmissions — you see normal throughput interrupted by pauses while TCP times out and retransmits. High latency causes uniformly slow transfers. The netstat -s command on Linux shows TcpExt:TCPRetransFail and TcpExt:TCPTimeouts counters — increasing values indicate retransmissions. You can also watch ss -tin to see retransmission counters per connection in real time.
 
@@ -1861,7 +1882,8 @@ Fix options, in order of preference: (1) Clamp TCP MSS at the interface level us
     questions: 6,
     description: 'Identify NAT Gateway connection limits and eliminate unnecessary NAT costs with VPC endpoints.',
     visualizations: [],
-    introduction: `NAT Gateway is one of the most used and least understood services in AWS networking. It enables private subnet resources to initiate outbound internet connections while blocking inbound connections — essential for EC2 instances, ECS tasks, and Lambda functions in private subnets. But NAT Gateway has specific limits that, when exceeded, cause connectivity failures that look like general network outages.
+    introduction: `## Overview
+NAT Gateway is one of the most used and least understood services in AWS networking. It enables private subnet resources to initiate outbound internet connections while blocking inbound connections — essential for EC2 instances, ECS tasks, and Lambda functions in private subnets. But NAT Gateway has specific limits that, when exceeded, cause connectivity failures that look like general network outages.
 
 NAT Gateway supports up to 45 Gbps of bandwidth, which is usually not the binding constraint. The more common limits are connection-based: 55,000 simultaneous connections per destination IP and port combination, and 900 new connections per second to the same destination. These limits exist per NAT Gateway instance. Applications that make many short-lived connections to the same destination (common with microservices calling shared databases or APIs) can hit the connections-per-second limit before hitting the bandwidth limit.
 
@@ -1923,7 +1945,8 @@ Beyond this specific fix, audit all AWS service traffic going through NAT Gatewa
     questions: 6,
     description: 'Systematically identify and eliminate flaky tests and infrastructure failures that erode CI trust.',
     visualizations: [],
-    introduction: `Flaky CI/CD pipelines are more damaging than they appear. When developers learn that CI failures are sometimes spurious, they start merging anyway. The pipeline stops being a quality gate and becomes an annoyance. This is the worst possible outcome — the infrastructure, cost, and time cost of CI continues while the reliability benefit disappears entirely. Fixing flakiness is therefore not just a convenience improvement but a correctness requirement for the CI investment to pay off.
+    introduction: `## Overview
+Flaky CI/CD pipelines are more damaging than they appear. When developers learn that CI failures are sometimes spurious, they start merging anyway. The pipeline stops being a quality gate and becomes an annoyance. This is the worst possible outcome — the infrastructure, cost, and time cost of CI continues while the reliability benefit disappears entirely. Fixing flakiness is therefore not just a convenience improvement but a correctness requirement for the CI investment to pay off.
 
 Flakiness falls into three categories with different remediation strategies. Test flakiness means the test code itself has non-deterministic behavior — the test passes some runs and fails others on the same commit. Infrastructure flakiness means the runner environment is unreliable — network timeouts, disk full, resource contention on shared runners. Dependency flakiness means the test relies on external services (third-party APIs, staging databases) that behave inconsistently.
 
@@ -1987,7 +2010,8 @@ Track the fix: after remediation, monitor the pass rate for two weeks. The 70% s
     questions: 6,
     description: 'Design rollback-capable deployment pipelines and untangle database migrations from code deployments.',
     visualizations: [],
-    introduction: `Rollback is often treated as an edge case to handle when something goes wrong, but the most reliable systems are designed from the start so rollback is fast, tested, and almost automatic. The fundamental challenge is that code and data have different rollback properties: code can be swapped instantly, but database schema changes are often difficult or impossible to reverse safely.
+    introduction: `## Overview
+Rollback is often treated as an edge case to handle when something goes wrong, but the most reliable systems are designed from the start so rollback is fast, tested, and almost automatic. The fundamental challenge is that code and data have different rollback properties: code can be swapped instantly, but database schema changes are often difficult or impossible to reverse safely.
 
 Code rollback has two approaches: deploy a previous artifact, or git revert and deploy the new commit. Deploying a previous artifact is faster and lower-risk — you are deploying something that was previously validated in production, not creating a new commit that could introduce its own issues. Most CI/CD systems store build artifacts for a configurable period; the rollback is just pointing the deployment system at an older artifact. Git revert creates a new commit that undoes previous changes, which is correct for long-lived branches but adds unnecessary risk in a rollback scenario where speed matters.
 
@@ -2051,7 +2075,8 @@ For the trigger in PostgreSQL: CREATE OR REPLACE FUNCTION sync_username() RETURN
     questions: 6,
     description: 'Fix canary traffic routing, statistical validity, and monitoring gaps that make canaries unreliable.',
     visualizations: [],
-    introduction: `Canary deployments are one of the most powerful techniques for reducing deployment risk, but they require more sophistication to implement correctly than most teams expect. A naive canary — send 5% of traffic to the new version, watch it for 10 minutes, then promote — often fails silently. The canary passes, the full rollout proceeds, and the bug that the canary was supposed to catch hits 100% of traffic.
+    introduction: `## Overview
+Canary deployments are one of the most powerful techniques for reducing deployment risk, but they require more sophistication to implement correctly than most teams expect. A naive canary — send 5% of traffic to the new version, watch it for 10 minutes, then promote — often fails silently. The canary passes, the full rollout proceeds, and the bug that the canary was supposed to catch hits 100% of traffic.
 
 The statistical validity problem is the most common unrecognized issue. Detecting a 1% increase in error rate with 95% confidence requires roughly 7,000 requests per version to reach statistical significance. At a 1% canary weight, getting 7,000 canary requests requires 700,000 total requests. A service handling 1,000 requests per minute needs 700 minutes — 11 hours — for the canary to have meaningful statistical power. Most teams observe canaries for 10–30 minutes. The canary period is too short to detect the regression, so the canary passes regardless of whether the new version is buggy.
 
@@ -2127,7 +2152,8 @@ For genuinely low-traffic internal services, consider whether the risk profile j
     questions: 6,
     description: 'Diagnose and resolve missing data points in Prometheus, CloudWatch, and Grafana dashboards.',
     visualizations: [],
-    introduction: `A gap in a dashboard graph is not always the same thing as a zero value — and treating them as equivalent is a common diagnostic mistake that wastes hours of on-call time. Understanding what actually causes a gap is the first step to resolving it.
+    introduction: `## Overview
+A gap in a dashboard graph is not always the same thing as a zero value — and treating them as equivalent is a common diagnostic mistake that wastes hours of on-call time. Understanding what actually causes a gap is the first step to resolving it.
 
 Gaps in Prometheus graphs come from one of four main sources. The first is a scrape failure: the Prometheus server tried to scrape the target and got a connection error, timeout, or non-200 HTTP response. When this happens for long enough, Prometheus injects a staleness marker into the time series — a special sentinel value that tells the storage engine "this series has gone away." A staleness-marked gap renders as a broken line in Grafana, not a flat zero.
 
@@ -2206,7 +2232,8 @@ The fix depends on the cause: correct the ACL or security group rules if traffic
     questions: 6,
     description: 'Identify, measure, and systematically reduce alert noise to restore effective on-call rotations.',
     visualizations: [],
-    introduction: `Alert fatigue is the state where on-call engineers have been conditioned by noisy, low-signal alerts to treat pages as background noise rather than urgent signals. It is one of the most dangerous failure modes in reliability engineering because it silently degrades your incident response capability — often without anyone explicitly deciding to stop responding to alerts.
+    introduction: `## Overview
+Alert fatigue is the state where on-call engineers have been conditioned by noisy, low-signal alerts to treat pages as background noise rather than urgent signals. It is one of the most dangerous failure modes in reliability engineering because it silently degrades your incident response capability — often without anyone explicitly deciding to stop responding to alerts.
 
 The symptoms of alert fatigue are measurable: mean time to acknowledge (MTTA) trends upward over weeks even as alert volume stays constant, engineers acknowledge alerts without opening runbooks or investigating root cause, multiple alerts fire for the same underlying issue and engineers respond to none, and on-call rotations become the most dreaded assignment in the team.
 
@@ -2283,7 +2310,8 @@ The configuration in Alertmanager uses inhibit_rules: if the source alert (datab
     questions: 6,
     description: 'Diagnose why traces are incomplete or missing in Jaeger, Zipkin, or OpenTelemetry-based systems.',
     visualizations: [],
-    introduction: `Distributed tracing is only valuable when traces are complete — a trace that shows three of seven service hops provides misleading latency attribution and can send you debugging the wrong service. Missing traces and broken trace chains are among the most frustrating debugging experiences in distributed systems, and they have a surprisingly small number of root causes once you know where to look.
+    introduction: `## Overview
+Distributed tracing is only valuable when traces are complete — a trace that shows three of seven service hops provides misleading latency attribution and can send you debugging the wrong service. Missing traces and broken trace chains are among the most frustrating debugging experiences in distributed systems, and they have a surprisingly small number of root causes once you know where to look.
 
 The first and most common cause is sampling. Most production tracing systems sample a fraction of requests to control storage costs and overhead. Head-based sampling — where the decision to trace is made at the entry point before the trace is complete — typically samples 1% to 10% of traffic. This means rare events, errors that occur in 0.1% of requests, and slow outlier traces are almost never sampled. If you are trying to debug a specific error and the trace is missing, sampling is often the answer. Tail-based sampling solves this by buffering complete traces at a collector and then making the sampling decision based on trace characteristics (errors, high latency) — but it requires a stateful collector like the OpenTelemetry Collector with the tail sampling processor.
 
@@ -2364,7 +2392,8 @@ To verify spans are being generated but not exported, use the zPages endpoint on
     questions: 6,
     description: 'Identify and eliminate runaway log volume that drives unexpected observability cost spikes.',
     visualizations: [],
-    introduction: `Log volume explosions are one of the most common causes of unexpected cloud cost spikes — and they are almost always avoidable. A single misconfigured service or a new code path logging at the wrong level can increase your observability bill by 10x in hours, and the problem compounds because most teams only notice when the monthly bill arrives.
+    introduction: `## Overview
+Log volume explosions are one of the most common causes of unexpected cloud cost spikes — and they are almost always avoidable. A single misconfigured service or a new code path logging at the wrong level can increase your observability bill by 10x in hours, and the problem compounds because most teams only notice when the monthly bill arrives.
 
 The most common causes follow a predictable pattern. The first is deploying to production with DEBUG logging enabled. Debug log levels are designed for development: they log every function call, every database query parameter, every HTTP header. In production under load, a service that makes 1,000 requests per second with debug logging enabled can generate tens of thousands of log lines per second. A single misconfigured environment variable is all it takes.
 
@@ -2447,7 +2476,8 @@ Combine the dynamic level API with a timer: automatically revert to INFO after 3
     questions: 6,
     description: 'Diagnose and reduce replication lag on RDS read replicas to ensure data freshness for reads.',
     visualizations: [],
-    introduction: `RDS read replica replication lag is a measure of how far behind the replica is from the primary database, expressed in seconds. It is one of the most important metrics for applications that rely on read replicas for query offloading — because a lagging replica serves stale data, which can cause user-visible inconsistencies and subtle application bugs.
+    introduction: `## Overview
+RDS read replica replication lag is a measure of how far behind the replica is from the primary database, expressed in seconds. It is one of the most important metrics for applications that rely on read replicas for query offloading — because a lagging replica serves stale data, which can cause user-visible inconsistencies and subtle application bugs.
 
 The fundamental cause of replication lag is the difference in throughput between the primary and the replica's ability to apply changes. MySQL replication is asynchronous: the primary writes binlog events and the replica applies them independently. By default in older MySQL versions, replication is single-threaded — the replica's SQL thread applies events from the binlog one at a time, serially. If the primary executes a large bulk INSERT that takes 60 seconds, the replica also takes approximately 60 seconds to apply it — and during those 60 seconds, every subsequent write on the primary queues up behind the bulk operation on the replica. Lag spikes dramatically.
 
@@ -2524,7 +2554,8 @@ Use pt-osc when: the table is smaller (under 50GB), the write rate is low, and y
     questions: 6,
     description: 'Detect, interpret, and eliminate database deadlocks in PostgreSQL and MySQL production systems.',
     visualizations: [],
-    introduction: `A deadlock occurs when two or more database transactions each hold a lock that the other needs to proceed, creating a circular dependency that neither can break without external intervention. The database engine detects this cycle and resolves it by aborting one of the transactions — the "victim" — allowing the other to complete. The aborted transaction receives an error and must be retried by the application.
+    introduction: `## Overview
+A deadlock occurs when two or more database transactions each hold a lock that the other needs to proceed, creating a circular dependency that neither can break without external intervention. The database engine detects this cycle and resolves it by aborting one of the transactions — the "victim" — allowing the other to complete. The aborted transaction receives an error and must be retried by the application.
 
 PostgreSQL's deadlock detection runs every deadlock_timeout milliseconds (default 1 second). When two transactions have been waiting longer than this threshold, the engine checks for circular lock dependencies. When a deadlock is detected, PostgreSQL aborts the transaction with the lower cost estimate (typically the one that has done less work) and logs the event at ERROR level with a detailed DETAIL section showing exactly which processes were waiting for which locks.
 
@@ -2607,7 +2638,8 @@ Combine this with a reduced transaction scope: execute the SELECT FOR UPDATE, do
     questions: 6,
     description: 'Execute zero-downtime database schema changes safely in production PostgreSQL and MySQL systems.',
     visualizations: [],
-    introduction: `Database migrations are one of the highest-risk operations in production engineering. A naive ALTER TABLE on a large table can take an exclusive lock for minutes or hours, blocking all reads and writes and causing a complete service outage. Understanding how databases execute DDL and which operations are safe at what scale is essential for running migrations without downtime.
+    introduction: `## Overview
+Database migrations are one of the highest-risk operations in production engineering. A naive ALTER TABLE on a large table can take an exclusive lock for minutes or hours, blocking all reads and writes and causing a complete service outage. Understanding how databases execute DDL and which operations are safe at what scale is essential for running migrations without downtime.
 
 PostgreSQL uses an access control system based on lock modes for DDL operations. Most DDL operations — ALTER TABLE ADD COLUMN with a default, ALTER TABLE SET NOT NULL, and CREATE INDEX — require an AccessExclusiveLock, which conflicts with every other lock type including SELECT statements. On a table with 100 million rows, a migration that requires scanning the full table (backfilling a default, validating a NOT NULL constraint, building an index) can hold this lock for 10-30 minutes, preventing any reads or writes on that table for the entire duration.
 
@@ -2692,7 +2724,8 @@ Run the backfill from an application-level job or a database-side DO block with 
     questions: 6,
     description: 'Identify and fix runaway CPU consumers using profiling tools across Python, JVM, Go, and Node.js.',
     visualizations: [],
-    introduction: `A CPU runaway process is one that consumes CPU resources far beyond what is expected for its workload — often pinning one or more cores at 100% utilization, degrading co-located services, and eventually triggering OOM kills or instance failures. Unlike memory leaks, CPU runaways are often intermittent and triggered by specific input patterns, making them harder to reproduce in development.
+    introduction: `## Overview
+A CPU runaway process is one that consumes CPU resources far beyond what is expected for its workload — often pinning one or more cores at 100% utilization, degrading co-located services, and eventually triggering OOM kills or instance failures. Unlike memory leaks, CPU runaways are often intermittent and triggered by specific input patterns, making them harder to reproduce in development.
 
 The first step is identification. The top command (or htop for a more visual interface) shows per-process CPU usage updated every 2 seconds. Sort by CPU with the P key. The ps aux --sort=-%cpu | head -20 command gives a point-in-time snapshot suitable for logging or scripting. In Kubernetes, kubectl top pods and kubectl top pods --containers break down CPU usage at pod and container level respectively. In CloudWatch, the CloudWatch agent can ship per-process metrics using the procstat configuration, allowing you to build dashboards and alarms on CPU usage for specific processes by name or PID file.
 
@@ -2775,7 +2808,8 @@ Fixes: rewrite the regex to eliminate ambiguity (use possessive quantifiers like
     questions: 6,
     description: 'Diagnose and resolve disk IOPS bottlenecks on EBS volumes and database instances under load.',
     visualizations: [],
-    introduction: `Disk IOPS saturation occurs when the storage layer cannot service read and write requests as fast as the application generates them, creating a queue of pending I/O operations. The visible symptoms are high I/O wait in the CPU stats (the wa column in top), slow query times in databases, and elevated disk latency that manifests as application timeouts. Unlike CPU saturation, which users often experience as high latency only, disk I/O saturation can cause cascading failures as write buffers fill and threads block waiting for I/O completion.
+    introduction: `## Overview
+Disk IOPS saturation occurs when the storage layer cannot service read and write requests as fast as the application generates them, creating a queue of pending I/O operations. The visible symptoms are high I/O wait in the CPU stats (the wa column in top), slow query times in databases, and elevated disk latency that manifests as application timeouts. Unlike CPU saturation, which users often experience as high latency only, disk I/O saturation can cause cascading failures as write buffers fill and threads block waiting for I/O completion.
 
 The most useful tool for diagnosing disk saturation is iostat -x 1, which outputs per-device I/O statistics every second. The key metrics are: await (average time in milliseconds that I/O requests wait before being serviced — high values indicate saturation), svctm (deprecated but often still shown — average service time per I/O), %util (percentage of time the device is busy — values consistently above 80-90% indicate saturation), and r/s and w/s (read and write I/O operations per second).
 
@@ -2856,7 +2890,8 @@ checkpoint_completion_target = 0.9 (default is 0.5 in older versions) tells Post
     questions: 6,
     description: 'Detect and resolve network bandwidth saturation on EC2 instances and container workloads.',
     visualizations: [],
-    introduction: `Network bandwidth saturation occurs when a host, instance, or network path reaches its maximum capacity for data transfer, causing packet drops, increased latency, and connection timeouts. Unlike CPU and memory saturation, which are well-understood and closely monitored, network bandwidth limits are often invisible until they cause failures — because many monitoring setups track metrics rather than absolute bandwidth consumption.
+    introduction: `## Overview
+Network bandwidth saturation occurs when a host, instance, or network path reaches its maximum capacity for data transfer, causing packet drops, increased latency, and connection timeouts. Unlike CPU and memory saturation, which are well-understood and closely monitored, network bandwidth limits are often invisible until they cause failures — because many monitoring setups track metrics rather than absolute bandwidth consumption.
 
 EC2 instances have both baseline and burst network bandwidth limits that vary by instance type and size. A t3.medium has a baseline of 0.5 Gbps with burst to 5 Gbps. A c5.xlarge has a baseline of 10 Gbps with burst to 10 Gbps (no burst distinction on higher performance instances). Instances in the same family scale bandwidth with size: a c5.4xlarge has up to 10 Gbps, c5.9xlarge up to 12 Gbps, c5.18xlarge up to 25 Gbps. The c5n and m5n families (the "n" denotes network-optimized) offer 25 to 100 Gbps and are designed specifically for network-intensive workloads. Exceeding the baseline on a burstable instance depletes a network credit bucket — sustained high bandwidth that exhausts the bucket throttles to baseline.
 
@@ -2943,7 +2978,8 @@ Content delivery optimization: serving static assets (images, videos, large file
     questions: 6,
     description: 'Diagnose and reduce JVM GC pause times that cause latency spikes and health check failures.',
     visualizations: [],
-    introduction: `JVM garbage collection pauses are one of the most common causes of latency spikes in Java, Kotlin, and Scala services. During a Stop-The-World garbage collection pause, all application threads are suspended — the JVM literally stops the world to find and reclaim unreachable objects. From the caller's perspective, the service stops responding for the duration of the pause. This can trigger connection timeouts, health check failures, SLO violations, and cascading failures in upstream services.
+    introduction: `## Overview
+JVM garbage collection pauses are one of the most common causes of latency spikes in Java, Kotlin, and Scala services. During a Stop-The-World garbage collection pause, all application threads are suspended — the JVM literally stops the world to find and reclaim unreachable objects. From the caller's perspective, the service stops responding for the duration of the pause. This can trigger connection timeouts, health check failures, SLO violations, and cascading failures in upstream services.
 
 Understanding GC algorithm selection is the foundation of GC tuning. The Parallel GC (-XX:+UseParallelGC) was the default in Java 8 and prioritizes throughput — it uses multiple threads for collection but still stops the world for all major collections. G1GC (-XX:+UseG1GC) became the default in Java 9 and is designed for low-latency balanced throughput — it divides the heap into regions, collects the most garbage-dense regions first (the "Garbage First" in the name), and targets a configurable pause time goal (-XX:MaxGCPauseMillis=200). ZGC (-XX:+UseZGC, available since Java 11, production-quality since Java 15) uses a concurrent, colored-pointer approach to achieve sub-millisecond pause times even on heaps of hundreds of gigabytes — it does almost all GC work concurrently with application threads. Shenandoah GC (from Red Hat, available in OpenJDK builds) also achieves concurrent compaction with low pause times, similar to ZGC in design goals but with different implementation trade-offs.
 
@@ -3026,7 +3062,8 @@ The decision matrix: CPU-constrained service → G1GC (lowest overhead). Latency
     questions: 6,
     description: 'Diagnose OOMKilled container failures in Kubernetes using metrics, heap dumps, and memory profiling.',
     visualizations: [],
-    introduction: `OOMKilled (Out Of Memory Killed) is a Kubernetes pod termination state caused by the Linux kernel's OOM killer terminating a container that exceeded its memory limit. The pod exits with reason OOMKilled and exit code 137 (128 + SIGKILL). Understanding the distinction between the kernel's OOM killer and application-level out-of-memory errors is critical: the container process receives no warning, no graceful shutdown signal, and no opportunity to write error logs — the process simply stops, and Kubernetes restarts the pod.
+    introduction: `## Overview
+OOMKilled (Out Of Memory Killed) is a Kubernetes pod termination state caused by the Linux kernel's OOM killer terminating a container that exceeded its memory limit. The pod exits with reason OOMKilled and exit code 137 (128 + SIGKILL). Understanding the distinction between the kernel's OOM killer and application-level out-of-memory errors is critical: the container process receives no warning, no graceful shutdown signal, and no opportunity to write error logs — the process simply stops, and Kubernetes restarts the pod.
 
 The first diagnostic step is confirming the cause. kubectl describe pod pod-name shows the last and current container state. The Last State section reads: State: Terminated, Reason: OOMKilled, Exit Code: 137. This confirms the OOM kill. A different exit code (like 1 or 143) means the process crashed or was gracefully terminated, not OOM-killed.
 
@@ -3118,7 +3155,8 @@ Monitor native memory with -XX:NativeMemoryTracking=summary and jcmd PID VM.nati
     questions: 6,
     description: 'Systematically debug Kubernetes Service connectivity failures using endpoints, selectors, and DNS.',
     visualizations: [],
-    introduction: `"Service not reachable" in Kubernetes covers a range of failure modes that share the same user-visible symptom — connection refused or connection timeout when trying to reach a service — but have very different root causes and fixes. Approaching this systematically with a layered diagnostic process is far more effective than random investigation.
+    introduction: `## Overview
+"Service not reachable" in Kubernetes covers a range of failure modes that share the same user-visible symptom — connection refused or connection timeout when trying to reach a service — but have very different root causes and fixes. Approaching this systematically with a layered diagnostic process is far more effective than random investigation.
 
 The Kubernetes Service resource is a virtual IP (ClusterIP) with associated iptables or eBPF rules (managed by kube-proxy or Cilium) that forward traffic to pods matching the Service's selector. Several things must work correctly for a Service to route traffic: the Service selector must match at least one pod's labels, that pod must be in a Ready state (readiness probe passing), kube-proxy must be running and have programmed the iptables rules, and if NetworkPolicies are in use, they must allow the traffic.
 
@@ -3213,7 +3251,8 @@ The definitive verification: kubectl get pods -n namespace -l key1=val1,key2=val
     questions: 6,
     description: 'Resolve PersistentVolumeClaim mount failures including Multi-Attach errors and CSI provisioning issues.',
     visualizations: [],
-    introduction: `PersistentVolumeClaim (PVC) mount failures are a common and disruptive problem in Kubernetes clusters that use persistent storage. When a pod cannot mount its PVC, it stays in ContainerCreating state indefinitely, and the describe output contains one of several characteristic error messages that point to different root causes.
+    introduction: `## Overview
+PersistentVolumeClaim (PVC) mount failures are a common and disruptive problem in Kubernetes clusters that use persistent storage. When a pod cannot mount its PVC, it stays in ContainerCreating state indefinitely, and the describe output contains one of several characteristic error messages that point to different root causes.
 
 The most impactful and frequently misunderstood failure mode is the Multi-Attach error: "Multi-Attach error for volume X: volume is already exclusively attached to one node and can't be attached to another." This error occurs when a PVC uses a ReadWriteOnce (RWO) access mode — which means the volume can only be mounted by pods on a single node — and Kubernetes tries to mount it on a second node while it is still "attached" to the first.
 
@@ -3302,7 +3341,8 @@ For databases running in Kubernetes — PostgreSQL, MySQL, Cassandra, Kafka — 
     questions: 6,
     description: 'Diagnose and fix CoreDNS failures that cause cascading service-to-service connectivity failures in Kubernetes.',
     visualizations: [],
-    introduction: `CoreDNS is the cluster DNS server in Kubernetes — it resolves service names (myservice.namespace.svc.cluster.local), pod DNS names, and external hostnames for all pods in the cluster. When CoreDNS fails or becomes overloaded, the impact is immediate and severe: every service-to-service call that uses a DNS name fails. This is typically the entire cluster's internal communication, since Kubernetes best practice is to use service names rather than hardcoded IPs. The resulting failure pattern looks like a complete application outage, even though the pods themselves and the Kubernetes control plane may be healthy.
+    introduction: `## Overview
+CoreDNS is the cluster DNS server in Kubernetes — it resolves service names (myservice.namespace.svc.cluster.local), pod DNS names, and external hostnames for all pods in the cluster. When CoreDNS fails or becomes overloaded, the impact is immediate and severe: every service-to-service call that uses a DNS name fails. This is typically the entire cluster's internal communication, since Kubernetes best practice is to use service names rather than hardcoded IPs. The resulting failure pattern looks like a complete application outage, even though the pods themselves and the Kubernetes control plane may be healthy.
 
 CoreDNS runs as a Deployment in the kube-system namespace, typically with two replicas for redundancy. It is exposed by the kube-dns Service (historically named kube-dns regardless of whether you use CoreDNS or the original kube-dns), and its ClusterIP is the DNS server address injected into every pod's /etc/resolv.conf via the kubelet's clusterDNS configuration.
 

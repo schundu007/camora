@@ -50,7 +50,8 @@ export const microservicesPatterns = [
       'Monitor gateway latency percentiles (p50, p95, p99) separately from backend latency to isolate bottlenecks',
     ],
 
-    introduction: `The API Gateway pattern provides a single entry point for all client requests in a microservices architecture. Instead of having clients call dozens of individual services directly, the gateway acts as a reverse proxy that routes requests, aggregates responses, and handles cross-cutting concerns like authentication, rate limiting, and logging.
+    introduction: `## Overview
+The API Gateway pattern provides a single entry point for all client requests in a microservices architecture. Instead of having clients call dozens of individual services directly, the gateway acts as a reverse proxy that routes requests, aggregates responses, and handles cross-cutting concerns like authentication, rate limiting, and logging.
 
 At companies like Netflix (Zuul/Spring Cloud Gateway), Amazon (API Gateway), and Kong, the gateway is the front door to the entire platform. It decouples clients from the internal service topology, allowing teams to refactor, split, or merge services without breaking client contracts.
 
@@ -305,7 +306,8 @@ Auth Flow:
       'Combine service discovery with circuit breakers so that unhealthy instances are removed from the pool before the registry catches up',
     ],
 
-    introduction: `In a microservices architecture, services are deployed across multiple hosts and containers, often scaling up and down dynamically. Service discovery is the mechanism by which one service finds the network location (IP address and port) of another service it needs to call.
+    introduction: `## Overview
+In a microservices architecture, services are deployed across multiple hosts and containers, often scaling up and down dynamically. Service discovery is the mechanism by which one service finds the network location (IP address and port) of another service it needs to call.
 
 Without service discovery, you would hardcode IP addresses or maintain static configuration files — both of which break instantly in elastic cloud environments. Service discovery automates this process, enabling services to register themselves when they start, deregister when they stop, and query the registry to find each other.
 
@@ -601,7 +603,8 @@ DNS Resolution:
       'Combine circuit breakers with retries carefully: retries happen inside the breaker; once the breaker opens, retries stop immediately',
     ],
 
-    introduction: `The Circuit Breaker pattern prevents an application from repeatedly trying to call a service that is likely to fail. Just like an electrical circuit breaker that trips to prevent a house fire, this pattern detects failures and short-circuits requests to a failing service, giving it time to recover.
+    introduction: `## Overview
+The Circuit Breaker pattern prevents an application from repeatedly trying to call a service that is likely to fail. Just like an electrical circuit breaker that trips to prevent a house fire, this pattern detects failures and short-circuits requests to a failing service, giving it time to recover.
 
 Without circuit breakers, a single failing service can bring down an entire microservices system through cascading failures. When Service A depends on Service B, and Service B is slow or down, Service A's threads get blocked waiting for responses. As threads exhaust, Service A stops responding, and the failure cascades to every service that depends on A.
 
@@ -897,7 +900,8 @@ Configuration Per Dependency:
       'Test failure at every step: what happens if step 3 of 5 fails? What happens if compensation for step 2 fails?',
     ],
 
-    introduction: `The Saga pattern manages data consistency across microservices without distributed transactions. In a monolith, you wrap multiple database operations in a single ACID transaction. In microservices, each service owns its own database, so a single cross-service transaction is impossible without two-phase commit (2PC), which is slow, fragile, and locks resources.
+    introduction: `## Overview
+The Saga pattern manages data consistency across microservices without distributed transactions. In a monolith, you wrap multiple database operations in a single ACID transaction. In microservices, each service owns its own database, so a single cross-service transaction is impossible without two-phase commit (2PC), which is slow, fragile, and locks resources.
 
 A saga is a sequence of local transactions where each step is a transaction within a single service. If a step fails, the saga executes compensating transactions to undo the changes made by preceding steps. Think of it as "undo" rather than "rollback" — compensation is a new forward action, not a database rollback.
 
@@ -1206,7 +1210,8 @@ Saga Lifecycle:
       'In Kubernetes, resource limits (CPU/memory) on pods act as process-level bulkheads — set them to prevent a single misbehaving service from starving the node',
     ],
 
-    introduction: `The Bulkhead pattern isolates resources so that a failure in one component does not cascade to bring down the entire system. The name comes from ship design: a ship's hull is divided into watertight compartments (bulkheads) so that if one compartment floods, the rest stay dry and the ship stays afloat.
+    introduction: `## Overview
+The Bulkhead pattern isolates resources so that a failure in one component does not cascade to bring down the entire system. The name comes from ship design: a ship's hull is divided into watertight compartments (bulkheads) so that if one compartment floods, the rest stay dry and the ship stays afloat.
 
 In microservices, the most common scenario is thread pool exhaustion. If your service uses a single shared thread pool to call all downstream dependencies, a slow dependency can consume all threads, preventing your service from handling any requests — even requests to healthy dependencies.
 
@@ -1524,7 +1529,8 @@ Common mistake: Setting all pools to the same size. Each dependency has differen
       'Log every retry with context (attempt number, delay, error) so you can diagnose retry patterns in production',
     ],
 
-    introduction: `The Retry pattern handles transient failures by automatically re-attempting failed operations. In distributed systems, transient failures are routine: network blips, temporary service overloads, connection resets, and DNS resolution delays. Most of these resolve within seconds, making retries an effective strategy.
+    introduction: `## Overview
+The Retry pattern handles transient failures by automatically re-attempting failed operations. In distributed systems, transient failures are routine: network blips, temporary service overloads, connection resets, and DNS resolution delays. Most of these resolve within seconds, making retries an effective strategy.
 
 However, naive retries are dangerous. If a service is struggling under load and 1000 clients simultaneously retry their failed requests, the service receives a thundering herd of retry traffic on top of normal load, making the problem worse. This is a retry storm, and it has caused major outages at companies like AWS, Slack, and GitHub.
 
@@ -1855,7 +1861,8 @@ Typical Configuration:
       'Plan for sidecar resource consumption: each sidecar typically uses 50-100MB RAM and 0.1-0.5 CPU cores',
     ],
 
-    introduction: `The Sidecar pattern deploys a helper container alongside your application container to handle cross-cutting concerns like networking, security, and observability. Instead of embedding these capabilities in every service (duplicating code across languages), you extract them into a separate process that runs alongside the service and intercepts all inbound and outbound traffic.
+    introduction: `## Overview
+The Sidecar pattern deploys a helper container alongside your application container to handle cross-cutting concerns like networking, security, and observability. Instead of embedding these capabilities in every service (duplicating code across languages), you extract them into a separate process that runs alongside the service and intercepts all inbound and outbound traffic.
 
 The most prominent implementation of the sidecar pattern is the service mesh, where every service gets a sidecar proxy (typically Envoy) that handles mTLS encryption, load balancing, circuit breaking, retries, and distributed tracing — all without modifying application code. Istio, Linkerd, and Consul Connect are popular service mesh implementations.
 
@@ -2171,7 +2178,8 @@ Resource Budget Per Sidecar:
       'Set a deadline for completing the migration; without one, the "strangled" system tends to linger forever in a half-migrated state',
     ],
 
-    introduction: `The Strangler Fig pattern incrementally replaces a legacy system by building new functionality around it, gradually routing traffic from the old system to the new one until the legacy system can be decommissioned. The name comes from the strangler fig tree, which grows around a host tree, eventually replacing it entirely.
+    introduction: `## Overview
+The Strangler Fig pattern incrementally replaces a legacy system by building new functionality around it, gradually routing traffic from the old system to the new one until the legacy system can be decommissioned. The name comes from the strangler fig tree, which grows around a host tree, eventually replacing it entirely.
 
 This pattern is the antithesis of the "big bang rewrite," which Martin Fowler and most experienced engineers warn against. Big rewrites are risky because you must replicate years of accumulated functionality before you can switch over, and during the rewrite, the old system continues to evolve, creating a moving target.
 
@@ -2527,7 +2535,8 @@ Migration Tracking:
       'BFFs can cache aggressively for data that changes infrequently, reducing load on downstream services',
     ],
 
-    introduction: `The Backend for Frontend (BFF) pattern creates dedicated backend services tailored to the needs of specific frontend clients. Instead of one generic API serving web browsers, mobile apps, smart TVs, and IoT devices alike, each client type gets its own backend that returns exactly the data it needs in exactly the format it expects.
+    introduction: `## Overview
+The Backend for Frontend (BFF) pattern creates dedicated backend services tailored to the needs of specific frontend clients. Instead of one generic API serving web browsers, mobile apps, smart TVs, and IoT devices alike, each client type gets its own backend that returns exactly the data it needs in exactly the format it expects.
 
 The pattern emerged from a common frustration: mobile developers need small, efficient payloads optimized for limited bandwidth, while web developers need richer data for complex UIs. A single generic API either over-fetches for mobile (wasting bandwidth) or under-fetches for web (requiring multiple round trips). BFF solves this by giving each client type its own purpose-built API.
 
@@ -2854,7 +2863,8 @@ Ownership:
       'Start with at-least-once delivery and idempotent consumers rather than attempting exactly-once (which is much harder to achieve)',
     ],
 
-    introduction: `Event-driven architecture (EDA) is a design paradigm where services communicate through events — records of things that have happened. Instead of Service A calling Service B directly (synchronous coupling), Service A publishes an event ("OrderPlaced"), and any interested services react to it independently.
+    introduction: `## Overview
+Event-driven architecture (EDA) is a design paradigm where services communicate through events — records of things that have happened. Instead of Service A calling Service B directly (synchronous coupling), Service A publishes an event ("OrderPlaced"), and any interested services react to it independently.
 
 This decoupling is transformative for microservices. Services do not need to know about each other; they only need to know about events. Adding a new feature (e.g., sending order confirmation emails) means deploying a new consumer that listens for OrderPlaced events — without modifying the Order Service.
 
@@ -3245,7 +3255,8 @@ Event Flow:
       'Monitor replication lag between write and read models; alert when it exceeds your SLA',
     ],
 
-    introduction: `CQRS separates the model for reading data from the model for writing data. Instead of a single data model that handles both reads and writes (the traditional CRUD approach), CQRS uses distinct models optimized for their specific purpose: a write model that enforces business rules and an read model that is shaped for fast, efficient queries.
+    introduction: `## Overview
+CQRS separates the model for reading data from the model for writing data. Instead of a single data model that handles both reads and writes (the traditional CRUD approach), CQRS uses distinct models optimized for their specific purpose: a write model that enforces business rules and an read model that is shaped for fast, efficient queries.
 
 The motivation is that read and write workloads have fundamentally different characteristics. Writes need validation, business rules, and transactions. Reads need speed, denormalization, and flexibility. A single model that tries to serve both compromises on each. CQRS eliminates this tension by letting each side be independently optimized and scaled.
 
@@ -3628,7 +3639,8 @@ Read Model (denormalized):
       'Test with production configuration in staging before deploying to production; many outages are caused by configuration differences between environments',
     ],
 
-    introduction: `Configuration externalization moves application configuration out of the codebase and into a centralized, manageable location. In a microservices architecture with dozens or hundreds of services, each potentially running multiple instances across environments (dev, staging, production), managing configuration becomes a significant operational challenge.
+    introduction: `## Overview
+Configuration externalization moves application configuration out of the codebase and into a centralized, manageable location. In a microservices architecture with dozens or hundreds of services, each potentially running multiple instances across environments (dev, staging, production), managing configuration becomes a significant operational challenge.
 
 The core principle is separating what the code does (logic) from how it behaves (configuration). Database connection strings, feature flags, timeout values, rate limits, and third-party API URLs should all be externalized so they can be changed without recompiling, redeploying, or restarting the application.
 

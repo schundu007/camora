@@ -101,7 +101,8 @@ export const lldTopics = [
     questions: 8,
     description: 'The foundational building blocks of object-oriented programming.',
 
-    introduction: `Classes and objects form the bedrock of object-oriented programming. A class is a blueprint that defines the structure and behavior of a concept, while an object is a concrete instance of that blueprint living in memory. Think of a class as the architectural plan for a house and each actual house built from those plans as an object.
+    introduction: `## Overview
+Classes and objects form the bedrock of object-oriented programming. A class is a blueprint that defines the structure and behavior of a concept, while an object is a concrete instance of that blueprint living in memory. Think of a class as the architectural plan for a house and each actual house built from those plans as an object.
 
 In practice, classes bundle together related data (attributes) and the operations that act on that data (methods). This bundling is what allows us to model real-world entities in code. A BankAccount class might hold a balance attribute and expose deposit and withdraw methods, keeping the logic and state tightly coupled.
 
@@ -158,7 +159,8 @@ In languages with garbage collection (Java, Python, C#), objects on the heap are
     questions: 7,
     description: 'Contracts that define what a class must do without specifying how.',
 
-    introduction: `An interface defines a contract: a set of method signatures that any implementing class must provide. It specifies what operations are available without dictating how those operations work internally. Think of a wall power outlet as an interface. Any appliance with the correct plug shape can connect, regardless of whether it is a lamp, a toaster, or a phone charger. The outlet defines the contract; the devices fulfill it differently.
+    introduction: `## Overview
+An interface defines a contract: a set of method signatures that any implementing class must provide. It specifies what operations are available without dictating how those operations work internally. Think of a wall power outlet as an interface. Any appliance with the correct plug shape can connect, regardless of whether it is a lamp, a toaster, or a phone charger. The outlet defines the contract; the devices fulfill it differently.
 
 Interfaces are central to writing flexible, testable software. When you code to an interface rather than a concrete class, you can swap implementations without changing the calling code. A PaymentProcessor interface lets you switch between StripeProcessor and PayPalProcessor by simply injecting a different implementation. This is the foundation of dependency injection and many design patterns.
 
@@ -209,7 +211,8 @@ In Java, if two interfaces provide default methods with the same signature, the 
     questions: 8,
     description: 'Mechanism for creating new classes based on existing ones.',
 
-    introduction: `Inheritance allows a new class (child/subclass) to acquire the attributes and methods of an existing class (parent/superclass). It models "is-a" relationships: a Dog is an Animal, a SavingsAccount is a BankAccount. The child class inherits the parent's behavior and can extend or override it to specialize.
+    introduction: `## Overview
+Inheritance allows a new class (child/subclass) to acquire the attributes and methods of an existing class (parent/superclass). It models "is-a" relationships: a Dog is an Animal, a SavingsAccount is a BankAccount. The child class inherits the parent's behavior and can extend or override it to specialize.
 
 The power of inheritance lies in code reuse and establishing type hierarchies. Shared logic lives in the parent class, while each child adds or overrides only what differs. An Animal class might define eat() and sleep(), while Dog overrides speak() to return "Woof" and Cat overrides speak() to return "Meow". This hierarchy lets you write polymorphic code that treats all Animals uniformly.
 
@@ -266,7 +269,8 @@ In C++, the inheritance mode (public, protected, private) further controls visib
     questions: 7,
     description: 'One interface, many implementations: the ability of objects to take many forms.',
 
-    introduction: `Polymorphism, from the Greek for "many forms," is the principle that lets you treat objects of different classes through a common interface. When you call shape.area(), the actual computation depends on whether the shape is a Circle, Rectangle, or Triangle. The calling code does not need to know the specific type; it simply trusts that every shape knows how to compute its area.
+    introduction: `## Overview
+Polymorphism, from the Greek for "many forms," is the principle that lets you treat objects of different classes through a common interface. When you call shape.area(), the actual computation depends on whether the shape is a Circle, Rectangle, or Triangle. The calling code does not need to know the specific type; it simply trusts that every shape knows how to compute its area.
 
 There are two primary types. Compile-time polymorphism (static) is achieved through method overloading and operator overloading, where the compiler decides which method to call based on argument types. Runtime polymorphism (dynamic) is achieved through method overriding and interfaces, where the decision is deferred to runtime based on the actual object type. Runtime polymorphism is the more important form for design interviews.
 
@@ -317,7 +321,8 @@ With polymorphism, you define a PaymentMethod interface with a process() method.
     questions: 6,
     description: 'Hiding complexity by exposing only essential details.',
 
-    introduction: `Abstraction is the process of hiding implementation complexity and exposing only what users of a component need to know. When you drive a car, you interact with the steering wheel, pedals, and gear shift. You do not need to understand the internal combustion engine, transmission mechanics, or electronic control unit. The car's interface abstracts away its complexity.
+    introduction: `## Overview
+Abstraction is the process of hiding implementation complexity and exposing only what users of a component need to know. When you drive a car, you interact with the steering wheel, pedals, and gear shift. You do not need to understand the internal combustion engine, transmission mechanics, or electronic control unit. The car's interface abstracts away its complexity.
 
 In software, abstraction manifests at every level. Functions abstract sequences of operations behind a name. Classes abstract data and behavior behind a public API. Interfaces and abstract classes take this further by defining contracts with no implementation at all, forcing subclasses to fill in the details. A well-designed DatabaseConnection abstract class exposes connect(), query(), and disconnect() while hiding whether the underlying database is PostgreSQL, MySQL, or MongoDB.
 
@@ -368,7 +373,8 @@ Follow these guidelines: hide anything the consumer should not change or does no
     questions: 7,
     description: 'Bundling data with methods and restricting direct access to internals.',
 
-    introduction: `Encapsulation is the practice of bundling data (attributes) and the methods that operate on that data into a single unit (a class) while restricting direct external access to the internal state. The class controls how its data is read and modified through a well-defined public interface, typically using getters and setters.
+    introduction: `## Overview
+Encapsulation is the practice of bundling data (attributes) and the methods that operate on that data into a single unit (a class) while restricting direct external access to the internal state. The class controls how its data is read and modified through a well-defined public interface, typically using getters and setters.
 
 Consider a bank account. You should not be able to directly set the balance to any arbitrary value. Instead, you interact through deposit() and withdraw() methods that enforce business rules: balances cannot go negative, withdrawals cannot exceed the balance, and every transaction is logged. The balance field is private; the methods are public. This is encapsulation in action.
 
@@ -419,7 +425,8 @@ If a reporting module only needs to read user data, it should interact through r
     questions: 5,
     description: 'A "has-a" relationship where the child can exist independently of the parent.',
 
-    introduction: `Aggregation is a specialized form of association that represents a "has-a" relationship where the contained object can exist independently of the container. A university has professors, but if the university closes, the professors continue to exist as individuals. The university does not own the lifecycle of its professors; it merely references them.
+    introduction: `## Overview
+Aggregation is a specialized form of association that represents a "has-a" relationship where the contained object can exist independently of the container. A university has professors, but if the university closes, the professors continue to exist as individuals. The university does not own the lifecycle of its professors; it merely references them.
 
 In code, aggregation is typically implemented by passing an existing object into the constructor or setter of the containing object, rather than creating the object internally. A Department class might receive a list of Employee objects through its constructor. The Department holds references to these employees, but it did not create them and will not destroy them. The same Employee could belong to multiple departments or exist with no department at all.
 
@@ -470,7 +477,8 @@ Use a plain association when two classes are related but neither is a container.
     questions: 6,
     description: 'A strong "has-a" relationship where the child\'s lifecycle is tied to the parent.',
 
-    introduction: `Composition is a strong form of the "has-a" relationship where the parent object owns and controls the lifecycle of the child objects. When the parent is destroyed, the children are destroyed with it. A Human has a Heart; if the human ceases to exist, the heart (in this modeling context) has no independent existence. The heart is not shared with other humans.
+    introduction: `## Overview
+Composition is a strong form of the "has-a" relationship where the parent object owns and controls the lifecycle of the child objects. When the parent is destroyed, the children are destroyed with it. A Human has a Heart; if the human ceases to exist, the heart (in this modeling context) has no independent existence. The heart is not shared with other humans.
 
 In code, composition means the parent class creates the child objects internally, usually in its constructor. The children are not passed in from outside, and they are not accessible or meaningful outside the context of the parent. A Car class might create its own Engine object in the constructor. The engine is an internal implementation detail of the car.
 
@@ -521,7 +529,8 @@ Pure composition (creating objects internally) is simpler but less flexible and 
     questions: 5,
     description: 'A relationship between two classes where each maintains its own lifecycle.',
 
-    introduction: `Association is the most general relationship between two classes. It indicates that instances of one class are connected to instances of another, but neither owns or contains the other. Both objects have independent lifecycles and can exist without the relationship. A Teacher and a Student are associated through a Course, but each can exist independently.
+    introduction: `## Overview
+Association is the most general relationship between two classes. It indicates that instances of one class are connected to instances of another, but neither owns or contains the other. Both objects have independent lifecycles and can exist without the relationship. A Teacher and a Student are associated through a Course, but each can exist independently.
 
 Associations have multiplicity: one-to-one (a Person has one Passport), one-to-many (a Teacher teaches many Students), or many-to-many (Students enroll in many Courses and each Course has many Students). They can also be directional. A unidirectional association means one class knows about the other but not vice versa. A bidirectional association means both classes hold references to each other.
 
@@ -576,7 +585,8 @@ Multiplicity directly affects your data structure choices. A 1..1 relationship c
     questions: 5,
     description: 'Every piece of knowledge should have a single, authoritative representation.',
 
-    introduction: `The DRY principle states that every piece of knowledge in a system should have a single, unambiguous, authoritative representation. When the same logic, data, or configuration exists in multiple places, changes require finding and updating every copy. Miss one, and you have inconsistency, which leads to bugs.
+    introduction: `## Overview
+The DRY principle states that every piece of knowledge in a system should have a single, unambiguous, authoritative representation. When the same logic, data, or configuration exists in multiple places, changes require finding and updating every copy. Miss one, and you have inconsistency, which leads to bugs.
 
 DRY is not just about avoiding copy-pasted code. It applies to database schemas (don't store derived data that can be computed), configuration (don't repeat settings across files), documentation (don't restate what the code already says), and even team knowledge (don't rely on tribal knowledge when you can encode rules in code). The principle is about reducing the maintenance burden of change.
 
@@ -627,7 +637,8 @@ Solutions include: shared validation libraries (used by both frontend and backen
     questions: 5,
     description: 'Prefer simple solutions over unnecessarily complex ones.',
 
-    introduction: `The KISS principle asserts that most systems work best when they are kept simple rather than made complex. Simplicity should be a key goal in design, and unnecessary complexity should be avoided. The principle is attributed to Kelly Johnson, the lead engineer at Lockheed's Skunk Works, who challenged his team to design aircraft maintainable by an average mechanic with basic tools under combat conditions.
+    introduction: `## Overview
+The KISS principle asserts that most systems work best when they are kept simple rather than made complex. Simplicity should be a key goal in design, and unnecessary complexity should be avoided. The principle is attributed to Kelly Johnson, the lead engineer at Lockheed's Skunk Works, who challenged his team to design aircraft maintainable by an average mechanic with basic tools under combat conditions.
 
 In software, KISS means choosing the straightforward solution over the clever one. A simple for loop is better than a chain of three higher-order functions when the loop is easier to read. A relational database is better than a distributed event-sourcing system when your data fits on one server. A flat file is better than a database when you have ten records that change once a month.
 
@@ -678,7 +689,8 @@ In system design interviews, KISS means starting with a monolithic architecture 
     questions: 5,
     description: 'Do not build functionality until it is actually needed.',
 
-    introduction: `YAGNI is an Extreme Programming principle that states you should not add functionality until it is genuinely needed. It directly combats the tendency to build features "just in case" or to design abstractions for requirements that do not exist yet. The cost of unused code is not zero: it must be maintained, tested, understood by new team members, and it increases the surface area for bugs.
+    introduction: `## Overview
+YAGNI is an Extreme Programming principle that states you should not add functionality until it is genuinely needed. It directly combats the tendency to build features "just in case" or to design abstractions for requirements that do not exist yet. The cost of unused code is not zero: it must be maintained, tested, understood by new team members, and it increases the surface area for bugs.
 
 The principle stems from the observation that developers are poor at predicting future requirements. Studies show that most speculative features are never used or are needed in a different form than anticipated. Building them upfront wastes development time and creates code that makes the system harder to change when actual requirements arrive.
 
@@ -729,7 +741,8 @@ For example, the Open/Closed Principle says classes should be open for extension
     questions: 5,
     description: 'Only talk to your immediate friends, not to strangers.',
 
-    introduction: `The Law of Demeter (LoD), also known as the principle of least knowledge, states that an object should only communicate with its direct collaborators. Specifically, a method M of an object O should only call methods on: O itself, M's parameters, objects created within M, and O's direct fields. It should not call methods on objects returned by other method calls, which creates chains like a.getB().getC().doSomething().
+    introduction: `## Overview
+The Law of Demeter (LoD), also known as the principle of least knowledge, states that an object should only communicate with its direct collaborators. Specifically, a method M of an object O should only call methods on: O itself, M's parameters, objects created within M, and O's direct fields. It should not call methods on objects returned by other method calls, which creates chains like a.getB().getC().doSomething().
 
 The classic violation is the "train wreck" pattern: customer.getAddress().getCity().getZipCode(). This chain means your code depends on the internal structure of Customer, Address, and City. If Address stops having a City field, or City stops having a getZipCode method, your code breaks even though it had nothing to do with those changes.
 
@@ -780,7 +793,8 @@ Stream and collection operations (list.stream().filter(...).map(...).collect(...
     questions: 6,
     description: 'A class should have one, and only one, reason to change.',
 
-    introduction: `The Single Responsibility Principle (SRP) states that a class should have only one reason to change, meaning it should have only one job or responsibility. Robert C. Martin, who formulated the principle, later clarified that "reason to change" means one stakeholder or actor. A class that generates reports and also sends emails has two responsibilities: reporting logic (owned by the analytics team) and email delivery (owned by the infrastructure team). Changes from either team require modifying the same class.
+    introduction: `## Overview
+The Single Responsibility Principle (SRP) states that a class should have only one reason to change, meaning it should have only one job or responsibility. Robert C. Martin, who formulated the principle, later clarified that "reason to change" means one stakeholder or actor. A class that generates reports and also sends emails has two responsibilities: reporting logic (owned by the analytics team) and email delivery (owned by the infrastructure team). Changes from either team require modifying the same class.
 
 SRP is arguably the most important of the SOLID principles because violations compound rapidly. A class with three responsibilities is modified for three different reasons, tested for three different scenarios, and understood by three different mental models. Every time you change it for one reason, you risk breaking the other two.
 
@@ -831,7 +845,8 @@ At the microservice level, SRP becomes the guiding principle for service boundar
     questions: 6,
     description: 'Software entities should be open for extension but closed for modification.',
 
-    introduction: `The Open/Closed Principle (OCP) states that software entities (classes, modules, functions) should be open for extension but closed for modification. You should be able to add new behavior to a system without changing the existing, tested code. This is achieved through abstractions: interfaces, abstract classes, and polymorphism.
+    introduction: `## Overview
+The Open/Closed Principle (OCP) states that software entities (classes, modules, functions) should be open for extension but closed for modification. You should be able to add new behavior to a system without changing the existing, tested code. This is achieved through abstractions: interfaces, abstract classes, and polymorphism.
 
 Consider a payment processing system. If you hard-code "if creditCard then... elif paypal then... elif bitcoin then..." in a single function, adding a new payment method (Apple Pay) requires modifying that function. This risks breaking the existing, tested credit card and PayPal logic. With OCP, you define a PaymentProcessor interface and create separate classes for each payment method. Adding Apple Pay means creating a new ApplePayProcessor class; no existing code is changed.
 
@@ -882,7 +897,8 @@ The principle applies specifically to feature additions. When a new requirement 
     questions: 6,
     description: 'Subtypes must be substitutable for their base types without altering correctness.',
 
-    introduction: `The Liskov Substitution Principle (LSP), formulated by Barbara Liskov, states that objects of a superclass should be replaceable with objects of a subclass without altering the correctness of the program. If function F works correctly with objects of type T, it must also work correctly with objects of any subtype S of T.
+    introduction: `## Overview
+The Liskov Substitution Principle (LSP), formulated by Barbara Liskov, states that objects of a superclass should be replaceable with objects of a subclass without altering the correctness of the program. If function F works correctly with objects of type T, it must also work correctly with objects of any subtype S of T.
 
 The classic violation is the Square-Rectangle problem. A Rectangle has setWidth() and setHeight() that independently change each dimension. A Square IS-A Rectangle mathematically, but if Square.setWidth() also changes the height (to maintain the square invariant), code that expects independent dimensions breaks. The substitute (Square) violates the expectations set by the base type (Rectangle).
 
@@ -937,7 +953,8 @@ In practice, look for these code smells: subclass methods that throw Unsupported
     questions: 5,
     description: 'Clients should not be forced to depend on interfaces they do not use.',
 
-    introduction: `The Interface Segregation Principle (ISP) states that no client should be forced to depend on methods it does not use. Fat interfaces that bundle many methods force implementing classes to provide stubs or throw exceptions for methods they do not support. ISP says to break these fat interfaces into smaller, more specific ones so that clients only depend on the methods they actually need.
+    introduction: `## Overview
+The Interface Segregation Principle (ISP) states that no client should be forced to depend on methods it does not use. Fat interfaces that bundle many methods force implementing classes to provide stubs or throw exceptions for methods they do not support. ISP says to break these fat interfaces into smaller, more specific ones so that clients only depend on the methods they actually need.
 
 Consider a Worker interface with work(), eat(), and sleep() methods. A HumanWorker implements all three sensibly. But a RobotWorker does not eat or sleep. If forced to implement the fat Worker interface, RobotWorker must provide empty or exception-throwing implementations of eat() and sleep(). This pollutes the interface and confuses callers. ISP says to split into Workable, Eatable, and Sleepable interfaces. HumanWorker implements all three; RobotWorker implements only Workable.
 
@@ -988,7 +1005,8 @@ Instead of one large WorkerABC with work(), eat(), and sleep() abstract methods,
     questions: 6,
     description: 'High-level modules should not depend on low-level modules; both should depend on abstractions.',
 
-    introduction: `The Dependency Inversion Principle (DIP) states two things: high-level modules should not depend on low-level modules, and both should depend on abstractions. Additionally, abstractions should not depend on details; details should depend on abstractions. This inverts the traditional dependency direction where high-level business logic directly calls low-level infrastructure code.
+    introduction: `## Overview
+The Dependency Inversion Principle (DIP) states two things: high-level modules should not depend on low-level modules, and both should depend on abstractions. Additionally, abstractions should not depend on details; details should depend on abstractions. This inverts the traditional dependency direction where high-level business logic directly calls low-level infrastructure code.
 
 Without DIP, a UserService class directly instantiates and calls MySQLUserRepository. The business logic (UserService) depends on the infrastructure detail (MySQL). Changing to PostgreSQL requires modifying UserService. With DIP, UserService depends on a UserRepository interface, and MySQLUserRepository implements that interface. The dependency arrow is inverted: both the high-level module and the low-level module depend on the abstraction.
 
@@ -1039,7 +1057,8 @@ In Python, interfaces can be ABCs or Protocols. Dependency injection is typicall
     questions: 8,
     description: 'The five foundational principles of object-oriented design, unified.',
 
-    introduction: `SOLID is an acronym for five design principles introduced by Robert C. Martin that guide developers in creating software that is easy to maintain, extend, and test. They are: Single Responsibility (SRP), Open/Closed (OCP), Liskov Substitution (LSP), Interface Segregation (ISP), and Dependency Inversion (DIP). Together, they form a cohesive philosophy for managing complexity in object-oriented systems.
+    introduction: `## Overview
+SOLID is an acronym for five design principles introduced by Robert C. Martin that guide developers in creating software that is easy to maintain, extend, and test. They are: Single Responsibility (SRP), Open/Closed (OCP), Liskov Substitution (LSP), Interface Segregation (ISP), and Dependency Inversion (DIP). Together, they form a cohesive philosophy for managing complexity in object-oriented systems.
 
 The principles are not independent rules to follow in isolation; they reinforce each other. SRP keeps classes focused, which makes them easier to extend (OCP). Small, focused interfaces (ISP) make substitution safe (LSP). Depending on abstractions (DIP) enables extension without modification (OCP). When one principle is violated, it often cascades into violations of others.
 
@@ -1100,7 +1119,8 @@ Walk through this example in an interview to demonstrate not just knowledge of t
     questions: 7,
     description: 'Visualize the static structure of a system: classes, attributes, methods, and relationships.',
 
-    introduction: `A class diagram is the most commonly used UML diagram, showing the static structure of a system. It depicts classes (with their attributes and methods), interfaces, and the relationships between them: inheritance, implementation, association, aggregation, and composition. In LLD interviews, the class diagram is your primary design artifact.
+    introduction: `## Overview
+A class diagram is the most commonly used UML diagram, showing the static structure of a system. It depicts classes (with their attributes and methods), interfaces, and the relationships between them: inheritance, implementation, association, aggregation, and composition. In LLD interviews, the class diagram is your primary design artifact.
 
 Each class is drawn as a rectangle divided into three sections: the class name at the top, attributes in the middle, and methods at the bottom. Visibility modifiers are shown with symbols: + for public, - for private, # for protected, and ~ for package-private. Relationships are shown with different line and arrow styles: a solid line with a hollow triangle for inheritance, a dashed line with a hollow triangle for interface implementation, and various diamond shapes for aggregation and composition.
 
@@ -1159,7 +1179,8 @@ Exclude: getter/setter methods (they clutter the diagram), utility classes and h
     questions: 5,
     description: 'Capture functional requirements by showing actors and their interactions with the system.',
 
-    introduction: `A use case diagram captures the functional requirements of a system from the user's perspective. It shows actors (users or external systems that interact with the system) and use cases (the functionalities the system provides). The diagram answers the question: who uses the system and what can they do with it?
+    introduction: `## Overview
+A use case diagram captures the functional requirements of a system from the user's perspective. It shows actors (users or external systems that interact with the system) and use cases (the functionalities the system provides). The diagram answers the question: who uses the system and what can they do with it?
 
 Actors are drawn as stick figures and placed outside the system boundary (a rectangle). Use cases are drawn as ovals inside the system boundary. Lines connect actors to the use cases they participate in. Relationships between use cases include "include" (a use case always includes another) and "extend" (a use case optionally extends another under certain conditions).
 
@@ -1210,7 +1231,8 @@ In interviews, aim for 8-15 use cases that cover the main functionality. Group r
     questions: 6,
     description: 'Model the dynamic interaction between objects over time.',
 
-    introduction: `A sequence diagram shows how objects interact with each other over time. Unlike a class diagram (static structure), a sequence diagram captures the dynamic behavior of a specific scenario or use case. It shows which objects send messages to which other objects and in what order. Time flows from top to bottom.
+    introduction: `## Overview
+A sequence diagram shows how objects interact with each other over time. Unlike a class diagram (static structure), a sequence diagram captures the dynamic behavior of a specific scenario or use case. It shows which objects send messages to which other objects and in what order. Time flows from top to bottom.
 
 Each object or participant is drawn as a rectangle at the top with a dashed vertical line (lifeline) extending downward. Messages between objects are drawn as horizontal arrows between lifelines. Synchronous calls are solid arrows; asynchronous calls are open arrows. Return messages are dashed arrows going back. Activation bars (thin rectangles on lifelines) show when an object is actively processing.
 
@@ -1263,7 +1285,8 @@ Use an activity diagram when you want to show the flow of a process with decisio
     questions: 5,
     description: 'Model workflows and processes with decision points, parallel flows, and loops.',
 
-    introduction: `An activity diagram models the workflow or process flow of a system. It shows activities (actions), decision points, parallel branches, and the sequence in which things happen. Think of it as a sophisticated flowchart that can express concurrency, synchronization, and complex branching logic.
+    introduction: `## Overview
+An activity diagram models the workflow or process flow of a system. It shows activities (actions), decision points, parallel branches, and the sequence in which things happen. Think of it as a sophisticated flowchart that can express concurrency, synchronization, and complex branching logic.
 
 Activity diagrams use specific symbols: rounded rectangles for activities/actions, diamonds for decision/merge nodes, horizontal bars for fork/join (parallel execution), a filled circle for the initial node, and a circle with a ring for the final node. Arrows (transitions) connect these elements to show the flow from start to finish.
 
@@ -1314,7 +1337,8 @@ Activity diagrams are less useful for problems centered on data structures (use 
     questions: 6,
     description: 'Model the states of an object and the events that trigger transitions between them.',
 
-    introduction: `A state machine diagram (also called a statechart diagram) models the different states an object can be in and the events or conditions that cause transitions between those states. It answers the question: "What are the possible states of this entity and what triggers changes?"
+    introduction: `## Overview
+A state machine diagram (also called a statechart diagram) models the different states an object can be in and the events or conditions that cause transitions between those states. It answers the question: "What are the possible states of this entity and what triggers changes?"
 
 States are drawn as rounded rectangles with the state name. Transitions are arrows between states labeled with the triggering event, an optional guard condition in brackets, and an optional action. The initial state is shown as a filled circle with an arrow to the first state. The final state is a filled circle inside a ring. States can have internal activities: entry actions (performed on entering the state), exit actions (performed on leaving), and do activities (performed while in the state).
 
@@ -1371,7 +1395,8 @@ In a Mealy machine, outputs depend on both the current state AND the triggering 
     questions: 6,
     description: 'Ensure a class has only one instance and provide a global point of access to it.',
 
-    introduction: `The Singleton pattern restricts a class to a single instance and provides a global access point to that instance. It is used when exactly one object is needed to coordinate actions across the system, such as a configuration manager, a connection pool, or a logging service. The pattern ensures that no matter how many times you request the instance, you always get the same one.
+    introduction: `## Overview
+The Singleton pattern restricts a class to a single instance and provides a global access point to that instance. It is used when exactly one object is needed to coordinate actions across the system, such as a configuration manager, a connection pool, or a logging service. The pattern ensures that no matter how many times you request the instance, you always get the same one.
 
 Implementation involves making the constructor private (so external code cannot call "new"), storing the single instance as a static field, and providing a static getInstance() method that creates the instance on first call and returns the existing instance on subsequent calls. The tricky part is thread safety: in a multi-threaded environment, two threads could simultaneously find the instance is null and both create one.
 
@@ -1464,7 +1489,8 @@ assert db1 is db2  # True — same object
     questions: 6,
     description: 'Define an interface for creating objects, letting subclasses decide which class to instantiate.',
 
-    introduction: `The Factory Method pattern defines an interface for creating an object but lets subclasses decide which concrete class to instantiate. Instead of calling a constructor directly, you call a factory method that returns an object of the desired type. The calling code works with the product interface, not the concrete class.
+    introduction: `## Overview
+The Factory Method pattern defines an interface for creating an object but lets subclasses decide which concrete class to instantiate. Instead of calling a constructor directly, you call a factory method that returns an object of the desired type. The calling code works with the product interface, not the concrete class.
 
 Consider a logistics application. A Logistics class has a createTransport() method that returns a Transport object. RoadLogistics overrides createTransport() to return a Truck, while SeaLogistics overrides it to return a Ship. The rest of the Logistics code calls transport.deliver() without knowing or caring whether it is a truck or a ship. Adding air transport means creating AirLogistics with createTransport() returning a Plane, with zero changes to existing code.
 
@@ -1559,7 +1585,8 @@ print(send_alert(SMSFactory(), "Server down!"))`,
     questions: 6,
     description: 'Create families of related objects without specifying their concrete classes.',
 
-    introduction: `The Abstract Factory pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes. While Factory Method creates a single product, Abstract Factory creates an entire suite of related products that are designed to work together.
+    introduction: `## Overview
+The Abstract Factory pattern provides an interface for creating families of related or dependent objects without specifying their concrete classes. While Factory Method creates a single product, Abstract Factory creates an entire suite of related products that are designed to work together.
 
 Imagine building a cross-platform UI toolkit. Each platform (Windows, macOS, Linux) needs its own set of widgets: buttons, text fields, checkboxes, and scroll bars. These widgets must be consistent within a platform (you should not mix a Windows button with a macOS text field). An Abstract Factory defines methods like createButton(), createTextField(), and createCheckbox(). WindowsFactory produces WindowsButton, WindowsTextField, and WindowsCheckbox. MacFactory produces MacButton, MacTextField, and MacCheckbox. The application code uses the factory interface and gets a consistent set of platform-specific widgets without knowing which platform it is running on.
 
@@ -1610,7 +1637,8 @@ The pattern can also lead to a proliferation of classes. Each family times each 
     questions: 6,
     description: 'Construct complex objects step by step, separating construction from representation.',
 
-    introduction: `The Builder pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations. It is useful when an object requires many parameters, some of which are optional, and constructing it in a single step would be unwieldy.
+    introduction: `## Overview
+The Builder pattern separates the construction of a complex object from its representation, allowing the same construction process to create different representations. It is useful when an object requires many parameters, some of which are optional, and constructing it in a single step would be unwieldy.
 
 Consider creating a Pizza object. It needs a size, crust type, sauce, cheese, and any number of optional toppings. A constructor with all these parameters is hard to read: Pizza("large", "thin", "marinara", "mozzarella", true, false, true, true, false). What do those booleans mean? A Builder makes this readable: Pizza.builder().size("large").crust("thin").sauce("marinara").cheese("mozzarella").addTopping("mushrooms").addTopping("olives").build().
 
@@ -1709,7 +1737,8 @@ print(request)
     questions: 5,
     description: 'Create new objects by cloning existing instances rather than constructing from scratch.',
 
-    introduction: `The Prototype pattern creates new objects by copying (cloning) an existing object, known as the prototype. Instead of calling a constructor and configuring the new object from scratch, you take a fully configured object and duplicate it. This is useful when object creation is expensive (complex initialization, database lookups, network calls) or when you want to create variations of a pre-configured template.
+    introduction: `## Overview
+The Prototype pattern creates new objects by copying (cloning) an existing object, known as the prototype. Instead of calling a constructor and configuring the new object from scratch, you take a fully configured object and duplicate it. This is useful when object creation is expensive (complex initialization, database lookups, network calls) or when you want to create variations of a pre-configured template.
 
 Think of a document template system. You have a standard contract template with 50 fields pre-filled with default values. Instead of creating a new Contract object and setting all 50 fields, you clone the template and modify only the fields that differ (client name, dates, specific terms). The clone operation copies the entire object state in one step.
 
@@ -1766,7 +1795,8 @@ In both languages, consider using a copy constructor instead of clone(): a const
     questions: 6,
     description: 'Convert the interface of a class into another interface clients expect.',
 
-    introduction: `The Adapter pattern allows two incompatible interfaces to work together. It acts as a bridge between an existing class with one interface and a client that expects a different interface. Just as a power adapter lets a US plug work in a European socket, the software adapter translates calls from one interface format to another.
+    introduction: `## Overview
+The Adapter pattern allows two incompatible interfaces to work together. It acts as a bridge between an existing class with one interface and a client that expects a different interface. Just as a power adapter lets a US plug work in a European socket, the software adapter translates calls from one interface format to another.
 
 Consider integrating a legacy XML-based analytics service into a system that expects JSON. You cannot modify the legacy service, and you should not modify all the client code. An adapter wraps the legacy service and translates: the client calls analyze(jsonData), and the adapter converts the JSON to XML internally, calls the legacy service, converts the XML response back to JSON, and returns it to the client. Neither the client nor the legacy service is modified.
 
@@ -1817,7 +1847,8 @@ A memory aid: Adapter makes things compatible (changes the interface), Facade ma
     questions: 5,
     description: 'Provide a simplified interface to a complex subsystem.',
 
-    introduction: `The Facade pattern provides a single, simplified interface to a complex subsystem of classes. Instead of forcing clients to interact with dozens of classes and understand their relationships, the facade exposes a few high-level methods that handle the coordination internally. It does not add new functionality; it makes existing functionality easier to use.
+    introduction: `## Overview
+The Facade pattern provides a single, simplified interface to a complex subsystem of classes. Instead of forcing clients to interact with dozens of classes and understand their relationships, the facade exposes a few high-level methods that handle the coordination internally. It does not add new functionality; it makes existing functionality easier to use.
 
 Consider a home theater system with a DVD player, projector, sound system, lights, and screen. To watch a movie, you would need to dim the lights, lower the screen, turn on the projector, set the input source, power on the sound system, set the volume, and start the DVD. A HomeTheaterFacade provides a single watchMovie(title) method that orchestrates all these steps. The subsystem classes still exist and can be accessed directly for fine-grained control, but most callers just want the simplified interface.
 
@@ -1868,7 +1899,8 @@ The solution is to create multiple focused facades. An OrderFacade handles order
     questions: 6,
     description: 'Attach additional responsibilities to an object dynamically.',
 
-    introduction: `The Decorator pattern lets you add new behavior to an object dynamically by wrapping it in another object that has the same interface. Instead of creating subclasses for every combination of behaviors, you stack decorators like layers. Each decorator adds one behavior and delegates the rest to the wrapped object.
+    introduction: `## Overview
+The Decorator pattern lets you add new behavior to an object dynamically by wrapping it in another object that has the same interface. Instead of creating subclasses for every combination of behaviors, you stack decorators like layers. Each decorator adds one behavior and delegates the rest to the wrapped object.
 
 Consider a coffee ordering system. You have a basic Coffee with a cost of $2. You can add Milk (+$0.50), Whip (+$0.75), and Caramel (+$1.00). With inheritance, you would need classes for Coffee, CoffeeWithMilk, CoffeeWithWhip, CoffeeWithMilkAndWhip, CoffeeWithMilkAndCaramel, and so on. With decorators, you create MilkDecorator, WhipDecorator, and CaramelDecorator. A caramel milk coffee is: new CaramelDecorator(new MilkDecorator(new Coffee())). Each decorator wraps the previous, adding its cost and description.
 
@@ -1919,7 +1951,8 @@ In web frameworks, middleware is a form of decorator. Each middleware wraps the 
     questions: 5,
     description: 'Compose objects into tree structures and treat individual and composite objects uniformly.',
 
-    introduction: `The Composite pattern lets you compose objects into tree structures to represent part-whole hierarchies. It allows clients to treat individual objects (leaves) and compositions of objects (branches) uniformly through a common interface. This is powerful for any domain with recursive structures.
+    introduction: `## Overview
+The Composite pattern lets you compose objects into tree structures to represent part-whole hierarchies. It allows clients to treat individual objects (leaves) and compositions of objects (branches) uniformly through a common interface. This is powerful for any domain with recursive structures.
 
 A file system is the perfect example. A File is a leaf: it has a name and a size. A Directory is a composite: it has a name and contains a list of children, which can be Files or other Directories. Both File and Directory implement a FileSystemNode interface with getName() and getSize(). For a File, getSize() returns the file's size. For a Directory, getSize() sums the sizes of all children recursively. Client code does not need to know whether it is dealing with a file or a directory; it just calls getSize().
 
@@ -1970,7 +2003,8 @@ Menu systems: a Menu contains MenuItems and sub-Menus. Graphics systems: a Group
     questions: 6,
     description: 'Provide a surrogate or placeholder for another object to control access to it.',
 
-    introduction: `The Proxy pattern provides a substitute object that controls access to the original object. The proxy has the same interface as the real object, so clients cannot tell the difference. The proxy intercepts requests, performs some action (access control, caching, lazy loading, logging), and then delegates to the real object.
+    introduction: `## Overview
+The Proxy pattern provides a substitute object that controls access to the original object. The proxy has the same interface as the real object, so clients cannot tell the difference. The proxy intercepts requests, performs some action (access control, caching, lazy loading, logging), and then delegates to the real object.
 
 There are several types of proxies. A virtual proxy delays the creation of an expensive object until it is actually needed (lazy initialization). An image viewer that shows thumbnails initially and loads full-resolution images only when clicked uses a virtual proxy. A protection proxy controls access based on permissions: a document proxy that checks if the current user has permission before allowing edits. A remote proxy represents an object in a different address space (like an RPC stub). A caching proxy stores results of expensive operations and returns cached values for repeated requests.
 
@@ -2027,7 +2061,8 @@ Python descriptors and properties: @property is a proxy that intercepts attribut
     questions: 5,
     description: 'Decouple an abstraction from its implementation so both can vary independently.',
 
-    introduction: `The Bridge pattern separates an abstraction from its implementation so that both can evolve independently. Without Bridge, combining abstractions and implementations leads to an explosion of classes. If you have 3 shapes (Circle, Square, Triangle) and 3 renderers (Vector, Raster, SVG), inheritance would require 9 classes: VectorCircle, RasterCircle, SVGCircle, and so on. Bridge reduces this to 3 + 3 = 6 classes by separating shape from renderer.
+    introduction: `## Overview
+The Bridge pattern separates an abstraction from its implementation so that both can evolve independently. Without Bridge, combining abstractions and implementations leads to an explosion of classes. If you have 3 shapes (Circle, Square, Triangle) and 3 renderers (Vector, Raster, SVG), inheritance would require 9 classes: VectorCircle, RasterCircle, SVGCircle, and so on. Bridge reduces this to 3 + 3 = 6 classes by separating shape from renderer.
 
 The pattern creates two independent hierarchies connected by composition. The abstraction hierarchy (Shape with Circle, Square, Triangle) holds a reference to an implementation object (Renderer interface with VectorRenderer, RasterRenderer, SVGRenderer). Circle.draw() delegates to renderer.renderCircle(), and the specific rendering behavior depends on which renderer was injected. You can combine any shape with any renderer without creating a new class for each combination.
 
@@ -2078,7 +2113,8 @@ Real-world examples: cross-platform GUI (Window abstraction + LinuxWindow/Window
     questions: 5,
     description: 'Share fine-grained objects efficiently to reduce memory consumption.',
 
-    introduction: `The Flyweight pattern minimizes memory usage by sharing as much data as possible between similar objects. Instead of creating a new object for each instance, the pattern identifies shared (intrinsic) state and unique (extrinsic) state, stores the shared state in a pool of reusable flyweight objects, and passes the unique state as method parameters.
+    introduction: `## Overview
+The Flyweight pattern minimizes memory usage by sharing as much data as possible between similar objects. Instead of creating a new object for each instance, the pattern identifies shared (intrinsic) state and unique (extrinsic) state, stores the shared state in a pool of reusable flyweight objects, and passes the unique state as method parameters.
 
 Consider a text editor rendering a million characters. Each character could be an object with font, size, color, and position. Without Flyweight, a million character objects consume enormous memory. With Flyweight, the font/size/color combinations (intrinsic state) are shared. There might be only 50 unique font/size/color combinations across the entire document. These 50 flyweight objects are shared among all million characters, with each character's position (extrinsic state) passed to the rendering method at runtime.
 
@@ -2133,7 +2169,8 @@ Java Integer caching: Integer.valueOf(n) for values -128 to 127 returns cached i
     questions: 5,
     description: 'Provide a way to access elements of a collection sequentially without exposing its internal structure.',
 
-    introduction: `The Iterator pattern provides a standard way to traverse a collection of elements without exposing the collection's internal data structure. The client code uses a uniform interface (hasNext(), next()) regardless of whether the underlying collection is an array, linked list, tree, graph, or hash map. The collection knows how to create an iterator; the iterator knows how to traverse.
+    introduction: `## Overview
+The Iterator pattern provides a standard way to traverse a collection of elements without exposing the collection's internal data structure. The client code uses a uniform interface (hasNext(), next()) regardless of whether the underlying collection is an array, linked list, tree, graph, or hash map. The collection knows how to create an iterator; the iterator knows how to traverse.
 
 Without the Iterator pattern, traversing a tree would require different code than traversing a list. The client would need to know the internal structure: "for array, use index; for linked list, follow next pointers; for tree, use recursion." With iterators, all collections expose the same traversal interface, and the traversal logic is encapsulated in iterator objects specific to each data structure.
 
@@ -2184,7 +2221,8 @@ For a graph with BFS traversal: the iterator maintains a queue and a visited set
     questions: 7,
     description: 'Define a one-to-many dependency so that when one object changes state, all dependents are notified.',
 
-    introduction: `The Observer pattern establishes a one-to-many relationship between a subject (the object being watched) and its observers (objects interested in changes). When the subject's state changes, it automatically notifies all registered observers, and each observer updates itself accordingly. This decouples the subject from its observers; the subject does not need to know what the observers do with the notification.
+    introduction: `## Overview
+The Observer pattern establishes a one-to-many relationship between a subject (the object being watched) and its observers (objects interested in changes). When the subject's state changes, it automatically notifies all registered observers, and each observer updates itself accordingly. This decouples the subject from its observers; the subject does not need to know what the observers do with the notification.
 
 Think of a newspaper subscription. The newspaper publisher (subject) maintains a list of subscribers (observers). When a new edition is published, all subscribers are notified. Subscribers can join or leave at any time without affecting the publisher or other subscribers. The publisher does not know or care what each subscriber does with the newspaper; it just delivers.
 
@@ -2288,7 +2326,8 @@ ticker.set_price("AAPL", 155.0)
     questions: 6,
     description: 'Define a family of algorithms, encapsulate each one, and make them interchangeable.',
 
-    introduction: `The Strategy pattern defines a family of algorithms, encapsulates each one in a separate class, and makes them interchangeable. The algorithm can be selected at runtime without altering the client code that uses it. Instead of hard-coding an algorithm inside a class or using conditionals to select between algorithms, you extract each algorithm into its own class implementing a common interface.
+    introduction: `## Overview
+The Strategy pattern defines a family of algorithms, encapsulates each one in a separate class, and makes them interchangeable. The algorithm can be selected at runtime without altering the client code that uses it. Instead of hard-coding an algorithm inside a class or using conditionals to select between algorithms, you extract each algorithm into its own class implementing a common interface.
 
 Consider a navigation app that calculates routes. The routing algorithm differs based on the mode of transport: driving follows roads and avoids one-way violations, walking allows pedestrian paths and shortcuts, and cycling prefers bike lanes. Without Strategy, the route calculator has a massive if-else chain. With Strategy, you create DrivingStrategy, WalkingStrategy, and CyclingStrategy, each implementing a RouteStrategy interface. The navigation app holds a RouteStrategy reference and delegates route calculation to it. Changing the mode at runtime means swapping the strategy object.
 
@@ -2403,7 +2442,8 @@ print(strategies["paypal"](1029.98))`,
     questions: 6,
     description: 'Encapsulate a request as an object, enabling undo, queuing, and logging.',
 
-    introduction: `The Command pattern turns a request or action into a standalone object that contains all information needed to perform the action. This encapsulation allows you to parameterize methods with different requests, queue or log requests, and support undoable operations. The request is no longer a direct method call; it is a first-class object that can be stored, passed, and manipulated.
+    introduction: `## Overview
+The Command pattern turns a request or action into a standalone object that contains all information needed to perform the action. This encapsulation allows you to parameterize methods with different requests, queue or log requests, and support undoable operations. The request is no longer a direct method call; it is a first-class object that can be stored, passed, and manipulated.
 
 Consider a text editor. Every action (type character, delete, bold, italic, paste) is encapsulated as a Command object. Each command knows how to execute itself and how to undo itself. When the user types "Hello" and bolds it, the editor pushes TypeCommand("H"), TypeCommand("e"), TypeCommand("l"), TypeCommand("l"), TypeCommand("o"), and BoldCommand onto a command stack. Pressing Ctrl+Z pops the last command and calls undo(). This gives you unlimited undo/redo with minimal effort.
 
@@ -2454,7 +2494,8 @@ Job queues and task schedulers: each job is a command object placed in a queue. 
     questions: 6,
     description: 'Allow an object to alter its behavior when its internal state changes.',
 
-    introduction: `The State pattern allows an object to change its behavior when its internal state changes, appearing to change its class. Instead of implementing state-dependent behavior with large conditional blocks (if state == A, do X; if state == B, do Y), each state is encapsulated in its own class, and the object delegates behavior to its current state object.
+    introduction: `## Overview
+The State pattern allows an object to change its behavior when its internal state changes, appearing to change its class. Instead of implementing state-dependent behavior with large conditional blocks (if state == A, do X; if state == B, do Y), each state is encapsulated in its own class, and the object delegates behavior to its current state object.
 
 Consider a vending machine. Its behavior depends on its state: when idle, inserting money transitions to "has money" state; when has money, selecting a product dispenses it and transitions to "dispensing" state; when dispensing, taking the product transitions back to "idle." Without the State pattern, every method has conditionals checking the current state. With the State pattern, each state (IdleState, HasMoneyState, DispensingState) implements the VendingMachineState interface, and the vending machine delegates all behavior to the current state object.
 
@@ -2505,7 +2546,8 @@ For complex transition rules, a transition table can map (currentState, event) t
     questions: 5,
     description: 'Define the skeleton of an algorithm in a base class, letting subclasses override specific steps.',
 
-    introduction: `The Template Method pattern defines the skeleton of an algorithm in a base class method and lets subclasses override specific steps without changing the overall structure. The template method defines the order of steps; subclasses customize the individual steps. This is the Hollywood Principle: "Don't call us; we'll call you." The framework calls the subclass's overridden methods at the right time.
+    introduction: `## Overview
+The Template Method pattern defines the skeleton of an algorithm in a base class method and lets subclasses override specific steps without changing the overall structure. The template method defines the order of steps; subclasses customize the individual steps. This is the Hollywood Principle: "Don't call us; we'll call you." The framework calls the subclass's overridden methods at the right time.
 
 Consider a data mining application that processes CSV files, JSON files, and databases. The overall process is the same: open the data source, extract raw data, parse it into a standard format, analyze it, generate a report, and close the source. A DataMiner base class defines this sequence as a template method: mine(). The steps openSource(), extractData(), parseData() are abstract and overridden by CSVMiner, JSONMiner, and DatabaseMiner. The steps analyze() and generateReport() are concrete in the base class because they are the same for all formats.
 
@@ -2556,7 +2598,8 @@ Example: a template method for processing web requests might have steps: authent
     questions: 5,
     description: 'Add new operations to existing object structures without modifying them.',
 
-    introduction: `The Visitor pattern lets you define a new operation on a set of classes without modifying those classes. Instead of adding a new method to every class in a hierarchy, you create a visitor object that implements the operation for each class type. The existing classes accept the visitor, and the visitor performs the operation based on the specific type.
+    introduction: `## Overview
+The Visitor pattern lets you define a new operation on a set of classes without modifying those classes. Instead of adding a new method to every class in a hierarchy, you create a visitor object that implements the operation for each class type. The existing classes accept the visitor, and the visitor performs the operation based on the specific type.
 
 Consider a compiler that has an AST (Abstract Syntax Tree) with node types: NumberNode, BinaryOperationNode, FunctionCallNode. You need operations like evaluation, pretty-printing, type-checking, and optimization. Without Visitor, every new operation means adding a method to every node class. With Visitor, each operation is a visitor: EvaluationVisitor, PrintVisitor, TypeCheckVisitor. Each visitor has a visit method for each node type. The node classes have a single accept(visitor) method that calls visitor.visit(this), dispatching to the correct overload.
 
@@ -2607,7 +2650,8 @@ Visitors can also break encapsulation: they need access to element internals to 
     questions: 5,
     description: 'Define an object that encapsulates how a set of objects interact.',
 
-    introduction: `The Mediator pattern reduces chaotic many-to-many dependencies between objects by introducing a central mediator object that handles all communication. Instead of objects referring to each other directly, they communicate through the mediator. This turns a complex web of interconnections into a simple star topology.
+    introduction: `## Overview
+The Mediator pattern reduces chaotic many-to-many dependencies between objects by introducing a central mediator object that handles all communication. Instead of objects referring to each other directly, they communicate through the mediator. This turns a complex web of interconnections into a simple star topology.
 
 Think of an air traffic control tower. Without it, every airplane would need to communicate with every other airplane to coordinate landing, takeoff, and altitude. With hundreds of planes, this would be thousands of connections and guaranteed chaos. The control tower (mediator) centralizes communication: each plane talks only to the tower, and the tower coordinates all interactions.
 
@@ -2658,7 +2702,8 @@ To prevent this, keep the mediator focused on coordination (routing messages bet
     questions: 5,
     description: 'Capture and restore an object\'s internal state without violating encapsulation.',
 
-    introduction: `The Memento pattern lets you capture a snapshot of an object's internal state so that the object can be restored to that state later, without exposing its internal structure. The snapshot is stored in a separate Memento object that is opaque to external code. Only the originator (the object whose state is captured) can create and restore from mementos.
+    introduction: `## Overview
+The Memento pattern lets you capture a snapshot of an object's internal state so that the object can be restored to that state later, without exposing its internal structure. The snapshot is stored in a separate Memento object that is opaque to external code. Only the originator (the object whose state is captured) can create and restore from mementos.
 
 Think of a video game save system. When you save, the game captures the player's position, health, inventory, quest progress, and world state into a save file (memento). When you load, the game restores all these values from the save file. The save file does not expose game internals to the file system; it is a black box that only the game engine can interpret.
 
@@ -2709,7 +2754,8 @@ Command-based undo stores the action performed and its inverse. Undo means execu
     questions: 6,
     description: 'Pass a request along a chain of handlers until one handles it.',
 
-    introduction: `The Chain of Responsibility pattern passes a request sequentially through a chain of handler objects. Each handler decides either to process the request or to pass it to the next handler in the chain. The sender does not know which handler will process the request, and each handler does not need to know the full chain structure. This decouples request senders from receivers.
+    introduction: `## Overview
+The Chain of Responsibility pattern passes a request sequentially through a chain of handler objects. Each handler decides either to process the request or to pass it to the next handler in the chain. The sender does not know which handler will process the request, and each handler does not need to know the full chain structure. This decouples request senders from receivers.
 
 Consider a customer support system. When a ticket is submitted, it goes to Level 1 support. If they cannot resolve it, it escalates to Level 2. If Level 2 cannot resolve it, it escalates to Level 3. Each support level is a handler in the chain. The customer does not know or care which level handles their issue; they just submit the ticket.
 
@@ -2764,7 +2810,8 @@ In Express.js: app.use(logging, auth, rateLimit, cors, router). Each middleware 
     questions: 8,
     description: 'Architectural patterns for separating UI logic from business logic.',
 
-    introduction: `MVC, MVP, and MVVM are three related patterns that all solve the same core problem: separating the user interface from the business logic. Each was developed in response to limitations of its predecessor, and understanding when to use each is a key interview skill.
+    introduction: `## Overview
+MVC, MVP, and MVVM are three related patterns that all solve the same core problem: separating the user interface from the business logic. Each was developed in response to limitations of its predecessor, and understanding when to use each is a key interview skill.
 
 MVC (Model-View-Controller) is the oldest of the three, originating in Smalltalk. The Model holds data and business logic, the View renders the UI, and the Controller sits between them handling user input and updating both. The View and Controller are both aware of each other and of the Model. Rails, Django, and Spring MVC all follow this pattern.
 
@@ -2819,7 +2866,8 @@ Choose MVVM when your platform supports reactive data binding (Android Jetpack w
     questions: 6,
     description: 'Abstracts data access behind a collection-like interface.',
 
-    introduction: `The Repository pattern places a layer of abstraction between your domain logic and your data access code. Instead of sprinkling database queries throughout your service classes, all data access goes through a Repository interface that looks like an in-memory collection. Your domain logic calls repository.findById(id), repository.save(user), or repository.findByEmail(email) without knowing whether the data comes from PostgreSQL, MongoDB, a REST API, or an in-memory map.
+    introduction: `## Overview
+The Repository pattern places a layer of abstraction between your domain logic and your data access code. Instead of sprinkling database queries throughout your service classes, all data access goes through a Repository interface that looks like an in-memory collection. Your domain logic calls repository.findById(id), repository.save(user), or repository.findByEmail(email) without knowing whether the data comes from PostgreSQL, MongoDB, a REST API, or an in-memory map.
 
 This separation gives you two key benefits. First, your domain and service code is decoupled from the database technology. Swapping from MySQL to Postgres or from SQL to NoSQL requires changing only the repository implementation, not every service class. Second, it makes unit testing trivial: inject a FakeUserRepository backed by a HashMap in tests, avoiding the need for a running database.
 
@@ -2864,7 +2912,8 @@ A Specific Repository adds domain-meaningful query methods: UserRepository exten
     questions: 7,
     description: 'Separates read and write models for scalability and clarity.',
 
-    introduction: `Command Query Responsibility Segregation (CQRS) splits your system into two distinct sides: the write side (commands that change state) and the read side (queries that return data). The principle originates from Bertrand Meyer's Command-Query Separation: a method should either change state or return data, never both.
+    introduction: `## Overview
+Command Query Responsibility Segregation (CQRS) splits your system into two distinct sides: the write side (commands that change state) and the read side (queries that return data). The principle originates from Bertrand Meyer's Command-Query Separation: a method should either change state or return data, never both.
 
 In a traditional CRUD architecture, the same model handles both reads and writes. This works well at small scale but causes friction when the read and write access patterns diverge. A complex order management system might have dozens of write operations (place order, cancel, refund, add item) with strong consistency requirements, while the read side needs highly denormalized, pre-aggregated views for dashboards and reporting. CQRS lets each side optimize independently.
 
@@ -2909,7 +2958,8 @@ Other trade-offs: increased complexity (two models to maintain, event infrastruc
     questions: 6,
     description: 'Ports & Adapters pattern that isolates the application core from infrastructure.',
 
-    introduction: `Hexagonal Architecture, also known as Ports & Adapters, was introduced by Alistair Cockburn to solve a recurring problem: business logic entangled with infrastructure (databases, HTTP, message queues) becomes hard to test, hard to change, and impossible to reuse.
+    introduction: `## Overview
+Hexagonal Architecture, also known as Ports & Adapters, was introduced by Alistair Cockburn to solve a recurring problem: business logic entangled with infrastructure (databases, HTTP, message queues) becomes hard to test, hard to change, and impossible to reuse.
 
 The pattern organizes the system around an application core that contains pure business logic with no dependencies on external systems. The core exposes Ports—interfaces that define what the application needs (driven ports, like a UserRepository) and what it offers (driving ports, like a use case interface). Adapters implement these ports: an HTTP adapter calls a use case port, a JPA adapter implements the repository port.
 
@@ -2958,7 +3008,8 @@ Clean Architecture (Robert Martin) adds explicit concentric rings: Entities (inn
     questions: 7,
     description: 'Store state as an immutable sequence of events rather than current values.',
 
-    introduction: `Event Sourcing is a persistence strategy where, instead of storing the current state of an entity, you store the full sequence of events that led to that state. A BankAccount does not store "balance: $500"—it stores [AccountOpened($0), Deposited($600), Withdrawn($100)]. The current state is derived by replaying these events.
+    introduction: `## Overview
+Event Sourcing is a persistence strategy where, instead of storing the current state of an entity, you store the full sequence of events that led to that state. A BankAccount does not store "balance: $500"—it stores [AccountOpened($0), Deposited($600), Withdrawn($100)]. The current state is derived by replaying these events.
 
 This approach provides a complete audit trail for free. Every state change is recorded with its timestamp and context. You can reconstruct the state at any point in time by replaying events up to that timestamp—invaluable for debugging production issues or regulatory compliance.
 
@@ -3005,7 +3056,8 @@ A snapshot can be taken every N events (e.g., every 100 events) or triggered by 
     questions: 5,
     description: 'Replace null checks with a do-nothing default object that implements the same interface.',
 
-    introduction: `The Null Object pattern eliminates null checks by providing a default object that implements the same interface as real objects but does nothing (or returns safe defaults) when its methods are called. Instead of checking if(logger != null) logger.log(msg) throughout your code, you inject a NullLogger that implements the Logger interface with empty method bodies.
+    introduction: `## Overview
+The Null Object pattern eliminates null checks by providing a default object that implements the same interface as real objects but does nothing (or returns safe defaults) when its methods are called. Instead of checking if(logger != null) logger.log(msg) throughout your code, you inject a NullLogger that implements the Logger interface with empty method bodies.
 
 Tony Hoare, who invented the null reference in 1965, famously called it his "billion-dollar mistake." Null references cause NullPointerExceptions that are common runtime errors. The Null Object pattern is one strategy to reduce reliance on null.
 
@@ -3056,7 +3108,8 @@ Null Objects work well for optional features (logging, caching, metrics) where d
     questions: 8,
     description: 'Provide dependencies to a class from outside rather than letting it create them.',
 
-    introduction: `Dependency Injection (DI) is a technique where an object receives its dependencies from an external source rather than creating them itself. Instead of UserService creating new UserRepository() internally, the repository is passed in through the constructor, a setter, or a method parameter. This small inversion has profound effects on testability, flexibility, and coupling.
+    introduction: `## Overview
+Dependency Injection (DI) is a technique where an object receives its dependencies from an external source rather than creating them itself. Instead of UserService creating new UserRepository() internally, the repository is passed in through the constructor, a setter, or a method parameter. This small inversion has profound effects on testability, flexibility, and coupling.
 
 The underlying principle is Inversion of Control (IoC): the class declares what it needs, and a framework or caller decides what to provide. This shifts control from the class to its environment. DI frameworks like Spring (Java), Dagger (Android), and Angular (TypeScript) automate this process by reading declarations (@Autowired, @Inject) and wiring dependencies at startup.
 
@@ -3103,7 +3156,8 @@ Service Locator is considered an anti-pattern because dependencies are hidden in
     questions: 8,
     description: 'Model software around the business domain using a shared language and rich domain objects.',
 
-    introduction: `Domain-Driven Design (DDD) is an approach to software development that centers the design on the core business domain, using a shared language between developers and domain experts. Introduced by Eric Evans in his 2003 book, DDD provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling individual bounded contexts).
+    introduction: `## Overview
+Domain-Driven Design (DDD) is an approach to software development that centers the design on the core business domain, using a shared language between developers and domain experts. Introduced by Eric Evans in his 2003 book, DDD provides both strategic patterns (for organizing large systems) and tactical patterns (for modeling individual bounded contexts).
 
 The central idea is Ubiquitous Language: developers and domain experts use the exact same terms in conversations, in code, in tests, and in documentation. If a domain expert says "subscription renewal," that phrase appears as a class name, method name, and event name in the codebase. This alignment reduces translation errors between business requirements and implementation.
 
@@ -3154,7 +3208,8 @@ The distinction matters for equality semantics, persistence strategy, and change
     questions: 6,
     description: 'Common design mistakes that reduce maintainability and how to refactor them.',
 
-    introduction: `Anti-patterns are recurring solutions that seem reasonable but consistently produce negative results. Recognizing them is as important as knowing design patterns, because real codebases are full of them and interviewers often ask candidates to identify and fix them.
+    introduction: `## Overview
+Anti-patterns are recurring solutions that seem reasonable but consistently produce negative results. Recognizing them is as important as knowing design patterns, because real codebases are full of them and interviewers often ask candidates to identify and fix them.
 
 The most dangerous anti-patterns are those that appear to work in the short term. A God Class accumulates all logic for a subsystem—it feels convenient until it becomes a 3000-line class that nobody dares change. Spaghetti Code arises from years of quick fixes without refactoring—the control flow becomes impossible to follow. The Anemic Domain Model looks like clean object-oriented code but strips domain objects of behavior, leaving the business logic scattered in service classes.
 
@@ -3199,7 +3254,8 @@ The problem: business rules are scattered across service classes, making them ha
     questions: 7,
     description: 'Patterns for safely coordinating concurrent threads and avoiding race conditions.',
 
-    introduction: `Concurrency patterns address the fundamental challenges of multi-threaded programming: race conditions, deadlocks, starvation, and visibility issues. These patterns appear constantly in system design interviews at senior levels and in LLD problems that involve shared state.
+    introduction: `## Overview
+Concurrency patterns address the fundamental challenges of multi-threaded programming: race conditions, deadlocks, starvation, and visibility issues. These patterns appear constantly in system design interviews at senior levels and in LLD problems that involve shared state.
 
 A race condition occurs when the outcome depends on the relative timing of threads—two threads reading, modifying, and writing a shared counter can lose updates. A deadlock occurs when two or more threads wait forever for each other to release locks. These bugs are notoriously hard to reproduce because they depend on thread scheduling, which is non-deterministic.
 
@@ -3247,7 +3303,8 @@ Java's BlockingQueue interface provides the synchronization: put(item) blocks if
     questions: 6,
     description: 'Design a Least Recently Used cache with O(1) get and put operations.',
 
-    introduction: `The LRU (Least Recently Used) cache is one of the most common low-level design interview questions. It asks: given a cache of fixed capacity, when the cache is full and a new item needs to be inserted, which existing item should be evicted? The LRU policy evicts the item that was accessed least recently.
+    introduction: `## Overview
+The LRU (Least Recently Used) cache is one of the most common low-level design interview questions. It asks: given a cache of fixed capacity, when the cache is full and a new item needs to be inserted, which existing item should be evicted? The LRU policy evicts the item that was accessed least recently.
 
 The elegance of the LRU cache problem is that it requires combining two data structures to achieve O(1) time complexity for both get and put operations. A HashMap alone gives O(1) lookup but doesn't track access order. A doubly linked list tracks order efficiently but gives O(n) lookup. Together — a HashMap pointing to nodes in a doubly linked list — you get O(1) for both.
 
@@ -3399,7 +3456,8 @@ Interview expectation: sketch the consistent hashing ring, explain replication f
     questions: 5,
     description: 'Probabilistic data structure for fast membership testing with no false negatives.',
 
-    introduction: `A Bloom filter answers the question "is this element in the set?" with two possible answers: "definitely not" or "possibly yes." This makes it ideal for eliminating expensive lookups — if the Bloom filter says no, you skip the database entirely; if it says yes, you do the lookup (and occasionally find it was a false positive).
+    introduction: `## Overview
+A Bloom filter answers the question "is this element in the set?" with two possible answers: "definitely not" or "possibly yes." This makes it ideal for eliminating expensive lookups — if the Bloom filter says no, you skip the database entirely; if it says yes, you do the lookup (and occasionally find it was a false positive).
 
 The core structure is a bit array of m bits, initially all 0, and k independent hash functions. To insert an element, compute k hash values and set those k bit positions to 1. To query, check if all k positions are 1 — if any is 0, the element is definitely absent. If all are 1, it's probably present (might be a false positive from other insertions).
 
@@ -3496,7 +3554,8 @@ Akamai CDN: Bloom filter for "one-hit wonders" — content accessed only once do
     questions: 5,
     description: 'Design and implement tries for prefix-based string operations.',
 
-    introduction: `A trie (derived from "retrieval") is a tree-based data structure optimized for string prefix operations. Each node represents a character, and the path from root to a node spells out a prefix. A trie of n strings enables O(m) lookup, insert, and delete where m is the string length — independent of n.
+    introduction: `## Overview
+A trie (derived from "retrieval") is a tree-based data structure optimized for string prefix operations. Each node represents a character, and the path from root to a node spells out a prefix. A trie of n strings enables O(m) lookup, insert, and delete where m is the string length — independent of n.
 
 Tries excel where prefix relationships matter: autocomplete (type "hel" → find "hello", "help", "herald"), spell checking, IP routing tables (longest prefix match), and word frequency analysis. They trade memory efficiency for time efficiency — a naive implementation stores a HashMap<char, TrieNode> at each node, which can be sparse for large character sets.
 
@@ -3619,7 +3678,8 @@ Trade-off: slightly more complex insertion (may need to split an edge mid-string
     questions: 5,
     description: 'Distribute keys across nodes minimizing reshuffling when topology changes.',
 
-    introduction: `Consistent hashing solves a fundamental distributed systems problem: how do you assign keys to nodes such that adding or removing a node only remaps k/n keys (where k = number of keys, n = number of nodes), rather than remapping all keys as simple modulo hashing would require?
+    introduction: `## Overview
+Consistent hashing solves a fundamental distributed systems problem: how do you assign keys to nodes such that adding or removing a node only remaps k/n keys (where k = number of keys, n = number of nodes), rather than remapping all keys as simple modulo hashing would require?
 
 The intuition: imagine a circular hash ring from 0 to 2^32. Each server is placed on the ring by hashing its identifier. Each key is also hashed to a position on the ring, then assigned to the first server encountered clockwise. When a server is added, only the keys between it and its predecessor need to migrate. When a server is removed, its keys migrate to its successor.
 
@@ -3729,7 +3789,8 @@ Production use: Memcached clients use ring-based consistent hashing; Google's Ma
     questions: 4,
     description: 'Log-Structured Merge tree — the storage engine behind Cassandra, RocksDB, LevelDB.',
 
-    introduction: `The Log-Structured Merge (LSM) tree is a write-optimized data structure powering most modern NoSQL databases. The core insight: sequential I/O is 100x-1000x faster than random I/O on spinning disks, and even on SSDs random writes create significant write amplification. LSM trees convert all random writes into sequential writes by buffering mutations in memory and periodically flushing them to disk in sorted order.
+    introduction: `## Overview
+The Log-Structured Merge (LSM) tree is a write-optimized data structure powering most modern NoSQL databases. The core insight: sequential I/O is 100x-1000x faster than random I/O on spinning disks, and even on SSDs random writes create significant write amplification. LSM trees convert all random writes into sequential writes by buffering mutations in memory and periodically flushing them to disk in sorted order.
 
 The architecture: writes go to an in-memory MemTable (a sorted structure like a Red-Black tree). When the MemTable reaches a size threshold, it's flushed to disk as an immutable SSTable (Sorted String Table). SSTables are organized into levels, and background compaction merges and sorts SSTables, discarding deleted (tombstoned) entries. This design makes writes extremely fast (O(1) amortized) while reads become more expensive — potentially requiring a search across multiple SSTables per level.
 
@@ -3823,7 +3884,8 @@ Space reclamation guarantee: tombstones must propagate all the way through all l
     questions: 5,
     description: 'Design rate limiting algorithms: token bucket, leaky bucket, sliding window.',
 
-    introduction: `Rate limiting is a foundational API design pattern that controls how many requests a user or service can make in a given time window. It protects backend systems from overload, prevents abuse, enforces fair usage across tenants, and provides a mechanism for tiered pricing. Every production API — from AWS to Stripe to Twitter — implements rate limiting.
+    introduction: `## Overview
+Rate limiting is a foundational API design pattern that controls how many requests a user or service can make in a given time window. It protects backend systems from overload, prevents abuse, enforces fair usage across tenants, and provides a mechanism for tiered pricing. Every production API — from AWS to Stripe to Twitter — implements rate limiting.
 
 The challenge is implementing rate limiting at scale with low latency and distributed correctness. A naive counter in memory doesn't work when you have 100 API servers — the counter needs to be shared. But a round-trip to Redis on every request adds latency. The choice of algorithm determines accuracy, memory usage, and burst behavior, while the implementation architecture determines latency and consistency.
 
@@ -3947,7 +4009,8 @@ Real systems often use option 3 with the acceptance that slight over-serving dur
     questions: 4,
     description: 'Prevent cascading failures by detecting and isolating failing dependencies.',
 
-    introduction: `The Circuit Breaker pattern (named after electrical circuit breakers) prevents cascading failures in distributed systems. When a downstream service starts failing, calls to it pile up waiting for timeouts, consuming threads, connections, and memory. The circuit breaker detects the failure and fast-fails subsequent calls, giving the system a chance to recover.
+    introduction: `## Overview
+The Circuit Breaker pattern (named after electrical circuit breakers) prevents cascading failures in distributed systems. When a downstream service starts failing, calls to it pile up waiting for timeouts, consuming threads, connections, and memory. The circuit breaker detects the failure and fast-fails subsequent calls, giving the system a chance to recover.
 
 The pattern has three states: Closed (normal operation, all calls pass through), Open (failure threshold exceeded, all calls fast-fail without calling the service), and Half-Open (after a recovery timeout, allow a limited number of trial calls to test if the service has recovered). Netflix's Hystrix popularized this pattern; Resilience4j, the Go circuit breaker library, and AWS SDK all implement variants.
 
@@ -4055,7 +4118,8 @@ Fallback: circuit breaker should always have a fallback — cached data, degrade
     questions: 4,
     description: 'Reuse expensive connections to databases and services efficiently.',
 
-    introduction: `Creating a database connection is expensive: TCP handshake, TLS negotiation, database authentication, session setup — easily 50-500ms. If your web server creates a new connection for every query, a service handling 1000 requests/second would require 1000 new connections per second, each taking ~100ms. The database would be overwhelmed before handling a single query.
+    introduction: `## Overview
+Creating a database connection is expensive: TCP handshake, TLS negotiation, database authentication, session setup — easily 50-500ms. If your web server creates a new connection for every query, a service handling 1000 requests/second would require 1000 new connections per second, each taking ~100ms. The database would be overwhelmed before handling a single query.
 
 Connection pooling solves this by maintaining a pool of pre-established connections that are checked out for the duration of a query and returned to the pool afterward. Connection creation cost is paid once at startup; query execution uses an idle connection (typically <1ms to acquire).
 
@@ -4151,7 +4215,8 @@ Monitoring: track pool acquisition wait time. If p99 > 5ms, the pool is too smal
     questions: 4,
     description: 'Design and implement concurrent queues: blocking, lock-free, and bounded.',
 
-    introduction: `Thread-safe queues are the backbone of concurrent programming: producer-consumer systems, work queues, event buses, and async task execution all rely on queues that are safe to access from multiple threads simultaneously. The challenge is that naively sharing a queue leads to race conditions — two threads dequeuing simultaneously might both read the same element, or two threads enqueueing might corrupt internal pointers.
+    introduction: `## Overview
+Thread-safe queues are the backbone of concurrent programming: producer-consumer systems, work queues, event buses, and async task execution all rely on queues that are safe to access from multiple threads simultaneously. The challenge is that naively sharing a queue leads to race conditions — two threads dequeuing simultaneously might both read the same element, or two threads enqueueing might corrupt internal pointers.
 
 The tradeoff space is rich: mutex-based queues are simple but contended under load; lock-free queues using CAS (Compare-And-Swap) eliminate contention but are complex to implement correctly; bounded queues provide backpressure; unbounded queues can cause memory exhaustion. Java's BlockingQueue hierarchy (LinkedBlockingQueue, ArrayBlockingQueue, SynchronousQueue, ConcurrentLinkedQueue) each optimize for different scenarios.
 
@@ -4251,7 +4316,8 @@ Solutions:
     questions: 4,
     description: 'Manage data consistency across microservices without distributed transactions.',
 
-    introduction: `Traditional ACID transactions work within a single database: atomicity guarantees all-or-nothing. But in a microservices architecture, a business transaction spans multiple services, each with its own database. A traditional 2-Phase Commit (2PC) protocol provides distributed atomicity, but it requires locking resources across services during the commit phase — blocking, low availability, and catastrophic when a coordinator fails.
+    introduction: `## Overview
+Traditional ACID transactions work within a single database: atomicity guarantees all-or-nothing. But in a microservices architecture, a business transaction spans multiple services, each with its own database. A traditional 2-Phase Commit (2PC) protocol provides distributed atomicity, but it requires locking resources across services during the commit phase — blocking, low availability, and catastrophic when a coordinator fails.
 
 The Saga pattern solves this by breaking a distributed transaction into a sequence of local transactions, each with a corresponding compensating transaction (rollback). If step N fails, the saga executes compensating transactions for steps N-1 through 1, unwinding the changes. This provides eventual consistency without locking.
 

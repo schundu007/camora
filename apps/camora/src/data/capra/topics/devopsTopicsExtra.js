@@ -56,7 +56,8 @@ export const devopsExtraTopics = [
         image: '/diagrams/linkdiags/k8s-kube-proxy.png',
       },
     ],
-    introduction: `Every Pod in Kubernetes receives its own unique, routable IP address — this is the fundamental networking contract of the platform. Pod IPs are ephemeral: they change whenever a Pod restarts or is rescheduled. Services provide the stable IP and DNS name that the rest of the cluster uses.
+    introduction: `## Overview
+Every Pod in Kubernetes receives its own unique, routable IP address — this is the fundamental networking contract of the platform. Pod IPs are ephemeral: they change whenever a Pod restarts or is rescheduled. Services provide the stable IP and DNS name that the rest of the cluster uses.
 
 The Container Network Interface (CNI) is the plugin layer that implements this contract. When kubelet starts a new Pod, it calls the configured CNI plugin, which allocates an IP from the pod CIDR and wires up the network namespace.
 
@@ -185,7 +186,8 @@ With Calico BGP mode: Steps 4–7 are replaced by real BGP routes. No encapsulat
         image: '/diagrams/linkdiags/k8s-network-policy.png',
       },
     ],
-    introduction: `Kubernetes NetworkPolicy resources act as firewall rules for Pods inside the cluster. They are the primary tool for implementing the principle of least privilege at the network layer.
+    introduction: `## Overview
+Kubernetes NetworkPolicy resources act as firewall rules for Pods inside the cluster. They are the primary tool for implementing the principle of least privilege at the network layer.
 
 Default behavior: without any NetworkPolicy, every Pod can talk to every other Pod in the cluster on any port. This is intentional for ease of getting started but unsuitable for production.
 
@@ -362,7 +364,8 @@ Step 6 — Use Calico/Cilium for enforcement and enable audit logging to catch u
         image: '/diagrams/linkdiags/k8s-traffic-flow.png',
       },
     ],
-    introduction: `Understanding how a user request travels from a browser to a Kubernetes Pod and back is essential for both architecture decisions and incident debugging. Seven components participate in the journey, each with a distinct role.
+    introduction: `## Overview
+Understanding how a user request travels from a browser to a Kubernetes Pod and back is essential for both architecture decisions and incident debugging. Seven components participate in the journey, each with a distinct role.
 
 Step 1 — DNS: The user\'s browser resolves the domain name (e.g., api.example.com) to an IP address. That IP belongs to a cloud load balancer or an Ingress Controller\'s Service of type LoadBalancer.
 
@@ -509,7 +512,8 @@ Gateway API: The next generation — HTTPRoute, TCPRoute, GRPCRoute resources re
         image: '/diagrams/linkdiags/k8s-deployment-strategies.png',
       },
     ],
-    introduction: `Choosing the right deployment strategy determines how much risk you accept per release and how quickly you can recover from a bad deployment.
+    introduction: `## Overview
+Choosing the right deployment strategy determines how much risk you accept per release and how quickly you can recover from a bad deployment.
 
 Rolling Update (default Kubernetes): Kubernetes replaces pods one by one. New pods start, pass readiness probes, then old pods are terminated. maxSurge controls how many extra pods can exist during rollout; maxUnavailable controls how many old pods can be removed before new ones are ready. No downtime, but V1 and V2 run simultaneously during rollout — if V2 has backward-incompatible API or DB changes, this is a problem.
 
@@ -638,7 +642,8 @@ With Argo Rollouts: declare a Rollout resource with canarySteps (setWeight, paus
         image: '/diagrams/devops/k8s-networking-cni.png',
       },
     ],
-    introduction: `Kubernetes is a complex distributed system but it exposes rich diagnostic information. Nearly every problem can be diagnosed with kubectl if you know which command to run and what to look for. The Events section in kubectl describe output is the single most valuable source of truth.
+    introduction: `## Overview
+Kubernetes is a complex distributed system but it exposes rich diagnostic information. Nearly every problem can be diagnosed with kubectl if you know which command to run and what to look for. The Events section in kubectl describe output is the single most valuable source of truth.
 
 Taxonomy of common failures:
 
@@ -781,7 +786,8 @@ Step 6: Check NetworkPolicy. kubectl get networkpolicy -n <namespace>. A policy 
         image: '/diagrams/linkdiags/ansible-roles-collections.png',
       },
     ],
-    introduction: `Ansible provides two levels of reuse: Roles (within a project) and Collections (across projects and teams).
+    introduction: `## Overview
+Ansible provides two levels of reuse: Roles (within a project) and Collections (across projects and teams).
 
 A Role is a standard way to organize a set of related Ansible tasks, handlers, templates, files, variables, and defaults into a named directory structure. Roles make playbooks cleaner by moving complexity into reusable, testable units. A role like "webserver" encapsulates everything needed to install, configure, and manage Nginx — the playbook simply says "apply role webserver to these hosts."
 
@@ -934,7 +940,8 @@ Run just the web tier: ansible-playbook playbooks/web.yml -i inventory/productio
         image: '/diagrams/linkdiags/ansible-architecture.png',
       },
     ],
-    introduction: `A well-structured Ansible project is self-documenting, easy to test, and scales to hundreds of hosts without becoming unmanageable. The standard layout separates concerns: inventory (where), variables (what values), roles (how), and playbooks (when and for whom).
+    introduction: `## Overview
+A well-structured Ansible project is self-documenting, easy to test, and scales to hundreds of hosts without becoming unmanageable. The standard layout separates concerns: inventory (where), variables (what values), roles (how), and playbooks (when and for whom).
 
 The 21 components and their roles:
 
@@ -1068,7 +1075,8 @@ Never put secrets in plain-text vars files — use Ansible Vault to encrypt them
         image: '/diagrams/linkdiags/terraform-cicd.png',
       },
     ],
-    introduction: `Running Terraform manually is fine for experiments. Running it in production without a CI/CD pipeline is dangerous: no peer review, no audit trail, no policy enforcement, and no protection against two people applying simultaneously.
+    introduction: `## Overview
+Running Terraform manually is fine for experiments. Running it in production without a CI/CD pipeline is dangerous: no peer review, no audit trail, no policy enforcement, and no protection against two people applying simultaneously.
 
 Why CI/CD for Terraform: Consistent (same pipeline runs every time), Collaborative (changes reviewed via PR), Auditable (full history in CI logs), Safe (policy gates and manual approval before Apply).
 
@@ -1213,7 +1221,8 @@ Multi-env pattern: use different S3 keys per environment (dev/vpc/terraform.tfst
         image: '/diagrams/linkdiags/terraform-count-for-each.png',
       },
     ],
-    introduction: `Both count and for_each create multiple instances of a resource or module, but they differ fundamentally in how they identify each instance — and that difference has major production safety implications.
+    introduction: `## Overview
+Both count and for_each create multiple instances of a resource or module, but they differ fundamentally in how they identify each instance — and that difference has major production safety implications.
 
 count — number-based, creates indexed resources:
 resource "aws_instance" "web" {
@@ -1326,7 +1335,8 @@ Interview one-liner: count is index-based and fragile with reordering; for_each 
         image: '/diagrams/linkdiags/terraform-architecture.png',
       },
     ],
-    introduction: `Terraform state is a JSON file (terraform.tfstate) that records the real infrastructure Terraform manages. It maps .tf resource definitions to actual cloud resource IDs, attributes, and dependencies. Without accurate state, Terraform cannot plan or destroy correctly.
+    introduction: `## Overview
+Terraform state is a JSON file (terraform.tfstate) that records the real infrastructure Terraform manages. It maps .tf resource definitions to actual cloud resource IDs, attributes, and dependencies. Without accurate state, Terraform cannot plan or destroy correctly.
 
 What state tracks: resource ID (aws_instance.web → i-0abc12345), all attributes returned by the cloud API (public IP, ARN, created_at), dependencies between resources (security group must exist before EC2), and metadata (Terraform version, provider versions).
 
@@ -1468,7 +1478,8 @@ Prevention: use Terraform Cloud or Enterprise, which handles lock management wit
         image: '/diagrams/linkdiags/jenkins-architecture.png',
       },
     ],
-    introduction: `Jenkins uses a Controller-Agent (formerly Master-Slave) architecture to distribute work across machines. Understanding this split is foundational to designing scalable Jenkins deployments.
+    introduction: `## Overview
+Jenkins uses a Controller-Agent (formerly Master-Slave) architecture to distribute work across machines. Understanding this split is foundational to designing scalable Jenkins deployments.
 
 The Controller:
 - Stores all Jenkins configuration, job definitions, and build history
@@ -1630,7 +1641,8 @@ Benefits: clean environment per build, no agent maintenance, parallel builds sca
         image: '/diagrams/linkdiags/jenkins-architecture.png',
       },
     ],
-    introduction: `A Jenkinsfile is a text file checked into the source repository that defines the entire CI/CD pipeline as code. Jenkins reads it automatically when a build triggers. Having the pipeline definition in the repository provides version control, peer review, and reproducibility.
+    introduction: `## Overview
+A Jenkinsfile is a text file checked into the source repository that defines the entire CI/CD pipeline as code. Jenkins reads it automatically when a build triggers. Having the pipeline definition in the repository provides version control, peer review, and reproducibility.
 
 Declarative Pipeline (recommended):
 A structured, opinionated syntax with predefined blocks. Easier to read and write. Jenkins validates the structure before running. Supports a visual pipeline editor. Most teams should use Declarative.
@@ -1845,7 +1857,8 @@ You can mix both: Declarative pipeline with a script { ... } block inside a stag
         image: '/diagrams/linkdiags/devsecops-pipeline.png',
       },
     ],
-    introduction: `DevSecOps integrates security practices into every stage of the software development lifecycle rather than treating security as a phase at the end. The principle: "shift left" — find and fix security issues when they are cheapest, at the code commit stage, not in production.
+    introduction: `## Overview
+DevSecOps integrates security practices into every stage of the software development lifecycle rather than treating security as a phase at the end. The principle: "shift left" — find and fix security issues when they are cheapest, at the code commit stage, not in production.
 
 The three pillars of DevSecOps: People (security champions, shared responsibility), Process (security gates in every pipeline stage), Tools (automated scanning — no human can manually review every commit).
 
@@ -1987,7 +2000,8 @@ Use all three: SAST + SCA in every PR (fast, automated). DAST in staging after d
         image: '/diagrams/linkdiags/high-availability.png',
       },
     ],
-    introduction: `High Availability (HA) means designing a system to operate continuously with minimal downtime, even when individual components fail. Production systems are designed to SURVIVE failure, not avoid it.
+    introduction: `## Overview
+High Availability (HA) means designing a system to operate continuously with minimal downtime, even when individual components fail. Production systems are designed to SURVIVE failure, not avoid it.
 
 The core principle: eliminate every single point of failure (SPOF). Any component that, if it fails, takes down the entire system is a SPOF. HA means every critical component has redundancy.
 
@@ -2137,7 +2151,8 @@ The conversation: always ask the business for RTO and RPO before designing. Stri
         image: '/diagrams/linkdiags/overlay-underlay.png',
       },
     ],
-    introduction: `Every modern cloud and Kubernetes networking stack uses the overlay-underlay model. Understanding it explains how pods on different nodes communicate, why there are two IP headers in a packet trace, and what happens when VXLAN breaks.
+    introduction: `## Overview
+Every modern cloud and Kubernetes networking stack uses the overlay-underlay model. Understanding it explains how pods on different nodes communicate, why there are two IP headers in a packet trace, and what happens when VXLAN breaks.
 
 Underlay Network — the physical/cloud foundation:
 The underlay is the real network: physical routers, switches, cloud VPC routing tables, ISP links. It carries actual IP packets between machines. It knows nothing about containers or Kubernetes. Its only job is to deliver packets from Node A to Node B based on real IP addresses.
@@ -2278,7 +2293,8 @@ VXLAN kernel module missing: rare, but some stripped-down OS images lack the vxl
     questions: 5,
     description: 'Deliberately injecting failures into production-like systems to uncover weaknesses before they cause outages.',
     visualizations: [],
-    introduction: `Chaos Engineering is the practice of deliberately introducing failures into a system to build confidence in its ability to withstand turbulent conditions. Pioneered by Netflix with Chaos Monkey in 2011, the discipline has evolved into a rigorous experimental science: form a hypothesis about steady-state behavior, run a controlled experiment, observe deviations, and fix weaknesses before incidents find them first.
+    introduction: `## Overview
+Chaos Engineering is the practice of deliberately introducing failures into a system to build confidence in its ability to withstand turbulent conditions. Pioneered by Netflix with Chaos Monkey in 2011, the discipline has evolved into a rigorous experimental science: form a hypothesis about steady-state behavior, run a controlled experiment, observe deviations, and fix weaknesses before incidents find them first.
 
 The core insight is that distributed systems fail in unexpected ways. You cannot reason about resilience from architecture diagrams alone — you must observe the system under stress. A 30-minute planned game day that kills a pod is infinitely preferable to an unplanned 3 AM outage that kills revenue.
 
@@ -2373,7 +2389,8 @@ They are complementary. Load testing tells you where your capacity ceiling is. C
     questions: 5,
     description: 'The practice of bringing financial accountability to the variable spend model of cloud computing through cross-functional collaboration.',
     visualizations: [],
-    introduction: `FinOps (Financial Operations) is a cloud financial management discipline that brings together engineering, finance, and product teams to make data-driven spending decisions. As cloud bills scale from thousands to millions of dollars per month, unmanaged cloud cost becomes a critical engineering problem — not just a finance problem.
+    introduction: `## Overview
+FinOps (Financial Operations) is a cloud financial management discipline that brings together engineering, finance, and product teams to make data-driven spending decisions. As cloud bills scale from thousands to millions of dollars per month, unmanaged cloud cost becomes a critical engineering problem — not just a finance problem.
 
 The FinOps Foundation defines three phases: Inform (understand what you're spending and why), Optimize (eliminate waste and right-size resources), and Operate (continuous cost governance embedded in engineering workflow). Most organizations loop through these phases iteratively rather than completing them sequentially.
 
@@ -2472,7 +2489,8 @@ The key mental model: RIs are "I commit to a specific SKU," Savings Plans are "I
     questions: 5,
     description: 'The SPACE framework for measuring developer productivity across Satisfaction, Performance, Activity, Communication, and Efficiency — beyond DORA metrics.',
     visualizations: [],
-    introduction: `Developer productivity is one of the most debated topics in engineering leadership. For decades, organizations tried to measure it with lines of code or tickets closed — proxies that incentivize the wrong behaviors. The SPACE framework (2021, from Microsoft Research and GitHub) provides a multidimensional model that captures the full complexity of productive developer work.
+    introduction: `## Overview
+Developer productivity is one of the most debated topics in engineering leadership. For decades, organizations tried to measure it with lines of code or tickets closed — proxies that incentivize the wrong behaviors. The SPACE framework (2021, from Microsoft Research and GitHub) provides a multidimensional model that captures the full complexity of productive developer work.
 
 SPACE stands for: Satisfaction and well-being, Performance, Activity, Communication and collaboration, and Efficiency and flow. The critical insight is that no single dimension captures productivity — you need at least three dimensions from different parts of the framework to avoid perverse incentives.
 
@@ -2559,7 +2577,8 @@ The key discipline: never report a single metric in isolation. Always show at le
     questions: 5,
     description: 'Signing, verifying, and attesting software artifacts using Sigstore (Cosign, Fulcio, Rekor), SBOM, and SLSA to secure the software supply chain.',
     visualizations: [],
-    introduction: `The software supply chain — every tool, dependency, build step, and artifact that contributes to your production software — is a major attack surface. The SolarWinds breach (2020), Log4Shell (2021), and XZ Utils backdoor (2024) demonstrated that attackers increasingly target the build and distribution process rather than the running application.
+    introduction: `## Overview
+The software supply chain — every tool, dependency, build step, and artifact that contributes to your production software — is a major attack surface. The SolarWinds breach (2020), Log4Shell (2021), and XZ Utils backdoor (2024) demonstrated that attackers increasingly target the build and distribution process rather than the running application.
 
 Sigstore is an open-source project (OpenSSF, Linux Foundation) that makes cryptographic signing of software artifacts free and accessible. The three components work together: Cosign signs container images and arbitrary blobs; Fulcio is a certificate authority that issues short-lived signing certificates tied to OIDC identity (your GitHub, Google, or Microsoft identity); Rekor is an immutable, append-only transparency log that records all signing events publicly.
 
@@ -2647,7 +2666,8 @@ Why it's better: no key management, no key rotation, no key leakage risk. The id
     questions: 5,
     description: 'Running WebAssembly workloads on Kubernetes and serverless platforms for near-native performance, instant cold starts, and sandboxed multi-tenancy.',
     visualizations: [],
-    introduction: `WebAssembly (Wasm) was designed for the browser but its properties — compact binary format, near-native execution speed, sandboxed security model, and language agnosticism — make it increasingly attractive for server-side and cloud-native workloads.
+    introduction: `## Overview
+WebAssembly (Wasm) was designed for the browser but its properties — compact binary format, near-native execution speed, sandboxed security model, and language agnosticism — make it increasingly attractive for server-side and cloud-native workloads.
 
 WASI (WebAssembly System Interface) is the key enabler for server-side Wasm. It provides a standardized, capability-based interface to OS resources (file system, networking, clocks) without exposing the underlying OS directly. A Wasm module compiled for WASI runs on any runtime that implements the interface — portability that even containers don't fully achieve (containers are Linux-specific).
 
@@ -2730,7 +2750,8 @@ The near-term model: Wasm for stateless edge handlers and plugin systems; contai
     questions: 5,
     description: 'Using large language models and ML to accelerate DevOps workflows: AI code review, intelligent incident response, predictive CI, and AIOps patterns.',
     visualizations: [],
-    introduction: `AI is being integrated into every layer of the DevOps toolchain — not to replace engineers, but to handle the low-signal, high-volume tasks that consume disproportionate attention. The categories where AI adds measurable value today are code review assistance, incident response acceleration, test generation, and build failure diagnosis.
+    introduction: `## Overview
+AI is being integrated into every layer of the DevOps toolchain — not to replace engineers, but to handle the low-signal, high-volume tasks that consume disproportionate attention. The categories where AI adds measurable value today are code review assistance, incident response acceleration, test generation, and build failure diagnosis.
 
 AI code review tools (GitHub Copilot Code Review, CodeRabbit, Sourcery) analyze pull requests and flag security vulnerabilities, logic errors, and style violations before a human reviewer sees the PR. Effectiveness data from GitHub shows that AI-assisted review reduces time-to-merge by 20-30% in teams that adopt it, primarily by eliminating trivial review cycles on automated findings. The critical design principle: AI review is a first-pass filter, not a replacement for human review of design decisions.
 
@@ -2813,7 +2834,8 @@ Governance: log all AI suggestions and their outcomes. Review monthly. This data
     questions: 5,
     description: 'Standardizing development environments with Dev Containers spec, Devbox, Nix shells, and cloud IDEs to eliminate "works on my machine" problems.',
     visualizations: [],
-    introduction: `"It works on my machine" is one of the most persistent problems in software development. Reproducible development environments close the gap between a developer's local setup and CI/production, eliminating entire categories of bugs that exist only in specific configurations.
+    introduction: `## Overview
+"It works on my machine" is one of the most persistent problems in software development. Reproducible development environments close the gap between a developer's local setup and CI/production, eliminating entire categories of bugs that exist only in specific configurations.
 
 The Dev Containers specification (Microsoft, open standard, used by VS Code, GitHub Codespaces, and JetBrains) defines a JSON-based format for declaring a development environment as a Docker container. The devcontainer.json file at the repo root specifies the base image, extensions, port forwarding, and lifecycle scripts. Any developer who opens the repo gets the same environment — same runtime version, same tools, same extensions — in seconds via VS Code or Codespaces.
 
@@ -2901,7 +2923,8 @@ Execution:
     questions: 5,
     description: 'The OpenFeature standard for feature flagging, flag lifecycle management, technical debt from long-lived flags, and progressive rollout governance.',
     visualizations: [],
-    introduction: `Feature flags (also called feature toggles) allow teams to deploy code to production without activating it for users — decoupling deployment from release. This is a foundational capability for trunk-based development, A/B testing, progressive delivery, and dark launching. But without governance, feature flags accumulate into technical debt that degrades system maintainability.
+    introduction: `## Overview
+Feature flags (also called feature toggles) allow teams to deploy code to production without activating it for users — decoupling deployment from release. This is a foundational capability for trunk-based development, A/B testing, progressive delivery, and dark launching. But without governance, feature flags accumulate into technical debt that degrades system maintainability.
 
 OpenFeature is an open standard (CNCF sandbox) that defines a vendor-neutral API for feature flag evaluation. Instead of coupling your application code to a specific vendor (LaunchDarkly, Split.io, Unleash, Flagsmith), you code against the OpenFeature SDK. Switching vendors requires only changing the provider implementation, not the application code. This portability is particularly valuable for large organizations evaluating different flag systems or migrating between vendors.
 
@@ -2989,7 +3012,8 @@ Result: flag inventory stays manageable because cleanup is a scheduled, automate
     questions: 5,
     description: 'Navigating the CNCF landscape, understanding project maturity levels (sandbox/incubating/graduated), and selecting cloud native tools by category.',
     visualizations: [],
-    introduction: `The Cloud Native Computing Foundation (CNCF) landscape contains over 1,000 projects, making it the most comprehensive map of the cloud native ecosystem — and one of the most overwhelming documents in technology. Understanding how to navigate it, what the maturity levels mean, and how to evaluate projects for production use is a core skill for platform engineers and architects.
+    introduction: `## Overview
+The Cloud Native Computing Foundation (CNCF) landscape contains over 1,000 projects, making it the most comprehensive map of the cloud native ecosystem — and one of the most overwhelming documents in technology. Understanding how to navigate it, what the maturity levels mean, and how to evaluate projects for production use is a core skill for platform engineers and architects.
 
 CNCF project maturity has three tiers: Sandbox (experimental, early-stage — high innovation risk), Incubating (growing adoption, stable API, formal governance — acceptable for early adopters), and Graduated (production-proven, broad adoption, formal security audit — safe for enterprise use). The graduation requirements are strict: demonstrated production use by at least three independent organizations, committer diversity, formal governance, and completion of a third-party security audit.
 
@@ -3073,7 +3097,8 @@ Final decision gate: Can you patch it yourself if a critical CVE drops? If yes, 
     questions: 5,
     description: 'Identifying, measuring, and eliminating toil — manual, repetitive, automatable operations work — to reclaim engineering time for lasting improvements.',
     visualizations: [],
-    introduction: `Toil is a specific type of work defined by Google SRE: work that is manual, repetitive, automatable, tactical (not strategic), devoid of enduring value, and O(n) with service growth. The word "toil" is precise — not all operational work is toil. Responding thoughtfully to a novel incident is not toil. Running the same manual DB backup script every Friday is.
+    introduction: `## Overview
+Toil is a specific type of work defined by Google SRE: work that is manual, repetitive, automatable, tactical (not strategic), devoid of enduring value, and O(n) with service growth. The word "toil" is precise — not all operational work is toil. Responding thoughtfully to a novel incident is not toil. Running the same manual DB backup script every Friday is.
 
 The SRE team commitment model caps toil at 50% of engineer time, with the remaining 50% reserved for engineering work that reduces future toil (automation, reliability improvements, scalability work). When toil exceeds 50%, the team is in a reactive death spiral: more toil → less time to automate → more toil accumulates. Measuring current toil percentage is the first step to breaking the cycle.
 
@@ -3156,7 +3181,8 @@ Long-term: build toil metrics into the team's quarterly OKRs — toil percentage
     questions: 5,
     description: 'IDPs abstract infrastructure complexity from developers via golden paths. Backstage (CNCF) is the leading open-source IDP framework: software catalog, templates, plugins, TechDocs. Reduces cognitive load; accelerates onboarding.',
     visualizations: [],
-    introduction: `An Internal Developer Platform (IDP) is a self-service layer built by platform engineering teams to reduce cognitive load on application developers. Rather than requiring developers to understand Kubernetes, Terraform, IAM, and CI/CD pipelines in depth, an IDP presents golden paths — opinionated, pre-approved workflows for common operations.
+    introduction: `## Overview
+An Internal Developer Platform (IDP) is a self-service layer built by platform engineering teams to reduce cognitive load on application developers. Rather than requiring developers to understand Kubernetes, Terraform, IAM, and CI/CD pipelines in depth, an IDP presents golden paths — opinionated, pre-approved workflows for common operations.
 
 Backstage, open-sourced by Spotify and now a CNCF incubating project, is the leading framework for building IDPs. Its core components:
 
@@ -3214,7 +3240,8 @@ Plugins: Backstage's extension model. Integrates existing tools (PagerDuty, GitH
     questions: 4,
     description: 'OpenGitOps 4 principles: declarative, versioned+immutable, pulled automatically, continuously reconciled. ArgoCD and Flux implement the pull model — in-cluster agents watch Git and reconcile desired vs actual state.',
     visualizations: [],
-    introduction: `GitOps is a set of practices where the desired state of infrastructure and applications is stored in Git and an automated operator continuously reconciles actual state to match desired state.
+    introduction: `## Overview
+GitOps is a set of practices where the desired state of infrastructure and applications is stored in Git and an automated operator continuously reconciles actual state to match desired state.
 
 OpenGitOps (CNCF) defines GitOps through four core principles:
 
@@ -3274,7 +3301,8 @@ ArgoCD and Flux are the two dominant GitOps operators implementing these princip
     questions: 4,
     description: 'SLSA defines 3 levels of supply chain integrity. Level 1: provenance. Level 2: hosted build + signed provenance. Level 3: hardened build + non-falsifiable provenance. Sigstore (Cosign, Rekor, Fulcio) implements keyless signing.',
     visualizations: [],
-    introduction: `SLSA (Supply-chain Levels for Software Artifacts, pronounced "salsa") is a security framework from Google (now OpenSSF) defining graduated levels of software supply chain integrity. Created in response to attacks like SolarWinds and Log4Shell where the build pipeline or dependency chain was compromised.
+    introduction: `## Overview
+SLSA (Supply-chain Levels for Software Artifacts, pronounced "salsa") is a security framework from Google (now OpenSSF) defining graduated levels of software supply chain integrity. Created in response to attacks like SolarWinds and Log4Shell where the build pipeline or dependency chain was compromised.
 
 SLSA v1.0 defines three levels:
 
@@ -3333,7 +3361,8 @@ Sigstore is the open-source ecosystem implementing SLSA signing: Cosign (sign im
     questions: 4,
     description: 'DORA Four Keys: Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore. Elite: deploy on-demand, <1h MTTR, <15% CFR. Speed and stability are positively correlated — not a tradeoff.',
     visualizations: [],
-    introduction: `The DORA (DevOps Research and Assessment) Four Keys are the industry-standard metrics for measuring software delivery performance. Derived from six years of research across 32,000+ professionals in the annual State of DevOps reports.
+    introduction: `## Overview
+The DORA (DevOps Research and Assessment) Four Keys are the industry-standard metrics for measuring software delivery performance. Derived from six years of research across 32,000+ professionals in the annual State of DevOps reports.
 
 The four metrics measure delivery speed and stability:
 
@@ -3394,7 +3423,8 @@ Critical insight: elite teams achieve HIGH speed AND HIGH stability simultaneous
     icon: 'zap',
     color: '#f59e0b',
     description: 'Just-in-time node provisioning for Kubernetes — Karpenter watches unschedulable pods and provisions the optimal EC2 instance type directly, replacing Cluster Autoscaler.',
-    introduction: `Karpenter is an open-source node autoscaler for Kubernetes that provisions new nodes in response to unschedulable pods. Unlike Cluster Autoscaler (which manages predefined node groups), Karpenter directly calls the cloud provider API to launch the optimal instance type for the pending workload.
+    introduction: `## Overview
+Karpenter is an open-source node autoscaler for Kubernetes that provisions new nodes in response to unschedulable pods. Unlike Cluster Autoscaler (which manages predefined node groups), Karpenter directly calls the cloud provider API to launch the optimal instance type for the pending workload.
 
 How Karpenter works:
 1. A pod cannot be scheduled — no node has enough CPU, memory, or GPU, or no node matches the required node affinity.
@@ -3450,7 +3480,8 @@ Karpenter vs. Cluster Autoscaler: Cluster Autoscaler requires pre-defined node g
     icon: 'layers',
     color: '#6366f1',
     description: 'Kubernetes-native cloud infrastructure management — Crossplane turns your Kubernetes cluster into a universal control plane that provisions cloud resources via CRDs and continuous reconciliation.',
-    introduction: `Crossplane is an open-source CNCF project that extends Kubernetes with the ability to manage cloud infrastructure (AWS, GCP, Azure) using native Kubernetes primitives — CRDs, controllers, and RBAC.
+    introduction: `## Overview
+Crossplane is an open-source CNCF project that extends Kubernetes with the ability to manage cloud infrastructure (AWS, GCP, Azure) using native Kubernetes primitives — CRDs, controllers, and RBAC.
 
 The core idea: instead of running Terraform CLI or CloudFormation stacks, you declare the desired state of cloud resources as Kubernetes manifests, and Crossplane controllers reconcile actual cloud state to match.
 
@@ -3502,7 +3533,8 @@ Crossplane vs. Terraform: Terraform uses plan/apply CLI operations with external
     icon: 'lock',
     color: '#ef4444',
     description: 'Sync secrets from AWS Secrets Manager, Vault, GCP Secret Manager, and other stores into Kubernetes Secrets — the standard pattern for secrets management in Kubernetes.',
-    introduction: `The External Secrets Operator (ESO) is a Kubernetes operator that reads secrets from external secret stores (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Azure Key Vault, and others) and synchronizes them into native Kubernetes Secrets.
+    introduction: `## Overview
+The External Secrets Operator (ESO) is a Kubernetes operator that reads secrets from external secret stores (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Azure Key Vault, and others) and synchronizes them into native Kubernetes Secrets.
 
 The problem ESO solves: storing secrets directly in Kubernetes Secrets is insecure by default because Secret values are base64-encoded (not encrypted) in etcd. ESO bridges external secret stores — which handle access control, audit logging, rotation, and versioning — with Kubernetes applications that need secrets as environment variables or volume mounts.
 
@@ -3554,7 +3586,8 @@ Secret rotation: when a secret is rotated in AWS Secrets Manager, ESO detects th
     icon: 'bar-chart-2',
     color: '#22c55e',
     description: 'Implementing DORA 4 Keys in practice — measuring deployment frequency, lead time, change failure rate, and MTTR using real tooling, data pipelines, and dashboards.',
-    introduction: `The DORA Four Keys are the most widely validated metrics for measuring software delivery performance. Identified by the DevOps Research and Assessment team (now at Google Cloud) and validated across 7+ years of the State of DevOps Report, they predict organizational performance and team well-being.
+    introduction: `## Overview
+The DORA Four Keys are the most widely validated metrics for measuring software delivery performance. Identified by the DevOps Research and Assessment team (now at Google Cloud) and validated across 7+ years of the State of DevOps Report, they predict organizational performance and team well-being.
 
 The four metrics and how to measure them:
 
@@ -3612,7 +3645,8 @@ A fifth metric, Reliability (meeting SLOs), was added to the DORA model in 2023.
     icon: 'layout',
     color: '#8b5cf6',
     description: 'Designing Internal Developer Platforms — golden paths, thinnest viable platform, Backstage, cognitive load reduction, and the CNCF Platform Engineering maturity model.',
-    introduction: `Platform Engineering is the discipline of building and operating Internal Developer Platforms (IDPs) that reduce cognitive load on development teams and provide self-service infrastructure capabilities. It applies product thinking to internal tooling.
+    introduction: `## Overview
+Platform Engineering is the discipline of building and operating Internal Developer Platforms (IDPs) that reduce cognitive load on development teams and provide self-service infrastructure capabilities. It applies product thinking to internal tooling.
 
 Platform as a Product: the platform team treats development teams as customers. Define a product roadmap, collect feedback, measure adoption, and iterate based on developer needs — not on what the platform team finds technically interesting.
 
@@ -3672,7 +3706,8 @@ Team Topologies context: the Platform team is one of the four team types. Platfo
     icon: 'radio',
     color: '#14b8a6',
     description: 'High-performance RPC framework using Protocol Buffers — unary and streaming RPCs, HTTP/2 multiplexing, schema evolution, service mesh integration, and REST transcoding.',
-    introduction: `gRPC is an open-source, high-performance Remote Procedure Call (RPC) framework developed by Google. It uses HTTP/2 as the transport and Protocol Buffers (Protobuf) as the interface definition language and wire format.
+    introduction: `## Overview
+gRPC is an open-source, high-performance Remote Procedure Call (RPC) framework developed by Google. It uses HTTP/2 as the transport and Protocol Buffers (Protobuf) as the interface definition language and wire format.
 
 Why gRPC over REST: REST uses HTTP/1.1 text-based JSON with no schema enforcement. gRPC uses HTTP/2 (multiplexing, header compression, binary framing) with Protobuf (binary wire format, strict schema, forward and backward compatible). gRPC is typically 5-10x faster and more bandwidth-efficient than JSON over REST for the same payload.
 

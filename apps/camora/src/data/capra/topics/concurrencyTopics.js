@@ -8,7 +8,8 @@ export const concurrencyTopics = [
       color: '#10b981',
       description: 'Core concepts of concurrent programming',
 
-      introduction: `Concurrency is the ability of a system to deal with multiple tasks during overlapping time periods—not necessarily simultaneously. It's one of the most frequently tested topics in system design and backend engineering interviews because virtually every production system must handle concurrent requests, background jobs, and shared state safely.
+      introduction: `## Overview
+Concurrency is the ability of a system to deal with multiple tasks during overlapping time periods—not necessarily simultaneously. It's one of the most frequently tested topics in system design and backend engineering interviews because virtually every production system must handle concurrent requests, background jobs, and shared state safely.
 
 Understanding concurrency means knowing the difference between processes and threads (and when to use each), recognizing race conditions before they become bugs, preventing deadlocks through design rather than debugging, and choosing the right synchronization primitive for the job. In interviews, you'll be expected to explain these concepts clearly, write thread-safe code, and reason about the correctness of concurrent systems.
 
@@ -96,7 +97,8 @@ Decision Framework:
       color: '#3b82f6',
       description: 'Locks, mutexes, semaphores, and more',
 
-      introduction: `Synchronization primitives are the building blocks for coordinating access to shared resources in concurrent programs. They prevent race conditions and ensure thread safety.`,
+      introduction: `## Overview
+Synchronization primitives are the building blocks for coordinating access to shared resources in concurrent programs. They prevent race conditions and ensure thread safety.`,
 
       primitives: [
         { name: 'Mutex', description: 'Mutual exclusion lock - only one thread can hold it', example: 'threading.Lock() in Python' },
@@ -178,7 +180,8 @@ Java Tip: StampedLock (Java 8+) offers an optimistic read mode that doesn't actu
       color: '#ef4444',
       description: 'Producer-Consumer, Readers-Writers, Dining Philosophers',
 
-      introduction: `These classic problems are frequently asked in interviews and demonstrate fundamental concurrency patterns. Understanding their solutions helps you tackle real-world synchronization challenges.`,
+      introduction: `## Overview
+These classic problems are frequently asked in interviews and demonstrate fundamental concurrency patterns. Understanding their solutions helps you tackle real-world synchronization challenges.`,
 
       basicImplementation: {
         title: 'Producer-Consumer Pattern',
@@ -261,7 +264,8 @@ Interview Tip: Start with resource ordering (simplest, most practical). Mention 
       color: '#8b5cf6',
       description: 'Managing worker threads efficiently',
 
-      introduction: `Thread pools manage a collection of reusable worker threads to execute tasks. They reduce overhead from thread creation/destruction and prevent resource exhaustion from unbounded thread spawning.`,
+      introduction: `## Overview
+Thread pools manage a collection of reusable worker threads to execute tasks. They reduce overhead from thread creation/destruction and prevent resource exhaustion from unbounded thread spawning.`,
 
       basicImplementation: {
         title: 'Thread Pool Architecture',
@@ -356,7 +360,8 @@ with ThreadPoolExecutor(max_workers=4) as executor:
       color: '#06b6d4',
       description: 'Thread-safe collections and atomic operations',
 
-      introduction: `Concurrent data structures are designed for safe access by multiple threads without external synchronization. They use techniques like lock-free algorithms, fine-grained locking, and copy-on-write semantics.`,
+      introduction: `## Overview
+Concurrent data structures are designed for safe access by multiple threads without external synchronization. They use techniques like lock-free algorithms, fine-grained locking, and copy-on-write semantics.`,
 
       structures: [
         { name: 'ConcurrentHashMap', description: 'Segment-level locking for high concurrency' },
@@ -431,7 +436,8 @@ Interview Insight: Lock-free doesn't mean faster in all cases. Under low content
       color: '#f59e0b',
       description: 'Thread states, transitions, and daemon threads',
 
-      introduction: `Understanding the thread lifecycle is fundamental to writing correct concurrent programs. A thread transitions through well-defined states from creation to termination, and knowing these states helps you diagnose deadlocks, understand scheduling behavior, and use synchronization primitives correctly.
+      introduction: `## Overview
+Understanding the thread lifecycle is fundamental to writing correct concurrent programs. A thread transitions through well-defined states from creation to termination, and knowing these states helps you diagnose deadlocks, understand scheduling behavior, and use synchronization primitives correctly.
 
 In Java, threads have six states defined by Thread.State: NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, and TERMINATED. In Python and other languages the model is similar conceptually, though the APIs differ. Daemon threads are background threads that do not prevent the JVM/process from exiting, making them suitable for housekeeping tasks.`,
 
@@ -464,7 +470,8 @@ In Java, threads have six states defined by Thread.State: NEW, RUNNABLE, BLOCKED
       color: '#6366f1',
       description: 'Work stealing, recursive decomposition, and parallel computation',
 
-      introduction: `The Fork/Join framework is designed for divide-and-conquer parallelism. It splits a large task into smaller subtasks (fork), processes them in parallel, and combines the results (join). The framework uses a work-stealing algorithm where idle threads steal tasks from the queues of busy threads, ensuring all cores stay utilized.
+      introduction: `## Overview
+The Fork/Join framework is designed for divide-and-conquer parallelism. It splits a large task into smaller subtasks (fork), processes them in parallel, and combines the results (join). The framework uses a work-stealing algorithm where idle threads steal tasks from the queues of busy threads, ensuring all cores stay utilized.
 
 Java's ForkJoinPool is the backbone of parallel streams and CompletableFuture. Understanding fork/join helps you reason about when parallelism actually improves performance versus when the overhead of task splitting and merging outweighs the benefits.`,
 
@@ -540,7 +547,8 @@ long sum = pool.invoke(new SumTask(data, 0, data.length));`
       color: '#ec4899',
       description: 'Shared vs exclusive access and the reader-writer problem',
 
-      introduction: `A Read-Write Lock (RWLock) allows multiple concurrent readers OR a single exclusive writer. This is a significant improvement over a plain mutex for read-heavy workloads: instead of serializing all access, multiple readers can proceed simultaneously, and only writes require exclusive access.
+      introduction: `## Overview
+A Read-Write Lock (RWLock) allows multiple concurrent readers OR a single exclusive writer. This is a significant improvement over a plain mutex for read-heavy workloads: instead of serializing all access, multiple readers can proceed simultaneously, and only writes require exclusive access.
 
 The classic reader-writer problem has three variants: readers-preference (readers never wait if the lock is held by another reader, risking writer starvation), writers-preference (new readers wait if a writer is queued, risking reader starvation), and fair (strict FIFO ordering, no starvation for either). Java's ReentrantReadWriteLock supports both fair and non-fair modes.`,
 
@@ -631,7 +639,8 @@ class ThreadSafeCache:
       color: '#14b8a6',
       description: 'Wait/notify patterns, spurious wakeups, and producer-consumer with conditions',
 
-      introduction: `Condition variables allow threads to wait for a specific condition to become true, rather than busy-waiting or polling. A thread acquires a lock, checks the condition, and if it is not met, calls wait() which atomically releases the lock and suspends the thread. When another thread changes the state and calls notify/notifyAll, waiting threads are woken up to re-check the condition.
+      introduction: `## Overview
+Condition variables allow threads to wait for a specific condition to become true, rather than busy-waiting or polling. A thread acquires a lock, checks the condition, and if it is not met, calls wait() which atomically releases the lock and suspends the thread. When another thread changes the state and calls notify/notifyAll, waiting threads are woken up to re-check the condition.
 
 The critical rule is to ALWAYS check conditions in a while loop, not an if statement, because of spurious wakeups: a thread may be woken up even when no notify was called. The while loop ensures the condition is actually true before proceeding.`,
 
@@ -711,7 +720,8 @@ for t in threads: t.join()`
       color: '#f97316',
       description: 'CyclicBarrier, CountDownLatch, Phaser, and Exchanger',
 
-      introduction: `Barriers and latches are synchronization constructs that coordinate groups of threads reaching a common point. A CountDownLatch is a one-shot gate: threads wait until a counter reaches zero. A CyclicBarrier is reusable: threads wait until all parties arrive, then all proceed and the barrier resets. A Phaser generalizes both with dynamic registration and multiple phases.
+      introduction: `## Overview
+Barriers and latches are synchronization constructs that coordinate groups of threads reaching a common point. A CountDownLatch is a one-shot gate: threads wait until a counter reaches zero. A CyclicBarrier is reusable: threads wait until all parties arrive, then all proceed and the barrier resets. A Phaser generalizes both with dynamic registration and multiple phases.
 
 These are commonly used for parallel initialization (wait until all services are ready), batch processing (process data in parallel then merge), testing (start N threads simultaneously to simulate load), and multi-phase algorithms (all threads complete phase 1 before any starts phase 2).`,
 
@@ -810,7 +820,8 @@ phaser.arriveAndDeregister(); // coordinator deregisters`
       color: '#ef4444',
       description: 'Classic multithreaded coding challenges from interviews',
 
-      introduction: `Concurrency coding problems are increasingly common in interviews at top tech companies. Unlike algorithmic problems, these test your ability to coordinate multiple threads safely. The problems typically require using locks, semaphores, condition variables, or barriers to ensure threads execute in a specific order or share resources correctly.
+      introduction: `## Overview
+Concurrency coding problems are increasingly common in interviews at top tech companies. Unlike algorithmic problems, these test your ability to coordinate multiple threads safely. The problems typically require using locks, semaphores, condition variables, or barriers to ensure threads execute in a specific order or share resources correctly.
 
 The key pattern: identify what shared state exists, what ordering constraints are required, and which synchronization primitive best enforces those constraints. Always think about edge cases like spurious wakeups, thread starvation, and deadlock prevention.`,
 

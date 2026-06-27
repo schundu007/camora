@@ -52,7 +52,8 @@ export const systemDesignExtraTopics = [
       'Raft was designed to be understandable: the paper explicitly optimized for comprehensibility over theoretical minimality',
       'etcd (used in Kubernetes) uses Raft; if etcd loses quorum, the entire Kubernetes control plane stops accepting writes',
     ],
-    introduction: `Raft is a consensus algorithm designed to be more understandable than Paxos while providing equivalent safety guarantees. It is the backbone of etcd, CockroachDB, TiKV, Consul, and dozens of other production distributed systems. Every engineer working on distributed infrastructure must understand Raft at the conceptual level.
+    introduction: `## Overview
+Raft is a consensus algorithm designed to be more understandable than Paxos while providing equivalent safety guarantees. It is the backbone of etcd, CockroachDB, TiKV, Consul, and dozens of other production distributed systems. Every engineer working on distributed infrastructure must understand Raft at the conceptual level.
 
 The core insight: a cluster of N nodes can tolerate up to (N-1)/2 failures and still reach consensus. A 3-node cluster tolerates 1 failure; a 5-node cluster tolerates 2. Raft decomposes the consensus problem into three mostly independent subproblems: leader election, log replication, and safety.
 
@@ -116,7 +117,8 @@ In interviews: Mention that Raft is the practical choice for new systems due to 
       'In microservices, sagas are almost always preferred over 2PC because they avoid distributed locking',
       'Google Spanner uses TrueTime + Paxos to implement external consistency without traditional 2PC',
     ],
-    introduction: `Two-Phase Commit (2PC) is the canonical protocol for achieving atomicity across multiple distributed participants. It ensures that either all nodes commit a transaction or all roll back — the fundamental "all-or-nothing" guarantee extended to distributed systems.
+    introduction: `## Overview
+Two-Phase Commit (2PC) is the canonical protocol for achieving atomicity across multiple distributed participants. It ensures that either all nodes commit a transaction or all roll back — the fundamental "all-or-nothing" guarantee extended to distributed systems.
 
 The protocol has two phases: in the prepare phase, a coordinator sends "prepare to commit" to all participants, who vote yes (locking resources) or no. If all vote yes, the coordinator sends "commit" in the commit phase; if any vote no, it sends "abort." Every participant that voted yes must honor the coordinator's decision regardless of local failures.
 
@@ -164,7 +166,8 @@ When 2PC is appropriate: Internal database transactions within a single service 
       'Choreography is simpler for simple flows; orchestration is better for complex, conditional flows',
       'The outbox pattern ensures at-least-once delivery for saga events without two-phase commit',
     ],
-    introduction: `Sagas are a pattern for managing data consistency across microservices without distributed locking. Instead of a single atomic transaction, a saga is a sequence of local transactions where each step publishes events or messages that trigger the next step. If any step fails, the saga executes compensating transactions to undo the completed steps.
+    introduction: `## Overview
+Sagas are a pattern for managing data consistency across microservices without distributed locking. Instead of a single atomic transaction, a saga is a sequence of local transactions where each step publishes events or messages that trigger the next step. If any step fails, the saga executes compensating transactions to undo the completed steps.
 
 There are two implementation styles. In choreography, each service listens for events and reacts without a central coordinator — simple to implement but hard to track. In orchestration, a central saga orchestrator sends commands to services and handles the state machine explicitly — more complex infrastructure but easier to reason about.
 
@@ -218,7 +221,8 @@ Key design decisions:
       'OR-Set (Observed-Remove Set): add wins over concurrent remove by tagging each element with a unique token',
       'CRDTs avoid coordination overhead — replicas accept writes independently and merge lazily',
     ],
-    introduction: `Conflict-Free Replicated Data Types (CRDTs) are data structures with mathematically guaranteed convergence: any two replicas that have received the same set of updates will hold the same state, regardless of the order updates were applied. This makes CRDTs ideal for systems that need to accept writes on multiple replicas simultaneously without coordination.
+    introduction: `## Overview
+Conflict-Free Replicated Data Types (CRDTs) are data structures with mathematically guaranteed convergence: any two replicas that have received the same set of updates will hold the same state, regardless of the order updates were applied. This makes CRDTs ideal for systems that need to accept writes on multiple replicas simultaneously without coordination.
 
 CRDTs work by restricting operations to those that form a semilattice — a mathematical structure where merging is commutative (A merge B = B merge A), associative ((A merge B) merge C = A merge (B merge C)), and idempotent (A merge A = A). When all updates satisfy these properties, replicas can merge in any order and always converge.
 
@@ -269,7 +273,8 @@ Interview guidance: Mention both when discussing real-time collaboration. Google
       'Cross-region replication lag is typically 50-200ms; design your consistency model around this floor',
       'Geo-partitioning (routing users to their "home" region based on user ID) eliminates most cross-region conflicts',
     ],
-    introduction: `Multi-region active-active is the highest tier of availability architecture: multiple geographic regions each serve live traffic and accept writes simultaneously. This provides the lowest possible latency (users connect to their nearest region), the highest availability (any single region can fail completely without user impact), and the best disaster recovery posture.
+    introduction: `## Overview
+Multi-region active-active is the highest tier of availability architecture: multiple geographic regions each serve live traffic and accept writes simultaneously. This provides the lowest possible latency (users connect to their nearest region), the highest availability (any single region can fail completely without user impact), and the best disaster recovery posture.
 
 The fundamental challenge is write conflicts: if a user in the US and a user in Europe both modify the same record within the replication lag window (~100-200ms for cross-continental links), both writes succeed locally and must be reconciled. Different systems handle this differently: DynamoDB uses last-write-wins with vector clocks, Google Spanner uses TrueTime to provide external consistency across regions, and CockroachDB uses Raft-based consensus extended to span regions.
 
@@ -315,7 +320,8 @@ Geo-partitioning as conflict avoidance: The cleanest approach. Assign each user 
       'Prometheus stores data in 2-hour chunks; each chunk is compressed independently using Gorilla encoding',
       'TimescaleDB extends PostgreSQL with automatic time-partitioned hypertables — good for SQL familiarity',
     ],
-    introduction: `Time-series databases (TSDBs) are purpose-built for data with a time dimension: metrics (CPU usage, request rate), IoT sensor readings, financial tick data, and application traces. Unlike general-purpose databases, TSDBs optimize for the specific access patterns of time-series workloads: extremely high write throughput, range queries over time windows, and efficient aggregation.
+    introduction: `## Overview
+Time-series databases (TSDBs) are purpose-built for data with a time dimension: metrics (CPU usage, request rate), IoT sensor readings, financial tick data, and application traces. Unlike general-purpose databases, TSDBs optimize for the specific access patterns of time-series workloads: extremely high write throughput, range queries over time windows, and efficient aggregation.
 
 The key insight is that time-series data is almost always append-only: you rarely update or delete historical data points, and writes are always for "now." This allows TSDBs to use write-optimized storage (LSM trees or columnar chunk files) and aggressive compression. Gorilla encoding (used by Facebook and Prometheus) uses XOR of adjacent float values plus delta encoding for timestamps, achieving 1.37 bytes per data point on average versus 16 bytes in a naive representation — a 12x compression ratio.
 
@@ -361,7 +367,8 @@ Scaling: Single Prometheus instances handle ~1 million active series. For larger
       'Number of primary shards cannot be changed after index creation — plan for future growth',
       'For type-ahead search, index edge n-grams of each token ("hel", "hell", "hello") to match prefixes efficiently',
     ],
-    introduction: `Search systems are one of the most commonly asked design problems in senior engineering interviews because they touch nearly every distributed systems concept: high write throughput (indexing), complex read patterns (ranking), near-real-time requirements, and massive scale. Understanding how search engines work under the hood distinguishes candidates who understand distributed systems from those who only know the APIs.
+    introduction: `## Overview
+Search systems are one of the most commonly asked design problems in senior engineering interviews because they touch nearly every distributed systems concept: high write throughput (indexing), complex read patterns (ranking), near-real-time requirements, and massive scale. Understanding how search engines work under the hood distinguishes candidates who understand distributed systems from those who only know the APIs.
 
 The foundation is the inverted index: for each unique token in the corpus, maintain a posting list of all document IDs that contain that token, along with term frequency and position information. To search for "distributed systems", look up both tokens, intersect (or union) the posting lists, and rank by relevance. Elasticsearch, Solr, and Google's original MapReduce paper all build on this core structure.
 
@@ -412,7 +419,8 @@ In-flight indexing during reindex: Use a timestamp filter — reindex all docume
       'TCP implements backpressure natively via the receive window — the receiver advertises how much buffer space it has',
       'Kafka consumer lag is a natural backpressure signal: add consumers when lag grows, reduce producers when lag is manageable',
     ],
-    introduction: `Backpressure is the mechanism by which a slow consumer signals to a fast producer to reduce its send rate. Without backpressure, a producer that generates work faster than the consumer can process it will either exhaust memory (through unbounded buffering) or drop work silently. Both outcomes are failures.
+    introduction: `## Overview
+Backpressure is the mechanism by which a slow consumer signals to a fast producer to reduce its send rate. Without backpressure, a producer that generates work faster than the consumer can process it will either exhaust memory (through unbounded buffering) or drop work silently. Both outcomes are failures.
 
 The key insight: unbounded queues are the enemy of stability. They allow the system to appear to function normally while secretly accumulating a growing backlog that will eventually cause an OOM crash or introduce unbounded latency. A message that sat in a queue for 10 minutes before being processed may be processed too late to be useful (e.g., a real-time notification), consuming CPU and I/O to produce a useless result.
 
@@ -458,7 +466,8 @@ Monitoring: Track queue depth, consumer lag, and processing latency as the three
       'BFF (Backend for Frontend): separate gateway instances for mobile, web, and third-party APIs, each with optimized response shapes',
       'API Gateway handles North-South traffic (external clients to internal services); service mesh handles East-West (service to service)',
     ],
-    introduction: `API gateways are the front door for microservices architectures. Rather than exposing dozens of individual service endpoints to clients, an API gateway provides a single URL that routes requests to the appropriate backend service, applies cross-cutting concerns (authentication, rate limiting, logging, tracing), and handles protocol translation.
+    introduction: `## Overview
+API gateways are the front door for microservices architectures. Rather than exposing dozens of individual service endpoints to clients, an API gateway provides a single URL that routes requests to the appropriate backend service, applies cross-cutting concerns (authentication, rate limiting, logging, tracing), and handles protocol translation.
 
 The most important benefit: decoupling clients from the internal service topology. Clients call \`/api/v1/users\` and the gateway routes to whichever User Service instances are healthy, handles retries, and translates errors into a consistent response format. Services can be redeployed, renamed, or split without changing any client code.
 
@@ -516,7 +525,8 @@ Common interview mistake: Conflating API gateway with service mesh. Clearly dist
       'Noisy neighbor: one tenant\'s heavy load degrades other tenants. Mitigate with per-tenant rate limits and resource quotas',
       'Many SaaS products use bridge: shared pool for free/startup tiers, dedicated silo for enterprise tiers',
     ],
-    introduction: `Multi-tenancy is the ability to serve multiple customers (tenants) from shared infrastructure while maintaining strong isolation between them. It is the foundational architectural challenge for any SaaS product.
+    introduction: `## Overview
+Multi-tenancy is the ability to serve multiple customers (tenants) from shared infrastructure while maintaining strong isolation between them. It is the foundational architectural challenge for any SaaS product.
 
 The three models represent a spectrum of isolation vs cost. The silo model gives each tenant a completely separate deployment (separate database, separate compute, sometimes separate cloud account). Isolation is perfect, compliance is simple, but cost is highest and operations become complex at scale. The pool model puts all tenants in the same database, differentiating rows by a tenant_id column. Cost is lowest, but a bug that omits the tenant_id filter in a query could expose one tenant's data to another — a catastrophic security failure.
 
@@ -570,7 +580,8 @@ Additional safeguards:
       'Mutual exclusion: if experiment A and experiment B affect the same feature, users should be in only one of them to avoid interaction effects',
       'Minimum detectable effect (MDE) determines sample size: the smaller the effect you want to detect, the more users you need',
     ],
-    introduction: `A/B testing platforms are the infrastructure that allows product teams to run controlled experiments at scale — showing different variants of a feature to different user cohorts and measuring the impact on business metrics. Companies like Airbnb, Netflix, and Booking.com run thousands of concurrent experiments per year, making the A/B testing platform a critical piece of infrastructure.
+    introduction: `## Overview
+A/B testing platforms are the infrastructure that allows product teams to run controlled experiments at scale — showing different variants of a feature to different user cohorts and measuring the impact on business metrics. Companies like Airbnb, Netflix, and Booking.com run thousands of concurrent experiments per year, making the A/B testing platform a critical piece of infrastructure.
 
 The core challenge is consistent assignment: user 12345 must always see variant B for experiment X, regardless of which server handles the request, whether they are on mobile or web, and whether they log out and log back in. This is achieved by hashing the (user_id, experiment_id) pair and mapping the result to a variant. No state is needed — the assignment can be recomputed on any server and will always agree.
 
@@ -616,7 +627,8 @@ In practice: Most companies use layers for orthogonal experiments (different pro
       'APNs and FCM (Firebase Cloud Messaging) are the channels for iOS and Android push notifications respectively',
       'Deduplication: use notification_id as idempotency key. If the same notification is processed twice (at-least-once delivery), skip the second delivery',
     ],
-    introduction: `Notification systems are deceptively complex. At face value, "send a notification when event X occurs" seems simple. In practice, a production notification system at scale must handle millions of notifications per second across multiple channels (push, email, SMS, in-app), guarantee at-least-once delivery without duplicates, respect user preferences and do-not-disturb windows, and recover gracefully from downstream failures (APNs/FCM outages, email deliverability issues).
+    introduction: `## Overview
+Notification systems are deceptively complex. At face value, "send a notification when event X occurs" seems simple. In practice, a production notification system at scale must handle millions of notifications per second across multiple channels (push, email, SMS, in-app), guarantee at-least-once delivery without duplicates, respect user preferences and do-not-disturb windows, and recover gracefully from downstream failures (APNs/FCM outages, email deliverability issues).
 
 The central architectural challenge is fan-out: when a user with 10 million followers posts a tweet, you need to notify 10 million people. If this is done synchronously in the request path, the post API would take minutes. Instead, the notification is published to a message queue, and worker services consume the queue and send notifications asynchronously.
 
@@ -678,7 +690,8 @@ User preference check: Before each delivery attempt, check user preferences (do-
       'Presence (who is editing where) is typically implemented as ephemeral pub/sub, not persisted state',
       'Offline editing: buffer local changes and replay against the server state on reconnect, resolving conflicts',
     ],
-    introduction: `Real-time collaborative editing — where multiple users edit the same document simultaneously and see each other's changes instantly — is one of the most technically challenging system design problems. The core difficulty: two users can make concurrent edits that conflict, and both changes must be preserved (not silently discarded) while keeping all clients in a consistent state.
+    introduction: `## Overview
+Real-time collaborative editing — where multiple users edit the same document simultaneously and see each other's changes instantly — is one of the most technically challenging system design problems. The core difficulty: two users can make concurrent edits that conflict, and both changes must be preserved (not silently discarded) while keeping all clients in a consistent state.
 
 Two main approaches exist. Operational Transformation (OT), used by Google Docs, transforms operations against each other: if user A inserts "X" at position 5, and user B simultaneously inserts "Y" at position 3, when A's operation is applied after B's, it must be transformed to position 6 (shifted by B's insertion). OT requires a central server to define the canonical operation order.
 
@@ -728,7 +741,8 @@ Presence layer is separate: user cursor positions are broadcast via WebSocket as
       'After N failed retries (e.g., 24 hours of attempts), move to dead-letter storage and alert the subscriber',
       'Webhook delivery is inherently at-least-once; require subscribers to implement idempotency with the event ID',
     ],
-    introduction: `Webhooks are HTTP callbacks that notify external systems when an event occurs. Rather than polling an API for changes, subscribers register a URL and receive an HTTP POST whenever a relevant event happens. Webhooks power Stripe payment notifications, GitHub push events, Shopify order webhooks, and thousands of other integrations.
+    introduction: `## Overview
+Webhooks are HTTP callbacks that notify external systems when an event occurs. Rather than polling an API for changes, subscribers register a URL and receive an HTTP POST whenever a relevant event happens. Webhooks power Stripe payment notifications, GitHub push events, Shopify order webhooks, and thousands of other integrations.
 
 The central design challenge is reliable delivery: the subscriber's server may be down, slow, or return errors. The webhook system must retry failed deliveries without delivering the same event twice (a payment webhook delivered twice could trigger a double-charge). Since the network and subscriber servers are unreliable, at-least-once delivery is the practical guarantee, and subscribers are required to implement idempotency using the event ID.
 
@@ -784,7 +798,8 @@ Security is equally critical. Any server on the internet can call your webhook e
       'Client-side flags (evaluated in the browser) risk exposing your targeting rules to users; use for cosmetic features only',
       'Stale flag debt: flags that are always on or always off but never cleaned up. Schedule a quarterly flag audit',
     ],
-    introduction: `Feature flags (also called feature toggles) allow teams to ship code to production without immediately releasing it to users. A flag evaluation at runtime determines which code path executes, enabling gradual rollouts, A/B tests, kill switches, and beta programs — all without a new deployment.
+    introduction: `## Overview
+Feature flags (also called feature toggles) allow teams to ship code to production without immediately releasing it to users. A flag evaluation at runtime determines which code path executes, enabling gradual rollouts, A/B tests, kill switches, and beta programs — all without a new deployment.
 
 The core pattern: wrap new code in an \`if (isEnabled("new_checkout_flow", user))\` check. When the flag is off, the old code runs. When the flag is on, the new code runs. Turning on the flag requires only a configuration change — no deployment, no downtime.
 
