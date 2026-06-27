@@ -32,12 +32,34 @@ export const HEAVY_TOPIC_LOADERS = {
   },
 
   'system-design': async () => {
-    const [topics, problems, problemsExtra, extra] = await Promise.all([
+    const [topics, problems, problemsExtra, ai1, ai2, ai3, realtime, aiSolves, extra] = await Promise.all([
       import('./systemDesignTopics.js'),
       import('./systemDesignProblems.js'),
       import('./systemDesignProblemsExtra.js'),
+      import('./systemDesignAIProblems1.js'),
+      import('./systemDesignAIProblems2.js'),
+      import('./systemDesignAIProblems3.js'),
+      import('./systemDesignRealtimeProblems.js'),
+      import('./systemDesignAISolvesProblems.js'),
       import('./systemDesignTopicsExtra.js'),
     ]);
+
+    const allNewCategories = [
+      ...problemsExtra.extraSystemDesignProblemCategories,
+      ...ai1.aiProblems1Categories,
+      ...ai2.aiProblems2Categories,
+      ...ai3.aiProblems3Categories,
+      ...realtime.realtimeProblemCategories,
+      ...aiSolves.aiSolvesProblemCategories,
+    ];
+
+    const seenIds = new Set(problems.systemDesignProblemCategories.map((c) => c.id));
+    const deduped = allNewCategories.filter((c) => {
+      if (seenIds.has(c.id)) return false;
+      seenIds.add(c.id);
+      return true;
+    });
+
     return {
       systemDesignTopics: topics.systemDesignTopics,
       systemDesignExtraTopics: extra.systemDesignExtraTopics,
@@ -45,15 +67,26 @@ export const HEAVY_TOPIC_LOADERS = {
       systemDesignExtraCategoryMap: extra.systemDesignExtraCategoryMap,
       systemDesignProblemCategories: [
         ...problems.systemDesignProblemCategories,
-        ...problemsExtra.extraSystemDesignProblemCategories.filter(
-          (c) => !problems.systemDesignProblemCategories.some((p) => p.id === c.id)
-        ),
+        ...deduped,
       ],
       systemDesignProblemCategoryMap: {
         ...problems.systemDesignProblemCategoryMap,
         ...problemsExtra.extraSystemDesignProblemCategoryMap,
+        ...ai1.aiProblems1CategoryMap,
+        ...ai2.aiProblems2CategoryMap,
+        ...ai3.aiProblems3CategoryMap,
+        ...realtime.realtimeProblemCategoryMap,
+        ...aiSolves.aiSolvesProblemCategoryMap,
       },
-      systemDesigns: [...problems.systemDesigns, ...problemsExtra.extraSystemDesigns],
+      systemDesigns: [
+        ...problems.systemDesigns,
+        ...problemsExtra.extraSystemDesigns,
+        ...ai1.aiProblems1Designs,
+        ...ai2.aiProblems2Designs,
+        ...ai3.aiProblems3Designs,
+        ...realtime.realtimeDesigns,
+        ...aiSolves.aiSolvesDesigns,
+      ],
       lldProblemCategories: problems.lldProblemCategories,
     };
   },
