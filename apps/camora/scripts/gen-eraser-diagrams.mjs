@@ -27,21 +27,22 @@ if (!REFRESH_TOKEN) {
   process.exit(1);
 }
 
-const FIREBASE_API_KEY  = 'AIzaSyCX5UYWp-3ZAVEuQ3Ospj9Xg9e6ji16roI';
-const SESSION_ID        = '3TVBEsFiAgslQdXMdurc';
-const WORKSPACE_ID      = '9DzIeEmqzNtS52hJEODr';
-const PROMPTS_DIR       = path.resolve(__dirname, 'eraser-prompts');
-const PUBLIC_DIAGRAMS   = path.resolve(__dirname, '../public/diagrams');
-const ICON_BASE         = 'https://app.eraser.io/_next/static/canvas-icons';
+const FIREBASE_API_KEY = 'AIzaSyCX5UYWp-3ZAVEuQ3Ospj9Xg9e6ji16roI';
+const SESSION_ID       = '3TVBEsFiAgslQdXMdurc';
+const WORKSPACE_ID     = '9DzIeEmqzNtS52hJEODr';
+const PROMPTS_DIR      = path.resolve(__dirname, 'eraser-prompts');
+const PUBLIC_DIAGRAMS  = path.resolve(__dirname, '../public/diagrams');
+const ICON_BASE        = 'https://app.eraser.io/_next/static/canvas-icons';
 
-const argv    = process.argv.slice(2);
-const flag    = (name, fb) => { const h = argv.find(a => a.startsWith(`--${name}=`)); return h ? h.split('=').slice(1).join('=') : fb; };
-const LIMIT   = parseInt(flag('limit', '0'), 10) || Infinity;
+const argv      = process.argv.slice(2);
+const flag      = (name, fb) => { const h = argv.find(a => a.startsWith(`--${name}=`)); return h ? h.split('=').slice(1).join('=') : fb; };
+const LIMIT     = parseInt(flag('limit', '0'), 10) || Infinity;
 const ONLY_SLUG = flag('slug', '');
 const ONLY_PROV = flag('provider', '');
-const DRY_RUN = argv.includes('--dry-run');
-const FORCE   = argv.includes('--force');
-const CONCURRENCY = parseInt(flag('concurrency', '2'), 10);
+const DRY_RUN   = argv.includes('--dry-run');
+const FORCE     = argv.includes('--force');
+// Default concurrency=1 — one at a time prevents partial/corrupt renders
+const CONCURRENCY = parseInt(flag('concurrency', '1'), 10);
 
 const PROVIDERS  = ONLY_PROV ? [ONLY_PROV] : ['aws', 'azure', 'gcp'];
 const PROV_LABEL = { aws: 'AWS', azure: 'Azure', gcp: 'GCP' };
@@ -69,7 +70,7 @@ async function getIdToken() {
   const data = await res.json();
   idToken = data.id_token;
   tokenExpiry = Date.now() + parseInt(data.expires_in, 10) * 1000;
-  console.log('Token refreshed.');
+  console.log('  [auth] token refreshed');
   return idToken;
 }
 
@@ -82,7 +83,7 @@ function eraserHeaders(token) {
   };
 }
 
-// ── Eraser AI ─────────────────────────────────────────────────────────────────
+// ── Eraser AI API ─────────────────────────────────────────────────────────────
 
 async function callPlanner(prompt, token) {
   const res = await fetch('https://app.eraser.io/api/ai/planner', {
@@ -99,7 +100,7 @@ async function callPlanner(prompt, token) {
   const data = await res.json();
   const tc = data.interaction?.toolCalls?.[0];
   if (!tc) throw new Error(`No toolCall in planner response: ${JSON.stringify(data).slice(0, 200)}`);
-  return { interactionId: data.interactionId, toolCallId: tc.id, elementId: tc.parameters.elementId };
+  return { interactionId: data.interactionId, toolCallId: tc.id, elementId: tc.parameters?.elementId };
 }
 
 async function callToolExecute(interactionId, toolCallId, elementId, token) {
@@ -116,126 +117,262 @@ async function callToolExecute(interactionId, toolCallId, elementId, token) {
   });
   if (!res.ok) throw new Error(`toolExecute failed: HTTP ${res.status} ${await res.text()}`);
 
-  // Stream NDJSON lines
+  // Stream NDJSON — take the LAST freeformElements (most complete state)
   const text = await res.text();
-  let diagramCode = '';
+  let finalElements = null;
+
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;
     try {
       const obj = JSON.parse(line);
-      if (obj.type === 'diagram-code' || obj.diagramCode) diagramCode += (obj.diagramCode || obj.code || '');
-      if (obj.type === 'complete' && obj.diagramCode) diagramCode = obj.diagramCode;
+      if (obj.type === 'progress' && Array.isArray(obj.data?.freeformElements) && obj.data.freeformElements.length > 0) {
+        finalElements = obj.data.freeformElements;
+      }
     } catch {}
   }
-  if (!diagramCode) throw new Error(`No diagram code in toolExecute response`);
-  return diagramCode;
+
+  if (!finalElements || finalElements.length === 0) {
+    throw new Error('No freeform elements returned by toolExecute');
+  }
+  return finalElements;
 }
 
-// ── Canvas renderer ───────────────────────────────────────────────────────────
+// ── Icon loader ───────────────────────────────────────────────────────────────
 
 const iconCache = new Map();
+
 async function fetchIcon(name) {
+  if (!name) return null;
   if (iconCache.has(name)) return iconCache.get(name);
   try {
-    const img = await loadImage(`${ICON_BASE}/${name}.svg`);
+    const res = await fetch(`${ICON_BASE}/${name}.svg`, {
+      headers: { 'Referer': 'https://app.eraser.io/', 'Origin': 'https://app.eraser.io' },
+    });
+    if (!res.ok) { iconCache.set(name, null); return null; }
+    const buf = Buffer.from(await res.arrayBuffer());
+    const img = await loadImage(buf);
     iconCache.set(name, img);
     return img;
-  } catch { return null; }
+  } catch {
+    iconCache.set(name, null);
+    return null;
+  }
 }
 
-async function renderDiagram(diagramCode, outPath) {
-  const W = 1600, H = 900;
-  const canvas = createCanvas(W, H);
-  const ctx = canvas.getContext('2d');
+// ── Renderer ──────────────────────────────────────────────────────────────────
 
+const RENDER_SCALE = 2;   // 2× for retina-quality output
+const PAD          = 60;  // canvas padding around diagram content
+
+function getPort(el, port) {
+  const x = el.x ?? 0, y = el.y ?? 0, w = el.width ?? 50, h = el.height ?? 50;
+  switch ((port || '').toLowerCase()) {
+    case 'left':   return { x, y: y + h / 2 };
+    case 'right':  return { x: x + w, y: y + h / 2 };
+    case 'top':    return { x: x + w / 2, y };
+    case 'bottom': return { x: x + w / 2, y: y + h };
+    default:       return { x: x + w / 2, y: y + h / 2 };
+  }
+}
+
+function wrapText(ctx, text, maxWidth) {
+  const words = (text || '').split(' ');
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [''];
+}
+
+async function renderFreeform(elements, outPath) {
+  const S = RENDER_SCALE;
+
+  // Bounding box from all positioned elements
+  const positioned = elements.filter(e => e.x != null && e.y != null && e.width != null && e.height != null);
+  if (positioned.length === 0) throw new Error('No positioned elements to render');
+
+  const minX = Math.min(...positioned.map(e => e.x)) - PAD;
+  const minY = Math.min(...positioned.map(e => e.y)) - PAD;
+  const maxX = Math.max(...positioned.map(e => e.x + (e.width || 0))) + PAD;
+  const maxY = Math.max(...positioned.map(e => e.y + (e.height || 0))) + PAD;
+
+  const W = Math.round((maxX - minX) * S);
+  const H = Math.round((maxY - minY) * S);
+
+  const canvas = createCanvas(W, H);
+  const ctx    = canvas.getContext('2d');
+
+  // White background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, H);
 
-  // Parse nodes and edges from diagram code
-  const nodePattern = /^(\w[\w\s-]*?)\s*\[([^\]]*)\]/gm;
-  const edgePattern = /^(\w[\w\s-]*?)\s*(?:>|->|--|<>)\s*(\w[\w\s-]*?)(?:\s*:\s*(.+))?$/gm;
+  // Coordinate helpers
+  const px = x => (x - minX) * S;
+  const py = y => (y - minY) * S;
 
-  const nodes = new Map();
-  let nodeMatch;
-  while ((nodeMatch = nodePattern.exec(diagramCode)) !== null) {
-    const name = nodeMatch[1].trim();
-    const props = Object.fromEntries(
-      nodeMatch[2].split(',').map(p => p.trim().split(':').map(s => s.trim()))
-        .filter(([k]) => k)
-    );
-    nodes.set(name, { name, icon: props.icon, label: props.label || name });
-  }
+  // Element lookup for relationship arrows
+  const byId = new Map(elements.filter(e => e.id).map(e => [e.id, e]));
 
-  const edges = [];
-  let edgeMatch;
-  while ((edgeMatch = edgePattern.exec(diagramCode)) !== null) {
-    edges.push({ from: edgeMatch[1].trim(), to: edgeMatch[2].trim(), label: edgeMatch[3]?.trim() });
-  }
-
-  // Layout: distribute nodes in a grid
-  const nodeList = [...nodes.values()];
-  const cols = Math.ceil(Math.sqrt(nodeList.length));
-  const cellW = W / (cols + 1);
-  const cellH = H / (Math.ceil(nodeList.length / cols) + 1);
-  const NODE_SIZE = Math.min(cellW, cellH) * 0.35;
-
-  nodeList.forEach((node, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    node.x = cellW * (col + 1);
-    node.y = cellH * (row + 1);
-  });
-
-  // Draw edges
-  ctx.strokeStyle = '#94a3b8';
-  ctx.lineWidth = 1.5;
-  ctx.font = '11px sans-serif';
-  ctx.fillStyle = '#64748b';
-  for (const edge of edges) {
-    const from = nodes.get(edge.from);
-    const to = nodes.get(edge.to);
-    if (!from || !to) continue;
+  // ── 1. Groups (background containers) ────────────────────────────────────
+  for (const e of elements.filter(el => el.tag === 'Group')) {
+    const x = px(e.x), y = py(e.y), w = e.width * S, h = e.height * S;
+    ctx.fillStyle   = '#f8fafc';
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth   = 1.5;
     ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
+    ctx.roundRect(x, y, w, h, 10);
+    ctx.fill();
     ctx.stroke();
-    if (edge.label) {
-      ctx.fillText(edge.label, (from.x + to.x) / 2, (from.y + to.y) / 2 - 4);
-    }
   }
 
-  // Draw nodes
-  for (const node of nodeList) {
-    const img = node.icon ? await fetchIcon(node.icon) : null;
-    const half = NODE_SIZE / 2;
-
-    // Box
-    ctx.fillStyle = '#f8fafc';
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1.5;
+  // ── 2. Shapes (note / annotation boxes) ──────────────────────────────────
+  for (const e of elements.filter(el => el.tag === 'Shape')) {
+    const x = px(e.x), y = py(e.y), w = e.width * S, h = e.height * S;
+    ctx.fillStyle   = '#fefce8';
+    ctx.strokeStyle = '#fde68a';
+    ctx.lineWidth   = 1.5;
     ctx.beginPath();
-    ctx.roundRect(node.x - half, node.y - half, NODE_SIZE, NODE_SIZE, 8);
+    ctx.roundRect(x, y, w, h, 6);
     ctx.fill();
     ctx.stroke();
 
-    // Icon
+    const texts = Array.isArray(e.texts) ? e.texts : (e.text ? [{ text: String(e.text), fontSize: 12 }] : []);
+    let textY = y + 10;
+    for (const t of texts) {
+      const fs = (t.fontSize || 12) * S * 0.5;
+      ctx.fillStyle = '#374151';
+      ctx.font = `${fs}px Arial, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      const lines = wrapText(ctx, (t.text || ''), (w - 16));
+      for (const line of lines) {
+        ctx.fillText(line, x + 8, textY);
+        textY += fs * 1.4;
+      }
+    }
+  }
+
+  // ── 3. Icons (cloud service components) ──────────────────────────────────
+  for (const e of elements.filter(el => el.tag === 'Icon')) {
+    const cx = px(e.x + (e.width  || 50) / 2);
+    const cy = py(e.y + (e.height || 50) / 2);
+    const sz = (e.width || 50) * S * 0.75;
+
+    const img = await fetchIcon(e.icon);
     if (img) {
-      const iconPad = NODE_SIZE * 0.18;
-      ctx.drawImage(img, node.x - half + iconPad, node.y - half + iconPad, NODE_SIZE - iconPad * 2, NODE_SIZE - iconPad * 2);
+      ctx.drawImage(img, cx - sz / 2, cy - sz / 2, sz, sz);
     } else {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = `bold ${NODE_SIZE * 0.28}px sans-serif`;
-      ctx.textAlign = 'center';
+      // Fallback: colored pill box with 2-letter abbreviation
+      ctx.fillStyle   = '#dbeafe';
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth   = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(cx - sz / 2, cy - sz / 2, sz, sz, 8);
+      ctx.fill();
+      ctx.stroke();
+      const abbrev = (e.texts?.[0]?.text || e.id || '??').slice(0, 2).toUpperCase();
+      ctx.fillStyle = '#1e40af';
+      ctx.font      = `bold ${sz * 0.36}px Arial, sans-serif`;
+      ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(node.label.slice(0, 2).toUpperCase(), node.x, node.y);
+      ctx.fillText(abbrev, cx, cy);
     }
 
-    // Label
-    ctx.fillStyle = '#1e293b';
-    ctx.font = `${Math.max(10, NODE_SIZE * 0.14)}px sans-serif`;
-    ctx.textAlign = 'center';
+    // Text labels below icon
+    const texts = Array.isArray(e.texts) ? e.texts : [];
+    let labelY = py(e.y + (e.height || 50)) + 5;
+    for (const t of texts) {
+      const fs = (t.fontSize || 13) * S * 0.5;
+      ctx.fillStyle    = t.color === 'gray' ? '#6b7280' : '#1e293b';
+      ctx.font         = `${fs}px Arial, sans-serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'top';
+      const lines = wrapText(ctx, (t.text || ''), (e.width || 50) * S * 1.2);
+      for (const line of lines) {
+        ctx.fillText(line, cx, labelY);
+        labelY += fs * 1.3;
+      }
+    }
+  }
+
+  // ── 4. Textboxes (titles and legends) ────────────────────────────────────
+  for (const e of elements.filter(el => el.tag === 'Textbox')) {
+    const rawText = typeof e.text === 'string' ? e.text : '';
+    if (!rawText.trim()) continue;
+
+    const isHeading = rawText.startsWith('#');
+    const clean     = rawText.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+    const fs        = isHeading ? 18 * S * 0.5 : (e.fontSize || 13) * S * 0.5;
+
+    ctx.fillStyle    = isHeading ? '#0f172a' : '#475569';
+    ctx.font         = `${isHeading ? 'bold ' : ''}${fs}px Arial, sans-serif`;
+    ctx.textAlign    = e.hAlign === 'center' ? 'center' : 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(node.label, node.x, node.y + half + 4);
+
+    const x      = px(e.x);
+    const y      = py(e.y);
+    const maxW   = (e.width || 1200) * S;
+
+    const lines = wrapText(ctx, clean, maxW);
+    lines.forEach((line, i) => ctx.fillText(line, x, y + i * fs * 1.4));
+  }
+
+  // ── 5. Relationships (arrows with labels) ─────────────────────────────────
+  for (const e of elements.filter(el => el.tag === 'Relationship')) {
+    const fromEl = byId.get(e.from);
+    const toEl   = byId.get(e.to);
+    if (!fromEl || !toEl) continue;
+
+    const fp = getPort(fromEl, e.fromPort);
+    const tp = getPort(toEl,   e.toPort);
+
+    const x1 = px(fp.x), y1 = py(fp.y);
+    const x2 = px(tp.x), y2 = py(tp.y);
+    const dx = x2 - x1, dy = y2 - y1;
+
+    // Bezier arrow
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.bezierCurveTo(x1 + dx * 0.4, y1, x1 + dx * 0.6, y2, x2, y2);
+    ctx.stroke();
+
+    // Arrowhead (pointing at endpoint)
+    const angle = Math.atan2(y2 - (y1 + dy * 0.5), x2 - (x1 + dx * 0.6));
+    const head  = 8;
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 6), y2 - head * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 6), y2 - head * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+
+    // Label with white background pill
+    if (e.label) {
+      const midX = x1 + dx / 2;
+      const midY = y1 + dy / 2 - 10;
+      const fs   = 11 * S * 0.5;
+      ctx.font   = `${fs}px Arial, sans-serif`;
+      const tw   = ctx.measureText(e.label).width + 8;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.roundRect(midX - tw / 2, midY - fs - 2, tw, fs + 6, 3);
+      ctx.fill();
+      ctx.fillStyle    = '#475569';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(e.label, midX, midY);
+    }
   }
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -259,9 +396,9 @@ for (const slug of fs.readdirSync(PUBLIC_DIAGRAMS, { withFileTypes: true })
 }
 
 const total = Math.min(tasks.length, LIMIT === Infinity ? tasks.length : LIMIT);
-console.log(`${total} diagrams to generate`);
+console.log(`${total} diagrams to generate (concurrency=${CONCURRENCY})`);
 if (DRY_RUN) { tasks.slice(0, total).forEach(t => console.log(`  ${t.slug}/${t.provider}`)); process.exit(0); }
-if (total === 0) process.exit(0);
+if (total === 0) { console.log('Nothing to do.'); process.exit(0); }
 
 let done = 0, failed = 0;
 const queue = tasks.slice(0, total);
@@ -269,18 +406,25 @@ const queue = tasks.slice(0, total);
 async function worker() {
   while (queue.length > 0) {
     const task = queue.shift();
+    const label = `${task.slug}/${task.provider}`;
+    const t0 = Date.now();
     try {
+      console.log(`  → [${done + failed + 1}/${total}] ${label}`);
       const token = await getIdToken();
       const { interactionId, toolCallId, elementId } = await callPlanner(task.prompt, token);
       const freshToken = await getIdToken();
-      const diagramCode = await callToolExecute(interactionId, toolCallId, elementId, freshToken);
-      await renderDiagram(diagramCode, task.outPath);
+      const elements = await callToolExecute(interactionId, toolCallId, elementId, freshToken);
+      console.log(`     elements: ${elements.length} (${[...new Set(elements.map(e => e.tag))].join(', ')})`);
+      await renderFreeform(elements, task.outPath);
       done++;
-      console.log(`✓ [${done}/${total}] ${task.slug}/${task.provider}`);
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      console.log(`  ✓ [${done}/${total}] ${label} (${elapsed}s)`);
     } catch (err) {
       failed++;
-      console.error(`✗ ${task.slug}/${task.provider}: ${err.message}`);
+      console.error(`  ✗ ${label}: ${err.message}`);
     }
+    // Polite delay between requests
+    if (queue.length > 0) await new Promise(r => setTimeout(r, 1500));
   }
 }
 
