@@ -350,6 +350,7 @@ def diag_rolling_vs_blue_green():
 # ── ALB vs NLB ────────────────────────────────────────────────────────────────
 def diag_alb_vs_nlb():
     g = base_graph('alb_vs_nlb', 'ALB vs NLB — AWS Load Balancer Selection', rankdir='LR')
+    g.attr(rankdir='TB', nodesep='2.0')
 
     n(g, 'client', 'Client\n(browser / app)', 'gray')
 
@@ -378,6 +379,7 @@ def diag_alb_vs_nlb():
 # ── Helm vs Kustomize ─────────────────────────────────────────────────────────
 def diag_helm_vs_kustomize():
     g = base_graph('helm_vs_kustomize', 'Helm vs Kustomize — Kubernetes Config Management', rankdir='LR')
+    g.attr(rankdir='TB', nodesep='2.0')
 
     with g.subgraph(name='cluster_helm') as s:
         s.attr(label='Helm — Package Manager (Templating)', style='filled,rounded',

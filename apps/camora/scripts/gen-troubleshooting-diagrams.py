@@ -35,6 +35,7 @@ os.makedirs(OUT, exist_ok=True)
 
 def diag_ec2_unresponsive_layers():
     g = base_graph('ec2_unresponsive_layers', 'EC2 Unresponsive — Diagnosis Layers', rankdir='TB')
+    g.attr(rankdir='LR')
     n(g, 'start',   'SSH Timeout\nor Refused', 'red')
     n(g, 'sg',      'Layer 1: Network\nSecurity Group / NACL\nRoute Table / EIP', 'navy')
     n(g, 'hw',      'Layer 2: Hardware\nSystem Status Check\n→ stop+start (new host)', 'gold')
@@ -121,6 +122,7 @@ def diag_elb_5xx():
 
 def diag_dns_failures():
     g = base_graph('dns_failures', 'DNS Failure Diagnosis Path', rankdir='TB')
+    g.attr(nodesep='1.5')
     n(g, 'symptom', 'App: "cannot\nresolve hostname"', 'red')
     n(g, 'local',   'Local DNS Cache\nnslookup / dig @127.0.0.1\nflush cache?', 'navy')
     n(g, 'resolver','VPC Resolver\n169.254.169.253\ndig @169.254.169.253', 'navy')

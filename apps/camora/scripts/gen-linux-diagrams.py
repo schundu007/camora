@@ -58,7 +58,7 @@ def diag_process_lifecycle():
 
 
 def diag_process_tree():
-    g = base_graph('proc_tree', 'Process Tree — fork/exec & PID Namespaces', rankdir='TB')
+    g = base_graph('proc_tree', 'Process Tree — fork/exec & PID Namespaces', rankdir='LR')
     n(g, 'init',    'PID 1\nsystemd\n(host namespace)', 'purple')
     n(g, 'sshd',    'sshd\nPID 42', 'navy')
     n(g, 'bash',    'bash\nPID 107', 'navy')
@@ -206,7 +206,7 @@ def diag_bash_script_anatomy():
 
 
 def diag_bash_control_flow():
-    g = base_graph('bash_flow', 'Bash Control Flow — Conditionals, Loops & Functions', rankdir='LR')
+    g = base_graph('bash_flow', 'Bash Control Flow — Conditionals, Loops & Functions', rankdir='TB')
     n(g, 'if',    'if [[ cond ]]\nthen ... elif\nelse ... fi', 'navy')
     n(g, 'case',  'case "$var" in\n  pat1) ;;\n  pat2) ;;\nesac', 'navy')
     n(g, 'for',   'for item in list\nfor ((i=0;i<n;i++))\ndo ... done', 'green')
@@ -217,18 +217,16 @@ def diag_bash_control_flow():
 
     with g.subgraph() as s:
         s.attr(rank='same')
-        s.node('if')
-        s.node('case')
+        s.node('if'); s.node('case'); s.node('for'); s.node('while'); s.node('until')
     with g.subgraph() as s:
         s.attr(rank='same')
-        s.node('for')
-        s.node('while')
-        s.node('until')
+        s.node('func'); s.node('arr')
 
     e(g, 'if',    'func', 'call')
     e(g, 'case',  'func', 'call')
     e(g, 'for',   'arr',  'iterate')
     e(g, 'while', 'arr',  'iterate')
+    e(g, 'until', 'arr',  'iterate')
 
     g.render(os.path.join(OUT, 'bash-scripting-control-flow'), cleanup=True)
     print('Generated: bash-scripting-control-flow')
@@ -365,7 +363,7 @@ def diag_iptables_rules():
 # ─── linux-memory-management ──────────────────────────────────────────────────
 
 def diag_memory_layout():
-    g = base_graph('mem_layout', 'Linux Process Memory Layout — Virtual Address Space', rankdir='TB')
+    g = base_graph('mem_layout', 'Linux Process Memory Layout — Virtual Address Space', rankdir='LR')
     n(g, 'stack',   'Stack\n(grows down)\nlocal vars, frames', 'navy')
     n(g, 'mmap',    'mmap region\nshared libs (.so)\nfile mappings', 'purple')
     n(g, 'heap',    'Heap\n(grows up)\nmalloc / new', 'gold')

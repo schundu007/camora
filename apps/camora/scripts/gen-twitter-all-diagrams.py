@@ -5,8 +5,8 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'twitter')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -23,7 +23,7 @@ def mk(name, **kw):
 
 # ── FLOWCHART: Search Flow ──
 def search_flow():
-    g = mk('search', rankdir='LR', label='  Tweet Search Flow (Earlybird)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('search', rankdir='LR', label='  Tweet Search Flow (Earlybird)  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User\nsearches', 'blue')
     n(g, 'api', 'Search API\n(parse query)', 'gray')
     n(g, 'scatter', 'Scatter to\nEarlybird shards\n(time-partitioned)', 'orange')
@@ -45,9 +45,9 @@ def search_flow():
 
 # ── DEEP DIVE: Hybrid Fan-out ──
 def dd_fanout():
-    g = mk('fanout', rankdir='LR', label='  Hybrid Fan-out Strategy  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('fanout', rankdir='LR', label='  Hybrid Fan-out Strategy  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'tweet', 'New Tweet\nPosted', 'blue')
-    g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue', fontsize='12', height='0.7')
+    g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica', fontsize='12', height='0.7')
     n(g, 'push', 'Fan-out on Write\nPush to all follower\ntimeline caches', 'green')
     n(g, 'store', 'Celebrity Cache\nStore tweet only\n(no fan-out)', 'orange')
     n(g, 'redis', 'Redis ZADD\nto each follower\nsorted set', 'pink')
@@ -61,7 +61,7 @@ def dd_fanout():
 
 # ── DEEP DIVE: Earlybird Search ──
 def dd_search():
-    g = mk('earlybird', rankdir='LR', label='  Earlybird Search Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('earlybird', rankdir='LR', label='  Earlybird Search Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'tweet', 'New Tweet', 'blue')
     n(g, 'kafka', 'Kafka\n(tweet stream)', 'yellow')
     n(g, 'index', 'Earlybird\nIndexer\n(inverted index)', 'green')
@@ -80,7 +80,7 @@ def dd_search():
 
 # ── DEEP DIVE: Snowflake ID ──
 def dd_snowflake():
-    g = mk('snowflake', rankdir='LR', label='  Snowflake ID Generation  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('snowflake', rankdir='LR', label='  Snowflake ID Generation  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'req', 'ID Request\n(any service)', 'blue')
     n(g, 'worker', 'Snowflake\nWorker\n(per machine)', 'green')
     n(g, 'bits', '64-bit ID:\n1 sign + 41 timestamp\n+ 10 machine\n+ 12 sequence', 'purple')
@@ -94,7 +94,7 @@ def dd_snowflake():
 
 # ── DEEP DIVE: Timeline Ranking ──
 def dd_ranking():
-    g = mk('ranking', rankdir='LR', label='  Timeline Ranking ML Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('ranking', rankdir='LR', label='  Timeline Ranking ML Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'candidates', 'Candidate\nTweets\n(from timeline\n+ celebrities)', 'blue')
     n(g, 'features', 'Feature\nExtraction\n(user, tweet,\ncontext)', 'green')
     n(g, 'model', 'ML Model\n(predict\nengagement\nprobability)', 'purple')
@@ -110,7 +110,7 @@ def dd_ranking():
 
 # ── DEEP DIVE: Trends Detection ──
 def dd_trends():
-    g = mk('trends', rankdir='LR', label='  Trending Topics (Stream Processing)  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('trends', rankdir='LR', label='  Trending Topics (Stream Processing)  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'tweets', 'Tweet Stream\n(500K/sec)', 'blue')
     n(g, 'extract', 'Extract\nHashtags +\nKeywords', 'green')
     n(g, 'kafka', 'Kafka\n(hashtag topic)', 'yellow')
@@ -128,7 +128,7 @@ def dd_trends():
 
 # ── DISCUSSION: Search Arch ──
 def disc_search():
-    g = mk('disc_search', rankdir='LR', label='  Search Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('disc_search', rankdir='LR', label='  Search Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'query', 'Search\nQuery', 'blue')
     n(g, 'blender', 'Blender\n(router)', 'gray')
     n(g, 'rt', 'Real-time\nIndex', 'orange')
@@ -143,7 +143,7 @@ def disc_search():
 
 # ── DISCUSSION: Trending ──
 def disc_trending():
-    g = mk('disc_trending', rankdir='LR', label='  Trending Topics Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('disc_trending', rankdir='LR', label='  Trending Topics Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'stream', 'Tweet\nStream', 'blue')
     n(g, 'extract', 'Hashtag\nExtractor', 'green')
     n(g, 'counter', 'Sliding Window\nCounters\n(5m/1h/24h)', 'orange')
@@ -157,7 +157,7 @@ def disc_trending():
 
 # ── DISCUSSION: Media Storage ──
 def disc_media():
-    g = mk('disc_media', rankdir='LR', label='  Media Storage Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk('disc_media', rankdir='LR', label='  Media Storage Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'upload', 'Media\nUpload', 'blue')
     n(g, 'process', 'Image/Video\nProcessor\n(resize, transcode)', 'green')
     n(g, 's3', 'S3\n(multiple sizes)', 'purple')

@@ -11,7 +11,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 GRAPH_ATTRS = {
     'rankdir': 'LR',
     'bgcolor': '#ffffff',
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'pad': '0.4',
     'nodesep': '0.6',
     'ranksep': '0.8',
@@ -22,7 +22,7 @@ GRAPH_ATTRS = {
 PARTICIPANT_STYLE = {
     'shape': 'box',
     'style': 'filled,rounded',
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '12',
     'penwidth': '1.5',
     'height': '0.5',
@@ -31,13 +31,13 @@ PARTICIPANT_STYLE = {
 
 STEP_STYLE = {
     'shape': 'plaintext',
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '10',
     'fontcolor': '#64748b',
 }
 
 EDGE_STYLE = {
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '10',
     'penwidth': '1.8',
 }
@@ -67,7 +67,7 @@ def make_edge(g, src, dst, label, color='#475569', style='solid', dir_='forward'
 def gen_send_flow():
     g = graphviz.Digraph('send_flow', format='png')
     g.attr(**{**GRAPH_ATTRS, 'label': '  Send Message Flow (Both Users Online)  ', 'labelloc': 't',
-              'fontsize': '14', 'fontname': 'Helvetica Neue Bold', 'fontcolor': '#1e293b'})
+              'fontsize': '14', 'fontname': 'Helvetica Bold', 'fontcolor': '#1e293b'})
 
     # Participants
     make_participant(g, 'A', 'User A\n(Sender)', 'client')
@@ -98,7 +98,7 @@ def gen_send_flow():
 def gen_offline_flow():
     g = graphviz.Digraph('offline_flow', format='png')
     g.attr(**{**GRAPH_ATTRS, 'label': '  Offline Message Delivery (Store-and-Forward)  ', 'labelloc': 't',
-              'fontsize': '14', 'fontname': 'Helvetica Neue Bold', 'fontcolor': '#1e293b'})
+              'fontsize': '14', 'fontname': 'Helvetica Bold', 'fontcolor': '#1e293b'})
 
     make_participant(g, 'A', 'User A\n(Sender)', 'client')
     make_participant(g, 'GW1', 'Chat\nGateway 1', 'gateway')
@@ -128,7 +128,7 @@ def gen_offline_flow():
 def gen_group_flow():
     g = graphviz.Digraph('group_flow', format='png')
     g.attr(**{**GRAPH_ATTRS, 'label': '  Group Message Fan-out (Hybrid Approach)  ', 'labelloc': 't',
-              'fontsize': '14', 'fontname': 'Helvetica Neue Bold', 'fontcolor': '#1e293b',
+              'fontsize': '14', 'fontname': 'Helvetica Bold', 'fontcolor': '#1e293b',
               'rankdir': 'TB'})
 
     # Use subgraphs for layout control

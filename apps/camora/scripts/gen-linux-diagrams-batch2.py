@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -20,10 +20,10 @@ def e(g, a, b, label='', color='#475569', style='solid'):
     g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def base_graph(name, title, rankdir='LR'):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.55',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica-Bold', fontcolor='#1e293b')
     return g
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'linux')
@@ -391,7 +391,7 @@ def diag_capability_sets():
 
 
 def diag_capability_drop():
-    g = base_graph('cap_drop', 'Capability Drop Flow — Secure Service Launch', rankdir='TB')
+    g = base_graph('cap_drop', 'Capability Drop Flow — Secure Service Launch', rankdir='LR')
     n(g, 'root', 'Start as root\nAll caps permitted', 'red')
     n(g, 'bind', 'CAP_NET_BIND_SERVICE\nbind port < 1024', 'gold')
     n(g, 'drop_root', 'setuid(nobody)\nDrop root UID\nKeep needed caps', 'navy')
@@ -410,7 +410,7 @@ def diag_capability_drop():
 # ─── systemd-journalctl ───────────────────────────────────────────────────────
 
 def diag_journal_storage():
-    g = base_graph('journal_storage', 'systemd Journal Storage & Query Flow', rankdir='TB')
+    g = base_graph('journal_storage', 'systemd Journal Storage & Query Flow', rankdir='LR')
     n(g, 'sources', 'Log Sources:\nsyslog socket\nkmsg (kernel)\nstdout/stderr\nnative journal protocol', 'navy')
     n(g, 'journald', 'systemd-journald\n/run/systemd/journal/', 'purple')
     n(g, 'volatile', 'Volatile Storage\n/run/log/journal/\nLost on reboot\n(default if no persist dir)', 'gold')
@@ -428,7 +428,7 @@ def diag_journal_storage():
 
 
 def diag_journal_filters():
-    g = base_graph('journal_filters', 'journalctl Filter Options Cheatsheet', rankdir='LR')
+    g = base_graph('journal_filters', 'journalctl Filter Options Cheatsheet', rankdir='TB')
     n(g, 'jctl', 'journalctl', 'purple')
     n(g, 'unit', '-u SERVICE\n--unit=nginx.service', 'navy')
     n(g, 'time', '--since "2024-01-01"\n--until "1 hour ago"\n-S today -U now', 'teal')
@@ -518,7 +518,7 @@ def diag_module_loading():
 # ─── bash-variables-env ───────────────────────────────────────────────────────
 
 def diag_variable_scoping():
-    g = base_graph('var_scope', 'Bash Variable Scoping & Inheritance', rankdir='TB')
+    g = base_graph('var_scope', 'Bash Variable Scoping & Inheritance', rankdir='LR')
     n(g, 'shell', 'Shell Variable\nNAME=value\nLocal to current shell', 'navy')
     n(g, 'export', 'Environment Variable\nexport NAME=value\nor declare -x NAME', 'green')
     n(g, 'local', 'Function Local\nlocal NAME=value\nVisible only in function', 'teal')
@@ -558,7 +558,7 @@ def diag_env_inheritance():
 # ─── bash-conditionals-loops ──────────────────────────────────────────────────
 
 def diag_control_flow():
-    g = base_graph('ctrl_flow', 'Bash Control Flow & Exit Codes', rankdir='TB')
+    g = base_graph('ctrl_flow', 'Bash Control Flow & Exit Codes', rankdir='LR')
     n(g, 'if', 'if [ condition ]\nthen commands\nelif ...\nelse ...\nfi', 'navy')
     n(g, 'case', 'case $var in\n  pattern) cmds;;\n  *) default;;\nesac', 'navy')
     n(g, 'while', 'while [ condition ]\ndo\n  commands\ndone', 'green')

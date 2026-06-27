@@ -10,9 +10,9 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'ad-cl
 os.makedirs(OUT, exist_ok=True)
 
 # Modern style constants
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11',
             penwidth='1.5', height='0.5', margin='0.15,0.1')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 
 C = {
     'client':  ('#dbeafe', '#3b82f6', '#1e40af'),   # blue — clients/users
@@ -38,7 +38,7 @@ def new_graph(title, direction='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.55',
            splines='spline', rankdir=direction,
            label=f'  {title}  ', labelloc='t',
-           fontsize='15', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='15', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -154,7 +154,7 @@ def lambda_arch():
     # Speed layer
     with g.subgraph(name='cluster_speed') as s:
         s.attr(label='  Speed Layer (real-time, ~1% error)  ', style='filled,rounded',
-               color='#f97316', fillcolor='#fff7ed', fontname='Helvetica Neue Bold',
+               color='#f97316', fillcolor='#fff7ed', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#9a3412')
         n(s, 'flink', 'Apache Flink\n(1-min windows)\nHLL for uniques\napproximate counts', 'process')
         n(s, 'hot', 'ClickHouse\n(hot OLAP)\n<50ms queries', 'db')
@@ -162,7 +162,7 @@ def lambda_arch():
     # Batch layer
     with g.subgraph(name='cluster_batch') as s:
         s.attr(label='  Batch Layer (hourly, <0.01% error)  ', style='filled,rounded',
-               color='#6366f1', fillcolor='#eef2ff', fontname='Helvetica Neue Bold',
+               color='#6366f1', fillcolor='#eef2ff', fontname='Helvetica Bold',
                fontsize='11', fontcolor='#3730a3')
         n(s, 'spark', 'Apache Spark\n(full dedup)\nexact counts\nfraud reclassification', 'process')
         n(s, 'cold', 'BigQuery\n(warehouse)\nbilling authority', 'db')

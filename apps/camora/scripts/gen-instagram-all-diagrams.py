@@ -5,8 +5,8 @@ import graphviz, os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'instagram')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'blue': ('#dbeafe','#3b82f6','#1e40af'), 'green': ('#dcfce7','#22c55e','#166534'),
     'yellow': ('#fef3c7','#f59e0b','#92400e'), 'purple': ('#e0e7ff','#6366f1','#3730a3'),
@@ -17,12 +17,12 @@ def n(g, name, label, c): g.node(name, label, fillcolor=C[c][0], color=C[c][1], 
 def e(g, a, b, label='', color='#475569', style='solid'): g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def mk(**kw):
     g = graphviz.Digraph(format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.2', nodesep='0.4', ranksep='0.5', splines='spline', **kw)
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.6', nodesep='0.7', ranksep='0.9', splines='spline', **kw)
     return g
 
 # Deep Dive 1: Image Processing Pipeline
 def dd_image():
-    g = mk(rankdir='LR', label='  Image Processing Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Image Processing Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'upload', 'Raw Photo\nUpload', 'blue')
     n(g, 'moderate', 'Content\nModeration\n(ML scan)', 'pink')
     n(g, 'resize', 'Resize Engine\n150px thumb\n640px medium\n1080px full', 'orange')
@@ -38,7 +38,7 @@ def dd_image():
 
 # Deep Dive 2: CDN Multi-Tier
 def dd_cdn():
-    g = mk(rankdir='LR', label='  CDN Multi-Tier Caching  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  CDN Multi-Tier Caching  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'client', 'Mobile\nClient', 'blue')
     n(g, 'edge', 'CDN Edge\n(L1 — city)', 'green')
     n(g, 'regional', 'Regional\nPOP (L2)', 'yellow')
@@ -53,9 +53,9 @@ def dd_cdn():
 
 # Deep Dive 3: Hybrid Fan-out
 def dd_fanout():
-    g = mk(rankdir='LR', label='  Hybrid Fan-out for Feed  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Hybrid Fan-out for Feed  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'post', 'New Post', 'blue')
-    g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica Neue', fontsize='12', height='0.7')
+    g.node('check', 'Follower\nCount?', shape='diamond', style='filled', fillcolor='#fef3c7', color='#f59e0b', fontcolor='#92400e', fontname='Helvetica', fontsize='12', height='0.7')
     n(g, 'push', 'Push to\nfollower feeds\n(Redis ZADD)', 'green')
     n(g, 'cache', 'Celebrity\ncache only', 'orange')
     n(g, 'feed', 'Feed Service\nmerges at\nread time', 'purple')
@@ -67,7 +67,7 @@ def dd_fanout():
 
 # Deep Dive 4: Stories Architecture
 def dd_stories():
-    g = mk(rankdir='LR', label='  Stories Ephemeral Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Stories Ephemeral Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User posts\nstory', 'blue')
     n(g, 'store', 'Hot Storage\n(Redis + SSD)\nTTL: 24 hours', 'orange')
     n(g, 'ring', 'Story Ring\n(ordered by\nrecency)', 'yellow')
@@ -83,7 +83,7 @@ def dd_stories():
 
 # Deep Dive 5: Explore ML
 def dd_explore():
-    g = mk(rankdir='LR', label='  Explore Page Recommendations  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Explore Page Recommendations  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'signals', 'User Signals\n(likes, saves,\nfollows, time)', 'blue')
     n(g, 'candidate', 'Candidate\nGeneration\n(1000s of posts)', 'green')
     n(g, 'rank', 'ML Ranking\n(engagement\nprediction)', 'purple')
@@ -97,7 +97,7 @@ def dd_explore():
 
 # Discussion 1: Feed Ranking
 def disc_ranking():
-    g = mk(rankdir='LR', label='  Feed Ranking Algorithm  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Feed Ranking Algorithm  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'candidates', 'Candidate\nPosts', 'blue')
     n(g, 'features', 'Features\n(author, content,\nuser affinity)', 'green')
     n(g, 'model', 'ML Model\n(predict\nP(like|share|save))', 'purple')
@@ -109,7 +109,7 @@ def disc_ranking():
 
 # Discussion 2: Celebrity Problem
 def disc_celebrity():
-    g = mk(rankdir='LR', label='  Celebrity Post Handling  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='TB', label='  Celebrity Post Handling  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'celeb', 'Celebrity\nposts (100M+\nfollowers)', 'orange')
     n(g, 'cache', 'Hot Tweet\nCache (L1)', 'pink')
     n(g, 'pull', 'Pull on Read\n(no fan-out)', 'yellow')
@@ -123,19 +123,24 @@ def disc_celebrity():
 
 # Discussion 3: Stories Architecture
 def disc_stories():
-    g = mk(rankdir='LR', label='  Stories Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Stories Architecture  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'create', 'Create\nStory', 'blue')
+    n(g, 'store', 'Story\nService\n(S3 + DB)', 'purple')
     n(g, 'hot', 'Hot Cache\n(24h TTL)', 'orange')
+    n(g, 'cdn', 'CDN\n(media edge)', 'teal')
     n(g, 'ring', 'Story Ring\nUI', 'green')
-    n(g, 'expire', 'Auto\nExpire', 'pink')
-    e(g, 'create', 'hot', 'store', '#f97316')
+    n(g, 'expire', 'Auto\nExpire\n(24h TTL)', 'pink')
+    e(g, 'create', 'store', 'upload', '#6366f1')
+    e(g, 'store', 'hot', 'cache\nmetadata', '#f97316')
+    e(g, 'store', 'cdn', 'media', '#14b8a6')
     e(g, 'hot', 'ring', 'serve', '#22c55e')
+    e(g, 'cdn', 'ring', 'media\nURL', '#14b8a6')
     e(g, 'hot', 'expire', 'TTL', '#ec4899', 'dashed')
     g.render(os.path.join(OUT, 'discuss-stories'), cleanup=True)
 
 # Discussion 4: Image Optimization
 def disc_image():
-    g = mk(rankdir='LR', label='  Image Optimization Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Image Optimization Pipeline  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'raw', 'Raw Upload\n(10-20 MB)', 'blue')
     n(g, 'compress', 'JPEG/WebP\nCompression\n(quality 85%)', 'green')
     n(g, 'resize', 'Resize\n150/640/1080px', 'orange')
@@ -149,7 +154,7 @@ def disc_image():
 
 # Story lifecycle flow
 def flow_story():
-    g = mk(rankdir='LR', label='  Story Lifecycle Flow  ', labelloc='t', fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+    g = mk(rankdir='LR', label='  Story Lifecycle Flow  ', labelloc='t', fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     n(g, 'user', 'User creates\nstory', 'blue')
     n(g, 'upload', 'Upload +\nProcess', 'green')
     n(g, 'store', 'Hot Storage\n(Redis + SSD)', 'orange')

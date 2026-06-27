@@ -12,11 +12,11 @@ g.attr(
     bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
     splines='spline', rankdir='LR',
     label='  WhatsApp — Key Design Decisions  ', labelloc='t',
-    fontsize='16', fontname='Helvetica Neue Bold', fontcolor='#1e293b',
+    fontsize='16', fontname='Helvetica Bold', fontcolor='#1e293b',
 )
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue', fontsize='11', penwidth='1.5', height='0.5', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='9', penwidth='1.5')
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica', fontsize='11', penwidth='1.5', height='0.5', margin='0.15,0.08')
+EDGE = dict(fontname='Helvetica', fontsize='9', penwidth='1.5')
 
 C = {
     'blue':   ('#dbeafe', '#3b82f6', '#1e40af'),

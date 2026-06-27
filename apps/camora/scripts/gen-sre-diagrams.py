@@ -208,7 +208,7 @@ def diag_prom_stack():
 # ── C6: Distributed trace waterfall ─────────────────────────────────
 def diag_trace_waterfall():
     g = base_graph('c6_trace', 'Distributed trace — span tree across services')
-    g.attr(rankdir='TB')
+    g.attr(rankdir='TB', nodesep='1.2', ranksep='1.0')
     n(g, 'gw',  'Gateway\n[span 1] 200ms', 'navy')
     n(g, 'auth','Auth service\n[span 2] 30ms', 'green')
     n(g, 'api', 'API service\n[span 3] 150ms', 'gold')
@@ -535,6 +535,7 @@ def diag_nalsd():
 # ── B6: Latency budget waterfall ────────────────────────────────────
 def diag_latency_budget():
     g = base_graph('b6_latency_budget', 'Latency budget waterfall — apportion 500ms across components')
+    g.attr(rankdir='TB', ranksep='0.7')
     n(g, 'total','Total budget\n500 ms', 'navy')
     n(g, 'auth', 'Auth\n50 ms', 'green')
     n(g, 'cache','Cache\n5 ms', 'green')
@@ -591,8 +592,12 @@ def diag_logs_cost():
 # ── C7: Symptoms vs causes alerting ────────────────────────────────
 def diag_symptom_alert():
     g = base_graph('c7_symptom_alert', 'Alert on SYMPTOMS, not causes (SRE Book Ch 6)')
+    g.attr(rankdir='TB', nodesep='2.5', ranksep='1.2')
     n(g, 'cause','Cause-based alert\nDB CPU > 90%\n\n→ may not impact users\n→ false positives\n→ alert fatigue', 'red')
     n(g, 'sym',  'Symptom-based alert\np99 latency > 500ms\n\n→ user feels it\n→ actionable\n→ multi-window burn rate', 'green')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('cause'); s.node('sym')
     n(g, 'rule', 'Rule:\nWake humans on\nuser pain only.\nDebug causes via\ndashboards.', 'gold')
     e(g, 'cause','rule', 'avoid', '#dc2626', 'dashed')
     e(g, 'sym',  'rule', 'use', '#16a34a')
@@ -683,6 +688,7 @@ def diag_chaos_maturity():
 # ── E1: Toil 6 properties ───────────────────────────────────────────
 def diag_toil_six():
     g = base_graph('e1_toil_six', 'Toil — 6 properties (all must be true)')
+    g.attr(rankdir='TB', ranksep='0.7')
     n(g, 'toil', 'TOIL =', 'navy')
     n(g, 'p1', 'manual', 'gold')
     n(g, 'p2', 'repetitive', 'gold')
@@ -971,9 +977,13 @@ def diag_oncall_health():
 # ── I1: Reliability + Security overlap ─────────────────────────────
 def diag_rel_sec():
     g = base_graph('i1_rel_sec', 'Reliability + Security — shared engineering primitives')
+    g.attr(rankdir='TB', nodesep='2.8', ranksep='1.2')
     n(g, 'rel', 'Reliability\n• capacity\n• failure recovery\n• graceful degrade', 'green')
-    n(g, 'shared','Shared\n• Defense in depth\n• Least privilege\n• Audit logging\n• Incident command\n• Game days', 'gold')
     n(g, 'sec', 'Security\n• confidentiality\n• threat models\n• adversaries', 'red')
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        s.node('rel'); s.node('sec')
+    n(g, 'shared','Shared\n• Defense in depth\n• Least privilege\n• Audit logging\n• Incident command\n• Game days', 'gold')
     e(g, 'rel', 'shared')
     e(g, 'sec', 'shared')
     g.render(os.path.join(OUT, 'i1-rel-sec'), cleanup=True)

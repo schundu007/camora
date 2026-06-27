@@ -91,6 +91,7 @@ def diag_lambda_invocation():
 
 def diag_lambda_cold_start():
     g = base_graph('lambda_cold_start', 'Lambda Cold Start vs Warm Invocation', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     with g.subgraph(name='cluster_cold') as c:
         c.attr(label='Cold Start (first invocation)', style='filled', fillcolor='#fee2e2',
                color='#ef4444', fontcolor='#991b1b', fontname='Helvetica Bold', fontsize='12')
@@ -180,6 +181,7 @@ def diag_eks_architecture():
 
 def diag_eks_networking():
     g = base_graph('eks_networking', 'EKS Networking — VPC CNI + Services + Ingress', rankdir='TB')
+    g.attr(nodesep='2.5')
     n(g, 'inet',    'Internet', 'gray')
     n(g, 'alb',     'ALB (Ingress)\npublic subnet', 'navy')
     n(g, 'svc',     'ClusterIP Service\n(kube-proxy rules)', 'teal')
@@ -200,6 +202,7 @@ def diag_eks_networking():
 
 def diag_s3_storage_classes():
     g = base_graph('s3_storage_classes', 'S3 Storage Classes — Cost vs Access Latency', rankdir='TB')
+    g.attr(rankdir='LR', nodesep='1.5')
     n(g, 'std',      'S3 Standard\n99.99% avail\nFrequent access\nHighest cost/GB', 'green')
     n(g, 'ia',       'S3 Standard-IA\nInfrequent access\nRetrieval fee\n128KB min object', 'navy')
     n(g, 'one_ia',   'S3 One Zone-IA\nSingle AZ\nCheaper IA\n20% lower cost', 'teal')
@@ -239,6 +242,7 @@ def diag_s3_event_flow():
 
 def diag_iam_model():
     g = base_graph('iam_model', 'IAM Authorization Model — Principal / Policy / Resource', rankdir='TB')
+    g.attr(nodesep='1.5')
     n(g, 'principal', 'Principal\n(IAM User, Role,\nFederated Identity,\nAWS Service)', 'navy')
     n(g, 'auth_req',  'Authorization\nRequest\n(action + resource\n+ condition)', 'gray')
     n(g, 'policy',    'IAM Policy\n(JSON: Effect Allow/Deny\nAction, Resource,\nCondition)', 'purple')
@@ -510,6 +514,7 @@ def diag_dynamodb_capacity():
 
 def diag_cloudformation_lifecycle():
     g = base_graph('cfn_lifecycle', 'CloudFormation Stack Lifecycle — Create / Update / Delete', rankdir='TB')
+    g.attr(nodesep='1.5')
     n(g, 'template',  'CloudFormation\nTemplate (YAML/JSON)\nResources, Parameters,\nOutputs, Mappings', 'navy')
     n(g, 'change_set','Change Set\n(preview diffs\nbefore apply)', 'gold')
     n(g, 'stack',     'Stack\n(logical grouping\nof resources)', 'teal')
