@@ -6,6 +6,7 @@ export const extraSystemDesignProblemCategories = [
   { id: 'specialized', name: 'Specialized Systems', icon: 'zap', color: '#0ea5e9' },
   { id: 'social', name: 'Social Media & Networking', icon: 'users', color: '#3b82f6' },
   { id: 'streaming', name: 'Streaming & Media', icon: 'play', color: '#ef4444' },
+  { id: 'ai-ml', name: 'AI & Machine Learning', icon: 'cpu', color: '#7c3aed' },
 ];
 
 export const extraSystemDesignProblemCategoryMap = {
@@ -43,6 +44,13 @@ export const extraSystemDesignProblemCategoryMap = {
   'price-tracking-service': 'specialized',
   'youtube-top-k-trending': 'streaming',
   'vehicle-registration': 'specialized',
+  'ml-feature-store': 'ai-ml',
+  'ml-training-platform': 'ai-ml',
+  'search-ranking-system': 'ai-ml',
+  'fraud-detection-system': 'ai-ml',
+  'content-moderation-system': 'ai-ml',
+  'vector-search-index': 'ai-ml',
+  'ai-image-generation': 'ai-ml',
 };
 
 export const extraSystemDesigns = [
@@ -8668,5 +8676,1756 @@ lookup_audit: audit_id (PK), caller_id, caller_role (leo|insurer|public|internal
       'Append-only title_events / lookup_audit vs audit columns on row updates — chose append-only because legal evidence requires immutable history, and row history is hard to query for subpoena response',
     ],
 
+  },
+
+  // ─── ML Feature Store ───────────────────────────────────────────────────────
+  {
+    id: 'ml-feature-store',
+    isNew: true,
+    title: 'ML Feature Store',
+    subtitle: 'Uber Michelangelo / Meta Feature Store',
+    icon: 'database',
+    color: '#7c3aed',
+    difficulty: 'Hard',
+    description: 'Design a platform that computes, stores, and serves ML features with consistency guarantees between training and production, supporting both real-time and batch workloads.',
+
+    introduction: `Machine learning models are only as good as the features fed into them. A feature store is the infrastructure layer that bridges the gap between raw data and model inputs, ensuring that the same feature logic runs identically during training and at serving time. Without a feature store, teams independently reimplement features across notebooks, pipelines, and services — leading to training/serving skew, duplicate computation, and features that are impossible to audit or reuse.
+
+The hardest problem in feature store design is point-in-time correctness: when generating training data, a model must only see feature values that would have been available at the historical timestamp of each training example. Getting this wrong silently corrupts model quality by leaking future information. Equally difficult is achieving sub-10ms feature serving latency at millions of QPS while keeping values fresh from streaming pipelines.
+
+Feature stores must also handle feature versioning, lineage tracking, and drift monitoring across hundreds of features used by dozens of models — all while supporting a wide range of ML frameworks and allowing data scientists to iterate quickly without waiting for engineering work.`,
+
+    functionalRequirements: [
+      'Register, version, and document features with metadata (owner, description, data type, freshness SLA)',
+      'Compute features via batch pipelines (daily/hourly) and streaming pipelines (real-time)',
+      'Serve features online at low latency (<10ms p99) for real-time model inference',
+      'Serve features offline in bulk for model training and batch scoring',
+      'Point-in-time correct feature retrieval for training dataset generation',
+      'Feature lineage: track which raw data sources produced each feature value',
+      'Feature monitoring: detect drift, null rates, and distribution shifts',
+      'Backfill historical feature values when a new feature is registered',
+    ],
+
+    nonFunctionalRequirements: [
+      'Online serving: <10ms p99 latency at 1M+ QPS',
+      'Zero training/serving skew — identical transformation code runs in both paths',
+      'Feature freshness: streaming features updated within seconds; batch features within hours',
+      'Horizontal scalability: support 10,000+ feature definitions across hundreds of models',
+      'High availability: 99.99% uptime for online serving (models depend on it)',
+      'Backfill throughput: recompute years of historical features within hours using Spark',
+    ],
+
+    estimation: {
+      users: '500 data scientists and ML engineers across 50 teams; hundreds of models in production consuming features',
+      storage: '10,000 features * 100M entities * 8 bytes avg = ~8TB for online store; 3 years of history * 10,000 features * 500M daily events = ~petabyte scale for offline store',
+      bandwidth: 'Online: 1M QPS * 50 features avg * 100 bytes per feature = ~5GB/sec read bandwidth from online store',
+      qps: '1M reads/sec from online store during peak inference; 50K writes/sec from streaming feature pipelines',
+    },
+
+    apiDesign: {
+      description: 'Feature registry API for management, online serving API for inference, and offline retrieval API for training',
+      endpoints: [
+        { method: 'POST', path: '/api/features/register', params: '{ name, entity_keys[], value_type, transformation_code, freshness_sla_seconds, owner }', response: '{ feature_id, version, status }', description: 'Register a new feature definition with transformation logic' },
+        { method: 'GET', path: '/api/features/online', params: '{ feature_names[], entity_ids{} }', response: '{ features: { entity_id: { feature_name: value, timestamp } } }', description: 'Batch fetch feature values for real-time inference' },
+        { method: 'POST', path: '/api/features/offline', params: '{ feature_names[], entity_id_col, timestamp_col, entity_df_path, output_path }', response: '{ job_id, status_url }', description: 'Generate point-in-time correct training dataset asynchronously' },
+        { method: 'GET', path: '/api/features/{feature_id}/stats', params: 'start_date, end_date', response: '{ null_rate, mean, stddev, drift_score, freshness_p99_sec }', description: 'Monitoring statistics for a feature' },
+        { method: 'POST', path: '/api/features/{feature_id}/backfill', params: '{ start_date, end_date, parallelism }', response: '{ job_id }', description: 'Trigger historical backfill for a feature' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Feature registry, online store (key-value), offline store (columnar), and lineage tracking',
+      schema: `feature_definitions {
+  id: uuid PK
+  name: varchar(200) unique
+  version: int
+  entity_keys: text[]      -- e.g., [user_id], [user_id, item_id]
+  value_type: enum(float, int, string, vector, map)
+  transformation_code: text
+  source_tables: text[]
+  freshness_sla_seconds: int
+  owner: varchar(100)
+  created_at: timestamp
+  deprecated_at: timestamp nullable
+}
+
+feature_values_online {
+  -- Stored in Redis / DynamoDB, not PostgreSQL
+  -- Key: feature_name:entity_key_hash
+  -- Value: { value, computed_at }
+  -- TTL: set to freshness_sla * 2
+}
+
+feature_values_offline {
+  -- Stored in Delta Lake / Hive partitioned table
+  -- Partition by: feature_name, date
+  feature_name: varchar
+  entity_key_hash: varchar(64)
+  entity_keys: map<string, string>
+  value: variant
+  computed_at: timestamp
+  valid_start: timestamp   -- point-in-time window
+  valid_end: timestamp nullable
+  pipeline_run_id: uuid FK
+}
+
+pipeline_runs {
+  id: uuid PK
+  feature_id: uuid FK
+  run_type: enum(batch, streaming, backfill)
+  status: enum(running, success, failed)
+  started_at: timestamp
+  completed_at: timestamp nullable
+  rows_written: bigint
+  error_message: text nullable
+}`,
+      examples: [
+        { table: 'feature_definitions', label: 'User 30-day purchase count feature', json: `{ "id": "f-9a2b3c4d", "name": "user_purchase_count_30d", "version": 3, "entity_keys": ["user_id"], "value_type": "int", "source_tables": ["orders"], "freshness_sla_seconds": 3600, "owner": "ml-platform-team" }` },
+        { table: 'feature_values_online (Redis)', label: 'Cached value for user 12345', json: `{ "key": "user_purchase_count_30d:user_id=12345", "value": 47, "computed_at": "2025-04-18T09:00:00Z", "ttl_seconds": 7200 }` },
+        { table: 'feature_values_offline', label: 'Historical value for point-in-time join', json: `{ "feature_name": "user_purchase_count_30d", "entity_key_hash": "a3f8...", "entity_keys": {"user_id": "12345"}, "value": 31, "computed_at": "2025-01-15T00:00:00Z", "valid_start": "2025-01-15T00:00:00Z", "valid_end": "2025-01-16T00:00:00Z" }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'Each team writes their own feature computation scripts and stores results in a shared database. Online serving queries the same database that batch jobs write to. Training pipelines join feature tables using the latest available value at training time.',
+      problems: [
+        'Training/serving skew: teams reimplement feature logic independently in Python notebooks and Java serving code, producing different values for the same conceptual feature',
+        'No point-in-time correctness: training joins on latest feature value, inadvertently leaking future information into historical training examples',
+        'No feature reuse: identical features computed by 10 different teams with 10 different bugs and 10 different freshness guarantees',
+        'Latency: querying a relational database for 50 features per request adds 50-200ms to inference latency',
+        'No monitoring: feature drift and null rate spikes go undetected until model performance degrades',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Dual-Store Architecture with Unified Transformation Layer',
+      description: 'A single transformation definition (Python/SQL) generates features for both the offline store (Delta Lake via Spark) and online store (Redis/DynamoDB via Flink). The feature registry enforces that all consumers use the same versioned transformation code. Point-in-time joins are computed server-side using valid_start/valid_end windows. Streaming pipelines keep the online store fresh within seconds, while batch pipelines recompute at hourly or daily cadence for bulk backfill.',
+      keyPoints: [
+        'Single transformation definition: feature code runs via Spark for batch and Flink for streaming — one codebase, two runtimes, guaranteed identical results',
+        'Online store (Redis): key = feature_name:entity_hash, TTL = freshness_sla * 2; served by feature serving tier behind a read-through cache',
+        'Offline store (Delta Lake): append-only with valid_start/valid_end; point-in-time joins use AS OF TIMESTAMP semantics without leaking future values',
+        'Point-in-time correct dataset generation: for each (entity, label_timestamp) in training data, fetch the feature row where valid_start <= label_timestamp < valid_end',
+        'Materialization scheduler: monitors pipeline_runs for SLA violations, triggers alerts and on-demand recomputation for stale features',
+        'Feature monitoring: Flink computes rolling null rate, mean, stddev, and Jensen-Shannon divergence vs baseline distribution; alerts on drift > threshold',
+        'Backfill service: submits Spark jobs partitioned by date range, writes to offline store with correct valid windows; automatically populates online store for recent dates',
+      ],
+      databaseChoice: 'PostgreSQL for feature registry and pipeline metadata; Redis Cluster for online feature store (low latency, TTL support); Delta Lake on S3 for offline feature store (ACID, time travel, schema enforcement); Kafka as streaming backbone; Flink for real-time feature computation',
+      caching: 'In-process LRU cache in the feature serving tier caches hot entity features for 1 second, cutting Redis load by 60-80% for viral entities; Redis itself serves as the primary online cache; feature serving nodes pre-warm caches for known high-traffic entities (top users, popular items) before peak traffic windows',
+    },
+
+    tips: [
+      'Lead with the training/serving skew problem — it is the core motivation for feature stores and interviewers expect you to name it immediately',
+      'Explain point-in-time correctness with a concrete example: if a user churned on Jan 20, you must not use their Jan 25 feature values when training on Jan 20 labels',
+      'Distinguish the online store (Redis, <10ms) from the offline store (Delta Lake, batch) — they serve different consumers and have different freshness requirements',
+      'Mention that transformation code must be framework-agnostic (Python SDK that compiles to both Spark and Flink) to achieve zero skew',
+      'Feature monitoring is a must-mention: models silently degrade when upstream data pipelines change; drift detection catches this before it hits metrics',
+      'For scale questions, note that most entities are cold — LRU caching in the serving tier handles the long tail cheaply',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How do you prevent training/serving skew?',
+        answer: `**Root Cause of Skew**:
+Skew occurs when the feature logic used to generate training labels differs from the logic used at serving time. Common causes:
+- Data scientist computes a feature in pandas; engineer re-implements it in Java for the serving path
+- Batch pipeline uses a different SQL dialect than the streaming pipeline
+- Implicit differences in null handling, type coercion, or timezone handling
+
+**Solution: Single Transformation Definition**:
+\`\`\`python
+@feature(entity_keys=["user_id"], freshness_sla=3600)
+def user_purchase_count_30d(events: DataFrame) -> int:
+    return events.filter(
+        (events.event_type == "purchase") &
+        (events.timestamp > now() - timedelta(days=30))
+    ).count()
+\`\`\`
+
+The same function is compiled and executed by:
+- **Spark** for batch materialization to the offline store
+- **Flink** for streaming materialization to the online store
+- **Pandas** for local development and unit tests
+
+**Versioning**:
+- Each code change increments the feature version
+- Models pin to a specific version: model v12 always uses user_purchase_count_30d v3
+- Old versions continue serving until all dependent models migrate
+
+**Enforcement**:
+- Feature serving tier only serves features registered in the registry
+- Ad-hoc feature computation in notebooks is blocked in production
+- CI pipeline runs transformation code against test fixtures to verify output matches expected values`,
+      },
+      {
+        question: 'How do you implement point-in-time correct training data generation?',
+        answer: `**The Problem**:
+\`\`\`
+Training example: user=12345 churned on 2025-01-20 (label timestamp)
+Wrong approach:  join on latest feature value → gets 2025-04-18 feature (data leakage!)
+Correct approach: join on feature value as of 2025-01-20 (what the model would have seen)
+\`\`\`
+
+**Offline Store Schema**:
+Each feature row has valid_start and valid_end timestamps:
+\`\`\`
+feature: user_purchase_count_30d
+entity:  user_id = 12345
+value: 31,  valid_start: 2025-01-14,  valid_end: 2025-01-15
+value: 33,  valid_start: 2025-01-15,  valid_end: 2025-01-16
+value: 47,  valid_start: 2025-04-18,  valid_end: NULL (current)
+\`\`\`
+
+**Point-in-Time Join (Spark)**:
+\`\`\`sql
+SELECT labels.user_id, labels.label, f.value AS purchase_count_30d
+FROM training_labels labels
+JOIN feature_values_offline f
+  ON labels.user_id = f.entity_keys['user_id']
+  AND f.feature_name = 'user_purchase_count_30d'
+  AND f.valid_start <= labels.label_timestamp
+  AND (f.valid_end IS NULL OR f.valid_end > labels.label_timestamp)
+\`\`\`
+
+**Delta Lake Time Travel Alternative**:
+Delta Lake supports AS OF TIMESTAMP queries, simplifying point-in-time retrieval without maintaining explicit valid windows — at the cost of larger storage footprint.
+
+**Freshness Gap**:
+If a feature has hourly batch cadence and a label timestamp falls between two batch runs, the join returns the most recent available value — not the theoretically correct current value. Streaming features (Flink) with sub-second freshness minimize this gap.`,
+      },
+      {
+        question: 'How do you keep the online store fresh while maintaining consistency?',
+        answer: `**Dual Write Architecture**:
+\`\`\`
+Raw Events → Kafka → [Flink Streaming Pipeline] → Redis (online store)
+                   → [Spark Batch Pipeline]    → Delta Lake (offline store)
+                                                → Redis (backfill recent dates)
+\`\`\`
+
+**Freshness Guarantees**:
+- Streaming features: Flink processes events within 5 seconds of arrival, writes to Redis
+- Batch features: Spark runs hourly; features are at most 1 hour stale
+- Feature SLA registry: each feature declares its freshness_sla_seconds; the monitoring system pages if violated
+
+**Consistency During Pipeline Failures**:
+- Redis TTL is set to 2x the freshness SLA — stale features serve rather than 404ing
+- If Flink falls behind (lag > threshold), alert fires and batch job takes over
+- On Flink restart, it replays from Kafka offset matching the oldest TTL in Redis to avoid serving stale values
+
+**Write Amplification**:
+- One Kafka event may update dozens of features (e.g., a purchase event updates purchase_count_30d, purchase_count_7d, last_purchase_category, lifetime_value, ...)
+- Flink groups feature writes into micro-batches per entity and pipelines Redis writes to minimize round trips
+- Redis pipelining with MSET reduces per-entity write latency from O(N) to O(1) network round trips`,
+      },
+    ],
+
+    keyDecisions: [
+      'Single online store (Redis) vs per-feature databases — chose Redis Cluster with key namespacing because operational simplicity and uniform sub-10ms latency outweigh the flexibility of per-feature storage engines',
+      'Flink streaming vs Lambda architecture (Spark batch + Spark streaming) — chose native Flink for both because a single streaming engine eliminates the dual-code-path problem that causes skew in the Lambda approach',
+      'Explicit valid_start/valid_end windows vs Delta Lake time travel — chose explicit windows for the offline store because they make point-in-time semantics explicit and portable across query engines; Delta time travel is an acceptable alternative',
+      'Centralized registry enforcement vs opt-in — chose mandatory registry for all production features because opt-in guarantees nothing; the registry is the single source of truth for what features exist and how they are computed',
+      'In-process serving cache vs Redis-only — chose a 1-second in-process LRU cache in front of Redis because viral entities create hot-key patterns that a single Redis shard cannot absorb; the short TTL keeps staleness bounded',
+    ],
+  },
+
+  // ─── Distributed ML Training Platform ────────────────────────────────────────
+  {
+    id: 'ml-training-platform',
+    isNew: true,
+    title: 'Distributed ML Training Platform',
+    subtitle: "Meta's PyTorch Distributed / Google TPU Pods",
+    icon: 'cpu',
+    color: '#dc2626',
+    difficulty: 'Hard',
+    description: 'Design a platform that orchestrates distributed training of large neural networks across thousands of GPUs, with fault tolerance, experiment tracking, and multi-tenant resource scheduling.',
+
+    introduction: `Training modern deep learning models has become one of the most computationally intensive workloads in existence. GPT-4-class models require thousands of A100/H100 GPUs running for weeks, with the gradient synchronization communication fabric consuming as much bandwidth as a major data center's external traffic. A single hardware failure during a week-long training run can waste millions of dollars of compute if the system cannot automatically checkpoint and resume.
+
+The platform must solve three fundamentally hard problems simultaneously: parallelism strategy (deciding how to split a model and its data across thousands of GPUs), collective communication (synchronizing gradients across a cluster without creating bottlenecks), and fault tolerance (recovering from the inevitable GPU failures without restarting the entire job from scratch).
+
+Beyond the raw training infrastructure, the platform serves data scientists who need to track experiments, compare hyperparameter combinations, manage datasets, and promote the best checkpoint to production — all while sharing a finite GPU cluster with hundreds of competing teams.`,
+
+    functionalRequirements: [
+      'Submit training jobs specifying model code, dataset, hyperparameters, and resource requirements (GPU count, memory)',
+      'Schedule jobs across a shared GPU cluster with priority queuing and preemption',
+      'Orchestrate data-parallel, model-parallel, and tensor-parallel training strategies',
+      'Synchronize gradients across workers using all-reduce (NCCL/RCCL)',
+      'Checkpoint model state periodically and resume automatically after worker failures',
+      'Track experiments: log metrics (loss, accuracy, throughput) and hyperparameters per run',
+      'Hyperparameter search: launch parallel trials and surface the best configuration',
+      'Register trained model checkpoints to a model registry for deployment',
+    ],
+
+    nonFunctionalRequirements: [
+      'GPU utilization >80% across the cluster (idle GPUs are wasted capital)',
+      'Fault tolerance: auto-recover from up to 5% simultaneous GPU failures within 5 minutes',
+      'Checkpoint overhead <2% of total training time',
+      'Job scheduling latency: job starts within 60 seconds of resource availability',
+      'Support jobs from 1 GPU to 4096 GPUs with linear throughput scaling to at least 1024 GPUs',
+      'Metric logging latency <1 second from worker to experiment dashboard',
+    ],
+
+    estimation: {
+      users: '500 ML researchers submitting 200 training jobs per day; cluster of 10,000 GPUs across 1,250 8-GPU nodes',
+      storage: '10 model checkpoints per run * 200 GB avg checkpoint * 200 runs/day = 400 TB/day checkpoint writes; 1 TB/day experiment metrics and logs',
+      bandwidth: 'All-reduce for a 70B parameter model: 70B params * 2 bytes (bfloat16) * 2 (all-reduce factor) / 8 GPUs per node = ~35 GB per iteration crossing NVLink; inter-node: ~10 GB per iteration over InfiniBand',
+      qps: '200 job submissions/day; 10,000 metric log events/sec across all running jobs; 50 checkpoint writes/hour across cluster',
+    },
+
+    apiDesign: {
+      description: 'Job submission API, experiment tracking API, and cluster management API',
+      endpoints: [
+        { method: 'POST', path: '/api/jobs/submit', params: '{ name, docker_image, entrypoint, num_gpus, gpu_type, priority, hyperparams{}, dataset_path, max_duration_hours }', response: '{ job_id, queue_position, estimated_start }', description: 'Submit a training job to the scheduler queue' },
+        { method: 'GET', path: '/api/jobs/{job_id}/status', params: '', response: '{ status, assigned_nodes[], started_at, current_epoch, throughput_samples_per_sec, gpu_utilization_pct }', description: 'Poll job status and real-time metrics' },
+        { method: 'POST', path: '/api/jobs/{job_id}/metrics', params: '{ step, metrics{loss, accuracy, learning_rate, ...} }', response: '{ ok }', description: 'Worker-side metric logging (called from training loop)' },
+        { method: 'POST', path: '/api/jobs/{job_id}/checkpoint', params: '{ step, checkpoint_uri }', response: '{ ok }', description: 'Register a checkpoint location for fault recovery' },
+        { method: 'POST', path: '/api/hparam-search', params: '{ base_config, search_space{}, num_trials, metric_to_optimize, direction }', response: '{ search_id, trial_jobs[] }', description: 'Launch a parallel hyperparameter search' },
+        { method: 'POST', path: '/api/models/register', params: '{ job_id, checkpoint_step, name, tags{} }', response: '{ model_id, version }', description: 'Promote a checkpoint to the model registry' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Job lifecycle, cluster topology, experiment metrics, and model registry',
+      schema: `training_jobs {
+  id: uuid PK
+  name: varchar(200)
+  submitter_id: bigint FK
+  team_id: bigint FK
+  docker_image: varchar(500)
+  entrypoint: text
+  num_gpus: int
+  gpu_type: enum(a100_80g, h100_80g, v100_32g)
+  priority: int
+  status: enum(queued, scheduled, running, completed, failed, preempted)
+  hyperparams: jsonb
+  dataset_path: varchar(500)
+  submitted_at: timestamp
+  started_at: timestamp nullable
+  completed_at: timestamp nullable
+  last_checkpoint_step: int nullable
+  last_checkpoint_uri: varchar(500) nullable
+  max_duration_hours: int
+}
+
+worker_assignments {
+  job_id: uuid FK
+  node_id: varchar(50) FK
+  rank: int            -- global rank of this worker (0 = master)
+  local_rank: int      -- GPU index within node (0-7)
+  assigned_at: timestamp
+  released_at: timestamp nullable
+}
+
+cluster_nodes {
+  id: varchar(50) PK   -- e.g., "gpu-node-0042"
+  gpu_type: enum
+  num_gpus: int
+  status: enum(healthy, degraded, offline, maintenance)
+  current_job_id: uuid nullable FK
+  last_heartbeat_at: timestamp
+}
+
+experiment_metrics {
+  -- Stored in ClickHouse for time-series queries
+  job_id: uuid
+  step: int
+  timestamp: timestamp
+  metric_name: varchar(100)
+  metric_value: float
+  -- Partitioned by job_id, date
+}`,
+      examples: [
+        { table: 'training_jobs', label: 'Large LLM fine-tuning job in queue', json: `{ "id": "job-8f3a2b1c", "name": "llama3-finetune-v7", "num_gpus": 64, "gpu_type": "h100_80g", "status": "queued", "priority": 8, "hyperparams": {"lr": 3e-5, "batch_size": 128, "warmup_steps": 200}, "submitted_at": "2025-04-18T08:00:00Z" }` },
+        { table: 'worker_assignments', label: 'Node assignment for rank 0 master', json: `{ "job_id": "job-8f3a2b1c", "node_id": "gpu-node-0012", "rank": 0, "local_rank": 0, "assigned_at": "2025-04-18T08:01:43Z" }` },
+        { table: 'experiment_metrics (ClickHouse)', label: 'Training loss at step 500', json: `{ "job_id": "job-8f3a2b1c", "step": 500, "timestamp": "2025-04-18T09:15:22Z", "metric_name": "train_loss", "metric_value": 1.847 }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'A centralized job scheduler assigns GPUs to jobs from a queue. Each job runs a standard data-parallel training loop using PyTorch DDP (Distributed Data Parallel) where every GPU holds a full copy of the model. Gradients are synchronized with all-reduce after each backward pass. Checkpoints are saved periodically to shared NFS storage by the rank-0 worker.',
+      problems: [
+        'Model size limit: DDP requires the full model to fit in a single GPU\'s memory; models larger than ~40B parameters cannot train on a single 80GB A100',
+        'Straggler sensitivity: all-reduce waits for the slowest GPU; one degraded node slows the entire job by 10-20%',
+        'No preemption: lower-priority jobs block higher-priority jobs until completion; cluster utilization suffers',
+        'Checkpoint overhead: saving a 200GB model checkpoint synchronously every hour blocks training for 3-5 minutes on NFS',
+        'No fault recovery: a single GPU failure terminates the job; the team must manually resubmit and wait in queue again',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Multi-Dimensional Parallelism with Elastic Fault Tolerance',
+      description: 'Large jobs use 3D parallelism: data parallelism across pipeline stages, pipeline parallelism across model layers, and tensor parallelism within each layer\'s matrix operations. NCCL handles all-reduce over InfiniBand for inter-node communication. The scheduler supports gang scheduling (all GPUs start simultaneously), preemption with checkpoint-and-resume, and elastic training where jobs can shrink or grow GPU allocations without restart. Async checkpointing writes model state to CPU memory in the background while training continues.',
+      keyPoints: [
+        'Data parallelism: each GPU holds a full model copy and processes a different data shard; gradients all-reduced via ring topology after each step',
+        'Tensor parallelism (Megatron-style): each transformer layer\'s weight matrices are split column-wise across N GPUs within a node; eliminates the single-GPU memory limit for matrix multiply',
+        'Pipeline parallelism: model layers split into stages assigned to different nodes; GPUs in different stages run micro-batches concurrently (1F1B schedule) to hide pipeline bubble',
+        'Ring all-reduce (NCCL): each GPU sends to its right neighbor and receives from its left in log2(N) rounds, achieving bandwidth = (N-1)/N * peak; scales to 4096 GPUs with InfiniBand',
+        'Async checkpointing: rank-0 copies model state to CPU RAM at checkpoint time (fast, memcpy); a background thread streams checkpoint to S3/HDFS; training resumes immediately without blocking',
+        'Elastic training with Torch Elastic: if a node fails, the job shrinks to remaining nodes and continues from the last checkpoint; no manual resubmission needed',
+        'Gang scheduling: the scheduler only starts a job when all requested GPUs are available simultaneously, preventing partial starts that hold GPUs idle while waiting for others',
+      ],
+      databaseChoice: 'PostgreSQL for job metadata and scheduling state; ClickHouse for time-series experiment metrics (fast range scans by job_id and step); Redis for real-time job status and worker heartbeats; S3/HDFS for checkpoint storage; etcd for distributed coordination (cluster membership, leader election for scheduler)',
+      caching: 'Redis caches current job status and latest metric values for the dashboard, avoiding ClickHouse queries on every page load; worker heartbeat cache in Redis (5-second TTL per node) allows the scheduler to detect failures within 10 seconds; dataset shards are pre-fetched to local NVMe on each node before training starts to saturate GPU compute rather than waiting on network storage',
+    },
+
+    tips: [
+      'Start with data parallelism (every GPU has a full model copy, gradients are all-reduced) — this is the baseline everyone knows',
+      'Clarify when you need model parallelism: only when a single model layer does not fit in one GPU\'s memory (common for 70B+ models)',
+      'Ring all-reduce is a key concept: explain that it scales bandwidth linearly with the number of GPUs because each GPU only communicates with two neighbors',
+      'Fault tolerance question is almost certain: distinguish checkpoint-and-resume (restart from last checkpoint after failure) from elastic training (job continues with fewer GPUs)',
+      'Mention the straggler problem: one slow GPU stalls all-reduce; solutions include timeout-based exclusion and stragglers-as-checkpointing-signal',
+      'Async checkpointing is the interviewer-pleasing optimization: checkpoint in background to CPU RAM while GPU training continues, then stream to S3',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How does ring all-reduce work and why does it scale?',
+        answer: `**Problem with Naive All-Reduce (Parameter Server)**:
+\`\`\`
+N workers each send gradients to 1 parameter server
+PS aggregates and broadcasts back
+Bottleneck: PS network bandwidth = O(N * model_size)
+At 1000 workers: PS needs 1000x the bandwidth of each worker
+\`\`\`
+
+**Ring All-Reduce**:
+Workers arranged in a logical ring. Each worker has gradient shards of size M/N (M = total gradient size).
+
+**Phase 1: Scatter-Reduce (N-1 steps)**:
+\`\`\`
+Step 1: Each GPU sends chunk[i] to right neighbor, receives chunk[i-1] from left
+Step 2: Add received chunk to local chunk, send result rightward
+...
+After N-1 steps: each GPU holds the fully summed gradient for one chunk
+\`\`\`
+
+**Phase 2: All-Gather (N-1 steps)**:
+\`\`\`
+Each GPU broadcasts its fully summed chunk around the ring
+After N-1 steps: every GPU has all fully summed gradients
+\`\`\`
+
+**Bandwidth Analysis**:
+- Each GPU sends and receives exactly 2*(N-1)/N * M bytes total
+- As N grows, each GPU always sends ~2M bytes regardless of cluster size
+- Total cluster bandwidth scales with N (more GPUs = more total bandwidth)
+- No single bottleneck node
+
+**In Practice (NCCL)**:
+- NVLink for intra-node (600 GB/s bidirectional per GPU)
+- InfiniBand HDR (200 Gb/s) for inter-node all-reduce
+- NCCL automatically selects ring or tree topology based on cluster topology`,
+      },
+      {
+        question: 'How do you handle fault tolerance in a long-running training job?',
+        answer: `**Failure Types and Frequencies**:
+- GPU hardware failure: ~0.1% per GPU per week; at 1000 GPUs, expect 1 failure per week
+- Node failure (full 8-GPU server): similar rate; affects 8 workers simultaneously
+- Network partition: InfiniBand link flaps; all-reduce hangs until timeout
+
+**Checkpoint-and-Resume**:
+\`\`\`
+Every K steps (K = 500-1000):
+1. Rank-0 signals all workers to pause after current step
+2. All workers save: model weights, optimizer state, RNG state, data loader position
+3. Rank-0 aggregates worker shards into a complete checkpoint on S3
+4. Training resumes
+\`\`\`
+On failure: scheduler detects dead worker via heartbeat timeout, restarts all workers from the last checkpoint. Cost: at most K steps of repeated work.
+
+**Async Checkpointing (reduces overhead)**:
+\`\`\`
+Synchronous (old): training blocked for 3-5 min per checkpoint write
+Async:
+  1. memcpy model weights to pinned CPU RAM (fast, ~30 seconds)
+  2. Training immediately resumes on GPU
+  3. Background thread streams CPU RAM to S3 (takes 5-10 min, overlaps with training)
+Overhead: <2% of training time instead of 20%
+\`\`\`
+
+**Elastic Training (PyTorch Elastic / Torchelastic)**:
+- Workers register with a rendezvous coordinator (etcd or C10d)
+- If a worker fails, remaining workers detect it via heartbeat
+- Job shrinks to (N - failed_count) workers; each takes on a larger data shard
+- No resubmission required; trains at reduced throughput until replacement nodes assigned
+- Handles transient failures without wasting hours of queue wait time
+
+**Straggler Mitigation**:
+- Monitor per-worker step time via heartbeat
+- If one worker is consistently 20% slower, mark it as degraded
+- Scheduler replaces it at next checkpoint boundary`,
+      },
+    ],
+
+    keyDecisions: [
+      'Data parallelism vs pipeline parallelism vs tensor parallelism — chose all three (3D parallelism) for 70B+ models because no single strategy is sufficient: DP alone hits GPU memory limits, PP alone creates pipeline bubbles, TP alone cannot span nodes efficiently',
+      'Synchronous vs asynchronous gradient updates — chose synchronous because async SGD introduces gradient staleness that degrades model quality; modern all-reduce over InfiniBand is fast enough that synchronous is preferred for large models',
+      'NFS vs S3 for checkpoints — chose S3 because NFS throughput bottlenecks on large checkpoint writes from many workers simultaneously; S3 multipart upload from each worker in parallel saturates available bandwidth',
+      'Centralized parameter server vs ring all-reduce — chose ring all-reduce because the PS creates a bandwidth bottleneck that prevents scaling beyond a few hundred GPUs; ring all-reduce scales linearly with GPU count',
+      'Preemption vs non-preemptive scheduling — chose preemptive scheduling with checkpoint-and-resume because without it a single multi-week job can monopolize the cluster and block all high-priority research',
+    ],
+  },
+
+  // ─── ML-Powered Search Ranking ───────────────────────────────────────────────
+  {
+    id: 'search-ranking-system',
+    isNew: true,
+    title: 'ML-Powered Search Ranking',
+    subtitle: 'Google Search / LinkedIn / Amazon Product Search',
+    icon: 'search',
+    color: '#0ea5e9',
+    difficulty: 'Hard',
+    description: 'Design a two-stage search system that retrieves thousands of candidate documents and ranks them with a machine learning model within 100ms end-to-end latency.',
+
+    introduction: `Search ranking is one of the most economically valuable ML problems in existence — a 1% improvement in Amazon's search ranking translates to hundreds of millions of dollars in revenue. The problem decomposes cleanly into two stages: retrieval (find thousands of plausible candidates from billions of documents quickly) and ranking (score those candidates with a high-quality ML model and return the top K).
+
+The core tension is between recall and latency. Retrieval must find nearly all relevant documents — missing a highly relevant result at this stage means it never appears in the final ranking, regardless of how good the ranker is. But retrieval must operate at millisecond scale over billions of documents, making expensive operations like neural embedding search difficult to apply exhaustively. Ranking can afford much richer features and larger models because it only sees hundreds of candidates rather than billions of documents.
+
+Beyond the two-stage pipeline, a production search system must handle query understanding (spell correction, entity recognition, intent classification), personalization (the same query means different things to different users), freshness (new documents must appear in results within minutes), and real-time A/B experimentation to continuously improve the ranking model.`,
+
+    functionalRequirements: [
+      'Accept a text query and return ranked results (documents, products, or profiles) with sub-100ms p99 latency',
+      'Query understanding: spell correction, synonym expansion, entity tagging, and intent classification',
+      'Two-stage pipeline: fast retrieval of candidate set followed by ML-based reranking',
+      'Personalization: ranking accounts for user history, preferences, and context',
+      'Freshness: new or updated documents indexed within 60 seconds of publication',
+      'A/B experimentation: different ranking models or features served to different user buckets',
+      'Click and conversion signal collection for continuous model training',
+      'Faceted filtering: results filterable by category, price range, date, rating, etc.',
+    ],
+
+    nonFunctionalRequirements: [
+      'End-to-end p99 latency < 100ms from query receipt to ranked results returned',
+      'Retrieval recall > 95% (top-1000 candidates must contain at least 95% of relevant documents that the ranker would surface)',
+      'Index freshness: document indexed within 60 seconds of write',
+      'Availability: 99.99% uptime; search is a core revenue-generating feature',
+      'Horizontal scalability: support 10,000 QPS with linear scaling to 100,000 QPS by adding shards',
+      'Model update cadence: ranking model retrained daily with fresh click signal; deployed without search downtime',
+    ],
+
+    estimation: {
+      users: '50M daily active users generating 500M queries/day (average 10 queries per user); 10,000 QPS peak',
+      storage: '1B documents * 10KB avg document size = 10TB raw corpus; inverted index ~3x raw size = 30TB; embedding index (768 dims, float16) = 1B * 768 * 2 bytes = 1.5TB',
+      bandwidth: '10,000 QPS * 50KB avg response (top-10 results with metadata) = 500MB/sec response bandwidth; retrieval tier internal: 10,000 QPS * 1000 candidates * 200 bytes = 2GB/sec',
+      qps: '10,000 search QPS at peak; 50,000 index write QPS (document updates from crawl/ingestion pipeline)',
+    },
+
+    apiDesign: {
+      description: 'Search query API, document indexing API, and experimentation control API',
+      endpoints: [
+        { method: 'GET', path: '/api/search', params: 'q, user_id?, filters{}, page, page_size, experiment_id?', response: '{ results[{id, title, score, snippet, metadata}], total_hits, facets{}, query_understanding{corrected_query, entities[]} }', description: 'Primary search endpoint' },
+        { method: 'POST', path: '/api/index/document', params: '{ id, content, metadata{}, timestamp }', response: '{ indexed_at, shard_id }', description: 'Index or update a document (async fan-out to inverted index and embedding index)' },
+        { method: 'DELETE', path: '/api/index/document/{id}', params: '', response: '{ removed: true }', description: 'Remove document from all indexes' },
+        { method: 'POST', path: '/api/events/click', params: '{ query_id, result_id, position, user_id, timestamp }', response: '{ ok }', description: 'Log a result click for training signal collection' },
+        { method: 'POST', path: '/api/experiments', params: '{ name, model_id, feature_flags{}, traffic_pct }', response: '{ experiment_id }', description: 'Create a ranking experiment directing N% of traffic to a new model' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Document corpus, inverted index (Elasticsearch/Lucene), embedding index (HNSW), and click log',
+      schema: `documents {
+  id: varchar(100) PK
+  title: text
+  body: text
+  author_id: bigint nullable FK
+  category: varchar(100)
+  tags: text[]
+  published_at: timestamp
+  updated_at: timestamp
+  quality_score: float     -- PageRank / domain authority
+  engagement_metrics: jsonb  -- views, avg_dwell_time, ctr
+}
+
+-- Inverted index: stored in Elasticsearch / Lucene
+-- term -> [ (doc_id, tf, positions[]) ]
+-- Maintained per shard; shards distributed across nodes
+
+-- Embedding index: stored in FAISS / HNSW
+-- doc_id -> 768-dim float16 vector (BERT CLS token)
+-- Sharded by doc_id; supports approximate nearest neighbor
+
+ranking_features {
+  query_id: uuid
+  doc_id: varchar(100)
+  bm25_score: float
+  semantic_similarity: float
+  freshness_score: float
+  quality_score: float
+  personalization_score: float
+  position: int            -- position in final ranked list
+  clicked: bool
+  dwell_time_ms: int nullable
+  converted: bool
+  timestamp: timestamp
+  -- Used as training data for next model iteration
+}
+
+experiments {
+  id: uuid PK
+  name: varchar(200)
+  model_id: varchar(100)
+  feature_flags: jsonb
+  traffic_pct: float
+  status: enum(active, paused, concluded)
+  started_at: timestamp
+  concluded_at: timestamp nullable
+}`,
+      examples: [
+        { table: 'documents', label: 'Indexed product listing', json: `{ "id": "prod-9a2b3c", "title": "Wireless Noise-Canceling Headphones", "category": "Electronics/Audio", "tags": ["bluetooth", "anc", "over-ear"], "published_at": "2025-03-01T00:00:00Z", "quality_score": 0.82, "engagement_metrics": {"views": 145000, "avg_dwell_time_sec": 42, "ctr": 0.068} }` },
+        { table: 'ranking_features', label: 'Click signal for training', json: `{ "query_id": "q-d4e5f6a7", "doc_id": "prod-9a2b3c", "bm25_score": 12.4, "semantic_similarity": 0.87, "freshness_score": 0.91, "position": 2, "clicked": true, "dwell_time_ms": 38000, "converted": true, "timestamp": "2025-04-18T14:23:01Z" }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'A single Elasticsearch cluster handles both indexing and retrieval using BM25 scoring. Query string is passed directly to Elasticsearch, which returns results ranked by TF-IDF and BM25. Results are returned to the user without reranking.',
+      problems: [
+        'BM25 is lexical only: queries like "buy running shoes" miss documents titled "athletic footwear for jogging" despite high semantic relevance',
+        'No personalization: all users see the same ranking regardless of history, preferences, or intent',
+        'No query understanding: typos and synonyms reduce recall; "iphone charger" misses "lightning cable" documents',
+        'Ranking quality plateau: BM25 cannot incorporate rich signals like click-through rate, freshness, or document quality without complex per-field boosting hacks',
+        'Freshness vs quality trade-off: boosting new documents with BM25 requires manual weight tuning that degrades every time the document distribution shifts',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Two-Stage Pipeline with Neural Ranking and Query Understanding',
+      description: 'A query understanding service runs spell correction, synonym expansion, entity tagging, and intent classification in parallel before retrieval. The retrieval stage fans out to both a BM25 inverted index (Elasticsearch) and a semantic ANN index (FAISS/HNSW with BERT embeddings), then merges candidates using reciprocal rank fusion. The ranking stage scores the top-1000 candidates with a gradient-boosted tree (LightGBM) or neural ranker using 200+ features per (query, document) pair. Results pass through a post-processing layer for diversity and business rule enforcement.',
+      keyPoints: [
+        'Query understanding pipeline: spell correction (edit distance trie), entity linking (NER model), intent classification (e.g., navigational vs informational vs transactional), synonym expansion from query log co-click data',
+        'Dual retrieval: BM25 (Elasticsearch) for lexical precision + BERT-embedding ANN (FAISS) for semantic recall; reciprocal rank fusion merges both candidate lists with no model training required',
+        'Candidate reranking: LightGBM model trained on click logs using features: BM25 score, embedding similarity, document quality, freshness decay, user-document co-engagement history, query-category match',
+        'Personalization layer: user embedding (trained on click history) dot-producted with document embedding to produce a personalization score added to the ranking model features',
+        'Real-time feature serving: ranking features that depend on live signals (e.g., trending score, inventory level for products) fetched from the feature store at query time with <5ms SLA',
+        'A/B experimentation framework: each request is assigned to an experiment bucket; ranking model, retrieval weights, and feature flags vary per bucket; statistical significance tested daily',
+        'Freshness pipeline: document changes published to Kafka; Elasticsearch consumer updates inverted index within 30 seconds; BERT embeddings recomputed asynchronously within 5 minutes via embedding worker fleet',
+      ],
+      databaseChoice: 'Elasticsearch for inverted index (BM25, faceted filtering, highlighting); FAISS with HNSW index for embedding ANN search; Redis for real-time feature cache (trending scores, freshness signals); ClickHouse for click log storage and model training data; PostgreSQL for experiment metadata and document metadata',
+      caching: 'Query result cache in Redis for top-1000 popular queries (10-second TTL, covers ~40% of traffic); user personalization vector cached in Redis (1-hour TTL); retrieval candidate sets cached by query hash for 5 seconds to deduplicate burst traffic for the same query; document embeddings cached in FAISS in-memory index (full corpus fits in ~3TB RAM across fleet)',
+    },
+
+    tips: [
+      'Always frame the answer as two stages first (retrieval then ranking) before diving into any ML details — interviewers reward this structure',
+      'BM25 recall limitation is the key motivation for adding embedding-based semantic retrieval; quantify it: "BM25 misses 20-30% of relevant results for tail queries"',
+      'Explain why you cannot just run a neural ranker over the full corpus: at 1B documents and 10,000 QPS, even 1ms per document scoring would require 1 million cores',
+      'Discuss the training data challenge: clicks are biased by position (users click rank 1 more regardless of quality); mention inverse propensity weighting or pairwise loss to correct for position bias',
+      'Freshness vs quality is a common follow-up: new documents have no click signal, so the model defaults to low quality; solve with a freshness decay feature and separate quality prior from engagement signals',
+      'A/B experimentation is expected at this scale: mention that all improvements are validated with holdout experiments before full rollout, and that online metrics (CTR, dwell time, conversion) lag offline metrics (NDCG)',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How does the two-stage retrieval and ranking pipeline work end-to-end?',
+        answer: `**End-to-End Latency Budget (100ms total)**:
+\`\`\`
+Query Understanding:    5ms  (spell correct, NER, intent)
+Retrieval (parallel):  20ms  (BM25 + ANN, merge 1000 candidates)
+Feature Fetching:      10ms  (feature store, personalization)
+Ranking Model:         15ms  (LightGBM score 1000 candidates)
+Post-processing:        5ms  (diversity, business rules)
+Network + serialization:45ms
+Total:                100ms p99
+\`\`\`
+
+**Stage 1 — Retrieval**:
+\`\`\`
+Query: "wireless headphones for running"
+
+BM25 path (Elasticsearch):
+  - Token: [wireless, headphones, running]
+  - Retrieves: top-500 documents by BM25 score
+  - Advantages: exact match, fast (10-20ms), good for head queries
+
+ANN path (FAISS / HNSW):
+  - Embed query with BERT: 768-dim vector
+  - ANN search: top-500 by cosine similarity
+  - Advantages: semantic match, captures synonyms and paraphrase
+
+Merge (Reciprocal Rank Fusion):
+  score(doc) = 1/(60 + rank_bm25) + 1/(60 + rank_ann)
+  Top-1000 by merged score → passed to ranker
+\`\`\`
+
+**Stage 2 — Ranking**:
+\`\`\`
+For each of 1000 candidates, compute features:
+  - Query-Document: BM25 score, embedding similarity, field match (title, body)
+  - Document quality: PageRank, domain authority, avg dwell time, CTR
+  - Freshness: exponential decay since published_at
+  - Personalization: user_embedding · doc_embedding
+  - Context: device, location, time of day
+
+LightGBM scores all 1000 candidates in ~15ms (batch inference)
+Top-10 returned to user
+\`\`\``,
+      },
+      {
+        question: 'How do you handle position bias in click-based training data?',
+        answer: `**The Problem**:
+Users are much more likely to click results at position 1-3 regardless of actual quality:
+\`\`\`
+Position 1: 30% CTR (even for mediocre results)
+Position 10: 3% CTR (even for excellent results)
+\`\`\`
+Naively training on (query, doc, clicked=1) as positive signal biases the model to favor whatever it previously ranked highly — a feedback loop that ossifies the ranking.
+
+**Solution 1: Inverse Propensity Weighting (IPW)**:
+Estimate the probability of a click being observed at position k (propensity p_k).
+Weight each training example by 1/p_k:
+\`\`\`python
+# Position 1 clicks are common (propensity=0.3) → downweight
+# Position 10 clicks are rare (propensity=0.03) → upweight
+loss = -click * (1/propensity) * log(model_score)
+\`\`\`
+Estimated propensities from randomized result swaps (A/B test where random positions are injected).
+
+**Solution 2: Pairwise Learning-to-Rank (LambdaRank)**:
+Instead of treating each click independently, create pairs:
+- (clicked doc, non-clicked doc at same position) → clicked doc should rank higher
+- Loss: max(0, 1 - score(clicked) + score(non_clicked))
+Position bias partially cancels because both docs in a pair are shown to the same user in the same session.
+
+**Solution 3: Counterfactual Logging**:
+Periodically inject random rankings for a small fraction of users (1-5%).
+These unbiased clicks provide ground truth for propensity estimation without contaminating the main ranking experience.
+
+**Dwell Time as a Quality Signal**:
+Dwell time (time between click and back-button) is less position-biased than raw clicks.
+A 60-second dwell is a strong quality signal regardless of position. Use it as a secondary label alongside click to reduce position bias impact.`,
+      },
+      {
+        question: 'How do you keep a 1-billion document index fresh within 60 seconds?',
+        answer: `**Freshness Pipeline**:
+\`\`\`
+Document Write/Update
+        |
+        v
+  Kafka Topic: document-events
+  (partition by doc_id for ordering)
+        |
+     ┌──┴────────────────┐
+     v                   v
+Elasticsearch       Embedding Worker Fleet
+Consumer            (BERT inference)
+(BM25 index update) (async, 3-5 min)
+< 30 seconds
+\`\`\`
+
+**Elasticsearch Near-Real-Time (NRT) Updates**:
+- Lucene writes to in-memory buffer; refresh every 1 second makes new docs searchable
+- Kafka consumer batches 1000 documents, bulk-indexes to Elasticsearch
+- End-to-end: document published → Kafka → consumer → indexed = ~15-30 seconds
+- Delete is immediate (tombstone in Lucene, filtered before returning results)
+
+**Embedding Index Freshness (slower)**:
+- BERT encoding takes ~50ms per document on GPU
+- 50,000 new documents/hour → need ~700 GPU-ms/sec = 1-2 GPU workers
+- New documents served by BM25-only retrieval until embedding is computed
+- FAISS index rebuilt incrementally: append new vectors to HNSW index without full rebuild
+
+**Freshness vs Index Consistency**:
+- Inverted index shards are updated independently; a query may hit different shards at different freshness states
+- For most search use cases, eventual consistency (30-second window) is acceptable
+- For breaking news or stock prices, prioritize freshness by routing affected queries to a dedicated real-time index that bypasses the main index`,
+      },
+    ],
+
+    keyDecisions: [
+      'BM25-only vs dual retrieval (BM25 + ANN) — chose dual retrieval because BM25 alone misses 20-30% of relevant results for semantic queries; dual retrieval improves recall by 15-20% with only 15ms added latency',
+      'LightGBM vs neural ranker (BERT cross-encoder) — chose LightGBM for the ranker because it scores 1000 candidates in 15ms vs 2 seconds for BERT cross-encoder; a BERT reranker can be applied to top-20 as a third stage for latency-tolerant use cases',
+      'Centralized Elasticsearch vs distributed sharding — chose sharding because a 1B document index at 10KB per doc = 10TB; no single server can hold the inverted index in memory; 20-shard cluster with 500GB per shard fits comfortably',
+      'Exact ANN vs approximate ANN — chose HNSW approximate ANN because exact cosine similarity over 1B 768-dim vectors takes 50ms per query at scale; HNSW achieves 95% recall at 20ms with 4x less memory than brute force',
+      'Real-time personalization vs batch personalization — chose batch user embeddings (updated hourly) for the base ranking, with a lightweight real-time session signal (last 3 clicks in current session) for immediate relevance; real-time full model personalization adds 40ms latency that violates the SLO',
+    ],
+  },
+
+  // ─── Real-Time Fraud Detection ────────────────────────────────────────────────
+  {
+    id: 'fraud-detection-system',
+    isNew: true,
+    title: 'Real-Time Fraud Detection',
+    subtitle: 'Stripe / PayPal / Meta',
+    icon: 'shield',
+    color: '#ef4444',
+    difficulty: 'Hard',
+    description: 'Design a system that scores every payment transaction for fraud risk within 100ms, combining a rule engine with ML models and real-time velocity features computed from streaming events.',
+
+    introduction: `Fraud detection is the canonical real-time ML scoring problem where the cost of a wrong decision is asymmetric: a false negative (missed fraud) directly loses money, while a false positive (blocking a legitimate transaction) damages customer trust and directly reduces revenue. At Stripe's scale, every basis point improvement in fraud detection rates represents tens of millions of dollars.
+
+The hardest part of fraud detection is not the ML model — it is computing the right features in time. A fraudster's most distinguishing signal is velocity: using a card 20 times in 5 minutes, shipping to 10 addresses in an hour, or logging in from 3 countries in 1 hour. These features require maintaining sliding-window aggregations over a streaming event log, updating in real-time as new events arrive, and serving them with single-digit millisecond latency during transaction scoring.
+
+Fraud patterns also evolve continuously as fraudsters adapt to detection. Models must be retrained frequently with fresh labels, but labels arrive on a delay (a chargeback takes days to weeks to confirm). The feedback loop between detected fraud, new labels, and model updates must be designed to avoid introducing bias that amplifies past mistakes.`,
+
+    functionalRequirements: [
+      'Score every payment transaction in real time with a fraud risk score between 0 and 1',
+      'Block high-risk transactions (score > threshold), flag medium-risk for review, allow low-risk',
+      'Apply a configurable rule engine before the ML model (e.g., block known bad IPs, enforce velocity caps)',
+      'Compute velocity features in real time: transactions per card/user/device/IP in last 1m, 5m, 1h, 24h',
+      'Collect fraud labels (chargebacks, manual reviews) and feed them back for model retraining',
+      'Detect fraud rings via graph analysis: shared device IDs, cards, or shipping addresses across accounts',
+      'Provide a merchant-facing dashboard showing fraud rates, false positives, and blocked revenue',
+      'Support user appeals for incorrectly blocked transactions with manual review workflow',
+    ],
+
+    nonFunctionalRequirements: [
+      'Scoring latency: <100ms p99 end-to-end (transaction cannot wait longer than this)',
+      'Throughput: 100,000 transactions per second at peak (e.g., Black Friday)',
+      'False positive rate: <0.3% (1 in 333 legitimate transactions incorrectly blocked)',
+      'Fraud detection rate: >98% of fraudulent transactions scored above the blocking threshold',
+      'Label freshness: new fraud labels incorporated into model training within 24 hours of confirmation',
+      'Zero downtime model updates: new model versions deployed via shadow scoring without blocking any transactions',
+    ],
+
+    estimation: {
+      users: '5M merchants processing 100M transactions/day (1,150 TPS avg; 100,000 TPS peak on Black Friday)',
+      storage: 'Velocity counters: 50M unique cards * 10 velocity windows * 8 bytes = 4GB (fits in Redis); Transaction log: 100M transactions/day * 2KB per event = 200GB/day; Model features: 100M * 200 features * 4 bytes = 80GB/day',
+      bandwidth: 'Kafka ingest: 100,000 TPS * 2KB per event = 200MB/sec; Velocity counter writes: 100,000 TPS * 10 counters per transaction = 1M Redis writes/sec',
+      qps: '100,000 scoring requests/sec at peak; 1M Redis read-write ops/sec for velocity features; 10,000 label ingestion events/day from chargeback pipeline',
+    },
+
+    apiDesign: {
+      description: 'Transaction scoring API, rule management API, and label feedback API',
+      endpoints: [
+        { method: 'POST', path: '/api/v1/score', params: '{ transaction_id, amount_cents, currency, card_bin, card_last4, user_id, device_id, ip_address, merchant_id, shipping_address, timestamp }', response: '{ transaction_id, risk_score, decision: allow|review|block, triggered_rules[], latency_ms }', description: 'Score a transaction synchronously before authorization' },
+        { method: 'POST', path: '/api/v1/rules', params: '{ name, condition_sql, action: block|review|allow, priority }', response: '{ rule_id, status: active }', description: 'Create or update a fraud rule (evaluated before ML model)' },
+        { method: 'POST', path: '/api/v1/labels', params: '{ transaction_id, label: fraud|legitimate, label_source: chargeback|manual_review, confirmed_at }', response: '{ ok }', description: 'Ingest a fraud label for model retraining' },
+        { method: 'GET', path: '/api/v1/graph/neighbors', params: 'entity_type, entity_id, depth', response: '{ nodes[], edges[], fraud_score }', description: 'Explore fraud ring graph: accounts sharing device/card/address' },
+        { method: 'POST', path: '/api/v1/appeal', params: '{ transaction_id, user_explanation }', response: '{ appeal_id, review_eta_hours }', description: 'Submit a user appeal for a blocked legitimate transaction' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Transaction events, velocity counters (Redis), fraud labels, and fraud ring graph',
+      schema: `transactions {
+  id: uuid PK
+  merchant_id: bigint FK
+  user_id: bigint FK
+  amount_cents: bigint
+  currency: char(3)
+  card_fingerprint: varchar(64)  -- hashed card identifier
+  device_id: varchar(100)
+  ip_address: inet
+  shipping_address_hash: varchar(64)
+  risk_score: float
+  decision: enum(allow, review, block)
+  triggered_rules: text[]
+  model_version: varchar(20)
+  latency_ms: int
+  created_at: timestamp
+  -- Partitioned by date + merchant_id
+}
+
+fraud_labels {
+  transaction_id: uuid FK PK
+  label: enum(fraud, legitimate)
+  label_source: enum(chargeback, manual_review, model_feedback)
+  confirmed_at: timestamp
+  labeled_at: timestamp
+  delay_days: float  -- time from transaction to label confirmation
+}
+
+-- Velocity counters (Redis, not PostgreSQL)
+-- Key pattern: vel:{entity_type}:{entity_id}:{window}
+-- e.g., vel:card:fp_abc123:5m -> count = 12
+-- Implemented with sliding window counters or Redis sorted sets
+
+fraud_graph_edges {
+  -- Stored in Neo4j or TigerGraph
+  from_entity_type: enum(account, card, device, ip, address)
+  from_entity_id: varchar(100)
+  to_entity_type: enum(account, card, device, ip, address)
+  to_entity_id: varchar(100)
+  edge_type: enum(used_card, used_device, shipped_to, logged_in_from)
+  first_seen_at: timestamp
+  last_seen_at: timestamp
+  occurrence_count: int
+}`,
+      examples: [
+        { table: 'transactions', label: 'Blocked high-risk transaction', json: `{ "id": "txn-f3a2b1c9", "amount_cents": 89900, "currency": "USD", "card_fingerprint": "fp_9d8c7b6a", "device_id": "dev_emulator_001", "risk_score": 0.94, "decision": "block", "triggered_rules": ["velocity_card_5m_exceeded", "known_fraud_device"], "latency_ms": 42 }` },
+        { table: 'fraud_labels', label: 'Chargeback confirming fraud 8 days later', json: `{ "transaction_id": "txn-f3a2b1c9", "label": "fraud", "label_source": "chargeback", "confirmed_at": "2025-04-26T00:00:00Z", "labeled_at": "2025-04-18T09:00:00Z", "delay_days": 8.0 }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'Every transaction passes through a static rule engine (block if amount > $5000 from new account, block known bad IPs, etc.) and then a logistic regression model trained weekly on historical transaction data. Features are computed at scoring time by querying a relational database for recent transaction counts.',
+      problems: [
+        'Latency: querying a relational database for velocity counts (transactions in last 5 minutes per card) takes 50-200ms, consuming most of the 100ms latency budget',
+        'No real-time features: velocity features are computed by SQL aggregation at scoring time; under high load, this creates DB contention that increases latency and misses emerging fraud patterns',
+        'Stale model: weekly retraining means new fraud patterns (e.g., a new carding attack) go undetected for up to 7 days',
+        'No graph features: individual-transaction features miss fraud rings where each card is used only once but all cards share a device or shipping address',
+        'Rule rigidity: static rules have high false positive rates and cannot adapt to merchant-specific normal behavior patterns',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Stream-First Architecture with Real-Time Velocity Features and Graph Scoring',
+      description: 'Every transaction event is published to Kafka. A Flink streaming job maintains sliding-window velocity counters in Redis (count of transactions per card/device/IP in last 1m, 5m, 1h, 24h windows), updated within 100ms of each event. At scoring time, velocity features are read from Redis in a single MGET call. The fraud model (gradient-boosted tree + shallow neural layer) is served via a local model server on each scoring node, eliminating network calls for inference. A graph database (Neo4j) stores entity relationships for fraud ring detection, queried asynchronously and used for high-value transactions above a secondary threshold.',
+      keyPoints: [
+        'Kafka event stream: every transaction published with guaranteed delivery; Flink consumers maintain velocity counters with at-least-once semantics and idempotent Redis increments',
+        'Sliding window counters in Redis: sorted set per entity window, ZRANGEBYSCORE for count in time window, or approximate with token bucket for constant-time updates',
+        'Feature assembly: 200+ features fetched in parallel — velocity features from Redis (MGET), user features from feature store, device reputation from a third-party provider, all within a 20ms SLA',
+        'Two-model ensemble: a fast gradient-boosted tree (GBT) runs first (5ms), followed by a neural model only if GBT score is in the ambiguous 0.3-0.7 range; combined score with learned weights',
+        'Shadow scoring: new model version scores all transactions in shadow (no action taken) for 24 hours; if false positive rate matches or improves, it is promoted to production via atomic traffic switch',
+        'Graph-based fraud ring detection: Flink updates the fraud graph (account-card-device-IP edges) in real time; a separate graph scoring service runs graph convolutional network features for transactions above $500',
+        'Feedback loop bias prevention: new labels are applied to a held-out validation set before being added to the training set; label uplift from model decisions is corrected with inverse propensity weighting',
+      ],
+      databaseChoice: 'Kafka for event streaming and audit log; Flink for real-time velocity counter maintenance; Redis Cluster for velocity counter storage (<1ms reads via MGET); PostgreSQL for transaction records and fraud labels; Neo4j or TigerGraph for fraud ring graph; ClickHouse for analytical fraud dashboards',
+      caching: 'Velocity counters live entirely in Redis (no DB queries on the scoring path); merchant-level baseline statistics (average transaction amount, typical geographies) cached in Redis with 1-hour TTL; device reputation scores from third-party APIs cached in Redis for 24 hours to avoid per-transaction API calls; local model binary loaded in memory on each scoring node — no network round-trip for inference',
+    },
+
+    tips: [
+      'Start by naming the core challenge: computing velocity features (sliding window counts) within the latency budget — this is what separates naive from production-grade designs',
+      'Explain why Redis sorted sets are the right data structure for sliding windows: ZRANGEBYSCORE with a time range gives the count in O(log N + M) where M is the count, updated in O(log N) per insert',
+      'Mention the label delay problem: chargebacks arrive 7-30 days after the transaction; models trained today see fraud patterns from a month ago',
+      'Discuss the feedback loop bias explicitly: if the model blocks a transaction, you never observe whether it was truly fraudulent; this creates survivorship bias in the training data',
+      'Graph features are a strong differentiator: explain that individual card velocity is easy to evade (one transaction per card), but graph features detect rings sharing a device across 100 cards',
+      'Shadow scoring before deployment is expected at this risk level — mention it unprompted to signal production thinking',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How do you compute velocity features (e.g., transactions per card in last 5 minutes) in real time?',
+        answer: `**Why Not SQL?**
+\`\`\`sql
+SELECT COUNT(*) FROM transactions
+WHERE card_fingerprint = ? AND created_at > NOW() - INTERVAL '5 minutes'
+\`\`\`
+At 100,000 TPS, this creates massive DB contention. Each scoring request would issue 10+ such queries across different windows and entity types. Latency: 50-200ms per query.
+
+**Approach 1: Redis Sorted Sets (Exact Sliding Window)**:
+\`\`\`
+Key: vel:card:{fingerprint}:5m
+Type: Sorted Set
+Member: transaction_id
+Score: unix_timestamp_ms
+
+On each transaction:
+  ZADD vel:card:{fp}:5m {timestamp_ms} {txn_id}
+  ZREMRANGEBYSCORE vel:card:{fp}:5m 0 {timestamp_ms - 300000}
+  count = ZCARD vel:card:{fp}:5m
+  EXPIRE vel:card:{fp}:5m 3600  -- cleanup after 1 hour of inactivity
+\`\`\`
+- Exact count in any time window
+- O(log N) insert and prune, O(1) count
+- Memory: sorted set overhead ~60 bytes per entry
+
+**Approach 2: Token Bucket (Approximate, O(1) memory)**:
+\`\`\`
+Key: vel:card:{fingerprint}:5m -> {count, last_refill_time}
+Refill rate = max_allowed / window_seconds tokens per second
+On transaction: count += 1; if count > max → flag
+Memory: 16 bytes per entity window (constant)
+\`\`\`
+Trade-off: cannot recover exact count, but perfect for threshold checks.
+
+**Multiple Windows**:
+Compute 1m, 5m, 1h, 24h simultaneously with Redis pipelining:
+\`\`\`python
+pipe = redis.pipeline()
+for window in [60, 300, 3600, 86400]:
+    pipe.zrangebyscore(f"vel:card:{fp}:{window}", now-window*1000, now, withscores=False, count=True)
+counts = pipe.execute()  # single network round-trip, <5ms
+\`\`\``,
+      },
+      {
+        question: 'How do you avoid feedback loop bias when training on model-blocked transactions?',
+        answer: `**The Bias Problem**:
+When the model blocks a transaction, no label is ever generated (no chargeback possible on a blocked transaction). This creates survivorship bias:
+\`\`\`
+Training data only contains:
+  - Allowed transactions (some are fraud, most are legit)
+  - Manually reviewed transactions (small sample, expensive)
+Missing:
+  - Blocked transactions that would have been fraud (model never sees its own successes)
+  - Blocked transactions that were actually legitimate (false positives hidden)
+\`\`\`
+Result: the model's effective training distribution shifts away from high-risk patterns, causing recall to degrade over time.
+
+**Solution 1: Counterfactual Logging (Random Allowlist)**:
+Allow 0.1-1% of would-be-blocked transactions through and observe their outcomes.
+\`\`\`
+decision = model_score > threshold ? block : allow
+if blocked and random() < 0.001:
+    decision = allow  # override for counterfactual data collection
+    log(transaction_id, override=True, model_score=...)
+\`\`\`
+Provides unbiased labels for the high-risk region. Cost: accept some fraud losses from the override.
+
+**Solution 2: Inverse Propensity Weighting (IPW)**:
+Estimate P(transaction was allowed | features) and upweight examples that were unlikely to be shown to the model:
+\`\`\`python
+propensity = P(allowed | risk_score)  # estimated from allow/block rates at each score
+training_weight = 1.0 / propensity   # upweight rare allowed transactions with high scores
+\`\`\`
+
+**Solution 3: Separate Validation Set**:
+Hold out 10% of labels completely from training. Evaluate new model on holdout before deploying. If holdout metrics improve, the model is better, not just fitting a biased training set.
+
+**Solution 4: Human Review Queue Sampling**:
+Route 2-5% of blocked transactions to human review (regardless of model score). Human labels provide ground truth on both allowed and blocked decisions.`,
+      },
+    ],
+
+    keyDecisions: [
+      'Synchronous scoring vs async scoring — chose synchronous because the payment gateway must have a decision before authorizing the transaction; async post-authorization scoring is faster but cannot block fraud',
+      'Rule engine before model vs model-only — chose rule engine first because deterministic rules (block known fraud device IDs, enforce hard velocity caps) are faster and more explainable than ML; rules also provide a safety net when the model is unavailable',
+      'Redis sorted sets vs time-series DB for velocity counters — chose Redis because sorted sets give exact sliding window counts in <1ms reads; time-series DBs add unnecessary read latency for this use case',
+      'Gradient-boosted tree vs deep neural network for primary scorer — chose GBT as primary because it scores 200 features in <5ms, produces calibrated probabilities, and is interpretable for compliance; a neural model runs as a secondary scorer for ambiguous cases',
+      'Graph features in-path vs out-of-path — chose out-of-path (async graph enrichment) for the primary decision to preserve latency; graph scores are stored per-entity and refreshed every hour, consulted synchronously only for transactions above $500',
+    ],
+  },
+
+  // ─── AI Content Moderation ────────────────────────────────────────────────────
+  {
+    id: 'content-moderation-system',
+    isNew: true,
+    title: 'AI Content Moderation at Scale',
+    subtitle: 'Meta / YouTube / TikTok',
+    icon: 'shield',
+    color: '#f59e0b',
+    difficulty: 'Medium',
+    description: 'Design a multi-modal content moderation system that classifies user-generated text, images, and videos against policy violations at platform scale, with a tiered pipeline and human review queue.',
+
+    introduction: `Content moderation is one of the most socially consequential ML systems in existence. Platforms like Facebook process 500 billion pieces of content per day, and even a 0.01% false positive rate means 50 million legitimate posts incorrectly removed. At the same time, a missed piece of harmful content can cause real-world violence, suicide contagion, or child exploitation.
+
+The scale makes human-only review impossible. At 500 billion pieces per day, even 1 million human moderators reviewing 24 hours a day would each need to review 500,000 pieces per day — one every 0.2 seconds, with no time for nuanced judgment. ML must handle the vast majority of clear-cut violations automatically, while routing the hardest cases to human review with priority scoring based on virality and severity.
+
+The technical challenges are compounded by the adversarial nature of the problem: bad actors constantly find new evasion techniques — using l33t speak, flipping images, adding noise, or using coded language. Content policy also varies by market (what is legal in Germany differs from the US) and by context (the same image might be artistic in one context and pornographic in another). Models must be updated continuously as evasion techniques evolve.`,
+
+    functionalRequirements: [
+      'Classify text posts, images, videos, and audio for policy violations (hate speech, violence, nudity, spam, misinformation)',
+      'Hash-based matching: instantly detect known violating content using perceptual hashes (PhotoDNA for images, audio fingerprints)',
+      'Tiered pipeline: fast cheap classifier first, expensive model only for borderline cases',
+      'Human review queue: route uncertain cases to moderators with priority ordering by severity and viral reach',
+      'Policy-based thresholds: configurable decision thresholds per violation type and per market/region',
+      'Appeals workflow: creators can appeal decisions; approved appeals feed back as training corrections',
+      'Proactive detection: scan content as it is uploaded, not just after reports',
+      'Transparency reporting: per-category action rates for regulatory compliance',
+    ],
+
+    nonFunctionalRequirements: [
+      'Latency: text classification <100ms; image classification <500ms; video moderation (async, non-blocking)',
+      'Throughput: 500B pieces per day (6M per second peak) — must route to cheap models first',
+      'False positive rate: <0.05% for the most sensitive categories (political speech, news reporting)',
+      'False negative rate: <0.1% for child safety material (zero-tolerance category)',
+      'Human queue SLA: severe violations (CSAM, credible violence threats) reviewed within 1 hour; standard violations within 24 hours',
+      'Policy update latency: new evasion patterns added to the rule system within 2 hours of detection by the intelligence team',
+    ],
+
+    estimation: {
+      users: '3B users generating 500B content pieces/day across text (300B), images (150B), video (50B)',
+      storage: 'Perceptual hash database: 10B known violating images * 144 bytes (PDQ hash) = 1.4TB; Classification results: 500B * 100 bytes = 50TB/day; Human review queue: 0.01% of content = 50M pieces/day routed to humans',
+      bandwidth: '6M pieces/sec * avg 50KB per piece = 300GB/sec ingest; classifier tier 1 output: 6M/sec * 200 bytes = 1.2GB/sec',
+      qps: '6M content pieces/sec routed to tier-1 classifiers; 600K/sec to tier-2 (10% pass-through rate); 60K/sec to human queue (1% of tier-2)',
+    },
+
+    apiDesign: {
+      description: 'Content submission API (called during upload), moderation decision API, and human review API',
+      endpoints: [
+        { method: 'POST', path: '/api/moderate/text', params: '{ content_id, text, author_id, context{post_type, audience_size}, market }', response: '{ decision: allow|remove|review, categories[{name, score}], policy_version }', description: 'Classify text content synchronously' },
+        { method: 'POST', path: '/api/moderate/image', params: '{ content_id, image_url, author_id, market }', response: '{ decision, categories[], hash_matched: bool }', description: 'Classify image (hash check first, then model)' },
+        { method: 'POST', path: '/api/moderate/video', params: '{ content_id, video_url, author_id, market }', response: '{ job_id, eta_seconds }', description: 'Submit video for async moderation (samples frames + audio)' },
+        { method: 'GET', path: '/api/review/queue', params: 'reviewer_id, specialization, limit', response: '{ items[{content_id, priority, categories, context}] }', description: 'Dequeue items for human review with priority ordering' },
+        { method: 'POST', path: '/api/review/decision', params: '{ content_id, reviewer_id, decision, notes }', response: '{ ok, training_queued: bool }', description: 'Submit human reviewer decision; queues correction for model retraining if it disagrees with model' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Content moderation decisions, hash database, human review queue, and appeal records',
+      schema: `moderation_decisions {
+  content_id: varchar(100) PK
+  content_type: enum(text, image, video, audio)
+  decision: enum(allow, remove, restrict, review)
+  decision_source: enum(hash_match, tier1_model, tier2_model, human, appeal)
+  violation_categories: jsonb  -- [{category, score, threshold}]
+  policy_version: varchar(20)
+  market: char(2)
+  processing_ms: int
+  decided_at: timestamp
+  -- Partitioned by content_type, date
+}
+
+perceptual_hashes {
+  hash: varchar(200) PK  -- PDQ hash for images, audio fingerprint for audio
+  content_type: enum(image, audio, video_frame)
+  violation_category: varchar(50)
+  severity: enum(critical, high, medium)
+  added_at: timestamp
+  source: varchar(100)  -- e.g., 'NCMEC', 'GIFCT', 'internal_detection'
+}
+
+review_queue {
+  id: uuid PK
+  content_id: varchar(100) unique FK
+  priority: float  -- computed from severity + viral_reach_score
+  specialization: varchar(50)  -- e.g., 'csam', 'hate_speech', 'violence'
+  tier2_categories: jsonb
+  assigned_to: bigint nullable FK
+  assigned_at: timestamp nullable
+  completed_at: timestamp nullable
+  status: enum(pending, assigned, completed, expired)
+  created_at: timestamp
+}`,
+      examples: [
+        { table: 'moderation_decisions', label: 'Tier-2 model flagging hate speech for review', json: `{ "content_id": "post-7b8c9d0e", "content_type": "text", "decision": "review", "decision_source": "tier2_model", "violation_categories": [{"category": "hate_speech", "score": 0.71, "threshold_remove": 0.85, "threshold_review": 0.60}], "policy_version": "2025-Q2-v3", "market": "DE", "processing_ms": 87 }` },
+        { table: 'perceptual_hashes', label: 'Known CSAM hash from NCMEC database', json: `{ "hash": "f8a3b2c1d4e5...", "content_type": "image", "violation_category": "csam", "severity": "critical", "added_at": "2025-01-10T00:00:00Z", "source": "NCMEC" }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'All content passes through a single multi-label classifier that runs on every piece. A threshold is applied per category to decide allow/remove. Flagged content and user reports are added to a first-in-first-out human review queue.',
+      problems: [
+        'Cost: running an expensive transformer model on 500B pieces per day costs millions of dollars per day; most content is completely benign and does not need heavy model inference',
+        'Latency: a single large model takes 200-500ms per piece; at 6M pieces/second, this requires an impractical fleet size',
+        'No hash matching: known violating content (CSAM, terrorist content) is re-evaluated by the model on every re-upload instead of being instantly blocked',
+        'Human queue flooding: without intelligent prioritization, viral harmful content sits in queue behind low-risk borderline posts; harm spreads before reviewers reach it',
+        'One-size-fits-all thresholds: content that is legal in the US but illegal in Germany is either over-restricted globally or under-restricted in Germany',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Tiered Pipeline with Hash Matching, Specialized Models, and Priority Human Queue',
+      description: 'Content enters a three-tier pipeline. Tier 0 is hash matching: perceptual hashes (PDQ for images, audio fingerprints) are compared against a database of known violations; matches are instantly actioned with no ML inference. Tier 1 is a fast, cheap model (distilled BERT for text, MobileNet for images) that handles 90% of traffic with clear allow or remove decisions. Tier 2 is an expensive ensemble of specialized models (separate model per violation category) that handles the borderline 10%. Only 1% of content that remains ambiguous after tier 2 enters the human review queue, prioritized by virality score and violation severity.',
+      keyPoints: [
+        'Hash tier (tier 0): PDQ hashing computes a 256-bit perceptual hash of each image in <5ms; compared against a 10B-hash database using Hamming distance; matching within distance 10 triggers instant action; zero false negatives for known content',
+        'Tier-1 classifier: distilled model (6-layer BERT for text, MobileNet for images) runs in 20ms; trained to output high-confidence scores (>0.9) for clear violations and clear allows; routes only ambiguous scores (0.3-0.7) to tier 2',
+        'Tier-2 specialized ensemble: separate model per violation category (hate speech, CSAM, violence, nudity) allows each to be fine-tuned on category-specific training data and updated independently as evasion techniques evolve',
+        'Virality-weighted review queue: priority = severity_weight * log(1 + audience_reach); a moderately severe post seen by 10M users is reviewed before a highly severe post seen by 10 people',
+        'Market-specific thresholds: each market has a threshold configuration JSON that maps violation categories to allow/review/remove thresholds; deployed per-region with hot reload, no model redeployment required',
+        'Evasion detection: a separate adversarial detection model runs on content that tier-1 flags as benign but originates from accounts with prior violations or known bad-actor networks; catches l33t speak and image flips',
+        'Feedback loop: human reviewer corrections (model said allow, human says remove) are added to a priority retraining queue; model retrained daily with corrections from the past 7 days',
+      ],
+      databaseChoice: 'PostgreSQL for moderation decisions and appeal records; Redis for the perceptual hash lookup service (10B hashes in a distributed hash table); Kafka for async video moderation job queue; Elasticsearch for human review queue with priority scoring; ClickHouse for transparency reporting and compliance dashboards',
+      caching: 'Perceptual hash database cached in Redis Cluster (1.4TB fits in memory); author trust score cached in Redis (1-hour TTL) — accounts with clean 2-year history skip tier-2 for low-confidence classifications; video frame results cached by content hash to deduplicate re-uploads of the same video; tier-1 model loaded in GPU memory on all moderation nodes (no cold-start per request)',
+    },
+
+    tips: [
+      'Lead with the tiered pipeline — this is the key architecture insight; running an expensive model on every piece of content is economically impossible',
+      'Hash matching deserves its own tier (tier 0) because it provides zero-latency, zero-false-negative detection for known content; mention PhotoDNA and GIFCT hash database partnerships',
+      'Explain the asymmetric cost of errors: for CSAM, false negatives are catastrophic (legal liability, child harm); for political speech, false positives are catastrophic (censorship); different categories need different thresholds',
+      'Virality weighting in the human review queue is the key production insight: a piece of content seen by 10M users needs review within minutes, not 24 hours',
+      'Mention evasion arms race: adversaries flip images horizontally, replace letters with homoglyphs, or use coded slang; the moderation team must continuously red-team their own classifiers',
+      'Context sensitivity is a common follow-up: the same image may be allowed in an art group and removed from a children\'s community; models trained on raw label data without context will have high false positive rates',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How does the tiered pipeline reduce cost while maintaining quality?',
+        answer: `**Cost Analysis Without Tiering**:
+\`\`\`
+500B pieces/day * $0.001 per large model inference = $500M/day
+Obviously impossible.
+\`\`\`
+
+**Tiered Routing**:
+\`\`\`
+Tier 0: Hash matching     — 5ms, near-zero cost, handles ~0.001% of traffic (known violations)
+Tier 1: Distilled model   — 20ms, $0.00001/inference, handles 90% of traffic
+Tier 2: Ensemble model    — 200ms, $0.0005/inference, handles 10% of traffic
+Human review              — $0.10/item, handles 0.01% of traffic
+
+Daily cost at 500B pieces:
+  Tier 1: 450B * $0.00001 = $4.5M/day
+  Tier 2: 50B  * $0.0005  = $25M/day
+  Human:  50M  * $0.10    = $5M/day
+  Total: ~$35M/day (vs $500M without tiering)
+\`\`\`
+
+**Tier-1 Model Design**:
+The tier-1 model is deliberately trained to be confident on the extremes:
+- Score > 0.9 → remove (confident violation)
+- Score < 0.1 → allow (confident benign)
+- Score 0.1–0.9 → pass to tier 2 (uncertain)
+
+The tier-1 model is optimized for confidence calibration, not just accuracy.
+A miscalibrated tier-1 that routes 30% to tier-2 instead of 10% doubles cost.
+
+**Feedback Loop**:
+Monitor the distribution of tier-2 inputs monthly.
+If tier-2 is seeing a new category of content that always resolves to allow,
+retrain tier-1 to handle it directly without tier-2 escalation.`,
+      },
+      {
+        question: 'How do you handle evasion techniques like adversarial images and l33t speak?',
+        answer: `**Image Evasion Techniques and Defenses**:
+
+- **Horizontal flip**: Adversary flips violating image to evade hash match
+  - Defense: compute PDQ hash after normalizing orientation (deskew, detect and undo flip)
+  - Defense: train image classifier with augmentation (flips, rotations, crops)
+
+- **Adversarial noise**: add imperceptible pixel noise that fools the classifier
+  - Defense: adversarial training — include adversarial examples in training data
+  - Defense: ensemble multiple model architectures; adversarial noise that fools ResNet often does not fool a ViT
+
+- **Image-in-screenshot**: place violating image inside a screenshot of a news article
+  - Defense: object detection crops and classifies image regions independently
+
+**Text Evasion Techniques and Defenses**:
+
+- **L33t speak / homoglyphs**: "k1ll j3ws", "h@te" using homoglyphs (Cyrillic a vs Latin a)
+  - Defense: text normalization layer before classification: "k1ll" → "kill", homoglyph normalization
+  - Defense: character-level model components that see raw characters, not just tokens
+
+- **Coded language / dog whistles**: new slang terms adopted by bad-actor communities
+  - Defense: intelligence team monitors known bad-actor spaces and adds new terms to a watchlist; alert the moderation team when watchlist terms appear at high volume
+
+- **Context shifting**: embed hateful content in a "joke" or "educational" framing
+  - Defense: train on context-labeled data where the same sentence in different contexts has different labels; include surrounding post context in the input
+
+**General Defense Strategy**:
+- Red-team the system quarterly: hire adversarial researchers to find bypasses
+- Monitor high-volume bypass attempts in real time (users who post similar borderline content repeatedly)
+- Maintain a fast-path for deploying new rules (2-hour SLA) for novel evasion patterns discovered by the intelligence team, independent of model retraining`,
+      },
+    ],
+
+    keyDecisions: [
+      'Single model vs tiered pipeline — chose tiered because a single model at 500B pieces/day at production inference cost is economically impossible; tier-1 distilled model handles 90% of content at 1/50th the cost of the full model',
+      'Proactive scanning vs reactive (report-based only) — chose proactive for all content at upload because viral harmful content can reach millions of users within minutes of posting; report-based alone has a multi-hour lag',
+      'Global model vs market-specific models — chose a global model with per-market threshold configuration because training separate models per market (190+ countries) is operationally infeasible; threshold tuning is low-cost and can be hot-reloaded',
+      'Automated removal vs always route to human — chose automated removal for score > threshold in clear-cut categories (CSAM, known terrorist content) because routing these to humans exposes moderators to severe psychological harm and delays takedown; human review reserved for borderline and contested cases',
+      'FIFO queue vs priority queue for human review — chose priority queue because viral content causes disproportionate harm; a FIFO queue would let a post seen by 10M people sit behind 10,000 low-reach borderline posts',
+    ],
+  },
+
+  // ─── Vector Search / Semantic Index ──────────────────────────────────────────
+  {
+    id: 'vector-search-index',
+    isNew: true,
+    title: 'Vector Search / Semantic Index',
+    subtitle: 'Pinecone / Weaviate / pgvector',
+    icon: 'search',
+    color: '#10b981',
+    difficulty: 'Medium',
+    description: 'Design a vector database that stores high-dimensional embeddings and supports approximate nearest neighbor search with metadata filtering at billion-vector scale.',
+
+    introduction: `Vector search has become the foundational infrastructure of the AI application stack. Every RAG (retrieval-augmented generation) system, semantic search engine, recommendation system based on embeddings, and similarity-based product feature relies on the ability to find the most semantically similar vectors to a query vector — quickly, at scale, and with metadata filtering.
+
+The core challenge is that exact nearest neighbor search over high-dimensional vectors is inherently expensive: comparing a query vector against 1 billion 768-dimensional vectors with brute force requires 768 billion floating-point multiplications per query. Even at modern GPU speeds, this takes tens of seconds. Approximate Nearest Neighbor (ANN) algorithms like HNSW trade a small amount of recall (typically 95-99%) for 100-1000x speedup by building a navigable graph data structure that prunes the search space.
+
+The second hardest problem is combining vector similarity with metadata filtering. Users rarely want "the 10 most similar items in the entire corpus" — they want "the 10 most similar items that are in stock, cost less than $50, and were published in the last week." Pre-filtering (filter before ANN search) and post-filtering (filter after ANN search) both have failure modes, and the right approach depends on how selective the filter is.`,
+
+    functionalRequirements: [
+      'Upsert vectors with metadata: store (id, vector, metadata{}) tuples at billion-vector scale',
+      'Approximate nearest neighbor (ANN) search: given a query vector, return the top-K most similar vectors by cosine or dot product similarity',
+      'Metadata filtering: combine vector similarity with boolean/range filters on metadata fields (e.g., category="electronics" AND price < 100)',
+      'Hybrid search: combine BM25 keyword score with vector similarity score in a single ranked result',
+      'Namespace / collection isolation: multi-tenant support with per-namespace index isolation',
+      'Real-time upsert: new vectors searchable within seconds of insertion',
+      'Batch import: efficiently import hundreds of millions of pre-computed embeddings',
+      'Delete and update: remove or replace vectors by ID; deleted vectors must not appear in results',
+    ],
+
+    nonFunctionalRequirements: [
+      'Query latency: <50ms p99 for ANN search over 1B vectors without metadata filter',
+      'Recall: >95% recall@10 (95% of the true top-10 nearest neighbors appear in ANN results)',
+      'Throughput: 10,000 ANN queries per second',
+      'Index freshness: upserted vectors searchable within 5 seconds',
+      'Scalability: linear throughput scaling with horizontal shard addition',
+      'Durability: vectors persisted to disk; index survives node restarts without full rebuild',
+    ],
+
+    estimation: {
+      users: '10,000 applications using the vector DB as a backend; 10,000 QPS aggregate query load',
+      storage: '1B vectors * 768 dimensions * 4 bytes (float32) = 3TB raw vectors; HNSW index overhead ~1.5x = 4.5TB; metadata storage ~200 bytes/vector = 200GB; total ~8TB per 1B vectors',
+      bandwidth: '10,000 QPS * 768 * 4 bytes query vector = 30MB/sec inbound; 10,000 QPS * 10 results * 200 bytes = 20MB/sec results outbound; HNSW inter-shard communication: 10,000 QPS * 100 candidate vectors * 200 bytes = 200MB/sec',
+      qps: '10,000 ANN queries/sec; 1,000 upsert operations/sec (vectors indexed in background); 100 batch import jobs running concurrently',
+    },
+
+    apiDesign: {
+      description: 'Vector upsert, query, and namespace management APIs',
+      endpoints: [
+        { method: 'POST', path: '/api/v1/{namespace}/upsert', params: '{ vectors: [{id, values: float[], metadata{}}] }', response: '{ upserted_count }', description: 'Upsert one or more vectors (create or overwrite by ID)' },
+        { method: 'POST', path: '/api/v1/{namespace}/query', params: '{ vector: float[], top_k, filter{ field: op: value }, include_metadata, include_values }', response: '{ matches: [{id, score, metadata, values?}] }', description: 'ANN search with optional metadata filter' },
+        { method: 'DELETE', path: '/api/v1/{namespace}/vectors', params: '{ ids: string[] }', response: '{ deleted_count }', description: 'Delete vectors by ID' },
+        { method: 'POST', path: '/api/v1/{namespace}/fetch', params: '{ ids: string[] }', response: '{ vectors: {id: {values, metadata}} }', description: 'Fetch specific vectors by ID (no similarity search)' },
+        { method: 'GET', path: '/api/v1/{namespace}/stats', params: '', response: '{ vector_count, dimension, index_fullness_pct, index_type }', description: 'Namespace statistics' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Vector storage layer (HNSW index), metadata index (inverted index for filtering), and vector log (WAL for durability)',
+      schema: `-- Logical schema; physical storage is custom binary format
+
+namespaces {
+  id: varchar(100) PK
+  dimension: int
+  metric: enum(cosine, dot_product, euclidean)
+  index_type: enum(hnsw, ivf_pq, flat)
+  hnsw_m: int           -- HNSW connectivity parameter (default 16)
+  hnsw_ef_construction: int  -- HNSW build-time search width (default 200)
+  created_at: timestamp
+}
+
+vector_records {
+  -- Physical storage: HNSW graph nodes (binary) + WAL (append-only log)
+  id: varchar(200)          -- user-provided ID, unique per namespace
+  namespace_id: varchar(100)
+  vector: float32[]         -- stored as raw bytes in custom allocator
+  metadata: jsonb           -- indexed separately for filtering
+  inserted_at: timestamp
+  deleted: bool
+  -- HNSW node: stores neighbor_ids[] at each layer
+}
+
+-- Metadata inverted index (for filter pre-computation)
+-- Field: category → {value → [vector_ids]}
+-- Field: price → B-tree for range queries
+-- Maintained in parallel with HNSW graph`,
+      examples: [
+        { table: 'vector_records', label: 'Product embedding with metadata', json: `{ "id": "prod-abc123", "namespace_id": "ecommerce-products", "vector": [0.12, -0.34, 0.89, ...], "metadata": {"category": "electronics", "price": 49.99, "in_stock": true, "brand": "Sony"}, "inserted_at": "2025-04-18T10:00:00Z" }` },
+        { table: 'query result', label: 'ANN query response', json: `{ "matches": [{"id": "prod-abc123", "score": 0.94, "metadata": {"category": "electronics", "price": 49.99}}, {"id": "prod-def456", "score": 0.91, "metadata": {"category": "electronics", "price": 39.99}}] }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'All vectors stored in memory as a flat array. Each query computes cosine similarity against every vector using brute force (exact nearest neighbor). Metadata filtering done post-search by iterating results until K matching ones are found.',
+      problems: [
+        'Query latency scales linearly with corpus size: 1B vectors at 768 dims = 768B multiplications per query, taking 30+ seconds on CPU even with SIMD vectorization',
+        'Memory bound: 1B float32 vectors at 768 dims = 3TB; no single server has enough RAM for the full corpus',
+        'Post-filter failure: with a highly selective metadata filter (matches 0.01% of corpus), the ANN search may return top-1000 results and find only 1 that passes the filter, returning fewer than K results',
+        'No persistence: in-memory only; node restart requires reloading all vectors from blob storage, taking hours for a billion-vector corpus',
+        'No multi-tenancy: a single flat index mixes all namespaces, making per-tenant isolation and deletion expensive',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Sharded HNSW Index with Pre-Filter Metadata Index and Segment-Based Freshness',
+      description: 'The vector space is sharded across nodes by vector ID hash. Each shard maintains an HNSW (Hierarchical Navigable Small World) graph index in memory, backed by a write-ahead log (WAL) for durability. Metadata is indexed in a parallel inverted index per shard. For filtered queries, pre-filtering with high selectivity uses the metadata index to build a candidate set before HNSW search; post-filtering is used for low-selectivity filters. New upserts go to an in-memory write buffer and a mutable segment; background compaction merges segments and rebuilds the HNSW graph.',
+      keyPoints: [
+        'HNSW index structure: multi-layer graph where each node connects to M neighbors at each layer; queries navigate from a coarse top layer to the dense bottom layer using greedy graph traversal — O(log N) per query',
+        'Sharding strategy: vector IDs hashed to shards; each query fan-outs to all shards in parallel, each returning top-K results; a merge layer takes the global top-K by score',
+        'Pre-filter vs post-filter for metadata: if filter matches <1% of corpus, pre-filter (build candidate set from metadata index, then do brute-force ANN over candidates); if filter matches >10%, post-filter (HNSW search, filter results, expand search radius until K results found)',
+        'Segment architecture (like Lucene): immutable sealed segments hold HNSW index and metadata; a mutable write buffer handles new inserts; background merge compacts segments and rebuilds HNSW for the merged segment',
+        'Quantization for memory efficiency: Product Quantization (PQ) compresses 768-dim float32 vectors to 96 bytes (8x compression) with ~5% recall loss; full-precision vectors stored on disk for re-ranking top-K candidates',
+        'Persistence: WAL on SSD for durability; HNSW graph serialized to memory-mapped files for fast restart without full rebuild (mmap on startup restores the graph in seconds)',
+        'Hybrid search: BM25 score from an embedded keyword index combined with vector similarity score using reciprocal rank fusion or learned linear combination',
+      ],
+      databaseChoice: 'Custom binary storage for HNSW graph and raw vectors (memory-mapped files on NVMe SSD); RocksDB for WAL and segment metadata; Redis for distributed query coordination and result caching; S3 for segment backup and batch import staging; PostgreSQL for namespace configuration and API key management',
+      caching: 'HNSW graph held entirely in RAM on each shard node (sized to fit with headroom using quantized vectors); hot query vectors cached in Redis for 60 seconds (deduplicates identical concurrent queries); metadata filter result sets cached by filter expression hash for 10 seconds; segment index warmed on startup by mmap page fault prefetching',
+    },
+
+    tips: [
+      'Lead with the core trade-off: ANN trades recall for latency; explain that 95% recall at 50ms is far better than 100% recall at 30 seconds for practical applications',
+      'HNSW is the dominant algorithm today — explain the key intuition: build a navigable graph where you can quickly navigate to approximate nearest neighbors without checking every vector',
+      'The pre-filter vs post-filter question is almost always asked: nail the decision rule (filter selectivity determines which is faster)',
+      'Mention quantization: serving 1B 768-dim float32 vectors requires 3TB of RAM per replica; Product Quantization reduces this to 375GB with minimal recall loss',
+      'Sharding strategy has a key insight: unlike a database where you route by key, every ANN query must fan out to every shard because the nearest neighbor could be anywhere; the merge step is critical',
+      'Write path vs read path tension: HNSW is expensive to update (O(M * log N) per insert); production systems use immutable segments that are merged and re-indexed in the background, similar to LSM trees',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'How does HNSW work and why is it faster than brute force?',
+        answer: `**Brute Force Baseline**:
+\`\`\`
+Query vector q, 1B stored vectors, 768 dimensions
+Operations: 1B * 768 multiplications + additions = 768B FLOPs
+Time on CPU (100 GFLOPS): ~7.7 seconds. Unusable.
+\`\`\`
+
+**HNSW (Hierarchical Navigable Small World)**:
+
+**Intuition**: Build a multi-layer graph. Top layers are sparse (few connections, big jumps). Bottom layer is dense (many connections, fine-grained search). Navigate from top to bottom like a zoom-in.
+
+**Structure**:
+\`\`\`
+Layer 2 (sparse): 1000 vectors, each connected to M=16 neighbors
+Layer 1 (medium): 100,000 vectors, each connected to M=16 neighbors
+Layer 0 (dense):  1B vectors, each connected to M=16 neighbors
+\`\`\`
+Each vector is assigned to a max layer using exponential decay (most vectors only appear at layer 0).
+
+**Query Algorithm**:
+\`\`\`
+1. Start at layer 2 entry point
+2. Greedy traversal: move to the neighbor closest to query q
+3. When local minimum found, descend to layer 1 and repeat
+4. At layer 0, expand search using ef_search=200 candidates
+   (explore 200 nodes greedily, tracking global top-K)
+5. Return top-K from the explored set
+\`\`\`
+
+**Why It Is Fast**:
+- Average nodes visited: O(log N) at upper layers + ef_search at layer 0
+- For N=1B, ef_search=200: visit ~30 nodes at upper layers + 200 at layer 0 = 230 node comparisons
+- Each comparison: 768 multiply-adds = 230 * 768 = 177K FLOPs
+- Speedup vs brute force: 768B / 177K = 4,300x faster
+
+**Recall-Latency Trade-off**:
+- Higher ef_search → explore more nodes → better recall, higher latency
+- ef_search=50: 95% recall@10, 5ms query time
+- ef_search=500: 99.9% recall@10, 25ms query time`,
+      },
+      {
+        question: 'How do you handle metadata filtering with ANN search?',
+        answer: `**The Problem**:
+\`\`\`
+Query: "find top-10 products similar to this embedding WHERE category='shoes' AND price < 50"
+Naive approach: HNSW returns top-100, filter to category+price → may get only 3 results
+\`\`\`
+
+**Strategy 1: Post-Filtering (works when filter is not selective)**:
+\`\`\`
+1. HNSW search with ef_search=top_k * 10  (e.g., top-100 for top-10 result)
+2. Filter results by metadata
+3. If fewer than top_k pass filter, expand ef_search and retry
+\`\`\`
+Good when filter matches >10% of corpus (shoes are 10% of a product catalog).
+Bad when filter matches 0.01% — need ef_search = 100,000 to get 10 matching results.
+
+**Strategy 2: Pre-Filtering (works when filter is highly selective)**:
+\`\`\`
+1. Use metadata inverted index to get all IDs matching filter
+   category='shoes' AND price<50 → candidate_set = [id1, id2, ..., id50,000]
+2. Run brute-force ANN over candidate_set only
+   50,000 vectors * 768 dims = 38M FLOPs → ~0.4ms on CPU
+\`\`\`
+Good when filter matches <1% of corpus.
+Bad when filter matches 50% — brute force over 500M vectors is too slow.
+
+**Hybrid Decision Rule**:
+\`\`\`python
+filter_selectivity = estimated_match_count / total_vectors
+if filter_selectivity < 0.001:
+    use pre-filter (brute force over candidate set)
+elif filter_selectivity < 0.1:
+    use HNSW with graph filter (skip non-matching nodes during traversal)
+else:
+    use post-filter with expanded ef_search
+\`\`\`
+
+**HNSW with Inline Filter (Filtered HNSW)**:
+During HNSW traversal, skip nodes that do not pass the metadata filter.
+Risk: can get stuck in local minima if many neighbors are filtered out.
+Mitigation: increase ef_search and add backtracking when stuck.
+Weaviate and Qdrant implement this approach.`,
+      },
+    ],
+
+    keyDecisions: [
+      'HNSW vs IVF-PQ vs LSH — chose HNSW as default because it achieves the best recall/latency trade-off at billion scale; IVF-PQ uses less memory but has lower recall at the same latency; LSH is simpler but requires more memory and has worse recall than HNSW',
+      'Sharding by vector ID vs sharding by vector space partition — chose ID-based sharding because space partitioning (IVF clustering) requires all queries to visit every shard anyway when cluster boundaries are uncertain; ID-based sharding with fan-out is simpler and equally effective',
+      'In-memory index vs disk-based index — chose memory-mapped HNSW because HNSW random access patterns are incompatible with disk; each graph traversal step accesses a different node; magnetic disk I/O would make each query take seconds; NVMe mmap is the only viable disk-backed option',
+      'Pre-filter vs post-filter for metadata — chose dynamic strategy based on filter selectivity because neither is universally better; a 0.001% filter with post-filtering requires ef_search=100,000 which is slower than brute force over the candidate set',
+      'float32 vs quantized vectors — chose float32 for the active HNSW index (accuracy matters) with optional PQ compression for cold shards and for memory-constrained deployments; re-rank top-K with full precision after quantized ANN search to recover recall',
+    ],
+  },
+
+  // ─── AI Image Generation Service ─────────────────────────────────────────────
+  {
+    id: 'ai-image-generation',
+    isNew: true,
+    title: 'AI Image Generation Service',
+    subtitle: 'Midjourney / DALL-E / Stable Diffusion',
+    icon: 'cpu',
+    color: '#ec4899',
+    difficulty: 'Hard',
+    description: 'Design a service that accepts text prompts and returns AI-generated images using diffusion models, with an async job queue, GPU auto-scaling, and a credit-based rate limiting system.',
+
+    introduction: `AI image generation is one of the most GPU-intensive consumer products ever built. A single high-quality image generation request runs 20-50 denoising steps on a latent diffusion model, each step requiring a full forward pass through a U-Net with billions of parameters — consuming 8-24 GPU-seconds per image at a cost of $0.01-0.10 per image in cloud compute. The service is inherently asynchronous because users cannot wait 30 seconds on a synchronous HTTP call.
+
+The demand pattern for image generation is extremely spiky. A viral social media moment ("generate yourself as a medieval knight") can drive 100x traffic spikes in minutes. GPU scaling has a cold-start problem: provisioning a new GPU instance from cloud provider takes 5-15 minutes, meaning a spike that lasts 20 minutes is essentially unscalable through auto-scaling alone. The platform must pre-warm a GPU buffer and shed load gracefully when demand exceeds capacity.
+
+Safety is existentially important: a service that generates child sexual abuse material, non-consensual deepfakes of real people, or instructions for weapon construction would face regulatory shutdown. The prompt safety pipeline must block violating prompts before any GPU compute is spent, and the output safety classifier must catch edge cases that the prompt filter missed — while doing this fast enough that the user experience is not degraded.`,
+
+    functionalRequirements: [
+      'Accept a text prompt and optional parameters (style, aspect ratio, number of images) and return a job ID',
+      'Generate 1-4 images per request using a latent diffusion model (Stable Diffusion / DALL-E equivalent)',
+      'Async delivery: poll for job status or receive webhook callback when images are complete',
+      'Prompt safety filtering: block requests that violate content policy before GPU compute is consumed',
+      'Output safety classification: scan generated images for NSFW content, real person likeness, and watermarks',
+      'Credit-based rate limiting: users have a credit balance; each generation costs credits based on resolution and steps',
+      'Style and LoRA adapter management: support different artistic styles loaded as adapter weights on the base model',
+      'Image storage and CDN delivery: store generated images with signed URL delivery and expiration',
+    ],
+
+    nonFunctionalRequirements: [
+      'Generation latency: median 10 seconds; p99 45 seconds (queuing time excluded)',
+      'Queue wait time: <60 seconds at normal load; degrade gracefully under spikes with estimated wait time shown',
+      'GPU utilization: >75% across the fleet (GPU idle time is pure cost)',
+      'Throughput: 10,000 concurrent generation jobs at steady state',
+      'Image availability: generated images available via CDN URL for 30 days; permanent for paid users',
+      'Safety: <0.001% of delivered images contain policy violations (NSFW, CSAM, deepfakes of named individuals)',
+    ],
+
+    estimation: {
+      users: '5M daily active users; 3 generations per user per day = 15M generations/day = 175 generations/sec average; 2,000/sec peak',
+      storage: '15M images/day * 4 images per generation * 2MB avg = 120GB/day new images; 3-year retention for paid users = ~130TB cumulative; CDN cache covers 90% of reads',
+      bandwidth: 'CDN delivery: 15M * 4 images * 2MB * 10 views each = 1.2TB/day outbound; GPU cluster internal: 2,000 jobs/sec * 6GB model weights already loaded = compute bound, not bandwidth bound',
+      qps: '2,000 generation requests/sec at peak; 20,000 job status poll requests/sec (users poll every 2 seconds for 10-second jobs); 2,000 image uploads to S3/sec on completion',
+    },
+
+    apiDesign: {
+      description: 'Async generation API with job polling and webhook delivery',
+      endpoints: [
+        { method: 'POST', path: '/api/v1/generate', params: '{ prompt, negative_prompt?, style?, width, height, num_images, num_inference_steps?, seed? }', response: '{ job_id, estimated_wait_sec, credits_cost }', description: 'Submit a generation job; returns immediately with a job ID' },
+        { method: 'GET', path: '/api/v1/jobs/{job_id}', params: '', response: '{ status: queued|generating|completed|failed, progress_pct?, images[{url, width, height, seed}]?, error? }', description: 'Poll job status and retrieve image URLs on completion' },
+        { method: 'POST', path: '/api/v1/webhooks', params: '{ job_id, callback_url }', response: '{ webhook_id }', description: 'Register a webhook to receive job completion notification' },
+        { method: 'GET', path: '/api/v1/credits', params: '', response: '{ balance, daily_reset_at, plan_tier }', description: 'Check credit balance' },
+        { method: 'GET', path: '/api/v1/styles', params: '', response: '{ styles[{id, name, preview_url, credits_multiplier}] }', description: 'List available style presets and LoRA adapters' },
+      ],
+    },
+
+    dataModel: {
+      description: 'Job queue, generation history, credit ledger, and model registry',
+      schema: `generation_jobs {
+  id: uuid PK
+  user_id: bigint FK
+  prompt: text
+  negative_prompt: text nullable
+  style_id: varchar(50) nullable
+  width: int
+  height: int
+  num_images: int
+  num_inference_steps: int
+  seed: bigint
+  status: enum(queued, generating, safety_check, completed, failed, rejected)
+  queue_entered_at: timestamp
+  generation_started_at: timestamp nullable
+  completed_at: timestamp nullable
+  worker_id: varchar(50) nullable
+  gpu_seconds_used: float nullable
+  rejection_reason: varchar(200) nullable
+}
+
+generated_images {
+  id: uuid PK
+  job_id: uuid FK
+  image_index: int  -- 0 to num_images-1
+  s3_key: varchar(500)
+  cdn_url: varchar(500)
+  width: int
+  height: int
+  seed: bigint
+  safety_score: float
+  expires_at: timestamp
+  created_at: timestamp
+}
+
+credit_ledger {
+  id: bigint PK (serial)
+  user_id: bigint FK
+  amount: int       -- positive = credit, negative = debit
+  description: varchar(200)
+  job_id: uuid nullable FK
+  created_at: timestamp
+  -- Running balance computed as SUM(amount) per user_id
+}
+
+style_adapters {
+  id: varchar(50) PK
+  name: varchar(100)
+  base_model_id: varchar(50) FK
+  lora_s3_key: varchar(500)
+  credits_multiplier: float
+  preview_image_url: varchar(500)
+  enabled: bool
+  created_at: timestamp
+}`,
+      examples: [
+        { table: 'generation_jobs', label: 'Completed generation job', json: `{ "id": "job-a1b2c3d4", "user_id": 88210, "prompt": "a photorealistic cat sitting on a moonlit rooftop, cinematic lighting", "style_id": "photorealistic-v3", "width": 1024, "height": 1024, "num_images": 4, "status": "completed", "queue_entered_at": "2025-04-18T10:00:00Z", "generation_started_at": "2025-04-18T10:00:08Z", "completed_at": "2025-04-18T10:00:31Z", "gpu_seconds_used": 23.4 }` },
+        { table: 'credit_ledger', label: 'Credit debit for generation', json: `{ "id": 9384021, "user_id": 88210, "amount": -40, "description": "4x 1024x1024 photorealistic-v3 generation", "job_id": "job-a1b2c3d4", "created_at": "2025-04-18T10:00:31Z" }` },
+      ],
+    },
+
+    basicImplementation: {
+      title: 'Basic Architecture',
+      description: 'A web server accepts generation requests, adds them to a database queue table, and a pool of GPU worker processes polls the table, runs diffusion inference, saves the image to S3, and updates the job status. Users poll a status endpoint every 2 seconds.',
+      problems: [
+        'Queue polling: workers query the database table for new jobs every second; at high concurrency, this creates thundering herd and database lock contention',
+        'No GPU batch utilization: each worker processes one job at a time; modern diffusion models achieve 4x higher throughput when batching 4 images simultaneously vs 4 sequential single-image jobs',
+        'No priority or fairness: premium subscribers wait behind free users who submitted earlier; a single user generating 1000 images blocks everyone else',
+        'Cold-start latency: loading a 6GB model from disk into GPU memory takes 30-60 seconds per worker restart; no warm pool means every scale-up event adds 60 seconds to queue wait',
+        'No load shedding: under spikes, the queue grows unboundedly; users see queue times of hours with no feedback or option to cancel',
+      ],
+    },
+
+    advancedImplementation: {
+      title: 'Priority Queue with Batch GPU Execution and Adaptive Auto-Scaling',
+      description: 'Generation requests enter a Redis-backed priority queue (paid users at higher priority). GPU workers pull batches of 4 jobs at a time, running them as a single batched diffusion forward pass for 4x throughput improvement over sequential processing. Workers are containerized and run on spot GPU instances managed by Kubernetes with a custom autoscaler that pre-warms based on queue depth predictions. Output safety classification runs in parallel on CPU while the worker picks up the next batch from the queue. Style LoRA adapters are grouped in the priority queue so the scheduler can batch jobs with the same style together, avoiding costly adapter weight swaps between generations.',
+      keyPoints: [
+        'Redis priority queue: sorted set with score = priority_weight * submission_timestamp; paid users have priority_weight=10, free=1; ZPOPMIN atomically dequeues the highest-priority job to a worker',
+        'Batched inference: diffusion U-Net processes a batch of 4 images in the same forward pass with only 10-15% extra GPU time vs 1 image; 4x throughput improvement; worker pulls 4 queued jobs before starting inference',
+        'Style-aware batching: scheduler groups same-style jobs to minimize LoRA adapter swaps; adapter swap takes 500ms; grouping reduces swaps from O(N) to O(styles), saving 40% of GPU idle time',
+        'Model warm pool: Kubernetes keeps a fleet of pre-loaded GPU workers running at minimum capacity (20% of peak); new instances bootstrapped with model weights pre-cached on instance-attached SSD; cold-start reduced from 60s to 8s',
+        'Adaptive auto-scaling: autoscaler reads queue depth every 10 seconds; triggers scale-up when projected wait time > 60 seconds based on (queue_depth / current_throughput); scale-down waits for queue to clear to avoid thrashing',
+        'Output safety pipeline: after generation, images are classified by a safety model on a dedicated CPU pool running in parallel with the next batch; if unsafe, image URLs are withheld and job marked failed; user is not charged credits for failed jobs',
+        'Signed CDN URLs with expiry: generated images served from CloudFront with time-limited signed URLs; S3 objects have lifecycle policies for auto-deletion after 30 days (free) or 3 years (paid); no direct S3 access exposed to users',
+      ],
+      databaseChoice: 'PostgreSQL for job records, credit ledger, and image metadata; Redis for the priority queue, job status cache, and credit balance cache; S3 for generated image storage; CloudFront CDN for image delivery; Kafka for webhook delivery (reliable fan-out to user callback URLs)',
+      caching: 'Model weights memory-mapped in GPU VRAM on each worker (6-10GB depending on model); LoRA adapters for the top-10 most popular styles kept loaded in GPU memory alongside the base model; job status cached in Redis for 5 minutes (avoids PostgreSQL reads on every poll); credit balance cached in Redis with write-through on every debit; CDN caches all generated image responses at edge nodes (high cache hit rate since images are accessed heavily in the first hour after generation)',
+    },
+
+    tips: [
+      'Open with why generation is async: a 10-30 second generation time cannot be served as a synchronous HTTP response; the job-queue pattern is the only viable design',
+      'Batching is the key GPU efficiency insight: explain that a diffusion model U-Net processes a batch of 4 images in nearly the same time as 1, due to parallelism in tensor operations; this directly halves cost',
+      'GPU cold-start is the key scaling challenge: a spike from 1,000 to 10,000 concurrent jobs cannot be served by auto-scaling alone in under 15 minutes; discuss pre-warming and load shedding',
+      'Credit system design: credits must be deducted atomically when a job completes (not when submitted) to avoid charging for failed jobs; the ledger pattern (append-only debits and credits) is auditable and crash-safe',
+      'Safety has two layers: prompt safety (before GPU compute, fast) and output safety (after generation, parallel); explain both and why both are needed — adversarial prompts can bypass filters and generate policy violations that the prompt alone would not predict',
+      'Seed reproducibility is a nice production touch: storing the random seed used for each generation allows exact replay of any generated image — valuable for debugging and for users who want to regenerate with slight variations',
+    ],
+
+    keyQuestions: [
+      {
+        question: 'Why is image generation inherently asynchronous and how do you design the job queue?',
+        answer: `**Why Async Is Required**:
+\`\`\`
+Diffusion generation timeline:
+  Step 1-50: U-Net forward pass, each step: ~100-500ms on A100
+  Total: 5-25 seconds for 20-50 steps
+  + VAE decode: 500ms
+  + Safety check: 200ms
+  Total: 6-30 seconds per request
+
+HTTP timeout in browsers: typically 30-60 seconds
+User UX expectation: response within 2 seconds
+
+Synchronous is impossible for slow generation; impractical even for fast.
+\`\`\`
+
+**Job Queue Design**:
+\`\`\`
+1. POST /generate → validate prompt → deduct credit hold → enqueue → return job_id
+2. User polls GET /jobs/{job_id} every 2 seconds (or uses webhook)
+3. Worker atomically dequeues job from Redis priority queue
+4. Worker runs generation (10-30 seconds)
+5. Worker uploads images to S3
+6. Worker updates job status to completed in PostgreSQL + Redis cache
+7. Next poll returns image URLs
+\`\`\`
+
+**Priority Queue Implementation (Redis)**:
+\`\`\`
+Key: generation_queue
+Type: Sorted Set
+Score: priority_weight / unix_timestamp  (lower score = dequeued first for same priority)
+
+Enqueue:
+  ZADD generation_queue {score} {job_id}
+
+Worker dequeue (atomic):
+  job_id = ZPOPMIN generation_queue  -- atomic, no race condition
+\`\`\`
+
+**Estimated Wait Time**:
+\`\`\`python
+queue_depth = ZCARD generation_queue
+worker_throughput = 4 jobs/worker/batch * 60 sec/generation * num_workers
+estimated_wait_sec = queue_depth / worker_throughput
+\`\`\`
+Shown to users on submission: "Estimated wait: 45 seconds"
+
+**Webhook Delivery**:
+On job completion, publish to Kafka topic "job-completions".
+A webhook delivery service consumes Kafka and POSTs to registered callback URLs.
+Retries with exponential backoff on HTTP failure (3 attempts, max 60 second delay).`,
+      },
+      {
+        question: 'How do you scale GPU capacity for spiky demand without 15-minute provisioning delays?',
+        answer: `**The Problem**:
+\`\`\`
+Baseline:    1,000 jobs/sec, 200 GPU workers, avg wait 5 seconds
+Viral spike: 10,000 jobs/sec (10x) arrives in 2 minutes
+
+Cloud GPU provisioning: 5-15 minutes from API call to ready
+If we auto-scale on the spike: help arrives 15 min later, spike may be over
+\`\`\`
+
+**Strategy 1: Pre-Warm Buffer**:
+Always maintain 20-30% idle GPU capacity ("warm pool"):
+\`\`\`
+Normal load: 200 workers needed, keep 250 running
+Cost: 25% GPU overspend at baseline
+Benefit: instant 25% surge capacity, no cold start needed
+\`\`\`
+Pre-warm workers sit in a "ready" state with model loaded, waiting for jobs.
+
+**Strategy 2: Predictive Auto-Scaling**:
+\`\`\`python
+# Every 10 seconds
+queue_depth = redis.zcard("generation_queue")
+throughput = completed_jobs_last_30s / 30
+projected_wait_60s = queue_depth / throughput  # jobs waiting 60s from now
+
+if projected_wait_60s > 60:  # projected wait exceeds SLO
+    target_workers = queue_depth / target_wait_sec / avg_batch_size
+    scale_up_by = target_workers - current_workers
+    trigger_k8s_scale_up(scale_up_by)
+\`\`\`
+Predictive: scale before the queue builds up, not after.
+
+**Strategy 3: Load Shedding for Sustained Overload**:
+If queue depth exceeds 10,000 and growing:
+\`\`\`
+Free tier: return 429 with "Service busy, try again in 10 minutes"
+Paid tier: accept with extended estimated wait time shown
+Premium tier: always accepted, served from reserved GPU capacity
+\`\`\`
+Load shedding prevents runaway queue growth that makes wait times unbounded.
+
+**Strategy 4: Spot Instances with On-Demand Fallback**:
+\`\`\`
+Baseline fleet: on-demand instances (reliable, 3x cost of spot)
+Surge capacity: spot instances (cheap but may be preempted)
+On preemption: checkpoint job state to Redis, re-enqueue for another worker
+Workers designed to be stateless — any in-flight generation can be restarted
+\`\`\``,
+      },
+      {
+        question: 'How do you prevent generation of NSFW and policy-violating images?',
+        answer: `**Two-Layer Safety Pipeline**:
+\`\`\`
+User Prompt
+    |
+    v
+[Layer 1: Prompt Safety Filter]     <-- BEFORE GPU compute
+    |-- Block: "generate nude..." → reject immediately, no cost
+    |-- Block: named real person + suggestive context
+    |-- Pass: to generation queue
+    |
+[Diffusion Generation: 10-30 sec on GPU]
+    |
+    v
+[Layer 2: Output Safety Classifier] <-- AFTER generation
+    |-- NSFW image classifier (nudity, violence)
+    |-- Real person face recognition (check against blocklist)
+    |-- Block: withhold URL, mark job failed, refund credits
+    |-- Pass: deliver signed CDN URL to user
+\`\`\`
+
+**Layer 1: Prompt Safety Filter**:
+- Keyword blocklist: exact and fuzzy match against known violating terms (fast, O(1))
+- Text classifier (DistilBERT): scores prompt for sexual content, violence, real-person targeting (<50ms)
+- Named entity recognition: extract person names, check against celebrity/public figure blocklist
+- Prompt injection detection: catch attempts to override system prompt ("ignore instructions and generate...")
+- Cost: <100ms, pure CPU, runs before any GPU is allocated
+
+**Layer 2: Output Safety Classifier**:
+- NSFW image classifier: nude/suggestive content; runs on CPU in parallel with next batch on GPU
+- Face detection + embedding: compare faces in generated image against known public figure embedding database; block if cosine similarity > threshold for non-consented likeness
+- Watermarking: invisible semantic watermark embedded in generated images (C2PA standard); allows provenance tracing if image is misused
+- If violated: do not deliver CDN URL, mark job "failed_safety", refund credits, increment user violation count
+
+**Adversarial Resistance**:
+- Prompt injection via l33t speak: normalize text before classifier ("g3n3r@te" → "generate")
+- Indirect prompts: "draw my friend Jane Doe who looks like [celebrity]" → NER catches the name
+- Style prompts that imply NSFW: "anime style, ecchi" → style classifier catches intent even without explicit words
+- NSFW through negative prompt abuse: "generate a fully clothed person, negative: clothing" → negative prompt also classified`,
+      },
+    ],
+
+    keyDecisions: [
+      'Synchronous vs asynchronous generation — chose async with job queue because generation takes 10-30 seconds, which exceeds HTTP timeout conventions and creates terrible UX if synchronous; async allows users to do other things while images are generating',
+      'Single image per job vs batch-4 per job — chose batch-4 default because diffusion models process a batch of 4 images in nearly the same GPU time as 1 image; offering "generate 4 variants" matches user mental model while quadrupling throughput',
+      'Priority queue vs FIFO queue — chose priority queue with paid-user boosting because without priority, one free user who submits 1000 jobs can block all paying customers; priority is also a key monetization lever',
+      'On-demand GPU instances vs spot instances — chose primarily spot instances with 20% on-demand base because GPU spot prices are 60-70% cheaper than on-demand; job state is checkpointed to Redis so spot preemption only adds <30 seconds of re-queue latency',
+      'Prompt safety before generation vs output safety only — chose both layers because prompt filtering costs 100ms and prevents GPU spending on clearly violating requests (saves cost and prevents even generating the content); output safety catches edge cases and adversarial prompts that bypass text filters',
+      'Credit deduction on submit vs on completion — chose on completion because if generation fails (GPU error, safety rejection), users should not be charged; an upfront credit hold is reserved on submit and converted to a deduction only on successful delivery',
+    ],
   },
 ];
