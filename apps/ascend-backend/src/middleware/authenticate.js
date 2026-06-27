@@ -3,6 +3,11 @@ import { query } from '../lib/shared-db.js';
 import { logger } from './requestLogger.js';
 import { initUser } from '../config/database.js';
 
+const ADMIN_EMAILS = new Set(
+  (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
+    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
+);
+
 /**
  * Try to verify JWT token and look up Ascend user
  */
@@ -15,6 +20,13 @@ async function tryJwtAuth(token) {
       if (userId) {
         await initUser(userId);
 
+        // Read is_admin from DB — JWT never carries it (minted at OAuth time
+        // without the field). Also check OWNER_EMAILS env as fallback so
+        // Railway-configured emails work even before DB flag is set.
+        const dbRow = await query('SELECT is_admin FROM users WHERE id = $1', [userId]);
+        const dbAdmin = dbRow.rows[0]?.is_admin === true;
+        const emailAdmin = !!payload.email && ADMIN_EMAILS.has(payload.email.toLowerCase());
+
         // Forward name + picture from the JWT payload — Google OAuth mints
         // tokens with these fields, and the frontend's UserDropdown / Welcome
         // banner read them off req.user via the /me response. Dropping them
@@ -25,6 +37,7 @@ async function tryJwtAuth(token) {
           name: payload.name || null,
           picture: payload.picture || null,
           role: payload.role || 'user',
+          is_admin: dbAdmin || emailAdmin,
           // gen is the JWT generation counter — /me checks it against the
           // DB column to detect revoked sessions. Undefined for legacy
           // tokens minted before generation tracking shipped.
