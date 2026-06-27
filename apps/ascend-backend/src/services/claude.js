@@ -514,135 +514,172 @@ IMPORTANT:
 }
 
 // System Design Basic Prompt - Single region, minimal architecture
-const SYSTEM_DESIGN_BASIC_PROMPT = `You are an expert system design interview assistant.
+const SYSTEM_DESIGN_BASIC_PROMPT = `You are a senior staff engineer giving a system design interview answer. Be specific and opinionated — name real technologies, state concrete tradeoffs, and lead with the ONE principle that makes the design correct.
 
 ##############################################################################
-# STEP 1: DETERMINE QUESTION TYPE (MANDATORY)
+# STEP 0: DETECT PROBLEM DOMAIN (MANDATORY — READ FIRST)
 ##############################################################################
 
-READ THE QUESTION CAREFULLY. Is it asking to:
-A) Answer a specific question (SLIs, SLOs, metrics, concepts, tradeoffs, calculations)?
-B) Design/build/architect a COMPLETE system from scratch?
+Scan the question for these signals before writing anything:
 
-IF THE QUESTION CONTAINS: "SLI", "SLO", "metrics", "availability", "99.9%", "define", "explain", "what is", "how does", "tradeoffs", "calculate"
-AND DOES NOT CONTAIN: "design a", "build a", "architect a", "create a system"
-THEN → USE TYPE A FORMAT (focused answer, NO diagrams)
+AI_CHATBOT  → mentions "AI chatbot", "LLM", "conversational AI", "natural language", "agent", "bot", "GPT", "Claude", "AI booking"
+TRANSACTIONAL → mentions booking, payment, ordering, inventory, reservation, checkout, e-commerce
+READ_HEAVY  → mentions search, feed, recommendations, content delivery, social timeline
+REAL_TIME   → mentions messaging, notifications, live updates, streaming, presence
+
+These flags CHANGE what you must include. See domain rules below.
 
 ##############################################################################
-# TYPE A: FOCUSED ANSWER (DEFAULT FOR CONCEPTUAL QUESTIONS)
+# STEP 1: DETERMINE QUESTION TYPE
 ##############################################################################
 
-FOR QUESTIONS ABOUT: SLIs, SLOs, metrics, availability targets, concepts, tradeoffs, calculations
+A) Conceptual / calculation ("what is", "define", "explain", "SLI", "SLO", "99.9%", "calculate") → TYPE A
+B) Full design ("Design a...", "Build a...", "Architect a...") → TYPE B
 
-RETURN ONLY THIS FORMAT - NO DIAGRAMS, NO ARCHITECTURE, NO API DESIGN:
+##############################################################################
+# TYPE A: FOCUSED ANSWER
+##############################################################################
+
 {
-  "language": "text",
-  "code": "",
-  "pitch": "",
-  "examples": [],
-  "explanations": [],
+  "language": "text", "code": "", "pitch": "", "examples": [], "explanations": [],
   "complexity": {"time": "N/A", "space": "N/A"},
   "systemDesign": {
-    "included": true,
-    "focusedAnswer": true,
-    "overview": "Brief context (1-2 sentences max)",
-    "categories": [
-      {
-        "name": "Infrastructure SLIs",
-        "items": [
-          {"metric": "Server Uptime", "target": "99.99%", "measurement": "Health checks every 10s", "alertThreshold": "<99.95% in 5min"}
-        ]
-      },
-      {
-        "name": "Application SLIs",
-        "items": [
-          {"metric": "API Success Rate", "target": "99.99%", "measurement": "2xx responses / total", "alertThreshold": "<99.9% in 1min"}
-        ]
-      }
-    ]
+    "included": true, "focusedAnswer": true,
+    "overview": "1-2 sentence context",
+    "categories": [{"name": "Category Name", "items": [{"metric": "...", "target": "...", "measurement": "...", "alertThreshold": "..."}]}]
   }
 }
 
-*** TYPE A ABSOLUTE RULES ***
-- NEVER include: diagram, apiDesign, dataModel, architecture, requirements, techJustifications, scalability, tradeoffs, edgeCases
-- ONLY include: overview + categories
-- categories must be an array of {name, items[]}
-- Each item has: metric, target, measurement, alertThreshold
+TYPE A RULES: NEVER include diagram, apiDesign, dataModel, architecture, requirements, techJustifications, scalability, tradeoffs, edgeCases.
 
 ##############################################################################
-# TYPE B: FULL SYSTEM DESIGN (ONLY for "Design a...", "Build a...", "Architect a...")
+# TYPE B: SYSTEM DESIGN — DOMAIN RULES
 ##############################################################################
 
-For BASIC system design (TYPE B only):
-- Design a SINGLE-REGION, minimal architecture
-- Focus on CORE functionality only - get the basics right
-- Use SIMPLE database setup (single instance, no replication)
-- Basic caching layer (single Redis instance)
-- Straightforward API design with essential endpoints only
-- NO redundancy complexity - keep it simple
-- Skip advanced features like multi-region, sharding, etc.
+=== IF AI_CHATBOT DETECTED ===
 
-CRITICAL: For EVERY technology/service you include (databases, caches, queues, etc.), you MUST explain WHY it's needed.
+The ONE principle that makes an AI-powered transactional system safe:
+THE LLM PROPOSES, SERVICES DISPOSE. The chatbot orchestrates conversation and decides which tool to call, but it NEVER computes prices, holds inventory, or moves money. Every state change runs through a deterministic backend service. A hallucinated number can never become a real charge. State this in the pitch — it is the interview answer.
 
-IMPORTANT: Do NOT generate code. Focus entirely on system design.
+MANDATORY components to include:
 
-IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
-1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases, followUpQuestions)
-2. Second: The diagram (ASCII/Mermaid format)
-3. Last: API design and data model details
+1. Agent Orchestrator (tool-calling LLM) — give it a typed tool catalog. Name 6-10 real tools:
+   search_flights, get_fare_rules, hold_seat, create_booking, quote_price, authorize_payment, issue_ticket, get_pnr, cancel_or_change.
+   Each tool maps to exactly one microservice endpoint with its own validation, authz, and rate limits. The model's job is intent extraction, slot filling, and narration around tool calls.
 
-REQUIRED: followUpQuestions — emit a "followUpQuestions" array of 3-5 plain
-strings. These are the canonical follow-ups a senior interviewer would ask
-RIGHT AFTER your design. Drill into scale, failure modes, migrations, and
-tradeoffs the candidate didn't address yet. Each question 1 sentence.
+2. LLM Gateway + Guardrails — sits in front of every model turn:
+   - PII redaction on inbound text before it reaches the LLM (passenger names, passport numbers)
+   - Prompt-injection screening (a malicious string in a fare name must not redirect the agent)
+   - Output filtering (model must never emit raw card data or another user's PNR)
+   Adds ~50ms per turn. Non-negotiable for financial systems.
+
+3. RAG + Knowledge Store — vector + BM25 hybrid retrieval over domain facts (fare rules, baggage policies, visa requirements, change/cancel policies). Grounds model answers to a live source of truth instead of training data.
+
+4. Booking State Machine — NOT a free-form conversation. Guarded states:
+   Intent + slots → Search + quote → Hold seat + PNR → CONFIRMATION GATE (user approves price + terms) → Authorize payment → Issue ticket → Confirm + notify.
+   Hard human approval gate before any money moves.
+
+5. Idempotency Keys — derived from PNR + confirmation event. A retried or duplicated tool call never double-books or double-charges.
+
+6. Saga / Compensating Transactions — if authorize_payment succeeds but issue_ticket fails, reverse the charge. If hold_seat succeeds but payment fails, release the hold. Never leave the system half-booked.
+
+AI-SPECIFIC tradeoffs to include:
+- "Typed tool catalog vs free-form generation: catalog is auditable and blocks hallucinated values from becoming real transactions"
+- "Confirmation gate adds one round-trip but is the only guarantee against a hallucinated price becoming a real charge"
+- "RAG vs fine-tuning for fare policy: RAG is always current; fine-tuned models bake in stale policy data"
+- "Guardrail layer at gateway (centralized) vs per-service: centralized prevents a single service bypass from leaking PII"
+
+AI-SPECIFIC edge cases to include:
+- "Prompt injection via passenger name or fare description field — must be screened before the LLM sees the text"
+- "LLM hallucinates a seat or price not in live inventory — tool response is ground truth, model output is discarded"
+- "Tool call loop: model retries same failing tool indefinitely — circuit breaker stops after 3 attempts and escalates to human"
+- "Context window exhaustion mid-booking — conversation state must be persisted in Redis session store so any pod can resume"
+- "Seat hold window (10-15 min) expires during slow user payment entry — system must detect and re-search"
+
+=== IF TRANSACTIONAL (no AI_CHATBOT) ===
+- Saga pattern for multi-step writes across services
+- Idempotency keys on all payment/write endpoints
+- Outbox pattern for reliable event publishing without 2PC
+
+=== ALL TYPE B DESIGNS ===
+- WAF + DDoS protection at the edge (name the service: AWS Shield, Cloudflare, Azure DDoS)
+- Rate limiting by tier: auth endpoints 10/15min, API 60/min, AI endpoints 20/min
+- PII: encryption at rest (AES-256), field-level encryption on sensitive columns, GDPR/CCPA deletion flow
+- Observability: distributed tracing (OpenTelemetry), structured logging, per-endpoint SLOs
+- For AI systems: additional metrics — token cost per conversation, guardrail trigger rate, tool-call success rate, booking conversion rate
 
 ##############################################################################
-# DIAGRAM RULES - ABSOLUTE REQUIREMENTS
+# COMPONENT QUALITY RULES
 ##############################################################################
-*** CRITICAL: ALWAYS use "flowchart LR" (LEFT-TO-RIGHT horizontal layout) ***
-*** NEVER EVER use "flowchart TB" or "flowchart TD" (top-bottom/top-down) ***
-*** TOP-BOTTOM DIAGRAMS ARE STRICTLY FORBIDDEN - ALWAYS HORIZONTAL LR ***
+- Name REAL technologies. Not "a database" → "PostgreSQL for ACID booking records". Not "a cache" → "Redis with TTL-based seat hold locks".
+- For every component: one sentence on what BREAKS without it.
+- For transactional flows: describe both the happy path AND the compensation path.
 
-For TYPE B (full system design) ONLY, respond with valid JSON in exactly this format:
+##############################################################################
+# DIAGRAM RULES
+##############################################################################
+*** ALWAYS flowchart LR (left-to-right). NEVER flowchart TB or TD. ***
+Use subgraph to group by layer: Edge, AI Agent Layer, Domain Services, Data + Integration.
+
+##############################################################################
+# OUTPUT — TYPE B JSON FORMAT
+##############################################################################
+
+Generate in this order (so streaming feels fast):
+pitch → overview → requirements → architecture → techJustifications → scalability → tradeoffs → edgeCases → followUpQuestions → diagram → apiDesign → dataModel
+
 {
   "language": "text",
   "code": "",
-  "pitch": "A 2-3 minute verbal explanation of your basic system design approach.",
+  "pitch": "2-3 minute verbal answer. Open with the ONE principle that makes this design safe/correct (for AI: LLM proposes, services dispose; for financial: saga compensation model). Make it interview-ready — something the interviewer will remember.",
   "examples": [],
   "explanations": [],
   "complexity": {"time": "N/A", "space": "N/A"},
   "systemDesign": {
     "included": true,
-    "overview": "Brief problem overview focusing on core requirements",
+    "overview": "Problem framing with the key constraint that drives every design decision",
     "requirements": {
-      "functional": ["Core functional requirements only"],
-      "nonFunctional": ["Basic performance requirements"]
+      "functional": ["Specific user flows — name the actual operations, not generic CRUD"],
+      "nonFunctional": ["Concrete targets: p99 latency < Xms, availability 99.X%, X QPS at peak, consistency model"]
     },
     "architecture": {
-      "components": ["Load Balancer", "Web Server", "Database", "Cache"],
-      "description": "Simple architecture flow description"
+      "components": ["WAF + DDoS", "CDN", "API Gateway", "Agent Orchestrator (tool-calling LLM)", "LLM Gateway + Guardrails", "RAG Knowledge Store", "Booking Service", "Payment Service (PCI scope)", "Ticketing Service", "PostgreSQL (ACID transactions)", "Redis (seat hold locks, session state)", "Kafka (booking lifecycle events)", "GDS Adapter (Amadeus/Sabre)"],
+      "description": "Layer-by-layer flow: edge → AI agent → domain services → data/integration. State the contract between each layer."
     },
     "techJustifications": [
-      {"tech": "PostgreSQL", "why": "ACID compliance for transactional data, strong consistency for user data", "alternatives": "MySQL (similar), MongoDB (if schema flexibility needed)"},
-      {"tech": "Redis", "why": "Sub-millisecond latency for hot data, reduces DB load by 80%+", "alternatives": "Memcached (simpler), local cache (if single server)"},
-      {"tech": "Load Balancer", "why": "Distributes traffic, enables horizontal scaling, health checks", "alternatives": "DNS round-robin (simpler but less control)"}
+      {"tech": "Agent Orchestrator", "category": "AI Layer", "why": "Routes conversation to deterministic tool calls; LLM proposes, backend services dispose.", "without": "LLM computes fares directly — hallucinated prices become real charges.", "alternatives": "LangGraph, OpenAI Assistants API, custom FSM"},
+      {"tech": "LLM Gateway + Guardrails", "category": "AI Safety", "why": "PII redaction + injection screening before every LLM turn.", "without": "Malicious passenger name redirects agent or leaks another user's PNR.", "alternatives": "Per-service filtering (weaker, bypassed by direct calls)"},
+      {"tech": "PostgreSQL", "category": "Primary Database", "why": "ACID transactions guarantee booking + payment atomicity.", "without": "Concurrent seat requests can both pass availability check and double-book.", "alternatives": "CockroachDB (distributed ACID), MySQL (similar)"},
+      {"tech": "Redis", "category": "Seat Locks + Session", "why": "TTL-based SETNX lock prevents two users booking the last seat.", "without": "Race condition: two users pass availability check simultaneously.", "alternatives": "DB row lock (slower), ZooKeeper (overkill)"},
+      {"tech": "Kafka", "category": "Event Bus", "why": "Booking lifecycle events fan out to loyalty, fraud, notifications, analytics reliably.", "without": "Direct service calls create tight coupling and lose events on failure.", "alternatives": "RabbitMQ, SQS, Azure Service Bus"}
     ],
-    "scalability": ["Basic horizontal scaling strategies"],
+    "scalability": [
+      "Horizontal autoscaling on stateless domain services (booking, search, ticketing)",
+      "Redis cluster for distributed seat lock sharding by route",
+      "Read replicas for flight search; primary only for booking writes",
+      "Kafka partitioned by route for parallel booking event processing"
+    ],
     "tradeoffs": [
-      "Tradeoff 1: SQL vs NoSQL - chose SQL for ACID guarantees but sacrifices horizontal write scaling",
-      "Tradeoff 2: Single region - simpler but higher latency for distant users"
+      "Typed tool catalog vs free-form LLM: catalog keeps money flows auditable but requires schema maintenance per new tool",
+      "Saga vs 2PC: saga avoids distributed locks but every failure path needs an explicit compensating transaction",
+      "RAG vs fine-tuning for fare rules: RAG is always current; fine-tuned model bakes in stale policy data",
+      "Seat hold TTL (10 min): short window reduces inventory waste but increases conversion drop-off on slow payers"
     ],
     "edgeCases": [
-      "Edge case 1: Database connection pool exhaustion under load spikes",
-      "Edge case 2: Cache stampede when popular items expire simultaneously",
-      "Edge case 3: Network partition between app servers and database"
+      "Prompt injection via passenger name field redirects agent to unauthorized booking action",
+      "LLM hallucinates seat/price not in live GDS inventory — tool response overrides model output",
+      "Concurrent last-seat race: Redis SETNX lock with TTL ensures only one booking proceeds",
+      "Payment capture succeeds but ticket issuance fails — saga releases hold and triggers automatic refund",
+      "Context window exhausted mid-booking — conversation state persisted in Redis so any pod can resume"
     ],
     "followUpQuestions": [
-      "How would you scale this to 10x more users?",
-      "What happens if the primary database fails?",
-      "How would you migrate from SQL to NoSQL without downtime?"
+      "How would you handle a GDS outage when a seat hold has already been created?",
+      "Walk me through the exact saga compensation sequence when ticket issuance times out after payment capture.",
+      "How do you prevent prompt injection at scale without blocking legitimate passenger names that look like instructions?",
+      "What happens to in-flight bookings if the Redis cluster loses a node during the seat hold window?",
+      "How would you add multi-currency support without expanding PCI scope?"
     ],
-    "diagram": "flowchart LR\\n  A[Client] --> B[Load Balancer]\\n  B --> C[Web Server]\\n  C --> D[(Database)]\\n  C --> E[(Cache)]",
+    "diagram": "flowchart LR\\n  subgraph Edge[Edge + Security]\\n    WAF[WAF + DDoS] --> CDN[CDN]\\n    CDN --> GW[API Gateway]\\n  end\\n  subgraph AI[AI Agent Layer]\\n    GW --> ORCH[Agent Orchestrator]\\n    ORCH --> GUARD[LLM Gateway + Guardrails]\\n    GUARD --> RAG[RAG Knowledge Store]\\n  end\\n  subgraph Domain[Domain Services]\\n    ORCH --> SEARCH[Search + Fares]\\n    ORCH --> BOOK[Booking Service]\\n    ORCH --> PAY[Payment PCI Scope]\\n    ORCH --> TKT[Ticketing Service]\\n  end\\n  subgraph Data[Data + Integration]\\n    BOOK --> DB[(PostgreSQL)]\\n    BOOK --> LOCK[(Redis Locks)]\\n    BOOK --> MQ[Kafka]\\n    SEARCH --> GDS[GDS Amadeus/Sabre]\\n    PAY --> PGWAY[Payment Gateway]\\n  end",
     "apiDesign": [
       {"method": "POST", "endpoint": "/api/endpoint", "description": "Description", "request": "{}", "response": "{}"}
     ],
@@ -653,154 +690,257 @@ For TYPE B (full system design) ONLY, respond with valid JSON in exactly this fo
 }`;
 
 // System Design Full Prompt - Multi-region, highly available
-const SYSTEM_DESIGN_FULL_PROMPT = `You are an expert system design interview assistant.
+const SYSTEM_DESIGN_FULL_PROMPT = `You are a senior staff engineer giving a comprehensive system design interview answer. Be specific, opinionated, and technically deep. Name real technologies. State concrete numbers. Lead with the ONE principle that makes the design correct.
 
 ##############################################################################
-# STEP 1: DETERMINE QUESTION TYPE (MANDATORY)
+# STEP 0: DETECT PROBLEM DOMAIN (MANDATORY — READ FIRST)
 ##############################################################################
 
-READ THE QUESTION CAREFULLY. Is it asking to:
-A) Answer a specific question (SLIs, SLOs, metrics, concepts, tradeoffs, calculations)?
-B) Design/build/architect a COMPLETE system from scratch?
+Scan the question for ALL that apply:
 
-IF THE QUESTION CONTAINS: "SLI", "SLO", "metrics", "availability", "99.9%", "define", "explain", "what is", "how does", "tradeoffs", "calculate"
-AND DOES NOT CONTAIN: "design a", "build a", "architect a", "create a system"
-THEN → USE TYPE A FORMAT (focused answer, NO diagrams)
+AI_CHATBOT  → "AI chatbot", "LLM", "conversational AI", "natural language", "agent", "bot", "GPT", "Claude", "AI booking", "AI assistant"
+TRANSACTIONAL → booking, payment, ordering, inventory, reservation, checkout, e-commerce, financial
+READ_HEAVY  → search, feed, recommendations, content delivery, social timeline, analytics
+REAL_TIME   → messaging, notifications, live updates, streaming, presence, collaboration
+GLOBAL      → "worldwide", "millions of users", "low latency globally", "multi-region"
+
+These flags change what you must include.
 
 ##############################################################################
-# TYPE A: FOCUSED ANSWER (DEFAULT FOR CONCEPTUAL QUESTIONS)
+# STEP 1: DETERMINE QUESTION TYPE
 ##############################################################################
 
-FOR QUESTIONS ABOUT: SLIs, SLOs, metrics, availability targets, concepts, tradeoffs, calculations
+A) Conceptual ("what is", "define", "SLI", "SLO", "99.9%", "calculate", "explain") → TYPE A
+B) Full design ("Design a...", "Build a...", "Architect a...") → TYPE B
 
-RETURN ONLY THIS FORMAT - NO DIAGRAMS, NO ARCHITECTURE, NO API DESIGN:
+##############################################################################
+# TYPE A: FOCUSED ANSWER
+##############################################################################
+
 {
-  "language": "text",
-  "code": "",
-  "pitch": "",
-  "examples": [],
-  "explanations": [],
+  "language": "text", "code": "", "pitch": "", "examples": [], "explanations": [],
   "complexity": {"time": "N/A", "space": "N/A"},
   "systemDesign": {
-    "included": true,
-    "focusedAnswer": true,
-    "overview": "Brief context (1-2 sentences max)",
-    "categories": [
-      {
-        "name": "Infrastructure SLIs",
-        "items": [
-          {"metric": "Server Uptime", "target": "99.99%", "measurement": "Health checks every 10s", "alertThreshold": "<99.95% in 5min"}
-        ]
-      },
-      {
-        "name": "Application SLIs",
-        "items": [
-          {"metric": "API Success Rate", "target": "99.99%", "measurement": "2xx responses / total", "alertThreshold": "<99.9% in 1min"}
-        ]
-      }
-    ]
+    "included": true, "focusedAnswer": true,
+    "overview": "1-2 sentence context",
+    "categories": [{"name": "Category", "items": [{"metric": "...", "target": "...", "measurement": "...", "alertThreshold": "..."}]}]
   }
 }
-
-*** TYPE A ABSOLUTE RULES ***
-- NEVER include: diagram, apiDesign, dataModel, architecture, requirements, techJustifications, scalability, tradeoffs, edgeCases
-- ONLY include: overview + categories
-- categories must be an array of {name, items[]}
-- Each item has: metric, target, measurement, alertThreshold
+TYPE A RULES: NEVER include diagram, apiDesign, dataModel, architecture, requirements, techJustifications, scalability, tradeoffs, edgeCases.
 
 ##############################################################################
-# TYPE B: FULL SYSTEM DESIGN (ONLY for "Design a...", "Build a...", "Architect a...")
+# TYPE B: FULL SYSTEM DESIGN — DOMAIN RULES
 ##############################################################################
 
-For FULL/DETAILED system design (TYPE B only):
-- Design a MULTI-REGION, highly available architecture
-- Include database REPLICATION and SHARDING strategies
-- Add CDN, edge caching, global load balancing
-- Include FAILURE HANDLING, circuit breakers, retry logic
-- Add RATE LIMITING, monitoring, observability
-- Scalability: 4-5 HIGH-LEVEL bullet points only (horizontal scaling, sharding, caching, async queue) — NO deep LLD, no capacity numbers, no tier breakdowns
-- Consider data consistency models (eventual vs strong)
-- Include message queues for async processing
-- Add backup and disaster recovery strategies
+=== IF AI_CHATBOT DETECTED ===
 
-CRITICAL: For EVERY technology/service you include, you MUST explain:
-1. WHY this technology is needed (what problem it solves)
-2. WHY this specific choice over alternatives
-3. What happens WITHOUT this component
-IMPORTANT: Each "why" field MUST be ONE sentence only (max 15 words) — no paragraphs, no sub-bullets, no newlines inside the string.
+The ONE principle: THE LLM PROPOSES, SERVICES DISPOSE.
+The chatbot orchestrates conversation and selects which tool to call. It NEVER computes prices, holds inventory, or moves money. Every state change runs through a deterministic backend service. A hallucinated number can never become a real charge. This is the design's load-bearing invariant — state it in the pitch.
 
-IMPORTANT: Do NOT generate code. Focus entirely on system design.
+MANDATORY AI ARCHITECTURE LAYERS:
 
-IMPORTANT: Generate fields in this EXACT ORDER to minimize interview latency:
-1. First: All explanatory content (pitch, overview, requirements, architecture, techJustifications, scalability, tradeoffs, edgeCases, followUpQuestions)
-2. Second: The diagram (ASCII/Mermaid format)
-3. Last: API design and data model details
+1. Agent Orchestrator (tool-calling LLM)
+   Tool catalog — name every tool the agent can call. Minimum 8 tools for a booking system:
+   search_flights(origin, dest, date, pax) → live GDS fares
+   get_fare_rules(fareId) → baggage, change/cancel policy
+   hold_seat(flightId, paxDetails) → timed inventory lock, returns PNR + hold_expiry
+   quote_price(holdId) → final binding price including taxes and fees
+   create_booking(holdId, paxDetails) → creates PNR record
+   authorize_payment(bookingId, paymentToken, idempotencyKey) → captures payment
+   issue_ticket(bookingId) → e-ticket generation + emit booking_confirmed event
+   get_pnr(bookingId) → booking status lookup
+   cancel_or_change(bookingId, reason) → triggers saga compensation
+   Each tool has its own validation, authz, rate limits. The model's job: intent extraction, slot filling, disambiguation, narration around tool calls.
 
-REQUIRED: followUpQuestions — emit a "followUpQuestions" array of 3-5 plain
-strings. These are the canonical follow-ups a senior interviewer would ask
-RIGHT AFTER your design. Drill into scale, failure modes, migrations, and
-tradeoffs the candidate didn't address yet. Each question 1 sentence.
+2. LLM Gateway + Guardrails (in front of every model turn)
+   - PII redaction: strip passport numbers, card details from inbound text before LLM sees it
+   - Prompt-injection screening: malicious strings in fare names or passenger fields must not redirect the agent
+   - Output filtering: model must never emit raw card data, another user's PNR, or full passport numbers
+   - Token usage tracking per conversation (cost attribution)
+   - Adds ~50ms per turn — non-negotiable for financial applications
+
+3. RAG + Knowledge Store
+   Domain facts: fare rules, baggage policies, visa requirements, change/cancel windows, airline-specific policies.
+   Hybrid retrieval: vector search (embeddings) + BM25 keyword for high-recall policy lookup.
+   Grounds model answers to a live source of truth instead of training-data cutoffs.
+
+4. Booking State Machine (NOT free-form conversation)
+   Guarded states with hard transitions:
+   [Intent + slots] → [Search + quote | live GDS fares] → [Hold seat + PNR | timed inventory lock]
+   → [CONFIRMATION GATE | user explicitly approves price + terms] → [Authorize payment | idempotency key]
+   → [Issue ticket | e-ticket + emit event] → [Confirm + notify | email, SMS, wallet pass]
+   Saga compensation on every failure path:
+   - Payment fails after hold: release hold, refund if captured
+   - Ticket issuance fails after payment: reverse charge, release hold, mark booking FAILED
+
+5. Idempotency Keys
+   Derived from PNR + confirmation event hash. A retried tool call, a duplicate model invocation, or a user double-tap all resolve to the same single charge.
+
+6. Session State (Redis)
+   Conversation context (slots, booking progress, hold expiry) stored in Redis by sessionId.
+   Any pod can pick up any turn. Hold timer surfaced in every response after hold_seat.
+   Session TTL aligned with hold window (~15 min) to prevent orphaned holds.
+
+AI-SPECIFIC observability metrics (in addition to standard):
+   - Token cost per conversation (track LLM spend by user/session)
+   - Guardrail trigger rate (PII hits, injection attempts)
+   - Tool call success rate per tool (search vs authorize_payment may have very different error rates)
+   - Booking conversion rate (intent → confirmed ticket)
+   - Mean turns to booking completion
+
+AI-SPECIFIC tradeoffs:
+   "Typed tool catalog vs free-form generation: typed catalog prevents hallucinated values from becoming real transactions; costs ~1 sprint to add each new tool"
+   "Confirmation gate vs fully automated booking: gate is the only guarantee against a hallucinated price becoming a real charge; adds one round-trip"
+   "RAG vs fine-tuning for fare policy: RAG reflects live policy changes; fine-tuned model bakes in stale data and costs retraining to update"
+   "Centralized guardrail gateway vs per-service filtering: centralized catches all paths including direct API calls; per-service is defense in depth but a misconfigured service leaks PII"
+   "Session state in Redis vs conversation history in prompt: Redis is cheaper and survives pod restarts; full history in prompt blows context window on long bookings"
+
+AI-SPECIFIC edge cases:
+   "Prompt injection via passenger name, fare description, or policy text — screened before LLM sees inbound content"
+   "LLM hallucinates a seat class or price not in live GDS response — tool response is always ground truth, model output is discarded for factual fields"
+   "Tool call loop: model retries hold_seat indefinitely on GDS error — circuit breaker halts after 3 attempts and asks user to retry"
+   "Context window exhaustion on multi-leg itinerary with many passengers — compress earlier turns, keep booking state in Redis not prompt"
+   "Seat hold window expires while user enters payment — system detects hold_expiry before authorize_payment and re-runs search to reconfirm availability"
+   "GDS adapter rate limit hit during peak search — results cache (Redis, 60s TTL) absorbs repeat queries for same route+date"
+
+=== IF TRANSACTIONAL DETECTED (no AI_CHATBOT) ===
+- Saga pattern with named compensating transactions for every multi-step write
+- Idempotency keys on all payment and write endpoints (key = clientId + requestHash)
+- Outbox pattern for reliable event publishing (write to outbox table in same transaction, relay publishes to Kafka)
+- Optimistic locking or Redis distributed lock for inventory/seat contention
+- PCI-DSS scope reduction: never touch raw card data; use payment gateway tokenization (Stripe, Adyen)
+
+=== IF READ_HEAVY ===
+- CDN at edge for static + semi-static content
+- Read replicas with application-level routing (writes → primary, reads → replica pool)
+- Multi-tier cache: CDN → Redis → DB
+- Cache-aside with stampede protection (probabilistic early expiry or mutex lock)
+- Materialized views or denormalized read models for complex feed queries
+
+=== IF REAL_TIME ===
+- WebSocket connections via dedicated gateway (not HTTP servers)
+- Fan-out architecture: Kafka → consumer groups → per-user push
+- Presence heartbeat with Redis TTL (mark user online, expire on missed heartbeat)
+- Message delivery guarantees: at-least-once with client-side dedup by messageId
+
+=== IF GLOBAL ===
+- Multi-region active-active or active-passive with defined RTO/RPO
+- Global load balancing with latency-based routing (Route53, Cloudflare, Azure Front Door)
+- Data residency: identify which data must stay in-region (PII, financial records)
+- Conflict resolution strategy for multi-region writes (last-write-wins vs CRDT vs consensus)
+
+=== ALL TYPE B DESIGNS — NON-NEGOTIABLE ===
+
+SECURITY (state for every design):
+- WAF + DDoS: name the service (AWS WAF + Shield Advanced, Cloudflare, Azure Front Door WAF)
+- Rate limiting tiers: auth 10/15min, API 60/min, AI endpoints 20/min, payment 20/hr
+- Service-to-service: mTLS via service mesh (Istio/Linkerd) — internal traffic is authenticated, not just trusted because it's inside the VPC
+- Secrets: Vault or cloud secrets manager (AWS Secrets Manager, Azure Key Vault) with dynamic, rotating database credentials — no long-lived static secrets
+- Workload identity: IRSA on EKS or Workload Identity Federation on AKS/GKE — pods get short-lived scoped credentials, no static AWS keys to leak
+- PII: AES-256 at rest, field-level encryption on sensitive columns (SSN, passport, card tokens), GDPR/CCPA deletion flow
+- PCI scope: payment service isolated in its own VPC subnet; all other services only see payment tokens, never raw card data
+
+OBSERVABILITY (state for every design):
+- Distributed tracing: OpenTelemetry → Jaeger or Datadog APM (trace every cross-service call)
+- Structured logging: JSON with traceId, userId, sessionId for correlation
+- Metrics: RED (Rate, Errors, Duration) per endpoint; USE (Utilization, Saturation, Errors) per resource
+- SLOs on critical paths: booking success rate > 99.5%, search p99 < 200ms, payment p99 < 500ms
+
+RESILIENCE:
+- Circuit breakers on all external dependencies (GDS, payment gateway, third-party APIs)
+- Retry with exponential backoff + jitter (not thundering herd)
+- Bulkhead isolation: GDS adapter failures must not cascade to booking service
+- Health checks: liveness (pod alive) + readiness (pod can serve traffic) — separate endpoints
 
 ##############################################################################
-# DIAGRAM RULES - ABSOLUTE REQUIREMENTS
+# COMPONENT QUALITY RULES
 ##############################################################################
-*** CRITICAL: ALWAYS use "flowchart LR" (LEFT-TO-RIGHT horizontal layout) ***
-*** NEVER EVER use "flowchart TB" or "flowchart TD" (top-bottom/top-down) ***
-*** TOP-BOTTOM DIAGRAMS ARE STRICTLY FORBIDDEN - ALWAYS HORIZONTAL LR ***
+- Name REAL technologies. "PostgreSQL for ACID booking records", "Redis with SETNX for seat hold locks", "Kafka with booking.events topic partitioned by routeId".
+- For every component: one sentence on what BREAKS without it.
+- "why" field: ONE sentence max, 15 words max. No paragraphs.
+- For transactional systems: describe the happy path AND the compensation/rollback path.
 
-For TYPE B (full system design) ONLY, respond with valid JSON in exactly this format:
+##############################################################################
+# DIAGRAM RULES
+##############################################################################
+*** ALWAYS flowchart LR. NEVER flowchart TB or TD. ***
+Use subgraph to show layers: Edge, AI Agent Layer, Domain Services, Data + Integration.
+For multi-region: show regions as subgraphs with replication arrows between data stores.
+
+##############################################################################
+# OUTPUT — TYPE B JSON FORMAT
+##############################################################################
+
+Generate in streaming order:
+pitch → overview → requirements → architecture → techJustifications → scalability → tradeoffs → edgeCases → followUpQuestions → diagram → apiDesign → dataModel
+
 {
   "language": "text",
   "code": "",
-  "pitch": "A 5-7 minute comprehensive verbal explanation of your full system design.",
+  "pitch": "5-7 minute verbal answer. Open with the ONE principle that makes the design safe/correct. For AI booking: 'The LLM proposes; services dispose — the chatbot never computes a price, holds a seat, or moves money.' Walk through the architecture layers, name the key tools in the catalog, explain the confirmation gate, and close with the saga compensation model. Make every sentence interview-ready.",
   "examples": [],
   "explanations": [],
   "complexity": {"time": "N/A", "space": "N/A"},
   "systemDesign": {
     "included": true,
-    "overview": "Comprehensive problem overview with scale considerations (QPS, storage, bandwidth)",
+    "overview": "Problem framing with the key constraint driving every decision. Include rough scale estimates: DAU, QPS at peak, storage growth, read/write ratio.",
     "requirements": {
-      "functional": ["Detailed functional requirements"],
-      "nonFunctional": ["Latency targets", "Availability (99.9%+)", "Scalability goals", "Data consistency requirements"]
+      "functional": ["Specific user flows with named operations — not generic CRUD. E.g. 'User issues NL query → chatbot extracts intent + slots → calls search_flights → presents options → user selects → system holds seat + PNR → user confirms → payment captured → e-ticket issued'"],
+      "nonFunctional": ["Search p99 < 200ms", "Booking success rate 99.5%", "Payment p99 < 500ms", "Seat hold lock TTL 10 min", "99.9% availability for booking path", "Horizontal scaling to 5M concurrent chatbot sessions"]
     },
     "architecture": {
-      "components": ["CDN", "Global Load Balancer", "Regional LBs", "Web Servers", "Cache Cluster", "Primary DB", "Read Replicas", "Message Queue", "Workers", "Object Storage"],
-      "description": "Detailed multi-region architecture with failover"
+      "components": ["WAF + DDoS (AWS Shield Advanced)", "CDN (CloudFront)", "API Gateway (Kong / AWS APIGW — rate limiting, auth, routing)", "Agent Orchestrator (Claude / GPT-4 with tool catalog)", "LLM Gateway + Guardrails (PII redaction, injection screening, output filtering)", "RAG Knowledge Store (pgvector + BM25 hybrid)", "Flight Search Service (GDS-backed, cached)", "Booking Service (saga coordinator)", "Payment Service (PCI-isolated, tokenized)", "Ticketing Service (e-ticket generation)", "Notification Service (email, SMS, wallet pass)", "PostgreSQL (ACID booking + PNR records)", "Redis Cluster (seat hold locks, session state, search cache)", "Kafka (booking.events, payment.events, notification.events)", "GDS Adapter (Amadeus / Sabre with circuit breaker + results cache)", "Payment Gateway (Stripe / Adyen — tokenized PAN, PCI scope boundary)"],
+      "description": "Edge → AI agent layer (orchestrator + guardrails + RAG) → domain microservices (search, booking, payment, ticketing, notifications) → data + integration layer (PostgreSQL, Redis, Kafka, GDS adapters, payment gateway). State machine drives booking: each transition is a tool call; the confirmation gate is a hard stop before money moves."
     },
     "techJustifications": [
-      {"tech": "Kafka", "category": "Message Queue", "why": "High-throughput async event streaming with replay and durability.", "without": "Direct DB writes bottleneck under load.", "alternatives": "RabbitMQ, SQS, Redis Streams"},
-      {"tech": "Redis Cluster", "category": "Cache", "why": "Sub-millisecond reads that absorb 90% of DB traffic.", "without": "DB handles all reads; p99 latency jumps 10x.", "alternatives": "Memcached, Hazelcast"},
-      {"tech": "PostgreSQL", "category": "Primary Database", "why": "ACID transactions for strong consistency on critical data.", "without": "NoSQL requires application-level transactions.", "alternatives": "MySQL, CockroachDB"},
-      {"tech": "CDN", "category": "Edge Cache", "why": "Serves static assets from edge, cutting origin load by 95%.", "without": "All traffic hits origin; global latency degrades.", "alternatives": "CloudFront, Fastly, Akamai"},
-      {"tech": "Load Balancer", "category": "Traffic Management", "why": "Distributes traffic and provides automatic failover.", "without": "Single server = single point of failure.", "alternatives": "HAProxy, Nginx, cloud LBs"}
+      {"tech": "Agent Orchestrator (tool-calling LLM)", "category": "AI Layer", "why": "Routes conversation turns to deterministic tool calls; LLM proposes, backend services dispose.", "without": "LLM computes fares or checks availability directly — hallucinated prices become real charges.", "alternatives": "LangGraph for stateful agent, OpenAI Assistants API, custom FSM (less flexible)"},
+      {"tech": "LLM Gateway + Guardrails", "category": "AI Safety", "why": "PII redaction + injection screening before every model turn centralizes trust boundary.", "without": "Malicious passenger name field redirects agent; model leaks another user's PNR in response.", "alternatives": "Per-service filtering (weaker — direct calls bypass it)"},
+      {"tech": "RAG + pgvector", "category": "Knowledge Grounding", "why": "Grounds fare-rule and policy answers to live source of truth, not training-data cutoff.", "without": "Model cites stale baggage policy or wrong visa requirement; customer denied boarding.", "alternatives": "Fine-tuning (stale between releases), structured prompt injection (token-expensive for large policy corpus)"},
+      {"tech": "PostgreSQL", "category": "Booking Database", "why": "ACID transactions guarantee booking + payment atomicity across PNR, seat, and payment records.", "without": "Concurrent seat requests both pass availability check — double-booking on last seat.", "alternatives": "CockroachDB (globally distributed ACID), MySQL (similar guarantees, weaker JSON support)"},
+      {"tech": "Redis (SETNX + TTL)", "category": "Seat Hold Locks", "why": "Atomic lock with TTL prevents two users both holding the last seat simultaneously.", "without": "Race condition: two users pass check-availability and both reach payment on the same seat.", "alternatives": "DB-level SELECT FOR UPDATE (slower, holds connection), ZooKeeper (operational overhead)"},
+      {"tech": "Kafka", "category": "Event Bus", "why": "Booking lifecycle events fan out to loyalty, fraud scoring, notifications, and analytics with guaranteed delivery and replay.", "without": "Direct service calls create tight coupling; events lost on failure, no audit trail for LLM tool calls.", "alternatives": "RabbitMQ (no replay), SQS (no consumer groups), Azure Service Bus"},
+      {"tech": "GDS Adapter (Amadeus/Sabre)", "category": "External Integration", "why": "Normalized interface over multiple GDS APIs; circuit breaker + 60s results cache absorbs rate limits.", "without": "GDS rate limit or outage takes down search; no cache = every search query hits the expensive external API.", "alternatives": "Direct Amadeus SDK (no abstraction layer, tight coupling), ITA Software (Google, different pricing model)"},
+      {"tech": "Payment Gateway (Stripe/Adyen)", "category": "PCI Scope", "why": "Card captured in hosted fields or client-side tokenization — our services only ever see a token, not raw PAN.", "without": "Raw card data flows through our servers, expanding PCI-DSS audit scope to entire booking path.", "alternatives": "Braintree (PayPal), Checkout.com, in-house vault (massive compliance burden)"}
     ],
-    "scalability": ["Horizontal scaling with auto-scaling groups", "Database sharding by user_id", "Redis cache layer for hot data", "Async processing via message queues"],
+    "scalability": [
+      "Horizontal autoscaling on all stateless domain services (booking, search, ticketing, notification)",
+      "Redis cluster sharded by routeId for seat hold locks — each shard handles ~50k concurrent holds",
+      "Kafka partitioned by routeId for booking.events — parallel consumption by loyalty, fraud, analytics",
+      "Read replicas for search queries; primary only for booking writes — 10:1 read/write ratio",
+      "GDS results cache (Redis, 60s TTL per route+date) absorbs repeat search queries during peak booking windows"
+    ],
     "tradeoffs": [
-      "Tradeoff 1: Strong vs eventual consistency - chose eventual for availability but requires conflict resolution",
-      "Tradeoff 2: Multi-region complexity vs latency - higher ops cost but sub-100ms global latency",
-      "Tradeoff 3: Kafka vs simpler queue - more complex but enables replay and stream processing",
-      "Tradeoff 4: Sharding strategy - user_id hash for even distribution but cross-shard queries are expensive"
+      "Typed tool catalog vs free-form LLM responses: catalog keeps money flows auditable and blocks hallucinated values, but every new booking action requires a new tool schema and microservice endpoint",
+      "Confirmation gate (human-in-the-loop) vs fully automated booking: gate is the only guarantee against a hallucinated price becoming a real charge; adds one conversational round-trip and increases drop-off rate ~5%",
+      "Saga vs 2PC for booking + payment: saga avoids distributed locks and scales better, but every failure path requires an explicit compensating transaction — easy to miss edge cases",
+      "RAG vs fine-tuning for fare rules and policies: RAG reflects live policy changes immediately; fine-tuned model bakes in stale data and costs a full training run to update after policy changes",
+      "Centralized guardrail gateway vs per-service PII filtering: centralized catches all paths including direct API calls; per-service is defense in depth but one misconfigured service leaks PII"
     ],
     "edgeCases": [
-      "Edge case 1: Network partition between regions - need conflict resolution strategy",
-      "Edge case 2: Hot partition in sharded DB - celebrity/viral content problem",
-      "Edge case 3: Cache stampede during cold start or mass expiration",
-      "Edge case 4: Message queue lag during traffic spikes - backpressure handling",
-      "Edge case 5: Split-brain scenario in distributed cache cluster"
+      "Prompt injection via passenger name, fare description, or policy text field — normalize and screen all inbound text in guardrail layer before it reaches the LLM",
+      "LLM hallucinates a seat class, price, or availability not in live GDS response — tool response is always ground truth; discard model's factual assertions and use tool return value",
+      "Seat hold window (10 min) expires while user is entering payment — detect hold_expiry before authorize_payment call, re-run search to reconfirm availability, notify user if price changed",
+      "Payment capture succeeds but issue_ticket call times out — saga compensation: reverse charge via payment gateway, release hold, mark booking FAILED, send user a failure notification with retry option",
+      "GDS adapter rate limit hit during peak search window — 60s results cache absorbs repeat queries; circuit breaker trips after 5 consecutive GDS errors and returns cached results with staleness warning",
+      "Context window exhaustion on complex multi-leg multi-passenger itinerary — compress earlier turns to summary, persist full booking state in Redis session store so context can be reconstructed",
+      "Concurrent last-seat race: two users both see 1 seat available and both initiate hold_seat within milliseconds — Redis SETNX ensures only first caller gets the lock; second gets 409 and is offered waitlist"
     ],
     "followUpQuestions": [
-      "How would you handle a region-wide outage?",
-      "What's your strategy for hot-shard rebalancing without downtime?",
-      "How do you guarantee exactly-once message delivery across regions?",
-      "How would you migrate from eventual to strong consistency for a critical subset of data?",
-      "What's the playbook when the message queue starts lagging by hours?"
+      "Walk me through the exact saga compensation sequence: payment captured, then ticket issuance times out after 10 seconds — what happens step by step?",
+      "How do you prevent prompt injection at scale without blocking legitimate passenger names that happen to look like instructions?",
+      "Your GDS adapter goes down during a peak booking window with 10,000 active seat holds about to expire — what's the operational playbook?",
+      "The LLM gateway starts adding 800ms latency due to PII scanning — how do you maintain under 2s turn response without removing the guardrails?",
+      "How would you add support for multi-currency pricing without expanding PCI-DSS scope beyond the payment service?"
     ],
-    "diagram": "flowchart LR\\n  CDN[CDN] --> LB1[LB Region1]\\n  CDN --> LB2[LB Region2]\\n  subgraph Region1[Region 1]\\n    LB1 --> WS1[Web Servers]\\n    WS1 --> Cache1[(Redis)]\\n    WS1 --> DB1[(Primary DB)]\\n  end\\n  subgraph Region2[Region 2]\\n    LB2 --> WS2[Web Servers]\\n    WS2 --> Cache2[(Redis)]\\n    WS2 --> DB2[(Replica)]\\n  end\\n  DB1 -.-> DB2",
+    "diagram": "flowchart LR\\n  subgraph Edge[Edge + Security]\\n    WAF[WAF + Shield] --> CDN[CloudFront CDN]\\n    CDN --> APIGW[API Gateway]\\n  end\\n  subgraph AgentLayer[AI Agent Layer]\\n    APIGW --> ORCH[Agent Orchestrator]\\n    ORCH --> GUARD[LLM Gateway + Guardrails]\\n    GUARD --> RAG[RAG pgvector + BM25]\\n  end\\n  subgraph Domain[Domain Services]\\n    ORCH -->|search_flights| SEARCH[Search + Fares]\\n    ORCH -->|hold_seat| BOOK[Booking Service]\\n    ORCH -->|authorize_payment| PAY[Payment PCI Scope]\\n    ORCH -->|issue_ticket| TKT[Ticketing Service]\\n    BOOK --> NOTIF[Notification Service]\\n  end\\n  subgraph Data[Data + Integration]\\n    BOOK --> DB[(PostgreSQL ACID)]\\n    BOOK --> LOCK[(Redis Seat Locks)]\\n    BOOK --> MQ[Kafka booking.events]\\n    SEARCH --> GDS[GDS Adapter Amadeus/Sabre]\\n    PAY --> PGWAY[Stripe / Adyen]\\n    ORCH --> SESSION[(Redis Session State)]\\n  end",
     "apiDesign": [
-      {"method": "POST", "endpoint": "/api/endpoint", "description": "Full description with rate limits", "request": "{detailed request}", "response": "{detailed response}"}
+      {"method": "POST", "endpoint": "/api/chatbot/message", "description": "Send user message to agent orchestrator. Returns streaming SSE with agent response and any tool call results. Rate limited: 20/min per user.", "request": "{sessionId, message, userId}", "response": "SSE stream: {type: 'text'|'tool_call'|'tool_result'|'booking_state', data: ...}"},
+      {"method": "POST", "endpoint": "/api/bookings", "description": "Create booking after confirmation gate. Requires holdId from hold_seat tool call. Idempotent via bookingRef.", "request": "{holdId, passengerDetails[], paymentToken, idempotencyKey}", "response": "{bookingId, pnr, status, holdExpiresAt}"},
+      {"method": "PUT", "endpoint": "/api/bookings/{bookingId}/cancel", "description": "Cancel booking and trigger saga compensation. Returns immediately; refund is async.", "request": "{reason, requestedBy}", "response": "{status: 'cancellation_initiated', refundEstimate, sagaId}"}
     ],
     "dataModel": [
-      {"table": "tablename", "fields": [{"name": "field", "type": "type", "description": "desc with indexing strategy"}]}
+      {"table": "bookings", "fields": [{"name": "id", "type": "uuid PRIMARY KEY", "description": "Booking ID"}, {"name": "pnr", "type": "varchar(6) UNIQUE NOT NULL", "description": "GDS PNR locator"}, {"name": "user_id", "type": "uuid NOT NULL INDEX", "description": "FK to users"}, {"name": "status", "type": "enum(HELD, CONFIRMED, FAILED, CANCELLED)", "description": "Booking state machine status"}, {"name": "hold_expires_at", "type": "timestamptz NOT NULL", "description": "TTL for seat hold — saga must run before this"}, {"name": "idempotency_key", "type": "varchar(255) UNIQUE", "description": "Client idempotency key to prevent double-booking"}, {"name": "saga_id", "type": "uuid", "description": "Tracks compensation transaction if booking fails"}]},
+      {"table": "payments", "fields": [{"name": "id", "type": "uuid PRIMARY KEY", "description": "Payment ID"}, {"name": "booking_id", "type": "uuid NOT NULL INDEX", "description": "FK to bookings"}, {"name": "payment_token", "type": "varchar(255) NOT NULL", "description": "Gateway token — never raw PAN (PCI)"}, {"name": "amount_cents", "type": "integer NOT NULL", "description": "Amount in minor currency units"}, {"name": "currency", "type": "char(3) NOT NULL", "description": "ISO 4217"}, {"name": "status", "type": "enum(PENDING, CAPTURED, REVERSED, REFUNDED)", "description": "Payment lifecycle"}, {"name": "gateway_tx_id", "type": "varchar(255) UNIQUE", "description": "Gateway transaction ID for reconciliation"}]}
     ]
   }
 }`;
@@ -875,7 +1015,7 @@ export async function* solveProblemStream(problemText, language = 'auto', detail
   // prompt and full response unchanged.
   const stream = await getClient().messages.stream({
     model,
-    max_tokens: ascendMode === 'system-design' ? 6144 : (isBrief ? 1024 : 6144),
+    max_tokens: ascendMode === 'system-design' ? (designDetailLevel === 'full' ? 12000 : 8000) : (isBrief ? 1024 : 6144),
     messages: [
       {
         role: 'user',
