@@ -695,7 +695,7 @@ export default function TopicDetail({
   // Pages that use SRE/slide-card-style rendering (introduction, keyQuestions, visualizations, quickFire).
   // ADD NEW CATEGORIES HERE — that's the only change needed to wire up content rendering.
   const isSREStyle = ['sre', 'devops', 'observability', 'platform', 'mlops', 'aiops', 'networking',
-    'cloud', 'linux', 'troubleshooting', 'war-stories', 'comparisons', 'ai-systems-perf', 'ddia'].includes(activePage);
+    'cloud', 'linux', 'troubleshooting', 'war-stories', 'comparisons', 'ai-systems-perf', 'ddia', 'agentic'].includes(activePage);
   // SQL uses coding/DSA-style rendering (whenToUse, approach, commonProblems, etc.)
   const isCodingStyle = activePage === 'coding' || activePage === 'sql' || (activePage === 'databases' && topicIsCodingShaped);
 
