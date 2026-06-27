@@ -274,6 +274,7 @@ export default function DocsPage({ onBack }) {
   const ddiaTopicCategoryMap = heavyData.ddiaTopicCategoryMap || {};
   const ddiaTopics = heavyData.ddiaTopics || [];
 
+
   // Job context for role-filtered mode (passed from JobPrepPage or job URL analysis)
   const [jobContext, setJobContext] = useState(() => {
     if (initialState.role) {
@@ -793,8 +794,8 @@ export default function DocsPage({ onBack }) {
 
     const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return [...topics].sort((a, b) => {
-      if (sortOrder === 'a-z') return a.title.localeCompare(b.title);
-      if (sortOrder === 'z-a') return b.title.localeCompare(a.title);
+      if (sortOrder === 'a-z') return (a.title || '').localeCompare(b.title || '');
+      if (sortOrder === 'z-a') return (b.title || '').localeCompare(a.title || '');
       if (sortOrder === 'most') return b.questions - a.questions;
       if (sortOrder === 'least') return a.questions - b.questions;
       return 0;
@@ -826,8 +827,8 @@ export default function DocsPage({ onBack }) {
           const bIdx = [...roleFilteredIds].indexOf(b.id);
           if (sortOrder === 'a-z' && aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
         }
-        if (sortOrder === 'a-z') return a.title.localeCompare(b.title);
-        if (sortOrder === 'z-a') return b.title.localeCompare(a.title);
+        if (sortOrder === 'a-z') return (a.title || '').localeCompare(b.title || '');
+        if (sortOrder === 'z-a') return (b.title || '').localeCompare(a.title || '');
         if (sortOrder === 'most') return b.questions - a.questions;
         if (sortOrder === 'least') return a.questions - b.questions;
         return 0; // 'default' — preserves data-defined order
@@ -947,7 +948,7 @@ export default function DocsPage({ onBack }) {
         }
       })();
     }
-  }, [selectedTopic, topicDetails?.title]);
+  }, [selectedTopic, topicDetails?.title, diagramCloudProvider]);
 
   // ── Overview dashboard data ──
   // Static counts used as fallback before heavyData async chunks load.
