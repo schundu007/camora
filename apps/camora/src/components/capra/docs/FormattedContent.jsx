@@ -565,7 +565,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="landing-display"
+                className="landing-display prep-section-heading"
               >
                 {formatInlineText(headerText)}
               </h3>,
@@ -619,7 +619,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="landing-display"
+                className="landing-display prep-section-heading"
               >
                 {formatInlineText(label)}
               </h4>,
@@ -638,7 +638,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="landing-display"
+                className="landing-display prep-section-heading"
               >
                 {formatInlineText(text)}
               </h3>,
@@ -647,7 +647,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="landing-display"
+                className="landing-display prep-section-heading"
               >
                 {formatInlineText(text)}
               </h4>,
@@ -763,7 +763,7 @@ export default function FormattedContent({ content, inline = false }) {
   // gold-leaf rail (PPT parent → child grammar). A leading section with
   // no header skips the rail so intro paragraphs aren't pushed in.
   const elements = sections.map((sec, i) => (
-    <section key={`sec-${i}`}>
+    <div key={`sec-${i}`}>
       {sec.header}
       {sec.body.length > 0 && (
         sec.header
@@ -774,7 +774,7 @@ export default function FormattedContent({ content, inline = false }) {
           )
           : sec.body
       )}
-    </section>
+    </div>
   ));
 
   // `prep-content` opts this surface into the docs design system (navy
