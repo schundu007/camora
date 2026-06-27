@@ -628,13 +628,22 @@ export default function FormattedContent({ content, inline = false }) {
           return;
         }
 
-        // Markdown headings: ## Heading / ### Heading
+        // Markdown headings: # / ## / ### — mapped to h2/h3/h4 for book hierarchy
         const h2Match = trimmed.match(/^(#{1,3})\s+(.+)$/);
         if (h2Match) {
           flushAll();
           const level = h2Match[1].length;
           const text = h2Match[2];
           if (level === 1) {
+            openSection(
+              <h2
+                key={`h-${blockIdx}-${lineIdx}`}
+                className="landing-display prep-section-heading"
+              >
+                {formatInlineText(text)}
+              </h2>,
+            );
+          } else if (level === 2) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
