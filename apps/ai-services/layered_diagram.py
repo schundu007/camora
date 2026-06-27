@@ -222,7 +222,7 @@ def render_flow(spec: dict, out_path: Path) -> None:
         label="",
         labelloc="t",
         size="16,!",
-        dpi="150",
+        dpi="200",
     )
     g.attr(
         "node",
