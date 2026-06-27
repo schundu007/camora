@@ -72,23 +72,29 @@ RUN mkdir -p /data/embeddings
 # Verify diagrams library PNG resources are bundled and Graphviz can render
 # icons into a PNG. A diagram without icons is tiny (<5 KB); the test fails
 # the build if icons are missing so this is caught before deployment.
+#
+# In diagrams 0.25+, icons moved from diagrams/resources/ to
+# site-packages/resources/ (basedir.parent). The check below matches
+# _load_icon()'s actual resolution logic.
 RUN python3 - <<'EOF'
 import os, sys, subprocess, tempfile
+from pathlib import Path
 
-# 1. Check icon files are present in the installed package
+# 1. Verify icons exist at the path diagrams._load_icon() will look for them
 import diagrams as _d
-icons_dir = os.path.join(os.path.dirname(_d.__file__), "resources", "aws", "compute")
-if not os.path.isdir(icons_dir):
+basedir = Path(os.path.abspath(os.path.dirname(_d.__file__)))
+icons_dir = basedir.parent / "resources" / "aws" / "compute"
+if not icons_dir.is_dir():
     sys.exit(f"FAIL: diagrams resources missing at {icons_dir}")
 pngs = [f for f in os.listdir(icons_dir) if f.endswith(".png")]
 if not pngs:
-    sys.exit(f"FAIL: no PNG icons found in {icons_dir}")
-print(f"OK: {len(pngs)} AWS compute icons found")
+    sys.exit(f"FAIL: no PNG icons in {icons_dir}")
+print(f"OK: {len(pngs)} AWS compute icons at {icons_dir}")
 
-# 2. Render a minimal diagram and check the output is large enough to
-#    contain icon data (icon-free PNGs are typically < 5 KB).
+# 2. Render a minimal diagram and confirm the PNG is large enough to contain
+#    icon image data. Icon-free diagrams are typically < 5 KB.
 code = """
-from diagrams import Diagram, Cluster
+from diagrams import Diagram
 from diagrams.aws.compute import EC2
 from diagrams.aws.database import RDS
 with Diagram("smoke", show=False, filename="output", outformat="png", direction="LR"):
@@ -100,11 +106,11 @@ with tempfile.TemporaryDirectory() as tmp:
         f.write(code)
     r = subprocess.run([sys.executable, script], cwd=tmp, capture_output=True, timeout=30)
     if r.returncode != 0:
-        sys.exit(f"FAIL: diagram render: {r.stderr.decode()[:400]}")
+        sys.exit(f"FAIL: diagram render failed: {r.stderr.decode()[:500]}")
     png = os.path.join(tmp, "output.png")
     size = os.path.getsize(png) if os.path.exists(png) else 0
     if size < 5000:
-        sys.exit(f"FAIL: output.png is {size} bytes — icons are likely not rendering")
+        sys.exit(f"FAIL: output.png is only {size} bytes — Graphviz is not embedding icons")
     print(f"OK: diagram rendered with icons ({size} bytes)")
 EOF
 
