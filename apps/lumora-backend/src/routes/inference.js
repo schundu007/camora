@@ -39,9 +39,9 @@ async function recordUsage({ userId, endpoint, questionType, tokensUsed, latency
   if (reservationId) {
     await query(
       `UPDATE lumora_usage_logs
-          SET endpoint = $2, question_type = $3, tokens_used = $4, latency_ms = $5, success = $6, error_message = $7
-        WHERE id = $8`,
-      [userId, endpoint, questionType, tokensUsed, latencyMs, success, errorMessage, reservationId],
+          SET endpoint = $1, question_type = $2, tokens_used = $3, latency_ms = $4, success = $5, error_message = $6
+        WHERE id = $7`,
+      [endpoint, questionType, tokensUsed, latencyMs, success, errorMessage, reservationId],
     );
   } else {
     await query(
