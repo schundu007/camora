@@ -307,6 +307,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
   // safety net — the LLM should already be cloud-aware via prompts —
   // but it costs nothing and rescues older cached responses.
   const fmtCloud = useCloudFormatter();
+  const stripMd = (s) => typeof s === 'string' ? s.replace(/\*\*/g, '') : s;
   const [generatingEraser, setGeneratingEraser] = useState(false);
   const [diagramModal, setDiagramModal] = useState(false);
   const [proDiagramModal, setProDiagramModal] = useState(false);
@@ -784,9 +785,9 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               <SectionCard title="Scalability" className="col-span-full" accent="var(--cam-gold-leaf)">
                 <div className="flex flex-wrap gap-1.5">
                   {systemDesign.scalability.map((item, i) => (
-                    <Chip key={i} variant="default" title={item}>
+                    <Chip key={i} variant="default" title={stripMd(item)}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
-                      {item}
+                      {stripMd(item)}
                     </Chip>
                   ))}
                 </div>
@@ -802,7 +803,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                       {systemDesign.requirements.functional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
                           <span className="text-[var(--accent)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
-                          <span>{req}</span>
+                          <span>{stripMd(req)}</span>
                         </li>
                       ))}
                     </ul>
@@ -814,7 +815,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                       {systemDesign.requirements.nonFunctional.map((req, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
                           <span className="text-[var(--accent)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
-                          <span>{req}</span>
+                          <span>{stripMd(req)}</span>
                         </li>
                       ))}
                     </ul>
@@ -826,7 +827,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                       {systemDesign.tradeoffs.slice(0, 5).map((tradeoff, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
                           <span className="text-amber-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
-                          <span>{typeof tradeoff === 'string' ? tradeoff.replace(/^Tradeoff \d+:\s*/i, '') : tradeoff}</span>
+                          <span>{typeof tradeoff === 'string' ? stripMd(tradeoff.replace(/^Tradeoff \d+:\s*/i, '')) : tradeoff}</span>
                         </li>
                       ))}
                     </ul>
@@ -838,7 +839,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                       {systemDesign.edgeCases.slice(0, 5).map((edge, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
                           <span className="text-rose-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
-                          <span>{typeof edge === 'string' ? edge.replace(/^Edge case \d+:\s*/i, '') : edge}</span>
+                          <span>{typeof edge === 'string' ? stripMd(edge.replace(/^Edge case \d+:\s*/i, '')) : edge}</span>
                         </li>
                       ))}
                     </ul>
