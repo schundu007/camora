@@ -106,29 +106,56 @@ def gen_langgraph_supervisor():
 # ─── 2. LangGraph State Flow ──────────────────────────────────────────────────
 def gen_langgraph_state_flow():
     g = graphviz.Digraph('langgraph_state', format='png')
-    g.attr(rankdir='LR', label='LangGraph State and Message Flow',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+    g.attr(rankdir='TB', label='LangGraph State and Message Flow',
+           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b',
+           bgcolor='#ffffff', pad='0.7', nodesep='0.9', ranksep='1.1',
+           dpi='180', splines='spline')
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
-    node(g, 'start', '__start__', 'slate')
-    node(g, 'msgs', 'messages\n(add_messages)', 'state')
-    node(g, 'sup', 'supervisor', 'llm')
+    # Tier 1 — entry
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'start', '__start__', 'slate')
+        node(s, 'msgs', 'messages\n(add_messages)', 'state')
+
+    # Tier 2 — supervisor
+    node(g, 'sup', 'supervisor\n(LLM Router)', 'llm')
+
+    # Tier 3 — routing decision
     node(g, 'next', 'next: str\n(route field)', 'decision')
-    node(g, 'res', 'researcher', 'agent')
-    node(g, 'wri', 'writer', 'agent')
-    node(g, 'end', '__end__', 'good')
+
+    # Tier 4 — outcomes on same rank
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'res', 'researcher', 'agent')
+        node(s, 'end', '__end__', 'good')
+        node(s, 'wri', 'writer', 'agent')
+
+    # Persistence — side branch
     node(g, 'check', 'Checkpoint\n(auto-persist)', 'store')
 
+    # Main forward flow
     edge(g, 'start', 'msgs', 'init')
     edge(g, 'msgs', 'sup', 'read')
     edge(g, 'sup', 'next', 'set next')
     edge(g, 'next', 'res', '"researcher"')
-    edge(g, 'next', 'wri', '"writer"')
     edge(g, 'next', 'end', '"FINISH"')
-    edge(g, 'res', 'msgs', 'append result')
-    edge(g, 'wri', 'msgs', 'append draft')
-    edge(g, 'msgs', 'check', '', '#93c5fd')
+    edge(g, 'next', 'wri', '"writer"')
+
+    # Feedback loops — constraint=false keeps them from distorting rank layout
+    g.edge('res', 'msgs', 'append result',
+           color='#7c3aed', fontcolor='#475569', fontname='Helvetica Neue',
+           fontsize='9', penwidth='1.6', constraint='false')
+    g.edge('wri', 'msgs', 'append draft',
+           color='#7c3aed', fontcolor='#475569', fontname='Helvetica Neue',
+           fontsize='9', penwidth='1.6', constraint='false')
+
+    # Persistence side edge
+    g.edge('msgs', 'check', '',
+           color='#93c5fd', style='dashed', fontcolor='#475569',
+           fontname='Helvetica Neue', fontsize='9', penwidth='1.4',
+           constraint='false')
 
     out = os.path.join(OUT_DIR, 'langgraph-state-flow')
     g.render(out, cleanup=True)
@@ -170,32 +197,56 @@ def gen_async_checkpoint_webhook():
 # ─── 4. Retry State Counter & Circuit Breaker ────────────────────────────────
 def gen_async_retry_state():
     g = graphviz.Digraph('async_retry', format='png')
-    g.attr(rankdir='LR', label='Agent Loop Prevention: Retry Counter and Circuit Breaker',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+    g.attr(rankdir='TB', label='Agent Loop Prevention: Retry Counter and Circuit Breaker',
+           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b',
+           bgcolor='#ffffff', pad='0.7', nodesep='0.8', ranksep='1.0',
+           dpi='180', splines='spline')
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
+    # Entry
     node(g, 'agent', 'Agent Node', 'agent')
     node(g, 'incr', 'retries[tool]++', 'state')
-    node(g, 'check', 'retries >= MAX?', 'decision')
-    node(g, 'circuit', 'Circuit\nBreaker Open?', 'decision')
-    node(g, 'exec', 'Execute Tool', 'tool')
-    node(g, 'success', 'Success\ncontinue', 'good')
-    node(g, 'fail', 'Tool Error', 'warn')
-    node(g, 'backoff', 'Exponential\nBackoff', 'async')
-    node(g, 'escalate', 'Escalate\nto Human', 'amber')
 
+    # Decision tier
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'check', 'retries >= MAX?', 'decision')
+        node(s, 'escalate', 'Escalate\nto Human', 'amber')
+
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'circuit', 'Circuit\nBreaker Open?', 'decision')
+
+    # Execution tier
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'exec', 'Execute Tool', 'tool')
+        node(s, 'success', 'Success\ncontinue', 'good')
+
+    with g.subgraph() as s:
+        s.attr(rank='same')
+        node(s, 'fail', 'Tool Error', 'warn')
+        node(s, 'backoff', 'Exponential\nBackoff', 'async')
+
+    # Forward flow
     edge(g, 'agent', 'incr', 'call tool')
     edge(g, 'incr', 'check')
-    edge(g, 'check', 'escalate', 'YES')
+    edge(g, 'check', 'escalate', 'YES →')
     edge(g, 'check', 'circuit', 'NO')
-    edge(g, 'circuit', 'escalate', 'OPEN')
+    edge(g, 'circuit', 'escalate', 'OPEN →')
     edge(g, 'circuit', 'exec', 'CLOSED')
     edge(g, 'exec', 'success', 'ok')
     edge(g, 'exec', 'fail', 'error')
     edge(g, 'fail', 'backoff', 'transient')
-    edge(g, 'backoff', 'agent', 'retry')
-    edge(g, 'fail', 'agent', 'semantic')
+
+    # Feedback loops — constraint=false to avoid rank distortion
+    g.edge('backoff', 'agent', 'retry',
+           color='#0d9488', fontcolor='#475569', fontname='Helvetica Neue',
+           fontsize='9', penwidth='1.6', constraint='false')
+    g.edge('fail', 'agent', 'semantic fix',
+           color='#ef4444', fontcolor='#475569', fontname='Helvetica Neue',
+           fontsize='9', penwidth='1.6', constraint='false', style='dashed')
 
     out = os.path.join(OUT_DIR, 'async-retry-state')
     g.render(out, cleanup=True)
