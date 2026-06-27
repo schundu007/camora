@@ -202,6 +202,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [eraserImgUrl, setEraserImgUrl] = useState<string | null>(null);
   const [eraserLoading, setEraserLoading] = useState(false);
   const [eraserKey, setEraserKey] = useState('');
+  const [eraserError, setEraserError] = useState<string | null>(null);
 
   // Revoke blob URL when component unmounts to avoid memory leaks
   useEffect(() => () => { if (gvBlobRef.current) URL.revokeObjectURL(gvBlobRef.current); }, []);
@@ -682,6 +683,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     const currentKey = `${question}::${cloudProvider}`;
     if (eraserImgUrl && eraserKey === currentKey) return;
     setEraserImgUrl(null);
+    setEraserError(null);
     setEraserLoading(true);
     try {
       const r = await fetch(`${CAPRA_URL}/api/diagram/eraser`, {
@@ -695,10 +697,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         setEraserImgUrl(data.imageUrl);
         setEraserKey(currentKey);
       } else {
-        await dialogAlert(cleanErrorMsg(data.error));
+        setEraserError(cleanErrorMsg(data.error) || 'Diagram generation failed');
       }
     } catch (err: any) {
-      await dialogAlert(err.message || 'Network error');
+      setEraserError(err.message || 'Network error');
     }
     setEraserLoading(false);
   }, [question, token, eraserLoading, cloudProvider, eraserImgUrl, eraserKey]);
@@ -725,6 +727,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     setEraserImgUrl(null);
     setEraserKey('');
     setEraserLoading(false);
+    setEraserError(null);
     setDiagramTab('python');
     useSessionStore.getState().setLastFromCache(null);
     useSessionStore.getState().setLiveSolveContext(null);
@@ -1292,7 +1295,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {!eraserLoading && eraserImgUrl && (
                     <img src={eraserImgUrl} alt="Eraser architecture diagram" className="w-full rounded-lg" />
                   )}
-                  {!eraserLoading && !eraserImgUrl && (
+                  {!eraserLoading && !eraserImgUrl && eraserError && (
+                    <div className="py-3 px-3 rounded-lg text-[11px]" style={{ border: '1px solid var(--warning)', background: 'var(--bg-elevated)' }}>
+                      <p className="mb-2" style={{ color: 'var(--warning-text)' }}>{eraserError}</p>
+                      <button onClick={handleEraser} className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                  {!eraserLoading && !eraserImgUrl && !eraserError && (
                     <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
                       Click <strong>Eraser</strong> tab again to generate.
                     </div>

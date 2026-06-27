@@ -359,7 +359,7 @@ OUTPUT: Raw DOT source ONLY — no markdown fences, no explanations, just the di
 REQUIRED SKELETON:
 digraph G {
   graph [rankdir=LR bgcolor=white fontname="Helvetica" nodesep=0.5 ranksep=0.8 dpi=200 splines=ortho pad="0.6,0.6"]
-  node  [fontname="Helvetica" fontsize=11 margin="0.22,0.10" style="rounded,filled" penwidth=1.5 shape=box]
+  node  [fontname="Helvetica" fontsize=11 fontcolor="#1e293b" margin="0.22,0.10" style="rounded,filled" penwidth=1.5 shape=box]
   edge  [fontname="Helvetica" fontsize=9 color="#94a3b8" arrowsize=0.8 penwidth=1.2]
 
   clients [label="Clients\\n(Web / Mobile)" fillcolor="#f0f9ff" color="#0284c7" fontcolor="#0c4a6e"]
@@ -402,6 +402,7 @@ PALETTE — assign clusters based on function:
 
 RULES:
 - rankdir=LR is MANDATORY — never TB
+- ALWAYS set fontcolor on every node using a DARK color (#0c4a6e / #14532d / #78350f / #4c1d95 / #881337) so text is readable on light fills — NEVER use white, #fff, or #ffffff as fontcolor on any node
 - 8-14 nodes total — do not over-engineer
 - SHORT labels: 2-3 words max, use \\n for line breaks
 - Edge labels ONLY on the 3-5 most important paths (auth, cache miss, write, stream, etc.)
