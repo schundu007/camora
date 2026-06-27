@@ -101,14 +101,18 @@ async function bm25User(userId, question) {
 export async function hybridSearchKb(question, finalK, opts = {}) {
   const vec = opts.vec || await embedQuery(question);
   const sourceFilter = (Array.isArray(opts.sourceFilter) && opts.sourceFilter.length > 0) ? opts.sourceFilter : null;
-  const [v, b] = await Promise.all([vecKb(vec, sourceFilter), bm25Kb(question, sourceFilter)]);
-  return fuse([v, b], finalK);
+  const results = vec
+    ? await Promise.all([vecKb(vec, sourceFilter), bm25Kb(question, sourceFilter)])
+    : [[], await bm25Kb(question, sourceFilter)];
+  return fuse(results, finalK);
 }
 
 export async function hybridSearchUserDocs(userId, question, finalK, opts = {}) {
   const vec = opts.vec || await embedQuery(question);
-  const [v, b] = await Promise.all([vecUser(userId, vec), bm25User(userId, question)]);
-  return fuse([v, b], finalK);
+  const results = vec
+    ? await Promise.all([vecUser(userId, vec), bm25User(userId, question)])
+    : [[], await bm25User(userId, question)];
+  return fuse(results, finalK);
 }
 
 // ── Per-user code kit (RAG Phase 6) ──────────────────────────────────
@@ -147,6 +151,8 @@ async function bm25UserCode(userId, question) {
 
 export async function hybridSearchUserCode(userId, question, finalK, opts = {}) {
   const vec = opts.vec || await embedQuery(question);
-  const [v, b] = await Promise.all([vecUserCode(userId, vec), bm25UserCode(userId, question)]);
-  return fuse([v, b], finalK);
+  const results = vec
+    ? await Promise.all([vecUserCode(userId, vec), bm25UserCode(userId, question)])
+    : [[], await bm25UserCode(userId, question)];
+  return fuse(results, finalK);
 }
