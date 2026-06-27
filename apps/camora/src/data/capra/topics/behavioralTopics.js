@@ -115,10 +115,13 @@ export const behavioralTopics = [
       questions: 6,
       description: 'Your 60-90 second elevator pitch.',
 
-      introduction: `"Tell me about yourself" is often the first question in any interview and arguably the most important. It sets the tone for the entire conversation, shapes the interviewer's first impression, and—when done well—creates a narrative arc that guides every follow-up question in your favor. Studies from hiring platforms show that interviewers form a strong initial impression within the first 90 seconds, making this your highest-leverage moment.
+      introduction: `## Overview
+"Tell me about yourself" is often the first question in any interview and arguably the most important. It sets the tone for the entire conversation, shapes the interviewer's first impression, and—when done well—creates a narrative arc that guides every follow-up question in your favor. Studies from hiring platforms show that interviewers form a strong initial impression within the first 90 seconds, making this your highest-leverage moment.
 
-What interviewers are really testing: communication clarity (can you explain your career concisely?), self-awareness (do you know what's relevant?), and intentionality (do you have a clear career trajectory, or are you just drifting?). A great answer tells a story of deliberate growth—from where you started, through key inflection points, to why this specific role is the logical next chapter.
+## What Interviewers Test
+Communication clarity (can you explain your career concisely?), self-awareness (do you know what's relevant?), and intentionality (do you have a clear career trajectory, or are you just drifting?). A great answer tells a story of deliberate growth—from where you started, through key inflection points, to why this specific role is the logical next chapter.
 
+## Strong vs Weak Answers
 A mediocre answer recites a resume chronologically, buries the lead under irrelevant details, or rambles past the 90-second mark. A great answer is a curated highlight reel: 60-90 seconds, three to four sentences per section, ending with genuine enthusiasm for the role. The interviewer should walk away thinking, "This person knows exactly who they are and why they're here."`,
 
       keyQuestions: [
@@ -309,10 +312,13 @@ What excites me about [Your Company] is the scale of your technical challenges a
       questions: 6,
       description: 'Demonstrate leading without authority, mentoring, and driving results.',
 
-      introduction: `Leadership questions assess your ability to influence, guide, and enable others—regardless of your title. At FAANG companies, leadership is expected at every level: an L4/E4 engineer leads a feature, an L5/E5 leads a project, an L6/E6 leads a team or initiative. The question isn't whether you have "manager" in your title—it's whether you can step up, take ownership, and drive results through collaboration.
+      introduction: `## Overview
+Leadership questions assess your ability to influence, guide, and enable others—regardless of your title. At FAANG companies, leadership is expected at every level: an L4/E4 engineer leads a feature, an L5/E5 leads a project, an L6/E6 leads a team or initiative. The question isn't whether you have "manager" in your title—it's whether you can step up, take ownership, and drive results through collaboration.
 
-What interviewers are really testing: Can you influence without authority? Do you take initiative before being asked? Can you align people with different priorities toward a shared goal? Do you develop others, or just do the work yourself? The strongest signals come from stories where you led despite having no formal authority—where people followed you because of your ideas, not your title.
+## What Interviewers Test
+Can you influence without authority? Do you take initiative before being asked? Can you align people with different priorities toward a shared goal? Do you develop others, or just do the work yourself? The strongest signals come from stories where you led despite having no formal authority—where people followed you because of your ideas, not your title.
 
+## Strong vs Weak Answers
 A mediocre answer describes managing a project (assigning tickets, running standups). A great answer shows you changing the trajectory of a team or initiative: identifying a problem nobody else saw, rallying people around a solution, navigating resistance, and delivering measurable impact. The best leaders in tech don't just ship code—they multiply the output of everyone around them.`,
 
       keyQuestions: [
@@ -462,10 +468,13 @@ The key challenge was getting buy-in from teams who had already built their own 
       questions: 6,
       description: 'How you handle disagreements and difficult conversations.',
 
-      introduction: `Conflict is inevitable in any workplace—and interviewers know it. When they ask conflict questions, they're not looking for people who avoid disagreements (that's a red flag). They're looking for people who can engage in productive conflict: disagree respectfully, seek to understand before being understood, and turn friction into better outcomes.
+      introduction: `## Overview
+Conflict is inevitable in any workplace—and interviewers know it. When they ask conflict questions, they're not looking for people who avoid disagreements (that's a red flag). They're looking for people who can engage in productive conflict: disagree respectfully, seek to understand before being understood, and turn friction into better outcomes.
 
-What interviewers are testing: emotional intelligence (can you manage your own reactions?), communication skills (can you disagree without being disagreeable?), problem-solving under interpersonal pressure, and maturity (do you focus on the problem or the person?). At senior levels, they also assess whether you can navigate organizational politics and conflicting stakeholder interests without burning bridges.
+## What Interviewers Test
+Emotional intelligence (can you manage your own reactions?), communication skills (can you disagree without being disagreeable?), problem-solving under interpersonal pressure, and maturity (do you focus on the problem or the person?). At senior levels, they also assess whether you can navigate organizational politics and conflicting stakeholder interests without burning bridges.
 
+## Strong vs Weak Answers
 A mediocre answer sounds diplomatic but vague: "I listened to their perspective and we found a compromise." A great answer includes a specific technical disagreement with real stakes (not just a personality clash), shows your reasoning process, demonstrates genuine empathy for the other side, and arrives at a resolution that made the team stronger. The best conflict stories end with the relationship improving, not just surviving.`,
 
       keyQuestions: [
@@ -591,10 +600,13 @@ The data showed GraphQL reduced mobile payload sizes by 60% but did complicate o
       questions: 6,
       description: 'Show self-awareness and ability to learn from setbacks.',
 
-      introduction: `Failure questions are among the most important in behavioral interviews—and most candidates get them wrong. The biggest mistake is choosing a "safe" failure that's really a humble brag ("I worked too hard and burned out") or blaming external factors ("The requirements kept changing"). Interviewers see through both instantly.
+      introduction: `## Overview
+Failure questions are among the most important in behavioral interviews—and most candidates get them wrong. The biggest mistake is choosing a "safe" failure that's really a humble brag ("I worked too hard and burned out") or blaming external factors ("The requirements kept changing"). Interviewers see through both instantly.
 
-What interviewers are really testing: self-awareness (can you honestly assess what went wrong?), accountability (do you own the mistake or deflect?), resilience (did you recover or crumble?), and growth mindset (did you actually change your behavior?). At Amazon, this maps directly to "Earn Trust" and "Learn and Be Curious." At Google, it signals intellectual humility.
+## What Interviewers Test
+Self-awareness (can you honestly assess what went wrong?), accountability (do you own the mistake or deflect?), resilience (did you recover or crumble?), and growth mindset (did you actually change your behavior?). At Amazon, this maps directly to "Earn Trust" and "Learn and Be Curious." At Google, it signals intellectual humility.
 
+## The 30/70 Rule
 A great failure story follows the 30/70 rule: spend 30% describing what went wrong and 70% on what you learned, how you changed, and the evidence that you've applied those lessons since. The failure should be genuine and significant enough to matter—a production outage, a missed launch, a wrong architectural bet—but not career-ending. The learning should be specific and lasting: not "I learned to communicate better" but "I now run a pre-mortem before every launch, and the last three launches had zero P0 incidents."`,
 
       keyQuestions: [
@@ -714,10 +726,13 @@ What I changed permanently: I now require production-parity testing for any data
       questions: 6,
       description: 'Highlight your biggest wins and impact.',
 
-      introduction: `Achievement questions are your chance to sell yourself—and most engineers undersell. The typical mistake is describing what the team did without isolating your specific contribution, or leading with technical details before establishing business context. Interviewers have heard thousands of "I built a microservice" stories; what they remember are stories with clear stakes, clever decisions, and quantified outcomes.
+      introduction: `## Overview
+Achievement questions are your chance to sell yourself—and most engineers undersell. The typical mistake is describing what the team did without isolating your specific contribution, or leading with technical details before establishing business context. Interviewers have heard thousands of "I built a microservice" stories; what they remember are stories with clear stakes, clever decisions, and quantified outcomes.
 
-What interviewers are testing: Can you identify what matters (not just what's technically interesting)? Can you articulate YOUR unique contribution? Do you understand how technical work connects to business results? Can you handle a complex, high-stakes project from start to finish? The strongest candidates have 3-5 polished achievement stories that demonstrate different competencies: technical depth, leadership, innovation, business impact, and cross-functional influence.
+## What Interviewers Test
+Can you identify what matters (not just what's technically interesting)? Can you articulate YOUR unique contribution? Do you understand how technical work connects to business results? Can you handle a complex, high-stakes project from start to finish? The strongest candidates have 3-5 polished achievement stories that demonstrate different competencies: technical depth, leadership, innovation, business impact, and cross-functional influence.
 
+## Strong vs Weak Answers
 A mediocre achievement story sounds like a resume bullet: "I built a caching layer that improved performance." A great achievement story creates a narrative arc: stakes ("$50K/month in lost transactions"), diagnosis ("discovered a retry storm nobody else had identified"), decision-making ("chose circuit breaker over rate limiting because..."), impact ("99.9% uptime through Black Friday"), and ripple effects ("became the template for 3 other services"). Make the interviewer think, "I want this person solving OUR problems."`,
 
       keyQuestions: [
@@ -900,10 +915,13 @@ In its first quarter, the system detected 12 incidents an average of 23 minutes 
       questions: 6,
       description: 'Demonstrate analytical thinking and creative solutions.',
 
-      introduction: `Problem-solving questions are the behavioral equivalent of a coding interview—they assess HOW you think, not just what you did. Interviewers are watching for structured thinking, hypothesis-driven investigation, and the ability to navigate ambiguity without freezing up. These questions appear in every FAANG loop and carry significant weight in leveling decisions.
+      introduction: `## Overview
+Problem-solving questions are the behavioral equivalent of a coding interview—they assess HOW you think, not just what you did. Interviewers are watching for structured thinking, hypothesis-driven investigation, and the ability to navigate ambiguity without freezing up. These questions appear in every FAANG loop and carry significant weight in leveling decisions.
 
-What interviewers are testing: analytical rigor (do you break problems down systematically?), creativity (do you consider non-obvious solutions?), collaboration (do you leverage expertise from others?), and judgment (do you know when you have enough information to act vs. when to keep investigating?). At senior levels, they also assess whether you can identify the RIGHT problem to solve—not just solve the one handed to you.
+## What Interviewers Test
+Analytical rigor (do you break problems down systematically?), creativity (do you consider non-obvious solutions?), collaboration (do you leverage expertise from others?), and judgment (do you know when you have enough information to act vs. when to keep investigating?). At senior levels, they also assess whether you can identify the RIGHT problem to solve—not just solve the one handed to you.
 
+## Strong vs Weak Answers
 A mediocre answer describes solving a well-defined bug. A great answer shows you navigating genuine complexity: multiple root causes interacting, incomplete information, time pressure, cross-team dependencies, and a solution that required both technical depth and strategic thinking. The best problem-solving stories demonstrate that you don't just fight fires—you prevent them by seeing patterns others miss.`,
 
       keyQuestions: [
@@ -1112,10 +1130,13 @@ I redesigned the watermark strategy to use a tiered approach: different watermar
       questions: 6,
       description: 'The proven method for structuring behavioral answers.',
 
-      introduction: `The STAR method (Situation, Task, Action, Result) is the single most effective framework for answering behavioral interview questions. Every major tech company—Amazon, Google, Meta, Microsoft—evaluates behavioral answers using some form of this structure. Without it, candidates ramble, bury their contributions in team accomplishments, and leave interviewers guessing: "Who is 'we'?", "What was YOUR specific role?", "How much impact did you actually have?"
+      introduction: `## Overview
+The STAR method (Situation, Task, Action, Result) is the single most effective framework for answering behavioral interview questions. Every major tech company—Amazon, Google, Meta, Microsoft—evaluates behavioral answers using some form of this structure. Without it, candidates ramble, bury their contributions in team accomplishments, and leave interviewers guessing: "Who is 'we'?", "What was YOUR specific role?", "How much impact did you actually have?"
 
-But STAR is a compass, not a cage. The best candidates internalize the framework so deeply that their answers feel natural and conversational while still hitting every structural element. The goal is to tell a compelling story where the interviewer can clearly identify the challenge, your unique contribution, and the measurable outcome—all in 2-3 minutes.
+## Using STAR Naturally
+STAR is a compass, not a cage. The best candidates internalize the framework so deeply that their answers feel natural and conversational while still hitting every structural element. The goal is to tell a compelling story where the interviewer can clearly identify the challenge, your unique contribution, and the measurable outcome—all in 2-3 minutes.
 
+## Time Allocation
 The most common mistake is spending 60% of the answer on Situation and Task (the setup) and rushing through Action and Result (the payoff). The ideal ratio is roughly 15% Situation, 10% Task, 50% Action, and 25% Result. Your actions are what demonstrate your competency—that's where interviewers are scoring you. The result seals the deal with quantified impact.`,
 
       keyQuestions: [
@@ -1264,7 +1285,8 @@ Key Principle: Follow-ups are where interviewers separate rehearsed answers from
       questions: 5,
       description: 'Build a library of powerful interview stories.',
 
-      introduction: `A Story Bank is your interview preparation document—a curated collection of professional experiences that demonstrate key competencies. Having this prepared is "the single greatest thing you can do to reduce interview anxiety and boost your performance." Instead of trying to think of examples on the spot, you'll have ready-to-use stories for any question.`,
+      introduction: `## Overview
+A Story Bank is your interview preparation document—a curated collection of professional experiences that demonstrate key competencies. Having this prepared is "the single greatest thing you can do to reduce interview anxiety and boost your performance." Instead of trying to think of examples on the spot, you'll have ready-to-use stories for any question.`,
 
       keyQuestions: [
         {
@@ -1400,10 +1422,13 @@ Pro Tip: Each story should be versatile enough to answer multiple question types
       questions: 6,
       description: 'Show genuine interest and research.',
 
-      introduction: `"Why this company?" seems simple but it's a trap for the unprepared. Generic answers—"Great culture," "Interesting problems," "I admire your mission"—signal that you're applying broadly and haven't done real research. Interviewers hear these empty phrases dozens of times per week and immediately discount them.
+      introduction: `## Overview
+"Why this company?" seems simple but it's a trap for the unprepared. Generic answers—"Great culture," "Interesting problems," "I admire your mission"—signal that you're applying broadly and haven't done real research. Interviewers hear these empty phrases dozens of times per week and immediately discount them.
 
-What interviewers are testing: Have you invested time understanding what makes THIS company different? Can you articulate specific technical challenges, product directions, or cultural values that genuinely excite you? Is there authentic alignment between your career trajectory and what this role offers? The best answers reference something you could only know from real research: a recent engineering blog post, a specific product decision, a team's approach to a technical problem, or an insight from talking to current employees.
+## What Interviewers Test
+Have you invested time understanding what makes THIS company different? Can you articulate specific technical challenges, product directions, or cultural values that genuinely excite you? Is there authentic alignment between your career trajectory and what this role offers? The best answers reference something you could only know from real research: a recent engineering blog post, a specific product decision, a team's approach to a technical problem, or an insight from talking to current employees.
 
+## Strong vs Weak Answers
 A mediocre answer is interchangeable across companies—you could say it at Google, Stripe, or a random startup. A great answer is so specific that it could only apply to THIS company. It connects three threads: something genuine about the company that excites you, something specific about the role that matches your skills, and something about your career direction that makes this the logical next step. When done well, the interviewer thinks, "This person actually gets us."`,
 
       keyQuestions: [
@@ -1522,7 +1547,8 @@ Third, I talked to two engineers on the team through a mutual connection, and bo
       questions: 6,
       description: 'Working effectively across organizational boundaries.',
 
-      introduction: `Modern product development requires engineers to collaborate effectively with Product Managers, UX Designers, QA, and other engineering teams—each with distinct goals and perspectives. These questions assess your ability to work across boundaries, influence without authority, and deliver results through partnership.`,
+      introduction: `## Overview
+Modern product development requires engineers to collaborate effectively with Product Managers, UX Designers, QA, and other engineering teams—each with distinct goals and perspectives. These questions assess your ability to work across boundaries, influence without authority, and deliver results through partnership.`,
 
       keyQuestions: [
         {
@@ -1604,7 +1630,8 @@ Taking All Credit
       questions: 5,
       description: 'Demonstrate coachability and growth mindset.',
 
-      introduction: `Feedback questions assess whether you're coachable—can you receive criticism constructively, learn from it, and grow? Companies want people who will improve over time, not those who become defensive or dismiss input. A red flag: claiming you've never received critical feedback suggests difficulty accepting growth.`,
+      introduction: `## Overview
+Feedback questions assess whether you're coachable—can you receive criticism constructively, learn from it, and grow? Companies want people who will improve over time, not those who become defensive or dismiss input. A red flag: claiming you've never received critical feedback suggests difficulty accepting growth.`,
 
       keyQuestions: [
         {
@@ -1668,7 +1695,8 @@ Example: "Within a month, team members said my reviews were more helpful. I than
       questions: 5,
       description: 'Managing competing priorities and tight deadlines.',
 
-      introduction: `Time management questions assess whether you have a systematic approach to prioritization, or if you just "work harder" when things pile up. Companies want people who can make strategic decisions about where to focus, communicate proactively about constraints, and deliver consistently even under pressure.`,
+      introduction: `## Overview
+Time management questions assess whether you have a systematic approach to prioritization, or if you just "work harder" when things pile up. Companies want people who can make strategic decisions about where to focus, communicate proactively about constraints, and deliver consistently even under pressure.`,
 
       keyQuestions: [
         {
@@ -1731,7 +1759,8 @@ Red Flags
       questions: 4,
       description: 'Show adaptability and self-directed learning.',
 
-      introduction: `Technology evolves constantly, so companies want engineers who can quickly learn and apply new skills. These questions assess whether you're a self-directed learner with a systematic approach, or someone who waits for formal training. The best answers show methodology, hands-on application, and eventual mastery.`,
+      introduction: `## Overview
+Technology evolves constantly, so companies want engineers who can quickly learn and apply new skills. These questions assess whether you're a self-directed learner with a systematic approach, or someone who waits for formal training. The best answers show methodology, hands-on application, and eventual mastery.`,
 
       keyQuestions: [
         {
@@ -1800,7 +1829,8 @@ Red Flags to Avoid
       questions: 4,
       description: 'Communicate complex ideas clearly to any audience.',
 
-      introduction: `This question assesses whether you can bridge the gap between technical and non-technical worlds—a crucial skill for senior engineers who must work with product managers, executives, and customers. The best answers show empathy for the audience, use effective analogies, and connect technical details to business outcomes.`,
+      introduction: `## Overview
+This question assesses whether you can bridge the gap between technical and non-technical worlds—a crucial skill for senior engineers who must work with product managers, executives, and customers. The best answers show empathy for the audience, use effective analogies, and connect technical details to business outcomes.`,
 
       keyQuestions: [
         {
@@ -1860,7 +1890,8 @@ Clearly state costs or constraints.
       questions: 5,
       description: 'Understanding the purpose and format of behavioral interviews.',
 
-      introduction: `Behavioral interviews are structured conversations where interviewers assess how you've handled real situations in the past. The fundamental premise is that past behavior is the best predictor of future behavior. Unlike technical interviews that test skills, behavioral interviews reveal your soft skills, work style, and cultural fit.`,
+      introduction: `## Overview
+Behavioral interviews are structured conversations where interviewers assess how you've handled real situations in the past. The fundamental premise is that past behavior is the best predictor of future behavior. Unlike technical interviews that test skills, behavioral interviews reveal your soft skills, work style, and cultural fit.`,
 
       keyQuestions: [
         {
@@ -1942,7 +1973,8 @@ Week 4: Practice & Refine
       questions: 4,
       description: 'Navigate deeper probing questions with confidence.',
 
-      introduction: `Follow-up questions are where behavioral interviews get real. Interviewers use them to probe deeper, verify details, and see how you think on your feet. Being prepared for follow-ups separates good candidates from great ones.`,
+      introduction: `## Overview
+Follow-up questions are where behavioral interviews get real. Interviewers use them to probe deeper, verify details, and see how you think on your feet. Being prepared for follow-ups separates good candidates from great ones.`,
 
       keyQuestions: [
         {
@@ -2013,7 +2045,8 @@ OR
       questions: 3,
       description: 'Explain your career transition positively and professionally.',
 
-      introduction: `"Why are you leaving your current role?" is a delicate question that requires careful framing. Interviewers want to understand your motivations and ensure you won't badmouth employers. The key is to be honest while staying positive and focusing on growth.`,
+      introduction: `## Overview
+"Why are you leaving your current role?" is a delicate question that requires careful framing. Interviewers want to understand your motivations and ensure you won't badmouth employers. The key is to be honest while staying positive and focusing on growth.`,
 
       keyQuestions: [
         {
@@ -2075,7 +2108,8 @@ Key Principles:
       questions: 4,
       description: 'Showcase your best work and demonstrate impact.',
 
-      introduction: `"Tell me about a project you're most proud of" is your chance to shine. This question assesses technical depth, ownership, impact, and your ability to articulate complex work. Choose a project where you can demonstrate clear ownership and measurable outcomes.`,
+      introduction: `## Overview
+"Tell me about a project you're most proud of" is your chance to shine. This question assesses technical depth, ownership, impact, and your ability to articulate complex work. Choose a project where you can demonstrate clear ownership and measurable outcomes.`,
 
       keyQuestions: [
         {
@@ -2150,7 +2184,8 @@ Specific metrics and business impact:
       questions: 4,
       description: 'Show how you develop and support others.',
 
-      introduction: `Mentoring questions assess your ability to develop others—a crucial skill for senior engineers and leaders. Companies want to see that you can transfer knowledge, provide feedback, and help others grow while maintaining productivity.`,
+      introduction: `## Overview
+Mentoring questions assess your ability to develop others—a crucial skill for senior engineers and leaders. Companies want to see that you can transfer knowledge, provide feedback, and help others grow while maintaining productivity.`,
 
       keyQuestions: [
         {
@@ -2212,7 +2247,8 @@ The key was meeting her where she was and progressively increasing autonomy."`
       questions: 3,
       description: 'Navigate hierarchy conflicts professionally.',
 
-      introduction: `Disagreeing with your manager is delicate territory. Interviewers want to see that you can advocate for your position while respecting hierarchy, ultimately committing to decisions even when you disagree. This tests your professionalism, communication, and ability to disagree constructively.`,
+      introduction: `## Overview
+Disagreeing with your manager is delicate territory. Interviewers want to see that you can advocate for your position while respecting hierarchy, ultimately committing to decisions even when you disagree. This tests your professionalism, communication, and ability to disagree constructively.`,
 
       keyQuestions: [
         {
