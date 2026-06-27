@@ -9,23 +9,23 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 BASE_GRAPH = {
     'bgcolor': '#ffffff',
-    'pad': '0.5',
-    'nodesep': '0.55',
-    'ranksep': '0.75',
-    'dpi': '180',
-    'splines': 'ortho',
+    'pad': '0.6',
+    'nodesep': '0.65',
+    'ranksep': '0.85',
+    'dpi': '200',
+    'splines': 'spline',
 }
 BASE_NODE = {
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '11',
     'penwidth': '1.5',
     'height': '0.45',
-    'margin': '0.18,0.10',
+    'margin': '0.20,0.12',
     'style': 'filled,rounded',
     'shape': 'box',
 }
 BASE_EDGE = {
-    'fontname': 'Helvetica Neue',
+    'fontname': 'Helvetica',
     'fontsize': '9',
     'penwidth': '1.6',
 }
@@ -58,7 +58,7 @@ def edge(g, a, b, label='', color='#64748b'):
 def gen_langgraph_supervisor():
     g = graphviz.Digraph('langgraph_supervisor', format='png')
     g.attr(rankdir='TB', label='LangGraph Supervisor Multi-Agent Architecture',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b', **BASE_GRAPH)
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
@@ -107,9 +107,9 @@ def gen_langgraph_supervisor():
 def gen_langgraph_state_flow():
     g = graphviz.Digraph('langgraph_state', format='png')
     g.attr(rankdir='TB', label='LangGraph State and Message Flow',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b',
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b',
            bgcolor='#ffffff', pad='0.7', nodesep='0.9', ranksep='1.1',
-           dpi='180', splines='spline')
+           dpi='200', splines='spline')
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
@@ -145,16 +145,16 @@ def gen_langgraph_state_flow():
 
     # Feedback loops — constraint=false keeps them from distorting rank layout
     g.edge('res', 'msgs', 'append result',
-           color='#7c3aed', fontcolor='#475569', fontname='Helvetica Neue',
+           color='#7c3aed', fontcolor='#475569', fontname='Helvetica',
            fontsize='9', penwidth='1.6', constraint='false')
     g.edge('wri', 'msgs', 'append draft',
-           color='#7c3aed', fontcolor='#475569', fontname='Helvetica Neue',
+           color='#7c3aed', fontcolor='#475569', fontname='Helvetica',
            fontsize='9', penwidth='1.6', constraint='false')
 
     # Persistence side edge
     g.edge('msgs', 'check', '',
            color='#93c5fd', style='dashed', fontcolor='#475569',
-           fontname='Helvetica Neue', fontsize='9', penwidth='1.4',
+           fontname='Helvetica', fontsize='9', penwidth='1.4',
            constraint='false')
 
     out = os.path.join(OUT_DIR, 'langgraph-state-flow')
@@ -165,8 +165,8 @@ def gen_langgraph_state_flow():
 # ─── 3. Async Checkpoint + Webhook ───────────────────────────────────────────
 def gen_async_checkpoint_webhook():
     g = graphviz.Digraph('async_checkpoint', format='png')
-    g.attr(rankdir='TB', label='Async Long-Running Tool: Checkpoint + Webhook Pattern',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+    g.attr(rankdir='LR', label='Async Long-Running Tool: Checkpoint + Webhook Pattern',
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b', **BASE_GRAPH)
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
@@ -198,9 +198,9 @@ def gen_async_checkpoint_webhook():
 def gen_async_retry_state():
     g = graphviz.Digraph('async_retry', format='png')
     g.attr(rankdir='TB', label='Agent Loop Prevention: Retry Counter and Circuit Breaker',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b',
-           bgcolor='#ffffff', pad='0.7', nodesep='0.8', ranksep='1.0',
-           dpi='180', splines='spline')
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b',
+           bgcolor='#ffffff', pad='0.7', nodesep='0.9', ranksep='1.1',
+           dpi='200', splines='spline')
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
@@ -242,10 +242,10 @@ def gen_async_retry_state():
 
     # Feedback loops — constraint=false to avoid rank distortion
     g.edge('backoff', 'agent', 'retry',
-           color='#0d9488', fontcolor='#475569', fontname='Helvetica Neue',
+           color='#0d9488', fontcolor='#475569', fontname='Helvetica',
            fontsize='9', penwidth='1.6', constraint='false')
     g.edge('fail', 'agent', 'semantic fix',
-           color='#ef4444', fontcolor='#475569', fontname='Helvetica Neue',
+           color='#ef4444', fontcolor='#475569', fontname='Helvetica',
            fontsize='9', penwidth='1.6', constraint='false', style='dashed')
 
     out = os.path.join(OUT_DIR, 'async-retry-state')
@@ -256,8 +256,8 @@ def gen_async_retry_state():
 # ─── 5. Context Window Management 3-Tier ─────────────────────────────────────
 def gen_context_window_mgmt():
     g = graphviz.Digraph('context_window', format='png')
-    g.attr(rankdir='TB', label='Context Window Management: 3-Tier Hybrid Architecture',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+    g.attr(rankdir='LR', label='Context Window Management: 3-Tier Hybrid Architecture',
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b', **BASE_GRAPH)
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
@@ -304,7 +304,7 @@ def gen_context_window_mgmt():
 def gen_summarization_flow():
     g = graphviz.Digraph('summarization_flow', format='png')
     g.attr(rankdir='LR', label='Summarization Node: LangGraph Conditional Flow',
-           labelloc='t', fontsize='14', fontname='Helvetica Neue', fontcolor='#1e293b', **BASE_GRAPH)
+           labelloc='t', fontsize='14', fontname='Helvetica', fontcolor='#1e293b', **BASE_GRAPH)
     g.attr('node', **BASE_NODE)
     g.attr('edge', **BASE_EDGE)
 
