@@ -22,19 +22,19 @@ export const agenticTopics = [
     description: 'Design multi-agent pipelines using the LangGraph Supervisor pattern. Covers StateGraph construction, TypedDict shared state, add_messages reducer, checkpointers, human-in-the-loop interrupts, parallel branches, and error routing between specialist agents.',
     introduction: `Multi-agent systems divide complex tasks across specialist agents that each focus on one narrow concern. LangGraph is the graph-based orchestration layer that wires them together -- it turns agents into graph nodes and messages into edges, giving you explicit control over routing, state, and persistence that a single monolithic agent chain cannot provide.
 
-## LangGraph fundamentals
+LangGraph fundamentals
 
 LangGraph models execution as a directed graph. Nodes are Python functions (or Runnables) that take the current state and return an updated state. Edges connect nodes and can be conditional -- the graph decides the next node based on the current state value. A StateGraph is compiled into a runnable graph object with a stream or invoke interface. The core objects are: StateGraph, the compiled graph (via .compile()), a state TypedDict, and the optional checkpointer for persistence.
 
 The state schema is defined as a Python TypedDict. Every node receives the full state dict and returns a partial dict of updates. LangGraph merges the partial dict into the current state using reducers. The built-in add_messages reducer appends to a messages list rather than replacing it -- this is the fundamental primitive that enables multi-turn conversation within a graph.
 
-## The Supervisor pattern
+The Supervisor pattern
 
 The Supervisor pattern introduces a router node that sits above all specialist agents. It reads the latest message in state and decides which agent should handle the next step. The supervisor does not perform work itself -- it dispatches. Specialist agents perform work and return results by appending to the messages list. The graph loops back to the supervisor after each agent completes, allowing the supervisor to decide whether to call another agent, refine a result, or terminate.
 
 For a Researcher-Writer pipeline: the supervisor first routes to the Researcher node. The Researcher uses web search tools, appends a structured research summary to messages, and returns. The supervisor reads that summary and routes to the Writer. The Writer drafts a report based on the accumulated messages and appends the draft. The supervisor may route back to the Researcher for a gap-fill pass, or it may terminate with the final draft as the graph output.
 
-## Shared state and message passing
+Shared state and message passing
 
 The state TypedDict carries all inter-agent communication. A minimal schema for the Researcher-Writer system looks like:
 
@@ -49,17 +49,17 @@ class AgentState(TypedDict):
 
 Each agent reads from messages -- a list of HumanMessage, AIMessage, and ToolMessage objects -- and returns new messages that are appended by the reducer. The supervisor reads state.messages[-1] (or a parsed field like research_complete) to make its routing decision. Agents never call each other directly; all communication flows through the shared state.
 
-## Checkpointers for state persistence
+Checkpointers for state persistence
 
 A checkpointer persists the full state snapshot at every superstep. MemorySaver stores state in a Python dict in memory -- suitable for development, single-process, short-lived sessions. SqliteSaver persists to a SQLite file and survives process restarts. PostgresSaver (via langgraph-checkpoint-postgres) is the production option for multi-process or cloud deployments.
 
 The checkpointer is passed at compile time: graph.compile(checkpointer=SqliteSaver.from_conn_string("checkpoints.db")). At runtime, every invoke or stream call accepts a config dict with a thread_id. The checkpointer uses the thread_id as the key -- two calls with the same thread_id resume the same conversation; a new thread_id starts a fresh execution. This is what makes sessions stateful across HTTP requests.
 
-## Human-in-the-loop
+Human-in-the-loop
 
 LangGraph's interrupt_before and interrupt_after mechanisms pause execution at a named node boundary. When a graph is compiled with interrupt_before=["writer"], execution halts before the Writer node runs and returns control to the caller. The caller can inspect state, modify it, and call graph.update_state() to inject changes, then resume by calling invoke again with the same thread_id. This is the standard pattern for approval checkpoints -- show the user the research summary before committing to a full report draft.
 
-## Error handling and fallback routing
+Error handling and fallback routing
 
 The supervisor's routing function can inspect the last message for error markers. If the Researcher node raises an exception or returns a low-confidence result, the supervisor routes to a Fallback node (which might try a different data source) or to a RetryResearcher node with a revised query. LangGraph's conditional edges accept a Python function that returns the name of the next node as a string -- error routing is just another branch in that function.`,
     quickFire: [
@@ -206,13 +206,13 @@ interrupt_after=["researcher"] is the symmetric alternative: it halts after the 
     description: 'Handling tool calls that take minutes rather than seconds -- checkpoint-and-suspend patterns, async polling, webhook resumption, SSE progress streaming, durable execution with Temporal and Step Functions, and idempotency requirements for retriable tool invocations.',
     introduction: `Standard LLM tool use assumes the tool returns within the inference timeout window -- typically a few seconds. A data pipeline, a batch job, a video transcoding task, or a model fine-tuning run can take five minutes to an hour. Bridging that gap without holding an open server connection or blocking the LLM context thread requires a specific set of patterns that sit at the intersection of agentic orchestration and distributed systems.
 
-## The fundamental mismatch
+The fundamental mismatch
 
 LLMs are designed for synchronous request-response cycles. When an LLM calls a tool, the expectation is that the result comes back in the same call. Inference infrastructure (API servers, load balancers, connection pools) is built around this assumption with hard timeouts typically in the 30-60 second range. A 5-minute pipeline run violates every timeout at every layer of the stack.
 
 The solution is never to hold the connection open. Instead, the agent must initiate the long-running task, record that it has been initiated, immediately release the connection, and later resume from where it left off when the task completes. This requires three things: a checkpointer to persist agent state, a mechanism for the external task to notify the agent when complete, and idempotent tool invocations so that safe retry is possible.
 
-## Pattern 1: Checkpoint-suspend-webhook-resume
+Pattern 1: Checkpoint-suspend-webhook-resume
 
 This is the canonical pattern for LangGraph. The tool invocation node starts the external pipeline (HTTP call to trigger the job), receives a job_id, stores it in the agent state, and then triggers a graph interrupt. The graph suspends. The caller returns the current state to the user with a "pipeline started" status.
 
@@ -227,21 +227,21 @@ class PipelineState(TypedDict):
     pipeline_result: dict | None
     started_at: str | None
 
-## Pattern 2: Async polling
+Pattern 2: Async polling
 
 When webhooks are not available (third-party services that only expose status endpoints), an alternative is a polling node. The agent starts the job, stores the job_id, and routes to a Poller node. The Poller checks the status endpoint and returns the job_id back to state if still running. A conditional edge loops back to the Poller on "running" and proceeds to the next stage on "complete". An exponential-backoff sleep between polls prevents hammering the status endpoint.
 
 The trade-off: polling holds a long-running graph execution thread (or relies on scheduled graph resumptions). For jobs longer than a few minutes, the checkpoint-suspend-webhook pattern is superior because no thread is held.
 
-## Pattern 3: SSE streaming for user experience
+Pattern 3: SSE streaming for user experience
 
 Regardless of how the agent state is managed, the user should never stare at a spinner. Server-Sent Events (SSE) provide a standard mechanism for pushing progress updates from server to browser over a single HTTP connection. When the pipeline is triggered, the server sends a stream of events: "status: pipeline started", "status: 20% complete", "status: 80% complete", "status: complete, resuming agent". The agent logic is decoupled from the SSE stream -- a background thread or async task emits progress events while the webhook-resume path handles actual graph resumption.
 
-## Durable execution: Temporal and AWS Step Functions
+Durable execution: Temporal and AWS Step Functions
 
 For workflows that span hours or days, LangGraph checkpointers are often insufficient -- they are optimized for conversation-length persistence, not workflow-engine durability. Temporal and AWS Step Functions provide durable execution primitives: activity retries with configurable policies, workflow versioning, event history replay, and saga patterns for multi-step compensation. An agentic system that must tolerate multi-hour failures and guarantee exactly-once execution of side effects should reach for Temporal or Step Functions rather than extending LangGraph checkpoints to handle that complexity.
 
-## Idempotency
+Idempotency
 
 Every tool invocation in an async system must be idempotent. If the agent process crashes after triggering the pipeline but before recording the job_id, resuming from the checkpoint will trigger the pipeline again. The tool must accept an idempotency key (a UUID generated by the agent before the call, stored in state) and deduplicate on the server side. This single requirement eliminates the "we triggered the pipeline twice" failure mode that shows up in every production agentic system.`,
     quickFire: [
@@ -334,11 +334,11 @@ Error states: if the pipeline fails, the SSE stream emits an error event with a 
     description: 'Managing token budgets in multi-day, multi-turn agents -- sliding window truncation, LangGraph summarization nodes with the trim_messages utility, vector DB offloading of episodic memory, hybrid summarization-plus-retrieval architectures, and the LangGraph 0.3+ Store API for cross-thread persistent memory.',
     introduction: `Production agents that span days or weeks face a hard physical constraint: the LLM context window. Claude 3.5 Sonnet and GPT-4o both offer 128K-token windows. A multi-day conversation with a power user -- including tool call round-trips, retrieved documents, and verbose AI responses -- can accumulate tens of thousands of tokens per hour. Within one business day, the raw history exceeds the context limit. Without active management, the agent either crashes with a context-length error or the developer adds silent truncation that loses critical early context without the user knowing.
 
-## The problem: what you cannot fit, the model cannot use
+The problem: what you cannot fit, the model cannot use
 
 Context window overflow is not just a technical error -- it is a user experience failure. An agent that cannot remember a key constraint the user specified two hours ago is not useful as a persistent assistant. The architectural challenge is to keep the model's effective working memory as large as possible within the physical token budget, while preserving the facts, decisions, and commitments that matter most across sessions that span days.
 
-## Strategy 1: Sliding window truncation
+Strategy 1: Sliding window truncation
 
 The simplest strategy is to keep only the last N messages in the prompt. When the message list exceeds a threshold, drop the oldest messages. LangGraph provides trim_messages() as a utility that trims a message list to a maximum token count, preserving the system message and the most recent messages.
 
@@ -354,7 +354,7 @@ trimmed = trim_messages(
 
 The critical weakness: early context is permanently lost. If the user specified a constraint on day one ("never recommend solutions that require vendor lock-in"), that constraint disappears from the window and the model behaves as if it was never stated.
 
-## Strategy 2: Summarization node
+Strategy 2: Summarization node
 
 A summarization node compresses old messages into a running summary when the message count or token count exceeds a threshold. The summary becomes a synthetic message at the top of the context that conveys the essence of what happened, and the raw messages it replaced are discarded from the active window.
 
@@ -362,7 +362,7 @@ In LangGraph, this is a conditional node. A conditional edge checks len(state["m
 
 The summary is itself stored as a field in state (running_summary: str) so it persists across truncation cycles. Each subsequent summarization extends the previous summary rather than re-summarizing from scratch, preventing the summary from growing unboundedly.
 
-## Strategy 3: Vector DB offloading
+Strategy 3: Vector DB offloading
 
 Vector database offloading treats every message exchange as a document to be embedded and stored. When context pressure mounts, instead of summarizing, the agent offloads old exchanges to a vector store (Pinecone, pgvector on PostgreSQL, Weaviate, or Chroma) and retrieves only the exchanges most semantically relevant to the current query.
 
@@ -370,19 +370,19 @@ At the start of each turn, the agent embeds the current user message, queries th
 
 The advantage over summarization is that no information is lost -- all past exchanges remain retrievable. The disadvantage is that retrieval-based recall can miss context that is not semantically similar to the current query but is nonetheless important (for example, a preference stated in a different vocabulary than the current query).
 
-## Strategy 4: Hybrid summarization plus vector retrieval
+Strategy 4: Hybrid summarization plus vector retrieval
 
 The production pattern for multi-day agents combines both strategies. Short-term recent context (last 20 exchanges) stays in the active message window verbatim. Medium-term context (exchanges from the last few hours) is compressed into a rolling summary stored in the state. Long-term episodic context (exchanges from prior sessions or days ago) is offloaded to a vector store and retrieved on demand.
 
 The LLM prompt structure is: [System prompt] + [Long-term retrieval: top-k relevant past exchanges] + [Running summary of medium-term history] + [Recent messages verbatim]. This gives the model accurate recent context, compressed middle history, and semantically targeted recall from the distant past -- all within the token budget.
 
-## The LangGraph Store API
+The LangGraph Store API
 
 LangGraph 0.3+ introduces a Store abstraction specifically for cross-thread, cross-session persistent memory. Unlike checkpointers (which scope state to a thread_id), the Store is a key-value namespace that persists data independently of any particular graph run. InMemoryStore is the development option. PostgresStore is the production option -- it stores data in a PostgreSQL table indexed by namespace and key.
 
 The Store is used for semantic memory (user preferences, long-term facts) and for cross-session user profiles. A node that needs to remember that a user prefers concise answers writes {"preference": "concise"} to the Store under the user's namespace. Any subsequent graph run for that user -- regardless of thread_id -- reads this preference from the Store. This is the correct architecture for preferences and facts that should persist across all sessions, separate from the episodic message history that is scoped to a thread.
 
-## Memory type taxonomy
+Memory type taxonomy
 
 Three memory types serve different roles in persistent agents. Semantic memory holds facts and propositions: "the user works in financial services", "the project uses PostgreSQL 15". These change slowly and should be stored in the LangGraph Store or a dedicated user profile table. Episodic memory holds event sequences: "the user asked about schema design on June 10, we decided on a normalized approach". These are best stored in the vector DB with timestamp metadata. Procedural memory holds workflow knowledge: "to deploy this project, run X then Y then Z". These belong in the system prompt or a retrieved knowledge base, not the conversation history. Conflating these memory types into a single undifferentiated message list is the architectural mistake that causes context management to fail at scale.`,
     quickFire: [

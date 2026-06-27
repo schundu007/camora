@@ -77,6 +77,19 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
     return () => document.removeEventListener('wheel', handler);
   }, [imageUrl]);
 
+  // Document-level mouseup so releasing outside the container always clears drag state.
+  useEffect(() => {
+    const cancel = () => { dragRef.current.active = false; setIsDragging(false); };
+    document.addEventListener('mouseup', cancel);
+    return () => document.removeEventListener('mouseup', cancel);
+  }, []);
+
+  // Reset drag state whenever the image changes (e.g. provider switch mid-drag).
+  useEffect(() => {
+    dragRef.current = { active: false, x: 0, y: 0, sl: 0, st: 0 };
+    setIsDragging(false);
+  }, [imageUrl]);
+
   // Step 1: Cache-only lookup (fast, no generation)
   useEffect(() => {
     if (!question || !token) return;
@@ -265,7 +278,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
             cursor: isDragging ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in',
           }}
           onMouseDown={e => {
-            if (e.button !== 0 || !containerRef.current) return;
+            if (e.button !== 0 || !containerRef.current || scale <= 1) return;
             dragRef.current = { active: true, x: e.clientX, y: e.clientY, sl: containerRef.current.scrollLeft, st: containerRef.current.scrollTop };
             setIsDragging(true);
             e.preventDefault();

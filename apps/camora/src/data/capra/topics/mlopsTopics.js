@@ -45,11 +45,11 @@ export const mlopsTopics = [
     description: 'End-to-end machine-learning lifecycle as an engineering discipline — data ingestion, feature engineering, training, evaluation, registration, deployment, monitoring, retraining. Covers CI for ML (data validation, model tests), CD for ML (canary, shadow, A/B), Google MLOps maturity 0/1/2, and 2026 platforms.',
     introduction: `MLOps is the discipline of applying DevOps principles to machine-learning systems. Where DevOps versions code and configuration, MLOps versions code, data, features, models, and the training pipeline itself. The goal is to shorten the cycle from idea to production model and then keep that model performing reliably over time.
 
-## Why MLOps exists
+Why MLOps exists
 
 A model trained once and never retouched will degrade. Data distributions shift, labels become stale, upstream schemas change, and business rules evolve. Without systematic processes, teams discover model failures from user complaints rather than monitoring dashboards. MLOps builds the discipline that catches these failures early and closes the loop from detection back to retraining.
 
-## The eight-stage lifecycle
+The eight-stage lifecycle
 
 The lifecycle begins at data ingestion -- raw data from operational sources (Kafka, CDC, batch exports, REST APIs) flows into a data lake or warehouse where schema is enforced and lineage is recorded. Feature engineering transforms raw rows into model inputs across two physical paths: offline batch computation for training and low-latency online serving for inference, which is exactly the problem feature stores were built to solve.
 
@@ -57,11 +57,11 @@ Training produces an artifact tracked in an experiment store with full reproduci
 
 Deployment moves the registered artifact into a serving environment using one of three patterns: canary (small real traffic), shadow (mirrored traffic, predictions never returned), or A/B (split users for statistical comparison). Monitoring watches both operational signals (latency, error rate) and model-quality signals (input drift, output distribution, delayed performance). When signals cross thresholds, retraining is triggered, completing the closed loop that distinguishes MLOps from one-off model training.
 
-## Google MLOps maturity levels
+Google MLOps maturity levels
 
 Google's three-level maturity model is the standard framework for assessing an organization's MLOps sophistication. Level 0 is manual -- data scientists work in notebooks, hand off pickle files, and engineers re-implement feature pipelines. Most companies live at Level 0. Level 1 automates the training pipeline: code runs on schedule or data trigger, models flow through a registry, and continuous training happens with manual deployment gates. Level 2 automates the pipeline itself through CI/CD -- new code triggers a pipeline build, which produces a new training pipeline, which produces a new registered model, which deploys automatically. Level 2 is the operating standard for high-volume recommendation, search, and ads systems.
 
-## The 2026 platform landscape
+The 2026 platform landscape
 
 Databricks (Lakehouse + MLflow + Feature Store + Model Serving) dominates teams on Spark and Delta Lake. Vertex AI (GCP), SageMaker (AWS), and Azure ML each provide integrated managed pipelines for their respective clouds. The open-source stack -- MLflow, Kubeflow Pipelines, Feast, KServe, Evidently -- remains popular for cloud-agnostic setups. Weights and Biases occupies the experiment tracking and model registry space with strong UX for deep learning teams.
 
@@ -279,27 +279,27 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Centralized service for computing, storing, and serving features for both training and inference — eliminates training-serving skew and enables feature reuse. Feast (OSS), Tecton (commercial), Hopsworks, SageMaker FS, Vertex FS, Databricks FS.',
     introduction: `A feature store is a centralized system that computes, stores, and serves ML features consistently to two consumers: the training pipeline (offline) and the inference service (online). It exists to solve a single critical problem -- training-serving skew -- and then earns its keep over time by enabling feature reuse across teams and models.
 
-## The core problem: training-serving skew
+The core problem: training-serving skew
 
 Training-serving skew is the most common ML production failure. A data scientist computes a feature in SQL on the warehouse -- average transaction value over the last 30 days. An engineer re-implements it in the production service using streaming aggregations. Subtle differences in window boundaries, timezone handling, or null semantics produce features that disagree by a few percent. The model, trained on the warehouse version, performs worse in production than in offline evaluation. The performance gap is real but nearly invisible in logs because no one is comparing feature values across environments.
 
 Feature stores eliminate this by making feature computation a single shared definition that materializes to both the offline warehouse and the online key-value store from the same code path.
 
-## Architecture: four components
+Architecture: four components
 
 Every feature store has four logical components. The feature definition registry stores feature logic as code -- a Python decorator, SQL transform, or YAML spec -- that is versioned and shared. The offline store holds historical feature values for training and batch scoring in a warehouse or lake (BigQuery, Snowflake, Delta Lake, Iceberg on S3). The online store holds the latest feature values for low-latency serving in a key-value store (Redis, DynamoDB, Bigtable, Cassandra) at single-digit-millisecond read latency. The materialization engine computes features (batch via Spark or dbt, streaming via Flink or Spark Streaming) and writes both stores consistently.
 
-## Point-in-time correctness
+Point-in-time correctness
 
 Point-in-time correctness is the technical heart of feature store design. When training a model on a label event from 14 days ago, every feature value joined to that event must reflect what it was at that moment -- not its current value. A naive join leaks future information into the training set. The model appears to perform well on a test set because it saw data it would not have had at inference time; then it collapses in production. Feature stores implement point-in-time joins (also called as-of joins): for each label event at time T, fetch the feature row with the latest timestamp less than or equal to T.
 
-## The 2026 vendor landscape
+The 2026 vendor landscape
 
 Feast is the dominant open-source option, originated at Gojek in 2018 and open-sourced in 2019. It follows a bring-your-own-infrastructure model -- you supply the offline store (BigQuery, Snowflake, Redshift) and online store (Redis, DynamoDB), and Feast provides the definition layer, materialization, and serving SDK.
 
 Tecton is the leading commercial option, founded in 2020 by the team that built Uber Michelangelo. It manages infrastructure for you and adds sub-50ms feature serving, streaming feature support, and built-in monitoring. Hopsworks is strong in regulated and on-premises deployments. Cloud-native options (Databricks Feature Store, Vertex AI Feature Store, SageMaker Feature Store) are the default for teams already committed to those platforms.
 
-## When to use a feature store
+When to use a feature store
 
 A feature store is justified when multiple models share features, when online inference runs at high QPS with latency SLOs, when streaming features must be consistent, or when multiple teams need shared governance. It is over-engineering for a single team with one batch model and three features. The boundary: more than one team with more than one online model.`,
     quickFire: [
@@ -502,21 +502,21 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Centralized versioned store for trained models — the boundary between research and production. Covers staging lifecycle, lineage, model cards, and the 2026 registry landscape (MLflow as default OSS, W&B Models, Vertex/SageMaker registries, Hugging Face Hub for foundation models).',
     introduction: `A model registry is a versioned catalog of trained model artifacts that serves as the formal boundary between the research environment and the production deployment pipeline. Without a registry, "the production model" is whatever pickle file an engineer last uploaded to S3 with a timestamped filename -- there is no authoritative source of truth, no promotion workflow, and no audit trail.
 
-## What a registry stores
+What a registry stores
 
 Every model version in a registry carries: an artifact reference (pointer to weights in object storage plus a cryptographic hash), a monotonically increasing version number, a lifecycle stage (None, Staging, Production, Archived), a model signature (input and output schema enforced at deploy time), full lineage (training run, dataset version, git SHA, hyperparameters, metrics, environment digest), a model card (intended use, training data, performance by slice, limitations), and arbitrary tags and metadata.
 
-## The promotion lifecycle
+The promotion lifecycle
 
 A model enters the registry after training with stage None. After automated tests pass (signature verification, evaluation on a frozen holdout set, behavioral tests), it is promoted to Staging. Human approval or an additional automated gate promotes it to Production, where the serving layer polls for the current production version or receives a webhook notification. The previous Production version moves to Archived -- retained for rollback but not actively served.
 
-## MLflow in depth
+MLflow in depth
 
 MLflow is the dominant open-source registry, originated at Databricks in 2018 and donated to the Linux Foundation AI and Data in 2020. It has four components: Tracking (experiments, runs, parameters, metrics, artifacts), Models (the MLmodel standardized format that packages weights and their loading flavor), Model Registry (versioned catalog with stages), and Projects (reproducible code packaging, less widely adopted). The pyfunc flavor is the lowest-common-denominator interface -- any MLflow model can be called as a Python predict function regardless of the underlying framework.
 
 MLflow 2.x deprecated hard-coded stages in favor of aliases (champion, challenger, production-blue), which are more flexible for teams running multiple concurrent production versions. MLflow 3.0 added Prompts and Evaluation as first-class objects and deepened autologging for LLM frameworks including LangChain, LlamaIndex, and Anthropic.
 
-## The 2026 landscape
+The 2026 landscape
 
 Weights and Biases Models offers the strongest deep-learning workflow -- lineage graphs, visual comparison of model versions, native integration with W&B experiment runs and datasets. Cloud-native registries (Vertex AI Model Registry, SageMaker Model Registry, Azure ML) are the pragmatic default for cloud-committed teams. Hugging Face Hub is the de facto registry for foundation model weights -- open and gated models, model cards as a standard, and dataset lineage links.
 
@@ -745,23 +745,23 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Production model serving — low latency, autoscaling, multi-framework, GPU-aware. KServe (CNCF, K8s-native), BentoML (Python framework), Seldon Core, NVIDIA Triton (GPU-optimized), Ray Serve, ONNX Runtime, batch vs online, GPU sharing (MIG, MPS).',
     introduction: `Production model serving is the discipline of taking a registered model artifact and exposing it as a reliable, low-latency HTTP or gRPC endpoint that handles real traffic. The naive solution -- a Flask app that loads a pickle file at startup -- works for one model at single-digit QPS. Production needs autoscaling, multi-framework support, GPU efficiency, observability, and controlled deployment patterns.
 
-## What production serving requires
+What production serving requires
 
 The requirements cluster into six areas. Low and predictable latency means meeting p50 and p99 SLOs with cold-start mitigation. Autoscaling means horizontal pod scaling on request rate or GPU utilization, with scale-to-zero for cost efficiency during low-traffic periods. Multi-framework support means the same serving infrastructure handles sklearn, XGBoost, PyTorch, TensorFlow, ONNX, and increasingly LLMs without bespoke solutions for each. GPU efficiency means batching inflight requests, sharing GPU memory across multiple small models, and using hardware partitioning. Observability means per-request latency, per-model throughput, prediction logging, and canary-level traffic splitting. Controlled rollout means canary, shadow, and A/B traffic management at the serving layer.
 
-## KServe
+KServe
 
 KServe (formerly KFServing) is the dominant Kubernetes-native model serving framework. It defines an InferenceService Custom Resource Definition (CRD) that declares the model URI, framework runtime, autoscaling configuration, and canary split in a single YAML manifest. KServe v0.13 supports two modes: individual deployments (one pod per model) and ModelMesh (many small models share a pool of pods, reducing overhead for large catalogs). Serverless mode uses Knative for scale-to-zero. KServe is the default serving layer in Kubeflow and is CNCF-incubating.
 
-## BentoML
+BentoML
 
 BentoML is a Python-first framework where developers write a Python class with decorated API endpoints, and BentoML handles packaging and deployment. A Bento is the versioned, immutable artifact -- model weights, code, and dependencies combined. Yatai is BentoML's Kubernetes operator. BentoML is the right choice for Python-native teams who want to stay in Python and avoid writing YAML-heavy serving configurations.
 
-## NVIDIA Triton
+NVIDIA Triton
 
 NVIDIA Triton Inference Server is the GPU-optimized multi-framework runtime. It supports TensorFlow, PyTorch, ONNX, TensorRT-optimized models, OpenVINO, and Python backends. Key features are dynamic batching (coalescing concurrent requests into one GPU forward pass), model concurrency (multiple model instances within one Triton process), and ensemble pipelines (multi-step inference graphs). Triton is the default for high-throughput GPU inference outside of LLM workloads.
 
-## GPU sharing primitives
+GPU sharing primitives
 
 Three mechanisms exist for sharing GPU resources. MIG (Multi-Instance GPU) is a hardware-level partition on NVIDIA A100 and H100 GPUs -- one A100 becomes up to seven isolated GPU instances each with guaranteed memory and compute, preventing noisy-neighbor problems. MPS (Multi-Process Service) is software-level concurrent process sharing on a GPU without hardware isolation. Time-slicing is the default Kubernetes GPU sharing -- context switching between processes with no memory isolation, leading to unpredictable latency. For multi-tenant serving, MIG is the correct production choice when hardware supports it.`,
     quickFire: [
@@ -990,7 +990,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'Detecting when production models degrade — covariate shift, concept drift, label drift, prior probability shift. Detection methods (KS test, PSI, JS divergence, embedding distance), 2026 monitoring vendor landscape (Evidently, Arize, Fiddler, WhyLabs, Datadog, Aporia), retraining triggers, delayed-label problem.',
     introduction: `A model deployed to production assumes the world it was trained on continues to exist. When the world shifts -- user behavior changes, upstream schemas evolve, economic conditions move -- predictions degrade. "Drift" is the umbrella term for this family of distribution shifts, and detecting it before users notice is the central monitoring challenge in production ML.
 
-## The four drift types
+The four drift types
 
 Covariate shift is the most common: the distribution of input features P(X) changes while the relationship P(Y|X) remains constant. A fraud model trained on 2024 transaction patterns sees 2026 traffic dominated by mobile payments not present in training. The model's internal logic is still valid but it has never seen these inputs before. Detection is statistical comparison of current vs reference feature distributions.
 
@@ -1000,7 +1000,7 @@ Label drift (prior probability shift) means the marginal distribution P(Y) chang
 
 Performance decay is the outcome symptom: model quality degrades against ground truth. The other three are causes. Monitoring should detect causes early, before decay becomes visible to users.
 
-## Detection methods
+Detection methods
 
 Population Stability Index (PSI) is the standard tabular metric. Bins the reference and current distributions, computes a weighted divergence score. PSI below 0.1 is stable, 0.1-0.25 is moderate shift warranting investigation, above 0.25 is significant shift requiring action. PSI applies per feature.
 
@@ -1008,7 +1008,7 @@ The Kolmogorov-Smirnov test is a two-sample non-parametric test on continuous di
 
 The domain classifier approach trains a binary classifier to distinguish reference from current data. If the classifier achieves high accuracy, the distributions are separable -- drift is present. It identifies which features drive the difference.
 
-## The 2026 monitoring landscape
+The 2026 monitoring landscape
 
 Evidently AI (open source) is the most widely adopted OSS choice for tabular drift monitoring with prebuilt dashboards and CI integration. Arize AI leads on embedding and LLM observability. Fiddler AI is strong in regulated finance with explainability integration. WhyLabs provides whylogs, a lightweight profiling library that works in distributed pipeline stages. Cloud-native options (SageMaker Model Monitor, Vertex AI Model Monitoring, Azure ML Data Drift Monitor) are the pragmatic default for cloud-committed teams.
 
@@ -1244,25 +1244,25 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'LLMOps as the LLM-shaped subset of MLOps — prompt versioning, evaluation harnesses, RAG observability, cost/token tracking, output guardrails. 2026 tooling: LangSmith, Promptfoo, Helicone, Patronus, OpenAI Evals, Guardrails AI, NeMo Guardrails.',
     introduction: `LLMOps is what MLOps becomes when the artifact you ship is not a set of learned weights but a system built on top of foundation models -- prompts, retrieval pipelines, tool definitions, and orchestration logic. The core principles (versioning, testing, monitoring, CD) transfer directly; the artifacts and failure modes are different.
 
-## What changes compared to classical MLOps
+What changes compared to classical MLOps
 
 In classical MLOps the primary artifact is a trained model; the training pipeline produces it; deployment puts it behind an endpoint. In LLMOps the primary artifacts are prompts and retrieval configuration; you orchestrate a foundation model rather than train from scratch; quality is determined by prompt design and retrieval quality, not weight optimization. This shifts the entire evaluation problem: you cannot use a standard holdout set with deterministic metrics because LLM outputs are open-ended text.
 
 The three pillars of LLMOps are prompt versioning (prompts as code, versioned and tested in CI), evaluation (subjective quality measurement at scale), and observability (tracing full chain from query through retrieval through generation).
 
-## Prompts as code
+Prompts as code
 
 A prompt is a versioned artifact with tests. It lives in a repository, is reviewed in PRs, and is tested before merging. Tools -- LangSmith Prompts, MLflow 3 Prompts, PromptLayer, Humanloop, W&B Weave -- provide a registry for prompt versions with lineage back to eval results. Promptfoo is the leading open-source CLI for running eval suites against prompts in CI, catching regressions before they reach production.
 
-## Evaluation methodology
+Evaluation methodology
 
 Five approaches exist. Reference-based evaluation compares outputs to known-correct answers using string match or semantic similarity -- practical for narrow tasks like extraction or classification. LLM-as-judge uses a strong model (GPT-4o, Claude Opus) to rate outputs on rubrics; it scales cheaply but carries biases (verbosity bias, position bias, bias toward same-family models). Human evaluation is the ground truth but is expensive and slow, primarily used to calibrate LLM-as-judge. Pairwise preference (judge picks A or B) reduces absolute-score bias and is the technique behind ChatBot Arena. Behavioral and red-team evaluation uses adversarial prompts designed to surface jailbreaks, hallucinations, PII leakage, and bias.
 
-## RAG observability and cost tracking
+RAG observability and cost tracking
 
 RAG systems add a retrieval layer whose quality directly determines answer quality. The four Ragas metrics are faithfulness (is the answer grounded in retrieved context?), answer relevance (does it address the query?), context precision (are retrieved chunks relevant?), and context recall (did retrieval find the answer?). LangSmith, LangFuse, and Arize provide tracing at the chain level. For cost, per-call token spend is significant at scale; LiteLLM and Helicone provide proxy-level cost tracking across providers. Prompt caching (Anthropic, OpenAI 2024-2025) reduces cost by 80-90% on repeated prompt prefixes.
 
-## Guardrails
+Guardrails
 
 LLM outputs can leak PII, generate unsafe content, or produce malformed structured outputs. Guardrails AI provides a Pythonic schema-and-rule validation layer. NVIDIA NeMo Guardrails adds programmable dialog flow control. LlamaGuard (Meta) is a fine-tuned safety classifier. Cloud-native options (Bedrock Guardrails, Azure Content Safety) are the default for managed deployments.`,
     quickFire: [
@@ -1520,7 +1520,7 @@ These are answers an MLOps-fluent platform engineer should give without preparat
     description: 'LLM inference is unique — KV cache, continuous batching, GPU memory bound. Covers vLLM (PagedAttention), HuggingFace TGI, NVIDIA TensorRT-LLM, SGLang (RadixAttention), llama.cpp, quantization (FP16/FP8/INT8/GPTQ/AWQ/GGUF), throughput-vs-latency, multi-tenant LLM hosting via LiteLLM.',
     introduction: `LLM inference is architecturally unlike serving any other model. Autoregressive generation introduces constraints -- KV cache memory pressure, two-phase computation, variable sequence lengths -- that make naive serving approaches fail catastrophically at scale. A dedicated generation of inference engines was built specifically for these constraints, and understanding them is core to ML platform engineering in 2026.
 
-## Why LLM inference is its own discipline
+Why LLM inference is its own discipline
 
 Inference runs in two phases with different bottlenecks. Prefill processes the entire prompt in parallel: it is compute-bound (like a forward pass of any neural net) and fast. Decode generates one token at a time autoregressively: each decode step must read the full KV cache for all attention layers, making it memory-bandwidth-bound. For long outputs, nearly all the wall-clock time is in decode.
 
@@ -1528,7 +1528,7 @@ The KV cache stores key and value attention activations for every generated toke
 
 Naive batching wastes this resource: if requests in a batch finish at different times, shorter requests hold up the entire batch until the longest one completes. Continuous batching (inflight batching) solves this by dropping completed requests and adding new ones at every decode step, keeping GPU utilization near 100%. This single technique produces 5-10x throughput improvement over static batching.
 
-## The 2026 serving landscape
+The 2026 serving landscape
 
 vLLM (UC Berkeley, 2023) is the dominant open-source engine. Its core innovation -- PagedAttention -- stores KV cache in non-contiguous physical memory pages (like virtual memory for GPU), eliminating fragmentation and enabling near-100% GPU memory utilization. vLLM supports continuous batching, prefix caching, speculative decoding, tensor and pipeline parallelism, and a wide model catalog. It is the default choice for self-hosted open-weight LLMs.
 
@@ -1538,11 +1538,11 @@ SGLang (UC Berkeley, late 2023) focuses on structured generation and multi-turn 
 
 llama.cpp is the C++ engine for CPU and Apple Silicon inference, powering local tools like Ollama and LM Studio. It is not a production server but is the foundation of the edge and developer ecosystem.
 
-## Quantization
+Quantization
 
 Running 70B models in FP16 demands multiple H100s. Quantization reduces memory footprint at small quality cost. FP8 (native on H100/B100) halves FP16 memory with minimal accuracy impact. INT8 is widely supported. GPTQ uses calibration data for 4-bit post-training quantization. AWQ (Activation-Aware Weight Quantization) preserves accuracy better than GPTQ at 4-bit by protecting activation-sensitive weights. GGUF is llama.cpp's quantization-friendly container format supporting 2 through 8-bit variants.
 
-## Throughput vs latency
+Throughput vs latency
 
 Higher batch size increases throughput (tokens generated per second per GPU) but raises p99 latency. Lower batch size reduces latency but wastes GPU. Continuous batching and speculative decoding both improve the tradeoff. Prefix caching reduces time-to-first-token for requests with shared prefixes by skipping their prefill entirely.`,
     quickFire: [
@@ -1806,7 +1806,7 @@ Traditional DevOps was built around one core artifact: code. Given the same sour
 
 MLOps is the discipline that applies DevOps automation, reproducibility, and observability to the full ML lifecycle, while adding the data and model dimensions that software CI/CD ignores.
 
-## The Three Pillars of MLOps
+The Three Pillars of MLOps
 
 MLOps sits at the intersection of three disciplines:
 
@@ -1816,7 +1816,7 @@ MLOps sits at the intersection of three disciplines:
 
 When any pillar is weak, the entire system degrades. A great model trained on bad data pipelines will fail in production. A well-trained model deployed without monitoring will decay silently.
 
-## CI/CD for ML vs Traditional CI/CD
+CI/CD for ML vs Traditional CI/CD
 
 Traditional CI/CD pipelines run: lint → unit test → build → integration test → deploy. ML CI/CD runs in two nested loops.
 
@@ -1832,7 +1832,7 @@ Key additions over traditional CI/CD:
 - Model registry with staged promotion (staging → production) and rollback
 - Drift detection in production that can trigger automated retraining
 
-## MLOps Roles and Team Topology
+MLOps Roles and Team Topology
 
 Four roles appear consistently across MLOps teams:
 
@@ -1846,7 +1846,7 @@ Four roles appear consistently across MLOps teams:
 
 At smaller organizations these roles collapse. At hyperscalers they split further (e.g., a dedicated ML Infrastructure team).
 
-## Tool Landscape
+Tool Landscape
 
 The MLOps tool ecosystem maps roughly to pipeline stages:
 
@@ -1866,7 +1866,7 @@ The MLOps tool ecosystem maps roughly to pipeline stages:
 
 **Infrastructure**: Azure ML CLI v2, SageMaker Pipelines SDK, Google Cloud Vertex AI SDK, Terraform for ML infra
 
-## Security, Compliance, and Model Maintenance
+Security, Compliance, and Model Maintenance
 
 MLOps adds three compliance concerns absent from traditional DevOps:
 
@@ -1996,7 +1996,7 @@ Level 2 is full CI/CD for ML. Code commits, data changes, and drift alerts all t
 
 Experiment tracking is the discipline of logging every meaningful detail of a machine learning training run so it can be reproduced, compared, and audited later. At minimum this includes the hyperparameters fed to a run, the metrics produced at each epoch or step, the artifact files (model weights, plots, preprocessed datasets), the code commit, and the software environment. Without systematic tracking, teams waste days rerunning experiments that have already been done, cannot explain why a deployed model differs from the last champion, and have no audit trail for compliance or debugging.
 
-## Core Concepts
+Core Concepts
 
 A tracking system organizes work into two levels. An experiment is a named collection of related runs, such as "bert-fine-tune-v2" or "xgboost-fraud-2025". A run is one execution of training code: it has a unique ID, a start and end time, a status (running, finished, failed), and a set of logged values.
 
@@ -2007,13 +2007,13 @@ The four categories of data logged per run are:
 - Artifacts: arbitrary files produced by or consumed by the run (model checkpoints, tokenizer configs, confusion matrix PNGs, preprocessed dataset shards).
 - Tags: free-form key-value strings used for search and filtering (team name, model architecture family, data version label).
 
-## MLflow: The Open-Source Standard
+MLflow: The Open-Source Standard
 
 MLflow is the most widely used open-source experiment tracking library. Its tracking component exposes a Python API and a REST API backed by a tracking server that stores records in a relational database (SQLite or PostgreSQL) and artifacts in a storage backend (local filesystem, S3, Azure Blob, GCS).
 
 MLflow autologging removes boilerplate for supported frameworks. Calling mlflow.autolog() before training automatically captures framework-specific params, metrics logged at each step, and the final model artifact. Autologging is supported for scikit-learn, XGBoost, LightGBM, PyTorch Lightning, Keras, Spark MLlib, and others.
 
-## Reproducibility: The Four Pillars
+Reproducibility: The Four Pillars
 
 A run is reproducible when you can recreate its output given the same inputs. The four pillars are:
 
@@ -2022,19 +2022,19 @@ A run is reproducible when you can recreate its output given the same inputs. Th
 3. Environment: log the conda environment YAML or pip requirements file as an artifact.
 4. Random seeds: log every seed passed to NumPy, PyTorch, TensorFlow, and the data-shuffling step.
 
-## Hyperparameter Tracking and Sweep Integration
+Hyperparameter Tracking and Sweep Integration
 
 Experiment tracking is the backbone of hyperparameter optimization. Libraries like Optuna, Ray Tune, and Weights and Biases Sweeps run dozens or hundreds of trials, each of which becomes a child run nested under a parent sweep run. The tracking UI then lets you plot a parallel-coordinates chart to identify which parameter combinations dominate.
 
-## Azure ML Experiments and Jobs
+Azure ML Experiments and Jobs
 
 Azure ML wraps MLflow tracking in its Jobs API. Every azure.ai.ml job automatically tracks to the workspace's built-in MLflow-compatible tracking server. You can add custom tracking with the same mlflow.* calls inside the training script. The Azure ML Studio UI provides experiment comparison views, metric charts, and one-click registration of the best run's model to the Model Registry.
 
-## Alternatives: W&B, Neptune, Comet
+Alternatives: W&B, Neptune, Comet
 
 Weights and Biases (W&B) adds real-time system metric dashboards (GPU memory, utilization curves), interactive parallel-coordinates sweeps, and collaborative annotations on runs. Neptune.ai focuses on large-scale metadata management with a query-language for filtering thousands of runs. Comet ML integrates code diffing so you can see exactly which lines changed between two runs. All three are drop-in replacements for MLflow tracking in most workflows.
 
-## Model Logging and the Model Registry
+Model Logging and the Model Registry
 
 Logging a model artifact with mlflow.sklearn.log_model() or mlflow.pytorch.log_model() stores the model in a standard directory format (MLmodel manifest + serialized weights). From there, mlflow.register_model() promotes the artifact into the Model Registry, where it receives a version number and can move through lifecycle stages: None, Staging, Production, Archived.`,
     quickFire: [
@@ -2141,7 +2141,7 @@ Hyperparameters are configuration choices made before training begins — learni
 
 The goal of hyperparameter tuning is to find the configuration that minimizes a validation metric (e.g., val_loss or AUC) subject to a compute budget.
 
-## Search Strategies
+Search Strategies
 
 ### Grid Search
 Exhaustively evaluates every combination in a discrete grid. Guaranteed to find the best configuration within the grid, but cost grows exponentially with dimensionality. Suitable only for 1–2 hyperparameters with small ranges.
@@ -2155,31 +2155,31 @@ Builds a probabilistic surrogate model (commonly a Gaussian Process or Tree-stru
 ### Tree-structured Parzen Estimator (TPE)
 Used by Optuna and Hyperopt. Instead of modeling p(y | x) directly, TPE models p(x | y < threshold) and p(x | y >= threshold) separately. The next candidate maximizes the ratio l(x)/g(x), where l is the density of good configurations and g is the density of bad ones.
 
-## Optuna
+Optuna
 
 Optuna is a Python framework built around the study/trial abstraction. A Study is the optimization campaign; each Trial is one configuration evaluation. The objective function receives a trial object and calls trial.suggest_float, trial.suggest_int, or trial.suggest_categorical to define the search space lazily.
 
 Pruning is a key feature: unpromising trials are stopped early based on intermediate values. MedianPruner terminates a trial if its intermediate metric falls below the median of completed trials at the same step. HyperbandPruner implements the Hyperband algorithm within Optuna. Pruning can reduce total compute by 50–80% on deep learning workloads.
 
-## Ray Tune and Distributed Tuning
+Ray Tune and Distributed Tuning
 
 Ray Tune runs trials as Ray actors, enabling distribution across a cluster. It supports pluggable search algorithms (Optuna, Hyperopt, Ax/BoTorch) and trial schedulers.
 
 ASHA (Asynchronous Successive Halving Algorithm) is the recommended scheduler for most workloads. It promotes the top fraction of trials at each resource rung asynchronously, so workers never idle waiting for synchronization. Population-Based Training (PBT) periodically copies weights from top-performing agents into bottom performers while perturbing their hyperparameters — it searches configuration and training trajectory simultaneously.
 
-## Hyperband Algorithm
+Hyperband Algorithm
 
 Hyperband solves the explore-exploit tradeoff in budget allocation. Given a maximum resource budget R and a halving rate eta (commonly 3), it runs multiple successive halving brackets at different starting sizes. Each bracket begins with many configurations on a small budget, repeatedly keeps the top 1/eta and triples their budget. Hyperband is asymptotically optimal in the bandit-with-budgets formulation and typically beats random search by 5–10x for neural networks.
 
-## Azure ML AutoML
+Azure ML AutoML
 
 Azure ML AutoML automates the full pipeline: data type inference, imputation, scaling, encoding, feature generation, model selection from a library (LightGBM, XGBoost, Random Forest, linear models, neural networks for tabular), and stacking ensembles. It uses early termination to kill underperforming child runs and a voting or stacking ensemble of top-N models at the end.
 
-## Hyperparameter Importance Analysis
+Hyperparameter Importance Analysis
 
 After a study, Optuna provides optuna.importance.get_param_importances using fANOVA (functional ANOVA) to estimate the fraction of variance in the objective attributable to each parameter. Parameters with low importance can be removed from future searches.
 
-## Tuning vs. More Data
+Tuning vs. More Data
 
 More data almost always dominates better hyperparameters when a model is data-limited. The decision heuristic: if train accuracy is much higher than val accuracy, more data (or stronger regularization) is the right investment. If both are low (underfitting), architecture changes or hyperparameter search may help.`,
     quickFire: [
@@ -2278,7 +2278,7 @@ Notebooks are the default starting point for most ML work, but they fail at repr
 
 Reproducible ML pipelines solve this by treating every step of model development — data preparation, feature engineering, training, evaluation, registration — as a versioned, parameterized, and cacheable unit of work.
 
-## Pipeline as a DAG
+Pipeline as a DAG
 
 A reproducible ML pipeline is structured as a Directed Acyclic Graph (DAG) where each node is a component and each edge is an artifact (data, model, metrics). Components have typed interfaces:
 
@@ -2289,13 +2289,13 @@ A reproducible ML pipeline is structured as a Directed Acyclic Graph (DAG) where
 
 This explicit interface design means components can be tested independently, re-used across pipelines, and swapped without touching the rest of the graph.
 
-## Azure ML Pipelines and Kubeflow
+Azure ML Pipelines and Kubeflow
 
 Azure ML Pipelines represent each step as a CommandComponent defined in YAML or the Python SDK. Each component declares its inputs, outputs, and environment (a Docker image URI or curated environment name). Pipelines are composed by wiring component outputs to the next component's inputs and submitted as a PipelineJob. The scheduler tracks run lineage and supports caching so unchanged components are skipped on re-runs.
 
 Kubeflow Pipelines (KFP) follows the same model: components are containerized functions decorated with @component, pipelines are Python functions decorated with @pipeline, and the compiled YAML is submitted to a Kubeflow cluster.
 
-## Software Dependency Tracking
+Software Dependency Tracking
 
 Pinning software dependencies is the foundation of a reproducible environment. Three common approaches:
 
@@ -2305,13 +2305,13 @@ Pinning software dependencies is the foundation of a reproducible environment. T
 
 Docker containers provide the strongest guarantee: a pinned base image combined with a locked requirements file makes the environment fully portable.
 
-## DVC: Data Version Control
+DVC: Data Version Control
 
 Git tracks code but cannot track large binary files like datasets or model weights. DVC fills this gap. When you run dvc add data/train.csv, DVC computes a content hash of the file, moves the file to a local cache, writes a small .dvc pointer file (containing the hash) that Git can track, and optionally pushes the file to a remote store (S3, GCS, Azure Blob).
 
 Pipeline stages are defined in dvc.yaml with commands, dependencies, outputs, parameters, and metrics. After a run, dvc.lock records the exact content hashes of every dependency and output. Together, dvc.yaml and dvc.lock committed to Git create a complete reproducibility snapshot: checking out a commit and running dvc repro will reconstruct the exact pipeline state, pulling the right data versions from the remote.
 
-## Git + DVC Full Reproducibility
+Git + DVC Full Reproducibility
 
 The full reproducibility stack layers Git and DVC:
 
@@ -2320,11 +2320,11 @@ The full reproducibility stack layers Git and DVC:
 
 A commit SHA in Git, combined with dvc pull, is sufficient to fully reconstruct any prior pipeline run: same code, same data, same parameters, same environment.
 
-## Pipeline Caching
+Pipeline Caching
 
 Caching skips components whose inputs have not changed since the last run. DVC caching is content-addressed: if a stage's dependencies match a prior lock entry, the stage is skipped and outputs are restored from cache. Azure ML pipeline caching works similarly: a component is skipped if its inputs, parameters, and environment hash match a prior run.
 
-## CI/CD Integration
+CI/CD Integration
 
 Pipelines integrate with GitHub Actions or Azure DevOps: on pull request, run dvc repro --dry to validate the pipeline graph; on merge to main, trigger a full pipeline run and register the resulting model if metrics pass thresholds; on release, promote the registered model from staging to production.`,
     quickFire: [
@@ -2421,7 +2421,7 @@ A model that only runs on the training machine is not a product. Packaging is th
 
 Poor packaging is one of the top causes of training-serving skew. If the serving environment uses a different version of scikit-learn, a different tokenizer, or a different feature normalization order, predictions drift from what was validated in offline evaluation.
 
-## MLflow Model Format
+MLflow Model Format
 
 MLflow wraps models in a directory-based format centered on an MLmodel YAML file. The file declares one or more flavors, each representing a different way the model can be loaded.
 
@@ -2429,7 +2429,7 @@ The python_function (pyfunc) flavor is the universal interface. Any model with a
 
 Dependency pinning happens in conda.yaml (full Conda environment) and requirements.txt (pip-only). MLflow ModelSignature enforces input and output schemas: at serving time, MLflow validates input shape and dtype against the signature, catching mismatches before they silently corrupt predictions.
 
-## ONNX: Open Neural Network Exchange
+ONNX: Open Neural Network Exchange
 
 ONNX is a vendor-neutral graph format originally developed by Facebook and Microsoft. It represents models as a computation graph of standard operators, enabling models trained in PyTorch or TensorFlow to run in any ONNX-compatible runtime.
 
@@ -2437,7 +2437,7 @@ ONNX Runtime (onnxruntime) is the primary inference engine. It applies graph-lev
 
 ONNX limitations: not all PyTorch operators are exportable (custom CUDA kernels, dynamic control flow). Use torch.onnx.export with opset_version matched to your onnxruntime version.
 
-## TorchScript
+TorchScript
 
 TorchScript serializes PyTorch models into a static computation graph that can run without a Python interpreter.
 
@@ -2447,11 +2447,11 @@ torch.jit.script parses the Python source and compiles a type-annotated subset o
 
 TorchScript models are portable to C++ via LibTorch, making them suitable for mobile and edge deployments.
 
-## TensorFlow SavedModel
+TensorFlow SavedModel
 
 TensorFlow's canonical format since TF 2.0. A SavedModel directory contains: saved_model.pb (the computation graph and metadata), variables/ (checkpoint files for weights), and assets/ (arbitrary files such as vocabulary files). Signatures define the callable interface. TF Serving, Vertex AI, and SageMaker all consume SavedModel natively.
 
-## Model Compression Formats
+Model Compression Formats
 
 Quantization reduces weight precision (FP32 to INT8 or FP16), shrinking model size and improving inference latency with acceptable accuracy loss. Post-training quantization (PTQ) requires only a calibration dataset. Quantization-aware training (QAT) bakes quantization into the training loop for higher accuracy.
 
@@ -2566,15 +2566,15 @@ In practice, a full compression pipeline might distill a large model to a medium
 
 ML governance is the set of policies, processes, and tools that ensure machine learning systems are developed and operated responsibly. It encompasses four core pillars: accountability (knowing who owns each decision), traceability (reproducing exactly how a model was built), auditability (proving compliance to regulators or internal reviewers), and compliance (meeting legal and ethical standards). Governance is not a post-hoc checkbox — it must be embedded from the moment raw data is collected through every retraining cycle in production.
 
-## Data Lineage
+Data Lineage
 
 Data lineage tracks the full provenance chain from raw source tables through feature engineering pipelines to the exact training dataset a model consumed. A complete lineage record answers: which tables were joined, which transformation code ran, which version of that code, when each step executed, and what sampling or filtering was applied. Tools like Apache Atlas, OpenLineage, and Azure Purview capture this metadata automatically by instrumenting Spark jobs and SQL queries. Without lineage, reproducing a model for audit or debugging is impossible.
 
-## Model Lineage
+Model Lineage
 
 Model lineage extends data lineage to include the code commit hash, hyperparameters, runtime environment (Docker image digest or conda lockfile), training compute resource, and the identity of the person or pipeline that triggered training. MLflow, Azure ML, and SageMaker Experiments all record this information per run.
 
-## Bias Detection and Fairness Metrics
+Bias Detection and Fairness Metrics
 
 Bias enters ML systems through historical data, label noise, and proxy features. The primary detection metrics are:
 
@@ -2587,7 +2587,7 @@ Bias enters ML systems through historical data, label noise, and proxy features.
 
 Libraries like Fairlearn, AIF360 (IBM), and Microsoft Responsible AI Toolbox compute these metrics and surface them in interactive dashboards.
 
-## Mitigation Strategies
+Mitigation Strategies
 
 When bias is detected, mitigation can occur at three stages:
 
@@ -2597,7 +2597,7 @@ In-processing: adversarial debiasing trains a secondary adversary network that p
 
 Post-processing: threshold shifting or Platt scaling adjusts decision boundaries per group after training so that equalized odds are satisfied.
 
-## Regulatory Landscape
+Regulatory Landscape
 
 The EU AI Act (effective 2024-2026 phased) classifies AI systems into four risk tiers. High-risk systems (credit scoring, hiring, medical diagnostics, critical infrastructure) require conformity assessments, human oversight mechanisms, technical documentation, and registration in an EU database before deployment. Prohibited practices include real-time biometric surveillance in public spaces and social scoring.
 
@@ -2605,11 +2605,11 @@ GDPR applies to ML through the right to explanation (Article 22 restricts solely
 
 FDA guidance on Software as a Medical Device (SaMD) requires predetermined change control plans (PCCP) so that model updates do not trigger full re-approval for every retraining cycle, provided the changes stay within documented bounds.
 
-## Model Cards
+Model Cards
 
 Model cards, introduced by Mitchell et al. (2019) at Google, are standardized documentation artifacts that accompany every deployed model. They record: intended use cases and out-of-scope uses, performance metrics broken down by subgroup and operating condition, training data description, evaluation datasets, known limitations, ethical considerations, and caveats.
 
-## Governance Tools
+Governance Tools
 
 - Great Expectations: data quality assertions defined as expectations that run as pipeline gates
 - Evidently AI: open-source library for data drift, model performance, and bias monitoring
@@ -2730,7 +2730,7 @@ For regulatory review, these three data streams must be joinable on a common mod
 
 Deploying a model to production is only the beginning. Without continuous monitoring, even a well-trained model will silently degrade as the real world changes around it. ML monitoring spans two distinct dimensions: infrastructure monitoring (is the system available and fast?) and model performance monitoring (is the model still making good predictions?).
 
-## Infrastructure Monitoring
+Infrastructure Monitoring
 
 Infrastructure signals are borrowed from classical site reliability engineering:
 
@@ -2742,7 +2742,7 @@ Infrastructure signals are borrowed from classical site reliability engineering:
 
 Tools like Prometheus and Grafana handle this layer well. Kubernetes-native exporters expose pod-level GPU metrics (DCGM exporter for NVIDIA), and an Alertmanager rule can page on-call when P99 latency exceeds the SLO for 5 minutes.
 
-## Model Performance Monitoring
+Model Performance Monitoring
 
 Model monitoring is harder because the ground truth label is often delayed or never arrives. Practitioners rely on proxy signals:
 
@@ -2754,7 +2754,7 @@ Model monitoring is harder because the ground truth label is often delayed or ne
 
 Azure ML DataCollector logs inference inputs and outputs to a storage account. Scheduled monitoring jobs compute drift scores against a baseline dataset and surface alerts in Azure Monitor.
 
-## Alerting Strategies
+Alerting Strategies
 
 Three main strategies exist for generating alerts from monitoring signals:
 
@@ -2764,7 +2764,7 @@ Anomaly detection alerting uses statistical process control or ML-based models t
 
 SLO-based alerting fires when an error budget is being consumed too quickly. For model quality, this requires defining a measurable SLO (e.g., accuracy must stay above 85% on labeled production samples).
 
-## Alert Fatigue
+Alert Fatigue
 
 Naively alerting on every threshold breach floods on-call engineers and trains them to ignore alerts. Mitigation strategies:
 
@@ -2773,7 +2773,7 @@ Naively alerting on every threshold breach floods on-call engineers and trains t
 - Inhibition rules: suppress downstream alerts when the root cause upstream alert is already firing
 - Alert prioritization: surface alerts on high-traffic or high-revenue segments first
 
-## Retraining Triggers
+Retraining Triggers
 
 Monitoring closes the loop by triggering retraining pipelines. Common trigger patterns:
 
@@ -2782,7 +2782,7 @@ Monitoring closes the loop by triggering retraining pipelines. Common trigger pa
 - Performance-triggered: retrain when labeled accuracy falls below a floor (requires label availability)
 - Human-in-the-loop: monitoring surfaces a candidate trigger; a human approves the pipeline run
 
-## Tooling Ecosystem
+Tooling Ecosystem
 
 - Evidently AI: open-source drift reports and test suites, integrates with MLflow and Airflow
 - Arize AI: commercial platform with embedding drift for unstructured data, LLM tracing
@@ -2888,7 +2888,7 @@ Finally, alert noise should be measured and reviewed monthly. Track the ratio of
 
 MLOps CI/CD extends the software engineering practice of continuous integration and continuous delivery to the full machine learning lifecycle. Unlike traditional software CI/CD, ML pipelines must account for three moving parts: code, data, and models. A change to any one of these can break a production system, so automation must validate all three dimensions before promoting an artifact to production.
 
-## Continuous Integration for ML
+Continuous Integration for ML
 
 CI in MLOps covers everything that happens before training a model at scale. A well-designed CI pipeline for ML runs in under 15 minutes and includes:
 
@@ -2900,7 +2900,7 @@ CI in MLOps covers everything that happens before training a model at scale. A w
 
 The principle is to fail fast and cheaply. Running a full multi-hour training job on every pull request is impractical. Instead, CI uses a tiny subset of data to verify that the code path is correct, while the full training pipeline is deferred to CD.
 
-## Continuous Delivery for ML
+Continuous Delivery for ML
 
 CD in MLOps covers the chain from a merged code change to a live serving endpoint. A standard ML CD pipeline has four stages:
 
@@ -2909,7 +2909,7 @@ CD in MLOps covers the chain from a merged code change to a live serving endpoin
 3. Staging deployment: the candidate model is deployed to a staging environment that mirrors production.
 4. Production promotion: a canary rollout sends a small percentage of live traffic to the new model, with automatic rollback on anomaly.
 
-## GitHub Actions Workflow Structure
+GitHub Actions Workflow Structure
 
 A typical ML repository contains three workflow files:
 
@@ -2919,7 +2919,7 @@ A typical ML repository contains three workflow files:
 
 Jobs within a workflow run in parallel by default. Sequential jobs use the needs keyword. Artifacts such as trained model files and evaluation reports are passed between jobs using actions/upload-artifact and actions/download-artifact.
 
-## Triggering ML Pipelines
+Triggering ML Pipelines
 
 ML pipelines have richer trigger conditions than software builds:
 
@@ -2929,7 +2929,7 @@ ML pipelines have richer trigger conditions than software builds:
 - Manual dispatch with parameters: workflow_dispatch with input fields for hyperparameter overrides, dataset versions, or experiment names
 - Model drift alert: a monitoring service detects production drift and calls the dispatch API to trigger emergency retraining
 
-## Secrets Management
+Secrets Management
 
 ML pipelines require a large surface area of secrets: cloud provider credentials, model registry tokens, API keys for evaluation services, and Weights and Biases tokens. Best practices:
 
@@ -2939,11 +2939,11 @@ ML pipelines require a large surface area of secrets: cloud provider credentials
 - Never log secrets; use ::add-mask:: in GitHub Actions to redact dynamic values
 - For model weights, reference them by a content-addressed URI in a model registry rather than storing them in the workflow
 
-## Infrastructure as Code for ML
+Infrastructure as Code for ML
 
 Terraform manages the cloud resources that ML pipelines depend on: compute clusters, object storage buckets, container registries, and serving endpoints. Helm charts manage Kubernetes-based model serving infrastructure. Both are version-controlled and applied through the same CI/CD pipeline, ensuring that environment drift between dev, staging, and production is caught early.
 
-## Common Pitfalls
+Common Pitfalls
 
 Slow pipelines: running full training in CI makes developers wait hours for feedback. The fix is a two-tier approach: fast smoke tests in CI, full training only in CD.
 
@@ -3060,7 +3060,7 @@ Secret sprawl accumulates over time as pipelines grow. Establish a secrets inven
 
 Real-world MLOps deployments reveal a gap between textbook architectures and the constraints that dominate production: latency budgets, data freshness windows, organizational boundaries, and cost ceilings. The three case studies in this topic span three cloud providers and three distinct ML problem types.
 
-## Case Study 1: Demand Forecasting on Azure
+Case Study 1: Demand Forecasting on Azure
 
 A retailer needed daily inventory predictions across thousands of SKUs and store locations. The pipeline runs on Azure Databricks for feature engineering (lag features, rolling statistics, calendar encodings) and Azure ML for training and experiment tracking.
 
@@ -3072,7 +3072,7 @@ Key architecture decisions:
 
 Lessons learned: Forecasting accuracy degrades faster than classification accuracy when the input distribution shifts, because even small distribution changes compound across a multi-step horizon. Setting drift thresholds based on business impact (missed stock events) rather than statistical p-values reduced false-positive retraining runs by 60 percent.
 
-## Case Study 2: Handwriting Assistance on GCP
+Case Study 2: Handwriting Assistance on GCP
 
 An edtech product helps children improve handwriting by scoring letter formation in real time. The core model is a computer vision classifier trained on labeled handwriting samples using Vertex AI AutoML Vision, with a custom fine-tuning stage for language-specific character sets.
 
@@ -3084,7 +3084,7 @@ Key architecture decisions:
 
 Lessons learned: AutoML accelerates the initial model but creates a ceiling; the team eventually replaced the AutoML backbone with a custom EfficientNet-B2 to break through accuracy limits for cursive letters.
 
-## Case Study 3: Real-Time Precision Delivery on AWS
+Case Study 3: Real-Time Precision Delivery on AWS
 
 A logistics company routes delivery drivers in real time based on traffic, weather, and package priority. The model scores candidate routes every few seconds per active driver.
 
@@ -3096,11 +3096,11 @@ Key architecture decisions:
 
 Lessons learned: Online feature freshness is the hardest operational problem in real-time ML. Traffic feature staleness of more than 90 seconds caused route quality to degrade visibly. The team invested more engineering time in the Kinesis pipeline than in the model itself.
 
-## Common Architecture Patterns Across Case Studies
+Common Architecture Patterns Across Case Studies
 
 All three cases share a set of recurring patterns: versioned artifacts (models, datasets, pipelines) for reproducibility; staged rollout (A/B or shadow) before full promotion; drift or freshness monitoring as a first-class operational concern; and clear separation between the online serving path (latency-sensitive) and the offline training path (throughput-sensitive).
 
-## Managed vs. Custom MLOps Stack Trade-offs
+Managed vs. Custom MLOps Stack Trade-offs
 
 Managed platforms (Vertex AI Pipelines, SageMaker Pipelines, Azure ML) reduce time-to-production for standard patterns but impose constraints on custom runtimes and inter-service integration. Custom stacks built on Kubeflow or Airflow offer flexibility but shift operational burden to the ML team.`,
     quickFire: [
@@ -3194,13 +3194,13 @@ Rollback strategy in all three cases relied on model registry versioning. Each r
 
 Responsible AI is a framework for developing and deploying machine learning systems that are trustworthy, equitable, and accountable. Microsoft formalizes this into six principles: fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability.
 
-## Why Explainability Matters
+Why Explainability Matters
 
 Modern ML models, especially gradient-boosted trees and deep neural networks, are effectively black boxes. Regulators, auditors, and end users increasingly require justification for individual predictions. The EU AI Act classifies many business-critical models as high-risk and mandates human oversight and transparency documentation. In finance, ECOA requires lenders to provide adverse action reasons to denied applicants. In healthcare, the FDA expects model performance characterization across subgroups.
 
 Beyond compliance, explainability is a debugging tool. Understanding which features drive errors helps practitioners identify data leakage, spurious correlations, and cohort-specific failure modes.
 
-## SHAP — SHapley Additive exPlanations
+SHAP — SHapley Additive exPlanations
 
 SHAP assigns each feature a contribution score based on Shapley values from cooperative game theory. The key identity is that the sum of all SHAP values equals the difference between the model prediction and the base rate (expected prediction over the dataset).
 
@@ -3208,33 +3208,33 @@ TreeSHAP is an exact, polynomial-time algorithm for tree ensembles (XGBoost, Lig
 
 Global explanations aggregate local SHAP values: mean absolute SHAP across samples gives feature importance; beeswarm plots show direction and magnitude per feature across the dataset. Local (per-prediction) explanations use waterfall plots to show how each feature pushed a single prediction above or below the baseline.
 
-## LIME — Local Interpretable Model-agnostic Explanations
+LIME — Local Interpretable Model-agnostic Explanations
 
 LIME fits a locally faithful surrogate linear model around a single prediction. It generates synthetic neighbors by perturbing the input (e.g., masking words in text, replacing superpixels in images, sampling tabular feature values), scores them with the black-box model, and fits a weighted linear regression where closer neighbors receive higher weight. The resulting coefficients are the explanation.
 
 LIME is fast for a single prediction but unstable — small changes in the random seed or perturbation strategy can produce different explanations. SHAP is generally preferred for tabular data; LIME remains popular for text and images.
 
-## Integrated Gradients
+Integrated Gradients
 
 For differentiable models (neural networks), Integrated Gradients attributes the prediction to input features by integrating the gradient of the output with respect to the input along a straight path from a baseline (e.g., black image, zero embedding vector) to the actual input. It satisfies completeness — attribution values sum to the output difference between the input and baseline — and is implementation-invariant.
 
-## Counterfactual Explanations
+Counterfactual Explanations
 
 A counterfactual explanation answers: what is the minimum change to the input that flips the model's decision? DiCE (Diverse Counterfactual Explanations) generates multiple counterfactuals that are diverse, actionable, and proximate. Counterfactuals are particularly valuable in consumer-facing applications — telling a loan applicant they would have been approved if their debt-to-income ratio were 2% lower is more actionable than a SHAP value.
 
-## Fairness Assessment
+Fairness Assessment
 
 Key group fairness metrics include demographic parity (positive prediction rates equal across groups), equalized odds (equal true positive and false positive rates across groups), and predictive parity (equal precision across groups). These metrics are mutually exclusive in most real-world scenarios (Chouldechova's impossibility theorem), so teams must choose which to optimize given the deployment context.
 
-## Error Analysis and Causal Inference
+Error Analysis and Causal Inference
 
 Cohort-based error analysis decomposes model error across demographic or feature-based subgroups to find where the model fails disproportionately. Error tree analysis builds a decision tree on incorrectly predicted samples to surface interaction effects that drive errors.
 
-## Production Explainability at Scale
+Production Explainability at Scale
 
 Generating exact SHAP values at serving time adds latency. Common strategies include precomputing explanations for batch decisions, caching SHAP background datasets, using FastTreeSHAP for streaming inference, and approximating with a smaller surrogate model.
 
-## EU AI Act and Regulatory Landscape
+EU AI Act and Regulatory Landscape
 
 The EU AI Act (effective 2024, enforcement phased through 2026) establishes risk tiers. High-risk systems (credit scoring, hiring, biometric identification, medical devices) must maintain technical documentation, undergo conformity assessment, implement human oversight, and log decisions. Explainability is not prescribed by method — regulators care that decisions can be reviewed and challenged.`,
     quickFire: [
@@ -3333,29 +3333,29 @@ Fourth, maintain a compliance audit trail. Every model promotion event should re
 
 Reproducibility is a first-class requirement in machine learning. A model trained on one slice of data can behave completely differently when retrained weeks later if the underlying dataset has silently changed. Unlike source code, raw datasets are often gigabytes or terabytes in size, live in object storage or distributed file systems, and are mutated in place. Traditional Git cannot track these files efficiently. Data versioning tools solve this by decoupling the lightweight metadata pointer from the heavy binary payload.
 
-## DVC — Data Version Control
+DVC — Data Version Control
 
 DVC (Data Version Control) treats data with the same discipline Git applies to source code. Each tracked file or directory is replaced by a small \`.dvc\` pointer file committed to Git. The actual bytes live in a configurable remote backend: Amazon S3, Google Cloud Storage, Azure Blob, SSH servers, or local paths. When you run \`dvc pull\`, DVC fetches the exact content-addressed version specified by the pointer.
 
 DVC pipelines (\`dvc run\` or \`dvc.yaml\`) record each transformation stage with its inputs, outputs, and command. Running \`dvc repro\` re-executes only stages whose dependencies have changed — a content-hash–based build cache. This gives you end-to-end experiment reproducibility: pinning both the code (Git commit) and the data (DVC pointer) fully determines a training run.
 
-## Delta Lake
+Delta Lake
 
 Delta Lake is an open-source storage layer that brings ACID transactions to Apache Spark data lakes. Every write operation — whether an INSERT, UPDATE, DELETE, or MERGE — appends a JSON transaction log entry to the \`_delta_log/\` directory. Readers and writers coordinate through this log, enabling snapshot isolation without a central lock manager.
 
 Time travel is a first-class feature: \`SELECT * FROM events TIMESTAMP AS OF '2024-01-01'\` or \`VERSION AS OF 42\` restores an earlier snapshot by replaying the transaction log up to that point. \`RESTORE TABLE events TO VERSION AS OF 42\` makes that version the current state. Schema enforcement rejects writes that would break downstream consumers, while schema evolution allows explicitly approved changes with \`MERGE schema\` options.
 
-## Apache Iceberg
+Apache Iceberg
 
 Apache Iceberg defines a table format specification rather than a storage engine. Its metadata hierarchy — catalog → metadata file → snapshot → manifest list → manifest files → data files — enables features impossible in Hive's directory-scanning model. Hidden partitioning stores the partition value alongside each data file rather than embedding it in the directory path, so partition schemes can evolve without rewriting data (\`ALTER TABLE ADD PARTITION FIELD\`).
 
 Snapshot isolation means readers always see a consistent view even while writers commit new snapshots. Compaction (\`rewrite_data_files\`) merges small files written by streaming ingestion into larger ones for efficient batch reads. Multiple catalogs are supported: Hive Metastore, AWS Glue, REST, JDBC, and Nessie.
 
-## LakeFS — Git Semantics for Object Storage
+LakeFS — Git Semantics for Object Storage
 
 LakeFS layers Git-like branching, committing, and merging directly onto S3, GCS, or Azure Blob without copying data. A branch is a zero-copy pointer to a set of objects; creating a branch is instantaneous regardless of dataset size. Data scientists can experiment on a feature branch, validate results, and merge back to main — or discard the branch entirely with no storage cost. CI pipelines can gate merges on data quality checks. LakeFS exposes an S3-compatible API, so existing tools (Spark, Pandas, DVC) work without modification.
 
-## Reproducing Training Runs
+Reproducing Training Runs
 
 Pinning an experiment requires three coordinates: the Git commit hash, the DVC pointer (or Delta/Iceberg snapshot ID), and the environment specification (Docker image digest or conda lock file). Teams that store all three in their experiment tracker can reconstruct any training run deterministically, which is essential for debugging production regressions and for regulatory audit trails.
 
@@ -3434,31 +3434,31 @@ For most ML teams: use Delta Lake if your stack is Databricks; use Iceberg if yo
 
 A machine learning pipeline is a directed acyclic graph of computational steps: data ingestion, validation, feature engineering, training, evaluation, and deployment. Running these steps manually works for a single experiment but fails at scale: steps need to be retried on transient failures, intermediate artifacts need to be cached, runs need to be scheduled on a cadence, and teams need visibility into what ran, when, and with what inputs. Orchestrators solve all of these problems.
 
-## Kubeflow Pipelines
+Kubeflow Pipelines
 
 Kubeflow Pipelines (KFP) is the orchestration layer in the Kubeflow ecosystem, designed for Kubernetes-native ML workflows. Each pipeline step runs in a separate Docker container, giving complete environment isolation. The KFP SDK lets you define pipelines in Python using the \`@component\` and \`@pipeline\` decorators. Components declare typed inputs and outputs; KFP wires them together and handles artifact passing through MinIO or a cloud object store.
 
 KFP tracks artifact lineage automatically — you can trace any model artifact back through evaluation, training, feature engineering, and raw data. Step-level caching stores the output of a component execution keyed on the component code and input fingerprint; reruns skip cached steps. The KFP UI provides a visual DAG, run history, and artifact viewer integrated into the Kubeflow central dashboard.
 
-## Apache Airflow
+Apache Airflow
 
 Apache Airflow is the most widely deployed workflow orchestrator in the data industry. Pipelines are Python DAG files stored in a \`dags/\` directory. Operators execute work: \`PythonOperator\`, \`BashOperator\`, \`KubernetesPodOperator\`, \`DockerOperator\`. XCom (cross-communication) lets tasks push small values for downstream tasks to pull. Sensors block execution until an external condition is met — for example, a file arriving in S3 or a Spark job completing.
 
 Airflow's scheduler backfills historical intervals, making it natural for time-partitioned ML pipelines that need to reprocess past data. Its primary limitation for ML is that it treats tasks as execution units, not data assets — there is no built-in notion of which dataset a task produces, making lineage tracking an add-on rather than a first-class feature.
 
-## Prefect
+Prefect
 
 Prefect is built on an async-native Python runtime. Flows and tasks are decorated Python functions; Prefect infers the DAG from data dependencies automatically. Prefect Cloud provides a managed orchestration plane while agents run locally or in Kubernetes, polling for work. The retry, timeout, and result caching policies are configured declaratively on each task. Prefect's fail-fast mode surfaces errors immediately; its deferred retry mode queues failed tasks for later execution without blocking the rest of the flow.
 
-## Dagster
+Dagster
 
 Dagster takes an asset-centric approach called Software-Defined Assets (SDAs). Instead of defining tasks that run, you define assets that exist — a training dataset, a feature table, a model artifact. Dagster infers the job DAG from asset dependencies. This inversion is powerful for ML: you can materialize a subset of assets on demand, inspect their current freshness, and set partition-level materialization policies. Type-checked inputs and outputs catch schema mismatches at the framework level rather than at runtime. Dagster's UI provides an asset catalog with lineage graphs, run history, and per-asset status.
 
-## Metaflow
+Metaflow
 
 Metaflow was developed at Netflix and open-sourced in 2019. Pipelines are Python classes where each method decorated with \`@step\` is a DAG node. The \`@resources\` decorator specifies CPU, memory, and GPU requirements; Metaflow provisions the corresponding AWS Batch or Kubernetes job. The \`@conda\` and \`@pypi\` decorators pin dependencies per step. Metaflow's local execution mode runs the exact same code locally that runs in the cloud, with no code changes. All artifacts are automatically versioned and retrievable via the Metaflow Client API.
 
-## Choosing an Orchestrator
+Choosing an Orchestrator
 
 Task-centric orchestrators (Airflow, Prefect) are natural fits for scheduled ETL pipelines with well-understood step sequences. Asset-centric orchestrators (Dagster) fit teams that want to reason about data freshness and lineage as primary concepts. Kubeflow Pipelines and Metaflow are purpose-built for ML, with native support for GPU scheduling, artifact lineage, and experiment tracking integration. Many mature ML platforms use two layers: Airflow for data pipeline scheduling and KFP or Metaflow for the training DAG itself.
 
@@ -3526,7 +3526,7 @@ Practically, enforce lineage completeness with a pre-registration check: before 
 
 Model evaluation in production systems has two distinct phases: offline evaluation, which happens before deployment using held-out data, and online evaluation, which measures model behavior on live traffic. Relying solely on offline metrics is insufficient — a model that performs well on a static test set can degrade in production due to distribution shift, latency constraints, or interaction effects with other system components. A mature MLOps practice uses both phases systematically.
 
-## Offline Evaluation
+Offline Evaluation
 
 The holdout test set is the foundation: a random or stratified sample of labeled examples set aside before any model training. Its integrity depends on avoiding any leakage from training data — including leakage through feature engineering pipelines that look at the full dataset. For classification, standard metrics are precision, recall, F1, and AUC-ROC. For regression, MAE, RMSE, and R².
 
@@ -3534,7 +3534,7 @@ K-fold cross-validation gives a lower-variance estimate of generalization error 
 
 Per-segment fairness slices go beyond aggregate metrics. A model might achieve 92% accuracy overall while performing at 75% for a demographic subgroup. Tools like Fairlearn, TFX Model Analysis, and Google's What-If Tool support slice-level metric computation. Threshold selection — choosing the operating point on the ROC curve — is a business decision: a fraud model may tolerate low precision to minimize missed fraud, while a content moderation model may prioritize precision to avoid false positives.
 
-## Online Evaluation
+Online Evaluation
 
 A/B testing exposes two user segments to different model versions and measures a business metric (conversion rate, engagement, revenue) in addition to ML metrics. The required sample size is determined by the minimum detectable effect (MDE), the desired statistical power (typically 80%), and the significance level (typically 5%). Experiments must run long enough to capture weekly seasonality and avoid novelty effects.
 
@@ -3542,7 +3542,7 @@ Shadow mode is the safest online evaluation technique. The new model receives a 
 
 Champion/challenger evaluation runs both models simultaneously on live traffic with a defined split (e.g., 90% champion, 10% challenger). The challenger is promoted if it meets pre-defined success criteria over a sufficient observation window. Rollback criteria — error rate spike, latency p99 regression, output distribution shift — are defined before the experiment starts.
 
-## Delayed Labels
+Delayed Labels
 
 Many production ML systems face the delayed label problem: ground truth arrives long after the prediction. A loan default label may arrive 30–90 days after origination; a click may arrive milliseconds after the recommendation. Evaluation in these systems requires logging all predictions with a request ID, collecting labels asynchronously, and joining them in a label store. The evaluation window must account for the label delay to avoid artificially optimistic metrics.
 
@@ -3613,25 +3613,25 @@ The Azure Machine Learning workspace is the top-level resource that organizes al
 
 Role-based access control (RBAC) at the workspace level separates data scientists (who can submit runs and register models) from ML engineers (who can deploy endpoints) from administrators (who manage compute and quotas). Workspaces support private endpoints and VNet integration for enterprise network isolation.
 
-## Experiments, Runs, and Environments
+Experiments, Runs, and Environments
 
 An experiment is a named grouping of training runs. A run is a single execution of a training script; it captures parameters, metrics, and artifacts logged via MLflow or the Azure ML SDK. Azure ML uses MLflow as its native tracking backend — \`mlflow.log_metric()\`, \`mlflow.log_param()\`, and \`mlflow.log_artifact()\` all work without modification, making experiments portable to other MLflow-compatible servers.
 
 Environments define the Python packages, conda dependencies, and Docker base image for a training job or endpoint. Azure ML curates environments for common frameworks (PyTorch, TensorFlow, HuggingFace) that are pre-built and cached in ACR, reducing startup time. Custom environments are defined in YAML and built once, then reused across runs.
 
-## Compute Targets and Azure ML Pipelines
+Compute Targets and Azure ML Pipelines
 
 Compute targets range from single-node VMs (compute instances, for interactive development) to auto-scaling compute clusters (AmlCompute, for batch training) to attached Kubernetes clusters (AKS, for serving) and Azure Databricks (for large-scale data processing). Compute clusters scale to zero when idle, so teams pay only for active training time.
 
 Azure ML Pipelines chain steps — data preparation, feature engineering, training, evaluation, registration — into a reproducible DAG. Each step runs on its own compute target and environment, enabling heterogeneous pipelines (e.g., a Spark step for feature engineering followed by a GPU step for training). Pipeline outputs are registered as datasets, creating automatic lineage.
 
-## Managed Endpoints
+Managed Endpoints
 
 Online endpoints provide real-time inference with SLA-backed availability. A deployment specifies the model, environment, compute SKU, and instance count. Traffic is routed to one or more deployments using a percentage split, enabling blue/green and canary patterns natively. Batch endpoints process large files asynchronously using AmlCompute, returning predictions to blob storage.
 
 The Responsible AI Dashboard, available in Azure ML Studio, integrates error analysis (decision tree–based error pattern discovery), fairness assessment (metric disparity across demographic slices), model interpretability (SHAP values), and causal analysis (DoWhy integration) into a single visualization surface. It is generated as a pipeline component that runs after model training and is attached to the registered model.
 
-## Azure Databricks Integration
+Azure Databricks Integration
 
 Azure Databricks is the preferred platform for large-scale feature engineering and distributed training. The integration with Azure ML allows Databricks compute clusters to be attached as training targets and enables bidirectional MLflow tracking: runs started in Databricks are visible in the Azure ML workspace experiment view. Feature tables created in Databricks Feature Store can be consumed directly by Azure ML training jobs and online endpoints.
 
@@ -3706,31 +3706,31 @@ The chosen mitigation must be re-evaluated on the test set, and the updated RAI 
 
 Deploying a new model version is riskier than deploying a new software version. A code change has deterministic behavior given the same inputs; a new model may produce different outputs for the exact same request, affecting user experience in ways that are hard to predict from offline metrics alone. The deployment strategy controls the blast radius of any unexpected behavior: how quickly a bad model reaches users, and how quickly it can be rolled back.
 
-## Blue/Green Deployment
+Blue/Green Deployment
 
 Blue/green maintains two identical production environments. The blue environment runs the current model; the green environment runs the new model. Traffic is switched atomically from blue to green at the load balancer level. Rollback is instant — switch traffic back to blue. The cost is maintaining two full production environments simultaneously, which doubles the serving infrastructure cost during the transition window.
 
 Blue/green is the right choice when the model change is large enough that gradual exposure is not meaningful, or when the serving infrastructure does not support traffic splitting natively. It is also preferred when rollback speed is the primary concern and cost is secondary.
 
-## Canary Deployment
+Canary Deployment
 
 A canary routes a small fraction of traffic — typically 1%, then 10%, then 50%, then 100% — to the new model while the remainder stays on the current model. Metrics are evaluated at each gate before traffic is increased. If any gate metric falls outside the acceptance window, the rollout is halted and traffic is returned to 0% on the new model.
 
 The key design decisions are: what fraction to use at each gate, how long to observe each gate (the observation window), and which metrics are gate-qualified. Business metrics (conversion, revenue per session) require larger sample sizes and longer windows than infrastructure metrics (error rate, latency). For ML-specific metrics (output distribution, score distribution), use KS tests to detect statistically significant divergence.
 
-## Shadow Mode
+Shadow Mode
 
 Shadow mode runs the new model in parallel with production, receiving a copy of each request but not returning its response to users. It is the lowest-risk evaluation technique because it has zero user impact. Shadow mode is used to validate that a new model: (a) produces responses without crashing, (b) meets latency requirements under real traffic patterns, and (c) produces output distributions consistent with expectations. It does not validate that the model produces better predictions — that requires an A/B test or champion/challenger experiment.
 
-## Feature Flags
+Feature Flags
 
 Feature flags decouple deployment from release. A new model is deployed to all serving instances but routed to only a subset of users based on a flag configuration in a feature flag service (LaunchDarkly, Unleash, GrowthBook). This enables targeting: the new model can be activated for internal users first, then beta users, then a percentage of production users. Flags can be toggled in seconds without a deployment, making rollback instantaneous.
 
-## Multi-Armed Bandit
+Multi-Armed Bandit
 
 A multi-armed bandit continuously reallocates traffic toward better-performing variants. Unlike A/B tests with a fixed allocation, bandits adapt: if the new model is winning on the reward metric (clicks, conversions), more traffic shifts to it automatically. Thompson Sampling and Upper Confidence Bound (UCB) are common bandit algorithms. Bandits are appropriate when the objective is to maximize reward during the experiment, not to reach a statistically definitive conclusion. They are widely used in recommendation and ad ranking systems.
 
-## Rollback Triggers
+Rollback Triggers
 
 Every deployment strategy needs pre-defined rollback triggers. Define them before the rollout begins: error rate > X%, latency p99 > Y ms, output distribution KS statistic > Z. Automated rollback — triggered by monitoring alerts without human intervention — is preferable for fast-moving systems. Manual rollback requires an on-call engineer to observe the alert, assess severity, and execute the rollback procedure, which introduces minutes of delay.
 
@@ -3804,29 +3804,29 @@ Test automated rollback quarterly by deliberately deploying a model that exceeds
 
 Machine learning systems introduce security vulnerabilities that do not exist in traditional software. The attack surface spans the entire ML lifecycle: data collection and labeling, model training, model storage and distribution, and inference serving. A mature MLSecOps practice treats these threats with the same rigor applied to application security — threat modeling, attack simulation, defense implementation, and continuous monitoring.
 
-## Adversarial Examples
+Adversarial Examples
 
 Adversarial examples are inputs crafted to fool a model while appearing normal to a human observer. The Fast Gradient Sign Method (FGSM) adds a perturbation proportional to the gradient of the loss with respect to the input, in the direction that maximizes prediction error. A single-step attack, FGSM is fast but detectable. Projected Gradient Descent (PGD) iterates FGSM multiple times, projecting the perturbation back into an epsilon-ball after each step — it finds stronger adversarial examples within a given perturbation budget.
 
 Physical adversarial attacks extend this to the real world: adversarial patches printed on paper can fool object detection systems in camera feeds. In NLP, character substitution, synonym replacement, and homoglyph attacks fool text classifiers with imperceptible changes. In speech, psychoacoustic hiding inserts commands inaudible to humans but interpreted by voice recognition systems.
 
-## Data Poisoning
+Data Poisoning
 
 Data poisoning attacks corrupt the training pipeline rather than inference. In backdoor attacks, an attacker inserts training examples with a trigger pattern (a specific pixel patch, a word token) and a target label. The trained model behaves normally on clean inputs but produces the attacker's chosen label whenever the trigger is present. Clean-label attacks do not change the label — they modify the input features imperceptibly to cause the model to learn incorrect decision boundaries.
 
 Label flipping attacks change a fraction of training labels from correct to incorrect, degrading overall model accuracy or targeting a specific class. In federated learning, a malicious participant can submit poisoned gradient updates that survive aggregation.
 
-## Model Stealing and Membership Inference
+Model Stealing and Membership Inference
 
 Model stealing extracts a functionally equivalent copy of a model by querying its prediction API repeatedly. Given enough (input, output) pairs, an attacker can train a surrogate model that matches the target's behavior. This undermines the business value of proprietary models and enables targeted adversarial attacks (since the surrogate is a white-box proxy).
 
 Membership inference attacks determine whether a specific record was in the training set by querying the model. Models that overfit tend to output higher confidence scores for training examples than for unseen examples. This is a privacy violation when the training data contains sensitive personal information (medical records, private communications).
 
-## Supply Chain Attacks
+Supply Chain Attacks
 
 Pre-trained models downloaded from public hubs (HuggingFace, PyPI) can carry embedded backdoors that survive fine-tuning. Pickle-based serialization formats (\`torch.load\`, \`pickle.load\`) execute arbitrary Python code on deserialization — a malicious \`.pt\` file can run a reverse shell. This is a critical supply chain risk for teams that download pre-trained weights without verification.
 
-## Defenses
+Defenses
 
 Adversarial training augments the training set with adversarially perturbed examples, teaching the model to correctly classify inputs near the decision boundary. PGD-adversarial training is the most robust known defense against norm-bounded attacks.
 
@@ -3909,13 +3909,13 @@ Stage 6 — Runtime isolation: serve models in containers with minimal system pr
 
 Most production ML systems follow a batch retraining cycle: collect data, retrain, evaluate, deploy, repeat. For many applications — weekly content recommendations, monthly fraud model updates — this is sufficient. But for fast-moving domains where the data distribution changes on timescales shorter than the retraining cycle, batch retraining is too slow. Real-time fraud detection, CTR prediction for news articles, and dynamic pricing in spot markets all benefit from models that update continuously as new observations arrive.
 
-## Online Learning Algorithms
+Online Learning Algorithms
 
 Online learning algorithms update model parameters incrementally, one example or mini-batch at a time, without revisiting past data. Online Gradient Descent (OGD) applies a single SGD step per example with a decaying learning rate. Vowpal Wabbit (VW) is a production-grade online learning library from Microsoft that implements logistic regression, contextual bandits, and neural networks with sub-millisecond per-example update latency. The River library (Python) provides a modern online learning toolkit with implementations of Naive Bayes, Hoeffding Trees, and adaptive ensemble methods designed for data streams.
 
 The key property of online learning is O(1) memory: the model processes each example once and discards it. This makes online learning suitable for unbounded data streams where storing the full history is impractical.
 
-## Continual Learning and Catastrophic Forgetting
+Continual Learning and Catastrophic Forgetting
 
 Continual learning differs from online learning in scope: it addresses the challenge of learning a sequence of tasks while retaining performance on previous tasks. When a neural network is fine-tuned on new task data with standard gradient descent, it overwrites the weights that encoded knowledge of the previous task — a phenomenon known as catastrophic forgetting or catastrophic interference.
 
@@ -3925,13 +3925,13 @@ Progressive Neural Networks allocate new capacity (new columns of neurons) for e
 
 Experience Replay stores a buffer of past task examples and mixes them into each mini-batch during new task training. The simplest variant, Reservoir Sampling, maintains a fixed-size buffer that is uniformly sampled from the stream. Dark Experience Replay (DER) stores soft labels (logits) in addition to inputs, providing richer training signal for replay.
 
-## Concept Drift
+Concept Drift
 
 Concept drift occurs when the statistical properties of the data stream change over time. Sudden drift is an abrupt shift (a new fraud pattern emerges overnight). Gradual drift is a slow change (seasonal purchasing behavior shifts). Recurring drift cycles (weekday vs. weekend traffic patterns). Incremental drift is a steady monotonic shift.
 
 The ADWIN (ADaptive WINdowing) algorithm detects drift by maintaining a sliding window of recent examples and testing whether the error rate in the recent sub-window is significantly higher than in the older sub-window. When drift is detected, ADWIN shrinks the window to exclude pre-drift data. The Page-Hinkley test is a sequential change detection method based on cumulative sum statistics, suited for detecting drift in continuously monitored metrics. The Drift Detection Method (DDM) monitors the online learner's error rate: a statistically significant increase triggers a warning or drift alarm.
 
-## When to Use Online vs. Batch Retraining
+When to Use Online vs. Batch Retraining
 
 Use online learning when: labels are available within seconds to minutes (clicks, transactions, sensor readings); the prediction task changes faster than the retraining cycle; or memory constraints prohibit storing a growing training set. Use batch retraining when: labels are delayed (weeks to months); model quality requires evaluation on a held-out test set before deployment; or the model architecture requires full-dataset statistics (normalization layers, tree splits).
 
@@ -4010,31 +4010,31 @@ Prevention: design the training pipeline to use a sliding window of recent data 
 
 Software testing practices — unit tests, integration tests, end-to-end tests — apply to ML systems but are insufficient on their own. An ML system has three failure modes that traditional tests miss: silent data quality degradation, unexpected model behavior on distribution-edge inputs, and training pipeline non-determinism. A mature ML testing infrastructure extends the standard test pyramid with layers specific to data and model behavior.
 
-## The ML Test Pyramid
+The ML Test Pyramid
 
 The base of the pyramid — unit tests — covers the deterministic components: data transformation functions, feature engineering logic, pre/post-processing code. These tests are fast, cheap, and should run on every commit. A transformation that maps raw categorical values to embeddings should be tested for correctness, null handling, and boundary values with pytest. Model architecture unit tests verify that a forward pass produces the expected output shape for a given input tensor shape.
 
 Integration tests verify that pipeline stages compose correctly. A training pipeline integration test runs the full pipeline on a small synthetic dataset and verifies that the model is saved to the expected artifact location, that metrics are logged to the experiment tracker, and that the evaluation stage loads the model correctly. These tests catch interface mismatches between pipeline stages that unit tests cannot.
 
-## Data Validation Tests
+Data Validation Tests
 
 Data validation is a first-class test category for ML systems. Great Expectations defines "expectations" — assertions about data schema, null rates, value ranges, and statistical distributions — as versioned test suites. An expectation suite is generated from a reference batch of clean training data and checked against every new data batch in the pipeline. Soda provides a SQL-first alternative with \`soda scan\` checks defined in YAML. TFX Data Validation (TFDV) integrates with TensorFlow Extended pipelines and supports distribution-based anomaly detection.
 
 The key expectations for ML data: schema conformance (column names, types), null rate thresholds (< 5% nulls on critical features), value range checks (age > 0, price > 0), cardinality checks for categorical features (no unseen categories in serving that were absent in training), and distribution drift checks (PSI or KS statistic against training statistics).
 
-## Model Behavioral Tests
+Model Behavioral Tests
 
 Behavioral testing (inspired by the CheckList framework from Ribeiro et al. 2020) evaluates model behavior through semantically meaningful test cases rather than aggregate metrics. Three test types: invariance tests (small perturbations to inputs should not change the output — changing a person's name in a resume should not change a hiring model's score), directional tests (increasing a feature value should monotonically change the output in the expected direction — higher credit score should increase loan approval probability), and minimum functionality tests (the model must correctly classify obviously positive and obviously negative examples from a hand-curated minimum competency set).
 
 These tests are implemented as pytest parametrize suites and run as a post-training gate before model registration. A model that fails behavioral tests is not registered, regardless of its aggregate AUC.
 
-## Training Pipeline Tests
+Training Pipeline Tests
 
 Training pipeline tests verify properties of the training process itself. Determinism test: run training with a fixed random seed on the same data twice; verify that the output weights are bit-for-bit identical. Convergence test: run 10 gradient steps on a tiny batch; verify that the loss decreases monotonically. Overfitting test: run training for 100 epochs on a tiny dataset (10 examples); verify that the model achieves near-zero training loss, confirming that the gradient computation is correct and the model has sufficient capacity.
 
 These tests catch silent bugs in the training code: incorrect loss function, wrong gradient flow due to detached tensors, incorrect learning rate schedule implementation. They run quickly on CPU and should be part of the CI pipeline on every training code commit.
 
-## Serving Tests and Hermetic Environments
+Serving Tests and Hermetic Environments
 
 Serving tests verify the contract between the model and its serving infrastructure. A schema contract test sends a valid inference request to the serving endpoint and verifies that the response matches the expected schema (field names, types, value ranges). A latency SLO test sends N requests concurrently and verifies that p99 latency is below the SLO. A throughput test verifies that the endpoint sustains the target QPS without error rate degradation.
 
