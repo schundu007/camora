@@ -190,5 +190,13 @@
     "unsplashUrl": "https://unsplash.com/photos/photo-1518770660439-4636190af475?utm_source=camora&utm_medium=referral",
     "query": "circuit board macro dark tech",
     "bytes": 83520
+  },
+  "agentic": {
+    "file": "/topic-heroes/agentic.jpg",
+    "photographer": "Igor Omilaev",
+    "photographerUrl": "https://unsplash.com/@omilaev?utm_source=camora&utm_medium=referral",
+    "unsplashUrl": "https://unsplash.com/photos/a-blue-and-purple-background-with-lines-and-dots-gVQLAbGVB6Q?utm_source=camora&utm_medium=referral",
+    "query": "neural network abstract nodes dark",
+    "bytes": 0
   }
 }
