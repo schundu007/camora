@@ -2791,6 +2791,13 @@ figure:has(> .viz-caption) {
 .docs-page ul > li::marker,
 .prep-content > ul > li::marker,
 .prep-content > section > ul > li::marker { color: var(--cam-gold-leaf); }
+
+/* FormattedContent prose fills the flex container — measure is owned
+   by the parent layout (prep-content + TOC rail), not inline max-width.
+   Overrides the 72ch/68ch constraints that fire when section wrappers
+   match .prep-content > section > p/li selectors. */
+.formatted-content p,
+.formatted-content li { max-width: none; }
 .docs-page ol > li::marker,
 .prep-content > ol > li::marker,
 .prep-content > section > ol > li::marker { color: var(--cam-primary); font-weight: 700; }
