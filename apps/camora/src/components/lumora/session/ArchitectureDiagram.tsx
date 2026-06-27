@@ -48,9 +48,10 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
   const [noCache, setNoCache] = useState(false);
   const [cloudProvider, setCloudProvider] = useCloudProvider();
 
-  // Zoom — scroll-based (overflow:auto handles pan; no drag needed)
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ active: boolean; x: number; y: number; sl: number; st: number }>({ active: false, x: 0, y: 0, sl: 0, st: 0 });
   const [scale, setScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const resetView = useCallback(() => setScale(1), []);
@@ -261,8 +262,23 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
             background: 'var(--bg-surface)',
             border: '1px solid var(--border)',
             maxHeight: '65vh',
-            cursor: scale > 1 ? 'grab' : 'zoom-in',
-          }}>
+            cursor: isDragging ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in',
+          }}
+          onMouseDown={e => {
+            if (e.button !== 0 || !containerRef.current) return;
+            dragRef.current = { active: true, x: e.clientX, y: e.clientY, sl: containerRef.current.scrollLeft, st: containerRef.current.scrollTop };
+            setIsDragging(true);
+            e.preventDefault();
+          }}
+          onMouseMove={e => {
+            const d = dragRef.current;
+            if (!d.active || !containerRef.current) return;
+            containerRef.current.scrollLeft = d.sl - (e.clientX - d.x);
+            containerRef.current.scrollTop  = d.st  - (e.clientY - d.y);
+          }}
+          onMouseUp={() => { dragRef.current.active = false; setIsDragging(false); }}
+          onMouseLeave={() => { dragRef.current.active = false; setIsDragging(false); }}
+        >
           <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: 'min-content' }}>
             <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
               style={{ width: '100%', height: 'auto', display: 'block' }} />
