@@ -89,7 +89,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
   try {
     // Check daily free limit for free-tier users (atomic: check + reserve in one CTE)
     const userPlan = user.plan_type || 'free';
-    if (userPlan === 'free') {
+    if (userPlan === 'free' && !user.is_admin) {
       const dailyCheck = await checkAndReserveInferenceSlot(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
@@ -325,7 +325,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
   try {
     // Check daily free limit for free-tier users (atomic: check + reserve in one CTE)
     const userPlan = user.plan_type || 'free';
-    if (userPlan === 'free') {
+    if (userPlan === 'free' && !user.is_admin) {
       const dailyCheck = await checkAndReserveInferenceSlot(user.id);
       if (!dailyCheck.allowed) {
         return res.status(429).json({ error: dailyCheck.message });
