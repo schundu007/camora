@@ -564,7 +564,7 @@ export default function FormattedContent({ content, inline = false }) {
                 key={`h-${blockIdx}-${lineIdx}`}
                 className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
               >
-                {headerText}
+                {formatInlineText(headerText)}
               </h3>,
             );
           }
@@ -618,7 +618,7 @@ export default function FormattedContent({ content, inline = false }) {
                 key={`h-${blockIdx}-${lineIdx}`}
                 className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
               >
-                {label}
+                {formatInlineText(label)}
               </h4>,
             );
           }
@@ -637,7 +637,7 @@ export default function FormattedContent({ content, inline = false }) {
                 key={`h-${blockIdx}-${lineIdx}`}
                 className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
               >
-                {text}
+                {formatInlineText(text)}
               </h3>,
             );
           } else {
@@ -646,7 +646,7 @@ export default function FormattedContent({ content, inline = false }) {
                 key={`h-${blockIdx}-${lineIdx}`}
                 className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
               >
-                {text}
+                {formatInlineText(text)}
               </h4>,
             );
           }
