@@ -45,17 +45,12 @@ export async function requirePaidSubscription(req, res, next) {
     // Owner bypass — staff/founder access without paying.
     if (isOwnerEmail(user.email)) return next();
 
+    // DB admin bypass — users granted is_admin via the admin UI.
+    if (user.is_admin) return next();
+
     // Read entitlement from ascend_subscriptions (the canonical billing table).
-    // ascend_free_usage holds trial start/end so we can recognize active trials.
     const r = await query(
-      `SELECT s.plan_type,
-              s.status,
-              s.trial_ends_at,
-              fu.trial_started_at,
-              fu.trial_expires_at
-         FROM ascend_subscriptions s
-    LEFT JOIN ascend_free_usage fu ON fu.user_id = s.user_id
-        WHERE s.user_id = $1`,
+      `SELECT plan_type, status, trial_ends_at FROM ascend_subscriptions WHERE user_id = $1`,
       [user.id],
     );
     const sub = r.rows[0];
@@ -64,6 +59,11 @@ export async function requirePaidSubscription(req, res, next) {
 
     // Active paid plan
     if (PAID_PLAN_TYPES.has(planType) && status === 'active') {
+      return next();
+    }
+
+    // Active trial — granted via admin panel grant-trial
+    if (sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date()) {
       return next();
     }
 
