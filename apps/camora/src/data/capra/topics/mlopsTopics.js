@@ -31,6 +31,8 @@ export const mlopsTopicCategoryMap = {
   'mlops-ml-security':               'mlops-core',
   'mlops-online-continual-learning': 'mlops-core',
   'mlops-testing-infrastructure':    'mlops-core',
+  'agent-tool-security':             'mlops-core',
+  'agent-loop-prevention':           'mlops-core',
 };
 
 export const mlopsTopics = [
@@ -1335,6 +1337,28 @@ Per-tenant cost caps enforce a maximum spend. The proxy checks the running cost 
 Prompt caching is the highest-leverage cost reduction. Anthropic and OpenAI both support prefix caching as of 2024-2025 -- if you mark the static portion of your prompt (system prompt, RAG context) as cacheable, cache hit reads cost 80-90% less than fresh tokens. For a RAG application where the system prompt is hundreds of tokens and the retrieved context adds thousands more, caching the prefix on every turn of a multi-turn conversation reduces cost per turn by 70-85%.
 
 Model routing assigns requests to the cheapest model that can handle them satisfactorily. Simple classification tasks route to Claude Haiku or GPT-4o-mini; complex synthesis routes to Claude Sonnet or GPT-4o. The routing logic can be static (by task type), dynamic (route based on query complexity score), or an LLM-as-router (use a cheap model to classify the query and select the serving model). LiteLLM supports routing with fallbacks. Track cost-per-task across routing strategies to tune the accuracy-cost tradeoff.`,
+      },
+      {
+        question: 'If we want to update the system prompt for our core agent, how do you mathematically prove to me that the new prompt is better than the old one before we merge the PR?',
+        answer: `Saying a new prompt looks better is subjective and unreproducible. A PR that changes the system prompt for a production agent needs the same rigor as a PR that changes a sorting algorithm: quantitative evidence that the change improves the target metrics and does not regress any existing ones.
+
+The first step is building an eval dataset before you write the new prompt. The dataset has three categories. Golden QA pairs are hand-curated examples where the correct answer is unambiguous, covering the core use cases the agent handles. Adversarial inputs are designed to surface failure modes: prompt injections, edge-case queries, queries outside the agent's scope, queries where the old prompt was known to produce wrong answers. Regression cases are drawn from production logs, labeled by humans or a judge model, covering the long tail of real queries. A minimum of 50-100 examples is needed for statistical power; 200 or more is better for catching subtle regressions.
+
+Automated metrics depend on the task type. For narrow, extractive tasks like structured data extraction or classification, ROUGE and BLEU provide reference-based scores that are fast and reproducible. For open-ended generation -- which covers most agentic tasks -- these metrics fail because they penalize valid paraphrases that do not match the reference text exactly. This is where LLM-as-judge becomes the standard approach.
+
+LLM-as-judge uses a strong judge model -- Claude Opus or GPT-4o, never the same model family as the one being evaluated, to avoid family bias -- to score each output on a rubric. A production rubric for a general agent typically scores: correctness (1-5: is the factual content accurate?), helpfulness (1-5: does the response address the user's actual need?), and groundedness (1-5: are claims supported by the provided context, not hallucinated?). The judge runs in both pairwise mode (given query Q, which response is better: old prompt or new prompt?) and single-pass absolute scoring mode. Pairwise scoring is more reliable for catching small differences; single-pass scoring gives you absolute metric values to track over time.
+
+DeepEval is the best Python library for wiring this into CI. You write eval test cases as pytest-style functions using assert_test(), declare metrics as GEval objects with a custom rubric, or use DeepEval's built-in faithfulness metric and answer_relevancy metric. The test file runs with pytest and fails the CI step if any metric falls below its threshold. This makes prompt quality a first-class CI gate alongside unit tests.
+
+For RAG-backed agents, Ragas provides four metrics computable without human labels: faithfulness (does the answer contain only claims present in the retrieved context?), answer relevance (does the answer address the query?), context precision (are the retrieved chunks relevant?), and context recall (do the retrieved chunks contain the information needed to answer?). These run in minutes on a sampled dataset and catch retrieval-generation coupling issues that pure generation metrics miss.
+
+Promptfoo is the dedicated CLI tool for side-by-side prompt comparison. You define a promptfooconfig.yaml with both prompt versions, the eval dataset, and the judge model. Running promptfoo eval produces a side-by-side diff table with per-example scores, aggregate metric summaries, and a pass/fail status. The output is designed to be posted as a CI comment. This is the tool you run as the merge gate on the PR.
+
+Statistical significance is the part most teams skip that causes the most downstream problems. With N=100 examples and a 3-point improvement in mean LLM-judge score, the question is whether this improvement is real or noise. Use the Wilcoxon signed-rank test -- non-parametric, appropriate because LLM judge scores are ordinal rather than continuous -- to test whether the distribution of per-example score differences is significantly positive. Bootstrap confidence intervals are an alternative: resample the 100 examples with replacement 10,000 times, compute the mean score difference each time, and report the 95% interval. If the interval includes zero, the improvement is not statistically significant and the PR should not be merged on quality grounds alone.
+
+The PR gate works as follows. The CI workflow runs promptfoo eval and DeepEval against the eval suite on every PR that touches the system prompt file. If the new prompt regresses on any metric by more than 5% relative to the score stored for the current production prompt, the CI check fails and the PR is blocked from merging. If the new prompt improves on all metrics, the CI check passes and the detailed report is auto-posted as a PR comment so reviewers can inspect the per-example breakdown.
+
+Even with full automation, add a human spot-check layer for major prompt changes. Before merging, pull 20 random examples from the eval suite and review the old-versus-new outputs side by side. Automated judges have systematic blind spots -- they rate fluent-but-factually-wrong answers too highly, for example. A 20-example human review adds 30 minutes of work and catches the class of errors that consistently slips through automated metrics.`,
       },
     ],
     visualizations: [
@@ -4074,6 +4098,156 @@ On scheduled daily retraining (2am UTC): the pipeline runs stages 2-6 automatica
 
 The pipeline is defined in YAML (GitHub Actions), with each stage as a separate job with explicit dependencies. All secrets (model registry credentials, cloud provider keys) are stored in GitHub Secrets, never in the repository. The pipeline configuration is version-controlled alongside the model code and reviewed in the same pull request.`,
       },
+    ],
+  },
+  {
+    id: 'agent-tool-security',
+    title: 'Agent Tool Security',
+    icon: 'shield',
+    color: '#84cc16',
+    questions: 6,
+    description: 'Securing agent access to internal data sources — SQL injection prevention, MCP tool definitions, JWT-scoped permissions, row-level security, and audit logging for agentic queries against databases like Snowflake.',
+    introduction: `Giving an agent access to query internal databases introduces a security surface that is fundamentally harder to lock down than API security on human-initiated requests. When a human engineer writes a SQL query, they decide what to query based on known intent. When an agent writes a query, it decides based on a natural language instruction that may have been manipulated by a user prompt injection. The result is a direct path from untrusted user input to your most sensitive internal data.
+
+The attack surface has two entry points: the tool definition and the tool input. A poorly scoped tool definition lets the agent access tables it should never touch. A tool implementation that concatenates user-supplied values into SQL queries is vulnerable to prompt injection leading to SQL injection, regardless of how well the tool definition is scoped.
+
+MCP (Model Context Protocol) is the emerging standard for defining agent tools in 2026. An MCP tool definition specifies the tool schema as JSON Schema -- the parameter names, types, and constraints the agent must conform to when calling the tool. A query_snowflake tool that accepts allowed_tables (array of strings from a fixed allowlist), filter (object with typed fields), and limit (integer, maximum 1000) cannot be called with a raw SQL string parameter, because the schema does not allow one. The schema is the first security layer; it constrains the call structure before any implementation code runs.
+
+The second layer is parameterized query construction in the tool implementation. Even with a strict MCP schema, the tool must build SQL using parameterized queries with placeholder binding -- cursor.execute with %s placeholders in Python, or Snowflake bind parameters -- never string concatenation. If the agent passes a filter value that contains SQL syntax, parameterization prevents it from altering the query structure. The tool implementation is the last programmatic defense before the database.
+
+JWT-scoped credentials add identity-based access control at the tool layer. Rather than using a shared database credential for all agent calls, the agent authenticates via a short-lived JWT (15-minute TTL) issued by your auth service at session start. The JWT payload encodes the data access scope for this agent session: allowed_schemas, allowed_tables, and a read_only flag. The tool validates these claims before executing and injects them into the Snowflake session context for row-level security enforcement.
+
+Row-level security in Snowflake and PostgreSQL filters rows based on session context rather than query content. A Snowflake row access policy reads the session context variable set from the JWT claims at connection time and appends a WHERE clause limiting rows to the allowed tenant or data scope. This means even if the tool is called correctly by the agent and even if the JWT is somehow compromised, the database itself enforces data boundaries independent of the query logic.
+
+Audit logging closes the loop. Every agent query should be logged with the agent ID, user ID, JWT claims used, the parameterized SQL executed, the number of rows returned, and the execution time. Anomaly detection on this log stream -- queries returning more than 10,000 rows, queries hitting tables outside the typical access pattern, high-frequency query bursts from a single agent session -- surfaces data exfiltration attempts that pass all other controls.`,
+    quickFire: [
+      { q: 'What is an MCP tool definition?', a: 'A JSON Schema specification of the parameters an agent tool accepts, validated before the tool implementation runs. It is the first security layer preventing malicious or malformed tool calls.' },
+      { q: 'Why are parameterized queries essential even in MCP-defined tools?', a: 'Because the agent\'s filter values arrive as untrusted input at runtime. Parameterized queries ensure those values cannot alter the SQL query structure regardless of their content.' },
+      { q: 'What does a JWT-scoped credential contain for database access?', a: 'Claims for allowed_schemas, allowed_tables, and a read_only flag, with a short TTL (15 minutes). The tool validates these claims before executing and uses them to set database session context.' },
+      { q: 'How does Snowflake row-level security integrate with JWT claims?', a: 'The tool sets a Snowflake session context variable from the JWT claims at connection time. A row access policy reads this variable and appends a WHERE clause filtering rows to the allowed scope.' },
+      { q: 'What is the prompt injection to SQL injection attack path for agents?', a: 'A user embeds a malicious instruction in their query that the agent follows, causing the agent to pass a malicious filter value to the tool. Without parameterized queries, this value can alter the SQL query structure.' },
+      { q: 'Why use an allowlist rather than a blocklist for table access?', a: 'A blocklist must enumerate every sensitive table; any new table added to the database is accessible by default. An allowlist requires explicit inclusion, so new tables are blocked by default.' },
+      { q: 'What is Snowflake query tagging and why is it useful for agents?', a: 'ALTER SESSION SET QUERY_TAG labels all queries from a session. Tagging with agent_id and user_id makes audit log filtering efficient -- you can isolate all queries from a specific agent session in Snowflake query history.' },
+      { q: 'What database role should agent tool credentials map to?', a: 'A read-only role with SELECT-only grants on an explicit table allowlist. Even if the credential is compromised, the role cannot INSERT, UPDATE, DELETE, or access schemas outside its grant scope.' },
+      { q: 'How should agent database credentials be rotated?', a: 'Short-lived JWT tokens (15-minute TTL) enforce continuous effective rotation. The underlying service credential should be rotated on a schedule (daily or weekly) via a secrets manager like HashiCorp Vault or AWS Secrets Manager.' },
+      { q: 'What is the least-privilege principle as applied to agent tool access?', a: 'The agent is granted access to the minimum set of tables, schemas, and operations required for its task, scoped per session via JWT claims rather than granted statically at deployment time.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk me through how you would securely give an agent access to query our internal Snowflake database without exposing us to SQL injection or data leaks.',
+        answer: `The solution has seven distinct security layers that compose into a defense-in-depth architecture. Each layer is independently valuable; all seven together make exploitation require simultaneous failure of multiple independent controls.
+
+Layer 1 is the MCP tool definition. The agent never writes raw SQL. You expose a query_snowflake MCP tool with a strict JSON Schema: allowed_tables accepts an array of strings constrained to an enum of permitted table names. filter accepts a typed object with field names mapped to primitive types (string, number, date). limit accepts an integer with a maximum of 1000. The agent cannot call this tool with a raw SQL string parameter because the schema does not declare one. Schema validation runs client-side before the call reaches the tool server. This prevents the entire class of attacks where the agent is manipulated into passing arbitrary SQL.
+
+Layer 2 is parameterized queries in the tool implementation. The Python tool function receives the validated parameters and builds SQL using parameterized queries -- cursor.execute with %s placeholder syntax, never string concatenation. The table name is resolved from the allowed_tables enum to a hardcoded string, not interpolated from input. Even if an adversarial filter value contains SQL syntax, parameterization prevents it from altering the query structure.
+
+Layer 3 is JWT-scoped credentials. The agent authenticates at session start via a short-lived JWT (15-minute TTL) issued by your auth service. The JWT payload contains allowed_schemas, allowed_tables, and read_only: true. The tool implementation verifies the JWT signature and checks that the requested table is in the allowed_tables claim before proceeding. A valid JWT for a sales analytics agent cannot authorize access to the HR schema even if the MCP schema validation is somehow bypassed.
+
+Layer 4 is the read-only Snowflake role. The database credentials used by the tool service map to a Snowflake role with SELECT-only privileges on an explicit table allowlist. Even if the JWT is compromised or the application layer is bypassed, the database role prevents INSERT, UPDATE, DELETE, and TRUNCATE operations. The role is created with GRANT SELECT ON TABLE ... TO ROLE agent_reader with explicit per-table permissions, never wildcard grants.
+
+Layer 5 is row-level security. A Snowflake row access policy reads the session context variable set from the JWT claims at connection time and appends a WHERE clause filtering rows to the allowed tenant or data partition. A sales agent only sees sales schema rows; a customer support agent only sees records for its assigned customer segment. This is enforced by the database independent of application logic.
+
+Layer 6 is query complexity limits. The Snowflake warehouse is configured with a statement timeout of 30 seconds and a maximum concurrent query limit. The tool implementation rejects queries with more than 5 JOINs or subqueries referencing non-indexed columns. A query resource monitor alerts if any single query consumes more than 10% of the daily credit budget. This prevents the agent from accidentally -- or through manipulation -- triggering a warehouse-killing full table scan.
+
+Layer 7 is audit logging. Every agent query is written to an audit log: agent_id, user_id, JWT claims used, parameterized SQL post-substitution, row count returned, execution time in milliseconds, and timestamp. A streaming alert fires when any single query returns more than 10,000 rows, when a query accesses a table not in the session JWT allowed_tables, or when query frequency from a single agent session exceeds 100 queries per minute. The audit log is append-only and stored in a separate database schema where the agent role has no access.`,
+      },
+      {
+        question: 'How does MCP (Model Context Protocol) enforce tool-level security boundaries for an agent?',
+        answer: `MCP security model is built on a capability-based access model: an agent can only call tools that appear in its tool list for the session, and each tool inputs are constrained by a JSON Schema definition that is validated before the tool implementation runs.
+
+The MCP tool server runs as a separate process or container from the agent orchestrator. It exposes a list of tool definitions over a transport (stdio, HTTP with SSE, or WebSocket). When the agent session is initialized, the orchestrator fetches this list and presents it to the LLM as the set of available tools. The LLM cannot invoke arbitrary code or call tools outside this list -- there is no escape hatch in the protocol.
+
+Each tool definition includes a JSON Schema for its input parameters. When the LLM generates a tool call, the MCP client validates the generated inputs against the schema before forwarding the call to the tool server. A query_snowflake tool that accepts allowed_tables as an enum array and limit as an integer with maximum 1000 cannot be called with a raw SQL string or a limit of 1,000,000 -- schema validation rejects these inputs and the call never reaches the tool server.
+
+The tool server itself enforces a second validation layer before executing. Defense in depth means the tool implementation re-validates its inputs, checks the JWT claims on the request, and enforces parameterized query construction independently of the MCP client validation. If client-side schema validation is somehow bypassed, the server-side check catches it.
+
+Process isolation means a vulnerability in the tool implementation cannot directly compromise the agent orchestrator or other tools. Each tool server runs as a separate process with minimal OS permissions -- filesystem access limited to its own working directory, network access limited to its upstream service endpoints, no access to other tools secrets or state. Container-level isolation with a read-only filesystem and an explicit network allowlist implements this boundary in production.
+
+The orchestrator enforces a per-session tool capability set that controls which tools appear in the LLM tool list for a given session. A customer support agent gets a tool list including query_order_history and create_support_ticket but not query_financial_data or query_employee_records. This session-level scoping is set at session creation based on the user role and the agent declared purpose, encoded in the session JWT, and verified by the orchestrator before populating the tool list. The LLM is structurally unable to access tools not in its session list -- they do not exist from its perspective.`,
+      },
+    ],
+    tips: [
+      'Define MCP tool schemas as the tightest contract possible: enumerate allowed values for string parameters as enums rather than accepting free-form strings, set explicit maximum values for numeric parameters, and mark all optional fields with explicit defaults.',
+      'Log every tool call with its full parameter set and the JWT claims used, not just success or failure status. Operational visibility into what the agent queried is essential for both debugging and security forensics.',
+      'Never use the same database credential for agents and application code. Agents need their own database role with a separate audit trail so agent-originated queries are distinguishable from application-originated queries in Snowflake query history.',
+      'Test your parameterized query implementation with adversarial inputs before deploying: pass SQL keywords (DROP TABLE, UNION SELECT, --), null bytes, and multi-kilobyte strings as filter values and verify they are handled correctly without altering query structure.',
+      'Treat the MCP tool definition file as a security boundary document reviewed alongside the tool implementation in every code review. If the schema allows a dangerous input pattern, the implementation defense is the only remaining layer.',
+    ],
+    references: [
+      'https://modelcontextprotocol.io/docs/concepts/tools',
+      'https://docs.snowflake.com/en/user-guide/security-row-intro',
+    ],
+  },
+  {
+    id: 'agent-loop-prevention',
+    title: 'Agent Loop Prevention',
+    icon: 'refreshCw',
+    color: '#84cc16',
+    questions: 5,
+    description: 'Preventing agents from infinite loops when tools fail — retry state counters in Pydantic state models, circuit breakers, Pydantic self-healing for malformed tool outputs, and exponential backoff strategies for agentic workflows.',
+    introduction: `Agents loop when the LLM control logic reaches a state where it repeatedly performs the same action without making progress. The root cause is a mismatch between the LLM expectation -- calling this tool again will produce a different result -- and reality -- the tool is failing for a reason that will not change until something external changes. The LLM has no built-in concept of futility and will retry indefinitely unless the framework prevents it.
+
+Three distinct loop types appear in production. Retry loops occur when a tool returns an error (API timeout, validation failure, malformed response) and the LLM re-calls the tool expecting the error to resolve itself. Without a retry counter in the agent state, this continues until the framework times out or the user disconnects. Semantic loops occur when a tool returns a successful result, but the agent keeps re-calling it with slightly different parameters hoping to get different information from a result that is correct but not what the agent expected. Dependency loops occur in multi-agent systems when agent A waits for a result from agent B, which itself waits for a result from agent A. Neither makes progress without external intervention.
+
+Three prevention layers address these at different architectural levels. State-level counters track retry attempts per tool within the agent state object and enforce a maximum before routing to an error handler or human escalation node. Framework-level limits cap the total number of node visits in the graph execution, catching runaway loops that slip past state-level logic. LLM-level instructions tell the model explicitly what to do when stuck: call an escalate_to_human tool with a summary of what was tried, and stop retrying.
+
+The specific retry and escalation thresholds must be calibrated against production traces of successful agent runs. An agent performing complex multi-step research may legitimately visit 50 or more nodes; setting recursion_limit to 25 would incorrectly terminate valid runs. Measure the 99th percentile step count across successful production runs, then set the maximum at 2-3x that value. This ensures the limit catches runaway loops without terminating legitimate deep reasoning.
+
+Pydantic self-healing is a particularly important pattern for agents that receive structured output from tools or sub-LLMs. When the tool returns malformed JSON or a schema mismatch, naive retry sends the same prompt and gets the same malformed output. Self-healing sends a correction prompt that includes the specific Pydantic ValidationError message, giving the LLM the information to fix the structural issue rather than repeat the same mistake. This retry is itself counted against the per-tool retry limit.`,
+    quickFire: [
+      { q: 'What is the primary cause of agent retry loops?', a: 'The LLM re-calls a failing tool expecting a different result because it has no internal concept of futility. Without a retry counter in state, the agent retries indefinitely until a framework timeout fires.' },
+      { q: 'How do you implement a retry counter in a LangGraph agent?', a: 'Add tool_retries: dict[str, int] to the TypedDict state. Increment retries[tool_name] in the tool call node before calling the tool. A conditional edge checks if retries[tool_name] >= MAX_RETRIES and routes to an error node if exceeded.' },
+      { q: 'What is LangGraph recursion_limit and what happens when it is hit?', a: 'A config parameter passed to graph.invoke() that caps total node visits. When exceeded, LangGraph raises a GraphRecursionError. Calibrate it against production traces of successful runs, then set it at 2-3x the 99th percentile step count.' },
+      { q: 'What is Pydantic self-healing for malformed tool outputs?', a: 'When a tool output fails Pydantic validation, instead of raising, the agent sends a correction prompt that includes the specific ValidationError message, allowing the LLM to fix the structural issue rather than repeat the mistake. This retry counts against the per-tool limit.' },
+      { q: 'What is the difference between a retry loop and a semantic loop?', a: 'A retry loop occurs when a tool fails and the agent re-calls it. A semantic loop occurs when a tool succeeds but the agent keeps re-calling it with variations, trying to extract different information from a result that is correct but not what it expected.' },
+      { q: 'How do you detect a semantic loop programmatically?', a: 'Compute embedding similarity between consecutive agent messages. If cosine similarity exceeds 0.95 for three or more consecutive rounds, the agent is semantically stuck. Alternatively, check if the same tool has been called with highly similar inputs (similarity > 0.90) more than twice.' },
+      { q: 'What is exponential backoff and where should it live in an agent architecture?', a: 'A retry delay that doubles on each failure (1s, 2s, 4s, with jitter). It belongs inside the tool implementation for transient errors like 429 and 503, not at the agent level, so the agent sees a clean success or failure rather than managing backoff timing itself.' },
+      { q: 'What is a circuit breaker pattern in the context of agent tools?', a: 'After N consecutive failures of a tool across different agent runs within a time window, the circuit opens and the tool is marked unavailable. Subsequent agents that would call the tool are routed directly to a fallback path or human escalation without retrying.' },
+      { q: 'How does LangGraph interrupt_before help prevent dangerous loops?', a: 'It pauses execution before a specified node and waits for human confirmation to continue. This allows a human to inspect state and redirect the agent when it is stuck, rather than waiting for an automatic timeout to terminate the run.' },
+      { q: 'What production metric best reveals loop-prone agent designs?', a: 'The distribution of steps per completed run. A bimodal distribution -- most runs completing in 5-10 steps with a tail completing in 40-50 steps -- indicates a loop-prone code path that should be investigated and given explicit retry limits.' },
+    ],
+    keyQuestions: [
+      {
+        question: 'How do you prevent an agent from getting stuck in an infinite loop when an API tool fails?',
+        answer: `Prevention requires three independent layers so that no single failure mode can produce an infinite loop. Each layer addresses a different failure class.
+
+The primary layer is state-level retry counting. In a LangGraph agent, the TypedDict state includes tool_retries: dict[str, int] with a default_factory of dict. Every tool call node increments state["tool_retries"][tool_name] before calling the tool -- this increment happens unconditionally so the counter is always accurate even if the call succeeds. A conditional edge after the tool call node reads this counter: if state["tool_retries"][tool_name] >= MAX_RETRIES, the edge routes to an error_node that records the failure and surfaces a human-readable message; otherwise it routes back to the tool call node. MAX_RETRIES is typically 3 for external API calls. The counter is per-tool so a multi-tool agent can retry each tool independently without the counts interfering.
+
+The second layer is LangGraph recursion_limit. graph.invoke(state, config={"recursion_limit": 25}) sets a hard ceiling on total node visits across the entire graph execution. When this limit is exceeded, LangGraph raises a GraphRecursionError that the caller catches and converts to a graceful failure response. This limit catches loops that slip through state-level logic -- for example, a bug in the conditional edge that never routes to the error_node. Set this limit at 2-3x the 99th percentile step count observed in production traces of successful runs, not at an arbitrary low value that would incorrectly terminate legitimate deep-reasoning runs.
+
+The third layer is Pydantic self-healing for structured output failures. When the tool returns a response that fails Pydantic validation -- malformed JSON, missing required fields, wrong type on a field -- the naive response is to raise a ValidationError and halt. Self-healing instead constructs a correction prompt that includes the specific error message and the expected schema, giving the LLM the information to fix the structural issue rather than repeat the same mistake. This retry is counted against the tool retry limit, so self-healing cannot itself become an infinite loop.
+
+Exponential backoff lives inside the tool implementation for transient infrastructure errors: 429 (rate limit), 503 (service unavailable), 504 (gateway timeout). The backoff follows delay = min(2^attempt * base_delay + jitter, max_delay) with jitter sampled uniformly from 0 to base_delay. This is invisible to the agent -- the tool either succeeds or fails from the agent perspective. The agent retry counter tracks semantic retries (the LLM deciding to try again), not transient retries (the tool retrying due to a temporary network error).
+
+The circuit breaker pattern adds a cross-run protection layer. A Redis key tracks consecutive failure counts per tool name with a 5-minute expiry window. After 3 consecutive failures across different agent runs, the circuit opens: a flag in Redis marks the tool as unavailable, and all subsequent tool calls that would invoke it are short-circuited to an immediate error response. The circuit resets automatically after 5 minutes in half-open state, or manually via an ops command. This prevents a broken external dependency from causing every concurrent agent run to exhaust its retry budget before failing.
+
+Finally, include an explicit LLM-level instruction in the system prompt: if you have called the same tool more than 3 times without making progress toward your goal, stop retrying and call the escalate_to_human tool with a summary of what you attempted, what results you received, and why you are stuck. This gives the LLM agency to self-terminate a stuck loop even if the state-level counter has not yet fired, and it produces a useful escalation message rather than a generic timeout error.`,
+      },
+      {
+        question: 'How would you distinguish between a genuine retry (transient failure) and a semantic loop (agent is stuck thinking)?',
+        answer: `The distinction determines the correct response: a transient failure warrants a retry with backoff; a semantic loop warrants escalation or a fundamentally different approach. Treating a semantic loop as a transient failure causes the agent to exhaust its retry budget generating identical outputs rather than escalating to a human who can actually resolve the underlying issue.
+
+Transient failures have distinctive HTTP status signatures: 429 (rate limit exceeded), 503 (service unavailable), 504 (gateway timeout), and connection reset errors. These are failures at the infrastructure layer expected to resolve with time. The tool implementation handles them with exponential backoff internally. From the agent perspective, the tool either eventually succeeds or returns a structured error with a category of transient that the agent can handle by waiting and retrying after a delay.
+
+Semantic failures look different at the protocol level: the tool returns HTTP 200 with a structurally valid response, but the response does not contain the information the agent expected. The agent subsequent messages attempt to extract useful information from the result, fail, and then re-call the tool with minor input variations hoping to get a different answer. The tool is working correctly; the agent model of what the tool does is incorrect, or the information it wants genuinely does not exist in the tool data source.
+
+The programmatic detection approach uses three signals. Call history analysis: the agent state maintains a list of (tool_name, hash_of_inputs) tuples for every tool call in the session. If the same tool is called with inputs whose embedding cosine similarity exceeds 0.90 more than twice, classify the third call as a semantic loop candidate. Message similarity analysis: compute embedding cosine similarity between consecutive agent messages. If similarity exceeds 0.95 for three or more consecutive rounds, the agent is generating semantically identical follow-up actions despite tool calls happening in between, indicating it is stuck in a thought pattern rather than responding to new information. Message diff analysis: if the character-level edit distance between two consecutive agent messages is less than 10% of the total message length, the agent is nearly repeating itself verbatim.
+
+Combining all three signals reduces false positives. A single high-similarity tool call pair might be coincidence; all three signals firing together is strong evidence of a semantic loop. When the combination threshold is crossed, the correct response is escalation, not retry. The agent pauses via LangGraph interrupt_before, surfaces the accumulated state to a human reviewer -- what was tried, what results were returned, what the agent was attempting -- and asks the human to either provide missing information, reframe the task, or confirm that the task is impossible and should be abandoned.
+
+Human-in-the-loop escalation is preferable to automatic termination for semantic loops because the retrieved information and attempted steps are valuable context that helps a human quickly diagnose why the agent got stuck. The escalation message should include the original user request, the sequence of tool calls with their inputs and outputs, the agent most recent assessment of why it is stuck, and suggested next steps for the human reviewer.`,
+      },
+    ],
+    tips: [
+      'Initialize retry counters with a defaultdict(int) or an explicit dict default in the TypedDict state definition so that missing keys never cause KeyError in conditional edge logic on the first call to a tool.',
+      'Set recursion_limit conservatively at first based on observed successful run lengths, then increase it only when production traces show legitimate runs being incorrectly terminated -- not proactively to avoid having to debug loops.',
+      'Log the full agent state at the point a loop is detected, not just the error message. The call history, tool outputs, and agent messages are the primary debugging surface for understanding what caused the loop.',
+      'Test loop prevention by writing a mock tool that always fails or always returns a fixed response and verifying that the agent routes to the error handler after exactly MAX_RETRIES attempts, not more.',
+      'Distinguish between loop prevention (max_retries, recursion_limit) and loop detection (semantic similarity, message diff). Prevention fires proactively based on counts; detection fires reactively on subtle loops that bypass prevention counters but produce no new useful work.',
+    ],
+    references: [
+      'https://langchain-ai.github.io/langgraph/how-tos/recursion-limit/',
+      'https://docs.pydantic.dev/latest/',
     ],
   },
 ];
