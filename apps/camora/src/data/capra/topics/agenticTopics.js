@@ -20,6 +20,10 @@ export const agenticTopics = [
     color: '#6366f1',
     questions: 8,
     description: 'Design multi-agent pipelines using the LangGraph Supervisor pattern. Covers StateGraph construction, TypedDict shared state, add_messages reducer, checkpointers, human-in-the-loop interrupts, parallel branches, and error routing between specialist agents.',
+    visualizations: [
+      { type: 'architecture', caption: 'LangGraph Supervisor Architecture', image: '/diagrams/agentic/langgraph-supervisor.png' },
+      { type: 'workflow',     caption: 'State and Message Flow',            image: '/diagrams/agentic/langgraph-state-flow.png' },
+    ],
     introduction: `Multi-agent systems divide complex tasks across specialist agents that each focus on one narrow concern. LangGraph is the graph-based orchestration layer that wires them together -- it turns agents into graph nodes and messages into edges, giving you explicit control over routing, state, and persistence that a single monolithic agent chain cannot provide.
 
 LangGraph fundamentals
@@ -204,6 +208,10 @@ interrupt_after=["researcher"] is the symmetric alternative: it halts after the 
     color: '#0ea5e9',
     questions: 7,
     description: 'Handling tool calls that take minutes rather than seconds -- checkpoint-and-suspend patterns, async polling, webhook resumption, SSE progress streaming, durable execution with Temporal and Step Functions, and idempotency requirements for retriable tool invocations.',
+    visualizations: [
+      { type: 'architecture', caption: 'Checkpoint + Webhook Resume Pattern', image: '/diagrams/agentic/async-checkpoint-webhook.png' },
+      { type: 'workflow',     caption: 'Retry Counter and Circuit Breaker',   image: '/diagrams/agentic/async-retry-state.png' },
+    ],
     introduction: `Standard LLM tool use assumes the tool returns within the inference timeout window -- typically a few seconds. A data pipeline, a batch job, a video transcoding task, or a model fine-tuning run can take five minutes to an hour. Bridging that gap without holding an open server connection or blocking the LLM context thread requires a specific set of patterns that sit at the intersection of agentic orchestration and distributed systems.
 
 The fundamental mismatch
@@ -332,6 +340,10 @@ Error states: if the pipeline fails, the SSE stream emits an error event with a 
     color: '#0ea5e9',
     questions: 6,
     description: 'Managing token budgets in multi-day, multi-turn agents -- sliding window truncation, LangGraph summarization nodes with the trim_messages utility, vector DB offloading of episodic memory, hybrid summarization-plus-retrieval architectures, and the LangGraph 0.3+ Store API for cross-thread persistent memory.',
+    visualizations: [
+      { type: 'architecture', caption: '3-Tier Context Window Architecture', image: '/diagrams/agentic/context-window-mgmt.png' },
+      { type: 'workflow',     caption: 'Summarization Node Flow',            image: '/diagrams/agentic/summarization-flow.png' },
+    ],
     introduction: `Production agents that span days or weeks face a hard physical constraint: the LLM context window. Claude 3.5 Sonnet and GPT-4o both offer 128K-token windows. A multi-day conversation with a power user -- including tool call round-trips, retrieved documents, and verbose AI responses -- can accumulate tens of thousands of tokens per hour. Within one business day, the raw history exceeds the context limit. Without active management, the agent either crashes with a context-length error or the developer adds silent truncation that loses critical early context without the user knowing.
 
 The problem: what you cannot fit, the model cannot use

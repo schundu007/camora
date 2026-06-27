@@ -1752,6 +1752,23 @@ export default function DocsPage({ onBack }) {
                     </div>
                   )}
 
+                  {activePage === 'agentic' && !selectedTopic && (
+                    <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                      <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+                      <div className="relative rounded-[15px] p-6">
+                        <div className="flex items-start gap-5">
+                          <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }}>
+                            <Icon name="network" size={28} style={{ color: 'var(--cam-primary-dk)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-3xl font-extrabold" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>Agentic Orchestration</h2>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--cam-strip-heading)', opacity: 0.75 }}>LangGraph multi-agent patterns, async tool calls, context window management</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {activePage === 'challenges' && !selectedTopic && (
                     <div className="mb-6 rounded-xl overflow-hidden relative" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
