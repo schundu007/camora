@@ -46,20 +46,23 @@ jobs:
           if [ "${{ inputs.force }}" = "true" ]; then FLAGS="$FLAGS --force"; fi
           echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"
 
-      # Uses Firebase refresh token (permanent) to auto-refresh the session token.
-      # Consumes Eraser AI credits — no paid API calls, no cookie expiry.
-      - name: Generate diagrams
-        env:
-          ERASER_REFRESH_TOKEN: ${{ secrets.ERASER_REFRESH_TOKEN }}
-        run: node apps/camora/scripts/gen-eraser-diagrams.mjs ${{ steps.flags.outputs.flags }}
-
-      - name: Commit generated PNGs
+      - name: Configure git for mid-run commits
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Smart-skips PNGs already ≥2000px wide (new renderer) — safe to re-run without --force.
+      # Commits progress every 15 diagrams so a cancel never loses completed work.
+      - name: Generate diagrams
+        env:
+          ERASER_REFRESH_TOKEN: ${{ secrets.ERASER_REFRESH_TOKEN }}
+        run: node apps/camora/scripts/gen-eraser-diagrams.mjs ${{ steps.flags.outputs.flags }} --commit-every=15
+
+      - name: Commit remaining PNGs
+        run: |
           git add apps/camora/public/diagrams/
           if git diff --cached --quiet; then
-            echo "No new diagrams generated."
+            echo "No new diagrams to commit."
           else
             git commit -m "chore(diagrams): auto-generate eraser PNGs [skip ci]"
             git push
