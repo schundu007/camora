@@ -6,7 +6,11 @@
  * Required env: ERASER_REFRESH_TOKEN
  */
 
-import { createCanvas, loadImage } from '@napi-rs/canvas';
+let _canvasMod = null;
+async function loadCanvasMod() {
+  if (!_canvasMod) _canvasMod = await import('@napi-rs/canvas');
+  return _canvasMod;
+}
 
 const FIREBASE_API_KEY = 'AIzaSyCX5UYWp-3ZAVEuQ3Ospj9Xg9e6ji16roI';
 const SESSION_ID       = '3TVBEsFiAgslQdXMdurc';
@@ -97,6 +101,7 @@ const iconCache = new Map();
 async function fetchIcon(name) {
   if (iconCache.has(name)) return iconCache.get(name);
   try {
+    const { loadImage } = await loadCanvasMod();
     const img = await loadImage(`${ICON_BASE}/${name}.svg`);
     iconCache.set(name, img);
     return img;
@@ -104,6 +109,7 @@ async function fetchIcon(name) {
 }
 
 async function renderToBuffer(diagramCode) {
+  const { createCanvas, loadImage } = await loadCanvasMod();
   const W = 1600, H = 900;
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
