@@ -54,46 +54,76 @@ function eraserHeaders(token) {
 }
 
 async function callPlanner(prompt, token) {
-  const res = await fetch('https://app.eraser.io/api/ai/planner', {
-    method: 'POST',
-    headers: eraserHeaders(token),
-    body: JSON.stringify({
-      userMessage: prompt,
-      sessionId: SESSION_ID,
-      workspaceId: WORKSPACE_ID,
-      diagramType: 'cloud-architecture-diagram',
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
+  let res;
+  try {
+    res = await fetch('https://app.eraser.io/api/ai/planner', {
+      method: 'POST',
+      headers: eraserHeaders(token),
+      signal: controller.signal,
+      body: JSON.stringify({
+        userMessage: prompt,
+        sessionId: SESSION_ID,
+        workspaceId: WORKSPACE_ID,
+        diagramType: 'cloud-architecture-diagram',
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) throw new Error(`Planner failed: ${res.status} ${await res.text()}`);
   const data = await res.json();
+  console.log('[Eraser] planner response keys:', Object.keys(data));
   const tc = data.interaction?.toolCalls?.[0];
   if (!tc) throw new Error('No toolCall in planner response');
   return { interactionId: data.interactionId, toolCallId: tc.id, elementId: tc.parameters.elementId };
 }
 
 async function callToolExecute(interactionId, toolCallId, elementId, token) {
-  const res = await fetch('https://app.eraser.io/api/ai/toolExecute', {
-    method: 'POST',
-    headers: eraserHeaders(token),
-    body: JSON.stringify({
-      interactionId, toolCallId, elementId,
-      sessionId: SESSION_ID,
-      workspaceId: WORKSPACE_ID,
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  let res;
+  try {
+    res = await fetch('https://app.eraser.io/api/ai/toolExecute', {
+      method: 'POST',
+      headers: eraserHeaders(token),
+      signal: controller.signal,
+      body: JSON.stringify({
+        interactionId, toolCallId, elementId,
+        sessionId: SESSION_ID,
+        workspaceId: WORKSPACE_ID,
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!res.ok) throw new Error(`toolExecute failed: ${res.status} ${await res.text()}`);
 
   const text = await res.text();
+  console.log('[Eraser] toolExecute raw (first 800 chars):', text.slice(0, 800));
+
   let diagramCode = '';
   for (const line of text.split('\n')) {
     if (!line.trim()) continue;
     try {
       const obj = JSON.parse(line);
-      if (obj.type === 'complete' && obj.diagramCode) { diagramCode = obj.diagramCode; break; }
-      if (obj.type === 'diagram-code' || obj.diagramCode) diagramCode += (obj.diagramCode || obj.code || '');
-    } catch {}
+      // Try every field name Eraser has used across API versions
+      const code = obj.diagramCode || obj.eraserCode || obj.code || obj.content || obj.diagram;
+      if (code) {
+        diagramCode += code;
+        if (obj.type === 'complete') break;
+      }
+    } catch {
+      // plain-text line — accumulate as diagram code if it looks like Eraser DSL
+      const t = line.trim();
+      if (t && !t.startsWith('{') && !t.startsWith('[')) diagramCode += t + '\n';
+    }
   }
-  if (!diagramCode) throw new Error('No diagram code in toolExecute response');
+  if (!diagramCode.trim()) {
+    console.error('[Eraser] No diagram code extracted. Full response:', text.slice(0, 2000));
+    throw new Error('No diagram code in toolExecute response');
+  }
   return diagramCode;
 }
 
