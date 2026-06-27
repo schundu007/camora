@@ -600,7 +600,7 @@ export default function DocsPage({ onBack }) {
       activePage === 'ddia' ? ddiaTopics :
       [...behavioralTopics, ...companyPrep];
     const total = topics.length;
-    const completed = topics.filter(t => completedTopics[t.id]).length;
+    const completed = topics.filter(t => t && completedTopics[t.id]).length;
     return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -999,7 +999,7 @@ export default function DocsPage({ onBack }) {
     ];
     return cats.map(c => {
       const count = c.topics.length || STATIC_TOPIC_COUNTS[c.id] || 0;
-      const completed = c.topics.filter(t => completedTopics[t.id]).length;
+      const completed = c.topics.filter(t => t && completedTopics[t.id]).length;
       const progress = count > 0 ? Math.round((completed / count) * 100) : 0;
       return { ...c, count, completed, progress };
     });
@@ -1851,7 +1851,7 @@ export default function DocsPage({ onBack }) {
                         <div key={topic.id}>
                           {isFirstInCategory && category && (() => {
                             const catTopics = filteredTopics.filter(t => codingCategoryMap[t.id] === catId);
-                            const completedCount = catTopics.filter(t => completedTopics[t.id]).length;
+                            const completedCount = catTopics.filter(t => t && completedTopics[t.id]).length;
                             const progressPct = catTopics.length > 0 ? Math.round((completedCount / catTopics.length) * 100) : 0;
                             return (
                               <div className="col-span-full px-3 py-2 flex items-center gap-3 rounded" style={{ background: 'transparent' }}>
@@ -1990,7 +1990,7 @@ export default function DocsPage({ onBack }) {
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
-                            progress={{ done: categoryTopics.filter(t => completedTopics[t.id]).length, total: categoryTopics.length }}
+                            progress={{ done: categoryTopics.filter(t => t && completedTopics[t.id]).length, total: categoryTopics.length }}
                           />
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
@@ -2573,9 +2573,9 @@ export default function DocsPage({ onBack }) {
                     }
                     const allBehavioralTopics = [...behavioralTopics, ...companyPrep];
                     const totalTopics = behavioralTopics.length;
-                    const completedCount = behavioralTopics.filter(t => completedTopics[t.id]).length;
-                    const starredCount = behavioralTopics.filter(t => starredTopics[t.id]).length;
-                    const companyCompleted = companyPrep.filter(t => completedTopics[t.id]).length;
+                    const completedCount = behavioralTopics.filter(t => t && completedTopics[t.id]).length;
+                    const starredCount = behavioralTopics.filter(t => t && starredTopics[t.id]).length;
+                    const companyCompleted = companyPrep.filter(t => t && completedTopics[t.id]).length;
                     const readinessPercent = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
                     const readinessLabel = readinessPercent === 0 ? 'Not Started' : readinessPercent < 25 ? 'Getting Started' : readinessPercent < 50 ? 'Building Momentum' : readinessPercent < 75 ? 'Strong Progress' : readinessPercent < 100 ? 'Almost Ready' : 'Fully Prepared';
                     return (
@@ -2604,7 +2604,7 @@ export default function DocsPage({ onBack }) {
                               { value: completedCount, label: 'Topics Done', total: totalTopics },
                               { value: starredCount, label: 'Starred', total: null },
                               { value: companyCompleted, label: 'Companies', total: companyPrep.length },
-                              { value: behavioralCategories.filter(cat => { const ct = behavioralTopics.filter(t => topicCategoryMap[t.id] === cat.id); return ct.length > 0 && ct.every(t => completedTopics[t.id]); }).length, label: 'Categories Done', total: behavioralCategories.length },
+                              { value: behavioralCategories.filter(cat => { const ct = behavioralTopics.filter(t => topicCategoryMap[t.id] === cat.id); return ct.length > 0 && ct.every(t => t && completedTopics[t.id]); }).length, label: 'Categories Done', total: behavioralCategories.length },
                             ].map((stat, i) => (
                               <div key={i} className="text-center p-2.5 rounded" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
                                 <div className="landing-mono text-lg font-bold" style={{ color: 'var(--accent)' }}>
@@ -2676,7 +2676,7 @@ export default function DocsPage({ onBack }) {
                           <CategoryHeader
                             icon={category.icon}
                             title={category.name}
-                            progress={{ done: categoryTopics.filter(t => completedTopics[t.id]).length, total: categoryTopics.length }}
+                            progress={{ done: categoryTopics.filter(t => t && completedTopics[t.id]).length, total: categoryTopics.length }}
                           />
                           {/* Topics in Category */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
