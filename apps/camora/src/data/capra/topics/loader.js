@@ -241,6 +241,17 @@ export const HEAVY_TOPIC_LOADERS = {
     };
   },
 
+  // Agentic AI — autonomous agents, multi-agent systems, tool use, memory, orchestration.
+  // Lives at /capra/prepare?page=agentic.
+  agentic: async () => {
+    const mod = await import('./agenticTopics.js');
+    return {
+      agenticCategories: mod.agenticCategories,
+      agenticTopicCategoryMap: mod.agenticTopicCategoryMap,
+      agenticTopics: mod.agenticTopics,
+    };
+  },
+
   // Cloud / AWS — interview prep for cloud engineers.
   // 11 sub-categories: compute, storage, networking, databases, security,
   // serverless, containers, monitoring, AI/ML, devtools, migration.
