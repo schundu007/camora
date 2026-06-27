@@ -48,9 +48,15 @@ FROM python:3.11-slim
 # Runtime-only system packages: graphviz binary (the diagrams library
 # shells out to `dot` at request time), ffmpeg (audio decoding for
 # resemblyzer / speaker verification).
+# libgd3 + libpng16-16: required for Graphviz to render PNG stencil icons
+# in `diagrams` cloud architecture nodes (image= attribute in DOT source).
+# Without these, `dot -Tpng` silently produces empty rectangles instead.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ffmpeg \
         graphviz \
+        libgd3 \
+        libpng16-16 \
+        libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Bring over the installed Python packages and console scripts. We skip
@@ -62,6 +68,45 @@ WORKDIR /app
 COPY . .
 
 RUN mkdir -p /data/embeddings
+
+# Verify diagrams library PNG resources are bundled and Graphviz can render
+# icons into a PNG. A diagram without icons is tiny (<5 KB); the test fails
+# the build if icons are missing so this is caught before deployment.
+RUN python3 - <<'EOF'
+import os, sys, subprocess, tempfile
+
+# 1. Check icon files are present in the installed package
+import diagrams as _d
+icons_dir = os.path.join(os.path.dirname(_d.__file__), "resources", "aws", "compute")
+if not os.path.isdir(icons_dir):
+    sys.exit(f"FAIL: diagrams resources missing at {icons_dir}")
+pngs = [f for f in os.listdir(icons_dir) if f.endswith(".png")]
+if not pngs:
+    sys.exit(f"FAIL: no PNG icons found in {icons_dir}")
+print(f"OK: {len(pngs)} AWS compute icons found")
+
+# 2. Render a minimal diagram and check the output is large enough to
+#    contain icon data (icon-free PNGs are typically < 5 KB).
+code = """
+from diagrams import Diagram, Cluster
+from diagrams.aws.compute import EC2
+from diagrams.aws.database import RDS
+with Diagram("smoke", show=False, filename="output", outformat="png", direction="LR"):
+    EC2("API") >> RDS("DB")
+"""
+with tempfile.TemporaryDirectory() as tmp:
+    script = os.path.join(tmp, "t.py")
+    with open(script, "w") as f:
+        f.write(code)
+    r = subprocess.run([sys.executable, script], cwd=tmp, capture_output=True, timeout=30)
+    if r.returncode != 0:
+        sys.exit(f"FAIL: diagram render: {r.stderr.decode()[:400]}")
+    png = os.path.join(tmp, "output.png")
+    size = os.path.getsize(png) if os.path.exists(png) else 0
+    if size < 5000:
+        sys.exit(f"FAIL: output.png is {size} bytes — icons are likely not rendering")
+    print(f"OK: diagram rendered with icons ({size} bytes)")
+EOF
 
 # Pre-download resemblyzer weights at build time so first-request inference
 # is instant. Without this, VoiceEncoder() downloads on the first enroll
