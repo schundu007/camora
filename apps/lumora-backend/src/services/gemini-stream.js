@@ -53,6 +53,10 @@ export async function* streamResponseGemini(question, history, options = {}) {
     systemContext = null,
     retrievedContext = null,
     responseFormat = null,
+    cloudProvider = 'aws',
+    detailLevel = null,
+    designKind = 'system',
+    mode = 'general',
     model: rawModel = null,
     signal = null,
   } = options;
@@ -63,8 +67,10 @@ export async function* streamResponseGemini(question, history, options = {}) {
   const isShortMode = question.startsWith('[SHORT] ');
   const cleanQuestion = isShortMode ? question.slice(8) : question;
 
-  const isDesign = isDesignQuestion(cleanQuestion);
-  const isCoding = !isDesign && isCodingQuestion(cleanQuestion);
+  const isDesignHeuristic = isDesignQuestion(cleanQuestion);
+  const isCodingHeuristic = !isDesignHeuristic && isCodingQuestion(cleanQuestion);
+  const isDesign = mode === 'design' ? true : (mode === 'coding' ? false : isDesignHeuristic);
+  const isCoding = mode === 'coding' ? true : (mode === 'design' ? false : isCodingHeuristic);
 
   const groundedContext = retrievedContext
     ? `${retrievedContext}\n\n${systemContext || ''}`.trim()
@@ -80,7 +86,7 @@ export async function* streamResponseGemini(question, history, options = {}) {
     systemInstruction = codingGrounding + CODING_SYSTEM_PROMPT;
     maxOutputTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
-    systemInstruction = buildDesignPrompt(resume, technical);
+    systemInstruction = buildDesignPrompt(resume, technical, detailLevel, cloudProvider, designKind);
     maxOutputTokens = MAX_TOKENS_DESIGN;
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical);
