@@ -289,7 +289,8 @@ Q: Give an example of CI/CD mapped to the Three Ways.
 A: CI/CD is a First Way practice (it reduces batch size and increases flow). Automated tests in the pipeline are a Second Way practice (feedback loops catch defects at the earliest stage). Blameless postmortems on pipeline failures are a Third Way practice (learning from what goes wrong). The pipeline embodies all three.`,
       },
     ],
-    introduction: `The Three Ways are the foundational organizing principles of DevOps, articulated in The Phoenix Project (Kim, Behr, Spafford, 2013) and codified in The DevOps Handbook (Kim, Humble, Debois, Willis, 2016, 2nd ed. 2020). Every DevOps practice — CI/CD, observability, blameless postmortems, chaos engineering, error budgets — is an application of one or more of the Three Ways.
+    introduction: `## Overview
+The Three Ways are the foundational organizing principles of DevOps, articulated in The Phoenix Project (Kim, Behr, Spafford, 2013) and codified in The DevOps Handbook (Kim, Humble, Debois, Willis, 2016, 2nd ed. 2020). Every DevOps practice — CI/CD, observability, blameless postmortems, chaos engineering, error budgets — is an application of one or more of the Three Ways.
 
 The First Way — Flow (left-to-right):
 Optimize the entire value stream from concept to production. The unit of optimization is the SYSTEM, not individual silos (dev, QA, ops). Reduce batch sizes; eliminate handoffs; surface and remove queues, wait times, and rework. Concrete practices: trunk-based development, continuous integration, automated deploys, small-batch releases, infrastructure-as-code.
@@ -539,7 +540,8 @@ S — Sharing (knowledge across org boundaries):
   Fix: internal TechDocs platform, postmortem library, open-source culture for internal tooling.`,
       },
     ],
-    introduction: `Two frameworks every senior DevOps engineer should be able to discuss precisely:
+    introduction: `## Overview
+Two frameworks every senior DevOps engineer should be able to discuss precisely:
 
 WESTRUM ORGANIZATIONAL TYPOLOGY (Ron Westrum, 2004 paper "A Typology of Organisational Cultures")
 
@@ -821,7 +823,8 @@ Q: What is the PT/LT ratio for world-class teams?
 A: Elite DORA teams have lead times under one day for the whole stream. If coding takes 4 hours, review takes 2 hours, and deploy takes 10 minutes, the PT/LT ratio is over 90% — waiting is nearly eliminated. The typical enterprise starts at 2-5%.`,
       },
     ],
-    introduction: `Value Stream Mapping (VSM) is a Lean-manufacturing technique adapted by Toyota in the 1990s and now standard in software DevOps. Verbatim from The DevOps Handbook (Ch 4): "A value stream is the sequence of activities that an organization undertakes to deliver upon a customer request."
+    introduction: `## Overview
+Value Stream Mapping (VSM) is a Lean-manufacturing technique adapted by Toyota in the 1990s and now standard in software DevOps. Verbatim from The DevOps Handbook (Ch 4): "A value stream is the sequence of activities that an organization undertakes to deliver upon a customer request."
 
 For software, the value stream typically is:
 - Idea (product / customer request)
@@ -1144,7 +1147,8 @@ Q: What is the fifth DORA metric?
 A: Reliability — added in 2021. Asks whether the service meets customer expectations as expressed by SLOs. Bridges the DORA framework to SRE's SLO model. A team can have elite velocity and stability metrics and still have users who are unhappy if the SLOs are poorly defined or not met.`,
       },
     ],
-    introduction: `DORA (DevOps Research and Assessment) is a research program founded by Nicole Forsgren, Jez Humble, and Gene Kim in ~2014, acquired by Google in 2018 and now run as part of Google Cloud. The annual State of DevOps Report has 9+ years of survey data from tens of thousands of respondents across every industry.
+    introduction: `## Overview
+DORA (DevOps Research and Assessment) is a research program founded by Nicole Forsgren, Jez Humble, and Gene Kim in ~2014, acquired by Google in 2018 and now run as part of Google Cloud. The annual State of DevOps Report has 9+ years of survey data from tens of thousands of respondents across every industry.
 
 The DORA framework names four metrics that statistically distinguish high-performing software teams. Verbatim from the Accelerate book and dora.dev:
 
@@ -1445,7 +1449,8 @@ Q: What is "cognitive load" in the Team Topologies context?
 A: The total mental effort a team must sustain to do their work. Includes intrinsic load (problem complexity), extraneous load (bad tooling and processes), and germane load (expertise-building). Teams have a finite cognitive bandwidth. Overloaded stream-aligned teams slow down or cut corners. Platform teams absorb extraneous load. The goal is to keep stream-aligned teams within their cognitive bandwidth so they can deliver fast.`,
       },
     ],
-    introduction: `Team Topologies (Matthew Skelton & Manuel Pais, 2019; 2nd ed. updates ongoing) is the canonical organizational design framework for DevOps-aligned teams. It builds on Conway\'s Law and the cognitive-load research of Eduardo Salas et al. The book is the most-cited org-design text in modern DevOps.
+    introduction: `## Overview
+Team Topologies (Matthew Skelton & Manuel Pais, 2019; 2nd ed. updates ongoing) is the canonical organizational design framework for DevOps-aligned teams. It builds on Conway\'s Law and the cognitive-load research of Eduardo Salas et al. The book is the most-cited org-design text in modern DevOps.
 
 The thesis: organize teams to MINIMIZE COGNITIVE LOAD and MAXIMIZE FAST FLOW. Four team types, each with a specific purpose, interacting via three defined modes.
 
@@ -1773,7 +1778,8 @@ Q: What is a self-hosted runner and when do you need one?
 A: A build agent you operate yourself instead of using the CI provider's hosted runners. Required when: you have on-prem dependencies (private artifact repo, internal services), you need GPU for ML pipelines, your build minutes exceed hosted plan caps, or your security policy prohibits code leaving the network. Operational risk: persistent self-hosted runners accumulate state and become supply-chain targets. Use ephemeral runners (fresh VM per job) wherever possible.`,
       },
     ],
-    introduction: `Continuous Integration is the practice of merging every developer\'s work to a shared mainline at least once a day, with each merge verified by an automated build that includes the test suite. Martin Fowler\'s canonical 2006 article (martinfowler.com/articles/continuousIntegration.html) defines it: "a software development practice where members of a team integrate their work frequently, usually each person integrates at least daily — leading to multiple integrations per day. Each integration is verified by an automated build (including test) to detect integration errors as quickly as possible."
+    introduction: `## Overview
+Continuous Integration is the practice of merging every developer\'s work to a shared mainline at least once a day, with each merge verified by an automated build that includes the test suite. Martin Fowler\'s canonical 2006 article (martinfowler.com/articles/continuousIntegration.html) defines it: "a software development practice where members of a team integrate their work frequently, usually each person integrates at least daily — leading to multiple integrations per day. Each integration is verified by an automated build (including test) to detect integration errors as quickly as possible."
 
 The phrase "as quickly as possible" is load-bearing. CI exists because integration in long-lived branches is expensive and unpredictable: the longer two branches diverge, the more painful the eventual merge, and the higher the probability that a defect introduced weeks ago surfaces only at integration time. CI inverts that — by integrating constantly, every conflict is small, every regression is attributed to a tiny change set, and the team always has a working trunk to ship from.
 
@@ -1998,7 +2004,8 @@ Q: What is progressive delivery and how does it relate to Continuous Deployment?
 A: Progressive delivery is the deployment practice that makes Continuous Deployment safe: canary releases (1% of traffic, observe SLOs, then 10%, then 100%), ring-based rollout (internal users first, then external), feature flags (deploy dark, flip on per cohort). Progressive delivery means a bad deploy is caught at low blast radius before reaching all users. Without progressive delivery, Continuous Deployment at 100% blast radius is high-risk. With it, the risk is bounded.`,
       },
     ],
-    introduction: `Continuous Delivery (CD) and Continuous Deployment (CDeploy) are different things, and the distinction shows up in interviews because most candidates conflate them.
+    introduction: `## Overview
+Continuous Delivery (CD) and Continuous Deployment (CDeploy) are different things, and the distinction shows up in interviews because most candidates conflate them.
 
 Jez Humble and Dave Farley defined Continuous Delivery in their 2010 book of the same name. Humble\'s verbatim distinction (continuousdelivery.com): "Continuous Delivery is the ability to get changes of all types — including new features, configuration changes, bug fixes and experiments — into production, or into the hands of users, safely and quickly in a sustainable way." The capability is the product. Whether you exercise it on every commit is a separate, business-driven decision.
 
@@ -2231,7 +2238,8 @@ Q: What does DORA research say about branch lifetime?
 A: Accelerate (Forsgren, Humble, Kim, 2018): teams with fewer than 3 active branches and branch lifetimes under a day correlate with elite delivery performance. Long-lived feature branches correlate with low and medium performance bands. The mechanism is small batches: short branches produce small merges, small conflicts, small attribution windows when regressions appear.`,
       },
     ],
-    introduction: `Trunk-based development (TBD) is the source-control branching model where all developers commit to a single shared branch (trunk / main) at least once a day, with branches — when used at all — living hours, not weeks. The canonical reference is trunkbaseddevelopment.com (Paul Hammant, 2017+).
+    introduction: `## Overview
+Trunk-based development (TBD) is the source-control branching model where all developers commit to a single shared branch (trunk / main) at least once a day, with branches — when used at all — living hours, not weeks. The canonical reference is trunkbaseddevelopment.com (Paul Hammant, 2017+).
 
 Hammant\'s verbatim definition: "Trunk-Based Development is a source-control branching model, where developers collaborate on code in a single branch called \'trunk\' (in Git, this is the \'main\' branch), resist any pressure to create other long-lived development branches by employing documented techniques."
 
@@ -2466,7 +2474,8 @@ Q: What is actionlint and why use it?
 A: actionlint is a static analysis tool for GitHub Actions workflow files. It catches type errors in workflow inputs, invalid job dependency names, incorrect expression syntax, and common security issues. Run it in the CI pipeline as a pre-merge check. Prevents broken workflow syntax from reaching main, which causes an invisible CI failure (the pipeline never starts rather than failing with a clear error).`,
       },
     ],
-    introduction: `Pipeline-as-code means the build/test/deploy pipeline is defined as version-controlled source code in the same repository as the application, not as a click-configured job in a CI server\'s UI. The shift was popularized by Jenkins 2.0 (2016) introducing the Jenkinsfile, paralleled by Travis CI\'s \`.travis.yml\` (2011), CircleCI\'s \`.circleci/config.yml\`, GitLab CI\'s \`.gitlab-ci.yml\` (2015), and GitHub Actions\' \`.github/workflows/*.yml\` (2019).
+    introduction: `## Overview
+Pipeline-as-code means the build/test/deploy pipeline is defined as version-controlled source code in the same repository as the application, not as a click-configured job in a CI server\'s UI. The shift was popularized by Jenkins 2.0 (2016) introducing the Jenkinsfile, paralleled by Travis CI\'s \`.travis.yml\` (2011), CircleCI\'s \`.circleci/config.yml\`, GitLab CI\'s \`.gitlab-ci.yml\` (2015), and GitHub Actions\' \`.github/workflows/*.yml\` (2019).
 
 Why it matters. Before pipeline-as-code, CI configuration was a server-side artefact — Jenkins jobs configured through a web UI, drift between environments, no review process for pipeline changes, no audit trail beyond "Steve modified the build step on Tuesday." The pipeline was outside the code\'s lifecycle. A revert of the application could not revert the pipeline that built the previous version. Pipeline-as-code closes the loop: the pipeline ships with the code, evolves with the code, and is reviewed like the code.
 
@@ -2674,7 +2683,8 @@ Q: What is a test double?
 A: Gerard Meszaros's term (xUnit Test Patterns, 2007) for any object that stands in for a real dependency in a test. Five types: dummy (fills a parameter, never called), stub (returns canned responses), fake (working simplified implementation), spy (records calls), mock (pre-programmed with expectations, verifies interactions). Prefer stubs and fakes for most unit tests; use mocks sparingly at architectural boundaries only.`,
       },
     ],
-    introduction: `The test pyramid is Mike Cohn\'s mental model from Succeeding with Agile (2009) for distributing automated tests across levels of granularity. The shape is a triangle, widest at the base and narrowest at the top.
+    introduction: `## Overview
+The test pyramid is Mike Cohn\'s mental model from Succeeding with Agile (2009) for distributing automated tests across levels of granularity. The shape is a triangle, widest at the base and narrowest at the top.
 
 Base: unit tests. Many, fast (milliseconds), isolated from external dependencies. Test individual classes, functions, modules.
 
@@ -2890,7 +2900,8 @@ Q: What is the monorepo vs polyrepo trade-off?
 A: Monorepo: atomic cross-cutting changes (update an API and its callers in one PR), shared tooling and standards, visibility across the org, simpler dependency management within the org. Cost: requires build-system investment as scale grows; git performance needs tuning (partial clone, sparse checkout) at very large scale. Polyrepo: each service is independent, smaller, simpler to reason about in isolation. Cost: cross-cutting changes require coordinated PRs across repos, tooling standardization is harder to enforce, dependency drift between services is common. For teams of 5-50 with strong shared standards, monorepo is usually the better default.`,
       },
     ],
-    introduction: `A monorepo is a single repository containing multiple projects (services, libraries, frontends). The pattern is mainstream — Google\'s monorepo is the canonical extreme (~2 billion lines, multi-thousand engineers; Potvin & Levenberg, "Why Google Stores Billions of Lines of Code in a Single Repository," CACM 2016). Meta (Mercurial-based), Microsoft (Windows on Git, with VFS for Git), and many product companies use the model.
+    introduction: `## Overview
+A monorepo is a single repository containing multiple projects (services, libraries, frontends). The pattern is mainstream — Google\'s monorepo is the canonical extreme (~2 billion lines, multi-thousand engineers; Potvin & Levenberg, "Why Google Stores Billions of Lines of Code in a Single Repository," CACM 2016). Meta (Mercurial-based), Microsoft (Windows on Git, with VFS for Git), and many product companies use the model.
 
 The problem build systems solve. Naive monorepo CI runs every test on every change. With 500 packages, even ten-second test suites per package mean 80 minutes per CI run. Worse, each developer\'s local builds also re-run everything, killing iteration speed. The job of a monorepo build system is incremental, hermetic, cacheable builds: only build/test what actually changed, share the work across runs and machines.
 
@@ -3094,7 +3105,8 @@ The same pattern works for GCP (Workload Identity Federation), Azure (federated 
         image: '/diagrams/devops/ct1-gha.png',
       },
     ],
-    introduction: `GitHub Actions launched November 2019, hit GA April 2020, and overtook Jenkins as the most-used CI/CD tool by 2022. JetBrains 2024 State of Developer Ecosystem: ~33% adoption, ahead of Jenkins (~28%) and GitLab CI (~21%). For any team already on GitHub, it's the path of least resistance — but the depth is non-trivial: hosted vs self-hosted runners, OIDC federation, reusable workflows, composite actions, marketplace supply chain, monorepo scaling. This topic is the operational reality.
+    introduction: `## Overview
+GitHub Actions launched November 2019, hit GA April 2020, and overtook Jenkins as the most-used CI/CD tool by 2022. JetBrains 2024 State of Developer Ecosystem: ~33% adoption, ahead of Jenkins (~28%) and GitLab CI (~21%). For any team already on GitHub, it's the path of least resistance — but the depth is non-trivial: hosted vs self-hosted runners, OIDC federation, reusable workflows, composite actions, marketplace supply chain, monorepo scaling. This topic is the operational reality.
 
 Architecture in one paragraph. Every workflow lives at .github/workflows/*.yml. GitHub's scheduler watches events (push, pull_request, schedule, workflow_dispatch, repository_dispatch, workflow_call, plus dozens of others). When a workflow triggers, jobs are dispatched to a runner — either a hosted ephemeral VM (GitHub manages the lifecycle, 7-minute cold-start) or a self-hosted runner (you manage). Each job runs as a fresh process; sharing state between jobs requires explicit artifact upload/download or a cache mechanism. Steps within a job share the runner filesystem and process; you can mix uses: actions/checkout@v4 calls with run: shell scripts.
 
@@ -4098,7 +4110,8 @@ OIDC to clouds works the same as GHA: each job mints a JWT, exchanged with AWS S
         image: '/diagrams/devops/ct3-gitlab-ci.png',
       },
     ],
-    introduction: `GitLab CI is the CI half of the integrated GitLab DevSecOps platform — SCM, CI/CD, container registry, package registry, security scanning, issue tracking, all in one product. JetBrains 2024 DevEcosystem: ~21% market share, third behind GitHub Actions (~33%) and Jenkins (~28%).
+    introduction: `## Overview
+GitLab CI is the CI half of the integrated GitLab DevSecOps platform — SCM, CI/CD, container registry, package registry, security scanning, issue tracking, all in one product. JetBrains 2024 DevEcosystem: ~21% market share, third behind GitHub Actions (~33%) and Jenkins (~28%).
 
 The pitch is integration. Where GHA gives you CI tightly coupled to GitHub but you stitch in registry/scanning/deploy from third parties, GitLab gives you the full vertical stack from one vendor. For some orgs that's the right trade — one auth model, one billing relationship, one dashboard. For others it's vendor lock-in or feature surface they don't need.
 
@@ -5232,7 +5245,8 @@ Operational notes:
         image: '/diagrams/devops/ct2-jenkins.png',
       },
     ],
-    introduction: `Jenkins is the CI/CD incumbent — Hudson started in 2004 (Kohsuke Kawaguchi at Sun); the Hudson/Jenkins fork happened 2011 over Oracle's stewardship; Jenkins 2.0 (2016) introduced Jenkinsfile and Pipeline as the canonical model. As of JetBrains 2024 DevEcosystem: ~28% market share, second only to GitHub Actions (~33%) and ahead of GitLab CI (~21%).
+    introduction: `## Overview
+Jenkins is the CI/CD incumbent — Hudson started in 2004 (Kohsuke Kawaguchi at Sun); the Hudson/Jenkins fork happened 2011 over Oracle's stewardship; Jenkins 2.0 (2016) introduced Jenkinsfile and Pipeline as the canonical model. As of JetBrains 2024 DevEcosystem: ~28% market share, second only to GitHub Actions (~33%) and ahead of GitLab CI (~21%).
 
 Why Jenkins is still chosen in 2026 despite GHA's momentum:
 
@@ -6258,7 +6272,8 @@ Per-second billing means the workflow cost is exactly proportional to wall time,
         image: '/diagrams/devops/ct4-circleci.png',
       },
     ],
-    introduction: `CircleCI launched 2011, public cloud-native CI before that was common. Long-time leader in build performance: fast hosted runners, generous parallelism, automatic test splitting by timing, per-second billing. Market share in 2026: ~7-10% per JetBrains DevEcosystem; smaller than the big three (GHA, Jenkins, GitLab CI) but a real player especially in the JS/Node and Rails ecosystems.
+    introduction: `## Overview
+CircleCI launched 2011, public cloud-native CI before that was common. Long-time leader in build performance: fast hosted runners, generous parallelism, automatic test splitting by timing, per-second billing. Market share in 2026: ~7-10% per JetBrains DevEcosystem; smaller than the big three (GHA, Jenkins, GitLab CI) but a real player especially in the JS/Node and Rails ecosystems.
 
 Where CircleCI wins:
 
@@ -7218,7 +7233,8 @@ Annotation system: agents can post Markdown annotations during builds (build sum
         image: '/diagrams/devops/ct7-buildkite.png',
       },
     ],
-    introduction: `Buildkite is the hybrid CI platform — SaaS frontend, self-hosted agents. Founded 2013 in Melbourne. Niche but durable: the choice for mega-monorepo CI at Shopify, Airbnb, Pinterest, Etsy, Uber, PagerDuty, Cisco, Block (Square), Canva. Market share in 2026: ~3-5% per JetBrains, smaller than GHA/Jenkins/GitLab CI but concentrated in specific contexts.
+    introduction: `## Overview
+Buildkite is the hybrid CI platform — SaaS frontend, self-hosted agents. Founded 2013 in Melbourne. Niche but durable: the choice for mega-monorepo CI at Shopify, Airbnb, Pinterest, Etsy, Uber, PagerDuty, Cisco, Block (Square), Canva. Market share in 2026: ~3-5% per JetBrains, smaller than GHA/Jenkins/GitLab CI but concentrated in specific contexts.
 
 The pitch: SaaS UX, self-hosted execution. Buildkite hosts the orchestrator, web UI, pipeline scheduler, build history. Your agents do all the actual work on your infrastructure. Best of both worlds: polished UX without giving up infrastructure control.
 
@@ -8035,7 +8051,8 @@ Triggers v1beta1 GA'd in 2021; Triggers v1 still in alpha as of 2026. Most produ
         image: '/diagrams/devops/ct5-tekton.png',
       },
     ],
-    introduction: `Tekton is Kubernetes-native CI/CD: pipelines defined as CRDs (Custom Resource Definitions), executed by a Kubernetes controller. Originated at Google as part of the Knative project, donated to the CD Foundation (CDF) in 2019. Now powers Google Cloud Build (rebuilt on Tekton in 2023), OpenShift Pipelines (Red Hat's CI/CD), and Jenkins X.
+    introduction: `## Overview
+Tekton is Kubernetes-native CI/CD: pipelines defined as CRDs (Custom Resource Definitions), executed by a Kubernetes controller. Originated at Google as part of the Knative project, donated to the CD Foundation (CDF) in 2019. Now powers Google Cloud Build (rebuilt on Tekton in 2023), OpenShift Pipelines (Red Hat's CI/CD), and Jenkins X.
 
 The pitch: if you're already running Kubernetes, treating pipelines as Kubernetes resources is operationally cohesive. kubectl apply / kubectl get / kubectl describe work on Pipelines and PipelineRuns. RBAC, NetworkPolicy, ResourceQuota apply uniformly. Argo CD or Flux can manage Tekton resources via GitOps. The same operational primitives that run your apps run your CI.
 
@@ -9068,7 +9085,8 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Workf
         image: '/diagrams/devops/ct6-argo-wf-arch.png',
       },
     ],
-    introduction: `Argo Workflows is the Kubernetes-native general-purpose workflow engine. CNCF Graduated (graduated November 2022). Originated at Applatix → Intuit (2017+), now broadly adopted at BlackRock, NVIDIA, GitHub, Adobe, NASA JPL.
+    introduction: `## Overview
+Argo Workflows is the Kubernetes-native general-purpose workflow engine. CNCF Graduated (graduated November 2022). Originated at Applatix → Intuit (2017+), now broadly adopted at BlackRock, NVIDIA, GitHub, Adobe, NASA JPL.
 
 Its scope is wider than Tekton's. Where Tekton is purpose-built for CI/CD, Argo Workflows is positioned as the general orchestration engine: data pipelines (extract-transform-load), ML training pipelines (Kubeflow Pipelines is built on Argo Workflows), batch processing (image processing, video transcoding, scientific computation), CI/CD as one of many use cases, scheduled cron jobs, event-driven workflows.
 
@@ -11318,7 +11336,8 @@ Push vs pull deployment direction is the key architectural inversion. Traditiona
         image: '/diagrams/devops/g6-gitops-drift.png',
       },
     ],
-    introduction: `GitOps is the operating model where git is the source of truth for declarative infrastructure and applications, and software agents continuously reconcile actual system state to match what's in git. The term was coined by Alexis Richardson at Weaveworks in 2017. The OpenGitOps project (CNCF Sandbox since 2021) formalized the principles in v1.0 of the spec.
+    introduction: `## Overview
+GitOps is the operating model where git is the source of truth for declarative infrastructure and applications, and software agents continuously reconcile actual system state to match what's in git. The term was coined by Alexis Richardson at Weaveworks in 2017. The OpenGitOps project (CNCF Sandbox since 2021) formalized the principles in v1.0 of the spec.
 
 Why GitOps wins for Kubernetes:
 
@@ -11871,7 +11890,8 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from argocd-example-apps
         image: '/diagrams/devops/g2-argocd-blue-green.png',
       },
     ],
-    introduction: `Argo CD is the dominant Kubernetes GitOps tool in 2026. Originated at Intuit; CNCF Graduated December 2022. Production-deployed at Intuit, IBM, Adobe, Tesla, BMW, JPMorgan, Red Hat (the engine behind OpenShift GitOps), and thousands of other organizations.
+    introduction: `## Overview
+Argo CD is the dominant Kubernetes GitOps tool in 2026. Originated at Intuit; CNCF Graduated December 2022. Production-deployed at Intuit, IBM, Adobe, Tesla, BMW, JPMorgan, Red Hat (the engine behind OpenShift GitOps), and thousands of other organizations.
 
 Why Argo CD wins:
 
@@ -12859,7 +12879,8 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from Bank of Anthos mani
         image: '/diagrams/devops/g5-bank-of-anthos.png',
       },
     ],
-    introduction: `Flux v2 is the K8s-native GitOps tool from Weaveworks (the originators of the term GitOps in 2017). v1 was the original implementation; v2 (released 2021) is a complete rewrite into the GitOps Toolkit (GOTK) — a set of composable Kubernetes controllers. CNCF Graduated November 2022, the same month as Argo CD.
+    introduction: `## Overview
+Flux v2 is the K8s-native GitOps tool from Weaveworks (the originators of the term GitOps in 2017). v1 was the original implementation; v2 (released 2021) is a complete rewrite into the GitOps Toolkit (GOTK) — a set of composable Kubernetes controllers. CNCF Graduated November 2022, the same month as Argo CD.
 
 Why Flux wins:
 
@@ -21874,7 +21895,8 @@ Production patterns:
         image: '/diagrams/devops/o1-otel.png',
       },
     ],
-    introduction: `OpenTelemetry is the CNCF Incubating standard for application telemetry — traces, metrics, logs — vendor-neutral. Started as the merger of OpenTracing and OpenCensus (2019); CNCF Incubating since 2021. Second-most-active CNCF project after Kubernetes itself by 2024 (commits, contributors, releases).
+    introduction: `## Overview
+OpenTelemetry is the CNCF Incubating standard for application telemetry — traces, metrics, logs — vendor-neutral. Started as the merger of OpenTracing and OpenCensus (2019); CNCF Incubating since 2021. Second-most-active CNCF project after Kubernetes itself by 2024 (commits, contributors, releases).
 
 What changed with OTel:
 
@@ -23030,7 +23052,8 @@ Cost comparison (100k samples/sec ingest, 1 year retention):
 OSS long-term storage is 10-50x cheaper than Datadog/New Relic for metrics at scale.`,
       },
     ],
-    introduction: `Prometheus is the dominant metrics monitoring system in cloud-native. CNCF Graduated 2018 (second project after Kubernetes). Originated at SoundCloud (2012); inspired by Google's Borgmon. Pull-based model, time-series database, PromQL query language.
+    introduction: `## Overview
+Prometheus is the dominant metrics monitoring system in cloud-native. CNCF Graduated 2018 (second project after Kubernetes). Originated at SoundCloud (2012); inspired by Google's Borgmon. Pull-based model, time-series database, PromQL query language.
 
 Grafana is the dominant visualization layer. CNCF Sandbox 2021. Founded 2014. Open source (Apache 2.0); cloud-managed Grafana Cloud as paid tier. Visualizes Prometheus, Loki, Tempo, InfluxDB, Datadog, dozens of other data sources.
 
@@ -24298,7 +24321,8 @@ Loki's value: 10x cheaper storage than Elastic. 1TB/day raw logs cost ~$60/month
         image: '/diagrams/devops/o4-log-agg.png',
       },
     ],
-    introduction: `Logs are the third leg of observability after metrics and traces. They contain the most semantic detail per event but at the highest cost per useful query. Modern log aggregation balances cost (storage + indexing) against query capability.
+    introduction: `## Overview
+Logs are the third leg of observability after metrics and traces. They contain the most semantic detail per event but at the highest cost per useful query. Modern log aggregation balances cost (storage + indexing) against query capability.
 
 The 2026 landscape:
 
@@ -25690,7 +25714,8 @@ context.attach(ctx)
         image: '/diagrams/devops/o2-tracing.png',
       },
     ],
-    introduction: `Distributed tracing solves the microservices "where's the latency?" problem. A user sees 3-second checkout latency. Without tracing, you have N services each with their own logs and metrics — you grep through logs hoping to correlate timestamps. With tracing, you see the full request path as a flame graph; the slow span jumps out immediately.
+    introduction: `## Overview
+Distributed tracing solves the microservices "where's the latency?" problem. A user sees 3-second checkout latency. Without tracing, you have N services each with their own logs and metrics — you grep through logs hoping to correlate timestamps. With tracing, you see the full request path as a flame graph; the slow span jumps out immediately.
 
 The concept dates to Google's Dapper (2010 paper) — Google's internal tracing system. Open implementations followed: Zipkin (Twitter, 2012), Jaeger (Uber, 2015 → CNCF Graduated 2019), AWS X-Ray (2016), Datadog APM, New Relic Distributed Tracing.
 
@@ -26905,7 +26930,8 @@ Hybrid common: Datadog for production app teams (UI matters); Grafana stack for 
         image: '/diagrams/devops/o5-apm.png',
       },
     ],
-    introduction: `Application Performance Monitoring (APM) platforms bundle traces, metrics, logs, real user monitoring, synthetic monitoring, profiling, and SLO tracking into a single integrated product. The category emerged ~2008 (New Relic launched 2008, AppDynamics 2008) and matured through the 2010s.
+    introduction: `## Overview
+Application Performance Monitoring (APM) platforms bundle traces, metrics, logs, real user monitoring, synthetic monitoring, profiling, and SLO tracking into a single integrated product. The category emerged ~2008 (New Relic launched 2008, AppDynamics 2008) and matured through the 2010s.
 
 The 2026 APM landscape:
 
@@ -31704,7 +31730,8 @@ RBE requires hermetic builds. Non-hermetic actions produce different outputs on 
         image: '/diagrams/devops/ct8-bazel-rbe.png',
       },
     ],
-    introduction: `Bazel is Google's open-source build and test tool, released in 2015 as the externalized version of Google's internal Blaze system. It targets monorepos where conventional build tools break down: repositories with multiple languages, hundreds of services, thousands of engineers, and test suites measured in hours.
+    introduction: `## Overview
+Bazel is Google's open-source build and test tool, released in 2015 as the externalized version of Google's internal Blaze system. It targets monorepos where conventional build tools break down: repositories with multiple languages, hundreds of services, thousands of engineers, and test suites measured in hours.
 
 The Google origin matters. Google's monorepo -- approximately 2 billion lines of code per Potvin and Levenberg (CACM 2016) -- runs on the same underlying design as Bazel. Every design choice is informed by operating at that scale for decades. The result is a build tool with strong correctness guarantees and high operational capability, combined with a steep learning curve and significant initial configuration investment.
 
@@ -32827,7 +32854,8 @@ Useful Cilium CLI for debugging:
   cilium bpf lb list                    # service -> backend mappings in BPF`,
     },
   ],
-  introduction: `eBPF, originally Extended Berkeley Packet Filter, has grown from a simple packet filtering mechanism into a general-purpose kernel execution environment. Where Berkeley Packet Filter of the 1990s gave tcpdump a safe way to specify which packets to capture, the extended version introduced a 64-bit register file, arbitrary helper calls, persistent maps, and dozens of hook points spanning networking, tracing, and security. The result is a programmability layer that lets you instrument and enforce policy inside the kernel with none of the risk or maintenance burden of writing a kernel module.
+  introduction: `## Overview
+eBPF, originally Extended Berkeley Packet Filter, has grown from a simple packet filtering mechanism into a general-purpose kernel execution environment. Where Berkeley Packet Filter of the 1990s gave tcpdump a safe way to specify which packets to capture, the extended version introduced a 64-bit register file, arbitrary helper calls, persistent maps, and dozens of hook points spanning networking, tracing, and security. The result is a programmability layer that lets you instrument and enforce policy inside the kernel with none of the risk or maintenance burden of writing a kernel module.
 
 The safety guarantee is the central innovation. Every eBPF program submitted via the bpf() syscall is validated by the verifier before it is allowed to run. The verifier explores every possible execution path in the program's control-flow graph, tracks the type and value range of every register and stack slot, and rejects any path that could read out-of-bounds memory, call a non-approved helper, or loop without a provable bound. If the verifier rejects your program you get a human-readable log explaining exactly which instruction failed and why. This makes eBPF safer than any dynamically loaded module while remaining faster than user-space alternatives because there is no system call boundary on the hot path.
 
@@ -33465,7 +33493,8 @@ Rule of thumb:
   Internal containerd state   -> ctr`,
     },
   ],
-  introduction: `containerd began as an internal component inside Docker and was donated to the CNCF in 2017, graduating to a top-level CNCF project in 2019. Today it is the default container runtime in most Kubernetes distributions including EKS, GKE, AKS, and kubeadm-provisioned clusters. It replaced dockershim, which was removed from kubelet in Kubernetes 1.24, making direct knowledge of containerd essential for modern Kubernetes operations.
+  introduction: `## Overview
+containerd began as an internal component inside Docker and was donated to the CNCF in 2017, graduating to a top-level CNCF project in 2019. Today it is the default container runtime in most Kubernetes distributions including EKS, GKE, AKS, and kubeadm-provisioned clusters. It replaced dockershim, which was removed from kubelet in Kubernetes 1.24, making direct knowledge of containerd essential for modern Kubernetes operations.
 
 The project implements two separate but related specifications from the Open Container Initiative. The OCI Image Specification defines how container images are structured: a manifest referencing a config blob and a set of compressed layer tarballs stored in a content-addressable layout. The OCI Runtime Specification defines the config.json bundle format that instructs a low-level runtime (runc) how to set up the container environment including namespaces, cgroups, capabilities, and the process to execute. containerd bridges these two specs by converting images into runtime bundles.
 
@@ -34016,7 +34045,8 @@ Security properties vs standard containers:
   Cost: ~125ms cold start, ~5MB memory overhead for VMM process per microVM`,
     },
   ],
-  introduction: `Firecracker was open-sourced by Amazon Web Services in 2018 and has since become the reference implementation of what the industry calls a microVM: a virtual machine that is stripped of all legacy hardware emulation and sized to run a single workload rather than a general-purpose operating system. The project was motivated by a specific problem: AWS needed to run millions of short-lived Lambda functions with sub-second cold starts while maintaining the hard multi-tenant isolation that hardware virtualization provides. Containers alone did not provide sufficient isolation because they share the host kernel, and traditional hypervisors like QEMU were too slow to start and too heavy on memory to run at Lambda scale.
+  introduction: `## Overview
+Firecracker was open-sourced by Amazon Web Services in 2018 and has since become the reference implementation of what the industry calls a microVM: a virtual machine that is stripped of all legacy hardware emulation and sized to run a single workload rather than a general-purpose operating system. The project was motivated by a specific problem: AWS needed to run millions of short-lived Lambda functions with sub-second cold starts while maintaining the hard multi-tenant isolation that hardware virtualization provides. Containers alone did not provide sufficient isolation because they share the host kernel, and traditional hypervisors like QEMU were too slow to start and too heavy on memory to run at Lambda scale.
 
 The VMM is written entirely in Rust, a choice that eliminated whole categories of memory safety vulnerabilities that have historically plagued C-based hypervisors such as QEMU. Rust's ownership model guarantees that buffer overflows, use-after-free errors, and data races are caught at compile time. Given that the VMM processes untrusted guest requests continuously, this property meaningfully reduces the probability that a malicious guest can escape into the host.
 
@@ -34514,7 +34544,8 @@ At the end of the run the engine publishes the final artifact, emits a structure
       image: `/diagrams/devops/dagger-ci-flow.png`
     },
   ],
-  introduction: `Dagger reimagines CI/CD pipelines by treating them as ordinary programs rather than configuration files. Instead of learning a YAML DSL specific to GitHub Actions, GitLab CI, or Jenkins, you write pipeline logic in Go, Python, or TypeScript using a typed SDK that compiles down to a GraphQL description of your build graph. The Dagger engine executes that graph inside containers using BuildKit under the hood, which means every step runs in a reproducible, isolated environment regardless of the host machine.
+  introduction: `## Overview
+Dagger reimagines CI/CD pipelines by treating them as ordinary programs rather than configuration files. Instead of learning a YAML DSL specific to GitHub Actions, GitLab CI, or Jenkins, you write pipeline logic in Go, Python, or TypeScript using a typed SDK that compiles down to a GraphQL description of your build graph. The Dagger engine executes that graph inside containers using BuildKit under the hood, which means every step runs in a reproducible, isolated environment regardless of the host machine.
 
 The core insight behind Dagger is that the gap between local development and CI is mostly a tooling problem. When a pipeline is expressed as a YAML file it can only run on the CI provider that understands that YAML format. When it is expressed as a regular function in a general-purpose language it can run anywhere the Dagger CLI is installed, including a developer laptop, a local Docker environment, and any CI provider. Debugging a failing pipeline no longer requires pushing commits and waiting for a remote runner; you reproduce the exact failure locally in seconds.
 
@@ -35116,7 +35147,8 @@ Systemd unit key flags that differ from kubeadm defaults:
       image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
     },
   ],
-  introduction: `Kubernetes the Hard Way refers to the practice of bootstrapping a Kubernetes cluster entirely by hand, generating every certificate, writing every configuration file, and starting every component explicitly rather than delegating to an installer like kubeadm. The exercise was popularized by Kelsey Hightower as a learning tool, and it remains the most effective way to build deep operational intuition about how Kubernetes actually works under the hood. Engineers who have done this work understand exactly why a cluster fails to start, how to recover from certificate expiry, and what each component is responsible for.
+  introduction: `## Overview
+Kubernetes the Hard Way refers to the practice of bootstrapping a Kubernetes cluster entirely by hand, generating every certificate, writing every configuration file, and starting every component explicitly rather than delegating to an installer like kubeadm. The exercise was popularized by Kelsey Hightower as a learning tool, and it remains the most effective way to build deep operational intuition about how Kubernetes actually works under the hood. Engineers who have done this work understand exactly why a cluster fails to start, how to recover from certificate expiry, and what each component is responsible for.
 
 The foundation of any Kubernetes cluster is etcd, a strongly consistent distributed key-value store that implements the Raft consensus algorithm. Every piece of cluster state lives in etcd: node registrations, pod specifications, service definitions, secrets, and ConfigMaps. Because all control plane components are stateless and derive their view of the world from etcd, the health and integrity of the etcd cluster directly determines the health and integrity of the entire Kubernetes cluster. Understanding how to size an etcd cluster for quorum, how to back it up and restore it, and how to compact and defragment its data is essential operational knowledge.
 
@@ -35574,7 +35606,8 @@ StatefulSets use volumeClaimTemplates to give each pod replica its own stable PV
       image: `/diagrams/devops/kubernetes-storage-flow.png`,
     },
   ],
-  introduction: `Kubernetes was originally designed for stateless workloads, but real production systems require durable storage for databases, message queues, file stores, and logging pipelines. The storage subsystem has matured through multiple generations, moving from in-tree volume plugins tightly coupled to cloud providers, through the out-of-tree FlexVolume mechanism, to the current Container Storage Interface standard that cleanly decouples storage vendor code from the Kubernetes release cycle.
+  introduction: `## Overview
+Kubernetes was originally designed for stateless workloads, but real production systems require durable storage for databases, message queues, file stores, and logging pipelines. The storage subsystem has matured through multiple generations, moving from in-tree volume plugins tightly coupled to cloud providers, through the out-of-tree FlexVolume mechanism, to the current Container Storage Interface standard that cleanly decouples storage vendor code from the Kubernetes release cycle.
 
 The core abstraction is the PersistentVolume and PersistentVolumeClaim pair. PVs are cluster-scoped resources representing actual storage capacity, while PVCs are namespace-scoped requests for that storage. This two-level design lets administrators configure and quota storage centrally while developers request it by capability rather than by name or location. Dynamic provisioning via StorageClass removes the need for admins to pre-create PVs and enables self-service storage at scale.
 
@@ -36011,7 +36044,8 @@ The interaction between these two systems means you must understand which takes 
       image: `/diagrams/devops/kubernetes-pod-scheduling-flow.png`,
     },
   ],
-  introduction: `Kubernetes pod scheduling is the process by which the control plane decides which node should run each newly created pod. The default kube-scheduler watches for unscheduled pods and processes them through a pipeline of filter and score plugins before committing a node assignment. Understanding this pipeline in depth is essential for building clusters that maintain high availability across zones, prevent resource contention, and scale efficiently under dynamic workloads.
+  introduction: `## Overview
+Kubernetes pod scheduling is the process by which the control plane decides which node should run each newly created pod. The default kube-scheduler watches for unscheduled pods and processes them through a pipeline of filter and score plugins before committing a node assignment. Understanding this pipeline in depth is essential for building clusters that maintain high availability across zones, prevent resource contention, and scale efficiently under dynamic workloads.
 
 The scheduling framework, stabilized in Kubernetes 1.19, replaced the older predicates-and-priorities model with a structured set of extension points: PreEnqueue, PreFilter, Filter, PostFilter, PreScore, Score, Reserve, Permit, PreBind, Bind, and PostBind. Each extension point accepts one or more plugins that can read pod and node state, mutate scheduling decisions, or communicate with external systems. This architecture allows platform teams to ship custom placement logic as compiled Go plugins without maintaining a full scheduler fork.
 
@@ -36485,7 +36519,8 @@ On the admission path, a developer submits a new Deployment that omits a seccomp
       image: `/diagrams/devops/kubescape-runtime-security-flow.png`
     },
   ],
-  introduction: `Kubernetes cluster security spans two fundamentally different time horizons. Static posture assessment catches misconfigurations before workloads are admitted or before they reach production, while runtime security detects malicious behavior in workloads that have already passed through all gates. A mature security program requires both layers because no admission policy can anticipate every zero-day exploitation path or insider threat, and no runtime detector can compensate for an attacker who already holds an overprivileged RBAC role obtained from a misconfigured cluster.
+  introduction: `## Overview
+Kubernetes cluster security spans two fundamentally different time horizons. Static posture assessment catches misconfigurations before workloads are admitted or before they reach production, while runtime security detects malicious behavior in workloads that have already passed through all gates. A mature security program requires both layers because no admission policy can anticipate every zero-day exploitation path or insider threat, and no runtime detector can compensate for an attacker who already holds an overprivileged RBAC role obtained from a misconfigured cluster.
 
 Kubescape was created by ARMO and donated to the CNCF as the first open-source tool to implement the NSA and CISA Kubernetes Hardening Guidance as machine-executable controls. It also implements MITRE ATT&CK for Kubernetes, which maps adversarial techniques such as container escapes, lateral movement via the service account token, and data exfiltration through DNS tunneling to specific configuration checks. The combination gives security teams a vocabulary aligned with threat intelligence reports rather than arbitrary checklist items.
 
@@ -37286,7 +37321,8 @@ Q: How does GitOps use Git differently from standard version control?
 A: In GitOps, the repository is the declarative single source of truth for all infrastructure state. A git push triggers an operator (ArgoCD, Flux) to reconcile the live cluster to match. There is no direct kubectl apply in production — Git is the deployment mechanism and the audit trail.`,
       },
     ],
-    introduction: `Git is the foundation of every DevOps pipeline. Nearly every CI/CD system — GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite — is triggered by Git events: push, tag, pull request. Every GitOps operator (ArgoCD, Flux) watches a Git repository as its source of truth. Every Infrastructure as Code workflow stores Terraform modules, Helm charts, and Kubernetes manifests in Git. Mastering Git is not optional for a DevOps engineer — it is the baseline from which everything else operates.
+    introduction: `## Overview
+Git is the foundation of every DevOps pipeline. Nearly every CI/CD system — GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite — is triggered by Git events: push, tag, pull request. Every GitOps operator (ArgoCD, Flux) watches a Git repository as its source of truth. Every Infrastructure as Code workflow stores Terraform modules, Helm charts, and Kubernetes manifests in Git. Mastering Git is not optional for a DevOps engineer — it is the baseline from which everything else operates.
 
 This topic covers Git in two layers. The first layer is the complete command reference: every command group needed for day-to-day work and interviews, from basic operations through branching, remotes, staging, viewing history, undoing changes, stashing, tags, configuration, hooks, submodules, merge strategies, bisect, and reflog. The second layer is Git applied to DevOps contexts: CI/CD pipeline integration, Infrastructure as Code management, GitOps workflow, secrets management, production rollbacks, multi-environment deployments, and team collaboration patterns.
 
@@ -37410,7 +37446,8 @@ Hooks are the extensibility layer that DevOps teams use to enforce quality gates
     color: '#3b82f6',
     questions: 3,
     description: 'Organizational, technical, and cultural changes required to adopt TBD with CD, and how to sequence them.',
-    introduction: 'Trunk-based development with continuous deployment requires sequenced investment in safety mechanisms before shortening branch lifetimes. Build the safety net first, then reduce branch lifetime, then enable progressive delivery.',
+    introduction: '## Overview
+Trunk-based development with continuous deployment requires sequenced investment in safety mechanisms before shortening branch lifetimes. Build the safety net first, then reduce branch lifetime, then enable progressive delivery.',
     keyQuestions: [
       {
         question: 'Your team wants to adopt trunk-based development with continuous deployment. What organizational, technical, and cultural changes are required, and how do you sequence them?',
@@ -37455,7 +37492,8 @@ spec:
     color: '#f59e0b',
     questions: 2,
     description: 'Designing CI runner fleets with spot/preemptible instances, warm pools, and cross-region spot arbitrage to minimize cost while handling burst.',
-    introduction: 'CI runner cost is dominated by idle capacity during off-hours and cold-start latency during burst. The solution is a hybrid reserved/spot fleet with a warm pool and spot interruption handling.',
+    introduction: '## Overview
+CI runner cost is dominated by idle capacity during off-hours and cold-start latency during burst. The solution is a hybrid reserved/spot fleet with a warm pool and spot interruption handling.',
     keyQuestions: [
       {
         question: 'How do you design a cost-optimized CI runner fleet that scales to burst capacity during business hours but minimizes cost overnight?',
@@ -37480,7 +37518,8 @@ spec:
     color: '#ef4444',
     questions: 2,
     description: 'SLSA levels, SBOM generation, provenance attestation, and dependency pinning to secure the software supply chain end-to-end.',
-    introduction: 'Supply chain attacks target the build system and dependencies rather than the application itself. Defense requires verifiable provenance for every artifact and a full inventory of every component.',
+    introduction: '## Overview
+Supply chain attacks target the build system and dependencies rather than the application itself. Defense requires verifiable provenance for every artifact and a full inventory of every component.',
     keyQuestions: [
       {
         question: 'How do you implement software supply chain security end-to-end in a CI/CD pipeline?',
@@ -37508,7 +37547,8 @@ spec:
     color: '#f97316',
     questions: 2,
     description: 'Systematic approach to diagnosing why alerts stopped firing during a production incident.',
-    introduction: 'A broken alerting pipeline is a silent failure: the system is on fire and nobody gets paged. Diagnose it by segmenting it into stages and checking each stage independently.',
+    introduction: '## Overview
+A broken alerting pipeline is a silent failure: the system is on fire and nobody gets paged. Diagnose it by segmenting it into stages and checking each stage independently.',
     keyQuestions: [
       {
         question: 'Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?',
@@ -37637,7 +37677,8 @@ kubeadm reset. It deletes /etc/kubernetes/, drains the node, removes the CNI net
         image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
       },
     ],
-    introduction: `kubeadm is the tool that automates the manual steps of Kubernetes the Hard Way into a reliable, repeatable process. It was designed to be a building block — it handles the security-critical bootstrapping steps but deliberately leaves CNI plugin selection, load balancer configuration, and monitoring to the operator. This separation of concerns is why kubeadm is used as the foundation of higher-level tools like Cluster API, RKE2, and K3s.
+    introduction: `## Overview
+kubeadm is the tool that automates the manual steps of Kubernetes the Hard Way into a reliable, repeatable process. It was designed to be a building block — it handles the security-critical bootstrapping steps but deliberately leaves CNI plugin selection, load balancer configuration, and monitoring to the operator. This separation of concerns is why kubeadm is used as the foundation of higher-level tools like Cluster API, RKE2, and K3s.
 
 The most important thing to understand about kubeadm is its phase model. Every major step of kubeadm init is an independently runnable phase. If a default behavior does not fit your environment, you can run kubeadm init phase certs to generate certificates with custom configuration, then skip that phase when running the full init. This composability is what makes kubeadm suitable as a foundation for automation.
 
@@ -37831,7 +37872,8 @@ Run kubectl create -f pod.yaml -v=8 to see all API calls. If the error says admi
         image: `/diagrams/devops/g1-k8s-arch.png`,
       },
     ],
-    introduction: `Admission control is the mechanism that makes Kubernetes policy enforcement possible. Without admission controllers, any authenticated user who has RBAC permission to create pods could create pods that run as root, mount host paths, or bypass resource limits. Admission controllers provide the second policy layer that transforms Kubernetes from a simple container scheduler into a multi-tenant platform with enforceable governance.
+    introduction: `## Overview
+Admission control is the mechanism that makes Kubernetes policy enforcement possible. Without admission controllers, any authenticated user who has RBAC permission to create pods could create pods that run as root, mount host paths, or bypass resource limits. Admission controllers provide the second policy layer that transforms Kubernetes from a simple container scheduler into a multi-tenant platform with enforceable governance.
 
 The most important conceptual shift is understanding that admission is a pipeline, not a single check. A request that reaches admission has already been authenticated (the user is who they say they are) and authorized (they have permission to create this resource type). Admission is the third layer that asks whether this specific object is acceptable given the cluster's policies.
 
@@ -37982,7 +38024,8 @@ containerd's SystemdCgroup = true setting in config.toml makes containerd manage
         image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
       },
     ],
-    introduction: `RuntimeClass is the Kubernetes primitive that exposes the security/performance knob for container isolation. Most clusters run everything with runc because it is fast and well-understood, but this is a one-size-fits-all choice that is increasingly inadequate as Kubernetes is used for more sensitive workloads. RuntimeClass provides the API to make different isolation choices per workload without changing the deployment interface.
+    introduction: `## Overview
+RuntimeClass is the Kubernetes primitive that exposes the security/performance knob for container isolation. Most clusters run everything with runc because it is fast and well-understood, but this is a one-size-fits-all choice that is increasingly inadequate as Kubernetes is used for more sensitive workloads. RuntimeClass provides the API to make different isolation choices per workload without changing the deployment interface.
 
 The security isolation problem that RuntimeClass solves is real: Linux container namespaces isolate processes from each other but they share the host kernel. A kernel exploit (CVE-2019-5736 runc escape, for example) can allow a container to gain root on the host. gVisor's user-space kernel and kata-containers' VM boundary provide additional layers of isolation that make kernel exploits much harder to leverage.
 
@@ -38118,7 +38161,8 @@ Kubernetes 1.29 (released December 2023) moved native sidecar containers to beta
         image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
       },
     ],
-    introduction: `Native sidecar containers solve one of the most persistent operational pain points in the sidecar pattern: the lack of guaranteed lifecycle ordering between the proxy/collector and the main application. For years, engineers running Istio, Linkerd, Fluent Bit, and similar tools built fragile workarounds using init containers, shell loops, and sleep commands. Native sidecars (stable in Kubernetes 1.29) eliminate these workarounds with a single API field: restartPolicy: Always on an initContainer.
+    introduction: `## Overview
+Native sidecar containers solve one of the most persistent operational pain points in the sidecar pattern: the lack of guaranteed lifecycle ordering between the proxy/collector and the main application. For years, engineers running Istio, Linkerd, Fluent Bit, and similar tools built fragile workarounds using init containers, shell loops, and sleep commands. Native sidecars (stable in Kubernetes 1.29) eliminate these workarounds with a single API field: restartPolicy: Always on an initContainer.
 
 The simplicity of the API belies how significant the change is. Prior to native sidecars, the sidecar pattern was not a first-class Kubernetes concept — it was an operator convention with no lifecycle guarantees. This caused a spectrum of bugs ranging from occasional connection refused errors at app startup (when the proxy was not yet ready) to the systematic last-log-line loss in Kubernetes Jobs (when the log collector was terminated before flushing its buffer).
 
@@ -38401,7 +38445,8 @@ Labels are used by selectors (Services, ReplicaSets, NetworkPolicies). Annotatio
 arbitrary metadata (build IDs, owner, URLs) — not used by selectors.`,
       },
     ],
-    introduction: `kubectl is the Swiss Army knife of Kubernetes operations. In interviews, knowing only kubectl get and kubectl apply is insufficient — interviewers expect fluency with the full debugging workflow (describe → logs → exec), local access patterns (port-forward/proxy), and node management commands (cordon/drain/taint). CKA and CKAD exams are entirely kubectl-based with no GUI.
+    introduction: `## Overview
+kubectl is the Swiss Army knife of Kubernetes operations. In interviews, knowing only kubectl get and kubectl apply is insufficient — interviewers expect fluency with the full debugging workflow (describe → logs → exec), local access patterns (port-forward/proxy), and node management commands (cordon/drain/taint). CKA and CKAD exams are entirely kubectl-based with no GUI.
 
 The single most important debugging habit: always start with kubectl describe pod and read the Events section before checking logs. Events surface scheduling, image pull, and probe failures before any log output exists.`,
     whenToUse: [
@@ -38606,7 +38651,8 @@ Common readinessProbe mistake:
         image: '/diagrams/devops/k8s-probes-flow.png',
       },
     ],
-    introduction: `Container probes are the mechanism by which Kubernetes determines whether a container is healthy, ready to serve traffic, or still starting up. The three probe types map to three distinct kubelet actions: restart (liveness), EndpointSlice removal (readiness), and startup gating (startup). Most production incidents involving unexpected pod restarts or dropped traffic during rolling updates trace back to misconfigured probes — particularly missing startupProbes on slow-starting apps, or readinessProbes that are too aggressive during rolling updates.`,
+    introduction: `## Overview
+Container probes are the mechanism by which Kubernetes determines whether a container is healthy, ready to serve traffic, or still starting up. The three probe types map to three distinct kubelet actions: restart (liveness), EndpointSlice removal (readiness), and startup gating (startup). Most production incidents involving unexpected pod restarts or dropped traffic during rolling updates trace back to misconfigured probes — particularly missing startupProbes on slow-starting apps, or readinessProbes that are too aggressive during rolling updates.`,
     whenToUse: [
       'Configuring a Spring Boot / JVM app that takes 60+ seconds to start — add startupProbe with a high failureThreshold × periodSeconds budget',
       'Zero-downtime rolling updates — readinessProbe ensures new pods serve traffic before old pods terminate',
@@ -38803,7 +38849,8 @@ kubectl get pod $POD -o json | jq '.status.containerStatuses[0]'
 \`\`\``,
       },
     ],
-    introduction: `Kubernetes application troubleshooting follows a consistent pattern: status string → describe Events → logs (--previous for crashes) → exec (live inspection) → crictl on the node (when all else fails). Knowing which status string maps to which root cause — and which kubectl command to run next — is a core CKA/CKAD skill and comes up in every SRE and DevOps interview. CrashLoopBackOff with kubectl logs --previous and ImagePullBackOff with registry auth are the two most common real-world failure modes.`,
+    introduction: `## Overview
+Kubernetes application troubleshooting follows a consistent pattern: status string → describe Events → logs (--previous for crashes) → exec (live inspection) → crictl on the node (when all else fails). Knowing which status string maps to which root cause — and which kubectl command to run next — is a core CKA/CKAD skill and comes up in every SRE and DevOps interview. CrashLoopBackOff with kubectl logs --previous and ImagePullBackOff with registry auth are the two most common real-world failure modes.`,
     whenToUse: [
       'Pod stuck in Pending — use kubectl describe pod and read Events for scheduling failure reason (resource shortage, taint mismatch, quota)',
       'CrashLoopBackOff — always use kubectl logs --previous to read the crashed container\'s output; current logs may be empty',
@@ -39007,7 +39054,8 @@ Interview answer for "how do you run Kubernetes locally?":
    port mapping. For learning and addon exploration I recommend minikube."`,
       },
     ],
-    introduction: `Local Kubernetes tools fill the gap between laptop development and production clusters. kubeadm and Kubernetes the Hard Way cover production-grade HA setup, but for the day-to-day developer workflow — running integration tests, iterating on Helm charts, testing Operators — you need a cluster that starts in seconds, runs on your laptop, and is disposable. The ecosystem settled on kind for CI (GitHub Actions uses it) and minikube/k3d for local dev. Docker Desktop's built-in cluster is the zero-friction onramp for developers who just want kubectl to work.`,
+    introduction: `## Overview
+Local Kubernetes tools fill the gap between laptop development and production clusters. kubeadm and Kubernetes the Hard Way cover production-grade HA setup, but for the day-to-day developer workflow — running integration tests, iterating on Helm charts, testing Operators — you need a cluster that starts in seconds, runs on your laptop, and is disposable. The ecosystem settled on kind for CI (GitHub Actions uses it) and minikube/k3d for local dev. Docker Desktop's built-in cluster is the zero-friction onramp for developers who just want kubectl to work.`,
     whenToUse: [
       'Setting up a Kubernetes learning environment — minikube start --driver=docker and minikube dashboard',
       'Running Kubernetes integration tests in GitHub Actions CI — kind via helm/kind-action',
@@ -43233,7 +43281,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'activity',
     color: '#3b82f6',
     description: 'DORA 2024 State of DevOps: 39 capabilities across 5 clusters, new AI category, 5 performance levels. How elite performers differ.',
-    introduction: 'DORA (DevOps Research and Assessment) has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified 39 capabilities organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new AI capabilities cluster — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
+    introduction: '## Overview
+DORA (DevOps Research and Assessment) has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified 39 capabilities organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new AI capabilities cluster — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
     keyConcepts: [
       { title: 'The Four Key DORA Metrics', description: 'Deployment Frequency: how often you deploy to production. Lead Time for Changes: commit-to-production time. Mean Time to Restore (MTTR): recovery time from production failure. Change Failure Rate: percentage of deployments causing incidents. Elite thresholds: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
       { title: 'AI Capabilities Cluster (New in 2024)', description: 'Six capabilities added in 2024: AI-assisted code review, test generation, documentation, code assistance (Copilot/Cursor), incident response augmentation, and AI as a team collaborator in architecture decisions. Organizations with mature AI capability scores show 1.6× higher deployment frequency and 1.4× lower change failure rates.' },
@@ -43260,7 +43309,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'filter',
     color: '#06b6d4',
     description: 'OTel Collector: receivers, processors, exporters. Tail-based vs head-based sampling. Agent/Gateway topology. Kubernetes Operator.',
-    introduction: 'OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
+    introduction: '## Overview
+OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
     keyConcepts: [
       { title: 'Pipeline Components: Receivers → Processors → Exporters', description: 'Receivers accept telemetry: OTLP (gRPC/HTTP), Jaeger, Zipkin, Prometheus scrape, Fluentd, StatsD. Processors transform data: batch, memory limiter (always first!), attribute enrichment, filter, tail-based sampling, PII redaction. Exporters ship to backends: OTLP, Prometheus remote write, Jaeger, Datadog, Grafana OTLP, AWS X-Ray. Each pipeline is configured per signal type (traces/metrics/logs) in YAML.' },
       { title: 'Head-Based vs Tail-Based Sampling', description: 'Head-based: sampling decision made at trace start — fast, zero memory overhead, cannot sample based on outcome (errors, slow spans). Tail-based: buffers all spans for a complete trace before deciding — enables "100% errors, 1% success" strategies. The tailsampling processor must see ALL spans for a trace, requiring sticky routing (all pods of a service → same Gateway collector via TraceID hash).' },
@@ -43287,7 +43337,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'globe',
     color: '#14b8a6',
     description: 'Gateway API v1 (GA Oct 2023): GatewayClass/Gateway/HTTPRoute hierarchy. Role-oriented design, traffic splitting, ReferenceGrants.',
-    introduction: 'Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a role-oriented resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
+    introduction: '## Overview
+Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a role-oriented resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
     keyConcepts: [
       { title: 'Three-Tier Hierarchy: GatewayClass → Gateway → Routes', description: 'GatewayClass (cluster-scoped): maps a name to a controller implementation (Envoy Gateway, Istio, Kong, Cilium). Gateway (namespace-scoped): instantiates a load balancer — specifies listeners (port, protocol, TLS cert ref). HTTPRoute / GRPCRoute / TCPRoute / TLSRoute (namespace-scoped): routing rules — hostname, path, header matching, traffic splitting via weighted BackendRefs.' },
       { title: 'Role-Oriented Design', description: 'Infrastructure Provider defines GatewayClasses (e.g., platform team creates cloud LB classes). Cluster Operator creates Gateways (selects GatewayClass, configures TLS, sets listeners). Application Developer creates Routes pointing to their Services — no cluster-level RBAC needed. This is a fundamental improvement over Ingress where all config was in one resource requiring elevated permissions.' },
@@ -43314,7 +43365,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'layers',
     color: '#8b5cf6',
     description: 'CNCF Platform Engineering Whitepaper: 5 maturity levels, 13 capability domains, measuring platform ROI and developer satisfaction.',
-    introduction: 'The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
+    introduction: '## Overview
+The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
     keyConcepts: [
       { title: '5 Maturity Levels', description: '1. Provisional: ad-hoc, undocumented, built for immediate need. 2. Operationalized: documented, repeatable, but manually triggered. 3. Scalable: self-service, automated, handles multiple teams. 4. Optimizing: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. 5. Leading: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
       { title: '13 Capability Domains', description: 'A mature IDP covers: (1) artifact/image store, (2) CI/CD pipelines, (3) cloud/environment provisioning, (4) developer portal, (5) IDP orchestration layer, (6) observability, (7) policy/governance, (8) RBAC/access control, (9) secrets management, (10) service catalog/registry, (11) service mesh, (12) testing frameworks, (13) toolchain selection/standardization. Not all domains need full coverage at once — prioritize by team pain points.' },
@@ -43341,7 +43393,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'lock',
     color: '#0891b2',
     description: 'Secrets in GitOps: SOPS+age, Sealed Secrets, External Secrets Operator (ESO). Vault integration patterns. When to use each approach.',
-    introduction: 'GitOps stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: encrypt in Git (SOPS, Sealed Secrets), reference externally (External Secrets Operator, Vault agent), and hybrid (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
+    introduction: '## Overview
+GitOps stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: encrypt in Git (SOPS, Sealed Secrets), reference externally (External Secrets Operator, Vault agent), and hybrid (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
     keyConcepts: [
       { title: 'SOPS + age: Encrypted Values in Git', description: 'SOPS (Secrets OPerationS, Mozilla) encrypts specific values within YAML/JSON/ENV files — you can read the structure, not the values. age is the modern encryption backend (replacing PGP). Workflow: `sops --encrypt --age <pubkey> secrets.yaml > secrets.enc.yaml` → commit encrypted file → ArgoCD/Flux decrypts at deploy using age private key in a cluster Secret. Pros: simple, works with any backend. Cons: key rotation complexity, decryption key must exist in-cluster.' },
       { title: 'Sealed Secrets: Cluster-Bound Encryption', description: 'Sealed Secrets (Bitnami/CNCF) generates a `SealedSecret` CRD that can only be decrypted by the controller running in a specific cluster. You encrypt with `kubeseal --cert <cluster-pub-cert>` and commit the sealed YAML. The Sealed Secrets controller decrypts it into a standard Kubernetes Secret. Pros: dead simple, GitOps-native. Cons: sealed secrets are cluster-bound (cannot share across clusters), key rotation requires re-sealing all secrets.' },
