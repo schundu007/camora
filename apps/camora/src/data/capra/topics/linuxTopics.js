@@ -96,7 +96,7 @@ export const linuxTopics = [
       { title: 'Process Lifecycle', description: 'States and transitions: R→S→D→T→Z and what each means for DevOps debugging', image: '/diagrams/linux/linux-processes-lifecycle.png' },
       { title: 'Process Tree', description: 'fork/exec hierarchy from PID 1 systemd, PID namespaces, and zombie formation', image: '/diagrams/linux/linux-processes-tree.png' },
     ],
-    introduction: `Every running program in Linux is a **process** \u2014 an instance of an executable with its own address space, file descriptors, and credentials. Processes are organised in a tree rooted at **PID 1** (\`init\` or \`systemd\`). Each process has a parent (**PPID**); when a parent exits before its children, those children are re-parented to PID 1.\n\n## Process States\n\n- **R (Running)** \u2014 on a CPU or ready to run\n- **S (Sleeping)** \u2014 waiting for an event, interruptible\n- **D (Disk sleep)** \u2014 waiting for I/O, uninterruptible\n- **T (Stopped)** \u2014 frozen by SIGSTOP or a debugger\n- **Z (Zombie)** \u2014 exited but parent hasn't called \`wait()\` yet\n\n## Creating Processes\n\n**\`fork()\`** duplicates the current process (copy-on-write pages). **\`exec()\`** replaces the process image with a new program. The shell uses \`fork\` then \`exec\` for every command. Threads are implemented as lightweight processes via \`clone()\`.\n\n## Zombie Processes\n\n**Zombie processes** accumulate when a parent ignores \`SIGCHLD\` or doesn't call \`wait()\`. The zombie holds its PID and exit status but no memory. A large number of zombies indicates a parent bug, not a resource leak, but it exhausts the PID namespace.`,
+    introduction: `Every running program in Linux is a process \u2014 an instance of an executable with its own address space, file descriptors, and credentials. Processes are organised in a tree rooted at PID 1 (\`init\` or \`systemd\`). Each process has a parent (PPID); when a parent exits before its children, those children are re-parented to PID 1.\n\n## Process States\n\n- R (Running) \u2014 on a CPU or ready to run\n- S (Sleeping) \u2014 waiting for an event, interruptible\n- D (Disk sleep) \u2014 waiting for I/O, uninterruptible\n- T (Stopped) \u2014 frozen by SIGSTOP or a debugger\n- Z (Zombie) \u2014 exited but parent hasn't called \`wait()\` yet\n\n## Creating Processes\n\n\`fork()\` duplicates the current process (copy-on-write pages). \`exec()\` replaces the process image with a new program. The shell uses \`fork\` then \`exec\` for every command. Threads are implemented as lightweight processes via \`clone()\`.\n\n## Zombie Processes\n\nZombie processes accumulate when a parent ignores \`SIGCHLD\` or doesn't call \`wait()\`. The zombie holds its PID and exit status but no memory. A large number of zombies indicates a parent bug, not a resource leak, but it exhausts the PID namespace.`,
     whenToUse: [
       'Diagnosing high load average when CPU% is low — D-state processes blocked on I/O',
       'Explaining container isolation at the process level — PID namespaces give each container its own PID 1',
@@ -104,10 +104,10 @@ export const linuxTopics = [
       'Understanding why kill -9 on a zombie has no effect',
     ],
     keyConcepts: [
-      { term: 'Process states', definition: `**R** (running), **S** (sleeping), **D** (uninterruptible disk sleep), **T** (stopped), **Z** (zombie). The \`D\` state is the main cause of high load with low CPU.` },
-      { term: 'fork/exec', definition: `**\`fork()\`** duplicates the process (copy-on-write); **\`exec()\`** replaces the image. Shell runs every command via \`fork\` + \`exec\`.` },
+      { term: 'Process states', definition: `R (running), S (sleeping), D (uninterruptible disk sleep), T (stopped), Z (zombie). The \`D\` state is the main cause of high load with low CPU.` },
+      { term: 'fork/exec', definition: `\`fork()\` duplicates the process (copy-on-write); \`exec()\` replaces the image. Shell runs every command via \`fork\` + \`exec\`.` },
       { term: 'Zombie', definition: `Exited but parent has not called \`wait()\`. Holds a PID slot but no memory. Fixed by repairing the parent or sending \`SIGCHLD\`.` },
-      { term: 'PID namespace', definition: `Gives a container its **own PID 1** and isolated PID space. The container sees PIDs 1-N; the host sees a different PID for the same process.` },
+      { term: 'PID namespace', definition: `Gives a container its own PID 1 and isolated PID space. The container sees PIDs 1-N; the host sees a different PID for the same process.` },
       { term: 'PPID / reparenting', definition: `Every process tracks its parent PID. If the parent dies, orphaned children are reparented to PID 1 (\`systemd\`).` },
     ],
     pitfalls: [
@@ -118,11 +118,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Your server load average is 50 but CPU usage is only 5%. What is happening and how do you diagnose it?',
-        answer: `**Load average** counts all processes in **R** (runnable) and **D** (uninterruptible sleep) states. A high load with low CPU means processes are blocked waiting for I/O \u2014 they are in D state.\n\n## Diagnosis Steps\n\n\`\`\`bash\n# Check iowait \u2014 high %wa confirms an I/O problem\ntop        # look at the %wa column\n\n# Per-device utilisation\niostat -x 1\n\n# List all D-state processes\nps aux | awk '$8 ~ /D/'\n\n# Check for storage errors in kernel log\ndmesg | grep -E 'ata reset|I/O error'\njournalctl -k\n\`\`\`\n\n## Common Causes\n\n- Failing disk drive\n- NFS mount that went unresponsive\n- Ceph OSD in a degraded state\n- Network block device with packet loss\n\nFix depends on root cause: replace the disk, restore NFS connectivity, or add more IOPS.`,
+        answer: `Load average counts all processes in R (runnable) and D (uninterruptible sleep) states. A high load with low CPU means processes are blocked waiting for I/O \u2014 they are in D state.\n\n## Diagnosis Steps\n\n\`\`\`bash\n# Check iowait \u2014 high %wa confirms an I/O problem\ntop        # look at the %wa column\n\n# Per-device utilisation\niostat -x 1\n\n# List all D-state processes\nps aux | awk '$8 ~ /D/'\n\n# Check for storage errors in kernel log\ndmesg | grep -E 'ata reset|I/O error'\njournalctl -k\n\`\`\`\n\n## Common Causes\n\n- Failing disk drive\n- NFS mount that went unresponsive\n- Ceph OSD in a degraded state\n- Network block device with packet loss\n\nFix depends on root cause: replace the disk, restore NFS connectivity, or add more IOPS.`,
       },
       {
         question: 'What is the difference between a zombie process and an orphan process?',
-        answer: `## Zombie Process\n\nA **zombie** has exited but its parent has not called \`wait()\`. Holds a PID entry but **no memory, file descriptors, or CPU**. Cannot be killed with any signal.\n\n**Fix options:**\n- Fix the parent to call \`wait()\`\n- Send \`SIGCHLD\` to the parent\n- Kill the parent so zombies get reparented to init (PID 1), which reaps them\n\n## Orphan Process\n\nAn **orphan** is a process whose parent exited while the child is still running. Linux automatically **reparents orphans to PID 1** (\`systemd\`), which reaps them when they exit. Orphans are harmless \u2014 they continue running normally.\n\n## Practical Diagnosis\n\n\`\`\`bash\n# Find the parent of all zombies\nps aux --ppid <PPID>\n\`\`\``,
+        answer: `## Zombie Process\n\nA zombie has exited but its parent has not called \`wait()\`. Holds a PID entry but no memory, file descriptors, or CPU. Cannot be killed with any signal.\n\nFix options:\n- Fix the parent to call \`wait()\`\n- Send \`SIGCHLD\` to the parent\n- Kill the parent so zombies get reparented to init (PID 1), which reaps them\n\n## Orphan Process\n\nAn orphan is a process whose parent exited while the child is still running. Linux automatically reparents orphans to PID 1 (\`systemd\`), which reaps them when they exit. Orphans are harmless \u2014 they continue running normally.\n\n## Practical Diagnosis\n\n\`\`\`bash\n# Find the parent of all zombies\nps aux --ppid <PPID>\n\`\`\``,
       },
     ],
     quickFire: [
@@ -153,18 +153,18 @@ export const linuxTopics = [
       { title: 'Signal Delivery Flow', description: 'How signals travel from source → pending set → mask check → handler or default action', image: '/diagrams/linux/linux-signals-delivery.png' },
       { title: 'Key Signals Cheatsheet', description: 'SIGTERM (15) vs SIGKILL (9) vs SIGSTOP/CONT — which are catchable and when to use each', image: '/diagrams/linux/linux-signals-cheatsheet.png' },
     ],
-    introduction: `**Signals** are asynchronous notifications sent to a process by the kernel, another process, or the process itself. There are 64 standard signals. Signals interrupt normal execution and invoke a registered handler, the default action (usually terminate or ignore), or are blocked via a **signal mask**.\n\n## Key Signals for Production\n\n- **SIGTERM (15)** \u2014 request graceful termination; processes can catch and clean up\n- **SIGKILL (9)** \u2014 unconditional termination; cannot be caught, blocked, or ignored\n- **SIGINT (2)** \u2014 Ctrl+C from the terminal\n- **SIGHUP (1)** \u2014 trigger **config reload** in daemons\n- **SIGCHLD (17)** \u2014 sent to parent when a child changes state\n- **SIGUSR1 / SIGUSR2 (10/12)** \u2014 user-defined signals\n\n## Signal Delivery\n\nIf a process has a signal **blocked** in its signal mask, it is queued (pending). Signals are **not queued past one** \u2014 if the same signal fires three times while blocked, only one delivery occurs when unblocked. Real-time signals (\`SIGRTMIN\` to \`SIGRTMAX\`) are queued and ordered.\n\n## Graceful Shutdown Pattern\n\nReceive \`SIGTERM\` \u2192 stop accepting new work \u2192 drain in-flight requests \u2192 close connections \u2192 exit 0. Kubernetes uses \`terminationGracePeriodSeconds\` for this.`,
+    introduction: `Signals are asynchronous notifications sent to a process by the kernel, another process, or the process itself. There are 64 standard signals. Signals interrupt normal execution and invoke a registered handler, the default action (usually terminate or ignore), or are blocked via a signal mask.\n\n## Key Signals for Production\n\n- SIGTERM (15) \u2014 request graceful termination; processes can catch and clean up\n- SIGKILL (9) \u2014 unconditional termination; cannot be caught, blocked, or ignored\n- SIGINT (2) \u2014 Ctrl+C from the terminal\n- SIGHUP (1) \u2014 trigger config reload in daemons\n- SIGCHLD (17) \u2014 sent to parent when a child changes state\n- SIGUSR1 / SIGUSR2 (10/12) \u2014 user-defined signals\n\n## Signal Delivery\n\nIf a process has a signal blocked in its signal mask, it is queued (pending). Signals are not queued past one \u2014 if the same signal fires three times while blocked, only one delivery occurs when unblocked. Real-time signals (\`SIGRTMIN\` to \`SIGRTMAX\`) are queued and ordered.\n\n## Graceful Shutdown Pattern\n\nReceive \`SIGTERM\` \u2192 stop accepting new work \u2192 drain in-flight requests \u2192 close connections \u2192 exit 0. Kubernetes uses \`terminationGracePeriodSeconds\` for this.`,
     whenToUse: [
       'Explaining why kill -9 should be the last resort — it prevents graceful cleanup',
       'Designing container shutdown sequences in Kubernetes (preStop hooks + SIGTERM + grace period)',
       'Debugging why a daemon does not pick up config changes — likely needs SIGHUP',
     ],
     keyConcepts: [
-      { term: 'SIGTERM (15)', definition: `Request **graceful shutdown**. Can be caught and handled. Always try first — allows the process to flush buffers and exit cleanly.` },
-      { term: 'SIGKILL (9)', definition: `**Unconditional kill**. Cannot be caught, blocked, or ignored. Use as a last resort after SIGTERM has been given time to work.` },
-      { term: 'SIGHUP (1)', definition: `Modern convention: **reload configuration** without restarting. \`nginx\`, \`sshd\`, and most daemons handle this via a registered SIGHUP handler.` },
-      { term: 'Signal mask', definition: `Per-thread **bitmask of blocked signals**. Blocked signals are queued (pending) and delivered when unblocked.` },
-      { term: 'Real-time signals', definition: `\`SIGRTMIN\` through \`SIGRTMAX\`. Unlike standard signals, they are **queued, ordered**, and can carry a payload.` },
+      { term: 'SIGTERM (15)', definition: `Request graceful shutdown. Can be caught and handled. Always try first — allows the process to flush buffers and exit cleanly.` },
+      { term: 'SIGKILL (9)', definition: `Unconditional kill. Cannot be caught, blocked, or ignored. Use as a last resort after SIGTERM has been given time to work.` },
+      { term: 'SIGHUP (1)', definition: `Modern convention: reload configuration without restarting. \`nginx\`, \`sshd\`, and most daemons handle this via a registered SIGHUP handler.` },
+      { term: 'Signal mask', definition: `Per-thread bitmask of blocked signals. Blocked signals are queued (pending) and delivered when unblocked.` },
+      { term: 'Real-time signals', definition: `\`SIGRTMIN\` through \`SIGRTMAX\`. Unlike standard signals, they are queued, ordered, and can carry a payload.` },
     ],
     pitfalls: [
       'Sending SIGKILL immediately without trying SIGTERM — prevents log flushing, database checkpoint, and connection draining.',
@@ -174,11 +174,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'What happens when you run kill -9 on a process vs kill -15? When should you use each?',
-        answer: `## SIGTERM (kill -15) \u2014 Always Try First\n\n\`kill -15\` sends **SIGTERM**. The process can catch it to run cleanup: flush write buffers, close database connections, complete in-flight requests, remove lock files.\n\n## SIGKILL (kill -9) \u2014 Last Resort Only\n\n\`kill -9\` sends **SIGKILL**. The kernel tears the process down immediately \u2014 no cleanup runs. File buffers may not be flushed, database connections are cut hard.\n\n**Use SIGKILL only when:**\n- The process is hung and not responding to SIGTERM after a grace period\n- The process caught SIGTERM but is stuck in shutdown code\n\n## Practical Sequence\n\n\`\`\`bash\nkill -15 <pid>\nsleep 30\nkill -0 <pid> 2>/dev/null && kill -9 <pid>   # Still alive? Force kill.\n\`\`\``,
+        answer: `## SIGTERM (kill -15) \u2014 Always Try First\n\n\`kill -15\` sends SIGTERM. The process can catch it to run cleanup: flush write buffers, close database connections, complete in-flight requests, remove lock files.\n\n## SIGKILL (kill -9) \u2014 Last Resort Only\n\n\`kill -9\` sends SIGKILL. The kernel tears the process down immediately \u2014 no cleanup runs. File buffers may not be flushed, database connections are cut hard.\n\nUse SIGKILL only when:\n- The process is hung and not responding to SIGTERM after a grace period\n- The process caught SIGTERM but is stuck in shutdown code\n\n## Practical Sequence\n\n\`\`\`bash\nkill -15 <pid>\nsleep 30\nkill -0 <pid> 2>/dev/null && kill -9 <pid>   # Still alive? Force kill.\n\`\`\``,
       },
       {
         question: 'How do you ensure your Docker container shuts down gracefully when Kubernetes drains a node?',
-        answer: `Kubernetes sends **SIGTERM to PID 1** inside the container on pod deletion. If the app does not handle SIGTERM, Kubernetes waits \`terminationGracePeriodSeconds\` (default 30s) then sends SIGKILL.\n\n## Requirements for Graceful Shutdown\n\n**1. Be PID 1 or receive forwarded signals.** If you use \`CMD ["bash", "-c", "myapp"]\` the shell is PID 1 and does not forward signals. Use \`exec\`:\n\`\`\`bash\nCMD exec myapp\n\`\`\`\n\n**2. Install a SIGTERM handler** that stops accepting connections, drains requests, and exits 0.\n\n**3. Set \`terminationGracePeriodSeconds\`** in the pod spec to match your drain timeout.\n\n**4. Add a \`preStop\` hook** if needed to deregister from a load balancer before SIGTERM.\n\n## Common Mistake\n\nUsing \`npm start\` as PID 1 \u2014 the shell traps no signals. Use **\`dumb-init\`** or **\`tini\`** as a minimal init that forwards signals to children.`,
+        answer: `Kubernetes sends SIGTERM to PID 1 inside the container on pod deletion. If the app does not handle SIGTERM, Kubernetes waits \`terminationGracePeriodSeconds\` (default 30s) then sends SIGKILL.\n\n## Requirements for Graceful Shutdown\n\n1. Be PID 1 or receive forwarded signals. If you use \`CMD ["bash", "-c", "myapp"]\` the shell is PID 1 and does not forward signals. Use \`exec\`:\n\`\`\`bash\nCMD exec myapp\n\`\`\`\n\n2. Install a SIGTERM handler that stops accepting connections, drains requests, and exits 0.\n\n3. Set \`terminationGracePeriodSeconds\` in the pod spec to match your drain timeout.\n\n4. Add a \`preStop\` hook if needed to deregister from a load balancer before SIGTERM.\n\n## Common Mistake\n\nUsing \`npm start\` as PID 1 \u2014 the shell traps no signals. Use \`dumb-init\` or \`tini\` as a minimal init that forwards signals to children.`,
       },
     ],
     quickFire: [
@@ -210,18 +210,18 @@ export const linuxTopics = [
       { title: 'VFS Stack', description: 'System call → VFS abstraction → ext4/XFS/NFS → Page Cache → Block I/O → hardware', image: '/diagrams/linux/linux-filesystem-vfs.png' },
       { title: 'Inodes — Hard vs Soft Links', description: 'Hard links share the same inode; symlinks store a path string and can go dangling', image: '/diagrams/linux/linux-filesystem-inodes.png' },
     ],
-    introduction: `Everything in Linux is a file — devices, processes, network sockets, even hardware. This mental model is the foundation. Before memorizing commands, understand where things live and why the filesystem is organised that way.\n\n## The Filesystem Hierarchy Standard (FHS)\n\nLinux follows the FHS so every distribution puts things in predictable places:\n- **/bin, /sbin** — essential binaries needed before /usr mounts (boot recovery)\n- **/usr/bin, /usr/sbin** — most user programs; this is where \`grep\`, \`ssh\`, \`python3\` live\n- **/etc** — all configuration files, always text, always editable\n- **/var** — variable data: logs in \`/var/log\`, databases, mail queues, runtime state\n- **/proc, /sys** — virtual filesystems exposing kernel state as files (read \`/proc/cpuinfo\`, write \`/sys/...\` to tune the kernel live)\n- **/home** — user home directories; \`~\` expands to yours\n- **/tmp** — temporary files cleared on reboot; world-writable with sticky bit\n- **/opt** — optional third-party packages installed outside the distro package manager\n\n**The 'everything is a file' principle** means: disk devices are files (\`/dev/sda\`), processes expose state as files (\`/proc/1/status\`), and network connections appear as files when using socketpair. This is why Unix tools that work on files compose so well.\n\nLinux uses the **Virtual Filesystem Switch (VFS)** as an abstraction layer between system calls (\`open\`, \`read\`, \`write\`) and specific filesystem implementations. Every filesystem presents the same VFS interface, so userspace code is filesystem-agnostic.\n\n## Inodes\n\nThe **inode** stores file metadata: type, permissions, owner/group, size, timestamps (\`atime\`, \`mtime\`, \`ctime\`), and pointers to data blocks. Critically, the **inode does not contain the filename** \u2014 filenames live in directory entries that map names to inode numbers.\n\n## Hard Links vs Symbolic Links\n\n**Hard links** are directory entries pointing to the same inode. The inode and data are freed only when link count reaches zero and no process has the file open. This is why you can delete a file that a running process holds open \u2014 the data is still accessible via \`/proc/PID/fd/\`.\n\n**Symbolic links** are special files containing a path string. They can cross filesystem boundaries. **Dangling symlinks** point to a non-existent target.\n\n## Common Production Problems\n\n- **Disk full** (\`df -h\`) vs **inode exhaustion** (\`df -i\`) \u2014 a filesystem can run out of inodes even when blocks are available, typically caused by millions of tiny files.`,
+    introduction: `Everything in Linux is a file — devices, processes, network sockets, even hardware. This mental model is the foundation. Before memorizing commands, understand where things live and why the filesystem is organised that way.\n\n## The Filesystem Hierarchy Standard (FHS)\n\nLinux follows the FHS so every distribution puts things in predictable places:\n- /bin, /sbin — essential binaries needed before /usr mounts (boot recovery)\n- /usr/bin, /usr/sbin — most user programs; this is where \`grep\`, \`ssh\`, \`python3\` live\n- /etc — all configuration files, always text, always editable\n- /var — variable data: logs in \`/var/log\`, databases, mail queues, runtime state\n- /proc, /sys — virtual filesystems exposing kernel state as files (read \`/proc/cpuinfo\`, write \`/sys/...\` to tune the kernel live)\n- /home — user home directories; \`~\` expands to yours\n- /tmp — temporary files cleared on reboot; world-writable with sticky bit\n- /opt — optional third-party packages installed outside the distro package manager\n\nThe 'everything is a file' principle means: disk devices are files (\`/dev/sda\`), processes expose state as files (\`/proc/1/status\`), and network connections appear as files when using socketpair. This is why Unix tools that work on files compose so well.\n\nLinux uses the Virtual Filesystem Switch (VFS) as an abstraction layer between system calls (\`open\`, \`read\`, \`write\`) and specific filesystem implementations. Every filesystem presents the same VFS interface, so userspace code is filesystem-agnostic.\n\n## Inodes\n\nThe inode stores file metadata: type, permissions, owner/group, size, timestamps (\`atime\`, \`mtime\`, \`ctime\`), and pointers to data blocks. Critically, the inode does not contain the filename \u2014 filenames live in directory entries that map names to inode numbers.\n\n## Hard Links vs Symbolic Links\n\nHard links are directory entries pointing to the same inode. The inode and data are freed only when link count reaches zero and no process has the file open. This is why you can delete a file that a running process holds open \u2014 the data is still accessible via \`/proc/PID/fd/\`.\n\nSymbolic links are special files containing a path string. They can cross filesystem boundaries. Dangling symlinks point to a non-existent target.\n\n## Common Production Problems\n\n- Disk full (\`df -h\`) vs inode exhaustion (\`df -i\`) \u2014 a filesystem can run out of inodes even when blocks are available, typically caused by millions of tiny files.`,
     whenToUse: [
       '"Disk is full but df shows space available" — inode exhaustion, check df -i',
       'Explaining why a deleted file still uses disk space — process holding open fd',
       'Understanding why mv is atomic within a filesystem but cp is not',
     ],
     keyConcepts: [
-      { term: 'Inode', definition: `**Metadata structure** for a file: type, permissions, owner, size, timestamps, block pointers. Does **not** contain the filename. Check with \`ls -i\`.` },
-      { term: 'Hard link', definition: `Additional directory entry pointing to the **same inode**. The file is deleted only when link count reaches 0 **and** no open file descriptors remain.` },
-      { term: 'Symbolic link', definition: `A file containing a **path string**. Can cross filesystems. Becomes a **dangling symlink** if the target is moved or deleted.` },
-      { term: 'VFS', definition: `**Virtual Filesystem Switch** — kernel abstraction routing system calls to the correct filesystem driver.` },
-      { term: 'Inode exhaustion', definition: `Can run out of **inodes** before running out of blocks. Check with \`df -i\`. XFS uses dynamic inode allocation and rarely hits this.` },
+      { term: 'Inode', definition: `Metadata structure for a file: type, permissions, owner, size, timestamps, block pointers. Does not contain the filename. Check with \`ls -i\`.` },
+      { term: 'Hard link', definition: `Additional directory entry pointing to the same inode. The file is deleted only when link count reaches 0 and no open file descriptors remain.` },
+      { term: 'Symbolic link', definition: `A file containing a path string. Can cross filesystems. Becomes a dangling symlink if the target is moved or deleted.` },
+      { term: 'VFS', definition: `Virtual Filesystem Switch — kernel abstraction routing system calls to the correct filesystem driver.` },
+      { term: 'Inode exhaustion', definition: `Can run out of inodes before running out of blocks. Check with \`df -i\`. XFS uses dynamic inode allocation and rarely hits this.` },
     ],
     pitfalls: [
       'Running df -h and seeing free space but still getting "No space left on device" — check df -i for inode exhaustion.',
@@ -231,11 +231,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'What is an inode and what happens when inodes are exhausted?',
-        answer: `An **inode** stores metadata: file type, permissions (\`rwxrwxrwx\`), owner UID/GID, file size, three timestamps (\`atime\` = last access, \`mtime\` = last modification, \`ctime\` = last inode change), and pointers to data blocks. The **inode does not store the filename** \u2014 filenames are stored in directory entries.\n\nWhen inodes are exhausted, **new files cannot be created** even with available disk blocks.\n\n## Diagnosis\n\n\`\`\`bash\n# Check inode usage -- look for Use% near 100%\ndf -i\n\n# Find the directory with the most files\nfind / -xdev -printf '%h\\n' | sort | uniq -c | sort -k 1 -rn | head -20\n\`\`\`\n\n## Fix\n\nDelete excess small files (empty mail queue, clear tmp). To prevent recurrence, increase inode density at filesystem creation:\n\`\`\`bash\nmkfs.ext4 -N <count> /dev/sdX\n\`\`\`\nOr switch to **XFS**, which uses dynamic inode allocation and rarely exhausts inodes.`,
+        answer: `An inode stores metadata: file type, permissions (\`rwxrwxrwx\`), owner UID/GID, file size, three timestamps (\`atime\` = last access, \`mtime\` = last modification, \`ctime\` = last inode change), and pointers to data blocks. The inode does not store the filename \u2014 filenames are stored in directory entries.\n\nWhen inodes are exhausted, new files cannot be created even with available disk blocks.\n\n## Diagnosis\n\n\`\`\`bash\n# Check inode usage -- look for Use% near 100%\ndf -i\n\n# Find the directory with the most files\nfind / -xdev -printf '%h\\n' | sort | uniq -c | sort -k 1 -rn | head -20\n\`\`\`\n\n## Fix\n\nDelete excess small files (empty mail queue, clear tmp). To prevent recurrence, increase inode density at filesystem creation:\n\`\`\`bash\nmkfs.ext4 -N <count> /dev/sdX\n\`\`\`\nOr switch to XFS, which uses dynamic inode allocation and rarely exhausts inodes.`,
       },
       {
         question: 'A file is deleted but disk usage does not decrease. Why and how do you fix it?',
-        answer: `When you delete a file (\`unlink\`), the directory entry is removed and link count decrements. If **any process has the file open**, the kernel keeps the inode and data blocks alive until the fd is closed. The file is invisible in the directory tree but still occupies disk space.\n\nThis is common with **log files**: a rotation script deletes the old log, but the application still has the old file descriptor open and is writing to the deleted file.\n\n## Diagnosis\n\n\`\`\`bash\n# List all deleted files still held open\nlsof | grep deleted\n\n# Files with link count < 1\nlsof +L1\n\`\`\`\n\n## Fix Options\n\n- **Restart or reload the process** \u2014 opens new file descriptors pointing to the new log file\n- **Truncate via /proc** (if restart not possible):\n\`\`\`bash\n> /proc/<PID>/fd/<FD>\n\`\`\`\n- **Send SIGHUP** to trigger log rotation (\`logrotate\` uses \`postrotate\` scripts for this)`,
+        answer: `When you delete a file (\`unlink\`), the directory entry is removed and link count decrements. If any process has the file open, the kernel keeps the inode and data blocks alive until the fd is closed. The file is invisible in the directory tree but still occupies disk space.\n\nThis is common with log files: a rotation script deletes the old log, but the application still has the old file descriptor open and is writing to the deleted file.\n\n## Diagnosis\n\n\`\`\`bash\n# List all deleted files still held open\nlsof | grep deleted\n\n# Files with link count < 1\nlsof +L1\n\`\`\`\n\n## Fix Options\n\n- Restart or reload the process \u2014 opens new file descriptors pointing to the new log file\n- Truncate via /proc (if restart not possible):\n\`\`\`bash\n> /proc/<PID>/fd/<FD>\n\`\`\`\n- Send SIGHUP to trigger log rotation (\`logrotate\` uses \`postrotate\` scripts for this)`,
       },
     ],
     quickFire: [
@@ -267,15 +267,15 @@ export const linuxTopics = [
       { title: 'Bash Script Anatomy', description: 'Shebang → set -euo pipefail → vars → functions → main logic → trap cleanup → exit code', image: '/diagrams/linux/bash-scripting-anatomy.png' },
       { title: 'Control Flow', description: 'if/elif/else, case, for, while, until, functions, and array iteration in Bash', image: '/diagrams/linux/bash-scripting-control-flow.png' },
     ],
-    introduction: `**Bash** is the dominant shell for system automation. Production scripts must be written with defensive defaults.\n\n## Defensive Defaults\n\nAlways start scripts with:\n\`\`\`bash\nset -euo pipefail\n\`\`\`\n- **\`-e\`** \u2014 exit on any non-zero return\n- **\`-u\`** \u2014 treat unset variables as errors\n- **\`-o pipefail\`** \u2014 fail a pipeline if **any** command in it fails\n\n## Variables and Quoting\n\nAlways **double-quote variable expansions**: \`"$variable"\` not \`$variable\` \u2014 prevents word splitting and glob expansion. Use \`\${variable:-default}\` for a default when unset.\n\n## Exit Codes and trap\n\n\`0\` is success; anything else is failure. Use \`trap\` to register cleanup functions:\n\`\`\`bash\ntrap cleanup EXIT\n\`\`\`\n\n## Process Substitution\n\n**Process substitution** feeds command output as a file:\n\`\`\`bash\ndiff <(sort a.txt) <(sort b.txt)\n\`\`\`\nDiffs two sorted outputs without temporary files.`,
+    introduction: `Bash is the dominant shell for system automation. Production scripts must be written with defensive defaults.\n\n## Defensive Defaults\n\nAlways start scripts with:\n\`\`\`bash\nset -euo pipefail\n\`\`\`\n- \`-e\` \u2014 exit on any non-zero return\n- \`-u\` \u2014 treat unset variables as errors\n- \`-o pipefail\` \u2014 fail a pipeline if any command in it fails\n\n## Variables and Quoting\n\nAlways double-quote variable expansions: \`"$variable"\` not \`$variable\` \u2014 prevents word splitting and glob expansion. Use \`\${variable:-default}\` for a default when unset.\n\n## Exit Codes and trap\n\n\`0\` is success; anything else is failure. Use \`trap\` to register cleanup functions:\n\`\`\`bash\ntrap cleanup EXIT\n\`\`\`\n\n## Process Substitution\n\nProcess substitution feeds command output as a file:\n\`\`\`bash\ndiff <(sort a.txt) <(sort b.txt)\n\`\`\`\nDiffs two sorted outputs without temporary files.`,
     whenToUse: [
       'Writing deployment scripts, cron jobs, and CI/CD pipeline steps',
       'Automating repetitive system administration tasks',
       'Designing error handling that cleans up temp files even on failure',
     ],
     keyConcepts: [
-      { term: 'set -euo pipefail', definition: `**Defensive defaults** every production script should start with. \`-e\` exits on error, \`-u\` treats unset variables as an error, \`-o pipefail\` fails the whole pipeline on the first non-zero command.` },
-      { term: 'Double quoting', definition: `Always quote variable expansions: \`"$var"\` not \`$var\`. Prevents **word splitting** and **glob expansion**.` },
+      { term: 'set -euo pipefail', definition: `Defensive defaults every production script should start with. \`-e\` exits on error, \`-u\` treats unset variables as an error, \`-o pipefail\` fails the whole pipeline on the first non-zero command.` },
+      { term: 'Double quoting', definition: `Always quote variable expansions: \`"$var"\` not \`$var\`. Prevents word splitting and glob expansion.` },
       { term: 'trap', definition: `Register functions to run on shell exit or signals. \`trap cleanup EXIT\` ensures temp files are deleted even when the script exits early.` },
       { term: 'Exit codes', definition: `\`0\` is success; anything else is failure. Scripts should propagate exit codes correctly.` },
       { term: 'Process substitution', definition: `\`diff <(cmd1) <(cmd2)\` feeds command output as named pipes. Avoids temp files.` },
@@ -288,11 +288,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Write a bash script that downloads a file, processes it, and cleans up temp files even if the script fails mid-way.',
-        answer: `\`\`\`bash\n#!/usr/bin/env bash\nset -euo pipefail\n\nTMPDIR=\$(mktemp -d)\nTMPFILE="\$TMPDIR/download.dat"\n\ncleanup() {\n  rm -rf "\$TMPDIR"\n}\ntrap cleanup EXIT\n\nURL="\${1:?Usage: \$0 <url>}"\n\ncurl -fsSL "\$URL" -o "\$TMPFILE"\n\nprocess_data "\$TMPFILE"\n\necho "Done. Temp files cleaned up automatically by trap."\n\`\`\`\n\n## Key Points\n\n- **\`mktemp -d\`** creates a unique temp directory\n- **\`trap cleanup EXIT\`** runs cleanup whether the script succeeds, fails, or receives a signal\n- **\`\${1:?message}\`** exits with message if \`\$1\` is unset\n- **\`curl -f\`** fails on HTTP 4xx/5xx; without it, curl exits 0 even on a 404`,
+        answer: `\`\`\`bash\n#!/usr/bin/env bash\nset -euo pipefail\n\nTMPDIR=\$(mktemp -d)\nTMPFILE="\$TMPDIR/download.dat"\n\ncleanup() {\n  rm -rf "\$TMPDIR"\n}\ntrap cleanup EXIT\n\nURL="\${1:?Usage: \$0 <url>}"\n\ncurl -fsSL "\$URL" -o "\$TMPFILE"\n\nprocess_data "\$TMPFILE"\n\necho "Done. Temp files cleaned up automatically by trap."\n\`\`\`\n\n## Key Points\n\n- \`mktemp -d\` creates a unique temp directory\n- \`trap cleanup EXIT\` runs cleanup whether the script succeeds, fails, or receives a signal\n- \`\${1:?message}\` exits with message if \`\$1\` is unset\n- \`curl -f\` fails on HTTP 4xx/5xx; without it, curl exits 0 even on a 404`,
       },
       {
         question: 'Explain the difference between $*, "$*", $@, and "$@" when passing arguments.',
-        answer: `Without quotes, both \`\$*\` and \`\$@\` word-split on IFS and behave identically.\n\n## "\$*" \u2014 Single String\n\n\`"\$*"\` expands to a **single word** with all arguments joined by the first character of IFS. Useful when you want to pass all args as one string.\n\n## "\$@" \u2014 Preserved Words\n\n\`"\$@"\` expands to **separate words**, one per original argument, preserving internal spaces. This is almost always what you want when forwarding arguments.\n\n## Example\n\n\`\`\`bash\nargs() { for a in "\$@"; do echo "[\$a]"; done; }\nargs "hello world" "foo"\n# With "\$@": [hello world]  [foo]      -- correct\n# With "\$*": [hello world foo]         -- all joined\n# With  \$@:  [hello] [world] [foo]     -- split on space\n\`\`\`\n\n**Rule of thumb:** always use \`"\$@"\` when forwarding arguments.`,
+        answer: `Without quotes, both \`\$*\` and \`\$@\` word-split on IFS and behave identically.\n\n## "\$*" \u2014 Single String\n\n\`"\$*"\` expands to a single word with all arguments joined by the first character of IFS. Useful when you want to pass all args as one string.\n\n## "\$@" \u2014 Preserved Words\n\n\`"\$@"\` expands to separate words, one per original argument, preserving internal spaces. This is almost always what you want when forwarding arguments.\n\n## Example\n\n\`\`\`bash\nargs() { for a in "\$@"; do echo "[\$a]"; done; }\nargs "hello world" "foo"\n# With "\$@": [hello world]  [foo]      -- correct\n# With "\$*": [hello world foo]         -- all joined\n# With  \$@:  [hello] [world] [foo]     -- split on space\n\`\`\`\n\nRule of thumb: always use \`"\$@"\` when forwarding arguments.`,
       },
     ],
     quickFire: [
@@ -323,18 +323,18 @@ export const linuxTopics = [
       { title: 'File Descriptors & Pipes', description: 'stdin(0)/stdout(1)/stderr(2) and how pipe connects fd1 of one process to fd0 of the next', image: '/diagrams/linux/bash-pipes-redirection-fds.png' },
       { title: 'Pipeline Chain', description: 'grep→sort→uniq→awk — each stage and why set -o pipefail matters', image: '/diagrams/linux/bash-pipes-redirection-chain.png' },
     ],
-    introduction: `Every process inherits three **file descriptors**: \`0\` (stdin), \`1\` (stdout), \`2\` (stderr). Redirection changes where these point.\n\n## Redirection Operators\n\n- \`> file\` \u2014 redirect stdout to file (truncating)\n- \`>> file\` \u2014 append stdout to file\n- \`2> file\` \u2014 redirect stderr to file\n- \`2>&1\` \u2014 merge stderr into stdout\n- \`&> file\` \u2014 redirect both stdout and stderr to file\n\n## Pipes and Subshells\n\nThe pipe operator \`|\` connects stdout of the left command to stdin of the right. Commands in a pipeline run in **subshells** \u2014 **variable assignments in a pipeline do not affect the parent shell**.\n\n## tee and Named Pipes\n\n**\`tee\`** copies stdin to both stdout and a file:\n\`\`\`bash\ncommand | tee logfile.txt | next-command\n\`\`\`\n\n**Named pipes (FIFOs)** created with \`mkfifo\` allow producer-consumer patterns between separate processes.`,
+    introduction: `Every process inherits three file descriptors: \`0\` (stdin), \`1\` (stdout), \`2\` (stderr). Redirection changes where these point.\n\n## Redirection Operators\n\n- \`> file\` \u2014 redirect stdout to file (truncating)\n- \`>> file\` \u2014 append stdout to file\n- \`2> file\` \u2014 redirect stderr to file\n- \`2>&1\` \u2014 merge stderr into stdout\n- \`&> file\` \u2014 redirect both stdout and stderr to file\n\n## Pipes and Subshells\n\nThe pipe operator \`|\` connects stdout of the left command to stdin of the right. Commands in a pipeline run in subshells \u2014 variable assignments in a pipeline do not affect the parent shell.\n\n## tee and Named Pipes\n\n\`tee\` copies stdin to both stdout and a file:\n\`\`\`bash\ncommand | tee logfile.txt | next-command\n\`\`\`\n\nNamed pipes (FIFOs) created with \`mkfifo\` allow producer-consumer patterns between separate processes.`,
     whenToUse: [
       'Building complex data-processing pipelines in shell scripts',
       'Explaining why variables set inside a pipeline do not persist after the pipeline',
       'Logging output while still displaying it to the terminal',
     ],
     keyConcepts: [
-      { term: 'File descriptors 0/1/2', definition: `**\`stdin\` (0)**, **\`stdout\` (1)**, **\`stderr\` (2)**. Redirection changes which file or pipe these descriptors point to.` },
-      { term: '2>&1', definition: `Redirect **stderr (fd 2)** to wherever **stdout (fd 1)** currently points. Order matters: \`cmd > file 2>&1\` is correct; \`cmd 2>&1 > file\` sends stderr to terminal.` },
-      { term: 'Pipeline subshell', definition: `Each command in a pipeline runs in a **subshell**. Variable assignments inside pipelines do not affect the parent shell.` },
-      { term: 'Process substitution', definition: `\`<(cmd)\` substitutes command output as a **named pipe**. Enables comparing live output without temp files.` },
-      { term: 'tee', definition: `Reads stdin and writes to both **stdout and one or more files**. \`tee -a\` appends instead of truncating.` },
+      { term: 'File descriptors 0/1/2', definition: `\`stdin\` (0), \`stdout\` (1), \`stderr\` (2). Redirection changes which file or pipe these descriptors point to.` },
+      { term: '2>&1', definition: `Redirect stderr (fd 2) to wherever stdout (fd 1) currently points. Order matters: \`cmd > file 2>&1\` is correct; \`cmd 2>&1 > file\` sends stderr to terminal.` },
+      { term: 'Pipeline subshell', definition: `Each command in a pipeline runs in a subshell. Variable assignments inside pipelines do not affect the parent shell.` },
+      { term: 'Process substitution', definition: `\`<(cmd)\` substitutes command output as a named pipe. Enables comparing live output without temp files.` },
+      { term: 'tee', definition: `Reads stdin and writes to both stdout and one or more files. \`tee -a\` appends instead of truncating.` },
     ],
     pitfalls: [
       'Putting 2>&1 before > file — sends stderr to terminal and stdout to file. Correct order: cmd > file 2>&1.',
@@ -344,11 +344,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Why does this script not work: count=0; cat file.txt | while read line; do count=$((count+1)); done; echo $count?',
-        answer: `The \`count\` variable is **always 0** after the loop because the \`while\` loop runs in a **subshell**. In bash, each command in a pipeline is a subprocess \u2014 variable assignments do not propagate to the parent shell.\n\n## Fix Options\n\n**Option 1 \u2014 Input redirection (idiomatic bash):**\n\`\`\`bash\ncount=0\nwhile read line; do\n  count=\$((count+1))\ndone < file.txt\necho \$count   # Correct count\n\`\`\`\n\n**Option 2 \u2014 Let \`wc -l\` do the work:**\n\`\`\`bash\ncount=\$(wc -l < file.txt)\n\`\`\`\n\nOption 1 (input redirection) is the idiomatic and most portable solution.`,
+        answer: `The \`count\` variable is always 0 after the loop because the \`while\` loop runs in a subshell. In bash, each command in a pipeline is a subprocess \u2014 variable assignments do not propagate to the parent shell.\n\n## Fix Options\n\nOption 1 \u2014 Input redirection (idiomatic bash):\n\`\`\`bash\ncount=0\nwhile read line; do\n  count=\$((count+1))\ndone < file.txt\necho \$count   # Correct count\n\`\`\`\n\nOption 2 \u2014 Let \`wc -l\` do the work:\n\`\`\`bash\ncount=\$(wc -l < file.txt)\n\`\`\`\n\nOption 1 (input redirection) is the idiomatic and most portable solution.`,
       },
       {
         question: 'You need to log all output of a script to a file while still displaying it on the terminal. How?',
-        answer: `Use \`exec\` with \`tee\` at the top of the script:\n\n\`\`\`bash\n#!/usr/bin/env bash\nset -euo pipefail\nexec > >(tee -a /var/log/deploy.log) 2>&1\n\n# Everything below writes to both terminal and the log file\necho "Starting deployment..."\n\`\`\`\n\n**How it works:** \`exec > >(tee -a logfile)\` replaces stdout with a tee process. \`2>&1\` merges stderr into that same tee stream.\n\n## Capturing Exit Code with tee\n\n\`\`\`bash\nsome_command 2>&1 | tee output.log\nexit \${PIPESTATUS[0]}   # Exit code of some_command, not tee\n\`\`\``,
+        answer: `Use \`exec\` with \`tee\` at the top of the script:\n\n\`\`\`bash\n#!/usr/bin/env bash\nset -euo pipefail\nexec > >(tee -a /var/log/deploy.log) 2>&1\n\n# Everything below writes to both terminal and the log file\necho "Starting deployment..."\n\`\`\`\n\nHow it works: \`exec > >(tee -a logfile)\` replaces stdout with a tee process. \`2>&1\` merges stderr into that same tee stream.\n\n## Capturing Exit Code with tee\n\n\`\`\`bash\nsome_command 2>&1 | tee output.log\nexit \${PIPESTATUS[0]}   # Exit code of some_command, not tee\n\`\`\``,
       },
     ],
     quickFire: [
@@ -379,7 +379,7 @@ export const linuxTopics = [
       { title: 'Networking Tools by Use Case', description: 'ss/nc for connections, tcpdump for traffic, dig/ip for DNS/routing, iperf3/mtr for performance', image: '/diagrams/linux/linux-networking-tools-map.png' },
       { title: 'Common Network Ports', description: 'Essential ports every DevOps engineer must know: SSH(22), HTTP(80), HTTPS(443), DNS(53), and DB ports', image: '/diagrams/linux/linux-common-ports.png' },
     ],
-    introduction: `Linux networking diagnosis uses a **layered approach** matching the OSI model \u2014 start at the physical/IP layer and work up to the application layer.\n\n## Tools by Layer\n\n**Layer 3 (IP):**\n- \`ip addr\` \u2014 interface addresses\n- \`ip route\` \u2014 routing table\n- \`ping\` \u2014 ICMP reachability\n- \`traceroute\` / \`tracepath\` \u2014 path discovery\n\n**Layer 4 (TCP/UDP):**\n- \`ss\` \u2014 socket statistics, modern replacement for \`netstat\`\n- \`nc\` / \`ncat\` \u2014 raw TCP/UDP connections\n- \`tcpdump\` \u2014 packet capture\n\n**Layer 7 (Application):**\n- \`curl\` \u2014 HTTP/HTTPS\n- \`dig\` / \`nslookup\` \u2014 DNS\n- \`openssl s_client\` \u2014 TLS handshake inspection\n\n## Key Tools\n\n**\`ss -tulpn\`** shows all listening TCP/UDP ports with process names. Modern replacement for \`netstat -tulpn\`.\n\n**\`tcpdump\`** captures packets at the kernel level:\n\`\`\`bash\ntcpdump -i eth0 -n -vvv port 443\n\`\`\`\n\`-n\` disables name resolution. \`-w capture.pcap\` writes to a file for Wireshark analysis.`,
+    introduction: `Linux networking diagnosis uses a layered approach matching the OSI model \u2014 start at the physical/IP layer and work up to the application layer.\n\n## Tools by Layer\n\nLayer 3 (IP):\n- \`ip addr\` \u2014 interface addresses\n- \`ip route\` \u2014 routing table\n- \`ping\` \u2014 ICMP reachability\n- \`traceroute\` / \`tracepath\` \u2014 path discovery\n\nLayer 4 (TCP/UDP):\n- \`ss\` \u2014 socket statistics, modern replacement for \`netstat\`\n- \`nc\` / \`ncat\` \u2014 raw TCP/UDP connections\n- \`tcpdump\` \u2014 packet capture\n\nLayer 7 (Application):\n- \`curl\` \u2014 HTTP/HTTPS\n- \`dig\` / \`nslookup\` \u2014 DNS\n- \`openssl s_client\` \u2014 TLS handshake inspection\n\n## Key Tools\n\n\`ss -tulpn\` shows all listening TCP/UDP ports with process names. Modern replacement for \`netstat -tulpn\`.\n\n\`tcpdump\` captures packets at the kernel level:\n\`\`\`bash\ntcpdump -i eth0 -n -vvv port 443\n\`\`\`\n\`-n\` disables name resolution. \`-w capture.pcap\` writes to a file for Wireshark analysis.`,
     whenToUse: [
       'Diagnosing "connection refused" vs "connection timed out" — one means the port is closed, the other means a firewall is dropping packets',
       'Verifying a service is listening on the expected port with ss -tulpn',
@@ -387,10 +387,10 @@ export const linuxTopics = [
       'Inspecting TLS certificate chains with openssl s_client',
     ],
     keyConcepts: [
-      { term: 'ss -tulpn', definition: `List all **listening sockets**: TCP, UDP, listening only, with process name, no name resolution. Modern replacement for \`netstat -tulpn\`.` },
-      { term: 'ip route', definition: `Show the **kernel routing table**. \`ip route get 8.8.8.8\` shows which interface and gateway will be used for a specific IP.` },
-      { term: 'tcpdump', definition: `**Kernel-level packet capture**. \`tcpdump -i any -n port 80\` captures HTTP on all interfaces.` },
-      { term: 'dig +trace', definition: `Perform a **full DNS resolution from root servers**, showing each delegation step.` },
+      { term: 'ss -tulpn', definition: `List all listening sockets: TCP, UDP, listening only, with process name, no name resolution. Modern replacement for \`netstat -tulpn\`.` },
+      { term: 'ip route', definition: `Show the kernel routing table. \`ip route get 8.8.8.8\` shows which interface and gateway will be used for a specific IP.` },
+      { term: 'tcpdump', definition: `Kernel-level packet capture. \`tcpdump -i any -n port 80\` captures HTTP on all interfaces.` },
+      { term: 'dig +trace', definition: `Perform a full DNS resolution from root servers, showing each delegation step.` },
       { term: 'curl -v', definition: `Shows full request/response headers including TLS handshake details. \`curl --resolve\` overrides DNS for testing specific backends.` },
     ],
     pitfalls: [
@@ -401,11 +401,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'A service cannot connect to a remote endpoint. Walk through your network diagnosis steps.',
-        answer: `I work from **Layer 3 up to Layer 7**:\n\n## Step 1 \u2014 Routing and Reachability (Layer 3)\n\n\`\`\`bash\nping -c 3 <remote-ip>         # Is the host reachable?\nip route get <remote-ip>      # Which interface/gateway will be used?\n\`\`\`\n\nIf ping fails: check \`ip route\`, verify the gateway is reachable, check for firewall rules blocking ICMP.\n\n## Step 2 \u2014 TCP Connectivity (Layer 4)\n\n\`\`\`bash\nnc -zv <remote-ip> <port> -w 5\n\`\`\`\n\n- **Connection refused** \u2014 port is closed or service not listening\n- **Connection timed out** \u2014 firewall is dropping packets\n\n## Step 3 \u2014 DNS (if using a hostname)\n\n\`\`\`bash\ndig +short <hostname>    # Does it resolve?\ndig +trace <hostname>    # Full resolution from root\n\`\`\`\n\n## Step 4 \u2014 Application Layer\n\n\`\`\`bash\ncurl -v http://<remote>:<port>/healthz\nopenssl s_client -connect <remote>:<port>\n\`\`\`\n\n## Step 5 \u2014 Packet Capture\n\n\`\`\`bash\ntcpdump -i any -n host <remote-ip> and port <port>\n\`\`\`\n\n**Common findings:** security group blocking port, service bound to \`127.0.0.1\` instead of \`0.0.0.0\`, DNS resolving to unexpected IP.`,
+        answer: `I work from Layer 3 up to Layer 7:\n\n## Step 1 \u2014 Routing and Reachability (Layer 3)\n\n\`\`\`bash\nping -c 3 <remote-ip>         # Is the host reachable?\nip route get <remote-ip>      # Which interface/gateway will be used?\n\`\`\`\n\nIf ping fails: check \`ip route\`, verify the gateway is reachable, check for firewall rules blocking ICMP.\n\n## Step 2 \u2014 TCP Connectivity (Layer 4)\n\n\`\`\`bash\nnc -zv <remote-ip> <port> -w 5\n\`\`\`\n\n- Connection refused \u2014 port is closed or service not listening\n- Connection timed out \u2014 firewall is dropping packets\n\n## Step 3 \u2014 DNS (if using a hostname)\n\n\`\`\`bash\ndig +short <hostname>    # Does it resolve?\ndig +trace <hostname>    # Full resolution from root\n\`\`\`\n\n## Step 4 \u2014 Application Layer\n\n\`\`\`bash\ncurl -v http://<remote>:<port>/healthz\nopenssl s_client -connect <remote>:<port>\n\`\`\`\n\n## Step 5 \u2014 Packet Capture\n\n\`\`\`bash\ntcpdump -i any -n host <remote-ip> and port <port>\n\`\`\`\n\nCommon findings: security group blocking port, service bound to \`127.0.0.1\` instead of \`0.0.0.0\`, DNS resolving to unexpected IP.`,
       },
       {
         question: 'How do you capture and analyse packets for an HTTPS connection?',
-        answer: `Without the TLS session keys, you can capture the **TLS handshake** (certificate, cipher suite, SNI) but not the payload.\n\n## Capture with tcpdump\n\n\`\`\`bash\ntcpdump -i any -n -w capture.pcap host api.example.com and port 443\n\`\`\`\n\n## Analyse the Handshake\n\n\`\`\`bash\n# Inspect the full certificate chain\nopenssl s_client -connect api.example.com:443 -showcerts\n\`\`\`\n\n## Decrypt the Payload (Your Own Services Only)\n\n\`\`\`bash\n# Set the key log file before running the client\nSSLKEYLOGFILE=/tmp/keys.log curl https://api.example.com\n\`\`\`\n\nThen in Wireshark: **Edit > Preferences > Protocols > TLS > (Pre)-Master-Secret log file** \u2014 point to \`keys.log\`. This only works for services where you **control the client**.`,
+        answer: `Without the TLS session keys, you can capture the TLS handshake (certificate, cipher suite, SNI) but not the payload.\n\n## Capture with tcpdump\n\n\`\`\`bash\ntcpdump -i any -n -w capture.pcap host api.example.com and port 443\n\`\`\`\n\n## Analyse the Handshake\n\n\`\`\`bash\n# Inspect the full certificate chain\nopenssl s_client -connect api.example.com:443 -showcerts\n\`\`\`\n\n## Decrypt the Payload (Your Own Services Only)\n\n\`\`\`bash\n# Set the key log file before running the client\nSSLKEYLOGFILE=/tmp/keys.log curl https://api.example.com\n\`\`\`\n\nThen in Wireshark: Edit > Preferences > Protocols > TLS > (Pre)-Master-Secret log file \u2014 point to \`keys.log\`. This only works for services where you control the client.`,
       },
     ],
     quickFire: [
@@ -436,18 +436,18 @@ export const linuxTopics = [
       { title: 'iptables Packet Flow', description: 'RAW PREROUTING → NAT PREROUTING → routing decision → INPUT/FORWARD → NAT POSTROUTING', image: '/diagrams/linux/linux-iptables-flow.png' },
       { title: 'iptables Rule Anatomy', description: 'Table → chain → protocol → port → target (ACCEPT/DROP/REJECT/MASQUERADE/LOG) + stateful matching', image: '/diagrams/linux/linux-iptables-rules.png' },
     ],
-    introduction: `**iptables** is the userspace interface to the Linux kernel's **Netfilter** packet filtering framework. **nftables** is the modern replacement, but iptables knowledge remains essential because Kubernetes \`kube-proxy\` still uses iptables mode by default.\n\n## Tables and Purposes\n\n- **\`filter\`** (default) \u2014 INPUT / FORWARD / OUTPUT chains \u2014 packet filtering\n- **\`nat\`** \u2014 PREROUTING / POSTROUTING \u2014 address translation\n- **\`mangle\`** \u2014 packet modification\n- **\`raw\`** \u2014 connection tracking bypass\n\n## Chains and Rule Evaluation\n\nRules in a chain are checked **top-to-bottom**; the first matching rule's target is applied. Targets: \`ACCEPT\`, \`DROP\`, \`REJECT\` (sends RST/ICMP), \`RETURN\`, \`LOG\`.\n\n## Connection Tracking\n\n**Connection tracking (conntrack)** allows stateful firewalling:\n\`\`\`bash\n-m conntrack --ctstate ESTABLISHED,RELATED\n\`\`\`\nThis allows return traffic without explicit rules for each port.\n\n## Kubernetes kube-proxy\n\n\`kube-proxy\` (iptables mode) installs **thousands of rules** to implement Services. Large Kubernetes clusters with many services have slow iptables rule updates because iptables replaces the entire ruleset atomically \u2014 **O(n)** for n rules. eBPF-based alternatives (Cilium, IPVS mode) solve this.`,
+    introduction: `iptables is the userspace interface to the Linux kernel's Netfilter packet filtering framework. nftables is the modern replacement, but iptables knowledge remains essential because Kubernetes \`kube-proxy\` still uses iptables mode by default.\n\n## Tables and Purposes\n\n- \`filter\` (default) \u2014 INPUT / FORWARD / OUTPUT chains \u2014 packet filtering\n- \`nat\` \u2014 PREROUTING / POSTROUTING \u2014 address translation\n- \`mangle\` \u2014 packet modification\n- \`raw\` \u2014 connection tracking bypass\n\n## Chains and Rule Evaluation\n\nRules in a chain are checked top-to-bottom; the first matching rule's target is applied. Targets: \`ACCEPT\`, \`DROP\`, \`REJECT\` (sends RST/ICMP), \`RETURN\`, \`LOG\`.\n\n## Connection Tracking\n\nConnection tracking (conntrack) allows stateful firewalling:\n\`\`\`bash\n-m conntrack --ctstate ESTABLISHED,RELATED\n\`\`\`\nThis allows return traffic without explicit rules for each port.\n\n## Kubernetes kube-proxy\n\n\`kube-proxy\` (iptables mode) installs thousands of rules to implement Services. Large Kubernetes clusters with many services have slow iptables rule updates because iptables replaces the entire ruleset atomically \u2014 O(n) for n rules. eBPF-based alternatives (Cilium, IPVS mode) solve this.`,
     whenToUse: [
       'Debugging connectivity in Kubernetes when pods cannot reach a Service ClusterIP',
       'Explaining how NAT masquerade enables containers to reach the internet',
       'Auditing iptables rules that may be blocking expected traffic',
     ],
     keyConcepts: [
-      { term: 'Chains', definition: `Ordered lists of rules. Built-in chains: **INPUT** (to local process), **FORWARD** (routed through), **OUTPUT** (locally generated), **PREROUTING**, **POSTROUTING**.` },
+      { term: 'Chains', definition: `Ordered lists of rules. Built-in chains: INPUT (to local process), FORWARD (routed through), OUTPUT (locally generated), PREROUTING, POSTROUTING.` },
       { term: 'Connection tracking', definition: `\`-m conntrack --ctstate ESTABLISHED,RELATED\` allows return traffic automatically without symmetric rules.` },
-      { term: 'DNAT / SNAT', definition: `**DNAT** rewrites the destination IP (used by kube-proxy). **SNAT** rewrites the source IP (used for internet egress from private IPs).` },
-      { term: 'MASQUERADE', definition: `**Dynamic SNAT** that uses the outgoing interface IP automatically. Used for containers needing internet access through the host.` },
-      { term: 'Default policy', definition: `Action taken if **no rule matches**. For production hardening, set \`INPUT\` and \`FORWARD\` to \`DROP\`.` },
+      { term: 'DNAT / SNAT', definition: `DNAT rewrites the destination IP (used by kube-proxy). SNAT rewrites the source IP (used for internet egress from private IPs).` },
+      { term: 'MASQUERADE', definition: `Dynamic SNAT that uses the outgoing interface IP automatically. Used for containers needing internet access through the host.` },
+      { term: 'Default policy', definition: `Action taken if no rule matches. For production hardening, set \`INPUT\` and \`FORWARD\` to \`DROP\`.` },
     ],
     pitfalls: [
       'Setting INPUT policy to DROP before adding SSH ACCEPT rule — locks you out. Always add ACCEPT rules first.',
@@ -457,11 +457,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How does Kubernetes kube-proxy use iptables to implement a ClusterIP service?',
-        answer: `When you create a Service of type \`ClusterIP\`, **kube-proxy** installs iptables rules in the \`nat\` table.\n\n## The Mechanism\n\n1. A \`KUBE-SERVICES\` chain matches packets destined for the \`ClusterIP:port\`.\n2. That chain jumps to a per-service chain that **randomly distributes traffic** across backends using statistic-module rules.\n3. Each backend has a \`KUBE-SEP-*\` chain that **DNATs** the packet \u2014 rewrites destination IP from ClusterIP to Pod IP.\n4. Return traffic is handled by **connection tracking**.\n\n## Inspecting the Rules\n\n\`\`\`bash\niptables -t nat -L KUBE-SERVICES -n    # All service ClusterIP rules\niptables -t nat -L KUBE-SVC-* -n       # Endpoint selection rules\n\`\`\`\n\n## Scalability Problem\n\niptables replaces the **entire ruleset atomically**. With 10,000 services, each update requires reloading all rules. **IPVS mode** uses a hash table for O(1) lookup. **Cilium** bypasses iptables entirely with eBPF programs.`,
+        answer: `When you create a Service of type \`ClusterIP\`, kube-proxy installs iptables rules in the \`nat\` table.\n\n## The Mechanism\n\n1. A \`KUBE-SERVICES\` chain matches packets destined for the \`ClusterIP:port\`.\n2. That chain jumps to a per-service chain that randomly distributes traffic across backends using statistic-module rules.\n3. Each backend has a \`KUBE-SEP-*\` chain that DNATs the packet \u2014 rewrites destination IP from ClusterIP to Pod IP.\n4. Return traffic is handled by connection tracking.\n\n## Inspecting the Rules\n\n\`\`\`bash\niptables -t nat -L KUBE-SERVICES -n    # All service ClusterIP rules\niptables -t nat -L KUBE-SVC-* -n       # Endpoint selection rules\n\`\`\`\n\n## Scalability Problem\n\niptables replaces the entire ruleset atomically. With 10,000 services, each update requires reloading all rules. IPVS mode uses a hash table for O(1) lookup. Cilium bypasses iptables entirely with eBPF programs.`,
       },
       {
         question: 'How do you allow all outbound traffic but only allow inbound SSH and established return traffic?',
-        answer: `\`\`\`bash\niptables -F   # Flush existing rules\n\n# Allow return traffic for established connections\niptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT\n\n# Allow inbound SSH\niptables -A INPUT -p tcp --dport 22 -j ACCEPT\n\n# Always allow loopback\niptables -A INPUT -i lo -j ACCEPT\n\n# Default deny INPUT and FORWARD; allow all outbound\niptables -P INPUT DROP\niptables -P FORWARD DROP\niptables -P OUTPUT ACCEPT\n\`\`\`\n\n## Critical Order\n\nThe \`ESTABLISHED,RELATED\` rule **must come before** the default DROP policy. Without it, no TCP reply would be allowed back in.\n\n## Verify\n\n\`\`\`bash\niptables -L INPUT -n -v --line-numbers\n\`\`\``,
+        answer: `\`\`\`bash\niptables -F   # Flush existing rules\n\n# Allow return traffic for established connections\niptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT\n\n# Allow inbound SSH\niptables -A INPUT -p tcp --dport 22 -j ACCEPT\n\n# Always allow loopback\niptables -A INPUT -i lo -j ACCEPT\n\n# Default deny INPUT and FORWARD; allow all outbound\niptables -P INPUT DROP\niptables -P FORWARD DROP\niptables -P OUTPUT ACCEPT\n\`\`\`\n\n## Critical Order\n\nThe \`ESTABLISHED,RELATED\` rule must come before the default DROP policy. Without it, no TCP reply would be allowed back in.\n\n## Verify\n\n\`\`\`bash\niptables -L INPUT -n -v --line-numbers\n\`\`\``,
       },
     ],
     quickFire: [
@@ -493,18 +493,18 @@ export const linuxTopics = [
       { title: 'Process Virtual Address Space', description: 'Stack (grows down) → mmap → heap (grows up) → BSS → data → text → vDSO', image: '/diagrams/linux/linux-memory-management-layout.png' },
       { title: 'Memory Reclaim & OOM', description: 'kswapd reclaims page cache first, swaps anonymous pages, OOM killer as last resort', image: '/diagrams/linux/linux-memory-management-reclaim.png' },
     ],
-    introduction: `Linux uses a **virtual memory** system where every process sees a flat 64-bit address space. Physical RAM is managed in **4 KB pages**.\n\n## Page Cache\n\nThe **page cache** is the kernel's disk cache. Linux **deliberately keeps almost no RAM truly idle**. \`free -h\` shows \`buffers\` and \`cached\` columns. **\`available\` memory** (not \`free\`) is the realistic estimate of memory new processes can use.\n\n## Memory Pressure and Reclaim\n\nMemory pressure triggers reclaim: **\`kswapd\`** daemon scans and reclaims LRU pages. **File-backed pages** are simply dropped. **Anonymous pages** (heap, stack) must be written to swap before reclaim.\n\n## OOM Killer\n\nThe **OOM killer** activates when the system cannot reclaim enough memory. To protect a critical process:\n\`\`\`bash\necho -1000 > /proc/PID/oom_score_adj   # Never kill\necho 1000  > /proc/PID/oom_score_adj   # Kill first\n\`\`\`\n\n## Huge Pages\n\n**Transparent Huge Pages (THP)** can cause latency spikes \u2014 databases (Oracle, Cassandra, MongoDB) recommend disabling:\n\`\`\`bash\necho never > /sys/kernel/mm/transparent_hugepage/enabled\n\`\`\``,
+    introduction: `Linux uses a virtual memory system where every process sees a flat 64-bit address space. Physical RAM is managed in 4 KB pages.\n\n## Page Cache\n\nThe page cache is the kernel's disk cache. Linux deliberately keeps almost no RAM truly idle. \`free -h\` shows \`buffers\` and \`cached\` columns. \`available\` memory (not \`free\`) is the realistic estimate of memory new processes can use.\n\n## Memory Pressure and Reclaim\n\nMemory pressure triggers reclaim: \`kswapd\` daemon scans and reclaims LRU pages. File-backed pages are simply dropped. Anonymous pages (heap, stack) must be written to swap before reclaim.\n\n## OOM Killer\n\nThe OOM killer activates when the system cannot reclaim enough memory. To protect a critical process:\n\`\`\`bash\necho -1000 > /proc/PID/oom_score_adj   # Never kill\necho 1000  > /proc/PID/oom_score_adj   # Kill first\n\`\`\`\n\n## Huge Pages\n\nTransparent Huge Pages (THP) can cause latency spikes \u2014 databases (Oracle, Cassandra, MongoDB) recommend disabling:\n\`\`\`bash\necho never > /sys/kernel/mm/transparent_hugepage/enabled\n\`\`\``,
     whenToUse: [
       'Explaining why a server with 2% "free" RAM is not out of memory — the page cache fills free RAM',
       'Debugging container OOMKilled events — memory limit too low or memory leak',
       'Recommending huge pages for a database workload to reduce TLB misses',
     ],
     keyConcepts: [
-      { term: 'Page cache', definition: `Kernel uses **all free RAM** as a disk cache. The \`available\` column in \`free -h\` (not \`free\`) is what matters.` },
-      { term: 'OOM killer', definition: `Kills a process when memory **cannot be reclaimed**. Selects victim by \`oom_score\`. Adjust \`oom_score_adj\` per-process (\`-1000\` to \`+1000\`).` },
-      { term: 'Anonymous vs file-backed pages', definition: `**Anonymous pages** (heap/stack) must be swapped to disk before reclaim. **File-backed pages** can be dropped and re-read — much cheaper.` },
-      { term: 'Transparent Huge Pages (THP)', definition: `2 MB pages managed automatically. Can cause **latency spikes** in databases. Disable with \`echo never > /sys/kernel/mm/transparent_hugepage/enabled\`.` },
-      { term: 'cgroup memory limit', definition: `**Hard memory cap** per container. When exceeded, an OOM kill occurs within the cgroup, visible in \`dmesg\`.` },
+      { term: 'Page cache', definition: `Kernel uses all free RAM as a disk cache. The \`available\` column in \`free -h\` (not \`free\`) is what matters.` },
+      { term: 'OOM killer', definition: `Kills a process when memory cannot be reclaimed. Selects victim by \`oom_score\`. Adjust \`oom_score_adj\` per-process (\`-1000\` to \`+1000\`).` },
+      { term: 'Anonymous vs file-backed pages', definition: `Anonymous pages (heap/stack) must be swapped to disk before reclaim. File-backed pages can be dropped and re-read — much cheaper.` },
+      { term: 'Transparent Huge Pages (THP)', definition: `2 MB pages managed automatically. Can cause latency spikes in databases. Disable with \`echo never > /sys/kernel/mm/transparent_hugepage/enabled\`.` },
+      { term: 'cgroup memory limit', definition: `Hard memory cap per container. When exceeded, an OOM kill occurs within the cgroup, visible in \`dmesg\`.` },
     ],
     pitfalls: [
       'Treating "free" memory as available — use the "available" column in free -h.',
@@ -514,11 +514,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Your Java application in Kubernetes keeps getting OOMKilled. How do you diagnose and fix it?',
-        answer: `## Step 1 \u2014 Confirm the OOMKill\n\n\`\`\`bash\nkubectl describe pod <name>    # Look for OOMKilled, exitCode 137\ndmesg | grep -i oom            # Shows which process was killed\n\`\`\`\n\n## Step 2 \u2014 JVM Memory Breakdown\n\nThe JVM uses **more than just heap**:\n- **Heap** \u2014 controlled by \`-Xmx\`\n- **Metaspace** \u2014 class metadata (no limit by default pre-Java 8)\n- **Thread stacks** \u2014 each thread uses ~1 MB by default\n- **Direct buffers** \u2014 NIO, Netty, native libraries\n- **Code cache** \u2014 JIT-compiled native code\n\n## Step 3 \u2014 Common Fixes\n\n- Set **\`-XX:MaxRAMPercentage=75\`** \u2014 leaves 25% for non-heap overhead\n- Set **\`-XX:+UseContainerSupport\`** (default in Java 10+) so JVM reads cgroup limits\n- Increase container limit: \`resources.limits.memory: 2Gi\`\n- Cap Metaspace: \`-XX:MaxMetaspaceSize=256m\`\n\n## Step 4 \u2014 Monitor\n\n\`\`\`bash\nkubectl top pod <name>\n\`\`\``,
+        answer: `## Step 1 \u2014 Confirm the OOMKill\n\n\`\`\`bash\nkubectl describe pod <name>    # Look for OOMKilled, exitCode 137\ndmesg | grep -i oom            # Shows which process was killed\n\`\`\`\n\n## Step 2 \u2014 JVM Memory Breakdown\n\nThe JVM uses more than just heap:\n- Heap \u2014 controlled by \`-Xmx\`\n- Metaspace \u2014 class metadata (no limit by default pre-Java 8)\n- Thread stacks \u2014 each thread uses ~1 MB by default\n- Direct buffers \u2014 NIO, Netty, native libraries\n- Code cache \u2014 JIT-compiled native code\n\n## Step 3 \u2014 Common Fixes\n\n- Set \`-XX:MaxRAMPercentage=75\` \u2014 leaves 25% for non-heap overhead\n- Set \`-XX:+UseContainerSupport\` (default in Java 10+) so JVM reads cgroup limits\n- Increase container limit: \`resources.limits.memory: 2Gi\`\n- Cap Metaspace: \`-XX:MaxMetaspaceSize=256m\`\n\n## Step 4 \u2014 Monitor\n\n\`\`\`bash\nkubectl top pod <name>\n\`\`\``,
       },
       {
         question: 'What is the Linux OOM killer and how do you control which process it kills?',
-        answer: `The **OOM killer** activates when the system cannot reclaim enough memory. It calculates an \`oom_score\` for each process (0-1000) and kills the **highest-scoring process**.\n\n## Controlling oom_score_adj\n\n\`\`\`bash\n# Range: -1000 to +1000\necho -1000 > /proc/\$(pgrep sshd)/oom_score_adj   # Never kill sshd\necho 500   > /proc/<worker_pid>/oom_score_adj     # Kill this worker first\n\`\`\`\n\n- **\`+1000\`** \u2014 always kill this process first\n- **\`-1000\`** \u2014 never kill this process\n\n## Kubernetes QoS Classes\n\nKubernetes sets \`oom_score_adj\` via **QoS class**:\n- **Guaranteed** (requests == limits) \u2014 \`oom_score_adj = -997\` (protected)\n- **BestEffort** (no requests/limits) \u2014 \`oom_score_adj = 1000\` (first to be killed)\n\nThis is why setting **proper requests and limits** is critical for production reliability.`,
+        answer: `The OOM killer activates when the system cannot reclaim enough memory. It calculates an \`oom_score\` for each process (0-1000) and kills the highest-scoring process.\n\n## Controlling oom_score_adj\n\n\`\`\`bash\n# Range: -1000 to +1000\necho -1000 > /proc/\$(pgrep sshd)/oom_score_adj   # Never kill sshd\necho 500   > /proc/<worker_pid>/oom_score_adj     # Kill this worker first\n\`\`\`\n\n- \`+1000\` \u2014 always kill this process first\n- \`-1000\` \u2014 never kill this process\n\n## Kubernetes QoS Classes\n\nKubernetes sets \`oom_score_adj\` via QoS class:\n- Guaranteed (requests == limits) \u2014 \`oom_score_adj = -997\` (protected)\n- BestEffort (no requests/limits) \u2014 \`oom_score_adj = 1000\` (first to be killed)\n\nThis is why setting proper requests and limits is critical for production reliability.`,
       },
     ],
     quickFire: [
@@ -549,18 +549,18 @@ export const linuxTopics = [
       { title: 'LVM Architecture', description: 'Physical Volumes → Volume Group (PE pool) → Logical Volumes → ext4/XFS filesystem', image: '/diagrams/linux/linux-lvm-layers.png' },
       { title: 'Online LVM Resize', description: 'Add disk → pvcreate → vgextend → lvextend → resize2fs/xfs_growfs without unmounting', image: '/diagrams/linux/linux-lvm-resize.png' },
     ],
-    introduction: `**LVM (Logical Volume Manager)** adds a layer of abstraction between physical storage and filesystems.\n\n## Three-Tier Hierarchy\n\n- **Physical Volumes (PVs)** \u2014 raw disks initialised for LVM: \`pvcreate /dev/sdb\`\n- **Volume Groups (VGs)** \u2014 pool of PVs: \`vgcreate myvg /dev/sdb /dev/sdc\`\n- **Logical Volumes (LVs)** \u2014 virtual partitions: \`lvcreate -L 100G -n data myvg\`\n\n## Online Storage Extension\n\n\`\`\`bash\npvcreate /dev/sdd\nvgextend myvg /dev/sdd\nlvextend -l +100%FREE /dev/myvg/data\nresize2fs /dev/myvg/data    # ext4\nxfs_growfs /mnt/data        # XFS\n\`\`\`\n\n## LVM Snapshots\n\n**LVM snapshots** are copy-on-write:\n\`\`\`bash\nlvcreate -s -n snap -L 10G /dev/myvg/data\n\`\`\`\nUse snapshots for consistent backups of running databases. **The snapshot must be large enough** to hold all writes during the backup window.\n\n## Thin Provisioning\n\n**Thin provisioning** overcommits storage \u2014 allocating real blocks only when written. Useful for dev environments but **dangerous in production** without monitoring.`,
+    introduction: `LVM (Logical Volume Manager) adds a layer of abstraction between physical storage and filesystems.\n\n## Three-Tier Hierarchy\n\n- Physical Volumes (PVs) \u2014 raw disks initialised for LVM: \`pvcreate /dev/sdb\`\n- Volume Groups (VGs) \u2014 pool of PVs: \`vgcreate myvg /dev/sdb /dev/sdc\`\n- Logical Volumes (LVs) \u2014 virtual partitions: \`lvcreate -L 100G -n data myvg\`\n\n## Online Storage Extension\n\n\`\`\`bash\npvcreate /dev/sdd\nvgextend myvg /dev/sdd\nlvextend -l +100%FREE /dev/myvg/data\nresize2fs /dev/myvg/data    # ext4\nxfs_growfs /mnt/data        # XFS\n\`\`\`\n\n## LVM Snapshots\n\nLVM snapshots are copy-on-write:\n\`\`\`bash\nlvcreate -s -n snap -L 10G /dev/myvg/data\n\`\`\`\nUse snapshots for consistent backups of running databases. The snapshot must be large enough to hold all writes during the backup window.\n\n## Thin Provisioning\n\nThin provisioning overcommits storage \u2014 allocating real blocks only when written. Useful for dev environments but dangerous in production without monitoring.`,
     whenToUse: [
       'Growing a volume for a database that is running out of disk space without downtime',
       'Creating a consistent database backup snapshot while the database is running',
       'Migrating data across disks with pvmove without taking services offline',
     ],
     keyConcepts: [
-      { term: 'Physical Volume (PV)', definition: `A disk or partition **initialised with \`pvcreate\`**. Contains LVM metadata and Physical Extents (PE, typically 4 MB each).` },
-      { term: 'Volume Group (VG)', definition: `A **pool of one or more PVs**. Logical Volumes are allocated from VG free space.` },
-      { term: 'Logical Volume (LV)', definition: `A **virtual partition** within a VG. Has its own device path (\`/dev/VG/LV\`). Can span multiple PVs.` },
-      { term: 'LVM snapshot', definition: `**Copy-on-write** point-in-time copy of an LV. Used for online backups — the snapshot presents the state at creation time.` },
-      { term: 'pvmove', definition: `Migrates physical extents **from one PV to another** within the same VG. Allows hot removal of a disk without downtime.` },
+      { term: 'Physical Volume (PV)', definition: `A disk or partition initialised with \`pvcreate\`. Contains LVM metadata and Physical Extents (PE, typically 4 MB each).` },
+      { term: 'Volume Group (VG)', definition: `A pool of one or more PVs. Logical Volumes are allocated from VG free space.` },
+      { term: 'Logical Volume (LV)', definition: `A virtual partition within a VG. Has its own device path (\`/dev/VG/LV\`). Can span multiple PVs.` },
+      { term: 'LVM snapshot', definition: `Copy-on-write point-in-time copy of an LV. Used for online backups — the snapshot presents the state at creation time.` },
+      { term: 'pvmove', definition: `Migrates physical extents from one PV to another within the same VG. Allows hot removal of a disk without downtime.` },
     ],
     pitfalls: [
       'Taking an LVM snapshot that is too small — when the difference area fills, the snapshot becomes invalid. Size at 20-30% of the source LV.',
@@ -570,7 +570,7 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Your /data partition is 95% full. How do you extend it online without restarting the service?',
-        answer: `## Step 1 \u2014 Check Current State\n\n\`\`\`bash\ndf -h /data\nlvdisplay\nvgdisplay   # Check available free space in the VG\n\`\`\`\n\n## Step 2a \u2014 If VG Has Free Space\n\n\`\`\`bash\nlvextend -l +100%FREE /dev/myvg/data_lv\n\n# For ext4:\nresize2fs /dev/myvg/data_lv\n\n# For XFS (mount must be active):\nxfs_growfs /data\n\`\`\`\n\n## Step 2b \u2014 If VG Has No Free Space: Add a New Disk\n\n\`\`\`bash\npvcreate /dev/xvdf\nvgextend myvg /dev/xvdf\nlvextend -l +100%FREE /dev/myvg/data_lv\nresize2fs /dev/myvg/data_lv\n\`\`\`\n\n## Step 3 \u2014 Verify\n\n\`\`\`bash\ndf -h /data   # Should show the new size immediately\n\`\`\`\n\nThe entire operation is **online** for XFS and ext4 on LVM. The service never needs to stop.`,
+        answer: `## Step 1 \u2014 Check Current State\n\n\`\`\`bash\ndf -h /data\nlvdisplay\nvgdisplay   # Check available free space in the VG\n\`\`\`\n\n## Step 2a \u2014 If VG Has Free Space\n\n\`\`\`bash\nlvextend -l +100%FREE /dev/myvg/data_lv\n\n# For ext4:\nresize2fs /dev/myvg/data_lv\n\n# For XFS (mount must be active):\nxfs_growfs /data\n\`\`\`\n\n## Step 2b \u2014 If VG Has No Free Space: Add a New Disk\n\n\`\`\`bash\npvcreate /dev/xvdf\nvgextend myvg /dev/xvdf\nlvextend -l +100%FREE /dev/myvg/data_lv\nresize2fs /dev/myvg/data_lv\n\`\`\`\n\n## Step 3 \u2014 Verify\n\n\`\`\`bash\ndf -h /data   # Should show the new size immediately\n\`\`\`\n\nThe entire operation is online for XFS and ext4 on LVM. The service never needs to stop.`,
       },
     ],
     quickFire: [
@@ -600,17 +600,17 @@ export const linuxTopics = [
       { title: 'SSH Authentication Flow', description: 'TCP:22 → key exchange (ECDH) → host key verification → pubkey challenge/sign/verify → shell', image: '/diagrams/linux/linux-ssh-hardening-auth.png' },
       { title: 'sshd Hardening Settings', description: 'PasswordAuthentication no, PermitRootLogin no, restrict algorithms, fail2ban, optional 2FA', image: '/diagrams/linux/linux-ssh-hardening-config.png' },
     ],
-    introduction: `**SSH** is the primary remote access mechanism for Linux servers. Default configurations are permissive; production servers require explicit hardening.\n\n## Authentication Hardening\n\n- Disable password authentication: \`PasswordAuthentication no\`\n- Disable root login: \`PermitRootLogin no\`\n- Restrict to specific users/groups: \`AllowUsers\`, \`AllowGroups\`\n- Use **ed25519** keys \u2014 faster and stronger than RSA 2048\n\n## Network Hardening\n\n- Change the default port (\`Port 2222\`) to reduce automated scan noise\n- Set \`MaxAuthTries 3\` and \`LoginGraceTime 30\`\n- Disable \`AllowTcpForwarding no\` and \`X11Forwarding no\` unless needed\n\n## Brute-Force Protection\n\n**\`fail2ban\`** automatically bans IPs with repeated failed authentication attempts.\n\n## SSH Agent Forwarding Risk\n\n\`ForwardAgent yes\` is a security risk \u2014 a compromised jump host can use your local agent. Use **\`ProxyJump\`** instead:\n\`\`\`bash\nssh -J jumphost target\n\`\`\``,
+    introduction: `SSH is the primary remote access mechanism for Linux servers. Default configurations are permissive; production servers require explicit hardening.\n\n## Authentication Hardening\n\n- Disable password authentication: \`PasswordAuthentication no\`\n- Disable root login: \`PermitRootLogin no\`\n- Restrict to specific users/groups: \`AllowUsers\`, \`AllowGroups\`\n- Use ed25519 keys \u2014 faster and stronger than RSA 2048\n\n## Network Hardening\n\n- Change the default port (\`Port 2222\`) to reduce automated scan noise\n- Set \`MaxAuthTries 3\` and \`LoginGraceTime 30\`\n- Disable \`AllowTcpForwarding no\` and \`X11Forwarding no\` unless needed\n\n## Brute-Force Protection\n\n\`fail2ban\` automatically bans IPs with repeated failed authentication attempts.\n\n## SSH Agent Forwarding Risk\n\n\`ForwardAgent yes\` is a security risk \u2014 a compromised jump host can use your local agent. Use \`ProxyJump\` instead:\n\`\`\`bash\nssh -J jumphost target\n\`\`\``,
     whenToUse: [
       'Hardening a new EC2 instance before making it production-facing',
       'Setting up a bastion/jump host pattern for VPC access without a VPN',
       'Replacing ad-hoc key distribution with a CA-based SSH trust model',
     ],
     keyConcepts: [
-      { term: 'PasswordAuthentication no', definition: `Disables **password login** for SSH. Essential for any internet-facing server — set in \`/etc/ssh/sshd_config\`.` },
-      { term: 'ed25519 keys', definition: `Modern **elliptic curve** algorithm. Stronger than RSA 2048, faster to generate and sign. Generate with \`ssh-keygen -t ed25519\`.` },
-      { term: 'ProxyJump', definition: `SSH through a jump host **without agent forwarding**: \`ssh -J user@jumphost user@target\`. The jump host never sees your private key.` },
-      { term: 'SSH CA', definition: `A keypair that **signs user SSH certificates**. Servers trust the CA public key. Enables expiry and revocation without per-server authorized_keys.` },
+      { term: 'PasswordAuthentication no', definition: `Disables password login for SSH. Essential for any internet-facing server — set in \`/etc/ssh/sshd_config\`.` },
+      { term: 'ed25519 keys', definition: `Modern elliptic curve algorithm. Stronger than RSA 2048, faster to generate and sign. Generate with \`ssh-keygen -t ed25519\`.` },
+      { term: 'ProxyJump', definition: `SSH through a jump host without agent forwarding: \`ssh -J user@jumphost user@target\`. The jump host never sees your private key.` },
+      { term: 'SSH CA', definition: `A keypair that signs user SSH certificates. Servers trust the CA public key. Enables expiry and revocation without per-server authorized_keys.` },
       { term: 'fail2ban', definition: `Bans IPs with repeated failed authentication attempts by writing iptables rules.` },
     ],
     pitfalls: [
@@ -621,11 +621,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do you set up a secure bastion host pattern for accessing private EC2 instances?',
-        answer: `## Architecture\n\nA **bastion (jump host)** is a hardened EC2 instance in a public subnet. Private instances allow SSH **only from the bastion's security group ID**.\n\n## Bastion Hardening\n\n\`\`\`bash\n# /etc/ssh/sshd_config\nPasswordAuthentication no\nPermitRootLogin no\nAllowUsers ec2-user\nMaxAuthTries 3\nClientAliveInterval 300\nClientAliveCountMax 2\n\`\`\`\n\nAdditional steps:\n- Security group: allow port 22 **only from your corporate IP ranges**\n- Install \`fail2ban\`\n- Enable CloudTrail and VPC Flow Logs\n\n## Client Configuration\n\n\`\`\`bash\n# ~/.ssh/config\nHost bastion\n  HostName <bastion-public-ip>\n  User ec2-user\n  IdentityFile ~/.ssh/prod.pem\n\nHost private-*\n  User ec2-user\n  IdentityFile ~/.ssh/prod.pem\n  ProxyJump bastion\n\`\`\`\n\nAccess: \`ssh private-db-01\` \u2014 SSH tunnels through the bastion automatically.\n\n## Even Better: No SSH Port at All\n\n**AWS Systems Manager Session Manager** \u2014 uses IAM for auth, no open port 22, all sessions logged to CloudTrail.`,
+        answer: `## Architecture\n\nA bastion (jump host) is a hardened EC2 instance in a public subnet. Private instances allow SSH only from the bastion's security group ID.\n\n## Bastion Hardening\n\n\`\`\`bash\n# /etc/ssh/sshd_config\nPasswordAuthentication no\nPermitRootLogin no\nAllowUsers ec2-user\nMaxAuthTries 3\nClientAliveInterval 300\nClientAliveCountMax 2\n\`\`\`\n\nAdditional steps:\n- Security group: allow port 22 only from your corporate IP ranges\n- Install \`fail2ban\`\n- Enable CloudTrail and VPC Flow Logs\n\n## Client Configuration\n\n\`\`\`bash\n# ~/.ssh/config\nHost bastion\n  HostName <bastion-public-ip>\n  User ec2-user\n  IdentityFile ~/.ssh/prod.pem\n\nHost private-*\n  User ec2-user\n  IdentityFile ~/.ssh/prod.pem\n  ProxyJump bastion\n\`\`\`\n\nAccess: \`ssh private-db-01\` \u2014 SSH tunnels through the bastion automatically.\n\n## Even Better: No SSH Port at All\n\nAWS Systems Manager Session Manager \u2014 uses IAM for auth, no open port 22, all sessions logged to CloudTrail.`,
       },
       {
         question: 'Explain how certificate-based SSH works and why it is better than authorized_keys management.',
-        answer: `## The Problem with authorized_keys at Scale\n\nEach user public key must be added to \`~/.ssh/authorized_keys\` on every server. At 100 users, 500 servers: 50,000 key entries. Revoking a key requires removing it from every server.\n\n## Certificate-Based SSH\n\n\`\`\`bash\n# 1. Generate a CA keypair\nssh-keygen -t ed25519 -f /etc/ssh/ca\n\n# 2. Configure servers to trust the CA\nTrustedUserCAKeys /etc/ssh/ca.pub\n\n# 3. Sign a user's public key (8-hour validity)\nssh-keygen -s /etc/ssh/ca -I "alice@company" -n "alice" -V +8h alice.pub\n\`\`\`\n\nThe server validates the cert signature against the CA public key \u2014 **no per-user authorized_keys needed**.\n\n## Advantages\n\n- **Add a new server:** just add \`TrustedUserCAKeys\` \u2014 instantly trusts all existing users\n- **Revoke a user:** add the cert serial to a **KRL** via \`ssh-keygen -k\`\n- **Forced rotation:** an 8-hour cert forces re-issuance 3x per day\n\n**Tools that implement this:** HashiCorp Vault SSH Secrets Engine, Teleport, BeyondTrust.`,
+        answer: `## The Problem with authorized_keys at Scale\n\nEach user public key must be added to \`~/.ssh/authorized_keys\` on every server. At 100 users, 500 servers: 50,000 key entries. Revoking a key requires removing it from every server.\n\n## Certificate-Based SSH\n\n\`\`\`bash\n# 1. Generate a CA keypair\nssh-keygen -t ed25519 -f /etc/ssh/ca\n\n# 2. Configure servers to trust the CA\nTrustedUserCAKeys /etc/ssh/ca.pub\n\n# 3. Sign a user's public key (8-hour validity)\nssh-keygen -s /etc/ssh/ca -I "alice@company" -n "alice" -V +8h alice.pub\n\`\`\`\n\nThe server validates the cert signature against the CA public key \u2014 no per-user authorized_keys needed.\n\n## Advantages\n\n- Add a new server: just add \`TrustedUserCAKeys\` \u2014 instantly trusts all existing users\n- Revoke a user: add the cert serial to a KRL via \`ssh-keygen -k\`\n- Forced rotation: an 8-hour cert forces re-issuance 3x per day\n\nTools that implement this: HashiCorp Vault SSH Secrets Engine, Teleport, BeyondTrust.`,
       },
     ],
     quickFire: [
@@ -657,18 +657,18 @@ export const linuxTopics = [
       { title: 'systemd Unit Lifecycle', description: 'inactive → activating → active → deactivating → inactive (or failed) state machine', image: '/diagrams/linux/systemd-units-lifecycle.png' },
       { title: 'Unit File Structure', description: '[Unit] After= deps, [Service] Type/ExecStart/Restart, security sandbox options, [Install] WantedBy', image: '/diagrams/linux/systemd-units-file.png' },
     ],
-    introduction: `**systemd** is the init system and service manager on virtually all modern Linux distributions. It parallelizes service startup by tracking inter-service dependencies.\n\n## Unit File Locations\n\n- \`/usr/lib/systemd/system/\` \u2014 distribution packages (do not edit)\n- \`/etc/systemd/system/\` \u2014 admin overrides (preferred)\n- \`~/.config/systemd/user/\` \u2014 user units\n\n## Service Types\n\n- **\`simple\`** (default) \u2014 main process is ExecStart\n- **\`forking\`** \u2014 daemon forks; \`PIDFile\` must be set\n- **\`notify\`** \u2014 process sends \`sd_notify("READY=1")\` when ready\n- **\`oneshot\`** \u2014 completes and exits\n\n## Dependency Keywords\n\n- **\`Requires=\`** \u2014 hard dependency\n- **\`Wants=\`** \u2014 soft dependency\n- **\`After=\`** / **\`Before=\`** \u2014 ordering only; \`Requires=\` does not imply \`After=\`\n\n## Hardening Directives\n\n\`PrivateTmp\`, \`NoNewPrivileges\`, \`ProtectSystem=strict\`, \`CapabilityBoundingSet\` \u2014 implement least-privilege for system services.`,
+    introduction: `systemd is the init system and service manager on virtually all modern Linux distributions. It parallelizes service startup by tracking inter-service dependencies.\n\n## Unit File Locations\n\n- \`/usr/lib/systemd/system/\` \u2014 distribution packages (do not edit)\n- \`/etc/systemd/system/\` \u2014 admin overrides (preferred)\n- \`~/.config/systemd/user/\` \u2014 user units\n\n## Service Types\n\n- \`simple\` (default) \u2014 main process is ExecStart\n- \`forking\` \u2014 daemon forks; \`PIDFile\` must be set\n- \`notify\` \u2014 process sends \`sd_notify("READY=1")\` when ready\n- \`oneshot\` \u2014 completes and exits\n\n## Dependency Keywords\n\n- \`Requires=\` \u2014 hard dependency\n- \`Wants=\` \u2014 soft dependency\n- \`After=\` / \`Before=\` \u2014 ordering only; \`Requires=\` does not imply \`After=\`\n\n## Hardening Directives\n\n\`PrivateTmp\`, \`NoNewPrivileges\`, \`ProtectSystem=strict\`, \`CapabilityBoundingSet\` \u2014 implement least-privilege for system services.`,
     whenToUse: [
       'Writing a systemd service for a custom application (API server, background worker)',
       'Diagnosing why a service fails to start with "Failed to start" in systemctl status',
       'Hardening a service unit to run with minimal privileges',
     ],
     keyConcepts: [
-      { term: 'Service type=notify', definition: `Service sends \`sd_notify("READY=1")\` when **initialization is complete**. systemd waits before starting dependent services.` },
-      { term: 'After= vs Requires=', definition: `\`After=network.target\` means start after networking (ordering only). \`Requires=postgresql.service\` means **fail if postgres is not running** (dependency).` },
-      { term: 'WantedBy=multi-user.target', definition: `Running \`systemctl enable\` creates a symlink in \`multi-user.target.wants/\`, causing the service to **start at boot**.` },
-      { term: 'Restart=on-failure', definition: `Automatically restart if the service exits with a **non-zero exit code**. Combine with \`RestartSec=5\` to prevent tight crash loops.` },
-      { term: 'Socket activation', definition: `systemd holds the **listening socket open** and passes it to the service on first connection. The service can restart without dropping connections.` },
+      { term: 'Service type=notify', definition: `Service sends \`sd_notify("READY=1")\` when initialization is complete. systemd waits before starting dependent services.` },
+      { term: 'After= vs Requires=', definition: `\`After=network.target\` means start after networking (ordering only). \`Requires=postgresql.service\` means fail if postgres is not running (dependency).` },
+      { term: 'WantedBy=multi-user.target', definition: `Running \`systemctl enable\` creates a symlink in \`multi-user.target.wants/\`, causing the service to start at boot.` },
+      { term: 'Restart=on-failure', definition: `Automatically restart if the service exits with a non-zero exit code. Combine with \`RestartSec=5\` to prevent tight crash loops.` },
+      { term: 'Socket activation', definition: `systemd holds the listening socket open and passes it to the service on first connection. The service can restart without dropping connections.` },
     ],
     pitfalls: [
       'Using Requires= without After= — the dependency may not be fully initialized when the service starts.',
@@ -678,11 +678,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Write a systemd service unit for a Node.js API server that should restart on failure and start after the network is up.',
-        answer: `\`\`\`ini\n[Unit]\nDescription=Node.js API Server\nAfter=network.target\nWants=network.target\n\n[Service]\nType=simple\nUser=nodeapp\nGroup=nodeapp\nWorkingDirectory=/opt/api\nExecStart=/usr/bin/node /opt/api/server.js\nRestart=on-failure\nRestartSec=5\nEnvironment=NODE_ENV=production\nEnvironmentFile=-/opt/api/.env\n\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\nReadWritePaths=/opt/api/logs\n\nStandardOutput=journal\nStandardError=journal\nSyslogIdentifier=api-server\n\n[Install]\nWantedBy=multi-user.target\n\`\`\`\n\n## Install and Start\n\n\`\`\`bash\ncp api.service /etc/systemd/system/\nsystemctl daemon-reload\nsystemctl enable --now api.service\njournalctl -u api-server -f\n\`\`\`\n\n## Key Decisions\n\n- **\`Type=simple\`** because Node.js does not fork\n- **\`Restart=on-failure\`** with \`RestartSec=5\` prevents tight crash loops\n- **\`EnvironmentFile=-/opt/api/.env\`** \u2014 the \`-\` prefix means failure to read the file is non-fatal`,
+        answer: `\`\`\`ini\n[Unit]\nDescription=Node.js API Server\nAfter=network.target\nWants=network.target\n\n[Service]\nType=simple\nUser=nodeapp\nGroup=nodeapp\nWorkingDirectory=/opt/api\nExecStart=/usr/bin/node /opt/api/server.js\nRestart=on-failure\nRestartSec=5\nEnvironment=NODE_ENV=production\nEnvironmentFile=-/opt/api/.env\n\nNoNewPrivileges=yes\nPrivateTmp=yes\nProtectSystem=strict\nReadWritePaths=/opt/api/logs\n\nStandardOutput=journal\nStandardError=journal\nSyslogIdentifier=api-server\n\n[Install]\nWantedBy=multi-user.target\n\`\`\`\n\n## Install and Start\n\n\`\`\`bash\ncp api.service /etc/systemd/system/\nsystemctl daemon-reload\nsystemctl enable --now api.service\njournalctl -u api-server -f\n\`\`\`\n\n## Key Decisions\n\n- \`Type=simple\` because Node.js does not fork\n- \`Restart=on-failure\` with \`RestartSec=5\` prevents tight crash loops\n- \`EnvironmentFile=-/opt/api/.env\` \u2014 the \`-\` prefix means failure to read the file is non-fatal`,
       },
       {
         question: 'Your systemd service is stuck in "activating" state. How do you diagnose it?',
-        answer: `## Initial Inspection\n\n\`\`\`bash\nsystemctl status myservice\njournalctl -u myservice -n 50 --no-pager\n\`\`\`\n\n## Common Causes\n\n**\`Type=simple\`:** ExecStart is running but blocking:\n\`\`\`bash\nstrace -p <PID>\n\`\`\`\n\n**\`Type=forking\`:** the parent did not exit after forking, or \`PIDFile\` path is wrong.\n\n**\`Type=notify\`:** service never called \`sd_notify("READY=1")\`. Add a timeout:\n\`\`\`bash\nTimeoutStartSec=30\n\`\`\`\n\n## Check the Dependency Chain\n\n\`\`\`bash\n# Shows dependency chain and timing\nsystemd-analyze critical-chain myservice.service\n\n# Lists all dependencies\nsystemctl list-dependencies myservice.service\n\`\`\``,
+        answer: `## Initial Inspection\n\n\`\`\`bash\nsystemctl status myservice\njournalctl -u myservice -n 50 --no-pager\n\`\`\`\n\n## Common Causes\n\n\`Type=simple\`: ExecStart is running but blocking:\n\`\`\`bash\nstrace -p <PID>\n\`\`\`\n\n\`Type=forking\`: the parent did not exit after forking, or \`PIDFile\` path is wrong.\n\n\`Type=notify\`: service never called \`sd_notify("READY=1")\`. Add a timeout:\n\`\`\`bash\nTimeoutStartSec=30\n\`\`\`\n\n## Check the Dependency Chain\n\n\`\`\`bash\n# Shows dependency chain and timing\nsystemd-analyze critical-chain myservice.service\n\n# Lists all dependencies\nsystemctl list-dependencies myservice.service\n\`\`\``,
       },
     ],
     quickFire: [
@@ -712,18 +712,18 @@ export const linuxTopics = [
       { title: 'cgroup v2 Hierarchy', description: 'root → system.slice/user.slice/machine.slice → per-service cgroups with resource limits', image: '/diagrams/linux/systemd-cgroups-hierarchy.png' },
       { title: 'cgroup Controllers', description: 'cpu (CPUQuota%), memory (MemoryMax), io (IOReadBandwidthMax), pids (TasksMax) controllers', image: '/diagrams/linux/systemd-cgroups-controllers.png' },
     ],
-    introduction: `**Control groups (cgroups)** and **namespaces** are the two kernel features that make containers possible. Cgroups provide resource limiting; namespaces provide isolation.\n\n## cgroups (v2)\n\nCgroups v2 organise processes into a hierarchy with **resource controllers**:\n- **\`cpu\`** \u2014 CPU time share and quota\n- **\`memory\`** \u2014 max RSS, swap, page cache\n- **\`io\`** \u2014 disk bandwidth\n- **\`pids\`** \u2014 max number of processes\n\nWhen a cgroup's memory limit is exceeded, the kernel **OOM-kills a process within that cgroup**.\n\n## Linux Namespaces\n\n- **\`pid\`** \u2014 container gets its own PID 1\n- **\`net\`** \u2014 own network interfaces and routing table\n- **\`mnt\`** \u2014 own filesystem mount points\n- **\`uts\`** \u2014 own hostname and domainname\n- **\`ipc\`** \u2014 own System V IPC\n- **\`user\`** \u2014 UID/GID mapping (uid 0 in container maps to unprivileged uid on host)\n\n## Containers Are Just Processes\n\nA container is a **process running in its own set of namespaces and controlled by a cgroup**. There is no container kernel \u2014 the same host kernel serves all containers. This is why **container isolation is weaker than VM isolation**: a container escape exploit can reach the host kernel directly.`,
+    introduction: `Control groups (cgroups) and namespaces are the two kernel features that make containers possible. Cgroups provide resource limiting; namespaces provide isolation.\n\n## cgroups (v2)\n\nCgroups v2 organise processes into a hierarchy with resource controllers:\n- \`cpu\` \u2014 CPU time share and quota\n- \`memory\` \u2014 max RSS, swap, page cache\n- \`io\` \u2014 disk bandwidth\n- \`pids\` \u2014 max number of processes\n\nWhen a cgroup's memory limit is exceeded, the kernel OOM-kills a process within that cgroup.\n\n## Linux Namespaces\n\n- \`pid\` \u2014 container gets its own PID 1\n- \`net\` \u2014 own network interfaces and routing table\n- \`mnt\` \u2014 own filesystem mount points\n- \`uts\` \u2014 own hostname and domainname\n- \`ipc\` \u2014 own System V IPC\n- \`user\` \u2014 UID/GID mapping (uid 0 in container maps to unprivileged uid on host)\n\n## Containers Are Just Processes\n\nA container is a process running in its own set of namespaces and controlled by a cgroup. There is no container kernel \u2014 the same host kernel serves all containers. This is why container isolation is weaker than VM isolation: a container escape exploit can reach the host kernel directly.`,
     whenToUse: [
       'Explaining the technical difference between containers and VMs',
       'Debugging why a container is hitting its memory limit even though the app seems fine',
       'Designing rootless containers with user namespace mapping for defense in depth',
     ],
     keyConcepts: [
-      { term: 'cgroup memory.max', definition: `**Hard limit** on memory usage in cgroup v2. In Docker: \`--memory\` flag. In Kubernetes: \`resources.limits.memory\`.` },
-      { term: 'PID namespace', definition: `Each container sees its **own PID space starting at 1**. Container PID 1 maps to a higher PID on the host.` },
-      { term: 'Network namespace', definition: `Each container gets its **own network stack**: \`lo\`, virtual ethernet pair (\`eth0\` inside, \`vethXXXX\` on host), own routing table.` },
-      { term: 'User namespace', definition: `Maps UIDs inside the namespace to **different UIDs on the host**. Rootless containers: uid=0 inside maps to unprivileged uid on host.` },
-      { term: 'Cgroup v2 unified hierarchy', definition: `**Single cgroup tree** with all resource controllers. Required for Kubernetes cgroup v2 support since Kubernetes 1.25.` },
+      { term: 'cgroup memory.max', definition: `Hard limit on memory usage in cgroup v2. In Docker: \`--memory\` flag. In Kubernetes: \`resources.limits.memory\`.` },
+      { term: 'PID namespace', definition: `Each container sees its own PID space starting at 1. Container PID 1 maps to a higher PID on the host.` },
+      { term: 'Network namespace', definition: `Each container gets its own network stack: \`lo\`, virtual ethernet pair (\`eth0\` inside, \`vethXXXX\` on host), own routing table.` },
+      { term: 'User namespace', definition: `Maps UIDs inside the namespace to different UIDs on the host. Rootless containers: uid=0 inside maps to unprivileged uid on host.` },
+      { term: 'Cgroup v2 unified hierarchy', definition: `Single cgroup tree with all resource controllers. Required for Kubernetes cgroup v2 support since Kubernetes 1.25.` },
     ],
     pitfalls: [
       'Setting container memory limit without accounting for page cache — Java apps reading large files can OOMKill even if heap is within limits.',
@@ -733,7 +733,7 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do Linux namespaces enable container isolation? Walk through each namespace type.',
-        answer: `## pid namespace\n\nContainer gets its **own PID number space starting at 1**. Processes in the container cannot see host PIDs. Killing PID 1 in the container may cascade to all children.\n\n## net namespace\n\nContainer gets its **own network stack**: own \`lo\`, virtual ethernet pair (\`eth0\` inside, \`vethXXXX\` on host), own routing table and iptables rules.\n\n## mnt namespace\n\nContainer has its **own mount table**. The container sees its rootfs (overlay filesystem). Mounts inside the container do not appear on the host.\n\n## uts namespace\n\nContainer has its **own hostname and NIS domainname**. Setting hostname inside the container does not affect the host.\n\n## user namespace\n\nMaps UIDs inside the container to **different UIDs on the host**. uid=0 inside the container maps to uid=100000 on the host. Makes rootless containers safe \u2014 even if a process escapes, it has no host privileges.\n\n## How Containers Are Created\n\nA container is created by calling \`unshare()\` or \`clone()\` with namespace flags, then \`execve()\`. Docker, containerd, and runc all use this mechanism.`,
+        answer: `## pid namespace\n\nContainer gets its own PID number space starting at 1. Processes in the container cannot see host PIDs. Killing PID 1 in the container may cascade to all children.\n\n## net namespace\n\nContainer gets its own network stack: own \`lo\`, virtual ethernet pair (\`eth0\` inside, \`vethXXXX\` on host), own routing table and iptables rules.\n\n## mnt namespace\n\nContainer has its own mount table. The container sees its rootfs (overlay filesystem). Mounts inside the container do not appear on the host.\n\n## uts namespace\n\nContainer has its own hostname and NIS domainname. Setting hostname inside the container does not affect the host.\n\n## user namespace\n\nMaps UIDs inside the container to different UIDs on the host. uid=0 inside the container maps to uid=100000 on the host. Makes rootless containers safe \u2014 even if a process escapes, it has no host privileges.\n\n## How Containers Are Created\n\nA container is created by calling \`unshare()\` or \`clone()\` with namespace flags, then \`execve()\`. Docker, containerd, and runc all use this mechanism.`,
       },
     ],
     quickFire: [
@@ -766,7 +766,7 @@ export const linuxTopics = [
       { title: 'Partition Table Layout', description: 'MBR vs GPT partition structures and field breakdown', image: '/diagrams/linux/linux-disk-partition-table.png' },
       { title: 'Disk Tool Workflow', description: 'lsblk → fdisk/parted → mkfs → mount decision flow', image: '/diagrams/linux/linux-disk-tools-workflow.png' },
     ],
-    introduction: `Disk management is a foundational SRE skill. Whether you are adding a data volume to a database server, replacing a failed drive, or setting up a new host, you need to understand partitioning schemes, filesystem creation, integrity checking, and drive health monitoring.\n\n## MBR vs GPT\n\n**MBR (Master Boot Record)** is the legacy scheme stored in the first 512 bytes of a disk. It supports at most **4 primary partitions** (or 3 primary + 1 extended with logical partitions inside) and disks up to **2 TiB**. Use \`fdisk\` to work with MBR disks.\n\n**GPT (GUID Partition Table)** is the modern standard. It supports up to **128 partitions** per disk and disks beyond 2 TiB. GPT stores a backup partition table at the end of the disk for recovery. Use \`gdisk\` or \`parted\` for GPT disks. All disks over 2 TiB must use GPT.\n\n## Key Tools\n\n- **\`lsblk -f\`** — list block devices with filesystem type, UUID, and mount point in a tree view\n- **\`blkid\`** — print UUID and TYPE for all block devices; used in \`/etc/fstab\`\n- **\`fdisk\` / \`gdisk\`** — interactive partition editors for MBR and GPT respectively\n- **\`parted\`** — non-interactive partitioning, scriptable, supports both MBR and GPT\n- **\`mkfs.ext4\`** / **\`mkfs.xfs\`** — create filesystems\n- **\`fsck\`** — filesystem consistency checker; never run on mounted filesystems\n- **\`smartctl\`** — query SMART (Self-Monitoring Analysis and Reporting Technology) data from drive firmware\n\n## Why UUID Over Device Name\n\nDevice names like \`/dev/sdb\` can change between reboots depending on probe order, PCI slot changes, or adding new disks. **UUIDs are stable** and assigned at filesystem creation. Always reference disks by UUID in \`/etc/fstab\` and bootloader configs.`,
+    introduction: `Disk management is a foundational SRE skill. Whether you are adding a data volume to a database server, replacing a failed drive, or setting up a new host, you need to understand partitioning schemes, filesystem creation, integrity checking, and drive health monitoring.\n\n## MBR vs GPT\n\nMBR (Master Boot Record) is the legacy scheme stored in the first 512 bytes of a disk. It supports at most 4 primary partitions (or 3 primary + 1 extended with logical partitions inside) and disks up to 2 TiB. Use \`fdisk\` to work with MBR disks.\n\nGPT (GUID Partition Table) is the modern standard. It supports up to 128 partitions per disk and disks beyond 2 TiB. GPT stores a backup partition table at the end of the disk for recovery. Use \`gdisk\` or \`parted\` for GPT disks. All disks over 2 TiB must use GPT.\n\n## Key Tools\n\n- \`lsblk -f\` — list block devices with filesystem type, UUID, and mount point in a tree view\n- \`blkid\` — print UUID and TYPE for all block devices; used in \`/etc/fstab\`\n- \`fdisk\` / \`gdisk\` — interactive partition editors for MBR and GPT respectively\n- \`parted\` — non-interactive partitioning, scriptable, supports both MBR and GPT\n- \`mkfs.ext4\` / \`mkfs.xfs\` — create filesystems\n- \`fsck\` — filesystem consistency checker; never run on mounted filesystems\n- \`smartctl\` — query SMART (Self-Monitoring Analysis and Reporting Technology) data from drive firmware\n\n## Why UUID Over Device Name\n\nDevice names like \`/dev/sdb\` can change between reboots depending on probe order, PCI slot changes, or adding new disks. UUIDs are stable and assigned at filesystem creation. Always reference disks by UUID in \`/etc/fstab\` and bootloader configs.`,
     whenToUse: [
       'Adding a new data disk to a database server — partition with parted, format with mkfs.xfs, add UUID to fstab',
       'Investigating "No space left on device" errors — check df -h for blocks and df -i for inodes',
@@ -775,11 +775,11 @@ export const linuxTopics = [
       'Migrating from MBR to GPT on a disk over 2 TiB — gdisk or parted required',
     ],
     keyConcepts: [
-      { term: 'MBR', definition: `**Master Boot Record** — legacy partition scheme in the first 512 bytes. Max 4 primary partitions, max 2 TiB disk. Use \`fdisk\` to manage.` },
-      { term: 'GPT', definition: `**GUID Partition Table** — modern scheme supporting 128+ partitions and disks beyond 2 TiB. Stores a backup partition table at disk end. Use \`gdisk\` or \`parted\`.` },
-      { term: 'UUID', definition: `**Universally Unique Identifier** assigned at filesystem creation. Stable across reboots unlike \`/dev/sdX\` names. Retrieve with \`blkid\`. Always use in \`/etc/fstab\`.` },
-      { term: 'SMART attributes', definition: `Drive firmware counters exposed via \`smartctl -a /dev/sda\`. Key ones: **Reallocated_Sector_Ct** (bad sectors remapped — rising count = drive failing), **Spin_Retry_Count**, **Uncorrectable_Error_Cnt**, **Power_On_Hours**.` },
-      { term: 'fsck', definition: `**Filesystem check** — scans and repairs inconsistencies. Run only on **unmounted** or **read-only** filesystems. Use \`-n\` flag for a dry-run (read-only check with no writes).` },
+      { term: 'MBR', definition: `Master Boot Record — legacy partition scheme in the first 512 bytes. Max 4 primary partitions, max 2 TiB disk. Use \`fdisk\` to manage.` },
+      { term: 'GPT', definition: `GUID Partition Table — modern scheme supporting 128+ partitions and disks beyond 2 TiB. Stores a backup partition table at disk end. Use \`gdisk\` or \`parted\`.` },
+      { term: 'UUID', definition: `Universally Unique Identifier assigned at filesystem creation. Stable across reboots unlike \`/dev/sdX\` names. Retrieve with \`blkid\`. Always use in \`/etc/fstab\`.` },
+      { term: 'SMART attributes', definition: `Drive firmware counters exposed via \`smartctl -a /dev/sda\`. Key ones: Reallocated_Sector_Ct (bad sectors remapped — rising count = drive failing), Spin_Retry_Count, Uncorrectable_Error_Cnt, Power_On_Hours.` },
+      { term: 'fsck', definition: `Filesystem check — scans and repairs inconsistencies. Run only on unmounted or read-only filesystems. Use \`-n\` flag for a dry-run (read-only check with no writes).` },
       { term: 'parted', definition: `Scriptable partition tool supporting both MBR and GPT. Preferred for automation. \`parted /dev/sdb mklabel gpt mkpart primary 0% 100%\` creates a single GPT partition.` },
     ],
     pitfalls: [
@@ -795,11 +795,11 @@ export const linuxTopics = [
       },
       {
         question: 'How do you check if a disk is failing in production without taking downtime?',
-        answer: `## SMART Self-Test (Non-Disruptive)\n\n\`\`\`bash\n# Check overall SMART health\nsmartctl -H /dev/sda\n\n# Full attribute dump\nsmartctl -a /dev/sda\n\n# Run a short self-test in the background (takes ~2 min, drive stays online)\nsmartctl -t short /dev/sda\n\n# Check results after test\nsmartctl -l selftest /dev/sda\n\`\`\`\n\n## Key SMART Attributes to Watch\n\n| Attribute | Meaning |\n|---|---|\n| **Reallocated_Sector_Ct** | Bad sectors remapped to spares — rising = drive failing |\n| **Current_Pending_Sector** | Sectors waiting to be remapped on next write |\n| **Offline_Uncorrectable** | Errors detected during offline testing |\n| **Spin_Retry_Count** | Spinup failures (HDDs) |\n\n## Kernel Errors\n\n\`\`\`bash\n# Kernel logs SCSI/SATA errors in real time\ndmesg | grep -E 'ata[0-9]|sd[a-z]|I/O error|reset'\njournalctl -k --since today | grep -i error\n\`\`\`\n\n## What Triggers Immediate Replacement\n\n- \`SMART overall-health self-assessment: FAILED\`\n- Reallocated_Sector_Ct raw value **above 0 and rising**\n- Repeated kernel I/O errors on the same device\n\nPre-failure replacement: schedule replacement when trend is rising even if SMART is still PASSED.`,
+        answer: `## SMART Self-Test (Non-Disruptive)\n\n\`\`\`bash\n# Check overall SMART health\nsmartctl -H /dev/sda\n\n# Full attribute dump\nsmartctl -a /dev/sda\n\n# Run a short self-test in the background (takes ~2 min, drive stays online)\nsmartctl -t short /dev/sda\n\n# Check results after test\nsmartctl -l selftest /dev/sda\n\`\`\`\n\n## Key SMART Attributes to Watch\n\n| Attribute | Meaning |\n|---|---|\n| Reallocated_Sector_Ct | Bad sectors remapped to spares — rising = drive failing |\n| Current_Pending_Sector | Sectors waiting to be remapped on next write |\n| Offline_Uncorrectable | Errors detected during offline testing |\n| Spin_Retry_Count | Spinup failures (HDDs) |\n\n## Kernel Errors\n\n\`\`\`bash\n# Kernel logs SCSI/SATA errors in real time\ndmesg | grep -E 'ata[0-9]|sd[a-z]|I/O error|reset'\njournalctl -k --since today | grep -i error\n\`\`\`\n\n## What Triggers Immediate Replacement\n\n- \`SMART overall-health self-assessment: FAILED\`\n- Reallocated_Sector_Ct raw value above 0 and rising\n- Repeated kernel I/O errors on the same device\n\nPre-failure replacement: schedule replacement when trend is rising even if SMART is still PASSED.`,
       },
       {
         question: 'What is the difference between fdisk, gdisk, and parted? When do you use each?',
-        answer: `## fdisk — MBR Only\n\n\`fdisk\` is the classic interactive partitioner. It only understands **MBR** (MS-DOS) partition tables. Maximum disk size 2 TiB. Use for legacy systems or when you specifically need MBR.\n\n\`\`\`bash\nfdisk /dev/sdb\n# m for help, n for new partition, p for print, w to write\n\`\`\`\n\n## gdisk — GPT Equivalent of fdisk\n\n\`gdisk\` is the **GPT-aware** equivalent of fdisk, with nearly identical interactive interface. Use when you want the fdisk-style workflow but on a GPT disk.\n\n\`\`\`bash\ngdisk /dev/sdb\n# same key bindings as fdisk, operates on GPT\n\`\`\`\n\n## parted — Scriptable, Supports Both\n\n\`parted\` supports both MBR and GPT and is **non-interactive by default** — ideal for automation and Ansible playbooks.\n\n\`\`\`bash\nparted /dev/sdb mklabel gpt\nparted /dev/sdb mkpart primary xfs 0% 100%\nparted /dev/sdb print\n\`\`\`\n\n## Rule of Thumb\n\n- Disk **<= 2 TiB, legacy system**: use \`fdisk\`\n- Disk **> 2 TiB or modern system**: use \`gdisk\` or \`parted\`\n- **Automation / scripts**: always use \`parted\``,
+        answer: `## fdisk — MBR Only\n\n\`fdisk\` is the classic interactive partitioner. It only understands MBR (MS-DOS) partition tables. Maximum disk size 2 TiB. Use for legacy systems or when you specifically need MBR.\n\n\`\`\`bash\nfdisk /dev/sdb\n# m for help, n for new partition, p for print, w to write\n\`\`\`\n\n## gdisk — GPT Equivalent of fdisk\n\n\`gdisk\` is the GPT-aware equivalent of fdisk, with nearly identical interactive interface. Use when you want the fdisk-style workflow but on a GPT disk.\n\n\`\`\`bash\ngdisk /dev/sdb\n# same key bindings as fdisk, operates on GPT\n\`\`\`\n\n## parted — Scriptable, Supports Both\n\n\`parted\` supports both MBR and GPT and is non-interactive by default — ideal for automation and Ansible playbooks.\n\n\`\`\`bash\nparted /dev/sdb mklabel gpt\nparted /dev/sdb mkpart primary xfs 0% 100%\nparted /dev/sdb print\n\`\`\`\n\n## Rule of Thumb\n\n- Disk <= 2 TiB, legacy system: use \`fdisk\`\n- Disk > 2 TiB or modern system: use \`gdisk\` or \`parted\`\n- Automation / scripts: always use \`parted\``,
       },
     ],
     quickFire: [
@@ -830,7 +830,7 @@ export const linuxTopics = [
       { title: 'RAID Levels Comparison', description: 'RAID 0/1/5/6/10 redundancy, performance, and usable space', image: '/diagrams/linux/linux-raid-levels.png' },
       { title: 'mdadm State Machine', description: 'clean → active → degraded → resyncing state transitions', image: '/diagrams/linux/linux-raid-mdadm-states.png' },
     ],
-    introduction: `**Software RAID** uses the Linux kernel's \`md\` (multiple devices) subsystem to combine physical disks into a logical array with redundancy, performance, or both. Unlike hardware RAID controllers, software RAID is transparent, portable, and doesn't tie you to proprietary firmware.\n\n## RAID Levels\n\n**RAID 0 — Striping.** Data is split across all disks in stripes. Delivers maximum throughput (reads and writes scale with disk count) but **zero redundancy** — one disk failure loses everything. Use for scratch/temp storage where speed matters and data is ephemeral.\n\n**RAID 1 — Mirroring.** Each disk is an exact copy of the other. Tolerates **one disk failure**. Read throughput doubles (each disk can serve reads independently); write throughput is limited to the slowest disk. Minimum 2 disks.\n\n**RAID 5 — Distributed Parity.** Data and parity are striped across all disks. Can survive **one disk failure**. Minimum 3 disks; usable capacity is (N-1) disks. Parity computation adds write overhead — beware write hole on unclean shutdown (mitigated by write-intent bitmaps).\n\n**RAID 6 — Dual Parity.** Like RAID 5 but with two independent parity blocks per stripe. Survives **two simultaneous disk failures**. Minimum 4 disks. Rebuild of a RAID 5 array can itself fail during the rebuild (URE on a second disk) — RAID 6 is safer for large arrays.\n\n**RAID 10 — Striped Mirrors.** RAID 1 arrays striped together. Combines mirroring redundancy with striping throughput. Minimum 4 disks. Can survive multiple failures as long as no mirror loses both disks.\n\n## Key Files\n\n- **\`/proc/mdstat\`** — live rebuild progress, array state, and per-device status\n- **\`/etc/mdadm/mdadm.conf\`** — array configuration for boot-time assembly`,
+    introduction: `Software RAID uses the Linux kernel's \`md\` (multiple devices) subsystem to combine physical disks into a logical array with redundancy, performance, or both. Unlike hardware RAID controllers, software RAID is transparent, portable, and doesn't tie you to proprietary firmware.\n\n## RAID Levels\n\nRAID 0 — Striping. Data is split across all disks in stripes. Delivers maximum throughput (reads and writes scale with disk count) but zero redundancy — one disk failure loses everything. Use for scratch/temp storage where speed matters and data is ephemeral.\n\nRAID 1 — Mirroring. Each disk is an exact copy of the other. Tolerates one disk failure. Read throughput doubles (each disk can serve reads independently); write throughput is limited to the slowest disk. Minimum 2 disks.\n\nRAID 5 — Distributed Parity. Data and parity are striped across all disks. Can survive one disk failure. Minimum 3 disks; usable capacity is (N-1) disks. Parity computation adds write overhead — beware write hole on unclean shutdown (mitigated by write-intent bitmaps).\n\nRAID 6 — Dual Parity. Like RAID 5 but with two independent parity blocks per stripe. Survives two simultaneous disk failures. Minimum 4 disks. Rebuild of a RAID 5 array can itself fail during the rebuild (URE on a second disk) — RAID 6 is safer for large arrays.\n\nRAID 10 — Striped Mirrors. RAID 1 arrays striped together. Combines mirroring redundancy with striping throughput. Minimum 4 disks. Can survive multiple failures as long as no mirror loses both disks.\n\n## Key Files\n\n- \`/proc/mdstat\` — live rebuild progress, array state, and per-device status\n- \`/etc/mdadm/mdadm.conf\` — array configuration for boot-time assembly`,
     whenToUse: [
       'Replacing a failed disk in a production RAID 1 or RAID 5 array — mdadm --remove then --add',
       'Diagnosing why a server is running slow — degraded RAID array causes write penalty; check /proc/mdstat',
@@ -838,11 +838,11 @@ export const linuxTopics = [
       'Monitoring rebuild progress after a disk replacement — watch /proc/mdstat or mdadm --detail',
     ],
     keyConcepts: [
-      { term: 'RAID 0', definition: `**Striping** — maximum throughput, zero redundancy. Any single disk failure destroys all data. Use only for ephemeral scratch space.` },
-      { term: 'RAID 1', definition: `**Mirroring** — exact copy on every disk. Tolerates one failure. Read throughput scales, write throughput does not. Minimum 2 disks.` },
-      { term: 'RAID 5', definition: `**Distributed parity** — parity block rotated across all disks. Tolerates one failure, usable capacity = (N-1) disks. Minimum 3 disks. Risk of data loss during rebuild if a second disk fails (URE).` },
-      { term: 'RAID 6', definition: `**Dual parity** — tolerates two simultaneous failures. Preferred for arrays with 6+ large disks where rebuild time is long and URE risk is high.` },
-      { term: 'RAID 10', definition: `**Striped mirrors** — combines throughput of RAID 0 with redundancy of RAID 1. Minimum 4 disks. Best for OLTP databases.` },
+      { term: 'RAID 0', definition: `Striping — maximum throughput, zero redundancy. Any single disk failure destroys all data. Use only for ephemeral scratch space.` },
+      { term: 'RAID 1', definition: `Mirroring — exact copy on every disk. Tolerates one failure. Read throughput scales, write throughput does not. Minimum 2 disks.` },
+      { term: 'RAID 5', definition: `Distributed parity — parity block rotated across all disks. Tolerates one failure, usable capacity = (N-1) disks. Minimum 3 disks. Risk of data loss during rebuild if a second disk fails (URE).` },
+      { term: 'RAID 6', definition: `Dual parity — tolerates two simultaneous failures. Preferred for arrays with 6+ large disks where rebuild time is long and URE risk is high.` },
+      { term: 'RAID 10', definition: `Striped mirrors — combines throughput of RAID 0 with redundancy of RAID 1. Minimum 4 disks. Best for OLTP databases.` },
       { term: '/proc/mdstat', definition: `Live kernel view of all \`md\` arrays. Shows state (clean, degraded, recovering), rebuild speed, and ETA. Monitor with \`watch -n1 cat /proc/mdstat\`.` },
     ],
     pitfalls: [
@@ -858,7 +858,7 @@ export const linuxTopics = [
       },
       {
         question: 'What is the difference between RAID 5 and RAID 6, and when would you choose one over the other?',
-        answer: `## RAID 5\n\n- **Parity**: single distributed parity block per stripe\n- **Failure tolerance**: 1 disk\n- **Usable capacity**: (N-1) / N\n- **Minimum disks**: 3\n- **Risk**: During rebuild, if any remaining disk has an **Uncorrectable Read Error (URE)**, the rebuild fails and all data is lost. On modern large disks (4–16 TiB), the probability of a URE during a multi-hour rebuild is non-trivial.\n\n## RAID 6\n\n- **Parity**: two independent parity blocks (P+Q) per stripe\n- **Failure tolerance**: 2 disks simultaneously\n- **Usable capacity**: (N-2) / N\n- **Minimum disks**: 4\n- **Trade-off**: Slightly higher write overhead, but dramatically safer rebuilds\n\n## Decision Rule\n\n| Scenario | Choose |\n|---|---|\n| Small array (3-4 disks), disks < 4 TiB | RAID 5 |\n| Large array (6+ disks), disks >= 4 TiB | RAID 6 |\n| Maximum IOPS for databases | RAID 10 |\n| Maximum capacity, cost-sensitive | RAID 6 |\n\n## Practical Note\n\nCloud providers (AWS, GCP) replicate data at the storage layer — you rarely need software RAID in cloud VMs. Software RAID shines in bare-metal servers and homelab/on-prem environments.`,
+        answer: `## RAID 5\n\n- Parity: single distributed parity block per stripe\n- Failure tolerance: 1 disk\n- Usable capacity: (N-1) / N\n- Minimum disks: 3\n- Risk: During rebuild, if any remaining disk has an Uncorrectable Read Error (URE), the rebuild fails and all data is lost. On modern large disks (4–16 TiB), the probability of a URE during a multi-hour rebuild is non-trivial.\n\n## RAID 6\n\n- Parity: two independent parity blocks (P+Q) per stripe\n- Failure tolerance: 2 disks simultaneously\n- Usable capacity: (N-2) / N\n- Minimum disks: 4\n- Trade-off: Slightly higher write overhead, but dramatically safer rebuilds\n\n## Decision Rule\n\n| Scenario | Choose |\n|---|---|\n| Small array (3-4 disks), disks < 4 TiB | RAID 5 |\n| Large array (6+ disks), disks >= 4 TiB | RAID 6 |\n| Maximum IOPS for databases | RAID 10 |\n| Maximum capacity, cost-sensitive | RAID 6 |\n\n## Practical Note\n\nCloud providers (AWS, GCP) replicate data at the storage layer — you rarely need software RAID in cloud VMs. Software RAID shines in bare-metal servers and homelab/on-prem environments.`,
       },
     ],
     quickFire: [
@@ -888,7 +888,7 @@ export const linuxTopics = [
       { title: 'fstab Fields Anatomy', description: 'All 6 /etc/fstab fields explained with examples', image: '/diagrams/linux/linux-mount-fstab-fields.png' },
       { title: 'Mount Namespace Layers', description: 'VFS → host NS → bind mounts → container NS hierarchy', image: '/diagrams/linux/linux-mount-namespace-layers.png' },
     ],
-    introduction: `Mounting is the act of attaching a filesystem to a directory in the Linux VFS tree. The kernel's mount table tracks every mounted filesystem, its options, and its relationship to other mounts. Understanding mount options and \`/etc/fstab\` is essential for building reliable, performant storage configurations.\n\n## The mount Command\n\n\`mount -t <fstype> <device> <mountpoint>\` is the basic form. Common examples:\n\n\`\`\`bash\nmount -t ext4 /dev/sdb1 /mnt/data\nmount -t nfs 10.0.0.5:/exports/data /mnt/nfs\nmount -t tmpfs -o size=512m tmpfs /tmp/ramdisk\n\`\`\`\n\n## /etc/fstab Format\n\nEach line has **6 whitespace-separated fields**:\n\n1. **Device** — UUID=xxx, LABEL=xxx, or /dev/sdX\n2. **Mount point** — absolute path\n3. **Filesystem type** — ext4, xfs, nfs, tmpfs, etc.\n4. **Mount options** — comma-separated (defaults, noatime, ro, ...)\n5. **dump** — 0 (most modern systems) or 1 (back up with dump utility)\n6. **pass** — fsck order at boot: 0 = skip, 1 = root fs first, 2 = other fs\n\nExample:\n\`\`\`\nUUID=abc123  /data  xfs  defaults,noatime  0  2\n\`\`\`\n\n## Key Mount Options\n\n- **\`noatime\`** — do not update access time on reads. Eliminates a write for every read; significant I/O saving on busy filesystems. Use on all data volumes.\n- **\`ro\`** — mount read-only. Use for rescue operations or read-only bind mounts.\n- **\`noexec\`** — prevent execution of binaries. Use on \`/tmp\` and \`/var/tmp\` for security hardening.\n- **\`nosuid\`** — ignore setuid/setgid bits. Prevents privilege escalation via setuid binaries on mounted volumes.\n- **\`relatime\`** — update atime only when mtime is newer (a middle ground between atime and noatime).`,
+    introduction: `Mounting is the act of attaching a filesystem to a directory in the Linux VFS tree. The kernel's mount table tracks every mounted filesystem, its options, and its relationship to other mounts. Understanding mount options and \`/etc/fstab\` is essential for building reliable, performant storage configurations.\n\n## The mount Command\n\n\`mount -t <fstype> <device> <mountpoint>\` is the basic form. Common examples:\n\n\`\`\`bash\nmount -t ext4 /dev/sdb1 /mnt/data\nmount -t nfs 10.0.0.5:/exports/data /mnt/nfs\nmount -t tmpfs -o size=512m tmpfs /tmp/ramdisk\n\`\`\`\n\n## /etc/fstab Format\n\nEach line has 6 whitespace-separated fields:\n\n1. Device — UUID=xxx, LABEL=xxx, or /dev/sdX\n2. Mount point — absolute path\n3. Filesystem type — ext4, xfs, nfs, tmpfs, etc.\n4. Mount options — comma-separated (defaults, noatime, ro, ...)\n5. dump — 0 (most modern systems) or 1 (back up with dump utility)\n6. pass — fsck order at boot: 0 = skip, 1 = root fs first, 2 = other fs\n\nExample:\n\`\`\`\nUUID=abc123  /data  xfs  defaults,noatime  0  2\n\`\`\`\n\n## Key Mount Options\n\n- \`noatime\` — do not update access time on reads. Eliminates a write for every read; significant I/O saving on busy filesystems. Use on all data volumes.\n- \`ro\` — mount read-only. Use for rescue operations or read-only bind mounts.\n- \`noexec\` — prevent execution of binaries. Use on \`/tmp\` and \`/var/tmp\` for security hardening.\n- \`nosuid\` — ignore setuid/setgid bits. Prevents privilege escalation via setuid binaries on mounted volumes.\n- \`relatime\` — update atime only when mtime is newer (a middle ground between atime and noatime).`,
     whenToUse: [
       'Adding a persistent data volume to a server — write UUID-based fstab entry and test with mount -a',
       'Creating a ramdisk for fast temporary storage — tmpfs with size limit prevents OOM',
@@ -898,11 +898,11 @@ export const linuxTopics = [
     ],
     keyConcepts: [
       { term: 'fstab 6 fields', definition: `device, mountpoint, fstype, options, dump, pass. Field 6 (pass) controls \`fsck\` order: root=1, others=2, skip=0.` },
-      { term: 'noatime', definition: `Suppresses **access time updates** on reads. Eliminates one write iop per read — measurable improvement on busy filesystems. Safe for almost all workloads; logs still track mtime.` },
+      { term: 'noatime', definition: `Suppresses access time updates on reads. Eliminates one write iop per read — measurable improvement on busy filesystems. Safe for almost all workloads; logs still track mtime.` },
       { term: 'Bind mount', definition: `\`mount --bind /src /dst\` makes the same filesystem tree visible at two paths. Used heavily by containers and chroots. Does not copy data.` },
-      { term: 'tmpfs', definition: `**In-memory filesystem** backed by RAM and swap. Size-limited via \`size=\` option. Perfect for \`/tmp\` and build caches. Data is lost on unmount/reboot.` },
+      { term: 'tmpfs', definition: `In-memory filesystem backed by RAM and swap. Size-limited via \`size=\` option. Perfect for \`/tmp\` and build caches. Data is lost on unmount/reboot.` },
       { term: 'findmnt', definition: `Modern replacement for reading \`/proc/mounts\`. Shows mount tree with options, source, and propagation. \`findmnt -t xfs\` filters by type.` },
-      { term: 'mount -o remount', definition: `Change mount options **without unmounting**. Common recovery pattern: \`mount -o remount,rw /\` to make root writable in single-user mode.` },
+      { term: 'mount -o remount', definition: `Change mount options without unmounting. Common recovery pattern: \`mount -o remount,rw /\` to make root writable in single-user mode.` },
     ],
     pitfalls: [
       'Using device names like /dev/sdb1 in fstab instead of UUIDs — probe order can change, causing boot failure or mounting the wrong disk.',
@@ -913,11 +913,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Explain the /etc/fstab format and how you would safely add a new entry.',
-        answer: `## fstab Field Reference\n\n\`\`\`\n# <device>         <mountpoint>  <type>  <options>           <dump> <pass>\nUUID=abc-123       /data         xfs     defaults,noatime    0      2\nUUID=def-456       /boot         ext4    defaults            0      2\ntmpfs              /tmp          tmpfs   size=1g,mode=1777   0      0\n10.0.0.5:/exports  /mnt/nfs      nfs     defaults,nofail,_netdev  0  0\n\`\`\`\n\n## Field Meanings\n\n1. **Device**: \`UUID=\` preferred — stable across reboots. Get with \`blkid\`.\n2. **Mount point**: Must exist before mounting (\`mkdir -p /data\`).\n3. **fstype**: \`ext4\`, \`xfs\`, \`nfs\`, \`tmpfs\`, \`auto\`.\n4. **Options**: Comma-separated. \`defaults\` = rw,suid,dev,exec,auto,nouser,async.\n5. **dump**: Almost always \`0\`. Legacy flag for the \`dump\` backup utility.\n6. **pass**: \`0\` = skip fsck, \`1\` = root filesystem only, \`2\` = check after root.\n\n## Safe Procedure for Adding an Entry\n\n\`\`\`bash\n# 1. Get UUID\nblkid /dev/sdb1\n\n# 2. Create mountpoint\nmkdir -p /data\n\n# 3. Add line to /etc/fstab (edit with your preferred editor)\n# UUID=<uuid>  /data  xfs  defaults,noatime  0  2\n\n# 4. Test immediately — reveals errors before next reboot\nmount -a\n\n# 5. Verify\ndf -h /data\nfindmnt /data\n\`\`\``,
+        answer: `## fstab Field Reference\n\n\`\`\`\n# <device>         <mountpoint>  <type>  <options>           <dump> <pass>\nUUID=abc-123       /data         xfs     defaults,noatime    0      2\nUUID=def-456       /boot         ext4    defaults            0      2\ntmpfs              /tmp          tmpfs   size=1g,mode=1777   0      0\n10.0.0.5:/exports  /mnt/nfs      nfs     defaults,nofail,_netdev  0  0\n\`\`\`\n\n## Field Meanings\n\n1. Device: \`UUID=\` preferred — stable across reboots. Get with \`blkid\`.\n2. Mount point: Must exist before mounting (\`mkdir -p /data\`).\n3. fstype: \`ext4\`, \`xfs\`, \`nfs\`, \`tmpfs\`, \`auto\`.\n4. Options: Comma-separated. \`defaults\` = rw,suid,dev,exec,auto,nouser,async.\n5. dump: Almost always \`0\`. Legacy flag for the \`dump\` backup utility.\n6. pass: \`0\` = skip fsck, \`1\` = root filesystem only, \`2\` = check after root.\n\n## Safe Procedure for Adding an Entry\n\n\`\`\`bash\n# 1. Get UUID\nblkid /dev/sdb1\n\n# 2. Create mountpoint\nmkdir -p /data\n\n# 3. Add line to /etc/fstab (edit with your preferred editor)\n# UUID=<uuid>  /data  xfs  defaults,noatime  0  2\n\n# 4. Test immediately — reveals errors before next reboot\nmount -a\n\n# 5. Verify\ndf -h /data\nfindmnt /data\n\`\`\``,
       },
       {
         question: 'What is a bind mount and what are common production use cases?',
-        answer: `## What is a Bind Mount\n\nA **bind mount** makes an existing directory visible at a second path in the filesystem tree. The source and destination share the same underlying inode — they are not copies.\n\n\`\`\`bash\nmount --bind /data/appdata /var/lib/app\n# Now /data/appdata and /var/lib/app show the same contents\n\`\`\`\n\nIn fstab:\n\`\`\`\n/data/appdata  /var/lib/app  none  bind  0  0\n\`\`\`\n\n## Production Use Cases\n\n**1. Container bind mounts** — Docker and Kubernetes mount host directories into containers using bind mounts:\n\`\`\`bash\ndocker run -v /host/data:/container/data myimage\n\`\`\`\n\n**2. Chroot isolation** — bind-mount /proc, /sys, /dev into a chroot before chrooting in:\n\`\`\`bash\nmount --bind /proc /mnt/chroot/proc\n\`\`\`\n\n**3. Read-only exposure** — bind-mount a directory read-only to give a process access without write permission:\n\`\`\`bash\nmount --bind /data/configs /app/configs\nmount -o remount,ro,bind /app/configs\n\`\`\`\n\n**4. Redirecting application paths** — if an app hardcodes /var/log but you want logs on a separate volume:\n\`\`\`bash\nmount --bind /mnt/logvol /var/log\n\`\`\``,
+        answer: `## What is a Bind Mount\n\nA bind mount makes an existing directory visible at a second path in the filesystem tree. The source and destination share the same underlying inode — they are not copies.\n\n\`\`\`bash\nmount --bind /data/appdata /var/lib/app\n# Now /data/appdata and /var/lib/app show the same contents\n\`\`\`\n\nIn fstab:\n\`\`\`\n/data/appdata  /var/lib/app  none  bind  0  0\n\`\`\`\n\n## Production Use Cases\n\n1. Container bind mounts — Docker and Kubernetes mount host directories into containers using bind mounts:\n\`\`\`bash\ndocker run -v /host/data:/container/data myimage\n\`\`\`\n\n2. Chroot isolation — bind-mount /proc, /sys, /dev into a chroot before chrooting in:\n\`\`\`bash\nmount --bind /proc /mnt/chroot/proc\n\`\`\`\n\n3. Read-only exposure — bind-mount a directory read-only to give a process access without write permission:\n\`\`\`bash\nmount --bind /data/configs /app/configs\nmount -o remount,ro,bind /app/configs\n\`\`\`\n\n4. Redirecting application paths — if an app hardcodes /var/log but you want logs on a separate volume:\n\`\`\`bash\nmount --bind /mnt/logvol /var/log\n\`\`\``,
       },
     ],
     quickFire: [
@@ -947,7 +947,7 @@ export const linuxTopics = [
       { title: 'Inode Structure', description: 'Inode metadata and direct/indirect block pointer layout', image: '/diagrams/linux/linux-inodes-structure.png' },
       { title: 'Hard vs Symbolic Links', description: 'How hard links share inodes vs symlinks store path strings', image: '/diagrams/linux/linux-inodes-links.png' },
     ],
-    introduction: `Every file and directory in a Linux filesystem is represented by an **inode** — a data structure stored in the filesystem's inode table. Understanding inodes is critical for diagnosing a range of subtle production issues, from "disk full" errors when the disk has free space, to files that persist on disk after deletion.\n\n## What an Inode Contains\n\nAn inode stores all file metadata **except the filename**:\n\n- **File type** — regular file, directory, symlink, device, socket, FIFO\n- **Permissions** — owner, group, and other read/write/execute bits\n- **Owner UID and GID**\n- **File size** in bytes\n- **Three timestamps**: \`atime\` (last access), \`mtime\` (last data modification), \`ctime\` (last inode/metadata change)\n- **Link count** — number of directory entries pointing to this inode\n- **Block pointers** — direct, indirect, double-indirect pointers to data blocks\n\n## Filenames Live in Directories\n\nThe filename itself is stored in the **directory entry**, which maps a name string to an inode number. This design enables **hard links** — multiple filenames pointing to the same inode.\n\n## Hard Links vs Symbolic Links\n\n**Hard link** (\`ln source hardlink\`): creates a new directory entry pointing to the **same inode**. The inode's link count increments. The file data is only freed when link count reaches zero **and** no process holds the file open. Hard links cannot cross filesystem boundaries and cannot link to directories.\n\n**Symbolic link** (\`ln -s target symlink\`): a special file whose **data is the target path string**. The symlink has its own inode. Can cross filesystem boundaries, can point to directories. Breaks if the target is moved or deleted (dangling symlink).\n\n## Inode Exhaustion\n\nFilesystems have a **fixed number of inodes** allocated at creation time (ext4) or dynamic allocation (XFS). When inodes are exhausted, new files cannot be created even if gigabytes of block space remain. The symptom is \`No space left on device\` from \`df -h\` showing free space — check \`df -i\` instead.`,
+    introduction: `Every file and directory in a Linux filesystem is represented by an inode — a data structure stored in the filesystem's inode table. Understanding inodes is critical for diagnosing a range of subtle production issues, from "disk full" errors when the disk has free space, to files that persist on disk after deletion.\n\n## What an Inode Contains\n\nAn inode stores all file metadata except the filename:\n\n- File type — regular file, directory, symlink, device, socket, FIFO\n- Permissions — owner, group, and other read/write/execute bits\n- Owner UID and GID\n- File size in bytes\n- Three timestamps: \`atime\` (last access), \`mtime\` (last data modification), \`ctime\` (last inode/metadata change)\n- Link count — number of directory entries pointing to this inode\n- Block pointers — direct, indirect, double-indirect pointers to data blocks\n\n## Filenames Live in Directories\n\nThe filename itself is stored in the directory entry, which maps a name string to an inode number. This design enables hard links — multiple filenames pointing to the same inode.\n\n## Hard Links vs Symbolic Links\n\nHard link (\`ln source hardlink\`): creates a new directory entry pointing to the same inode. The inode's link count increments. The file data is only freed when link count reaches zero and no process holds the file open. Hard links cannot cross filesystem boundaries and cannot link to directories.\n\nSymbolic link (\`ln -s target symlink\`): a special file whose data is the target path string. The symlink has its own inode. Can cross filesystem boundaries, can point to directories. Breaks if the target is moved or deleted (dangling symlink).\n\n## Inode Exhaustion\n\nFilesystems have a fixed number of inodes allocated at creation time (ext4) or dynamic allocation (XFS). When inodes are exhausted, new files cannot be created even if gigabytes of block space remain. The symptom is \`No space left on device\` from \`df -h\` showing free space — check \`df -i\` instead.`,
     whenToUse: [
       '"No space left on device" but df -h shows free space — immediately check df -i for inode exhaustion',
       'Debugging why deleting files does not free disk space — process holds open file descriptor',
@@ -956,12 +956,12 @@ export const linuxTopics = [
       'Understanding how log rotation works — hard link counts ensure the old log stays accessible while the new one is created',
     ],
     keyConcepts: [
-      { term: 'Inode', definition: `Metadata structure for every file: type, permissions, owner, size, timestamps, block pointers. Does **not** contain the filename. View with \`stat filename\` or \`ls -i\` for inode number.` },
-      { term: 'Hard link', definition: `Additional directory entry pointing to the **same inode**. Link count in inode increments. Data freed only when count reaches 0 and no open fds. Cannot cross filesystem boundaries.` },
-      { term: 'Symbolic link', definition: `A file whose **content is the target path**. Has its own inode. Can cross filesystems and point to directories. Becomes a **dangling symlink** if target is moved or deleted.` },
+      { term: 'Inode', definition: `Metadata structure for every file: type, permissions, owner, size, timestamps, block pointers. Does not contain the filename. View with \`stat filename\` or \`ls -i\` for inode number.` },
+      { term: 'Hard link', definition: `Additional directory entry pointing to the same inode. Link count in inode increments. Data freed only when count reaches 0 and no open fds. Cannot cross filesystem boundaries.` },
+      { term: 'Symbolic link', definition: `A file whose content is the target path. Has its own inode. Can cross filesystems and point to directories. Becomes a dangling symlink if target is moved or deleted.` },
       { term: 'Inode exhaustion', definition: `When all inodes are allocated, new files cannot be created even with free blocks. Check with \`df -i\`. Common cause: millions of tiny files in mail queues, session stores, or small log files.` },
       { term: 'Link count', definition: `Field in the inode tracking how many directory entries point to it. A new directory has link count 2 (the entry in parent + the \`.\` entry inside itself). Each subdirectory adds 1 via its \`..\` entry.` },
-      { term: 'ctime vs mtime', definition: `**mtime** — last data modification. **ctime** — last inode change (permissions, ownership, link count). \`ctime\` cannot be set manually — it updates whenever the inode changes.` },
+      { term: 'ctime vs mtime', definition: `mtime — last data modification. ctime — last inode change (permissions, ownership, link count). \`ctime\` cannot be set manually — it updates whenever the inode changes.` },
     ],
     pitfalls: [
       'Checking only df -h when getting "No space left on device" — always also check df -i. Inode exhaustion produces the same error with free block space.',
@@ -972,11 +972,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'Your server reports "No space left on device" but df -h shows 40% free. What do you do?',
-        answer: `## Diagnosis\n\nThe error comes from **inode exhaustion** — all inodes allocated, no space to create new directory entries.\n\n\`\`\`bash\n# Check inode usage — look for Use% at or near 100%\ndf -i\n\n# Filesystem   Inodes   IUsed   IFree IUse% Mounted on\n# /dev/sda1   1048576  1048576      0  100% /\n\`\`\`\n\n## Find the Offender\n\n\`\`\`bash\n# Count files per directory — find directories with huge counts\nfind / -xdev -printf '%h\\n' | sort | uniq -c | sort -rn | head -20\n\n# Or count files per top-level directory\nfor d in /*; do echo -n "$d: "; find "$d" -xdev | wc -l; done 2>/dev/null\n\`\`\`\n\n## Common Causes\n\n- **Mail queue** (\`/var/spool/\`) — thousands of queued messages\n- **PHP session files** (\`/var/lib/php/sessions/\`) — never purged\n- **Small log files** — per-request log files from misconfigured apps\n- **Temp file leaks** in \`/tmp\`\n\n## Fix\n\n\`\`\`bash\n# Delete excess files (after identifying the directory)\nfind /var/spool/mqueue -type f -delete\n\n# Prevent recurrence: clean session files\nfind /var/lib/php/sessions -type f -mtime +1 -delete\n\`\`\`\n\n## Long-term Prevention\n\nSwitch to **XFS** for workloads with millions of small files — XFS uses dynamic inode allocation and does not have a fixed inode count.`,
+        answer: `## Diagnosis\n\nThe error comes from inode exhaustion — all inodes allocated, no space to create new directory entries.\n\n\`\`\`bash\n# Check inode usage — look for Use% at or near 100%\ndf -i\n\n# Filesystem   Inodes   IUsed   IFree IUse% Mounted on\n# /dev/sda1   1048576  1048576      0  100% /\n\`\`\`\n\n## Find the Offender\n\n\`\`\`bash\n# Count files per directory — find directories with huge counts\nfind / -xdev -printf '%h\\n' | sort | uniq -c | sort -rn | head -20\n\n# Or count files per top-level directory\nfor d in /*; do echo -n "$d: "; find "$d" -xdev | wc -l; done 2>/dev/null\n\`\`\`\n\n## Common Causes\n\n- Mail queue (\`/var/spool/\`) — thousands of queued messages\n- PHP session files (\`/var/lib/php/sessions/\`) — never purged\n- Small log files — per-request log files from misconfigured apps\n- Temp file leaks in \`/tmp\`\n\n## Fix\n\n\`\`\`bash\n# Delete excess files (after identifying the directory)\nfind /var/spool/mqueue -type f -delete\n\n# Prevent recurrence: clean session files\nfind /var/lib/php/sessions -type f -mtime +1 -delete\n\`\`\`\n\n## Long-term Prevention\n\nSwitch to XFS for workloads with millions of small files — XFS uses dynamic inode allocation and does not have a fixed inode count.`,
       },
       {
         question: 'What is the difference between a hard link and a symbolic link? Give practical examples.',
-        answer: `## Hard Link\n\n\`\`\`bash\nln /data/file.txt /data/file-hardlink.txt\nls -li /data/file*\n# Both show the same inode number\n# 1234567 -rw-r--r-- 2 user group 1024 /data/file.txt\n# 1234567 -rw-r--r-- 2 user group 1024 /data/file-hardlink.txt\n\`\`\`\n\n**Key hard link properties:**\n- Same inode number — same file, two names\n- Deleting one name does not remove the data\n- Works **only within the same filesystem**\n- Cannot link to directories (prevents cycles in the tree)\n\n## Symbolic Link\n\n\`\`\`bash\nln -s /data/file.txt /data/file-symlink.txt\nls -li /data/file*\n# Symlink has a DIFFERENT inode number\n# 9999999 lrwxrwxrwx 1 user group 14 /data/file-symlink.txt -> /data/file.txt\n\`\`\`\n\n**Key symlink properties:**\n- Own inode containing the target path as data\n- Can cross filesystem boundaries\n- Can point to directories\n- Breaks if target is moved or deleted (dangling)\n\n## stat to Inspect\n\n\`\`\`bash\nstat /data/file.txt\n# Shows: Inode: 1234567  Links: 2  (because of hard link)\n\nstat /data/file-symlink.txt\n# Shows: File: /data/file-symlink.txt -> /data/file.txt\n# Different inode from the target\n\`\`\`\n\n## Practical Uses\n\n- **Hard links**: \`logrotate\` uses hard links to atomically rename the old log without breaking open file descriptors\n- **Symlinks**: \`/etc/alternatives\`, Python virtual environments, \`/usr/local/bin/python -> python3.11\``,
+        answer: `## Hard Link\n\n\`\`\`bash\nln /data/file.txt /data/file-hardlink.txt\nls -li /data/file*\n# Both show the same inode number\n# 1234567 -rw-r--r-- 2 user group 1024 /data/file.txt\n# 1234567 -rw-r--r-- 2 user group 1024 /data/file-hardlink.txt\n\`\`\`\n\nKey hard link properties:\n- Same inode number — same file, two names\n- Deleting one name does not remove the data\n- Works only within the same filesystem\n- Cannot link to directories (prevents cycles in the tree)\n\n## Symbolic Link\n\n\`\`\`bash\nln -s /data/file.txt /data/file-symlink.txt\nls -li /data/file*\n# Symlink has a DIFFERENT inode number\n# 9999999 lrwxrwxrwx 1 user group 14 /data/file-symlink.txt -> /data/file.txt\n\`\`\`\n\nKey symlink properties:\n- Own inode containing the target path as data\n- Can cross filesystem boundaries\n- Can point to directories\n- Breaks if target is moved or deleted (dangling)\n\n## stat to Inspect\n\n\`\`\`bash\nstat /data/file.txt\n# Shows: Inode: 1234567  Links: 2  (because of hard link)\n\nstat /data/file-symlink.txt\n# Shows: File: /data/file-symlink.txt -> /data/file.txt\n# Different inode from the target\n\`\`\`\n\n## Practical Uses\n\n- Hard links: \`logrotate\` uses hard links to atomically rename the old log without breaking open file descriptors\n- Symlinks: \`/etc/alternatives\`, Python virtual environments, \`/usr/local/bin/python -> python3.11\``,
       },
     ],
     quickFire: [
@@ -1006,7 +1006,7 @@ export const linuxTopics = [
       { title: 'ext4 Journal Write Flow', description: 'JBD2 transaction lifecycle from write() to checkpoint', image: '/diagrams/linux/linux-ext4-journal-flow.png' },
       { title: 'XFS Allocation Groups', description: 'Per-AG B-trees enabling parallel concurrent writes', image: '/diagrams/linux/linux-xfs-allocation-groups.png' },
     ],
-    introduction: `Choosing the right filesystem has significant implications for performance, data integrity, and operational complexity. Linux ships three mature general-purpose filesystems — **ext4**, **XFS**, and **btrfs** — each with distinct trade-offs.\n\n## ext4\n\n**ext4** is the evolution of ext2/ext3 and the default on most Debian/Ubuntu/RHEL systems. Key features: **extents** (contiguous block ranges replacing block maps), **dir_index** (htree-indexed directories for large dirs), **journal** for crash consistency, delayed allocation, and online defragmentation.\n\n**Journal modes** control what the journal protects:\n- **\`writeback\`** — only metadata is journaled, data may be written before or after metadata. Fastest, least safe — can expose stale data in files after a crash.\n- **\`ordered\`** (default) — data written to disk before metadata journaled. Prevents stale data exposure. Good balance of safety and performance.\n- **\`journal\`** — both data and metadata are journaled. Safest, but doubles write I/O. Only useful for high-integrity requirements.\n\n## XFS\n\n**XFS** is a high-performance 64-bit journaling filesystem originally from SGI. It excels at **parallel I/O** (multiple allocation groups enable concurrent writes), **large files**, and workloads with millions of files. It uses **dynamic inode allocation** — no fixed inode limit. \`xfs_repair\` replaces fsck; online defrag with \`xfs_fsr\`.\n\n## btrfs\n\n**btrfs** is a **copy-on-write (COW)** filesystem with built-in RAID, snapshots, deduplication, and checksums. COW means writes never overwrite existing blocks — new data is written to free blocks, then the metadata updated atomically. This enables instant snapshots at zero cost.`,
+    introduction: `Choosing the right filesystem has significant implications for performance, data integrity, and operational complexity. Linux ships three mature general-purpose filesystems — ext4, XFS, and btrfs — each with distinct trade-offs.\n\n## ext4\n\next4 is the evolution of ext2/ext3 and the default on most Debian/Ubuntu/RHEL systems. Key features: extents (contiguous block ranges replacing block maps), dir_index (htree-indexed directories for large dirs), journal for crash consistency, delayed allocation, and online defragmentation.\n\nJournal modes control what the journal protects:\n- \`writeback\` — only metadata is journaled, data may be written before or after metadata. Fastest, least safe — can expose stale data in files after a crash.\n- \`ordered\` (default) — data written to disk before metadata journaled. Prevents stale data exposure. Good balance of safety and performance.\n- \`journal\` — both data and metadata are journaled. Safest, but doubles write I/O. Only useful for high-integrity requirements.\n\n## XFS\n\nXFS is a high-performance 64-bit journaling filesystem originally from SGI. It excels at parallel I/O (multiple allocation groups enable concurrent writes), large files, and workloads with millions of files. It uses dynamic inode allocation — no fixed inode limit. \`xfs_repair\` replaces fsck; online defrag with \`xfs_fsr\`.\n\n## btrfs\n\nbtrfs is a copy-on-write (COW) filesystem with built-in RAID, snapshots, deduplication, and checksums. COW means writes never overwrite existing blocks — new data is written to free blocks, then the metadata updated atomically. This enables instant snapshots at zero cost.`,
     whenToUse: [
       'New database server — XFS for parallel I/O, no fixed inode limit, and excellent large-file performance',
       'Default /boot and system partitions on RHEL/Debian — ext4 is well-understood and universally supported',
@@ -1015,12 +1015,12 @@ export const linuxTopics = [
       'Recovery from XFS corruption — xfs_repair (requires unmounted filesystem)',
     ],
     keyConcepts: [
-      { term: 'ext4 journal modes', definition: `**writeback** = metadata only, fastest; **ordered** = data before metadata (default, safe); **journal** = data+metadata both journaled, safest but 2x write I/O.` },
+      { term: 'ext4 journal modes', definition: `writeback = metadata only, fastest; ordered = data before metadata (default, safe); journal = data+metadata both journaled, safest but 2x write I/O.` },
       { term: 'tune2fs', definition: `Reads and modifies ext4 filesystem parameters. \`tune2fs -l /dev/sda1\` prints all metadata. \`tune2fs -e remount-ro /dev/sda1\` sets error behavior to remount read-only on detected errors.` },
-      { term: 'XFS allocation groups', definition: `XFS divides the filesystem into **allocation groups** (typically 8). Each has its own free space B-tree and inode B-tree, enabling **parallel allocation** from multiple threads without lock contention.` },
-      { term: 'xfs_repair', definition: `XFS consistency checker and repair tool. Unlike \`fsck.ext4\`, it does **not** need to be run routinely — XFS journal replays automatically. Run only after forced unmount or detected corruption. Requires **unmounted** filesystem.` },
-      { term: 'btrfs COW', definition: `**Copy-on-write**: writes always go to new blocks. Old blocks remain until all references are released. Enables **instant snapshots** (just copy the root inode reference) and **checksums** (detected silently correctable errors).` },
-      { term: 'xfs_freeze', definition: `\`xfs_freeze -f /mountpoint\` flushes all in-flight I/O and suspends writes. Used to create a **crash-consistent snapshot** of the underlying block device (LVM snapshot, EBS snapshot). Resume with \`xfs_freeze -u\`.` },
+      { term: 'XFS allocation groups', definition: `XFS divides the filesystem into allocation groups (typically 8). Each has its own free space B-tree and inode B-tree, enabling parallel allocation from multiple threads without lock contention.` },
+      { term: 'xfs_repair', definition: `XFS consistency checker and repair tool. Unlike \`fsck.ext4\`, it does not need to be run routinely — XFS journal replays automatically. Run only after forced unmount or detected corruption. Requires unmounted filesystem.` },
+      { term: 'btrfs COW', definition: `Copy-on-write: writes always go to new blocks. Old blocks remain until all references are released. Enables instant snapshots (just copy the root inode reference) and checksums (detected silently correctable errors).` },
+      { term: 'xfs_freeze', definition: `\`xfs_freeze -f /mountpoint\` flushes all in-flight I/O and suspends writes. Used to create a crash-consistent snapshot of the underlying block device (LVM snapshot, EBS snapshot). Resume with \`xfs_freeze -u\`.` },
     ],
     pitfalls: [
       'Running fsck.ext4 on a mounted filesystem — causes severe corruption. Always unmount first or pass -n for a read-only check.',
@@ -1031,11 +1031,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do you inspect and tune an ext4 filesystem? What does tune2fs show you?',
-        answer: `## Read Filesystem Metadata\n\n\`\`\`bash\ntune2fs -l /dev/sda1\n\`\`\`\n\nKey fields in the output:\n\n| Field | Meaning |\n|---|---|\n| **Filesystem state** | clean / with errors — "with errors" means fsck needed |\n| **Errors behavior** | continue / remount-ro / panic |\n| **Mount count** / **Maximum mount count** | Legacy fsck trigger (usually disabled now) |\n| **Filesystem features** | extents, dir_index, has_journal, metadata_csum |\n| **Journal size** | Larger journal = faster recovery but more RAM |\n| **Last checked** | When fsck last ran |\n\n## Tune Error Behavior\n\n\`\`\`bash\n# Remount read-only on detected errors (safer than panic for servers)\ntune2fs -e remount-ro /dev/sda1\n\n# Change journal mode to writeback (faster, use only for non-critical data)\ntune2fs -o journal_data_writeback /dev/sda1\n\n# Disable legacy periodic fsck (modern systems use journal instead)\ntune2fs -c 0 -i 0 /dev/sda1\n\`\`\`\n\n## Check Features\n\n\`\`\`bash\ntune2fs -l /dev/sda1 | grep features\n# Filesystem features: has_journal ext_attr resize_inode dir_index filetype\n#   extent 64bit flex_bg sparse_super large_file huge_file uninit_bg\n#   dir_nlink extra_isize metadata_csum\n\`\`\`\n\n\`metadata_csum\` = ext4 metadata checksums (enabled by default on modern mkfs.ext4).`,
+        answer: `## Read Filesystem Metadata\n\n\`\`\`bash\ntune2fs -l /dev/sda1\n\`\`\`\n\nKey fields in the output:\n\n| Field | Meaning |\n|---|---|\n| Filesystem state | clean / with errors — "with errors" means fsck needed |\n| Errors behavior | continue / remount-ro / panic |\n| Mount count / Maximum mount count | Legacy fsck trigger (usually disabled now) |\n| Filesystem features | extents, dir_index, has_journal, metadata_csum |\n| Journal size | Larger journal = faster recovery but more RAM |\n| Last checked | When fsck last ran |\n\n## Tune Error Behavior\n\n\`\`\`bash\n# Remount read-only on detected errors (safer than panic for servers)\ntune2fs -e remount-ro /dev/sda1\n\n# Change journal mode to writeback (faster, use only for non-critical data)\ntune2fs -o journal_data_writeback /dev/sda1\n\n# Disable legacy periodic fsck (modern systems use journal instead)\ntune2fs -c 0 -i 0 /dev/sda1\n\`\`\`\n\n## Check Features\n\n\`\`\`bash\ntune2fs -l /dev/sda1 | grep features\n# Filesystem features: has_journal ext_attr resize_inode dir_index filetype\n#   extent 64bit flex_bg sparse_super large_file huge_file uninit_bg\n#   dir_nlink extra_isize metadata_csum\n\`\`\`\n\n\`metadata_csum\` = ext4 metadata checksums (enabled by default on modern mkfs.ext4).`,
       },
       {
         question: 'When would you choose XFS over ext4 for a production server?',
-        answer: `## Choose XFS When\n\n**1. Large files** — XFS uses extents natively and has no practical file size limit. Better performance for files > 1 GB than ext4 without tune.\n\n**2. High-parallelism workloads** — XFS allocation groups enable multiple threads to write simultaneously without lock contention. ext4 has a single journal lock. For databases with many concurrent writers, XFS throughput is higher.\n\n**3. Millions of files** — XFS dynamic inode allocation never exhausts inodes. ext4 fixes inode count at mkfs time.\n\n**4. Large filesystems** — XFS scales to 500 TiB; ext4 to 1 EiB on paper but practically much smaller. XFS performance is more consistent at scale.\n\n**5. Online grow** — \`xfs_growfs /mountpoint\` grows the filesystem while mounted. ext4 also supports online grow (\`resize2fs\`) but not online shrink (neither does XFS).\n\n## Choose ext4 When\n\n- You need **online filesystem shrink** — only ext4 supports it (offline)\n- Compatibility with very old kernels or bootloaders is required\n- Small filesystems where ext4 tooling familiarity matters\n- The workload is many small files with random writes (ext4 and XFS perform similarly here)\n\n## Real-World Rule\n\nRHEL/CentOS 7+ default to **XFS** for all partitions except \`/boot\`. This is the right call for most server workloads.`,
+        answer: `## Choose XFS When\n\n1. Large files — XFS uses extents natively and has no practical file size limit. Better performance for files > 1 GB than ext4 without tune.\n\n2. High-parallelism workloads — XFS allocation groups enable multiple threads to write simultaneously without lock contention. ext4 has a single journal lock. For databases with many concurrent writers, XFS throughput is higher.\n\n3. Millions of files — XFS dynamic inode allocation never exhausts inodes. ext4 fixes inode count at mkfs time.\n\n4. Large filesystems — XFS scales to 500 TiB; ext4 to 1 EiB on paper but practically much smaller. XFS performance is more consistent at scale.\n\n5. Online grow — \`xfs_growfs /mountpoint\` grows the filesystem while mounted. ext4 also supports online grow (\`resize2fs\`) but not online shrink (neither does XFS).\n\n## Choose ext4 When\n\n- You need online filesystem shrink — only ext4 supports it (offline)\n- Compatibility with very old kernels or bootloaders is required\n- Small filesystems where ext4 tooling familiarity matters\n- The workload is many small files with random writes (ext4 and XFS perform similarly here)\n\n## Real-World Rule\n\nRHEL/CentOS 7+ default to XFS for all partitions except \`/boot\`. This is the right call for most server workloads.`,
       },
     ],
     quickFire: [
@@ -1067,7 +1067,7 @@ export const linuxTopics = [
     visualizations: [
       { title: 'Security Hardening Layers', description: 'Defense in depth: firewall → SSH → patching → least-privilege → audit → SELinux/AppArmor', image: '/diagrams/linux/linux-security-hardening-layers.png' },
     ],
-    introduction: `**SELinux (Security-Enhanced Linux)** is a Mandatory Access Control (MAC) system built into the Linux kernel. Unlike Discretionary Access Control (DAC — the traditional Unix permission model), SELinux enforces policy rules that even the root user cannot override. Every process and file is labeled with a **security context**, and the policy defines which process labels may access which file labels.\n\n## MAC vs DAC\n\n**DAC** (traditional Unix permissions): the file owner decides who can access the file. Root can bypass all DAC restrictions. If a process is compromised, it inherits all the permissions of the user running it.\n\n**MAC** (SELinux): the security policy — written by administrators and defined by the OS vendor — controls access. Even root cannot access a resource if the SELinux policy denies it. A compromised web server running as root cannot read \`/etc/shadow\` if the policy prohibits \`httpd_t\` from accessing \`shadow_t\` files.\n\n## Three Modes\n\n- **Enforcing** — policy is enforced. Denials block the operation and are logged to \`/var/log/audit/audit.log\`.\n- **Permissive** — policy is not enforced but denials are logged. Use for debugging.\n- **Disabled** — SELinux is off. Requires a reboot to re-enable (inode relabeling required).\n\n## Context Format\n\nEvery file and process has a label in the format: \`user:role:type:level\`\n\n- \`user\` — SELinux user identity (e.g., \`system_u\`, \`unconfined_u\`)\n- \`role\` — SELinux role (e.g., \`object_r\` for files, \`system_r\` for daemons)\n- \`type\` — the primary enforcement dimension (e.g., \`httpd_sys_content_t\`)\n- \`level\` — MLS/MCS sensitivity level (e.g., \`s0\`)\n\nThe **type** field is what policy rules typically reference.`,
+    introduction: `SELinux (Security-Enhanced Linux) is a Mandatory Access Control (MAC) system built into the Linux kernel. Unlike Discretionary Access Control (DAC — the traditional Unix permission model), SELinux enforces policy rules that even the root user cannot override. Every process and file is labeled with a security context, and the policy defines which process labels may access which file labels.\n\n## MAC vs DAC\n\nDAC (traditional Unix permissions): the file owner decides who can access the file. Root can bypass all DAC restrictions. If a process is compromised, it inherits all the permissions of the user running it.\n\nMAC (SELinux): the security policy — written by administrators and defined by the OS vendor — controls access. Even root cannot access a resource if the SELinux policy denies it. A compromised web server running as root cannot read \`/etc/shadow\` if the policy prohibits \`httpd_t\` from accessing \`shadow_t\` files.\n\n## Three Modes\n\n- Enforcing — policy is enforced. Denials block the operation and are logged to \`/var/log/audit/audit.log\`.\n- Permissive — policy is not enforced but denials are logged. Use for debugging.\n- Disabled — SELinux is off. Requires a reboot to re-enable (inode relabeling required).\n\n## Context Format\n\nEvery file and process has a label in the format: \`user:role:type:level\`\n\n- \`user\` — SELinux user identity (e.g., \`system_u\`, \`unconfined_u\`)\n- \`role\` — SELinux role (e.g., \`object_r\` for files, \`system_r\` for daemons)\n- \`type\` — the primary enforcement dimension (e.g., \`httpd_sys_content_t\`)\n- \`level\` — MLS/MCS sensitivity level (e.g., \`s0\`)\n\nThe type field is what policy rules typically reference.`,
     whenToUse: [
       'A service fails to start and logs show "Permission denied" — check audit.log for AVC denials before disabling SELinux',
       'A web server cannot read its docroot after moving files — restorecon -Rv /var/www/html to restore contexts',
@@ -1076,13 +1076,13 @@ export const linuxTopics = [
       'Checking if SELinux is the cause of a problem — set to permissive temporarily, reproduce the issue, then read denials',
     ],
     keyConcepts: [
-      { term: 'Security context', definition: `Four-part label \`user:role:type:level\` on every file and process. The **type** field drives most policy rules. View with \`ls -Z\` (files) or \`ps -Z\` (processes).` },
-      { term: 'AVC denial', definition: `**Access Vector Cache denial** — the kernel's record that SELinux blocked an operation. Found in \`/var/log/audit/audit.log\` as \`type=AVC\` lines. Contains subject context, object context, and the operation denied.` },
-      { term: 'chcon', definition: `Changes a file's SELinux context **temporarily** (reset by relabeling or restorecon). \`chcon -t httpd_sys_content_t /data/site/\` — use only for testing; use \`semanage fcontext\` for persistent changes.` },
-      { term: 'semanage fcontext', definition: `Records a **persistent** context rule in the policy database. \`semanage fcontext -a -t httpd_sys_content_t '/srv/mysite(/.*)?'\` then \`restorecon -Rv /srv/mysite\` to apply.` },
-      { term: 'restorecon', definition: `Resets file contexts to the **policy default**. \`restorecon -Rv /var/www/html\` — \`-R\` for recursive, \`-v\` for verbose. Always run after semanage fcontext.` },
-      { term: 'audit2allow', definition: `Reads AVC denials from audit.log and generates a **policy module** allowing those operations. \`audit2allow -M mypolicy < /var/log/audit/audit.log\` then \`semodule -i mypolicy.pp\`.` },
-      { term: 'setsebool', definition: `Sets named **SELinux booleans** that toggle policy behaviors. \`setsebool -P httpd_can_network_connect on\` allows Apache to make outbound network connections. \`-P\` makes it persistent across reboots.` },
+      { term: 'Security context', definition: `Four-part label \`user:role:type:level\` on every file and process. The type field drives most policy rules. View with \`ls -Z\` (files) or \`ps -Z\` (processes).` },
+      { term: 'AVC denial', definition: `Access Vector Cache denial — the kernel's record that SELinux blocked an operation. Found in \`/var/log/audit/audit.log\` as \`type=AVC\` lines. Contains subject context, object context, and the operation denied.` },
+      { term: 'chcon', definition: `Changes a file's SELinux context temporarily (reset by relabeling or restorecon). \`chcon -t httpd_sys_content_t /data/site/\` — use only for testing; use \`semanage fcontext\` for persistent changes.` },
+      { term: 'semanage fcontext', definition: `Records a persistent context rule in the policy database. \`semanage fcontext -a -t httpd_sys_content_t '/srv/mysite(/.*)?'\` then \`restorecon -Rv /srv/mysite\` to apply.` },
+      { term: 'restorecon', definition: `Resets file contexts to the policy default. \`restorecon -Rv /var/www/html\` — \`-R\` for recursive, \`-v\` for verbose. Always run after semanage fcontext.` },
+      { term: 'audit2allow', definition: `Reads AVC denials from audit.log and generates a policy module allowing those operations. \`audit2allow -M mypolicy < /var/log/audit/audit.log\` then \`semodule -i mypolicy.pp\`.` },
+      { term: 'setsebool', definition: `Sets named SELinux booleans that toggle policy behaviors. \`setsebool -P httpd_can_network_connect on\` allows Apache to make outbound network connections. \`-P\` makes it persistent across reboots.` },
     ],
     pitfalls: [
       'Disabling SELinux (setenforce 0 or disabled in config) to fix a permission error — this removes a critical security layer. Instead, read the AVC denial and write the correct policy.',
@@ -1097,7 +1097,7 @@ export const linuxTopics = [
       },
       {
         question: 'What is audit2allow and when should you use it vs writing a proper policy?',
-        answer: `## What audit2allow Does\n\n\`audit2allow\` reads **AVC denials** from the audit log and generates SELinux policy allow rules that would permit those operations.\n\n\`\`\`bash\n# Generate a policy module from recent denials\naudit2allow -M mypolicy < /var/log/audit/audit.log\n\n# Review the generated rules BEFORE applying\ncat mypolicy.te\n\n# Load the module\nsemodule -i mypolicy.pp\n\`\`\`\n\n## When It Is Appropriate\n\n- A **custom application** has unique access patterns not covered by stock policy\n- You have reviewed the generated \`.te\` file and the rules are specific and narrow\n- The application is well-understood and the access is legitimate\n\n## When It Is Dangerous\n\n- **Never run audit2allow on a production system that was potentially compromised** — you would be writing policy to allow the attacker's actions\n- Avoid generating policy from large audit logs without filtering — you capture legitimate denials alongside attacker activity\n\n## Filter to the Specific Application\n\n\`\`\`bash\n# Filter to only nginx denials\ngrep httpd /var/log/audit/audit.log | audit2allow -M nginx-custom\n\n# Or use ausearch to filter by time\nausearch -m avc -ts today | audit2allow -M mypolicy\n\`\`\`\n\n## Proper Fix vs Module Workaround\n\nBefore using audit2allow, always check:\n1. Is there an **SELinux boolean** that handles this? (\`getsebool -a | grep httpd\`)\n2. Is the file in the **wrong location**? (move to a standard path vs custom policy)\n3. Is there a **semanage fcontext** rule that covers this?`,
+        answer: `## What audit2allow Does\n\n\`audit2allow\` reads AVC denials from the audit log and generates SELinux policy allow rules that would permit those operations.\n\n\`\`\`bash\n# Generate a policy module from recent denials\naudit2allow -M mypolicy < /var/log/audit/audit.log\n\n# Review the generated rules BEFORE applying\ncat mypolicy.te\n\n# Load the module\nsemodule -i mypolicy.pp\n\`\`\`\n\n## When It Is Appropriate\n\n- A custom application has unique access patterns not covered by stock policy\n- You have reviewed the generated \`.te\` file and the rules are specific and narrow\n- The application is well-understood and the access is legitimate\n\n## When It Is Dangerous\n\n- Never run audit2allow on a production system that was potentially compromised — you would be writing policy to allow the attacker's actions\n- Avoid generating policy from large audit logs without filtering — you capture legitimate denials alongside attacker activity\n\n## Filter to the Specific Application\n\n\`\`\`bash\n# Filter to only nginx denials\ngrep httpd /var/log/audit/audit.log | audit2allow -M nginx-custom\n\n# Or use ausearch to filter by time\nausearch -m avc -ts today | audit2allow -M mypolicy\n\`\`\`\n\n## Proper Fix vs Module Workaround\n\nBefore using audit2allow, always check:\n1. Is there an SELinux boolean that handles this? (\`getsebool -a | grep httpd\`)\n2. Is the file in the wrong location? (move to a standard path vs custom policy)\n3. Is there a semanage fcontext rule that covers this?`,
       },
     ],
     quickFire: [
@@ -1128,7 +1128,7 @@ export const linuxTopics = [
       { title: 'AppArmor Enforcement Modes', description: 'Unconfined → Complain → Enforce mode transitions', image: '/diagrams/linux/linux-apparmor-modes.png' },
       { title: 'Rule Matching Flow', description: 'How LSM hooks check profile rules on every operation', image: '/diagrams/linux/linux-apparmor-rule-match.png' },
     ],
-    introduction: `**AppArmor** is a Mandatory Access Control (MAC) system for Linux that confines programs to a limited set of resources. Unlike SELinux which labels every file with a security context, AppArmor uses **path-based profiles** — rules that reference filesystem paths directly. This makes AppArmor significantly easier to write and audit than SELinux, at the cost of some flexibility.\n\nAppArmor is the default MAC system on **Ubuntu**, **Debian**, and **SUSE** distributions, while RHEL/Fedora use SELinux.\n\n## Profile Anatomy\n\nA profile lives in \`/etc/apparmor.d/\` and has this general structure:\n\n\`\`\`\n#include <tunables/global>\n\nprofile nginx /usr/sbin/nginx {\n  #include <abstractions/base>\n  #include <abstractions/nameservice>\n\n  capability net_bind_service,\n  capability setgid,\n  capability setuid,\n\n  /var/www/html/** r,\n  /var/log/nginx/** w,\n  /etc/nginx/** r,\n  /run/nginx.pid rw,\n  network tcp,\n}\n\`\`\`\n\n## File Permission Letters\n\n- **\`r\`** — read\n- **\`w\`** — write\n- **\`x\`** — execute\n- **\`k\`** — lock\n- **\`m\`** — mmap\n- **\`l\`** — link\n\n## Two Enforcement Modes\n\n**Enforce** — violations are blocked and logged. The profile is fully active.\n\n**Complain** — violations are logged but **not blocked**. Use for profile development and auditing. Equivalent to SELinux permissive mode for that specific profile.\n\nProfiles can be in different modes simultaneously — you can put a new custom app profile in complain while leaving all system profiles in enforce.`,
+    introduction: `AppArmor is a Mandatory Access Control (MAC) system for Linux that confines programs to a limited set of resources. Unlike SELinux which labels every file with a security context, AppArmor uses path-based profiles — rules that reference filesystem paths directly. This makes AppArmor significantly easier to write and audit than SELinux, at the cost of some flexibility.\n\nAppArmor is the default MAC system on Ubuntu, Debian, and SUSE distributions, while RHEL/Fedora use SELinux.\n\n## Profile Anatomy\n\nA profile lives in \`/etc/apparmor.d/\` and has this general structure:\n\n\`\`\`\n#include <tunables/global>\n\nprofile nginx /usr/sbin/nginx {\n  #include <abstractions/base>\n  #include <abstractions/nameservice>\n\n  capability net_bind_service,\n  capability setgid,\n  capability setuid,\n\n  /var/www/html/ r,\n  /var/log/nginx/ w,\n  /etc/nginx/ r,\n  /run/nginx.pid rw,\n  network tcp,\n}\n\`\`\`\n\n## File Permission Letters\n\n- \`r\` — read\n- \`w\` — write\n- \`x\` — execute\n- \`k\` — lock\n- \`m\` — mmap\n- \`l\` — link\n\n## Two Enforcement Modes\n\nEnforce — violations are blocked and logged. The profile is fully active.\n\nComplain — violations are logged but not blocked. Use for profile development and auditing. Equivalent to SELinux permissive mode for that specific profile.\n\nProfiles can be in different modes simultaneously — you can put a new custom app profile in complain while leaving all system profiles in enforce.`,
     whenToUse: [
       'Confining a third-party application to only the paths it legitimately needs — aa-genprof to build an initial profile',
       'Hardening Docker/container workloads on Ubuntu — Docker ships a default AppArmor profile applied to all containers',
@@ -1137,12 +1137,12 @@ export const linuxTopics = [
       'Auditing which profiles are loaded and their modes — aa-status',
     ],
     keyConcepts: [
-      { term: 'Profile', definition: `A file in \`/etc/apparmor.d/\` defining which files, capabilities, and network resources a binary may access. Keyed by the **absolute path to the binary**.` },
-      { term: 'Enforce mode', definition: `Policy violations are **blocked and logged**. The profile is fully active. Set with \`aa-enforce /etc/apparmor.d/profile\`.` },
-      { term: 'Complain mode', definition: `Policy violations are **logged but allowed**. Used for profile development. Set with \`aa-complain /etc/apparmor.d/profile\`. Equivalent to SELinux permissive for that profile.` },
-      { term: 'aa-genprof', definition: `**Interactive profile generator**. Runs the application, monitors what it accesses, and interactively asks you to allow or deny each access. Produces an initial profile.` },
-      { term: 'aa-logprof', definition: `Reads log events from a profile in **complain mode** and interactively offers to add allow rules to the profile. Use after exercising the application in complain mode.` },
-      { term: 'Abstractions', definition: `**Reusable profile snippets** in \`/etc/apparmor.d/abstractions/\`. \`#include <abstractions/base>\` grants access to common libraries. Reduces boilerplate in profiles.` },
+      { term: 'Profile', definition: `A file in \`/etc/apparmor.d/\` defining which files, capabilities, and network resources a binary may access. Keyed by the absolute path to the binary.` },
+      { term: 'Enforce mode', definition: `Policy violations are blocked and logged. The profile is fully active. Set with \`aa-enforce /etc/apparmor.d/profile\`.` },
+      { term: 'Complain mode', definition: `Policy violations are logged but allowed. Used for profile development. Set with \`aa-complain /etc/apparmor.d/profile\`. Equivalent to SELinux permissive for that profile.` },
+      { term: 'aa-genprof', definition: `Interactive profile generator. Runs the application, monitors what it accesses, and interactively asks you to allow or deny each access. Produces an initial profile.` },
+      { term: 'aa-logprof', definition: `Reads log events from a profile in complain mode and interactively offers to add allow rules to the profile. Use after exercising the application in complain mode.` },
+      { term: 'Abstractions', definition: `Reusable profile snippets in \`/etc/apparmor.d/abstractions/\`. \`#include <abstractions/base>\` grants access to common libraries. Reduces boilerplate in profiles.` },
     ],
     pitfalls: [
       'Disabling AppArmor entirely (apparmor=0 kernel param) when a profile blocks an application — put the profile in complain mode instead and fix the profile.',
@@ -1153,11 +1153,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do you create an AppArmor profile for a new custom application?',
-        answer: `## Method 1 — aa-genprof (Interactive)\n\n\`\`\`bash\n# Install apparmor-utils\napt install apparmor-utils\n\n# Start profile generation (put app in learning mode)\naa-genprof /usr/local/bin/myapp\n\n# In another terminal, run the application through its use cases\n/usr/local/bin/myapp --config /etc/myapp/config.yaml\n\n# Back in aa-genprof: press S to scan logs, answer allow/deny for each access\n# Press F when done — saves profile to /etc/apparmor.d/\n\`\`\`\n\n## Method 2 — Manual + Complain Mode\n\n\`\`\`bash\n# Create a minimal profile\ncat > /etc/apparmor.d/usr.local.bin.myapp << 'EOF'\n#include <tunables/global>\n\nprofile myapp /usr/local/bin/myapp flags=(complain) {\n  #include <abstractions/base>\n  /etc/myapp/** r,\n  /var/log/myapp/ w,\n  /var/log/myapp/*.log w,\n}\nEOF\n\n# Load it\napparmor_parser -r /etc/apparmor.d/usr.local.bin.myapp\n\n# Run app in complain mode, watch logs\njournalctl -f | grep ALLOWED\n\n# After testing, use aa-logprof to update profile\naa-logprof\n\n# Switch to enforce when satisfied\naa-enforce /etc/apparmor.d/usr.local.bin.myapp\n\`\`\``,
+        answer: `## Method 1 — aa-genprof (Interactive)\n\n\`\`\`bash\n# Install apparmor-utils\napt install apparmor-utils\n\n# Start profile generation (put app in learning mode)\naa-genprof /usr/local/bin/myapp\n\n# In another terminal, run the application through its use cases\n/usr/local/bin/myapp --config /etc/myapp/config.yaml\n\n# Back in aa-genprof: press S to scan logs, answer allow/deny for each access\n# Press F when done — saves profile to /etc/apparmor.d/\n\`\`\`\n\n## Method 2 — Manual + Complain Mode\n\n\`\`\`bash\n# Create a minimal profile\ncat > /etc/apparmor.d/usr.local.bin.myapp << 'EOF'\n#include <tunables/global>\n\nprofile myapp /usr/local/bin/myapp flags=(complain) {\n  #include <abstractions/base>\n  /etc/myapp/ r,\n  /var/log/myapp/ w,\n  /var/log/myapp/*.log w,\n}\nEOF\n\n# Load it\napparmor_parser -r /etc/apparmor.d/usr.local.bin.myapp\n\n# Run app in complain mode, watch logs\njournalctl -f | grep ALLOWED\n\n# After testing, use aa-logprof to update profile\naa-logprof\n\n# Switch to enforce when satisfied\naa-enforce /etc/apparmor.d/usr.local.bin.myapp\n\`\`\``,
       },
       {
         question: 'How does AppArmor compare to SELinux? When would you choose one over the other?',
-        answer: `## AppArmor — Path-Based MAC\n\n- Rules reference **filesystem paths** (e.g., \`/var/www/html/** r\`)\n- Much easier to write and understand — a human can read a profile directly\n- Profile keys on the **binary path** — moving the binary to a different path breaks the profile\n- Ships as default on Ubuntu, Debian, SUSE\n- Weaker against **symlink attacks** — path-based rules can be bypassed by symlinks in some configurations\n\n## SELinux — Label-Based MAC\n\n- Every file and process has a **security context label** — rules reference labels, not paths\n- More flexible and harder to bypass — labels follow the inode, not the path\n- Dramatically more complex to write and debug\n- Ships as default on RHEL, Fedora, CentOS\n- Provides **multi-level security (MLS)** for high-security environments\n\n## When to Choose\n\n| Situation | Choose |\n|---|---|\n| Ubuntu/Debian server, ops team unfamiliar with SELinux | AppArmor |\n| RHEL/Fedora environment (SELinux is default) | SELinux |\n| High-security / government / classified workloads | SELinux with MLS |\n| Containerized workloads on Ubuntu | AppArmor (Docker integrates with it) |\n| You need fine-grained control over network sockets and IPC | SELinux |\n\n## Practical Advice\n\nUse whichever is the **default on your distribution**. Never disable either in production — learn to write profiles/policies instead.`,
+        answer: `## AppArmor — Path-Based MAC\n\n- Rules reference filesystem paths (e.g., \`/var/www/html/ r\`)\n- Much easier to write and understand — a human can read a profile directly\n- Profile keys on the binary path — moving the binary to a different path breaks the profile\n- Ships as default on Ubuntu, Debian, SUSE\n- Weaker against symlink attacks — path-based rules can be bypassed by symlinks in some configurations\n\n## SELinux — Label-Based MAC\n\n- Every file and process has a security context label — rules reference labels, not paths\n- More flexible and harder to bypass — labels follow the inode, not the path\n- Dramatically more complex to write and debug\n- Ships as default on RHEL, Fedora, CentOS\n- Provides multi-level security (MLS) for high-security environments\n\n## When to Choose\n\n| Situation | Choose |\n|---|---|\n| Ubuntu/Debian server, ops team unfamiliar with SELinux | AppArmor |\n| RHEL/Fedora environment (SELinux is default) | SELinux |\n| High-security / government / classified workloads | SELinux with MLS |\n| Containerized workloads on Ubuntu | AppArmor (Docker integrates with it) |\n| You need fine-grained control over network sockets and IPC | SELinux |\n\n## Practical Advice\n\nUse whichever is the default on your distribution. Never disable either in production — learn to write profiles/policies instead.`,
       },
     ],
     quickFire: [
@@ -1188,7 +1188,7 @@ export const linuxTopics = [
       { title: 'PAM Authentication Stack', description: 'auth → account → session phases and control flags', image: '/diagrams/linux/linux-sudo-pam-stack.png' },
       { title: 'sudo Privilege Flow', description: 'sudoers parse → PAM auth → exec as target user', image: '/diagrams/linux/linux-sudo-privilege-flow.png' },
     ],
-    introduction: `**sudo** and **PAM** are the two central pillars of privilege management and authentication on Linux systems. \`sudo\` controls **who can run what commands as which user**, while PAM (Pluggable Authentication Modules) controls **how users authenticate**.\n\n## sudo\n\n\`sudo\` allows permitted users to run commands with elevated (or different-user) privileges. The policy is defined in \`/etc/sudoers\` and files in \`/etc/sudoers.d/\`.\n\n**Always edit sudoers with \`visudo\`** — it locks the file, validates syntax before saving, and prevents saving a broken sudoers that would lock you out of sudo entirely.\n\nSudoers rule syntax:\n\n\`\`\`\nUSER HOST=(RUNAS) COMMAND\n%GROUP HOST=(RUNAS) COMMAND\n\`\`\`\n\nExamples:\n- \`alice ALL=(ALL) ALL\` — alice can run any command as any user on any host\n- \`%ops ALL=(ALL) NOPASSWD: /bin/systemctl\` — ops group can run systemctl without password\n- \`deploy ALL=(www-data) NOPASSWD: /usr/bin/git\` — deploy user can run git as www-data only\n\n## PAM — Pluggable Authentication Modules\n\nPAM is a **framework that decouples authentication logic from applications**. Instead of every application implementing its own authentication, they call PAM, which delegates to a stack of modules defined in \`/etc/pam.d/\`.\n\nPAM module types:\n- **\`auth\`** — authenticate the user (verify password, check TOTP, etc.)\n- **\`account\`** — check account validity (expired? locked? time restrictions?)\n- **\`session\`** — set up/tear down the session (mount home dir, set limits, logging)\n- **\`password\`** — handle password changes\n\nPAM control flags: **\`required\`** (must pass, continue stack), **\`requisite\`** (must pass, stop on failure), **\`sufficient\`** (if passes, stop stack), **\`optional\`** (result ignored unless only module).`,
+    introduction: `sudo and PAM are the two central pillars of privilege management and authentication on Linux systems. \`sudo\` controls who can run what commands as which user, while PAM (Pluggable Authentication Modules) controls how users authenticate.\n\n## sudo\n\n\`sudo\` allows permitted users to run commands with elevated (or different-user) privileges. The policy is defined in \`/etc/sudoers\` and files in \`/etc/sudoers.d/\`.\n\nAlways edit sudoers with \`visudo\` — it locks the file, validates syntax before saving, and prevents saving a broken sudoers that would lock you out of sudo entirely.\n\nSudoers rule syntax:\n\n\`\`\`\nUSER HOST=(RUNAS) COMMAND\n%GROUP HOST=(RUNAS) COMMAND\n\`\`\`\n\nExamples:\n- \`alice ALL=(ALL) ALL\` — alice can run any command as any user on any host\n- \`%ops ALL=(ALL) NOPASSWD: /bin/systemctl\` — ops group can run systemctl without password\n- \`deploy ALL=(www-data) NOPASSWD: /usr/bin/git\` — deploy user can run git as www-data only\n\n## PAM — Pluggable Authentication Modules\n\nPAM is a framework that decouples authentication logic from applications. Instead of every application implementing its own authentication, they call PAM, which delegates to a stack of modules defined in \`/etc/pam.d/\`.\n\nPAM module types:\n- \`auth\` — authenticate the user (verify password, check TOTP, etc.)\n- \`account\` — check account validity (expired? locked? time restrictions?)\n- \`session\` — set up/tear down the session (mount home dir, set limits, logging)\n- \`password\` — handle password changes\n\nPAM control flags: \`required\` (must pass, continue stack), \`requisite\` (must pass, stop on failure), \`sufficient\` (if passes, stop stack), \`optional\` (result ignored unless only module).`,
     whenToUse: [
       'Granting a deployment user permission to restart a service without a password — sudoers NOPASSWD rule',
       'Locking out an account after 5 failed SSH attempts — pam_faillock in /etc/pam.d/sshd',
@@ -1197,12 +1197,12 @@ export const linuxTopics = [
       'Setting per-user resource limits — pam_limits and /etc/security/limits.conf',
     ],
     keyConcepts: [
-      { term: 'visudo', definition: `**Safe editor for /etc/sudoers**. Locks the file, checks syntax before saving, and opens with $EDITOR. Never edit /etc/sudoers directly with vi — a syntax error locks everyone out of sudo.` },
+      { term: 'visudo', definition: `Safe editor for /etc/sudoers. Locks the file, checks syntax before saving, and opens with $EDITOR. Never edit /etc/sudoers directly with vi — a syntax error locks everyone out of sudo.` },
       { term: 'NOPASSWD', definition: `Sudoers flag that allows a rule to execute without prompting for a password. Essential for automation. Always scope as narrowly as possible: \`NOPASSWD: /bin/systemctl restart myapp\` not \`NOPASSWD: ALL\`.` },
-      { term: 'sudo -l', definition: `Lists the **current user's sudo permissions**. \`sudo -l -U username\` shows another user's permissions. Critical for auditing privilege escalation paths.` },
+      { term: 'sudo -l', definition: `Lists the current user's sudo permissions. \`sudo -l -U username\` shows another user's permissions. Critical for auditing privilege escalation paths.` },
       { term: '/etc/pam.d/', definition: `Directory of PAM configuration files, one per service (\`sshd\`, \`login\`, \`sudo\`, \`su\`). Each file is a stack of module rules with control flags.` },
-      { term: 'pam_faillock', definition: `PAM module that **locks accounts after N failed authentication attempts**. Replacement for the older pam_tally2. Configure in \`/etc/security/faillock.conf\` and \`/etc/pam.d/\`. Unlock with \`faillock --reset --user username\`.` },
-      { term: 'pam_limits', definition: `PAM module that applies **resource limits** from \`/etc/security/limits.conf\` at session start. Sets \`nofile\` (max open files), \`nproc\` (max processes), \`memlock\`, etc. Soft vs hard limits.` },
+      { term: 'pam_faillock', definition: `PAM module that locks accounts after N failed authentication attempts. Replacement for the older pam_tally2. Configure in \`/etc/security/faillock.conf\` and \`/etc/pam.d/\`. Unlock with \`faillock --reset --user username\`.` },
+      { term: 'pam_limits', definition: `PAM module that applies resource limits from \`/etc/security/limits.conf\` at session start. Sets \`nofile\` (max open files), \`nproc\` (max processes), \`memlock\`, etc. Soft vs hard limits.` },
     ],
     pitfalls: [
       'Editing /etc/sudoers directly with vi instead of visudo — a syntax error disables sudo for all users, potentially requiring recovery boot.',
@@ -1249,7 +1249,7 @@ export const linuxTopics = [
       { title: 'auditd Event Pipeline', description: 'Syscall → kernel hook → ring buffer → auditd → audit.log', image: '/diagrams/linux/linux-audit-pipeline.png' },
       { title: 'Audit Rule Types', description: 'Control, filesystem watch, and syscall exit rule examples', image: '/diagrams/linux/linux-audit-rule-types.png' },
     ],
-    introduction: `The **Linux Audit System** is a kernel-level event logging framework that records security-relevant events with high fidelity — far beyond what traditional application logs capture. Every syscall, file access, user authentication event, and privilege escalation can be recorded with full context: who did it (UID, PID, process name), what they did, and when.\n\n## Architecture\n\nThe audit system has two layers:\n\n**Kernel audit subsystem** — intercepts system calls and file accesses according to rules. Events are written to an in-kernel ring buffer.\n\n**\`auditd\`** daemon — reads from the kernel ring buffer and writes events to \`/var/log/audit/audit.log\` (default) or forwards to a remote audit server via \`audisp\`.\n\n## Audit Rules\n\nRules are loaded with \`auditctl\` or persistently via files in \`/etc/audit/rules.d/\`:\n\n**File watch** (\`-w\`): generates events when a file or directory is accessed in the specified way:\n\`\`\`bash\nauditctl -w /etc/passwd -p wa -k passwd-changes\n# -w = path to watch\n# -p = permissions to watch: r(read) w(write) x(execute) a(attribute change)\n# -k = key name for searching\n\`\`\`\n\n**Syscall audit** (\`-a\`): generates events when a specific syscall is called:\n\`\`\`bash\nauditctl -a always,exit -F arch=b64 -S execve -k exec-tracking\n# -a = action (always/never), list (exit/entry/task)\n# -F = filter field\n# -S = syscall name\n\`\`\`\n\n## Log Format\n\nAudit events are structured records with key=value pairs:\n\n\`\`\`\ntype=SYSCALL msg=audit(1704067200.123:456): arch=c000003e syscall=59\n  success=yes exit=0 a0=... a1=... a2=... a3=...\n  pid=12345 ppid=12344 uid=1000 gid=1000 euid=0\n  exe="/usr/bin/sudo" key="privilege-escalation"\n\`\`\``,
+    introduction: `The Linux Audit System is a kernel-level event logging framework that records security-relevant events with high fidelity — far beyond what traditional application logs capture. Every syscall, file access, user authentication event, and privilege escalation can be recorded with full context: who did it (UID, PID, process name), what they did, and when.\n\n## Architecture\n\nThe audit system has two layers:\n\nKernel audit subsystem — intercepts system calls and file accesses according to rules. Events are written to an in-kernel ring buffer.\n\n\`auditd\` daemon — reads from the kernel ring buffer and writes events to \`/var/log/audit/audit.log\` (default) or forwards to a remote audit server via \`audisp\`.\n\n## Audit Rules\n\nRules are loaded with \`auditctl\` or persistently via files in \`/etc/audit/rules.d/\`:\n\nFile watch (\`-w\`): generates events when a file or directory is accessed in the specified way:\n\`\`\`bash\nauditctl -w /etc/passwd -p wa -k passwd-changes\n# -w = path to watch\n# -p = permissions to watch: r(read) w(write) x(execute) a(attribute change)\n# -k = key name for searching\n\`\`\`\n\nSyscall audit (\`-a\`): generates events when a specific syscall is called:\n\`\`\`bash\nauditctl -a always,exit -F arch=b64 -S execve -k exec-tracking\n# -a = action (always/never), list (exit/entry/task)\n# -F = filter field\n# -S = syscall name\n\`\`\`\n\n## Log Format\n\nAudit events are structured records with key=value pairs:\n\n\`\`\`\ntype=SYSCALL msg=audit(1704067200.123:456): arch=c000003e syscall=59\n  success=yes exit=0 a0=... a1=... a2=... a3=...\n  pid=12345 ppid=12344 uid=1000 gid=1000 euid=0\n  exe="/usr/bin/sudo" key="privilege-escalation"\n\`\`\``,
     whenToUse: [
       'Post-incident forensics — who deleted this critical file? ausearch -k file-deletion -ts 2024-01-15',
       'Compliance requirements (PCI-DSS, SOC 2, HIPAA) requiring audit trails for privileged command execution',
@@ -1258,12 +1258,12 @@ export const linuxTopics = [
       'Monitoring a specific user account during an incident investigation — auditctl -F uid=1000',
     ],
     keyConcepts: [
-      { term: 'auditd', definition: `**Audit daemon** that reads events from the kernel ring buffer and writes them to \`/var/log/audit/audit.log\`. Must be running for audit events to be persisted. Config at \`/etc/audit/auditd.conf\`.` },
-      { term: 'auditctl', definition: `Command to **load audit rules at runtime**. Rules are lost on reboot unless saved to \`/etc/audit/rules.d/*.rules\`. \`auditctl -l\` lists active rules. \`auditctl -D\` deletes all rules.` },
-      { term: 'ausearch', definition: `**Search audit logs** by key, user, time, or event type. \`ausearch -k passwd-changes -ts today\` finds all events for the "passwd-changes" key since midnight. Output is human-readable audit records.` },
-      { term: 'aureport', definition: `**Summary reports** from audit logs. \`aureport --summary\` gives an overview. \`aureport --login\` shows all login events. \`aureport --exe\` shows executed commands. Useful for trend analysis.` },
-      { term: '-k key', definition: `A **tag** applied to audit rules for easy searching. \`-k sudo-commands\` marks all events from that rule with the key "sudo-commands". Retrieve with \`ausearch -k sudo-commands\`.` },
-      { term: '/etc/audit/rules.d/', definition: `**Persistent audit rules** loaded at auditd startup. Files end in \`.rules\`. \`augenrules --check\` validates rule syntax. RHEL ships \`30-stig.rules\` for STIG compliance.` },
+      { term: 'auditd', definition: `Audit daemon that reads events from the kernel ring buffer and writes them to \`/var/log/audit/audit.log\`. Must be running for audit events to be persisted. Config at \`/etc/audit/auditd.conf\`.` },
+      { term: 'auditctl', definition: `Command to load audit rules at runtime. Rules are lost on reboot unless saved to \`/etc/audit/rules.d/*.rules\`. \`auditctl -l\` lists active rules. \`auditctl -D\` deletes all rules.` },
+      { term: 'ausearch', definition: `Search audit logs by key, user, time, or event type. \`ausearch -k passwd-changes -ts today\` finds all events for the "passwd-changes" key since midnight. Output is human-readable audit records.` },
+      { term: 'aureport', definition: `Summary reports from audit logs. \`aureport --summary\` gives an overview. \`aureport --login\` shows all login events. \`aureport --exe\` shows executed commands. Useful for trend analysis.` },
+      { term: '-k key', definition: `A tag applied to audit rules for easy searching. \`-k sudo-commands\` marks all events from that rule with the key "sudo-commands". Retrieve with \`ausearch -k sudo-commands\`.` },
+      { term: '/etc/audit/rules.d/', definition: `Persistent audit rules loaded at auditd startup. Files end in \`.rules\`. \`augenrules --check\` validates rule syntax. RHEL ships \`30-stig.rules\` for STIG compliance.` },
     ],
     pitfalls: [
       'Relying on audit.log alone for forensics without verifying auditd was running — if auditd is stopped, no events are recorded. Check service status and log gaps.',
@@ -1309,7 +1309,7 @@ export const linuxTopics = [
       { title: 'Capability Sets Model', description: 'Permitted/effective/inheritable/ambient/bounding set relationships', image: '/diagrams/linux/linux-capabilities-sets.png' },
       { title: 'Capability Drop Flow', description: 'Secure service: bind port → drop root → minimal caps → seccomp', image: '/diagrams/linux/linux-capabilities-drop-flow.png' },
     ],
-    introduction: `Traditionally, Linux privilege was binary: you either had root (UID 0) and could do anything, or you were an unprivileged user. **Linux capabilities** break this model by dividing root's omnipotent authority into **~40 distinct privilege units** that can be independently granted or revoked.\n\n## Why Capabilities Matter\n\nRunning a process as root to bind port 80 is a massive security over-grant. With capabilities, you grant only \`CAP_NET_BIND_SERVICE\` and nothing else. A vulnerability in the service cannot be exploited to write to /etc/passwd or load kernel modules.\n\n## Key Capabilities\n\n| Capability | What It Allows |\n|---|---|\n| \`CAP_NET_BIND_SERVICE\` | Bind to ports below 1024 |\n| \`CAP_NET_RAW\` | Raw socket access (ping, tcpdump) |\n| \`CAP_SYS_PTRACE\` | Trace other processes (strace, gdb) |\n| \`CAP_SYS_ADMIN\` | Broad system administration — mount, namespace creation. Often called "almost root". |\n| \`CAP_CHOWN\` | Change file ownership |\n| \`CAP_SETUID\` / \`CAP_SETGID\` | Change process UID/GID |\n| \`CAP_DAC_OVERRIDE\` | Bypass DAC permission checks |\n| \`CAP_KILL\` | Send signals to any process |\n\n## Capability Sets\n\nEach thread has **five capability sets**:\n- **Permitted** — the maximum set a thread can ever have\n- **Effective** — the capabilities currently active for privilege checks\n- **Inheritable** — capabilities inherited across \`execve()\`\n- **Ambient** — inheritable even by unprivileged executables (Linux 4.3+)\n- **Bounding** — an upper bound; capabilities in permitted cannot exceed bounding\n\n## File Capabilities\n\nExecutable files can have capabilities attached, replacing setuid root:\n- **Permitted** — added to thread's permitted set on exec\n- **Inheritable** — ANDed with thread's inheritable\n- **Effective bit** — if set, permitted file capabilities are also effective`,
+    introduction: `Traditionally, Linux privilege was binary: you either had root (UID 0) and could do anything, or you were an unprivileged user. Linux capabilities break this model by dividing root's omnipotent authority into ~40 distinct privilege units that can be independently granted or revoked.\n\n## Why Capabilities Matter\n\nRunning a process as root to bind port 80 is a massive security over-grant. With capabilities, you grant only \`CAP_NET_BIND_SERVICE\` and nothing else. A vulnerability in the service cannot be exploited to write to /etc/passwd or load kernel modules.\n\n## Key Capabilities\n\n| Capability | What It Allows |\n|---|---|\n| \`CAP_NET_BIND_SERVICE\` | Bind to ports below 1024 |\n| \`CAP_NET_RAW\` | Raw socket access (ping, tcpdump) |\n| \`CAP_SYS_PTRACE\` | Trace other processes (strace, gdb) |\n| \`CAP_SYS_ADMIN\` | Broad system administration — mount, namespace creation. Often called "almost root". |\n| \`CAP_CHOWN\` | Change file ownership |\n| \`CAP_SETUID\` / \`CAP_SETGID\` | Change process UID/GID |\n| \`CAP_DAC_OVERRIDE\` | Bypass DAC permission checks |\n| \`CAP_KILL\` | Send signals to any process |\n\n## Capability Sets\n\nEach thread has five capability sets:\n- Permitted — the maximum set a thread can ever have\n- Effective — the capabilities currently active for privilege checks\n- Inheritable — capabilities inherited across \`execve()\`\n- Ambient — inheritable even by unprivileged executables (Linux 4.3+)\n- Bounding — an upper bound; capabilities in permitted cannot exceed bounding\n\n## File Capabilities\n\nExecutable files can have capabilities attached, replacing setuid root:\n- Permitted — added to thread's permitted set on exec\n- Inheritable — ANDed with thread's inheritable\n- Effective bit — if set, permitted file capabilities are also effective`,
     whenToUse: [
       'Allowing a non-root service to bind to port 443 — setcap cap_net_bind_service+ep /usr/bin/myapp',
       'Hardening Docker containers — --cap-drop ALL --cap-add NET_BIND_SERVICE instead of --privileged',
@@ -1318,12 +1318,12 @@ export const linuxTopics = [
       'Designing least-privilege container security in Kubernetes securityContext',
     ],
     keyConcepts: [
-      { term: 'CAP_NET_BIND_SERVICE', definition: `Allows binding to **privileged ports (<1024)** without root. The canonical replacement for running web servers as root.` },
+      { term: 'CAP_NET_BIND_SERVICE', definition: `Allows binding to privileged ports (<1024) without root. The canonical replacement for running web servers as root.` },
       { term: 'CAP_SYS_ADMIN', definition: `The broadest capability — covers mount/unmount, namespace manipulation, kernel keyring access, device I/O, and more. Granting this is nearly equivalent to root. Avoid.` },
-      { term: 'setcap', definition: `Set capabilities on an **executable file**. \`setcap cap_net_bind_service+ep /usr/bin/nginx\` — \`+e\` adds to effective set, \`+p\` to permitted. Use \`getcap\` to read.` },
+      { term: 'setcap', definition: `Set capabilities on an executable file. \`setcap cap_net_bind_service+ep /usr/bin/nginx\` — \`+e\` adds to effective set, \`+p\` to permitted. Use \`getcap\` to read.` },
       { term: 'getcap', definition: `Read capabilities from a file. \`getcap /usr/bin/ping\` returns \`cap_net_raw=ep\`. \`getcap -r /usr/bin/\` recursively scans a directory.` },
-      { term: 'capsh', definition: `**Capability shell** — inspects and modifies capability state. \`capsh --print\` shows all five sets for the current process. \`capsh --decode=0000003fffffffff\` decodes a hex capability bitmask.` },
-      { term: 'Docker --cap-drop/--cap-add', definition: `Docker containers start with a **restricted capability set** (not full root). \`--cap-drop ALL\` removes all capabilities; \`--cap-add NET_BIND_SERVICE\` adds back only what is needed. Far safer than \`--privileged\`.` },
+      { term: 'capsh', definition: `Capability shell — inspects and modifies capability state. \`capsh --print\` shows all five sets for the current process. \`capsh --decode=0000003fffffffff\` decodes a hex capability bitmask.` },
+      { term: 'Docker --cap-drop/--cap-add', definition: `Docker containers start with a restricted capability set (not full root). \`--cap-drop ALL\` removes all capabilities; \`--cap-add NET_BIND_SERVICE\` adds back only what is needed. Far safer than \`--privileged\`.` },
     ],
     pitfalls: [
       'Granting CAP_SYS_ADMIN thinking it is a narrow capability — it is the most dangerous capability short of full root. Audit every grant of CAP_SYS_ADMIN carefully.',
@@ -1334,11 +1334,11 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do you allow a non-root application to bind to port 80 using capabilities instead of running as root?',
-        answer: `## Option 1 — File Capabilities (Preferred)\n\n\`\`\`bash\n# Grant cap_net_bind_service to the binary\nsetcap cap_net_bind_service+ep /usr/local/bin/myapp\n\n# Verify\ngetcap /usr/local/bin/myapp\n# /usr/local/bin/myapp cap_net_bind_service=ep\n\n# Now run as a non-root user — it can bind port 80\n./myapp  # binding port 80 succeeds\n\`\`\`\n\n**Trade-off**: file capabilities are reset when the binary is replaced (package upgrades). Add a post-install step to re-apply.\n\n## Option 2 — systemd Unit with AmbientCapabilities\n\n\`\`\`ini\n[Service]\nUser=appuser\nGroup=appgroup\nAmbientCapabilities=CAP_NET_BIND_SERVICE\nCapabilityBoundingSet=CAP_NET_BIND_SERVICE\nNoNewPrivileges=true\n\`\`\`\n\nThis grants the capability to the process at startup without modifying the binary file. Survives binary upgrades.\n\n## Option 3 — Reverse Proxy (Most Common)\n\nRun the app on port 8080 (no privilege needed) and put nginx or HAProxy on port 80 as a reverse proxy. The app never needs elevated privileges at all.\n\n## Check Current Capabilities\n\n\`\`\`bash\n# Of a running process\ncat /proc/$(pgrep myapp)/status | grep Cap\n# CapPrm, CapEff, CapBnd, CapAmb — hex bitmasks\n\n# Decode a hex bitmask\ncapsh --decode=0000000000000400\n# = cap_net_bind_service\n\`\`\``,
+        answer: `## Option 1 — File Capabilities (Preferred)\n\n\`\`\`bash\n# Grant cap_net_bind_service to the binary\nsetcap cap_net_bind_service+ep /usr/local/bin/myapp\n\n# Verify\ngetcap /usr/local/bin/myapp\n# /usr/local/bin/myapp cap_net_bind_service=ep\n\n# Now run as a non-root user — it can bind port 80\n./myapp  # binding port 80 succeeds\n\`\`\`\n\nTrade-off: file capabilities are reset when the binary is replaced (package upgrades). Add a post-install step to re-apply.\n\n## Option 2 — systemd Unit with AmbientCapabilities\n\n\`\`\`ini\n[Service]\nUser=appuser\nGroup=appgroup\nAmbientCapabilities=CAP_NET_BIND_SERVICE\nCapabilityBoundingSet=CAP_NET_BIND_SERVICE\nNoNewPrivileges=true\n\`\`\`\n\nThis grants the capability to the process at startup without modifying the binary file. Survives binary upgrades.\n\n## Option 3 — Reverse Proxy (Most Common)\n\nRun the app on port 8080 (no privilege needed) and put nginx or HAProxy on port 80 as a reverse proxy. The app never needs elevated privileges at all.\n\n## Check Current Capabilities\n\n\`\`\`bash\n# Of a running process\ncat /proc/$(pgrep myapp)/status | grep Cap\n# CapPrm, CapEff, CapBnd, CapAmb — hex bitmasks\n\n# Decode a hex bitmask\ncapsh --decode=0000000000000400\n# = cap_net_bind_service\n\`\`\``,
       },
       {
         question: 'Walk through capability sets — permitted, effective, inheritable, ambient, and bounding. How do they interact?',
-        answer: `## The Five Sets\n\n**Permitted (P)** — the **maximum ceiling** of what a thread can ever activate. A capability can only be added to Effective if it is in Permitted. Cannot exceed the Bounding set.\n\n**Effective (E)** — the capabilities **currently checked by the kernel** when the thread makes a privileged syscall. A thread can drop capabilities from Effective without losing them from Permitted (so it can regain them later).\n\n**Inheritable (I)** — capabilities that **survive execve()** — but only if they are also in the new binary's file Inheritable set. Classic inheritable is rarely useful for unprivileged processes.\n\n**Ambient (A)** — Linux 4.3+. An inheritable set that is **automatically added to Permitted and Effective** in child processes after execve(), even for binaries without file capabilities. Solves the gap where unprivileged users cannot inherit capabilities.\n\n**Bounding (B)** — a **one-way ratchet**: you can drop from bounding but never add back. The bounding set limits what can ever be in Permitted, even via setcap on files. Docker uses this to limit container capabilities.\n\n## Interaction on execve()\n\n\`\`\`\nFile permitted (Fp) ∩ Bounding → added to thread Permitted\nFile inheritable (Fi) ∩ thread Inheritable → added to Permitted\nAmbient → added to both Permitted and Effective\nIf file Effective bit set → Permitted becomes Effective\n\`\`\`\n\n## Inspect in Practice\n\n\`\`\`bash\ncapsh --print\n# Current: cap_net_bind_service+eip  (effective, inheritable, permitted)\n# Bounding set = ...\n# Ambient set =\n\ncat /proc/self/status | grep Cap\n# CapInh: 0000000000000000\n# CapPrm: 0000000000000400\n# CapEff: 0000000000000400\n# CapBnd: 000001ffffffffff\n# CapAmb: 0000000000000000\n\`\`\``,
+        answer: `## The Five Sets\n\nPermitted (P) — the maximum ceiling of what a thread can ever activate. A capability can only be added to Effective if it is in Permitted. Cannot exceed the Bounding set.\n\nEffective (E) — the capabilities currently checked by the kernel when the thread makes a privileged syscall. A thread can drop capabilities from Effective without losing them from Permitted (so it can regain them later).\n\nInheritable (I) — capabilities that survive execve() — but only if they are also in the new binary's file Inheritable set. Classic inheritable is rarely useful for unprivileged processes.\n\nAmbient (A) — Linux 4.3+. An inheritable set that is automatically added to Permitted and Effective in child processes after execve(), even for binaries without file capabilities. Solves the gap where unprivileged users cannot inherit capabilities.\n\nBounding (B) — a one-way ratchet: you can drop from bounding but never add back. The bounding set limits what can ever be in Permitted, even via setcap on files. Docker uses this to limit container capabilities.\n\n## Interaction on execve()\n\n\`\`\`\nFile permitted (Fp) ∩ Bounding → added to thread Permitted\nFile inheritable (Fi) ∩ thread Inheritable → added to Permitted\nAmbient → added to both Permitted and Effective\nIf file Effective bit set → Permitted becomes Effective\n\`\`\`\n\n## Inspect in Practice\n\n\`\`\`bash\ncapsh --print\n# Current: cap_net_bind_service+eip  (effective, inheritable, permitted)\n# Bounding set = ...\n# Ambient set =\n\ncat /proc/self/status | grep Cap\n# CapInh: 0000000000000000\n# CapPrm: 0000000000000400\n# CapEff: 0000000000000400\n# CapBnd: 000001ffffffffff\n# CapAmb: 0000000000000000\n\`\`\``,
       },
     ],
     quickFire: [
@@ -1371,7 +1371,7 @@ export const linuxTopics = [
       { title: 'Journal Storage Paths', description: 'Sources → journald → volatile /run vs persistent /var/log/journal', image: '/diagrams/linux/systemd-journalctl-storage.png' },
       { title: 'journalctl Filter Options', description: '-u unit, -p priority, -b boot, -k kernel, field matches', image: '/diagrams/linux/systemd-journalctl-filters.png' },
     ],
-    introduction: `**journald** is systemd's logging daemon. It collects log entries from the kernel, systemd units, and any process that writes to \`stdout\`/\`stderr\` or calls \`syslog()\`. Unlike traditional text-based syslog, journald stores logs in a **structured binary format** that supports efficient filtering by time, unit, priority, PID, UID, and arbitrary fields.\n\n## Storage Locations\n\n**Volatile (default on many distros)**: \`/run/log/journal/\` — lost on reboot. Kernel events still survive if the machine reboots cleanly because the EFI pstore or pmsg captures crash logs.\n\n**Persistent**: \`/var/log/journal/\` — survives reboots. Enabled by setting \`Storage=persistent\` in \`/etc/systemd/journald.conf\` or by creating the directory: \`mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal\`.\n\n## Priority Levels\n\nJournald uses syslog priority numbers:\n\n| Level | Number | Meaning |\n|---|---|---|\n| emerg | 0 | System is unusable |\n| alert | 1 | Action must be taken immediately |\n| crit | 2 | Critical conditions |\n| err | 3 | Error conditions |\n| warning | 4 | Warning conditions |\n| notice | 5 | Normal but significant |\n| info | 6 | Informational |\n| debug | 7 | Debug-level messages |\n\n\`journalctl -p err\` shows messages at level 3 (err) and above — everything more severe.\n\n## Output Formats\n\n\`journalctl -o FORMAT\` supports: \`short\` (default), \`verbose\` (all fields), \`json\` (one JSON object per line), \`json-pretty\`, \`cat\` (message only), \`export\` (for piping to another journal).`,
+    introduction: `journald is systemd's logging daemon. It collects log entries from the kernel, systemd units, and any process that writes to \`stdout\`/\`stderr\` or calls \`syslog()\`. Unlike traditional text-based syslog, journald stores logs in a structured binary format that supports efficient filtering by time, unit, priority, PID, UID, and arbitrary fields.\n\n## Storage Locations\n\nVolatile (default on many distros): \`/run/log/journal/\` — lost on reboot. Kernel events still survive if the machine reboots cleanly because the EFI pstore or pmsg captures crash logs.\n\nPersistent: \`/var/log/journal/\` — survives reboots. Enabled by setting \`Storage=persistent\` in \`/etc/systemd/journald.conf\` or by creating the directory: \`mkdir -p /var/log/journal && systemd-tmpfiles --create --prefix /var/log/journal\`.\n\n## Priority Levels\n\nJournald uses syslog priority numbers:\n\n| Level | Number | Meaning |\n|---|---|---|\n| emerg | 0 | System is unusable |\n| alert | 1 | Action must be taken immediately |\n| crit | 2 | Critical conditions |\n| err | 3 | Error conditions |\n| warning | 4 | Warning conditions |\n| notice | 5 | Normal but significant |\n| info | 6 | Informational |\n| debug | 7 | Debug-level messages |\n\n\`journalctl -p err\` shows messages at level 3 (err) and above — everything more severe.\n\n## Output Formats\n\n\`journalctl -o FORMAT\` supports: \`short\` (default), \`verbose\` (all fields), \`json\` (one JSON object per line), \`json-pretty\`, \`cat\` (message only), \`export\` (for piping to another journal).`,
     whenToUse: [
       'Tailing a specific service log — journalctl -u nginx.service -f',
       'Investigating an incident at a specific time — journalctl --since "2024-01-15 14:00" --until "2024-01-15 16:00"',
@@ -1380,12 +1380,12 @@ export const linuxTopics = [
       'Making logs persistent across reboots — Storage=persistent in journald.conf',
     ],
     keyConcepts: [
-      { term: 'journald', definition: `**systemd logging daemon** that collects from all units. Binary format at \`/run/log/journal/\` (volatile) or \`/var/log/journal/\` (persistent). Supports structured fields for rich filtering.` },
-      { term: 'journalctl -u', definition: `Filter to a **specific systemd unit**. \`journalctl -u nginx.service -f\` follows nginx logs in real time. Combine with \`--since\` for time-bounded queries.` },
-      { term: '-p priority', definition: `Filter by **syslog priority**. \`-p err\` shows err(3) and above (err, crit, alert, emerg). \`-p warning..err\` shows a range. Lower number = higher severity.` },
-      { term: '--vacuum-size / --vacuum-time', definition: `**Prune old journal data**. \`journalctl --vacuum-size=1G\` keeps only 1 GiB of logs. \`journalctl --vacuum-time=30d\` deletes logs older than 30 days.` },
+      { term: 'journald', definition: `systemd logging daemon that collects from all units. Binary format at \`/run/log/journal/\` (volatile) or \`/var/log/journal/\` (persistent). Supports structured fields for rich filtering.` },
+      { term: 'journalctl -u', definition: `Filter to a specific systemd unit. \`journalctl -u nginx.service -f\` follows nginx logs in real time. Combine with \`--since\` for time-bounded queries.` },
+      { term: '-p priority', definition: `Filter by syslog priority. \`-p err\` shows err(3) and above (err, crit, alert, emerg). \`-p warning..err\` shows a range. Lower number = higher severity.` },
+      { term: '--vacuum-size / --vacuum-time', definition: `Prune old journal data. \`journalctl --vacuum-size=1G\` keeps only 1 GiB of logs. \`journalctl --vacuum-time=30d\` deletes logs older than 30 days.` },
       { term: 'Storage=persistent', definition: `Set in \`/etc/systemd/journald.conf\`. Writes journal to \`/var/log/journal/\` instead of \`/run/log/journal/\`. Required for logs to survive reboots.` },
-      { term: '-o json', definition: `Output each log entry as a **JSON object** with all structured fields. Useful for piping to jq or ingesting into a log aggregator. \`-o json-pretty\` for human-readable.` },
+      { term: '-o json', definition: `Output each log entry as a JSON object with all structured fields. Useful for piping to jq or ingesting into a log aggregator. \`-o json-pretty\` for human-readable.` },
     ],
     pitfalls: [
       'Assuming logs persist across reboots without configuring Storage=persistent — default volatile storage means all logs are lost on reboot. Always set persistent on production servers.',
@@ -1396,7 +1396,7 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'How do you make systemd journal logs persist across reboots and manage their disk usage?',
-        answer: `## Enable Persistent Logging\n\n**Method 1 — Create the directory** (journald detects this):\n\`\`\`bash\nmkdir -p /var/log/journal\nsystemd-tmpfiles --create --prefix /var/log/journal\nsystemctl restart systemd-journald\n\`\`\`\n\n**Method 2 — journald.conf**:\n\`\`\`bash\n# /etc/systemd/journald.conf\n[Journal]\nStorage=persistent\nSystemMaxUse=2G          # max total journal size\nSystemKeepFree=512M      # always keep this much free\nSystemMaxFileSize=100M   # max size of one journal file\nMaxRetentionSec=90day    # keep at most 90 days\nMaxFileSec=7day          # rotate after 7 days\n\`\`\`\n\n\`\`\`bash\n# Apply config\nsystemctl restart systemd-journald\n\`\`\`\n\n## Check Current Usage\n\n\`\`\`bash\njournalctl --disk-usage\n# Archived and active journals take up 1.2G in the filesystem.\n\`\`\`\n\n## Prune Old Logs\n\n\`\`\`bash\n# Keep only last 1 GB\njournalctl --vacuum-size=1G\n\n# Keep only last 30 days\njournalctl --vacuum-time=30d\n\n# Keep only last 100 journal files\njournalctl --vacuum-files=100\n\`\`\``,
+        answer: `## Enable Persistent Logging\n\nMethod 1 — Create the directory (journald detects this):\n\`\`\`bash\nmkdir -p /var/log/journal\nsystemd-tmpfiles --create --prefix /var/log/journal\nsystemctl restart systemd-journald\n\`\`\`\n\nMethod 2 — journald.conf:\n\`\`\`bash\n# /etc/systemd/journald.conf\n[Journal]\nStorage=persistent\nSystemMaxUse=2G          # max total journal size\nSystemKeepFree=512M      # always keep this much free\nSystemMaxFileSize=100M   # max size of one journal file\nMaxRetentionSec=90day    # keep at most 90 days\nMaxFileSec=7day          # rotate after 7 days\n\`\`\`\n\n\`\`\`bash\n# Apply config\nsystemctl restart systemd-journald\n\`\`\`\n\n## Check Current Usage\n\n\`\`\`bash\njournalctl --disk-usage\n# Archived and active journals take up 1.2G in the filesystem.\n\`\`\`\n\n## Prune Old Logs\n\n\`\`\`bash\n# Keep only last 1 GB\njournalctl --vacuum-size=1G\n\n# Keep only last 30 days\njournalctl --vacuum-time=30d\n\n# Keep only last 100 journal files\njournalctl --vacuum-files=100\n\`\`\``,
       },
       {
         question: 'Show common journalctl query patterns for production incident investigation.',
@@ -1430,7 +1430,7 @@ export const linuxTopics = [
     visualizations: [
       { title: 'Linux Namespace Types', description: 'PID, NET, MNT, UTS, IPC, USER, CGROUP, TIME isolation domains', image: '/diagrams/linux/systemd-namespaces-types.png' },
     ],
-    introduction: `systemd provides a rich set of **sandboxing directives** that restrict what a service can access — without writing custom seccomp profiles or AppArmor rules. These directives leverage the same Linux kernel primitives (namespaces, seccomp, cgroups, capabilities) used by containers, but are configured declaratively in unit files.\n\nEffective sandboxing follows **least privilege**: each service should have exactly the access it needs and nothing more. A compromised web server that cannot access /home/, /root, or the network (if it only serves static files) has severely limited blast radius.\n\n## Core Sandboxing Directives\n\n**Filesystem isolation:**\n- \`PrivateTmp=yes\` — the service gets its own private \`/tmp\` and \`/var/tmp\`. Other services cannot access its temp files.\n- \`ProtectSystem=strict\` — mounts \`/usr\`, \`/boot\`, and \`/etc\` **read-only**. The service cannot modify system files.\n- \`ProtectHome=yes\` — makes \`/home\`, \`/root\`, and \`/run/user\` **inaccessible**.\n- \`ReadOnlyPaths=\` — make specific paths read-only.\n- \`ReadWritePaths=\` — re-grant write access to specific paths (used together with ProtectSystem=strict).\n\n**Privilege isolation:**\n- \`NoNewPrivileges=yes\` — the service **cannot gain new privileges** via setuid binaries or file capabilities. This single directive blocks a large class of privilege escalation attacks.\n- \`User=\` / \`Group=\` — run the service as a non-root user.\n- \`CapabilityBoundingSet=\` — restrict which capabilities the service can ever hold.\n\n**Network isolation:**\n- \`PrivateNetwork=yes\` — the service gets its own network namespace with only a loopback interface. Cannot make outbound connections or listen on ports.\n\n## Auditing Security Score\n\n\`systemd-analyze security <service>\` prints a security score and lists which sandboxing directives are missing. A score of 10 (worst) means no sandboxing at all; 0.0 (best) is fully sandboxed.`,
+    introduction: `systemd provides a rich set of sandboxing directives that restrict what a service can access — without writing custom seccomp profiles or AppArmor rules. These directives leverage the same Linux kernel primitives (namespaces, seccomp, cgroups, capabilities) used by containers, but are configured declaratively in unit files.\n\nEffective sandboxing follows least privilege: each service should have exactly the access it needs and nothing more. A compromised web server that cannot access /home/, /root, or the network (if it only serves static files) has severely limited blast radius.\n\n## Core Sandboxing Directives\n\nFilesystem isolation:\n- \`PrivateTmp=yes\` — the service gets its own private \`/tmp\` and \`/var/tmp\`. Other services cannot access its temp files.\n- \`ProtectSystem=strict\` — mounts \`/usr\`, \`/boot\`, and \`/etc\` read-only. The service cannot modify system files.\n- \`ProtectHome=yes\` — makes \`/home\`, \`/root\`, and \`/run/user\` inaccessible.\n- \`ReadOnlyPaths=\` — make specific paths read-only.\n- \`ReadWritePaths=\` — re-grant write access to specific paths (used together with ProtectSystem=strict).\n\nPrivilege isolation:\n- \`NoNewPrivileges=yes\` — the service cannot gain new privileges via setuid binaries or file capabilities. This single directive blocks a large class of privilege escalation attacks.\n- \`User=\` / \`Group=\` — run the service as a non-root user.\n- \`CapabilityBoundingSet=\` — restrict which capabilities the service can ever hold.\n\nNetwork isolation:\n- \`PrivateNetwork=yes\` — the service gets its own network namespace with only a loopback interface. Cannot make outbound connections or listen on ports.\n\n## Auditing Security Score\n\n\`systemd-analyze security <service>\` prints a security score and lists which sandboxing directives are missing. A score of 10 (worst) means no sandboxing at all; 0.0 (best) is fully sandboxed.`,
     whenToUse: [
       'Hardening a third-party service unit — add PrivateTmp, NoNewPrivileges, ProtectSystem=strict as a baseline',
       'Auditing service security posture — systemd-analyze security nginx to see score and missing directives',
@@ -1439,12 +1439,12 @@ export const linuxTopics = [
       'Running a service as non-root with filesystem write access only to its data directory — User=appuser + ReadWritePaths=/var/lib/myapp',
     ],
     keyConcepts: [
-      { term: 'PrivateTmp=yes', definition: `Service gets its own **private /tmp and /var/tmp** via a mount namespace. Other services cannot read its temp files. Prevents /tmp race conditions and information leaks.` },
-      { term: 'ProtectSystem=strict', definition: `Mounts **/usr, /boot, and /etc read-only**. The service cannot write to system directories. Combine with \`ReadWritePaths=\` to re-grant write access to specific paths.` },
-      { term: 'ProtectHome=yes', definition: `Makes **/home, /root, and /run/user inaccessible** (tmpfs overlay). Service cannot read user home directories or SSH keys.` },
-      { term: 'NoNewPrivileges=yes', definition: `Sets the \`PR_SET_NO_NEW_PRIVS\` bit. The process and all its children **cannot gain new privileges** via setuid executables or file capabilities. Blocks most local privilege escalation.` },
-      { term: 'PrivateNetwork=yes', definition: `Gives the service its **own network namespace** with only loopback. Cannot connect to the network, listen on external ports, or interact with other services over the network.` },
-      { term: 'systemd-analyze security', definition: `**Security auditing command** that scores a service from 0 (best) to 10 (worst) based on which sandboxing directives are applied. Lists missing directives with their risk contribution.` },
+      { term: 'PrivateTmp=yes', definition: `Service gets its own private /tmp and /var/tmp via a mount namespace. Other services cannot read its temp files. Prevents /tmp race conditions and information leaks.` },
+      { term: 'ProtectSystem=strict', definition: `Mounts /usr, /boot, and /etc read-only. The service cannot write to system directories. Combine with \`ReadWritePaths=\` to re-grant write access to specific paths.` },
+      { term: 'ProtectHome=yes', definition: `Makes /home, /root, and /run/user inaccessible (tmpfs overlay). Service cannot read user home directories or SSH keys.` },
+      { term: 'NoNewPrivileges=yes', definition: `Sets the \`PR_SET_NO_NEW_PRIVS\` bit. The process and all its children cannot gain new privileges via setuid executables or file capabilities. Blocks most local privilege escalation.` },
+      { term: 'PrivateNetwork=yes', definition: `Gives the service its own network namespace with only loopback. Cannot connect to the network, listen on external ports, or interact with other services over the network.` },
+      { term: 'systemd-analyze security', definition: `Security auditing command that scores a service from 0 (best) to 10 (worst) based on which sandboxing directives are applied. Lists missing directives with their risk contribution.` },
     ],
     pitfalls: [
       'Adding ProtectSystem=strict without ReadWritePaths — the service cannot write logs or state to its directories. Always pair with ReadWritePaths=/var/lib/myapp /var/log/myapp.',
@@ -1459,7 +1459,7 @@ export const linuxTopics = [
       },
       {
         question: 'What does systemd-analyze security show and how do you use it to improve a unit?',
-        answer: `## Running the Command\n\n\`\`\`bash\nsystemd-analyze security nginx.service\n\`\`\`\n\n## Example Output\n\n\`\`\`\nSETTING                       VALUE  EXPOSURE\nPrivateNetwork=               ---      0.5\nPrivateTmp=                   ---      0.5\nProtectSystem=                ---      1.0\nNoNewPrivileges=              yes      ✓\nUser=/DynamicUser=            yes      ✓\nProtectHome=                  yes      ✓\nCapabilityBoundingSet=        CAP_NET_BIND_SERVICE  ✓\nSystemCallFilter=             @system-service  ✓\n...\n-> Overall exposure level for nginx.service: 3.7 OK\n\`\`\`\n\n## Interpreting the Score\n\n| Score | Rating |\n|---|---|\n| 0.0–0.9 | SAFE |\n| 1.0–2.9 | OK |\n| 3.0–4.9 | MEDIUM |\n| 5.0–7.9 | UNSAFE |\n| 8.0–10.0 | EXPOSED |\n\n## Iterative Hardening Workflow\n\n\`\`\`bash\n# 1. Baseline score\nsystemd-analyze security myapp.service > /tmp/baseline.txt\n\n# 2. Add directives to unit file\n# PrivateTmp=yes\n# ProtectSystem=strict\n# NoNewPrivileges=yes\n\n# 3. Reload and rescore\nsystemctl daemon-reload\nsystemd-analyze security myapp.service\n\n# 4. Test the service still works\nsystemctl restart myapp.service\nsystemctl status myapp.service\ncurl -s http://localhost:8080/health\n\`\`\`\n\nAlways **test after each directive** — some directives break services in non-obvious ways (e.g., ProtectSystem=strict blocking a service from writing to /etc).`,
+        answer: `## Running the Command\n\n\`\`\`bash\nsystemd-analyze security nginx.service\n\`\`\`\n\n## Example Output\n\n\`\`\`\nSETTING                       VALUE  EXPOSURE\nPrivateNetwork=               ---      0.5\nPrivateTmp=                   ---      0.5\nProtectSystem=                ---      1.0\nNoNewPrivileges=              yes      ✓\nUser=/DynamicUser=            yes      ✓\nProtectHome=                  yes      ✓\nCapabilityBoundingSet=        CAP_NET_BIND_SERVICE  ✓\nSystemCallFilter=             @system-service  ✓\n...\n-> Overall exposure level for nginx.service: 3.7 OK\n\`\`\`\n\n## Interpreting the Score\n\n| Score | Rating |\n|---|---|\n| 0.0–0.9 | SAFE |\n| 1.0–2.9 | OK |\n| 3.0–4.9 | MEDIUM |\n| 5.0–7.9 | UNSAFE |\n| 8.0–10.0 | EXPOSED |\n\n## Iterative Hardening Workflow\n\n\`\`\`bash\n# 1. Baseline score\nsystemd-analyze security myapp.service > /tmp/baseline.txt\n\n# 2. Add directives to unit file\n# PrivateTmp=yes\n# ProtectSystem=strict\n# NoNewPrivileges=yes\n\n# 3. Reload and rescore\nsystemctl daemon-reload\nsystemd-analyze security myapp.service\n\n# 4. Test the service still works\nsystemctl restart myapp.service\nsystemctl status myapp.service\ncurl -s http://localhost:8080/health\n\`\`\`\n\nAlways test after each directive — some directives break services in non-obvious ways (e.g., ProtectSystem=strict blocking a service from writing to /etc).`,
       },
     ],
     quickFire: [
@@ -1488,7 +1488,7 @@ export const linuxTopics = [
     visualizations: [
       { title: 'Troubleshooting Playbook', description: 'systemctl status → journalctl → ss → df/free → top → root cause → fix or escalate', image: '/diagrams/linux/linux-troubleshooting-playbook.png' },
     ],
-    introduction: `**systemctl** is the primary interface to systemd — the init system, service manager, and system state machine on every major Linux distribution. Understanding systemctl deeply means understanding how services start, how dependencies are resolved, how to diagnose failures, and how the system boots.\n\n## Unit Types\n\nsystemd manages **units** — not just services. Unit types include: \`.service\` (daemons), \`.socket\` (socket activation), \`.target\` (dependency groups), \`.timer\` (cron replacement), \`.mount\` (filesystem mounts), \`.device\` (udev devices), \`.path\` (filesystem watch).\n\n## Essential systemctl Verbs\n\n| Verb | What it does |\n|---|---|\n| \`start\` | Start the unit now |\n| \`stop\` | Stop the unit now |\n| \`restart\` | Stop then start |\n| \`reload\` | Send SIGHUP (reload config without restart) |\n| \`status\` | Show unit state, last log lines, PID |\n| \`enable\` | Create symlink to start at boot |\n| \`disable\` | Remove boot symlink |\n| \`mask\` | Symlink to /dev/null — prevents any start |\n| \`unmask\` | Remove the /dev/null symlink |\n| \`daemon-reload\` | Re-read all unit files from disk |\n\n## Dependency Directives\n\nUnit file \`[Unit]\` section directives control ordering and dependencies:\n\n- **\`After=\`** — ordering only. This unit starts **after** the listed units are active. Does not require them to be present.\n- **\`Requires=\`** — hard dependency. If the required unit fails to start or stops, this unit is also stopped.\n- **\`Wants=\`** — soft dependency. Systemd will try to start the wanted unit, but this unit is not stopped if the wanted unit fails.\n- **\`Before=\`** — this unit must start **before** the listed units.\n- **\`BindsTo=\`** — like Requires but tighter: if the bound unit stops for any reason, this unit stops immediately.\n\n## Target Units\n\nTargets are grouping units with no executable payload. Key targets:\n\n- \`multi-user.target\` — multi-user text mode (server default)\n- \`graphical.target\` — GUI mode (extends multi-user.target)\n- \`network.target\` — network is up\n- \`rescue.target\` — minimal single-user recovery`,
+    introduction: `systemctl is the primary interface to systemd — the init system, service manager, and system state machine on every major Linux distribution. Understanding systemctl deeply means understanding how services start, how dependencies are resolved, how to diagnose failures, and how the system boots.\n\n## Unit Types\n\nsystemd manages units — not just services. Unit types include: \`.service\` (daemons), \`.socket\` (socket activation), \`.target\` (dependency groups), \`.timer\` (cron replacement), \`.mount\` (filesystem mounts), \`.device\` (udev devices), \`.path\` (filesystem watch).\n\n## Essential systemctl Verbs\n\n| Verb | What it does |\n|---|---|\n| \`start\` | Start the unit now |\n| \`stop\` | Stop the unit now |\n| \`restart\` | Stop then start |\n| \`reload\` | Send SIGHUP (reload config without restart) |\n| \`status\` | Show unit state, last log lines, PID |\n| \`enable\` | Create symlink to start at boot |\n| \`disable\` | Remove boot symlink |\n| \`mask\` | Symlink to /dev/null — prevents any start |\n| \`unmask\` | Remove the /dev/null symlink |\n| \`daemon-reload\` | Re-read all unit files from disk |\n\n## Dependency Directives\n\nUnit file \`[Unit]\` section directives control ordering and dependencies:\n\n- \`After=\` — ordering only. This unit starts after the listed units are active. Does not require them to be present.\n- \`Requires=\` — hard dependency. If the required unit fails to start or stops, this unit is also stopped.\n- \`Wants=\` — soft dependency. Systemd will try to start the wanted unit, but this unit is not stopped if the wanted unit fails.\n- \`Before=\` — this unit must start before the listed units.\n- \`BindsTo=\` — like Requires but tighter: if the bound unit stops for any reason, this unit stops immediately.\n\n## Target Units\n\nTargets are grouping units with no executable payload. Key targets:\n\n- \`multi-user.target\` — multi-user text mode (server default)\n- \`graphical.target\` — GUI mode (extends multi-user.target)\n- \`network.target\` — network is up\n- \`rescue.target\` — minimal single-user recovery`,
     whenToUse: [
       'Reloading nginx config without dropping connections — systemctl reload nginx (SIGHUP, no downtime)',
       'Preventing a service from ever starting — systemctl mask servicename',
@@ -1497,11 +1497,11 @@ export const linuxTopics = [
       'After editing a unit file — systemctl daemon-reload is required before the change takes effect',
     ],
     keyConcepts: [
-      { term: 'start vs enable', definition: `**start** — runs the unit **now**. **enable** — creates a symlink so the unit starts at **next boot**. A service can be running but not enabled (starts manually) or enabled but stopped (will start at boot).` },
-      { term: 'restart vs reload', definition: `**restart** — stops and starts the process (brief downtime, new PID). **reload** — sends SIGHUP; the process re-reads its config with no downtime. Only works if the service supports SIGHUP reload.` },
-      { term: 'mask', definition: `Creates a symlink \`/etc/systemd/system/servicename.service -> /dev/null\`. The unit **cannot be started** by any means — not manually, not as a dependency. Stronger than disable.` },
-      { term: 'daemon-reload', definition: `**Required after any unit file change**. Instructs systemd to re-read all unit files from disk. Without it, systemd runs the old unit definition even if the file has changed.` },
-      { term: 'Wants= vs Requires=', definition: `**Wants=** is a soft dependency — the wanted unit is started if possible, but failure doesn't stop this unit. **Requires=** is hard — if the required unit fails, this unit is stopped too.` },
+      { term: 'start vs enable', definition: `start — runs the unit now. enable — creates a symlink so the unit starts at next boot. A service can be running but not enabled (starts manually) or enabled but stopped (will start at boot).` },
+      { term: 'restart vs reload', definition: `restart — stops and starts the process (brief downtime, new PID). reload — sends SIGHUP; the process re-reads its config with no downtime. Only works if the service supports SIGHUP reload.` },
+      { term: 'mask', definition: `Creates a symlink \`/etc/systemd/system/servicename.service -> /dev/null\`. The unit cannot be started by any means — not manually, not as a dependency. Stronger than disable.` },
+      { term: 'daemon-reload', definition: `Required after any unit file change. Instructs systemd to re-read all unit files from disk. Without it, systemd runs the old unit definition even if the file has changed.` },
+      { term: 'Wants= vs Requires=', definition: `Wants= is a soft dependency — the wanted unit is started if possible, but failure doesn't stop this unit. Requires= is hard — if the required unit fails, this unit is stopped too.` },
       { term: 'systemctl isolate', definition: `Switches the system to a specific target, stopping all units not wanted by that target. \`systemctl isolate rescue.target\` puts the system in rescue mode. Use with care — stops services.` },
     ],
     pitfalls: [
@@ -1513,15 +1513,15 @@ export const linuxTopics = [
     keyQuestions: [
       {
         question: 'What is the difference between systemctl restart and systemctl reload? When should you use each?',
-        answer: `## systemctl restart\n\n**Stops the process, then starts it again.** The old process is terminated (SIGTERM, then SIGKILL after timeout), and a new process starts with the updated configuration.\n\n- New PID\n- Brief downtime between stop and start\n- All in-flight requests are dropped\n- Required when: binary is updated, config changes require a full reinitialisation, environment variables changed\n\n\`\`\`bash\nsystemctl restart nginx\nsystemctl status nginx  # new PID\n\`\`\`\n\n## systemctl reload\n\n**Sends SIGHUP to the running process.** The process handles SIGHUP by re-reading its configuration file without terminating.\n\n- Same PID\n- **No downtime** — in-flight connections continue\n- Only works if the service implements a SIGHUP handler for config reload\n- Services that support reload: nginx, apache2, sshd, haproxy, rsyslog, bind\n\n\`\`\`bash\nnginx -t                # test config first\nsystemctl reload nginx  # zero-downtime reload\n\`\`\`\n\n## reload-or-restart\n\n\`\`\`bash\n# Use reload if the service supports it, otherwise restart\nsystemctl reload-or-restart nginx\n\`\`\`\n\n## Decision Rule\n\n| Situation | Use |\n|---|---|\n| Config file changed (nginx, sshd) | reload |\n| Binary updated (package upgrade) | restart |\n| Unit file changed | daemon-reload + restart |\n| Unsure if service supports reload | reload-or-restart |`,
+        answer: `## systemctl restart\n\nStops the process, then starts it again. The old process is terminated (SIGTERM, then SIGKILL after timeout), and a new process starts with the updated configuration.\n\n- New PID\n- Brief downtime between stop and start\n- All in-flight requests are dropped\n- Required when: binary is updated, config changes require a full reinitialisation, environment variables changed\n\n\`\`\`bash\nsystemctl restart nginx\nsystemctl status nginx  # new PID\n\`\`\`\n\n## systemctl reload\n\nSends SIGHUP to the running process. The process handles SIGHUP by re-reading its configuration file without terminating.\n\n- Same PID\n- No downtime — in-flight connections continue\n- Only works if the service implements a SIGHUP handler for config reload\n- Services that support reload: nginx, apache2, sshd, haproxy, rsyslog, bind\n\n\`\`\`bash\nnginx -t                # test config first\nsystemctl reload nginx  # zero-downtime reload\n\`\`\`\n\n## reload-or-restart\n\n\`\`\`bash\n# Use reload if the service supports it, otherwise restart\nsystemctl reload-or-restart nginx\n\`\`\`\n\n## Decision Rule\n\n| Situation | Use |\n|---|---|\n| Config file changed (nginx, sshd) | reload |\n| Binary updated (package upgrade) | restart |\n| Unit file changed | daemon-reload + restart |\n| Unsure if service supports reload | reload-or-restart |`,
       },
       {
         question: 'Walk through writing a systemd unit file for a custom application with proper dependencies.',
-        answer: `## Complete Unit File\n\n\`\`\`ini\n[Unit]\nDescription=My Application Server\nDocumentation=https://myapp.example.com/docs\n\n# Ordering — start after network and database\nAfter=network.target postgresql.service\n\n# Soft dependency — try to start postgres, but don't fail if absent\nWants=postgresql.service\n\n[Service]\nType=simple\n\n# Identity\nUser=myapp\nGroup=myapp\n\n# Working directory and command\nWorkingDirectory=/opt/myapp\nExecStart=/opt/myapp/bin/server --port 8080\n\n# Zero-downtime reload via SIGHUP\nExecReload=/bin/kill -HUP $MAINPID\n\n# Environment\nEnvironmentFile=/etc/myapp/environment\n\n# Restart policy\nRestart=on-failure\nRestartSec=5s\nStartLimitIntervalSec=60s\nStartLimitBurst=5\n\n# Logging\nStandardOutput=journal\nStandardError=journal\nSyslogIdentifier=myapp\n\n[Install]\n# Start when entering multi-user mode (standard server target)\nWantedBy=multi-user.target\n\`\`\`\n\n## Validate and Load\n\n\`\`\`bash\n# Check syntax\nsystemd-analyze verify /etc/systemd/system/myapp.service\n\n# Load and start\nsystemctl daemon-reload\nsystemctl enable --now myapp.service\n\n# Verify\nsystemctl status myapp.service\njournalctl -u myapp.service -f\n\`\`\`\n\n## Key Unit File Decisions\n\n- **Type=simple** — process stays in foreground (most modern apps)\n- **Type=forking** — legacy daemons that fork into background and write a PID file\n- **Type=notify** — process sends sd_notify("READY=1") when fully started (most reliable)`,
+        answer: `## Complete Unit File\n\n\`\`\`ini\n[Unit]\nDescription=My Application Server\nDocumentation=https://myapp.example.com/docs\n\n# Ordering — start after network and database\nAfter=network.target postgresql.service\n\n# Soft dependency — try to start postgres, but don't fail if absent\nWants=postgresql.service\n\n[Service]\nType=simple\n\n# Identity\nUser=myapp\nGroup=myapp\n\n# Working directory and command\nWorkingDirectory=/opt/myapp\nExecStart=/opt/myapp/bin/server --port 8080\n\n# Zero-downtime reload via SIGHUP\nExecReload=/bin/kill -HUP $MAINPID\n\n# Environment\nEnvironmentFile=/etc/myapp/environment\n\n# Restart policy\nRestart=on-failure\nRestartSec=5s\nStartLimitIntervalSec=60s\nStartLimitBurst=5\n\n# Logging\nStandardOutput=journal\nStandardError=journal\nSyslogIdentifier=myapp\n\n[Install]\n# Start when entering multi-user mode (standard server target)\nWantedBy=multi-user.target\n\`\`\`\n\n## Validate and Load\n\n\`\`\`bash\n# Check syntax\nsystemd-analyze verify /etc/systemd/system/myapp.service\n\n# Load and start\nsystemctl daemon-reload\nsystemctl enable --now myapp.service\n\n# Verify\nsystemctl status myapp.service\njournalctl -u myapp.service -f\n\`\`\`\n\n## Key Unit File Decisions\n\n- Type=simple — process stays in foreground (most modern apps)\n- Type=forking — legacy daemons that fork into background and write a PID file\n- Type=notify — process sends sd_notify("READY=1") when fully started (most reliable)`,
       },
       {
         question: 'What does systemctl mask do, and when would you use it instead of disable?',
-        answer: `## disable vs mask\n\n**disable**:\n- Removes the symlink from the \`.wants/\` directory\n- The service will not start automatically at boot\n- **Can still be started manually**: \`systemctl start servicename\` works\n- Can still be started as a dependency of another unit\n\n**mask**:\n- Creates a symlink \`/etc/systemd/system/servicename.service -> /dev/null\`\n- The service **cannot be started by any means** — manually, at boot, or as a dependency\n- systemd reads the unit file, finds \`/dev/null\`, and refuses to start it\n\n## When to Use mask\n\n\`\`\`bash\n# Prevent a conflicting service from ever starting\n# Example: system ships both firewalld and iptables — use only one\nsystemctl mask firewalld\n\n# Prevent a service with a security vulnerability from running\nsystemctl mask telnet.socket\n\n# Prevent an unnecessary default service (saves resources)\nsystemctl mask ModemManager\n\`\`\`\n\n## Unmask\n\n\`\`\`bash\n# Remove the /dev/null symlink, making the service manageable again\nsystemctl unmask firewalld\n\`\`\`\n\n## List All Masked Units\n\n\`\`\`bash\nsystemctl list-unit-files --state=masked\n\`\`\``,
+        answer: `## disable vs mask\n\ndisable:\n- Removes the symlink from the \`.wants/\` directory\n- The service will not start automatically at boot\n- Can still be started manually: \`systemctl start servicename\` works\n- Can still be started as a dependency of another unit\n\nmask:\n- Creates a symlink \`/etc/systemd/system/servicename.service -> /dev/null\`\n- The service cannot be started by any means — manually, at boot, or as a dependency\n- systemd reads the unit file, finds \`/dev/null\`, and refuses to start it\n\n## When to Use mask\n\n\`\`\`bash\n# Prevent a conflicting service from ever starting\n# Example: system ships both firewalld and iptables — use only one\nsystemctl mask firewalld\n\n# Prevent a service with a security vulnerability from running\nsystemctl mask telnet.socket\n\n# Prevent an unnecessary default service (saves resources)\nsystemctl mask ModemManager\n\`\`\`\n\n## Unmask\n\n\`\`\`bash\n# Remove the /dev/null symlink, making the service manageable again\nsystemctl unmask firewalld\n\`\`\`\n\n## List All Masked Units\n\n\`\`\`bash\nsystemctl list-unit-files --state=masked\n\`\`\``,
       },
     ],
     quickFire: [
@@ -1554,19 +1554,19 @@ export const linuxTopics = [
     visualizations: [
       { title: 'Permission Bits Model', description: 'rwx for owner/group/others, octal notation (4=r 2=w 1=x), special bits SUID/SGID/sticky', image: '/diagrams/linux/linux-permissions-model.png' },
     ],
-    introduction: `**Understanding permissions is non-negotiable for DevOps.** Every SSH key must be 600. Every script needs +x. Every shared directory needs SGID. Get this wrong and you get 'Permission denied' with no obvious fix — or worse, a security hole.\n\n## Reading ls -l Output\n\nEvery ls -l line starts with 10 characters: \`drwxr-xr-x\`\n- Position 1: file type (\`-\`=file, \`d\`=directory, \`l\`=symlink, \`b\`=block device)\n- Positions 2-4: owner permissions (r/w/x)\n- Positions 5-7: group permissions (r/w/x)\n- Positions 8-10: others permissions (r/w/x)\n\n## The 4-2-1 Rule\n\nOctal permissions are three digits, each a sum of: **4**=read, **2**=write, **1**=execute.\n- **7** = 4+2+1 = rwx (full access)\n- **6** = 4+2+0 = rw- (read/write, no execute)\n- **5** = 4+0+1 = r-x (read and execute, no write)\n- **4** = 4+0+0 = r-- (read only)\n\nMemoise the pairs: **755** (web server), **644** (config files), **700** (~/.ssh), **600** (private keys).\n\nFile permissions are the foundation of Linux security. Every file and directory has an owner (user), an owning group, and permission bits split into three sets: owner, group, and others.
+    introduction: `Understanding permissions is non-negotiable for DevOps. Every SSH key must be 600. Every script needs +x. Every shared directory needs SGID. Get this wrong and you get 'Permission denied' with no obvious fix — or worse, a security hole.\n\n## Reading ls -l Output\n\nEvery ls -l line starts with 10 characters: \`drwxr-xr-x\`\n- Position 1: file type (\`-\`=file, \`d\`=directory, \`l\`=symlink, \`b\`=block device)\n- Positions 2-4: owner permissions (r/w/x)\n- Positions 5-7: group permissions (r/w/x)\n- Positions 8-10: others permissions (r/w/x)\n\n## The 4-2-1 Rule\n\nOctal permissions are three digits, each a sum of: 4=read, 2=write, 1=execute.\n- 7 = 4+2+1 = rwx (full access)\n- 6 = 4+2+0 = rw- (read/write, no execute)\n- 5 = 4+0+1 = r-x (read and execute, no write)\n- 4 = 4+0+0 = r-- (read only)\n\nMemoise the pairs: 755 (web server), 644 (config files), 700 (~/.ssh), 600 (private keys).\n\nFile permissions are the foundation of Linux security. Every file and directory has an owner (user), an owning group, and permission bits split into three sets: owner, group, and others.
 
-**Octal vs symbolic chmod notation**: chmod 755 is identical to chmod u=rwx,g=rx,o=rx. Octal maps directly: 4=read, 2=write, 1=execute, so 7=rwx, 6=rw-, 5=r-x, 4=r--.
+Octal vs symbolic chmod notation: chmod 755 is identical to chmod u=rwx,g=rx,o=rx. Octal maps directly: 4=read, 2=write, 1=execute, so 7=rwx, 6=rw-, 5=r-x, 4=r--.
 
-**umask**: The user file-creation mask subtracts permissions from the default. Default umask 022 means new files get 644 (666 minus 022) and directories get 755 (777 minus 022). Change with umask 027 to give group read-only and no other access.
+umask: The user file-creation mask subtracts permissions from the default. Default umask 022 means new files get 644 (666 minus 022) and directories get 755 (777 minus 022). Change with umask 027 to give group read-only and no other access.
 
-**SUID bit (4000)**: When set on an executable, the process runs as the file's owner, not the calling user. /usr/bin/passwd uses SUID to let any user write to /etc/shadow (owned by root). Set with chmod u+s or chmod 4755.
+SUID bit (4000): When set on an executable, the process runs as the file's owner, not the calling user. /usr/bin/passwd uses SUID to let any user write to /etc/shadow (owned by root). Set with chmod u+s or chmod 4755.
 
-**SGID bit (2000)**: On executables, runs as the file's group. On directories, new files created inside inherit the directory's group rather than the creator's primary group — essential for shared project directories. Set with chmod g+s.
+SGID bit (2000): On executables, runs as the file's group. On directories, new files created inside inherit the directory's group rather than the creator's primary group — essential for shared project directories. Set with chmod g+s.
 
-**Sticky bit (1000)**: On directories like /tmp, only the file owner (or root) can delete files even if the directory is world-writable. Set with chmod +t.
+Sticky bit (1000): On directories like /tmp, only the file owner (or root) can delete files even if the directory is world-writable. Set with chmod +t.
 
-**POSIX ACLs**: Standard permissions support only one user and one group. getfacl shows ACLs, setfacl -m u:alice:rw file grants alice read/write without changing the owning group. setfacl -m d:u:alice:rw dir sets default ACL for new files in a directory. ACL entries are stored as extended attributes.`,
+POSIX ACLs: Standard permissions support only one user and one group. getfacl shows ACLs, setfacl -m u:alice:rw file grants alice read/write without changing the owning group. setfacl -m d:u:alice:rw dir sets default ACL for new files in a directory. ACL entries are stored as extended attributes.`,
     whenToUse: [
       'Hardening file access on multi-user systems',
       'Setting up shared directories with SGID for consistent group ownership',
@@ -1614,12 +1614,12 @@ export const linuxTopics = [
 # Others: no access
 \`\`\`
 
-**Use 755 for**:
+Use 755 for:
 - Web server document roots that need to be readable by the web server process (www-data group or other)
 - System binaries like /usr/bin/* that all users need to execute
 - Project directories where team members need read access
 
-**Use 700 for**:
+Use 700 for:
 - ~/.ssh directory (SSH will refuse to work if permissions are too open)
 - Private key files — actually use 600 (no execute needed)
 - Personal script directories with sensitive logic
@@ -1638,7 +1638,7 @@ ls -la ~/.ssh
         question: 'What is the SUID bit, where is it legitimately used, and what security risk does it pose?',
         answer: `## SUID Bit
 
-When the SUID bit is set on an executable, the process runs with the **file owner's privileges** instead of the calling user's privileges.
+When the SUID bit is set on an executable, the process runs with the file owner's privileges instead of the calling user's privileges.
 
 \`\`\`bash
 # Find all SUID executables on the system
@@ -1653,12 +1653,12 @@ ls -la /usr/bin/ping      # May have SUID or capabilities
 # If it were 'S' (capital), it means SUID set but no execute — likely a mistake
 \`\`\`
 
-**Legitimate uses**:
+Legitimate uses:
 - /usr/bin/passwd — must write to /etc/shadow (owned by root) so any user can change their password
 - /usr/bin/sudo — needs root to elevate privileges
 - /usr/bin/mount — historically needed root to mount filesystems
 
-**Security risks**:
+Security risks:
 - Any SUID binary with a vulnerability can be exploited to gain root
 - Custom SUID programs are high-value attack targets
 - SUID shell scripts are ignored by the kernel, but this is a common misconception that leads to false confidence
@@ -1700,17 +1700,17 @@ chmod u+s /bin/bash  # DO NOT DO THIS
     visualizations: [
       { title: 'Linux User Types', description: 'Root (UID 0), regular users (UID ≥1000), service accounts (UID 1-999) and their storage files', image: '/diagrams/linux/linux-users-types.png' },
     ],
-    introduction: `Linux has three categories of users, and knowing which type to use — and when — is a core sysadmin skill.\n\n## Three User Types\n\n- **Root (UID 0)** — unrestricted access to everything. Use sparingly, always via \`sudo\` rather than a direct root session. The golden rule: *grant the least access needed*.\n- **Regular users (UID ≥ 1000)** — standard login accounts with a home directory and a login shell. These are real humans.\n- **Service accounts (UID 1-999)** — created by packages for daemons (nginx, postgres, redis). No login shell (\`/sbin/nologin\`), no password, no home directory beyond what the service needs.\n\n## The Three Key Files\n\n\`\`\`bash\n/etc/passwd  # All accounts: username:x:UID:GID:GECOS:home:shell\n/etc/shadow  # Password hashes: root-only (mode 000), $6$=SHA-512\n/etc/group   # Group membership: groupname:x:GID:member1,member2\n\`\`\`\n\nLinux user management is built around two core files and a set of commands that modify them.
+    introduction: `Linux has three categories of users, and knowing which type to use — and when — is a core sysadmin skill.\n\n## Three User Types\n\n- Root (UID 0) — unrestricted access to everything. Use sparingly, always via \`sudo\` rather than a direct root session. The golden rule: *grant the least access needed*.\n- Regular users (UID ≥ 1000) — standard login accounts with a home directory and a login shell. These are real humans.\n- Service accounts (UID 1-999) — created by packages for daemons (nginx, postgres, redis). No login shell (\`/sbin/nologin\`), no password, no home directory beyond what the service needs.\n\n## The Three Key Files\n\n\`\`\`bash\n/etc/passwd  # All accounts: username:x:UID:GID:GECOS:home:shell\n/etc/shadow  # Password hashes: root-only (mode 000), $6$=SHA-512\n/etc/group   # Group membership: groupname:x:GID:member1,member2\n\`\`\`\n\nLinux user management is built around two core files and a set of commands that modify them.
 
-**/etc/passwd format** — seven colon-delimited fields: username:x:UID:GID:GECOS:home_directory:shell. The 'x' in the password field means the actual hash is in /etc/shadow. UID 0 is root; UIDs 1-999 are typically system accounts; UIDs 1000+ are regular users. The GECOS field holds the full name and other info (visible in finger command). The shell field determines the login shell — /sbin/nologin or /bin/false blocks interactive login for service accounts.
+/etc/passwd format — seven colon-delimited fields: username:x:UID:GID:GECOS:home_directory:shell. The 'x' in the password field means the actual hash is in /etc/shadow. UID 0 is root; UIDs 1-999 are typically system accounts; UIDs 1000+ are regular users. The GECOS field holds the full name and other info (visible in finger command). The shell field determines the login shell — /sbin/nologin or /bin/false blocks interactive login for service accounts.
 
-**/etc/shadow** stores the actual password hashes, readable only by root. Format: username:hash:last_change:min_days:max_days:warn_days:inactive_days:expiry. Hash format: $id$salt$hash where id identifies the algorithm (6=SHA-512, 5=SHA-256, 1=MD5-deprecated).
+/etc/shadow stores the actual password hashes, readable only by root. Format: username:hash:last_change:min_days:max_days:warn_days:inactive_days:expiry. Hash format: $id$salt$hash where id identifies the algorithm (6=SHA-512, 5=SHA-256, 1=MD5-deprecated).
 
-**useradd vs adduser**: useradd is the low-level tool (requires explicit flags for home dir, shell, etc.). adduser (Debian/Ubuntu) is a higher-level script with interactive prompts and sensible defaults. In RHEL/CentOS, useradd is configured via /etc/login.defs and /etc/default/useradd.
+useradd vs adduser: useradd is the low-level tool (requires explicit flags for home dir, shell, etc.). adduser (Debian/Ubuntu) is a higher-level script with interactive prompts and sensible defaults. In RHEL/CentOS, useradd is configured via /etc/login.defs and /etc/default/useradd.
 
-**Group management**: Each user has a primary group (set at login, files created with this GID) and supplementary groups (additional access). id command shows all. usermod -aG groupname username adds to a supplementary group without removing existing ones — the -a flag is critical.
+Group management: Each user has a primary group (set at login, files created with this GID) and supplementary groups (additional access). id command shows all. usermod -aG groupname username adds to a supplementary group without removing existing ones — the -a flag is critical.
 
-**su vs sudo**: su switches to another user entirely (needs that user's password; switches environment). sudo runs a single command as another user (needs your own password; logged to syslog; controlled by /etc/sudoers). For system administration, sudo is preferred because it provides accountability.`,
+su vs sudo: su switches to another user entirely (needs that user's password; switches environment). sudo runs a single command as another user (needs your own password; logged to syslog; controlled by /etc/sudoers). For system administration, sudo is preferred because it provides accountability.`,
     whenToUse: [
       'Provisioning new user accounts on a server',
       'Managing service accounts for applications',
@@ -1769,9 +1769,9 @@ sudo cat /etc/shadow | grep alice
 
 ## Why Separate?
 
-/etc/passwd must be **world-readable** because many programs (ls, ps) need to map UIDs to usernames. If password hashes were in passwd, anyone could run offline dictionary attacks.
+/etc/passwd must be world-readable because many programs (ls, ps) need to map UIDs to usernames. If password hashes were in passwd, anyone could run offline dictionary attacks.
 
-/etc/shadow is readable **only by root** (mode 000 or 640 with shadow group), protecting the hashes from offline cracking.
+/etc/shadow is readable only by root (mode 000 or 640 with shadow group), protecting the hashes from offline cracking.
 
 \`\`\`bash
 ls -la /etc/passwd /etc/shadow
@@ -1790,7 +1790,7 @@ su - alice        # Switch to alice with full login environment
 su -c "command"   # Run single command as root
 \`\`\`
 
-- Requires the **target user's password**
+- Requires the target user's password
 - Switches full session context (environment, groups)
 - No audit trail beyond PAM logs
 - Root login via su requires knowing the root password
@@ -1805,7 +1805,7 @@ sudo -l                # List what you're allowed to run
 sudo !!                # Re-run last command with sudo
 \`\`\`
 
-- Requires **your own password** (or NOPASSWD in sudoers)
+- Requires your own password (or NOPASSWD in sudoers)
 - Every command logged to /var/log/auth.log or journald
 - Controlled per-command by /etc/sudoers
 - Root password can remain unknown/disabled
@@ -1846,19 +1846,19 @@ sudo !!                # Re-run last command with sudo
     visualizations: [
       { title: 'Package Manager Families', description: 'Debian/Ubuntu (apt/dpkg) vs RHEL/Fedora (dnf/rpm) + universal packages (snap/flatpak/pip/npm/Docker)', image: '/diagrams/linux/linux-package-families.png' },
     ],
-    introduction: `Package managers are the first skill you use on any new server. Knowing both ecosystems is essential because job requirements don't pick one family for you.\n\n## Two Major Families\n\n| Distro | High-level | Low-level | Package format |\n|---|---|---|---|\n| Debian / Ubuntu | apt | dpkg | .deb |\n| RHEL / Fedora / CentOS | dnf / yum | rpm | .rpm |\n\n## Critical Rule\n\n**Always \`apt update\` before \`apt install\`** — without it you install from a stale package list and may get old versions or 'not found' errors.\n\n**Never \`curl https://... | bash\` in production.** Review the script first. Download it, read it, then run it.\n\n## Daily Commands (Debian/Ubuntu)\n\n\`\`\`bash\napt update                    # Refresh package lists\napt install nginx             # Install a package\napt upgrade                   # Upgrade all installed packages\napt remove nginx              # Remove (keep config files)\napt purge nginx               # Remove + delete config\napt search nginx              # Find packages by name\ndpkg -l | grep nginx          # Check if installed\n\`\`\`\n\n## Daily Commands (RHEL/Fedora)\n\n\`\`\`bash\ndnf check-update              # Check for updates\ndnf install nginx             # Install\ndnf remove nginx              # Remove\ndnf list installed            # All installed packages\nrpm -qa | grep nginx          # Check installed (low-level)\n\`\`\`\n\nLinux package management splits into two major ecosystems: Debian-based (apt/dpkg) and RHEL-based (yum/dnf/rpm). Understanding both is essential for working across distributions.
+    introduction: `Package managers are the first skill you use on any new server. Knowing both ecosystems is essential because job requirements don't pick one family for you.\n\n## Two Major Families\n\n| Distro | High-level | Low-level | Package format |\n|---|---|---|---|\n| Debian / Ubuntu | apt | dpkg | .deb |\n| RHEL / Fedora / CentOS | dnf / yum | rpm | .rpm |\n\n## Critical Rule\n\nAlways \`apt update\` before \`apt install\` — without it you install from a stale package list and may get old versions or 'not found' errors.\n\nNever \`curl https://... | bash\` in production. Review the script first. Download it, read it, then run it.\n\n## Daily Commands (Debian/Ubuntu)\n\n\`\`\`bash\napt update                    # Refresh package lists\napt install nginx             # Install a package\napt upgrade                   # Upgrade all installed packages\napt remove nginx              # Remove (keep config files)\napt purge nginx               # Remove + delete config\napt search nginx              # Find packages by name\ndpkg -l | grep nginx          # Check if installed\n\`\`\`\n\n## Daily Commands (RHEL/Fedora)\n\n\`\`\`bash\ndnf check-update              # Check for updates\ndnf install nginx             # Install\ndnf remove nginx              # Remove\ndnf list installed            # All installed packages\nrpm -qa | grep nginx          # Check installed (low-level)\n\`\`\`\n\nLinux package management splits into two major ecosystems: Debian-based (apt/dpkg) and RHEL-based (yum/dnf/rpm). Understanding both is essential for working across distributions.
 
-**Debian ecosystem (Ubuntu/Debian)**:
+Debian ecosystem (Ubuntu/Debian):
 apt is the high-level tool that handles dependency resolution and downloads from repositories. dpkg is the low-level backend that actually installs .deb files. apt update refreshes the package index from sources. apt upgrade installs newer versions of currently installed packages. apt dist-upgrade additionally resolves dependency changes (may add or remove packages). apt full-upgrade is the modern equivalent of dist-upgrade. Repositories are defined in /etc/apt/sources.list and files under /etc/apt/sources.list.d/.
 
-**RHEL ecosystem (CentOS/Fedora/RHEL)**:
+RHEL ecosystem (CentOS/Fedora/RHEL):
 dnf (Dandified YUM) replaced yum in Fedora 22+ and RHEL 8+. dnf is faster with better dependency resolution and memory usage. rpm is the low-level tool. rpm -qa queries all installed packages, rpm -qi package shows info, rpm -ql package lists files, rpm -qf /path/to/file identifies which package owns a file.
 
-**Finding package ownership**: On Debian: dpkg -S /path/to/file. On RHEL: rpm -qf /path/to/file.
+Finding package ownership: On Debian: dpkg -S /path/to/file. On RHEL: rpm -qf /path/to/file.
 
-**snap**: Canonical's universal package format — self-contained with dependencies bundled. Confinement levels: strict (sandboxed), classic (full system access like traditional packages), devmode (for development). snap list shows installed snaps.
+snap: Canonical's universal package format — self-contained with dependencies bundled. Confinement levels: strict (sandboxed), classic (full system access like traditional packages), devmode (for development). snap list shows installed snaps.
 
-**Compiling from source**: ./configure --prefix=/usr/local checks dependencies and generates Makefile, make compiles, sudo make install installs. Use checkinstall instead of make install to create a proper package for later removal.`,
+Compiling from source: ./configure --prefix=/usr/local checks dependencies and generates Makefile, make compiles, sudo make install installs. Use checkinstall instead of make install to create a proper package for later removal.`,
     whenToUse: [
       'Installing or removing software on Linux servers',
       'Auditing installed packages for security vulnerabilities',
@@ -1994,15 +1994,15 @@ rpm -ql curl
     ],
     introduction: `Understanding the Linux boot process helps diagnose startup failures and tune boot performance.
 
-**Stage 1 — POST and firmware**: Power-On Self Test runs, then BIOS or UEFI firmware takes over. BIOS uses MBR (Master Boot Record, first 512 bytes of disk), limited to 4 primary partitions and 2TB disks. UEFI supports GPT (GUID Partition Table), Secure Boot (cryptographic signature verification of bootloader), and reads the EFI System Partition (ESP, typically /boot/efi, FAT32 formatted).
+Stage 1 — POST and firmware: Power-On Self Test runs, then BIOS or UEFI firmware takes over. BIOS uses MBR (Master Boot Record, first 512 bytes of disk), limited to 4 primary partitions and 2TB disks. UEFI supports GPT (GUID Partition Table), Secure Boot (cryptographic signature verification of bootloader), and reads the EFI System Partition (ESP, typically /boot/efi, FAT32 formatted).
 
-**Stage 2 — GRUB2**: The bootloader. In BIOS mode, GRUB stage 1 lives in the MBR and loads stage 1.5 from the gap after MBR, which loads stage 2 from /boot/grub/. In UEFI mode, GRUB lives on the ESP as a .efi file. GRUB reads /boot/grub/grub.cfg (generated by update-grub or grub2-mkconfig, never edited directly) to display the boot menu. Kernel parameters are passed here (root=UUID=..., ro, quiet, splash, init=/path for alternative init).
+Stage 2 — GRUB2: The bootloader. In BIOS mode, GRUB stage 1 lives in the MBR and loads stage 1.5 from the gap after MBR, which loads stage 2 from /boot/grub/. In UEFI mode, GRUB lives on the ESP as a .efi file. GRUB reads /boot/grub/grub.cfg (generated by update-grub or grub2-mkconfig, never edited directly) to display the boot menu. Kernel parameters are passed here (root=UUID=..., ro, quiet, splash, init=/path for alternative init).
 
-**Stage 3 — Kernel initialization**: GRUB decompresses the kernel image (vmlinuz) into RAM and passes control. The kernel initializes CPU, memory management, and devices. It mounts the initramfs (initial RAM filesystem) as a temporary root.
+Stage 3 — Kernel initialization: GRUB decompresses the kernel image (vmlinuz) into RAM and passes control. The kernel initializes CPU, memory management, and devices. It mounts the initramfs (initial RAM filesystem) as a temporary root.
 
-**Stage 4 — initramfs**: A small, compressed cpio archive containing just enough tools and drivers to mount the real root filesystem (drivers for disk controllers, LVM, RAID, crypto). After mounting real root, it performs pivot_root to switch over.
+Stage 4 — initramfs: A small, compressed cpio archive containing just enough tools and drivers to mount the real root filesystem (drivers for disk controllers, LVM, RAID, crypto). After mounting real root, it performs pivot_root to switch over.
 
-**Stage 5 — systemd**: PID 1 takes over, reads unit files, starts services in dependency order to reach the default target (usually multi-user.target or graphical.target). systemd-analyze blame shows which services are slowest to start.`,
+Stage 5 — systemd: PID 1 takes over, reads unit files, starts services in dependency order to reach the default target (usually multi-user.target or graphical.target). systemd-analyze blame shows which services are slowest to start.`,
     whenToUse: [
       'Diagnosing servers that fail to boot',
       'Adding kernel parameters for debugging (single user mode, no module loading)',
@@ -2038,7 +2038,7 @@ rpm -ql curl
         question: 'Describe every step from pressing the power button to the login prompt appearing.',
         answer: `## Complete Linux Boot Sequence
 
-**1. Power On & POST**
+1. Power On & POST
 \`\`\`
 CPU resets → BIOS/UEFI firmware runs POST
 → Checks RAM, CPU, storage devices
@@ -2046,7 +2046,7 @@ CPU resets → BIOS/UEFI firmware runs POST
 → UEFI: reads ESP partition, finds .efi bootloader
 \`\`\`
 
-**2. GRUB2 Bootloader**
+2. GRUB2 Bootloader
 \`\`\`bash
 # GRUB displays menu from /boot/grub/grub.cfg
 # User selects kernel entry (or timeout picks default)
@@ -2054,7 +2054,7 @@ CPU resets → BIOS/UEFI firmware runs POST
 # Passes kernel command line: root=UUID=abc123 ro quiet splash
 \`\`\`
 
-**3. Kernel Initialization**
+3. Kernel Initialization
 \`\`\`
 vmlinuz decompresses itself into RAM
 → Initializes memory management (MMU, page tables)
@@ -2063,7 +2063,7 @@ vmlinuz decompresses itself into RAM
 → Runs /init script inside initramfs
 \`\`\`
 
-**4. initramfs**
+4. initramfs
 \`\`\`bash
 # initramfs /init script:
 # - Loads storage drivers (SCSI, RAID, LVM, crypto)
@@ -2072,7 +2072,7 @@ vmlinuz decompresses itself into RAM
 # - Execs /sbin/init (systemd) on real root
 \`\`\`
 
-**5. systemd (PID 1)**
+5. systemd (PID 1)
 \`\`\`bash
 systemd-analyze                    # Total boot time
 systemd-analyze blame              # Per-service startup time
@@ -2084,11 +2084,11 @@ journalctl -b                      # All logs from current boot
         question: 'What is initramfs and why does Linux need it?',
         answer: `## initramfs: Initial RAM Filesystem
 
-initramfs (or initrd) is a **compressed cpio archive** loaded into RAM during boot before the real root filesystem is mounted.
+initramfs (or initrd) is a compressed cpio archive loaded into RAM during boot before the real root filesystem is mounted.
 
 ## Why It's Needed
 
-The kernel is modular — drivers for disk controllers, RAID, LVM, encryption are often loadable modules, not compiled in. But to load modules, you need to read from disk. To read from disk, you need the driver. This is the **chicken-and-egg problem**.
+The kernel is modular — drivers for disk controllers, RAID, LVM, encryption are often loadable modules, not compiled in. But to load modules, you need to read from disk. To read from disk, you need the driver. This is the chicken-and-egg problem.
 
 initramfs breaks the cycle by providing a minimal environment with just enough to get to the real disk:
 
@@ -2148,13 +2148,13 @@ initramfs mounts real root at /sysroot
     ],
     introduction: `The Linux kernel is monolithic: all core subsystems (memory management, process scheduling, filesystems, networking, device drivers) run in kernel space at the same privilege level. Unlike microkernels (where subsystems run as separate processes), this gives better performance at the cost of isolation — a kernel bug can crash the entire system.
 
-**Loadable Kernel Modules (LKM)**: Despite being monolithic, Linux supports dynamically loading and unloading code (modules) without rebooting. lsmod lists loaded modules (from /proc/modules), modinfo shows module details (description, parameters, dependencies), modprobe loads a module and all its dependencies (reads /lib/modules/$(uname -r)/modules.dep), rmmod unloads (fails if module is in use), insmod loads a specific .ko file without dependency handling.
+Loadable Kernel Modules (LKM): Despite being monolithic, Linux supports dynamically loading and unloading code (modules) without rebooting. lsmod lists loaded modules (from /proc/modules), modinfo shows module details (description, parameters, dependencies), modprobe loads a module and all its dependencies (reads /lib/modules/$(uname -r)/modules.dep), rmmod unloads (fails if module is in use), insmod loads a specific .ko file without dependency handling.
 
-**/proc filesystem**: A virtual filesystem exposing kernel internal state as files. Nothing is stored on disk — files are generated on-the-fly when read. Key files: /proc/cpuinfo (CPU details including flags for virtualization support), /proc/meminfo (memory breakdown), /proc/loadavg (load averages and process counts), /proc/PID/ (per-process info: /proc/PID/cmdline, /proc/PID/maps for memory map, /proc/PID/fd/ for open file descriptors, /proc/PID/status), /proc/net/tcp for TCP connections (used by ss/netstat), /proc/sys/ for tunables.
+/proc filesystem: A virtual filesystem exposing kernel internal state as files. Nothing is stored on disk — files are generated on-the-fly when read. Key files: /proc/cpuinfo (CPU details including flags for virtualization support), /proc/meminfo (memory breakdown), /proc/loadavg (load averages and process counts), /proc/PID/ (per-process info: /proc/PID/cmdline, /proc/PID/maps for memory map, /proc/PID/fd/ for open file descriptors, /proc/PID/status), /proc/net/tcp for TCP connections (used by ss/netstat), /proc/sys/ for tunables.
 
-**/sys filesystem (sysfs)**: Exposes device and driver information in a structured hierarchy. /sys/class/net/ for network interfaces, /sys/block/ for block devices.
+/sys filesystem (sysfs): Exposes device and driver information in a structured hierarchy. /sys/class/net/ for network interfaces, /sys/block/ for block devices.
 
-**sysctl**: Reads and writes kernel parameters in /proc/sys/. sysctl -a shows all, sysctl net.ipv4.ip_forward reads one, sysctl -w net.ipv4.ip_forward=1 sets it (not persistent). Persistent in /etc/sysctl.conf or /etc/sysctl.d/*.conf, applied with sysctl -p.`,
+sysctl: Reads and writes kernel parameters in /proc/sys/. sysctl -a shows all, sysctl net.ipv4.ip_forward reads one, sysctl -w net.ipv4.ip_forward=1 sets it (not persistent). Persistent in /etc/sysctl.conf or /etc/sysctl.d/*.conf, applied with sysctl -p.`,
     whenToUse: [
       'Tuning kernel parameters for performance or networking',
       'Debugging module loading failures',
@@ -2305,17 +2305,17 @@ ulimit -n              # Current process file descriptor limit
     ],
     introduction: `Bash variables and the environment are fundamental to shell scripting and interactive use. Getting them wrong causes subtle, hard-to-debug bugs.
 
-**Variable assignment and types**: In bash, no type declaration is needed. var=value (no spaces around =). To use, prefix with $: echo $var or echo "\${var}". Curly braces are required for \${var}suffix to disambiguate from $varsuffix.
+Variable assignment and types: In bash, no type declaration is needed. var=value (no spaces around =). To use, prefix with $: echo $var or echo "\${var}". Curly braces are required for \${var}suffix to disambiguate from $varsuffix.
 
-**Local vs global scope**: Variables set in a script are global within that script. Variables set inside a function are global within the script unless declared with local. local var=value restricts the variable to the function scope and its children.
+Local vs global scope: Variables set in a script are global within that script. Variables set inside a function are global within the script unless declared with local. local var=value restricts the variable to the function scope and its children.
 
-**export**: Makes a variable available to child processes (subshells, commands run from the script). Without export, child processes cannot see the variable. export VAR=value sets and exports. env or printenv shows exported variables. set shows all variables including unexported shell variables (much more output).
+export: Makes a variable available to child processes (subshells, commands run from the script). Without export, child processes cannot see the variable. export VAR=value sets and exports. env or printenv shows exported variables. set shows all variables including unexported shell variables (much more output).
 
-**$PATH**: The colon-separated list of directories searched for commands. Order matters — the first match is used. Add to PATH safely: export PATH="$HOME/.local/bin:$PATH" (prepend — takes priority) or PATH="$PATH:/opt/myapp/bin" (append). Never overwrite PATH entirely.
+$PATH: The colon-separated list of directories searched for commands. Order matters — the first match is used. Add to PATH safely: export PATH="$HOME/.local/bin:$PATH" (prepend — takes priority) or PATH="$PATH:/opt/myapp/bin" (append). Never overwrite PATH entirely.
 
-**$IFS (Internal Field Separator)**: Controls word splitting. Default is space/tab/newline. Changing IFS affects for loop iteration and read. Set IFS=$'\n' to iterate over lines with spaces without splitting. Always restore: old_IFS="$IFS"; IFS=$'\n'; ...; IFS="$old_IFS".
+$IFS (Internal Field Separator): Controls word splitting. Default is space/tab/newline. Changing IFS affects for loop iteration and read. Set IFS=$'\n' to iterate over lines with spaces without splitting. Always restore: old_IFS="$IFS"; IFS=$'\n'; ...; IFS="$old_IFS".
 
-**Special variables**: $? (exit code of last command), $$ (current shell PID), $! (PID of last background job), $0 (script name), $1-$9 (positional parameters), $@ (all args, preserves quoting), $* (all args as one string), $# (argument count), $RANDOM (0-32767), $LINENO (current line number).`,
+Special variables: $? (exit code of last command), $$ (current shell PID), $! (PID of last background job), $0 (script name), $1-$9 (positional parameters), $@ (all args, preserves quoting), $* (all args as one string), $# (argument count), $RANDOM (0-32767), $LINENO (current line number).`,
     whenToUse: [
       'Writing robust shell scripts that pass data between functions',
       'Debugging PATH and command-not-found issues',
@@ -2351,7 +2351,7 @@ ulimit -n              # Current process file descriptor limit
         question: 'What is the difference between $@ and $* in bash? When does it matter?',
         answer: `## $@ vs $*
 
-Both expand to all positional parameters, but they differ critically when **double-quoted**.
+Both expand to all positional parameters, but they differ critically when double-quoted.
 
 \`\`\`bash
 #!/bin/bash
@@ -2370,7 +2370,7 @@ show_args() {
 show_args "hello world" "foo bar" "baz"
 \`\`\`
 
-**Output with "$@"**:
+Output with "$@":
 \`\`\`
 Using $@:
   [hello world]
@@ -2378,7 +2378,7 @@ Using $@:
   [baz]
 \`\`\`
 
-**Output with "$*"**:
+Output with "$*":
 \`\`\`
 Using $*:
   [hello world foo bar baz]
@@ -2476,19 +2476,19 @@ export API_KEY="secret123"
     ],
     introduction: `Bash provides multiple conditional constructs, and choosing the right one is critical for correctness and portability.
 
-**[ ] (test command)**: The POSIX-compatible test command. It is actually an external command (though bash has a builtin). It does not support regex, and unquoted variables with spaces cause word splitting bugs. Always quote variables: [ "$var" = "value" ].
+[ ] (test command): The POSIX-compatible test command. It is actually an external command (though bash has a builtin). It does not support regex, and unquoted variables with spaces cause word splitting bugs. Always quote variables: [ "$var" = "value" ].
 
-**[[ ]] (bash keyword)**: Extended test construct — bash-specific. Supports: pattern matching with =~ (regex), = for string comparison with glob patterns, no word splitting so quoting is less critical (though still good practice), && and || inside the brackets. Preferred for bash scripts.
+[[ ]] (bash keyword): Extended test construct — bash-specific. Supports: pattern matching with =~ (regex), = for string comparison with glob patterns, no word splitting so quoting is less critical (though still good practice), && and || inside the brackets. Preferred for bash scripts.
 
-**((  )) (arithmetic evaluation)**: For numeric comparisons and math. (( i++ )), (( count > 5 )), (( result = a * b )). Returns exit code 0 if result is nonzero (truthy), 1 if zero.
+((  )) (arithmetic evaluation): For numeric comparisons and math. (( i++ )), (( count > 5 )), (( result = a * b )). Returns exit code 0 if result is nonzero (truthy), 1 if zero.
 
-**File tests**: -f (regular file), -d (directory), -r/-w/-x (permissions), -s (nonzero size), -e (exists), -L (symlink), -z (string is empty), -n (string is nonzero length), -nt/-ot (newer/older than).
+File tests: -f (regular file), -d (directory), -r/-w/-x (permissions), -s (nonzero size), -e (exists), -L (symlink), -z (string is empty), -n (string is nonzero length), -nt/-ot (newer/older than).
 
-**for loop forms**: for item in list (word-split list), for item in "$@" (all script args), for ((i=0; i<10; i++)) (C-style), for file in *.log (glob expansion).
+for loop forms: for item in list (word-split list), for item in "$@" (all script args), for ((i=0; i<10; i++)) (C-style), for file in *.log (glob expansion).
 
-**while read pattern**: The canonical way to process files line by line. while IFS= read -r line; do ... done < file.txt. IFS= prevents trimming leading/trailing whitespace. -r prevents backslash interpretation.
+while read pattern: The canonical way to process files line by line. while IFS= read -r line; do ... done < file.txt. IFS= prevents trimming leading/trailing whitespace. -r prevents backslash interpretation.
 
-**case statement**: Cleaner than chained elif for string pattern matching. Supports wildcards: *, ?, [abc]. Multiple patterns per case with |.`,
+case statement: Cleaner than chained elif for string pattern matching. Supports wildcards: *, ?, [abc]. Multiple patterns per case with |.`,
     whenToUse: [
       'Writing conditional logic in shell scripts',
       'Processing files line by line',
@@ -2652,17 +2652,17 @@ echo $line_count  # Correct value
     ],
     introduction: `Bash functions allow code reuse and organization within scripts. They behave like mini-scripts within your script, with their own positional parameters but sharing the script's variable scope by default.
 
-**Declaration syntax**: Two equivalent forms exist: function name { body; } and name() { body; }. The name() form is slightly more POSIX-compatible. Functions must be defined before they are called (bash is interpreted top-to-bottom).
+Declaration syntax: Two equivalent forms exist: function name { body; } and name() { body; }. The name() form is slightly more POSIX-compatible. Functions must be defined before they are called (bash is interpreted top-to-bottom).
 
-**local keyword**: Critical for preventing variable pollution. Without local, any variable set inside a function is global within the script. local var=value creates a variable that only exists within the function and its children. Always use local for function-internal variables.
+local keyword: Critical for preventing variable pollution. Without local, any variable set inside a function is global within the script. local var=value creates a variable that only exists within the function and its children. Always use local for function-internal variables.
 
-**Arguments**: Inside a function, $1 $2 $@ $# refer to the function's arguments, shadowing the script's positional params. $0 still refers to the script name.
+Arguments: Inside a function, $1 $2 $@ $# refer to the function's arguments, shadowing the script's positional params. $0 still refers to the script name.
 
-**Return values — the key concept**: The return statement in bash only returns an exit code (0-255 integer). It cannot return strings or complex data. To "return" a string, use echo inside the function and capture with command substitution: result=$(my_function). For large data, write to a file or use a global variable (named explicitly, not local).
+Return values — the key concept: The return statement in bash only returns an exit code (0-255 integer). It cannot return strings or complex data. To "return" a string, use echo inside the function and capture with command substitution: result=$(my_function). For large data, write to a file or use a global variable (named explicitly, not local).
 
-**$FUNCNAME**: An array containing the call stack. \${FUNCNAME[0]} is the current function, \${FUNCNAME[1]} is the caller. Useful for error messages: echo "Error in \${FUNCNAME[0]}: message" >&2.
+$FUNCNAME: An array containing the call stack. \${FUNCNAME[0]} is the current function, \${FUNCNAME[1]} is the caller. Useful for error messages: echo "Error in \${FUNCNAME[0]}: message" >&2.
 
-**Sourcing libraries**: source /path/to/lib.sh or . /path/to/lib.sh loads functions and variables from another file into the current shell. Use this to build reusable function libraries. Source relative paths: source "$(dirname "$0")/lib.sh".`,
+Sourcing libraries: source /path/to/lib.sh or . /path/to/lib.sh loads functions and variables from another file into the current shell. Use this to build reusable function libraries. Source relative paths: source "$(dirname "$0")/lib.sh".`,
     whenToUse: [
       'Organizing complex scripts into reusable components',
       'Building shared function libraries sourced by multiple scripts',
@@ -2838,13 +2838,13 @@ echo "total still: $total"           # Still previous_calculation
     ],
     introduction: `The Unix text processing toolkit is a core skill for Linux administration and DevOps. These tools are composable via pipes and form the basis of shell-based data processing pipelines.
 
-**grep family**: grep searches for patterns. -E (or egrep) enables extended regex (|, +, ?, {n,m}, ()). -F (or fgrep) does fixed-string matching (faster, no regex). Key flags: -v (invert, print non-matching), -r (recursive directory search), -l (print filenames only), -n (line numbers), -c (count matches), -i (case-insensitive), -o (print only matching part), -A/-B/-C N (after/before/context lines).
+grep family: grep searches for patterns. -E (or egrep) enables extended regex (|, +, ?, {n,m}, ()). -F (or fgrep) does fixed-string matching (faster, no regex). Key flags: -v (invert, print non-matching), -r (recursive directory search), -l (print filenames only), -n (line numbers), -c (count matches), -i (case-insensitive), -o (print only matching part), -A/-B/-C N (after/before/context lines).
 
-**sed (stream editor)**: Processes text line by line. The s command is most common: sed 's/pattern/replacement/g'. Flags on s: g (global, all occurrences on line), i (case insensitive), p (print, use with -n). -i for in-place editing (use -i.bak on macOS for backup). Address ranges: sed '3,10d' (delete lines 3-10), sed '/start/,/end/d'.
+sed (stream editor): Processes text line by line. The s command is most common: sed 's/pattern/replacement/g'. Flags on s: g (global, all occurrences on line), i (case insensitive), p (print, use with -n). -i for in-place editing (use -i.bak on macOS for backup). Address ranges: sed '3,10d' (delete lines 3-10), sed '/start/,/end/d'.
 
-**awk**: A full programming language for field-based text processing. Field separator: -F ':' or FS=":" inside. Fields: $1 $2 ... $NF (last field). NR=line number, NF=number of fields. BEGIN{} runs before input, END{} runs after. printf for formatted output. Ideal for summing columns, filtering on conditions, and reformatting structured text.
+awk: A full programming language for field-based text processing. Field separator: -F ':' or FS=":" inside. Fields: $1 $2 ... $NF (last field). NR=line number, NF=number of fields. BEGIN{} runs before input, END{} runs after. printf for formatted output. Ideal for summing columns, filtering on conditions, and reformatting structured text.
 
-**Supporting tools**: cut -d: -f1,3 (extract specific fields by delimiter), sort -k2 -n (numeric sort on field 2), sort -u (unique), uniq -c (count duplicates — requires sorted input), tr -d '\\r' (delete carriage returns), tr -s ' ' (squeeze repeated spaces), wc -l (line count), head -n 20, tail -n 20, tail -f (follow), xargs -I{} command {} (pipe list to command arguments).`,
+Supporting tools: cut -d: -f1,3 (extract specific fields by delimiter), sort -k2 -n (numeric sort on field 2), sort -u (unique), uniq -c (count duplicates — requires sorted input), tr -d '\\r' (delete carriage returns), tr -s ' ' (squeeze repeated spaces), wc -l (line count), head -n 20, tail -n 20, tail -f (follow), xargs -I{} command {} (pipe list to command arguments).`,
     whenToUse: [
       'Analyzing log files for errors and patterns',
       'Extracting specific fields from structured text (CSV, colon-delimited)',
@@ -2988,15 +2988,15 @@ Much faster than regex for fixed patterns — no regex engine overhead.
     ],
     introduction: `Bash job control allows managing multiple processes from a single terminal session. Understanding it is essential for running background tasks, keeping processes alive after logout, and debugging pipeline behavior.
 
-**Terminal signals**: Ctrl+C sends SIGINT (signal 2) to the foreground process group — typically terminates the process. Ctrl+Z sends SIGTSTP (signal 20) — suspends the process (pauses it, doesn't terminate). Ctrl+\\ sends SIGQUIT — terminates with core dump.
+Terminal signals: Ctrl+C sends SIGINT (signal 2) to the foreground process group — typically terminates the process. Ctrl+Z sends SIGTSTP (signal 20) — suspends the process (pauses it, doesn't terminate). Ctrl+\\ sends SIGQUIT — terminates with core dump.
 
-**Job control commands**: After Ctrl+Z suspends a process, jobs -l lists all jobs with their PIDs and states. fg %1 brings job 1 to foreground. bg %1 resumes job 1 in background (as if it were started with &). & at end of command starts directly in background. Job specs: %1 is first job, %% or %+ is most recent job, %- is previous job.
+Job control commands: After Ctrl+Z suspends a process, jobs -l lists all jobs with their PIDs and states. fg %1 brings job 1 to foreground. bg %1 resumes job 1 in background (as if it were started with &). & at end of command starts directly in background. Job specs: %1 is first job, %% or %+ is most recent job, %- is previous job.
 
-**disown vs nohup**: disown removes a job from the shell's job table — the process continues running but the shell won't send SIGHUP when the terminal closes. However, the process's stdin/stdout still point to the terminal. nohup makes a process immune to SIGHUP before starting — output goes to nohup.out by default. For long-running processes, use nohup command > output.log 2>&1 & and then optionally disown.
+disown vs nohup: disown removes a job from the shell's job table — the process continues running but the shell won't send SIGHUP when the terminal closes. However, the process's stdin/stdout still point to the terminal. nohup makes a process immune to SIGHUP before starting — output goes to nohup.out by default. For long-running processes, use nohup command > output.log 2>&1 & and then optionally disown.
 
-**Process substitution** <(command): Creates a named pipe (FIFO) and substitutes its path. Allows commands that expect files to receive command output: diff <(sort file1.txt) <(sort file2.txt). The command runs in a subshell.
+Process substitution <(command): Creates a named pipe (FIFO) and substitutes its path. Allows commands that expect files to receive command output: diff <(sort file1.txt) <(sort file2.txt). The command runs in a subshell.
 
-**pipefail**: By default, a pipeline's exit code is the last command's exit code. set -o pipefail makes the pipeline fail if any command fails. Critical for reliable scripts.`,
+pipefail: By default, a pipeline's exit code is the last command's exit code. set -o pipefail makes the pipeline fail if any command fails. Critical for reliable scripts.`,
     whenToUse: [
       'Running long operations in background while continuing work',
       'Keeping processes alive after SSH session disconnect',
@@ -3158,22 +3158,22 @@ grep "optional_pattern" file.txt | process_matches || true
     ],
     introduction: `Linux kernel routing determines where outgoing packets are sent. Every packet consults the routing table, and the kernel applies longest prefix match to select the best route.
 
-**The routing table**: ip route show (the modern replacement for the obsolete route command) displays the main routing table. Output fields: destination network, via (gateway IP), dev (outgoing interface), src (preferred source IP), metric (preference — lower is preferred). The default route (0.0.0.0/0) matches all destinations not covered by more specific routes.
+The routing table: ip route show (the modern replacement for the obsolete route command) displays the main routing table. Output fields: destination network, via (gateway IP), dev (outgoing interface), src (preferred source IP), metric (preference — lower is preferred). The default route (0.0.0.0/0) matches all destinations not covered by more specific routes.
 
-**Longest prefix match**: When multiple routes match a destination, the most specific (longest prefix) wins. A /32 host route beats a /24 subnet route which beats the default /0 route.
+Longest prefix match: When multiple routes match a destination, the most specific (longest prefix) wins. A /32 host route beats a /24 subnet route which beats the default /0 route.
 
-**Adding and removing routes**:
+Adding and removing routes:
 \`\`\`
 ip route add 10.0.0.0/8 via 192.168.1.1 dev eth0
 ip route del 10.0.0.0/8
 ip route add default via 192.168.1.254
 \`\`\`
 
-**Policy routing (ip rule)**: Linux supports multiple routing tables (0-252) plus main (253), default (254), and local (255). ip rule list shows policy rules ordered by priority. When a rule matches (by source IP, mark, interface, etc.), the kernel consults that rule's table. This enables source-based routing — essential for multi-homed servers where reply traffic must exit the same interface it arrived on.
+Policy routing (ip rule): Linux supports multiple routing tables (0-252) plus main (253), default (254), and local (255). ip rule list shows policy rules ordered by priority. When a rule matches (by source IP, mark, interface, etc.), the kernel consults that rule's table. This enables source-based routing — essential for multi-homed servers where reply traffic must exit the same interface it arrived on.
 
-**ECMP (Equal-Cost Multi-Path)**: Multiple gateways with equal cost: ip route add default nexthop via 10.0.0.1 weight 1 nexthop via 10.0.0.2 weight 1. Kernel hashes the packet's 5-tuple to select the path.
+ECMP (Equal-Cost Multi-Path): Multiple gateways with equal cost: ip route add default nexthop via 10.0.0.1 weight 1 nexthop via 10.0.0.2 weight 1. Kernel hashes the packet's 5-tuple to select the path.
 
-**ip route get IP**: Test which route and source IP would be used for a specific destination — invaluable for debugging routing issues.`,
+ip route get IP: Test which route and source IP would be used for a specific destination — invaluable for debugging routing issues.`,
     whenToUse: [
       'Multi-homed servers (multiple network interfaces/ISPs)',
       'VPN and overlay network configuration',
@@ -3256,7 +3256,7 @@ ip route show
 
 ## Selection Steps
 
-**1. Policy rules first (ip rule list)**
+1. Policy rules first (ip rule list)
 \`\`\`bash
 ip rule list
 # 0:  from all lookup local    (always checked first — local addresses)
@@ -3264,20 +3264,20 @@ ip rule list
 # 32767: from all lookup default
 \`\`\`
 
-**2. Within a table: longest prefix match**
+2. Within a table: longest prefix match
 \`\`\`
 Destination: 192.168.1.100
 Matches: 192.168.1.0/24 (/24) AND 192.168.1.100/32 (/32)
 Winner: 192.168.1.100/32 (longer prefix = more specific)
 \`\`\`
 
-**3. Tie-breaking (same prefix length)**
+3. Tie-breaking (same prefix length)
 \`\`\`
 Same prefix → compare metric (lower wins)
 Same metric → ECMP if multiple nexthops configured
 \`\`\`
 
-**4. Test a specific lookup**
+4. Test a specific lookup
 \`\`\`bash
 ip route get 192.168.1.100
 # 192.168.1.100 via 192.168.1.254 dev eth0 src 192.168.1.10
@@ -3317,20 +3317,20 @@ ip route get 8.8.8.8
     ],
     introduction: `ss (socket statistics) is the modern replacement for netstat. It reads socket information directly from the kernel via netlink socket rather than parsing /proc/net/tcp, making it significantly faster on systems with many connections.
 
-**ss -tulnp decoded**:
+ss -tulnp decoded:
 - t: TCP sockets
 - u: UDP sockets
 - l: listening sockets only (omit to see established connections too)
 - n: numeric — show IP addresses and port numbers instead of resolving to hostnames and service names (much faster)
 - p: show process name and PID
 
-**Reading ss output**: Netid (tcp/udp/unix), State, Recv-Q (bytes received but not read by application — high value means app can't keep up), Send-Q (bytes in send buffer not yet acknowledged by remote), Local Address:Port, Peer Address:Port, Process.
+Reading ss output: Netid (tcp/udp/unix), State, Recv-Q (bytes received but not read by application — high value means app can't keep up), Send-Q (bytes in send buffer not yet acknowledged by remote), Local Address:Port, Peer Address:Port, Process.
 
-**TCP state machine**: The full TCP handshake and teardown creates distinct connection states. LISTEN (server waiting), SYN_SENT (client sent SYN, waiting for SYN-ACK), SYN_RECV (server received SYN, sent SYN-ACK), ESTABLISHED (connected), FIN_WAIT_1/2 (initiator closing), TIME_WAIT (initiator waiting for delayed packets), CLOSE_WAIT (receiver's side acknowledged FIN, application hasn't called close()), LAST_ACK, CLOSED.
+TCP state machine: The full TCP handshake and teardown creates distinct connection states. LISTEN (server waiting), SYN_SENT (client sent SYN, waiting for SYN-ACK), SYN_RECV (server received SYN, sent SYN-ACK), ESTABLISHED (connected), FIN_WAIT_1/2 (initiator closing), TIME_WAIT (initiator waiting for delayed packets), CLOSE_WAIT (receiver's side acknowledged FIN, application hasn't called close()), LAST_ACK, CLOSED.
 
-**TIME_WAIT**: After TCP connection closes, the initiating side enters TIME_WAIT for 2×MSL (Maximum Segment Lifetime, typically 30-60 seconds, so TIME_WAIT lasts 60-120 seconds). Purpose: ensure delayed/duplicate packets from the old connection don't corrupt a new connection with the same 4-tuple. Thousands of TIME_WAIT connections are normal on a busy server — the kernel manages them automatically.
+TIME_WAIT: After TCP connection closes, the initiating side enters TIME_WAIT for 2×MSL (Maximum Segment Lifetime, typically 30-60 seconds, so TIME_WAIT lasts 60-120 seconds). Purpose: ensure delayed/duplicate packets from the old connection don't corrupt a new connection with the same 4-tuple. Thousands of TIME_WAIT connections are normal on a busy server — the kernel manages them automatically.
 
-**CLOSE_WAIT**: The remote sent FIN (wants to close) and the local acknowledged it, but the local application hasn't called close() yet. CLOSE_WAIT connections accumulate when there's an application bug (not calling close() on HTTP keep-alive connections, unclosed sockets in code). This is almost always an application bug, not a kernel issue.`,
+CLOSE_WAIT: The remote sent FIN (wants to close) and the local acknowledged it, but the local application hasn't called close() yet. CLOSE_WAIT connections accumulate when there's an application bug (not calling close() on HTTP keep-alive connections, unclosed sockets in code). This is almost always an application bug, not a kernel issue.`,
     whenToUse: [
       'Checking what ports are listening on a server',
       'Diagnosing "address already in use" errors',
@@ -3431,7 +3431,7 @@ ss -tn | grep CLOSE-WAIT | wc -l
 
 ## Common Causes
 
-**1. HTTP connection not closed in code**
+1. HTTP connection not closed in code
 \`\`\`python
 # Bug: response body not fully read / connection not closed
 conn = http.client.HTTPConnection("example.com")
@@ -3440,11 +3440,11 @@ resp = conn.getresponse()
 # Missing: resp.read() and conn.close()
 \`\`\`
 
-**2. Database connection pool leak**
+2. Database connection pool leak
 - Connection acquired but not returned to pool after exception
 - try/finally or context managers prevent this
 
-**3. File descriptor leak**
+3. File descriptor leak
 - Sockets opened but never closed when function exits abnormally
 
 ## Fix
@@ -3481,11 +3481,11 @@ CLOSE_WAIT connections cannot be fixed by kernel tuning. The application must be
     ],
     introduction: `tcpdump is the essential command-line packet capture tool. It uses libpcap and BPF (Berkeley Packet Filter) to capture and filter network packets at the kernel level, minimizing the data sent to userspace.
 
-**Basic usage**: tcpdump -i eth0 captures on eth0. tcpdump -i any captures on all interfaces (useful when you're not sure which interface traffic uses, but misses some VLAN information). tcpdump with no filter prints all packets — typically too much data.
+Basic usage: tcpdump -i eth0 captures on eth0. tcpdump -i any captures on all interfaces (useful when you're not sure which interface traffic uses, but misses some VLAN information). tcpdump with no filter prints all packets — typically too much data.
 
-**BPF filter expressions**: The filter language is concise and powerful. Primitives: host 1.2.3.4 (source or destination), src host 1.2.3.4 (source only), dst host, port 80 (source or destination port), src port, dst port, tcp (TCP only), udp, net 10.0.0.0/8 (network). Combinations: and (&&), or (||), not (!). Parentheses for grouping: 'tcp and (port 80 or port 443)'.
+BPF filter expressions: The filter language is concise and powerful. Primitives: host 1.2.3.4 (source or destination), src host 1.2.3.4 (source only), dst host, port 80 (source or destination port), src port, dst port, tcp (TCP only), udp, net 10.0.0.0/8 (network). Combinations: and (&&), or (||), not (!). Parentheses for grouping: 'tcp and (port 80 or port 443)'.
 
-**Key flags**:
+Key flags:
 - -n: no DNS resolution (essential on busy servers)
 - -nn: no DNS and no service name resolution
 - -v/-vv/-vvv: increasing verbosity (protocol details)
@@ -3497,7 +3497,7 @@ CLOSE_WAIT connections cannot be fixed by kernel tuning. The application must be
 - -r file.pcap: read from file
 - -c N: stop after N packets
 
-**tshark**: Terminal-based Wireshark. tshark -r file.pcap for reading captures, -Y 'display filter' for Wireshark display filters (more expressive than BPF), -T fields -e field for extracting specific fields.`,
+tshark: Terminal-based Wireshark. tshark -r file.pcap for reading captures, -Y 'display filter' for Wireshark display filters (more expressive than BPF), -T fields -e field for extracting specific fields.`,
     whenToUse: [
       'Debugging application connectivity issues (can the server receive the packets?)',
       'Verifying TLS certificate presentation during HTTPS handshake',
@@ -3642,15 +3642,15 @@ tshark -r /tmp/tls_capture.pcap \
     ],
     introduction: `DNS debugging is a critical skill — many service failures are ultimately DNS failures. The tools and configuration files involved form a layered system.
 
-**dig (Domain Information Groper)**: The preferred DNS debugging tool for its structured, unambiguous output. dig @server name type queries a specific nameserver. Without @server, uses the system resolver from /etc/resolv.conf. Common types: A (IPv4), AAAA (IPv6), CNAME (canonical name), MX (mail), TXT (text records, SPF/DKIM/verification), NS (nameservers), SOA (Start of Authority), PTR (reverse DNS). Key options: +short (just the answer), +trace (full delegation from root servers), +norecurse (non-recursive query), +time=2 (short timeout).
+dig (Domain Information Groper): The preferred DNS debugging tool for its structured, unambiguous output. dig @server name type queries a specific nameserver. Without @server, uses the system resolver from /etc/resolv.conf. Common types: A (IPv4), AAAA (IPv6), CNAME (canonical name), MX (mail), TXT (text records, SPF/DKIM/verification), NS (nameservers), SOA (Start of Authority), PTR (reverse DNS). Key options: +short (just the answer), +trace (full delegation from root servers), +norecurse (non-recursive query), +time=2 (short timeout).
 
-**Reading dig output**: QUESTION SECTION shows what was asked. ANSWER SECTION shows the records. AUTHORITY SECTION shows the authoritative nameservers for the domain. ADDITIONAL SECTION shows IP addresses for nameservers. ;; MSG SIZE shows query/response sizes. The TTL in the ANSWER shows how long the answer is cached.
+Reading dig output: QUESTION SECTION shows what was asked. ANSWER SECTION shows the records. AUTHORITY SECTION shows the authoritative nameservers for the domain. ADDITIONAL SECTION shows IP addresses for nameservers. ;; MSG SIZE shows query/response sizes. The TTL in the ANSWER shows how long the answer is cached.
 
-**/etc/resolv.conf**: The system DNS configuration. nameserver IP specifies DNS servers (up to 3). search domain1 domain2 appends these domains to unqualified names (myservice resolves as myservice.domain1, then myservice.domain2). options ndots:5 means names with fewer than 5 dots get the search domains appended first (Kubernetes sets this to cause issues with external DNS).
+/etc/resolv.conf: The system DNS configuration. nameserver IP specifies DNS servers (up to 3). search domain1 domain2 appends these domains to unqualified names (myservice resolves as myservice.domain1, then myservice.domain2). options ndots:5 means names with fewer than 5 dots get the search domains appended first (Kubernetes sets this to cause issues with external DNS).
 
-**/etc/nsswitch.conf**: Controls the order of name resolution mechanisms. The hosts line: files dns — means check /etc/hosts first, then DNS. With just dns, /etc/hosts is ignored. compat includes NIS.
+/etc/nsswitch.conf: Controls the order of name resolution mechanisms. The hosts line: files dns — means check /etc/hosts first, then DNS. With just dns, /etc/hosts is ignored. compat includes NIS.
 
-**systemd-resolved**: A caching stub resolver at 127.0.0.53. Modern Ubuntu/Debian use it by default. /etc/resolv.conf is a symlink to /run/systemd/resolve/stub-resolv.conf. resolvectl status shows configuration per interface. resolvectl query hostname shows resolution path. Flush cache: resolvectl flush-caches.`,
+systemd-resolved: A caching stub resolver at 127.0.0.53. Modern Ubuntu/Debian use it by default. /etc/resolv.conf is a symlink to /run/systemd/resolve/stub-resolv.conf. resolvectl status shows configuration per interface. resolvectl query hostname shows resolution path. Flush cache: resolvectl flush-caches.`,
     whenToUse: [
       'Diagnosing DNS resolution failures in applications',
       'Verifying DNS propagation after DNS record changes',
@@ -3796,9 +3796,9 @@ resolvectl status     # If using systemd-resolved
     ],
     introduction: `curl is the Swiss Army knife for HTTP debugging and API testing. It supports nearly every HTTP feature and provides detailed output of the full request/response cycle.
 
-**curl -v (verbose mode)**: Shows the entire conversation — TCP connection, TLS handshake details, request headers (lines starting with >), and response headers (lines starting with <). Lines starting with * are informational (connecting, TLS version, SSL certificate details, connection reuse).
+curl -v (verbose mode): Shows the entire conversation — TCP connection, TLS handshake details, request headers (lines starting with >), and response headers (lines starting with <). Lines starting with * are informational (connecting, TLS version, SSL certificate details, connection reuse).
 
-**Request construction flags**:
+Request construction flags:
 - -X METHOD: HTTP method (GET is default, POST/PUT/DELETE/PATCH/HEAD)
 - -H "Header: Value": add request header
 - -d "body": request body (implies POST if -X not given)
@@ -3808,7 +3808,7 @@ resolvectl status     # If using systemd-resolved
 - -u user:pass: HTTP Basic authentication
 - -H "Authorization: Bearer token": JWT/OAuth authentication
 
-**Response and output flags**:
+Response and output flags:
 - -o file: save response body to file
 - -O: save with server filename
 - -s: silent (no progress meter)
@@ -3817,13 +3817,13 @@ resolvectl status     # If using systemd-resolved
 - -L: follow redirects
 - -w "%{time_total}\n": write-out format string for timing metrics
 
-**TLS debugging**:
+TLS debugging:
 - --cacert ca.pem: custom CA certificate
 - --cert client.pem: client certificate
 - -k/--insecure: skip certificate verification (debugging only — never in scripts)
 - --resolve host:port:IP: override DNS without changing /etc/hosts
 
-**wget vs curl**: wget is optimized for downloading files (recursive site download with -r, resume with -c). curl is better for API debugging, supports more protocols, and provides more output detail.`,
+wget vs curl: wget is optimized for downloading files (recursive site download with -r, resume with -c). curl is better for API debugging, supports more protocols, and provides more output detail.`,
     whenToUse: [
       'Testing API endpoints during development and debugging',
       'Verifying HTTPS certificate and TLS configuration',
@@ -3990,17 +3990,17 @@ api_call DELETE /v1/users/123 ""
     ],
     introduction: `top and htop are the first tools you reach for when investigating system performance. Understanding what you're looking at is critical — the numbers can be misleading without context.
 
-**Load average**: The three numbers (e.g., 2.50 0.80 0.40) represent the average number of runnable or uninterruptible-sleep processes over the last 1, 5, and 15 minutes. A process in either state contributes 1.0 to the load. Rule of thumb: divide by CPU count. On a 4-core system, load 4.0 means fully loaded, 8.0 means severely overloaded (processes waiting for CPU). A rising trend (15-min higher than 1-min) means load is increasing.
+Load average: The three numbers (e.g., 2.50 0.80 0.40) represent the average number of runnable or uninterruptible-sleep processes over the last 1, 5, and 15 minutes. A process in either state contributes 1.0 to the load. Rule of thumb: divide by CPU count. On a 4-core system, load 4.0 means fully loaded, 8.0 means severely overloaded (processes waiting for CPU). A rising trend (15-min higher than 1-min) means load is increasing.
 
-**CPU time columns** (in top header): %us = user space (application code), %sy = system/kernel (time spent in kernel on behalf of processes), %ni = niced processes, %id = idle (available headroom), %wa = I/O wait (CPU idle while waiting for disk or network I/O — high value is a disk bottleneck indicator), %hi = hardware interrupts, %si = software interrupts, %st = steal time (CPU stolen by hypervisor for other VMs — on cloud instances, high %st means noisy neighbor).
+CPU time columns (in top header): %us = user space (application code), %sy = system/kernel (time spent in kernel on behalf of processes), %ni = niced processes, %id = idle (available headroom), %wa = I/O wait (CPU idle while waiting for disk or network I/O — high value is a disk bottleneck indicator), %hi = hardware interrupts, %si = software interrupts, %st = steal time (CPU stolen by hypervisor for other VMs — on cloud instances, high %st means noisy neighbor).
 
-**Process table columns**: PID, USER, PR (priority, lower=higher priority), NI (nice value -20 to 19), VIRT (virtual memory allocated), RES (resident set — actual RAM in use), SHR (shared memory), S (state: R=running, S=sleeping, D=uninterruptible, Z=zombie, T=stopped), %CPU, %MEM, TIME+, COMMAND.
+Process table columns: PID, USER, PR (priority, lower=higher priority), NI (nice value -20 to 19), VIRT (virtual memory allocated), RES (resident set — actual RAM in use), SHR (shared memory), S (state: R=running, S=sleeping, D=uninterruptible, Z=zombie, T=stopped), %CPU, %MEM, TIME+, COMMAND.
 
-**Interactive top commands**: k = kill by PID, r = renice, P = sort by CPU, M = sort by memory, T = sort by CPU time, u = filter by user, 1 = toggle per-CPU breakdown (shows all cores individually), H = show threads, q = quit.
+Interactive top commands: k = kill by PID, r = renice, P = sort by CPU, M = sort by memory, T = sort by CPU time, u = filter by user, 1 = toggle per-CPU breakdown (shows all cores individually), H = show threads, q = quit.
 
-**htop advantages over top**: Color-coded display, mouse support, visual CPU/memory bars, tree view (F5) for parent/child relationships, easier kill (F9 + signal selection), filter by string (F4), and sorting by column click. htop also shows CPU numbers rather than aggregate.
+htop advantages over top: Color-coded display, mouse support, visual CPU/memory bars, tree view (F5) for parent/child relationships, easier kill (F9 + signal selection), filter by string (F4), and sorting by column click. htop also shows CPU numbers rather than aggregate.
 
-**Zombie processes**: Shown as Z in state column. Child process has exited but parent hasn't called wait() to collect its exit status. The zombie holds a PID but no resources. Fix: fix the parent process code or restart the parent.`,
+Zombie processes: Shown as Z in state column. Child process has exited but parent hasn't called wait() to collect its exit status. The zombie holds a PID but no resources. Fix: fix the parent process code or restart the parent.`,
     whenToUse: [
       'First-pass investigation of a slow or unresponsive system',
       'Identifying which process is consuming unexpected CPU or memory',
@@ -4038,7 +4038,7 @@ api_call DELETE /v1/users/123 ""
 
 Load 8.0 / 4 CPUs = 200% loaded — two CPU-worth of processes waiting at all times.
 
-**Step 1: Check if it's CPU or I/O bound**
+Step 1: Check if it's CPU or I/O bound
 
 \`\`\`bash
 top
@@ -4049,7 +4049,7 @@ top
 # If wa were 40.0+ = I/O bound, not CPU
 \`\`\`
 
-**Step 2: Find which processes are using CPU**
+Step 2: Find which processes are using CPU
 
 \`\`\`bash
 # In top: press P to sort by CPU
@@ -4057,7 +4057,7 @@ top
 ps aux --sort=-%cpu | head -10
 \`\`\`
 
-**Step 3: If I/O bound, investigate disk**
+Step 3: If I/O bound, investigate disk
 
 \`\`\`bash
 iostat -x 1
@@ -4068,7 +4068,7 @@ iostat -x 1
 iotop -o  # Only show processes actively doing I/O
 \`\`\`
 
-**Step 4: Check for D-state (uninterruptible sleep)**
+Step 4: Check for D-state (uninterruptible sleep)
 
 \`\`\`bash
 # D-state processes contribute to load average but don't consume CPU
@@ -4078,7 +4078,7 @@ ps aux | grep " D "
 # Common cause: NFS hang, stuck disk I/O, kernel bug
 \`\`\`
 
-**Step 5: Historical trend**
+Step 5: Historical trend
 
 \`\`\`bash
 sar -q 1 10       # Load average history
@@ -4093,9 +4093,9 @@ uptime            # Current + quick comparison
 %Cpu(s): 5.0 us, 2.0 sy, 0.0 ni, 15.0 id, 78.0 wa, 0.0 hi, 0.0 si
 \`\`\`
 
-**%wa = 78%**: CPU is mostly idle, waiting for I/O to complete. The disk (or network) is the bottleneck. Adding more CPUs won't help — the work is waiting on I/O.
+%wa = 78%: CPU is mostly idle, waiting for I/O to complete. The disk (or network) is the bottleneck. Adding more CPUs won't help — the work is waiting on I/O.
 
-**%us = 5%**: Application code running. If this were 95%, the bottleneck is CPU computation — more CPUs would help.
+%us = 5%: Application code running. If this were 95%, the bottleneck is CPU computation — more CPUs would help.
 
 ## How to Investigate High %wa
 
@@ -4154,17 +4154,17 @@ lsof -p PID | grep -v REG  # Non-regular files (pipes, sockets)
     ],
     introduction: `vmstat and iostat provide system-wide and per-device performance statistics at a level of detail that top doesn't offer.
 
-**vmstat 1** (run every 1 second): The first row after the header is averages since boot — ignore it. Subsequent rows are 1-second samples.
+vmstat 1 (run every 1 second): The first row after the header is averages since boot — ignore it. Subsequent rows are 1-second samples.
 
 Column groups and key fields:
-- **procs**: r = processes in run queue (waiting for CPU), b = processes in uninterruptible sleep (D state, blocked on I/O)
-- **memory**: swpd = swap used, free = free RAM, buff = buffer cache (block I/O), cache = page cache (file data). In Linux, free RAM is intentionally low — the OS uses it for cache
-- **swap**: si = swap in (KB/s, pages being read FROM swap TO RAM), so = swap out (KB/s, pages being WRITTEN TO swap). Any nonzero si/so means active swapping — serious performance problem
-- **io**: bi = blocks in (from disk), bo = blocks out (to disk), in 512-byte blocks/second
-- **system**: in = interrupts/sec, cs = context switches/sec. Very high cs (>100,000/sec) with low CPU can indicate excessive threading or system calls
-- **cpu**: identical to top's CPU columns — us sy id wa st
+- procs: r = processes in run queue (waiting for CPU), b = processes in uninterruptible sleep (D state, blocked on I/O)
+- memory: swpd = swap used, free = free RAM, buff = buffer cache (block I/O), cache = page cache (file data). In Linux, free RAM is intentionally low — the OS uses it for cache
+- swap: si = swap in (KB/s, pages being read FROM swap TO RAM), so = swap out (KB/s, pages being WRITTEN TO swap). Any nonzero si/so means active swapping — serious performance problem
+- io: bi = blocks in (from disk), bo = blocks out (to disk), in 512-byte blocks/second
+- system: in = interrupts/sec, cs = context switches/sec. Very high cs (>100,000/sec) with low CPU can indicate excessive threading or system calls
+- cpu: identical to top's CPU columns — us sy id wa st
 
-**iostat -x 1** (extended I/O statistics per device):
+iostat -x 1 (extended I/O statistics per device):
 - r/s, w/s: read/write operations per second (IOPS)
 - rMB/s, wMB/s: throughput
 - rrqm/s, wrqm/s: merged requests (OS combining adjacent requests before sending to device)
@@ -4172,7 +4172,7 @@ Column groups and key fields:
 - aqu-sz (or avgqu-sz): average queue length (requests waiting + being serviced)
 - %util: percentage of time the device is busy. Approaches 100% when the device is saturated
 
-**The critical insight**: await is the total time from I/O request submission to completion. svctm (deprecated but historically present) was device service time. A large gap between await and svctm indicates queuing — the device can service I/O quickly but requests are piling up. With modern SSDs, %util can be 100% but the device is not truly saturated (SSDs queue internally).`,
+The critical insight: await is the total time from I/O request submission to completion. svctm (deprecated but historically present) was device service time. A large gap between await and svctm indicates queuing — the device can service I/O quickly but requests are piling up. With modern SSDs, %util can be 100% but the device is not truly saturated (SSDs queue internally).`,
     whenToUse: [
       'Confirming whether swapping is occurring before it becomes critical',
       'Identifying disk I/O bottlenecks during database or file system issues',
@@ -4219,9 +4219,9 @@ vmstat 1
 
 ## What si/so Mean
 
-**si (swap in)**: Pages being read FROM swap device TO RAM. This happens when a process needs memory that was previously swapped out. Every si causes a disk read.
+si (swap in): Pages being read FROM swap device TO RAM. This happens when a process needs memory that was previously swapped out. Every si causes a disk read.
 
-**so (swap out)**: Pages being written FROM RAM TO swap device. Kernel is pushing memory to disk to free up RAM for other processes.
+so (swap out): Pages being written FROM RAM TO swap device. Kernel is pushing memory to disk to free up RAM for other processes.
 
 ## Urgency Assessment
 
@@ -4273,7 +4273,7 @@ await = queue_wait_time + device_service_time
                           (what svctm approximated)
 \`\`\`
 
-**Example analysis**:
+Example analysis:
 \`\`\`
 r_await = 85ms   (total read latency including wait)
 HDD typical service time ≈ 8-10ms
@@ -4283,7 +4283,7 @@ aqu-sz = 8.5  -- 8.5 requests in queue on average
 %util = 98%   -- device is almost always busy
 \`\`\`
 
-**Interpretation**: The disk can physically service I/O in ~10ms, but requests wait 75ms in queue. Solution: reduce I/O rate, use faster storage, add I/O scheduling tuning, or investigate application for unnecessary I/O.
+Interpretation: The disk can physically service I/O in ~10ms, but requests wait 75ms in queue. Solution: reduce I/O rate, use faster storage, add I/O scheduling tuning, or investigate application for unnecessary I/O.
 
 \`\`\`bash
 # For SSDs: high await but low aqu-sz is unusual — check for driver issues
@@ -4321,19 +4321,19 @@ aqu-sz = 8.5  -- 8.5 requests in queue on average
     ],
     introduction: `perf is the Linux performance profiling Swiss Army knife, built directly into the kernel subsystem. It uses hardware performance counters and software events to profile at near-zero overhead.
 
-**perf stat**: Collects hardware counter statistics for a command run. Key metrics: task-clock (milliseconds of CPU time), cycles (CPU clock cycles), instructions (retired instructions), IPC = instructions/cycles (efficiency measure — 1.0+ is good, below 0.5 suggests memory-bound workload), cache-misses (LLC misses indicate memory access pattern problems), branch-misses (mispredicted branches cause pipeline stalls).
+perf stat: Collects hardware counter statistics for a command run. Key metrics: task-clock (milliseconds of CPU time), cycles (CPU clock cycles), instructions (retired instructions), IPC = instructions/cycles (efficiency measure — 1.0+ is good, below 0.5 suggests memory-bound workload), cache-misses (LLC misses indicate memory access pattern problems), branch-misses (mispredicted branches cause pipeline stalls).
 
-**perf record**: Samples the call stack at a configurable rate (default 4000 Hz, often set to 99 Hz with -F 99 to avoid frequency aliasing). Records to perf.data. Flags: -g (call graph/stack traces), -p PID (attach to running process), -a (system-wide), --call-graph fp (frame pointer unwinding — fastest), --call-graph dwarf (DWARF unwinding — works without frame pointers but more overhead).
+perf record: Samples the call stack at a configurable rate (default 4000 Hz, often set to 99 Hz with -F 99 to avoid frequency aliasing). Records to perf.data. Flags: -g (call graph/stack traces), -p PID (attach to running process), -a (system-wide), --call-graph fp (frame pointer unwinding — fastest), --call-graph dwarf (DWARF unwinding — works without frame pointers but more overhead).
 
-**perf report**: Interactive TUI for analyzing perf.data. Shows functions sorted by CPU time with caller/callee breakdown.
+perf report: Interactive TUI for analyzing perf.data. Shows functions sorted by CPU time with caller/callee breakdown.
 
-**Flame Graphs** (invented by Brendan Gregg): A visualization where the x-axis represents alphabetically sorted stack frames (width = proportion of time), y-axis is call stack depth (bottom = root, top = leaf function). The key insight: **wide frames at the top** are where time is actually spent. Color is irrelevant. Look for wide plateaus that indicate hot code paths.
+Flame Graphs (invented by Brendan Gregg): A visualization where the x-axis represents alphabetically sorted stack frames (width = proportion of time), y-axis is call stack depth (bottom = root, top = leaf function). The key insight: wide frames at the top are where time is actually spent. Color is irrelevant. Look for wide plateaus that indicate hot code paths.
 
-**Generating flame graphs**:
+Generating flame graphs:
 1. perf record -F 99 -g -p PID -- sleep 30
 2. perf script | stackcollapse-perf.pl | flamegraph.pl > flame.svg
 
-**Off-CPU analysis**: Regular CPU profiling misses time spent waiting (I/O, locks, sleep). Off-CPU flame graphs show where threads block, not just where they compute.`,
+Off-CPU analysis: Regular CPU profiling misses time spent waiting (I/O, locks, sleep). Off-CPU flame graphs show where threads block, not just where they compute.`,
     whenToUse: [
       'Identifying CPU hotspots in production services',
       'Investigating high CPU usage with no obvious cause',
@@ -4369,14 +4369,14 @@ aqu-sz = 8.5  -- 8.5 requests in queue on average
         question: 'How do you generate a CPU flame graph on Linux? Walk through the entire process from profiling to visualization.',
         answer: `## Complete Flame Graph Generation
 
-**Step 1: Get Brendan Gregg's FlameGraph tools**
+Step 1: Get Brendan Gregg's FlameGraph tools
 
 \`\`\`bash
 git clone https://github.com/brendangregg/FlameGraph
 cd FlameGraph
 \`\`\`
 
-**Step 2: Record stack samples**
+Step 2: Record stack samples
 
 \`\`\`bash
 # Profile a specific PID for 30 seconds at 99 samples/sec
@@ -4389,7 +4389,7 @@ sudo perf record -F 99 -a -g -- sleep 30
 # perf cannot resolve JIT symbols natively
 \`\`\`
 
-**Step 3: Convert to flame graph**
+Step 3: Convert to flame graph
 
 \`\`\`bash
 # Generate the perf script output
@@ -4405,7 +4405,7 @@ sudo perf script > perf.output
 xdg-open flame.svg
 \`\`\`
 
-**Step 4: Interpret**
+Step 4: Interpret
 
 \`\`\`
 - Widest frames at TOP = hottest code paths (most CPU time)
@@ -4414,7 +4414,7 @@ xdg-open flame.svg
 - Plateaus that span many stacks = common code path
 \`\`\`
 
-**One-liner** (combining all steps):
+One-liner (combining all steps):
 
 \`\`\`bash
 sudo perf record -F 99 -p $(pgrep myapp) -g -- sleep 30 && \
@@ -4428,7 +4428,7 @@ sudo perf script | ~/FlameGraph/stackcollapse-perf.pl | \
 
 When CPU is spread thin (no single function using >5% each), the problem is usually architectural.
 
-**1. Check the system call profile**
+1. Check the system call profile
 
 \`\`\`bash
 # What syscalls is the app making?
@@ -4439,7 +4439,7 @@ strace -c -p $(pgrep myapp)
 # High mmap/mprotect = memory allocation churn
 \`\`\`
 
-**2. Check context switch rate**
+2. Check context switch rate
 
 \`\`\`bash
 vmstat 1 | awk '{print $12}'  # cs column
@@ -4451,7 +4451,7 @@ cat /proc/$(pgrep myapp)/status | grep ctxt
 # nonvoluntary_ctxt_switches -- preempted by scheduler (CPU-bound)
 \`\`\`
 
-**3. Lock contention profiling**
+3. Lock contention profiling
 
 \`\`\`bash
 # Using perf lock (if available)
@@ -4462,7 +4462,7 @@ sudo perf lock report
 sudo bpftrace -e 'tracepoint:syscalls:sys_enter_futex { @[ustack] = count(); } interval:s:10 { print(@); exit(); }'
 \`\`\`
 
-**4. Differential flame graph**
+4. Differential flame graph
 
 \`\`\`bash
 # Profile before optimization
@@ -4508,29 +4508,29 @@ perf script > after.perf
     ],
     introduction: `strace intercepts every interaction between a process and the Linux kernel. Since all I/O, file access, memory allocation (ultimately), and process management goes through system calls, strace reveals exactly what a program is doing at the lowest level.
 
-**How strace works**: strace uses the ptrace() system call to attach to a process and intercept each syscall entry and exit. This introduces significant overhead (typically 10-100x slowdown) — use on production with caution, and use -c for summary first.
+How strace works: strace uses the ptrace() system call to attach to a process and intercept each syscall entry and exit. This introduces significant overhead (typically 10-100x slowdown) — use on production with caution, and use -c for summary first.
 
-**Basic usage**:
+Basic usage:
 - strace command: traces from process start
 - strace -p PID: attach to a running process
 - strace -f: follow child processes created by fork()
 - strace -ff: follow forks and write each to a separate file (for threaded apps)
 
-**Output format**: syscall_name(arguments) = return_value. On error: syscall_name(arguments) = -1 ERRNO (error description). Common errno: ENOENT (No such file or directory), EACCES (Permission denied), EAGAIN (Resource temporarily unavailable / try again), ECONNREFUSED (Connection refused), ETIMEDOUT (Connection timed out).
+Output format: syscall_name(arguments) = return_value. On error: syscall_name(arguments) = -1 ERRNO (error description). Common errno: ENOENT (No such file or directory), EACCES (Permission denied), EAGAIN (Resource temporarily unavailable / try again), ECONNREFUSED (Connection refused), ETIMEDOUT (Connection timed out).
 
-**Filtering**:
+Filtering:
 - -e trace=file: only file-related syscalls
 - -e trace=network: only network syscalls (socket, connect, recv, send)
 - -e trace=process: process management (fork, execve, wait)
 - -e trace=memory: memory operations (mmap, brk, mprotect)
 - -e trace=open,read,write: specific syscalls
 
-**Performance analysis**:
+Performance analysis:
 - -c: count syscalls and show summary with time, calls, errors — great first step
 - -T: show time spent in each syscall
 - -tt: absolute timestamps with microseconds
 
-**ltrace**: Similar to strace but for library function calls. ltrace command shows calls to shared library functions (malloc, free, fopen, strcmp, pthread_mutex_lock, etc.). Less overhead than strace for I/O-heavy workloads.`,
+ltrace: Similar to strace but for library function calls. ltrace command shows calls to shared library functions (malloc, free, fopen, strcmp, pthread_mutex_lock, etc.). Less overhead than strace for I/O-heavy workloads.`,
     whenToUse: [
       'Debugging "file not found" when the file seems to exist',
       'Understanding why an application is slow (where is it spending time?)',
@@ -4566,7 +4566,7 @@ perf script > after.perf
         question: 'An application is mysteriously slow. How would you use strace to find where it\'s spending time?',
         answer: `## Using strace to Find Performance Bottlenecks
 
-**Step 1: Get a summary (lowest overhead)**
+Step 1: Get a summary (lowest overhead)
 
 \`\`\`bash
 # Attach to running process, collect 30 seconds of data
@@ -4581,14 +4581,14 @@ strace -c -p $(pgrep myapp) sleep 30
 #   2.30    0.023000           8      2875           poll
 \`\`\`
 
-**Step 2: Interpret the summary**
+Step 2: Interpret the summary
 
 - High time in read: lots of small reads? Use -e trace=read to see sizes
 - High time in futex: lock contention between threads
 - High time in poll/select/epoll_wait: I/O bound (waiting for network/disk)
 - High count but low time in any syscall: chatty but not bottlenecked
 
-**Step 3: Drill into specific syscalls**
+Step 3: Drill into specific syscalls
 
 \`\`\`bash
 # Show timing for each individual read call
@@ -4604,7 +4604,7 @@ ls -la /proc/$(pgrep myapp)/fd/5
 # -> /var/log/app.log  (reading log file 1KB at a time — needs buffering)
 \`\`\`
 
-**Step 4: Network-specific debugging**
+Step 4: Network-specific debugging
 
 \`\`\`bash
 strace -T -e trace=network -p $(pgrep myapp) 2>&1 | grep connect
@@ -4628,20 +4628,20 @@ strace -e trace=openat,stat,access,open ./myprogram 2>&1 | grep ENOENT
 
 ## Common Causes Revealed by strace
 
-**Wrong path (typo, relative vs absolute)**:
+Wrong path (typo, relative vs absolute):
 \`\`\`bash
 openat(AT_FDCWD, "/etc/myapp/conifg.json", ...) = -1 ENOENT
 # Note: "conifg" not "config" — typo in the application
 \`\`\`
 
-**Missing shared library**:
+Missing shared library:
 \`\`\`bash
 # Check library loading
 strace -e trace=openat ./myprogram 2>&1 | grep ".so"
 # Fix: ldconfig, LD_LIBRARY_PATH, or install the missing lib package
 \`\`\`
 
-**Wrong working directory**:
+Wrong working directory:
 \`\`\`bash
 openat(AT_FDCWD, "data/config.json", ...) = -1 ENOENT
 # Relative path — the program expects to run from /opt/myapp
@@ -4649,7 +4649,7 @@ openat(AT_FDCWD, "data/config.json", ...) = -1 ENOENT
 getcwd(buf) = "/home/user"  # Revealed by strace
 \`\`\`
 
-**Permissions, not existence**:
+Permissions, not existence:
 \`\`\`bash
 openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
 # The message says "no such file" but strace shows it's EACCES
@@ -4686,7 +4686,7 @@ openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
     ],
     introduction: `lsof (List Open Files) is uniquely powerful on Linux because "everything is a file" — regular files, directories, sockets, pipes, devices, and more all appear in lsof output. It's an essential tool for diagnosing resource leaks, connection issues, and deleted-file problems.
 
-**Basic usage and filtering**:
+Basic usage and filtering:
 - lsof (no args): lists ALL open files for ALL processes — massive output, always filter
 - lsof -i :80: files related to port 80 (TCP and UDP listeners and connections)
 - lsof -i TCP:22: specifically TCP port 22
@@ -4697,13 +4697,13 @@ openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
 - lsof -u username: files opened by a user
 - lsof -c nginx: files opened by processes with name matching "nginx"
 
-**FD column meanings**: cwd (current working directory), txt (program executable), mem (memory-mapped file), DEL (deleted but still open), 0 (stdin), 1 (stdout), 2 (stderr), numbers (regular file descriptors). Suffix u=read+write, r=read, w=write.
+FD column meanings: cwd (current working directory), txt (program executable), mem (memory-mapped file), DEL (deleted but still open), 0 (stdin), 1 (stdout), 2 (stderr), numbers (regular file descriptors). Suffix u=read+write, r=read, w=write.
 
-**TYPE column**: REG (regular file), DIR (directory), CHR (character device), BLK (block device), FIFO (named pipe), IPv4/IPv6 (network socket), unix (Unix domain socket), PIPE (anonymous pipe).
+TYPE column: REG (regular file), DIR (directory), CHR (character device), BLK (block device), FIFO (named pipe), IPv4/IPv6 (network socket), unix (Unix domain socket), PIPE (anonymous pipe).
 
-**Recovering deleted files**: When a process has a file open that has been deleted (unlinked), the file's inode and data remain on disk until all references are closed. The FD column shows "DEL" and the TYPE is REG. Access via /proc/PID/fd/N: cat /proc/$(pgrep myapp)/fd/5 > /tmp/recovered_file.
+Recovering deleted files: When a process has a file open that has been deleted (unlinked), the file's inode and data remain on disk until all references are closed. The FD column shows "DEL" and the TYPE is REG. Access via /proc/PID/fd/N: cat /proc/$(pgrep myapp)/fd/5 > /tmp/recovered_file.
 
-**Performance**: lsof with no filters is slow (iterates /proc for every process). Always filter: lsof -n (no DNS) -P (no port names) for speed.`,
+Performance: lsof with no filters is slow (iterates /proc for every process). Always filter: lsof -n (no DNS) -P (no port names) for speed.`,
     whenToUse: [
       'Finding which process is listening on a specific port',
       'Diagnosing "device busy" errors when unmounting',
@@ -4739,7 +4739,7 @@ openat(AT_FDCWD, "/etc/secret.conf", O_RDONLY) = -1 EACCES (Permission denied)
         question: 'A process deleted a large log file but disk space didn\'t free up. How do you find and recover it?',
         answer: `## Finding and Recovering Deleted Open Files
 
-**Step 1: Confirm the problem**
+Step 1: Confirm the problem
 
 \`\`\`bash
 df -h /var/log
@@ -4750,7 +4750,7 @@ du -sh /var/log
 # 12G  /var/log  (less than df shows!)
 \`\`\`
 
-**Step 2: Find the deleted file**
+Step 2: Find the deleted file
 
 \`\`\`bash
 # Find files marked as deleted (DEL) that are still open
@@ -4763,7 +4763,7 @@ lsof +L1  # Files with link count < 1 (deleted from directory)
 # ^PID   ^FD                        ^45GB!
 \`\`\`
 
-**Step 3: Recover the file if needed**
+Step 3: Recover the file if needed
 
 \`\`\`bash
 # Access the deleted file via /proc
@@ -4778,7 +4778,7 @@ cp /proc/$PID/fd/$FD /var/log/nginx/access.log.recovered
 # This truncates the file through the open file descriptor — space freed immediately!
 \`\`\`
 
-**Step 4: Permanent fix**
+Step 4: Permanent fix
 
 \`\`\`bash
 # The real fix: send SIGUSR1 to nginx to reopen log files after rotation
@@ -4792,7 +4792,7 @@ kill -USR1 $(cat /run/nginx.pid)
         question: 'How would you find which process is listening on port 8080 without using netstat or ss?',
         answer: `## Finding Port 8080 Listener Without netstat/ss
 
-**Method 1: lsof**
+Method 1: lsof
 
 \`\`\`bash
 sudo lsof -i :8080 -n -P
@@ -4804,7 +4804,7 @@ sudo lsof -i :8080 -n -P
 sudo lsof -i TCP:8080 -n -P -s TCP:LISTEN
 \`\`\`
 
-**Method 2: /proc filesystem directly**
+Method 2: /proc filesystem directly
 
 \`\`\`bash
 # Port 8080 in hex
@@ -4824,7 +4824,7 @@ find /proc/*/fd -lname 'socket:\[34567\]' 2>/dev/null
 # PID is 1234
 \`\`\`
 
-**Method 3: fuser**
+Method 3: fuser
 
 \`\`\`bash
 fuser 8080/tcp
@@ -4864,17 +4864,17 @@ fuser -v 8080/tcp
     ],
     introduction: `The Linux CPU scheduler determines which process runs on which CPU at any given moment. Understanding the scheduler helps optimize performance for both latency-sensitive and throughput-oriented workloads.
 
-**CFS (Completely Fair Scheduler)**: The default scheduler since kernel 2.6.23. CFS tracks "virtual runtime" (vruntime) for each runnable process — how much CPU time it has received, weighted by its nice value. At each scheduling decision, the process with the lowest vruntime runs next. This ensures fairness: every process gets proportional CPU time relative to its weight.
+CFS (Completely Fair Scheduler): The default scheduler since kernel 2.6.23. CFS tracks "virtual runtime" (vruntime) for each runnable process — how much CPU time it has received, weighted by its nice value. At each scheduling decision, the process with the lowest vruntime runs next. This ensures fairness: every process gets proportional CPU time relative to its weight.
 
-**Nice values**: Range from -20 (highest priority, gets more CPU time) to +19 (lowest priority, "background" process). Default is 0. Each nice level changes weight by about 10%. nice -n 10 ./command starts a command with nice 10. renice -n 5 -p PID changes a running process. Non-root users can only increase nice (lower priority), not decrease below their starting value.
+Nice values: Range from -20 (highest priority, gets more CPU time) to +19 (lowest priority, "background" process). Default is 0. Each nice level changes weight by about 10%. nice -n 10 ./command starts a command with nice 10. renice -n 5 -p PID changes a running process. Non-root users can only increase nice (lower priority), not decrease below their starting value.
 
-**ionice — I/O scheduling**: Linux's I/O scheduler also supports priority classes. Class 1 (real-time): gets I/O first, time-slice based. Class 2 (best-effort): default, priority levels 0-7. Class 3 (idle): only gets I/O when no other class wants disk access — perfect for background backups and indexing. ionice -c 3 -p PID changes a running process.
+ionice — I/O scheduling: Linux's I/O scheduler also supports priority classes. Class 1 (real-time): gets I/O first, time-slice based. Class 2 (best-effort): default, priority levels 0-7. Class 3 (idle): only gets I/O when no other class wants disk access — perfect for background backups and indexing. ionice -c 3 -p PID changes a running process.
 
-**taskset — CPU affinity**: Bind a process to specific CPUs using a CPU mask or list. taskset -c 0,1 command runs on CPUs 0 and 1 only. taskset -c 0 -p PID sets affinity of running process. Reduces cache misses by keeping process on same core (hot cache). Essential for latency-sensitive applications.
+taskset — CPU affinity: Bind a process to specific CPUs using a CPU mask or list. taskset -c 0,1 command runs on CPUs 0 and 1 only. taskset -c 0 -p PID sets affinity of running process. Reduces cache misses by keeping process on same core (hot cache). Essential for latency-sensitive applications.
 
-**numactl**: On multi-socket servers, memory access to a remote NUMA node is slower. numactl --cpunodebind=0 --membind=0 command keeps process and its memory on NUMA node 0. numactl --hardware shows NUMA topology. numastat shows per-node memory statistics.
+numactl: On multi-socket servers, memory access to a remote NUMA node is slower. numactl --cpunodebind=0 --membind=0 command keeps process and its memory on NUMA node 0. numactl --hardware shows NUMA topology. numastat shows per-node memory statistics.
 
-**Real-time scheduling**: chrt -f 99 command uses FIFO scheduling at priority 99 (highest). chrt -r 50 command uses Round-Robin at priority 50. Real-time processes preempt all normal processes. Dangerous if a bug causes a busy loop — can lock up the system. Requires CAP_SYS_NICE or root.`,
+Real-time scheduling: chrt -f 99 command uses FIFO scheduling at priority 99 (highest). chrt -r 50 command uses Round-Robin at priority 50. Real-time processes preempt all normal processes. Dangerous if a bug causes a busy loop — can lock up the system. Requires CAP_SYS_NICE or root.`,
     whenToUse: [
       'Protecting latency-sensitive services from noisy neighbor processes',
       'Running background jobs (backups, reindexing) without impacting production',
@@ -4910,7 +4910,7 @@ fuser -v 8080/tcp
         question: 'How does the CFS scheduler ensure fairness? What role does the nice value play?',
         answer: `## CFS: Completely Fair Scheduler
 
-**Core Mechanism: Virtual Runtime (vruntime)**
+Core Mechanism: Virtual Runtime (vruntime)
 
 \`\`\`
 Every runnable process has a vruntime counter:
@@ -4919,7 +4919,7 @@ vruntime is weighted by nice value
 Process with LOWEST vruntime runs next
 \`\`\`
 
-**The Red-Black Tree**:
+The Red-Black Tree:
 
 \`\`\`
 CFS stores runnable processes in a red-black tree ordered by vruntime.
@@ -4927,7 +4927,7 @@ Leftmost node (lowest vruntime) = next to run.
 O(log N) insert/delete for scheduling operations.
 \`\`\`
 
-**Nice Value and Weights**:
+Nice Value and Weights:
 
 \`\`\`bash
 # Nice values map to weights:
@@ -4946,7 +4946,7 @@ cat /proc/$(pgrep myprocess)/sched
 # se.load.weight (derived from nice value)
 \`\`\`
 
-**Practical Impact**:
+Practical Impact:
 
 \`\`\`bash
 # Start a CPU-intensive background job at low priority
@@ -4963,9 +4963,9 @@ chrt -f 99 ./latency-critical-service
         question: 'You have a latency-sensitive service and a batch job on the same server. How do you configure scheduling to protect the service?',
         answer: `## Protecting Latency-Sensitive Service from Batch Job
 
-**Scenario**: API server (must respond < 10ms) + nightly report generation (CPU and I/O intensive)
+Scenario: API server (must respond < 10ms) + nightly report generation (CPU and I/O intensive)
 
-**CPU Scheduling**:
+CPU Scheduling:
 
 \`\`\`bash
 # Give batch job lowest CPU priority
@@ -4983,7 +4983,7 @@ taskset -c 4-7 -p $(pgrep report_generator)
 # Then use taskset to explicitly assign processes
 \`\`\`
 
-**I/O Priority**:
+I/O Priority:
 
 \`\`\`bash
 # Batch job gets I/O only when API server doesn't need it
@@ -4993,7 +4993,7 @@ ionice -c 3 -p $(pgrep report_generator)   # Idle class
 ionice -c 2 -n 0 -p $(pgrep api_server)    # Best-effort, highest priority
 \`\`\`
 
-**systemd Unit Configuration** (persistent):
+systemd Unit Configuration (persistent):
 
 \`\`\`ini
 # /etc/systemd/system/report-generator.service
@@ -5996,7 +5996,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'seccomp Filter Chain', description: 'Process syscall → kernel → BPF filter → ALLOW/KILL/TRAP/ERRNO decision', image: '/diagrams/linux/linux-seccomp-chain.png' },
     ],
-    introduction: `**seccomp** (Secure Computing Mode) is a Linux kernel feature that restricts which system calls a process can make. It is the primary attack-surface-reduction mechanism used by Docker, Kubernetes, and browsers (Chrome/Firefox sandbox).\n\n## Modes\n\n- **SECCOMP_MODE_STRICT** — allows only \`read\`, \`write\`, \`exit\`, and \`sigreturn\`. Rarely used directly.\n- **SECCOMP_MODE_FILTER** — attaches a BPF program that inspects each syscall and returns an action: **SECCOMP_RET_ALLOW**, **SECCOMP_RET_KILL_PROCESS**, **SECCOMP_RET_ERRNO**, or **SECCOMP_RET_TRAP**.\n\n## Docker Default Profile\n\nDocker ships a default seccomp profile that blocks ~44 dangerous syscalls including \`ptrace\`, \`kexec_load\`, \`create_module\`, and \`mount\`. Privileged containers (\`--privileged\`) disable seccomp entirely.\n\n## Kubernetes Integration\n\nPod-level: \`securityContext.seccompProfile.type: RuntimeDefault\` applies the container runtime's default. \`Localhost\` type loads a custom profile from the node's profile directory (\`/var/lib/kubelet/seccomp/\`).\n\n## Writing a Custom Filter\n\n\`\`\`json\n{\n  "defaultAction": "SCMP_ACT_ERRNO",\n  "syscalls": [\n    { "names": ["read","write","open","close","stat","mmap","exit_group"],\n      "action": "SCMP_ACT_ALLOW" }\n  ]\n}\n\`\`\`\n\nUse \`strace -c ./myapp\` to discover which syscalls your app actually needs before writing an allowlist.`,
+    introduction: `seccomp (Secure Computing Mode) is a Linux kernel feature that restricts which system calls a process can make. It is the primary attack-surface-reduction mechanism used by Docker, Kubernetes, and browsers (Chrome/Firefox sandbox).\n\n## Modes\n\n- SECCOMP_MODE_STRICT — allows only \`read\`, \`write\`, \`exit\`, and \`sigreturn\`. Rarely used directly.\n- SECCOMP_MODE_FILTER — attaches a BPF program that inspects each syscall and returns an action: SECCOMP_RET_ALLOW, SECCOMP_RET_KILL_PROCESS, SECCOMP_RET_ERRNO, or SECCOMP_RET_TRAP.\n\n## Docker Default Profile\n\nDocker ships a default seccomp profile that blocks ~44 dangerous syscalls including \`ptrace\`, \`kexec_load\`, \`create_module\`, and \`mount\`. Privileged containers (\`--privileged\`) disable seccomp entirely.\n\n## Kubernetes Integration\n\nPod-level: \`securityContext.seccompProfile.type: RuntimeDefault\` applies the container runtime's default. \`Localhost\` type loads a custom profile from the node's profile directory (\`/var/lib/kubelet/seccomp/\`).\n\n## Writing a Custom Filter\n\n\`\`\`json\n{\n  "defaultAction": "SCMP_ACT_ERRNO",\n  "syscalls": [\n    { "names": ["read","write","open","close","stat","mmap","exit_group"],\n      "action": "SCMP_ACT_ALLOW" }\n  ]\n}\n\`\`\`\n\nUse \`strace -c ./myapp\` to discover which syscalls your app actually needs before writing an allowlist.`,
     whenToUse: [
       'Explaining how Docker reduces container attack surface without full virtualization',
       'Hardening a Kubernetes workload against kernel exploit escalation',
@@ -6016,11 +6016,11 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How does Docker use seccomp to reduce container attack surface, and what happens when you use --privileged?',
-        answer: `Docker attaches a **default seccomp BPF filter** to every container at start time. The filter blocks ~44 dangerous syscalls that are valid on the host but unnecessary for application containers: \`ptrace\`, \`kexec_load\`, \`create_module\`, \`mount\`, \`pivot_root\`, \`clone\` with certain flags, etc.\n\nWhen you run \`docker run --privileged\`, Docker disables seccomp entirely (\`--security-opt seccomp=unconfined\`), removes all capability drops, and turns off AppArmor/SELinux confinement. The container has near-root-equivalent access to the host kernel.\n\n**Hardening alternative to --privileged for specific needs:**\n\`\`\`bash\n# Add only the cap you need instead of full privileged\ndocker run --cap-add SYS_PTRACE --security-opt seccomp=unconfined myapp\n\`\`\`\n\nFor production, prefer a **custom seccomp profile** that allowlists only the syscalls your binary actually uses, discovered via:\n\`\`\`bash\nstrace -qcf ./myapp   # -f follows forks, -q quiet, -c summary\n\`\`\``,
+        answer: `Docker attaches a default seccomp BPF filter to every container at start time. The filter blocks ~44 dangerous syscalls that are valid on the host but unnecessary for application containers: \`ptrace\`, \`kexec_load\`, \`create_module\`, \`mount\`, \`pivot_root\`, \`clone\` with certain flags, etc.\n\nWhen you run \`docker run --privileged\`, Docker disables seccomp entirely (\`--security-opt seccomp=unconfined\`), removes all capability drops, and turns off AppArmor/SELinux confinement. The container has near-root-equivalent access to the host kernel.\n\nHardening alternative to --privileged for specific needs:\n\`\`\`bash\n# Add only the cap you need instead of full privileged\ndocker run --cap-add SYS_PTRACE --security-opt seccomp=unconfined myapp\n\`\`\`\n\nFor production, prefer a custom seccomp profile that allowlists only the syscalls your binary actually uses, discovered via:\n\`\`\`bash\nstrace -qcf ./myapp   # -f follows forks, -q quiet, -c summary\n\`\`\``,
       },
       {
         question: 'A containerized application crashes with "Operation not permitted" only in production Kubernetes but works in dev Docker. What do you check?',
-        answer: `The crash is likely a **blocked syscall** difference between environments.\n\n**Steps:**\n\n1. Check Kubernetes seccomp profile:\n\`\`\`bash\nkubectl get pod mypod -o jsonpath='{.spec.securityContext.seccompProfile}'\n\`\`\`\n\n2. Check container runtime default vs Docker default — \`containerd\`'s RuntimeDefault may block different syscalls than Docker's default profile.\n\n3. Run with seccomp disabled temporarily to confirm:\n\`\`\`yaml\nsecurityContext:\n  seccompProfile:\n    type: Unconfined\n\`\`\`\n\n4. Identify the blocked syscall:\n\`\`\`bash\n# On the pod node\nauditd or dmesg | grep 'seccomp'\n# In container logs look for SIGKILL or errno EPERM on specific syscall\n\`\`\`\n\n5. Add only the needed syscall to a custom Localhost profile rather than disabling seccomp entirely.`,
+        answer: `The crash is likely a blocked syscall difference between environments.\n\nSteps:\n\n1. Check Kubernetes seccomp profile:\n\`\`\`bash\nkubectl get pod mypod -o jsonpath='{.spec.securityContext.seccompProfile}'\n\`\`\`\n\n2. Check container runtime default vs Docker default — \`containerd\`'s RuntimeDefault may block different syscalls than Docker's default profile.\n\n3. Run with seccomp disabled temporarily to confirm:\n\`\`\`yaml\nsecurityContext:\n  seccompProfile:\n    type: Unconfined\n\`\`\`\n\n4. Identify the blocked syscall:\n\`\`\`bash\n# On the pod node\nauditd or dmesg | grep 'seccomp'\n# In container logs look for SIGKILL or errno EPERM on specific syscall\n\`\`\`\n\n5. Add only the needed syscall to a custom Localhost profile rather than disabling seccomp entirely.`,
       },
     ],
     quickFire: [
@@ -6047,7 +6047,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'eBPF Architecture', description: 'User-space program → LLVM → BPF bytecode → verifier → JIT → kernel hooks (kprobes/tracepoints/XDP)', image: '/diagrams/linux/linux-ebpf-arch.png' },
     ],
-    introduction: `**eBPF** (extended Berkeley Packet Filter) lets you run sandboxed programs in the Linux kernel without changing kernel source or loading kernel modules. The kernel verifies all eBPF programs for safety (no infinite loops, no out-of-bounds access) before running them.\n\n## How It Works\n\n1. Write a C program using the BPF API\n2. Compile with **Clang/LLVM** to BPF bytecode\n3. Load via \`bpf()\` syscall — kernel **verifier** checks safety\n4. **JIT compiler** translates to native machine code\n5. Program runs at a **hook point**: kprobe, tracepoint, XDP, cgroup, LSM hook, etc.\n\n## Key Hook Points\n\n- **kprobes/kretprobes** — dynamic instrumentation of any kernel function\n- **tracepoints** — stable kernel tracing interfaces\n- **uprobes** — user-space function tracing\n- **XDP** — network packet processing at driver level (before netstack)\n- **TC (Traffic Control)** — packet processing at tc ingress/egress\n- **LSM hooks** — security policy enforcement\n\n## bcc Toolset\n\nThe **BCC** (BPF Compiler Collection) provides ready-made tools:\n\n| Tool | What it does |\n|------|-------------|\n| \`execsnoop\` | Traces all exec() calls system-wide |\n| \`tcpconnect\` | Traces TCP connect() calls |\n| \`biolatency\` | Block I/O latency histogram |\n| \`opensnoop\` | Traces open() syscalls |\n| \`runqlat\` | CPU run queue latency |\n| \`funccount\` | Counts kernel function calls |\n\n## bpftrace One-liners\n\n\`\`\`bash\n# Trace all exec calls\nbpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s\\n", str(args->filename)); }'\n\n# TCP connection latency\nbpftrace -e 'kprobe:tcp_v4_connect { @start[tid] = nsecs; }\n  kretprobe:tcp_v4_connect /@start[tid]/ {\n    @latency = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# Block I/O size histogram\nbpftrace -e 'tracepoint:block:block_rq_issue { @bytes = hist(args->bytes); }'\n\`\`\`\n\n## Cilium and eBPF Networking\n\nCilium replaces kube-proxy with eBPF programs that perform load balancing at XDP/TC layer, providing 10x lower latency for service-to-service traffic and enabling network policies without iptables rules.`,
+    introduction: `eBPF (extended Berkeley Packet Filter) lets you run sandboxed programs in the Linux kernel without changing kernel source or loading kernel modules. The kernel verifies all eBPF programs for safety (no infinite loops, no out-of-bounds access) before running them.\n\n## How It Works\n\n1. Write a C program using the BPF API\n2. Compile with Clang/LLVM to BPF bytecode\n3. Load via \`bpf()\` syscall — kernel verifier checks safety\n4. JIT compiler translates to native machine code\n5. Program runs at a hook point: kprobe, tracepoint, XDP, cgroup, LSM hook, etc.\n\n## Key Hook Points\n\n- kprobes/kretprobes — dynamic instrumentation of any kernel function\n- tracepoints — stable kernel tracing interfaces\n- uprobes — user-space function tracing\n- XDP — network packet processing at driver level (before netstack)\n- TC (Traffic Control) — packet processing at tc ingress/egress\n- LSM hooks — security policy enforcement\n\n## bcc Toolset\n\nThe BCC (BPF Compiler Collection) provides ready-made tools:\n\n| Tool | What it does |\n|------|-------------|\n| \`execsnoop\` | Traces all exec() calls system-wide |\n| \`tcpconnect\` | Traces TCP connect() calls |\n| \`biolatency\` | Block I/O latency histogram |\n| \`opensnoop\` | Traces open() syscalls |\n| \`runqlat\` | CPU run queue latency |\n| \`funccount\` | Counts kernel function calls |\n\n## bpftrace One-liners\n\n\`\`\`bash\n# Trace all exec calls\nbpftrace -e 'tracepoint:syscalls:sys_enter_execve { printf("%s\\n", str(args->filename)); }'\n\n# TCP connection latency\nbpftrace -e 'kprobe:tcp_v4_connect { @start[tid] = nsecs; }\n  kretprobe:tcp_v4_connect /@start[tid]/ {\n    @latency = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# Block I/O size histogram\nbpftrace -e 'tracepoint:block:block_rq_issue { @bytes = hist(args->bytes); }'\n\`\`\`\n\n## Cilium and eBPF Networking\n\nCilium replaces kube-proxy with eBPF programs that perform load balancing at XDP/TC layer, providing 10x lower latency for service-to-service traffic and enabling network policies without iptables rules.`,
     whenToUse: [
       'Profiling production systems with zero instrumentation overhead and no code changes',
       'Explaining how Cilium achieves iptables-free Kubernetes networking',
@@ -6068,11 +6068,11 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How does eBPF allow safe kernel instrumentation without kernel modules, and what does the verifier check?',
-        answer: `eBPF programs are loaded via the \`bpf()\` syscall. Before execution, the kernel **verifier** performs static analysis:\n\n1. **Control flow** — must terminate. No unbounded loops. All paths must end in BPF_EXIT.\n2. **Memory safety** — all pointer arithmetic must stay within bounds. Map accesses validated at compile time.\n3. **Stack size** — limited to 512 bytes.\n4. **Helper calls only** — eBPF can only call approved kernel helper functions (\`bpf_map_lookup_elem\`, \`bpf_probe_read\`, etc.), not arbitrary kernel functions.\n5. **Type safety** — BTF (BPF Type Format) enables CO-RE (Compile Once, Run Everywhere), allowing programs to adapt to kernel struct layouts at load time.\n\nAfter verification, the JIT compiler translates BPF bytecode to native machine code. The program runs in the same privilege as the kernel but with hard safety boundaries — a buggy eBPF program cannot crash the kernel (unlike a kernel module).`,
+        answer: `eBPF programs are loaded via the \`bpf()\` syscall. Before execution, the kernel verifier performs static analysis:\n\n1. Control flow — must terminate. No unbounded loops. All paths must end in BPF_EXIT.\n2. Memory safety — all pointer arithmetic must stay within bounds. Map accesses validated at compile time.\n3. Stack size — limited to 512 bytes.\n4. Helper calls only — eBPF can only call approved kernel helper functions (\`bpf_map_lookup_elem\`, \`bpf_probe_read\`, etc.), not arbitrary kernel functions.\n5. Type safety — BTF (BPF Type Format) enables CO-RE (Compile Once, Run Everywhere), allowing programs to adapt to kernel struct layouts at load time.\n\nAfter verification, the JIT compiler translates BPF bytecode to native machine code. The program runs in the same privilege as the kernel but with hard safety boundaries — a buggy eBPF program cannot crash the kernel (unlike a kernel module).`,
       },
       {
         question: 'How does Cilium use eBPF to replace kube-proxy, and what are the performance benefits?',
-        answer: `**kube-proxy** implements Kubernetes service load balancing using iptables rules. Each service adds O(n) iptables rules; at 10k services, connection setup requires traversing thousands of rules.\n\n**Cilium** replaces kube-proxy with eBPF programs attached at:\n- **XDP** — for external traffic, drops/forwards at driver level\n- **TC ingress/egress** — for pod-to-pod and service traffic\n- **Socket-level** — rewrites destination at connect() time, bypassing netstack entirely\n\n**Benefits:**\n- O(1) service lookup via BPF hash maps instead of O(n) iptables chain traversal\n- No conntrack for pod-to-pod traffic (Cilium tracks state in BPF maps)\n- Direct pod-to-pod routing without SNAT in many topologies\n- Network policy enforcement in eBPF — no iptables rules\n\nBenchmarks show 10-100x lower p99 latency at high connection rates and 3-5x higher throughput compared to iptables kube-proxy.`,
+        answer: `kube-proxy implements Kubernetes service load balancing using iptables rules. Each service adds O(n) iptables rules; at 10k services, connection setup requires traversing thousands of rules.\n\nCilium replaces kube-proxy with eBPF programs attached at:\n- XDP — for external traffic, drops/forwards at driver level\n- TC ingress/egress — for pod-to-pod and service traffic\n- Socket-level — rewrites destination at connect() time, bypassing netstack entirely\n\nBenefits:\n- O(1) service lookup via BPF hash maps instead of O(n) iptables chain traversal\n- No conntrack for pod-to-pod traffic (Cilium tracks state in BPF maps)\n- Direct pod-to-pod routing without SNAT in many topologies\n- Network policy enforcement in eBPF — no iptables rules\n\nBenchmarks show 10-100x lower p99 latency at high connection rates and 3-5x higher throughput compared to iptables kube-proxy.`,
       },
     ],
     quickFire: [
@@ -6102,7 +6102,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'cgroup v2 Hierarchy', description: 'Single unified tree: /sys/fs/cgroup/ → systemd.slice → pod.scope → container cgroup with cpu/memory/io limits', image: '/diagrams/linux/linux-cgroup-v2-hierarchy.png' },
     ],
-    introduction: `**cgroups v2** (control groups version 2) is the Linux mechanism for grouping processes and applying resource limits — CPU, memory, I/O, PIDs, and CPU sets. It supersedes cgroups v1 with a **unified hierarchy** (one tree instead of per-controller trees).\n\n## v1 vs v2\n\n| Feature | v1 | v2 |\n|---------|-----|-----|\n| Hierarchy | Per-controller (separate trees) | Single unified tree |\n| CPU accounting | cpuacct controller | Built into cpu controller |\n| I/O control | blkio controller | io controller (weight + BPS/IOPS limits) |\n| Memory OOM | Per-cgroup, inconsistent | Unified OOM, memory.oom.group |\n| Delegation | Complex, unsafe | Safe subtree delegation |\n\n## Key Controllers\n\n- **cpu** — \`cpu.weight\` (proportional shares 1-10000), \`cpu.max\` (hard limit: \`quota period\`)\n- **memory** — \`memory.max\` (hard limit), \`memory.high\` (soft limit that triggers throttling), \`memory.swap.max\`\n- **io** — \`io.weight\`, \`io.max\` (BPS and IOPS limits per device)\n- **pids** — \`pids.max\` (fork bomb protection)\n- **cpuset** — pin to specific CPUs and NUMA nodes\n\n## Kubernetes and cgroups v2\n\nKubernetes 1.25+ requires cgroups v2 for **memory QoS** (guaranteed/burstable distinction via \`memory.high\`) and for **rootless container support** (delegation chain from system cgroup to user session). Containerd and cri-o configure pod cgroups under \`/sys/fs/cgroup/kubepods/\`.\n\n## Delegation for Rootless Containers\n\nIn v2, a parent cgroup can delegate its subtree to a non-root user. The user can create sub-cgroups and apply limits without CAP_SYS_ADMIN on the root cgroup. This is how rootless Docker and Podman work: systemd delegates a user slice, and the container runtime manages sub-cgroups within it.`,
+    introduction: `cgroups v2 (control groups version 2) is the Linux mechanism for grouping processes and applying resource limits — CPU, memory, I/O, PIDs, and CPU sets. It supersedes cgroups v1 with a unified hierarchy (one tree instead of per-controller trees).\n\n## v1 vs v2\n\n| Feature | v1 | v2 |\n|---------|-----|-----|\n| Hierarchy | Per-controller (separate trees) | Single unified tree |\n| CPU accounting | cpuacct controller | Built into cpu controller |\n| I/O control | blkio controller | io controller (weight + BPS/IOPS limits) |\n| Memory OOM | Per-cgroup, inconsistent | Unified OOM, memory.oom.group |\n| Delegation | Complex, unsafe | Safe subtree delegation |\n\n## Key Controllers\n\n- cpu — \`cpu.weight\` (proportional shares 1-10000), \`cpu.max\` (hard limit: \`quota period\`)\n- memory — \`memory.max\` (hard limit), \`memory.high\` (soft limit that triggers throttling), \`memory.swap.max\`\n- io — \`io.weight\`, \`io.max\` (BPS and IOPS limits per device)\n- pids — \`pids.max\` (fork bomb protection)\n- cpuset — pin to specific CPUs and NUMA nodes\n\n## Kubernetes and cgroups v2\n\nKubernetes 1.25+ requires cgroups v2 for memory QoS (guaranteed/burstable distinction via \`memory.high\`) and for rootless container support (delegation chain from system cgroup to user session). Containerd and cri-o configure pod cgroups under \`/sys/fs/cgroup/kubepods/\`.\n\n## Delegation for Rootless Containers\n\nIn v2, a parent cgroup can delegate its subtree to a non-root user. The user can create sub-cgroups and apply limits without CAP_SYS_ADMIN on the root cgroup. This is how rootless Docker and Podman work: systemd delegates a user slice, and the container runtime manages sub-cgroups within it.`,
     whenToUse: [
       'Explaining how Kubernetes resource requests/limits translate to kernel cgroup settings',
       'Debugging OOMKilled pods and memory.high throttling behavior',
@@ -6122,7 +6122,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How does Kubernetes translate a pod resource request/limit into kernel cgroup settings?',
-        answer: `**Requests** and **limits** in a pod spec map directly to cgroup v2 settings applied by the container runtime (containerd/cri-o):\n\n| Pod spec | cgroup v2 file | Effect |\n|----------|----------------|--------|\n| \`resources.limits.cpu: "500m"\` | \`cpu.max = 50000 100000\` | Hard cap: 50ms CPU per 100ms |\n| \`resources.requests.cpu: "250m"\` | \`cpu.weight\` | Proportional share for scheduling |\n| \`resources.limits.memory: "256Mi"\` | \`memory.max = 268435456\` | Hard OOM limit |\n| \`resources.requests.memory: "128Mi"\` | \`memory.high = 134217728\` | Soft throttle limit (Burstable QoS) |\n\n**QoS classes:**\n- **Guaranteed** — requests == limits for all containers. Gets highest priority.\n- **Burstable** — limits > requests. \`memory.high\` = request, \`memory.max\` = limit.\n- **BestEffort** — no requests or limits. OOM-killed first.\n\n\`\`\`bash\n# Inspect cgroup settings for a pod\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/cpu.max\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/memory.max\n\`\`\``,
+        answer: `Requests and limits in a pod spec map directly to cgroup v2 settings applied by the container runtime (containerd/cri-o):\n\n| Pod spec | cgroup v2 file | Effect |\n|----------|----------------|--------|\n| \`resources.limits.cpu: "500m"\` | \`cpu.max = 50000 100000\` | Hard cap: 50ms CPU per 100ms |\n| \`resources.requests.cpu: "250m"\` | \`cpu.weight\` | Proportional share for scheduling |\n| \`resources.limits.memory: "256Mi"\` | \`memory.max = 268435456\` | Hard OOM limit |\n| \`resources.requests.memory: "128Mi"\` | \`memory.high = 134217728\` | Soft throttle limit (Burstable QoS) |\n\nQoS classes:\n- Guaranteed — requests == limits for all containers. Gets highest priority.\n- Burstable — limits > requests. \`memory.high\` = request, \`memory.max\` = limit.\n- BestEffort — no requests or limits. OOM-killed first.\n\n\`\`\`bash\n# Inspect cgroup settings for a pod\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/cpu.max\ncat /sys/fs/cgroup/kubepods/pod<uid>/<container-id>/memory.max\n\`\`\``,
       },
     ],
     quickFire: [
@@ -6149,7 +6149,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'LUKS2 Stack', description: 'Block device → dm-crypt (kernel) → virtual /dev/mapper/name → filesystem. LUKS header stores key slots.', image: '/diagrams/linux/linux-luks-stack.png' },
     ],
-    introduction: `**dm-crypt** is the Linux kernel's transparent block device encryption layer, built on the Device Mapper framework. **LUKS** (Linux Unified Key Setup) is the metadata format layered on top that manages key slots, algorithm parameters, and header backup.\n\n## Architecture\n\n\`\`\`\n/dev/sdb (raw block device)\n  └─ LUKS2 header (key slots, algorithm, UUID)\n       └─ dm-crypt (kernel AES-XTS encryption)\n            └─ /dev/mapper/cryptdisk (plaintext virtual device)\n                 └─ ext4 / XFS filesystem\n\`\`\`\n\n## Key Operations\n\n\`\`\`bash\n# Create LUKS2 container\ncryptsetup luksFormat --type luks2 /dev/sdb\n\n# Open (decrypt) → creates /dev/mapper/cryptdisk\ncryptsetup open /dev/sdb cryptdisk\n\n# Format and mount\nmkfs.ext4 /dev/mapper/cryptdisk\nmount /dev/mapper/cryptdisk /mnt/data\n\n# Add a second key slot (backup passphrase or TPM)\ncryptsetup luksAddKey /dev/sdb\n\n# Close on unmount\numount /mnt/data\ncryptsetup close cryptdisk\n\`\`\`\n\n## LUKS2 Improvements over LUKS1\n\n- **Argon2id** KDF (key derivation function) — memory-hard, GPU-resistant (vs PBKDF2 in LUKS1)\n- **JSON metadata** — extensible header, supports labels and tokens\n- **32 key slots** (vs 8 in LUKS1)\n- **Token plugins** — TPM2, FIDO2, Clevis for automated unlocking\n\n## Automatic Unlocking with TPM2\n\n**Clevis** + **Tang** implement Network Bound Disk Encryption (NBDE): the encryption key is sealed in the TPM2 chip and only released if the system boots in a known-good state (PCR measurements match). Useful for auto-unlock after reboot without human intervention.\n\n\`\`\`bash\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\`\`\``,
+    introduction: `dm-crypt is the Linux kernel's transparent block device encryption layer, built on the Device Mapper framework. LUKS (Linux Unified Key Setup) is the metadata format layered on top that manages key slots, algorithm parameters, and header backup.\n\n## Architecture\n\n\`\`\`\n/dev/sdb (raw block device)\n  └─ LUKS2 header (key slots, algorithm, UUID)\n       └─ dm-crypt (kernel AES-XTS encryption)\n            └─ /dev/mapper/cryptdisk (plaintext virtual device)\n                 └─ ext4 / XFS filesystem\n\`\`\`\n\n## Key Operations\n\n\`\`\`bash\n# Create LUKS2 container\ncryptsetup luksFormat --type luks2 /dev/sdb\n\n# Open (decrypt) → creates /dev/mapper/cryptdisk\ncryptsetup open /dev/sdb cryptdisk\n\n# Format and mount\nmkfs.ext4 /dev/mapper/cryptdisk\nmount /dev/mapper/cryptdisk /mnt/data\n\n# Add a second key slot (backup passphrase or TPM)\ncryptsetup luksAddKey /dev/sdb\n\n# Close on unmount\numount /mnt/data\ncryptsetup close cryptdisk\n\`\`\`\n\n## LUKS2 Improvements over LUKS1\n\n- Argon2id KDF (key derivation function) — memory-hard, GPU-resistant (vs PBKDF2 in LUKS1)\n- JSON metadata — extensible header, supports labels and tokens\n- 32 key slots (vs 8 in LUKS1)\n- Token plugins — TPM2, FIDO2, Clevis for automated unlocking\n\n## Automatic Unlocking with TPM2\n\nClevis + Tang implement Network Bound Disk Encryption (NBDE): the encryption key is sealed in the TPM2 chip and only released if the system boots in a known-good state (PCR measurements match). Useful for auto-unlock after reboot without human intervention.\n\n\`\`\`bash\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\`\`\``,
     whenToUse: [
       'Designing at-rest encryption for cloud VM data disks and Kubernetes PVs',
       'Explaining TPM2-based automated disk unlock for server reboots without human passphrase',
@@ -6169,7 +6169,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How do you set up full-disk encryption on a Linux data disk, and how would you enable automatic unlocking on reboot for a server?',
-        answer: `**Setup:**\n\`\`\`bash\n# 1. Format with LUKS2\ncryptsetup luksFormat --type luks2 --pbkdf argon2id /dev/sdb\n\n# 2. Open and format\ncryptsetup open /dev/sdb cryptdisk\nmkfs.xfs /dev/mapper/cryptdisk\n\n# 3. Add to /etc/crypttab for persistent mapping\necho "cryptdisk UUID=$(blkid -s UUID -o value /dev/sdb) none luks" >> /etc/crypttab\n\n# 4. Add to /etc/fstab\necho "/dev/mapper/cryptdisk /data xfs defaults 0 2" >> /etc/fstab\n\`\`\`\n\n**Automatic unlocking with TPM2 (Clevis):**\n\`\`\`bash\n# Bind LUKS slot to TPM2 PCR 7 (Secure Boot state)\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\n# Install dracut integration for initramfs\ndnf install clevis-dracut && dracut -f\n\`\`\`\n\nOn reboot, the initramfs runs Clevis which unseals the key from the TPM if PCR 7 matches (system booted with same Secure Boot keys). If the disk is removed or the boot chain changes, the TPM refuses to unseal — requiring manual passphrase entry.`,
+        answer: `Setup:\n\`\`\`bash\n# 1. Format with LUKS2\ncryptsetup luksFormat --type luks2 --pbkdf argon2id /dev/sdb\n\n# 2. Open and format\ncryptsetup open /dev/sdb cryptdisk\nmkfs.xfs /dev/mapper/cryptdisk\n\n# 3. Add to /etc/crypttab for persistent mapping\necho "cryptdisk UUID=$(blkid -s UUID -o value /dev/sdb) none luks" >> /etc/crypttab\n\n# 4. Add to /etc/fstab\necho "/dev/mapper/cryptdisk /data xfs defaults 0 2" >> /etc/fstab\n\`\`\`\n\nAutomatic unlocking with TPM2 (Clevis):\n\`\`\`bash\n# Bind LUKS slot to TPM2 PCR 7 (Secure Boot state)\nclevis luks bind -d /dev/sdb tpm2 '{\"pcr_ids\":\"7\"}'\n\n# Install dracut integration for initramfs\ndnf install clevis-dracut && dracut -f\n\`\`\`\n\nOn reboot, the initramfs runs Clevis which unseals the key from the TPM if PCR 7 matches (system booted with same Secure Boot keys). If the disk is removed or the boot chain changes, the TPM refuses to unseal — requiring manual passphrase entry.`,
       },
     ],
     quickFire: [
@@ -6195,7 +6195,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'OverlayFS Layers', description: 'upperdir (writable) + lowerdir (read-only image layers) → merged view. Writes go to upper via copy-on-write.', image: '/diagrams/linux/linux-overlayfs-layers.png' },
     ],
-    introduction: `The **Virtual File System (VFS)** is a kernel abstraction layer that provides a uniform file API (\`open\`, \`read\`, \`write\`, \`stat\`) across all filesystem types — ext4, XFS, NFS, procfs, tmpfs, and more. Every file operation passes through VFS before reaching the concrete filesystem driver.\n\n## VFS Key Concepts\n\n- **Superblock** — filesystem-wide metadata (block size, inode count)\n- **Inode** — file metadata (permissions, size, timestamps, block pointers) — no filename\n- **Dentry** — directory entry that maps a filename to an inode; cached in the dentry cache\n- **File object** — open file descriptor state (offset, flags)\n\n## Mount Namespaces\n\nMount namespaces isolate the filesystem tree. Each container gets its own mount namespace — changes to mounts inside are invisible outside. Created with \`clone(CLONE_NEWNS)\` or \`unshare --mount\`.\n\n## Bind Mounts\n\nBind mounts re-expose a directory at a second path:\n\`\`\`bash\nmount --bind /data /mnt/backup   # /mnt/backup now shows /data contents\nmount --bind --ro /etc /mnt/conf  # Read-only bind\n\`\`\`\nDocker \`-v /host/path:/container/path\` is a bind mount propagated into the container mount namespace.\n\n## OverlayFS — Container Image Layers\n\nOverlayFS stacks multiple directory trees into a unified view:\n\n\`\`\`bash\nmount -t overlay overlay \\\n  -o lowerdir=/layer2:/layer1,\\\n     upperdir=/writable,\\\n     workdir=/work \\\n  /merged\n\`\`\`\n\n- **lowerdir** — read-only base layers (Docker image layers, bottom to top separated by colons)\n- **upperdir** — read-write container layer (container writes go here)\n- **workdir** — internal kernel workspace (must be on same filesystem as upperdir)\n- **merged** — the unified view shown to the container process\n\n**Copy-on-write:** Reading a file from lowerdir is zero-copy. Writing a lower-layer file copies it to upperdir first (copy-up), then modifies it — the lower layer is unchanged.\n\n**Deletion:** A deleted lower-layer file creates a **whiteout** file in upperdir (\`char device 0,0\`) that masks the lower entry.`,
+    introduction: `The Virtual File System (VFS) is a kernel abstraction layer that provides a uniform file API (\`open\`, \`read\`, \`write\`, \`stat\`) across all filesystem types — ext4, XFS, NFS, procfs, tmpfs, and more. Every file operation passes through VFS before reaching the concrete filesystem driver.\n\n## VFS Key Concepts\n\n- Superblock — filesystem-wide metadata (block size, inode count)\n- Inode — file metadata (permissions, size, timestamps, block pointers) — no filename\n- Dentry — directory entry that maps a filename to an inode; cached in the dentry cache\n- File object — open file descriptor state (offset, flags)\n\n## Mount Namespaces\n\nMount namespaces isolate the filesystem tree. Each container gets its own mount namespace — changes to mounts inside are invisible outside. Created with \`clone(CLONE_NEWNS)\` or \`unshare --mount\`.\n\n## Bind Mounts\n\nBind mounts re-expose a directory at a second path:\n\`\`\`bash\nmount --bind /data /mnt/backup   # /mnt/backup now shows /data contents\nmount --bind --ro /etc /mnt/conf  # Read-only bind\n\`\`\`\nDocker \`-v /host/path:/container/path\` is a bind mount propagated into the container mount namespace.\n\n## OverlayFS — Container Image Layers\n\nOverlayFS stacks multiple directory trees into a unified view:\n\n\`\`\`bash\nmount -t overlay overlay \\\n  -o lowerdir=/layer2:/layer1,\\\n     upperdir=/writable,\\\n     workdir=/work \\\n  /merged\n\`\`\`\n\n- lowerdir — read-only base layers (Docker image layers, bottom to top separated by colons)\n- upperdir — read-write container layer (container writes go here)\n- workdir — internal kernel workspace (must be on same filesystem as upperdir)\n- merged — the unified view shown to the container process\n\nCopy-on-write: Reading a file from lowerdir is zero-copy. Writing a lower-layer file copies it to upperdir first (copy-up), then modifies it — the lower layer is unchanged.\n\nDeletion: A deleted lower-layer file creates a whiteout file in upperdir (\`char device 0,0\`) that masks the lower entry.`,
     whenToUse: [
       'Explaining how Docker image layers work and why containers share base layers efficiently',
       'Debugging "no space left on device" inside a container when the overlay upperdir is full',
@@ -6215,7 +6215,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How does Docker use OverlayFS to share base image layers between containers, and what happens when a container writes to a file?',
-        answer: `Each Docker image layer is stored as a directory on disk (\`/var/lib/docker/overlay2/<layer-id>/diff/\`). When a container starts, Docker mounts an OverlayFS combining:\n\n- **lowerdir** — all image layers stacked (most recent on top)\n- **upperdir** — an empty per-container directory for writes\n- **workdir** — OverlayFS internal use\n- **merged** — the view shown to the container\n\n**Sharing:** Multiple containers using the same image share identical lowerdir layers (they are read-only). Only the upperdir is unique per container. A 1GB image layer stored once can be shared across 100 containers.\n\n**Write path:**\n1. Container process writes to \`/app/config.yaml\` (exists in an image layer)\n2. Kernel detects the file is in lowerdir\n3. **Copy-up**: copies entire \`config.yaml\` from lowerdir to upperdir\n4. Write applied to upperdir copy\n5. Subsequent reads/writes go directly to upperdir (fast path)\n\n**Inspection:**\n\`\`\`bash\n# See what a container has written\ndocker diff <container-id>\n\n# Inspect overlay mount\ncat /proc/$(docker inspect --format '{{.State.Pid}}' <id>)/mounts | grep overlay\n\`\`\``,
+        answer: `Each Docker image layer is stored as a directory on disk (\`/var/lib/docker/overlay2/<layer-id>/diff/\`). When a container starts, Docker mounts an OverlayFS combining:\n\n- lowerdir — all image layers stacked (most recent on top)\n- upperdir — an empty per-container directory for writes\n- workdir — OverlayFS internal use\n- merged — the view shown to the container\n\nSharing: Multiple containers using the same image share identical lowerdir layers (they are read-only). Only the upperdir is unique per container. A 1GB image layer stored once can be shared across 100 containers.\n\nWrite path:\n1. Container process writes to \`/app/config.yaml\` (exists in an image layer)\n2. Kernel detects the file is in lowerdir\n3. Copy-up: copies entire \`config.yaml\` from lowerdir to upperdir\n4. Write applied to upperdir copy\n5. Subsequent reads/writes go directly to upperdir (fast path)\n\nInspection:\n\`\`\`bash\n# See what a container has written\ndocker diff <container-id>\n\n# Inspect overlay mount\ncat /proc/$(docker inspect --format '{{.State.Pid}}' <id>)/mounts | grep overlay\n\`\`\``,
       },
     ],
     quickFire: [
@@ -6242,7 +6242,7 @@ ls /var/lib/cni/networks/mynet/
       { title: 'USE Method Checklist', description: 'CPU: utilization (top/mpstat) → saturation (runqlat) → errors (perf/dmesg). Memory, disk, network same pattern.', image: '/diagrams/linux/linux-use-method.png' },
       { title: 'Flame Graph Anatomy', description: 'x-axis = time (stack samples), y-axis = stack depth, width = time in function. Flat tops = CPU bottleneck.', image: '/diagrams/linux/linux-flame-graph.png' },
     ],
-    introduction: `## USE Method\n\nBrendan Gregg's **USE Method** provides a systematic checklist for resource performance analysis. For every resource, measure:\n\n- **U — Utilization** — time resource was busy (0-100%). High utilization doesn't always mean saturation.\n- **S — Saturation** — work queued that cannot be serviced (run queue depth, I/O queue depth). Saturation causes latency.\n- **E — Errors** — hardware or software errors (disk errors, dropped packets, CPU machine checks).\n\n**Resources to check:** CPU, memory, network interfaces, storage devices, controllers, interconnects.\n\n\`\`\`bash\n# CPU utilization\nmpstat -P ALL 1\n\n# CPU saturation (run queue latency)\nbpftrace -e 'tracepoint:sched:sched_stat_wait { @us = hist(args->delay/1000); }'\n\n# Memory utilization\nfree -m\n\n# Memory saturation (paging/swapping)\nvmstat 1 | awk '{print $7,$8}'  # si/so columns\n\n# Disk utilization and saturation\niostat -xz 1\n\n# Network errors\nip -s link\nnetstat -s | grep -i error\n\`\`\`\n\n## Flame Graphs\n\nFlame graphs visualize **stack traces over time**, showing where CPUs spend their time:\n\n- **x-axis** — alphabetical (not time). Width = proportion of CPU samples in that function.\n- **y-axis** — stack depth. Bottom = on-CPU, top = leaf function.\n- **Wide flat tops** — the function where CPU is spending time (the bottleneck).\n- **Wide bases** — a common code path.\n\n\`\`\`bash\n# Capture perf data\nperf record -F 99 -ag -- sleep 30\n\n# Generate flame graph\nperf script | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > flame.svg\n\n# eBPF-based (no perf overhead)\nbpftrace -e 'profile:hz:99 { @[kstack] = count(); }'\n\`\`\`\n\n## Off-CPU Analysis\n\nOn-CPU flame graphs miss time spent **blocked** (waiting for I/O, locks, sleep). Off-CPU analysis captures time processes spend not executing:\n\n\`\`\`bash\n# bpftrace off-CPU time per process\nbpftrace -e 'tracepoint:sched:sched_switch {\n  if (args->prev_state) @offcpu[args->prev_comm] = count(); }'\n\`\`\``,
+    introduction: `## USE Method\n\nBrendan Gregg's USE Method provides a systematic checklist for resource performance analysis. For every resource, measure:\n\n- U — Utilization — time resource was busy (0-100%). High utilization doesn't always mean saturation.\n- S — Saturation — work queued that cannot be serviced (run queue depth, I/O queue depth). Saturation causes latency.\n- E — Errors — hardware or software errors (disk errors, dropped packets, CPU machine checks).\n\nResources to check: CPU, memory, network interfaces, storage devices, controllers, interconnects.\n\n\`\`\`bash\n# CPU utilization\nmpstat -P ALL 1\n\n# CPU saturation (run queue latency)\nbpftrace -e 'tracepoint:sched:sched_stat_wait { @us = hist(args->delay/1000); }'\n\n# Memory utilization\nfree -m\n\n# Memory saturation (paging/swapping)\nvmstat 1 | awk '{print $7,$8}'  # si/so columns\n\n# Disk utilization and saturation\niostat -xz 1\n\n# Network errors\nip -s link\nnetstat -s | grep -i error\n\`\`\`\n\n## Flame Graphs\n\nFlame graphs visualize stack traces over time, showing where CPUs spend their time:\n\n- x-axis — alphabetical (not time). Width = proportion of CPU samples in that function.\n- y-axis — stack depth. Bottom = on-CPU, top = leaf function.\n- Wide flat tops — the function where CPU is spending time (the bottleneck).\n- Wide bases — a common code path.\n\n\`\`\`bash\n# Capture perf data\nperf record -F 99 -ag -- sleep 30\n\n# Generate flame graph\nperf script | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > flame.svg\n\n# eBPF-based (no perf overhead)\nbpftrace -e 'profile:hz:99 { @[kstack] = count(); }'\n\`\`\`\n\n## Off-CPU Analysis\n\nOn-CPU flame graphs miss time spent blocked (waiting for I/O, locks, sleep). Off-CPU analysis captures time processes spend not executing:\n\n\`\`\`bash\n# bpftrace off-CPU time per process\nbpftrace -e 'tracepoint:sched:sched_switch {\n  if (args->prev_state) @offcpu[args->prev_comm] = count(); }'\n\`\`\``,
     whenToUse: [
       'Systematically triaging a performance problem on an unfamiliar system',
       'Identifying which function is consuming the most CPU time in a service',
@@ -6262,7 +6262,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'Walk through how you would diagnose a production service with high latency but low CPU usage.',
-        answer: `Low CPU + high latency = the service is waiting for something, not computing. Follow the USE Method:\n\n**Step 1: CPU saturation check**\n\`\`\`bash\n# Run queue latency — are threads waiting to get on CPU?\nsar -q 1 5   # runq-sz > 1 indicates CPU saturation\nmpstat -P ALL 1\n\`\`\`\n\n**Step 2: Memory saturation**\n\`\`\`bash\nvmstat 1   # si/so > 0 means swapping — severe latency impact\nfree -m    # check available vs buff/cache\n\`\`\`\n\n**Step 3: Disk saturation**\n\`\`\`bash\niostat -xz 1   # await > 10ms = disk latency. %util near 100 = saturated.\n\`\`\`\n\n**Step 4: Network errors**\n\`\`\`bash\nip -s link show eth0   # RX/TX errors, drops\nnetstat -s | grep retransmit\n\`\`\`\n\n**Step 5: Off-CPU flame graph**\n\`\`\`bash\n# Find what the service threads are blocked on\npid=$(pgrep myservice)\noffcputime-bpfcc -p $pid 30 | flamegraph.pl > offcpu.svg\n\`\`\`\n\nCommon findings: database queries (off-CPU waiting on network), lock contention (off-CPU waiting on futex), GC pauses (off-CPU in GC thread), or slow NFS/EBS mount.`,
+        answer: `Low CPU + high latency = the service is waiting for something, not computing. Follow the USE Method:\n\nStep 1: CPU saturation check\n\`\`\`bash\n# Run queue latency — are threads waiting to get on CPU?\nsar -q 1 5   # runq-sz > 1 indicates CPU saturation\nmpstat -P ALL 1\n\`\`\`\n\nStep 2: Memory saturation\n\`\`\`bash\nvmstat 1   # si/so > 0 means swapping — severe latency impact\nfree -m    # check available vs buff/cache\n\`\`\`\n\nStep 3: Disk saturation\n\`\`\`bash\niostat -xz 1   # await > 10ms = disk latency. %util near 100 = saturated.\n\`\`\`\n\nStep 4: Network errors\n\`\`\`bash\nip -s link show eth0   # RX/TX errors, drops\nnetstat -s | grep retransmit\n\`\`\`\n\nStep 5: Off-CPU flame graph\n\`\`\`bash\n# Find what the service threads are blocked on\npid=$(pgrep myservice)\noffcputime-bpfcc -p $pid 30 | flamegraph.pl > offcpu.svg\n\`\`\`\n\nCommon findings: database queries (off-CPU waiting on network), lock contention (off-CPU waiting on futex), GC pauses (off-CPU in GC thread), or slow NFS/EBS mount.`,
       },
     ],
     quickFire: [
@@ -6289,7 +6289,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'sssd Authentication Stack', description: 'Login → PAM → sssd daemon → LDAP/AD/Kerberos → local cache. Offline mode serves from cache.', image: '/diagrams/linux/linux-sssd-stack.png' },
     ],
-    introduction: `**sssd** (System Security Services Daemon) is the standard Linux daemon for integrating with centralized identity providers: LDAP, Active Directory, FreeIPA, and Kerberos. It caches identity and authentication data so Linux hosts can authenticate users even when the directory server is temporarily unreachable.\n\n## Components\n\n- **sssd** — main daemon. Spawns per-domain provider processes.\n- **PAM** — pluggable authentication modules. \`pam_sss.so\` hooks login, sudo, and SSH into sssd.\n- **NSS** — name service switch. \`nss_sss\` resolves usernames/groups via sssd.\n- **Kerberos** — sssd can obtain Kerberos tickets on login for SSO to other services.\n\n## Configuration\n\n\`\`\`ini\n# /etc/sssd/sssd.conf\n[sssd]\ndomains = corp.example.com\nservices = nss, pam\n\n[domain/corp.example.com]\nid_provider = ldap\nauth_provider = krb5\nldap_uri = ldap://dc1.corp.example.com\nldap_search_base = dc=corp,dc=example,dc=com\nkrb5_realm = CORP.EXAMPLE.COM\ncache_credentials = true\noffline_credentials_expiration = 7\n\`\`\`\n\n## Active Directory Integration\n\nFor AD, use \`id_provider = ad\` which automatically discovers DCs via DNS SRV records, handles Kerberos, and maps AD groups to Linux groups:\n\n\`\`\`bash\n# Join AD domain (requires kerberos ticket or admin password)\nrealm join --user=Administrator corp.example.com\n\n# Verify user lookup\nid user@corp.example.com\ngetent passwd user@corp.example.com\n\n# Test auth\nsss_client user@corp.example.com\n\`\`\`\n\n## Offline Caching\n\nWith \`cache_credentials = true\`, sssd stores hashed credentials. Users can authenticate for \`offline_credentials_expiration\` days without reaching the directory server. Cached credentials are stored in \`/var/lib/sss/db/\` (SQLite, root-only).`,
+    introduction: `sssd (System Security Services Daemon) is the standard Linux daemon for integrating with centralized identity providers: LDAP, Active Directory, FreeIPA, and Kerberos. It caches identity and authentication data so Linux hosts can authenticate users even when the directory server is temporarily unreachable.\n\n## Components\n\n- sssd — main daemon. Spawns per-domain provider processes.\n- PAM — pluggable authentication modules. \`pam_sss.so\` hooks login, sudo, and SSH into sssd.\n- NSS — name service switch. \`nss_sss\` resolves usernames/groups via sssd.\n- Kerberos — sssd can obtain Kerberos tickets on login for SSO to other services.\n\n## Configuration\n\n\`\`\`ini\n# /etc/sssd/sssd.conf\n[sssd]\ndomains = corp.example.com\nservices = nss, pam\n\n[domain/corp.example.com]\nid_provider = ldap\nauth_provider = krb5\nldap_uri = ldap://dc1.corp.example.com\nldap_search_base = dc=corp,dc=example,dc=com\nkrb5_realm = CORP.EXAMPLE.COM\ncache_credentials = true\noffline_credentials_expiration = 7\n\`\`\`\n\n## Active Directory Integration\n\nFor AD, use \`id_provider = ad\` which automatically discovers DCs via DNS SRV records, handles Kerberos, and maps AD groups to Linux groups:\n\n\`\`\`bash\n# Join AD domain (requires kerberos ticket or admin password)\nrealm join --user=Administrator corp.example.com\n\n# Verify user lookup\nid user@corp.example.com\ngetent passwd user@corp.example.com\n\n# Test auth\nsss_client user@corp.example.com\n\`\`\`\n\n## Offline Caching\n\nWith \`cache_credentials = true\`, sssd stores hashed credentials. Users can authenticate for \`offline_credentials_expiration\` days without reaching the directory server. Cached credentials are stored in \`/var/lib/sss/db/\` (SQLite, root-only).`,
     whenToUse: [
       'Designing centralized Linux authentication for a fleet of servers joining Active Directory',
       'Explaining how Kubernetes node authentication integrates with corporate LDAP',
@@ -6309,7 +6309,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'Explain how sssd integrates Linux authentication with Active Directory and what happens when the AD server is unreachable.',
-        answer: `**Join flow:**\n1. \`realm join corp.example.com\` discovers DCs via DNS SRV: \`_ldap._tcp.corp.example.com\`\n2. Creates a **computer account** in AD for the Linux host\n3. Writes \`/etc/krb5.conf\` and \`/etc/sssd/sssd.conf\`\n4. Configures PAM (\`/etc/pam.d/\`) to include \`pam_sss.so\`\n5. Configures NSS (\`/etc/nsswitch.conf\`) to include \`sss\`\n\n**Authentication flow:**\n1. User types password at login\n2. PAM calls \`pam_sss.so\`\n3. sssd checks local cache — if cached and not expired, validates against hashed credential\n4. If not cached or expired, contacts AD via Kerberos (AS-REQ/AS-REP) or LDAP bind\n5. On success, sssd creates a local session and optionally obtains a TGT for SSO\n\n**Offline operation:**\nWith \`cache_credentials = true\`:\n- sssd stores a hash of the password in SQLite under \`/var/lib/sss/db/\`\n- Users can authenticate for \`offline_credentials_expiration\` days without AD\n- Group memberships are served from the last successful cache refresh\n- New users or users who have never logged in cannot authenticate offline\n\n\`\`\`bash\n# Check sssd cache status\nsss_cache -E   # expire all cache (force AD lookup)\nsssctl user-status user@corp.example.com\n\`\`\``,
+        answer: `Join flow:\n1. \`realm join corp.example.com\` discovers DCs via DNS SRV: \`_ldap._tcp.corp.example.com\`\n2. Creates a computer account in AD for the Linux host\n3. Writes \`/etc/krb5.conf\` and \`/etc/sssd/sssd.conf\`\n4. Configures PAM (\`/etc/pam.d/\`) to include \`pam_sss.so\`\n5. Configures NSS (\`/etc/nsswitch.conf\`) to include \`sss\`\n\nAuthentication flow:\n1. User types password at login\n2. PAM calls \`pam_sss.so\`\n3. sssd checks local cache — if cached and not expired, validates against hashed credential\n4. If not cached or expired, contacts AD via Kerberos (AS-REQ/AS-REP) or LDAP bind\n5. On success, sssd creates a local session and optionally obtains a TGT for SSO\n\nOffline operation:\nWith \`cache_credentials = true\`:\n- sssd stores a hash of the password in SQLite under \`/var/lib/sss/db/\`\n- Users can authenticate for \`offline_credentials_expiration\` days without AD\n- Group memberships are served from the last successful cache refresh\n- New users or users who have never logged in cannot authenticate offline\n\n\`\`\`bash\n# Check sssd cache status\nsss_cache -E   # expire all cache (force AD lookup)\nsssctl user-status user@corp.example.com\n\`\`\``,
       },
     ],
     quickFire: [
@@ -6335,7 +6335,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'ftrace vs bpftrace Layers', description: 'ftrace: tracefs interface → ring buffer → trace_pipe output. bpftrace: BPF program → map → user-space aggregation.', image: '/diagrams/linux/linux-ftrace-layers.png' },
     ],
-    introduction: `## ftrace\n\n**ftrace** is the Linux kernel's built-in tracing framework, accessible through the **tracefs** virtual filesystem at \`/sys/kernel/debug/tracing/\` (or \`/sys/kernel/tracing/\` on modern kernels).\n\n### Key ftrace Tracers\n\n| Tracer | Use |\n|--------|-----|\n| \`function\` | Traces every kernel function call — very high overhead |\n| \`function_graph\` | Traces entry and exit with call graph indentation |\n| \`nop\` | Disables tracing (default) |\n| \`blk\` | Block I/O events |\n\n### Basic ftrace Usage\n\n\`\`\`bash\n# Set tracer to function_graph, filter to tcp functions\ncd /sys/kernel/debug/tracing\necho function_graph > current_tracer\necho \"tcp_*\" > set_ftrace_filter\necho 1 > tracing_on\ncat trace_pipe   # live output\necho 0 > tracing_on\necho nop > current_tracer   # reset\n\`\`\`\n\n### trace-cmd (ftrace frontend)\n\n\`\`\`bash\n# Record for 5 seconds\ntrace-cmd record -p function_graph -g tcp_connect sleep 5\ntrace-cmd report   # analyze saved trace\n\`\`\`\n\n## bpftrace\n\n**bpftrace** is a high-level scripting language for eBPF tracing. Programs are compiled to BPF bytecode at runtime.\n\n### Probe Types\n\n| Type | Syntax | Use |\n|------|--------|-----|\n| kprobe | \`kprobe:tcp_connect\` | Kernel function entry |\n| kretprobe | \`kretprobe:tcp_connect\` | Kernel function return |\n| tracepoint | \`tracepoint:syscalls:sys_enter_read\` | Stable kernel events |\n| uprobe | \`uprobe:/bin/bash:readline\` | User-space function |\n| profile | \`profile:hz:99\` | CPU sampling |\n\n### Practical One-liners\n\n\`\`\`bash\n# System call counts by process\nbpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'\n\n# Read/write latency histogram\nbpftrace -e 'kprobe:vfs_read { @start[tid] = nsecs; }\n  kretprobe:vfs_read /@start[tid]/ {\n    @us = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# DNS query tracing (user-space probe)\nbpftrace -e 'uprobe:/lib/x86_64-linux-gnu/libc.so.6:getaddrinfo { printf(\"%s\\n\", str(arg0)); }'\n\n# TCP retransmits\nbpftrace -e 'kprobe:tcp_retransmit_skb { @[comm] = count(); }'\n\`\`\``,
+    introduction: `## ftrace\n\nftrace is the Linux kernel's built-in tracing framework, accessible through the tracefs virtual filesystem at \`/sys/kernel/debug/tracing/\` (or \`/sys/kernel/tracing/\` on modern kernels).\n\n### Key ftrace Tracers\n\n| Tracer | Use |\n|--------|-----|\n| \`function\` | Traces every kernel function call — very high overhead |\n| \`function_graph\` | Traces entry and exit with call graph indentation |\n| \`nop\` | Disables tracing (default) |\n| \`blk\` | Block I/O events |\n\n### Basic ftrace Usage\n\n\`\`\`bash\n# Set tracer to function_graph, filter to tcp functions\ncd /sys/kernel/debug/tracing\necho function_graph > current_tracer\necho \"tcp_*\" > set_ftrace_filter\necho 1 > tracing_on\ncat trace_pipe   # live output\necho 0 > tracing_on\necho nop > current_tracer   # reset\n\`\`\`\n\n### trace-cmd (ftrace frontend)\n\n\`\`\`bash\n# Record for 5 seconds\ntrace-cmd record -p function_graph -g tcp_connect sleep 5\ntrace-cmd report   # analyze saved trace\n\`\`\`\n\n## bpftrace\n\nbpftrace is a high-level scripting language for eBPF tracing. Programs are compiled to BPF bytecode at runtime.\n\n### Probe Types\n\n| Type | Syntax | Use |\n|------|--------|-----|\n| kprobe | \`kprobe:tcp_connect\` | Kernel function entry |\n| kretprobe | \`kretprobe:tcp_connect\` | Kernel function return |\n| tracepoint | \`tracepoint:syscalls:sys_enter_read\` | Stable kernel events |\n| uprobe | \`uprobe:/bin/bash:readline\` | User-space function |\n| profile | \`profile:hz:99\` | CPU sampling |\n\n### Practical One-liners\n\n\`\`\`bash\n# System call counts by process\nbpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'\n\n# Read/write latency histogram\nbpftrace -e 'kprobe:vfs_read { @start[tid] = nsecs; }\n  kretprobe:vfs_read /@start[tid]/ {\n    @us = hist((nsecs - @start[tid]) / 1000); delete(@start[tid]); }'\n\n# DNS query tracing (user-space probe)\nbpftrace -e 'uprobe:/lib/x86_64-linux-gnu/libc.so.6:getaddrinfo { printf(\"%s\\n\", str(arg0)); }'\n\n# TCP retransmits\nbpftrace -e 'kprobe:tcp_retransmit_skb { @[comm] = count(); }'\n\`\`\``,
     whenToUse: [
       'Tracing kernel function calls to debug an obscure I/O or networking issue without rebooting',
       'Writing custom observability that captures exactly the event and data needed',
@@ -6355,7 +6355,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'How would you trace what system calls a specific process is making in production without using strace?',
-        answer: `**strace problem:** strace uses ptrace which serializes every syscall through the tracer — it adds significant overhead (2-10x slowdown for syscall-heavy processes). Avoid in production.\n\n**bpftrace alternative (near-zero overhead):**\n\`\`\`bash\n# Count syscalls by name for a specific PID\npid=$(pgrep myservice)\nbpftrace -e "tracepoint:raw_syscalls:sys_enter /pid == $pid/ { @[ksym(args->id)] = count(); }"\n\n# Trace with arguments (slower, use carefully)\nbpftrace -e "tracepoint:syscalls:sys_enter_openat /pid == $pid/ {\n  printf(\"%s\\n\", str(args->filename)); }"\n\`\`\`\n\n**ftrace alternative:**\n\`\`\`bash\n# Trace syscalls for a PID using perf trace (perf-based, lower overhead than strace)\nperf trace -p $pid --no-syscalls -e 'syscalls:*' -- sleep 10\n\`\`\`\n\n**Overhead comparison:**\n- strace: 2-10x CPU overhead per syscall (ptrace stops process)\n- bpftrace tracepoint: ~50ns per event, runs in kernel context\n- perf trace: similar to bpftrace, uses perf_event_open`,
+        answer: `strace problem: strace uses ptrace which serializes every syscall through the tracer — it adds significant overhead (2-10x slowdown for syscall-heavy processes). Avoid in production.\n\nbpftrace alternative (near-zero overhead):\n\`\`\`bash\n# Count syscalls by name for a specific PID\npid=$(pgrep myservice)\nbpftrace -e "tracepoint:raw_syscalls:sys_enter /pid == $pid/ { @[ksym(args->id)] = count(); }"\n\n# Trace with arguments (slower, use carefully)\nbpftrace -e "tracepoint:syscalls:sys_enter_openat /pid == $pid/ {\n  printf(\"%s\\n\", str(args->filename)); }"\n\`\`\`\n\nftrace alternative:\n\`\`\`bash\n# Trace syscalls for a PID using perf trace (perf-based, lower overhead than strace)\nperf trace -p $pid --no-syscalls -e 'syscalls:*' -- sleep 10\n\`\`\`\n\nOverhead comparison:\n- strace: 2-10x CPU overhead per syscall (ptrace stops process)\n- bpftrace tracepoint: ~50ns per event, runs in kernel context\n- perf trace: similar to bpftrace, uses perf_event_open`,
       },
     ],
     quickFire: [
@@ -6381,7 +6381,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'NUMA Topology', description: 'Two sockets → two NUMA nodes. Local memory access ~60ns, remote (cross-QPI) ~120ns. CPU-to-memory distance matrix.', image: '/diagrams/linux/linux-numa-topology.png' },
     ],
-    introduction: `**NUMA** (Non-Uniform Memory Access) is the memory architecture of modern multi-socket servers. Each processor socket has local RAM — access to local memory is ~60ns, access to RAM on another socket (via QPI/UPI interconnect) is ~120ns or higher.\n\n## Why NUMA Matters\n\nA process pinned to CPU 0 that allocates memory on NUMA node 1 incurs remote memory latency on every access. At scale, this causes throughput degradation and latency spikes invisible to top/htop.\n\n## Viewing NUMA Topology\n\n\`\`\`bash\n# Show NUMA nodes and CPU assignments\nnumactl --hardware\n\n# Show memory distance matrix (100=local, 200=remote approx)\nnuma_maps or numactl -H\n\n# Which NUMA node is a process using?\ncat /proc/<pid>/numa_maps\n\n# Check NUMA statistics\nnumastat\n\n# See NUMA topology via lscpu\nlscpu | grep -i numa\n\`\`\`\n\n## Memory Allocation Policies\n\n| Policy | Behavior |\n|--------|----------|\n| \`local\` (default) | Allocate from the node where the requesting CPU runs |\n| \`preferred <node>\` | Prefer node N, fall back to others if full |\n| \`bind <node>\` | Allocate only from node N — fail if insufficient |\n| \`interleave\` | Round-robin across nodes — maximizes bandwidth |\n\n## numactl Usage\n\n\`\`\`bash\n# Run a process pinned to NUMA node 0 (CPUs + memory)\nnumactl --cpunodebind=0 --membind=0 ./myapp\n\n# Interleave memory for a database (max bandwidth)\nnumactl --interleave=all /usr/bin/mysqld\n\n# Check if existing process is NUMA-local\ncat /proc/$(pgrep redis)/numa_maps | grep anon\n\`\`\`\n\n## Kubernetes and NUMA\n\nKubernetes Topology Manager (\`--topology-manager-policy=single-numa-node\`) ensures CPU and memory allocations for Guaranteed QoS pods are colocated on a single NUMA node, critical for latency-sensitive HPC and telco workloads. Check with:\n\`\`\`bash\nkubectl describe node | grep -A5 Topology\n\`\`\``,
+    introduction: `NUMA (Non-Uniform Memory Access) is the memory architecture of modern multi-socket servers. Each processor socket has local RAM — access to local memory is ~60ns, access to RAM on another socket (via QPI/UPI interconnect) is ~120ns or higher.\n\n## Why NUMA Matters\n\nA process pinned to CPU 0 that allocates memory on NUMA node 1 incurs remote memory latency on every access. At scale, this causes throughput degradation and latency spikes invisible to top/htop.\n\n## Viewing NUMA Topology\n\n\`\`\`bash\n# Show NUMA nodes and CPU assignments\nnumactl --hardware\n\n# Show memory distance matrix (100=local, 200=remote approx)\nnuma_maps or numactl -H\n\n# Which NUMA node is a process using?\ncat /proc/<pid>/numa_maps\n\n# Check NUMA statistics\nnumastat\n\n# See NUMA topology via lscpu\nlscpu | grep -i numa\n\`\`\`\n\n## Memory Allocation Policies\n\n| Policy | Behavior |\n|--------|----------|\n| \`local\` (default) | Allocate from the node where the requesting CPU runs |\n| \`preferred <node>\` | Prefer node N, fall back to others if full |\n| \`bind <node>\` | Allocate only from node N — fail if insufficient |\n| \`interleave\` | Round-robin across nodes — maximizes bandwidth |\n\n## numactl Usage\n\n\`\`\`bash\n# Run a process pinned to NUMA node 0 (CPUs + memory)\nnumactl --cpunodebind=0 --membind=0 ./myapp\n\n# Interleave memory for a database (max bandwidth)\nnumactl --interleave=all /usr/bin/mysqld\n\n# Check if existing process is NUMA-local\ncat /proc/$(pgrep redis)/numa_maps | grep anon\n\`\`\`\n\n## Kubernetes and NUMA\n\nKubernetes Topology Manager (\`--topology-manager-policy=single-numa-node\`) ensures CPU and memory allocations for Guaranteed QoS pods are colocated on a single NUMA node, critical for latency-sensitive HPC and telco workloads. Check with:\n\`\`\`bash\nkubectl describe node | grep -A5 Topology\n\`\`\``,
     whenToUse: [
       'Diagnosing unexpected latency on a multi-socket server despite low overall CPU/memory usage',
       'Tuning database servers (Redis, PostgreSQL, MySQL) for maximum memory throughput',
@@ -6401,7 +6401,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'A Redis instance on a 2-socket server shows unexpectedly high latency at moderate load. How does NUMA factor in and how do you diagnose?',
-        answer: `**NUMA effect on Redis:** Redis is single-threaded for commands. If the Redis process runs on CPU socket 0 but its memory was allocated on socket 1 (remote), every memory access costs ~120ns instead of ~60ns — effectively halving memory bandwidth.\n\n**Diagnosis:**\n\`\`\`bash\n# 1. Check NUMA topology\nnumactl --hardware\n\n# 2. Check where Redis memory is allocated\ncat /proc/$(pgrep redis)/numa_maps | head -20\n# Look for: N0=X N1=Y — high N1 on a node-0 CPU = remote allocation\n\n# 3. Check NUMA miss counters\nnumastat -p redis\n# numa_foreign > 0 = remote allocations happening\n\n# 4. Check which CPUs Redis is using\npid=$(pgrep redis)\ncat /proc/$pid/status | grep Cpu\nls /sys/devices/system/cpu/cpu*/topology/core_id\n\`\`\`\n\n**Fix:**\n\`\`\`bash\n# Restart Redis pinned to NUMA node 0 (CPU + memory)\nnumactl --cpunodebind=0 --membind=0 redis-server /etc/redis/redis.conf\n\n# Verify: numa_foreign should now be 0\nnumastat -p redis\n\`\`\`\n\n**Alternative:** Use \`taskset\` to pin CPUs, but still need \`numactl --membind\` for memory locality. taskset alone does not set memory policy.`,
+        answer: `NUMA effect on Redis: Redis is single-threaded for commands. If the Redis process runs on CPU socket 0 but its memory was allocated on socket 1 (remote), every memory access costs ~120ns instead of ~60ns — effectively halving memory bandwidth.\n\nDiagnosis:\n\`\`\`bash\n# 1. Check NUMA topology\nnumactl --hardware\n\n# 2. Check where Redis memory is allocated\ncat /proc/$(pgrep redis)/numa_maps | head -20\n# Look for: N0=X N1=Y — high N1 on a node-0 CPU = remote allocation\n\n# 3. Check NUMA miss counters\nnumastat -p redis\n# numa_foreign > 0 = remote allocations happening\n\n# 4. Check which CPUs Redis is using\npid=$(pgrep redis)\ncat /proc/$pid/status | grep Cpu\nls /sys/devices/system/cpu/cpu*/topology/core_id\n\`\`\`\n\nFix:\n\`\`\`bash\n# Restart Redis pinned to NUMA node 0 (CPU + memory)\nnumactl --cpunodebind=0 --membind=0 redis-server /etc/redis/redis.conf\n\n# Verify: numa_foreign should now be 0\nnumastat -p redis\n\`\`\`\n\nAlternative: Use \`taskset\` to pin CPUs, but still need \`numactl --membind\` for memory locality. taskset alone does not set memory policy.`,
       },
     ],
     quickFire: [
@@ -6427,7 +6427,7 @@ ls /var/lib/cni/networks/mynet/
     visualizations: [
       { title: 'Linux Memory Hierarchy', description: 'Registers → L1/L2/L3 cache → RAM → swap (disk). Swappiness controls when Linux moves anonymous pages to swap vs reclaiming page cache.', image: '/diagrams/linux/linux-swap-hierarchy.png' },
     ],
-    introduction: `**Swap** is disk space used as an overflow for RAM. Linux uses swap not only when RAM is exhausted but also proactively to free RAM for file cache — controlled by the **swappiness** kernel parameter.\n\n## Types of Swap\n\n- **Swap partition** — dedicated partition, kernel writes directly (slightly faster)\n- **Swap file** — regular file on any filesystem (on ext4/XFS; btrfs has restrictions). Flexible, resizable without partition tools.\n- **zswap** — a compressed in-RAM cache for swap pages. Compresses pages before writing to disk, reducing I/O. Transparent to applications.\n\n## Key Parameters\n\n### vm.swappiness (0-200, default 60)\n\n- **60** (default) — kernel proactively reclaims anonymous pages to swap when under memory pressure\n- **0** — avoid swap unless absolutely necessary (OOM risk increases)\n- **1** — minimal swap, use mostly for OOM prevention\n- **100** — swap anonymous memory as aggressively as page cache reclaim\n- **> 100** — cgroup v2 only: allows swapping anonymous pages before page cache reclaim\n\n### vm.vfs_cache_pressure (default 100)\n\nControls how aggressively the kernel reclaims dentry/inode cache vs anonymous memory. Higher = more aggressive inode cache reclaim (good for systems with millions of files).\n\n## Creating Swap\n\n\`\`\`bash\n# Swapfile\nfallocate -l 4G /swapfile   # or: dd if=/dev/zero of=/swapfile bs=1M count=4096\nchmod 600 /swapfile\nmkswap /swapfile\nswapon /swapfile\n\n# Persist in /etc/fstab\necho '/swapfile none swap sw 0 0' >> /etc/fstab\n\n# Check active swap\nswapon --show\nfree -h\n\`\`\`\n\n## zswap\n\n\`\`\`bash\n# Enable zswap (LZ4 compressor, z3fold allocator)\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\necho z3fold > /sys/module/zswap/parameters/zpool\n\n# Stats\ncat /sys/kernel/debug/zswap/pool_total_size\ngrep zswap /proc/vmstat\n\`\`\`\n\n## Monitoring Swap\n\n\`\`\`bash\nvmstat 1        # si= swap-in, so= swap-out (KB/s)\nsar -B 1        # pgscank/s, pgsteal/s\niostat -x 1    # high write to swap device = swapping\ncatt /proc/meminfo | grep -i swap\n\`\`\``,
+    introduction: `Swap is disk space used as an overflow for RAM. Linux uses swap not only when RAM is exhausted but also proactively to free RAM for file cache — controlled by the swappiness kernel parameter.\n\n## Types of Swap\n\n- Swap partition — dedicated partition, kernel writes directly (slightly faster)\n- Swap file — regular file on any filesystem (on ext4/XFS; btrfs has restrictions). Flexible, resizable without partition tools.\n- zswap — a compressed in-RAM cache for swap pages. Compresses pages before writing to disk, reducing I/O. Transparent to applications.\n\n## Key Parameters\n\n### vm.swappiness (0-200, default 60)\n\n- 60 (default) — kernel proactively reclaims anonymous pages to swap when under memory pressure\n- 0 — avoid swap unless absolutely necessary (OOM risk increases)\n- 1 — minimal swap, use mostly for OOM prevention\n- 100 — swap anonymous memory as aggressively as page cache reclaim\n- > 100 — cgroup v2 only: allows swapping anonymous pages before page cache reclaim\n\n### vm.vfs_cache_pressure (default 100)\n\nControls how aggressively the kernel reclaims dentry/inode cache vs anonymous memory. Higher = more aggressive inode cache reclaim (good for systems with millions of files).\n\n## Creating Swap\n\n\`\`\`bash\n# Swapfile\nfallocate -l 4G /swapfile   # or: dd if=/dev/zero of=/swapfile bs=1M count=4096\nchmod 600 /swapfile\nmkswap /swapfile\nswapon /swapfile\n\n# Persist in /etc/fstab\necho '/swapfile none swap sw 0 0' >> /etc/fstab\n\n# Check active swap\nswapon --show\nfree -h\n\`\`\`\n\n## zswap\n\n\`\`\`bash\n# Enable zswap (LZ4 compressor, z3fold allocator)\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\necho z3fold > /sys/module/zswap/parameters/zpool\n\n# Stats\ncat /sys/kernel/debug/zswap/pool_total_size\ngrep zswap /proc/vmstat\n\`\`\`\n\n## Monitoring Swap\n\n\`\`\`bash\nvmstat 1        # si= swap-in, so= swap-out (KB/s)\nsar -B 1        # pgscank/s, pgsteal/s\niostat -x 1    # high write to swap device = swapping\ncatt /proc/meminfo | grep -i swap\n\`\`\``,
     whenToUse: [
       'Explaining why swap is still needed on systems with large RAM (OOM prevention, memory overcommit)',
       'Tuning swappiness for database workloads where swap latency is unacceptable',
@@ -6447,7 +6447,7 @@ ls /var/lib/cni/networks/mynet/
     keyQuestions: [
       {
         question: 'Why should you have swap enabled even on a server with 256GB of RAM, and how do you tune it to minimize latency impact?',
-        answer: `**Reasons for swap on large-RAM servers:**\n\n1. **OOM safety valve** — without swap, the kernel OOM killer fires as soon as RAM is exhausted. With swap, it writes cold pages to disk first, buying time and preventing cascading kills.\n\n2. **Anonymous page migration** — even at 90% RAM utilization, some processes have cold heap pages that haven't been accessed in hours. Swapping these out frees RAM for hot data without OOM.\n\n3. **Memory overcommit** — Linux allows applications to allocate more virtual memory than physical RAM (overcommit). Swap backs overcommitted pages that are actually written.\n\n**Tuning for minimal latency impact:**\n\n\`\`\`bash\n# Set swappiness low — only swap under real pressure\nsysctl -w vm.swappiness=1\n\n# Enable zswap to compress before hitting disk\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\n\n# Use SSD/NVMe swap, not HDD\n# Verify: swapon --show -- check Type column\n\n# Monitor: if so (swap-out) in vmstat is consistently > 0, tune app memory\nvmstat 1 | awk '{print $7, $8}'   # si= in, so= out\n\`\`\`\n\n**Database servers specifically:** Set \`swappiness=1\` and use huge pages for the buffer pool (innodb_buffer_pool_size / shared_buffers locked in RAM with mlock). This ensures the DB working set never swaps while still having a swap safety net.`,
+        answer: `Reasons for swap on large-RAM servers:\n\n1. OOM safety valve — without swap, the kernel OOM killer fires as soon as RAM is exhausted. With swap, it writes cold pages to disk first, buying time and preventing cascading kills.\n\n2. Anonymous page migration — even at 90% RAM utilization, some processes have cold heap pages that haven't been accessed in hours. Swapping these out frees RAM for hot data without OOM.\n\n3. Memory overcommit — Linux allows applications to allocate more virtual memory than physical RAM (overcommit). Swap backs overcommitted pages that are actually written.\n\nTuning for minimal latency impact:\n\n\`\`\`bash\n# Set swappiness low — only swap under real pressure\nsysctl -w vm.swappiness=1\n\n# Enable zswap to compress before hitting disk\necho 1 > /sys/module/zswap/parameters/enabled\necho lz4 > /sys/module/zswap/parameters/compressor\n\n# Use SSD/NVMe swap, not HDD\n# Verify: swapon --show -- check Type column\n\n# Monitor: if so (swap-out) in vmstat is consistently > 0, tune app memory\nvmstat 1 | awk '{print $7, $8}'   # si= in, so= out\n\`\`\`\n\nDatabase servers specifically: Set \`swappiness=1\` and use huge pages for the buffer pool (innodb_buffer_pool_size / shared_buffers locked in RAM with mlock). This ensures the DB working set never swaps while still having a swap safety net.`,
       },
     ],
     quickFire: [

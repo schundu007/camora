@@ -16,9 +16,9 @@ OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'syste
 os.makedirs(OUT, exist_ok=True)
 
 # Shared style — matches the rest of the topic diagrams.
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -44,7 +44,7 @@ def base_graph(name, title, rankdir='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -401,14 +401,14 @@ def diag_distributed_cache():
                    'Distributed cache — sharded cluster with replicas behind app servers')
     with g.subgraph(name='cluster_app') as c:
         c.attr(label='App servers (with L1 cache)', style='rounded',
-               color='#cbd5e1', fontname='Helvetica Neue', fontsize='11')
+               color='#cbd5e1', fontname='Helvetica', fontsize='11')
         for i in (1, 2, 3):
             c.node(f'app{i}', f'Server {i}\nL1 cache',
                    fillcolor=C['gray'][0], color=C['gray'][1],
                    fontcolor=C['gray'][2], **NODE)
     with g.subgraph(name='cluster_cache') as c:
         c.attr(label='Cache cluster (consistent hashing)', style='rounded',
-               color='#bfdbfe', fontname='Helvetica Neue', fontsize='11')
+               color='#bfdbfe', fontname='Helvetica', fontsize='11')
         c.node('n1', 'Node 1\nslots 0-5460',
                fillcolor=C['navy'][0], color=C['navy'][1],
                fontcolor=C['navy'][2], **NODE)
@@ -825,13 +825,13 @@ def diag_cqrs_vs_traditional():
                    'Single-model vs CQRS — separate read and write models', rankdir='TB')
     with g.subgraph(name='cluster_trad') as s:
         s.attr(label='  Traditional (single model)  ', style='rounded',
-               color='#cbd5e1', fontname='Helvetica Neue', fontsize='11')
+               color='#cbd5e1', fontname='Helvetica', fontsize='11')
         n(s, 'app1', 'Application', 'gray')
         n(s, 'db1',  'Single DB\n(reads + writes,\nJOINs on read)', 'navy')
         e(s, 'app1', 'db1', 'read + write')
     with g.subgraph(name='cluster_cqrs') as s:
         s.attr(label='  CQRS (separated models)  ', style='rounded',
-               color='#cbd5e1', fontname='Helvetica Neue', fontsize='11')
+               color='#cbd5e1', fontname='Helvetica', fontsize='11')
         n(s, 'app2', 'Application', 'gray')
         n(s, 'wdb',  'Write DB\n(normalized, ACID)', 'green')
         n(s, 'rdb',  'Read Store\n(denormalized,\npre-joined)', 'gold')

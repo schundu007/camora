@@ -1495,7 +1495,7 @@ class LiveMatch:
 
     def record_ball(self, bowler_id: str, batsman_id: str,
                     outcome: BallOutcome, runs: int = 0,
-                    **kwargs) -> BallEvent:
+                    kwargs) -> BallEvent:
         innings = self.current_innings
         if not innings.overs or innings.overs[-1].is_complete:
             over_num = len(innings.overs) + 1
@@ -1505,7 +1505,7 @@ class LiveMatch:
         ball = BallEvent(
             ball_number=current_over.legal_deliveries + 1,
             bowler_id=bowler_id, batsman_id=batsman_id,
-            outcome=outcome, runs=runs, **kwargs
+            outcome=outcome, runs=runs, kwargs
         )
         current_over.balls.append(ball)
 
@@ -2693,7 +2693,7 @@ class PaymentGateway:
             else:
                 payment.status = PaymentStatus.PARTIALLY_REFUNDED
             self._log_event(payment_id, "refunded", {
-                "amount": refund_amount, **result
+                "amount": refund_amount, result
             })
         return result`,
 
@@ -2786,7 +2786,7 @@ class Location:
     lng: float
 
     def distance_to(self, other: 'Location') -> float:
-        return math.sqrt((self.lat - other.lat)**2 + (self.lng - other.lng)**2)
+        return math.sqrt((self.lat - other.lat)2 + (self.lng - other.lng)**2)
 
 @dataclass
 class MenuItem:

@@ -1081,7 +1081,7 @@ export function computeNextGeneration(
     architectureLayers: [
       {
         name: 'Editor Input Layer',
-        description: 'Controlled textarea with cursor position tracking. Toolbar buttons use document.execCommand or manual string manipulation to wrap selected text (bold: **selection**, italic: *selection*). Tab key inserts two spaces rather than moving focus.',
+        description: 'Controlled textarea with cursor position tracking. Toolbar buttons use document.execCommand or manual string manipulation to wrap selected text (bold: selection, italic: *selection*). Tab key inserts two spaces rather than moving focus.',
       },
       {
         name: 'Parsing Layer (useMarkdown)',

@@ -169,33 +169,33 @@ model_decisions {
     keyQuestions: [
       {
         question: 'How do behavioral biometrics distinguish bots from real users?',
-        answer: `**The Core Insight**: Human motor control has natural variance; bots execute with machine precision.
+        answer: `The Core Insight: Human motor control has natural variance; bots execute with machine precision.
 
-**Mouse Movement**:
+Mouse Movement:
 - Humans: curved trajectories, speed varies (accelerate then decelerate), micro-corrections
 - Bots: perfectly straight lines or scripted bezier curves, constant velocity
 - Feature: linearity score = actual_path_length / euclidean_distance. Humans: 1.1-1.4. Bots: 1.00-1.02.
 
-**Keystroke Timing**:
+Keystroke Timing:
 - Humans: 50-300ms between keystrokes, variance of 20-80ms per character pair
 - Bots: <1ms between keystrokes OR suspiciously regular intervals if throttled
 - Feature: coefficient of variation of inter-key intervals. Humans: 0.3-0.8. Bots: <0.05 or >2.0 (if randomized too aggressively)
 
-**Form Interaction**:
+Form Interaction:
 - Humans: spend 30-120 seconds on seat selection, re-read details, often change mind
 - Bots: call Best Available API directly, fill form in <2 seconds, never view seat map
 - Feature: time_from_page_load_to_submit. Under 3 seconds = near-certain bot.
 
-**Scroll Behavior**:
+Scroll Behavior:
 - Humans: scroll down to read event details, scroll back up to re-check dates
 - Bots: no scroll events at all, or scripted single scroll to bottom
 - Feature: scroll_event_count and scroll_direction_changes
 
-**Evasion**: Sophisticated bots add artificial delays and randomized mouse movement. This is detectable because the randomness distribution doesn't match human Gaussian variance — it's uniform random, not motor-noise random.`,
+Evasion: Sophisticated bots add artificial delays and randomized mouse movement. This is detectable because the randomness distribution doesn't match human Gaussian variance — it's uniform random, not motor-noise random.`,
       },
       {
         question: 'How do you build a device identity graph and what does it reveal?',
-        answer: `**Graph Structure**:
+        answer: `Graph Structure:
 \`\`\`
 Nodes: accounts, devices (fingerprints), IPs, payment_hashes, billing_addresses
 Edges: "used_from", "linked_to", "paid_with"
@@ -210,18 +210,18 @@ Example bot operation graph:
        └──linked_to──> Account_912  (one device, 912 accounts = bot farm)
 \`\`\`
 
-**What the Graph Reveals**:
+What the Graph Reveals:
 - A single device fingerprint touching 900+ accounts = bot infrastructure
 - A single IP buying tickets for 50 different accounts in 10 minutes = rate-limited proxy
 - 100 accounts all sharing the same billing address = synthetic identity farm
 - Payment hash shared across 30 accounts = one person controlling many accounts
 
-**Implementation**:
+Implementation:
 - On each checkout: create edges between (session_device, session_ip, account_id, payment_hash)
 - Graph query at score time: how many accounts has this device touched? what is the max degree of any node in this device's 2-hop neighborhood?
 - Store in Neo4j for Cypher queries, or Redis sorted sets for simple degree counting
 
-**Key Query**:
+Key Query:
 \`\`\`cypher
 MATCH (d:Device {fp: $fp})-[:LINKED_TO]->(a:Account)
 RETURN count(a) as account_degree
@@ -230,30 +230,30 @@ If account_degree > 50, flag as likely bot infrastructure regardless of other si
       },
       {
         question: 'How do you tune the bot score threshold to minimize false positives?',
-        answer: `**The Tradeoff**:
+        answer: `The Tradeoff:
 - Lower threshold (0.5): catch more bots, but block more real fans — PR disaster at a major on-sale
 - Higher threshold (0.9): miss more sophisticated bots, but almost never block real fans
 
-**Approach: Two-Tier Thresholds + Step-Up Challenge**:
+Approach: Two-Tier Thresholds + Step-Up Challenge:
 \`\`\`
 Score 0.0 - 0.7  →  Allow (purchase proceeds)
 Score 0.7 - 0.9  →  Challenge (insert SMS verification)
 Score 0.9+       →  Block (or silent queue re-entry)
 \`\`\`
 
-**Why Step-Up Works**:
+Why Step-Up Works:
 - Real fans can complete SMS verification in 30-60 seconds
 - Bot operations cannot cheaply complete SMS at scale ($0.05/SMS * 100K bots = $5K)
 - Step-up converts a hard decision into a soft friction gate
 
-**Calibration Process**:
+Calibration Process:
 1. Label a random sample of 10K sessions manually (behavioral review)
 2. Plot precision-recall curve for your model
 3. Find the threshold where false positive rate = 0.5% (your budget)
 4. For the step-up tier, find where precision > 80% (worth the friction cost)
 5. Re-calibrate after every major on-sale event as bot tactics evolve
 
-**Monitoring in Production**:
+Monitoring in Production:
 - Track step-up completion rate (real fans: 85%+, bots: <5%)
 - Track false positive rate via customer support contacts ("I was blocked but I'm a real fan")
 - A/B test threshold changes on lower-demand events before major on-sales`,
@@ -420,10 +420,10 @@ competitor_prices {
     keyQuestions: [
       {
         question: 'How do you estimate price elasticity from historical data?',
-        answer: `**The Problem with Naive Regression**:
+        answer: `The Problem with Naive Regression:
 Simply regressing sales on price from historical data gives biased elasticity because price and demand are simultaneously determined: you raised prices when demand was high, so the correlation understates true elasticity.
 
-**Method 1: Randomized Price Experiments (Gold Standard)**:
+Method 1: Randomized Price Experiments (Gold Standard):
 \`\`\`
 Randomly assign users to price treatments:
   Group A (50%): see $299
@@ -437,59 +437,59 @@ Elasticity = (demand_B - demand_A) / demand_A / 0.10
 - Requires platform support for user-level price variation
 - Need to watch for spillover (users compare prices and complain)
 
-**Method 2: Instrumental Variables**:
+Method 2: Instrumental Variables:
 Find a variable that affects price but not demand directly (e.g., input cost changes, competitor price changes in a different market). Use as instrument to isolate causal price effect.
 
-**Method 3: Regression Discontinuity**:
+Method 3: Regression Discontinuity:
 Look for natural discontinuities in pricing rules (e.g., price always rounds to nearest $5). Compare demand just above vs just below the threshold — customers near the boundary are quasi-randomly assigned.
 
-**Practical Calibration**:
+Practical Calibration:
 - Start with industry-average elasticity (-1.5 for most consumer goods)
 - Run small randomized experiments (5% of traffic) to calibrate
 - Build segment-specific models (price-sensitive customers: -2.5, brand-loyal: -0.8)`,
       },
       {
         question: 'How do you prevent the pricing engine from charging unfairly high prices during emergencies?',
-        answer: `**Regulatory Context**:
+        answer: `Regulatory Context:
 Most US states have price gouging laws that prohibit "unconscionable" price increases for necessities during declared emergencies. Fines can be millions of dollars; reputational damage is worse.
 
-**Defense Architecture**:
+Defense Architecture:
 
-**1. Price Change Rate Limits**:
+1. Price Change Rate Limits:
 \`\`\`
 Rule: price cannot increase more than X% per 24-hour period
   X = 15% for normal operations
   X = 5% when a state of emergency is declared in the delivery region
 \`\`\`
 
-**2. Absolute Price Ceiling**:
+2. Absolute Price Ceiling:
 - Per category: hotel rooms cannot exceed 3x average nightly rate for the market
 - Triggered by: government emergency declarations (feed from FEMA, state gov APIs)
 - Override requires VP Revenue approval + legal sign-off
 
-**3. Historical Anchor**:
+3. Historical Anchor:
 - Store 30-day rolling average price per product
 - Alert when recommended price > 110% of rolling average
 - Automatic block when > 150% during emergency window
 
-**4. Human Review Queue**:
+4. Human Review Queue:
 - Any price recommendation that exceeds thresholds routes to revenue manager queue
 - Manager must explicitly approve with a documented business reason
 - All approvals are logged for potential regulatory audit
 
-**5. Competitor Comparison**:
+5. Competitor Comparison:
 - If you are 20%+ above all competitors on a commodity product, flag for human review
 - Helps catch algorithmic collusion (all competitors raise prices together)`,
       },
       {
         question: 'How do you run price A/B tests without biasing your demand estimates?',
-        answer: `**Why Standard A/B Tests Are Hard for Pricing**:
+        answer: `Why Standard A/B Tests Are Hard for Pricing:
 - You cannot show one user two prices simultaneously
 - Users may share prices (social comparison effect)
 - Search ranking may differ between price groups (algorithmic feedback)
 - Novelty effects: users in test group may react differently on day 1 vs day 30
 
-**Design: User-Level Randomization**:
+Design: User-Level Randomization:
 \`\`\`
 Assignment: hash(user_id + experiment_id) % 100
   0-49  → control price ($299)
@@ -499,15 +499,15 @@ Hold-out: reassign same users for full experiment duration
 No cross-group exposure: users do not see both prices
 \`\`\`
 
-**Handling Market-Level Interference**:
+Handling Market-Level Interference:
 If test-group users buy less, that inventory becomes available to control-group users → inflates control demand. Solution: geo-based experiments (test in city A, control in city B) for commodity markets where supply is fungible.
 
-**Metrics to Track**:
+Metrics to Track:
 - Primary: revenue per user (not conversion rate — that rewards lower prices)
 - Secondary: demand volume, average order value
 - Guardrail: customer satisfaction score, return rate
 
-**Statistical Considerations**:
+Statistical Considerations:
 - Run for minimum 2 weeks to capture weekly seasonality
 - Use sequential testing (SPRT) to allow early stopping if effect is clearly positive
 - Correct for multiple comparisons if testing multiple price points simultaneously`,
@@ -671,7 +671,7 @@ eta_predictions {
     keyQuestions: [
       {
         question: 'How does batch matching over a 5-second window outperform greedy per-request dispatch?',
-        answer: `**The Greedy Failure Mode**:
+        answer: `The Greedy Failure Mode:
 \`\`\`
 t=0.0s: Request A arrives at 5th Ave & 42nd St
   → Greedy dispatches Driver X (nearest, 200m away, ETA 60s)
@@ -687,12 +687,12 @@ With batch matching (solve at t=5s):
   → Each rider waits slightly more, but total system cost is lower
 \`\`\`
 
-**Why Batch Wins**:
+Why Batch Wins:
 - Greedy makes locally optimal decisions that are globally suboptimal
 - Two requests 1 block apart should compete for the same nearby drivers — greedy cannot represent this competition
 - Uber published results: batch matching reduces mean wait time 10-15% and reduces unfulfilled requests by 5-8%
 
-**The Assignment Algorithm**:
+The Assignment Algorithm:
 - Model as minimum-weight bipartite matching
 - Left nodes: pending requests (N requests in window)
 - Right nodes: available drivers (M drivers in candidate set)
@@ -700,20 +700,20 @@ With batch matching (solve at t=5s):
 - Solve with Hungarian algorithm: O(N^3) — feasible for N < 1000 per region per window
 - For larger scales: auction algorithm or distributed approximate matching
 
-**Implementation Boundary**:
+Implementation Boundary:
 - Partition the world into regional cells (~50km radius)
 - Run independent matching solver per region per 5-second window
 - Trips that cross regional boundaries handled by a cross-region coordinator`,
       },
       {
         question: 'How do you build an accurate ML ETA model for driver-to-pickup routing?',
-        answer: `**Why Distance-Based ETA Fails**:
+        answer: `Why Distance-Based ETA Fails:
 - One-way streets, turn restrictions, traffic signals are invisible to distance calculations
 - Traffic is highly time-of-day and location dependent
 - Weather conditions (rain slows traffic 20-30% in dense cities)
 - Driver behavior varies (some drivers know shortcuts, some follow GPS blindly)
 
-**Feature Engineering**:
+Feature Engineering:
 \`\`\`
 Spatial features:
   - H3 cell of origin (resolution 8, ~460m cells)
@@ -737,14 +737,14 @@ Driver features:
   - Driver average speed relative to route norm (driver-specific calibration)
 \`\`\`
 
-**Training**:
+Training:
 - Labels: actual_pickup_time - dispatch_time for each historical trip
 - Model: gradient-boosted trees (XGBoost)
 - Training data: ~500M historical trips
 - Update frequency: daily retrain, hourly feature updates for traffic features
 - Evaluation: MAE on held-out data split by city, time-of-day, trip distance
 
-**Serving**:
+Serving:
 - Model artifact loaded in memory of matching service (300MB)
 - Batch scoring: score all candidate-request pairs in one model call (vectorized)
 - Latency: ~5ms to score 500 pairs (1 request * 500 candidate drivers)`,
@@ -894,49 +894,49 @@ repositioning_nudges {
     keyQuestions: [
       {
         question: 'How do you predict demand 10-15 minutes ahead per geographic cell?',
-        answer: `**Feature Groups**:
+        answer: `Feature Groups:
 
-**1. Temporal Patterns (strongest signal)**:
+1. Temporal Patterns (strongest signal):
 \`\`\`
 - Historical request rate for this H3 cell at this time-of-day and day-of-week
 - Rolling average of requests in this cell in the last 10, 20, 30 minutes
 - Trend: is the current rate accelerating or decelerating?
 \`\`\`
 
-**2. Event Context**:
+2. Event Context:
 \`\`\`
 - Is there a venue within 2km? What event capacity?
 - Time until event ends (negative values = event already ended)
 - Historical demand multiplier for this venue type on similar events
 \`\`\`
 
-**3. Weather**:
+3. Weather:
 \`\`\`
 - Rain: +15% demand on average (people avoid walking)
 - Temperature below 15°C: +8% demand
 - Active severe weather warning: +30% demand
 \`\`\`
 
-**4. Cross-Cell Context**:
+4. Cross-Cell Context:
 \`\`\`
 - Demand in adjacent H3 cells (demand spills between cells)
 - Demand at nearby transit hubs (train station delays → spike in ride demand)
 \`\`\`
 
-**Model Architecture**:
+Model Architecture:
 - Temporal Fusion Transformer or LSTM for time-series structure
 - Separate model per city (demand patterns differ significantly between cities)
 - Output: predicted request count for 5-min windows at t+5, t+10, t+15
 - Uncertainty: output distribution (p10, p50, p90) so surge decisions account for forecast uncertainty
 
-**Accuracy Benchmark**:
+Accuracy Benchmark:
 - RMSE under 8% for 5-minute ahead forecast
 - RMSE under 18% for 15-minute ahead forecast
 - Re-evaluated weekly; trigger alert if accuracy drops (indicates distribution shift)`,
       },
       {
         question: 'How do you convert an imbalance score into a surge multiplier?',
-        answer: `**The Imbalance Score**:
+        answer: `The Imbalance Score:
 \`\`\`
 imbalance = predicted_demand_15min / predicted_supply_15min
 
@@ -947,7 +947,7 @@ Examples:
   imbalance = 6.0  → severe shortage → 2.8x surge
 \`\`\`
 
-**Calibration via Demand Elasticity**:
+Calibration via Demand Elasticity:
 The goal of surge is to attract enough additional driver supply to close the gap in ~10 minutes. The multiplier needed depends on driver supply elasticity in this city and time-of-day.
 
 \`\`\`
@@ -960,7 +960,7 @@ Result: in NYC at 9 PM, a 1.5x multiplier attracts ~15% more drivers
 Set multiplier so: attracted_supply(multiplier) ≈ demand_gap
 \`\`\`
 
-**Multiplier Constraints**:
+Multiplier Constraints:
 - Maximum: regulatory cap (some cities: 3.0x during emergencies)
 - Minimum increase step: 0.1x (avoid rapid oscillation)
 - Smoothing: new multiplier = 0.7 * current + 0.3 * recommended (exponential smoothing)
@@ -1108,7 +1108,7 @@ cold_start_experiments {
     keyQuestions: [
       {
         question: 'How do you generate recommendations when a user has zero interaction history?',
-        answer: `**Available Signals at Zero History**:
+        answer: `Available Signals at Zero History:
 1. Onboarding preferences (if collected)
 2. Device type and OS
 3. Geographic market
@@ -1116,7 +1116,7 @@ cold_start_experiments {
 5. Time of day and day of week
 6. Browser/app language settings
 
-**Strategy: Contextual Popularity with Diversity**:
+Strategy: Contextual Popularity with Diversity:
 \`\`\`
 Step 1: Get global top-200 items for this market
 Step 2: Filter by language preference (from device locale)
@@ -1130,7 +1130,7 @@ Step 4: Apply diversity constraint:
   - Include 1 "surprise" item from an adjacent genre
 \`\`\`
 
-**Onboarding Implicit Collection**:
+Onboarding Implicit Collection:
 \`\`\`
 Show a grid of 12 diverse items
 User taps an item → expanded preview → strong positive signal
@@ -1142,14 +1142,14 @@ Map interactions to genre vector:
   Use user_genre_vector to bias subsequent candidate pool
 \`\`\`
 
-**Key Principle**: exploration is more valuable than exploitation at zero history. Show diverse content to identify taste quickly; do not show 10 variations of the same popular item.`,
+Key Principle: exploration is more valuable than exploitation at zero history. Show diverse content to identify taste quickly; do not show 10 variations of the same popular item.`,
       },
       {
         question: 'How do you update recommendations in real time as a new user interacts during their first session?',
-        answer: `**Session Model Architecture**:
+        answer: `Session Model Architecture:
 A lightweight preference model that updates after each interaction without requiring a server model retrain.
 
-**Approach: Online Bandit with Item Embeddings**:
+Approach: Online Bandit with Item Embeddings:
 \`\`\`python
 # Initialize session context vector from onboarding seed or zeros
 session_vector = onboarding_genre_vector or zeros(50)
@@ -1177,13 +1177,13 @@ scores = [dot(session_vector, item_embedding) for item in candidates]
 top_k = argsort(scores)[-10:]  # top-10 recommendations
 \`\`\`
 
-**Key Properties**:
+Key Properties:
 - O(1) update — no model retrain, just vector arithmetic
 - Incorporates each interaction within 50ms
 - Item embeddings are precomputed and cached — no latency on update
 - After 5-10 interactions, session vector is meaningfully personalized
 
-**Persistence**: session vector stored in Redis with 24-hour TTL — if user returns the next day, their session learning carries over as an additional cold start seed.`,
+Persistence: session vector stored in Redis with 24-hour TTL — if user returns the next day, their session learning carries over as an additional cold start seed.`,
       },
     ],
 
@@ -1350,9 +1350,9 @@ enforcement_actions {
     keyQuestions: [
       {
         question: 'How do you detect coordinated inauthentic behavior when individual accounts look legitimate?',
-        answer: `**The Core Insight**: Individual bots can mimic humans across most dimensions. Networks of bots cannot hide their coordination patterns at scale.
+        answer: `The Core Insight: Individual bots can mimic humans across most dimensions. Networks of bots cannot hide their coordination patterns at scale.
 
-**Coordination Signals**:
+Coordination Signals:
 \`\`\`
 1. Synchronized following: 500 accounts all follow the same new account
    within a 10-minute window
@@ -1370,7 +1370,7 @@ enforcement_actions {
    → Real users have diverse client distributions; bot farms use the same tool
 \`\`\`
 
-**Implementation: Co-Action Matrix**:
+Implementation: Co-Action Matrix:
 \`\`\`
 For each pair of accounts (A, B):
   co_follow_count = # accounts both followed within same hour in last 7 days
@@ -1382,18 +1382,18 @@ Build adjacency graph: edge exists if co_action_score > threshold
 Run Louvain community detection → surfaces coordinated clusters
 \`\`\`
 
-**Why This Works**: A bot network of 1000 accounts cannot avoid having high co-action scores with each other because they are all controlled by the same operator reacting to the same instructions. Even if each account posts at random intervals, the instructions arrive in a short window and the execution has detectable temporal correlation.`,
+Why This Works: A bot network of 1000 accounts cannot avoid having high co-action scores with each other because they are all controlled by the same operator reacting to the same instructions. Even if each account posts at random intervals, the instructions arrive in a short window and the execution has detectable temporal correlation.`,
       },
       {
         question: 'How do you minimize false positives for real users with unusual posting patterns?',
-        answer: `**Who Gets Mis-classified**:
+        answer: `Who Gets Mis-classified:
 - Live sports commentators posting 200+ times during a game
 - Breaking news journalists tweeting every 5 minutes during a crisis
 - Quoting accounts that retweet extensively
 - Fan accounts with uniform posting schedules (scheduled posts)
 - Non-English speakers whose text gets low originality scores from English-trained models
 
-**Defense 1: Verification and Context Signals**:
+Defense 1: Verification and Context Signals:
 \`\`\`
 Features that strongly indicate human:
   - Phone-verified account
@@ -1404,7 +1404,7 @@ Features that strongly indicate human:
   - Payment method associated with account
 \`\`\`
 
-**Defense 2: Calibrated Thresholds by Action Type**:
+Defense 2: Calibrated Thresholds by Action Type:
 \`\`\`
 Suppress from trending: threshold 0.7  → accept 30% false positive rate among suppressed
 Interstitial warning:   threshold 0.85 → accept 15% false positive rate
@@ -1412,14 +1412,14 @@ Account suspension:     threshold 0.95 → accept 5% false positive rate
 Permanent ban:          ALWAYS requires human reviewer confirmation
 \`\`\`
 
-**Defense 3: Fast Appeals**:
+Defense 3: Fast Appeals:
 - Suspended accounts can appeal within 24 hours
 - Appeal automatically surfaces to human review queue
 - Human reviewer has access to all signals that triggered the action
 - Target: 90% of appeals resolved within 72 hours
 - Overturned actions become high-quality negative training examples
 
-**Defense 4: Pre-emptive Whitelist**:
+Defense 4: Pre-emptive Whitelist:
 - Known media organizations, political parties, and public figures pre-verified
 - Their posting patterns are excluded from bot detection thresholds
 - Requires ongoing maintenance as new public figures emerge`,
@@ -1581,7 +1581,7 @@ fraud_campaigns {
     keyQuestions: [
       {
         question: 'What is the difference between GIVT and SIVT, and how do you detect each?',
-        answer: `**GIVT (General Invalid Traffic)**:
+        answer: `GIVT (General Invalid Traffic):
 Invalid traffic identifiable through basic filtering techniques:
 - Known data center IP ranges (AWS, GCP, Azure — real users rarely browse from cloud IPs)
 - Known bot user-agent strings (Googlebot, scrapers, common crawl)
@@ -1589,9 +1589,9 @@ Invalid traffic identifiable through basic filtering techniques:
 - Spider and crawler signatures
 - Obvious behavioral anomalies (click within 5ms of ad load)
 
-**Detection**: simple lookup against blocklists and threshold rules. GIVT should be filtered before being counted as a billable click. Accuracy target: >99.9%.
+Detection: simple lookup against blocklists and threshold rules. GIVT should be filtered before being counted as a billable click. Accuracy target: >99.9%.
 
-**SIVT (Sophisticated Invalid Traffic)**:
+SIVT (Sophisticated Invalid Traffic):
 Traffic that does not fall into GIVT categories but is still invalid:
 - Click farms: real mobile devices operated by humans paid $0.01 per click
 - Ad stacking: multiple ads stacked on top of each other; only top ad is visible but all get click credit when user clicks
@@ -1599,7 +1599,7 @@ Traffic that does not fall into GIVT categories but is still invalid:
 - Domain spoofing: ad served on fraudsite.com but click declares it was served on nytimes.com
 - Sophisticated bots: user devices infected with adware that clicks ads in background while user is doing other things
 
-**Detection requires ML**:
+Detection requires ML:
 \`\`\`
 SIVT signals:
   - Viewport position at click (in_view: false = likely stacking or pixel stuffing)
@@ -1610,14 +1610,14 @@ SIVT signals:
   - Ad duration (ad impression for 0.1 seconds before click = not viewed)
 \`\`\`
 
-**Key difference**: GIVT is caught by rules; SIVT requires behavioral and contextual ML because the traffic is deliberately crafted to evade rule-based detection.`,
+Key difference: GIVT is caught by rules; SIVT requires behavioral and contextual ML because the traffic is deliberately crafted to evade rule-based detection.`,
       },
       {
         question: 'How do you handle click farms that use real human operators on real devices?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 Click farms hire humans to click ads using real smartphones. No single behavioral signal distinguishes a click farm worker from a real user.
 
-**Approach: Aggregate Pattern Analysis**:
+Approach: Aggregate Pattern Analysis:
 The fraudulent pattern emerges at the aggregate level even when individual clicks look legitimate.
 
 \`\`\`
@@ -1643,7 +1643,7 @@ Cross-advertiser conversion void:
   → Strongest signal: zero conversion is mathematically inconsistent with legitimate traffic
 \`\`\`
 
-**Mitigation**: publisher-level quarantine (stop serving ads to that publisher), geographic bid adjustments (reduce bids for traffic from known click-farm geographies), conversion-based payment models (pay per conversion, not per click — eliminates incentive for click fraud).`,
+Mitigation: publisher-level quarantine (stop serving ads to that publisher), geographic bid adjustments (reduce bids for traffic from known click-farm geographies), conversion-based payment models (pay per conversion, not per click — eliminates incentive for click fraud).`,
       },
     ],
 
@@ -1802,10 +1802,10 @@ dasher_route_history {
     keyQuestions: [
       {
         question: 'How do you predict restaurant preparation time accurately?',
-        answer: `**Why Average Prep Time Fails**:
+        answer: `Why Average Prep Time Fails:
 A restaurant with average prep time 18 minutes might take 8 minutes for a simple salad and 45 minutes for a complex sushi platter during dinner rush with a queue of 12 orders.
 
-**Feature Engineering**:
+Feature Engineering:
 \`\`\`
 Order features:
   - Item count: more items → longer prep
@@ -1830,16 +1830,16 @@ Historical features:
   - Same order type at same restaurant last 30 days: median prep time
 \`\`\`
 
-**Model**: gradient-boosted regression outputting prep time in seconds, plus quantile regression for p10 and p90 bounds.
+Model: gradient-boosted regression outputting prep time in seconds, plus quantile regression for p10 and p90 bounds.
 
-**POS Integration** (when available):
+POS Integration (when available):
 - Restaurant POS can send "order started" and "order ready" events
 - These become ground truth labels for model training
 - Also enable real-time re-estimation when order is marked started`,
       },
       {
         question: 'How do you handle the batching case where a dasher picks up two orders from different restaurants?',
-        answer: `**The Batching ETA Problem**:
+        answer: `The Batching ETA Problem:
 \`\`\`
 Order A: customer at 5th Ave & 42nd St
 Order B: customer at 5th Ave & 38th St (4 blocks south)
@@ -1863,13 +1863,13 @@ ETA for Customer B depends on:
   2. Travel Customer A → Customer B
 \`\`\`
 
-**Modeling Approach**:
+Modeling Approach:
 1. Detect batching at dispatch time (dasher assigned to multiple orders)
 2. Run multi-stop routing to compute optimal pickup sequence
 3. For each customer, the ETA is the full multi-stop route completion time, not just direct restaurant-to-customer
 4. The customer who is delivered second gets a longer ETA — this is shown transparently to them as "your dasher has another pickup on the way"
 
-**Customer Communication**:
+Customer Communication:
 - Show "Dasher is picking up your order and one other nearby order"
 - ETA for second customer clearly reflects the additional stop
 - For high-value or subscription customers, avoid batching to maintain ETA quality
@@ -2044,10 +2044,10 @@ booking_outcomes {
     keyQuestions: [
       {
         question: 'How do you estimate price elasticity for a specific listing with limited booking history?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 A new listing has zero booking history, so you cannot estimate its specific price-demand curve. Even a 1-year-old listing may have only 50-100 bookings — not enough for a reliable individual elasticity estimate.
 
-**Hierarchical Bayesian Approach**:
+Hierarchical Bayesian Approach:
 \`\`\`
 Level 1: Market elasticity (estimated from millions of bookings)
   elasticity_market = -1.4 (1% price increase → 1.4% demand decrease)
@@ -2065,19 +2065,19 @@ Level 3: Property-specific elasticity (starts at market prior, updates with data
   With 200+ bookings: elasticity_listing ≈ own_data (prior mostly overridden)
 \`\`\`
 
-**Property Attribute Adjustments**:
+Property Attribute Adjustments:
 Attributes shift elasticity even for new listings:
 - Review score 4.9+: -0.2 elasticity (premium brand, less price sensitive)
 - Zero reviews: +0.3 elasticity (high uncertainty → buyers very price sensitive)
 - Superhost status: -0.1 elasticity
 - Pool or unique amenity: -0.15 elasticity
 
-**Calibration Signal**:
+Calibration Signal:
 Track listing-level booking conversion rate at each price point vs market average. If this listing converts at 60% of market rate when priced at market average, its demand is lower → requires lower price for same occupancy.`,
       },
       {
         question: 'How do you detect local events and translate them into price adjustments?',
-        answer: `**Event Detection Sources**:
+        answer: `Event Detection Sources:
 \`\`\`
 1. Structured APIs:
    - Ticketmaster API: concerts, sports, theater
@@ -2095,7 +2095,7 @@ Track listing-level booking conversion rate at each price point vs market averag
    - Hotel platform search volume spikes (licensed from OTA partners)
 \`\`\`
 
-**Price Impact Estimation**:
+Price Impact Estimation:
 \`\`\`
 Historical correlation by event type:
   NCAA Final Four in market:         +150% demand, +120% price premium
@@ -2110,7 +2110,7 @@ Price impact formula:
   (events primarily impact nearby listings)
 \`\`\`
 
-**Lead Time Considerations**:
+Lead Time Considerations:
 - Major conferences: recommend price increase 90-180 days in advance (corporate travel books early)
 - Concerts: demand spike 30-45 days before event (consumer tickets go on sale)
 - Sporting events: depends on team performance (playoff demand is hard to predict in advance)
@@ -2273,10 +2273,10 @@ job_interactions {
     keyQuestions: [
       {
         question: 'How do you model two-sided relevance where both the job-candidate fit and the job attractiveness to the candidate matter?',
-        answer: `**The Problem with One-Sided Scoring**:
+        answer: `The Problem with One-Sided Scoring:
 A system that only scores "how well does the candidate fit the job" would recommend a senior engineer for every senior role regardless of whether the role matches what the candidate wants. This leads to low application rates even with high match scores.
 
-**Two-Sided Relevance Components**:
+Two-Sided Relevance Components:
 \`\`\`
 1. Candidate-to-Job fit (employer perspective):
    - Skills overlap: (required_skills ∩ candidate_skills) / len(required_skills)
@@ -2298,15 +2298,15 @@ Combined score:
   - If candidates primarily engage based on skill match, w1 > w2
 \`\`\`
 
-**Why This Matters in Practice**:
+Why This Matters in Practice:
 A perfect skill match for a job that pays 40% below candidate expectation will never get clicked. A model that ignores candidate preferences ranks irrelevant jobs at the top and has poor engagement metrics even with good skill matching.`,
       },
       {
         question: 'How do you handle cold start for a new job posting with zero interaction history?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 A new job posted at 9 AM Monday has zero clicks, zero applications, and zero signals. How do you rank it against established postings with rich interaction history?
 
-**Content-Based Bootstrap**:
+Content-Based Bootstrap:
 \`\`\`
 Step 1: Embed the job immediately on posting
   job_embedding = bert_model.encode(title + description + requirements)
@@ -2323,10 +2323,10 @@ Step 4: Use similar jobs\' engagement metrics as a prior
   cold_start_score = content_similarity * engagement_prior * freshness_boost
 \`\`\`
 
-**Freshness Boost Rationale**:
+Freshness Boost Rationale:
 New job postings have genuine value: they may be exactly what a candidate is looking for and have not yet accumulated the engagement signals that would surface them in a pure engagement-ranked system. A freshness boost ensures new postings get exposure to build their interaction history.
 
-**Graduation from Cold Start**:
+Graduation from Cold Start:
 After first 10 applications:
   score = 0.8 * cold_start_score + 0.2 * collaborative_filtering_score
 
@@ -2498,10 +2498,10 @@ business_rules {
     keyQuestions: [
       {
         question: 'How does learning-to-rank work and what labels do you use for training?',
-        answer: `**Problem Formulation**:
+        answer: `Problem Formulation:
 Given a query Q and a set of candidate products {P1, P2, ...Pn}, learn a scoring function that orders products from most to least relevant to maximize revenue-weighted engagement.
 
-**Training Label Construction**:
+Training Label Construction:
 \`\`\`
 From search session logs, for each (query, product) pair:
   - Product purchased in this session:     label = 3.0
@@ -2510,10 +2510,10 @@ From search session logs, for each (query, product) pair:
   - Product shown (not clicked):            label = 0.0
 \`\`\`
 
-**Position Bias Problem**:
+Position Bias Problem:
 Product shown at position 1 gets clicked 5x more than same product at position 5. Without correction, model thinks position-1 products are more relevant.
 
-**Inverse Propensity Weighting**:
+Inverse Propensity Weighting:
 \`\`\`python
 # Estimated probability of clicking position k (from randomization experiments)
 propensity = {1: 0.35, 2: 0.15, 3: 0.10, 4: 0.07, 5: 0.05, ...}
@@ -2524,7 +2524,7 @@ sample_weight = 1.0 / propensity[position_shown_at]
 # Now a click at position 5 (weight=20) is worth the same as 4 clicks at position 1 (weight=2.86 each)
 \`\`\`
 
-**Model Architecture**:
+Model Architecture:
 LambdaMART (gradient-boosted trees with LambdaRank loss):
 - Works well on tabular ranking features
 - Fast inference (milliseconds for 500 candidates)
@@ -2535,14 +2535,14 @@ Alternative: neural ranker (BERT + MLP on feature vector):
 - Slower inference (50-100ms for 500 candidates)
 - Often 2-5% NDCG improvement over GBT for complex queries
 
-**Evaluation Metrics**:
+Evaluation Metrics:
 - NDCG@10: primary offline metric (normalized discounted cumulative gain)
 - Revenue per search: primary online metric (A/B test)
 - CTR: secondary online metric`,
       },
       {
         question: 'How do you balance relevance vs business objectives like margin and promoted listings?',
-        answer: `**The Multi-Objective Tension**:
+        answer: `The Multi-Objective Tension:
 \`\`\`
 Pure relevance ranking:  best match for customer query
 Pure revenue ranking:    highest margin products
@@ -2551,7 +2551,7 @@ Pure seller-paid ranking: highest bidder wins position
 Reality: all three objectives matter and conflict
 \`\`\`
 
-**Approach 1: Feature-Based Business Signals in Ranking Model**:
+Approach 1: Feature-Based Business Signals in Ranking Model:
 Include commercial signals as features in the LTR model:
 \`\`\`
 ranking_score = model(semantic_relevance, click_probability, purchase_probability,
@@ -2561,14 +2561,14 @@ ranking_score = model(semantic_relevance, click_probability, purchase_probabilit
 
 The model learns the optimal blend from training data. Promoted listings get a boost only when their quality score justifies showing them (ad bid * quality_score, not just ad bid alone).
 
-**Approach 2: Constrained Optimization**:
+Approach 2: Constrained Optimization:
 Maximize: sum(customer_satisfaction_score * position_discount)
 Subject to:
   - At least 8 of top 10 results must have relevance_score > threshold
   - Promoted products can appear at most at positions 1 and 3
   - Out-of-stock products cannot appear in top 5
 
-**Approach 3: Policy Layer After ML Ranking**:
+Approach 3: Policy Layer After ML Ranking:
 \`\`\`
 1. ML ranking produces relevance-optimized order
 2. Promoted listing injection: insert paid products at positions 1 and 3,
@@ -2577,7 +2577,7 @@ Subject to:
 4. Quality guardrails: never show < 3-star products in top 5
 \`\`\`
 
-**Key Principle**: never let business rules completely override relevance. Platforms that show irrelevant ads and promotions lose customer trust. Quality Score system (relevance * bid) is the right design — high bids for irrelevant products get discounted.`,
+Key Principle: never let business rules completely override relevance. Platforms that show irrelevant ads and promotions lose customer trust. Quality Score system (relevance * bid) is the right design — high bids for irrelevant products get discounted.`,
       },
     ],
 
@@ -2734,10 +2734,10 @@ bookings {
     keyQuestions: [
       {
         question: 'How do you maintain conversation state across a multi-step booking flow?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 A flight booking requires collecting at minimum: origin, destination, departure date, return date, passenger count, cabin class, selected flight, passenger names and passport info, and payment. This happens across 10-20 conversation turns. State must be maintained reliably.
 
-**Architecture: Redis-Backed Session State**:
+Architecture: Redis-Backed Session State:
 \`\`\`json
 // Session state stored in Redis, keyed by session_id
 {
@@ -2762,7 +2762,7 @@ A flight booking requires collecting at minimum: origin, destination, departure 
 }
 \`\`\`
 
-**State Machine Transitions**:
+State Machine Transitions:
 \`\`\`
 greeting → collecting_search_params → showing_flights → selecting_seat
   → collecting_passenger_info → payment → confirmed
@@ -2773,24 +2773,24 @@ User can also:
   → abandon (session expires after 30 min idle)
 \`\`\`
 
-**Slot Update Handling**:
+Slot Update Handling:
 If user says "actually, make it 3 passengers" at any state:
   1. LLM extracts: {intent: "update_slot", slot: "adults", value: 3}
   2. Update session state: slots.adults = 3
   3. Re-run search if already in showing_flights state (slot change invalidates results)
   4. LLM generates: "Got it, updating to 3 passengers. Let me refresh the results..."
 
-**Why Redis with TTL**:
+Why Redis with TTL:
 - Sub-millisecond reads for state retrieval on every message
 - Automatic expiry after 30 minutes of idle (no orphan sessions)
 - Session data is ephemeral conversation context, not a durable record`,
       },
       {
         question: 'How do you handle payment securely in a chatbot without violating PCI DSS?',
-        answer: `**The PCI DSS Constraint**:
+        answer: `The PCI DSS Constraint:
 PCI DSS Level 1 (required for most airlines and booking platforms) prohibits storing, processing, or transmitting card numbers unless your systems are fully PCI-certified. Chatbot systems — with conversation logs, LLM providers, and multiple external services — cannot easily be made PCI-Level-1 compliant.
 
-**Solution: Payment Widget Isolation (P2PE)**:
+Solution: Payment Widget Isolation (P2PE):
 \`\`\`
 Flow:
 1. Chatbot reaches payment step
@@ -2813,7 +2813,7 @@ Flow:
 6. Chatbot continues conversation: "Payment received! Confirming your booking..."
 \`\`\`
 
-**What Gets Logged vs Not Logged**:
+What Gets Logged vs Not Logged:
 \`\`\`
 LOGGED in conversation history:
   User: "I'm ready to pay"
@@ -2828,7 +2828,7 @@ NOT LOGGED anywhere in chatbot system:
   Billing address (only last 4 digits stored for display)
 \`\`\`
 
-**Voice Channel Special Case**:
+Voice Channel Special Case:
 If the chatbot has a voice channel, payment by voice is high-risk (audio recordings may be stored). Solution: pause the voice conversation, send an SMS link to the PCI-compliant payment widget, wait for payment confirmation, then resume the voice conversation.`,
       },
     ],
@@ -2988,9 +2988,9 @@ disputes {
     keyQuestions: [
       {
         question: 'How do you verify customer identity in a chat interface without creating security risks?',
-        answer: `**The Authentication Hierarchy**:
+        answer: `The Authentication Hierarchy:
 
-**Level 1 — Inherited Session Auth (preferred)**:
+Level 1 — Inherited Session Auth (preferred):
 \`\`\`
 User is already logged into the banking mobile app
 → Chat session inherits the app session authentication
@@ -2998,7 +2998,7 @@ User is already logged into the banking mobile app
 → No additional verification needed; this is the most secure path
 \`\`\`
 
-**Level 2 — Step-Up Verification (for web or unauthenticated contexts)**:
+Level 2 — Step-Up Verification (for web or unauthenticated contexts):
 \`\`\`
 User opens web chat without banking login
 → Chatbot: "To access your account, I'll send a code to your registered phone"
@@ -3012,7 +3012,7 @@ Why send to registered phone, not user-provided phone:
   → The registered phone is what the bank already has — it is the verification factor
 \`\`\`
 
-**Level 3 — Knowledge-Based Auth (fallback, weaker)**:
+Level 3 — Knowledge-Based Auth (fallback, weaker):
 \`\`\`
 If phone number on file is not reachable:
 → Ask: last 4 digits of SSN + last transaction amount
@@ -3020,20 +3020,20 @@ If phone number on file is not reachable:
 → Considered weaker; limited to balance inquiry only, not transfers
 \`\`\`
 
-**What the Chatbot Must Never Do**:
+What the Chatbot Must Never Do:
 - Ask the user to type their password in chat (visible in logs, phishing risk)
 - Accept "I am [customer name]" as verification (trivially spoofed)
 - Reveal account numbers to verify identity ("Is your account ending in 1234?")
 - Lower auth requirements because the user is frustrated
 
-**Session Security**:
+Session Security:
 - 5-minute idle timeout resets auth state (must re-verify to access account)
 - Auth level degrades after 30 minutes even with activity (requires re-step-up)
 - Multiple failed verifications trigger account flag and human review`,
       },
       {
         question: 'How do you prevent the chatbot from giving financial or legal advice that violates regulations?',
-        answer: `**The Regulatory Boundary**:
+        answer: `The Regulatory Boundary:
 \`\`\`
 PERMITTED (factual information):
   - "Your current checking balance is [retrieved from API]"
@@ -3048,7 +3048,7 @@ NOT PERMITTED (advice that requires license):
   - "You qualify for a personal loan at this rate" (pre-qualification without process)
 \`\`\`
 
-**Implementation: Intent Classifier with Hard Redirect**:
+Implementation: Intent Classifier with Hard Redirect:
 \`\`\`python
 # Fine-tuned classifier on banking regulatory texts
 intent_class = regulatory_classifier.predict(user_message)
@@ -3068,10 +3068,10 @@ if intent_class in HARD_REDIRECT_INTENTS:
   return response  # LLM is NOT consulted for these intents
 \`\`\`
 
-**Why Not Just Prompt the LLM to Avoid Advice?**:
+Why Not Just Prompt the LLM to Avoid Advice?:
 Instructing the LLM "do not give investment advice" in the system prompt is not reliable. LLMs can follow this instruction 99% of the time, but that 1% failure rate is unacceptable in a regulated banking context. The hard-coded classifier catch is a defense-in-depth layer that does not rely on LLM compliance.
 
-**Safe Factual vs Unsafe Advisory Language**:
+Safe Factual vs Unsafe Advisory Language:
 \`\`\`
 Safe: "Our savings accounts offer 4.5% APY. Would you like to see the current rates?"
 Unsafe: "You should consider moving to savings to earn more interest"
@@ -3245,10 +3245,10 @@ hipaa_audit_log {
     keyQuestions: [
       {
         question: 'How do you prevent the chatbot from making diagnoses while still being useful for symptom guidance?',
-        answer: `**The Regulatory Boundary**:
+        answer: `The Regulatory Boundary:
 In the US, diagnosing a medical condition requires a licensed healthcare provider. A software system that diagnoses conditions may be regulated as a Class II or III medical device by the FDA, requiring premarket review (510k or PMA). Most hospital chatbots want to avoid this classification.
 
-**What the Chatbot CAN do (care level recommendation, not diagnosis)**:
+What the Chatbot CAN do (care level recommendation, not diagnosis):
 \`\`\`
 Patient: "I have a fever of 102, headache, and stiff neck"
 
@@ -3264,7 +3264,7 @@ Please call 911 or have someone drive you — do not drive yourself."
 → This recommends a care level. Clinically appropriate. Not a diagnosis.
 \`\`\`
 
-**Triage Model Design**:
+Triage Model Design:
 \`\`\`
 Input: [{symptom: "fever", severity: 8/10, onset: "2 hours ago"}, ...]
 Output: {urgency: "emergent", care_level: "er", reasoning: "..."}
@@ -3277,7 +3277,7 @@ Training: validated against Manchester Triage System and ESI
 before deployment; regular audit against ER triage nurse decisions.
 \`\`\`
 
-**Language Guardrails in LLM Prompt**:
+Language Guardrails in LLM Prompt:
 \`\`\`
 System prompt: "You are a healthcare assistant. You may:
 - Recommend care levels (routine, urgent, ER)
@@ -3291,14 +3291,14 @@ You must NOT:
 - Override the triage model's urgency assessment"
 \`\`\`
 
-**Additional Safety Layer**: the triage model runs independently of the LLM; if the triage model recommends "emergent" but the LLM generates a non-urgent response, the system overrides with the triage recommendation.`,
+Additional Safety Layer: the triage model runs independently of the LLM; if the triage model recommends "emergent" but the LLM generates a non-urgent response, the system overrides with the triage recommendation.`,
       },
       {
         question: 'How do you handle a patient who expresses suicidal ideation in a chat?',
-        answer: `**Why This Requires a Hard-Coded Protocol**:
+        answer: `Why This Requires a Hard-Coded Protocol:
 This is one of the few situations where an AI chatbot must have a completely deterministic, non-overridable response. The stakes are too high for probabilistic LLM behavior, however well-prompted.
 
-**Crisis Detection**:
+Crisis Detection:
 \`\`\`python
 # Runs on EVERY message before LLM processing
 def check_crisis_signals(message: str) -> CrisisLevel:
@@ -3316,7 +3316,7 @@ def check_crisis_signals(message: str) -> CrisisLevel:
   return CrisisLevel.NONE
 \`\`\`
 
-**Crisis Protocol (non-overridable)**:
+Crisis Protocol (non-overridable):
 \`\`\`
 If CrisisLevel.IMMEDIATE or CrisisLevel.HIGH:
 
@@ -3340,13 +3340,13 @@ If CrisisLevel.IMMEDIATE or CrisisLevel.HIGH:
    - Human agent given priority routing if patient requests one
 \`\`\`
 
-**What the Protocol Does NOT Do**:
+What the Protocol Does NOT Do:
 - Does not attempt to assess severity through continued questioning (risk of getting it wrong)
 - Does not reassure the patient everything is fine (minimizes valid concern)
 - Does not end the conversation (may be the patient's only connection in the moment)
 - Does not try to resolve the crisis through conversation (not within chatbot clinical scope)
 
-**Training and Quality Audit**:
+Training and Quality Audit:
 - Protocol reviewed by behavioral health team quarterly
 - False positive rate monitored (triggering crisis response on non-crisis messages)
 - False negative case review when crisis escalations are received without prior detection`,

@@ -124,31 +124,31 @@ Helm 4 (released November 2025 at KubeCon NA, stable at 4.2.2) introduced server
     keyQuestions: [
       {
         question: 'Explain the difference between a Helm chart, a Helm release, and a Helm revision.',
-        answer: `**Chart**: the package — a directory or .tgz archive containing Chart.yaml, values.yaml, templates/, and optional sub-charts. Think of it like a Docker image or an npm package: it is the artifact you version and distribute. Charts live in OCI registries or chart repositories.
+        answer: `Chart: the package — a directory or .tgz archive containing Chart.yaml, values.yaml, templates/, and optional sub-charts. Think of it like a Docker image or an npm package: it is the artifact you version and distribute. Charts live in OCI registries or chart repositories.
 
-**Release**: a named, running instance of a chart installed into a specific namespace. Running helm install my-app ./chart creates a release named "my-app". You can have multiple releases of the same chart in the same cluster: my-app-staging and my-app-prod are two releases of the same chart.
+Release: a named, running instance of a chart installed into a specific namespace. Running helm install my-app ./chart creates a release named "my-app". You can have multiple releases of the same chart in the same cluster: my-app-staging and my-app-prod are two releases of the same chart.
 
-**Revision**: an integer counter on a release. Every helm install starts at revision 1. Every helm upgrade increments it. helm history my-app shows all revisions. helm rollback my-app 2 restores the exact templates+values from revision 2.
+Revision: an integer counter on a release. Every helm install starts at revision 1. Every helm upgrade increments it. helm history my-app shows all revisions. helm rollback my-app 2 restores the exact templates+values from revision 2.
 
 The key distinction for interviews: chart = artifact (what you package and ship), release = running deployment (what exists in the cluster), revision = point-in-time snapshot of that deployment (what enables rollback). Getting these three terms precise signals real Helm experience.`,
       },
       {
         question: 'How does Helm compare to Kustomize and when would you use each?',
-        answer: `**Philosophy**: Helm uses Go templating — charts are programs that render YAML from a values file. Kustomize uses structured overlay patching — you start with plain YAML and layer environment-specific patches on top. No templating engine, no release tracking.
+        answer: `Philosophy: Helm uses Go templating — charts are programs that render YAML from a values file. Kustomize uses structured overlay patching — you start with plain YAML and layer environment-specific patches on top. No templating engine, no release tracking.
 
-**When Helm wins**:
+When Helm wins:
 - Distributing software to others (cert-manager, prometheus-stack, ingress-nginx ship as Helm charts; there is no Kustomize-native distribution model)
 - Third-party software you consume — Bitnami Helm charts have 50+ configurable values
 - Complex multi-environment configuration with feature toggles (Helm handles conditionals; Kustomize cannot)
 - Release lifecycle (rollback, history, ordered hooks)
 
-**When Kustomize wins**:
+When Kustomize wins:
 - Your own application with simple environment overlays
 - Pure-YAML diffs in pull requests — no template rendering step
 - Audit-friendly environments where all deployed YAML must be readable in Git as-is
 - kubectl native integration (kubectl apply -k)
 
-**2026 hybrid consensus**: Use Helm charts for third-party deps, Kustomize overlays for your own apps, and a GitOps controller (Argo CD or Flux) that understands both. Both Argo CD and Flux support rendering a Helm chart and then applying Kustomize patches on top.
+2026 hybrid consensus: Use Helm charts for third-party deps, Kustomize overlays for your own apps, and a GitOps controller (Argo CD or Flux) that understands both. Both Argo CD and Flux support rendering a Helm chart and then applying Kustomize patches on top.
 
 The anti-answer to avoid: "I use Helm for everything" or "I use Kustomize for everything" — neither is the right answer for a platform engineer. The right answer is knowing which tool fits which job.`,
       },
@@ -158,15 +158,15 @@ The anti-answer to avoid: "I use Helm for everything" or "I use Kustomize for ev
 
 The Secret stores a gzip-compressed, base64-encoded JSON blob containing the chart metadata, rendered templates, applied values, and release status (deployed, failed, pending-upgrade, etc.).
 
-**Why this matters**:
+Why this matters:
 
-1. **RBAC**: Any user or service account that can list or read Secrets in the namespace can read Helm release history — including values, which may contain sensitive configuration. Namespace-scoped RBAC is mandatory; never give wildcard Secret access to Helm operators.
+1. RBAC: Any user or service account that can list or read Secrets in the namespace can read Helm release history — including values, which may contain sensitive configuration. Namespace-scoped RBAC is mandatory; never give wildcard Secret access to Helm operators.
 
-2. **Rollback fidelity**: Rollback works by replaying the exact stored manifests from the target revision. If the Secret is deleted (accidentally or by a cluster admin), that revision is lost and rollback to it is impossible.
+2. Rollback fidelity: Rollback works by replaying the exact stored manifests from the target revision. If the Secret is deleted (accidentally or by a cluster admin), that revision is lost and rollback to it is impossible.
 
-3. **helm list permissions**: helm list requires Secret list access. A common support request is "helm list returns nothing" — the cause is usually a service account with no Secret read permissions.
+3. helm list permissions: helm list requires Secret list access. A common support request is "helm list returns nothing" — the cause is usually a service account with no Secret read permissions.
 
-4. **Helm 2 vs 3**: In Helm 2 with Tiller, state was stored in ConfigMaps and Tiller ran with cluster-admin. Helm 3 moved to client-side, Secrets-based storage, scoped per namespace. Helm 4 (2025) retains Secrets-based storage.
+4. Helm 2 vs 3: In Helm 2 with Tiller, state was stored in ConfigMaps and Tiller ran with cluster-admin. Helm 3 moved to client-side, Secrets-based storage, scoped per namespace. Helm 4 (2025) retains Secrets-based storage.
 
 Practical: always configure RBAC to give Helm service accounts only the minimum Secret permissions needed in the target namespace, not cluster-wide.`,
       },
@@ -174,7 +174,7 @@ Practical: always configure RBAC to give Helm service accounts only the minimum 
         question: 'How does Helm fit into a GitOps workflow?',
         answer: `Two models in production:
 
-**Pull-based GitOps (recommended)**:
+Pull-based GitOps (recommended):
 Git repo contains the Helm release definition — chart reference, version, and values file. Argo CD (ApplicationSet or Application) or Flux (HelmRelease CRD) watches the repo. When the chart version or values change in Git, the controller renders the chart and applies the diff to the cluster. No helm CLI runs in CI. Every change is a Git commit; rollback is a git revert.
 
 Argo CD HelmRelease approach:
@@ -187,10 +187,10 @@ Argo CD HelmRelease approach:
         values: |
           replicaCount: 3
 
-**Push-based GitOps**:
+Push-based GitOps:
 CI pipeline (GitHub Actions, GitLab CI) runs helm upgrade --install after tests pass. Simple to understand; harder to reconcile (cluster drift is not detected). Appropriate for teams early in GitOps adoption.
 
-**Helm template + kubectl apply (GitOps-compatible)**:
+Helm template + kubectl apply (GitOps-compatible):
 helm template my-app ./chart -f values-prod.yaml | kubectl apply -f -
 Renders manifests to stdout, applies via kubectl. The rendered YAML can be committed to Git (rendered manifests repo pattern). Useful when you want GitOps benefits without a controller.
 
@@ -400,31 +400,31 @@ Common mistake: putting environment-specific secrets in values files and committ
         question: 'Walk through how you would debug a stuck helm upgrade.',
         answer: `Systematic debugging steps:
 
-1. **Check release status**: helm status <release-name> -n <namespace>
+1. Check release status: helm status <release-name> -n <namespace>
    Look at STATUS field: DEPLOYED, FAILED, PENDING_UPGRADE. PENDING_UPGRADE means a previous upgrade is still running (or timed out and left dangling — force-release with helm rollback).
 
-2. **Check history**: helm history <release-name> -n <namespace>
+2. Check history: helm history <release-name> -n <namespace>
    See which revision is current, which failed, and the descriptions (e.g., "Upgrade failed: timed out waiting for the condition").
 
-3. **Get the rendered manifests**: helm get manifest <release-name>
+3. Get the rendered manifests: helm get manifest <release-name>
    Compare with kubectl get <resource> -o yaml to detect drift — if they differ, something modified resources outside Helm.
 
-4. **Check Kubernetes events**: kubectl describe pod <pod-name> -n <namespace>
+4. Check Kubernetes events: kubectl describe pod <pod-name> -n <namespace>
    Image pull errors, resource quota exceeded, scheduling failures, OOMKilled, CrashLoopBackOff.
 
-5. **Check hooks**: helm get hooks <release-name>
+5. Check hooks: helm get hooks <release-name>
    A hanging pre-upgrade Job blocks the upgrade indefinitely. Check the Job's Pod logs: kubectl logs -n <ns> -l job-name=<hook-job>.
 
-6. **Template render diff**: helm template <release> ./chart -f values.yaml > new-manifests.yaml
+6. Template render diff: helm template <release> ./chart -f values.yaml > new-manifests.yaml
    Then diff against helm get manifest to see what the upgrade would change.
 
-7. **Force-release a stuck PENDING state**: helm rollback <release> --force
+7. Force-release a stuck PENDING state: helm rollback <release> --force
 
 Common root causes: image pull failure, insufficient resource quota, webhook admission rejection, hook Job failure, CRD not present, RBAC preventing resource creation.`,
       },
       {
         question: 'What is the difference between helm template and helm install --dry-run?',
-        answer: `**helm template**:
+        answer: `helm template:
 - No cluster connection required (unless --dry-run=server)
 - Renders templates to stdout
 - Does NOT validate against the live cluster's API
@@ -432,14 +432,14 @@ Common root causes: image pull failure, insufficient resource quota, webhook adm
 - Fast, works in air-gapped environments
 - Use case: local development, GitOps diffing, piping into kubeval/kubeconform, committing rendered manifests
 
-**helm install --dry-run**:
+helm install --dry-run:
 - Connects to the cluster
 - Renders templates AND validates against the Kubernetes OpenAPI schema
 - Validates that CRDs referenced in the chart exist in the cluster
 - Still does NOT run admission webhooks (MutatingAdmissionWebhook / ValidatingAdmissionWebhook)
 - Use case: pre-flight check that catches schema errors and missing CRDs
 
-**helm upgrade --dry-run=server** (Helm 3.11+):
+helm upgrade --dry-run=server (Helm 3.11+):
 - Full server-side validation including admission webhooks
 - Closest to "what would actually happen" without making changes
 - Slowest — connects to cluster and engages the webhook chain
@@ -449,25 +449,25 @@ For interviews: helm template is for offline rendering and diffing; --dry-run is
       },
       {
         question: 'How do you list all Helm releases across all namespaces, and what permissions are required?',
-        answer: `**Command**: helm list -A (short for --all-namespaces)
+        answer: `Command: helm list -A (short for --all-namespaces)
 
 This runs helm list against every namespace the current kubeconfig user can access and aggregates the results.
 
-**Permissions required**: Helm stores release state as Secrets. To list releases in a namespace, the user/service account must have:
+Permissions required: Helm stores release state as Secrets. To list releases in a namespace, the user/service account must have:
   apiGroups: [""]
   resources: ["secrets"]
   verbs: ["list", "get"]
 
 Without Secret list permission in a namespace, helm list shows no releases for that namespace — not an error, just an empty result. This is a common support pitfall: "helm list shows nothing" usually means missing Secret permissions, not that no releases are installed.
 
-**Filtering flags**:
+Filtering flags:
   helm list -n prod                   # specific namespace
   helm list -A --filter my-app        # regex filter on release name
   helm list -A --failed               # only FAILED releases
   helm list -A --pending              # only PENDING_* releases
   helm list -A -o json                # JSON output for scripting
 
-**Service account for CI**: a typical CD service account needs:
+Service account for CI: a typical CD service account needs:
   Secrets: get, list, create, update, delete (for release state management)
   Plus whatever permissions the chart resources require
 
@@ -628,21 +628,21 @@ Library charts (type: library) are an advanced feature for platform teams: they 
         question: 'Describe the complete directory structure of a Helm chart and the role of each file.',
         answer: `A Helm chart is a directory named after the chart with this layout:
 
-**Chart.yaml** (required): chart metadata. Required fields: apiVersion (v2 for Helm 3/4), name, version (SemVer for the chart). Important optional fields: appVersion (application version, informational), type (application or library), kubeVersion (minimum Kubernetes version constraint), dependencies (sub-charts).
+Chart.yaml (required): chart metadata. Required fields: apiVersion (v2 for Helm 3/4), name, version (SemVer for the chart). Important optional fields: appVersion (application version, informational), type (application or library), kubeVersion (minimum Kubernetes version constraint), dependencies (sub-charts).
 
-**values.yaml** (conventional): default values for template variables. Users override by passing -f myvals.yaml or --set key=value at install time.
+values.yaml (conventional): default values for template variables. Users override by passing -f myvals.yaml or --set key=value at install time.
 
-**values.schema.json** (optional): JSON Schema (draft-07) that validates values at install, upgrade, lint, and template time. Provides error messages when values are wrong type, out of range, or missing required fields.
+values.schema.json (optional): JSON Schema (draft-07) that validates values at install, upgrade, lint, and template time. Provides error messages when values are wrong type, out of range, or missing required fields.
 
-**templates/** (required): Go template files rendered to Kubernetes manifests. Files starting with _ (e.g., _helpers.tpl) are not rendered — they define named templates. NOTES.txt is rendered and printed to CLI but not applied. All other .yaml/.json files are rendered and applied.
+templates/ (required): Go template files rendered to Kubernetes manifests. Files starting with _ (e.g., _helpers.tpl) are not rendered — they define named templates. NOTES.txt is rendered and printed to CLI but not applied. All other .yaml/.json files are rendered and applied.
 
-**charts/** (optional): vendored sub-chart dependencies populated by helm dependency update. Contains .tgz archives or unpacked chart directories.
+charts/ (optional): vendored sub-chart dependencies populated by helm dependency update. Contains .tgz archives or unpacked chart directories.
 
-**crds/** (optional): plain YAML CRD definitions installed before templates render. Cannot be templated, never deleted on uninstall, never automatically upgraded.
+crds/ (optional): plain YAML CRD definitions installed before templates render. Cannot be templated, never deleted on uninstall, never automatically upgraded.
 
-**.helmignore** (optional): files to exclude from the chart archive (like .gitignore syntax). Exclude .git, test fixtures, local override files.
+.helmignore (optional): files to exclude from the chart archive (like .gitignore syntax). Exclude .git, test fixtures, local override files.
 
-**LICENSE, README.md** (optional): informational files served to users browsing the chart on Artifact Hub.`,
+LICENSE, README.md (optional): informational files served to users browsing the chart on Artifact Hub.`,
       },
       {
         question: 'What is the purpose of _helpers.tpl and how are named templates called?',
@@ -663,23 +663,23 @@ Named templates are called from other template files using {{ include }}:
     labels:
       {{- include "myapp.labels" . | nindent 4 }}
 
-**{{ include }} vs {{ template }}**: Always use {{ include }} in modern charts. {{ template }} does not return a value — it outputs directly. {{ include }} returns a string that can be piped through functions like nindent, trim, or quote. This matters for indentation: {{ include "myapp.labels" . | nindent 4 }} correctly indents the multi-line labels output.
+{{ include }} vs {{ template }}: Always use {{ include }} in modern charts. {{ template }} does not return a value — it outputs directly. {{ include }} returns a string that can be piped through functions like nindent, trim, or quote. This matters for indentation: {{ include "myapp.labels" . | nindent 4 }} correctly indents the multi-line labels output.
 
-**Convention**: helm create generates _helpers.tpl with four standard named templates: fullname, chart (chart name + version), labels (standard recommended labels), and selectorLabels. These are called by every generated resource template. Extending _helpers.tpl for project-specific helpers (resource limits, sidecar spec, standard annotations) is the standard library chart pattern.`,
+Convention: helm create generates _helpers.tpl with four standard named templates: fullname, chart (chart name + version), labels (standard recommended labels), and selectorLabels. These are called by every generated resource template. Extending _helpers.tpl for project-specific helpers (resource limits, sidecar spec, standard annotations) is the standard library chart pattern.`,
       },
       {
         question: 'Why are CRDs in the crds/ directory, and what are the implications for upgrade management?',
         answer: `Helm installs CRDs before rendering templates so that .Capabilities.APIVersions.Has("my.group.io/v1") works during template rendering. This requires CRDs to be plain YAML (not templates) because Helm cannot render templates that reference types that don't exist yet.
 
-**Three immutability constraints for crds/**:
+Three immutability constraints for crds/:
 
-1. **Never deleted on uninstall**: CRDs are cluster-global resources. If Helm deleted them, it would destroy all instances of that custom resource across every namespace — a catastrophic operation. Kubernetes prevents this by policy; Helm aligns with it.
+1. Never deleted on uninstall: CRDs are cluster-global resources. If Helm deleted them, it would destroy all instances of that custom resource across every namespace — a catastrophic operation. Kubernetes prevents this by policy; Helm aligns with it.
 
-2. **Never reinstalled if already present**: Running helm install twice does not re-apply the CRD. This prevents version conflicts when multiple charts depend on the same CRD.
+2. Never reinstalled if already present: Running helm install twice does not re-apply the CRD. This prevents version conflicts when multiple charts depend on the same CRD.
 
-3. **Never upgraded automatically**: helm upgrade does not update CRD definitions. This is intentional — CRD schema changes require careful migration planning. Helm cannot know whether it is safe to update the schema.
+3. Never upgraded automatically: helm upgrade does not update CRD definitions. This is intentional — CRD schema changes require careful migration planning. Helm cannot know whether it is safe to update the schema.
 
-**Production implications**:
+Production implications:
 
 For simple charts that ship their own CRDs (cert-manager, prometheus-operator), this is fine — install once, upgrade the chart without touching the CRD.
 
@@ -691,7 +691,7 @@ Interview signal: knowing that crds/ is intentionally constrained, not a Helm li
         question: 'How does values.schema.json work and what does it validate?',
         answer: `values.schema.json is a JSON Schema (draft-07) document placed at the chart root. Helm validates user-supplied values against this schema at four points: helm install, helm upgrade, helm lint, and helm template.
 
-**What it validates**:
+What it validates:
 - Type enforcement: a field expected to be a number cannot be passed as a string
 - Required fields: schema can mark fields as required, preventing installs with missing config
 - Enum constraints: a field accepting only "ClusterIP", "NodePort", or "LoadBalancer"
@@ -699,7 +699,7 @@ Interview signal: knowing that crds/ is intentionally constrained, not a Helm li
 - Range constraints: minimum/maximum for numeric values
 - Pattern matching: regex for string values
 
-**Example**:
+Example:
   {
     "$schema": "https://json-schema.org/draft-07/schema",
     "type": "object",
@@ -720,15 +720,15 @@ Interview signal: knowing that crds/ is intentionally constrained, not a Helm li
     }
   }
 
-**Bypassing**: helm install --skip-schema-validation bypasses for air-gapped or legacy environments.
+Bypassing: helm install --skip-schema-validation bypasses for air-gapped or legacy environments.
 
-**Interview angle**: values.schema.json is how chart authors enforce correct usage at install time instead of failing at runtime when a misconfigured Pod crashes. It shifts errors left from cluster runtime to helm install. For a platform team distributing internal charts, adding schema validation prevents the class of "wrong values file applied to the wrong environment" incidents.`,
+Interview angle: values.schema.json is how chart authors enforce correct usage at install time instead of failing at runtime when a misconfigured Pod crashes. It shifts errors left from cluster runtime to helm install. For a platform team distributing internal charts, adding schema validation prevents the class of "wrong values file applied to the wrong environment" incidents.`,
       },
       {
         question: 'What does helm create generate and what would you typically remove or modify?',
         answer: `helm create myapp generates a starter chart deploying an nginx-based application. The generated structure:
 
-**Keep and modify**:
+Keep and modify:
 - Chart.yaml: update name, description, version (0.1.0 to your actual version), appVersion
 - values.yaml: replace defaults with your application's actual configuration surface
 - templates/_helpers.tpl: keep the generated naming/label helpers; add project-specific helpers
@@ -736,13 +736,13 @@ Interview signal: knowing that crds/ is intentionally constrained, not a Helm li
 - templates/service.yaml: usually keep as-is, modify service type default
 - templates/NOTES.txt: replace nginx references with your app's service URL and next steps
 
-**Usually remove**:
+Usually remove:
 - templates/hpa.yaml: remove if you don't need autoscaling (or make it conditional with {{ if .Values.autoscaling.enabled }})
 - templates/ingress.yaml: remove if managed separately or handled by a gateway controller
 - templates/serviceaccount.yaml: remove if your app uses the default service account
 - templates/tests/test-connection.yaml: replace with a meaningful test for your app
 
-**Key edits to values.yaml**:
+Key edits to values.yaml:
 Replace the default image with your actual registry and tag. Add your application's environment variables as values. Set resource requests and limits appropriate for your workload. Add any application-specific configuration (database URLs, feature flags) as values rather than hardcoded in the template.
 
 The generated chart is a learning scaffold, not a production-ready deployment. The Helm maintainers intentionally make it simple enough to understand but complex enough to demonstrate the key patterns (conditionals, named templates, helpers, NOTES).`,
@@ -930,9 +930,9 @@ Named templates (defined in _helpers.tpl with {{ define }}, called with {{ inclu
         question: 'Explain how named templates work in Helm and why {{ include }} is preferred over {{ template }}.',
         answer: `Named templates are reusable template snippets defined with {{ define "name" }} ... {{ end }} in any file starting with _ (conventionally _helpers.tpl). They are not rendered directly — only when called.
 
-**{{ template "name" . }}**: evaluates the named template and outputs directly to the rendered file. Returns nothing (void). Cannot be piped.
+{{ template "name" . }}: evaluates the named template and outputs directly to the rendered file. Returns nothing (void). Cannot be piped.
 
-**{{ include "name" . }}**: evaluates the named template and RETURNS it as a string. Can be piped to other functions.
+{{ include "name" . }}: evaluates the named template and RETURNS it as a string. Can be piped to other functions.
 
 Why include is always preferred:
 
@@ -946,9 +946,9 @@ Why include is always preferred:
 
 The nindent call adds a leading newline then indents all lines 4 spaces. Without nindent, the first line of the named template output starts at the column where include appears (after "labels:"), and subsequent lines are at column 0 — invalid YAML.
 
-**Scope**: both {{ template }} and {{ include }} accept a second argument (.) that becomes the dot context inside the named template. Passing . gives the template access to .Values, .Release, and .Chart. You can also pass a subset: {{ include "myapp.helper" .Values.config }}.
+Scope: both {{ template }} and {{ include }} accept a second argument (.) that becomes the dot context inside the named template. Passing . gives the template access to .Values, .Release, and .Chart. You can also pass a subset: {{ include "myapp.helper" .Values.config }}.
 
-**Convention**: helm create generates four named templates in _helpers.tpl — fullname, chart, labels, and selectorLabels. All generated resource templates call these. Extending this file for custom helpers is the standard Helm refactoring pattern.`,
+Convention: helm create generates four named templates in _helpers.tpl — fullname, chart, labels, and selectorLabels. All generated resource templates call these. Extending this file for custom helpers is the standard Helm refactoring pattern.`,
       },
       {
         question: 'How do you handle a nested map value in a template, and what is the toYaml + nindent pattern?',
@@ -977,9 +977,9 @@ The pattern is toYaml | nindent:
       cpu: 500m
       memory: 512Mi
 
-**Why nindent 4?** After the resources: key at column 0, the nested content must be indented 2-4 spaces. nindent 4 adds a newline before the content and indents every line 4 spaces. Without the leading newline (using indent instead of nindent), the first key (requests:) would appear on the same line as resources: — invalid YAML.
+Why nindent 4? After the resources: key at column 0, the nested content must be indented 2-4 spaces. nindent 4 adds a newline before the content and indents every line 4 spaces. Without the leading newline (using indent instead of nindent), the first key (requests:) would appear on the same line as resources: — invalid YAML.
 
-**The with pattern for optional maps**:
+The with pattern for optional maps:
 
   {{- with .Values.nodeSelector }}
   nodeSelector:
@@ -988,7 +988,7 @@ The pattern is toYaml | nindent:
 
 {{ with }} sets . to .Values.nodeSelector inside the block AND skips the block entirely if the value is empty/nil. This is cleaner than {{ if .Values.nodeSelector }} ... {{ toYaml .Values.nodeSelector }} ... {{ end }} because you avoid repeating the long path.
 
-**Lists follow the same pattern**:
+Lists follow the same pattern:
   tolerations:
     {{- toYaml .Values.tolerations | nindent 8 }}`,
       },
@@ -1022,7 +1022,7 @@ The pattern is toYaml | nindent:
     minReplicas: 3
     maxReplicas: 20
 
-**Conditional blocks within a resource** (e.g., optional Ingress TLS):
+Conditional blocks within a resource (e.g., optional Ingress TLS):
   {{- if .Values.ingress.tls }}
   tls:
     {{- range .Values.ingress.tls }}
@@ -1034,38 +1034,38 @@ The pattern is toYaml | nindent:
     {{- end }}
   {{- end }}
 
-**Compound conditions**:
+Compound conditions:
   {{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
 
-**Platform engineering pattern**: use a library chart that defines standard feature-flag named templates. Application charts call them with their specific values. This centralizes the conditional logic and ensures consistent behavior across the platform's chart collection.`,
+Platform engineering pattern: use a library chart that defines standard feature-flag named templates. Application charts call them with their specific values. This centralizes the conditional logic and ensures consistent behavior across the platform's chart collection.`,
       },
       {
         question: 'What are the most common Go templating mistakes and how do you debug them?',
-        answer: `**Most common mistakes**:
+        answer: `Most common mistakes:
 
-1. **Missing nindent after include**:
+1. Missing nindent after include:
    metadata:
      labels:
        {{ include "myapp.labels" . }}   # wrong — will produce invalid YAML
    Fix: {{- include "myapp.labels" . | nindent 4 }}
 
-2. **Stray whitespace from if/end blocks**:
+2. Stray whitespace from if/end blocks:
    {{if .Values.enabled}}
    key: value
    {{end}}
    Produces blank lines before and after. Fix: {{- if .Values.enabled }} and {{- end }}
 
-3. **Accessing root values inside range**:
+3. Accessing root values inside range:
    {{- range .Values.items }}
    annotation: {{ .Values.globalAnnotation }}   # wrong — . is now the list item
    {{- end }}
    Fix: {{ $.Values.globalAnnotation }}  # $ always refers to root context
 
-4. **toYaml without nindent on a map value**: outputs the map at column 0 inside an indented block.
+4. toYaml without nindent on a map value: outputs the map at column 0 inside an indented block.
 
-5. **Quoting number values that should be integers**: using {{ .Values.port | quote }} produces "8080" (string) where 8080 (integer) is required by Kubernetes. Some fields require integer; quote produces a schema validation error.
+5. Quoting number values that should be integers: using {{ .Values.port | quote }} produces "8080" (string) where 8080 (integer) is required by Kubernetes. Some fields require integer; quote produces a schema validation error.
 
-**Debugging tools**:
+Debugging tools:
   helm template myapp ./myapp --debug 2>&1 | head -100
     Shows template execution errors with file and line number.
 
@@ -1083,7 +1083,7 @@ The pattern is toYaml | nindent:
         question: 'Explain the Sprig library and which functions are used most in production charts.',
         answer: `Sprig is a Go library of 100+ template functions that Helm adds to the Go template engine. Without Sprig, Go templates have only basic comparison and control flow. Sprig provides string manipulation, math, encoding, type conversion, date, cryptography, and data structure functions.
 
-**Most-used in production charts**:
+Most-used in production charts:
 
 String functions:
   trunc 63           truncate to 63 chars (Kubernetes label value limit)
@@ -1121,7 +1121,7 @@ Most-used pattern combining multiple Sprig functions:
       },
       {
         question: 'How do you use the range action to iterate over a list and a map in Helm templates?',
-        answer: `**Iterating over a list**:
+        answer: `Iterating over a list:
 
   # values.yaml:
   extraEnv:
@@ -1139,7 +1139,7 @@ Most-used pattern combining multiple Sprig functions:
 
 Inside the range block, . becomes each list element. Access its fields with .fieldname.
 
-**Iterating over a map**:
+Iterating over a map:
 
   # values.yaml:
   nodeSelector:
@@ -1154,7 +1154,7 @@ Inside the range block, . becomes each list element. Access its fields with .fie
 
 With maps, use the $key, $val := pattern. The variable $key and $val are explicitly declared and scoped to the range block.
 
-**Accessing root context inside range**:
+Accessing root context inside range:
 Inside range, . is the current element. To access .Values or .Release use $ (root context):
 
   {{- range .Values.volumes }}
@@ -1163,13 +1163,13 @@ Inside range, . is the current element. To access .Values or .Release use $ (roo
       name: {{ $.Release.Name }}-config   # $ accesses root
   {{- end }}
 
-**Range with index**:
+Range with index:
   {{- range $i, $item := .Values.items }}
   - index: {{ $i }}
     value: {{ $item.value }}
   {{- end }}
 
-**Tuple for small lists**:
+Tuple for small lists:
   {{- range list "app" "worker" "scheduler" }}
   - component: {{ . }}
   {{- end }}`,
@@ -1382,13 +1382,13 @@ This structure keeps environment differences explicit and minimal. Any reviewer 
         question: 'How do you handle secrets in Helm values without committing them to Git?',
         answer: `Three patterns, in order of sophistication:
 
-**1. helm-secrets + SOPS (most common for teams already using Git)**:
+1. helm-secrets + SOPS (most common for teams already using Git):
 helm-secrets is a Helm plugin that integrates with SOPS (Mozilla). SOPS encrypts specific values in a values file using AWS KMS, GCP KMS, Azure Key Vault, or age/GPG keys. The encrypted file is committed to Git; SOPS decrypts at deploy time using IAM role credentials.
 
   helm secrets upgrade myapp ./chart -f values.yaml -f secrets.yaml
   # secrets.yaml is encrypted by SOPS, decrypted transparently by helm-secrets
 
-**2. External Secrets Operator (most cloud-native)**:
+2. External Secrets Operator (most cloud-native):
 ExternalSecret CRD watches AWS Secrets Manager / GCP Secret Manager / Vault and creates/syncs Kubernetes Secrets. Your Helm chart references the Secret by name (which ESO creates). No secret values ever appear in Helm values files or Git.
 
   # In the chart template, reference a Secret created by ESO:
@@ -1396,22 +1396,22 @@ ExternalSecret CRD watches AWS Secrets Manager / GCP Secret Manager / Vault and 
     - secretRef:
         name: {{ include "myapp.fullname" . }}-secrets
 
-**3. --set from CI secret (simple, less auditable)**:
+3. --set from CI secret (simple, less auditable):
   helm upgrade myapp ./chart --set database.password=$DB_PASSWORD
   # DB_PASSWORD is a CI/CD secret variable, never in Git
 
-**What NOT to do**:
+What NOT to do:
 - values-prod.yaml with plaintext secrets committed to Git
 - Kubernetes Secret manifests in the chart templates/ with hardcoded values
 - Base64-encoded values in values.yaml (base64 is encoding, not encryption)
 
-**Interview answer**: the correct answer is "secrets don't belong in values files." Use ESO for cloud-native environments, SOPS+helm-secrets for teams with existing secret management tooling, or CI-injected --set as a minimum. The choice depends on the team's secret management strategy and compliance requirements.`,
+Interview answer: the correct answer is "secrets don't belong in values files." Use ESO for cloud-native environments, SOPS+helm-secrets for teams with existing secret management tooling, or CI-injected --set as a minimum. The choice depends on the team's secret management strategy and compliance requirements.`,
       },
       {
         question: 'Describe how values.schema.json improves chart reliability.',
         answer: `values.schema.json is a JSON Schema (draft-07) file that validates all user-supplied and default values before any templates are rendered or any cluster changes are made.
 
-**What it catches**:
+What it catches:
 
 Type errors:
   User sets --set replicaCount=two (string where integer expected)
@@ -1433,14 +1433,14 @@ Range constraints:
   Schema: custom validation or minimum constraint
   Result: fails at install time rather than HPA rejecting it
 
-**Without schema validation**, these errors manifest as:
+Without schema validation, these errors manifest as:
 - Pod fails to start because image repository is wrong
 - HPA rejected by Kubernetes API because minReplicas > maxReplicas
 - Service type typo causes kubectl apply rejection but only after templates render
 
-**When validated**: install, upgrade, lint, template — all four trigger schema validation.
+When validated: install, upgrade, lint, template — all four trigger schema validation.
 
-**Bypass**: --skip-schema-validation for air-gapped environments or legacy compatibility.
+Bypass: --skip-schema-validation for air-gapped environments or legacy compatibility.
 
 Platform engineering value: when distributing internal charts to 10 application teams, schema validation prevents "wrong values applied" incidents. A PR review of values-prod.yaml is much more effective when the schema enforces what those values mean.`,
       },
@@ -1448,28 +1448,28 @@ Platform engineering value: when distributing internal charts to 10 application 
         question: 'How do you debug a release where the running behavior does not match your expected values?',
         answer: `Systematic investigation:
 
-**Step 1: Check what values Helm actually used**:
+Step 1: Check what values Helm actually used:
   helm get values <release> -n <namespace>          # user-supplied only
   helm get values <release> -n <namespace> --all    # all including defaults
 
 If --set was used at install time, those values appear here. Compare against your values files.
 
-**Step 2: Check the rendered manifests**:
+Step 2: Check the rendered manifests:
   helm get manifest <release> -n <namespace>
 
 This shows the YAML that was actually applied. Compare specific fields against what you expect. If the manifest has the right values but the Pod is behaving differently, the issue is drift (someone edited the Pod outside Helm) or a Kubernetes admission webhook modified the manifest on apply.
 
-**Step 3: Check for drift (out-of-band changes)**:
+Step 3: Check for drift (out-of-band changes):
   kubectl get deployment <name> -o yaml -n <namespace>
 
 Compare the kubectl output with helm get manifest. Fields differ? Something modified the resource after Helm applied it. Common culprits: Kyverno/OPA mutating webhooks adding sidebars or annotations, ArgoCD or another controller reconciling, or a human ran kubectl edit.
 
-**Step 4: Re-render with current values**:
+Step 4: Re-render with current values:
   helm template <release> ./chart -f values.yaml -f values-prod.yaml --set image.tag=<current-tag>
 
 Compare the output against helm get manifest. Any difference reveals what changed between the last helm upgrade and now (chart update, values file change, --set change).
 
-**Step 5: Check release history for upgrade errors**:
+Step 5: Check release history for upgrade errors:
   helm history <release> -n <namespace>
 
 Look for FAILED revisions. A failed upgrade can leave some resources at the new version and some at the old version — the most confusing state to debug.
@@ -1480,20 +1480,20 @@ Summary: helm get values -> helm get manifest -> kubectl get -o yaml -> helm tem
         question: 'What is the difference between --set, --set-string, --set-json, and --set-file?',
         answer: `All four are CLI flags that override values at highest precedence. They differ in how they handle the value type:
 
-**--set key=value**: standard override. Helm infers the type: numbers become integers, "true"/"false" become booleans, everything else is a string. Problem: --set port=8080 sets an integer; if the template expects a string (for ConfigMap data), this causes type mismatch.
+--set key=value: standard override. Helm infers the type: numbers become integers, "true"/"false" become booleans, everything else is a string. Problem: --set port=8080 sets an integer; if the template expects a string (for ConfigMap data), this causes type mismatch.
 
-**--set-string key=value**: forces the value to be a string regardless of content. --set-string port=8080 sets "8080" as a string. Use when a field must be a string even if it looks like a number or boolean.
+--set-string key=value: forces the value to be a string regardless of content. --set-string port=8080 sets "8080" as a string. Use when a field must be a string even if it looks like a number or boolean.
 
-**--set-json key=jsonValue**: sets the value by parsing raw JSON. Useful for arrays and complex objects:
+--set-json key=jsonValue: sets the value by parsing raw JSON. Useful for arrays and complex objects:
   --set-json 'tolerations=[{"key":"spot","effect":"NoSchedule"}]'
   --set-json 'config={"timeout":30,"retries":3}'
 Without --set-json, setting an array requires verbose index notation: --set tolerations[0].key=spot --set tolerations[0].effect=NoSchedule
 
-**--set-file key=filepath**: reads a file's content as the string value. Useful for long config strings, certificates, or scripts:
+--set-file key=filepath: reads a file's content as the string value. Useful for long config strings, certificates, or scripts:
   --set-file configData=./application.properties
   --set-file tlsCert=./certs/tls.crt
 
-**When to use each**:
+When to use each:
 - --set: simple scalar overrides (image tag, replica count, feature flags)
 - --set-string: values that look like numbers but must be strings (port numbers in ConfigMap data, version strings like "1.0" that would be parsed as floats)
 - --set-json: arrays, objects, or structured values
@@ -1690,7 +1690,7 @@ Two advanced features matter in production: conditional dependencies (enabled/di
 
 When postgresql.enabled is false, Helm skips the sub-chart entirely — none of its templates are rendered or applied. The parent chart still accesses the database; it just expects the connection string to point to an external instance configured via the parent chart's own values.
 
-**Tags alternative**: when multiple sub-charts should toggle together, use tags:
+Tags alternative: when multiple sub-charts should toggle together, use tags:
 
   # Chart.yaml
   dependencies:
@@ -1713,15 +1713,15 @@ The condition approach is better when each component has independent enablement.
       },
       {
         question: 'What happens to sub-chart resources during helm upgrade and rollback?',
-        answer: `**During upgrade**: Helm aggregates resources from all enabled sub-charts and the parent chart into a single resource set. It sorts by Kubernetes object type (Namespace, RBAC, CRDs first; workloads last) and applies changes. Sub-chart resources are upgraded alongside parent resources in the same operation. There is no separate "upgrade the sub-chart" step.
+        answer: `During upgrade: Helm aggregates resources from all enabled sub-charts and the parent chart into a single resource set. It sorts by Kubernetes object type (Namespace, RBAC, CRDs first; workloads last) and applies changes. Sub-chart resources are upgraded alongside parent resources in the same operation. There is no separate "upgrade the sub-chart" step.
 
-**Revision tracking**: sub-chart resources are included in the parent release's revision. helm get manifest <parent-release> shows ALL resources including sub-chart resources. The revision counter belongs to the parent release.
+Revision tracking: sub-chart resources are included in the parent release's revision. helm get manifest <parent-release> shows ALL resources including sub-chart resources. The revision counter belongs to the parent release.
 
-**During rollback**: helm rollback restores the exact manifests from the target revision for ALL resources — parent and sub-charts combined. If revision 3 used postgresql version 13.2.0 and revision 4 used 13.3.0, rolling back to revision 3 restores the postgresql 13.2.0 manifests. Whether the rolling-back PostgreSQL StatefulSet causes data loss is a separate concern from Helm's rollback mechanics.
+During rollback: helm rollback restores the exact manifests from the target revision for ALL resources — parent and sub-charts combined. If revision 3 used postgresql version 13.2.0 and revision 4 used 13.3.0, rolling back to revision 3 restores the postgresql 13.2.0 manifests. Whether the rolling-back PostgreSQL StatefulSet causes data loss is a separate concern from Helm's rollback mechanics.
 
-**Sub-chart version upgrade**: changing the sub-chart version in Chart.yaml, running helm dependency update, and running helm upgrade creates a new revision where the sub-chart resources reflect the new chart version.
+Sub-chart version upgrade: changing the sub-chart version in Chart.yaml, running helm dependency update, and running helm upgrade creates a new revision where the sub-chart resources reflect the new chart version.
 
-**CRD caveat**: if a sub-chart includes CRDs (in its own crds/ directory), those CRDs are subject to the same constraints as parent chart CRDs — never deleted on uninstall, never automatically upgraded. Upgrading a sub-chart that ships breaking CRD changes requires manual CRD migration first.
+CRD caveat: if a sub-chart includes CRDs (in its own crds/ directory), those CRDs are subject to the same constraints as parent chart CRDs — never deleted on uninstall, never automatically upgraded. Upgrading a sub-chart that ships breaking CRD changes requires manual CRD migration first.
 
 Interview signal: understanding that sub-charts are fully integrated into the parent release lifecycle (not separately tracked) is the key insight. Helm has no per-sub-chart release concept — it's always one release per helm install.`,
       },
@@ -1762,13 +1762,13 @@ Interview signal: understanding that sub-charts are fully integrated into the pa
 
 Each aliased instance creates separate Kubernetes resources with the alias prefix in resource names, preventing name collisions.
 
-**Common use cases**:
+Common use cases:
 - Primary/replica database setup within a single chart
 - Running two Redis instances (session cache and job queue)
 - Multi-region configurations where region-specific settings differ
 - Development environment with multiple databases for different microservices
 
-**Limitation**: all aliased instances must be the same version. For different versions, use separate charts.`,
+Limitation: all aliased instances must be the same version. For different versions, use separate charts.`,
       },
       {
         question: 'Explain the Helm object install order and why it matters for dependencies.',
@@ -1800,14 +1800,14 @@ Each aliased instance creates separate Kubernetes resources with the alias prefi
   Ingress
   APIService
 
-**Why this matters for dependencies**:
+Why this matters for dependencies:
 
 1. Namespaces are created before workloads.
 2. RBAC is applied before workloads — ServiceAccount referenced by a Deployment exists before the Deployment is applied.
 3. Secrets and ConfigMaps before Deployments — environment variables that reference Secrets will resolve when the Pod spec is applied.
 4. Services before Deployments — the Service object exists before the Pods try to connect to it.
 
-**Hooks override this order**: pre-install hooks run BEFORE any non-hook resources are applied. This is why pre-install hooks are used for database schema migrations — you need the database schema applied before the application Deployment comes up.
+Hooks override this order: pre-install hooks run BEFORE any non-hook resources are applied. This is why pre-install hooks are used for database schema migrations — you need the database schema applied before the application Deployment comes up.
 
 For platform engineers: understanding the install order explains why Helm generally "just works" for simple dependencies but why pre-install hooks are needed for stateful coordination requirements.`,
       },
@@ -1959,35 +1959,35 @@ The OCI approach unlocks significant advantages: immutable references by digest 
     keyQuestions: [
       {
         question: 'Compare classic Helm chart repositories with OCI-based distribution.',
-        answer: `**Classic chart repositories**:
+        answer: `Classic chart repositories:
 - Serve index.yaml (JSON/YAML index of all charts) and .tgz archives over HTTP
 - Require dedicated hosting: GitHub Pages, S3+CloudFront, ChartMuseum, Nexus, Artifactory (repo mode)
 - Workflow: helm repo add -> helm repo update -> helm search repo -> helm install bitnami/chart
 - Authentication: basic auth or token in the repo URL or helm repo add --username --password
 - No immutable references — a version tag can be republished with different content
 
-**OCI registry distribution**:
+OCI registry distribution:
 - Charts stored as OCI artifacts in any compliant registry (ECR, GHCR, ACR, GAR, Harbor, Docker Hub)
 - No dedicated hosting infrastructure beyond an existing container registry
 - Workflow: helm registry login -> helm package -> helm push -> helm install oci://registry/path/chart:version
 - Authentication: same IAM/token mechanisms as container images (native registry auth)
 - Immutable references by digest: oci://registry/chart@sha256:abc — cryptographically bound
 
-**Key differences**:
+Key differences:
 
 index.yaml: classic repos require generating and publishing an index.yaml on every chart release. OCI uses the registry's native tag/manifest system — no index needed.
 
 helm repo add: required for classic repos, not needed for OCI. OCI charts are referenced directly with oci://.
 
-**2026 recommendation**: OCI for all new distribution, especially internal charts. Classic repos when working with legacy tooling that predates OCI GA.`,
+2026 recommendation: OCI for all new distribution, especially internal charts. Classic repos when working with legacy tooling that predates OCI GA.`,
       },
       {
         question: 'How do you set up a chart distribution pipeline for an internal platform team?',
         answer: `Standard setup for a platform team distributing charts to application teams:
 
-**Registry choice**: use the organization's existing container registry. If on AWS, use ECR (create a dedicated repository per chart or one helm-charts repository). GitHub organizations use GHCR. Azure uses ACR.
+Registry choice: use the organization's existing container registry. If on AWS, use ECR (create a dedicated repository per chart or one helm-charts repository). GitHub organizations use GHCR. Azure uses ACR.
 
-**CI pipeline (GitHub Actions example)**:
+CI pipeline (GitHub Actions example):
 
   name: Release Chart
   on:
@@ -2014,9 +2014,9 @@ helm repo add: required for classic repos, not needed for OCI. OCI charts are re
         - name: Push
           run: helm push /tmp/charts/myapp-*.tgz oci://ghcr.io/\${{ github.repository_owner }}/charts
 
-**Version management**: chart version in Chart.yaml matches the Git tag (stripped of "v" prefix). The CI pipeline reads the tag and validates it matches Chart.yaml version before pushing.
+Version management: chart version in Chart.yaml matches the Git tag (stripped of "v" prefix). The CI pipeline reads the tag and validates it matches Chart.yaml version before pushing.
 
-**Consumer workflow**:
+Consumer workflow:
   helm install myapp oci://ghcr.io/myorg/charts/myapp --version 1.4.2 -f values-prod.yaml
 
 For supply chain security, add helm package --sign with a GPG key in CI and document key verification for consumers.`,
@@ -2033,45 +2033,45 @@ A digest is a SHA256 hash of the OCI manifest content. It cannot be forged, reta
   # Immutable — digest cannot be changed:
   helm install myapp oci://ghcr.io/myorg/charts/myapp@sha256:a3f1b2c...
 
-**In a CI/CD pipeline**:
+In a CI/CD pipeline:
 After helm push, capture the digest:
   helm push mychart-1.4.2.tgz oci://ghcr.io/myorg/charts | grep -oP 'sha256:[a-f0-9]+'
 
 Store the digest in the GitOps repo alongside the version to ensure production deploys always use the exact artifact that was tested in CI, even if someone later republishes v1.4.2.
 
-**Combined with provenance**: the .prov file uploaded alongside the chart provides GPG/PGP signature verification. helm pull --verify checks the signature. Together, digest + provenance proves the chart is unmodified and comes from the expected publisher. This is the recommended supply chain security posture for regulated environments.`,
+Combined with provenance: the .prov file uploaded alongside the chart provides GPG/PGP signature verification. helm pull --verify checks the signature. Together, digest + provenance proves the chart is unmodified and comes from the expected publisher. This is the recommended supply chain security posture for regulated environments.`,
       },
       {
         question: 'What are the key commands for working with OCI-based Helm charts?',
         answer: `Complete OCI workflow:
 
-**Authenticate**:
+Authenticate:
   helm registry login ghcr.io -u USERNAME -p TOKEN
   helm registry login ACCOUNT.dkr.ecr.REGION.amazonaws.com -u AWS -p $(aws ecr get-login-password)
   helm registry logout ghcr.io
 
-**Package**:
+Package:
   helm package ./mychart                        # produces mychart-1.4.2.tgz
   helm package ./mychart --sign --key "MyKey"   # with provenance
 
-**Push**:
+Push:
   helm push mychart-1.4.2.tgz oci://ghcr.io/myorg/charts
   # Chart becomes oci://ghcr.io/myorg/charts/mychart:1.4.2
 
-**Inspect before install**:
+Inspect before install:
   helm show chart oci://ghcr.io/myorg/charts/mychart --version 1.4.2
   helm show values oci://ghcr.io/myorg/charts/mychart --version 1.4.2
 
-**Pull (download locally)**:
+Pull (download locally):
   helm pull oci://ghcr.io/myorg/charts/mychart --version 1.4.2 --untar
   helm pull oci://ghcr.io/myorg/charts/mychart --version 1.4.2 --verify
 
-**Install**:
+Install:
   helm install myapp oci://ghcr.io/myorg/charts/mychart --version 1.4.2 -f values.yaml
   helm install myapp oci://ghcr.io/myorg/charts/mychart@sha256:abc123...  # by digest
   helm upgrade --install myapp oci://ghcr.io/myorg/charts/mychart --version 1.4.2
 
-**In Chart.yaml dependencies**:
+In Chart.yaml dependencies:
   dependencies:
     - name: mychart
       version: "1.4.2"
@@ -2281,7 +2281,7 @@ The test hook enables helm test — a command that runs validation Pods against 
                     name: {{ .Release.Name }}-db-secret
                     key: url
 
-**Why this is safe**:
+Why this is safe:
 
 1. The migration runs BEFORE the Deployment is updated. The old application version is still running.
 2. Helm blocks the upgrade until the migration Job completes (exit 0) or fails.
@@ -2289,14 +2289,14 @@ The test hook enables helm test — a command that runs validation Pods against 
 4. On migration success: Helm proceeds to update the Deployment. New code runs against new schema.
 5. Deletion policy: before-hook-creation removes the old migration Job before the new one runs. hook-succeeded removes the successful Job. A failed Job remains for log inspection.
 
-**Critical details**:
+Critical details:
 - restartPolicy: Never is mandatory for Job Pods. On failure, the Pod stays for log inspection rather than restarting indefinitely.
 - Include {{ .Release.Revision }} in the Job name for uniqueness across upgrades.
 - Set backoffLimit: 2 for idempotent migrations; set to 0 for non-idempotent migrations where retrying could corrupt data.`,
       },
       {
         question: 'Explain hook execution order with weights and what happens when a hook fails.',
-        answer: `**Execution order**:
+        answer: `Execution order:
 
 Within a lifecycle phase, hooks are sorted by helm.sh/hook-weight (string-to-integer comparison, ascending). Lower weight values run first. Default weight is 0.
 
@@ -2307,7 +2307,7 @@ Example with three pre-upgrade hooks:
 
 Hooks with the same weight at the same phase execute in parallel if they are Jobs/Pods.
 
-**Execution flow for helm upgrade**:
+Execution flow for helm upgrade:
   1. Render all templates
   2. Sort pre-upgrade hooks by weight
   3. Execute weight=-10 hooks, wait for completion
@@ -2316,7 +2316,7 @@ Hooks with the same weight at the same phase execute in parallel if they are Job
   6. Apply non-hook resource changes (Deployments, Services, etc.)
   7. Execute post-upgrade hooks by weight
 
-**On hook failure**:
+On hook failure:
 
 A hook Job fails when its Pod exits with a non-zero exit code. Helm sees the Job as failed, marks the release as FAILED, and aborts the operation.
 
@@ -2331,18 +2331,18 @@ For post-install failure:
 - The release status becomes FAILED
 - helm rollback can revert the non-hook resources
 
-**Escape hatch**: helm upgrade --no-hooks skips all hooks. Use when a hook is broken and you need to force a deployment.`,
+Escape hatch: helm upgrade --no-hooks skips all hooks. Use when a hook is broken and you need to force a deployment.`,
       },
       {
         question: 'How does helm test work and how do you write effective test hooks?',
-        answer: `**helm test basics**:
+        answer: `helm test basics:
 
 helm test <release-name> runs all resources annotated with "helm.sh/hook": test. Helm creates the test Pods, waits for them to complete, reports pass (exit 0) or fail (non-zero exit) for each, then outputs a summary.
 
   helm test myapp -n production
   helm test myapp -n production --logs    # retain Pod logs after test
 
-**Writing effective test hooks**:
+Writing effective test hooks:
 
 1. Connectivity test (basic):
   apiVersion: v1
@@ -2369,28 +2369,28 @@ helm test <release-name> runs all resources annotated with "helm.sh/hook": test.
       image: postgres:16
       command: ['sh', '-c', 'pg_isready -h {{ .Values.postgresql.host }} -p 5432']
 
-**Best practices**:
+Best practices:
 - Use lightweight images (curlimages/curl, busybox, minimal language runtimes)
 - Test specific application behavior, not just "Pod exists" (curl the health endpoint, not just ping)
 - Add helm test to your CI pipeline after every helm upgrade: helm upgrade --install && helm test $RELEASE
 - Use restartPolicy: Never to prevent infinite test retry loops
 
-**What test hooks cannot replace**: unit tests (run in CI before deploy), integration tests (run against a staging cluster), load tests. helm test is a quick post-deploy smoke test.`,
+What test hooks cannot replace: unit tests (run in CI before deploy), integration tests (run against a staging cluster), load tests. helm test is a quick post-deploy smoke test.`,
       },
       {
         question: 'What are the hook deletion policies and which combination should you use in production?',
         answer: `Three deletion policy values (can be combined with comma-separation):
 
-**before-hook-creation** (default when no policy is specified):
+before-hook-creation (default when no policy is specified):
 Deletes the hook resource if it already exists before creating a new one. This prevents "resource already exists" errors when the same hook runs across multiple upgrades.
 
-**hook-succeeded**:
+hook-succeeded:
 Deletes the hook resource after it completes successfully. Cleans up the Job and its Pod(s) from the cluster after a successful run.
 
-**hook-failed**:
+hook-failed:
 Deletes the hook resource after it fails. Cleans up failed Jobs automatically.
 
-**Production combinations**:
+Production combinations:
 
 Recommended for DB migrations and other critical hooks:
   "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -2411,30 +2411,30 @@ Testing consideration: for test hooks, the default behavior (delete Pods after t
         question: 'How do you handle a situation where a pre-upgrade hook is hanging and blocking the upgrade?',
         answer: `A hanging pre-upgrade hook puts the release in PENDING_UPGRADE state and blocks all subsequent upgrades until the timeout is reached (default 5 minutes) or the hook is manually interrupted.
 
-**Immediate steps**:
+Immediate steps:
 
-1. **Check the hook status**:
+1. Check the hook status:
    helm status <release> -n <namespace>
    kubectl get jobs -n <namespace>
    kubectl logs -n <namespace> -l job-name=<hook-job-name> --previous
 
-2. **Check why it's hanging**: common causes:
+2. Check why it's hanging: common causes:
    - DB connection failure (wrong credentials, network policy blocking access)
    - Migration is taking too long (large table, missing index)
    - Pod stuck in Pending (node capacity, image pull issue)
    - Infinite migration retry loop (wrong backoffLimit)
 
-3. **Let the timeout expire OR force-cancel**:
+3. Let the timeout expire OR force-cancel:
    Manually delete the hook Job: kubectl delete job <hook-job-name> -n <namespace>
    Helm marks the release as FAILED.
 
-4. **Bypass hooks for emergency deploy**:
+4. Bypass hooks for emergency deploy:
    helm upgrade <release> ./chart -f values.yaml --no-hooks -n <namespace>
    --no-hooks skips all hooks entirely. Document this bypass and immediately fix the hook.
 
-5. **Fix the root cause**: update the hook Job (fix connection, add timeout, fix migration), test in staging, redeploy.
+5. Fix the root cause: update the hook Job (fix connection, add timeout, fix migration), test in staging, redeploy.
 
-**Preventive measures**:
+Preventive measures:
 - Always set activeDeadlineSeconds on hook Jobs (30s, 60s, 300s depending on expected runtime)
 - Use backoffLimit: 0 or 1 for non-idempotent migrations
 - Test hooks in a non-production environment before every upgrade that changes migrations
@@ -2673,7 +2673,7 @@ Argo CD and Flux are the dominant GitOps controllers for pull-based Helm managem
         - name: Run smoke tests
           run: helm test myapp -n production --logs
 
-**Security decisions**:
+Security decisions:
 - OIDC: no long-lived AWS credentials stored in GitHub; the JWT is scoped to this workflow
 - Namespace: explicit --namespace production, create if absent
 - --atomic: self-healing on failure
@@ -2682,7 +2682,7 @@ Argo CD and Flux are the dominant GitOps controllers for pull-based Helm managem
       },
       {
         question: 'Explain how Argo CD deploys a Helm chart and how it differs from running helm install.',
-        answer: `**How Argo CD handles Helm**:
+        answer: `How Argo CD handles Helm:
 
 Argo CD treats Helm as a manifest templating engine, not a package manager. When an Application references a Helm chart, Argo CD:
 
@@ -2692,7 +2692,7 @@ Argo CD treats Helm as a manifest templating engine, not a package manager. When
 4. Applies only the resources that differ (equivalent to kubectl apply --server-side)
 5. Tracks resource state in its own Application resource — not in Helm release Secrets
 
-**Key differences from helm install**:
+Key differences from helm install:
 
 No release tracking: Argo CD does NOT create helm.sh/release.v1 Secrets. Running helm list in the target namespace returns nothing for Argo CD-managed releases.
 
@@ -2700,15 +2700,15 @@ No Helm rollback: helm rollback does not work on Argo CD-managed releases (no hi
 
 No Helm hooks: Argo CD renders hooks as regular manifests. Helm hook lifecycle (pre-upgrade, etc.) is NOT honored. Argo CD has its own hook system via Sync hooks (PreSync, Sync, PostSync annotations).
 
-**Coexistence warning**: never run helm upgrade on a release that Argo CD manages. Argo CD will overwrite the helm CLI changes on its next sync (typically within 3 minutes).
+Coexistence warning: never run helm upgrade on a release that Argo CD manages. Argo CD will overwrite the helm CLI changes on its next sync (typically within 3 minutes).
 
-**Interview framing**: Argo CD gives you GitOps reconciliation (drift correction, audit trail, sync status) but sacrifices native Helm semantics. Flux preserves native Helm semantics (release tracking, hooks) within a GitOps model.`,
+Interview framing: Argo CD gives you GitOps reconciliation (drift correction, audit trail, sync status) but sacrifices native Helm semantics. Flux preserves native Helm semantics (release tracking, hooks) within a GitOps model.`,
       },
       {
         question: 'How do you update a deployed application\'s image tag in a GitOps workflow?',
         answer: `Two approaches depending on architecture:
 
-**Approach 1: Commit to GitOps repo (pure GitOps)**:
+Approach 1: Commit to GitOps repo (pure GitOps):
 CI builds image -> pushes to registry -> updates image tag in the GitOps values file -> commits -> Argo CD or Flux picks up the change.
 
 GitHub Actions step:
@@ -2724,17 +2724,17 @@ GitHub Actions step:
 Argo CD polls the repo (default: 3 min) or receives a webhook and syncs.
 Flux image-automation-controller can automate this — it watches the registry and commits the new tag to Git automatically.
 
-**Approach 2: ArgoCD image updater**:
+Approach 2: ArgoCD image updater:
 Argo CD Image Updater watches container registries for new tags matching a pattern and writes the tag back to the Git repository or directly to the Application spec.
 
-**Approach 3: Push-based for the image tag, pull-based for everything else**:
+Approach 3: Push-based for the image tag, pull-based for everything else:
 CI pipeline updates the image tag with helm upgrade --set image.tag=$SHA for speed, while all other configuration is managed via GitOps. Common for development environments where fast iteration matters.
 
-**Best practice for production**: pure GitOps (Approach 1). Every change to the cluster is a Git commit with a full audit trail. PRs require approval before merging the tag bump.`,
+Best practice for production: pure GitOps (Approach 1). Every change to the cluster is a Git commit with a full audit trail. PRs require approval before merging the tag bump.`,
       },
       {
         question: 'How does Flux HelmRelease differ from Argo CD Application for Helm deployments?',
-        answer: `**Flux HelmRelease — native Helm semantics**:
+        answer: `Flux HelmRelease — native Helm semantics:
 
 Flux's helm-controller uses the actual Helm SDK (calls helm install/upgrade under the hood). This means:
 - Helm release Secrets ARE created — helm list works, helm history works
@@ -2758,19 +2758,19 @@ HelmRelease CRD:
       remediation:
         remediateLastFailure: true  # rollback on upgrade failure
 
-**Argo CD Application — render-and-apply model**:
+Argo CD Application — render-and-apply model:
 
 Argo CD uses helm template and applies manifests directly:
 - No Helm release Secrets — helm list shows nothing
 - Hooks not honored in Helm lifecycle sense
 - Rollback via Argo CD sync to previous commit, not helm rollback
 
-**When to choose Flux HelmRelease**:
+When to choose Flux HelmRelease:
 - Need native Helm hook semantics for DB migrations
 - Want helm list / helm history for operator familiarity
 - Composable controller architecture
 
-**When to choose Argo CD**:
+When to choose Argo CD:
 - Need unified GitOps UI (Argo CD has an excellent web interface)
 - Multi-cluster management at scale (App of Apps, ApplicationSet)
 - Mixed chart/Kustomize environment
@@ -2781,10 +2781,10 @@ The 2026 pattern: many organizations run both — Flux for Helm-heavy platform i
         question: 'How do you implement a helm diff step in CI for production safety?',
         answer: `The helm-diff plugin (github.com/databus23/helm-diff) adds terraform-plan-style preview to Helm upgrades.
 
-**Install in CI**:
+Install in CI:
   helm plugin install https://github.com/databus23/helm-diff
 
-**Usage**:
+Usage:
   helm diff upgrade myapp ./chart \
     -f values.yaml \
     -f values-prod.yaml \
@@ -2803,7 +2803,7 @@ Output (similar to kubectl diff):
   + apiVersion: autoscaling/v2
   + kind: HorizontalPodAutoscaler
 
-**Integrating into a PR check workflow**:
+Integrating into a PR check workflow:
 
   - name: Helm diff
     run: |
@@ -2828,11 +2828,11 @@ This automatically posts the Kubernetes resource changes as a PR comment, giving
       },
       {
         question: 'What authentication pattern should CI use to deploy to Kubernetes, and why?',
-        answer: `**Modern answer: OIDC (OpenID Connect) — no stored credentials**
+        answer: `Modern answer: OIDC (OpenID Connect) — no stored credentials
 
 GitHub Actions and GitLab CI both support OIDC identity federation with cloud providers and Kubernetes clusters.
 
-**AWS EKS + GitHub Actions**:
+AWS EKS + GitHub Actions:
   permissions:
     id-token: write    # request JWT from GitHub
 
@@ -2845,14 +2845,14 @@ GitHub Actions and GitLab CI both support OIDC identity federation with cloud pr
 
 How it works: GitHub mints a short-lived JWT signed by GitHub. AWS IAM validates the JWT (configured trust policy on the role). No AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY stored anywhere.
 
-**Minimum permissions for a Helm deploy service account**:
+Minimum permissions for a Helm deploy service account:
 - Namespace: get, list
 - Secrets: get, list, create, update, delete (for release tracking)
 - Plus permissions for each resource type the chart creates
 
 Scope to the deployment namespace only. Never cluster-admin for a deploy service account.
 
-**What NOT to do**:
+What NOT to do:
 - Long-lived kubeconfig files stored in CI secrets (they expire unexpectedly and cannot be rotated without a manual secret update)
 - cluster-admin service accounts for CI (overpowered, dangerous)
 - AWS IAM user credentials stored in CI (long-lived, human-owned, not rotated)
@@ -3023,7 +3023,7 @@ Secrets in values files is the most common Helm security mistake. Values files a
     keyQuestions: [
       {
         question: 'How do you sign a Helm chart and verify it at install time?',
-        answer: `**Signing workflow (GPG-based)**:
+        answer: `Signing workflow (GPG-based):
 
 1. Generate a GPG key pair (if not already done):
    gpg --full-generate-key
@@ -3036,7 +3036,7 @@ Secrets in values files is the most common Helm security mistake. Values files a
    helm push mychart-1.4.2.tgz oci://ghcr.io/myorg/charts
    # .prov file is uploaded automatically as an additional OCI layer
 
-**Verification workflow**:
+Verification workflow:
 
 At pull time:
    helm pull oci://ghcr.io/myorg/charts/mychart --version 1.4.2 --verify --keyring /path/to/pubring.gpg
@@ -3046,13 +3046,13 @@ At install time:
 
 Verification checks: SHA256 of the .tgz matches the checksum in .prov, and the OpenPGP signature in .prov validates against the provided keyring.
 
-**Sigstore alternative (keyless)**:
+Sigstore alternative (keyless):
    helm plugin install https://github.com/sigstore/helm-sigstore
    # Signs with your OIDC identity (GitHub Actions JWT)
    # Publishes signature to Rekor transparency log
    # Verification requires no pre-distributed key — queries Rekor
 
-**In CI**:
+In CI:
    - name: Sign and push chart
      run: |
        echo "$GPG_KEY_BASE64" | base64 -d | gpg --import
@@ -3061,7 +3061,7 @@ Verification checks: SHA256 of the .tgz matches the checksum in .prov, and the O
       },
       {
         question: 'Describe three approaches to secrets management in Helm and their trade-offs.',
-        answer: `**Approach 1: External Secrets Operator (ESO) — recommended for cloud-native**
+        answer: `Approach 1: External Secrets Operator (ESO) — recommended for cloud-native
 
 How it works: ExternalSecret CRD tells ESO where to fetch the secret (AWS Secrets Manager, Vault, GCP Secret Manager). ESO creates/syncs a Kubernetes Secret. The Helm chart references the Kubernetes Secret by name.
 
@@ -3073,7 +3073,7 @@ In chart template:
 Pros: secrets never in Git, never in Helm values, centralized secret management
 Cons: requires ESO controller installed in cluster, adds operational complexity
 
-**Approach 2: helm-secrets + SOPS — recommended for Git-centric teams**
+Approach 2: helm-secrets + SOPS — recommended for Git-centric teams
 
 How it works: SOPS encrypts specific keys in a YAML file using KMS. Encrypted file committed to Git. CI decrypts at deploy time.
 
@@ -3084,7 +3084,7 @@ How it works: SOPS encrypts specific keys in a YAML file using KMS. Encrypted fi
 Pros: GitOps-friendly (encrypted secrets in Git alongside configs), works with any KMS provider
 Cons: requires SOPS setup, CI IAM role needs KMS decrypt permission
 
-**Approach 3: Sealed Secrets (Bitnami) — recommended for GitOps with Kubernetes secrets**
+Approach 3: Sealed Secrets (Bitnami) — recommended for GitOps with Kubernetes secrets
 
 How it works: SealedSecret CRD is encrypted with the cluster's public key. Only the in-cluster controller can decrypt. Commit SealedSecret YAML to Git.
 
@@ -3093,11 +3093,11 @@ How it works: SealedSecret CRD is encrypted with the cluster's public key. Only 
 Pros: pure GitOps (sealed secret manifest in Git), no external dependency at deploy time
 Cons: cluster-specific (sealed secret for cluster A cannot be decrypted by cluster B)
 
-**The "wrong" approach**: base64-encoded values in values-prod.yaml committed to Git. Base64 is encoding, not encryption — anyone with Git access can decode it instantly.`,
+The "wrong" approach: base64-encoded values in values-prod.yaml committed to Git. Base64 is encoding, not encryption — anyone with Git access can decode it instantly.`,
       },
       {
         question: 'What RBAC configuration does a Helm CI service account require, and why?',
-        answer: `**What Helm needs to manage releases**:
+        answer: `What Helm needs to manage releases:
 
 Helm stores release state as Kubernetes Secrets in the target namespace. Every helm install/upgrade/rollback/uninstall reads and writes these Secrets. Therefore, the minimum RBAC for any Helm deployment service account is:
 
@@ -3137,15 +3137,15 @@ Bind to the service account:
       name: ci-deploy-sa
       namespace: production
 
-**Why namespace-scoped (Role + RoleBinding) not cluster-scoped**:
+Why namespace-scoped (Role + RoleBinding) not cluster-scoped:
 
 A ClusterRole + ClusterRoleBinding grants permissions across ALL namespaces. If the CI system is compromised with namespace-scoped permissions, an attacker can only modify the production namespace. With cluster-scoped permissions, the attacker can modify every namespace, read all Secrets cluster-wide.
 
-**Common mistake**: giving CI service accounts cluster-admin to make "everything work." This is the Helm 2 + Tiller anti-pattern — Tiller ran with cluster-admin by default, which is why Helm 2 had such a poor security reputation.`,
+Common mistake: giving CI service accounts cluster-admin to make "everything work." This is the Helm 2 + Tiller anti-pattern — Tiller ran with cluster-admin by default, which is why Helm 2 had such a poor security reputation.`,
       },
       {
         question: 'How do you scan a Helm chart for security misconfigurations in CI?',
-        answer: `**Trivy (most widely used)**:
+        answer: `Trivy (most widely used):
 
   # Scan chart templates for misconfigurations:
   trivy config ./mychart
@@ -3168,13 +3168,13 @@ A ClusterRole + ClusterRoleBinding grants permissions across ALL namespaces. If 
     - name: Trivy image scan
       run: trivy image $IMAGE --exit-code 1 --severity CRITICAL
 
-**Checkov (Bridgecrew)**:
+Checkov (Bridgecrew):
   checkov -d ./mychart --framework helm
 
-**Kubescape**:
+Kubescape:
   kubescape scan framework nsa ./mychart
 
-**In CI pipeline positioning**:
+In CI pipeline positioning:
   1. helm lint (syntax and structure)
   2. trivy config ./chart (security misconfigs)
   3. helm template | kubeconform (schema validation)
@@ -3188,27 +3188,27 @@ Steps 1-4 run in PR checks (pre-merge). Steps 5-6 run in CD (post-merge). This p
         question: 'What are the supply chain security risks specific to using public Helm charts?',
         answer: `Public Helm charts (Artifact Hub, Bitnami, ingress-nginx, cert-manager) introduce supply chain risks that differ from building your own:
 
-**Risk 1: Version pinning drift**
+Risk 1: Version pinning drift
 Unpinned dependencies (version: ">=13.0.0") pull the latest matching version on helm dependency update. A compromised or malicious patch release is pulled automatically.
 Mitigation: pin exact versions (version: "13.2.0"), commit Chart.lock, use helm dependency build in CI.
 
-**Risk 2: Compromised upstream chart**
+Risk 2: Compromised upstream chart
 A maintainer's credentials are stolen; a malicious chart version is published to the upstream repository.
 Mitigation: verify chart signatures (helm install --verify), use OCI digest references (@sha256:...), pin versions and review changelogs before upgrading.
 
-**Risk 3: Malicious container images in public charts**
+Risk 3: Malicious container images in public charts
 Public charts reference container images from Docker Hub. Docker Hub image tags are mutable — the same tag can be overwritten with a malicious image.
 Mitigation: pin images by digest in your values override (image.digest: sha256:abc instead of image.tag: latest), or use a registry mirror with vulnerability scanning.
 
-**Risk 4: Dependency confusion**
+Risk 4: Dependency confusion
 A public chart references a private registry that doesn't exist. An attacker publishes a malicious package with the same name at a higher version in the public registry.
 Mitigation: use OCI-based dependencies with explicit registry URLs, not name-only references.
 
-**Risk 5: Abandoned charts**
+Risk 5: Abandoned charts
 A popular chart's maintainer stops releasing security patches. The chart continues deploying software with known CVEs.
 Mitigation: run trivy image on chart container references in CI, track upstream release cadence.
 
-**Production practices**:
+Production practices:
 - Maintain a private registry mirror of approved public charts (Harbor, Artifactory)
 - Run Trivy scans on all public chart images before allowing into production
 - Subscribe to upstream security advisories for critical charts (cert-manager, ingress-nginx)
@@ -3218,7 +3218,7 @@ Mitigation: run trivy image on chart container references in CI, track upstream 
         question: 'How does Helm 4\'s server-side apply affect security posture?',
         answer: `Helm 4 (November 2025) switched from client-side apply (kubectl apply) to server-side apply (SSA) by default. This has direct security implications.
 
-**Security-positive changes**:
+Security-positive changes:
 
 1. Conflict detection: if a security policy enforcer (OPA/Gatekeeper, Kyverno) mutates a field that Helm owns, SSA detects the ownership conflict on the next upgrade. Previously with client-side apply, Helm could silently overwrite webhook mutations.
 
@@ -3226,13 +3226,13 @@ Mitigation: run trivy image on chart container references in CI, track upstream 
 
 3. Better audit trail: SSA field managers appear in the managedFields section of every resource. Security audit tools can see exactly which fields Helm changed (helm field manager) vs other tools.
 
-**Security-challenging changes**:
+Security-challenging changes:
 
 1. Field manager conflicts: charts that set fields that security policies also control produce conflicts. In environments where Kyverno or OPA injects fields, SSA makes this explicit as an error rather than a silent overwrite.
 
 2. --force-conflicts flag: when used to resolve conflicts, Helm takes ownership of fields away from security policy controllers. This should require explicit approval.
 
-**Migration impact**: most Helm 3 charts work in Helm 4 with SSA, but charts that apply the same field twice (common in umbrella chart patterns) may surface conflicts.
+Migration impact: most Helm 3 charts work in Helm 4 with SSA, but charts that apply the same field twice (common in umbrella chart patterns) may surface conflicts.
 
 For platform engineers: test Helm 4 in staging with SSA enabled, watch for field ownership conflicts with existing admission webhooks and kubectl edit workflows, and update runbooks to use helm upgrade --force-conflicts only when Helm should legitimately take ownership back from a security policy.`,
       },
@@ -3376,15 +3376,15 @@ For engineers migrating from Helm 3, the key steps are: audit for field ownershi
     keyQuestions: [
       {
         question: 'Explain server-side apply and how it changes the Helm upgrade behavior.',
-        answer: `**Client-side apply (Helm 3)**:
+        answer: `Client-side apply (Helm 3):
 Helm downloads the current resource state, merges it with the last-applied configuration and the new desired state (three-way merge), and sends the merged result to the Kubernetes API via PATCH or CREATE. The merge logic runs in the Helm client, not in the API server.
 
 Problem: if an admission webhook mutated a field after Helm applied it, the next helm upgrade would overwrite the mutation because Helm's local merge didn't know about it.
 
-**Server-side apply (Helm 4 default)**:
+Server-side apply (Helm 4 default):
 Helm sends the desired state to the Kubernetes API server with an Apply operation and its manager name (field-manager: helm). The API server handles the merge using the managedFields ownership model. Each field has exactly one "owner." If Helm owns a field and sends a new value, it applies. If another manager owns a field and Helm tries to set it, the API server returns a conflict error.
 
-**Practical differences**:
+Practical differences:
 
 1. Webhook mutation respect: if a MutatingAdmissionWebhook sets securityContext.runAsUser: 1000 and tracks that field, Helm 4 detects the conflict and either errors (safe) or respects the webhook's ownership (correct behavior). Helm 3 would silently overwrite it on next upgrade.
 
@@ -3392,38 +3392,38 @@ Helm sends the desired state to the Kubernetes API server with an Apply operatio
 
 3. Admission webhook always runs: SSA always triggers admission webhooks.
 
-**--force-conflicts**:
+--force-conflicts:
 helm upgrade myapp ./chart --force-conflicts makes Helm take ownership of all fields it sends, even if another manager currently owns them. Use when you intentionally want Helm to be the authoritative source for a field.
 
-**Migration guidance**: test SSA in staging before production. Charts that are well-written (don't set fields they don't need to control) are typically unaffected.`,
+Migration guidance: test SSA in staging before production. Charts that are well-written (don't set fields they don't need to control) are typically unaffected.`,
       },
       {
         question: 'What are the breaking changes in Helm 4 that a platform team needs to address before migrating?',
-        answer: `**Breaking change 1: Default SSA**
+        answer: `Breaking change 1: Default SSA
 All helm upgrade calls use server-side apply. Charts and workflows that depend on client-side apply behavior (e.g., Helm overwriting admission webhook mutations) will break.
 
 Action: test every chart in staging with Helm 4, watch for "Apply failed with X conflicts" errors. Resolve by: --force-conflicts, restructuring charts to not set conflicting fields, or coordinating with webhook policies.
 
-**Breaking change 2: Helm SDK import paths**
+Breaking change 2: Helm SDK import paths
 Any Go code importing the Helm SDK must change import paths from helm.sh/helm/v3 to helm.sh/helm/v4. Packages and function signatures may also have changed.
 
 Action: audit all internal tools and CI scripts that use the Helm SDK. Run go mod tidy after updating imports.
 
-**Breaking change 3: Plugin API changes**
+Breaking change 3: Plugin API changes
 Helm plugins using pre-4 lifecycle hooks or SDK functions need updates. Popular plugins (helm-diff, helm-secrets, helm-push) have v4 compatible versions.
 
 Action: before upgrading clusters, verify every installed plugin has a Helm 4 compatible release. Run helm plugin list and check each plugin's GitHub releases.
 
-**Breaking change 4: Removed deprecated CLI flags**
+Breaking change 4: Removed deprecated CLI flags
 Some flags deprecated in Helm 3 are removed in Helm 4. Check CI scripts for any deprecated flags.
 
-**Non-breaking (but worth knowing)**:
+Non-breaking (but worth knowing):
 - Existing Helm 3 release Secrets are read by Helm 4 (compatible format)
 - apiVersion: v2 charts still work
 - Chart templates (Go templates, Sprig) unchanged
 - Most Bitnami and official charts have Helm 4 compatible releases
 
-**Migration timeline recommendation**:
+Migration timeline recommendation:
 Month 1: test in dev cluster, identify chart and plugin issues
 Month 2: migrate staging cluster, run full regression
 Month 3: migrate production clusters one at a time
@@ -3431,7 +3431,7 @@ Keep Helm 3 binary available for rollback for 3+ months after production migrati
       },
       {
         question: 'How do you debug and resolve field manager conflicts in Helm 4?',
-        answer: `**Identifying the conflict**:
+        answer: `Identifying the conflict:
 helm upgrade myapp ./chart produces:
   Error: UPGRADE FAILED: Apply failed with 2 conflicts:
   - conflict with "kubectl-client-side-apply" using apps/v1: .spec.template.spec.containers[0].resources.limits.cpu
@@ -3439,17 +3439,17 @@ helm upgrade myapp ./chart produces:
 
 The error shows: the conflicting field path and which field manager owns it.
 
-**Step 1: Inspect managedFields in the live resource**:
+Step 1: Inspect managedFields in the live resource:
   kubectl get deployment myapp -o yaml | grep -A 100 managedFields
 
 This shows which manager (kubectl-client-side-apply, helm, kyverno, argo-cd) owns which fields.
 
-**Step 2: Understand why the conflict exists**:
+Step 2: Understand why the conflict exists:
 - kubectl-client-side-apply: someone ran kubectl edit or kubectl apply on this resource outside of Helm
 - kyverno / OPA Gatekeeper: a policy controller is setting the field (intentional)
 - argo-cd: Argo CD and Helm are both trying to manage the same resource
 
-**Resolution options**:
+Resolution options:
 
 Option A: Helm takes ownership (--force-conflicts):
   helm upgrade myapp ./chart --force-conflicts
@@ -3461,13 +3461,13 @@ Option B: Remove the competing manager's field ownership:
 Option C: Remove the field from the Helm chart template:
   If a webhook should always control securityContext.runAsUser, remove it from the chart template.
 
-**Best practice**: resolve by removing conflicting fields from chart templates (Option C) rather than force-conflicting (Option A). Force-conflict takes ownership away from policies that may be there for security reasons.`,
+Best practice: resolve by removing conflicting fields from chart templates (Option C) rather than force-conflicting (Option A). Force-conflict takes ownership away from policies that may be there for security reasons.`,
       },
       {
         question: 'What does the Helm 4 migration path look like for a team running 50+ charts in production?',
         answer: `Structured migration for a large-scale Helm estate:
 
-**Phase 1: Assessment (2-4 weeks)**
+Phase 1: Assessment (2-4 weeks)
 
 Inventory:
   helm list -A -o json | jq '.[].chart' | sort | uniq -c | sort -rn
@@ -3483,20 +3483,20 @@ SDK usage audit:
 Chart compatibility scan:
   helm4 template <chart> --dry-run for each chart
 
-**Phase 2: Staging migration (4-6 weeks)**
+Phase 2: Staging migration (4-6 weeks)
 
 Upgrade one staging cluster to Helm 4 binary only.
 Redeploy each chart using helm4 upgrade --install and capture conflicts.
 For each conflict, determine resolution (--force-conflicts, chart update, or policy coordination).
 
-**Phase 3: Production migration (rolling, 4-8 weeks)**
+Phase 3: Production migration (rolling, 4-8 weeks)
 
 Migrate clusters one at a time, starting with least-critical.
 Keep helm3 binary available in CI alongside helm4 for rollback.
 Monitor for 1 week after each cluster migration.
 Update runbooks to reference helm4 commands.
 
-**Risk mitigation**:
+Risk mitigation:
 - Never upgrade all clusters simultaneously (blast radius)
 - Keep Helm 3 binary in CI for at least 3 months after full migration
 - Helm 3 and Helm 4 CLIs can both manage the same release (compatible Secret format)
@@ -3507,22 +3507,22 @@ Update runbooks to reference helm4 commands.
         question: 'What is the status of Helm 3 and what is the support timeline?',
         answer: `As of 2026, Helm 3 is still actively deployed and widely used. Helm 4 is stable at 4.2.2 but the ecosystem is in a transition period.
 
-**Current status**:
+Current status:
 - Helm 4.2.2: stable, current recommended version for new deployments
 - Helm 3.x: still maintained, receiving critical security patches but no new features
 - Helm 2: End of Life November 2020 — not supported, known security issues, do not use
 
-**Ecosystem adoption**:
+Ecosystem adoption:
 - Most major charts (Bitnami, ingress-nginx, cert-manager, prometheus-community) have Helm 4 compatible releases
 - Argo CD has Helm 4 support in its chart rendering pipeline
 - Flux helm-controller added Helm 4 SDK support
 - The helm-diff, helm-secrets plugins have Helm 4 compatible versions
 
-**What Helm 3 charts do in Helm 4**:
+What Helm 3 charts do in Helm 4:
 - apiVersion: v2 charts: work in Helm 4 (most Helm 3 charts)
 - apiVersion: v1 charts (Helm 2 legacy): may work with warnings; test before relying on them
 
-**Migration urgency**:
+Migration urgency:
 For most teams, Helm 3 is still reliable for existing deployments. Helm 4 is the right choice for:
 - New clusters being provisioned in 2026
 - Charts being actively developed (build for Helm 4 from the start)
@@ -3530,7 +3530,7 @@ For most teams, Helm 3 is still reliable for existing deployments. Helm 4 is the
 
 For existing Helm 3 estates: plan migration but don't rush. Test in staging, migrate methodically.
 
-**Interview framing**: knowing that Helm 4 exists, what it changed (SSA), and what the migration involves signals current knowledge. Knowing Helm 2 is dead (Tiller removed in Helm 3, EOL 2020) signals security awareness.`,
+Interview framing: knowing that Helm 4 exists, what it changed (SSA), and what the migration involves signals current knowledge. Knowing Helm 2 is dead (Tiller removed in Helm 3, EOL 2020) signals security awareness.`,
       },
     ],
     references: [
@@ -3740,26 +3740,26 @@ Helmfile solves this with a single helmfile.yaml that declares all releases:
         - ingress-nginx/ingress-nginx    # wait for ingress before app
         - cert-manager/cert-manager      # wait for TLS before app
 
-**Commands**:
+Commands:
   helmfile sync              # deploy all releases (parallel where dependency allows)
   helmfile diff              # show pending changes for all releases
   helmfile apply             # diff, then prompt before applying
   helmfile destroy           # uninstall all releases
   helmfile -l name=myapp sync   # operate on one release only
 
-**Dependency ordering**: the needs: field ensures ingress-nginx is healthy before myapp is installed. Without ordering, myapp's Ingress resource would fail admission if the ingress controller isn't ready.
+Dependency ordering: the needs: field ensures ingress-nginx is healthy before myapp is installed. Without ordering, myapp's Ingress resource would fail admission if the ingress controller isn't ready.
 
-**Environment values**: Helmfile supports environment-specific values files applied to all or specific releases, keeping per-environment overrides centralized.
+Environment values: Helmfile supports environment-specific values files applied to all or specific releases, keeping per-environment overrides centralized.
 
-**Compared to Terraform**: Helmfile is for Helm releases what Terraform is for infrastructure — declarative, diff-before-apply, dependency-aware. Many teams use both: Terraform provisions the cluster infrastructure, Helmfile manages the Kubernetes applications.
+Compared to Terraform: Helmfile is for Helm releases what Terraform is for infrastructure — declarative, diff-before-apply, dependency-aware. Many teams use both: Terraform provisions the cluster infrastructure, Helmfile manages the Kubernetes applications.
 
-**Limitation**: Helmfile is a separate tool from Helm. It must be installed alongside helm. For GitOps with Argo CD or Flux, ApplicationSet (Argo CD) or Kustomize-managed HelmRelease manifests (Flux) can replace Helmfile.`,
+Limitation: Helmfile is a separate tool from Helm. It must be installed alongside helm. For GitOps with Argo CD or Flux, ApplicationSet (Argo CD) or Kustomize-managed HelmRelease manifests (Flux) can replace Helmfile.`,
       },
       {
         question: 'Design a library chart for a platform team managing 30+ application charts.',
         answer: `Design goals: standardize labeling, resource naming, sidecar injection, and resource defaults across all charts without copy-paste.
 
-**Library chart structure** (charts/common/):
+Library chart structure (charts/common/):
 
   Chart.yaml:
     apiVersion: v2
@@ -3793,7 +3793,7 @@ Helmfile solves this with a single helmfile.yaml that declares all releases:
       drop: [ALL]
     {{- end }}
 
-**Application chart usage**:
+Application chart usage:
 
   # In application Chart.yaml:
   dependencies:
@@ -3813,13 +3813,13 @@ Helmfile solves this with a single helmfile.yaml that declares all releases:
             securityContext:
               {{- include "common.securityContext.nonroot" . | nindent 14 }}
 
-**Governance**: when a new platform requirement is added (e.g., add environment label to all pods), update common library chart, bump to 2.2.0, and update all application charts' dependency version. One PR to the library, 30 PRs to bump the dependency version. Alternative: use a semver range ("2.x.x") in application charts so helm dependency update pulls the latest compatible version automatically.`,
+Governance: when a new platform requirement is added (e.g., add environment label to all pods), update common library chart, bump to 2.2.0, and update all application charts' dependency version. One PR to the library, 30 PRs to bump the dependency version. Alternative: use a semver range ("2.x.x") in application charts so helm dependency update pulls the latest compatible version automatically.`,
       },
       {
         question: 'What is your rollback strategy for a Helm deployment that includes a database migration?',
         answer: `The key challenge: database migrations are often not automatically reversible, and rolling back application code without rolling back the schema leaves the system in an inconsistent state.
 
-**Forward-compatible migration strategy (best approach)**:
+Forward-compatible migration strategy (best approach):
 Design migrations so that both old and new application code work against the new schema:
 1. Deploy new schema (add columns, add indexes — never rename/remove in the same deploy as code)
 2. Deploy new application code
@@ -3827,7 +3827,7 @@ Design migrations so that both old and new application code work against the new
 
 If the new code deploy fails: roll back code to old version. Old code still works against new schema (columns it doesn't know about are ignored). No database rollback needed.
 
-**Rollback sequence when migration is not forward-compatible**:
+Rollback sequence when migration is not forward-compatible:
 
 Step 1: Roll back application code
   helm rollback myapp <previous-revision>
@@ -3840,25 +3840,25 @@ Step 2: Run reverse migration
 Step 3: Verify schema matches old version expectations
   kubectl logs reverse-migration
 
-**Pre-rollback hook for automation**:
+Pre-rollback hook for automation:
   annotations:
     "helm.sh/hook": pre-rollback
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
   # Job that runs the reverse migration before manifests are rolled back
 
-**What NOT to do**:
+What NOT to do:
 - Rollback application code without considering schema state — new schema + old code crashes on startup
 - Assume helm rollback handles database state — it only reverts Kubernetes manifest history
 - Run destructive migrations (DROP COLUMN) in the same deploy as the code change that stops using the column
 
-**Interview answer**: always mention the migration strategy before the rollback sequence. Forward-compatible migrations make rollback trivial (no database rollback needed). Non-forward-compatible migrations require a pre-scripted reverse migration and a tested rollback runbook.`,
+Interview answer: always mention the migration strategy before the rollback sequence. Forward-compatible migrations make rollback trivial (no database rollback needed). Non-forward-compatible migrations require a pre-scripted reverse migration and a tested rollback runbook.`,
       },
       {
         question: 'How do you detect and respond to drift in Helm-managed clusters?',
         answer: `Drift occurs when the running cluster state diverges from the Helm-declared state. Causes: manual kubectl edit, admission webhook mutations, autoscaler changing resource fields, another controller reconciling the same resource.
 
-**Detection methods**:
+Detection methods:
 
 1. helm diff upgrade (on-demand):
    helm diff upgrade myapp ./chart -f values.yaml --namespace production
@@ -3873,7 +3873,7 @@ Step 3: Verify schema matches old version expectations
    # Returns: Synced or OutOfSync
    Argo CD and Flux continuously detect drift and optionally self-heal (auto-sync).
 
-**Response to drift**:
+Response to drift:
 
 If drift is unintentional (human kubectl edit, misfiring webhook):
   Rerun helm upgrade to restore Helm-declared state.
@@ -3884,7 +3884,7 @@ If drift is intentional (an admission webhook added a required annotation):
   Update the chart template to include the webhook-set field explicitly.
   OR configure SSA field ownership so Helm doesn't fight the webhook.
 
-**Prevention**:
+Prevention:
   In GitOps (Argo CD): enable selfHeal: true in Application spec — automatically reconciles any drift.
   In Flux: enable prune: true — removes resources not in GitOps repo.
   In push-based: schedule a CI drift check job, alert on non-zero diff, treat drift as an incident.
@@ -3893,7 +3893,7 @@ Continuous drift detection is a fundamental difference between GitOps and push-b
       },
       {
         question: 'When should you use an umbrella chart vs separate Helm releases vs Helmfile?',
-        answer: `**Umbrella chart (single parent chart with sub-charts)**:
+        answer: `Umbrella chart (single parent chart with sub-charts):
 
 Use when:
 - Local development environment: spin up the complete application stack with one command
@@ -3905,7 +3905,7 @@ Avoid when:
 - Services owned by different teams (deployment coupling creates organizational friction)
 - Services that need independent rollback (umbrella rollback reverts all services simultaneously)
 
-**Separate Helm releases (one helm release per service)**:
+Separate Helm releases (one helm release per service):
 
 Use for:
 - Production microservices with independent release cycles
@@ -3914,7 +3914,7 @@ Use for:
 
 Downside: no coordinated deployment (no dependency ordering), no single command to "deploy everything"
 
-**Helmfile (multi-release declarative management)**:
+Helmfile (multi-release declarative management):
 
 Use when:
 - You have 5+ charts that form an environment and need coordinated deployment
@@ -3923,7 +3923,7 @@ Use when:
 
 Provides coordination without coupling release cycles — each service is still an independent Helm release.
 
-**Decision framework**:
+Decision framework:
   Single developer, simple stack: umbrella chart for dev, separate releases for prod
   Small team (1-3 services): separate releases + Helmfile for coordinated deployment
   Platform team (10+ services, multiple teams): separate releases per service + Helmfile for environment management + library chart for shared standards + GitOps controller for production
@@ -3934,7 +3934,7 @@ The maturity progression: individual helm commands -> Helmfile -> Helmfile + Git
         question: 'How do you structure Helm for a multi-cluster production estate (dev, staging, prod-us, prod-eu)?',
         answer: `Multi-cluster Helm management at the platform engineering level:
 
-**Repository structure (GitOps-based)**:
+Repository structure (GitOps-based):
 
   gitops-repo/
   ├── charts/                          # internal chart sources (versioned independently)
@@ -3956,14 +3956,14 @@ The maturity progression: individual helm commands -> Helmfile -> Helmfile + Git
   │           ├── helmfile.yaml
   │           └── values/
 
-**Chart version strategy** (immutable chart versions):
+Chart version strategy (immutable chart versions):
   dev deploys chart version 1.4.0-alpha.3 (built from feature branch)
   staging promotes to 1.4.0-rc.1 (release candidate after dev validation)
   production promotes to 1.4.0 (after staging sign-off)
 
 Each environment's helmfile.yaml pins specific chart versions. Promotion = update the chart version in the next environment's helmfile.yaml and commit.
 
-**Cluster-specific values**:
+Cluster-specific values:
 Values that differ across clusters: replica counts, resource sizes, external endpoints, feature flags.
 
   values/myapp.yaml (dev):        values/myapp.yaml (prod-us):
@@ -3971,7 +3971,7 @@ Values that differ across clusters: replica counts, resource sizes, external end
   resources.requests.cpu: 50m    resources.requests.cpu: 500m
   feature.newUI: true             feature.newUI: false  # not yet in prod
 
-**With Argo CD ApplicationSet**:
+With Argo CD ApplicationSet:
   Generate one Argo CD Application per cluster automatically:
     spec:
       generators:
@@ -3987,7 +3987,7 @@ Values that differ across clusters: replica counts, resource sizes, external end
             chart: myapp
             repoURL: oci://ghcr.io/myorg/charts
 
-**Key principles**:
+Key principles:
 - One values file per cluster per service (not one mega-file)
 - Chart versions pinned per environment, promoted explicitly
 - Production clusters require PR approval for any change

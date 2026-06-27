@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -20,10 +20,10 @@ def e(g, a, b, label='', color='#475569', style='solid'):
     g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def base_graph(name, title, rankdir='LR'):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.55',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica-Bold', fontcolor='#1e293b')
     return g
 
 
@@ -134,7 +134,7 @@ def diag_signal_cheatsheet():
 # ─── linux-filesystem ─────────────────────────────────────────────────────────
 
 def diag_vfs_stack():
-    g = base_graph('vfs_stack', 'Linux VFS Stack — System Call to Block Device', rankdir='TB')
+    g = base_graph('vfs_stack', 'Linux VFS Stack — System Call to Block Device', rankdir='LR')
     n(g, 'app',      'User Application\nopen() read() write()', 'gray')
     n(g, 'syscall',  'System Call Interface\n(glibc → kernel entry)', 'navy')
     n(g, 'vfs',      'VFS (Virtual Filesystem)\nCommon dentry/inode/file\nabstraction layer', 'purple')
@@ -185,7 +185,7 @@ def diag_inode_links():
 # ─── bash-scripting ───────────────────────────────────────────────────────────
 
 def diag_bash_script_anatomy():
-    g = base_graph('bash_anatomy', 'Bash Script Anatomy — Structure & Best Practices', rankdir='TB')
+    g = base_graph('bash_anatomy', 'Bash Script Anatomy — Structure & Best Practices', rankdir='LR')
     n(g, 'shebang', '#!/usr/bin/env bash\nShebang line — picks\nright bash from PATH', 'navy')
     n(g, 'opts',    'set -euo pipefail\n-e exit on error\n-u unset var = error\n-o pipefail pipe fails', 'red')
     n(g, 'vars',    'readonly CONST="val"\nVAR="${1:-default}"\nVariable declarations', 'gold')
@@ -412,7 +412,7 @@ def diag_memory_reclaim():
 # ─── linux-lvm ────────────────────────────────────────────────────────────────
 
 def diag_lvm_layers():
-    g = base_graph('lvm_layers', 'LVM Architecture — PV → VG → LV → Filesystem', rankdir='TB')
+    g = base_graph('lvm_layers', 'LVM Architecture — PV → VG → LV → Filesystem', rankdir='LR')
     n(g, 'pv1',  'Physical Volume\n/dev/sda\n(PV)', 'gray')
     n(g, 'pv2',  'Physical Volume\n/dev/sdb\n(PV)', 'gray')
     n(g, 'pv3',  'Physical Volume\n/dev/sdc\n(PV)', 'gray')
@@ -532,7 +532,7 @@ def diag_systemd_unit_lifecycle():
 
 
 def diag_systemd_unit_file():
-    g = base_graph('sd_unit_file', 'systemd Unit File — [Unit] [Service] [Install] Sections', rankdir='TB')
+    g = base_graph('sd_unit_file', 'systemd Unit File — [Unit] [Service] [Install] Sections', rankdir='LR')
     n(g, 'unit',    '[Unit]\nDescription=\nAfter=network.target\nRequires=postgresql.service', 'navy')
     n(g, 'svc',     '[Service]\nType=simple|forking|notify\nExecStart=/usr/bin/myapp\nRestart=on-failure\nRestartSec=5s', 'purple')
     n(g, 'env',     'Environment=\nEnvironmentFile=-/etc/myapp.env\nUser=myuser Group=mygroup', 'teal')

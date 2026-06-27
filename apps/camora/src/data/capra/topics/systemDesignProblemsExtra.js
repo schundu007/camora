@@ -237,36 +237,36 @@ messages_search_index {
     keyQuestions: [
       {
         question: 'How do you deliver messages in real-time to all channel members?',
-        answer: `**Fan-out via WebSocket Gateways + Pub/Sub**:
+        answer: `Fan-out via WebSocket Gateways + Pub/Sub:
 1. User sends message -> hits any API server via load balancer
 2. API server persists to Kafka (durable) and Cassandra
 3. API server publishes to a Redis Pub/Sub channel: \`channel:{channelId}\`
 4. Each WebSocket Gateway subscribes to channels its connected users belong to
 5. Gateway pushes message to relevant WebSocket connections
 
-**Optimization for Large Channels (10K+ members)**:
+Optimization for Large Channels (10K+ members):
 - Don't fan-out to offline users; they load history on reconnect
 - Use "lazy delivery": only push to users who have the channel in view
 - Background workers compute push notifications for mobile users separately
 
-**Connection State Management**:
+Connection State Management:
 - Gateway registers \`userId -> gatewayId\` in Redis on connect
 - On disconnect, entry is removed; presence service updated
 - If a gateway crashes, its entries expire via Redis TTL (30s)`
       },
       {
         question: 'How does search work across billions of messages?',
-        answer: `**Elasticsearch-Based Search Pipeline**:
+        answer: `Elasticsearch-Based Search Pipeline:
 1. Messages flow through Kafka -> Search Indexer -> Elasticsearch
 2. Index is partitioned by workspace_id for tenant isolation
 3. Each message document includes: content (analyzed), channel_id, sender, timestamp
 
-**Query Processing**:
+Query Processing:
 - \`from:alice in:#engineering after:2024-01-01 deployment\`
 - Parsed into structured Elasticsearch query with filters + full-text match
 - Results ranked by relevance (BM25) with recency boost
 
-**Scaling Strategies**:
+Scaling Strategies:
 - Shard Elasticsearch index by workspace_id (large workspaces get dedicated shards)
 - Older messages (>1 year) moved to cold storage indices with fewer replicas
 - Query routing: recent-first search hits hot shards, falls back to cold if needed
@@ -274,19 +274,19 @@ messages_search_index {
       },
       {
         question: 'How do you handle user presence at scale?',
-        answer: `**Heartbeat + Redis EXPIRE Approach**:
+        answer: `Heartbeat + Redis EXPIRE Approach:
 - Client sends heartbeat every 30 seconds via WebSocket
 - Server sets Redis key: \`presence:{userId} = {status, lastSeen}\` with 60s TTL
 - If no heartbeat in 60s, key expires -> user is offline
 
-**Presence Fan-out (the hard part)**:
+Presence Fan-out (the hard part):
 - When user status changes, who needs to know?
 - Naive: broadcast to all workspace members (too expensive for 100K org)
 - Optimized: only notify users who have the status-changed user visible
   - Track "presence subscriptions" per client (users in sidebar, open DMs)
   - On status change, look up subscribers and push only to them
 
-**Consistency Trade-off**:
+Consistency Trade-off:
 - Presence is inherently approximate (network delays, heartbeat intervals)
 - Eventual consistency is fine: 30-60 second staleness is acceptable
 - Mobile users: even longer intervals (2-5 minutes) to save battery`
@@ -508,9 +508,9 @@ video_embeddings (ML feature store) {
     keyQuestions: [
       {
         question: 'How does the recommendation algorithm work?',
-        answer: `**Two-Phase Recommendation Pipeline**:
+        answer: `Two-Phase Recommendation Pipeline:
 
-**Phase 1: Candidate Generation (~1000 videos from millions)**
+Phase 1: Candidate Generation (~1000 videos from millions)
 - Multiple candidate sources run in parallel:
   - Collaborative filtering: users who watched X also watched Y
   - Content-based: videos similar to ones you engaged with (embedding similarity)
@@ -518,65 +518,65 @@ video_embeddings (ML feature store) {
   - Trending: globally/regionally popular recent videos
 - Each source returns ~200-500 candidates, merged and deduplicated
 
-**Phase 2: Ranking (~30 videos from 1000)**
+Phase 2: Ranking (~30 videos from 1000)
 - Neural ranking model scores each candidate
 - Features: user embedding, video embedding, context (time of day, device), cross-features
 - Prediction target: P(watch >75%) * engagement_score
 - Final re-ranking applies diversity rules (no >3 consecutive same-creator, topic mixing)
 
-**Real-time Signal Loop**:
+Real-time Signal Loop:
 - User watches/skips -> event to Kafka -> Flink updates session context
 - Next feed request uses updated context -> recommendations adapt within seconds
 - This "tight loop" is what makes TikTok's feed feel uncannily personalized`
       },
       {
         question: 'How do you handle video upload and transcoding?',
-        answer: `**Chunked Upload Pipeline**:
+        answer: `Chunked Upload Pipeline:
 1. Client splits video into 2MB chunks, uploads to pre-signed S3 URLs
 2. Upload service tracks chunks, assembles on completion
 3. Publishes \`VideoUploaded\` event to Kafka
 
-**Transcoding Pipeline**:
+Transcoding Pipeline:
 1. Transcoding worker pulls from Kafka, downloads raw video from S3
 2. FFmpeg produces multiple renditions: 360p, 720p, 1080p, plus adaptive bitrate (HLS/DASH)
 3. Generates thumbnail, extracts audio waveform, computes content hash (dedup)
 4. Uploads all artifacts to S3, publishes \`VideoTranscoded\` event
 
-**Content Moderation (parallel)**:
+Content Moderation (parallel):
 1. Visual AI scans frames for policy violations
 2. Audio analysis checks for copyrighted music
 3. OCR + NLP on text overlays
 4. If flagged, video enters human review queue; otherwise auto-approved
 
-**Reliability**:
+Reliability:
 - Each step is idempotent with at-least-once delivery
 - Dead letter queue for persistently failing transcodes
 - Typical pipeline: 30-60 seconds for short videos (< 1 min)`
       },
       {
         question: 'How do you handle the CDN and global video delivery?',
-        answer: `**Multi-Tier CDN Strategy**:
+        answer: `Multi-Tier CDN Strategy:
 
-**Tier 1 - Edge PoPs (200+ locations)**:
+Tier 1 - Edge PoPs (200+ locations):
 - Cache the top ~10K videos globally (covers 60-70% of traffic)
 - Each PoP has SSD storage for cached segments
 - Cache key: \`{videoId}:{resolution}:{segment}\`
 
-**Tier 2 - Regional Origin Shields (10-15 regions)**:
+Tier 2 - Regional Origin Shields (10-15 regions):
 - Cache long-tail content missed at edge
 - Reduces load on central origin by 90%+
 - Regional content moderation filtering applied here
 
-**Tier 3 - Central Origin (2-3 data centers)**:
+Tier 3 - Central Origin (2-3 data centers):
 - S3/GCS stores all transcoded video permanently
 - Only serves cache misses from Tier 2 (~1-2% of traffic)
 
-**Adaptive Bitrate Streaming**:
+Adaptive Bitrate Streaming:
 - HLS segments (2-4 seconds each) at multiple quality levels
 - Client-side ABR algorithm switches quality based on bandwidth
 - Pre-buffer next video while current plays (feels instant)
 
-**Optimization**:
+Optimization:
 - Predictive pre-caching: push newly viral videos to edge before they spike
 - Geo-aware routing: DNS-based or anycast to nearest healthy PoP
 - Cost optimization: serve from cheapest healthy PoP (cloud egress costs vary)`
@@ -804,7 +804,7 @@ votes {
     keyQuestions: [
       {
         question: 'How does the Hot ranking algorithm work?',
-        answer: `**Reddit's Hot Algorithm (simplified)**:
+        answer: `Reddit's Hot Algorithm (simplified):
 \`\`\`
 hot_score = log10(max(|score|, 1)) + sign(score) * (created_epoch / 45000)
 \`\`\`
@@ -812,62 +812,62 @@ hot_score = log10(max(|score|, 1)) + sign(score) * (created_epoch / 45000)
 - The time component increases linearly: newer posts get a constant score boost
 - Net effect: a post with 10 upvotes now beats a post with 100 upvotes from yesterday
 
-**Pre-computation Strategy**:
+Pre-computation Strategy:
 - Background worker recalculates hot_score every 30-60 seconds for active subreddits
 - Writes updated scores to Redis sorted set: \`ZADD feed:subreddit:hot score postId\`
 - Feed reads become simple ZREVRANGE: O(log N + K) for top K posts
 - Only recalculates for posts from the last 48 hours (older posts have effectively static rank)
 
-**The "Best" Sort for Comments** uses Wilson score interval:
+The "Best" Sort for Comments uses Wilson score interval:
 - Accounts for sample size: 5/5 upvotes ranks lower than 100/110 upvotes
 - More statistically sound than simple upvote percentage`
       },
       {
         question: 'How do you efficiently load nested comment trees?',
-        answer: `**Materialized Path with ltree**:
+        answer: `Materialized Path with ltree:
 - Each comment stores its full path: "post_123.c1.c5.c12"
 - Top-level: fetch WHERE post_id = X AND parent_id IS NULL ORDER BY score LIMIT 200
 - Expand branch: fetch WHERE path <@ 'post_123.c1' AND depth <= parent_depth + 3
 
-**Loading Strategy (progressive)**:
+Loading Strategy (progressive):
 1. First load: top 200 root comments, sorted by "best", with top 3 replies each
 2. "Load more replies": fetch next depth level for a specific branch
 3. "Continue thread": new page load for deeply nested chains (depth > 10)
 
-**"More comments" stubs**:
+"More comments" stubs:
 - When a branch has >3 replies at a level, return a stub: { type: "more", count: 47, ids: [...] }
 - Client fetches \`GET /api/morecomments?ids=c1,c2,...\` on click
 - Server returns only the requested subtree
 
-**Performance Numbers**:
+Performance Numbers:
 - Top-level fetch: ~5ms (indexed query + Redis cache)
 - Branch expansion: ~10ms (ltree index makes subtree queries fast)
 - Full 50K comment tree: never loaded at once; progressive loading keeps latency <100ms per interaction`
       },
       {
         question: 'How do you handle vote counting at scale?',
-        answer: `**Multi-Layer Vote Processing**:
+        answer: `Multi-Layer Vote Processing:
 
-**Layer 1 - Redis (immediate)**:
+Layer 1 - Redis (immediate):
 - Vote hits Redis: INCR post:{id}:up or INCR post:{id}:down
 - Also SET user_vote:{userId}:{postId} = direction (for UI state)
 - Response returns immediately with optimistic score
 
-**Layer 2 - Kafka (durable)**:
+Layer 2 - Kafka (durable):
 - Vote event published to Kafka topic for durable processing
 - Event: { userId, targetId, direction, timestamp }
 
-**Layer 3 - DB Flush (periodic)**:
+Layer 3 - DB Flush (periodic):
 - Consumer batches votes per post (every 5-10 seconds)
 - Single UPDATE posts SET upvotes = upvotes + batch_up, downvotes = downvotes + batch_down
 - Reduces write contention from 1000s of individual updates to one batch update
 
-**Idempotency**:
+Idempotency:
 - Redis SET for user_vote prevents duplicate counting
 - Changing vote: decrement old direction, increment new
 - Kafka consumer uses userId+targetId as dedup key
 
-**Consistency Trade-off**:
+Consistency Trade-off:
 - Score displayed may be 5-10 seconds stale (acceptable)
 - Vote direction (did I upvote?) is always consistent (served from Redis)
 - Final DB score is eventually consistent after flush`
@@ -1093,47 +1093,47 @@ follows {
     keyQuestions: [
       {
         question: 'How does the live video pipeline work end-to-end?',
-        answer: `**Glass-to-Glass Pipeline (target: <5 seconds)**:
+        answer: `Glass-to-Glass Pipeline (target: <5 seconds):
 
-**1. Ingest (Streamer -> Platform, ~500ms)**
+1. Ingest (Streamer -> Platform, ~500ms)
 - Streamer's OBS sends RTMP to nearest ingest PoP (DNS-based routing)
 - Ingest server receives raw H.264/AAC stream
 
-**2. Transcode (~1-2 seconds)**
+2. Transcode (~1-2 seconds)
 - GPU-accelerated transcoding at the ingest PoP
 - Produces 4 quality levels: source, 720p, 480p, 160p
 - Segments stream into 2-second HLS chunks (.ts files)
 
-**3. Distribution (~1-2 seconds)**
+3. Distribution (~1-2 seconds)
 - Segments pushed to origin storage + CDN edge nodes
 - Popular streams: proactive push to all edges
 - Long-tail streams: pull-through caching on first viewer request
 
-**4. Playback (~500ms)**
+4. Playback (~500ms)
 - Client fetches master playlist (lists available qualities)
 - ABR algorithm picks quality based on measured bandwidth
 - Client buffers 2-4 seconds of segments for smooth playback
 
-**Failure Handling**:
+Failure Handling:
 - Ingest PoP failure: streamer reconnects to next-nearest PoP (auto-reconnect in OBS)
 - Transcode failure: fallback to single-quality passthrough
 - CDN failure: failover to secondary CDN provider`
       },
       {
         question: 'How do you scale chat to 100K+ concurrent users in one room?',
-        answer: `**Tiered Chat Architecture**:
+        answer: `Tiered Chat Architecture:
 
-**Tier 1 - WebSocket Gateway (connection handling)**:
+Tier 1 - WebSocket Gateway (connection handling):
 - Each server holds ~50K WebSocket connections
 - Popular chat room spans 5-20 gateway servers
 - Gateway servers register with a Chat Coordinator: "I have 5000 users for channel X"
 
-**Tier 2 - Chat Service (message processing)**:
+Tier 2 - Chat Service (message processing):
 - Receives messages from any gateway, validates, applies moderation
 - Publishes to Redis Pub/Sub channel: \`chat:{channelId}\`
 - All gateways for that channel subscribe and broadcast to their connections
 
-**Scaling Beyond 50K Messages/sec**:
+Scaling Beyond 50K Messages/sec:
 - Problem: even Redis Pub/Sub has limits (~500K msg/sec per channel)
 - Solution: message batching -- accumulate messages for 100ms, send as batch
 - Further: server-side sampling for extreme rooms (>100K users):
@@ -1141,7 +1141,7 @@ follows {
   - Sample regular messages at 1/N rate to stay under bandwidth budget
   - Each client sees a different random sample (feels full-speed)
 
-**Moderation Pipeline** (inline, <50ms):
+Moderation Pipeline (inline, <50ms):
 - Blocked words filter (Aho-Corasick automaton)
 - Slow mode: rate limit per user per channel
 - Follower-only / subscriber-only mode
@@ -1149,25 +1149,25 @@ follows {
       },
       {
         question: 'How do you handle the viewer count skew?',
-        answer: `**The Long-Tail Problem**:
+        answer: `The Long-Tail Problem:
 - Top 100 streams: 80% of all viewers
 - Bottom 90% of streams: <10 viewers each
 
-**Resource Allocation Strategy**:
+Resource Allocation Strategy:
 
-**For Popular Streams (>1000 viewers)**:
+For Popular Streams (>1000 viewers):
 - Dedicated transcoding GPU slots
 - Proactive CDN edge caching (push model)
 - Chat room gets dedicated Redis Pub/Sub channels
 - Multiple gateway servers assigned
 
-**For Long-Tail Streams (<100 viewers)**:
+For Long-Tail Streams (<100 viewers):
 - Shared transcoding pool (may only produce 2 quality levels)
 - CDN pull-through caching (first viewer triggers cache fill)
 - Chat handled by shared multi-room gateway servers
 - Single Redis channel suffices
 
-**Dynamic Scaling**:
+Dynamic Scaling:
 - Monitor viewer count changes in real-time
 - "Raid" events (streamer sends all viewers to another): triggers pre-warming
   - Alert CDN: warm cache for target stream at edges where raid viewers are
@@ -1400,80 +1400,80 @@ email_search_index {
     keyQuestions: [
       {
         question: 'How does spam filtering work at scale?',
-        answer: `**Multi-Stage Spam Pipeline (inline, <2 seconds)**:
+        answer: `Multi-Stage Spam Pipeline (inline, <2 seconds):
 
-**Stage 1 - Connection-Level (SMTP)**:
+Stage 1 - Connection-Level (SMTP):
 - IP reputation check against known spam sources
 - SPF record validation (is sender authorized for this domain?)
 - DKIM signature verification (was the email tampered with?)
 - DMARC policy check (what does the domain owner want us to do?)
 
-**Stage 2 - Content Analysis**:
+Stage 2 - Content Analysis:
 - Heuristic rules engine (SpamAssassin-like): checks headers, body patterns
 - ML classifier trained on billions of user-reported spam/not-spam decisions
 - URL reputation: check links against known phishing databases
 - Attachment sandboxing: execute suspicious attachments in a VM, observe behavior
 
-**Stage 3 - Aggregate Signals**:
+Stage 3 - Aggregate Signals:
 - If 1000 users received the same email body hash in the last hour -> likely spam
 - Sender reputation score: based on historical spam reports from all recipients
 - New sender penalty: first email from unknown sender gets extra scrutiny
 
-**Scoring**: Each stage contributes to a composite spam_score (0.0 to 1.0).
+Scoring: Each stage contributes to a composite spam_score (0.0 to 1.0).
 - < 0.3: deliver to Inbox
 - 0.3-0.7: deliver to Spam folder
 - > 0.7: reject at SMTP level (saves storage)
 
-**Feedback Loop**: Users marking "Not Spam" or "Report Spam" feeds back into ML training.`
+Feedback Loop: Users marking "Not Spam" or "Report Spam" feeds back into ML training.`
       },
       {
         question: 'How do you handle email search across years of history?',
-        answer: `**Per-User Elasticsearch Sharding**:
+        answer: `Per-User Elasticsearch Sharding:
 
-**Index Strategy**:
+Index Strategy:
 - Each user's emails are indexed in a dedicated Elasticsearch shard group
 - Routing key = user_id ensures all of a user's documents land on the same shard
 - Typical user has 50K-500K emails -> single shard handles this easily
 
-**What's Indexed**:
+What's Indexed:
 - From, To, Cc, Subject: keyword fields (exact match + prefix)
 - Body text: analyzed with standard tokenizer + language detection
 - Labels, has_attachment, size_range: keyword filters
 - Date: date range queries
 
-**Query Examples**:
+Query Examples:
 - \`from:alice@company.com has:attachment after:2024/01/01 quarterly report\`
 - Parsed into: bool query with term filters (from, has_attachment, date range) + match query (body text)
 
-**Performance**:
+Performance:
 - Query scoped to single user's shard -> very fast (<100ms for most queries)
 - Heavy users (1M+ emails): may need 2-3 shards, but Elasticsearch handles this transparently
 
-**Indexing Pipeline**:
+Indexing Pipeline:
 - New email -> Kafka -> Search Indexer -> Elasticsearch
 - Index lag: 1-5 seconds (search may not find email sent 1 second ago)
 - Deleted/archived emails: soft delete in index, periodic cleanup`
       },
       {
         question: 'How do you ensure zero email loss?',
-        answer: `**Durability at Every Stage**:
+        answer: `Durability at Every Stage:
 
-**SMTP Reception**:
+SMTP Reception:
 - Email is only ACK'd to sending server after it's durably written to Kafka
 - If server crashes before ACK, sending server retries (SMTP guarantees this)
 - Kafka topic has replication factor 3, min.insync.replicas = 2
 
-**Processing Pipeline**:
+Processing Pipeline:
 - Each consumer checkpoints progress in Kafka (consumer offsets)
 - If consumer crashes mid-processing, it replays from last checkpoint
 - Idempotent writes to Bigtable (same email processed twice = same result)
 
-**Storage**:
+Storage:
 - Bigtable: data replicated across 3+ data centers (synchronous replication)
 - Blob storage (GCS): 99.999999999% (11 nines) durability
 - Cross-region replication: emails are readable from any region within minutes
 
-**Defense in Depth**:
+Defense in Depth:
 - WAL (write-ahead log) at every persistent component
 - Daily consistency checks: compare Kafka offsets vs Bigtable row counts
 - Backup Kafka cluster in different region for disaster recovery
@@ -1710,55 +1710,55 @@ blobs {
     keyQuestions: [
       {
         question: 'How does file sync work across devices?',
-        answer: `**Change-Based Sync Protocol**:
+        answer: `Change-Based Sync Protocol:
 
-**Server Side**:
+Server Side:
 - Every file mutation generates a change_log entry with a monotonically increasing change_id
 - Change log is per-user (each user's "view" of the filesystem)
 - Shared file edits generate entries in all viewers' change logs
 
-**Client Side**:
+Client Side:
 - Client stores \`last_synced_change_id\` locally
 - On sync: \`GET /api/changes?startChangeId=12345\`
 - Server returns all changes since that ID
 - Client applies changes to local state, updates checkpoint
 
-**Real-Time Notification**:
+Real-Time Notification:
 - Client maintains long-poll connection to sync service
 - When a change occurs, sync service notifies affected clients immediately
 - Client fetches the actual changes via the changes API
 
-**Conflict Resolution**:
+Conflict Resolution:
 - Same file edited on two offline devices -> conflict
 - Strategy: keep both versions, rename conflicting copy: "report (conflict from Device B).docx"
 - For Google Docs (collaborative): OT/CRDT handles concurrent edits in real-time, no conflicts possible
 
-**Bandwidth Optimization**:
+Bandwidth Optimization:
 - Only sync metadata for unmodified files (name, permissions)
 - For modified files, use rolling checksum to identify changed blocks
 - Only upload/download changed 4MB blocks`
       },
       {
         question: 'How does content-addressable storage and deduplication work?',
-        answer: `**Content-Addressable Storage (CAS)**:
+        answer: `Content-Addressable Storage (CAS):
 - File is split into 4MB chunks
 - Each chunk hashed with SHA-256: \`chunk_hash = SHA256(chunk_bytes)\`
 - Chunk stored at path derived from hash: \`/ab/cd/abcdef1234...\`
 - File metadata stores ordered list of chunk hashes
 
-**Deduplication Levels**:
+Deduplication Levels:
 
-**Cross-user dedup**: If Alice and Bob both upload the same 1GB video, only one copy stored
+Cross-user dedup: If Alice and Bob both upload the same 1GB video, only one copy stored
 - On upload: compute chunk hashes, check if hash exists in blob store
 - If exists: increment ref_count, skip upload (instant "upload")
 - Savings: ~30% for consumer storage, ~60% for enterprise (shared documents)
 
-**Cross-version dedup**: Editing page 50 of a 200-page PDF
+Cross-version dedup: Editing page 50 of a 200-page PDF
 - Only the chunk containing page 50 changes
 - New version references 49 unchanged chunks + 1 new chunk
 - Version storage cost: ~1 chunk instead of entire file
 
-**Garbage Collection**:
+Garbage Collection:
 - Blob ref_count tracks how many file versions reference each chunk
 - When ref_count reaches 0: chunk eligible for deletion
 - GC runs offline, marks and sweeps unreferenced chunks weekly
@@ -1766,28 +1766,28 @@ blobs {
       },
       {
         question: 'How do you handle permissions for shared folders?',
-        answer: `**Hierarchical Permission Model**:
+        answer: `Hierarchical Permission Model:
 
-**Permission Types**: Owner > Editor > Commenter > Viewer
-**Inheritance Rule**: Child inherits parent's permissions unless explicitly overridden
+Permission Types: Owner > Editor > Commenter > Viewer
+Inheritance Rule: Child inherits parent's permissions unless explicitly overridden
 
-**Storage**:
+Storage:
 - Explicit permissions stored in \`permissions\` table
 - Inherited permissions computed at read time (or cached)
 
-**Permission Check Algorithm**:
+Permission Check Algorithm:
 1. Check explicit permissions on the file
 2. If none found, walk up the folder tree checking each parent
 3. First explicit permission found = effective permission
 4. Root folder with no permission = no access
 
-**Caching Strategy** (permissions are read-heavy):
+Caching Strategy (permissions are read-heavy):
 - Build a materialized permission map per file: \`{userId -> role}\`
 - Cache in Redis with TTL = 5 minutes
 - On permission change: publish invalidation event to Pub/Sub
 - All nodes receiving event clear cached permissions for affected subtree
 
-**Shared Folder Challenges**:
+Shared Folder Challenges:
 - Shared folder appears in multiple users' "My Drive" (as a virtual link)
 - Moving a shared folder: only the owner can move it
 - Removing yourself from shared folder: removes the link, not the folder
@@ -2027,29 +2027,29 @@ inventory_levels {
     keyQuestions: [
       {
         question: 'How do you handle multi-tenancy and tenant isolation?',
-        answer: `**Pod-Based Multi-Tenancy**:
+        answer: `Pod-Based Multi-Tenancy:
 
-**What is a Pod?**
+What is a Pod?
 - Self-contained infrastructure unit: app servers + DB shard + Redis + queues
 - Each pod serves ~10K stores
 - Pods are independently scalable and deployable
 
-**Data Isolation**:
+Data Isolation:
 - Every table includes \`store_id\` as partition key
 - Database connection middleware injects store_id filter on every query
 - Cross-store queries are impossible by design (no JOINs across shards)
 
-**Resource Isolation**:
+Resource Isolation:
 - Rate limiting per store: API calls/sec, webhook deliveries/sec
 - CPU and memory limits per request: prevent one store's heavy query from starving others
 - Separate checkout infrastructure: not affected by catalog browsing spikes
 
-**Large Store Handling (Shopify Plus)**:
+Large Store Handling (Shopify Plus):
 - Stores exceeding 100K orders/day get a dedicated pod
 - Custom scaling rules: auto-scale pod based on that store's traffic patterns
 - Dedicated CDN cache allocation for storefront assets
 
-**Routing Layer**:
+Routing Layer:
 1. Request arrives at edge CDN with Host header (store domain)
 2. Edge looks up store_id from domain mapping (cached, <1ms)
 3. Routes to correct pod's load balancer
@@ -2057,52 +2057,52 @@ inventory_levels {
       },
       {
         question: 'How does checkout handle inventory under high concurrency?',
-        answer: `**Distributed Inventory Reservation Protocol**:
+        answer: `Distributed Inventory Reservation Protocol:
 
-**Problem**: 100 people click "Buy" for the last item simultaneously. Only one should succeed.
+Problem: 100 people click "Buy" for the last item simultaneously. Only one should succeed.
 
-**Two-Phase Approach**:
+Two-Phase Approach:
 
-**Phase 1 - Reservation (at "Add to Cart" / "Begin Checkout")**:
+Phase 1 - Reservation (at "Add to Cart" / "Begin Checkout"):
 - \`DECR inventory_reserved:{variantId}:{locationId}\` in Redis
 - If result >= 0: reservation successful, set TTL = 10 minutes
 - If result < 0: item unavailable, INCR back immediately
 - Redis is single-threaded: DECR is atomic, no race conditions
 
-**Phase 2 - Confirmation (at "Place Order")**:
+Phase 2 - Confirmation (at "Place Order"):
 - Convert reservation to order: write to DB, clear Redis reservation
 - If checkout abandoned (TTL expires): Redis key expires, reservation released
 
-**Why Not Just Lock the DB Row?**:
+Why Not Just Lock the DB Row?:
 - Row-level locks under high concurrency = contention and timeouts
 - Redis DECR is O(1) and lock-free: handles 100K ops/sec easily
 - DB write happens only for confirmed orders (much lower volume)
 
-**Edge Cases**:
+Edge Cases:
 - Redis failure: fall back to DB-level SELECT FOR UPDATE (slower but correct)
 - Split payment: reservation held until all payment steps complete
 - Multi-item order: all-or-nothing reservation (reserve all or release all)`
       },
       {
         question: 'How do you handle Black Friday traffic spikes?',
-        answer: `**Pre-Event Preparation (weeks before)**:
+        answer: `Pre-Event Preparation (weeks before):
 - Identify high-traffic stores (based on last year + merchant forecasts)
 - Pre-scale their pods: additional app servers, read replicas, expanded cache
 - Pre-warm CDN: crawl storefronts, cache all product pages and images
 - Load test checkout pipeline at 10x expected peak
 
-**During Event - Auto-Scaling**:
+During Event - Auto-Scaling:
 - Monitor per-pod metrics: request rate, latency, error rate, DB connections
 - Auto-scale app server tier horizontally (pods add servers in 60 seconds)
 - Read replicas scale independently from write primary
 
-**Traffic Management**:
+Traffic Management:
 - CDN absorbs 90%+ of storefront traffic (cached pages)
 - Checkout queue: if checkout rate exceeds capacity, queue users with progress indicator
 - "Checkout throttling": limit concurrent checkouts per store to prevent DB overload
 - Graceful degradation: disable non-critical features (analytics, recommendations) under extreme load
 
-**Post-Event**:
+Post-Event:
 - Scale down gradually (2-hour cool-off period)
 - Analyze bottlenecks for next year's capacity planning
 - Per-store reports: conversion rate, peak concurrent users, cart abandonment`
@@ -2317,7 +2317,7 @@ user_sale_attempts {
     keyQuestions: [
       {
         question: 'How do you prevent overselling with millions of concurrent requests?',
-        answer: `**Redis Atomic DECR Pattern**:
+        answer: `Redis Atomic DECR Pattern:
 
 \`\`\`
 # Before sale: SET sale:123:remaining 1000
@@ -2333,75 +2333,75 @@ elif remaining < 0:
     return "sold out"
 \`\`\`
 
-**Why This Works**:
+Why This Works:
 - Redis DECR is atomic and single-threaded: no race conditions possible
 - O(1) per operation, handles 1M+ ops/sec on a single Redis instance
 - No locks, no transactions, no contention
 - The counter can briefly go negative (two requests DECR simultaneously), but the INCR correction ensures it settles at 0
 
-**Why Not a Database?**:
+Why Not a Database?:
 - SELECT FOR UPDATE on a single row = serial execution = ~1000 ops/sec max
 - Distributed locks (Redlock) add latency and complexity
 - Redis DECR is 1000x faster and simpler
 
-**Restock on Expiration**:
+Restock on Expiration:
 - Reservation has 5-minute TTL
 - Background worker scans expired reservations: INCR sale:123:remaining
 - This returns inventory for users who didn't complete payment`
       },
       {
         question: 'How does the waiting room and queue work?',
-        answer: `**Pre-Sale Waiting Room**:
+        answer: `Pre-Sale Waiting Room:
 1. Before sale time: CDN serves a static page with a countdown timer
 2. Page auto-refreshes or uses WebSocket for "sale started" signal
 3. No requests hit origin servers during countdown (pure CDN)
 
-**Queue Entry (at sale start)**:
+Queue Entry (at sale start):
 1. Client sends request to queue service
 2. Queue service assigns position using Redis INCR: \`INCR sale:123:queue_position\`
 3. Returns position + estimated wait time
 4. Client polls or receives WebSocket update when it's their turn
 
-**Admission Control**:
+Admission Control:
 - Process queue in batches: admit 1000 users per second to the purchase endpoint
 - Rate shaped by: inventory remaining * (avg payment time)
 - If inventory = 500 and avg payment = 30 seconds: admit at 500/30 = ~17/sec
 
-**Fairness Guarantees**:
+Fairness Guarantees:
 - Position determined by arrival time (INCR is ordered)
 - Each user gets exactly one position (deduplicated by userId)
 - Queue position is not transferable
 
-**Skip the Queue (VIP / Loyalty)**:
+Skip the Queue (VIP / Loyalty):
 - Priority queue: VIP users get positions in a separate, faster lane
 - Implementation: two Redis counters, drain VIP queue first until empty`
       },
       {
         question: 'How do you detect and prevent bots?',
-        answer: `**Multi-Layer Bot Defense**:
+        answer: `Multi-Layer Bot Defense:
 
-**Layer 1 - CAPTCHA (pre-sale)**:
+Layer 1 - CAPTCHA (pre-sale):
 - Require CAPTCHA solve to enter the waiting room
 - Use proof-of-work challenge that takes 2-3 seconds (prevents automated solving)
 - CAPTCHA token valid for 10 minutes, single-use
 
-**Layer 2 - Rate Limiting**:
+Layer 2 - Rate Limiting:
 - Per-IP: max 5 requests/sec to purchase endpoint
 - Per-user: max 1 purchase attempt per sale
 - Per device fingerprint: max 3 accounts per device
 
-**Layer 3 - Behavioral Analysis**:
+Layer 3 - Behavioral Analysis:
 - Time-to-click after sale starts: <100ms is suspicious (human reaction time ~200ms)
 - Request pattern: identical timing intervals = bot
 - Browser fingerprint: headless Chrome, Selenium markers
 - Mouse movement/touch events: bots don't generate realistic interaction patterns
 
-**Layer 4 - Account Reputation**:
+Layer 4 - Account Reputation:
 - New account (created <24h before sale): flagged, extra verification
 - Account with history of abandoned reservations: throttled
 - Account linked to known bot IPs: blocked
 
-**Enforcement**:
+Enforcement:
 - Suspicious requests get a fake "queued" response (honeypot)
 - Confirmed bots: cancel their reservations, restock inventory
 - Post-sale audit: cancel orders from detected bot accounts, refund and restock`
@@ -2634,9 +2634,9 @@ linked_accounts {
     keyQuestions: [
       {
         question: 'How does double-entry bookkeeping work in this system?',
-        answer: `**The Golden Rule**: Every transaction creates exactly two ledger entries that sum to zero.
+        answer: `The Golden Rule: Every transaction creates exactly two ledger entries that sum to zero.
 
-**P2P Transfer ($50 from Alice to Bob)**:
+P2P Transfer ($50 from Alice to Bob):
 \`\`\`
 BEGIN TRANSACTION;
 -- Debit Alice's wallet
@@ -2651,12 +2651,12 @@ UPDATE wallets SET balance = balance + 50.00 WHERE id = 'bob';
 COMMIT;
 \`\`\`
 
-**Why Double-Entry?**:
+Why Double-Entry?:
 - Audit trail: every balance change is traceable to a specific transaction
 - Self-checking: sum of all debits must equal sum of all credits (invariant)
 - Debugging: if totals don't balance, you know something is wrong
 
-**Reconciliation** (daily background job):
+Reconciliation (daily background job):
 - Sum all credit entries across all wallets
 - Sum all debit entries across all wallets
 - If credits != debits -> alert, investigate, fix
@@ -2664,45 +2664,45 @@ COMMIT;
       },
       {
         question: 'How do you handle bank operations that take days?',
-        answer: `**Saga Pattern for ACH Top-Up**:
+        answer: `Saga Pattern for ACH Top-Up:
 
-**Step 1 - Initiate** (immediate):
+Step 1 - Initiate (immediate):
 - Create transaction record: status = "pending"
 - Add pending_balance to user's wallet (visible but not spendable)
 - Submit ACH request to banking partner API
 
-**Step 2 - Wait** (1-3 business days):
+Step 2 - Wait (1-3 business days):
 - Banking partner processes the ACH transfer
 - Webhook notification when transfer completes or fails
 
-**Step 3a - Success**:
+Step 3a - Success:
 - Move amount from pending_balance to available balance
 - Create ledger entries: debit "external_funds" account, credit user wallet
 - Update transaction status to "completed"
 - Send user notification
 
-**Step 3b - Failure** (compensating transaction):
+Step 3b - Failure (compensating transaction):
 - Reverse pending_balance addition
 - Update transaction status to "failed"
 - Create ledger entries that cancel the pending entries
 - Notify user of failure
 
-**Withdrawal Saga** is similar but reversed:
+Withdrawal Saga is similar but reversed:
 - Immediately debit wallet balance
 - If ACH fails: compensating credit restores the balance
 - "Returned" withdrawals (e.g., invalid bank account) handled same way
 
-**Key Principle**: The saga maintains consistency across the async boundary. At every point, either the forward transaction or the compensating transaction has run.`
+Key Principle: The saga maintains consistency across the async boundary. At every point, either the forward transaction or the compensating transaction has run.`
       },
       {
         question: 'How do you prevent duplicate transactions?',
-        answer: `**Idempotency Key Pattern**:
+        answer: `Idempotency Key Pattern:
 
-**Client Side**:
+Client Side:
 - Before every API call, client generates a unique idempotency_key (UUID)
 - If request times out or fails, client retries with THE SAME key
 
-**Server Side**:
+Server Side:
 \`\`\`python
 def process_transfer(request):
     key = request.idempotency_key
@@ -2724,12 +2724,12 @@ def process_transfer(request):
     return result
 \`\`\`
 
-**Why This Matters**:
+Why This Matters:
 - Network timeout: client didn't receive response but server processed it
 - Without idempotency: retry = double charge (user loses $50 twice)
 - With idempotency: retry returns original result (correct behavior)
 
-**Database-Level Protection** (belt and suspenders):
+Database-Level Protection (belt and suspenders):
 - Unique constraint on (from_wallet_id, idempotency_key)
 - Even if Redis fails, DB prevents duplicate transactions
 - Transaction isolation level: SERIALIZABLE for critical paths`
@@ -2953,7 +2953,7 @@ order_events {
     keyQuestions: [
       {
         question: 'How does the price-time priority matching algorithm work?',
-        answer: `**Order Book Data Structure**:
+        answer: `Order Book Data Structure:
 \`\`\`
 Bids (buy orders):           Asks (sell orders):
 Price  | Orders (FIFO)       Price  | Orders (FIFO)
@@ -2963,7 +2963,7 @@ $150.45| [B3:300]           $150.60| [A2:100, A3:150]
 $150.40| [B4:200, B5:100]   $150.75| [A4:500]
 \`\`\`
 
-**Matching a new Sell Limit Order: Sell 250 @ $150.45**:
+Matching a new Sell Limit Order: Sell 250 @ $150.45:
 1. Best bid = $150.50 >= limit price $150.45? YES -> match
 2. Fill B1 (100 shares @ $150.50) -> Trade! Remaining: 150
 3. Fill B2 (50 shares @ $150.50) -> Trade! Remaining: 100
@@ -2971,66 +2971,66 @@ $150.40| [B4:200, B5:100]   $150.75| [A4:500]
 5. Fill B3 partially (100 of 300 shares @ $150.45) -> Trade! Remaining: 0
 6. Order fully filled. B3 has 200 shares remaining on the book.
 
-**Time Complexity**:
+Time Complexity:
 - Match: O(1) to find best price (sorted tree), O(k) where k = orders matched
 - Insert: O(log P) where P = number of price levels
 - Cancel: O(1) with order ID -> pointer lookup (hash map)
 
-**Market Order**: Same algorithm but no price limit -> fills at whatever price is available (dangerous in thin markets)`
+Market Order: Same algorithm but no price limit -> fills at whatever price is available (dangerous in thin markets)`
       },
       {
         question: 'How do you achieve microsecond-level latency?',
-        answer: `**Hardware Optimizations**:
-- **Kernel bypass (DPDK)**: network packets go directly to user-space, skipping the OS kernel (~5us saved)
-- **RDMA**: remote direct memory access for inter-server communication without CPU involvement
-- **NVMe SSDs**: WAL writes complete in <10us (vs ~1ms for regular SSDs)
-- **CPU pinning**: matching engine thread pinned to a specific core, no context switches
-- **NUMA-aware memory**: allocate memory on the same NUMA node as the pinned CPU core
+        answer: `Hardware Optimizations:
+- Kernel bypass (DPDK): network packets go directly to user-space, skipping the OS kernel (~5us saved)
+- RDMA: remote direct memory access for inter-server communication without CPU involvement
+- NVMe SSDs: WAL writes complete in <10us (vs ~1ms for regular SSDs)
+- CPU pinning: matching engine thread pinned to a specific core, no context switches
+- NUMA-aware memory: allocate memory on the same NUMA node as the pinned CPU core
 
-**Software Optimizations**:
-- **Single-threaded**: no locks, no synchronization overhead
-- **Pre-allocated memory**: no heap allocation during order processing (object pools)
-- **Lock-free data structures**: for the rare shared state (e.g., sequence counters)
-- **Batched I/O**: accumulate market data updates, send in batches every 10us
-- **JIT compilation**: hot paths compiled to native code (if using JVM)
+Software Optimizations:
+- Single-threaded: no locks, no synchronization overhead
+- Pre-allocated memory: no heap allocation during order processing (object pools)
+- Lock-free data structures: for the rare shared state (e.g., sequence counters)
+- Batched I/O: accumulate market data updates, send in batches every 10us
+- JIT compilation: hot paths compiled to native code (if using JVM)
 
-**What NOT to do**:
+What NOT to do:
 - No garbage collection pauses (use C/C++/Rust, or tune JVM GC carefully)
 - No syscalls on the hot path (pre-open all file descriptors, pre-allocate all buffers)
 - No logging on the hot path (buffer log entries, flush asynchronously)
 - No dynamic memory allocation (everything pre-allocated at startup)
 
-**Typical Latency Budget**: Gateway receive: 1us + deserialize: 1us + match: 2-5us + serialize: 1us + send: 1us = ~7-10us total`
+Typical Latency Budget: Gateway receive: 1us + deserialize: 1us + match: 2-5us + serialize: 1us + send: 1us = ~7-10us total`
       },
       {
         question: 'How do you handle fault tolerance without adding latency?',
-        answer: `**Replicated State Machine Approach**:
+        answer: `Replicated State Machine Approach:
 
-**Primary-Secondary Architecture**:
+Primary-Secondary Architecture:
 - Primary matching engine processes all orders
 - 2 secondary engines receive the same order stream (via Raft or custom replication)
 - Secondaries maintain identical order book state but do NOT send responses
 
-**Replication Protocol**:
+Replication Protocol:
 1. Sequencer assigns sequence number to incoming order
 2. Order written to shared log (replicated across 3 nodes)
 3. Primary processes order, generates trades
 4. Response sent after order is durably logged (not after replication completes)
 5. Secondaries process the same order from the log, reach identical state
 
-**Failover (< 1 second)**:
+Failover (< 1 second):
 1. Primary failure detected via heartbeat (100ms timeout)
 2. Secondary with latest sequence number becomes new primary
 3. Replays any orders that primary acknowledged but secondary hasn't processed
 4. Deterministic replay: same orders + same sequence = same order book state
 5. Gateway redirects traffic to new primary
 
-**Why Deterministic Replay Works**:
+Why Deterministic Replay Works:
 - Matching is a pure function of: order book state + incoming order
 - No randomness, no external dependencies, no timestamps in matching logic
 - Given the same sequence of orders, any engine produces identical results
 
-**WAL for Crash Recovery**:
+WAL for Crash Recovery:
 - Every order event written to local NVMe WAL before processing
 - On restart: replay WAL from last checkpoint to rebuild order book
 - Checkpoint: serialize full order book state every 60 seconds`
@@ -3201,9 +3201,9 @@ circuit:{upstream}:last_failure = timestamp`,
     keyQuestions: [
       {
         question: 'How does distributed rate limiting work?',
-        answer: `**Sliding Window Counter in Redis**:
+        answer: `Sliding Window Counter in Redis:
 
-**Algorithm** (per consumer, per endpoint):
+Algorithm (per consumer, per endpoint):
 \`\`\`
 # Window = 1 second, limit = 100 requests/sec
 key = "rl:{consumerId}:{endpoint}:{current_second}"
@@ -3220,42 +3220,42 @@ else:
     Headers: X-RateLimit-Remaining: {100 - count}
 \`\`\`
 
-**Why Sliding Window?** (vs fixed window):
+Why Sliding Window? (vs fixed window):
 - Fixed window: consumer sends 100 requests at 0:59, 100 more at 1:01 = 200 in 2 seconds
 - Sliding window: uses weighted average of current and previous window counts
 - \`effective_count = prev_count * (1 - elapsed/window) + current_count\`
 
-**Distributed Consistency**:
+Distributed Consistency:
 - All gateway instances hit the same Redis key -> globally consistent count
 - Redis INCR is atomic -> no race conditions
 - Trade-off: adds ~0.5ms per request for Redis round-trip
 - Optimization: local counter + periodic sync (less accurate but faster)
 
-**Multiple Tiers**:
+Multiple Tiers:
 - Per-consumer: 100 req/sec (business plan)
 - Per-endpoint: 10K req/sec (protect backend)
 - Global: 1M req/sec (infrastructure protection)`
       },
       {
         question: 'How does the circuit breaker pattern work?',
-        answer: `**Three States**:
+        answer: `Three States:
 
-**Closed** (normal operation):
+Closed (normal operation):
 - Requests forwarded to upstream service
 - Track failure rate in sliding window
 - If failure rate > threshold (e.g., 50% of last 20 requests): -> OPEN
 
-**Open** (service is down, fail fast):
+Open (service is down, fail fast):
 - All requests immediately rejected with 503
 - Do NOT forward to failing service (prevent cascading failure)
 - After timeout (e.g., 30 seconds): -> HALF-OPEN
 
-**Half-Open** (testing recovery):
+Half-Open (testing recovery):
 - Allow 1-3 probe requests through to upstream
 - If probes succeed: -> CLOSED (service recovered)
 - If probes fail: -> OPEN (reset timeout)
 
-**Shared State (distributed)**:
+Shared State (distributed):
 \`\`\`
 Redis:
   circuit:{upstream}:state = "open"
@@ -3264,26 +3264,26 @@ Redis:
   circuit:{upstream}:opened_at = timestamp
 \`\`\`
 
-**Why Shared?**:
+Why Shared?:
 - 10 gateway instances: each sees 1/10th of traffic
 - If only local state: each instance independently determines service health
 - Shared state: collective view, faster detection, consistent behavior
 
-**Fallback Options** when circuit is open:
+Fallback Options when circuit is open:
 - Return cached response (if GET request and cache available)
 - Return degraded response (partial data from alternative source)
 - Return error with retry-after header`
       },
       {
         question: 'How do you handle configuration changes without downtime?',
-        answer: `**Control Plane Push Model**:
+        answer: `Control Plane Push Model:
 
-**Architecture**:
+Architecture:
 \`\`\`
 Admin API -> Config DB (etcd) -> Control Plane -> gRPC Stream -> Gateway Instances
 \`\`\`
 
-**Change Flow**:
+Change Flow:
 1. Admin updates route via API: POST /admin/routes
 2. Config written to etcd with version number
 3. Control plane detects change (etcd watch)
@@ -3291,18 +3291,18 @@ Admin API -> Config DB (etcd) -> Control Plane -> gRPC Stream -> Gateway Instanc
 5. Each gateway atomically swaps its in-memory route table
 6. New requests use new routes; in-flight requests complete on old routes
 
-**Atomic Swap**:
+Atomic Swap:
 - Gateway maintains two route tables: active and pending
 - New config builds the pending table
 - Single pointer swap makes pending the active table
 - Old table garbage collected after in-flight requests drain
 
-**Rollback Safety**:
+Rollback Safety:
 - Every config change is versioned
 - If error rate spikes after change: auto-rollback to previous version
 - Canary deployment: apply change to 1 gateway first, monitor, then roll out
 
-**Zero-Downtime Guarantee**:
+Zero-Downtime Guarantee:
 - No process restart needed
 - No connection drops (existing connections unaffected)
 - Change propagation: <1 second to all gateway instances
@@ -3473,43 +3473,43 @@ cluster_config {
     keyQuestions: [
       {
         question: 'How does consistent hashing with virtual nodes work?',
-        answer: `**Hash Ring Concept**:
+        answer: `Hash Ring Concept:
 - Hash space is a ring from 0 to 2^32
 - Each physical node placed at multiple points (virtual nodes) on the ring
 - A key is hashed, then walks clockwise to find its owning node
 
-**Example**: 3 physical nodes, 4 virtual nodes each = 12 points on ring
+Example: 3 physical nodes, 4 virtual nodes each = 12 points on ring
 \`\`\`
 Ring: ... [N1-v2] ... [N3-v1] ... [N2-v3] ... [N1-v4] ...
 Key "user:123" hashes to position X
 Walk clockwise from X -> first virtual node found = owner
 \`\`\`
 
-**Why Virtual Nodes?**:
+Why Virtual Nodes?:
 - 3 physical nodes with 1 point each: wildly uneven distribution (one node might get 60% of keys)
 - 3 nodes with 200 virtual nodes each: nearly perfect distribution (each gets ~33% ± 2%)
 - More virtual nodes = better balance, but more memory for the ring data structure
 
-**Node Addition (adding Node 4)**:
+Node Addition (adding Node 4):
 - Place Node 4's virtual nodes on the ring
 - Keys between each new virtual node and its predecessor belong to Node 4
 - Only ~1/4 of keys move (those in the ranges now owned by Node 4)
 - Other 3/4 of keys: completely unaffected
 
-**Node Removal**:
+Node Removal:
 - Remove Node 3's virtual nodes from ring
 - Keys that belonged to Node 3 now fall to the next clockwise node
 - Only Node 3's keys are redistributed (~1/3 of total keys)`
       },
       {
         question: 'How do you handle the thundering herd problem?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 - Popular key (e.g., celebrity profile) cached with TTL
 - Key expires at time T
 - 10,000 requests arrive in the next 100ms, all get cache miss
 - All 10,000 hit the database simultaneously -> database overloaded
 
-**Solution 1: Cache Lease (best approach)**:
+Solution 1: Cache Lease (best approach):
 \`\`\`
 value = cache.GET(key)
 if value is MISS:
@@ -3524,12 +3524,12 @@ if value is MISS:
 - Only ONE request reaches the database
 - Others wait briefly and read from cache
 
-**Solution 2: Stale-While-Revalidate**:
+Solution 2: Stale-While-Revalidate:
 - When TTL expires, serve stale value while ONE request refreshes in background
 - No requests ever hit the database stampede
 - Trade-off: briefly serves stale data
 
-**Solution 3: Probabilistic Early Expiration**:
+Solution 3: Probabilistic Early Expiration:
 - Each request has a small probability of triggering refresh before TTL
 - \`should_refresh = random() < (time_remaining / total_ttl) * factor\`
 - Popular keys: refreshed early by one of many requesters
@@ -3537,24 +3537,24 @@ if value is MISS:
       },
       {
         question: 'How do you choose between LRU, LFU, and TTL eviction?',
-        answer: `**LRU (Least Recently Used)**:
+        answer: `LRU (Least Recently Used):
 - Evict the key that hasn't been accessed for the longest time
 - Good for: temporal locality (recently accessed = likely accessed again)
 - Implementation: doubly linked list + hash map, O(1) for all operations
 - Weakness: one-time scan of many keys pollutes the cache (scan resistance)
 
-**LFU (Least Frequently Used)**:
+LFU (Least Frequently Used):
 - Evict the key with the fewest accesses
 - Good for: skewed popularity (some keys are consistently hot)
 - Implementation: frequency count + min-heap or frequency-indexed linked lists
 - Weakness: keys with historically high count but no longer popular stay cached (stale popularity)
 
-**TTL (Time-To-Live)**:
+TTL (Time-To-Live):
 - Keys automatically expire after a set duration
 - Good for: data with known freshness requirements
 - Often combined with LRU/LFU for when memory is full before TTL expires
 
-**Redis's Approach (recommended)**:
+Redis's Approach (recommended):
 - allkeys-lru: LRU across all keys (most common choice)
 - volatile-lfu: LFU only among keys with TTL set
 - Sampling-based approximation: don't track access order for ALL keys
@@ -3562,7 +3562,7 @@ if value is MISS:
   - Much less memory overhead than maintaining a full LRU list
   - Surprisingly close to perfect LRU in practice
 
-**Recommendation by Workload**:
+Recommendation by Workload:
 - Web sessions: TTL (known expiration)
 - Database query cache: LRU (temporal locality)
 - Content recommendation: LFU (popular items stay cached)
@@ -3737,62 +3737,62 @@ request_logs {
     keyQuestions: [
       {
         question: 'How does request routing work to direct users to the optimal PoP?',
-        answer: `**Option 1: Anycast (preferred for CDNs)**:
+        answer: `Option 1: Anycast (preferred for CDNs):
 - All edge PoPs advertise the same IP prefix via BGP
 - Internet routing naturally directs packets to the nearest PoP
 - Pros: automatic, no DNS TTL issues, handles PoP failure (BGP withdraws route)
 - Cons: routing is based on network topology (hops), not actual latency
 
-**Option 2: GeoDNS**:
+Option 2: GeoDNS:
 - DNS server maps client IP to geographic location
 - Returns IP of the nearest PoP based on geo-database
 - Pros: can incorporate real-time latency measurements
 - Cons: DNS caching means clients may use stale PoP assignment
 
-**Option 3: Latency-Based (hybrid)**:
+Option 3: Latency-Based (hybrid):
 - Client-side JavaScript measures latency to multiple PoPs
 - Subsequent requests directed to the lowest-latency PoP
 - Used by sophisticated CDNs for fine-tuning after initial anycast routing
 
-**Failover**:
+Failover:
 - Health checker monitors each PoP (synthetic requests every 10s)
 - Unhealthy PoP: BGP withdraws its route announcement (anycast) or DNS stops returning its IP (GeoDNS)
 - Traffic shifts to next-nearest healthy PoP within seconds (anycast) or DNS TTL (GeoDNS)
 
-**Real-World**: Most CDNs use anycast for initial routing + real-time performance data for optimization`
+Real-World: Most CDNs use anycast for initial routing + real-time performance data for optimization`
       },
       {
         question: 'How does the origin shield tier work?',
-        answer: `**The Problem Without Shield**:
+        answer: `The Problem Without Shield:
 - 200 edge PoPs, each with independent caches
 - Popular content cached at all edges (great hit rate)
 - Long-tail content: cache miss at multiple edges simultaneously
 - 50 edges miss on same URL at same time -> 50 requests to origin
 
-**Origin Shield Solution**:
+Origin Shield Solution:
 - 10-15 regional shield PoPs placed between edges and origin
 - Edge cache miss -> goes to regional shield (NOT to origin)
 - Shield cache miss -> goes to origin (only 1 request per region)
 
-**Request Flow**:
+Request Flow:
 \`\`\`
 User -> Edge PoP (SFO) -> [HIT] -> serve
 User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [HIT] -> serve, cache at edge
 User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [MISS] -> Origin -> serve, cache at shield + edge
 \`\`\`yaml
 
-**Shield Assignment**:
+Shield Assignment:
 - Each edge PoP is assigned to one shield PoP (based on network proximity)
 - US-West edges -> US-West shield
 - EU edges -> EU shield
 - This ensures request coalescing: all US-West edges funnel misses through one shield
 
-**Origin Load Reduction**:
+Origin Load Reduction:
 - Without shield: origin sees O(PoPs) requests per unique URL
 - With shield: origin sees O(regions) requests per unique URL
 - 200 PoPs, 10 regions -> 20x reduction in origin load
 
-**Request Coalescing at Shield**:
+Request Coalescing at Shield:
 - Multiple edges miss on same URL simultaneously
 - Shield receives multiple requests for same URL
 - Only the FIRST request goes to origin
@@ -3800,32 +3800,32 @@ User -> Edge PoP (SFO) -> [MISS] -> Shield (US-West) -> [MISS] -> Origin -> serv
       },
       {
         question: 'How do you handle cache invalidation across 200+ PoPs?',
-        answer: `**Push-Based Invalidation Fanout**:
+        answer: `Push-Based Invalidation Fanout:
 
-**Invalidation Request Flow**:
+Invalidation Request Flow:
 1. Customer calls API: \`POST /invalidations { paths: ["/images/*"] }\`
 2. Control plane writes invalidation to central store
 3. Control plane pushes to shield PoPs (10 nodes, parallel)
 4. Each shield pushes to its assigned edge PoPs (20 nodes each, parallel)
 5. Total propagation: 2 hops * ~1s each = ~2-3 seconds globally
 
-**At Each PoP**:
+At Each PoP:
 - Receive invalidation pattern (e.g., "/images/*")
 - Walk cache index, mark matching entries as invalidated
 - Marked entries: serve stale with background revalidation (optional) or reject immediately
 - Do NOT delete from disk (expensive): let normal eviction reclaim space
 
-**Invalidation Types**:
-- **Path-based**: invalidate all URLs matching a glob pattern
-- **Tag-based**: objects tagged at creation, invalidate by tag (e.g., "product:123")
-- **Purge all**: nuclear option, clears entire cache for a distribution
+Invalidation Types:
+- Path-based: invalidate all URLs matching a glob pattern
+- Tag-based: objects tagged at creation, invalidate by tag (e.g., "product:123")
+- Purge all: nuclear option, clears entire cache for a distribution
 
-**Consistency Guarantees**:
+Consistency Guarantees:
 - "Best effort within 5 seconds": not instant, but very fast
 - During propagation window: some PoPs may serve stale content (acceptable for most use cases)
 - For strong consistency needs: use Cache-Control: no-cache (forces origin validation on every request)
 
-**Monitoring**:
+Monitoring:
 - Track invalidation progress: how many PoPs have processed each invalidation
 - Alert if propagation takes >10 seconds (indicates network or PoP health issues)
 - Invalidation rate limiting: prevent customers from invalidating too frequently (cache thrashing)`
@@ -4002,24 +4002,24 @@ data_chunks {
     keyQuestions: [
       {
         question: 'How does erasure coding achieve 11-nines durability?',
-        answer: `**Reed-Solomon Erasure Coding (6+3 example)**:
+        answer: `Reed-Solomon Erasure Coding (6+3 example):
 - Object split into 6 data fragments
 - 3 parity fragments computed (mathematical redundancy)
 - 9 fragments placed on 9 different storage nodes (different racks/zones)
 
-**Durability Math**:
+Durability Math:
 - Object is lost only if 4+ of 9 fragments are simultaneously unavailable
 - P(single fragment loss) = 0.01 (1% per year, industry average for disk failure)
 - P(4+ fragments lost simultaneously) ≈ C(9,4) * 0.01^4 * 0.99^5 ≈ 1.25 × 10^-8
 - With repair (fragments reconstructed within hours of failure): effectively < 10^-11
 
-**Comparison with 3-Way Replication**:
+Comparison with 3-Way Replication:
 - Replication: 3 copies, data lost if all 3 fail -> P ≈ 10^-6 (6 nines)
 - Erasure coding 6+3: 9 fragments, data lost if 4+ fail -> P ≈ 10^-11 (11 nines)
 - Storage overhead: replication = 3x, erasure coding = 1.5x (9/6)
 - Erasure coding is both MORE durable AND MORE space-efficient
 
-**Repair Process**:
+Repair Process:
 - Background process monitors fragment health (heartbeats, checksums)
 - When a fragment is lost (node dies): reconstruct from any 6 of remaining 8 fragments
 - Place reconstructed fragment on a new healthy node
@@ -4027,47 +4027,47 @@ data_chunks {
       },
       {
         question: 'How do you achieve strong read-after-write consistency?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 - PUT completes at time T
 - GET at time T+1ms must return the new object (not stale or "not found")
 - In a distributed system with replication, this is hard
 
-**Solution: Paxos-Based Metadata Writes**:
+Solution: Paxos-Based Metadata Writes:
 
-**Write Path (PUT)**:
+Write Path (PUT):
 1. Client sends object to front-end server
 2. Front-end writes data fragments to storage nodes (erasure coded)
 3. Front-end proposes metadata write to Paxos group for that key's shard
 4. Paxos group achieves consensus (majority acknowledges)
 5. PUT response sent to client only after Paxos commits
 
-**Read Path (GET)**:
+Read Path (GET):
 1. Client sends GET to front-end server
 2. Front-end reads metadata from Paxos group (reads from leader or quorum)
 3. Metadata includes data locations; front-end fetches data fragments
 4. Returns object to client
 
-**Why This Guarantees Consistency**:
+Why This Guarantees Consistency:
 - PUT only succeeds after Paxos consensus (metadata is committed)
 - GET reads from the same Paxos group (sees all committed writes)
 - No stale reads possible: every read sees every completed write
 
-**Performance Impact**:
+Performance Impact:
 - Write latency slightly higher (Paxos round-trip: ~5-10ms additional)
 - Read latency: can read from Paxos leader (no quorum needed for reads if leader has latest state)
 - Trade-off is worth it: strong consistency eliminates an entire class of application bugs`
       },
       {
         question: 'How does multipart upload work for large objects?',
-        answer: `**Protocol** (for objects >100MB, required >5GB):
+        answer: `Protocol (for objects >100MB, required >5GB):
 
-**Phase 1 - Initiate**:
+Phase 1 - Initiate:
 \`\`\`
 POST /bucket/large-file.zip?uploads
 Response: { uploadId: "abc-123" }
 \`\`\`
 
-**Phase 2 - Upload Parts** (parallel):
+Phase 2 - Upload Parts (parallel):
 \`\`\`
 PUT /bucket/large-file.zip?partNumber=1&uploadId=abc-123  [body: 100MB]
 PUT /bucket/large-file.zip?partNumber=2&uploadId=abc-123  [body: 100MB]
@@ -4076,25 +4076,25 @@ PUT /bucket/large-file.zip?partNumber=50&uploadId=abc-123 [body: 50MB]
 // Parts can be uploaded in any order, in parallel, from different clients
 \`\`\`
 
-**Phase 3 - Complete**:
+Phase 3 - Complete:
 \`\`\`
 POST /bucket/large-file.zip?uploadId=abc-123
 Body: { parts: [{partNumber: 1, ETag: "..."}, {partNumber: 2, ETag: "..."}, ...] }
 // Server assembles parts into final object
 \`\`\`
 
-**Why Multipart?**:
+Why Multipart?:
 - Resumability: if a part fails, retry just that part (not the whole 5TB file)
 - Parallelism: upload multiple parts simultaneously (saturate network bandwidth)
 - Memory efficiency: server handles one part at a time, doesn't buffer entire file
 
-**Server-Side Handling**:
+Server-Side Handling:
 - Each part stored independently (like a temporary small object)
 - On complete: create final object metadata pointing to all parts in order
 - Parts are already erasure-coded individually -> final object doesn't need re-encoding
 - Abort: if upload not completed within 7 days, parts garbage collected
 
-**Integrity**:
+Integrity:
 - Each part has its own ETag (MD5 hash)
 - Final object ETag = MD5(concatenation of part ETags) + "-" + partCount
 - Client can verify each part and final object independently`
@@ -4268,7 +4268,7 @@ rollups {
     keyQuestions: [
       {
         question: 'How does Gorilla compression achieve 10-20x compression?',
-        answer: `**Timestamp Compression (delta-of-delta)**:
+        answer: `Timestamp Compression (delta-of-delta):
 - Timestamps arrive at regular intervals (e.g., every 10 seconds)
 - First timestamp: stored as full 64-bit value
 - Subsequent: store delta from previous (e.g., 10, 10, 10, 10...)
@@ -4276,28 +4276,28 @@ rollups {
 - Most delta-of-deltas are 0: encode as single bit!
 - Result: ~1-2 bits per timestamp (vs 64 bits uncompressed) = 32-64x compression
 
-**Value Compression (XOR encoding)**:
+Value Compression (XOR encoding):
 - Consecutive readings of same metric are usually similar
 - Example: CPU values 87.5, 87.3, 87.6, 87.4...
 - XOR of consecutive float64 values: most bits are identical (XOR result has few 1-bits)
 - Encode only the position and length of differing bits
 - Result: ~5-10 bits per value (vs 64 bits uncompressed) = 6-12x compression
 
-**Combined Effect**:
+Combined Effect:
 - Raw data point: 8 (timestamp) + 8 (value) = 16 bytes
 - Compressed: ~0.5 (timestamp) + ~1.0 (value) = ~1.5 bytes per point
 - Compression ratio: ~10x for typical metrics data
 
-**Why This Works for Time Series**:
+Why This Works for Time Series:
 - Regular timestamps -> delta-of-delta is near-zero
 - Slowly changing values -> XOR bits are mostly identical
 - Other data types (random values, strings) compress much worse`
       },
       {
         question: 'How does the write path work for high throughput?',
-        answer: `**LSM-Tree Write Path**:
+        answer: `LSM-Tree Write Path:
 
-**Step 1 - WAL + Memory Buffer**:
+Step 1 - WAL + Memory Buffer:
 \`\`\`
 Incoming data point -> Append to WAL (sequential disk write, ~1us)
                     -> Insert into in-memory buffer (sorted by series + time)
@@ -4306,33 +4306,33 @@ Incoming data point -> Append to WAL (sequential disk write, ~1us)
 - Memory buffer: typically 256MB-1GB, holds minutes of data
 - No disk seeks on write path -> can sustain millions of points/sec
 
-**Step 2 - Flush to Disk (every few minutes or when buffer is full)**:
+Step 2 - Flush to Disk (every few minutes or when buffer is full):
 - Serialize buffer into an immutable SST (Sorted String Table) file
 - Each SST file covers one time shard and contains columnar, compressed data
 - New empty buffer starts accepting writes (double-buffering)
 
-**Step 3 - Background Compaction**:
+Step 3 - Background Compaction:
 - Many small SST files accumulate over time
 - Compaction merges them into fewer, larger files
 - Removes any out-of-order data by re-sorting
 - Applies Gorilla compression to the merged data
 
-**Why This is Fast**:
+Why This is Fast:
 - Writes are sequential (append to WAL, insert to sorted buffer): no random I/O
 - No index updates on write (unlike B-tree): just append
 - Compression happens during flush (batch operation), not per-write
 - Single node can sustain 10M+ points/sec with SSD storage
 
-**Batch Ingestion Optimization**:
+Batch Ingestion Optimization:
 - Clients send batches of 100-1000 points per request
 - Server parses batch, inserts all points into buffer in one operation
 - Amortizes network and parsing overhead across many points`
       },
       {
         question: 'How does downsampling and retention work?',
-        answer: `**Time-Based Partitioning Enables Simple Retention**:
+        answer: `Time-Based Partitioning Enables Simple Retention:
 
-**Partition Strategy**:
+Partition Strategy:
 \`\`\`
 data/
   shard_2024-06-01/  -- all data for June 1
@@ -4341,30 +4341,30 @@ data/
   shard_2024-06-30/
 \`\`\`
 
-**Retention Policy**: "Keep raw data for 30 days"
+Retention Policy: "Keep raw data for 30 days"
 - Implementation: \`rm -rf shard_older_than_30_days\`
 - O(1) operation regardless of data volume!
 - No expensive DELETE queries, no vacuum/compaction needed
 
-**Downsampling Pipeline**:
+Downsampling Pipeline:
 1. Raw data: every 10 seconds (full resolution)
 2. After 7 days: downsample to 1-minute aggregates (min, max, avg, count)
 3. After 30 days: downsample to 1-hour aggregates
 4. After 1 year: downsample to 1-day aggregates
 
-**Implementation**:
+Implementation:
 - Background worker reads raw shard for day N-7
 - Computes 1-minute rollups: GROUP BY series, floor(timestamp, 1m)
 - Writes rollups to separate rollup table/shard
 - Raw shard can then be deleted (or moved to cold storage)
 
-**Query Routing**:
+Query Routing:
 - Query for last 1 hour: read from raw data (full resolution)
 - Query for last 7 days: read from 1-minute rollups
 - Query for last year: read from 1-hour rollups
 - Query engine automatically picks the appropriate resolution
 
-**Storage Savings**:
+Storage Savings:
 - 1 year of raw data at 10s interval: 3.15M points per series
 - 1-minute rollups: 525K points per series (6x reduction)
 - 1-hour rollups: 8.7K points per series (360x reduction)
@@ -4533,7 +4533,7 @@ raft_state {
     keyQuestions: [
       {
         question: 'Why is a simple Redis lock insufficient and what are fencing tokens?',
-        answer: `**The Stale Lock Holder Problem**:
+        answer: `The Stale Lock Holder Problem:
 \`\`\`
 Time 0: Client A acquires lock (TTL=30s)
 Time 0: Client A starts long GC pause (or network issue)
@@ -4543,12 +4543,12 @@ Time 33: Client A wakes up, STILL THINKS it holds the lock
 Time 33: Client A writes to shared resource -> DATA CORRUPTION
 \`\`\`
 
-**Why TTL Alone Doesn't Work**:
+Why TTL Alone Doesn't Work:
 - Client A has no way to know its lock expired while it was paused
 - From A's perspective, it acquired the lock and never released it
 - This is a fundamental issue with any TTL-based lock without fencing
 
-**Fencing Token Solution**:
+Fencing Token Solution:
 \`\`\`
 Client A acquires lock -> fencing_token = 33
 Client B acquires lock (after A's expires) -> fencing_token = 34
@@ -4558,7 +4558,7 @@ Storage sees: last_accepted_token = 34, received = 33
 33 < 34 -> REJECTED (stale lock holder detected)
 \`\`\`
 
-**Why This Works**:
+Why This Works:
 - Fencing tokens are monotonically increasing (guaranteed by Raft log index)
 - The shared resource (database, file system) checks the token on every write
 - A stale holder always has a lower token than the current holder
@@ -4566,19 +4566,19 @@ Storage sees: last_accepted_token = 34, received = 33
       },
       {
         question: 'How does session-based locking work?',
-        answer: `**Session Lifecycle**:
+        answer: `Session Lifecycle:
 
-**Creation**:
+Creation:
 - Client connects to lock service, receives sessionId
 - Session has a TTL (e.g., 30 seconds)
 - Client must send heartbeats every TTL/3 (10 seconds) to keep session alive
 
-**Lock Acquisition**:
+Lock Acquisition:
 - Lock is associated with a session, not just a client ID
 - If session expires -> all locks held by that session are automatically released
 - This handles the "client crashes while holding lock" problem
 
-**Session Expiration**:
+Session Expiration:
 \`\`\`
 Client A: session TTL=30s, heartbeat every 10s
 Time 0:  Heartbeat received, session renewed until T+30
@@ -4589,13 +4589,13 @@ Time 40: All of Client A's locks released
 Time 40: Waiters notified, next in queue acquires lock
 \`\`\`
 
-**ZooKeeper Ephemeral Nodes**:
+ZooKeeper Ephemeral Nodes:
 - Lock = ephemeral znode: /locks/my-resource/lock-0000000042
 - Ephemeral = automatically deleted when the creating session ends
 - Sequential = monotonically increasing suffix (natural fencing token!)
 - Lock holder = client that created the znode with the LOWEST sequence number
 
-**Fair Locking with Sequential Nodes**:
+Fair Locking with Sequential Nodes:
 1. Client creates sequential ephemeral node: /locks/res/lock-0000000042
 2. Client reads all children of /locks/res/
 3. If my node is the lowest: I hold the lock
@@ -4604,13 +4604,13 @@ Time 40: Waiters notified, next in queue acquires lock
       },
       {
         question: 'How does the Raft consensus protocol ensure correctness?',
-        answer: `**Raft for Distributed Locks**:
+        answer: `Raft for Distributed Locks:
 
-**Cluster Setup**: 5 nodes (tolerates 2 failures)
+Cluster Setup: 5 nodes (tolerates 2 failures)
 - 1 Leader: handles all writes (lock acquire/release)
 - 4 Followers: replicate leader's log
 
-**Lock Acquisition Flow**:
+Lock Acquisition Flow:
 1. Client sends ACQUIRE to leader
 2. Leader appends to log: { term: 5, index: 142, cmd: ACQUIRE("my-lock", clientA) }
 3. Leader replicates to followers (parallel RPCs)
@@ -4618,24 +4618,24 @@ Time 40: Waiters notified, next in queue acquires lock
 5. Leader applies to state machine: lock acquired, fencing_token = 142
 6. Leader responds to client: { fencingToken: 142, expiresAt: ... }
 
-**Safety Guarantee**:
+Safety Guarantee:
 - Log entry 142 is committed -> it will never be undone
 - Even if leader crashes after commit, new leader has the entry (majority has it)
 - Fencing token = log index 142: guaranteed unique and increasing
 
-**Leader Failure Handling**:
+Leader Failure Handling:
 1. Leader crashes after committing but before responding to client
 2. Client times out, retries with same idempotency key
 3. New leader elected (has the committed entry)
 4. Retry detected: returns original result (idempotent)
 
-**Network Partition**:
+Network Partition:
 - Minority partition: cannot form majority, cannot acquire locks (safe)
 - Majority partition: continues operating normally
 - When partition heals: minority nodes catch up from majority
 - NO split-brain: lock can only be acquired through majority consensus
 
-**Read Optimization (ReadIndex)**:
+Read Optimization (ReadIndex):
 - Client wants to check lock status (read-only)
 - Leader confirms it's still leader (one round of heartbeats)
 - Then reads directly from state machine (no log replication needed)
@@ -4821,11 +4821,11 @@ task_dependencies {
     keyQuestions: [
       {
         question: 'How do you guarantee exactly-once task execution?',
-        answer: `**State Machine Approach**:
+        answer: `State Machine Approach:
 
-**Task Run States**: pending -> claimed -> running -> succeeded/failed
+Task Run States: pending -> claimed -> running -> succeeded/failed
 
-**Claim Protocol** (prevents duplicate dispatch):
+Claim Protocol (prevents duplicate dispatch):
 \`\`\`sql
 -- Atomic claim: only one scheduler can claim a task run
 UPDATE task_runs
@@ -4835,19 +4835,19 @@ WHERE id = 'run-123' AND status = 'pending'
 -- If 1 row affected: we own it (dispatch to worker)
 \`\`\`
 
-**Worker Lease Protocol** (handles worker failure):
+Worker Lease Protocol (handles worker failure):
 - Worker receives task, starts execution
 - Worker sends heartbeat every 10 seconds: "I'm still working on run-123"
 - Server extends lease: run-123 expires at now + 30 seconds
 - If no heartbeat in 30 seconds: task run marked as "timed_out", re-dispatched
 
-**Idempotent Execution** (belt and suspenders):
+Idempotent Execution (belt and suspenders):
 - Each task run has a unique run_id
 - Worker includes run_id in all side effects (database writes, API calls)
 - Side-effect targets check for duplicate run_id: if seen, skip
 - Even if a task accidentally runs twice, it produces the same result
 
-**End-to-End Flow**:
+End-to-End Flow:
 1. Scheduler fires task -> inserts task_run (status: pending)
 2. Scheduler claims task_run (atomic UPDATE)
 3. Dispatcher sends to Kafka with run_id
@@ -4857,17 +4857,17 @@ WHERE id = 'run-123' AND status = 'pending'
       },
       {
         question: 'How does the hierarchical time wheel work?',
-        answer: `**Basic Time Wheel**:
+        answer: `Basic Time Wheel:
 - Circular array of N buckets, each representing a time slot
 - Current time pointer advances every tick (e.g., every 100ms)
 - Tasks in the current bucket are fired
 - Insert: compute bucket = (fire_time / tick_size) % N -> O(1)
 - Fire: process all tasks in current bucket -> O(tasks in bucket)
 
-**Problem**: for large time ranges, need huge array
+Problem: for large time ranges, need huge array
 - 1-second granularity, 1-year range = 31M buckets (wasteful)
 
-**Hierarchical Time Wheel** (like a clock with hours/minutes/seconds):
+Hierarchical Time Wheel (like a clock with hours/minutes/seconds):
 \`\`\`
 Level 0 (seconds):  60 buckets, 1-second tick
 Level 1 (minutes):  60 buckets, 1-minute tick
@@ -4875,21 +4875,21 @@ Level 2 (hours):    24 buckets, 1-hour tick
 Level 3 (days):     365 buckets, 1-day tick
 \`\`\`
 
-**Insert Task "fire in 3 hours 25 minutes 10 seconds"**:
+Insert Task "fire in 3 hours 25 minutes 10 seconds":
 - Place in Level 2, bucket (current_hour + 3) % 24
 
-**When Level 2 bucket fires (3 hours later)**:
+When Level 2 bucket fires (3 hours later):
 - "Cascade down": move tasks to Level 1 (minute wheel)
 - Task goes to Level 1, bucket 25
 
-**When Level 1 bucket fires (25 minutes later)**:
+When Level 1 bucket fires (25 minutes later):
 - Cascade to Level 0 (second wheel)
 - Task goes to Level 0, bucket 10
 
-**When Level 0 bucket fires (10 seconds later)**:
+When Level 0 bucket fires (10 seconds later):
 - Task is dispatched to worker
 
-**Complexity**:
+Complexity:
 - Insert: O(1) (compute which level and bucket, append)
 - Fire: O(tasks in bucket) (no scanning)
 - Total buckets: 60 + 60 + 24 + 365 = 509 (vs 31M for flat array)
@@ -4897,9 +4897,9 @@ Level 3 (days):     365 buckets, 1-day tick
       },
       {
         question: 'How do you handle task dependencies?',
-        answer: `**DAG-Based Dependency Resolution**:
+        answer: `DAG-Based Dependency Resolution:
 
-**Modeling Dependencies**:
+Modeling Dependencies:
 \`\`\`
 Task A (extract data) -> Task B (transform) -> Task C (load)
                      \\-> Task D (validate) -/
@@ -4907,13 +4907,13 @@ Task A (extract data) -> Task B (transform) -> Task C (load)
 - This is a Directed Acyclic Graph (DAG)
 - Task C runs only after both B and D complete
 
-**Execution Protocol**:
+Execution Protocol:
 1. When a task completes, check all tasks that depend on it
 2. For each dependent task: are ALL its dependencies now complete?
 3. If yes: task is now "ready" -> add to dispatch queue
 4. If no: wait for remaining dependencies
 
-**Implementation**:
+Implementation:
 \`\`\`sql
 -- On task B completion:
 SELECT t.id FROM tasks t
@@ -4928,13 +4928,13 @@ WHERE td.depends_on_task_id = 'B'
 -- Returns tasks whose ALL dependencies have succeeded
 \`\`\`yaml
 
-**Failure Propagation**:
+Failure Propagation:
 - If Task B fails: what happens to C and D?
 - Option 1: "Fail fast" -- mark all downstream tasks as failed
 - Option 2: "Best effort" -- only run tasks whose dependencies all succeeded, skip others
 - Option 3: "Retry" -- retry B per its retry policy, only fail downstream after max retries
 
-**Cycle Detection**:
+Cycle Detection:
 - On task creation, validate that adding the dependency doesn't create a cycle
 - Topological sort of the DAG: if sort fails (cycle detected), reject the task definition
 - This is checked at task creation time, not execution time`
@@ -5131,9 +5131,9 @@ secrets {
     keyQuestions: [
       {
         question: 'How do you execute a multi-stage pipeline with dependencies?',
-        answer: `**Pipeline YAML -> DAG -> Execution**:
+        answer: `Pipeline YAML -> DAG -> Execution:
 
-**Example Pipeline**:
+Example Pipeline:
 \`\`\`yaml
 stages:
   install: { image: node:18, commands: [npm ci] }
@@ -5143,13 +5143,13 @@ stages:
   deploy:  { image: aws-cli, commands: [./deploy.sh], needs: [build] }
 \`\`\`
 
-**DAG Construction**:
+DAG Construction:
 \`\`\`
 install -> lint  ─┐
        \\-> test ─┤-> build -> deploy
 \`\`\`
 
-**Execution Algorithm**:
+Execution Algorithm:
 1. Parse YAML, build dependency graph
 2. Find all stages with no unmet dependencies -> "ready" set: {install}
 3. Dispatch ready stages to workers (parallel)
@@ -5158,12 +5158,12 @@ install -> lint  ─┐
    - If a dependent's count reaches 0: add to ready set
 5. Repeat until all stages complete or one fails
 
-**Failure Handling**:
+Failure Handling:
 - If \`test\` fails: \`build\` and \`deploy\` are marked "skipped" (unrunnable)
 - If \`lint\` fails but \`test\` succeeds: \`build\` still skipped (needs BOTH)
 - Optional "allow_failure" flag: stage failure doesn't block dependents
 
-**Optimization - Workspace Sharing**:
+Optimization - Workspace Sharing:
 - \`install\` produces node_modules -> stages \`lint\`, \`test\`, \`build\` need it
 - Workspace (filesystem snapshot) is captured after \`install\`
 - Dependent stages start with that workspace (avoid re-installing)
@@ -5171,7 +5171,7 @@ install -> lint  ─┐
       },
       {
         question: 'How does dependency caching work?',
-        answer: `**Cache Key Strategy**:
+        answer: `Cache Key Strategy:
 \`\`\`yaml
 # In pipeline config:
 cache:
@@ -5179,30 +5179,30 @@ cache:
   paths: [node_modules/]
 \`\`\`
 
-**Cache Flow**:
+Cache Flow:
 
-**On Stage Start**:
+On Stage Start:
 1. Compute cache key: hash of lock file content -> "node-modules-a1b2c3d4"
 2. Check S3: does cache object exist at \`caches/repo-123/node-modules-a1b2c3d4.tar.zst\`?
 3. If HIT: download and extract (10 seconds vs 2 minutes for npm install)
 4. If MISS: proceed without cache
 
-**On Stage Success**:
+On Stage Success:
 1. If cache key didn't exist (was a miss): archive cached paths
 2. Upload to S3: \`caches/repo-123/node-modules-a1b2c3d4.tar.zst\` (zstd compressed)
 3. Future runs with same lock file -> instant cache hit
 
-**Cache Invalidation**:
+Cache Invalidation:
 - Automatic: when package-lock.json changes, hash changes -> new cache key
 - Manual: API endpoint to clear caches for a repository
 - TTL: caches expire after 7 days of no access (S3 lifecycle policy)
 
-**Multi-Layer Caching**:
+Multi-Layer Caching:
 - L1: Worker local disk (fastest, survives between runs on same worker)
 - L2: S3 (shared across all workers, survives worker replacement)
 - Cache hit rate: 80-90% for established projects (lock files change rarely)
 
-**Docker Layer Cache**:
+Docker Layer Cache:
 - Workers keep Docker layer cache warm
 - Custom base image (node:18 + common packages) pre-pulled on all workers
 - Dockerfile cache: each layer is cached by its instruction hash
@@ -5210,14 +5210,14 @@ cache:
       },
       {
         question: 'How do you handle secrets securely?',
-        answer: `**Secret Lifecycle**:
+        answer: `Secret Lifecycle:
 
-**Storage**:
+Storage:
 - Secrets stored in HashiCorp Vault (or similar KMS)
 - Encrypted at rest with AES-256, key managed by HSM
 - Access controlled per repository: repo X can only read its own secrets
 
-**Injection at Runtime**:
+Injection at Runtime:
 1. Stage is about to start on worker
 2. Worker requests secrets from Vault: "give me secrets for repo-123"
 3. Vault authenticates worker (mutual TLS + IAM role)
@@ -5225,20 +5225,20 @@ cache:
 5. Worker injects as environment variables inside the container
 6. Container process reads them like normal env vars
 
-**Log Scrubbing** (critical):
+Log Scrubbing (critical):
 - Build output is scanned for secret values before logging
-- Pattern matching: if any log line contains a secret value, replace with "***"
+- Pattern matching: if any log line contains a secret value, replace with "*"
 - Also scrub: base64-encoded secrets, URL-encoded secrets, partial matches
 - Defense in depth: scrubbing happens at both container sidecar and log ingestion
 
-**What Secrets NEVER Touch**:
+What Secrets NEVER Touch:
 - Never written to disk inside the container (tmpfs only)
 - Never included in Docker image layers
 - Never passed as command-line arguments (visible in /proc)
 - Never included in artifacts or cache archives
 - Never visible in pipeline YAML (stored separately, referenced by name)
 
-**Rotation**:
+Rotation:
 - Secrets can be rotated without changing pipeline config
 - Old secret value remains valid for a grace period (ongoing runs)
 - Vault audit log tracks every secret access (who, when, which pipeline run)`
@@ -5428,16 +5428,16 @@ freebusy_blocks {
     keyQuestions: [
       {
         question: 'How do you handle recurring events efficiently?',
-        answer: `**RRULE-Based Storage** (RFC 5545):
+        answer: `RRULE-Based Storage (RFC 5545):
 
-**Storage**: One row per recurring series
+Storage: One row per recurring series
 \`\`\`
 Event: "Team Standup"
 start_time: 2024-01-01 09:00 America/New_York
 recurrence_rule: "FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20241231"
 \`\`\`
 
-**On-The-Fly Expansion** (when rendering a calendar view):
+On-The-Fly Expansion (when rendering a calendar view):
 \`\`\`python
 def get_events(calendar_id, time_min, time_max):
     # 1. Get non-recurring events in range
@@ -5463,21 +5463,21 @@ def get_events(calendar_id, time_min, time_max):
     return simple + expanded
 \`\`\`
 
-**Performance**:
+Performance:
 - RRULE expansion is pure computation (no I/O): ~1ms for 1 year of weekly events
 - Only expand within the requested time range (not all time)
 - Exception instances are few (most recurring instances are unmodified)`
       },
       {
         question: 'How does the "Find a Time" scheduling feature work?',
-        answer: `**Algorithm: Interval Gap Finding**:
+        answer: `Algorithm: Interval Gap Finding:
 
-**Input**:
+Input:
 - Participants: [Alice, Bob, Charlie, Room A]
 - Duration: 30 minutes
 - Range: next 2 weeks, working hours only (9am-5pm in each person's timezone)
 
-**Step 1 - Gather Busy Intervals**:
+Step 1 - Gather Busy Intervals:
 \`\`\`
 Alice:   [9:00-10:00, 11:00-12:00, 14:00-15:30]  (day 1, converted to UTC)
 Bob:     [9:30-10:30, 13:00-14:00]
@@ -5485,44 +5485,44 @@ Charlie: [10:00-11:30, 15:00-16:00]
 Room A:  [9:00-10:00, 14:00-16:00]
 \`\`\`
 
-**Step 2 - Merge All Busy Intervals** (union):
+Step 2 - Merge All Busy Intervals (union):
 \`\`\`
 Merged busy: [9:00-10:30, 10:00-12:00, 13:00-16:00]
 Simplified:  [9:00-12:00, 13:00-16:00]
 \`\`\`
 
-**Step 3 - Find Gaps >= Duration**:
+Step 3 - Find Gaps >= Duration:
 \`\`\`
 Free slots: [12:00-13:00 (60min), 16:00-17:00 (60min)]
 Both fit a 30-minute meeting!
 \`\`\`
 
-**Step 4 - Rank Suggestions**:
+Step 4 - Rank Suggestions:
 - Prefer earlier slots (less likely to conflict with new events)
 - Prefer slots during "preferred" hours (10am-12pm, 2pm-4pm)
 - Penalize slots that require timezone inconvenience (2am for someone)
 - Score each slot, return top 3-5 suggestions
 
-**Implementation Optimization**:
+Implementation Optimization:
 - Read from materialized free/busy blocks (not raw events)
 - Index: (user_id, start_time) enables efficient range scan
 - For N participants, 2-week range: ~100-500 busy blocks to merge
 - Merge algorithm: O(N log N) sort + linear scan = <10ms
 
-**Working Hours Per Timezone**:
+Working Hours Per Timezone:
 - Each participant has a timezone and working hours preference
 - Convert working hours to UTC ranges for each day in the range
 - Non-working hours are treated as "busy" in the merge step`
       },
       {
         question: 'How do you handle time zones correctly?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 - Alice creates "Meeting at 3pm ET" on March 5
 - Bob views it in PT: should see 12pm
 - On March 10 (after DST spring-forward): ET is now EDT, PT is now PDT
 - The meeting should STILL be at 3pm ET / 12pm PT (not shift by an hour)
 
-**Correct Storage Strategy**:
+Correct Storage Strategy:
 \`\`\`
 DON'T store: start_time = "2024-03-05T15:00:00-05:00" (offset)
             (offset changes with DST, this is ambiguous for recurring events)
@@ -5531,12 +5531,12 @@ DO store:   start_time = "2024-03-05T20:00:00Z" (UTC)
             timezone = "America/New_York"
 \`\`\`
 
-**Why UTC + Timezone Name (not Offset)?**:
+Why UTC + Timezone Name (not Offset)?:
 - Offset -05:00 could be EST or CDT (ambiguous)
 - Timezone name "America/New_York" encodes all DST transition rules
 - For recurring events: "every Tuesday at 3pm America/New_York" correctly adjusts for DST
 
-**Recurring Event Expansion with DST**:
+Recurring Event Expansion with DST:
 \`\`\`
 Rule: FREQ=WEEKLY;BYDAY=TU at 15:00 America/New_York
 
@@ -5546,7 +5546,7 @@ After DST (EDT, UTC-4):   Tuesday 15:00 EDT = 19:00 UTC
 The UTC value changes! But the local time (3pm ET) stays the same.
 \`\`\`
 
-**IANA Timezone Database**:
+IANA Timezone Database:
 - Use the IANA tz database (e.g., via date-fns-tz or Java's ZoneId)
 - Updated regularly with new DST rules (countries change their DST policies)
 - Server must use the latest tz database version
@@ -5744,12 +5744,12 @@ seek_pool {
     keyQuestions: [
       {
         question: 'How does server-side clock management work?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 - In bullet chess (1 minute per player), 100ms of unfairness matters
 - Network latency varies: player with better connection has an advantage
 - Client-side clock is manipulable (cheating)
 
-**Server-Side Clock Protocol**:
+Server-Side Clock Protocol:
 \`\`\`
 1. Player makes a move at client time T_client
 2. Client sends: { move: "e2e4", clientTimestamp: T_client }
@@ -5760,32 +5760,32 @@ seek_pool {
 6. Server sends to both players: { move: "e4", whiteClockMs: 54200, blackClockMs: 58300 }
 \`\`\`
 
-**Latency Compensation**:
+Latency Compensation:
 - On game start: server pings both clients, estimates round-trip time (RTT)
 - Estimated one-way latency = RTT / 2
 - Time used = time on server - estimated one-way latency
 - This ensures a player with 200ms latency isn't penalized 200ms per move vs a player with 20ms
 
-**Pre-move / Pre-claim**:
+Pre-move / Pre-claim:
 - Player can set a "pre-move" (queued move before opponent's turn)
 - When opponent's move arrives, pre-move is executed with near-zero think time
 - Critical for bullet chess where reaction time matters
 
-**Clock Sync Messages**:
+Clock Sync Messages:
 - Server sends clock state with every move
 - If client clock drifts (due to browser tab throttling), server clock is authoritative
 - Client interpolates between server updates for smooth display
 
-**Timeout Detection**:
+Timeout Detection:
 - Server runs a timer for the active player
 - If clock reaches 0: game ends (timeout)
 - Grace period: 100ms (accounts for in-flight move from client)`
       },
       {
         question: 'How does the matchmaking system work?',
-        answer: `**Rating-Bucketed Pool with Time-Based Widening**:
+        answer: `Rating-Bucketed Pool with Time-Based Widening:
 
-**Pool Structure** (Redis sorted sets):
+Pool Structure (Redis sorted sets):
 \`\`\`
 seek:blitz:3+2:rated -> Sorted set (score = rating)
   { player: "alice", rating: 1500, seekTime: T }
@@ -5793,7 +5793,7 @@ seek:blitz:3+2:rated -> Sorted set (score = rating)
   { player: "charlie", rating: 1800, seekTime: T-15 }
 \`\`\`
 
-**Matching Algorithm**:
+Matching Algorithm:
 \`\`\`python
 def find_match(seeker):
     pool_key = f"seek:{seeker.time_control}:{seeker.variant}:{'rated' if seeker.rated else 'casual'}"
@@ -5819,42 +5819,42 @@ def find_match(seeker):
         return None  # check again in 1 second
 \`\`\`
 
-**Fairness**:
+Fairness:
 - Rating range starts narrow (±50): strong preference for close matches
 - Widens over time: after 30 seconds, range is ±350 (accept wider gap)
 - Prevents indefinite waiting while maintaining quality matches
 
-**Preventing Abuse**:
+Preventing Abuse:
 - Can't seek if already in a game
 - Minimum time between seeks (prevent rapid cancel/re-seek for rating sniping)
 - Provisional players (< 20 games) matched separately to protect established ratings
 
-**Color Assignment**:
+Color Assignment:
 - Track each player's recent color history
 - Assign to balance: if Alice played white 3 of last 4 games, she gets black
 - If both have balanced history: random`
       },
       {
         question: 'How does the Glicko-2 rating system work?',
-        answer: `**Why Not Simple Elo?**:
+        answer: `Why Not Simple Elo?:
 - Elo assumes all players are equally "certain" in their rating
 - A player who played 1000 games has a very certain rating
 - A new player or one returning after 6 months has an uncertain rating
 - Glicko-2 tracks this uncertainty explicitly
 
-**Three Components**:
-- **Rating (r)**: skill level (like Elo), default 1500
-- **Rating Deviation (RD)**: uncertainty in the rating (high = uncertain)
-- **Volatility (σ)**: how much the player's skill fluctuates over time
+Three Components:
+- Rating (r): skill level (like Elo), default 1500
+- Rating Deviation (RD): uncertainty in the rating (high = uncertain)
+- Volatility (σ): how much the player's skill fluctuates over time
 
-**How It Works**:
+How It Works:
 \`\`\`
 New player: r=1500, RD=350 (very uncertain)
 After 20 games: r=1650, RD=75 (fairly certain)
 After 6 months inactive: RD increases back toward 350 (uncertainty grows)
 \`\`\`
 
-**Rating Update After a Game**:
+Rating Update After a Game:
 1. Expected score: E = 1 / (1 + 10^((opponent_r - my_r) / (400 * g(opponent_RD))))
    - g(RD) is a function that reduces weight of opponents with high RD
 2. If I win against a higher-rated opponent: big rating gain
@@ -5862,13 +5862,13 @@ After 6 months inactive: RD increases back toward 350 (uncertainty grows)
 4. RD decreases after each game (more certainty)
 5. Volatility updated based on how surprising the result was
 
-**Practical Effects**:
-- **New player**: wins/losses cause large rating swings (high RD)
-- **Established player**: ratings change slowly (low RD)
-- **Returning player**: first few games cause larger swings (RD increased during inactivity)
-- **Matchmaking uses RD**: prefer opponents with low RD (their rating is more reliable)
+Practical Effects:
+- New player: wins/losses cause large rating swings (high RD)
+- Established player: ratings change slowly (low RD)
+- Returning player: first few games cause larger swings (RD increased during inactivity)
+- Matchmaking uses RD: prefer opponents with low RD (their rating is more reliable)
 
-**Batch vs. Real-Time**:
+Batch vs. Real-Time:
 - Original Glicko-2: batch update after a "rating period" (e.g., 1 week of games)
 - Online adaptation: update after each game, but cap RD decrease per game
 - This provides near-real-time rating updates while maintaining statistical properties`
@@ -6059,78 +6059,78 @@ item_embeddings (feature store) {
     keyQuestions: [
       {
         question: 'How does collaborative filtering work at scale?',
-        answer: `**Core Idea**: Users who interacted with similar items have similar preferences.
+        answer: `Core Idea: Users who interacted with similar items have similar preferences.
 
-**Matrix Factorization Approach**:
+Matrix Factorization Approach:
 - Build a user-item interaction matrix (sparse: most entries are missing)
 - Factorize into two lower-rank matrices: User matrix (N x k) and Item matrix (M x k)
 - Each user and item is represented as a k-dimensional vector (embedding)
 - Predicted score = dot product of user and item vectors
 
-**Training** (Alternating Least Squares or SGD):
+Training (Alternating Least Squares or SGD):
 \`\`\`
 For each known interaction (user_i, item_j, rating):
   Minimize: (rating - dot(user_vec_i, item_vec_j))^2 + regularization
 \`\`\`
 
-**Scaling to Billions of Interactions**:
-- **Distributed training**: Spark MLlib or parameter server architecture
+Scaling to Billions of Interactions:
+- Distributed training: Spark MLlib or parameter server architecture
 - Partition the interaction matrix by user shards
 - Each worker processes its shard, synchronizes embeddings periodically
 - Training on 100B interactions takes ~4 hours on a 100-node Spark cluster
 
-**Serving** (Approximate Nearest Neighbor):
+Serving (Approximate Nearest Neighbor):
 - Once trained, each user has a fixed embedding vector
 - To get recommendations: find the top-K item vectors nearest to the user vector
 - Use ANN index (HNSW, IVF) for sub-millisecond retrieval from millions of items
 - Libraries: Faiss (Facebook), ScaNN (Google), Milvus (open source)
 
-**Implicit Feedback** (more realistic than explicit ratings):
+Implicit Feedback (more realistic than explicit ratings):
 - Weighted by engagement: watch_completion > click > impression
 - One-class problem: we observe positive signals but "no interaction" is ambiguous (not interested vs. never seen)
 - Bayesian Personalized Ranking (BPR): optimize relative ordering of items per user`
       },
       {
         question: 'How do you handle the cold-start problem?',
-        answer: `**Cold-Start Users** (no interaction history):
+        answer: `Cold-Start Users (no interaction history):
 
-**Onboarding Signals**:
+Onboarding Signals:
 - Explicit preferences during signup (genre picks, favorite creators)
 - Demographic features: age bucket, country, language -> demographic cohort recommendations
 - Device/platform signals: iOS vs. Android, time zone
 
-**Bandit-Based Exploration**:
+Bandit-Based Exploration:
 - Treat new user's first N sessions as exploration
 - Thompson Sampling: show items from diverse categories, observe reactions
 - Each interaction rapidly narrows the user's preference estimate
 - Transition to full personalization after ~20-30 interactions
 
-**Cold-Start Items** (no engagement data):
+Cold-Start Items (no engagement data):
 
-**Content-Based Bootstrapping**:
+Content-Based Bootstrapping:
 - Extract content features: visual (CNN), audio (spectrogram), text (BERT embeddings)
 - Find nearest existing items by content similarity
 - "Borrow" engagement predictions from similar items
 - Boost exposure in candidate generation to accumulate real signals
 
-**Exploration Budget**:
+Exploration Budget:
 - Reserve 5-10% of recommendation slots for cold-start items
 - Distribute new items across diverse user segments to gather broad signal
 - Use contextual bandits: show new item to users most likely to engage (based on content match)
 
-**Measuring Cold-Start Performance**:
+Measuring Cold-Start Performance:
 - Track "time to first meaningful engagement" for new users
 - Track "impressions needed to reach stable CTR prediction" for new items
 - Target: new users get personalized recommendations within 5 interactions; new items get stable predictions within 1000 impressions`
       },
       {
         question: 'How does the real-time feature pipeline work?',
-        answer: `**Why Real-Time Matters**:
+        answer: `Why Real-Time Matters:
 - User watches a cooking video -> next recommendations should reflect this immediately
 - Without real-time: user sees stale recommendations until next batch retrain (hours later)
 - Goal: user actions reflected in recommendations within 1-5 minutes
 
-**Architecture**:
+Architecture:
 \`\`\`
 User action -> API -> Kafka (interaction events)
                          |
@@ -6141,12 +6141,12 @@ User action -> API -> Kafka (interaction events)
                     Recommendation Service reads updated features
 \`\`\`
 
-**Feature Types by Freshness**:
-- **Real-time (< 1 min)**: session features (last 10 items viewed, current category distribution), active device
-- **Near-real-time (< 1 hour)**: user engagement rates updated with recent actions, trending scores
-- **Batch (6-24 hours)**: user/item embeddings from full model retrain, long-term preference vectors
+Feature Types by Freshness:
+- Real-time (< 1 min): session features (last 10 items viewed, current category distribution), active device
+- Near-real-time (< 1 hour): user engagement rates updated with recent actions, trending scores
+- Batch (6-24 hours): user/item embeddings from full model retrain, long-term preference vectors
 
-**Flink Processing Examples**:
+Flink Processing Examples:
 \`\`\`
 // Sliding window: user's genre distribution in last 30 minutes
 SELECT user_id,
@@ -6158,14 +6158,14 @@ WHERE timestamp > now() - INTERVAL 30 MINUTES
 GROUP BY user_id, genre
 \`\`\`
 
-**Feature Store Design**:
-- **Write path**: Flink outputs -> Redis (real-time features) + DynamoDB (durable backup)
-- **Read path**: Recommendation service batch-fetches features for all candidates
+Feature Store Design:
+- Write path: Flink outputs -> Redis (real-time features) + DynamoDB (durable backup)
+- Read path: Recommendation service batch-fetches features for all candidates
   - Single round-trip via Redis MGET for user + candidate features
   - Latency budget: 10-20ms for feature retrieval
-- **Fallback**: if real-time features are unavailable, use last-known batch features (slightly stale but always available)
+- Fallback: if real-time features are unavailable, use last-known batch features (slightly stale but always available)
 
-**Consistency**:
+Consistency:
 - Features are eventually consistent (acceptable for recommendations)
 - Version each feature update to prevent out-of-order writes
 - Monitor feature freshness: alert if any feature type lags beyond its SLA`
@@ -6365,13 +6365,13 @@ model_registry {
     keyQuestions: [
       {
         question: 'How does continuous batching work?',
-        answer: `**Problem with Static Batching**:
+        answer: `Problem with Static Batching:
 - Collect N requests, process as a batch, wait for ALL to finish
 - Short requests (20 tokens) wait for long requests (2000 tokens) in the same batch
 - GPU idle time while waiting for the batch to fill
 - Throughput: ~5-10 requests/sec per GPU
 
-**Continuous Batching (Iteration-Level Scheduling)**:
+Continuous Batching (Iteration-Level Scheduling):
 \`\`\`
 Iteration 1: [Req_A(token 1), Req_B(token 1), Req_C(token 1)]
 Iteration 2: [Req_A(token 2), Req_B(DONE), Req_C(token 2)]
@@ -6379,7 +6379,7 @@ Iteration 2: [Req_A(token 2), Req_B(DONE), Req_C(token 2)]
 Iteration 3: [Req_A(token 3), Req_D(token 1), Req_C(token 3)]
 \`\`\`
 
-**How It Works**:
+How It Works:
 1. Maintain a running batch of active requests
 2. Each iteration: generate one token for each request in the batch
 3. When any request completes (hits stop token or max_tokens):
@@ -6387,36 +6387,36 @@ Iteration 3: [Req_A(token 3), Req_D(token 1), Req_C(token 3)]
    - Immediately insert the next waiting request
 4. New requests start generating within one iteration (~50ms)
 
-**Benefits**:
+Benefits:
 - GPU never idles waiting for batch to fill
 - Short requests complete quickly without being blocked by long ones
 - Throughput: ~50-200 requests/sec per GPU (10-20x improvement)
 - TTFT reduced because requests do not wait for a full batch
 
-**Memory Management Challenge**:
+Memory Management Challenge:
 - Each request in the batch needs KV-cache memory
 - Batch size limited by total GPU memory available for KV-cache
 - PagedAttention solves this by eliminating memory fragmentation
 
-**Prefill vs. Decode Phases**:
+Prefill vs. Decode Phases:
 - Prefill (processing input tokens): compute-bound, benefits from parallelism
 - Decode (generating output tokens): memory-bandwidth-bound, one token at a time
 - Advanced systems separate prefill and decode into different GPU pools`
       },
       {
         question: 'How do you manage KV-cache memory efficiently?',
-        answer: `**The KV-Cache Problem**:
+        answer: `The KV-Cache Problem:
 - For each token in the context, the model stores Key and Value tensors for every attention layer
 - GPT-4 class model: ~1-2MB of KV-cache per token per request
 - 4096 token context: ~4-8GB of KV-cache per request
 - A single 80GB A100 can only hold 10-20 concurrent requests!
 
-**Traditional Approach (Wasteful)**:
+Traditional Approach (Wasteful):
 - Pre-allocate max_context_length of KV-cache per request
 - If max is 8192 but actual context is 500 tokens: 94% of allocated memory is wasted
 - Result: far fewer concurrent requests than GPU memory allows
 
-**PagedAttention (vLLM)**:
+PagedAttention (vLLM):
 \`\`\`
 Physical GPU memory divided into fixed-size "pages" (e.g., 16 tokens each)
 
@@ -6431,25 +6431,25 @@ When Request A completes:
   Pages [P1-P13] freed immediately, available for new requests
 \`\`\`
 
-**Benefits**:
+Benefits:
 - Near-zero memory waste (only last page may have unused slots)
 - 2-4x more concurrent requests compared to pre-allocation
 - Pages can be shared across requests (prefix caching)
 
-**Prefix Caching**:
+Prefix Caching:
 - Many requests share the same system prompt (e.g., "You are a helpful assistant...")
 - Compute KV-cache for the system prompt once, share pages across all requests
 - For a 500-token system prompt: saves 500-1000MB of KV-cache per request
 - Particularly valuable for function-calling prompts (large tool definitions)
 
-**Eviction Policy** (when GPU memory is full):
+Eviction Policy (when GPU memory is full):
 - Priority queue: premium tier users kept in GPU memory, free tier swapped
 - Swap KV-cache to CPU memory (10x slower but cheaper than recomputation)
 - Last resort: preempt lowest-priority request, recompute from scratch later`
       },
       {
         question: 'How do you handle GPU cluster scheduling and routing?',
-        answer: `**Cluster Topology**:
+        answer: `Cluster Topology:
 \`\`\`
 GPU Cluster (thousands of GPUs):
   ├── Model Pool: GPT-4 (8x H100 per instance, tensor parallel)
@@ -6462,28 +6462,28 @@ GPU Cluster (thousands of GPUs):
   └── Model Pool: Fine-tuned variants (mixed hardware)
 \`\`\`
 
-**Global Request Scheduler**:
+Global Request Scheduler:
 1. Request arrives at API Gateway
 2. Scheduler selects target instance based on:
-   - **Model match**: route to instances running the requested model
-   - **KV-cache affinity**: if this is a multi-turn conversation, route to the instance that has the KV-cache from the previous turn (avoid recomputation)
-   - **Load balancing**: prefer instances with lower queue depth
-   - **SLO tier**: premium users routed to less-loaded instances
-   - **Memory availability**: check if instance has enough KV-cache memory for the request
+   - Model match: route to instances running the requested model
+   - KV-cache affinity: if this is a multi-turn conversation, route to the instance that has the KV-cache from the previous turn (avoid recomputation)
+   - Load balancing: prefer instances with lower queue depth
+   - SLO tier: premium users routed to less-loaded instances
+   - Memory availability: check if instance has enough KV-cache memory for the request
 
-**Autoscaling**:
+Autoscaling:
 - Scale based on queue depth and average TTFT, not just GPU utilization
 - Scale-up is slow (loading model weights takes 2-5 minutes for large models)
 - Keep warm spare capacity: always maintain 10-15% idle instances
 - Predictive scaling: use historical traffic patterns (traffic doubles during US business hours)
 
-**Handling Overload**:
+Handling Overload:
 - Priority queuing: premium requests skip ahead of free-tier
 - Request shedding: reject lowest-priority requests with 429 status when queue exceeds threshold
 - Graceful degradation: offer smaller/faster model as fallback ("GPT-4 is busy, GPT-3.5 available")
 - Token budget management: limit max_tokens for free-tier during peak to increase throughput
 
-**Fault Tolerance**:
+Fault Tolerance:
 - GPU failure detection via heartbeat (5-second timeout)
 - Running requests on failed GPU: client receives error, retries on different instance
 - KV-cache is ephemeral: loss means re-prefill (extra latency but not data loss)
@@ -6686,7 +6686,7 @@ canary_metrics {
     keyQuestions: [
       {
         question: 'How does canary deployment with automated analysis work?',
-        answer: `**Canary Deployment Flow**:
+        answer: `Canary Deployment Flow:
 \`\`\`
 1. Deploy canary (1 instance with new version alongside N baseline instances)
 2. Route 1% of traffic to canary via service mesh weighted routing
@@ -6696,7 +6696,7 @@ canary_metrics {
 6. If fail at any stage: automatic rollback to 0% canary traffic, terminate canary instances
 \`\`\`
 
-**Canary Analysis Engine**:
+Canary Analysis Engine:
 \`\`\`python
 def analyze_canary(deployment_id, metric_name):
     canary_samples = get_metric_samples(deployment_id, "canary", metric_name, window="5m")
@@ -6713,13 +6713,13 @@ def analyze_canary(deployment_id, metric_name):
         return Verdict.PASS
 \`\`\`
 
-**Metrics Compared**:
-- **Error rate**: canary error rate should not be statistically higher than baseline
-- **Latency (p50, p99)**: canary should not be slower
-- **Resource usage**: CPU/memory should not spike (indicates potential leak or inefficiency)
-- **Custom business metrics**: conversion rate, checkout success, etc.
+Metrics Compared:
+- Error rate: canary error rate should not be statistically higher than baseline
+- Latency (p50, p99): canary should not be slower
+- Resource usage: CPU/memory should not spike (indicates potential leak or inefficiency)
+- Custom business metrics: conversion rate, checkout success, etc.
 
-**Traffic Splitting via Service Mesh**:
+Traffic Splitting via Service Mesh:
 \`\`\`yaml
 # Istio VirtualService
 apiVersion: networking.istio.io/v1
@@ -6737,85 +6737,85 @@ spec:
       weight: 5
 \`\`\`
 
-**Handling Edge Cases**:
-- **Low traffic services**: extend analysis window (30 min instead of 5 min) or use synthetic load
-- **Flaky metrics**: use rolling averages and require consecutive failures before rollback
-- **Regional differences**: analyze canary independently per region, not globally aggregated`
+Handling Edge Cases:
+- Low traffic services: extend analysis window (30 min instead of 5 min) or use synthetic load
+- Flaky metrics: use rolling averages and require consecutive failures before rollback
+- Regional differences: analyze canary independently per region, not globally aggregated`
       },
       {
         question: 'How does blue-green deployment achieve zero-downtime?',
-        answer: `**Blue-Green Architecture**:
+        answer: `Blue-Green Architecture:
 
 A load balancer (or DNS record) sits in front of two identical environments — Blue (currently active, running v1.2) and Green (currently standby, where v1.3 has just been deployed). All production traffic continues to land on Blue while Green is validated. Once Green passes its checks, the load balancer's target group is flipped so Green becomes active and Blue moves to standby — Blue is now the instant-rollback target if something goes wrong.
 
-**Deployment Steps**:
-1. **Prepare Green**: deploy new version to Green environment (identical to Blue in capacity)
-2. **Validate Green**: run smoke tests, synthetic traffic, health checks against Green
-3. **Switch Traffic**: update load balancer target group (ALB) or DNS record to point to Green
-4. **Drain Blue**: wait for in-flight requests on Blue to complete (connection draining, 30-60 seconds)
-5. **Monitor**: watch Green metrics for 15-30 minutes (bake time)
-6. **Cleanup**: Blue can be kept warm for instant rollback or terminated to save cost
+Deployment Steps:
+1. Prepare Green: deploy new version to Green environment (identical to Blue in capacity)
+2. Validate Green: run smoke tests, synthetic traffic, health checks against Green
+3. Switch Traffic: update load balancer target group (ALB) or DNS record to point to Green
+4. Drain Blue: wait for in-flight requests on Blue to complete (connection draining, 30-60 seconds)
+5. Monitor: watch Green metrics for 15-30 minutes (bake time)
+6. Cleanup: Blue can be kept warm for instant rollback or terminated to save cost
 
-**Traffic Switch Methods**:
-- **Load Balancer (instant)**: ALB target group swap, traffic shifts within seconds
-- **DNS (slower)**: update DNS record, depends on TTL propagation (set TTL to 60s before switch)
-- **Service Mesh (granular)**: weighted routing allows gradual blue->green shift
+Traffic Switch Methods:
+- Load Balancer (instant): ALB target group swap, traffic shifts within seconds
+- DNS (slower): update DNS record, depends on TTL propagation (set TTL to 60s before switch)
+- Service Mesh (granular): weighted routing allows gradual blue->green shift
 
-**Rollback** (the key advantage):
+Rollback (the key advantage):
 - Blue environment is still running (or can be restarted from same image)
 - Switch traffic back: load balancer points to Blue again
 - Rollback time: < 30 seconds (just a target group change)
 - No need to rebuild, redeploy, or re-download anything
 
-**Cost Tradeoff**:
+Cost Tradeoff:
 - Requires 2x infrastructure during deployment (both Blue and Green running)
 - Mitigation: keep standby environment at reduced capacity, scale up before switch
 - For stateless services: auto-scaling handles this naturally
 - For services with warm caches: pre-warm Green cache before traffic switch
 
-**Database Considerations**:
+Database Considerations:
 - Blue-green is easy for stateless services but hard when database schema changes
 - Strategy: make DB changes backward-compatible (additive only), deploy DB change first, then application
 - Never drop columns or rename tables during blue-green: both versions must work with same schema`
       },
       {
         question: 'How do you handle rollback safely?',
-        answer: `**Rollback Triggers** (automated):
+        answer: `Rollback Triggers (automated):
 1. Health check failures exceed threshold (3 consecutive failures)
 2. Canary analysis verdict: FAIL on any critical metric
 3. Error rate spike > 2x baseline within 2 minutes of promotion
 4. Alerting system fires P1/P2 alert correlated with deployment window
 
-**Rollback Triggers** (manual):
+Rollback Triggers (manual):
 5. Engineer clicks "Rollback" button with reason
 6. On-call engineer triggers via CLI: \`deploy rollback --service payment --reason "elevated 5xx"\`
 
-**Rollback Mechanics by Strategy**:
+Rollback Mechanics by Strategy:
 
-**Blue-Green Rollback** (fastest: < 30 seconds):
+Blue-Green Rollback (fastest: < 30 seconds):
 - Switch load balancer back to old environment
 - Old environment was never touched, still running previous version
 - In-flight requests to new version may error (acceptable, clients retry)
 
-**Canary Rollback** (fast: < 60 seconds):
+Canary Rollback (fast: < 60 seconds):
 - Set canary traffic weight to 0% in service mesh
 - Terminate canary instances
 - 100% traffic goes to stable baseline (which was always serving)
 - Minimal user impact since canary was serving small % of traffic
 
-**Rolling Update Rollback** (slower: 2-5 minutes):
+Rolling Update Rollback (slower: 2-5 minutes):
 - Some instances already running new version
 - Reverse the rolling update: deploy old version back to updated instances
 - During rollback, mixed versions are serving (both old and new)
 - Requires backward-compatible versions to avoid issues during transition
 
-**Safe Rollback Patterns**:
-- **Deployment locks**: only one deployment per service at a time (prevents rollback-during-rollback)
-- **Rollback version pinning**: always roll back to last-known-good, not just "previous" (which may also be bad)
-- **Database migration rollback**: if the new version ran DB migrations, rollback code must handle both old and new schema
-- **In-flight request handling**: connection draining ensures requests complete before instance termination
+Safe Rollback Patterns:
+- Deployment locks: only one deployment per service at a time (prevents rollback-during-rollback)
+- Rollback version pinning: always roll back to last-known-good, not just "previous" (which may also be bad)
+- Database migration rollback: if the new version ran DB migrations, rollback code must handle both old and new schema
+- In-flight request handling: connection draining ensures requests complete before instance termination
 
-**Post-Rollback**:
+Post-Rollback:
 - Auto-create incident ticket with deployment context
 - Capture canary metrics snapshot for debugging
 - Lock service from re-deployment until incident is resolved
@@ -7001,7 +7001,7 @@ cluster_state {
     keyQuestions: [
       {
         question: 'How does the inverted index work and how are queries executed?',
-        answer: `**Inverted Index Structure**:
+        answer: `Inverted Index Structure:
 \`\`\`
 Document 1: "the quick brown fox"
 Document 2: "the lazy brown dog"
@@ -7017,14 +7017,14 @@ Inverted Index:
   "jumps" -> [doc3(pos:2)]
 \`\`\`
 
-**Query Execution: "quick brown"**:
+Query Execution: "quick brown":
 1. Look up "quick" -> posting list [doc1, doc3]
 2. Look up "brown" -> posting list [doc1, doc2]
 3. For OR query: union -> [doc1, doc2, doc3]
 4. For AND query: intersection -> [doc1]
 5. Score each result using BM25
 
-**BM25 Scoring**:
+BM25 Scoring:
 \`\`\`
 score(doc, query) = Σ for each term t in query:
   IDF(t) * (tf(t,doc) * (k1 + 1)) / (tf(t,doc) + k1 * (1 - b + b * fieldLen/avgFieldLen))
@@ -7036,23 +7036,23 @@ Where:
   k1 = 1.2 (term frequency saturation), b = 0.75 (field length normalization)
 \`\`\`
 
-**Distributed Query (Scatter-Gather)**:
+Distributed Query (Scatter-Gather):
 1. Coordinating node receives query
 2. Sends query to one copy of each shard (primary or replica)
 3. Each shard executes locally: look up posting lists, score, return top-K
 4. Coordinating node merges sorted results from all shards
 5. Fetch full documents (_source) for the final top-N results
 
-**Optimization**:
+Optimization:
 - Skip lists in posting lists for fast intersection
 - Block-Max WAND algorithm: skips low-scoring documents early
 - Query rewriting: "quick brown" as phrase query requires position matching`
       },
       {
         question: 'How does near-real-time indexing work?',
-        answer: `**The Segment Model** (inspired by Lucene):
+        answer: `The Segment Model (inspired by Lucene):
 
-**Write Path**:
+Write Path:
 \`\`\`
 1. Document arrives at primary shard
 2. Written to translog (WAL) for durability
@@ -7069,18 +7069,18 @@ Periodically (every 30 minutes or when translog is large):
 9. Translog is cleared (segments are now the durable copy)
 \`\`\`
 
-**What Is a Segment?**:
+What Is a Segment?:
 - An immutable, self-contained inverted index
 - Once written, never modified (append-only architecture)
 - Each segment has its own: inverted index, document store, field norms, deletion bitset
 - A shard = collection of segments + in-memory buffer
 
-**Why Immutability?**:
+Why Immutability?:
 - No locking needed for reads (segments never change)
 - Concurrent reads and writes without contention
 - Crash recovery: replay translog to reconstruct in-memory buffer
 
-**Segment Merging** (background process):
+Segment Merging (background process):
 \`\`\`
 Before: [seg1: 100 docs] [seg2: 100 docs] [seg3: 50 docs] [seg4: 200 docs] [seg5: 80 docs]
 After merge: [seg1_2_3: 250 docs] [seg4_5: 280 docs]
@@ -7090,14 +7090,14 @@ After merge: [seg1_2_3: 250 docs] [seg4_5: 280 docs]
 - Reduces number of segments that need to be searched per query
 - Tiered merge policy: small segments merge frequently, large segments merge rarely
 
-**Tuning Trade-offs**:
+Tuning Trade-offs:
 - Lower refresh interval (100ms) = faster searchability but more small segments = slower queries
 - Higher refresh interval (30s) = better indexing throughput but longer delay to searchability
 - For bulk loading: disable refresh, index all data, then refresh once`
       },
       {
         question: 'How do you handle distributed scoring and relevance?',
-        answer: `**The Problem with Distributed BM25**:
+        answer: `The Problem with Distributed BM25:
 - BM25 needs global statistics: total document count (N), document frequency (df) per term
 - Each shard only knows its local statistics
 - Shard 1 has 1M docs, shard 2 has 1M docs: each thinks N=1M but true N=2M
@@ -7106,7 +7106,7 @@ After merge: [seg1_2_3: 250 docs] [seg4_5: 280 docs]
   - Shard 2 IDF: term not found locally, very high IDF if document is somehow present
   - Scores are inconsistent across shards!
 
-**Solution 1: DFS_QUERY_THEN_FETCH** (Elasticsearch approach):
+Solution 1: DFS_QUERY_THEN_FETCH (Elasticsearch approach):
 \`\`\`
 Phase 1 (Distributed Frequency Scatter):
   - Coordinating node sends query to all shards
@@ -7123,21 +7123,21 @@ Phase 3 (Fetch):
   - Fetches full documents from relevant shards
 \`\`\`yaml
 
-**Solution 2: Shard-Local Scoring (default, good enough)**:
+Solution 2: Shard-Local Scoring (default, good enough):
 - With enough documents per shard (~10K+), local statistics approximate global
 - Law of large numbers: term distributions converge across shards
 - Much faster (2 phases vs. 3), acceptable for most use cases
 
-**When Local Scoring Fails**:
+When Local Scoring Fails:
 - Very small indices (< 1000 docs per shard)
 - Highly skewed data distribution (one shard has all docs of a certain type)
 - Precise ranking is critical (e-commerce product search)
 
-**Advanced Ranking**:
-- **Learning to Rank (LTR)**: train ML model to predict relevance, use BM25 as one feature among many
-- **Personalized ranking**: boost results based on user history (requires user context in query)
-- **Freshness boost**: multiply score by recency factor for time-sensitive searches
-- **Function scoring**: combine BM25 with custom scoring functions (popularity, location proximity)`
+Advanced Ranking:
+- Learning to Rank (LTR): train ML model to predict relevance, use BM25 as one feature among many
+- Personalized ranking: boost results based on user history (requires user context in query)
+- Freshness boost: multiply score by recency factor for time-sensitive searches
+- Function scoring: combine BM25 with custom scoring functions (popularity, location proximity)`
       }
     ],
 
@@ -7347,12 +7347,12 @@ chunk_placement {
     keyQuestions: [
       {
         question: 'How does erasure coding achieve 11-nines durability?',
-        answer: `**Erasure Coding Basics (Reed-Solomon)**:
+        answer: `Erasure Coding Basics (Reed-Solomon):
 - Split data into k data fragments, generate m parity fragments
 - Can tolerate loss of any m fragments (out of k+m total)
 - Storage overhead: (k+m)/k instead of replication's 3x
 
-**Example: 8+3 Reed-Solomon**:
+Example: 8+3 Reed-Solomon:
 \`\`\`
 64MB chunk -> split into 8 x 8MB data fragments
            -> generate 3 x 8MB parity fragments
@@ -7361,20 +7361,20 @@ chunk_placement {
            -> storage overhead: 11/8 = 1.375x (vs. 3x for replication)
 \`\`\`
 
-**Durability Calculation**:
+Durability Calculation:
 - Assume annual node failure rate: 2% (industry average for disks)
 - For data loss, need 4+ simultaneous failures among 11 fragments (before repair)
 - Repair time: detect failure + reconstruct from remaining 8 fragments: ~2 hours
 - P(4 failures in 2 hours among 11 nodes) ≈ 10^-11 per chunk per year
 - This gives 99.999999999% (11-nines) durability per chunk
 
-**Why Not Just Use 3x Replication?**:
+Why Not Just Use 3x Replication?:
 - 3 copies: lose data if 3 specific nodes fail simultaneously
 - P(3 failures in repair window among 3 nodes) ≈ 10^-6 per year (only 6-nines)
 - To match 11-nines with replication: need 5-6 copies (5-6x overhead)
 - Erasure coding achieves better durability with less storage
 
-**Background Integrity Verification (Scrubbing)**:
+Background Integrity Verification (Scrubbing):
 \`\`\`
 Every 30 days for each chunk:
 1. Read all 11 fragments
@@ -7386,20 +7386,20 @@ Every 30 days for each chunk:
 4. Report: chunks_scrubbed, fragments_repaired, data_at_risk
 \`\`\`
 
-**Protection Against Correlated Failures**:
+Protection Against Correlated Failures:
 - Place fragments across different racks, power domains, and availability zones
 - Rack-aware placement: no 2 fragments of the same chunk on the same rack
 - AZ-aware: distribute across 3 AZs (4+4+3 fragments) for zone-level resilience`
       },
       {
         question: 'How does the metadata layer work at trillion-object scale?',
-        answer: `**The Challenge**:
+        answer: `The Challenge:
 - Trillions of objects = trillions of key-value entries
 - Each GET needs a metadata lookup: must be fast (< 10ms)
 - LIST operations need range scans by prefix: requires ordered storage
 - Strong consistency for PUT (read-after-write): requires consensus
 
-**Architecture: Sharded Raft KV Store**:
+Architecture: Sharded Raft KV Store:
 \`\`\`
 Metadata Cluster:
   Shard 1 (Raft group: 3 nodes): keys with hash 0-999
@@ -7412,20 +7412,20 @@ Each shard stores:
   - Backed by RocksDB (LSM-tree) for sorted key storage
 \`\`\`
 
-**Key Operations**:
+Key Operations:
 
-**PUT metadata** (on object upload completion):
+PUT metadata (on object upload completion):
 1. Route to correct shard by hash(bucket, key)
 2. Raft leader writes to local RocksDB + replicates to 2 followers
 3. Acknowledged after majority (2/3) confirm
 4. Guarantees read-after-write consistency
 
-**GET metadata** (on object read):
+GET metadata (on object read):
 1. Route to correct shard by hash(bucket, key)
 2. Read from Raft leader (for strong consistency) or any replica (for eventual)
 3. Return object metadata including chunk manifest
 
-**LIST by prefix** (the hard part):
+LIST by prefix (the hard part):
 - Hash-based sharding destroys key ordering!
 - Solution: maintain a secondary prefix index
   - Separate shard groups ordered by (bucket, key_prefix)
@@ -7434,7 +7434,7 @@ Each shard stores:
   - Slightly eventual (new objects may take 1-2 seconds to appear in LIST)
   - This is why S3 had eventual consistency for LIST even after adding strong consistency for GET
 
-**Scaling**:
+Scaling:
 - Each shard handles ~1M keys
 - 1T objects = 1M shards
 - Shards automatically split when they exceed size threshold
@@ -7442,12 +7442,12 @@ Each shard stores:
       },
       {
         question: 'How does multipart upload work for large objects?',
-        answer: `**Why Multipart?**:
+        answer: `Why Multipart?:
 - Single PUT has a practical limit (~5GB): network timeouts, no resume on failure
 - A 1TB object would take hours on a single connection
 - Multipart enables: parallel upload, resumable upload, and streaming
 
-**Multipart Upload Flow**:
+Multipart Upload Flow:
 \`\`\`
 Step 1: Initiate
   POST /bucket/key?uploads -> { uploadId: "abc123" }
@@ -7480,7 +7480,7 @@ Step 4 (optional): Abort
   Server: marks all uploaded parts for garbage collection
 \`\`\`
 
-**Parallel Upload Optimization**:
+Parallel Upload Optimization:
 \`\`\`
 Client with 1Gbps connection uploading 1TB file:
   Sequential: 1TB / 125MB/s = ~2.2 hours
@@ -7488,13 +7488,13 @@ Client with 1Gbps connection uploading 1TB file:
   Parallel (32 connections): 1TB / (125MB/s * 32) = ~4 minutes
 \`\`\`
 
-**Failure Handling**:
+Failure Handling:
 - Part upload fails: retry just that part (other parts already stored)
 - Client crash: incomplete upload persists, cleaned up after configurable timeout (7 days default)
 - Network issue: client can resume by re-uploading only missing part numbers
 - Server crash: parts stored on durable storage nodes survive; session metadata replicated via Raft
 
-**Deduplication** (optional, storage optimization):
+Deduplication (optional, storage optimization):
 - Compute content hash (SHA-256) per chunk
 - Before storing: check if chunk with same hash already exists
 - If yes: reference existing chunk (copy-on-write metadata update)
@@ -7693,13 +7693,13 @@ task_metrics {
     keyQuestions: [
       {
         question: 'How do you achieve exactly-once task execution?',
-        answer: `**The Reality: At-Least-Once + Idempotency = Exactly-Once Semantics**
+        answer: `The Reality: At-Least-Once + Idempotency = Exactly-Once Semantics
 
 True exactly-once in a distributed system is impossible (FLP impossibility). What we achieve:
-- **At-least-once delivery**: guaranteed by the queue + retry mechanism
-- **Exactly-once processing**: guaranteed by making task handlers idempotent
+- At-least-once delivery: guaranteed by the queue + retry mechanism
+- Exactly-once processing: guaranteed by making task handlers idempotent
 
-**At-Least-Once Delivery via Visibility Timeout**:
+At-Least-Once Delivery via Visibility Timeout:
 \`\`\`
 1. Worker pulls task from queue
 2. Task becomes "invisible" to other workers for 60 seconds (visibility timeout)
@@ -7710,7 +7710,7 @@ True exactly-once in a distributed system is impossible (FLP impossibility). Wha
 4. Worker taking too long: heartbeat extends visibility timeout before it expires
 \`\`\`
 
-**Problem: Duplicate Execution**:
+Problem: Duplicate Execution:
 \`\`\`
 Worker A picks task, processes it, sends ACK
 ACK is lost due to network issue
@@ -7718,7 +7718,7 @@ Visibility timeout expires -> task reappears
 Worker B picks the same task -> processes it AGAIN
 \`\`\`
 
-**Solution: Idempotency Key + Deduplication Store**:
+Solution: Idempotency Key + Deduplication Store:
 \`\`\`python
 def process_task(task):
     dedup_key = f"task:{task.idempotency_key}"
@@ -7734,20 +7734,20 @@ def process_task(task):
         return json.loads(redis.get(dedup_key))
 \`\`\`
 
-**Making Task Handlers Idempotent**:
-- **Sending email**: check if email already sent for this event (dedup by event_id)
-- **Charging payment**: use Stripe's idempotency_key parameter
-- **Updating database**: use upsert (INSERT ON CONFLICT UPDATE) instead of blind INSERT
-- **Generating thumbnail**: check if output already exists in storage before processing
+Making Task Handlers Idempotent:
+- Sending email: check if email already sent for this event (dedup by event_id)
+- Charging payment: use Stripe's idempotency_key parameter
+- Updating database: use upsert (INSERT ON CONFLICT UPDATE) instead of blind INSERT
+- Generating thumbnail: check if output already exists in storage before processing
 
-**Idempotency Key Generation**:
+Idempotency Key Generation:
 - Must be deterministic for the same logical task
 - Example: \`send_email:{userId}:{eventType}:{eventId}\`
 - Caller provides it at submission time (not auto-generated UUID)`
       },
       {
         question: 'How does the retry mechanism with dead letter queues work?',
-        answer: `**Retry Policy Configuration**:
+        answer: `Retry Policy Configuration:
 \`\`\`json
 {
   "maxRetries": 5,
@@ -7760,7 +7760,7 @@ def process_task(task):
 }
 \`\`\`
 
-**Retry Flow**:
+Retry Flow:
 \`\`\`
 Attempt 1: execute task
   -> fails with TIMEOUT
@@ -7784,11 +7784,11 @@ Attempt 5: execute task
   -> max retries exhausted -> move to Dead Letter Queue
 \`\`\`
 
-**Why Jitter?**:
+Why Jitter?:
 - Without jitter: if 1000 tasks fail at the same time, all retry at the same time -> thundering herd
 - With 25% jitter: retries spread across a time window, reducing downstream load spike
 
-**Dead Letter Queue (DLQ)**:
+Dead Letter Queue (DLQ):
 \`\`\`python
 def handle_task_failure(task, error):
     task.attempt_count += 1
@@ -7815,7 +7815,7 @@ def handle_task_failure(task, error):
     requeue(task)
 \`\`\`
 
-**DLQ Management**:
+DLQ Management:
 - Dashboard shows all dead-lettered tasks with error history
 - Operators can: inspect, retry individual tasks, retry all tasks of a type, purge
 - Auto-alerting: if DLQ size exceeds threshold for a task type, page the owning team
@@ -7823,7 +7823,7 @@ def handle_task_failure(task, error):
       },
       {
         question: 'How does priority scheduling prevent starvation?',
-        answer: `**Strict Priority (Simple but Dangerous)**:
+        answer: `Strict Priority (Simple but Dangerous):
 \`\`\`
 Queue: CRITICAL -> HIGH -> NORMAL -> LOW
 Worker always checks CRITICAL first, then HIGH, etc.
@@ -7832,7 +7832,7 @@ Problem: if CRITICAL queue always has tasks, NORMAL and LOW never execute
 This is "starvation"
 \`\`\`
 
-**Weighted Fair Queuing (Better)**:
+Weighted Fair Queuing (Better):
 \`\`\`
 Priority weights:
   CRITICAL: 50%
@@ -7847,7 +7847,7 @@ For every 100 tasks a worker processes:
   ~5 from LOW
 \`\`\`
 
-**Implementation with Weighted Random Selection**:
+Implementation with Weighted Random Selection:
 \`\`\`python
 def pick_next_task(worker):
     # Check if any CRITICAL tasks exist (always priority)
@@ -7871,15 +7871,15 @@ def size_factor(queue):
     return 1.0
 \`\`\`
 
-**Anti-Starvation Mechanisms**:
-1. **Age-based promotion**: tasks waiting longer than threshold get promoted
+Anti-Starvation Mechanisms:
+1. Age-based promotion: tasks waiting longer than threshold get promoted
    - NORMAL task waiting > 5 minutes -> promoted to HIGH
    - LOW task waiting > 15 minutes -> promoted to NORMAL
-2. **Minimum guarantees**: reserve 5% of worker capacity for LOW priority
+2. Minimum guarantees: reserve 5% of worker capacity for LOW priority
    - Even under heavy CRITICAL load, LOW tasks make progress
-3. **Deadline awareness**: tasks with approaching deadlines get boosted regardless of priority
+3. Deadline awareness: tasks with approaching deadlines get boosted regardless of priority
 
-**Dynamic Priority Adjustment**:
+Dynamic Priority Adjustment:
 \`\`\`
 Scenario: payment processing tasks are NORMAL priority, but at month-end the queue backs up
 
@@ -7894,7 +7894,7 @@ Auto-adjustment:
   - Revert when queue depth drops below threshold
 \`\`\`
 
-**Worker Specialization**:
+Worker Specialization:
 - Some workers only process specific task types (GPU workers for ML tasks)
 - Generic workers handle all types with priority weighting
 - Dedicated worker pools for CRITICAL tasks ensure they are never starved by volume of lower-priority work`
@@ -8826,13 +8826,13 @@ pipeline_runs {
     keyQuestions: [
       {
         question: 'How do you prevent training/serving skew?',
-        answer: `**Root Cause of Skew**:
+        answer: `Root Cause of Skew:
 Skew occurs when the feature logic used to generate training labels differs from the logic used at serving time. Common causes:
 - Data scientist computes a feature in pandas; engineer re-implements it in Java for the serving path
 - Batch pipeline uses a different SQL dialect than the streaming pipeline
 - Implicit differences in null handling, type coercion, or timezone handling
 
-**Solution: Single Transformation Definition**:
+Solution: Single Transformation Definition:
 \`\`\`python
 @feature(entity_keys=["user_id"], freshness_sla=3600)
 def user_purchase_count_30d(events: DataFrame) -> int:
@@ -8843,30 +8843,30 @@ def user_purchase_count_30d(events: DataFrame) -> int:
 \`\`\`
 
 The same function is compiled and executed by:
-- **Spark** for batch materialization to the offline store
-- **Flink** for streaming materialization to the online store
-- **Pandas** for local development and unit tests
+- Spark for batch materialization to the offline store
+- Flink for streaming materialization to the online store
+- Pandas for local development and unit tests
 
-**Versioning**:
+Versioning:
 - Each code change increments the feature version
 - Models pin to a specific version: model v12 always uses user_purchase_count_30d v3
 - Old versions continue serving until all dependent models migrate
 
-**Enforcement**:
+Enforcement:
 - Feature serving tier only serves features registered in the registry
 - Ad-hoc feature computation in notebooks is blocked in production
 - CI pipeline runs transformation code against test fixtures to verify output matches expected values`,
       },
       {
         question: 'How do you implement point-in-time correct training data generation?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 \`\`\`
 Training example: user=12345 churned on 2025-01-20 (label timestamp)
 Wrong approach:  join on latest feature value → gets 2025-04-18 feature (data leakage!)
 Correct approach: join on feature value as of 2025-01-20 (what the model would have seen)
 \`\`\`
 
-**Offline Store Schema**:
+Offline Store Schema:
 Each feature row has valid_start and valid_end timestamps:
 \`\`\`
 feature: user_purchase_count_30d
@@ -8876,7 +8876,7 @@ value: 33,  valid_start: 2025-01-15,  valid_end: 2025-01-16
 value: 47,  valid_start: 2025-04-18,  valid_end: NULL (current)
 \`\`\`
 
-**Point-in-Time Join (Spark)**:
+Point-in-Time Join (Spark):
 \`\`\`sql
 SELECT labels.user_id, labels.label, f.value AS purchase_count_30d
 FROM training_labels labels
@@ -8887,32 +8887,32 @@ JOIN feature_values_offline f
   AND (f.valid_end IS NULL OR f.valid_end > labels.label_timestamp)
 \`\`\`
 
-**Delta Lake Time Travel Alternative**:
+Delta Lake Time Travel Alternative:
 Delta Lake supports AS OF TIMESTAMP queries, simplifying point-in-time retrieval without maintaining explicit valid windows — at the cost of larger storage footprint.
 
-**Freshness Gap**:
+Freshness Gap:
 If a feature has hourly batch cadence and a label timestamp falls between two batch runs, the join returns the most recent available value — not the theoretically correct current value. Streaming features (Flink) with sub-second freshness minimize this gap.`,
       },
       {
         question: 'How do you keep the online store fresh while maintaining consistency?',
-        answer: `**Dual Write Architecture**:
+        answer: `Dual Write Architecture:
 \`\`\`
 Raw Events → Kafka → [Flink Streaming Pipeline] → Redis (online store)
                    → [Spark Batch Pipeline]    → Delta Lake (offline store)
                                                 → Redis (backfill recent dates)
 \`\`\`
 
-**Freshness Guarantees**:
+Freshness Guarantees:
 - Streaming features: Flink processes events within 5 seconds of arrival, writes to Redis
 - Batch features: Spark runs hourly; features are at most 1 hour stale
 - Feature SLA registry: each feature declares its freshness_sla_seconds; the monitoring system pages if violated
 
-**Consistency During Pipeline Failures**:
+Consistency During Pipeline Failures:
 - Redis TTL is set to 2x the freshness SLA — stale features serve rather than 404ing
 - If Flink falls behind (lag > threshold), alert fires and batch job takes over
 - On Flink restart, it replays from Kafka offset matching the oldest TTL in Redis to avoid serving stale values
 
-**Write Amplification**:
+Write Amplification:
 - One Kafka event may update dozens of features (e.g., a purchase event updates purchase_count_30d, purchase_count_7d, last_purchase_category, lifetime_value, ...)
 - Flink groups feature writes into micro-batches per entity and pipelines Redis writes to minimize round trips
 - Redis pipelining with MSET reduces per-entity write latency from O(N) to O(1) network round trips`,
@@ -9081,7 +9081,7 @@ experiment_metrics {
     keyQuestions: [
       {
         question: 'How does ring all-reduce work and why does it scale?',
-        answer: `**Problem with Naive All-Reduce (Parameter Server)**:
+        answer: `Problem with Naive All-Reduce (Parameter Server):
 \`\`\`
 N workers each send gradients to 1 parameter server
 PS aggregates and broadcasts back
@@ -9089,10 +9089,10 @@ Bottleneck: PS network bandwidth = O(N * model_size)
 At 1000 workers: PS needs 1000x the bandwidth of each worker
 \`\`\`
 
-**Ring All-Reduce**:
+Ring All-Reduce:
 Workers arranged in a logical ring. Each worker has gradient shards of size M/N (M = total gradient size).
 
-**Phase 1: Scatter-Reduce (N-1 steps)**:
+Phase 1: Scatter-Reduce (N-1 steps):
 \`\`\`
 Step 1: Each GPU sends chunk[i] to right neighbor, receives chunk[i-1] from left
 Step 2: Add received chunk to local chunk, send result rightward
@@ -9100,31 +9100,31 @@ Step 2: Add received chunk to local chunk, send result rightward
 After N-1 steps: each GPU holds the fully summed gradient for one chunk
 \`\`\`
 
-**Phase 2: All-Gather (N-1 steps)**:
+Phase 2: All-Gather (N-1 steps):
 \`\`\`
 Each GPU broadcasts its fully summed chunk around the ring
 After N-1 steps: every GPU has all fully summed gradients
 \`\`\`
 
-**Bandwidth Analysis**:
+Bandwidth Analysis:
 - Each GPU sends and receives exactly 2*(N-1)/N * M bytes total
 - As N grows, each GPU always sends ~2M bytes regardless of cluster size
 - Total cluster bandwidth scales with N (more GPUs = more total bandwidth)
 - No single bottleneck node
 
-**In Practice (NCCL)**:
+In Practice (NCCL):
 - NVLink for intra-node (600 GB/s bidirectional per GPU)
 - InfiniBand HDR (200 Gb/s) for inter-node all-reduce
 - NCCL automatically selects ring or tree topology based on cluster topology`,
       },
       {
         question: 'How do you handle fault tolerance in a long-running training job?',
-        answer: `**Failure Types and Frequencies**:
+        answer: `Failure Types and Frequencies:
 - GPU hardware failure: ~0.1% per GPU per week; at 1000 GPUs, expect 1 failure per week
 - Node failure (full 8-GPU server): similar rate; affects 8 workers simultaneously
 - Network partition: InfiniBand link flaps; all-reduce hangs until timeout
 
-**Checkpoint-and-Resume**:
+Checkpoint-and-Resume:
 \`\`\`
 Every K steps (K = 500-1000):
 1. Rank-0 signals all workers to pause after current step
@@ -9134,7 +9134,7 @@ Every K steps (K = 500-1000):
 \`\`\`
 On failure: scheduler detects dead worker via heartbeat timeout, restarts all workers from the last checkpoint. Cost: at most K steps of repeated work.
 
-**Async Checkpointing (reduces overhead)**:
+Async Checkpointing (reduces overhead):
 \`\`\`
 Synchronous (old): training blocked for 3-5 min per checkpoint write
 Async:
@@ -9144,14 +9144,14 @@ Async:
 Overhead: <2% of training time instead of 20%
 \`\`\`
 
-**Elastic Training (PyTorch Elastic / Torchelastic)**:
+Elastic Training (PyTorch Elastic / Torchelastic):
 - Workers register with a rendezvous coordinator (etcd or C10d)
 - If a worker fails, remaining workers detect it via heartbeat
 - Job shrinks to (N - failed_count) workers; each takes on a larger data shard
 - No resubmission required; trains at reduced throughput until replacement nodes assigned
 - Handles transient failures without wasting hours of queue wait time
 
-**Straggler Mitigation**:
+Straggler Mitigation:
 - Monitor per-worker step time via heartbeat
 - If one worker is consistently 20% slower, mark it as degraded
 - Scheduler replaces it at next checkpoint boundary`,
@@ -9317,7 +9317,7 @@ experiments {
     keyQuestions: [
       {
         question: 'How does the two-stage retrieval and ranking pipeline work end-to-end?',
-        answer: `**End-to-End Latency Budget (100ms total)**:
+        answer: `End-to-End Latency Budget (100ms total):
 \`\`\`
 Query Understanding:    5ms  (spell correct, NER, intent)
 Retrieval (parallel):  20ms  (BM25 + ANN, merge 1000 candidates)
@@ -9328,7 +9328,7 @@ Network + serialization:45ms
 Total:                100ms p99
 \`\`\`
 
-**Stage 1 — Retrieval**:
+Stage 1 — Retrieval:
 \`\`\`
 Query: "wireless headphones for running"
 
@@ -9347,7 +9347,7 @@ Merge (Reciprocal Rank Fusion):
   Top-1000 by merged score → passed to ranker
 \`\`\`
 
-**Stage 2 — Ranking**:
+Stage 2 — Ranking:
 \`\`\`
 For each of 1000 candidates, compute features:
   - Query-Document: BM25 score, embedding similarity, field match (title, body)
@@ -9362,7 +9362,7 @@ Top-10 returned to user
       },
       {
         question: 'How do you handle position bias in click-based training data?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 Users are much more likely to click results at position 1-3 regardless of actual quality:
 \`\`\`
 Position 1: 30% CTR (even for mediocre results)
@@ -9370,7 +9370,7 @@ Position 10: 3% CTR (even for excellent results)
 \`\`\`
 Naively training on (query, doc, clicked=1) as positive signal biases the model to favor whatever it previously ranked highly — a feedback loop that ossifies the ranking.
 
-**Solution 1: Inverse Propensity Weighting (IPW)**:
+Solution 1: Inverse Propensity Weighting (IPW):
 Estimate the probability of a click being observed at position k (propensity p_k).
 Weight each training example by 1/p_k:
 \`\`\`python
@@ -9380,23 +9380,23 @@ loss = -click * (1/propensity) * log(model_score)
 \`\`\`
 Estimated propensities from randomized result swaps (A/B test where random positions are injected).
 
-**Solution 2: Pairwise Learning-to-Rank (LambdaRank)**:
+Solution 2: Pairwise Learning-to-Rank (LambdaRank):
 Instead of treating each click independently, create pairs:
 - (clicked doc, non-clicked doc at same position) → clicked doc should rank higher
 - Loss: max(0, 1 - score(clicked) + score(non_clicked))
 Position bias partially cancels because both docs in a pair are shown to the same user in the same session.
 
-**Solution 3: Counterfactual Logging**:
+Solution 3: Counterfactual Logging:
 Periodically inject random rankings for a small fraction of users (1-5%).
 These unbiased clicks provide ground truth for propensity estimation without contaminating the main ranking experience.
 
-**Dwell Time as a Quality Signal**:
+Dwell Time as a Quality Signal:
 Dwell time (time between click and back-button) is less position-biased than raw clicks.
 A 60-second dwell is a strong quality signal regardless of position. Use it as a secondary label alongside click to reduce position bias impact.`,
       },
       {
         question: 'How do you keep a 1-billion document index fresh within 60 seconds?',
-        answer: `**Freshness Pipeline**:
+        answer: `Freshness Pipeline:
 \`\`\`
 Document Write/Update
         |
@@ -9412,19 +9412,19 @@ Consumer            (BERT inference)
 < 30 seconds
 \`\`\`
 
-**Elasticsearch Near-Real-Time (NRT) Updates**:
+Elasticsearch Near-Real-Time (NRT) Updates:
 - Lucene writes to in-memory buffer; refresh every 1 second makes new docs searchable
 - Kafka consumer batches 1000 documents, bulk-indexes to Elasticsearch
 - End-to-end: document published → Kafka → consumer → indexed = ~15-30 seconds
 - Delete is immediate (tombstone in Lucene, filtered before returning results)
 
-**Embedding Index Freshness (slower)**:
+Embedding Index Freshness (slower):
 - BERT encoding takes ~50ms per document on GPU
 - 50,000 new documents/hour → need ~700 GPU-ms/sec = 1-2 GPU workers
 - New documents served by BM25-only retrieval until embedding is computed
 - FAISS index rebuilt incrementally: append new vectors to HNSW index without full rebuild
 
-**Freshness vs Index Consistency**:
+Freshness vs Index Consistency:
 - Inverted index shards are updated independently; a query may hit different shards at different freshness states
 - For most search use cases, eventual consistency (30-second window) is acceptable
 - For breaking news or stock prices, prioritize freshness by routing affected queries to a dedicated real-time index that bypasses the main index`,
@@ -9587,14 +9587,14 @@ fraud_graph_edges {
     keyQuestions: [
       {
         question: 'How do you compute velocity features (e.g., transactions per card in last 5 minutes) in real time?',
-        answer: `**Why Not SQL?**
+        answer: `Why Not SQL?
 \`\`\`sql
 SELECT COUNT(*) FROM transactions
 WHERE card_fingerprint = ? AND created_at > NOW() - INTERVAL '5 minutes'
 \`\`\`
 At 100,000 TPS, this creates massive DB contention. Each scoring request would issue 10+ such queries across different windows and entity types. Latency: 50-200ms per query.
 
-**Approach 1: Redis Sorted Sets (Exact Sliding Window)**:
+Approach 1: Redis Sorted Sets (Exact Sliding Window):
 \`\`\`
 Key: vel:card:{fingerprint}:5m
 Type: Sorted Set
@@ -9611,7 +9611,7 @@ On each transaction:
 - O(log N) insert and prune, O(1) count
 - Memory: sorted set overhead ~60 bytes per entry
 
-**Approach 2: Token Bucket (Approximate, O(1) memory)**:
+Approach 2: Token Bucket (Approximate, O(1) memory):
 \`\`\`
 Key: vel:card:{fingerprint}:5m -> {count, last_refill_time}
 Refill rate = max_allowed / window_seconds tokens per second
@@ -9620,7 +9620,7 @@ Memory: 16 bytes per entity window (constant)
 \`\`\`
 Trade-off: cannot recover exact count, but perfect for threshold checks.
 
-**Multiple Windows**:
+Multiple Windows:
 Compute 1m, 5m, 1h, 24h simultaneously with Redis pipelining:
 \`\`\`python
 pipe = redis.pipeline()
@@ -9631,7 +9631,7 @@ counts = pipe.execute()  # single network round-trip, <5ms
       },
       {
         question: 'How do you avoid feedback loop bias when training on model-blocked transactions?',
-        answer: `**The Bias Problem**:
+        answer: `The Bias Problem:
 When the model blocks a transaction, no label is ever generated (no chargeback possible on a blocked transaction). This creates survivorship bias:
 \`\`\`
 Training data only contains:
@@ -9643,7 +9643,7 @@ Missing:
 \`\`\`
 Result: the model's effective training distribution shifts away from high-risk patterns, causing recall to degrade over time.
 
-**Solution 1: Counterfactual Logging (Random Allowlist)**:
+Solution 1: Counterfactual Logging (Random Allowlist):
 Allow 0.1-1% of would-be-blocked transactions through and observe their outcomes.
 \`\`\`
 decision = model_score > threshold ? block : allow
@@ -9653,17 +9653,17 @@ if blocked and random() < 0.001:
 \`\`\`
 Provides unbiased labels for the high-risk region. Cost: accept some fraud losses from the override.
 
-**Solution 2: Inverse Propensity Weighting (IPW)**:
+Solution 2: Inverse Propensity Weighting (IPW):
 Estimate P(transaction was allowed | features) and upweight examples that were unlikely to be shown to the model:
 \`\`\`python
 propensity = P(allowed | risk_score)  # estimated from allow/block rates at each score
 training_weight = 1.0 / propensity   # upweight rare allowed transactions with high scores
 \`\`\`
 
-**Solution 3: Separate Validation Set**:
+Solution 3: Separate Validation Set:
 Hold out 10% of labels completely from training. Evaluate new model on holdout before deploying. If holdout metrics improve, the model is better, not just fitting a biased training set.
 
-**Solution 4: Human Review Queue Sampling**:
+Solution 4: Human Review Queue Sampling:
 Route 2-5% of blocked transactions to human review (regardless of model score). Human labels provide ground truth on both allowed and blocked decisions.`,
       },
     ],
@@ -9814,13 +9814,13 @@ review_queue {
     keyQuestions: [
       {
         question: 'How does the tiered pipeline reduce cost while maintaining quality?',
-        answer: `**Cost Analysis Without Tiering**:
+        answer: `Cost Analysis Without Tiering:
 \`\`\`
 500B pieces/day * $0.001 per large model inference = $500M/day
 Obviously impossible.
 \`\`\`
 
-**Tiered Routing**:
+Tiered Routing:
 \`\`\`
 Tier 0: Hash matching     — 5ms, near-zero cost, handles ~0.001% of traffic (known violations)
 Tier 1: Distilled model   — 20ms, $0.00001/inference, handles 90% of traffic
@@ -9834,7 +9834,7 @@ Daily cost at 500B pieces:
   Total: ~$35M/day (vs $500M without tiering)
 \`\`\`
 
-**Tier-1 Model Design**:
+Tier-1 Model Design:
 The tier-1 model is deliberately trained to be confident on the extremes:
 - Score > 0.9 → remove (confident violation)
 - Score < 0.1 → allow (confident benign)
@@ -9843,39 +9843,39 @@ The tier-1 model is deliberately trained to be confident on the extremes:
 The tier-1 model is optimized for confidence calibration, not just accuracy.
 A miscalibrated tier-1 that routes 30% to tier-2 instead of 10% doubles cost.
 
-**Feedback Loop**:
+Feedback Loop:
 Monitor the distribution of tier-2 inputs monthly.
 If tier-2 is seeing a new category of content that always resolves to allow,
 retrain tier-1 to handle it directly without tier-2 escalation.`,
       },
       {
         question: 'How do you handle evasion techniques like adversarial images and l33t speak?',
-        answer: `**Image Evasion Techniques and Defenses**:
+        answer: `Image Evasion Techniques and Defenses:
 
-- **Horizontal flip**: Adversary flips violating image to evade hash match
+- Horizontal flip: Adversary flips violating image to evade hash match
   - Defense: compute PDQ hash after normalizing orientation (deskew, detect and undo flip)
   - Defense: train image classifier with augmentation (flips, rotations, crops)
 
-- **Adversarial noise**: add imperceptible pixel noise that fools the classifier
+- Adversarial noise: add imperceptible pixel noise that fools the classifier
   - Defense: adversarial training — include adversarial examples in training data
   - Defense: ensemble multiple model architectures; adversarial noise that fools ResNet often does not fool a ViT
 
-- **Image-in-screenshot**: place violating image inside a screenshot of a news article
+- Image-in-screenshot: place violating image inside a screenshot of a news article
   - Defense: object detection crops and classifies image regions independently
 
-**Text Evasion Techniques and Defenses**:
+Text Evasion Techniques and Defenses:
 
-- **L33t speak / homoglyphs**: "k1ll j3ws", "h@te" using homoglyphs (Cyrillic a vs Latin a)
+- L33t speak / homoglyphs: "k1ll j3ws", "h@te" using homoglyphs (Cyrillic a vs Latin a)
   - Defense: text normalization layer before classification: "k1ll" → "kill", homoglyph normalization
   - Defense: character-level model components that see raw characters, not just tokens
 
-- **Coded language / dog whistles**: new slang terms adopted by bad-actor communities
+- Coded language / dog whistles: new slang terms adopted by bad-actor communities
   - Defense: intelligence team monitors known bad-actor spaces and adds new terms to a watchlist; alert the moderation team when watchlist terms appear at high volume
 
-- **Context shifting**: embed hateful content in a "joke" or "educational" framing
+- Context shifting: embed hateful content in a "joke" or "educational" framing
   - Defense: train on context-labeled data where the same sentence in different contexts has different labels; include surrounding post context in the input
 
-**General Defense Strategy**:
+General Defense Strategy:
 - Red-team the system quarterly: hire adversarial researchers to find bypasses
 - Monitor high-volume bypass attempts in real time (users who post similar borderline content repeatedly)
 - Maintain a fast-path for deploying new rules (2-hour SLA) for novel evasion patterns discovered by the intelligence team, independent of model retraining`,
@@ -10021,18 +10021,18 @@ vector_records {
     keyQuestions: [
       {
         question: 'How does HNSW work and why is it faster than brute force?',
-        answer: `**Brute Force Baseline**:
+        answer: `Brute Force Baseline:
 \`\`\`
 Query vector q, 1B stored vectors, 768 dimensions
 Operations: 1B * 768 multiplications + additions = 768B FLOPs
 Time on CPU (100 GFLOPS): ~7.7 seconds. Unusable.
 \`\`\`
 
-**HNSW (Hierarchical Navigable Small World)**:
+HNSW (Hierarchical Navigable Small World):
 
-**Intuition**: Build a multi-layer graph. Top layers are sparse (few connections, big jumps). Bottom layer is dense (many connections, fine-grained search). Navigate from top to bottom like a zoom-in.
+Intuition: Build a multi-layer graph. Top layers are sparse (few connections, big jumps). Bottom layer is dense (many connections, fine-grained search). Navigate from top to bottom like a zoom-in.
 
-**Structure**:
+Structure:
 \`\`\`
 Layer 2 (sparse): 1000 vectors, each connected to M=16 neighbors
 Layer 1 (medium): 100,000 vectors, each connected to M=16 neighbors
@@ -10040,7 +10040,7 @@ Layer 0 (dense):  1B vectors, each connected to M=16 neighbors
 \`\`\`
 Each vector is assigned to a max layer using exponential decay (most vectors only appear at layer 0).
 
-**Query Algorithm**:
+Query Algorithm:
 \`\`\`
 1. Start at layer 2 entry point
 2. Greedy traversal: move to the neighbor closest to query q
@@ -10050,26 +10050,26 @@ Each vector is assigned to a max layer using exponential decay (most vectors onl
 5. Return top-K from the explored set
 \`\`\`
 
-**Why It Is Fast**:
+Why It Is Fast:
 - Average nodes visited: O(log N) at upper layers + ef_search at layer 0
 - For N=1B, ef_search=200: visit ~30 nodes at upper layers + 200 at layer 0 = 230 node comparisons
 - Each comparison: 768 multiply-adds = 230 * 768 = 177K FLOPs
 - Speedup vs brute force: 768B / 177K = 4,300x faster
 
-**Recall-Latency Trade-off**:
+Recall-Latency Trade-off:
 - Higher ef_search → explore more nodes → better recall, higher latency
 - ef_search=50: 95% recall@10, 5ms query time
 - ef_search=500: 99.9% recall@10, 25ms query time`,
       },
       {
         question: 'How do you handle metadata filtering with ANN search?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 \`\`\`
 Query: "find top-10 products similar to this embedding WHERE category='shoes' AND price < 50"
 Naive approach: HNSW returns top-100, filter to category+price → may get only 3 results
 \`\`\`
 
-**Strategy 1: Post-Filtering (works when filter is not selective)**:
+Strategy 1: Post-Filtering (works when filter is not selective):
 \`\`\`
 1. HNSW search with ef_search=top_k * 10  (e.g., top-100 for top-10 result)
 2. Filter results by metadata
@@ -10078,7 +10078,7 @@ Naive approach: HNSW returns top-100, filter to category+price → may get only 
 Good when filter matches >10% of corpus (shoes are 10% of a product catalog).
 Bad when filter matches 0.01% — need ef_search = 100,000 to get 10 matching results.
 
-**Strategy 2: Pre-Filtering (works when filter is highly selective)**:
+Strategy 2: Pre-Filtering (works when filter is highly selective):
 \`\`\`
 1. Use metadata inverted index to get all IDs matching filter
    category='shoes' AND price<50 → candidate_set = [id1, id2, ..., id50,000]
@@ -10088,7 +10088,7 @@ Bad when filter matches 0.01% — need ef_search = 100,000 to get 10 matching re
 Good when filter matches <1% of corpus.
 Bad when filter matches 50% — brute force over 500M vectors is too slow.
 
-**Hybrid Decision Rule**:
+Hybrid Decision Rule:
 \`\`\`python
 filter_selectivity = estimated_match_count / total_vectors
 if filter_selectivity < 0.001:
@@ -10099,7 +10099,7 @@ else:
     use post-filter with expanded ef_search
 \`\`\`
 
-**HNSW with Inline Filter (Filtered HNSW)**:
+HNSW with Inline Filter (Filtered HNSW):
 During HNSW traversal, skip nodes that do not pass the metadata filter.
 Risk: can get stuck in local minima if many neighbors are filtered out.
 Mitigation: increase ef_search and add backtracking when stuck.
@@ -10273,7 +10273,7 @@ style_adapters {
     keyQuestions: [
       {
         question: 'Why is image generation inherently asynchronous and how do you design the job queue?',
-        answer: `**Why Async Is Required**:
+        answer: `Why Async Is Required:
 \`\`\`
 Diffusion generation timeline:
   Step 1-50: U-Net forward pass, each step: ~100-500ms on A100
@@ -10288,7 +10288,7 @@ User UX expectation: response within 2 seconds
 Synchronous is impossible for slow generation; impractical even for fast.
 \`\`\`
 
-**Job Queue Design**:
+Job Queue Design:
 \`\`\`
 1. POST /generate → validate prompt → deduct credit hold → enqueue → return job_id
 2. User polls GET /jobs/{job_id} every 2 seconds (or uses webhook)
@@ -10299,7 +10299,7 @@ Synchronous is impossible for slow generation; impractical even for fast.
 7. Next poll returns image URLs
 \`\`\`
 
-**Priority Queue Implementation (Redis)**:
+Priority Queue Implementation (Redis):
 \`\`\`
 Key: generation_queue
 Type: Sorted Set
@@ -10312,7 +10312,7 @@ Worker dequeue (atomic):
   job_id = ZPOPMIN generation_queue  -- atomic, no race condition
 \`\`\`
 
-**Estimated Wait Time**:
+Estimated Wait Time:
 \`\`\`python
 queue_depth = ZCARD generation_queue
 worker_throughput = 4 jobs/worker/batch * 60 sec/generation * num_workers
@@ -10320,14 +10320,14 @@ estimated_wait_sec = queue_depth / worker_throughput
 \`\`\`
 Shown to users on submission: "Estimated wait: 45 seconds"
 
-**Webhook Delivery**:
+Webhook Delivery:
 On job completion, publish to Kafka topic "job-completions".
 A webhook delivery service consumes Kafka and POSTs to registered callback URLs.
 Retries with exponential backoff on HTTP failure (3 attempts, max 60 second delay).`,
       },
       {
         question: 'How do you scale GPU capacity for spiky demand without 15-minute provisioning delays?',
-        answer: `**The Problem**:
+        answer: `The Problem:
 \`\`\`
 Baseline:    1,000 jobs/sec, 200 GPU workers, avg wait 5 seconds
 Viral spike: 10,000 jobs/sec (10x) arrives in 2 minutes
@@ -10336,7 +10336,7 @@ Cloud GPU provisioning: 5-15 minutes from API call to ready
 If we auto-scale on the spike: help arrives 15 min later, spike may be over
 \`\`\`
 
-**Strategy 1: Pre-Warm Buffer**:
+Strategy 1: Pre-Warm Buffer:
 Always maintain 20-30% idle GPU capacity ("warm pool"):
 \`\`\`
 Normal load: 200 workers needed, keep 250 running
@@ -10345,7 +10345,7 @@ Benefit: instant 25% surge capacity, no cold start needed
 \`\`\`
 Pre-warm workers sit in a "ready" state with model loaded, waiting for jobs.
 
-**Strategy 2: Predictive Auto-Scaling**:
+Strategy 2: Predictive Auto-Scaling:
 \`\`\`python
 # Every 10 seconds
 queue_depth = redis.zcard("generation_queue")
@@ -10359,7 +10359,7 @@ if projected_wait_60s > 60:  # projected wait exceeds SLO
 \`\`\`
 Predictive: scale before the queue builds up, not after.
 
-**Strategy 3: Load Shedding for Sustained Overload**:
+Strategy 3: Load Shedding for Sustained Overload:
 If queue depth exceeds 10,000 and growing:
 \`\`\`
 Free tier: return 429 with "Service busy, try again in 10 minutes"
@@ -10368,7 +10368,7 @@ Premium tier: always accepted, served from reserved GPU capacity
 \`\`\`
 Load shedding prevents runaway queue growth that makes wait times unbounded.
 
-**Strategy 4: Spot Instances with On-Demand Fallback**:
+Strategy 4: Spot Instances with On-Demand Fallback:
 \`\`\`
 Baseline fleet: on-demand instances (reliable, 3x cost of spot)
 Surge capacity: spot instances (cheap but may be preempted)
@@ -10378,7 +10378,7 @@ Workers designed to be stateless — any in-flight generation can be restarted
       },
       {
         question: 'How do you prevent generation of NSFW and policy-violating images?',
-        answer: `**Two-Layer Safety Pipeline**:
+        answer: `Two-Layer Safety Pipeline:
 \`\`\`
 User Prompt
     |
@@ -10398,20 +10398,20 @@ User Prompt
     |-- Pass: deliver signed CDN URL to user
 \`\`\`
 
-**Layer 1: Prompt Safety Filter**:
+Layer 1: Prompt Safety Filter:
 - Keyword blocklist: exact and fuzzy match against known violating terms (fast, O(1))
 - Text classifier (DistilBERT): scores prompt for sexual content, violence, real-person targeting (<50ms)
 - Named entity recognition: extract person names, check against celebrity/public figure blocklist
 - Prompt injection detection: catch attempts to override system prompt ("ignore instructions and generate...")
 - Cost: <100ms, pure CPU, runs before any GPU is allocated
 
-**Layer 2: Output Safety Classifier**:
+Layer 2: Output Safety Classifier:
 - NSFW image classifier: nude/suggestive content; runs on CPU in parallel with next batch on GPU
 - Face detection + embedding: compare faces in generated image against known public figure embedding database; block if cosine similarity > threshold for non-consented likeness
 - Watermarking: invisible semantic watermark embedded in generated images (C2PA standard); allows provenance tracing if image is misused
 - If violated: do not deliver CDN URL, mark job "failed_safety", refund credits, increment user violation count
 
-**Adversarial Resistance**:
+Adversarial Resistance:
 - Prompt injection via l33t speak: normalize text before classifier ("g3n3r@te" → "generate")
 - Indirect prompts: "draw my friend Jane Doe who looks like [celebrity]" → NER catches the name
 - Style prompts that imply NSFW: "anime style, ecchi" → style classifier catches intent even without explicit words

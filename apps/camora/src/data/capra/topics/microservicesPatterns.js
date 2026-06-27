@@ -59,11 +59,11 @@ Understanding the API Gateway pattern is essential for system design interviews 
     keyQuestions: [
       {
         question: 'How does an API Gateway differ from a reverse proxy or load balancer?',
-        answer: `**Reverse Proxy**: Forwards requests to a single upstream service. Operates at the transport layer (L4) or HTTP layer (L7). Does not understand application semantics.
+        answer: `Reverse Proxy: Forwards requests to a single upstream service. Operates at the transport layer (L4) or HTTP layer (L7). Does not understand application semantics.
 
-**Load Balancer**: Distributes traffic across multiple instances of the same service. Focuses on health checking and traffic distribution.
+Load Balancer: Distributes traffic across multiple instances of the same service. Focuses on health checking and traffic distribution.
 
-**API Gateway**: A superset of both, plus application-aware features:
+API Gateway: A superset of both, plus application-aware features:
 
 \`\`\`
 Client Request
@@ -86,17 +86,17 @@ Client Request
   (REST)     (gRPC)     (GraphQL)
 \`\`\`
 
-**Key differentiators**:
-- **API composition**: Gateway can fan-out to multiple services and merge responses into one payload
-- **Protocol translation**: Accept REST from client, call gRPC internally
-- **Schema validation**: Reject malformed requests before they hit backends
-- **Client-specific shaping**: Return different fields for mobile vs web
+Key differentiators:
+- API composition: Gateway can fan-out to multiple services and merge responses into one payload
+- Protocol translation: Accept REST from client, call gRPC internally
+- Schema validation: Reject malformed requests before they hit backends
+- Client-specific shaping: Return different fields for mobile vs web
 
-**Interview tip**: Emphasize that the gateway is application-aware and handles concerns that a plain reverse proxy cannot.`
+Interview tip: Emphasize that the gateway is application-aware and handles concerns that a plain reverse proxy cannot.`
       },
       {
         question: 'What are the risks of the API Gateway becoming a bottleneck, and how do you mitigate them?',
-        answer: `**Risk 1 — Single point of failure**:
+        answer: `Risk 1 — Single point of failure:
 If the gateway goes down, the entire system is unreachable.
 
 Mitigation:
@@ -104,7 +104,7 @@ Mitigation:
 - Run at least 3 instances with health checking
 - Use blue/green or canary deployments for gateway updates
 
-**Risk 2 — Latency overhead**:
+Risk 2 — Latency overhead:
 Every request pays an extra network hop and processing time.
 
 Mitigation:
@@ -112,7 +112,7 @@ Mitigation:
 - Use async I/O (event-driven architecture like Envoy or Nginx)
 - Avoid heavy computation; offload to backend services
 
-**Risk 3 — Monolithic gateway**:
+Risk 3 — Monolithic gateway:
 Over time, teams add business logic, transformations, and orchestration until the gateway becomes a new monolith.
 
 Mitigation:
@@ -133,7 +133,7 @@ Gateway    Gateway
 Svc-A Svc-B Svc-A Svc-B
 \`\`\`
 
-**Risk 4 — Coupling**:
+Risk 4 — Coupling:
 Gateway routing rules create implicit coupling to service URLs and contracts.
 
 Mitigation:
@@ -143,9 +143,9 @@ Mitigation:
       },
       {
         question: 'How do you implement API composition at the gateway?',
-        answer: `**API composition** aggregates data from multiple services into a single response. For example, a product page needs data from the Product Service, Inventory Service, and Reviews Service.
+        answer: `API composition aggregates data from multiple services into a single response. For example, a product page needs data from the Product Service, Inventory Service, and Reviews Service.
 
-**Sequential composition**:
+Sequential composition:
 \`\`\`
 Client --> Gateway
              |
@@ -162,7 +162,7 @@ Client --> Gateway
 \`\`\`
 Latency = sum of all calls. Simple but slow.
 
-**Parallel composition**:
+Parallel composition:
 \`\`\`
 Client --> Gateway
              |
@@ -178,14 +178,14 @@ Client --> Gateway
 \`\`\`
 Latency = max(all calls). Faster but requires independent data.
 
-**Hybrid**: Fan out independent calls in parallel, then make dependent calls sequentially.
+Hybrid: Fan out independent calls in parallel, then make dependent calls sequentially.
 
-**Error handling strategies**:
-- **Fail fast**: If any service fails, return error immediately
-- **Partial response**: Return available data, mark missing fields as null
-- **Fallback**: Use cached or default values for failed calls
+Error handling strategies:
+- Fail fast: If any service fails, return error immediately
+- Partial response: Return available data, mark missing fields as null
+- Fallback: Use cached or default values for failed calls
 
-**Best practices**:
+Best practices:
 - Set per-service timeouts shorter than client timeout
 - Use circuit breakers per downstream service
 - Return partial responses with degradation headers rather than failing entirely
@@ -193,26 +193,26 @@ Latency = max(all calls). Faster but requires independent data.
       },
       {
         question: 'Compare popular API Gateway implementations and when to choose each.',
-        answer: `**Kong (Open Source / Enterprise)**:
+        answer: `Kong (Open Source / Enterprise):
 - Built on Nginx + Lua (OpenResty)
 - Plugin ecosystem for auth, rate limiting, logging
 - Best for: Teams wanting open-source with enterprise support
 - Throughput: ~30K RPS per node
 
-**AWS API Gateway**:
+AWS API Gateway:
 - Fully managed, serverless
 - Native integration with Lambda, IAM, Cognito
 - Best for: AWS-native serverless architectures
 - Pay-per-request pricing (no idle cost)
 - Limitation: 29-second timeout, 10MB payload
 
-**Envoy Proxy**:
+Envoy Proxy:
 - C++ high-performance proxy
 - Native gRPC, HTTP/2 support
 - Best for: Service mesh (Istio data plane), high-throughput systems
 - Throughput: ~100K+ RPS per node
 
-**Spring Cloud Gateway**:
+Spring Cloud Gateway:
 - Java/Spring ecosystem
 - Reactive (non-blocking) architecture
 - Best for: Java microservices teams already using Spring Boot
@@ -231,7 +231,7 @@ Managed      | Opt.  |  Yes   |  No   |  No
 Performance  | High  |  Med   | V.High|  Med
 \`\`\`
 
-**Interview guidance**: State the trade-off you are making. For example: "I would choose Envoy for a high-throughput, polyglot environment because it handles gRPC and HTTP/2 natively and serves as the data plane if we adopt Istio later."`
+Interview guidance: State the trade-off you are making. For example: "I would choose Envoy for a high-throughput, polyglot environment because it handles gRPC and HTTP/2 natively and serves as the data plane if we adopt Istio later."`
       },
     ],
 
@@ -259,10 +259,10 @@ Performance  | High  |  Med   | V.High|  Med
   +--+ +--+ +--+
 
 Route Configuration:
-  /api/v1/users/**     --> User Service (port 8001)
-  /api/v1/products/**  --> Product Service (port 8002)
-  /api/v1/orders/**    --> Order Service (port 8003)
-  /api/v1/search/**    --> Search Service (port 8004)
+  /api/v1/users/     --> User Service (port 8001)
+  /api/v1/products/  --> Product Service (port 8002)
+  /api/v1/orders/    --> Order Service (port 8003)
+  /api/v1/search/    --> Search Service (port 8004)
 
 Rate Limiting Config:
   Global:     1000 req/s
@@ -314,7 +314,7 @@ Interviewers probe this topic to test your understanding of distributed systems 
     keyQuestions: [
       {
         question: 'What is the difference between client-side and server-side service discovery?',
-        answer: `**Client-Side Discovery**:
+        answer: `Client-Side Discovery:
 The client queries the service registry directly and selects an instance using a load-balancing algorithm.
 
 \`\`\`
@@ -342,7 +342,7 @@ Cons:
 
 Examples: Netflix Ribbon + Eureka, gRPC client-side LB
 
-**Server-Side Discovery**:
+Server-Side Discovery:
 The client sends requests to a load balancer/router that queries the registry and forwards the request.
 
 \`\`\`
@@ -369,25 +369,25 @@ Cons:
 
 Examples: AWS ALB + ECS, Kubernetes kube-proxy + CoreDNS, Consul Connect
 
-**Interview tip**: In Kubernetes, server-side discovery via ClusterIP services is the default and simplest approach. Mention client-side only when you need fine-grained control.`
+Interview tip: In Kubernetes, server-side discovery via ClusterIP services is the default and simplest approach. Mention client-side only when you need fine-grained control.`
       },
       {
         question: 'How do service registries maintain consistency and handle failures?',
-        answer: `**Consistency models vary by registry**:
+        answer: `Consistency models vary by registry:
 
-**Consul** (CP by default):
+Consul (CP by default):
 - Uses Raft consensus for strong consistency
 - Writes require leader acknowledgment + quorum
 - Reads can be stale (default) or strongly consistent
 - If the leader fails, a new election takes ~300ms
 
-**Eureka** (AP):
+Eureka (AP):
 - Peer-to-peer replication, no leader
 - Every node accepts writes, syncs to peers asynchronously
 - During network partition, instances continue serving stale data
 - Self-preservation mode: stops evicting instances if too many heartbeats missing simultaneously
 
-**etcd** (CP):
+etcd (CP):
 - Raft consensus, strongly consistent
 - Foundation of Kubernetes service discovery
 - Watches API for efficient change notification
@@ -408,13 +408,13 @@ Failure scenario:
   - Leader down: new election in ~300ms
 \`\`\`
 
-**Health checking approaches**:
+Health checking approaches:
 
-1. **TTL-based**: Service sends heartbeat every N seconds; registry deregisters after 3x TTL with no heartbeat
-2. **Active probe**: Registry sends HTTP/TCP/gRPC health checks to each instance
-3. **Script check**: Registry runs a custom health check script on the service host
+1. TTL-based: Service sends heartbeat every N seconds; registry deregisters after 3x TTL with no heartbeat
+2. Active probe: Registry sends HTTP/TCP/gRPC health checks to each instance
+3. Script check: Registry runs a custom health check script on the service host
 
-**Failure handling best practices**:
+Failure handling best practices:
 - Use both liveness (is the process alive?) and readiness (can it serve traffic?) checks
 - Set deregistration delay (e.g., 90 seconds) to tolerate temporary network blips
 - Implement graceful shutdown: deregister before stopping, drain in-flight requests
@@ -424,7 +424,7 @@ Failure scenario:
         question: 'How does service discovery work in Kubernetes?',
         answer: `Kubernetes has built-in service discovery through three mechanisms:
 
-**1. ClusterIP Services (most common)**:
+1. ClusterIP Services (most common):
 \`\`\`yaml
 apiVersion: v1
 kind: Service
@@ -443,7 +443,7 @@ spec:
 - kube-proxy programs iptables/IPVS rules on every node
 - Requests to ClusterIP are load-balanced across healthy pods
 
-**2. Headless Services (client-side discovery)**:
+2. Headless Services (client-side discovery):
 \`\`\`
 spec:
   clusterIP: None  # Headless
@@ -452,7 +452,7 @@ spec:
 - Client decides which pod to call
 - Used for stateful workloads (databases, Kafka)
 
-**3. External service discovery (cross-cluster)**:
+3. External service discovery (cross-cluster):
 - Consul Connect, Istio multi-cluster, AWS Cloud Map
 - Needed when services span multiple Kubernetes clusters or hybrid environments
 
@@ -473,16 +473,16 @@ Pod A                CoreDNS              kube-proxy          Pod B
   |<------------------------------ Response ------------------|
 \`\`\`
 
-**Readiness Gates**:
+Readiness Gates:
 - Pods only receive traffic when readiness probe passes
 - Failing readiness removes the pod from Endpoints (but does not restart it)
 - Liveness probe failure restarts the pod`
       },
       {
         question: 'How do you handle service discovery in a multi-region or hybrid cloud deployment?',
-        answer: `**Challenge**: Services are deployed across multiple regions, cloud providers, or on-prem data centers. A single Kubernetes cluster or Consul datacenter is no longer sufficient.
+        answer: `Challenge: Services are deployed across multiple regions, cloud providers, or on-prem data centers. A single Kubernetes cluster or Consul datacenter is no longer sufficient.
 
-**Approach 1 — Federated Service Registry**:
+Approach 1 — Federated Service Registry:
 \`\`\`
 Region US-East          Region EU-West
 +------------+         +------------+
@@ -500,7 +500,7 @@ Consul supports multi-datacenter federation out of the box:
 - Services can query across DCs: user-service.service.eu-west.consul
 - Prepared queries enable failover: prefer local DC, fall back to remote
 
-**Approach 2 — Global Load Balancer + Regional Discovery**:
+Approach 2 — Global Load Balancer + Regional Discovery:
 \`\`\`
      Client
        |
@@ -519,12 +519,12 @@ Discovery Discovery
 
 Each region runs its own discovery independently. Global DNS routes clients to the nearest region. Cross-region calls use explicit region-qualified URLs.
 
-**Approach 3 — Service Mesh (Istio Multi-Cluster)**:
+Approach 3 — Service Mesh (Istio Multi-Cluster):
 - Istio control plane manages service identity and routing across clusters
 - mTLS secures cross-cluster communication
 - Locality-aware load balancing prefers local, then regional, then remote instances
 
-**Best practices for multi-region discovery**:
+Best practices for multi-region discovery:
 - Prefer local calls whenever possible (latency, cost)
 - Implement region-aware health checking (mark remote instances as degraded, not down)
 - Use locality-weighted routing: 80% local, 20% secondary
@@ -610,7 +610,7 @@ Netflix pioneered this pattern at scale with Hystrix, handling billions of reque
     keyQuestions: [
       {
         question: 'Explain the circuit breaker state machine and transitions.',
-        answer: `**Three states**:
+        answer: `Three states:
 
 \`\`\`
              success threshold met
@@ -626,36 +626,36 @@ Netflix pioneered this pattern at scale with Hystrix, handling billions of reque
                  met
 \`\`\`
 
-**CLOSED (normal operation)**:
+CLOSED (normal operation):
 - All requests pass through to the downstream service
 - Failures are counted in a sliding window
 - When failure count or rate exceeds threshold, transition to OPEN
 - Example: >50% failures in last 10 requests -> OPEN
 
-**OPEN (fail fast)**:
+OPEN (fail fast):
 - All requests are immediately rejected with a fallback response
 - No requests reach the downstream service
 - A timer starts (e.g., 30 seconds)
 - When timer expires, transition to HALF_OPEN
 
-**HALF_OPEN (probe)**:
+HALF_OPEN (probe):
 - A limited number of trial requests (e.g., 3) are sent to the downstream service
 - If trial requests succeed, transition to CLOSED
 - If any trial request fails, transition back to OPEN (reset timer)
 
-**Sliding window types**:
+Sliding window types:
 
-1. **Count-based**: Track last N requests
+1. Count-based: Track last N requests
    - Trip at: 5 failures out of last 10 calls
    - Pros: Simple, predictable
    - Cons: Slow to react during low traffic
 
-2. **Time-based**: Track requests in last N seconds
+2. Time-based: Track requests in last N seconds
    - Trip at: >50% failure rate in last 60 seconds, minimum 10 calls
    - Pros: Adapts to traffic volume
    - Cons: More complex, needs minimum call threshold
 
-**Configuration example (Resilience4j)**:
+Configuration example (Resilience4j):
 - failureRateThreshold: 50 (percent)
 - slidingWindowSize: 10 (calls)
 - waitDurationInOpenState: 30s
@@ -664,7 +664,7 @@ Netflix pioneered this pattern at scale with Hystrix, handling billions of reque
       },
       {
         question: 'How do cascading failures happen and how do circuit breakers prevent them?',
-        answer: `**Cascading failure scenario** (without circuit breakers):
+        answer: `Cascading failure scenario (without circuit breakers):
 
 \`\`\`
 Step 1: Payment Service becomes slow (DB overloaded)
@@ -694,7 +694,7 @@ Step 3: Cascade continues upstream
     User sees: "Something went wrong"
 \`\`\`
 
-**With circuit breakers**:
+With circuit breakers:
 
 \`\`\`
 Step 1: Payment Service becomes slow
@@ -727,40 +727,40 @@ Step 3: Recovery
        Circuit: CLOSED (back to normal)
 \`\`\`
 
-**Key insight**: The circuit breaker preserves the calling service's resources by failing fast instead of waiting for timeouts. This keeps Order Service healthy even when Payment Service is down.
+Key insight: The circuit breaker preserves the calling service's resources by failing fast instead of waiting for timeouts. This keeps Order Service healthy even when Payment Service is down.
 
-**Defense in depth** — combine with:
-- **Timeouts**: Set aggressive timeouts (e.g., 2s) so threads are not blocked for 30s
-- **Bulkheads**: Isolate thread pools per dependency so a slow Payment Service does not starve threads for Inventory calls
-- **Retries with backoff**: Retry transient failures but stop when circuit opens`
+Defense in depth — combine with:
+- Timeouts: Set aggressive timeouts (e.g., 2s) so threads are not blocked for 30s
+- Bulkheads: Isolate thread pools per dependency so a slow Payment Service does not starve threads for Inventory calls
+- Retries with backoff: Retry transient failures but stop when circuit opens`
       },
       {
         question: 'What fallback strategies should you use when the circuit is open?',
-        answer: `**Strategy 1 — Cached response**:
+        answer: `Strategy 1 — Cached response:
 Return the last known good response from a local cache.
 - Best for: Product catalog, user profiles, configuration
 - Example: Show last cached product price when Pricing Service is down
 - Risk: Stale data (mitigate with cache TTL and staleness indicators)
 
-**Strategy 2 — Default value**:
+Strategy 2 — Default value:
 Return a sensible default or empty response.
 - Best for: Recommendations, non-critical features
 - Example: Show generic "popular items" when Recommendation Service is down
 - Risk: Degraded experience (but service stays up)
 
-**Strategy 3 — Queue for later**:
+Strategy 3 — Queue for later:
 Accept the request and process it asynchronously when the service recovers.
 - Best for: Writes that are not time-critical (emails, analytics, logs)
 - Example: Queue payment retry when Payment Service is down
 - Risk: Increased latency for eventual processing
 
-**Strategy 4 — Alternative service**:
+Strategy 4 — Alternative service:
 Route to a backup or degraded version of the service.
 - Best for: Critical functionality with redundant providers
 - Example: Fall back to secondary payment processor
 - Risk: Maintaining multiple integrations
 
-**Strategy 5 — Graceful error**:
+Strategy 5 — Graceful error:
 Return a clear error with retry guidance rather than a cryptic failure.
 - Best for: When no reasonable fallback exists
 - Example: "Payment processing is temporarily unavailable. Your cart is saved."
@@ -792,21 +792,21 @@ Fallback Decision Tree:
       },
       {
         question: 'Compare Hystrix and Resilience4j, and when would you use each?',
-        answer: `**Hystrix** (Netflix, now in maintenance mode):
+        answer: `Hystrix (Netflix, now in maintenance mode):
 - Thread pool isolation by default (each dependency gets its own thread pool)
 - Separate execution threads from calling threads
 - Rich dashboard (Hystrix Dashboard + Turbine for aggregation)
 - Heavy: creates threads per dependency, higher memory footprint
 - Java only
 
-**Resilience4j** (modern replacement):
+Resilience4j (modern replacement):
 - Lightweight, functional style (decorators/higher-order functions)
 - Semaphore isolation by default (no extra thread pools)
 - Modular: use only what you need (CircuitBreaker, RateLimiter, Retry, Bulkhead, TimeLimiter)
 - Works with Java 8+, Kotlin, reactive streams (Project Reactor, RxJava)
 - Better metrics integration (Micrometer, Prometheus)
 
-**Comparison**:
+Comparison:
 \`\`\`
 Feature         | Hystrix       | Resilience4j
 ----------------|---------------|------------------
@@ -820,18 +820,18 @@ Languages       | Java          | Java, Kotlin
 Composition     | HystrixCommand| Decorator chaining
 \`\`\`
 
-**When to use Resilience4j** (almost always):
+When to use Resilience4j (almost always):
 - Greenfield projects
 - Spring Boot applications (first-class support)
 - Need lightweight, modular approach
 - Reactive programming
 
-**When you might still see Hystrix**:
+When you might still see Hystrix:
 - Legacy Netflix OSS stack
 - Existing systems not worth migrating
 - Heavy thread pool isolation requirement
 
-**Service mesh alternative** (language-agnostic):
+Service mesh alternative (language-agnostic):
 - Istio/Envoy: Circuit breaking at the network proxy level
 - No code changes required
 - Configuration via DestinationRule CRDs in Kubernetes
@@ -906,9 +906,9 @@ This pattern is critical in e-commerce (order creation spans Inventory, Payment,
     keyQuestions: [
       {
         question: 'Compare choreography-based and orchestration-based sagas with a concrete example.',
-        answer: `**Scenario**: Create an order that spans Order, Payment, and Inventory services.
+        answer: `Scenario: Create an order that spans Order, Payment, and Inventory services.
 
-**Choreography (event-driven)**:
+Choreography (event-driven):
 Each service listens for events and publishes the next event. No central coordinator.
 
 \`\`\`
@@ -935,7 +935,7 @@ Cons:
 - Cyclic dependencies can emerge
 - Testing the full saga requires all services running
 
-**Orchestration (central coordinator)**:
+Orchestration (central coordinator):
 A saga orchestrator tells each service what to do and tracks the state.
 
 \`\`\`
@@ -961,15 +961,15 @@ Cons:
 - Tighter coupling (orchestrator knows all services)
 - Risk of centralizing too much logic
 
-**When to choose**:
+When to choose:
 - Choreography: Simple flows, 2-3 steps, event-driven architecture already in place
 - Orchestration: Complex flows, 4+ steps, need clear visibility, need to modify flow frequently`
       },
       {
         question: 'How do compensating transactions work? Design compensation for an e-commerce order saga.',
-        answer: `**Compensating transactions** undo the effect of a completed step. They are NOT database rollbacks — they are new forward actions that semantically reverse the previous step.
+        answer: `Compensating transactions undo the effect of a completed step. They are NOT database rollbacks — they are new forward actions that semantically reverse the previous step.
 
-**E-commerce Order Saga (5 steps)**:
+E-commerce Order Saga (5 steps):
 
 \`\`\`
 Step  | Action                  | Compensation
@@ -981,7 +981,7 @@ Step  | Action                  | Compensation
   5   | Schedule Shipping       | Cancel Shipment
 \`\`\`
 
-**Failure at step 3 (Payment fails)**:
+Failure at step 3 (Payment fails):
 
 \`\`\`
 Orchestrator
@@ -997,34 +997,34 @@ Orchestrator
                  (Payment was never charged)
 \`\`\`
 
-**Critical design rules**:
+Critical design rules:
 
-1. **Compensation is semantic, not physical**:
+1. Compensation is semantic, not physical:
    - Charging $100 is compensated by Refunding $100 (a new credit transaction)
    - NOT by deleting the charge record
    - Both the charge and refund appear in the audit trail
 
-2. **Compensation must be idempotent**:
+2. Compensation must be idempotent:
    - The compensating action might be called multiple times (network retries)
    - Use idempotency keys: "refund for saga-123-step-3"
    - Check if compensation already applied before executing
 
-3. **Some actions cannot be compensated**:
+3. Some actions cannot be compensated:
    - Sending an email (solution: send a follow-up correction email)
    - Sending a notification (solution: send a retraction)
    - Physical delivery (solution: schedule return pickup)
    - Design principle: put hard-to-compensate steps last in the saga
 
-4. **Compensation can fail too**:
+4. Compensation can fail too:
    - Retry compensation with exponential backoff
    - After max retries, raise an alert for manual intervention
    - Store saga state so operators can resume compensation`
       },
       {
         question: 'What are semantic locks and other saga countermeasures?',
-        answer: `**Problem**: During saga execution, intermediate data is visible to other transactions. This creates anomalies similar to dirty reads in databases.
+        answer: `Problem: During saga execution, intermediate data is visible to other transactions. This creates anomalies similar to dirty reads in databases.
 
-**Example anomaly**:
+Example anomaly:
 \`\`\`
 Saga 1: Create Order for $100
   Step 1: Reserve $100 from wallet (balance: $200 -> $100)
@@ -1039,7 +1039,7 @@ Saga 1 fails at Step 3:
   --> User now has $200 again, but they saw $100 briefly
 \`\`\`
 
-**Countermeasure 1 — Semantic Lock**:
+Countermeasure 1 — Semantic Lock:
 Mark records as "in-progress" so other transactions know the data is tentative.
 
 \`\`\`
@@ -1055,39 +1055,39 @@ Other services check: if order.status == PENDING,
 treat with caution (show "processing" to user)
 \`\`\`
 
-**Countermeasure 2 — Commutative Updates**:
+Countermeasure 2 — Commutative Updates:
 Design operations so that order does not matter.
 - Instead of SET balance = 100, use INCREMENT balance BY -100
 - Commutative operations can be applied in any order
 
-**Countermeasure 3 — Pessimistic View**:
+Countermeasure 3 — Pessimistic View:
 Reorder saga steps to reduce the window of dirty reads.
 - Put steps that query data before steps that modify data
 - Check inventory BEFORE reserving payment
 
-**Countermeasure 4 — Reread Value**:
+Countermeasure 4 — Reread Value:
 Before committing, re-read the value to verify it has not changed.
 - Similar to optimistic concurrency control
 - Use version numbers or ETags
 
-**Countermeasure 5 — Version File**:
+Countermeasure 5 — Version File:
 Record all operations on a record and use the log to compute the correct state.
 - Similar to event sourcing
 - Handles out-of-order operations
 
-**Best practice**: Use semantic locks (PENDING status) as the primary countermeasure and combine with commutative updates where possible.`
+Best practice: Use semantic locks (PENDING status) as the primary countermeasure and combine with commutative updates where possible.`
       },
       {
         question: 'How do you handle saga step timeouts and the "stuck saga" problem?',
-        answer: `**The stuck saga problem**: A saga step does not respond — it did not succeed, did not fail, it just... hangs. The orchestrator does not know whether to proceed or compensate.
+        answer: `The stuck saga problem: A saga step does not respond — it did not succeed, did not fail, it just... hangs. The orchestrator does not know whether to proceed or compensate.
 
-**Root causes**:
+Root causes:
 - Network partition between orchestrator and service
 - Service crashed mid-processing
 - Database deadlock in the target service
 - Message lost in the event bus
 
-**Solution: Timeout + Retry + Eventual Compensation**
+Solution: Timeout + Retry + Eventual Compensation
 
 \`\`\`
 Orchestrator Timeout Strategy:
@@ -1108,11 +1108,11 @@ Orchestrator Timeout Strategy:
   |   Begin compensation from Step N-1 backwards
 \`\`\`
 
-**But what if the step actually succeeded?**
+But what if the step actually succeeded?
 
 This is the fundamental problem. The service might have processed the request but the response was lost. Now the orchestrator compensates unnecessarily.
 
-**Solution: Idempotency + At-least-once delivery**:
+Solution: Idempotency + At-least-once delivery:
 
 1. Assign a unique saga_step_id to every step
 2. The target service stores {saga_step_id: result} before responding
@@ -1131,12 +1131,12 @@ saga-123 |  2c  | payment-svc | COMPENSATED | 10:00:08 | 10:00:09
 saga-123 |  1c  | order-svc   | COMPENSATED | 10:00:09 | 10:00:10
 \`\`\`
 
-**Dead letter queue for unresolvable sagas**:
+Dead letter queue for unresolvable sagas:
 - After max retries on compensation, push to DLQ
 - Operators review and resolve manually
 - Dashboard shows stuck sagas with full step history
 
-**Prevention**:
+Prevention:
 - Keep saga steps short (< 5 seconds each)
 - Use async messaging (guaranteed delivery) over synchronous HTTP
 - Monitor saga duration distributions; alert on anomalies`
@@ -1215,7 +1215,7 @@ Bulkheads are a prerequisite for building resilient systems. They pair naturally
     keyQuestions: [
       {
         question: 'How does thread pool isolation work and when should you use it?',
-        answer: `**Thread pool isolation** dedicates a separate thread pool for each dependency, so a slow or failing dependency can only consume its own pool.
+        answer: `Thread pool isolation dedicates a separate thread pool for each dependency, so a slow or failing dependency can only consume its own pool.
 
 \`\`\`
 Without Bulkhead (shared pool):
@@ -1249,7 +1249,7 @@ Inventory and User pools unaffected!
 --> Service continues serving Inventory and User requests
 \`\`\`
 
-**Sizing the thread pool**:
+Sizing the thread pool:
 \`\`\`
 pool_size = target_requests_per_second x p99_latency_in_seconds x safety_factor
 
@@ -1260,19 +1260,19 @@ Example for Payment Service:
   pool_size = 100 x 0.5 x 1.5 = 75 threads
 \`\`\`
 
-**When to use thread pool isolation**:
+When to use thread pool isolation:
 - Calling slow or unreliable external services
 - Network I/O with unpredictable latency
 - Any dependency that could block for seconds
 
-**When NOT to use**:
+When NOT to use:
 - In-memory operations (cache lookups)
 - Very fast calls (< 5ms) where thread context switching adds more overhead than the call itself
 - In reactive/async systems where threads are not blocked (use semaphore instead)`
       },
       {
         question: 'What is semaphore isolation and how does it differ from thread pool isolation?',
-        answer: `**Semaphore isolation** uses a counter (semaphore) to limit concurrent calls to a dependency, but the call executes on the calling thread — no separate thread pool.
+        answer: `Semaphore isolation uses a counter (semaphore) to limit concurrent calls to a dependency, but the call executes on the calling thread — no separate thread pool.
 
 \`\`\`
 Thread Pool Isolation:
@@ -1296,7 +1296,7 @@ Semaphore Isolation:
   - Cannot enforce timeout (depends on HTTP client timeout)
 \`\`\`
 
-**Comparison**:
+Comparison:
 \`\`\`
 Feature              | Thread Pool      | Semaphore
 ---------------------|-----------------|------------------
@@ -1310,7 +1310,7 @@ Resilience4j default | No              | Yes
 Hystrix default      | Yes             | No
 \`\`\`
 
-**Decision guide**:
+Decision guide:
 \`\`\`
 Is the call blocking I/O?
   |-- Yes: Is latency unpredictable (> 100ms p99)?
@@ -1320,7 +1320,7 @@ Is the call blocking I/O?
         --> Semaphore always (threads not blocked)
 \`\`\`
 
-**Resilience4j Bulkhead configuration**:
+Resilience4j Bulkhead configuration:
 - Thread pool: maxConcurrent=25, maxWait=0 (reject immediately when full)
 - Semaphore: maxConcurrent=25, maxWaitDuration=500ms`
       },
@@ -1328,7 +1328,7 @@ Is the call blocking I/O?
         question: 'How do you implement bulkheads at different architectural layers?',
         answer: `Bulkheads can be applied at multiple levels:
 
-**Layer 1 — Code level (thread/semaphore pools)**:
+Layer 1 — Code level (thread/semaphore pools):
 \`\`\`
 Per-dependency thread pools in a single service:
 
@@ -1341,7 +1341,7 @@ Per-dependency thread pools in a single service:
   +---------------------------+
 \`\`\`
 
-**Layer 2 — Connection pools**:
+Layer 2 — Connection pools:
 \`\`\`
 Database connection pool isolation:
 
@@ -1356,7 +1356,7 @@ Database connection pool isolation:
 A heavy analytics query cannot starve the write pool.
 \`\`\`
 
-**Layer 3 — Process/container isolation**:
+Layer 3 — Process/container isolation:
 \`\`\`
 Kubernetes resource limits:
 
@@ -1374,7 +1374,7 @@ Kubernetes resource limits:
 Payment-svc cannot consume all node resources.
 \`\`\`
 
-**Layer 4 — Infrastructure isolation**:
+Layer 4 — Infrastructure isolation:
 \`\`\`
 Separate infrastructure per criticality tier:
 
@@ -1388,7 +1388,7 @@ Separate infrastructure per criticality tier:
 Tier 2 outage does not affect Tier 1.
 \`\`\`
 
-**Layer 5 — Network-level (service mesh)**:
+Layer 5 — Network-level (service mesh):
 \`\`\`yaml
 Istio DestinationRule:
 
@@ -1408,17 +1408,17 @@ spec:
         http2MaxRequests: 100
 \`\`\`
 
-**Best practice**: Apply bulkheads at every layer for defense in depth. Code-level pools protect against slow dependencies, container limits protect against resource abuse, infrastructure isolation protects against catastrophic failures.`
+Best practice: Apply bulkheads at every layer for defense in depth. Code-level pools protect against slow dependencies, container limits protect against resource abuse, infrastructure isolation protects against catastrophic failures.`
       },
       {
         question: 'How do you size and tune bulkheads in production?',
-        answer: `**Step 1 — Measure baseline metrics** (before adding bulkheads):
+        answer: `Step 1 — Measure baseline metrics (before adding bulkheads):
 - p50, p95, p99 latency per dependency
 - Throughput (RPS) per dependency
 - Current thread/connection usage patterns
 - Failure rates per dependency
 
-**Step 2 — Calculate initial pool sizes**:
+Step 2 — Calculate initial pool sizes:
 \`\`\`
 Formula: pool_size = RPS x response_time_seconds x headroom
 
@@ -1437,13 +1437,13 @@ User Service:
   pool = 1000 x 0.02 x 1.5 = 30 threads
 \`\`\`
 
-**Step 3 — Set rejection policy**:
+Step 3 — Set rejection policy:
 - What happens when the pool is full?
 - Option A: Reject immediately (fast failure) — preferred for real-time requests
 - Option B: Queue briefly (100-500ms max wait) — acceptable for background tasks
 - Option C: Shed load by priority (drop low-priority requests first)
 
-**Step 4 — Monitor and alert**:
+Step 4 — Monitor and alert:
 \`\`\`
 Key metrics:
   bulkhead_active_threads{name="payment"}      (current usage)
@@ -1457,13 +1457,13 @@ Alert rules:
   - queue_depth > 0 sustained       --> Review sizing
 \`\`\`
 
-**Step 5 — Tune iteratively**:
+Step 5 — Tune iteratively:
 - Pools too small: Excessive rejections even when dependency is healthy
 - Pools too large: Waste memory, slow failure detection
 - Watch for seasonal patterns: traffic spikes need headroom
 - Auto-scaling: In Kubernetes, scale pods rather than increasing pool sizes
 
-**Common mistake**: Setting all pools to the same size. Each dependency has different latency and throughput characteristics — size each pool independently based on actual measured data.`
+Common mistake: Setting all pools to the same size. Each dependency has different latency and throughput characteristics — size each pool independently based on actual measured data.`
       },
     ],
 
@@ -1533,7 +1533,7 @@ The key to safe retries is combining exponential backoff (wait longer between ea
     keyQuestions: [
       {
         question: 'Explain exponential backoff with jitter and why both are necessary.',
-        answer: `**Exponential backoff**: Each retry waits exponentially longer.
+        answer: `Exponential backoff: Each retry waits exponentially longer.
 \`\`\`
 Attempt 1: wait 1s
 Attempt 2: wait 2s
@@ -1543,16 +1543,16 @@ Formula: delay = base_delay x 2^(attempt - 1)
 Cap at max_delay (e.g., 30s)
 \`\`\`
 
-**Problem with backoff alone**:
+Problem with backoff alone:
 If 1000 clients fail at the same time, they all retry at exactly:
 - t=1s: 1000 retries hit the server simultaneously
 - t=3s: 1000 retries again
 - t=7s: 1000 retries again
 This is called a "thundering herd" and can be worse than the original load.
 
-**Jitter**: Add randomness to spread retries over time.
+Jitter: Add randomness to spread retries over time.
 
-**Three jitter strategies**:
+Three jitter strategies:
 
 \`\`\`
 1. Full Jitter (recommended):
@@ -1578,20 +1578,20 @@ This is called a "thundering herd" and can be worse than the original load.
    delay = random(1, 6) --> between 1s and 6s
 \`\`\`
 
-**Visualization (1000 clients, attempt 3)**:
+Visualization (1000 clients, attempt 3):
 \`\`\`
 No jitter:     |XXXXX|                    (all at t=4s)
 Full jitter:   |X X  X X X  XX X X  X|   (spread 0-4s)
 Equal jitter:  |     XX XX XXX XX XX |    (spread 2-4s)
 \`\`\`
 
-**AWS recommendation**: Use full jitter for the broadest spread and lowest collision probability. This is the strategy used by the AWS SDK.`
+AWS recommendation: Use full jitter for the broadest spread and lowest collision probability. This is the strategy used by the AWS SDK.`
       },
       {
         question: 'What is a retry budget and how does it prevent retry storms?',
-        answer: `**Retry budget**: A limit on the proportion of total requests that can be retries.
+        answer: `Retry budget: A limit on the proportion of total requests that can be retries.
 
-**Without retry budget**:
+Without retry budget:
 \`\`\`
 Normal: 1000 req/s to Service B
 Service B starts failing (50% errors):
@@ -1603,7 +1603,7 @@ Service B starts failing (50% errors):
   Service B was already struggling at 1000!
 \`\`\`
 
-**With retry budget (10%)**:
+With retry budget (10%):
 \`\`\`
 Normal: 1000 req/s to Service B
 Retry budget: max 10% additional = 100 retries/s
@@ -1615,14 +1615,14 @@ Service B starts failing (50% errors):
   Service B has a chance to recover
 \`\`\`
 
-**Implementation approaches**:
+Implementation approaches:
 
-1. **Token bucket per client**:
+1. Token bucket per client:
    - Each client tracks: total_requests, retry_requests
    - Allow retry only if retry_requests / total_requests < budget (e.g., 0.10)
    - Sliding window of last 60 seconds
 
-2. **Global retry budget (service mesh)**:
+2. Global retry budget (service mesh):
    - Envoy/Istio tracks retry ratio across all pods
    - Configurable per route:
      retryPolicy:
@@ -1630,7 +1630,7 @@ Service B starts failing (50% errors):
          budget_percent: 10
          min_retries_per_second: 5
 
-3. **Adaptive retry budget**:
+3. Adaptive retry budget:
    - Start with generous budget (20%)
    - As error rate increases, reduce budget automatically
    - At 50%+ error rate, disable retries entirely (let circuit breaker handle it)
@@ -1645,14 +1645,14 @@ Retry Budget State Machine:
   50%+          | 0%           | No retries (circuit open)
 \`\`\`
 
-**Coordination with circuit breaker**:
+Coordination with circuit breaker:
 - Retry budget handles gradual degradation (10-30% errors)
 - Circuit breaker handles severe failure (50%+ errors)
 - Together they provide layered protection`
       },
       {
         question: 'Why is idempotency critical for retries, and how do you implement it?',
-        answer: `**The problem**: When a request times out, you do not know if it succeeded.
+        answer: `The problem: When a request times out, you do not know if it succeeded.
 
 \`\`\`
 Client         Service         Database
@@ -1669,7 +1669,7 @@ Client         Service         Database
 
 Without idempotency, the retry creates a double charge.
 
-**Idempotency key pattern**:
+Idempotency key pattern:
 
 \`\`\`
 Client generates unique key per logical operation:
@@ -1692,7 +1692,7 @@ Request 2 (retry, same key):
   --> NO duplicate processing
 \`\`\`
 
-**Implementation**:
+Implementation:
 \`\`\`
 Idempotency Store Schema:
 
@@ -1716,23 +1716,23 @@ Processing Flow:
   7. Return response
 \`\`\`
 
-**Naturally idempotent operations** (no key needed):
+Naturally idempotent operations (no key needed):
 - GET, HEAD, OPTIONS requests
 - PUT (full replacement): PUT /user/123 {name: "Alice"}
 - DELETE: DELETE /user/123 (deleting twice = same result)
 
-**Non-idempotent operations** (NEED key):
+Non-idempotent operations (NEED key):
 - POST (create): could create duplicates
 - PATCH (partial update): incrementing a counter
 - Any operation with side effects (send email, charge card)
 
-**Stripe's approach**: Every mutating API call accepts an Idempotency-Key header. Keys are scoped to the API key and expire after 24 hours. If a duplicate key is received with a different request body, Stripe returns a 422 error.`
+Stripe's approach: Every mutating API call accepts an Idempotency-Key header. Keys are scoped to the API key and expire after 24 hours. If a duplicate key is received with a different request body, Stripe returns a 422 error.`
       },
       {
         question: 'How do you classify errors to decide whether to retry?',
-        answer: `**Not all errors should be retried.** Retrying a permanent failure wastes resources and delays the error response to the user.
+        answer: `Not all errors should be retried. Retrying a permanent failure wastes resources and delays the error response to the user.
 
-**Retryable (transient) errors**:
+Retryable (transient) errors:
 \`\`\`
 HTTP 429  Too Many Requests    (rate limited, try later)
 HTTP 500  Internal Server Error (might be transient)
@@ -1744,7 +1744,7 @@ ETIMEDOUT                      (connection timed out)
 DNS_RESOLUTION_FAILED          (temporary DNS issue)
 \`\`\`
 
-**Non-retryable (permanent) errors**:
+Non-retryable (permanent) errors:
 \`\`\`
 HTTP 400  Bad Request          (malformed, will always fail)
 HTTP 401  Unauthorized         (wrong credentials)
@@ -1754,14 +1754,14 @@ HTTP 409  Conflict             (duplicate, needs resolution)
 HTTP 422  Unprocessable Entity (validation error)
 \`\`\`
 
-**Gray area (context-dependent)**:
+Gray area (context-dependent):
 \`\`\`
 HTTP 500  with body "database deadlock"  --> Retry (transient)
 HTTP 500  with body "null pointer"       --> Don't retry (bug)
 HTTP 408  Request Timeout                --> Retry (client was slow)
 \`\`\`
 
-**Implementation pattern**:
+Implementation pattern:
 \`\`\`
 Error Classification Decision Tree:
 
@@ -1786,9 +1786,9 @@ Error Classification Decision Tree:
   |-- No  --> Apply backoff + jitter, retry
 \`\`\`
 
-**Retry-After header**: When a server returns 429 or 503 with a Retry-After header, respect it. The server knows better than your backoff algorithm when it will be ready.
+Retry-After header: When a server returns 429 or 503 with a Retry-After header, respect it. The server knows better than your backoff algorithm when it will be ready.
 
-**Per-error-type metrics**:
+Per-error-type metrics:
 Track retry success rate by error type. If retrying 500s never succeeds, stop retrying them — it is likely a bug, not a transient failure. This adaptive classification prevents wasting retries on unrecoverable errors.`
       },
     ],
@@ -1864,7 +1864,7 @@ In interviews, the sidecar pattern tests your ability to reason about separation
     keyQuestions: [
       {
         question: 'How does the sidecar pattern work in a service mesh architecture?',
-        answer: `**Architecture overview**:
+        answer: `Architecture overview:
 Every service pod has two containers: the application and the sidecar proxy. All network traffic flows through the sidecar.
 
 \`\`\`
@@ -1886,7 +1886,7 @@ Traffic flow:
 6. Response follows the reverse path
 \`\`\`
 
-**Control plane vs data plane**:
+Control plane vs data plane:
 \`\`\`
 +-------------------------------------+
 |          Control Plane               |
@@ -1911,33 +1911,33 @@ Data Plane: All sidecar proxies
 Control Plane: Manages sidecar configuration
 \`\`\`
 
-**What the sidecar handles** (without changing application code):
-- **mTLS**: Automatic encryption between all services
-- **Load balancing**: Client-side LB with health checking
-- **Circuit breaking**: Per-destination failure thresholds
-- **Retries**: Configurable retry policies
-- **Tracing**: Inject and propagate trace headers (Jaeger, Zipkin)
-- **Metrics**: Emit latency, error rate, throughput per route
-- **Traffic splitting**: Canary deployments, A/B testing
-- **Rate limiting**: Per-service or per-route limits`
+What the sidecar handles (without changing application code):
+- mTLS: Automatic encryption between all services
+- Load balancing: Client-side LB with health checking
+- Circuit breaking: Per-destination failure thresholds
+- Retries: Configurable retry policies
+- Tracing: Inject and propagate trace headers (Jaeger, Zipkin)
+- Metrics: Emit latency, error rate, throughput per route
+- Traffic splitting: Canary deployments, A/B testing
+- Rate limiting: Per-service or per-route limits`
       },
       {
         question: 'Compare Istio, Linkerd, and Consul Connect. When would you choose each?',
-        answer: `**Istio**:
+        answer: `Istio:
 - Data plane: Envoy proxy
 - Feature-rich: traffic management, security, observability, policy
 - Complex: steep learning curve, many CRDs
 - Resource-heavy: ~100MB RAM per sidecar, control plane needs 2+ GB
 - Best for: Large organizations needing advanced traffic management
 
-**Linkerd**:
+Linkerd:
 - Data plane: Custom Rust-based proxy (linkerd2-proxy)
 - Lightweight: ~20MB RAM per sidecar, minimal control plane
 - Simple: easy to install, opinionated defaults
 - Focused: mTLS, observability, retries, load balancing
 - Best for: Teams wanting mesh benefits without Istio complexity
 
-**Consul Connect**:
+Consul Connect:
 - Data plane: Envoy (or built-in proxy)
 - Multi-platform: works across Kubernetes, VMs, bare metal
 - Integrated: service discovery + mesh in one product
@@ -1960,18 +1960,18 @@ Learning curve    | Steep    | Gentle   | Moderate
 CNCF status       | Graduated| Graduated| N/A
 \`\`\`
 
-**Decision framework**:
+Decision framework:
 - Need advanced traffic management (fault injection, header-based routing, traffic mirroring)? --> Istio
 - Want simplicity and low overhead? --> Linkerd
 - Have VMs or multi-platform infrastructure? --> Consul Connect
 - Budget-constrained or small team? --> Linkerd (least operational burden)
 
-**Alternative: No mesh**:
+Alternative: No mesh:
 For < 20 services, consider using application-level libraries (Resilience4j) + centralized observability (OpenTelemetry) instead of a full service mesh. The operational overhead of a mesh may not be justified.`
       },
       {
         question: 'What are the performance implications of adding a sidecar proxy to every service?',
-        answer: `**Latency overhead**:
+        answer: `Latency overhead:
 \`\`\`
 Without sidecar:
   App A --> Network --> App B
@@ -1989,14 +1989,14 @@ Breakdown per sidecar hop:
   - Total:              ~0.5-1.5ms per sidecar
 \`\`\`
 
-**For a request traversing 5 services**:
+For a request traversing 5 services:
 \`\`\`
 Without mesh: 5 hops x 1ms = 5ms network time
 With mesh:    5 hops x 1ms + 10 sidecar hops x 1ms = 15ms
 Overhead: ~10ms additional latency
 \`\`\`
 
-**Memory overhead**:
+Memory overhead:
 \`\`\`
 Per pod:
   Envoy (Istio):   50-150MB RAM depending on config
@@ -2007,7 +2007,7 @@ For 100 pods:
   Linkerd:         1-3GB additional RAM
 \`\`\`
 
-**CPU overhead**:
+CPU overhead:
 \`\`\`
 Per pod:
   Idle: 0.01-0.05 CPU cores
@@ -2017,22 +2017,22 @@ For 100 pods under moderate load:
   Additional: 10-50 CPU cores
 \`\`\`
 
-**Mitigation strategies**:
-1. **Connection pooling**: Reuse connections, amortize TLS handshake
-2. **Protocol upgrade**: Use HTTP/2 multiplexing to reduce connection overhead
-3. **Resource limits**: Set sidecar CPU/memory limits to prevent runaway consumption
-4. **Selective injection**: Only inject sidecars into services that need mesh features
-5. **Topology-aware routing**: Prefer same-node or same-AZ traffic to minimize latency
-6. **Ambient mesh** (Istio): Per-node proxy instead of per-pod, reducing sidecar count
+Mitigation strategies:
+1. Connection pooling: Reuse connections, amortize TLS handshake
+2. Protocol upgrade: Use HTTP/2 multiplexing to reduce connection overhead
+3. Resource limits: Set sidecar CPU/memory limits to prevent runaway consumption
+4. Selective injection: Only inject sidecars into services that need mesh features
+5. Topology-aware routing: Prefer same-node or same-AZ traffic to minimize latency
+6. Ambient mesh (Istio): Per-node proxy instead of per-pod, reducing sidecar count
 
-**When the overhead is unacceptable**:
+When the overhead is unacceptable:
 - Ultra-low-latency systems (< 1ms end-to-end): trading systems, real-time gaming
 - Resource-constrained environments: edge computing, IoT
 - Simple architectures with < 10 services`
       },
       {
         question: 'How does mTLS work in a service mesh and why is it important?',
-        answer: `**mTLS (mutual TLS)**: Both client and server authenticate each other using certificates, and all traffic is encrypted.
+        answer: `mTLS (mutual TLS): Both client and server authenticate each other using certificates, and all traffic is encrypted.
 
 \`\`\`
 Without mTLS (standard networking):
@@ -2055,7 +2055,7 @@ With mTLS:
   +--------+                             +--------+
 \`\`\`
 
-**Certificate lifecycle in Istio**:
+Certificate lifecycle in Istio:
 \`\`\`
 1. Pod starts, sidecar generates key pair
 2. Sidecar sends CSR (Certificate Signing Request) to Istiod
@@ -2077,11 +2077,11 @@ With mTLS:
  spiffe://cluster/ns/default/sa/user-service
 \`\`\`
 
-**SPIFFE identity**: Each service gets a cryptographic identity:
+SPIFFE identity: Each service gets a cryptographic identity:
 - Format: spiffe://trust-domain/ns/namespace/sa/service-account
 - Used for authorization policies (not just encryption)
 
-**Authorization policy example**:
+Authorization policy example:
 \`\`\`yaml
 Only payment-service can call billing-service:
 
@@ -2099,11 +2099,11 @@ spec:
         principals: ["cluster.local/ns/default/sa/payment-service"]
 \`\`\`
 
-**Why mTLS matters**:
-1. **Zero-trust networking**: Do not trust the network; verify every connection
-2. **Compliance**: PCI-DSS, HIPAA, SOC2 require encryption in transit
-3. **Defense in depth**: Even if an attacker breaches the network, they cannot read traffic or impersonate services
-4. **Identity-based policies**: Authorization based on cryptographic identity, not IP addresses (which change constantly in Kubernetes)`
+Why mTLS matters:
+1. Zero-trust networking: Do not trust the network; verify every connection
+2. Compliance: PCI-DSS, HIPAA, SOC2 require encryption in transit
+3. Defense in depth: Even if an attacker breaches the network, they cannot read traffic or impersonate services
+4. Identity-based policies: Authorization based on cryptographic identity, not IP addresses (which change constantly in Kubernetes)`
       },
     ],
 
@@ -2180,7 +2180,7 @@ The strangler fig approach is battle-tested at companies like Amazon (migrating 
     keyQuestions: [
       {
         question: 'How do you implement the Strangler Fig pattern step by step?',
-        answer: `**Phase 1 — Identify and Intercept**:
+        answer: `Phase 1 — Identify and Intercept:
 Place a routing layer (proxy/gateway) in front of the legacy system.
 
 \`\`\`
@@ -2194,7 +2194,7 @@ After Phase 1:
               (But now we can redirect selectively)
 \`\`\`
 
-**Phase 2 — Build New Service**:
+Phase 2 — Build New Service:
 Implement one bounded context as a new microservice.
 
 \`\`\`
@@ -2204,7 +2204,7 @@ Implement one bounded context as a new microservice.
               /* (else) --> Legacy Monolith
 \`\`\`
 
-**Phase 3 — Shadow Traffic and Validate**:
+Phase 3 — Shadow Traffic and Validate:
 Mirror traffic to both systems and compare results.
 
 \`\`\`
@@ -2217,7 +2217,7 @@ Mirror traffic to both systems and compare results.
   Log discrepancies for investigation.
 \`\`\`
 
-**Phase 4 — Migrate Traffic**:
+Phase 4 — Migrate Traffic:
 Gradually shift real traffic from legacy to new service.
 
 \`\`\`
@@ -2231,7 +2231,7 @@ Gradually shift real traffic from legacy to new service.
   - Rollback instantly if metrics degrade
 \`\`\`
 
-**Phase 5 — Migrate Data**:
+Phase 5 — Migrate Data:
 Move data ownership from legacy DB to new service's DB.
 
 \`\`\`
@@ -2243,7 +2243,7 @@ Move data ownership from legacy DB to new service's DB.
   Recommended: CDC-based sync, then cutover
 \`\`\`
 
-**Phase 6 — Decommission Legacy (for this route)**:
+Phase 6 — Decommission Legacy (for this route):
 Remove the legacy route, clean up legacy code.
 
 \`\`\`
@@ -2258,9 +2258,9 @@ Repeat Phase 2-6 for each bounded context until the legacy system is empty.`
       },
       {
         question: 'What is an anti-corruption layer and why is it essential during migration?',
-        answer: `**Anti-Corruption Layer (ACL)**: A translation layer that prevents legacy system concepts, data models, and quirks from leaking into the new system.
+        answer: `Anti-Corruption Layer (ACL): A translation layer that prevents legacy system concepts, data models, and quirks from leaking into the new system.
 
-**Problem without ACL**:
+Problem without ACL:
 \`\`\`
 Legacy DB schema:
   CUST_TBL (CUST_NO, CUST_NM, CUST_ADDR1, CUST_ADDR2, CUST_TP)
@@ -2273,7 +2273,7 @@ Without ACL, new service starts using:
 This couples the new service to legacy conventions.
 \`\`\`
 
-**Solution with ACL**:
+Solution with ACL:
 \`\`\`
 New User Service          ACL              Legacy System
 +------------------+  +----------+  +------------------+
@@ -2293,7 +2293,7 @@ ACL Translation Rules:
   CUST_TP "X" --> { status: DEACTIVATED, tier: null }
 \`\`\`
 
-**Where to place the ACL**:
+Where to place the ACL:
 \`\`\`
 Option A: In the new service (adapter pattern)
   New Service --> [ACL Adapter] --> Legacy API/DB
@@ -2314,20 +2314,20 @@ Option C: In the routing layer
   Con: Can become complex
 \`\`\`
 
-**ACL handles**:
-1. **Data model translation**: Legacy field names/types to new domain model
-2. **Protocol translation**: SOAP/XML to REST/JSON
-3. **Business rule mapping**: Legacy codes to domain enums
-4. **Error translation**: Legacy error codes to standard HTTP errors
-5. **ID mapping**: Legacy integer IDs to new UUIDs (with a mapping table)
+ACL handles:
+1. Data model translation: Legacy field names/types to new domain model
+2. Protocol translation: SOAP/XML to REST/JSON
+3. Business rule mapping: Legacy codes to domain enums
+4. Error translation: Legacy error codes to standard HTTP errors
+5. ID mapping: Legacy integer IDs to new UUIDs (with a mapping table)
 
-**Key rule**: The new service should NEVER know it is talking to a legacy system. The ACL makes the legacy system look like a modern service.`
+Key rule: The new service should NEVER know it is talking to a legacy system. The ACL makes the legacy system look like a modern service.`
       },
       {
         question: 'How do you handle data migration during a strangler fig migration?',
-        answer: `**Data migration is the hardest part.** Application logic can be routed flexibly, but data must be consistent and durable.
+        answer: `Data migration is the hardest part. Application logic can be routed flexibly, but data must be consistent and durable.
 
-**Strategy 1 — Change Data Capture (CDC)**:
+Strategy 1 — Change Data Capture (CDC):
 \`\`\`
 Legacy DB --> [CDC Tool] --> New Service DB
               (Debezium)
@@ -2345,7 +2345,7 @@ Cutover:
   5. Decommission legacy DB tables
 \`\`\`
 
-**Strategy 2 — Dual Write** (simpler but riskier):
+Strategy 2 — Dual Write (simpler but riskier):
 \`\`\`
   Write Request
        |
@@ -2365,7 +2365,7 @@ Mitigation:
 - Accept eventual consistency during migration
 \`\`\`
 
-**Strategy 3 — Bulk Migration + Cutover**:
+Strategy 3 — Bulk Migration + Cutover:
 \`\`\`
   Phase 1: Bulk copy data (offline or during low traffic)
     Legacy DB --[ETL]--> New DB
@@ -2381,7 +2381,7 @@ Mitigation:
     5. ~5-15 minutes downtime
 \`\`\`
 
-**Data migration decision matrix**:
+Data migration decision matrix:
 \`\`\`
 Requirement           | CDC      | Dual Write | Bulk+Cutover
 Zero downtime         | Yes      | Yes        | No (brief)
@@ -2394,11 +2394,11 @@ Rollback ease         | Easy     | Hard       | Easy
 * CDC reads transaction log, no schema changes needed
 \`\`\`
 
-**Recommended approach**: CDC (with Debezium + Kafka) for zero-downtime migration with strong consistency guarantees. It requires no changes to the legacy application and provides a reliable sync mechanism.`
+Recommended approach: CDC (with Debezium + Kafka) for zero-downtime migration with strong consistency guarantees. It requires no changes to the legacy application and provides a reliable sync mechanism.`
       },
       {
         question: 'What are the common pitfalls and failure modes during a strangler fig migration?',
-        answer: `**Pitfall 1 — The migration stalls halfway**:
+        answer: `Pitfall 1 — The migration stalls halfway:
 \`\`\`
 Month 1:  Migrate User Service    --> Success!
 Month 3:  Migrate Product Service --> Success!
@@ -2412,7 +2412,7 @@ Prevention:
 - Track migration progress on a dashboard (% routes migrated)
 - Allocate dedicated team capacity — do not treat migration as a side project
 
-**Pitfall 2 — Feature parity obsession**:
+Pitfall 2 — Feature parity obsession:
 \`\`\`
 "We must replicate every feature of the legacy system
  before migrating any traffic"
@@ -2425,7 +2425,7 @@ Prevention:
 - Some legacy features may no longer be needed — validate with usage data
 - Accept that the new system may initially be a subset
 
-**Pitfall 3 — Data synchronization drift**:
+Pitfall 3 — Data synchronization drift:
 \`\`\`
 Legacy DB and New DB gradually diverge because:
 - Bug in CDC pipeline loses events
@@ -2438,7 +2438,7 @@ Prevention:
 - Alert on row count differences, checksum mismatches
 - Have a repair mechanism to backfill missing data
 
-**Pitfall 4 — Missing the anti-corruption layer**:
+Pitfall 4 — Missing the anti-corruption layer:
 \`\`\`
 New services directly call legacy APIs or read legacy DB
 Legacy concepts (field names, business rules) leak into new code
@@ -2449,7 +2449,7 @@ Prevention:
 - ACL from day one — no exceptions
 - Code review rule: no legacy field names in new service code
 
-**Pitfall 5 — Ignoring rollback**:
+Pitfall 5 — Ignoring rollback:
 \`\`\`
 Traffic switched to new service at 100%
 Bug discovered after 2 hours
@@ -2536,7 +2536,7 @@ SoundCloud, Netflix, and Spotify are well-known adopters. In interviews, the BFF
     keyQuestions: [
       {
         question: 'What problems does the BFF pattern solve, and how does it work?',
-        answer: `**Problem: One API, many clients**:
+        answer: `Problem: One API, many clients:
 \`\`\`
 Generic API Response for GET /products/123:
 
@@ -2560,7 +2560,7 @@ Mobile app only needs: name, thumbnail image, price, rating
 But gets 20KB when it needs 0.5KB
 \`\`\`
 
-**Solution: Dedicated BFF per client**:
+Solution: Dedicated BFF per client:
 \`\`\`
                        Microservices
                     +---+---+---+---+
@@ -2588,12 +2588,12 @@ IoT BFF Response:
   --> 0.1KB, minimal for constrained devices
 \`\`\`
 
-**BFF responsibilities**:
-1. **Aggregate**: Call multiple backend services, merge responses
-2. **Transform**: Shape data for the specific client (field selection, formatting)
-3. **Optimize**: Compress images, paginate appropriately, batch requests
-4. **Cache**: Cache stable data at the BFF layer
-5. **Handle errors**: Provide client-appropriate error messages and fallbacks`
+BFF responsibilities:
+1. Aggregate: Call multiple backend services, merge responses
+2. Transform: Shape data for the specific client (field selection, formatting)
+3. Optimize: Compress images, paginate appropriately, batch requests
+4. Cache: Cache stable data at the BFF layer
+5. Handle errors: Provide client-appropriate error messages and fallbacks`
       },
       {
         question: 'How is a BFF different from an API Gateway?',
@@ -2622,21 +2622,21 @@ Web BFF  Mobile   IoT BFF        <-- Client-specific logic
   (Product, Inventory, etc.)      (owned by backend teams)
 \`\`\`
 
-**API Gateway**:
+API Gateway:
 - One instance shared by all clients
 - Handles infrastructure concerns (auth, rate limiting, routing, TLS)
 - Owned by platform/infrastructure team
 - Thin: minimal data transformation
 - Sits at the edge of the network
 
-**BFF**:
+BFF:
 - One instance per client type
 - Handles presentation concerns (aggregation, shaping, optimization)
 - Owned by the frontend team for that client
 - Thick: significant data transformation and composition
 - Sits between gateway and backend services
 
-**Key distinction**: The API Gateway does not know or care what type of client is calling. The BFF exists specifically because different client types need different things.
+Key distinction: The API Gateway does not know or care what type of client is calling. The BFF exists specifically because different client types need different things.
 
 \`\`\`
 Anti-pattern: Fat API Gateway
@@ -2652,14 +2652,14 @@ Anti-pattern: Fat API Gateway
   Keep the gateway thin; use separate BFFs.
 \`\`\`
 
-**Can you combine them?** Yes, in simple systems:
+Can you combine them? Yes, in simple systems:
 - < 2 client types: A single API gateway with some BFF logic is acceptable
 - 2-3 client types: Separate BFFs behind a shared gateway
 - 4+ client types or complex needs: BFFs are essential`
       },
       {
         question: 'When should you use GraphQL instead of (or alongside) BFFs?',
-        answer: `**GraphQL can replace BFFs** when the primary problem is over/under-fetching and clients want to define their own queries.
+        answer: `GraphQL can replace BFFs when the primary problem is over/under-fetching and clients want to define their own queries.
 
 \`\`\`
 BFF approach:
@@ -2680,19 +2680,19 @@ GraphQL approach:
   Single endpoint, clients choose their own fields.
 \`\`\`
 
-**When GraphQL is better**:
+When GraphQL is better:
 - Many client types with overlapping but different data needs
 - Clients iterate rapidly and change data requirements frequently
 - Strong frontend engineering team comfortable with GraphQL
 - Backend data model is graph-like (social networks, content platforms)
 
-**When BFF is better**:
+When BFF is better:
 - Client needs go beyond field selection (different business logic per client)
 - Need to call non-GraphQL backends (legacy SOAP, file systems, etc.)
 - Team does not have GraphQL expertise
 - Performance-critical: BFF can be highly optimized per client
 
-**Hybrid approach** (Netflix, Airbnb):
+Hybrid approach (Netflix, Airbnb):
 \`\`\`
   Web Client      Mobile Client
      |                 |
@@ -2707,13 +2707,13 @@ GraphQL approach:
   - GraphQL federation stitches backend schemas
 \`\`\`
 
-**GraphQL Federation** (Apollo Federation):
+GraphQL Federation (Apollo Federation):
 - Each microservice defines its own GraphQL schema
 - A gateway composes them into a unified schema
 - Clients query the gateway as if it were a single API
 - Acts like an automatic BFF with client-driven query flexibility
 
-**Trade-offs**:
+Trade-offs:
 \`\`\`
 Concern          | BFF           | GraphQL
 N+1 queries      | Controlled    | Must use DataLoader
@@ -2726,7 +2726,7 @@ Performance ctrl | High          | Medium
       },
       {
         question: 'How should BFF ownership and deployment work in a team structure?',
-        answer: `**Principle: The team that owns the frontend owns its BFF.**
+        answer: `Principle: The team that owns the frontend owns its BFF.
 
 \`\`\`
 Team Structure:
@@ -2747,13 +2747,13 @@ Team Structure:
          +----------+----------+
 \`\`\`
 
-**Why frontend teams own BFFs**:
-1. **Aligned incentives**: The team consuming the API defines its shape
-2. **Faster iteration**: Frontend changes do not require backend team coordination
-3. **Domain knowledge**: Frontend team knows exactly what data the UI needs
-4. **Technology choice**: BFF can use the same language as the frontend (Node.js for React teams)
+Why frontend teams own BFFs:
+1. Aligned incentives: The team consuming the API defines its shape
+2. Faster iteration: Frontend changes do not require backend team coordination
+3. Domain knowledge: Frontend team knows exactly what data the UI needs
+4. Technology choice: BFF can use the same language as the frontend (Node.js for React teams)
 
-**Deployment model**:
+Deployment model:
 \`\`\`
 Option A: BFF as a separate service (recommended)
   - Independent deployment pipeline
@@ -2773,7 +2773,7 @@ Option C: BFF as serverless functions
   - Cold start latency concern
 \`\`\`
 
-**Versioning and contracts**:
+Versioning and contracts:
 \`\`\`
 BFF --> Backend Service contract:
   - Backend services publish OpenAPI/gRPC schemas
@@ -2786,11 +2786,11 @@ Frontend --> BFF contract:
   - Useful when multiple app versions are in the wild (mobile apps)
 \`\`\`
 
-**Anti-patterns to avoid**:
-1. **Shared BFF**: One BFF serving multiple client types (defeats the purpose)
-2. **Business logic in BFF**: BFF should aggregate and shape, not implement business rules
-3. **Backend team owns BFF**: Creates coordination bottleneck, opposite of the pattern's intent
-4. **BFF per microservice**: Creates N BFFs that each call one service; use BFF per client type instead`
+Anti-patterns to avoid:
+1. Shared BFF: One BFF serving multiple client types (defeats the purpose)
+2. Business logic in BFF: BFF should aggregate and shape, not implement business rules
+3. Backend team owns BFF: Creates coordination bottleneck, opposite of the pattern's intent
+4. BFF per microservice: Creates N BFFs that each call one service; use BFF per client type instead`
       },
     ],
 
@@ -2863,7 +2863,7 @@ At its most ambitious, event sourcing stores every state change as an immutable 
     keyQuestions: [
       {
         question: 'What is event sourcing and how does it differ from traditional state storage?',
-        answer: `**Traditional (state-based) storage**:
+        answer: `Traditional (state-based) storage:
 Store the current state. When state changes, overwrite the previous value.
 
 \`\`\`
@@ -2881,7 +2881,7 @@ Traditional: Store current state
   Answer: "We don't know. The history is gone."
 \`\`\`
 
-**Event sourcing**: Store every state change as an immutable event. The current state is derived by replaying events.
+Event sourcing: Store every state change as an immutable event. The current state is derived by replaying events.
 
 \`\`\`
 Event sourced: Store events
@@ -2901,7 +2901,7 @@ Event sourced: Store events
   Complete audit trail!
 \`\`\`
 
-**Rebuilding state from events**:
+Rebuilding state from events:
 \`\`\`
 function rebuild(events):
   state = {}
@@ -2919,7 +2919,7 @@ apply(state, MoneyWithdrawn{amount: 100}):
   return { balance: state.balance - 100 }
 \`\`\`
 
-**Snapshots** (performance optimization):
+Snapshots (performance optimization):
 \`\`\`
 After 10,000 events, rebuilding is slow.
 Solution: periodically save a snapshot.
@@ -2929,15 +2929,15 @@ Solution: periodically save a snapshot.
   Instead of replaying all 10,000 events
 \`\`\`
 
-**Benefits**: Complete audit trail, temporal queries ("what was the balance on March 1?"), debugging (replay events to reproduce bugs), event replay for new projections.
+Benefits: Complete audit trail, temporal queries ("what was the balance on March 1?"), debugging (replay events to reproduce bugs), event replay for new projections.
 
-**Trade-offs**: Complexity (event replay, schema evolution), eventual consistency, storage growth (mitigated by snapshots), steep learning curve.`
+Trade-offs: Complexity (event replay, schema evolution), eventual consistency, storage growth (mitigated by snapshots), steep learning curve.`
       },
       {
         question: 'How do you handle event schema evolution without breaking consumers?',
-        answer: `**The problem**: Events are immutable and stored forever. But your domain model evolves. If you change an event's schema, old events in the store become incompatible.
+        answer: `The problem: Events are immutable and stored forever. But your domain model evolves. If you change an event's schema, old events in the store become incompatible.
 
-**Strategy 1 — Backward compatible changes only**:
+Strategy 1 — Backward compatible changes only:
 \`\`\`
 V1: OrderPlaced { orderId, customerId, total }
 V2: OrderPlaced { orderId, customerId, total, currency }
@@ -2949,7 +2949,7 @@ Rules:
 - CHANGE types: NEVER (add new field with new type)
 \`\`\`
 
-**Strategy 2 — Schema Registry**:
+Strategy 2 — Schema Registry:
 \`\`\`
 Producer                Schema Registry          Consumer
    |                        |                       |
@@ -2970,7 +2970,7 @@ Compatibility modes:
   NONE:      No compatibility guarantee
 \`\`\`
 
-**Strategy 3 — Event versioning**:
+Strategy 3 — Event versioning:
 \`\`\`
 Explicit version in event type:
 
@@ -2986,7 +2986,7 @@ Consumer handles both:
     items = event.items
 \`\`\`
 
-**Strategy 4 — Upcaster**:
+Strategy 4 — Upcaster:
 Transform old events to new schema when reading.
 \`\`\`
   Event Store: [v1 events, v2 events, v3 events]
@@ -3000,11 +3000,11 @@ Transform old events to new schema when reading.
     v2->v3: add region=infer_from_customer(customerId)
 \`\`\`
 
-**Best practice**: Use a schema registry with BACKWARD compatibility as the default. Add optional fields with defaults. Version events explicitly only when a breaking change is unavoidable. Use upcasters to bridge old events to new consumers.`
+Best practice: Use a schema registry with BACKWARD compatibility as the default. Add optional fields with defaults. Version events explicitly only when a breaking change is unavoidable. Use upcasters to bridge old events to new consumers.`
       },
       {
         question: 'Compare at-least-once, at-most-once, and exactly-once delivery semantics.',
-        answer: `**At-most-once delivery**:
+        answer: `At-most-once delivery:
 Send the message and do not retry. Message may be lost.
 \`\`\`
 Producer --> Broker --> Consumer
@@ -3018,7 +3018,7 @@ Producer --> Broker --> Consumer
 \`\`\`
 Use when: Metrics, logs, non-critical notifications (acceptable to lose some)
 
-**At-least-once delivery**:
+At-least-once delivery:
 Retry until acknowledged. Message may be delivered multiple times.
 \`\`\`
 Producer --> Broker --> Consumer
@@ -3034,7 +3034,7 @@ Producer --> Broker --> Consumer
 \`\`\`
 Use when: Most business events (combined with idempotent consumers)
 
-**Exactly-once delivery** (in practice: exactly-once processing):
+Exactly-once delivery (in practice: exactly-once processing):
 True exactly-once delivery across network boundaries is impossible (Two Generals Problem). What systems achieve is exactly-once processing via:
 
 \`\`\`
@@ -3066,7 +3066,7 @@ Approach 2: Transactional outbox (Kafka Transactions)
   Kafka transactions ensure producer->broker exactly-once.
 \`\`\`
 
-**Kafka's exactly-once semantics**:
+Kafka's exactly-once semantics:
 \`\`\`
 Producer (idempotent + transactional)
    |
@@ -3082,11 +3082,11 @@ Consumer (read-process-write pattern)
    |-- All in one Kafka transaction
 \`\`\`
 
-**Recommendation**: Use at-least-once delivery with idempotent consumers. This is simpler, more reliable, and works across any message broker. Reserve Kafka transactions for stream processing pipelines where exactly-once between Kafka topics is needed.`
+Recommendation: Use at-least-once delivery with idempotent consumers. This is simpler, more reliable, and works across any message broker. Reserve Kafka transactions for stream processing pipelines where exactly-once between Kafka topics is needed.`
       },
       {
         question: 'How do you design an event store and handle event replay?',
-        answer: `**Event store schema**:
+        answer: `Event store schema:
 \`\`\`
 events table:
   sequence_number  BIGSERIAL PRIMARY KEY  (global ordering)
@@ -3107,7 +3107,7 @@ Unique constraint:
   (aggregate_id, version) -- optimistic concurrency control
 \`\`\`
 
-**Optimistic concurrency** (prevent lost updates):
+Optimistic concurrency (prevent lost updates):
 \`\`\`
 Thread A reads: Order-123 at version 5
 Thread B reads: Order-123 at version 5
@@ -3121,9 +3121,9 @@ INSERT INTO events (aggregate_id, version, ...)
   -- unique constraint prevents duplicate version
 \`\`\`
 
-**Event replay use cases**:
+Event replay use cases:
 
-1. **Rebuild read model (projection)**:
+1. Rebuild read model (projection):
 \`\`\`
 New reporting requirement: "Orders by region"
 
@@ -3141,7 +3141,7 @@ New reporting requirement: "Orders by region"
   No schema migration! Just replay events into a new shape.
 \`\`\`
 
-2. **Debug production issues**:
+2. Debug production issues:
 \`\`\`
 "Why is Order-456 in a weird state?"
 
@@ -3158,7 +3158,7 @@ New reporting requirement: "Orders by region"
   -- The compensation worked correctly.
 \`\`\`
 
-3. **Temporal queries**:
+3. Temporal queries:
 \`\`\`
 "What was the account balance on March 1?"
 
@@ -3171,7 +3171,7 @@ New reporting requirement: "Orders by region"
   Result: balance as of March 1 = $45,230
 \`\`\`
 
-**Performance considerations**:
+Performance considerations:
 - Use snapshots every N events (e.g., every 100) to avoid replaying full history
 - Partition events by aggregate_id for write scaling
 - Use separate read-optimized projections for queries (CQRS pattern)
@@ -3254,7 +3254,7 @@ When combined with event sourcing, CQRS becomes especially powerful: the write s
     keyQuestions: [
       {
         question: 'How does CQRS separate reads and writes, and what are the architectural options?',
-        answer: `**Level 1 — Code-level separation** (simplest):
+        answer: `Level 1 — Code-level separation (simplest):
 \`\`\`
 Same database, separate code paths:
 
@@ -3274,7 +3274,7 @@ Benefit: Clean code, no infrastructure change
 Trade-off: Read queries limited by write schema
 \`\`\`
 
-**Level 2 — Separate read and write models** (common):
+Level 2 — Separate read and write models (common):
 \`\`\`
 Same or separate databases, different schemas:
 
@@ -3296,7 +3296,7 @@ Benefit: Read model optimized for queries
 Trade-off: Eventual consistency, sync complexity
 \`\`\`
 
-**Level 3 — Event sourcing + CQRS** (most powerful):
+Level 3 — Event sourcing + CQRS (most powerful):
 \`\`\`
   Commands                         Queries
      |                                |
@@ -3315,7 +3315,7 @@ Trade-off: Eventual consistency, sync complexity
   Sync:  Projector listens to events, updates read models
 \`\`\`
 
-**Multiple read models for different queries**:
+Multiple read models for different queries:
 \`\`\`
   Event Store
        |
@@ -3333,7 +3333,7 @@ Each read model is optimized for its specific query pattern.
       },
       {
         question: 'How do you handle eventual consistency between the write and read models?',
-        answer: `**The fundamental challenge**: After a write, the read model may not reflect the change immediately.
+        answer: `The fundamental challenge: After a write, the read model may not reflect the change immediately.
 
 \`\`\`
 Timeline:
@@ -3346,7 +3346,7 @@ Timeline:
   "I just created an order but it's not in my order list!"
 \`\`\`
 
-**Strategy 1 — Read-your-writes consistency**:
+Strategy 1 — Read-your-writes consistency:
 After a write, route the user's subsequent reads to the write model (or wait for the read model to catch up).
 
 \`\`\`
@@ -3366,7 +3366,7 @@ Option C: Causal consistency token
   Read model waits until it has processed up to this version
 \`\`\`
 
-**Strategy 2 — Optimistic UI**:
+Strategy 2 — Optimistic UI:
 The frontend optimistically updates the UI before the read model catches up.
 \`\`\`
   1. User clicks "Create Order"
@@ -3378,7 +3378,7 @@ The frontend optimistically updates the UI before the read model catches up.
   If write fails: frontend rolls back optimistic update
 \`\`\`
 
-**Strategy 3 — Acceptable staleness**:
+Strategy 3 — Acceptable staleness:
 For non-critical reads, accept that data may be a few seconds old.
 \`\`\`
   Dashboard showing "Total orders today: 1,234"
@@ -3388,7 +3388,7 @@ For non-critical reads, accept that data may be a few seconds old.
   User knows the data is slightly stale.
 \`\`\`
 
-**Monitoring consistency lag**:
+Monitoring consistency lag:
 \`\`\`
 Metrics:
   cqrs_projection_lag_ms{projection="orders"} gauge
@@ -3400,33 +3400,33 @@ Metrics:
     events_pending > 10,000 (Backlog alert)
 \`\`\`
 
-**Key interview point**: Eventual consistency is a trade-off you choose, not a bug. State clearly which queries need strong consistency (use read-your-writes) and which can tolerate staleness (use async projection).`
+Key interview point: Eventual consistency is a trade-off you choose, not a bug. State clearly which queries need strong consistency (use read-your-writes) and which can tolerate staleness (use async projection).`
       },
       {
         question: 'When should you use CQRS and when is it overkill?',
-        answer: `**Use CQRS when**:
+        answer: `Use CQRS when:
 
-1. **Read and write patterns are very different**:
+1. Read and write patterns are very different:
    - Writes: Complex business rules, validations, 100 writes/sec
    - Reads: Simple lookups, full-text search, 10,000 reads/sec
    - Different scaling needs justify separate models
 
-2. **Multiple read representations needed**:
+2. Multiple read representations needed:
    - Same data queried as: list view, search results, analytics, reports
    - Each read model is optimized for its query pattern
 
-3. **Collaborative domains**:
+3. Collaborative domains:
    - Multiple users modifying the same data
    - Need to track who changed what and when
    - Event sourcing + CQRS provides complete audit trail
 
-4. **Performance requires different storage engines**:
+4. Performance requires different storage engines:
    - Write: PostgreSQL (ACID transactions)
    - Read: Elasticsearch (full-text search) + Redis (fast lookups)
 
-**Do NOT use CQRS when**:
+Do NOT use CQRS when:
 
-1. **Simple CRUD application**:
+1. Simple CRUD application:
 \`\`\`
    Blog with authors and posts
    Read and write patterns are similar
@@ -3437,16 +3437,16 @@ Metrics:
    Cost: Significant complexity
 \`\`\`
 
-2. **Small team or prototype**:
+2. Small team or prototype:
    - CQRS requires more code, more infrastructure, more monitoring
    - Ship fast first, refactor to CQRS if scaling demands it
 
-3. **Strong consistency is non-negotiable everywhere**:
+3. Strong consistency is non-negotiable everywhere:
    - Financial ledger where every read MUST be up-to-date
    - CQRS eventual consistency adds risk
    - (Though you CAN do synchronous projections)
 
-4. **Low traffic**:
+4. Low traffic:
    - If your single database handles both reads and writes comfortably
    - Premature optimization adds complexity without benefit
 
@@ -3472,7 +3472,7 @@ Decision Framework:
       },
       {
         question: 'How do you build and maintain projections (read models) in a CQRS system?',
-        answer: `**Projection**: A function that transforms a stream of events into a read-optimized data structure.
+        answer: `Projection: A function that transforms a stream of events into a read-optimized data structure.
 
 \`\`\`
 Event Stream:
@@ -3508,9 +3508,9 @@ Projection: "Order Summary View"
         }
 \`\`\`
 
-**Projection types**:
+Projection types:
 
-1. **Synchronous projection** (inline, strong consistency):
+1. Synchronous projection (inline, strong consistency):
 \`\`\`
   Write Transaction:
     BEGIN
@@ -3522,7 +3522,7 @@ Projection: "Order Summary View"
   Con: Slower writes, couples write to read schema
 \`\`\`
 
-2. **Asynchronous projection** (eventual consistency):
+2. Asynchronous projection (eventual consistency):
 \`\`\`
   Write:  INSERT INTO events --> COMMIT
   Async:  Projector polls/subscribes to new events
@@ -3532,7 +3532,7 @@ Projection: "Order Summary View"
   Con: Eventual consistency, need to handle lag
 \`\`\`
 
-**Rebuilding a projection**:
+Rebuilding a projection:
 \`\`\`
 Scenario: Bug in projector, read model has wrong data.
 
@@ -3550,7 +3550,7 @@ Scenario: Bug in projector, read model has wrong data.
   - Or route queries to a secondary projection
 \`\`\`
 
-**Projection management**:
+Projection management:
 \`\`\`
 Track projection status:
 
@@ -3637,7 +3637,7 @@ This pattern underpins operational practices at every major tech company. Netfli
     keyQuestions: [
       {
         question: 'What are the different approaches to externalized configuration and when do you use each?',
-        answer: `**Approach 1 — Environment variables** (simplest):
+        answer: `Approach 1 — Environment variables (simplest):
 \`\`\`
 Application reads:
   DATABASE_URL=postgres://host:5432/mydb
@@ -3654,7 +3654,7 @@ Cons: No versioning, no dynamic updates, flat key-value only
 Best for: Simple applications, container orchestration
 \`\`\`
 
-**Approach 2 — Configuration server** (centralized):
+Approach 2 — Configuration server (centralized):
 \`\`\`
   +---------------------+
   | Config Server       |
@@ -3677,7 +3677,7 @@ Best for: Simple applications, container orchestration
 Best for: Microservices needing centralized, versioned config
 \`\`\`
 
-**Approach 3 — Kubernetes ConfigMaps and Secrets**:
+Approach 3 — Kubernetes ConfigMaps and Secrets:
 \`\`\`yaml
 apiVersion: v1
 kind: ConfigMap
@@ -3701,7 +3701,7 @@ Changes can trigger rolling restart or volume refresh.
 Best for: Kubernetes-native applications
 \`\`\`
 
-**Approach 4 — Feature flag platform** (specialized):
+Approach 4 — Feature flag platform (specialized):
 \`\`\`
   +----------------------+
   | Feature Flag Service |
@@ -3723,7 +3723,7 @@ Best for: Kubernetes-native applications
 Best for: Feature rollout, experimentation, kill switches
 \`\`\`
 
-**Recommended combination**:
+Recommended combination:
 \`\`\`
   Secrets     --> Vault / AWS Secrets Manager
   App config  --> Kubernetes ConfigMaps + Config Server
@@ -3734,9 +3734,9 @@ Best for: Feature rollout, experimentation, kill switches
       },
       {
         question: 'How do you implement runtime reconfiguration without restarting services?',
-        answer: `**The goal**: Change configuration in production and have services pick it up within seconds, without restart or redeployment.
+        answer: `The goal: Change configuration in production and have services pick it up within seconds, without restart or redeployment.
 
-**Approach 1 — Polling**:
+Approach 1 — Polling:
 \`\`\`
 Service                Config Server
   |                        |
@@ -3754,7 +3754,7 @@ Pros: Simple, works with any config server
 Cons: Up to 30s delay, unnecessary network traffic
 \`\`\`
 
-**Approach 2 — Push-based (watches)**:
+Approach 2 — Push-based (watches):
 \`\`\`
 Service                Config Server (Consul/etcd)
   |                        |
@@ -3770,7 +3770,7 @@ Pros: Near-instant updates
 Cons: Requires watch-capable config server, connection management
 \`\`\`
 
-**Approach 3 — Event-driven**:
+Approach 3 — Event-driven:
 \`\`\`
 Admin changes config in UI
   |
@@ -3786,7 +3786,7 @@ Pros: Decoupled, reliable delivery, audit trail
 Cons: More infrastructure
 \`\`\`
 
-**Spring Cloud Config refresh example**:
+Spring Cloud Config refresh example:
 \`\`\`
 # Application reads config on startup from Config Server
 # To refresh at runtime:
@@ -3802,7 +3802,7 @@ For all instances simultaneously:
   --> Broadcasts refresh to all instances
 \`\`\`
 
-**Safety mechanisms**:
+Safety mechanisms:
 \`\`\`
 1. Validation before applying:
    - New value must pass schema validation
@@ -3823,7 +3823,7 @@ For all instances simultaneously:
       },
       {
         question: 'How do you manage feature flags effectively at scale?',
-        answer: `**Feature flag lifecycle**:
+        answer: `Feature flag lifecycle:
 \`\`\`
   1. CREATE: Developer creates flag (default: OFF)
   2. DEVELOP: Code behind flag, deploy to production (flag OFF)
@@ -3835,7 +3835,7 @@ For all instances simultaneously:
   Timeline: 1-4 weeks from create to cleanup
 \`\`\`
 
-**Flag types** (categorize for different management):
+Flag types (categorize for different management):
 \`\`\`
   Release Flag:
     Purpose: Ship incomplete features safely
@@ -3858,7 +3858,7 @@ For all instances simultaneously:
     Example: premium-features-enabled (per subscription tier)
 \`\`\`
 
-**Targeting strategies**:
+Targeting strategies:
 \`\`\`
 Simple: ON/OFF globally
   { "new-feature": true }
@@ -3886,7 +3886,7 @@ Segment targeting:
   }}
 \`\`\`
 
-**Technical debt management**:
+Technical debt management:
 \`\`\`
 Problem: 500 flags accumulated over 2 years
   - 200 are always ON (released features, never cleaned up)
@@ -3909,7 +3909,7 @@ Metrics:
       },
       {
         question: 'How do you handle secrets management separately from configuration?',
-        answer: `**Secrets are NOT configuration.** They require different handling:
+        answer: `Secrets are NOT configuration. They require different handling:
 
 \`\`\`
 Configuration:                    Secrets:
@@ -3925,9 +3925,9 @@ Configuration:                    Secrets:
 - Change is routine               - Change requires rotation plan
 \`\`\`
 
-**Secrets management tools**:
+Secrets management tools:
 
-**HashiCorp Vault**:
+HashiCorp Vault:
 \`\`\`
   Application          Vault Server
       |                    |
@@ -3949,7 +3949,7 @@ Features:
   - PKI certificate management
 \`\`\`
 
-**AWS Secrets Manager / Parameter Store**:
+AWS Secrets Manager / Parameter Store:
 \`\`\`
   Application --> AWS SDK --> Secrets Manager
                               |
@@ -3963,7 +3963,7 @@ Features:
     Parameter Store: Free (standard), $0.05/10K for advanced
 \`\`\`
 
-**Kubernetes Secrets** (basic, not sufficient alone):
+Kubernetes Secrets (basic, not sufficient alone):
 \`\`\`yaml
   apiVersion: v1
   kind: Secret
@@ -3984,7 +3984,7 @@ Features:
     - Single source of truth in Vault
 \`\`\`
 
-**Secret rotation strategy**:
+Secret rotation strategy:
 \`\`\`
   1. Generate new secret (version N+1)
   2. Configure service to accept BOTH old (N) and new (N+1)

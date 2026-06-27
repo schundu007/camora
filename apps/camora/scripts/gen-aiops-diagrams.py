@@ -62,7 +62,7 @@ def render(g, filename):
 # ── 1. AgentOps Incident Lifecycle ───────────────────────────────────────────
 
 def gen_agentops_lifecycle():
-    g = base('agentops_lifecycle', rankdir='TB')
+    g = base('agentops_lifecycle', rankdir='LR')
     g.attr(label='AgentOps Incident Lifecycle', labelloc='t',
            fontsize='15', fontcolor='#1e3a5f')
 
@@ -269,7 +269,7 @@ def gen_cloud_aiops_platforms():
 # ── 6. Cross-Cloud AIOps Architecture ─────────────────────────────────────────
 
 def gen_cross_cloud_aiops():
-    g = base('cross_cloud_aiops', rankdir='TB')
+    g = base('cross_cloud_aiops', rankdir='LR')
     g.attr(label='Cross-Cloud AIOps Architecture', labelloc='t',
            fontsize='15', fontcolor='#1e3a5f')
 
@@ -454,7 +454,7 @@ def gen_llm_automation_levels():
 # ── 11. MLOps / AIOps Intersection ────────────────────────────────────────────
 
 def gen_mlops_aiops_intersection():
-    g = base('mlops_aiops_intersection', rankdir='TB')
+    g = base('mlops_aiops_intersection', rankdir='LR')
     g.attr(label='MLOps / AIOps Intersection', labelloc='t',
            fontsize='15', fontcolor='#1e3a5f')
 
@@ -594,7 +594,7 @@ def gen_pyrca_algorithms():
 # ── 14. RCA Taxonomy ──────────────────────────────────────────────────────────
 
 def gen_rca_taxonomy():
-    g = base('rca_taxonomy', rankdir='TB')
+    g = base('rca_taxonomy', rankdir='LR')
     g.attr(label='Root Cause Analysis Taxonomy', labelloc='t',
            fontsize='15', fontcolor='#1e3a5f')
 
@@ -649,7 +649,7 @@ def gen_rca_taxonomy():
 # ── 15. Observability Signal Types ────────────────────────────────────────────
 
 def gen_signal_types():
-    g = base('signal_types', rankdir='LR')
+    g = base('signal_types', rankdir='TB')
     g.attr(label='Observability Signal Types', labelloc='t',
            fontsize='15', fontcolor='#1e3a5f')
 

@@ -91,86 +91,86 @@ Buffer Pool (shared memory region):
     keyQuestions: [
       {
         question: 'How does a B-tree store and retrieve data?',
-        answer: `**B-tree Fundamentals**:
+        answer: `B-tree Fundamentals:
 A B-tree is a self-balancing tree where each node corresponds to a fixed-size disk page (typically 8-16 KB). Data is stored sorted by key, enabling efficient binary search.
 
-**Structure**:
-- **Root node**: Entry point, always cached in memory
-- **Internal nodes**: Contain keys and pointers to child pages
-- **Leaf nodes**: Contain actual key-value pairs (or pointers to heap tuples)
+Structure:
+- Root node: Entry point, always cached in memory
+- Internal nodes: Contain keys and pointers to child pages
+- Leaf nodes: Contain actual key-value pairs (or pointers to heap tuples)
 
-**Read Path** (point lookup):
+Read Path (point lookup):
 1. Start at root page (always in buffer pool)
 2. Binary search within page to find correct child pointer
 3. Follow pointer to next level, repeat
 4. Reach leaf page, binary search for key
 5. Cost: O(log_B n) disk reads, where B is branching factor (~500 for 8KB pages)
 
-**Write Path** (insert/update):
+Write Path (insert/update):
 1. Find correct leaf page via read path
 2. If page has space: insert in sorted order, mark page dirty
 3. If page is full: split into two pages, propagate new key to parent
 4. Parent may also split, cascading up to root (rare)
 
-**Why B-trees dominate OLTP**:
+Why B-trees dominate OLTP:
 - Predictable O(log n) reads — typically 3-4 levels for billions of rows
 - In-place updates avoid write amplification for updates
 - Range scans follow leaf page sibling pointers`
       },
       {
         question: 'How does an LSM-tree work and when should you use one?',
-        answer: `**LSM-tree (Log-Structured Merge-tree)**:
+        answer: `LSM-tree (Log-Structured Merge-tree):
 
-**Write Path** (always sequential):
+Write Path (always sequential):
 1. Write to WAL (Write-Ahead Log) on disk for durability
 2. Insert into in-memory MemTable (usually a red-black tree or skip list)
 3. When MemTable reaches threshold (~64MB), freeze it
 4. Flush frozen MemTable to disk as a sorted SSTable (Sorted String Table)
 5. Background compaction merges SSTables to reduce read amplification
 
-**Read Path** (potentially multiple lookups):
+Read Path (potentially multiple lookups):
 1. Check MemTable first (in memory)
 2. Check Bloom filters for each SSTable level
 3. Search SSTables from newest to oldest
 4. May need to check multiple SSTables before finding key
 
-**Compaction Strategies**:
-- **Size-tiered**: Merge similarly-sized SSTables. Simpler, higher space amplification.
-- **Leveled**: Each level has non-overlapping SSTables. Better read performance, more write amplification.
-- **FIFO**: Delete oldest SSTables. Good for time-series data.
+Compaction Strategies:
+- Size-tiered: Merge similarly-sized SSTables. Simpler, higher space amplification.
+- Leveled: Each level has non-overlapping SSTables. Better read performance, more write amplification.
+- FIFO: Delete oldest SSTables. Good for time-series data.
 
-**Use LSM-trees when**:
+Use LSM-trees when:
 - Write throughput is critical (logging, metrics, time-series)
 - Workload is append-heavy with few updates
 - Sequential disk I/O matters (HDDs, cloud storage)
 - Can tolerate slightly higher read latency
 
-**Avoid LSM-trees when**:
+Avoid LSM-trees when:
 - Read latency must be consistently low
 - Heavy point-lookup workload
 - Frequent updates to existing keys (high write amplification from compaction)`
       },
       {
         question: 'What is write amplification and why does it matter?',
-        answer: `**Write Amplification** = Total bytes written to disk / Bytes of user data written
+        answer: `Write Amplification = Total bytes written to disk / Bytes of user data written
 
-**In B-trees**:
+In B-trees:
 - Updating a single byte requires rewriting the entire page (8-16 KB)
 - Write amplification: ~100-1000x for small updates
 - Mitigated by: batching writes, WAL grouping, larger updates
 
-**In LSM-trees**:
+In LSM-trees:
 - Data is written to WAL, then MemTable, then flushed, then compacted multiple times
 - Each compaction level rewrites data: L0 -> L1 -> L2 -> ... -> Ln
 - Leveled compaction: write amplification = ~10-30x
 - Size-tiered compaction: write amplification = ~4-10x
 
-**Why it matters**:
-1. **SSD Lifespan**: SSDs have limited write cycles (P/E cycles). High write amplification burns through them faster.
-2. **Throughput**: Disk bandwidth is consumed by background rewrites, reducing available bandwidth for user writes.
-3. **Tail Latency**: Compaction storms cause latency spikes at p99.
+Why it matters:
+1. SSD Lifespan: SSDs have limited write cycles (P/E cycles). High write amplification burns through them faster.
+2. Throughput: Disk bandwidth is consumed by background rewrites, reducing available bandwidth for user writes.
+3. Tail Latency: Compaction storms cause latency spikes at p99.
 
-**Strategies to reduce write amplification**:
+Strategies to reduce write amplification:
 - Use larger MemTable sizes (flush less often)
 - Tune compaction concurrency and triggers
 - Choose size-tiered compaction if writes dominate
@@ -178,30 +178,30 @@ A B-tree is a self-balancing tree where each node corresponds to a fixed-size di
       },
       {
         question: 'How does the buffer pool work in a relational database?',
-        answer: `**Buffer Pool** = In-memory cache of disk pages
+        answer: `Buffer Pool = In-memory cache of disk pages
 
-**Purpose**: Eliminate disk I/O by keeping hot pages in memory. A well-tuned buffer pool serves 95-99% of reads from memory.
+Purpose: Eliminate disk I/O by keeping hot pages in memory. A well-tuned buffer pool serves 95-99% of reads from memory.
 
-**Core Components**:
-- **Page frames**: Fixed-size memory slots (matching disk page size)
-- **Page table**: Hash map from (file_id, page_number) -> frame_id
-- **Dirty page list**: Tracks modified pages that need flushing
-- **Eviction policy**: Decides which pages to remove when full
+Core Components:
+- Page frames: Fixed-size memory slots (matching disk page size)
+- Page table: Hash map from (file_id, page_number) -> frame_id
+- Dirty page list: Tracks modified pages that need flushing
+- Eviction policy: Decides which pages to remove when full
 
-**Page Lifecycle**:
+Page Lifecycle:
 1. Query requests page -> check page table
-2. **Cache hit**: Return page from memory (fast path, ~100ns)
-3. **Cache miss**: Read page from disk (~1-10ms), evict cold page if full
+2. Cache hit: Return page from memory (fast path, ~100ns)
+3. Cache miss: Read page from disk (~1-10ms), evict cold page if full
 4. Modifications mark page as dirty
 5. Background checkpoint process flushes dirty pages to disk
 
-**Eviction Policies**:
-- **LRU (Least Recently Used)**: Simple but susceptible to sequential scan pollution
-- **Clock**: Approximation of LRU, lower overhead
-- **LRU-K**: Track K-th most recent access, better for mixed workloads
-- **ARC**: Adaptive replacement cache, balances recency and frequency
+Eviction Policies:
+- LRU (Least Recently Used): Simple but susceptible to sequential scan pollution
+- Clock: Approximation of LRU, lower overhead
+- LRU-K: Track K-th most recent access, better for mixed workloads
+- ARC: Adaptive replacement cache, balances recency and frequency
 
-**Tuning**:
+Tuning:
 - Set buffer pool to 70-80% of available RAM
 - Monitor hit ratio: \`SHOW STATUS LIKE 'Innodb_buffer_pool_read%'\`
 - Hit ratio < 95% indicates undersized pool or working set exceeds memory`
@@ -323,28 +323,28 @@ Document: "the quick brown fox"
     keyQuestions: [
       {
         question: 'How do B-tree indexes work internally?',
-        answer: `**B-tree Index Structure**:
+        answer: `B-tree Index Structure:
 
 A B-tree index is a sorted copy of the indexed column(s) plus pointers back to the heap (actual table rows). It is separate from the table data.
 
-**Leaf Node Contents** (for secondary index):
+Leaf Node Contents (for secondary index):
 - Indexed column value(s)
 - Pointer to heap tuple (ctid in PostgreSQL = block number + offset)
 - Next/previous leaf page pointers (for range scans)
 
-**Lookup Process**:
+Lookup Process:
 1. Traverse from root to leaf: O(log_B n) page reads
 2. For a table with 1 billion rows and branching factor 500:
    - log_500(1,000,000,000) = ~3.3 levels
    - Only 4 page reads to find any row
 3. Follow heap pointer to fetch actual row data
 
-**Range Scan Process**:
+Range Scan Process:
 1. Find starting leaf via tree traversal
 2. Follow sibling pointers across leaf pages
 3. Each leaf page contains ~200-500 index entries
 
-**Key Properties**:
+Key Properties:
 - Always balanced: all leaves at same depth
 - Nodes are at least half-full (maintains efficiency)
 - Updates may cause page splits (when full) or merges (when sparse)
@@ -352,21 +352,21 @@ A B-tree index is a sorted copy of the indexed column(s) plus pointers back to t
       },
       {
         question: 'What is the leftmost prefix rule for composite indexes?',
-        answer: `**Leftmost Prefix Rule**:
+        answer: `Leftmost Prefix Rule:
 A composite index on (a, b, c) stores entries sorted by a first, then by b within each a value, then by c within each (a, b) pair.
 
-**The index can serve queries that use a leading prefix**:
+The index can serve queries that use a leading prefix:
 - WHERE a = 1 --> uses index
 - WHERE a = 1 AND b = 2 --> uses index
 - WHERE a = 1 AND b = 2 AND c = 3 --> uses index (full match)
 - WHERE a = 1 ORDER BY b --> uses index for both filter and sort
 
-**The index CANNOT efficiently serve**:
+The index CANNOT efficiently serve:
 - WHERE b = 2 --> cannot use index (no leading 'a')
 - WHERE c = 3 --> cannot use index
 - WHERE a = 1 AND c = 3 --> partial: uses 'a' only, scans for 'c'
 
-**Practical Example**:
+Practical Example:
 \`CREATE INDEX idx ON orders(customer_id, status, created_at);\`
 
 Efficient queries:
@@ -377,64 +377,64 @@ Efficient queries:
 Inefficient (index not useful):
 - All active orders: WHERE status = 'active' (needs separate index on status)
 
-**Column Order Strategy**:
+Column Order Strategy:
 1. Equality columns first (highest selectivity)
 2. Range/inequality columns next
 3. ORDER BY / GROUP BY columns last`
       },
       {
         question: 'When should you use a partial index vs a full index?',
-        answer: `**Partial Index**: An index that covers only a subset of rows, defined by a WHERE clause.
+        answer: `Partial Index: An index that covers only a subset of rows, defined by a WHERE clause.
 
-**Syntax**:
+Syntax:
 \`CREATE INDEX idx_active_orders ON orders(created_at) WHERE status = 'active';\`
 
-**When to use partial indexes**:
-1. **Skewed data**: 95% of orders are 'completed', 5% are 'active'. If you only query active orders, a partial index is 20x smaller.
-2. **Soft deletes**: \`WHERE deleted_at IS NULL\` — index only non-deleted rows.
-3. **Hot subset**: Only recent data is queried. \`WHERE created_at > '2025-01-01'\`.
-4. **Boolean flags**: \`WHERE is_featured = true\` when only 1% of rows are featured.
+When to use partial indexes:
+1. Skewed data: 95% of orders are 'completed', 5% are 'active'. If you only query active orders, a partial index is 20x smaller.
+2. Soft deletes: \`WHERE deleted_at IS NULL\` — index only non-deleted rows.
+3. Hot subset: Only recent data is queried. \`WHERE created_at > '2025-01-01'\`.
+4. Boolean flags: \`WHERE is_featured = true\` when only 1% of rows are featured.
 
-**Benefits**:
+Benefits:
 - Dramatically smaller index size (less storage, better cache fit)
 - Faster index maintenance (fewer entries to update on writes)
 - Better buffer pool utilization (index pages stay cached)
 
-**Limitations**:
+Limitations:
 - Query planner only uses it when the query WHERE clause matches the index predicate
 - Must repeat the exact condition or a subset of it in your queries
 - Cannot serve queries outside the partial index predicate
 
-**Full index is better when**:
+Full index is better when:
 - Queries filter on various values of the column (not just one subset)
 - The filtered subset is large (>50% of table)
 - You need range scans across the entire table`
       },
       {
         question: 'Explain GIN and GiST indexes and their use cases.',
-        answer: `**GIN (Generalized Inverted Index)**:
+        answer: `GIN (Generalized Inverted Index):
 
-**How it works**: Maps each element/token to a sorted list of row pointers (posting list). Like the index at the back of a book.
+How it works: Maps each element/token to a sorted list of row pointers (posting list). Like the index at the back of a book.
 
-**Use cases**:
-- **Full-text search**: \`CREATE INDEX idx ON articles USING gin(to_tsvector('english', body));\`
-- **JSONB queries**: \`CREATE INDEX idx ON events USING gin(metadata);\` for \`WHERE metadata @> '{"type": "click"}'\`
-- **Array containment**: \`CREATE INDEX idx ON products USING gin(tags);\` for \`WHERE tags @> ARRAY['sale']\`
-- **Trigram similarity**: With pg_trgm extension for LIKE/ILIKE queries
+Use cases:
+- Full-text search: \`CREATE INDEX idx ON articles USING gin(to_tsvector('english', body));\`
+- JSONB queries: \`CREATE INDEX idx ON events USING gin(metadata);\` for \`WHERE metadata @> '{"type": "click"}'\`
+- Array containment: \`CREATE INDEX idx ON products USING gin(tags);\` for \`WHERE tags @> ARRAY['sale']\`
+- Trigram similarity: With pg_trgm extension for LIKE/ILIKE queries
 
-**Characteristics**: Slower to build, faster to query. Updates are batched via pending list. Best for data types with many searchable elements per row.
+Characteristics: Slower to build, faster to query. Updates are batched via pending list. Best for data types with many searchable elements per row.
 
-**GiST (Generalized Search Tree)**:
+GiST (Generalized Search Tree):
 
-**How it works**: A balanced tree where each internal node contains a bounding predicate that covers all entries in its subtree. Supports overlap and containment operations.
+How it works: A balanced tree where each internal node contains a bounding predicate that covers all entries in its subtree. Supports overlap and containment operations.
 
-**Use cases**:
-- **Geometric data**: Point-in-polygon, nearest neighbor, bounding box intersection
-- **Range types**: \`CREATE INDEX idx ON reservations USING gist(during);\` for \`WHERE during && '[2025-01-01, 2025-01-31]'\`
-- **IP address ranges**: Network containment queries
-- **PostGIS**: Spatial queries (find restaurants within 5km)
+Use cases:
+- Geometric data: Point-in-polygon, nearest neighbor, bounding box intersection
+- Range types: \`CREATE INDEX idx ON reservations USING gist(during);\` for \`WHERE during && '[2025-01-01, 2025-01-31]'\`
+- IP address ranges: Network containment queries
+- PostGIS: Spatial queries (find restaurants within 5km)
 
-**GIN vs GiST**:
+GIN vs GiST:
 | Aspect | GIN | GiST |
 |--------|-----|------|
 | Build speed | Slower | Faster |
@@ -550,67 +550,67 @@ If T3 fails: execute C2, then C1 to undo earlier steps`
     keyQuestions: [
       {
         question: 'Explain each ACID property and how it is implemented.',
-        answer: `**Atomicity** — All or nothing.
-- **Implementation**: Write-Ahead Log (WAL). Every change is logged before applying. On crash, replay or undo incomplete transactions.
-- **Mechanism**: Transaction manager tracks all operations. COMMIT writes a commit record to WAL. ROLLBACK replays the undo log.
-- **Cost**: WAL writes add latency to every transaction.
+        answer: `Atomicity — All or nothing.
+- Implementation: Write-Ahead Log (WAL). Every change is logged before applying. On crash, replay or undo incomplete transactions.
+- Mechanism: Transaction manager tracks all operations. COMMIT writes a commit record to WAL. ROLLBACK replays the undo log.
+- Cost: WAL writes add latency to every transaction.
 
-**Consistency** — Database moves from one valid state to another.
-- **Implementation**: Constraint checks (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL) enforced at statement or transaction end.
-- **Mechanism**: Deferred constraints check at COMMIT time. Immediate constraints check after each statement.
-- **Note**: Application-level consistency (business rules) is the developer's responsibility.
+Consistency — Database moves from one valid state to another.
+- Implementation: Constraint checks (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL) enforced at statement or transaction end.
+- Mechanism: Deferred constraints check at COMMIT time. Immediate constraints check after each statement.
+- Note: Application-level consistency (business rules) is the developer's responsibility.
 
-**Isolation** — Concurrent transactions do not interfere.
-- **Implementation**: MVCC (Multi-Version Concurrency Control) in modern databases. Each transaction sees a snapshot of data.
-- **Mechanism**: PostgreSQL stores xmin/xmax on each tuple. Transaction visibility rules determine which version each transaction sees.
-- **Levels**: Read Uncommitted, Read Committed, Repeatable Read, Serializable — each trades performance for correctness.
+Isolation — Concurrent transactions do not interfere.
+- Implementation: MVCC (Multi-Version Concurrency Control) in modern databases. Each transaction sees a snapshot of data.
+- Mechanism: PostgreSQL stores xmin/xmax on each tuple. Transaction visibility rules determine which version each transaction sees.
+- Levels: Read Uncommitted, Read Committed, Repeatable Read, Serializable — each trades performance for correctness.
 
-**Durability** — Committed data survives crashes.
-- **Implementation**: WAL is fsync'd to disk before COMMIT returns. Data pages flushed lazily by background checkpoint process.
-- **Mechanism**: Group commit batches multiple transaction WAL records into a single fsync (amortizes the 1-10ms fsync cost).
-- **Trade-off**: synchronous_commit=off gives 3x throughput but risks losing last few milliseconds of commits on crash.`
+Durability — Committed data survives crashes.
+- Implementation: WAL is fsync'd to disk before COMMIT returns. Data pages flushed lazily by background checkpoint process.
+- Mechanism: Group commit batches multiple transaction WAL records into a single fsync (amortizes the 1-10ms fsync cost).
+- Trade-off: synchronous_commit=off gives 3x throughput but risks losing last few milliseconds of commits on crash.`
       },
       {
         question: 'How does Two-Phase Commit (2PC) work and what are its limitations?',
-        answer: `**Two-Phase Commit** ensures atomic commits across multiple database nodes.
+        answer: `Two-Phase Commit ensures atomic commits across multiple database nodes.
 
-**Phase 1 — Prepare (Voting)**:
+Phase 1 — Prepare (Voting):
 1. Coordinator sends PREPARE to all participants
 2. Each participant writes changes to local WAL, acquires locks
 3. Participant votes YES (ready to commit) or NO (must abort)
 4. Participant that votes YES is "in doubt" — it has promised to commit but has not yet
 
-**Phase 2 — Commit (Decision)**:
+Phase 2 — Commit (Decision):
 1. If ALL participants voted YES: Coordinator sends COMMIT
 2. If ANY participant voted NO: Coordinator sends ABORT
 3. Participants execute the decision and release locks
 4. Participants send ACK to coordinator
 
-**The Blocking Problem**:
+The Blocking Problem:
 If the coordinator crashes after Phase 1 but before Phase 2:
 - Participants that voted YES are stuck holding locks
 - They cannot unilaterally commit or abort
 - Must wait for coordinator recovery (could be minutes or hours)
 - All other transactions blocked by held locks
 
-**Limitations**:
-- **Blocking**: Coordinator failure blocks all participants
-- **Latency**: Minimum 2 round trips + 3 forced WAL writes
-- **Availability**: Any participant failure aborts the whole transaction
-- **Scalability**: Lock duration spans network round trips
+Limitations:
+- Blocking: Coordinator failure blocks all participants
+- Latency: Minimum 2 round trips + 3 forced WAL writes
+- Availability: Any participant failure aborts the whole transaction
+- Scalability: Lock duration spans network round trips
 
-**Three-Phase Commit** adds a pre-commit phase to reduce blocking but does not fully eliminate it and adds latency. Rarely used in practice.
+Three-Phase Commit adds a pre-commit phase to reduce blocking but does not fully eliminate it and adds latency. Rarely used in practice.
 
-**Modern Alternatives**:
-- **Saga pattern**: Sequence of local transactions with compensating actions
-- **Percolator model** (Google): Distributed transactions without coordinator
-- **Calvin/BOHM**: Deterministic ordering eliminates distributed coordination`
+Modern Alternatives:
+- Saga pattern: Sequence of local transactions with compensating actions
+- Percolator model (Google): Distributed transactions without coordinator
+- Calvin/BOHM: Deterministic ordering eliminates distributed coordination`
       },
       {
         question: 'What are savepoints and when would you use them?',
-        answer: `**Savepoints** create named markers within a transaction that you can roll back to without aborting the entire transaction.
+        answer: `Savepoints create named markers within a transaction that you can roll back to without aborting the entire transaction.
 
-**Syntax**:
+Syntax:
 \`\`\`sql
 BEGIN;
 INSERT INTO orders (user_id, total) VALUES (1, 100.00);
@@ -625,58 +625,58 @@ INSERT INTO order_items (order_id, product_id) VALUES (1, 42);
 COMMIT;
 \`\`\`
 
-**Use Cases**:
-1. **Batch processing**: Process 1000 records, savepoint every 100. If record 350 fails, roll back to savepoint at 300 and skip the bad batch.
-2. **Optimistic operations**: Try an operation that might fail (unique constraint, FK violation). Roll back to savepoint on failure, try alternative.
-3. **Complex business logic**: Multi-step workflows where intermediate steps may fail independently.
-4. **Testing within transactions**: Try a speculative operation, inspect results, roll back if undesirable.
+Use Cases:
+1. Batch processing: Process 1000 records, savepoint every 100. If record 350 fails, roll back to savepoint at 300 and skip the bad batch.
+2. Optimistic operations: Try an operation that might fail (unique constraint, FK violation). Roll back to savepoint on failure, try alternative.
+3. Complex business logic: Multi-step workflows where intermediate steps may fail independently.
+4. Testing within transactions: Try a speculative operation, inspect results, roll back if undesirable.
 
-**How they work internally**:
+How they work internally:
 - Each savepoint creates a sub-transaction with its own undo log segment
 - ROLLBACK TO replays the undo log back to the savepoint
 - RELEASE SAVEPOINT merges the sub-transaction into the parent
 - Nested savepoints form a stack (LIFO rollback order)
 
-**Limitations**:
+Limitations:
 - Still hold all locks from before the savepoint
 - Cannot savepoint across distributed transactions in most databases
 - Deep nesting adds memory overhead for undo log segments`
       },
       {
         question: 'Compare the Saga pattern with distributed transactions.',
-        answer: `**Distributed Transactions (2PC)**:
+        answer: `Distributed Transactions (2PC):
 - Strong consistency: all-or-nothing across nodes
 - Synchronous: all participants must be available
 - Locks held across network calls (high contention)
 - Simple programming model (looks like a local transaction)
 
-**Saga Pattern**:
+Saga Pattern:
 - Eventual consistency: temporary inconsistency during execution
 - Asynchronous: each step is an independent local transaction
 - No distributed locks (better availability and throughput)
 - Complex programming model (must design compensating actions)
 
-**Saga Execution Styles**:
+Saga Execution Styles:
 
-**Choreography** (event-driven):
+Choreography (event-driven):
 - Each service publishes events, next service reacts
 - Order Service -> "OrderCreated" -> Payment Service -> "PaymentProcessed" -> Inventory Service
 - Pro: Decoupled, no central coordinator
 - Con: Hard to understand flow, difficult to debug
 
-**Orchestration** (command-driven):
+Orchestration (command-driven):
 - Central orchestrator directs each step
 - Orchestrator calls Order -> Payment -> Inventory in sequence
 - Pro: Clear flow, easier to reason about
 - Con: Orchestrator is a single point of logic
 
-**Designing Compensating Actions**:
+Designing Compensating Actions:
 - Not always a simple "undo" — some actions are not reversible
 - Refund is not the inverse of charge (refund fees, timing differences)
 - Must be idempotent (safe to retry if compensation message is delivered twice)
 - May require human intervention for edge cases
 
-**When to choose**:
+When to choose:
 - 2PC: Financial transfers, inventory reservation where correctness is paramount
 - Saga: E-commerce checkout, travel booking, any multi-service workflow where eventual consistency is acceptable`
       }
@@ -793,31 +793,31 @@ Deadlock Detection (wait-for graph):
     keyQuestions: [
       {
         question: 'How does MVCC work in PostgreSQL?',
-        answer: `**Multi-Version Concurrency Control (MVCC)**:
+        answer: `Multi-Version Concurrency Control (MVCC):
 Each row has multiple physical versions (tuples). Each transaction sees a consistent snapshot based on which versions were committed when the transaction started.
 
-**Tuple Header Fields**:
-- **xmin**: Transaction ID that created this tuple version
-- **xmax**: Transaction ID that deleted/updated this version (0 if still live)
-- **ctid**: Physical location (block number, offset within block)
+Tuple Header Fields:
+- xmin: Transaction ID that created this tuple version
+- xmax: Transaction ID that deleted/updated this version (0 if still live)
+- ctid: Physical location (block number, offset within block)
 
-**Visibility Rules** (for transaction T reading a tuple):
+Visibility Rules (for transaction T reading a tuple):
 1. xmin must be committed AND committed before T started
 2. xmax must be 0 (not deleted) OR not committed OR committed after T started
 3. These rules are checked against the pg_xact (commit log) and the transaction's snapshot
 
-**Update Process** (UPDATE accounts SET balance = 450 WHERE id = 1):
+Update Process (UPDATE accounts SET balance = 450 WHERE id = 1):
 1. Find current version: xmin=100, xmax=0, balance=500
 2. Mark old version deleted: set xmax=105
 3. Create new version: xmin=105, xmax=0, balance=450
 4. Old version remains for concurrent readers who started before txn 105
 
-**Benefits**:
+Benefits:
 - Readers never block writers (read old version)
 - Writers never block readers (write new version)
 - No read locks needed — dramatically reduces contention
 
-**Costs**:
+Costs:
 - Table bloat: dead tuples accumulate until VACUUM removes them
 - VACUUM overhead: background process must regularly clean dead tuples
 - Index bloat: indexes may point to multiple versions of the same row
@@ -825,10 +825,10 @@ Each row has multiple physical versions (tuples). Each transaction sees a consis
       },
       {
         question: 'Explain optimistic vs pessimistic concurrency control.',
-        answer: `**Pessimistic Concurrency Control**:
+        answer: `Pessimistic Concurrency Control:
 Acquire locks before accessing data. Prevents conflicts by blocking concurrent access.
 
-**Implementation**:
+Implementation:
 \`\`\`sql
 -- Pessimistic: lock the row immediately
 SELECT * FROM inventory WHERE product_id = 42 FOR UPDATE;
@@ -837,13 +837,13 @@ UPDATE inventory SET quantity = quantity - 1 WHERE product_id = 42;
 COMMIT; -- Lock released
 \`\`\`
 
-**Pros**: Guarantees no conflicts. Simple error handling.
-**Cons**: Reduces concurrency. Risk of deadlocks. Locks held across application logic.
+Pros: Guarantees no conflicts. Simple error handling.
+Cons: Reduces concurrency. Risk of deadlocks. Locks held across application logic.
 
-**Optimistic Concurrency Control**:
+Optimistic Concurrency Control:
 No locks during reads. At write time, verify no one else modified the data. Retry if conflict detected.
 
-**Implementation** (application-level version column):
+Implementation (application-level version column):
 \`\`\`sql
 -- Read with version
 SELECT quantity, version FROM inventory WHERE product_id = 42;
@@ -857,60 +857,60 @@ WHERE product_id = 42 AND version = 5;
 -- If 0 rows affected: conflict! Re-read and retry.
 \`\`\`
 
-**Pros**: No locks held. Higher throughput when conflicts are rare.
-**Cons**: Wasted work on conflict (must retry). Starvation if contention is high.
+Pros: No locks held. Higher throughput when conflicts are rare.
+Cons: Wasted work on conflict (must retry). Starvation if contention is high.
 
-**When to choose**:
-- **Pessimistic**: High contention (concert ticket booking, inventory with few items)
-- **Optimistic**: Low contention (user profile updates, document editing with few concurrent editors)
-- **Hybrid**: Read optimistically, escalate to pessimistic lock on first conflict`
+When to choose:
+- Pessimistic: High contention (concert ticket booking, inventory with few items)
+- Optimistic: Low contention (user profile updates, document editing with few concurrent editors)
+- Hybrid: Read optimistically, escalate to pessimistic lock on first conflict`
       },
       {
         question: 'How does deadlock detection work?',
-        answer: `**Deadlock**: Two or more transactions each hold a lock the other needs.
+        answer: `Deadlock: Two or more transactions each hold a lock the other needs.
 
-**Example**:
+Example:
 - Txn A: locks row 1, wants row 2
 - Txn B: locks row 2, wants row 1
 - Neither can proceed -> deadlock
 
-**Detection via Wait-For Graph**:
+Detection via Wait-For Graph:
 1. Database maintains a directed graph of transaction dependencies
 2. Edge from Txn A -> Txn B means "A is waiting for a lock held by B"
 3. Periodically (or on each wait), check for cycles in the graph
 4. Cycle found = deadlock detected
 
-**Resolution Strategies**:
-- **Victim selection**: Abort the transaction that did the least work (fewest locks, shortest duration)
-- **PostgreSQL**: Checks for deadlocks after 1 second of waiting (deadlock_timeout). Aborts the last transaction to join the cycle.
-- **MySQL InnoDB**: Checks immediately on each lock wait. Aborts the transaction with fewest row locks.
+Resolution Strategies:
+- Victim selection: Abort the transaction that did the least work (fewest locks, shortest duration)
+- PostgreSQL: Checks for deadlocks after 1 second of waiting (deadlock_timeout). Aborts the last transaction to join the cycle.
+- MySQL InnoDB: Checks immediately on each lock wait. Aborts the transaction with fewest row locks.
 
-**Prevention Strategies**:
-1. **Lock ordering**: Always acquire locks in a consistent global order (e.g., by primary key ASC)
-2. **Lock timeout**: Set a maximum wait time (\`SET lock_timeout = '5s'\`)
-3. **Reduce transaction scope**: Shorter transactions hold locks for less time
-4. **Advisory locks**: Application-level locks acquired before the transaction
+Prevention Strategies:
+1. Lock ordering: Always acquire locks in a consistent global order (e.g., by primary key ASC)
+2. Lock timeout: Set a maximum wait time (\`SET lock_timeout = '5s'\`)
+3. Reduce transaction scope: Shorter transactions hold locks for less time
+4. Advisory locks: Application-level locks acquired before the transaction
 
-**Wait-Die and Wound-Wait** (used in distributed systems):
-- **Wait-Die**: Older transaction waits, younger one dies (aborts and retries)
-- **Wound-Wait**: Older transaction wounds (aborts) younger one, younger waits
+Wait-Die and Wound-Wait (used in distributed systems):
+- Wait-Die: Older transaction waits, younger one dies (aborts and retries)
+- Wound-Wait: Older transaction wounds (aborts) younger one, younger waits
 - Both are deadlock-free because they impose a total order on transactions`
       },
       {
         question: 'What are intent locks and why are they needed?',
-        answer: `**Intent Locks** signal that a transaction intends to acquire finer-grained locks within a resource.
+        answer: `Intent Locks signal that a transaction intends to acquire finer-grained locks within a resource.
 
-**The Problem Without Intent Locks**:
+The Problem Without Intent Locks:
 Txn A wants an exclusive table lock. To check if any rows are locked, it would need to scan every row in the table — potentially millions of rows. This is prohibitively expensive.
 
-**Solution — Intent Lock Hierarchy**:
+Solution — Intent Lock Hierarchy:
 When Txn B locks a single row, it first acquires an Intent lock on the table:
 1. IS (Intent Shared) on table -> S (Shared) lock on row
 2. IX (Intent Exclusive) on table -> X (Exclusive) lock on row
 
 Now when Txn A wants a table-level X lock, it only checks the table-level lock — sees IX held by Txn B, knows it must wait.
 
-**Compatibility Matrix (full)**:
+Compatibility Matrix (full):
 \`\`\`
          IS    IX    S     SIX   X
 IS       OK    OK    OK    OK    NO
@@ -920,14 +920,14 @@ SIX      OK    NO    NO    NO    NO
 X        NO    NO    NO    NO    NO
 \`\`\`
 
-**SIX (Shared + Intent Exclusive)**: Read entire table, write some rows. Example: SELECT * FROM orders; UPDATE orders SET status = 'archived' WHERE created_at < '2024-01-01';
+SIX (Shared + Intent Exclusive): Read entire table, write some rows. Example: SELECT * FROM orders; UPDATE orders SET status = 'archived' WHERE created_at < '2024-01-01';
 
-**Lock Escalation** (SQL Server):
+Lock Escalation (SQL Server):
 - When a transaction acquires too many row locks (>5000), the engine escalates to a table lock
 - Reduces lock manager memory usage
 - Can reduce concurrency — tunable via ALTER TABLE SET LOCK_ESCALATION
 
-**In Practice**:
+In Practice:
 - PostgreSQL uses a simplified model (no lock escalation, advisory locks instead)
 - MySQL InnoDB uses intent locks at table level with row-level S/X locks
 - Lock granularity trade-off: finer locks = more concurrency but more overhead`
@@ -1052,7 +1052,7 @@ Txn 100 reads row X:
     keyQuestions: [
       {
         question: 'Explain each SQL isolation level with concrete examples.',
-        answer: `**Read Uncommitted** (weakest):
+        answer: `Read Uncommitted (weakest):
 Transactions can see uncommitted changes from other transactions.
 \`\`\`
 Txn A: UPDATE accounts SET balance = 0 WHERE id = 1;  -- not committed
@@ -1061,7 +1061,7 @@ Txn A: ROLLBACK;  -- balance is actually still 1000
 \`\`\`
 Use case: Almost never. Some analytics where approximate data is acceptable.
 
-**Read Committed** (PostgreSQL default):
+Read Committed (PostgreSQL default):
 Each statement sees only committed data. But re-executing the same query may return different results.
 \`\`\`
 Txn A: SELECT count(*) FROM orders WHERE status = 'pending';  -- returns 10
@@ -1070,7 +1070,7 @@ Txn A: SELECT count(*) FROM orders WHERE status = 'pending';  -- returns 9
 \`\`\`
 Use case: Default for most OLTP applications. Good balance of correctness and performance.
 
-**Repeatable Read**:
+Repeatable Read:
 Transaction sees a consistent snapshot from the start. Re-reads return the same data.
 \`\`\`
 Txn A: BEGIN;
@@ -1080,15 +1080,15 @@ Txn A: SELECT balance FROM accounts WHERE id = 1;  -- still returns 1000
 \`\`\`
 Use case: Reports that need consistent data, financial summaries.
 
-**Serializable** (strongest):
+Serializable (strongest):
 Guarantees results are equivalent to some serial execution order. Detects and prevents all anomalies including write skew.
 Use case: Financial transactions, inventory management, any case where correctness is more important than throughput.`
       },
       {
         question: 'What is write skew and how do you prevent it?',
-        answer: `**Write Skew** is an anomaly where two transactions each read a shared condition, then make independent updates that together violate an invariant.
+        answer: `Write Skew is an anomaly where two transactions each read a shared condition, then make independent updates that together violate an invariant.
 
-**Classic Example — On-Call Doctors**:
+Classic Example — On-Call Doctors:
 Invariant: At least one doctor must be on call at all times.
 \`\`\`
 Initial state: Alice (on_call=true), Bob (on_call=true)
@@ -1107,34 +1107,34 @@ COMMIT;                              COMMIT;
 Result: 0 doctors on call! Invariant violated.
 \`\`\`
 
-**Why it occurs**: Under Repeatable Read / Snapshot Isolation, both transactions see the same snapshot (2 doctors). Neither detects the other's change because they modify different rows.
+Why it occurs: Under Repeatable Read / Snapshot Isolation, both transactions see the same snapshot (2 doctors). Neither detects the other's change because they modify different rows.
 
-**Prevention Strategies**:
+Prevention Strategies:
 
-1. **SERIALIZABLE isolation level**: PostgreSQL SSI detects the read-write dependency cycle and aborts one transaction.
+1. SERIALIZABLE isolation level: PostgreSQL SSI detects the read-write dependency cycle and aborts one transaction.
 
-2. **Explicit locking** (materializing conflicts):
+2. Explicit locking (materializing conflicts):
 \`\`\`sql
 SELECT * FROM doctors WHERE on_call = true FOR UPDATE;
 \`\`\`
 This locks the rows that the condition depends on, forcing serialization.
 
-3. **Application-level constraint**: Add a database constraint that enforces the invariant (e.g., a trigger or materialized view with a CHECK constraint).
+3. Application-level constraint: Add a database constraint that enforces the invariant (e.g., a trigger or materialized view with a CHECK constraint).
 
-4. **Single-row pattern**: Instead of distributed state, use a single row: \`on_call_count\` that both transactions UPDATE. This naturally serializes.`
+4. Single-row pattern: Instead of distributed state, use a single row: \`on_call_count\` that both transactions UPDATE. This naturally serializes.`
       },
       {
         question: 'How does PostgreSQL implement Serializable Snapshot Isolation (SSI)?',
-        answer: `**SSI** adds anomaly detection on top of regular snapshot isolation without adding locks.
+        answer: `SSI adds anomaly detection on top of regular snapshot isolation without adding locks.
 
-**Core Idea**: Track read-write dependencies between concurrent transactions. If a dangerous pattern (cycle) is detected, abort one transaction.
+Core Idea: Track read-write dependencies between concurrent transactions. If a dangerous pattern (cycle) is detected, abort one transaction.
 
-**Mechanism**:
-1. **SIRead locks**: Track what each transaction has read (predicate locks on ranges, not just individual rows)
-2. **RW-conflict detection**: When Txn B writes a row that Txn A previously read (or vice versa), record a rw-conflict edge
-3. **Dangerous structure detection**: If two consecutive rw-conflict edges form a pattern T1 -> T2 -> T3 where T1 committed before T3 started but T2 overlaps both, abort T2
+Mechanism:
+1. SIRead locks: Track what each transaction has read (predicate locks on ranges, not just individual rows)
+2. RW-conflict detection: When Txn B writes a row that Txn A previously read (or vice versa), record a rw-conflict edge
+3. Dangerous structure detection: If two consecutive rw-conflict edges form a pattern T1 -> T2 -> T3 where T1 committed before T3 started but T2 overlaps both, abort T2
 
-**Example — Detecting Write Skew**:
+Example — Detecting Write Skew:
 \`\`\`
 Txn A reads doctors (SIRead lock on WHERE on_call=true)
 Txn B reads doctors (SIRead lock on WHERE on_call=true)
@@ -1143,13 +1143,13 @@ Txn B writes Bob   -> rw-conflict: A read, B wrote
 Two consecutive rw-conflicts form a cycle -> ABORT one
 \`\`\`
 
-**Performance Characteristics**:
+Performance Characteristics:
 - No blocking: SSI only detects, it does not lock
 - False positives: May abort transactions that would not actually cause anomalies
 - Overhead: SIRead lock tracking consumes memory (configurable max)
 - Retry required: Aborted transactions must be retried by the application
 
-**Practical Implications**:
+Practical Implications:
 - Applications MUST handle serialization failures (SQLSTATE 40001)
 - Use retry loops with exponential backoff
 - Read-only transactions can be declared as such to reduce overhead
@@ -1157,7 +1157,7 @@ Two consecutive rw-conflicts form a cycle -> ABORT one
       },
       {
         question: 'How do MySQL and PostgreSQL differ in their Repeatable Read implementation?',
-        answer: `**PostgreSQL Repeatable Read** (true snapshot isolation):
+        answer: `PostgreSQL Repeatable Read (true snapshot isolation):
 - Takes a snapshot at transaction start
 - All reads see data as of that snapshot
 - No locking for reads — pure MVCC
@@ -1165,32 +1165,32 @@ Two consecutive rw-conflicts form a cycle -> ABORT one
 - Does NOT prevent: write skew
 - On write conflict: first-updater-wins, second transaction gets serialization error
 
-**MySQL InnoDB Repeatable Read** (snapshot + gap locks):
+MySQL InnoDB Repeatable Read (snapshot + gap locks):
 - Takes a snapshot at first read (not transaction start)
 - Consistent reads use MVCC snapshot
 - Locking reads (SELECT FOR UPDATE) use next-key locks (record + gap)
 - Gap locks prevent phantom inserts in locked ranges
 - Does NOT use MVCC for locking reads — they always read latest committed
 
-**Key Differences**:
+Key Differences:
 
-1. **Snapshot timing**:
+1. Snapshot timing:
    - PostgreSQL: snapshot at BEGIN
    - MySQL: snapshot at first SELECT
 
-2. **Phantom prevention**:
+2. Phantom prevention:
    - PostgreSQL: snapshot naturally prevents phantoms
    - MySQL: gap locks prevent phantoms for locking reads, snapshot for consistent reads
 
-3. **Write conflicts**:
+3. Write conflicts:
    - PostgreSQL: detects at COMMIT, returns serialization error
    - MySQL: detects at write time via row locks, blocks or deadlocks
 
-4. **Lost update behavior**:
+4. Lost update behavior:
    - PostgreSQL: second updater gets error (must retry)
    - MySQL: second updater blocks until first commits, then overwrites (no error)
 
-**Practical Impact**:
+Practical Impact:
 - PostgreSQL RR is safer by default (fewer silent anomalies)
 - MySQL RR allows "last writer wins" which can lose updates silently
 - Both require SERIALIZABLE for full anomaly prevention
@@ -1309,27 +1309,27 @@ Adding Node D: move vnode 3 from A, vnode 8 from B
     keyQuestions: [
       {
         question: 'How do you choose the right shard key?',
-        answer: `**Shard Key Selection Criteria**:
+        answer: `Shard Key Selection Criteria:
 
-1. **Cardinality**: Must have many distinct values. A boolean column is a terrible shard key (only 2 shards). User ID, order ID, or tenant ID are good.
+1. Cardinality: Must have many distinct values. A boolean column is a terrible shard key (only 2 shards). User ID, order ID, or tenant ID are good.
 
-2. **Distribution**: Values should be evenly distributed. Monotonically increasing IDs cause hotspots with range partitioning. UUIDs or hash-based keys distribute evenly.
+2. Distribution: Values should be evenly distributed. Monotonically increasing IDs cause hotspots with range partitioning. UUIDs or hash-based keys distribute evenly.
 
-3. **Query patterns**: Most queries should be routable to a single shard. If 80% of queries filter by user_id, shard by user_id.
+3. Query patterns: Most queries should be routable to a single shard. If 80% of queries filter by user_id, shard by user_id.
 
-4. **Growth patterns**: Key should distribute new data evenly. Timestamp-based keys create write hotspots on the latest shard.
+4. Growth patterns: Key should distribute new data evenly. Timestamp-based keys create write hotspots on the latest shard.
 
-**Common Shard Key Choices**:
+Common Shard Key Choices:
 
-- **user_id**: Good for user-centric apps (social media, SaaS). All user data on one shard. Problem: power users create hotspots.
+- user_id: Good for user-centric apps (social media, SaaS). All user data on one shard. Problem: power users create hotspots.
 
-- **tenant_id**: Good for multi-tenant SaaS. Isolation between tenants. Problem: large tenants need their own shard.
+- tenant_id: Good for multi-tenant SaaS. Isolation between tenants. Problem: large tenants need their own shard.
 
-- **compound key (tenant_id, entity_id)**: Route by tenant, distribute within tenant by entity. Best of both worlds.
+- compound key (tenant_id, entity_id): Route by tenant, distribute within tenant by entity. Best of both worlds.
 
-- **hash(key)**: Eliminates hotspots but loses range query capability.
+- hash(key): Eliminates hotspots but loses range query capability.
 
-**Anti-patterns**:
+Anti-patterns:
 - Sharding by country: uneven (US shard huge, Luxembourg tiny)
 - Sharding by first letter: extremely uneven (S has far more entries than X)
 - Auto-increment ID with range partitioning: all writes go to last shard
@@ -1337,71 +1337,71 @@ Adding Node D: move vnode 3 from A, vnode 8 from B
       },
       {
         question: 'How do you handle hotspots in a sharded database?',
-        answer: `**Hotspot**: One shard receives disproportionately more traffic than others.
+        answer: `Hotspot: One shard receives disproportionately more traffic than others.
 
-**Causes**:
+Causes:
 - Celebrity/power user problem: one user_id generates 1000x more traffic
 - Temporal hotspot: latest time partition gets all writes
 - Skewed data: some hash values naturally cluster
 
-**Detection**:
+Detection:
 - Monitor per-shard QPS, CPU, disk I/O
 - Track shard sizes and growth rates
 - Alert on >2x deviation from average shard load
 
-**Mitigation Strategies**:
+Mitigation Strategies:
 
-1. **Shard splitting**: Split the hot shard into two. Range partition at midpoint or re-hash into sub-shards.
+1. Shard splitting: Split the hot shard into two. Range partition at midpoint or re-hash into sub-shards.
 
-2. **Salt the key**: Append a random suffix (0-9) to hot keys. user_123 becomes user_123_0 through user_123_9, spreading across 10 shards. Reads must scatter-gather across all suffixes.
+2. Salt the key: Append a random suffix (0-9) to hot keys. user_123 becomes user_123_0 through user_123_9, spreading across 10 shards. Reads must scatter-gather across all suffixes.
 
-3. **Dedicated shard**: Give the hot entity its own shard (e.g., celebrity accounts on dedicated hardware).
+3. Dedicated shard: Give the hot entity its own shard (e.g., celebrity accounts on dedicated hardware).
 
-4. **Caching**: Put a cache (Redis) in front of the hot shard to absorb read traffic. Cache invalidation becomes critical.
+4. Caching: Put a cache (Redis) in front of the hot shard to absorb read traffic. Cache invalidation becomes critical.
 
-5. **Rate limiting**: Throttle traffic to the hot shard to protect other tenants on the same machine.
+5. Rate limiting: Throttle traffic to the hot shard to protect other tenants on the same machine.
 
-6. **Application-level routing**: Route hot entities to beefier hardware. Requires a directory-based approach.
+6. Application-level routing: Route hot entities to beefier hardware. Requires a directory-based approach.
 
-**Prevention**:
+Prevention:
 - Use hash partitioning to spread data evenly from the start
 - Virtual shards (many more logical shards than physical nodes) make rebalancing granular
 - Monitor continuously — hotspots can emerge as usage patterns change`
       },
       {
         question: 'How do you rebalance shards without downtime?',
-        answer: `**Rebalancing** = Redistributing data across shards when adding/removing nodes.
+        answer: `Rebalancing = Redistributing data across shards when adding/removing nodes.
 
-**Naive approach** (hash(key) % N):
+Naive approach (hash(key) % N):
 Change N (add a node) -> nearly every key maps to a different shard -> massive data migration. Unacceptable.
 
-**Consistent Hashing**:
+Consistent Hashing:
 1. Map both keys and nodes onto a hash ring (0 to 2^32)
 2. Each key is assigned to the next node clockwise on the ring
 3. Adding a node: only keys between the new node and its predecessor move
 4. Removing a node: its keys move to the next node clockwise
 5. Only ~1/N of keys move when adding the Nth node
 
-**Virtual Nodes (vnodes)**:
+Virtual Nodes (vnodes):
 Each physical node owns multiple points on the ring (100-256 vnodes).
 - Provides more uniform distribution
 - Rebalancing moves individual vnodes, not all data on a node
 - Heterogeneous hardware: give more vnodes to more powerful machines
 
-**Online Migration Process**:
-1. **Double-write**: New writes go to both old and new shard
-2. **Backfill**: Copy existing data from old shard to new shard
-3. **Verify**: Checksums to ensure data consistency
-4. **Cutover**: Route reads to new shard
-5. **Cleanup**: Remove duplicated data from old shard
+Online Migration Process:
+1. Double-write: New writes go to both old and new shard
+2. Backfill: Copy existing data from old shard to new shard
+3. Verify: Checksums to ensure data consistency
+4. Cutover: Route reads to new shard
+5. Cleanup: Remove duplicated data from old shard
 
-**Vitess (YouTube's MySQL sharding)**:
+Vitess (YouTube's MySQL sharding):
 - Uses a VSchema to define shard key routing
 - Resharding creates new shards, sets up filtered replication
 - Cutover is atomic: switch reads and writes in one operation
 - Rollback possible: keep old shards until verified
 
-**Key Metrics During Rebalancing**:
+Key Metrics During Rebalancing:
 - Migration throughput (rows/second, GB/minute)
 - Replication lag on new shards
 - Query latency during migration (should be <10% degradation)
@@ -1409,32 +1409,32 @@ Each physical node owns multiple points on the ring (100-256 vnodes).
       },
       {
         question: 'What are the challenges of cross-shard queries?',
-        answer: `**Cross-Shard Query**: A query that must access data from multiple shards.
+        answer: `Cross-Shard Query: A query that must access data from multiple shards.
 
-**Why they are expensive**:
-1. **Network overhead**: Must contact multiple shards (latency = max of all shard responses)
-2. **Scatter-gather**: Send query to all shards, merge results at coordinator
-3. **No global indexes**: Cannot efficiently filter on non-shard-key columns
-4. **No distributed joins**: Joining data across shards requires pulling data to coordinator
-5. **No global ordering**: Each shard returns locally sorted data; must merge-sort at coordinator
+Why they are expensive:
+1. Network overhead: Must contact multiple shards (latency = max of all shard responses)
+2. Scatter-gather: Send query to all shards, merge results at coordinator
+3. No global indexes: Cannot efficiently filter on non-shard-key columns
+4. No distributed joins: Joining data across shards requires pulling data to coordinator
+5. No global ordering: Each shard returns locally sorted data; must merge-sort at coordinator
 
-**Common Cross-Shard Operations**:
+Common Cross-Shard Operations:
 
-**Scatter-gather query** (search across all shards):
+Scatter-gather query (search across all shards):
 \`\`\`
 SELECT * FROM orders WHERE product_id = 42;
 -- If sharded by user_id, must query ALL shards
 -- Coordinator merges results
 \`\`\`
 
-**Cross-shard join**:
+Cross-shard join:
 \`\`\`
 SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id
 WHERE o.created_at > '2025-01-01';
 -- If users and orders on different shard keys, very expensive
 \`\`\`
 
-**Global aggregation**:
+Global aggregation:
 \`\`\`
 SELECT COUNT(*), SUM(total) FROM orders WHERE status = 'active';
 -- Each shard computes local count/sum, coordinator aggregates
@@ -1442,12 +1442,12 @@ SELECT COUNT(*), SUM(total) FROM orders WHERE status = 'active';
 -- Does NOT work for MEDIAN, PERCENTILE (need all data)
 \`\`\`
 
-**Mitigation Strategies**:
-- **Co-locate related data**: Shard users and orders by user_id so joins are local
-- **Global secondary indexes**: Maintain a separate index mapping non-shard-key to shard locations
-- **Denormalization**: Store frequently joined data together (trade consistency for read performance)
-- **CQRS**: Write to normalized shards, project to denormalized read models
-- **Limit cross-shard queries**: Design API so most queries are shard-local; use analytics pipeline for cross-shard reports`
+Mitigation Strategies:
+- Co-locate related data: Shard users and orders by user_id so joins are local
+- Global secondary indexes: Maintain a separate index mapping non-shard-key to shard locations
+- Denormalization: Store frequently joined data together (trade consistency for read performance)
+- CQRS: Write to normalized shards, project to denormalized read models
+- Limit cross-shard queries: Design API so most queries are shard-local; use analytics pipeline for cross-shard reports`
       }
     ],
 
@@ -1558,41 +1558,41 @@ Follower: [W1]---[W2]---[W3]          (lag = 2 writes)
     keyQuestions: [
       {
         question: 'Compare single-leader, multi-leader, and leaderless replication.',
-        answer: `**Single-Leader (Primary-Replica)**:
+        answer: `Single-Leader (Primary-Replica):
 - All writes go to one leader, replicated to followers
 - Followers serve reads (may be stale)
 - Failover: promote a follower to leader
 
-**Strengths**: Simple, no write conflicts, clear consistency model
-**Weaknesses**: Single write bottleneck, leader failure causes brief unavailability
-**Used by**: PostgreSQL, MySQL, MongoDB (replica sets), Redis Sentinel
+Strengths: Simple, no write conflicts, clear consistency model
+Weaknesses: Single write bottleneck, leader failure causes brief unavailability
+Used by: PostgreSQL, MySQL, MongoDB (replica sets), Redis Sentinel
 
-**Multi-Leader**:
+Multi-Leader:
 - Multiple nodes accept writes independently
 - Changes replicated asynchronously between leaders
 - Must resolve conflicts when same data modified on different leaders
 
-**Strengths**: Write availability in multiple regions, lower write latency for geo-distributed users
-**Weaknesses**: Conflict resolution is complex, potential for data loss
-**Used by**: CouchDB, Tungsten Replicator, custom setups for geo-distributed MySQL/PostgreSQL
+Strengths: Write availability in multiple regions, lower write latency for geo-distributed users
+Weaknesses: Conflict resolution is complex, potential for data loss
+Used by: CouchDB, Tungsten Replicator, custom setups for geo-distributed MySQL/PostgreSQL
 
-**Leaderless (Dynamo-style)**:
+Leaderless (Dynamo-style):
 - Client writes to W replicas, reads from R replicas
 - Quorum: W + R > N ensures at least one overlap
 - No leader to fail — any node can serve reads or writes
 
-**Strengths**: Highest availability, no leader bottleneck, partition tolerant
-**Weaknesses**: Eventual consistency, sloppy quorums can lose data, conflict resolution needed
-**Used by**: Amazon DynamoDB, Apache Cassandra, Riak
+Strengths: Highest availability, no leader bottleneck, partition tolerant
+Weaknesses: Eventual consistency, sloppy quorums can lose data, conflict resolution needed
+Used by: Amazon DynamoDB, Apache Cassandra, Riak
 
-**Decision Framework**:
+Decision Framework:
 - Need strong consistency? -> Single-leader
 - Need multi-region writes? -> Multi-leader (accept complexity)
 - Need maximum availability? -> Leaderless (accept eventual consistency)`
       },
       {
         question: 'What are the trade-offs between synchronous and asynchronous replication?',
-        answer: `**Synchronous Replication**:
+        answer: `Synchronous Replication:
 Write is acknowledged only after ALL replicas (or quorum) confirm.
 
 \`\`\`
@@ -1603,11 +1603,11 @@ Client -> Leader -> Write to WAL
 Total latency: leader write + network RTT + follower write
 \`\`\`
 
-**Guarantees**: Zero data loss on leader failure (RPO = 0)
-**Cost**: Higher write latency (network RTT added), reduced availability (follower down = writes blocked)
-**Mitigation**: Semi-synchronous (one follower sync, rest async) — used by MySQL Group Replication
+Guarantees: Zero data loss on leader failure (RPO = 0)
+Cost: Higher write latency (network RTT added), reduced availability (follower down = writes blocked)
+Mitigation: Semi-synchronous (one follower sync, rest async) — used by MySQL Group Replication
 
-**Asynchronous Replication**:
+Asynchronous Replication:
 Write is acknowledged as soon as leader writes locally.
 
 \`\`\`
@@ -1616,89 +1616,89 @@ Client -> Leader -> Write to WAL
                  -> Send to Follower (background)
 \`\`\`
 
-**Guarantees**: None — leader failure can lose committed writes
-**Benefit**: Low latency, high availability (followers can be down)
-**Risk**: Replication lag means stale reads from followers
+Guarantees: None — leader failure can lose committed writes
+Benefit: Low latency, high availability (followers can be down)
+Risk: Replication lag means stale reads from followers
 
-**Replication Lag Anomalies**:
+Replication Lag Anomalies:
 
-1. **Read-your-writes inconsistency**: User writes, then reads from a lagging follower, doesn't see their own write.
+1. Read-your-writes inconsistency: User writes, then reads from a lagging follower, doesn't see their own write.
    Fix: Route reads to leader after writes, or read from follower only if it has caught up.
 
-2. **Monotonic read inconsistency**: User reads from follower A (up-to-date), then follower B (lagging), sees data go backward.
+2. Monotonic read inconsistency: User reads from follower A (up-to-date), then follower B (lagging), sees data go backward.
    Fix: Stick user to one follower (session affinity).
 
-3. **Causal inconsistency**: User sees a reply to a comment but not the original comment.
+3. Causal inconsistency: User sees a reply to a comment but not the original comment.
    Fix: Track causal dependencies, ensure follower has replicated all causal predecessors.`
       },
       {
         question: 'How does conflict resolution work in multi-leader replication?',
-        answer: `**Conflict**: Two leaders accept different writes to the same data concurrently.
+        answer: `Conflict: Two leaders accept different writes to the same data concurrently.
 
-**Example**:
+Example:
 - Leader A: UPDATE users SET name = 'Alice' WHERE id = 1;
 - Leader B: UPDATE users SET name = 'Alicia' WHERE id = 1;
 - Both succeed locally, conflict detected during replication.
 
-**Resolution Strategies**:
+Resolution Strategies:
 
-1. **Last Writer Wins (LWW)**:
+1. Last Writer Wins (LWW):
    - Each write gets a timestamp, highest timestamp wins
    - Simple but LOSES DATA silently — the "losing" write is discarded
    - Used by Cassandra, DynamoDB
    - Danger: Clock skew means "last" is ambiguous
 
-2. **Custom merge function**:
+2. Custom merge function:
    - Application provides logic to merge conflicting values
    - Example: merge shopping cart items (union of both carts)
    - Most correct but requires per-data-type logic
 
-3. **Multi-value (siblings)**:
+3. Multi-value (siblings):
    - Keep all conflicting versions, let application resolve
    - Riak stores siblings, returns all to client
    - Most flexible but burdens the application
 
-4. **CRDTs (Conflict-free Replicated Data Types)**:
+4. CRDTs (Conflict-free Replicated Data Types):
    - Data structures that mathematically guarantee convergence
    - G-Counter, PN-Counter, OR-Set, LWW-Register
    - No conflicts by design, but limited to specific data types
    - Used by Redis CRDT, Riak
 
-5. **Operational Transform (OT) / CRDT for text**:
+5. Operational Transform (OT) / CRDT for text:
    - Used by Google Docs, Figma for concurrent editing
    - Transform operations based on concurrent changes
 
-**Best Practice**: Avoid conflicts rather than resolving them. Route all writes for a given entity to the same leader (e.g., home region for a user). Use multi-leader only for truly independent data.`
+Best Practice: Avoid conflicts rather than resolving them. Route all writes for a given entity to the same leader (e.g., home region for a user). Use multi-leader only for truly independent data.`
       },
       {
         question: 'How do you handle failover in single-leader replication?',
-        answer: `**Failover**: Promoting a follower to leader when the current leader fails.
+        answer: `Failover: Promoting a follower to leader when the current leader fails.
 
-**Detection**:
+Detection:
 - Heartbeat timeout: leader sends periodic heartbeats, followers detect absence
 - Typical timeout: 10-30 seconds (balance between false positives and detection speed)
 - External monitoring (e.g., Consul, etcd) can also trigger failover
 
-**Failover Process**:
-1. **Detect leader failure** (heartbeat timeout)
-2. **Choose new leader** (most up-to-date follower)
-3. **Reconfigure system** (update routing, redirect clients)
-4. **Handle old leader** (fence off to prevent split-brain)
+Failover Process:
+1. Detect leader failure (heartbeat timeout)
+2. Choose new leader (most up-to-date follower)
+3. Reconfigure system (update routing, redirect clients)
+4. Handle old leader (fence off to prevent split-brain)
 
-**Challenges**:
+Challenges:
 
-1. **Data loss**: If async replication, new leader may be behind. Uncommitted writes on old leader are lost. In PostgreSQL, the new primary may have a different timeline.
+1. Data loss: If async replication, new leader may be behind. Uncommitted writes on old leader are lost. In PostgreSQL, the new primary may have a different timeline.
 
-2. **Split-brain**: Old leader comes back online, thinks it is still leader. Two leaders accept conflicting writes. Prevention: STONITH (Shoot The Other Node In The Head) — fencing mechanism to ensure old leader cannot accept writes.
+2. Split-brain: Old leader comes back online, thinks it is still leader. Two leaders accept conflicting writes. Prevention: STONITH (Shoot The Other Node In The Head) — fencing mechanism to ensure old leader cannot accept writes.
 
-3. **Client redirection**: Clients must discover the new leader. Options:
+3. Client redirection: Clients must discover the new leader. Options:
    - DNS update (slow propagation, 30-300 seconds)
    - Service discovery (Consul, etcd — fast, seconds)
    - Proxy layer (HAProxy, PgBouncer — transparent to clients)
 
-4. **Replication catch-up**: New leader must apply any un-replicated transactions from its own WAL before accepting writes.
+4. Replication catch-up: New leader must apply any un-replicated transactions from its own WAL before accepting writes.
 
-**Automated vs Manual Failover**:
+Automated vs Manual Failover:
 - Automated: Faster recovery (seconds) but risk of false positives
 - Manual: Safer but slower (minutes to hours), requires on-call engineer
 - Best practice: Automated detection, human approval for promotion (semi-automated)`
@@ -1818,9 +1818,9 @@ Quorum Requirements:
     keyQuestions: [
       {
         question: 'How does the Raft consensus algorithm work?',
-        answer: `**Raft** decomposes consensus into three sub-problems:
+        answer: `Raft decomposes consensus into three sub-problems:
 
-**1. Leader Election**:
+1. Leader Election:
 - Each node starts as a Follower
 - Followers expect heartbeats from the leader
 - If no heartbeat within election timeout (randomized 150-300ms), become Candidate
@@ -1829,7 +1829,7 @@ Quorum Requirements:
 - If another leader discovered: revert to Follower
 - If election timeout with no winner: start new election
 
-**2. Log Replication**:
+2. Log Replication:
 - Client sends command to Leader
 - Leader appends to local log with term number
 - Leader sends AppendEntries RPC to all followers
@@ -1838,48 +1838,48 @@ Quorum Requirements:
 - Leader applies committed entry to state machine
 - Leader notifies followers of commit in next heartbeat
 
-**3. Safety**:
-- **Election restriction**: Candidate must have all committed entries to win election. Voters reject candidates with shorter logs.
-- **Leader completeness**: A committed entry will be present in all future leaders' logs.
-- **Log matching**: If two logs contain an entry with the same index and term, all preceding entries are identical.
+3. Safety:
+- Election restriction: Candidate must have all committed entries to win election. Voters reject candidates with shorter logs.
+- Leader completeness: A committed entry will be present in all future leaders' logs.
+- Log matching: If two logs contain an entry with the same index and term, all preceding entries are identical.
 
-**Key Invariants**:
+Key Invariants:
 - At most one leader per term
 - Leaders never overwrite or delete their own log entries
 - If an entry is committed, it will never be lost (even across leader changes)
 
-**Cluster Membership Changes**:
+Cluster Membership Changes:
 - Joint consensus: transition through intermediate state where both old and new configurations must agree
 - Single-server changes: add or remove one node at a time (simpler, used in practice)`
       },
       {
         question: 'What is the difference between safety and liveness in consensus?',
-        answer: `**Safety**: "Nothing bad ever happens."
+        answer: `Safety: "Nothing bad ever happens."
 In consensus: two different nodes never commit different values for the same log entry.
 
-**Raft safety guarantees** (hold under ALL conditions including network partitions, crashes, message reordering):
-- **Election safety**: At most one leader per term
-- **Leader append-only**: Leader never overwrites or deletes its own entries
-- **Log matching**: If two logs have same entry at same index, all prior entries match
-- **Leader completeness**: Committed entries appear in all future leaders
+Raft safety guarantees (hold under ALL conditions including network partitions, crashes, message reordering):
+- Election safety: At most one leader per term
+- Leader append-only: Leader never overwrites or deletes its own entries
+- Log matching: If two logs have same entry at same index, all prior entries match
+- Leader completeness: Committed entries appear in all future leaders
 
-**Liveness**: "Something good eventually happens."
+Liveness: "Something good eventually happens."
 In consensus: the system eventually makes progress (commits entries).
 
-**Raft liveness requires**:
+Raft liveness requires:
 - A majority of nodes are running and can communicate
 - Eventually, a leader is elected and remains stable long enough to commit entries
 - Network partitions eventually heal
 
-**The FLP Impossibility Result**:
+The FLP Impossibility Result:
 In an asynchronous system (no bounds on message delay), no deterministic consensus algorithm can guarantee both safety AND liveness if even one node can crash.
 
-**How Raft handles this**:
+How Raft handles this:
 - Safety is ALWAYS guaranteed (never violates invariants)
 - Liveness is guaranteed under "partial synchrony" — messages are eventually delivered within some unknown bound
 - Randomized election timeouts break symmetry and prevent livelock
 
-**Practical Implications**:
+Practical Implications:
 - During a network partition, the majority side continues to operate (safety + liveness)
 - The minority side cannot elect a leader (safety maintained, liveness lost)
 - When partition heals, minority nodes catch up from the leader's log
@@ -1888,21 +1888,21 @@ In an asynchronous system (no bounds on message delay), no deterministic consens
       },
       {
         question: 'How does Paxos differ from Raft?',
-        answer: `**Paxos** (Leslie Lamport, 1989):
+        answer: `Paxos (Leslie Lamport, 1989):
 - The original proven consensus algorithm
 - Proves that consensus is solvable in asynchronous systems with crash failures
 
-**Basic Paxos (single-decree)** — agree on one value:
-- **Phase 1 (Prepare)**: Proposer sends Prepare(n) to acceptors. Acceptors promise not to accept proposals with number < n.
-- **Phase 2 (Accept)**: Proposer sends Accept(n, value) to acceptors. Acceptors accept if they haven't promised a higher number.
-- **Decision**: Value is chosen when a majority of acceptors accept the same proposal.
+Basic Paxos (single-decree) — agree on one value:
+- Phase 1 (Prepare): Proposer sends Prepare(n) to acceptors. Acceptors promise not to accept proposals with number < n.
+- Phase 2 (Accept): Proposer sends Accept(n, value) to acceptors. Acceptors accept if they haven't promised a higher number.
+- Decision: Value is chosen when a majority of acceptors accept the same proposal.
 
-**Multi-Paxos** — agree on a sequence of values (log):
+Multi-Paxos — agree on a sequence of values (log):
 - Optimize by electing a stable leader
 - Leader skips Phase 1 for subsequent proposals
 - Effectively becomes similar to Raft
 
-**Key Differences from Raft**:
+Key Differences from Raft:
 
 | Aspect | Paxos | Raft |
 |--------|-------|------|
@@ -1912,49 +1912,49 @@ In an asynchronous system (no bounds on message delay), no deterministic consens
 | Specification | Abstract, many variants | Concrete, single algorithm |
 | Implementation | Many subtle decisions | Relatively straightforward |
 
-**Why Raft is preferred in practice**:
+Why Raft is preferred in practice:
 1. Easier to implement correctly (fewer edge cases)
 2. Contiguous logs simplify snapshotting and recovery
 3. Strong leader makes client interaction straightforward
 4. Well-defined cluster membership changes
 5. Extensive reference implementations available
 
-**Where Paxos is still used**:
+Where Paxos is still used:
 - Google Chubby (lock service) and Spanner
 - Academic research and formal verification
 - Systems that need flexible quorum configurations (Flexible Paxos)`
       },
       {
         question: 'How do real-world systems use consensus?',
-        answer: `**Consensus in Production Systems**:
+        answer: `Consensus in Production Systems:
 
-**etcd** (Raft):
+etcd (Raft):
 - Kubernetes control plane stores all cluster state in etcd
 - Typically 3 or 5 node cluster
 - Uses Raft for leader election and log replication
 - Provides linearizable reads and writes
 - Watch API for change notifications
 
-**ZooKeeper** (ZAB — Zookeeper Atomic Broadcast):
+ZooKeeper (ZAB — Zookeeper Atomic Broadcast):
 - Similar to Raft but predates it
 - Used by Kafka (pre-KRaft), HBase, Hadoop
 - Provides ordered, atomic broadcast of state changes
 - Hierarchical key-value store with ephemeral nodes
 
-**CockroachDB** (Raft per range):
+CockroachDB (Raft per range):
 - Database split into 64MB ranges
 - Each range has its own Raft group
 - Thousands of Raft groups per node
 - Leader for each range handles writes
 - Multi-Raft: batches Raft messages across groups for efficiency
 
-**Kafka KRaft**:
+Kafka KRaft:
 - Replaced ZooKeeper dependency with built-in Raft
 - Controller quorum manages cluster metadata
 - Brokers are Raft followers for metadata
 - Simplified operations (no separate ZooKeeper cluster)
 
-**Performance Characteristics**:
+Performance Characteristics:
 - Consensus adds 1-2 round trips to write latency
 - 3-node cluster: ~1-5ms write latency (same datacenter)
 - 5-node cross-region: 50-200ms write latency (dominated by network RTT)
@@ -2075,16 +2075,16 @@ PITR (Point-in-Time Recovery):
     keyQuestions: [
       {
         question: 'How does the Write-Ahead Log (WAL) ensure durability?',
-        answer: `**WAL Protocol** (the fundamental rule):
+        answer: `WAL Protocol (the fundamental rule):
 Before a modified data page is written to disk, ALL log records describing the modification must first be written to the WAL on stable storage.
 
-**Why this works**:
+Why this works:
 1. WAL writes are sequential (fast on any storage medium)
 2. Data page writes are random (slow, especially on HDD)
 3. WAL is always ahead of data pages on disk
 4. On crash: replay WAL to reconstruct any changes lost from data pages
 
-**Write Path**:
+Write Path:
 1. Transaction modifies a page in the buffer pool (memory)
 2. Log record written to WAL buffer with: LSN, txn_id, before-image, after-image
 3. On COMMIT: WAL buffer flushed to disk (fsync)
@@ -2092,12 +2092,12 @@ Before a modified data page is written to disk, ALL log records describing the m
 5. Modified data page remains in buffer pool (dirty)
 6. Background checkpoint eventually writes dirty page to disk
 
-**Performance Optimizations**:
-- **Group commit**: Batch multiple transaction WAL records into a single fsync. Instead of 1 fsync per commit (~1ms each), batch 100 commits into 1 fsync. Throughput: 1000 -> 100,000 TPS.
-- **WAL compression**: Reduce WAL size (PostgreSQL wal_compression)
-- **Async commit**: Trade durability window for speed (lose last few ms of commits on crash)
+Performance Optimizations:
+- Group commit: Batch multiple transaction WAL records into a single fsync. Instead of 1 fsync per commit (~1ms each), batch 100 commits into 1 fsync. Throughput: 1000 -> 100,000 TPS.
+- WAL compression: Reduce WAL size (PostgreSQL wal_compression)
+- Async commit: Trade durability window for speed (lose last few ms of commits on crash)
 
-**Key Properties**:
+Key Properties:
 - Sequential writes: ~500MB/s on HDD, ~2GB/s on SSD
 - Each log record is small (typically 50-200 bytes)
 - WAL files are recycled after checkpoint (bounded disk usage)
@@ -2105,56 +2105,56 @@ Before a modified data page is written to disk, ALL log records describing the m
       },
       {
         question: 'Explain the three phases of ARIES recovery.',
-        answer: `**ARIES** (Algorithms for Recovery and Isolation Exploiting Semantics):
+        answer: `ARIES (Algorithms for Recovery and Isolation Exploiting Semantics):
 
-**Phase 1: Analysis** (determine what needs to be done)
+Phase 1: Analysis (determine what needs to be done)
 Starting from the last checkpoint record, scan the WAL forward:
-- Rebuild the **Active Transaction Table (ATT)**: which transactions were in progress at crash time
-- Rebuild the **Dirty Page Table (DPT)**: which pages had modifications not yet flushed to disk, with the earliest LSN that dirtied each page
+- Rebuild the Active Transaction Table (ATT): which transactions were in progress at crash time
+- Rebuild the Dirty Page Table (DPT): which pages had modifications not yet flushed to disk, with the earliest LSN that dirtied each page
 - End of analysis: we know exactly which transactions to redo and undo
 
-**Phase 2: Redo** (repeat history)
+Phase 2: Redo (repeat history)
 Starting from the smallest LSN in the DPT, replay every logged change:
 - Redo ALL changes, including those from transactions that will be undone
 - This restores the database to its exact pre-crash state
 - A change is skipped only if the page's on-disk LSN is already >= the log record's LSN (page was already flushed before crash)
 - After redo: buffer pool state matches moment of crash
 
-**Why redo everything, even aborted transactions?**
+Why redo everything, even aborted transactions?
 - Simplifies recovery: no need to track which pages had partial writes
 - Undo phase will clean up aborted transactions
 - Compensation Log Records (CLRs) from previous incomplete undos are also redone
 
-**Phase 3: Undo** (clean up)
+Phase 3: Undo (clean up)
 Process uncommitted transactions in reverse LSN order:
 - For each undo action, write a CLR (Compensation Log Record) to the WAL
 - CLRs ensure that undo is idempotent — if crash occurs during undo, re-recovery will redo the CLRs and skip already-undone work
 - Continue until all uncommitted transactions are fully rolled back
 
-**Recovery Time**:
+Recovery Time:
 - Proportional to WAL between last checkpoint and crash
 - More frequent checkpoints = faster recovery but more I/O during normal operation
 - Typical: 30-60 seconds for well-configured databases`
       },
       {
         question: 'How does checkpointing work and why is it important?',
-        answer: `**Checkpoint** = A record that establishes a known-good recovery starting point.
+        answer: `Checkpoint = A record that establishes a known-good recovery starting point.
 
-**Purpose**:
+Purpose:
 1. Limit recovery time: without checkpoints, recovery must replay the entire WAL from the beginning
 2. Allow WAL recycling: WAL segments before the checkpoint can be deleted (or archived for PITR)
 3. Flush dirty pages: reduce the number of dirty pages in the buffer pool
 
-**Checkpoint Types**:
+Checkpoint Types:
 
-**Sharp Checkpoint** (simple but blocking):
+Sharp Checkpoint (simple but blocking):
 1. Stop all new transactions
 2. Flush ALL dirty pages to disk
 3. Write checkpoint record to WAL
 4. Resume transactions
 Problem: Blocks the entire database during flush (unacceptable for production)
 
-**Fuzzy Checkpoint** (non-blocking, used in practice):
+Fuzzy Checkpoint (non-blocking, used in practice):
 1. Write BEGIN_CHECKPOINT to WAL
 2. Record current ATT (Active Transaction Table) and DPT (Dirty Page Table)
 3. Continue normal operations (transactions keep running)
@@ -2162,49 +2162,49 @@ Problem: Blocks the entire database during flush (unacceptable for production)
 5. Write END_CHECKPOINT with ATT and DPT snapshot
 Note: Dirty pages may have changed between begin and end — that's OK, ARIES redo handles it
 
-**PostgreSQL Implementation**:
+PostgreSQL Implementation:
 - Checkpoint triggered by: time interval (checkpoint_timeout, default 5min), WAL volume (max_wal_size), manual CHECKPOINT command
 - Spreads dirty page writes over checkpoint_completion_target * checkpoint_timeout (default: 0.9 * 5min = 4.5min)
 - Prevents I/O spike by rate-limiting page flushes
 
-**Tuning Trade-offs**:
+Tuning Trade-offs:
 - More frequent checkpoints: faster recovery, more I/O overhead
 - Less frequent checkpoints: less I/O overhead, longer recovery time
 - Target: recovery time < RTO (Recovery Time Objective), typically 30-60 seconds`
       },
       {
         question: 'How does Point-in-Time Recovery (PITR) work?',
-        answer: `**PITR** = Restore a database to any specific point in time, typically to recover from human error (accidental DELETE, DROP TABLE).
+        answer: `PITR = Restore a database to any specific point in time, typically to recover from human error (accidental DELETE, DROP TABLE).
 
-**Requirements**:
+Requirements:
 1. A base backup (physical copy of all data files)
 2. All WAL segments from the base backup to the target recovery point
 3. A recovery target (timestamp, transaction ID, or named restore point)
 
-**Process**:
-1. **Restore base backup**: Copy data files to the database directory
-2. **Configure recovery**: Set recovery target in recovery configuration
+Process:
+1. Restore base backup: Copy data files to the database directory
+2. Configure recovery: Set recovery target in recovery configuration
    \`\`\`
    restore_command = 'cp /archive/%f %p'
    recovery_target_time = '2025-03-14 23:59:59'
    recovery_target_action = 'promote'
    \`\`\`
-3. **Start database**: PostgreSQL enters recovery mode
-4. **WAL replay**: Applies WAL segments sequentially up to target
-5. **Stop at target**: Stops replay at the specified timestamp
-6. **Promote**: Database becomes writable
+3. Start database: PostgreSQL enters recovery mode
+4. WAL replay: Applies WAL segments sequentially up to target
+5. Stop at target: Stops replay at the specified timestamp
+6. Promote: Database becomes writable
 
-**WAL Archiving**:
+WAL Archiving:
 - Continuous: each completed WAL segment (16MB) is archived to remote storage
 - archive_command copies to S3, NFS, or dedicated archive server
 - pg_receivewal for streaming archive (lower RPO than segment-based)
 
-**RPO (Recovery Point Objective)**:
+RPO (Recovery Point Objective):
 - Segment-based archiving: RPO = up to 1 WAL segment (16MB of changes, typically minutes)
 - Streaming archiving: RPO = seconds (continuously streams WAL)
 - Synchronous replication: RPO = 0 (no data loss)
 
-**Practical Considerations**:
+Practical Considerations:
 - Test PITR regularly — an untested backup is not a backup
 - Base backups weekly or daily (reduces WAL replay time)
 - Monitor archive lag (how far behind is the archive?)
@@ -2337,36 +2337,36 @@ to its relationships -> O(1) relationship traversal`
     keyQuestions: [
       {
         question: 'How does DynamoDB work internally?',
-        answer: `**DynamoDB Architecture**:
+        answer: `DynamoDB Architecture:
 
-**Data Model**:
+Data Model:
 - Tables with partition key (required) and optional sort key
 - Items (rows) up to 400KB, arbitrary attributes per item
 - Single-table design: store multiple entity types in one table using prefixed keys
 
-**Storage Layer**:
+Storage Layer:
 - Data partitioned by hash of partition key
 - Each partition: ~10GB storage, 3000 RCU, 1000 WCU
 - Partitions automatically split when limits are reached
 - B-tree storage within each partition
 
-**Consistency**:
+Consistency:
 - Writes go to leader replica, synchronously replicated to 2 of 3 replicas
 - Eventually consistent reads: any replica (cheaper, lower latency)
 - Strongly consistent reads: leader replica only (2x cost)
 
-**Global Secondary Index (GSI)**:
+Global Secondary Index (GSI):
 - Separate table with different partition/sort key
 - Asynchronously replicated from base table
 - Eventually consistent only
 - Separate provisioned capacity
 
-**DynamoDB Streams**:
+DynamoDB Streams:
 - Ordered sequence of item-level changes
 - 24-hour retention
 - Powers: Lambda triggers, cross-region replication, materialized views
 
-**Single-Table Design Pattern**:
+Single-Table Design Pattern:
 \`\`\`
 PK: USER#123        SK: PROFILE        (user data)
 PK: USER#123        SK: ORDER#2025-01  (user's orders)
@@ -2377,22 +2377,22 @@ All related data co-located in same partition for single-query retrieval.`
       },
       {
         question: 'How does MongoDB handle storage and replication?',
-        answer: `**MongoDB Storage Engine (WiredTiger)**:
+        answer: `MongoDB Storage Engine (WiredTiger):
 
-**Storage**:
+Storage:
 - Documents stored in BSON (Binary JSON) format
 - WiredTiger uses B-tree for indexes and data (or LSM-tree, configurable)
 - Block compression (snappy, zlib, zstd) at the page level
 - Prefix compression for indexes
 - Each collection is a separate file on disk
 
-**MVCC and Concurrency**:
+MVCC and Concurrency:
 - WiredTiger implements MVCC at the document level
 - Readers see a consistent snapshot without blocking writers
 - Document-level locks for writes (not collection or database level)
 - WiredTiger cache (separate from filesystem cache) holds working set
 
-**Replication (Replica Sets)**:
+Replication (Replica Sets):
 - One primary, multiple secondaries
 - Primary accepts all writes
 - Oplog: Capped collection recording all write operations
@@ -2401,23 +2401,23 @@ All related data co-located in same partition for single-query retrieval.`
 - Write concern: w:1 (primary only), w:majority (majority of replicas)
 - Read preference: primary, primaryPreferred, secondary, secondaryPreferred, nearest
 
-**Sharding**:
+Sharding:
 - Mongos router directs queries to correct shard
 - Config servers store shard metadata (which chunks on which shard)
 - Shard key determines data distribution
 - Range-based or hash-based partitioning
 - Automatic balancer moves chunks between shards
 
-**Aggregation Pipeline**:
+Aggregation Pipeline:
 - Multi-stage processing: $match -> $group -> $sort -> $project
 - $lookup for left-outer joins (limited, expensive across shards)
 - Pipeline stages push down to shards when possible`
       },
       {
         question: 'How does Cassandra achieve its write performance?',
-        answer: `**Cassandra Architecture**:
+        answer: `Cassandra Architecture:
 
-**Write Path** (optimized for throughput):
+Write Path (optimized for throughput):
 1. Client writes to ANY node (coordinator)
 2. Coordinator forwards to responsible replicas (determined by partition key hash on token ring)
 3. Each replica: Write to commit log (WAL) -> Write to MemTable (in-memory)
@@ -2425,60 +2425,60 @@ All related data co-located in same partition for single-query retrieval.`
 5. MemTable flushed to SSTable (disk) when threshold reached
 6. Compaction merges SSTables in background
 
-**Why writes are fast**:
+Why writes are fast:
 - Commit log is sequential append (no seeks)
 - MemTable is in-memory (no disk I/O for the write itself)
 - No read-before-write (unlike B-tree update)
 - Configurable consistency level: ONE, QUORUM, ALL
 
-**Read Path** (more complex):
+Read Path (more complex):
 1. Check MemTable (in-memory)
 2. Check Bloom filter for each SSTable (quick false-positive check)
 3. Check partition index to find SSTable offset
 4. Read from SSTable on disk
 5. Merge results from multiple SSTables (latest timestamp wins)
 
-**Data Model**:
+Data Model:
 - Partition key: determines which node stores the data
 - Clustering columns: determine sort order within a partition
 - Wide partitions: millions of rows per partition key (time-series pattern)
 
-**Consistency**:
+Consistency:
 - Tunable per query: ONE, QUORUM, LOCAL_QUORUM, ALL
 - Quorum = (replication_factor / 2) + 1
 - W(QUORUM) + R(QUORUM) > RF guarantees reading latest write
 - Hinted handoff: if a replica is down, coordinator stores hints for later delivery
 
-**Anti-entropy**:
+Anti-entropy:
 - Read repair: on read, if replicas disagree, repair the stale one
 - Merkle tree: anti-entropy process compares data hash trees between replicas
 - Repair: background process to synchronize all replicas`
       },
       {
         question: 'When would you choose a graph database over other NoSQL types?',
-        answer: `**Graph Databases** excel when relationships between entities are the primary query target.
+        answer: `Graph Databases excel when relationships between entities are the primary query target.
 
-**Neo4j Internals**:
-- **Index-free adjacency**: Each node physically stores pointers to its relationships. Traversing a relationship is O(1) — does not depend on total graph size.
-- **Property graph model**: Nodes and relationships have typed properties
-- **Cypher query language**: Pattern-matching for graph traversal
+Neo4j Internals:
+- Index-free adjacency: Each node physically stores pointers to its relationships. Traversing a relationship is O(1) — does not depend on total graph size.
+- Property graph model: Nodes and relationships have typed properties
+- Cypher query language: Pattern-matching for graph traversal
 
-**When to Choose Graph**:
+When to Choose Graph:
 
-**Strong fit** (relationships are first-class):
+Strong fit (relationships are first-class):
 - Social networks: friends-of-friends, mutual connections, influence paths
 - Recommendation engines: "users who bought X also bought Y" via collaborative filtering
 - Fraud detection: Circular money transfers, identity links, suspicious patterns
 - Knowledge graphs: Entity relationships, ontologies, semantic search
 - Network topology: routing, dependency analysis, impact assessment
 
-**Poor fit** (use a different NoSQL type):
+Poor fit (use a different NoSQL type):
 - Simple key-value lookups -> DynamoDB/Redis
 - Document storage with nested objects -> MongoDB
 - Time-series or event logging -> Cassandra/TimescaleDB
 - Full-text search -> Elasticsearch
 
-**Performance Comparison for Relationship Queries**:
+Performance Comparison for Relationship Queries:
 \`\`\`
 "Find all friends of friends of Alice" (depth 2)
 
@@ -2613,35 +2613,35 @@ TiDB Architecture:
     keyQuestions: [
       {
         question: 'How does Google Spanner achieve globally consistent transactions?',
-        answer: `**Spanner's Key Innovation: TrueTime**
+        answer: `Spanner's Key Innovation: TrueTime
 
-**TrueTime API**:
+TrueTime API:
 Returns an interval [earliest, latest] instead of a single timestamp.
 - GPS receivers + atomic clocks in every datacenter
 - Uncertainty typically < 7ms (usually ~4ms)
 - Enables globally ordered timestamps without centralized coordination
 
-**How Spanner uses TrueTime for transactions**:
+How Spanner uses TrueTime for transactions:
 
-1. **Read-write transaction**:
+1. Read-write transaction:
    - Acquire locks, perform reads and writes
    - At commit time, choose commit timestamp s = TT.now().latest
    - Wait until TT.now().earliest > s ("commit wait")
    - This guarantees the commit timestamp is in the past for all nodes worldwide
    - Release locks
 
-2. **Commit wait**:
+2. Commit wait:
    - Duration: up to 2x TrueTime uncertainty (~7-14ms)
    - This is the price of global consistency
    - With better clocks (lower uncertainty), commit wait shrinks
 
-3. **Snapshot reads** (no locks needed):
+3. Snapshot reads (no locks needed):
    - Choose a timestamp t in the past
    - Read data as of timestamp t from any replica
    - Since t is in the past, all replicas have data up to t
    - Enables consistent reads without any coordination
 
-**Why this matters**:
+Why this matters:
 - External consistency: if transaction T1 commits before T2 starts, T1's timestamp < T2's timestamp
 - This is stronger than serializable isolation — it respects real-time ordering
 - Enables globally distributed transactions with strong consistency
@@ -2649,31 +2649,31 @@ Returns an interval [earliest, latest] instead of a single timestamp.
       },
       {
         question: 'How does CockroachDB work without specialized hardware?',
-        answer: `**CockroachDB** provides Spanner-like capabilities on commodity hardware.
+        answer: `CockroachDB provides Spanner-like capabilities on commodity hardware.
 
-**Architecture**:
+Architecture:
 - Data split into 64MB ranges, each replicated via Raft (typically 3 replicas)
 - Each range has a leaseholder (serves reads) and a Raft leader (coordinates writes)
 - Usually leaseholder == Raft leader for efficiency
 
-**Clock Synchronization** (without TrueTime):
+Clock Synchronization (without TrueTime):
 - Uses Hybrid Logical Clocks (HLC): physical time + logical counter
 - NTP synchronization between nodes (uncertainty: ~100-250ms, much higher than Spanner)
 - Nodes track maximum clock offset via gossip protocol
 - Transactions use "uncertainty intervals" to handle clock skew
 
-**Transaction Protocol**:
-1. **Read**: Check if any version of the data has a timestamp within the reader's uncertainty interval
+Transaction Protocol:
+1. Read: Check if any version of the data has a timestamp within the reader's uncertainty interval
 2. If yes: "uncertainty restart" — retry with a later timestamp
 3. If no: safe to read the latest version before the read timestamp
 
-**Distributed Transactions** (without 2PC blocking):
+Distributed Transactions (without 2PC blocking):
 - Parallel commits: write intent records on each involved range
 - Transaction record tracks commit status
 - Commit: write transaction record as COMMITTED, intents resolved lazily
 - Conflict resolution: first-writer-wins, losers restart
 
-**Key Differences from Spanner**:
+Key Differences from Spanner:
 | Aspect | Spanner | CockroachDB |
 |--------|---------|-------------|
 | Clock | TrueTime (GPS+atomic) | HLC + NTP |
@@ -2683,56 +2683,56 @@ Returns an interval [earliest, latest] instead of a single timestamp.
 | Hardware | Specialized | Commodity |
 | Deployment | Google Cloud only | Anywhere |
 
-**Trade-off**: CockroachDB trades slightly weaker ordering guarantees for deployment flexibility.`
+Trade-off: CockroachDB trades slightly weaker ordering guarantees for deployment flexibility.`
       },
       {
         question: 'How does TiDB provide MySQL compatibility with distributed SQL?',
-        answer: `**TiDB Architecture**:
+        answer: `TiDB Architecture:
 
-**Stateless SQL Layer (TiDB Server)**:
+Stateless SQL Layer (TiDB Server):
 - Parses MySQL protocol — drop-in replacement for MySQL clients
 - Compiles SQL to distributed execution plans
 - Pushes computation down to TiKV (coprocessor)
 - Horizontally scalable: add more TiDB servers for more query throughput
 
-**Distributed Storage (TiKV)**:
+Distributed Storage (TiKV):
 - Key-value store with Raft consensus per region (~96MB)
 - RocksDB (LSM-tree) as local storage engine
 - MVCC for transaction isolation
 - Automatic region splitting when size exceeds threshold
 
-**Placement Driver (PD)**:
+Placement Driver (PD):
 - Cluster metadata and orchestration
 - Timestamp Oracle (TSO): globally unique, monotonically increasing timestamps
 - Scheduling: balances regions across TiKV nodes
 - Single logical clock eliminates clock synchronization issues (but PD is a bottleneck)
 
-**Transaction Model (Percolator-based)**:
+Transaction Model (Percolator-based):
 1. Client starts transaction, gets start_ts from PD
 2. Prewrite: write locks + data to all involved keys (choose one as "primary")
 3. Commit: write commit record for primary key with commit_ts from PD
 4. If primary commits successfully, transaction is committed
 5. Secondary keys resolved lazily (readers help resolve if they encounter locks)
 
-**Key Features**:
+Key Features:
 - Online DDL: schema changes without locking tables
 - TiFlash: columnar replica for OLAP queries (HTAP capability)
 - Placement rules: control which regions go to which physical nodes (geo-pinning)
 
-**Limitations compared to MySQL**:
+Limitations compared to MySQL:
 - Some MySQL features not supported (stored procedures, triggers limited)
 - Distributed transactions add latency (~10-20ms vs ~1ms for local MySQL)
 - TSO is a centralized bottleneck (mitigated by batching timestamp requests)`
       },
       {
         question: 'When should you choose a NewSQL database over traditional SQL or NoSQL?',
-        answer: `**Choose NewSQL when you need ALL of these**:
+        answer: `Choose NewSQL when you need ALL of these:
 1. Strong consistency (ACID transactions)
 2. SQL interface (complex queries, joins)
 3. Horizontal scalability (beyond single-node capacity)
 4. High availability (survive node/datacenter failures)
 
-**NewSQL vs Traditional SQL (PostgreSQL, MySQL)**:
+NewSQL vs Traditional SQL (PostgreSQL, MySQL):
 
 Choose NewSQL when:
 - Data exceeds single-node capacity (>2TB for transactional data)
@@ -2746,7 +2746,7 @@ Stick with traditional SQL when:
 - Lower latency for single-shard operations
 - More mature ecosystem (extensions, tools, community knowledge)
 
-**NewSQL vs NoSQL (DynamoDB, Cassandra)**:
+NewSQL vs NoSQL (DynamoDB, Cassandra):
 
 Choose NewSQL when:
 - Need multi-row/multi-table transactions
@@ -2760,7 +2760,7 @@ Choose NoSQL when:
 - Eventual consistency is acceptable
 - Schema flexibility is needed
 
-**Real-World Decision Examples**:
+Real-World Decision Examples:
 - E-commerce inventory (strong consistency needed): NewSQL or traditional SQL
 - Social media feed (eventual consistency OK): NoSQL
 - Banking ledger at scale: NewSQL (CockroachDB)
@@ -2896,35 +2896,35 @@ Vector Database (Pinecone / pgvector):
     keyQuestions: [
       {
         question: 'How do time-series databases optimize for temporal data?',
-        answer: `**Time-Series Optimization Techniques**:
+        answer: `Time-Series Optimization Techniques:
 
-**1. Time-based Partitioning (Chunking)**:
+1. Time-based Partitioning (Chunking):
 - Data automatically partitioned by time intervals (hour, day, week)
 - Recent chunks in memory (hot), older chunks compressed on disk (cold)
 - Old data dropped by deleting entire chunks (instant, no individual deletes)
 - Queries spanning time ranges only scan relevant chunks
 
-**2. Columnar Storage**:
+2. Columnar Storage:
 - Store each field (column) contiguously on disk
 - Enables aggressive compression: timestamps are monotonically increasing (delta encoding), similar values compress well (run-length encoding, gorilla compression)
 - Compression ratios: 10:1 to 50:1 typical for metrics data
 
-**3. Write Optimization**:
+3. Write Optimization:
 - Append-only model: new data always arrives at the latest time
 - Batch inserts: accumulate points in memory, flush periodically
 - No random updates: historical data is immutable (or rarely modified)
 - Write throughput: 1M+ points/second on moderate hardware
 
-**4. Query Optimization**:
+4. Query Optimization:
 - Pre-aggregation: continuous queries maintain rollups (1-min, 5-min, 1-hour averages)
 - Downsampling: automatically reduce resolution for old data
 - Time-based indexes: skip directly to relevant time range
 
-**InfluxDB vs TimescaleDB**:
+InfluxDB vs TimescaleDB:
 - InfluxDB: Purpose-built, Flux query language, simpler operations
 - TimescaleDB: PostgreSQL extension, full SQL, joins with relational data, easier if you already use PostgreSQL
 
-**Common Access Patterns**:
+Common Access Patterns:
 - Last N minutes of metrics for dashboards
 - Aggregate over time windows (avg CPU last hour)
 - Top-K queries (busiest servers today)
@@ -2932,21 +2932,21 @@ Vector Database (Pinecone / pgvector):
       },
       {
         question: 'How does Elasticsearch work internally?',
-        answer: `**Elasticsearch Architecture**:
+        answer: `Elasticsearch Architecture:
 
-**Core Concepts**:
-- **Index**: Collection of documents (like a database table)
-- **Shard**: Horizontal partition of an index (Lucene index)
-- **Replica**: Copy of a shard for fault tolerance and read scaling
-- **Segment**: Immutable chunk of data within a shard (Lucene segment)
+Core Concepts:
+- Index: Collection of documents (like a database table)
+- Shard: Horizontal partition of an index (Lucene index)
+- Replica: Copy of a shard for fault tolerance and read scaling
+- Segment: Immutable chunk of data within a shard (Lucene segment)
 
-**Inverted Index**:
+Inverted Index:
 - Maps every unique term to the list of documents containing it
 - Term dictionary: sorted list of all terms (stored in a trie/FST for O(1) lookup)
 - Posting list: for each term, list of (doc_id, term_frequency, positions)
 - Enables O(1) term lookup + linear scan of matching documents
 
-**Write Path**:
+Write Path:
 1. Document received by coordinating node
 2. Routed to correct shard (hash of _id % num_primary_shards)
 3. Written to in-memory buffer + transaction log (translog)
@@ -2954,19 +2954,19 @@ Vector Database (Pinecone / pgvector):
 5. Segments are immutable; deletes are marked in a separate bitset
 6. Background merge process combines small segments into larger ones
 
-**Search Path**:
+Search Path:
 1. Query sent to coordinating node
 2. Scatter: query forwarded to all relevant shards
 3. Each shard searches its segments, returns top-K doc IDs + scores
 4. Gather: coordinating node merges results, fetches full documents
 5. Return results
 
-**Relevance Scoring (BM25)**:
+Relevance Scoring (BM25):
 - Term Frequency (TF): more occurrences -> higher score
 - Inverse Document Frequency (IDF): rare terms -> higher score
 - Field length normalization: shorter fields score higher for a given match
 
-**When to use Elasticsearch** (vs database full-text search):
+When to use Elasticsearch (vs database full-text search):
 - Need sub-100ms search across millions of documents
 - Need faceted search, aggregations, highlighting
 - Need fuzzy matching, synonyms, language-specific stemming
@@ -2974,67 +2974,67 @@ Vector Database (Pinecone / pgvector):
       },
       {
         question: 'How do vector databases enable AI/ML similarity search?',
-        answer: `**Vector Databases** store high-dimensional vectors (embeddings) and find the most similar vectors to a query.
+        answer: `Vector Databases store high-dimensional vectors (embeddings) and find the most similar vectors to a query.
 
-**Use Cases**:
+Use Cases:
 - Semantic search: "find documents about machine learning" (not just keyword match)
 - Recommendation: find similar products/users based on embedding similarity
 - RAG (Retrieval-Augmented Generation): find relevant context for LLM prompts
 - Image/audio similarity: find visually/acoustically similar media
 
-**Embedding Vectors**:
+Embedding Vectors:
 - Text: 768-dim (BERT) or 1536-dim (OpenAI text-embedding-ada-002)
 - Images: 512-2048 dimensions (ResNet, CLIP)
 - Each dimension captures a semantic feature learned by the model
 
-**Distance Metrics**:
+Distance Metrics:
 - Cosine similarity: angle between vectors (most common for text)
 - Euclidean distance: straight-line distance (good for spatial data)
 - Dot product: magnitude-sensitive similarity
 
-**Indexing Algorithms**:
+Indexing Algorithms:
 
-**HNSW (Hierarchical Navigable Small World)**:
+HNSW (Hierarchical Navigable Small World):
 - Multi-layer graph where higher layers have fewer, long-range connections
 - Search: start at top layer, greedily navigate toward query vector, descend to next layer
 - Build time: O(n * log n), Query time: O(log n)
 - Recall: 95-99% with proper tuning
 - Memory: stores entire graph in memory (expensive for billions of vectors)
 
-**IVF (Inverted File Index)**:
+IVF (Inverted File Index):
 - Partition vector space into clusters (Voronoi cells) via k-means
 - At query time: find nearest cluster centroids, search only those clusters
 - Faster than HNSW for very large datasets, lower recall
 - Can combine with PQ (Product Quantization) for compression
 
-**Dedicated vs Embedded**:
-- **Pinecone, Weaviate, Qdrant**: Purpose-built, managed, optimized for scale
-- **pgvector**: PostgreSQL extension, combine vector search with SQL queries
-- **FAISS**: Library (not database), for embedding into applications
+Dedicated vs Embedded:
+- Pinecone, Weaviate, Qdrant: Purpose-built, managed, optimized for scale
+- pgvector: PostgreSQL extension, combine vector search with SQL queries
+- FAISS: Library (not database), for embedding into applications
 
-**Choosing**:
+Choosing:
 - < 1M vectors: pgvector is sufficient (simpler ops, SQL integration)
 - 1M-100M vectors: HNSW-based dedicated database
 - > 100M vectors: IVF + PQ or disk-based indexes (Vald, Milvus)`
       },
       {
         question: 'How do spatial databases handle geographic queries?',
-        answer: `**Spatial Databases** optimize for queries involving geometry and geography.
+        answer: `Spatial Databases optimize for queries involving geometry and geography.
 
-**PostGIS** (PostgreSQL extension, the industry standard):
+PostGIS (PostgreSQL extension, the industry standard):
 
-**Data Types**:
+Data Types:
 - GEOMETRY: flat Cartesian plane (faster, suitable for small areas)
 - GEOGRAPHY: spherical earth model (accurate for global distances, slower)
 - Common types: POINT, LINESTRING, POLYGON, MULTIPOLYGON
 
-**Spatial Indexes (R-tree via GiST)**:
+Spatial Indexes (R-tree via GiST):
 - R-tree organizes data into nested bounding boxes
 - Each node covers a rectangular region containing its children
 - Query: "find all restaurants within 5km" -> traverse tree, pruning branches whose bounding boxes don't overlap the search circle
 - Dramatically faster than scanning all points: O(log n + k) vs O(n)
 
-**Common Spatial Queries**:
+Common Spatial Queries:
 \`\`\`sql
 -- Find restaurants within 5km of a point
 SELECT name FROM restaurants
@@ -3056,13 +3056,13 @@ SELECT a.name, b.name FROM regions a, regions b
 WHERE ST_Intersects(a.geom, b.geom) AND a.id != b.id;
 \`\`\`
 
-**Geohashing** (alternative to R-tree):
+Geohashing (alternative to R-tree):
 - Encode lat/lon into a string: (37.7749, -122.4194) -> "9q8yyk8"
 - Hierarchical: longer prefix = more precise location
 - Proximity: nearby points share common prefixes
 - Used by: Redis GEO, DynamoDB (with geohash sort key), Elasticsearch geo_point
 
-**When PostGIS vs Dedicated**:
+When PostGIS vs Dedicated:
 - PostGIS: need spatial + relational queries together (most common)
 - Dedicated (Tile38): real-time geofencing, pub/sub on location changes
 - H3 (Uber): hexagonal grid system for ride matching, surge pricing`

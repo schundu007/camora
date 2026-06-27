@@ -2,9 +2,9 @@
 """New diagrams for the Linux DevOps 10-day article content."""
 import graphviz, os
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='12', penwidth='1.5', height='0.45', margin='0.15,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='10', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='10', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -21,10 +21,10 @@ def e(g, a, b, label='', color='#475569', style='solid'):
     g.edge(a, b, label=f'  {label}  ' if label else '', color=color, fontcolor=color, style=style, **EDGE)
 def base_graph(name, title, rankdir='LR'):
     g = graphviz.Digraph(name, format='png')
-    g.attr(bgcolor='#ffffff', dpi='200', pad='0.25', nodesep='0.5', ranksep='0.45',
+    g.attr(bgcolor='#ffffff', dpi='200', pad='0.4', nodesep='0.6', ranksep='0.55',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='14', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='14', fontname='Helvetica-Bold', fontcolor='#1e293b')
     return g
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'linux')
@@ -132,7 +132,7 @@ def diag_users_types():
 # ─── linux-package-families ───────────────────────────────────────────────────
 
 def diag_package_families():
-    g = base_graph('pkgfam', 'Linux Package Manager Families & Universal Packages', rankdir='TB')
+    g = base_graph('pkgfam', 'Linux Package Manager Families & Universal Packages', rankdir='LR')
     n(g, 'deb',     'Debian Family\nUbuntu / Debian /\nLinux Mint', 'navy')
     n(g, 'apt',     'apt (high-level)\napt install / update\napt upgrade / purge', 'green')
     n(g, 'dpkg',    'dpkg (low-level)\ndpkg -i pkg.deb\ndpkg -l | grep pkg', 'teal')
@@ -253,7 +253,7 @@ def diag_text_processing_chain():
 # ─── linux-security-hardening-layers ──────────────────────────────────────────
 
 def diag_security_hardening_layers():
-    g = base_graph('secharden', 'Linux Security Hardening — Defense in Depth', rankdir='TB')
+    g = base_graph('secharden', 'Linux Security Hardening — Defense in Depth', rankdir='LR')
     n(g, 'fw',      'Firewall\nufw / iptables / nftables\nAllow only needed ports', 'red')
     n(g, 'ssh',     'SSH Hardening\nPasswordAuth no\nPermitRootLogin no\nfail2ban', 'red')
     n(g, 'patch',   'Keep Patched\napt upgrade regularly\nunattended-upgrades', 'gold')

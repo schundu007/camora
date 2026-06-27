@@ -9,9 +9,9 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'diagrams', 'ddia')
 os.makedirs(OUT, exist_ok=True)
 
-NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica Neue',
+NODE = dict(shape='box', style='filled,rounded', fontname='Helvetica',
             fontsize='11', penwidth='1.5', height='0.42', margin='0.14,0.08')
-EDGE = dict(fontname='Helvetica Neue', fontsize='9', penwidth='1.5')
+EDGE = dict(fontname='Helvetica', fontsize='9', penwidth='1.5')
 C = {
     'navy':   ('#dbeafe', '#3b82f6', '#1e40af'),
     'gold':   ('#fef3c7', '#f59e0b', '#92400e'),
@@ -40,7 +40,7 @@ def base(name, title, rankdir='LR'):
     g.attr(bgcolor='#ffffff', dpi='200', pad='0.3', nodesep='0.45', ranksep='0.5',
            splines='spline', rankdir=rankdir,
            label=f'  {title}  ', labelloc='t',
-           fontsize='13', fontname='Helvetica Neue Bold', fontcolor='#1e293b')
+           fontsize='13', fontname='Helvetica Bold', fontcolor='#1e293b')
     return g
 
 
@@ -71,7 +71,7 @@ def diag_reliability_scalability():
     g = base('ddia_rsm', 'Twitter Home Timeline — Fan-out Architecture Comparison', rankdir='TB')
     with g.subgraph(name='cluster_a') as s:
         s.attr(label='Approach 1: Pull on Read', style='filled', fillcolor='#f0f9ff',
-               color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'tw_a', 'User posts tweet', 'navy')
         n(s, 'db_a', 'tweets table\n(INSERT one row)', 'navy')
         n(s, 'read_a', 'Home timeline read\nJOIN tweets + follows\n300K reads/sec', 'red')
@@ -79,7 +79,7 @@ def diag_reliability_scalability():
         e(s, 'db_a', 'read_a', 'expensive JOIN')
     with g.subgraph(name='cluster_b') as s:
         s.attr(label='Approach 2: Fan-out on Write (Twitter actual)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'tw_b', 'User posts tweet', 'navy')
         n(s, 'fanout', 'Fan-out worker\nlook up all N followers', 'gold')
         n(s, 'cache', 'Timeline cache\n(Redis list per user)', 'green')
@@ -134,7 +134,7 @@ def diag_relational_vs_document():
     g = base('ddia_relational_doc', 'Resume Data: Relational (Normalized) vs Document (JSON)')
     with g.subgraph(name='cluster_rel') as s:
         s.attr(label='Relational Model — 5 normalized tables', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'users',     'users\n(id, name, email)', 'navy')
         n(s, 'positions', 'positions\n(id, user_id, title,\ncompany, start, end)', 'navy')
         n(s, 'education', 'education\n(id, user_id, school,\ndegree, year)', 'navy')
@@ -146,7 +146,7 @@ def diag_relational_vs_document():
         e(s, 'users', 'skills',    'FK 1:N')
     with g.subgraph(name='cluster_doc') as s:
         s.attr(label='Document Model — 1 JSON document', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'doc', '{ id, name, email,\n  positions: [...],\n  education: [...],\n  contact: [...],\n  skills: [...] }', 'green')
         n(s, 'loc', 'Locality benefit:\nentire resume in\none disk read', 'teal')
         n(s, 'flex','Schema flexibility:\nadd new field without\nALTER TABLE', 'teal')
@@ -208,7 +208,7 @@ def diag_b_trees():
     g = base('ddia_btree', 'B-Tree Structure and Write Amplification vs LSM-Tree', rankdir='TB')
     with g.subgraph(name='cluster_btree') as s:
         s.attr(label='B-Tree (4KB pages, branching factor ~500)', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'root',  'Root page\n[ref A] [ref B] [ref C]', 'navy')
         n(s, 'int1',  'Internal page\n[ref D] [ref E]', 'navy')
         n(s, 'int2',  'Internal page\n[ref F] [ref G]', 'navy')
@@ -224,7 +224,7 @@ def diag_b_trees():
         e(s, 'leaf2', 'leaf3', 'next →', style='dashed')
     with g.subgraph(name='cluster_compare') as s:
         s.attr(label='B-Tree vs LSM-Tree Trade-offs', style='filled',
-               fillcolor='#fefce8', color='#f59e0b', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fefce8', color='#f59e0b', fontname='Helvetica Bold', fontsize='11')
         n(s, 'btree_r', 'B-Tree reads:\nFast (1 location per key)\nPredictable O(log n)', 'green')
         n(s, 'btree_w', 'B-Tree writes:\nRandom I/O (overwrite page)\nWAL + page = 2x write amp', 'orange')
         n(s, 'lsm_r',   'LSM reads:\nMay check multiple\nSSTables + Bloom filters', 'orange')
@@ -255,15 +255,15 @@ def diag_olap_vs_oltp():
     g = base('ddia_olap_oltp', 'OLTP vs OLAP and Star Schema (Data Warehouse)')
     with g.subgraph(name='cluster_oltp') as s:
         s.attr(label='OLTP — Online Transaction Processing', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'oltp', 'PostgreSQL / MySQL\nSmall reads + writes\nLow latency (<100ms)\nUser-facing, ACID', 'navy')
     with g.subgraph(name='cluster_etl') as s:
         s.attr(label='ETL Pipeline', style='filled', fillcolor='#fefce8',
-               color='#f59e0b', fontname='Helvetica Neue Bold', fontsize='11')
+               color='#f59e0b', fontname='Helvetica Bold', fontsize='11')
         n(s, 'etl', 'Extract-Transform-Load\nAirflow / dbt / Fivetran\nBatch or CDC-based', 'gold')
     with g.subgraph(name='cluster_dw') as s:
         s.attr(label='Data Warehouse — OLAP Star Schema', style='filled', fillcolor='#f0fdf4',
-               color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'fact',    'fact_sales\n(event: each row = 1 sale)\nbillions of rows', 'green')
         n(s, 'dim_p',   'dim_product\n(what was sold)', 'teal')
         n(s, 'dim_s',   'dim_store\n(where)', 'teal')
@@ -285,13 +285,13 @@ def diag_column_storage():
     g = base('ddia_column', 'Row-Oriented vs Column-Oriented Storage Layout', rankdir='TB')
     with g.subgraph(name='cluster_row') as s:
         s.attr(label='Row-Oriented (PostgreSQL, MySQL)', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'row1', 'Page: [id=1, date=2024-01, prod=69, qty=5, price=9.99]\n         [id=2, date=2024-01, prod=74, qty=2, price=4.99]', 'red')
         n(s, 'row_q', 'Query: SELECT date, SUM(qty) WHERE prod=69\n→ Must load ALL columns even though\nonly date+qty needed — wasteful I/O', 'red')
         e(s, 'row1', 'row_q', 'wasteful I/O')
     with g.subgraph(name='cluster_col') as s:
         s.attr(label='Column-Oriented (Redshift, ClickHouse, Parquet)', style='filled',
-               fillcolor='#dcfce7', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#dcfce7', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'col_id',   'date column:\n[2024-01][2024-01][2024-02]...\nCompressed: RLE', 'green')
         n(s, 'col_qty',  'qty column:\n[5][2][1]...\nCompressed: bitmap', 'green')
         n(s, 'col_prod', 'prod column:\n[69][74][69]...\nCompressed: bitmap', 'green')
@@ -385,7 +385,7 @@ def diag_replication_lag():
     g = base('ddia_rep_lag', 'Replication Lag: Three Consistency Anomalies', rankdir='TB')
     with g.subgraph(name='cluster_ryw') as s:
         s.attr(label='Read-Your-Writes Violation', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'ryw1', 'User writes comment\nto Leader', 'navy')
         n(s, 'ryw2', 'User reads from\nAsync Follower (lags)\n→ comment not visible!', 'red')
         n(s, 'ryw_fix', 'Fix: read from Leader\nfor 1 min after write\nor track replication offset', 'green')
@@ -393,7 +393,7 @@ def diag_replication_lag():
         e(s, 'ryw2', 'ryw_fix', 'solution')
     with g.subgraph(name='cluster_mr') as s:
         s.attr(label='Monotonic Reads Violation', style='filled',
-               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Bold', fontsize='11')
         n(s, 'mr1', 'User reads from F1\n(up-to-date)\nsees the post', 'green')
         n(s, 'mr2', 'User reads from F2\n(lags more)\npost has disappeared!', 'red')
         n(s, 'mr_fix', 'Fix: route user to\nsame replica every time\n(hash user ID to replica)', 'green')
@@ -401,7 +401,7 @@ def diag_replication_lag():
         e(s, 'mr2', 'mr_fix', 'solution')
     with g.subgraph(name='cluster_cp') as s:
         s.attr(label='Consistent Prefix Reads Violation', style='filled',
-               fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica Bold', fontsize='11')
         n(s, 'cp1', 'A writes "How old is Pam?"\nB writes "She is 35"', 'purple')
         n(s, 'cp2', "Observer sees answer\nbefore question!\n(replication reorders writes)", 'red')
         n(s, 'cp_fix', 'Fix: causally related writes\nto same partition\nor version vectors', 'green')
@@ -415,7 +415,7 @@ def diag_multi_leader():
     g = base('ddia_multi_leader', 'Multi-Leader Conflict and Leaderless Quorum')
     with g.subgraph(name='cluster_ml') as s:
         s.attr(label='Multi-Leader: Write Conflict', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'dc1_write', 'Datacenter 1 Leader\nUser A sets title = "B"', 'navy')
         n(s, 'dc2_write', 'Datacenter 2 Leader\nUser B sets title = "C"\n(concurrently)', 'navy')
         n(s, 'conflict',  'CONFLICT\nBoth committed locally\nAsync replication → conflicting versions', 'red')
@@ -425,7 +425,7 @@ def diag_multi_leader():
         e(s, 'conflict', 'resolve')
     with g.subgraph(name='cluster_lless') as s:
         s.attr(label='Leaderless: Quorum (n=3, w=2, r=2)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'client_ll', 'Client', 'gray')
         n(s, 'r1', 'Replica 1\nACK write', 'green')
         n(s, 'r2', 'Replica 2\nACK write', 'green')
@@ -461,7 +461,7 @@ def diag_partitioning():
     g = base('ddia_partition', 'Partitioning: Key Range vs Consistent Hash Ring')
     with g.subgraph(name='cluster_kr') as s:
         s.attr(label='Key Range Partitioning', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'p1', 'Partition 1\n[A — COM]', 'navy')
         n(s, 'p2', 'Partition 2\n[CON — GZZ]', 'navy')
         n(s, 'p3', 'Partition 3\n[H — MZZ]', 'navy')
@@ -473,7 +473,7 @@ def diag_partitioning():
         e(s, 'p3', 'hot', style='dashed')
     with g.subgraph(name='cluster_hash') as s:
         s.attr(label='Consistent Hash Ring (Cassandra vnodes)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'ring', 'Hash ring: 0 — 2^64\nVirtual nodes (vnodes):\n256 tokens per physical node', 'green')
         n(s, 'node_a', 'Node A\n(owns multiple\nring positions)', 'teal')
         n(s, 'node_b', 'Node B', 'teal')
@@ -491,7 +491,7 @@ def diag_secondary_indexes_partitioned():
     g = base('ddia_sec_idx', 'Partitioned Secondary Indexes: Local vs Global')
     with g.subgraph(name='cluster_local') as s:
         s.attr(label='Local (Document-Partitioned) Secondary Index', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'lp1', 'Partition 1\nDocs: {id:1..50}\nLocal idx: color:red → [2,10]', 'navy')
         n(s, 'lp2', 'Partition 2\nDocs: {id:51..100}\nLocal idx: color:red → [60]', 'navy')
         n(s, 'scatter', 'READ color=red:\nSCATTER to all partitions\nGATHER and merge\n→ expensive fan-out', 'red')
@@ -501,7 +501,7 @@ def diag_secondary_indexes_partitioned():
         e(s, 'write_l', 'lp1')
     with g.subgraph(name='cluster_global') as s:
         s.attr(label='Global (Term-Partitioned) Secondary Index', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'gi1', 'Index Partition A-M\ncolor:blue → [doc3, doc75, doc88]', 'green')
         n(s, 'gi2', 'Index Partition N-Z\ncolor:red → [doc2, doc10, doc60]', 'green')
         n(s, 'read_g', 'READ color=red:\nQuery only partition N-Z\n→ targeted read (cheap)', 'teal')
@@ -562,7 +562,7 @@ def diag_write_skew():
     g = base('ddia_write_skew', 'Write Skew and Phantom Reads — Concurrency Anomalies', rankdir='TB')
     with g.subgraph(name='cluster_lost') as s:
         s.attr(label='Lost Update (counter increment)', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'lu1', 'T1: READ counter = 0', 'navy')
         n(s, 'lu2', 'T2: READ counter = 0', 'navy')
         n(s, 'lu3', 'T1: WRITE counter = 1', 'green')
@@ -573,7 +573,7 @@ def diag_write_skew():
         e(s, 'lu4', 'lu_fix')
     with g.subgraph(name='cluster_ws') as s:
         s.attr(label='Write Skew (on-call doctors)', style='filled',
-               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Bold', fontsize='11')
         n(s, 'ws1', 'T1 (Alice): SELECT count(*)\nFROM doctors WHERE on_call=true\n→ count = 2. OK to go off call.', 'navy')
         n(s, 'ws2', 'T2 (Bob): SELECT count(*)\nFROM doctors WHERE on_call=true\n→ count = 2. OK to go off call.', 'navy')
         n(s, 'ws3', 'T1: UPDATE Alice set on_call=false\nT2: UPDATE Bob set on_call=false\nBOTH COMMIT', 'gold')
@@ -589,7 +589,7 @@ def diag_serializability():
     g = base('ddia_serial', '2PL vs SSI — Two Approaches to Serializability')
     with g.subgraph(name='cluster_2pl') as s:
         s.attr(label='Two-Phase Locking (2PL) — Pessimistic', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, '2pl_t1', 'T1: acquires\nshared lock on row\n(read)', 'navy')
         n(s, '2pl_t2', 'T2: wants\nexclusive lock\n(write)', 'navy')
         n(s, '2pl_block', 'T2 BLOCKS\nwaiting for T1\nto release lock', 'red')
@@ -599,7 +599,7 @@ def diag_serializability():
         e(s, '2pl_block', '2pl_dead', 'if circular wait')
     with g.subgraph(name='cluster_ssi') as s:
         s.attr(label='Serializable Snapshot Isolation (SSI) — Optimistic', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'ssi_t1', 'T1 proceeds\n(no lock)\ntracks read set', 'green')
         n(s, 'ssi_t2', 'T2 proceeds\n(no lock)\ntracks write set', 'green')
         n(s, 'ssi_chk', 'At commit:\ncheck if T2 write\naffected T1 read set', 'teal')
@@ -617,7 +617,7 @@ def diag_distributed_transactions():
     g = base('ddia_2pc', 'Two-Phase Commit (2PC) — Happy Path and Coordinator Failure')
     with g.subgraph(name='cluster_happy') as s:
         s.attr(label='2PC Happy Path', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'coord',  'Coordinator\n(transaction manager)', 'navy')
         n(s, 'p1',     'Participant 1\n(DB node A)', 'teal')
         n(s, 'p2',     'Participant 2\n(DB node B)', 'teal')
@@ -630,7 +630,7 @@ def diag_distributed_transactions():
         e(s, 'ph1', 'ph2', 'if all yes')
     with g.subgraph(name='cluster_fail') as s:
         s.attr(label='Coordinator Failure — Participants Stuck "In Doubt"', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'coord_fail', 'Coordinator\nCRASHES after Phase 1\nbefore sending COMMIT', 'red')
         n(s, 'stuck1',     'Participant 1\nWaiting for COMMIT/ABORT\nHolds locks\n"In doubt" state', 'red')
         n(s, 'stuck2',     'Participant 2\nAlso in doubt\nDatabase BLOCKED\nuntil coordinator recovers', 'red')
@@ -647,7 +647,7 @@ def diag_faults_networks():
     g = base('ddia_faults', 'Distributed Systems: Network Faults and Clock Problems')
     with g.subgraph(name='cluster_net') as s:
         s.attr(label='Network Fault Taxonomy — Cannot Distinguish Without Timeout', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'client_n', 'Client sends request\n(then waits...)', 'gray')
         n(s, 'req_lost', 'Request lost\n(packet dropped)', 'red')
         n(s, 'srv_slow', 'Server alive but slow\n(GC pause, I/O wait)', 'orange')
@@ -664,7 +664,7 @@ def diag_faults_networks():
         e(s, 'resp_lost', 'timeout')
     with g.subgraph(name='cluster_clock') as s:
         s.attr(label='Clock Unreliability', style='filled',
-               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fef3c7', color='#f59e0b', fontname='Helvetica Bold', fontsize='11')
         n(s, 'ntp',    'NTP accuracy:\n10-100ms typical\nspikes to 1s+ possible\nCan go backward (slew)', 'gold')
         n(s, 'truetime','Google TrueTime:\nGPS + atomic clocks\nBounded uncertainty 0-7ms\nSpanner: global transactions', 'green')
         n(s, 'logical', 'Logical clocks\n(Lamport timestamps):\nMeasure event ordering\nSafe for causality', 'teal')
@@ -678,7 +678,7 @@ def diag_linearizability():
     g = base('ddia_linear', 'Linearizability Test and CAP Theorem')
     with g.subgraph(name='cluster_test') as s:
         s.attr(label='Linearizability Violation Test', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'write1', 'Client A writes x=1\n(operation overlaps t=0..t=2)', 'navy')
         n(s, 'read1', 'Client B reads x\n→ gets 1 (new value)', 'green')
         n(s, 'read2', 'Client C reads x\n→ gets 0 (old value!)\nVIOLATION: C must also\nsee 1 after B saw 1', 'red')
@@ -686,7 +686,7 @@ def diag_linearizability():
         e(s, 'read1', 'read2', 'C reads AFTER\nB already saw new value')
     with g.subgraph(name='cluster_cap') as s:
         s.attr(label='CAP Theorem (Brewer 2000)', style='filled',
-               fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#ede9fe', color='#7c3aed', fontname='Helvetica Bold', fontsize='11')
         n(s, 'C', 'Consistency\n(Linearizability)\nAll nodes see same\ndata simultaneously', 'purple')
         n(s, 'A', 'Availability\nEvery request\nreceives a response\n(not an error)', 'green')
         n(s, 'P', 'Partition Tolerance\nSystem continues\ndespite network\npartitions', 'navy')
@@ -717,7 +717,7 @@ def diag_consensus_raft():
     g = base('ddia_raft', 'Raft Consensus: Leader Election and Log Replication')
     with g.subgraph(name='cluster_states') as s:
         s.attr(label='Raft Node State Machine', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'follower',   'FOLLOWER\n(default state)\nApplies committed\nlog entries', 'navy')
         n(s, 'candidate',  'CANDIDATE\n(election timeout\nexpired, no heartbeat)', 'gold')
         n(s, 'leader',     'LEADER\n(won election:\nmajority votes)\nSends heartbeats', 'green')
@@ -727,7 +727,7 @@ def diag_consensus_raft():
         e(s, 'leader',  'follower',   'new term\nleader found')
     with g.subgraph(name='cluster_log') as s:
         s.attr(label='Log Replication', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'client_r', 'Client write', 'gray')
         n(s, 'ldr',      'Leader\nappends to local log\nindex=42, term=3', 'green')
         n(s, 'f1',       'Follower 1\nAppendEntries\n→ ACK', 'teal')
@@ -786,7 +786,7 @@ def diag_beyond_mapreduce():
     g = base('ddia_spark', 'MapReduce Job Chain vs Spark DAG — Intermediate State')
     with g.subgraph(name='cluster_mr') as s:
         s.attr(label='MapReduce Multi-Step (HDFS writes between every step)', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'mr_in',   'HDFS Input', 'gray')
         n(s, 'mr_job1', 'Job 1 (Map+Reduce)', 'red')
         n(s, 'mr_hdfs1','HDFS write\n(intermediate)', 'orange')
@@ -796,7 +796,7 @@ def diag_beyond_mapreduce():
         e(s, 'mr_hdfs1', 'mr_job2'); e(s, 'mr_job2', 'mr_out')
     with g.subgraph(name='cluster_spark') as s:
         s.attr(label='Spark DAG (in-memory pipeline, lineage for fault tolerance)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'sp_in',   'HDFS Input', 'gray')
         n(s, 'sp_rdd1', 'RDD 1: filter()', 'green')
         n(s, 'sp_rdd2', 'RDD 2: map()', 'green')
@@ -823,7 +823,7 @@ def diag_event_streams():
     g = base('ddia_streams', 'Traditional Broker vs Log-Based Broker (Kafka)')
     with g.subgraph(name='cluster_amqp') as s:
         s.attr(label='Traditional Broker (RabbitMQ / ActiveMQ)', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'prod_a',  'Producer', 'navy')
         n(s, 'broker',  'Broker\n(queue)', 'orange')
         n(s, 'cons_a',  'Consumer\nreceives + ACKs', 'red')
@@ -834,7 +834,7 @@ def diag_event_streams():
         e(s, 'broker', 'delete', 'deletes message')
     with g.subgraph(name='cluster_kafka') as s:
         s.attr(label='Log-Based Broker (Kafka / Kinesis)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'prod_k',  'Producer', 'navy')
         n(s, 'log',     'Partitioned Log\n(append-only)\noffset=0..N\nRetained 7 days or forever', 'green')
         n(s, 'cg1',     'Consumer Group 1\n(offset=450)\n→ analytics', 'teal')
@@ -909,7 +909,7 @@ def diag_lambda_kappa():
     g = base('ddia_lambda', 'Lambda vs Kappa Architecture')
     with g.subgraph(name='cluster_lambda') as s:
         s.attr(label='Lambda Architecture (Marz 2011) — Two Codepaths', style='filled',
-               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#fee2e2', color='#ef4444', fontname='Helvetica Bold', fontsize='11')
         n(s, 'lam_src',   'Event source\n(Kafka)', 'navy')
         n(s, 'lam_batch', 'Batch Layer\n(Hadoop / Spark)\nAll historical data\nHigh latency (hours)', 'orange')
         n(s, 'lam_speed', 'Speed Layer\n(Storm / Flink)\nRecent data only\nLow latency (seconds)', 'gold')
@@ -922,7 +922,7 @@ def diag_lambda_kappa():
         e(s, 'lam_serve', 'lam_prob', style='dashed')
     with g.subgraph(name='cluster_kappa') as s:
         s.attr(label='Kappa Architecture (Kreps 2014) — Single Streaming Path', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'kap_src',   'Event source\n(Kafka)\nRetain log forever', 'navy')
         n(s, 'kap_stream','Single streaming job\n(Flink / Kafka Streams)\nHandles real-time AND\nhistorical replay', 'green')
         n(s, 'kap_replay','Reprocessing:\nReplay Kafka log\nfrom offset 0\nthrough updated job', 'teal')
@@ -971,13 +971,13 @@ def diag_schema_on_read():
     g = base('ddia_schema_read', 'Schema-on-Write vs Schema-on-Read')
     with g.subgraph(name='cluster_write') as s:
         s.attr(label='Schema-on-Write (Relational DB)', style='filled',
-               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#eff6ff', color='#3b82f6', fontname='Helvetica Bold', fontsize='11')
         n(s, 'sw_schema', 'Schema defined upfront\nCREATE TABLE users (\n  id INT,\n  name VARCHAR(100),\n  age INT\n)', 'navy')
         n(s, 'sw_write',  'Write: DB enforces schema\nINSERT fails if\nwrong type / missing NOT NULL', 'navy')
         n(s, 'sw_alter',  'Schema change:\nALTER TABLE ADD COLUMN\nMay lock table\nAll rows updated immediately', 'red')
     with g.subgraph(name='cluster_read') as s:
         s.attr(label='Schema-on-Read (Document DB / Data Lake)', style='filled',
-               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Neue Bold', fontsize='11')
+               fillcolor='#f0fdf4', color='#22c55e', fontname='Helvetica Bold', fontsize='11')
         n(s, 'sr_write',  'Write: any structure accepted\n{"name": "Alice", "age": 30}\n{"name": "Bob", "city": "NYC"}\nNo enforcement', 'green')
         n(s, 'sr_read',   'Read: code handles\nmissing fields\nif doc.get("age"):...', 'green')
         n(s, 'sr_change', 'Schema change:\njust start writing\nnew format\nOld docs read with\ncompat code', 'teal')

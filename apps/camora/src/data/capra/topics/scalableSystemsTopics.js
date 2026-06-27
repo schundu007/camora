@@ -54,22 +54,22 @@ export const scalableSystemsTopics = [
       'Real-world example: DNS resolvers cache NXDOMAIN responses (RFC 2308) with a negative TTL',
     ],
 
-    introduction: `**Negative caching** is the practice of storing "miss" results — such as HTTP 404 responses, empty database query results, or null lookups — in the cache so that subsequent requests for the same non-existent resource are served from cache rather than hitting the origin. Without negative caching, an attacker (or a misconfigured client) can overwhelm your backend by repeatedly requesting keys that do not exist, since every request bypasses the cache and goes straight to the database.
+    introduction: `Negative caching is the practice of storing "miss" results — such as HTTP 404 responses, empty database query results, or null lookups — in the cache so that subsequent requests for the same non-existent resource are served from cache rather than hitting the origin. Without negative caching, an attacker (or a misconfigured client) can overwhelm your backend by repeatedly requesting keys that do not exist, since every request bypasses the cache and goes straight to the database.
 
-This problem is called **cache penetration**: the cache provides zero protection because the requested key was never cached in the first place. It is distinct from a cache stampede (many requests for a recently expired key) and from cache avalanche (many keys expiring simultaneously). Negative caching directly addresses penetration by ensuring that even "nothing found" is a cached result.
+This problem is called cache penetration: the cache provides zero protection because the requested key was never cached in the first place. It is distinct from a cache stampede (many requests for a recently expired key) and from cache avalanche (many keys expiring simultaneously). Negative caching directly addresses penetration by ensuring that even "nothing found" is a cached result.
 
-The implementation is straightforward: when the backend returns a 404 or empty result, store a **sentinel value** (e.g., \`{status: "NOT_FOUND"}\`) in the cache with a short TTL (typically 30-120 seconds). On the next request, the cache returns the sentinel, and the backend is never contacted. For a more memory-efficient approach, a **Bloom filter** in front of the cache can reject lookups for keys that were never inserted, using only a few bits per key.`,
+The implementation is straightforward: when the backend returns a 404 or empty result, store a sentinel value (e.g., \`{status: "NOT_FOUND"}\`) in the cache with a short TTL (typically 30-120 seconds). On the next request, the cache returns the sentinel, and the backend is never contacted. For a more memory-efficient approach, a Bloom filter in front of the cache can reject lookups for keys that were never inserted, using only a few bits per key.`,
 
     keyQuestions: [
       {
         question: 'What is cache penetration and how does negative caching solve it?',
-        answer: `**Cache penetration** occurs when requests target keys that never exist in the cache or database, causing every request to bypass the cache and hit the backend directly.
+        answer: `Cache penetration occurs when requests target keys that never exist in the cache or database, causing every request to bypass the cache and hit the backend directly.
 
 ![Cache penetration vs negative caching](/diagrams/scalable/negative-caching.png)
 
 Without negative caching, every request for a non-existent key bypasses the cache and hits the database. With negative caching, the first miss stores a sentinel (\`{NOT_FOUND, TTL=60s}\`) and every subsequent request inside that 60-second window returns from cache, so the backend is shielded.
 
-**Implementation choices**:
+Implementation choices:
 
 | Strategy | Pros | Cons |
 |----------|------|------|
@@ -78,19 +78,19 @@ Without negative caching, every request for a non-existent key bypasses the cach
 | Request coalescing | Deduplicates in-flight misses | Only helps concurrent requests |
 | Rate limit on misses | Caps backend load directly | Legitimate misses also throttled |
 
-**Best practice**: Combine sentinel caching (short TTL) with a Bloom filter for large key spaces. The Bloom filter rejects obviously invalid keys without even checking the cache.`
+Best practice: Combine sentinel caching (short TTL) with a Bloom filter for large key spaces. The Bloom filter rejects obviously invalid keys without even checking the cache.`
       },
       {
         question: 'How do Bloom filters prevent cache penetration at scale?',
-        answer: `**Bloom filter** is a probabilistic data structure that answers "is this element in the set?" with:
-- **Definitely not in the set** (100% accurate for negatives)
-- **Probably in the set** (small false positive rate)
+        answer: `Bloom filter is a probabilistic data structure that answers "is this element in the set?" with:
+- Definitely not in the set (100% accurate for negatives)
+- Probably in the set (small false positive rate)
 
-**Architecture with Bloom filter gate** — Client request flows through Bloom filter → Cache → Database. The Bloom filter rejects definitely-absent keys before any cache or DB lookup; cache hits return immediately; on cache miss the DB query either returns and caches the value, or returns 404 and adds a negative cache entry.
+Architecture with Bloom filter gate — Client request flows through Bloom filter → Cache → Database. The Bloom filter rejects definitely-absent keys before any cache or DB lookup; cache hits return immediately; on cache miss the DB query either returns and caches the value, or returns 404 and adds a negative cache entry.
 
 ![Bloom filter cache gate](/diagrams/scalable/bloom-filter-gate.png)
 
-**Bloom filter internals**:
+Bloom filter internals:
 \`\`\`
 Insert key "user:42":
   hash1("user:42") = 3  → set bit 3
@@ -104,44 +104,44 @@ Check key "user:99":
   bit 5 = 0 → DEFINITELY NOT IN SET → reject immediately
 \`\`\`
 
-**Sizing**: For 100M keys with 1% false positive rate, a Bloom filter needs ~114 MB (about 9.6 bits per element). This fits comfortably in memory and eliminates 99% of penetration attacks.
+Sizing: For 100M keys with 1% false positive rate, a Bloom filter needs ~114 MB (about 9.6 bits per element). This fits comfortably in memory and eliminates 99% of penetration attacks.
 
-**Limitation**: Standard Bloom filters do not support deletion. Use a **Counting Bloom filter** or **Cuckoo filter** if you need to remove keys when resources are created.`
+Limitation: Standard Bloom filters do not support deletion. Use a Counting Bloom filter or Cuckoo filter if you need to remove keys when resources are created.`
       },
       {
         question: 'How would you design a layered defense against cache penetration for a user profile service?',
-        answer: `**Scenario**: A user profile API where attackers enumerate random user IDs (most do not exist).
+        answer: `Scenario: A user profile API where attackers enumerate random user IDs (most do not exist).
 
-**Layered defense architecture** — Client → Rate Limiter (rejects with 429 if >100 misses/s) → Bloom Filter (404 fast-path if not in set) → Cache (returns value on HIT) → DB (caches with TTL=300s if found, negative cache TTL=60s if not).
+Layered defense architecture — Client → Rate Limiter (rejects with 429 if >100 misses/s) → Bloom Filter (404 fast-path if not in set) → Cache (returns value on HIT) → DB (caches with TTL=300s if found, negative cache TTL=60s if not).
 
 ![Layered cache penetration defense](/diagrams/scalable/layered-defense.png)
 
-**Layer 1 — Input validation**:
+Layer 1 — Input validation:
 - Reject obviously invalid IDs at the API gateway (wrong format, negative numbers)
 - This is free and eliminates a class of random probes
 
-**Layer 2 — Rate limiting on misses**:
+Layer 2 — Rate limiting on misses:
 - Track per-IP or per-token miss rate
 - If a client exceeds 100 misses/minute, return 429 Too Many Requests
 - Legitimate users rarely hit non-existent profiles repeatedly
 
-**Layer 3 — Bloom filter**:
+Layer 3 — Bloom filter:
 - Populated on startup from the user ID column (or incrementally on inserts)
 - Rejects lookups for IDs that were never created
 - Memory: 50M users x 10 bits = 60 MB
 
-**Layer 4 — Negative cache with short TTL**:
+Layer 4 — Negative cache with short TTL:
 - For the small fraction of false positives from the Bloom filter
 - Store \`{status: "NOT_FOUND", cached_at: timestamp}\` with TTL=60s
 - When a new user registers, invalidate the negative cache entry
 
-**Monitoring**: Track the miss-to-hit ratio. A healthy cache has <5% miss rate. If it spikes to >50%, a penetration attack may be underway.`
+Monitoring: Track the miss-to-hit ratio. A healthy cache has <5% miss rate. If it spikes to >50%, a penetration attack may be underway.`
       },
       {
         question: 'What is the difference between cache penetration, cache stampede, and cache avalanche?',
         answer: `Three distinct failure modes that require different mitigations:
 
-**Three failure modes side-by-side**:
+Three failure modes side-by-side:
 
 | Failure mode | Pattern | Primary fix |
 |---|---|---|
@@ -157,7 +157,7 @@ Check key "user:99":
 | Primary fix | Negative cache / Bloom | Distributed lock / early refresh | TTL jitter / warming |
 | Secondary fix | Rate limiting | Probabilistic early expiry | Layered cache (L1/L2) |
 
-**Interview tip**: Interviewers love asking you to distinguish these three. Draw the diagrams above and explain the fix for each.`
+Interview tip: Interviewers love asking you to distinguish these three. Draw the diagrams above and explain the fix for each.`
       },
     ],
 
@@ -215,44 +215,44 @@ Cache Lookup Decision Tree:
       'Stale-while-revalidate serves the expired value while one thread refreshes in the background — great for availability',
     ],
 
-    introduction: `A **cache stampede** (also called thundering herd or dog-pile effect) occurs when a frequently accessed cache key expires and a large number of concurrent requests simultaneously experience a cache miss. Each of those requests independently queries the backend and attempts to recompute the cached value. If the recomputation is expensive (e.g., a complex database query or an API call taking several seconds), the backend can be overwhelmed — leading to cascading failures, increased latency, and potentially a complete outage.
+    introduction: `A cache stampede (also called thundering herd or dog-pile effect) occurs when a frequently accessed cache key expires and a large number of concurrent requests simultaneously experience a cache miss. Each of those requests independently queries the backend and attempts to recompute the cached value. If the recomputation is expensive (e.g., a complex database query or an API call taking several seconds), the backend can be overwhelmed — leading to cascading failures, increased latency, and potentially a complete outage.
 
-The danger is proportional to the product of **request rate** and **recomputation time**. A key serving 10,000 requests per second that takes 2 seconds to recompute will generate 20,000 simultaneous backend requests in the worst case. Even a well-provisioned database cannot handle that kind of sudden spike without protection.
+The danger is proportional to the product of request rate and recomputation time. A key serving 10,000 requests per second that takes 2 seconds to recompute will generate 20,000 simultaneous backend requests in the worst case. Even a well-provisioned database cannot handle that kind of sudden spike without protection.
 
-There are several complementary strategies to prevent stampedes: **distributed locking** (only one thread recomputes, others wait), **probabilistic early expiration** (recompute before the TTL actually expires), **request coalescing** (deduplicate in-flight requests), and **stale-while-revalidate** (serve the old value while refreshing in the background). The best production systems combine multiple strategies for defense in depth.`,
+There are several complementary strategies to prevent stampedes: distributed locking (only one thread recomputes, others wait), probabilistic early expiration (recompute before the TTL actually expires), request coalescing (deduplicate in-flight requests), and stale-while-revalidate (serve the old value while refreshing in the background). The best production systems combine multiple strategies for defense in depth.`,
 
     keyQuestions: [
       {
         question: 'How does distributed locking prevent a cache stampede?',
-        answer: `**Pattern**: When a cache miss occurs, the first thread acquires a lock (e.g., Redis SETNX) before recomputing. Other threads that encounter the miss either wait for the lock to release or return a stale value.
+        answer: `Pattern: When a cache miss occurs, the first thread acquires a lock (e.g., Redis SETNX) before recomputing. Other threads that encounter the miss either wait for the lock to release or return a stale value.
 
-**Without locking (stampede)**: Thread 1 → Cache MISS → DB query → Update cache. Thread 2, Thread 3, ... Thread N each independently miss → DB query → update cache. Result: N concurrent DB queries for the same data.
+Without locking (stampede): Thread 1 → Cache MISS → DB query → Update cache. Thread 2, Thread 3, ... Thread N each independently miss → DB query → update cache. Result: N concurrent DB queries for the same data.
 
-**With distributed locking**: Thread 1 → Cache MISS → SETNX lock → ACQUIRED → DB query. Threads 2, 3 → Cache MISS → SETNX lock → BLOCKED. Thread 1 writes cache, releases lock. Threads 2, 3 retry → Cache HIT → Return. Result: only 1 DB query for the same data.
+With distributed locking: Thread 1 → Cache MISS → SETNX lock → ACQUIRED → DB query. Threads 2, 3 → Cache MISS → SETNX lock → BLOCKED. Thread 1 writes cache, releases lock. Threads 2, 3 retry → Cache HIT → Return. Result: only 1 DB query for the same data.
 
-**Redis implementation**:
+Redis implementation:
 \`\`\`
   SETNX cache:lock:user:42 "owner-uuid" EX 10
   -- If acquired: recompute, SET value, DEL lock
   -- If not acquired: SLEEP 50ms, retry GET cache:user:42
 \`\`\`
 
-**Edge cases to handle**:
-- **Lock holder crashes**: Set a TTL on the lock (EX 10) so it auto-expires
-- **Lock holder is slow**: Use a lease extension (watchdog thread renews lock)
-- **Waiting threads timeout**: Return stale data or a degraded response rather than hanging
+Edge cases to handle:
+- Lock holder crashes: Set a TTL on the lock (EX 10) so it auto-expires
+- Lock holder is slow: Use a lease extension (watchdog thread renews lock)
+- Waiting threads timeout: Return stale data or a degraded response rather than hanging
 
-**Trade-off**: Locking serializes recomputation, which adds latency for waiting threads. For most use cases, serving a slightly stale value while one thread refreshes is preferable to blocking.`
+Trade-off: Locking serializes recomputation, which adds latency for waiting threads. For most use cases, serving a slightly stale value while one thread refreshes is preferable to blocking.`
       },
       {
         question: 'How does probabilistic early expiration (XFetch) work?',
-        answer: `**XFetch algorithm**: Each cache read probabilistically decides whether to recompute BEFORE the TTL actually expires. The closer to expiration, the higher the probability of triggering a refresh.
+        answer: `XFetch algorithm: Each cache read probabilistically decides whether to recompute BEFORE the TTL actually expires. The closer to expiration, the higher the probability of triggering a refresh.
 
-**Traditional TTL expiry (causes stampede)**: Cache is fresh from t=0 to t=TTL. At t=TTL the entry expires and many threads hit the DB simultaneously — stampede.
+Traditional TTL expiry (causes stampede): Cache is fresh from t=0 to t=TTL. At t=TTL the entry expires and many threads hit the DB simultaneously — stampede.
 
-**Probabilistic early expiry (XFetch)**: Cache is fresh from t=0 to ~t=TTL-delta. A random thread triggers a background refresh slightly before TTL expires, so the entry never actually goes empty.
+Probabilistic early expiry (XFetch): Cache is fresh from t=0 to ~t=TTL-delta. A random thread triggers a background refresh slightly before TTL expires, so the entry never actually goes empty.
 
-**Algorithm (on every cache read)**:
+Algorithm (on every cache read):
 \`\`\`
   function xfetch_get(key):
     value, expiry, delta = cache.get_with_metadata(key)
@@ -267,28 +267,28 @@ There are several complementary strategies to prevent stampedes: **distributed l
     return value   # Always return current value immediately
 \`\`\`
 
-**Parameters**:
-- **delta**: Time the last recomputation took (stored alongside the value)
-- **beta**: Tuning constant (typically 1.0). Higher = more aggressive early refresh
-- **ln(random())**: Negative value that grows larger as random() → 0
+Parameters:
+- delta: Time the last recomputation took (stored alongside the value)
+- beta: Tuning constant (typically 1.0). Higher = more aggressive early refresh
+- ln(random()): Negative value that grows larger as random() → 0
 
-**Why it works**:
+Why it works:
 - When remaining time is large, probability of early refresh is near zero
 - As TTL approaches, the probability ramps up exponentially
 - With high traffic, one of the many readers will trigger the refresh 10-30s before actual expiry
 - The key never actually expires — stampede is avoided entirely
 
-**Advantage over locking**: No coordination overhead, no blocked threads, no stale data. The refresh happens transparently in the background.`
+Advantage over locking: No coordination overhead, no blocked threads, no stale data. The refresh happens transparently in the background.`
       },
       {
         question: 'What is request coalescing and how does it differ from locking?',
-        answer: `**Request coalescing** (also called single-flight or request deduplication) groups concurrent requests for the same key into a single backend call. All waiting callers receive the same result.
+        answer: `Request coalescing (also called single-flight or request deduplication) groups concurrent requests for the same key into a single backend call. All waiting callers receive the same result.
 
-**Without coalescing** — three concurrent threads (T1, T2, T3) all miss the cache and each fires its own DB query, so the database does the same work three times.
+Without coalescing — three concurrent threads (T1, T2, T3) all miss the cache and each fires its own DB query, so the database does the same work three times.
 
-**With coalescing (singleflight)** — T1 misses and starts the DB query; T2 and T3 also miss but find an in-flight call for the same key and *wait* on it. When the result returns, all three threads receive it from the single query. One DB call serves N callers.
+With coalescing (singleflight) — T1 misses and starts the DB query; T2 and T3 also miss but find an in-flight call for the same key and *wait* on it. When the result returns, all three threads receive it from the single query. One DB call serves N callers.
 
-**Coalescing vs Locking**:
+Coalescing vs Locking:
 
 | Aspect | Coalescing | Distributed Lock |
 |--------|-----------|------------------|
@@ -299,7 +299,7 @@ There are several complementary strategies to prevent stampedes: **distributed l
 | Implementation | Go singleflight, Java CompletableFuture | Redis SETNX, Redlock |
 | Best for | Single-server or per-pod dedup | Multi-pod coordination |
 
-**Go singleflight example**:
+Go singleflight example:
 \`\`\`
   var g singleflight.Group
 
@@ -312,17 +312,17 @@ There are several complementary strategies to prevent stampedes: **distributed l
   }
 \`\`\`
 
-**Combining both**: Use in-process coalescing as the first layer (free, zero network overhead) and distributed locking as the second layer for cross-pod coordination. This way, each pod sends at most one request, and across N pods, at most one actually hits the database.`
+Combining both: Use in-process coalescing as the first layer (free, zero network overhead) and distributed locking as the second layer for cross-pod coordination. This way, each pod sends at most one request, and across N pods, at most one actually hits the database.`
       },
       {
         question: 'Design a stampede-proof caching layer for a high-traffic product page.',
-        answer: `**Scenario**: E-commerce product page serving 50K requests/second. Product data is fetched from a microservice taking ~500ms.
+        answer: `Scenario: E-commerce product page serving 50K requests/second. Product data is fetched from a microservice taking ~500ms.
 
-**Multi-layer stampede protection** — Client → Layer 1 CDN/Edge cache (TTL=30s, stale-while-revalidate=300s) → Layer 2 in-process cache (Caffeine/Guava TTL=10s, singleflight) → Layer 3 Redis with XFetch + distributed lock (TTL=300s, SETNX product:lock:{id} EX 5) → Layer 4 product microservice origin (500ms latency, 1000 RPS limit).
+Multi-layer stampede protection — Client → Layer 1 CDN/Edge cache (TTL=30s, stale-while-revalidate=300s) → Layer 2 in-process cache (Caffeine/Guava TTL=10s, singleflight) → Layer 3 Redis with XFetch + distributed lock (TTL=300s, SETNX product:lock:{id} EX 5) → Layer 4 product microservice origin (500ms latency, 1000 RPS limit).
 
 ![Multi-layer stampede protection](/diagrams/scalable/multi-layer-stampede.png)
 
-**Flow for a hot key expiry**:
+Flow for a hot key expiry:
 1. CDN serves stale while revalidating (users see no latency impact)
 2. CDN revalidation reaches the app server
 3. App-level singleflight coalesces all concurrent misses on this pod into one
@@ -331,7 +331,7 @@ There are several complementary strategies to prevent stampedes: **distributed l
 6. Lock winner fetches from origin, writes to Redis, releases lock
 7. Other pods retry and find the fresh value in Redis
 
-**Monitoring and alerting**:
+Monitoring and alerting:
 - Cache hit ratio (target >99% for hot keys)
 - Lock contention rate (>10% indicates TTLs are too short)
 - Origin RPS (should stay flat even during cache transitions)
@@ -395,19 +395,19 @@ Protection Strategy Selection:
       'Different data types need different TTLs: user session (minutes), product catalog (hours), static config (days)',
     ],
 
-    introduction: `Cache expiration is one of the two hard problems in computer science (the other being naming things and off-by-one errors). The fundamental tension is between **freshness** (serving up-to-date data) and **performance** (avoiding backend calls). A **hard TTL** is the traditional approach: after a fixed duration, the cached entry is evicted and the next request triggers a cache miss. This is simple but creates problems — the moment of expiry is a vulnerability window where a stampede can occur, and the data goes from "definitely fresh" to "definitely missing" with no intermediate state.
+    introduction: `Cache expiration is one of the two hard problems in computer science (the other being naming things and off-by-one errors). The fundamental tension is between freshness (serving up-to-date data) and performance (avoiding backend calls). A hard TTL is the traditional approach: after a fixed duration, the cached entry is evicted and the next request triggers a cache miss. This is simple but creates problems — the moment of expiry is a vulnerability window where a stampede can occur, and the data goes from "definitely fresh" to "definitely missing" with no intermediate state.
 
-A **soft TTL** introduces a more nuanced lifecycle: after the soft TTL expires, the cached data is considered "stale but usable." The system continues serving the stale value to incoming requests while triggering a background refresh. The data is only truly removed when the **hard TTL** expires. This pattern — known as **stale-while-revalidate** in HTTP caching — provides the best of both worlds: low latency for users (they always get a cached response) and eventual freshness (the background refresh updates the cache within seconds).
+A soft TTL introduces a more nuanced lifecycle: after the soft TTL expires, the cached data is considered "stale but usable." The system continues serving the stale value to incoming requests while triggering a background refresh. The data is only truly removed when the hard TTL expires. This pattern — known as stale-while-revalidate in HTTP caching — provides the best of both worlds: low latency for users (they always get a cached response) and eventual freshness (the background refresh updates the cache within seconds).
 
-In production systems, combining soft and hard TTLs with **jittered expiration** (adding randomness to TTLs so keys do not expire simultaneously) and **event-driven invalidation** (publishing cache invalidation events when data changes) provides a robust, multi-layered expiration strategy that balances freshness, performance, and resilience.`,
+In production systems, combining soft and hard TTLs with jittered expiration (adding randomness to TTLs so keys do not expire simultaneously) and event-driven invalidation (publishing cache invalidation events when data changes) provides a robust, multi-layered expiration strategy that balances freshness, performance, and resilience.`,
 
     keyQuestions: [
       {
         question: 'What is the difference between soft TTL and hard TTL?',
-        answer: `**Hard TTL**: Entry is deleted after this time. Next request is a cache miss.
-**Soft TTL**: Entry is marked stale after this time. Next request triggers a background refresh but still returns the stale value.
+        answer: `Hard TTL: Entry is deleted after this time. Next request is a cache miss.
+Soft TTL: Entry is marked stale after this time. Next request triggers a background refresh but still returns the stale value.
 
-**Timeline for a cache entry** (soft_ttl=60s, hard_ttl=300s):
+Timeline for a cache entry (soft_ttl=60s, hard_ttl=300s):
 
 | Time | State | Behavior |
 |---|---|---|
@@ -416,14 +416,14 @@ In production systems, combining soft and hard TTLs with **jittered expiration**
 | t=62 | FRESH (refreshed) | Background refresh completes. Entry updated. New soft_ttl starts at t=122. |
 | t=300 | EVICTED | Hard TTL expires. Entry deleted. Next read is a true cache miss. |
 
-**Why both are needed**:
+Why both are needed:
 - Soft TTL alone is dangerous — if the background refresh keeps failing, you serve indefinitely stale data
 - Hard TTL alone causes stampedes and latency spikes at expiry time
 - Together, soft TTL ensures smooth refreshes while hard TTL bounds maximum staleness
 
-**HTTP equivalent (Cache-Control header)**: \`Cache-Control: max-age=60, stale-while-revalidate=240\` — \`max-age=60\` is the soft TTL, \`stale-while-revalidate=240\` is the additional grace period, hard TTL = 60 + 240 = 300s total.
+HTTP equivalent (Cache-Control header): \`Cache-Control: max-age=60, stale-while-revalidate=240\` — \`max-age=60\` is the soft TTL, \`stale-while-revalidate=240\` is the additional grace period, hard TTL = 60 + 240 = 300s total.
 
-**Implementation in Redis**:
+Implementation in Redis:
 Store two timestamps alongside the value — a soft_expiry and let Redis handle the hard TTL:
 \`\`\`
   SET key value EX 300   # Hard TTL: Redis evicts at 300s
@@ -432,9 +432,9 @@ Store two timestamps alongside the value — a soft_expiry and let Redis handle 
       },
       {
         question: 'How does stale-while-revalidate work in practice?',
-        answer: `**Stale-while-revalidate** (SWR) is the HTTP-standard implementation of soft TTL, widely used by CDNs (Cloudflare, Fastly, CloudFront) and client-side libraries (SWR, React Query).
+        answer: `Stale-while-revalidate (SWR) is the HTTP-standard implementation of soft TTL, widely used by CDNs (Cloudflare, Fastly, CloudFront) and client-side libraries (SWR, React Query).
 
-**Request flow with SWR**:
+Request flow with SWR:
 
 | Client | Time | Cache state | Behavior | Latency |
 |---|---|---|---|---|
@@ -443,9 +443,9 @@ Store two timestamps alongside the value — a soft_expiry and let Redis handle 
 | Client 3 | t=72 | Fresh (just refreshed) | CDN HIT → return immediately | ~5ms |
 | Client 4 | t=400 | Past hard TTL | CDN MISS → fetch from origin → return | ~200ms |
 
-**Key insight**: With SWR, no user ever sees cache-miss latency during the revalidation window. The "cost" of refreshing is paid asynchronously.
+Key insight: With SWR, no user ever sees cache-miss latency during the revalidation window. The "cost" of refreshing is paid asynchronously.
 
-**Server-side implementation pattern**:
+Server-side implementation pattern:
 \`\`\`
   function get_with_swr(key):
     entry = cache.get(key)
@@ -461,20 +461,20 @@ Store two timestamps alongside the value — a soft_expiry and let Redis handle 
     return entry.value     # Always fast
 \`\`\`
 
-**Production tips**:
+Production tips:
 - Log revalidation failures separately — they are invisible to users but indicate origin issues
 - Set a minimum revalidation interval (e.g., 5s) to prevent a flood of background refreshes
 - Use a lock or singleflight for the background refresh to avoid multiple concurrent revalidations`
       },
       {
         question: 'Why is TTL jittering important and how do you implement it?',
-        answer: `**Problem**: If many cache entries share the same TTL and were cached at the same time, they all expire simultaneously — causing a **cache avalanche**.
+        answer: `Problem: If many cache entries share the same TTL and were cached at the same time, they all expire simultaneously — causing a cache avalanche.
 
-**Without jitter (cache avalanche)** — At t=0 you cache 1000 product entries all with TTL=3600s. At t=3600 all 1000 entries expire simultaneously → 1000 concurrent DB queries → database overloaded → cascading failure.
+Without jitter (cache avalanche) — At t=0 you cache 1000 product entries all with TTL=3600s. At t=3600 all 1000 entries expire simultaneously → 1000 concurrent DB queries → database overloaded → cascading failure.
 
-**With jitter** — At t=0 you cache 1000 entries with TTL = 3600 + random(-300, +300) (range 3300-3900s). First entries start expiring around t=3300, middle around t=3600, last around t=3900. Spread over ~600 seconds = ~1.7 queries/sec — the database handles it easily.
+With jitter — At t=0 you cache 1000 entries with TTL = 3600 + random(-300, +300) (range 3300-3900s). First entries start expiring around t=3300, middle around t=3600, last around t=3900. Spread over ~600 seconds = ~1.7 queries/sec — the database handles it easily.
 
-**Implementation patterns**:
+Implementation patterns:
 
 \`\`\`
 Pattern 1: Additive jitter
@@ -491,7 +491,7 @@ Pattern 3: Slab-based jitter (for bulk inserts)
   # Deterministic spread across time slots
 \`\`\`
 
-**Guidelines**:
+Guidelines:
 | Data type | Base TTL | Jitter range | Rationale |
 |-----------|----------|--------------|-----------|
 | User session | 1800s | +/- 180s (10%) | Moderate traffic, low risk |
@@ -499,15 +499,15 @@ Pattern 3: Slab-based jitter (for bulk inserts)
 | Config/feature flags | 86400s | +/- 3600s (4%) | Low churn, large jitter unnecessary |
 | API rate limit counters | 60s | 0 (no jitter) | Must be precise |
 
-**Rule of thumb**: 10-20% jitter is sufficient for most workloads. The goal is to spread expirations over a window longer than the recomputation time multiplied by the number of keys.`
+Rule of thumb: 10-20% jitter is sufficient for most workloads. The goal is to spread expirations over a window longer than the recomputation time multiplied by the number of keys.`
       },
       {
         question: 'When should you use event-driven invalidation vs TTL-based expiration?',
-        answer: `**Two fundamental approaches to cache freshness**:
+        answer: `Two fundamental approaches to cache freshness:
 
-**TTL-based expiration**: Writer → DB update → (nothing happens to cache). Reader → Cache → stale for up to TTL seconds. Freshness guarantee: eventually consistent within TTL.
+TTL-based expiration: Writer → DB update → (nothing happens to cache). Reader → Cache → stale for up to TTL seconds. Freshness guarantee: eventually consistent within TTL.
 
-**Event-driven invalidation**: Writer → DB update → publish invalidation event → cache node 1 DEL key, cache node 2 DEL key. Reader → Cache → MISS → DB (fresh data). Freshness guarantee: near-real-time (seconds).
+Event-driven invalidation: Writer → DB update → publish invalidation event → cache node 1 DEL key, cache node 2 DEL key. Reader → Cache → MISS → DB (fresh data). Freshness guarantee: near-real-time (seconds).
 
 | Criteria | TTL-based | Event-driven |
 |----------|-----------|-------------|
@@ -517,19 +517,19 @@ Pattern 3: Slab-based jitter (for bulk inserts)
 | Infrastructure | Cache only | Cache + message bus (Kafka, Redis Pub/Sub) |
 | Best for | Read-heavy, tolerates staleness | Financial data, inventory, auth |
 
-**Hybrid approach (recommended for production)**:
-1. **Writer** updates the database and publishes an invalidation event on the bus.
-2. **Subscriber** receives the event and evicts the matching cache entry — this is the primary mechanism, giving near-real-time freshness.
-3. **Cache entry** also carries a TTL (e.g., 1 hour) as a safety net so that if the event is dropped or delayed, the entry can never serve stale data for longer than the TTL window.
+Hybrid approach (recommended for production):
+1. Writer updates the database and publishes an invalidation event on the bus.
+2. Subscriber receives the event and evicts the matching cache entry — this is the primary mechanism, giving near-real-time freshness.
+3. Cache entry also carries a TTL (e.g., 1 hour) as a safety net so that if the event is dropped or delayed, the entry can never serve stale data for longer than the TTL window.
 
 You get the best of both: normal case is near-real-time freshness via events, and the failure case is bounded staleness (≤ 1 hour) via the TTL backup.
 
-**When to choose each**:
-- **TTL only**: Blog posts, product descriptions, weather data, news feeds — staleness measured in minutes is acceptable
-- **Event-driven**: Shopping cart inventory ("3 left in stock"), user permissions, payment status, feature flags
-- **Hybrid**: Most production systems — events for speed, TTL as a safety net
+When to choose each:
+- TTL only: Blog posts, product descriptions, weather data, news feeds — staleness measured in minutes is acceptable
+- Event-driven: Shopping cart inventory ("3 left in stock"), user permissions, payment status, feature flags
+- Hybrid: Most production systems — events for speed, TTL as a safety net
 
-**Event delivery reliability**:
+Event delivery reliability:
 - Redis Pub/Sub: at-most-once (fire and forget) — use with TTL backup
 - Kafka / SQS: at-least-once — may invalidate twice (harmless) but never misses
 - Change Data Capture (Debezium): captures DB WAL changes and publishes as events — guaranteed not to miss any write`
@@ -589,22 +589,22 @@ HTTP Cache-Control Mapping (\`max-age=60, stale-while-revalidate=240\`):
       'In interviews, argue for stateless architecture first, then explain when sticky sessions are a pragmatic compromise',
     ],
 
-    introduction: `**Sticky sessions** (also called session affinity) is a load balancing strategy where all requests from a particular client are routed to the same backend server for the duration of a session. This is typically implemented by the load balancer setting a cookie (e.g., AWS ALB's AWSALB cookie) or by hashing the client's IP address to select a consistent backend. The primary motivation is to support applications that store session state in memory on the server — such as shopping carts, authentication tokens, or WebSocket connections — where routing to a different server would lose that state.
+    introduction: `Sticky sessions (also called session affinity) is a load balancing strategy where all requests from a particular client are routed to the same backend server for the duration of a session. This is typically implemented by the load balancer setting a cookie (e.g., AWS ALB's AWSALB cookie) or by hashing the client's IP address to select a consistent backend. The primary motivation is to support applications that store session state in memory on the server — such as shopping carts, authentication tokens, or WebSocket connections — where routing to a different server would lose that state.
 
-While sticky sessions solve the immediate problem of in-memory state, they introduce significant operational trade-offs. **Uneven load distribution** is the most common issue: if one user generates 100x more traffic than average, the server they are pinned to becomes a bottleneck while other servers sit idle. **Fault tolerance** is another concern: if the pinned server crashes, the user's session is lost and they must re-authenticate or lose their shopping cart.
+While sticky sessions solve the immediate problem of in-memory state, they introduce significant operational trade-offs. Uneven load distribution is the most common issue: if one user generates 100x more traffic than average, the server they are pinned to becomes a bottleneck while other servers sit idle. Fault tolerance is another concern: if the pinned server crashes, the user's session is lost and they must re-authenticate or lose their shopping cart.
 
-The modern architectural preference is **stateless servers with externalized session storage** (Redis, Memcached, or a database). This allows any server to handle any request, enabling true horizontal scaling, seamless rolling deployments, and automatic failover. However, sticky sessions remain a pragmatic choice in legacy systems, WebSocket-heavy applications, and scenarios where the cost of externalizing state outweighs the operational overhead of affinity routing.`,
+The modern architectural preference is stateless servers with externalized session storage (Redis, Memcached, or a database). This allows any server to handle any request, enabling true horizontal scaling, seamless rolling deployments, and automatic failover. However, sticky sessions remain a pragmatic choice in legacy systems, WebSocket-heavy applications, and scenarios where the cost of externalizing state outweighs the operational overhead of affinity routing.`,
 
     keyQuestions: [
       {
         question: 'What are the different mechanisms for implementing sticky sessions?',
-        answer: `**Three common mechanisms**, each with distinct trade-offs:
+        answer: `Three common mechanisms, each with distinct trade-offs:
 
 ![Sticky session mechanisms](/diagrams/scalable/sticky-sessions.png)
 
-1. **Cookie-based affinity** (most common): the LB picks Server A on the first request and sets \`SERVERID=A\` in the response. Subsequent requests carry the cookie and are routed back to Server A.
-2. **IP hash-based affinity**: the LB computes \`hash(client_ip) % N\` and routes deterministically. Same IP always maps to the same server (breaks under NAT or mobile IP changes).
-3. **Header / URL-based affinity** (consistent hash): the LB hashes a request attribute (user ID, account ID) so a given entity always lands on the same server regardless of where it connects from.
+1. Cookie-based affinity (most common): the LB picks Server A on the first request and sets \`SERVERID=A\` in the response. Subsequent requests carry the cookie and are routed back to Server A.
+2. IP hash-based affinity: the LB computes \`hash(client_ip) % N\` and routes deterministically. Same IP always maps to the same server (breaks under NAT or mobile IP changes).
+3. Header / URL-based affinity (consistent hash): the LB hashes a request attribute (user ID, account ID) so a given entity always lands on the same server regardless of where it connects from.
 
 | Mechanism | Pros | Cons |
 |-----------|------|------|
@@ -612,16 +612,16 @@ The modern architectural preference is **stateless servers with externalized ses
 | IP hash | No cookie needed, works for any protocol | NAT breaks it (many users share IP), mobile IP changes |
 | Consistent hash | Even distribution, minimal disruption on scale | More complex, still has uneven load risk |
 
-**AWS ALB implementation**:
+AWS ALB implementation:
 - ALB generates a \`AWSALB\` cookie with an encrypted target group reference
 - Duration-based: cookie expires after configured TTL (1s to 7 days)
 - Application-based: app sets its own cookie, ALB respects it
 
-**Key detail for interviews**: Cookie-based affinity fails for the very first request (no cookie yet). The LB must use a fallback strategy (round-robin) for the initial request and set the affinity cookie in the response.`
+Key detail for interviews: Cookie-based affinity fails for the very first request (no cookie yet). The LB must use a fallback strategy (round-robin) for the initial request and set the affinity cookie in the response.`
       },
       {
         question: 'What are the operational problems with sticky sessions?',
-        answer: `**Five key operational problems**:
+        answer: `Five key operational problems:
 
 \`\`\`
 Problem 1: Uneven load distribution
@@ -644,20 +644,20 @@ Problem 5: Capacity planning
   One "whale" user can saturate a server regardless of fleet size
 \`\`\`
 
-**Mitigation strategies** (if sticky sessions are unavoidable):
-1. **Session replication**: Replicate session state across 2-3 servers (Tomcat clustering). Failover is seamless but replication adds latency and complexity.
-2. **Graceful drain timeout**: During deploys, stop assigning new sessions and wait up to N seconds for existing sessions to complete.
-3. **Monitoring**: Alert on per-server imbalance (max_load / avg_load > 2x). Consider rehashing if imbalance persists.`
+Mitigation strategies (if sticky sessions are unavoidable):
+1. Session replication: Replicate session state across 2-3 servers (Tomcat clustering). Failover is seamless but replication adds latency and complexity.
+2. Graceful drain timeout: During deploys, stop assigning new sessions and wait up to N seconds for existing sessions to complete.
+3. Monitoring: Alert on per-server imbalance (max_load / avg_load > 2x). Consider rehashing if imbalance persists.`
       },
       {
         question: 'How does externalizing session state eliminate the need for sticky sessions?',
-        answer: `**Architecture comparison**:
+        answer: `Architecture comparison:
 
-**Sticky sessions (in-memory state)** — Client → LB → Server A (with session in RAM); Servers B and C hold different sessions. Client MUST go to A.
+Sticky sessions (in-memory state) — Client → LB → Server A (with session in RAM); Servers B and C hold different sessions. Client MUST go to A.
 
-**Externalized state (stateless servers)** — Client → LB → any of Server A, B, or C → Redis (which holds all sessions). Client can go to ANY server.
+Externalized state (stateless servers) — Client → LB → any of Server A, B, or C → Redis (which holds all sessions). Client can go to ANY server.
 
-**Implementation**:
+Implementation:
 \`\`\`
   # Express.js with Redis sessions
   app.use(session({
@@ -671,7 +671,7 @@ Problem 5: Capacity planning
   # Client sends session cookie → any server loads from Redis
 \`\`\`
 
-**Benefits of externalized state**:
+Benefits of externalized state:
 | Aspect | Sticky | Externalized |
 |--------|--------|-------------|
 | Horizontal scaling | Limited (uneven load) | True (any server, any request) |
@@ -680,17 +680,17 @@ Problem 5: Capacity planning
 | Load distribution | Uneven | Perfectly even (round-robin) |
 | Latency | Fast (local RAM) | +1-2ms (Redis network hop) |
 
-**When sticky sessions are still appropriate**:
-1. **WebSockets**: Connection is inherently server-specific; externalized state does not help with an open TCP connection
-2. **In-memory compute state**: ML model loaded per-server, large working set that cannot be serialized to Redis efficiently
-3. **Legacy migration**: Gradual path — add sticky sessions first, externalize state later
-4. **Cost sensitivity**: Redis cluster adds infrastructure cost; sticky sessions are "free" at the LB`
+When sticky sessions are still appropriate:
+1. WebSockets: Connection is inherently server-specific; externalized state does not help with an open TCP connection
+2. In-memory compute state: ML model loaded per-server, large working set that cannot be serialized to Redis efficiently
+3. Legacy migration: Gradual path — add sticky sessions first, externalize state later
+4. Cost sensitivity: Redis cluster adds infrastructure cost; sticky sessions are "free" at the LB`
       },
       {
         question: 'How do you handle sticky sessions during a rolling deployment?',
-        answer: `**Challenge**: During a rolling deploy, you must replace server instances without disrupting users whose sessions are pinned to them.
+        answer: `Challenge: During a rolling deploy, you must replace server instances without disrupting users whose sessions are pinned to them.
 
-**Rolling deploy with graceful drain**:
+Rolling deploy with graceful drain:
 
 | Phase | Server A | Server B | Server C | Notes |
 |---|---|---|---|---|
@@ -699,7 +699,7 @@ Problem 5: Capacity planning
 | 3. Replace A | A' NEW VERSION (passes health check → ACTIVE) | ACTIVE | ACTIVE | |
 | 4. Repeat | — | DRAINING next | — | Then Server C |
 
-**AWS ALB deregistration**:
+AWS ALB deregistration:
 \`\`\`
   aws elbv2 deregister-targets \\
     --target-group-arn arn:aws:... \\
@@ -711,7 +711,7 @@ Problem 5: Capacity planning
   # - After delay, connections are forcibly closed
 \`\`\`
 
-**Kubernetes with sticky sessions**:
+Kubernetes with sticky sessions:
 \`\`\`yaml
   apiVersion: v1
   kind: Service
@@ -726,7 +726,7 @@ Problem 5: Capacity planning
 - During rolling update, Kubernetes respects \`maxUnavailable\` and \`maxSurge\`
 - Pods in Terminating state: no new sessions, existing connections drain for \`terminationGracePeriodSeconds\`
 
-**Best practice**: Set drain timeout to slightly longer than your average session duration. If sessions are long-lived (hours), consider forcing a session migration by invalidating the affinity cookie and redirecting to a new server with the session loaded from external store.`
+Best practice: Set drain timeout to slightly longer than your average session duration. If sessions are long-lived (hours), consider forcing a session migration by invalidating the affinity cookie and redirecting to a new server with the session loaded from external store.`
       },
     ],
 
@@ -784,48 +784,48 @@ Session State Externalization:
       'Combine GeoDNS for region selection with local load balancers (ALB/NLB) for instance-level distribution',
     ],
 
-    introduction: `**Global Server Load Balancing** (GSLB) is the practice of distributing user traffic across geographically distributed data centers to minimize latency, maximize availability, and provide disaster recovery. When a user in Tokyo makes a request, GSLB ensures they are routed to the nearest healthy data center (e.g., ap-northeast-1) rather than one in Virginia — reducing round-trip time from 200ms to 10ms.
+    introduction: `Global Server Load Balancing (GSLB) is the practice of distributing user traffic across geographically distributed data centers to minimize latency, maximize availability, and provide disaster recovery. When a user in Tokyo makes a request, GSLB ensures they are routed to the nearest healthy data center (e.g., ap-northeast-1) rather than one in Virginia — reducing round-trip time from 200ms to 10ms.
 
-The two primary mechanisms for GSLB are **GeoDNS** and **Anycast**. GeoDNS works at the DNS resolution layer: the authoritative DNS server inspects the source IP of the DNS resolver and returns the IP address of the nearest data center. **Anycast** works at the network layer: the same IP address is advertised via BGP from multiple locations, and the internet's routing infrastructure automatically directs packets to the nearest announcement. CDNs like Cloudflare and cloud providers like AWS (Route 53, CloudFront) use both techniques extensively.
+The two primary mechanisms for GSLB are GeoDNS and Anycast. GeoDNS works at the DNS resolution layer: the authoritative DNS server inspects the source IP of the DNS resolver and returns the IP address of the nearest data center. Anycast works at the network layer: the same IP address is advertised via BGP from multiple locations, and the internet's routing infrastructure automatically directs packets to the nearest announcement. CDNs like Cloudflare and cloud providers like AWS (Route 53, CloudFront) use both techniques extensively.
 
-Choosing between GeoDNS and anycast depends on the protocol and statefulness of the service. Anycast excels for **stateless, UDP-based services** like DNS resolvers and CDN edge nodes. GeoDNS is more appropriate for **stateful TCP services** like API backends, because anycast TCP connections can break during BGP route changes. In practice, most large-scale architectures use **GeoDNS for region selection** combined with **local load balancers** (ALB, NLB, or Envoy) for instance-level routing within each region.`,
+Choosing between GeoDNS and anycast depends on the protocol and statefulness of the service. Anycast excels for stateless, UDP-based services like DNS resolvers and CDN edge nodes. GeoDNS is more appropriate for stateful TCP services like API backends, because anycast TCP connections can break during BGP route changes. In practice, most large-scale architectures use GeoDNS for region selection combined with local load balancers (ALB, NLB, or Envoy) for instance-level routing within each region.`,
 
     keyQuestions: [
       {
         question: 'How does GeoDNS work and what are its limitations?',
-        answer: `**GeoDNS** returns different DNS answers based on the geographic location of the DNS resolver making the query.
+        answer: `GeoDNS returns different DNS answers based on the geographic location of the DNS resolver making the query.
 
-**GeoDNS resolution flow** — User in Tokyo asks local DNS resolver (103.x.x.x) → authoritative GeoDNS server does GeoIP lookup (103.x.x.x → Japan) → returns api.example.com → 13.x.x.x (Tokyo DC). User in London asks local resolver (81.x.x.x) → authoritative server GeoIP-looks up (81.x.x.x → UK) → returns api.example.com → 52.x.x.x (London DC).
+GeoDNS resolution flow — User in Tokyo asks local DNS resolver (103.x.x.x) → authoritative GeoDNS server does GeoIP lookup (103.x.x.x → Japan) → returns api.example.com → 13.x.x.x (Tokyo DC). User in London asks local resolver (81.x.x.x) → authoritative server GeoIP-looks up (81.x.x.x → UK) → returns api.example.com → 52.x.x.x (London DC).
 
 ![GeoDNS resolution flow](/diagrams/scalable/geodns-flow.png)
 
-**Limitations**:
+Limitations:
 
-1. **DNS resolver location != user location**:
+1. DNS resolver location != user location:
 1. User in Tokyo configures Google Public DNS (\`8.8.8.8\`) and issues a lookup.
 2. The query is forwarded to a Google resolver in California.
 3. The resolver hits your authoritative GeoDNS server, which sees a California source IP and returns the US-West DC.
 4. The Tokyo user is routed all the way across the Pacific to US-West — high latency, bad placement.
 
-**Fix:** *EDNS Client Subnet (ECS)* — the resolver forwards a prefix of the original client's IP (e.g. \`/24\`) to the authoritative server, so GeoDNS sees the Tokyo prefix and returns the AP-Northeast DC instead.
+Fix: *EDNS Client Subnet (ECS)* — the resolver forwards a prefix of the original client's IP (e.g. \`/24\`) to the authoritative server, so GeoDNS sees the Tokyo prefix and returns the AP-Northeast DC instead.
 
-2. **DNS caching delays failover**:
+2. DNS caching delays failover:
    - If TTL=300s and a DC goes down, clients using cached DNS continue routing to the dead DC for up to 300 seconds
    - Low TTL (30s) improves failover but increases DNS query volume by 10x
 
-3. **GeoIP database accuracy**: Databases like MaxMind are ~95% accurate at country level but only ~70% at city level
+3. GeoIP database accuracy: Databases like MaxMind are ~95% accurate at country level but only ~70% at city level
 
-4. **No real-time health awareness**: GeoDNS alone does not know if a DC is healthy. Must integrate health checks (Route 53 health checks, NS1 monitoring) to remove unhealthy DCs from DNS responses.`
+4. No real-time health awareness: GeoDNS alone does not know if a DC is healthy. Must integrate health checks (Route 53 health checks, NS1 monitoring) to remove unhealthy DCs from DNS responses.`
       },
       {
         question: 'What is anycast and when should you use it vs GeoDNS?',
-        answer: `**Anycast**: The same IP address is advertised from multiple locations via BGP. The network automatically routes packets to the "nearest" (in BGP terms) location.
+        answer: `Anycast: The same IP address is advertised from multiple locations via BGP. The network automatically routes packets to the "nearest" (in BGP terms) location.
 
-**Anycast routing** — Single IP 1.2.3.4 advertised from 3 locations. User A in New York reaches NYC PoP in 2 BGP hops. User B in London reaches London PoP in 1 hop. User C in Tokyo reaches Tokyo PoP in 3 hops. All three PoPs announce the same 1.2.3.4 IP via BGP; the network routes each user to the nearest PoP automatically.
+Anycast routing — Single IP 1.2.3.4 advertised from 3 locations. User A in New York reaches NYC PoP in 2 BGP hops. User B in London reaches London PoP in 1 hop. User C in Tokyo reaches Tokyo PoP in 3 hops. All three PoPs announce the same 1.2.3.4 IP via BGP; the network routes each user to the nearest PoP automatically.
 
 ![Anycast routing](/diagrams/scalable/anycast-routing.png)
 
-**Anycast vs GeoDNS**:
+Anycast vs GeoDNS:
 
 | Aspect | Anycast | GeoDNS |
 |--------|---------|--------|
@@ -837,13 +837,13 @@ Choosing between GeoDNS and anycast depends on the protocol and statefulness of 
 | DDoS resilience | Excellent (traffic absorbed at nearest PoP) | Good (still reaches specific IPs) |
 | Use cases | DNS resolvers, CDN, DDoS protection | API servers, databases, stateful services |
 
-**When to use anycast**:
+When to use anycast:
 - DNS resolvers (Cloudflare 1.1.1.1, Google 8.8.8.8)
 - CDN edge servers (static content)
 - DDoS mitigation (scrubbing at nearest PoP)
 - Any stateless, latency-sensitive service
 
-**When to use GeoDNS**:
+When to use GeoDNS:
 - API backends with TCP connections
 - WebSocket services
 - Databases and caches (connection pools)
@@ -851,9 +851,9 @@ Choosing between GeoDNS and anycast depends on the protocol and statefulness of 
       },
       {
         question: 'How does AWS Route 53 implement latency-based routing?',
-        answer: `**Route 53 latency-based routing** goes beyond simple geography — it measures actual network latency from AWS regions to DNS resolver locations and routes to the lowest-latency region.
+        answer: `Route 53 latency-based routing goes beyond simple geography — it measures actual network latency from AWS regions to DNS resolver locations and routes to the lowest-latency region.
 
-**Route 53 latency-based routing** — DNS query from a Singapore resolver. Route 53 looks up resolver-region → AWS-region latencies in its database:
+Route 53 latency-based routing — DNS query from a Singapore resolver. Route 53 looks up resolver-region → AWS-region latencies in its database:
 
 | AWS region | Latency from Singapore |
 |---|---|
@@ -875,7 +875,7 @@ If ap-southeast-1 is UNHEALTHY:
   Return IP of ap-northeast-1 (Tokyo) target
 \`\`\`
 
-**Configuration**:
+Configuration:
 \`\`\`
   Record 1: api.example.com → 13.x.x.x
     Routing: Latency
@@ -896,31 +896,31 @@ If ap-southeast-1 is UNHEALTHY:
     Set ID: "ireland"
 \`\`\`
 
-**Key behaviors**:
+Key behaviors:
 - Route 53 maintains a latency matrix updated continuously from AWS infrastructure
 - Health checks run every 10s or 30s from multiple Route 53 checker locations
 - If the lowest-latency target fails health checks, Route 53 returns the next-lowest
 - DNS TTL of 60s is typical — failover takes at most 60s + health check interval
 
-**Combining routing policies** (Route 53 supports nested records):
+Combining routing policies (Route 53 supports nested records):
 
 \`api.example.com\` is the apex name. Route 53 layers policies top-down:
 
-1. **Latency routing** picks the region.
-   - **us-east-1** → **Weighted routing** for canary: 90% to \`stable.us-east.example.com\`, 10% to \`canary.us-east.example.com\`.
-   - **eu-west-1** → **Failover routing**: primary is \`ireland-primary\`, secondary is \`ireland-dr\`.
-   - **ap-southeast-1** → **Simple routing** (single endpoint).
-2. **Health checks** run at every level — a record only resolves if its target is healthy.`
+1. Latency routing picks the region.
+   - us-east-1 → Weighted routing for canary: 90% to \`stable.us-east.example.com\`, 10% to \`canary.us-east.example.com\`.
+   - eu-west-1 → Failover routing: primary is \`ireland-primary\`, secondary is \`ireland-dr\`.
+   - ap-southeast-1 → Simple routing (single endpoint).
+2. Health checks run at every level — a record only resolves if its target is healthy.`
       },
       {
         question: 'Design a multi-region architecture for a global API using GSLB.',
-        answer: `**Scenario**: Global REST API serving users in Americas, Europe, and Asia-Pacific with 99.99% availability SLA.
+        answer: `Scenario: Global REST API serving users in Americas, Europe, and Asia-Pacific with 99.99% availability SLA.
 
-**Architecture overview** — Route 53 (GeoDNS + latency-based) sits at the GSLB layer. It routes to three regions: us-east-1 (Virginia), eu-west-1 (Ireland), ap-southeast-1 (Singapore). Each region runs CloudFront → ALB → ECS/EKS across 3 AZs → Aurora (Primary in us-east-1, Read replicas in others) → ElastiCache. All Aurora instances are connected through Aurora Global Database with cross-region replication under 1s lag.
+Architecture overview — Route 53 (GeoDNS + latency-based) sits at the GSLB layer. It routes to three regions: us-east-1 (Virginia), eu-west-1 (Ireland), ap-southeast-1 (Singapore). Each region runs CloudFront → ALB → ECS/EKS across 3 AZs → Aurora (Primary in us-east-1, Read replicas in others) → ElastiCache. All Aurora instances are connected through Aurora Global Database with cross-region replication under 1s lag.
 
 ![Multi-region GSLB architecture](/diagrams/scalable/gslb-multiregion.png)
 
-**Traffic flow**:
+Traffic flow:
 1. Client resolves api.example.com via Route 53
 2. Route 53 returns nearest healthy region IP (latency-based)
 3. CloudFront terminates TLS at edge (reduces handshake latency)
@@ -928,7 +928,7 @@ If ap-southeast-1 is UNHEALTHY:
 5. Read requests served from local Aurora read replica
 6. Write requests forwarded to primary region (us-east-1)
 
-**Failover strategy**:
+Failover strategy:
 \`\`\`
   Normal: us-east-1 (primary), eu-west-1 (read), ap-southeast-1 (read)
 
@@ -940,11 +940,11 @@ If ap-southeast-1 is UNHEALTHY:
   5. Total failover time: ~2-3 minutes (RPO <1s, RTO <3 min)
 \`\`\`
 
-**Key design decisions**:
-- **Active-active reads, active-passive writes**: Simplifies consistency (single writer)
-- **Aurora Global Database**: Sub-second replication lag, automated failover
-- **Per-region ElastiCache**: Session and query cache local to each region (not replicated — rebuilt on miss)
-- **CloudFront in front of ALB**: TLS termination at edge, DDoS protection, static asset caching`
+Key design decisions:
+- Active-active reads, active-passive writes: Simplifies consistency (single writer)
+- Aurora Global Database: Sub-second replication lag, automated failover
+- Per-region ElastiCache: Session and query cache local to each region (not replicated — rebuilt on miss)
+- CloudFront in front of ALB: TLS termination at edge, DDoS protection, static asset caching`
       },
     ],
 
@@ -1001,16 +1001,16 @@ DNS Record Structure:
       'GraphQL Relay specification standardizes cursor pagination with edges/nodes/pageInfo',
     ],
 
-    introduction: `**Pagination** is the practice of dividing a large result set into smaller pages, returning a manageable subset of records per API call. It is one of the most common API design decisions, and choosing the wrong strategy can have severe performance implications at scale. The three main approaches are **offset pagination** (OFFSET/LIMIT), **cursor pagination** (opaque encoded tokens), and **keyset pagination** (WHERE id > last_seen).
+    introduction: `Pagination is the practice of dividing a large result set into smaller pages, returning a manageable subset of records per API call. It is one of the most common API design decisions, and choosing the wrong strategy can have severe performance implications at scale. The three main approaches are offset pagination (OFFSET/LIMIT), cursor pagination (opaque encoded tokens), and keyset pagination (WHERE id > last_seen).
 
-**Offset pagination** (e.g., \`?page=5&size=20\`) is the simplest to implement and understand: the database skips \`offset\` rows and returns the next \`size\` rows. However, it has a critical flaw — the database must scan and discard all skipped rows, making deep pages (page 10,000+) extremely slow. Additionally, if new records are inserted while a user is paginating, they may see duplicates or miss records.
+Offset pagination (e.g., \`?page=5&size=20\`) is the simplest to implement and understand: the database skips \`offset\` rows and returns the next \`size\` rows. However, it has a critical flaw — the database must scan and discard all skipped rows, making deep pages (page 10,000+) extremely slow. Additionally, if new records are inserted while a user is paginating, they may see duplicates or miss records.
 
-**Cursor pagination** (e.g., \`?after=eyJpZCI6NDJ9&size=20\`) uses an opaque token that encodes the position in the result set (typically the last item's sort key). The server decodes the cursor and uses it to query the next page directly (e.g., \`WHERE id > 42 ORDER BY id LIMIT 20\`), which is O(1) regardless of page depth. This is the approach used by **Twitter's API**, **GitHub's GraphQL API**, **Slack**, and **Stripe** — and it is the recommended approach for any dataset that may grow beyond a few thousand records.`,
+Cursor pagination (e.g., \`?after=eyJpZCI6NDJ9&size=20\`) uses an opaque token that encodes the position in the result set (typically the last item's sort key). The server decodes the cursor and uses it to query the next page directly (e.g., \`WHERE id > 42 ORDER BY id LIMIT 20\`), which is O(1) regardless of page depth. This is the approach used by Twitter's API, GitHub's GraphQL API, Slack, and Stripe — and it is the recommended approach for any dataset that may grow beyond a few thousand records.`,
 
     keyQuestions: [
       {
         question: 'What is the performance difference between offset and cursor pagination?',
-        answer: `**Offset pagination** performance degrades linearly with page depth because the database must scan all skipped rows:
+        answer: `Offset pagination performance degrades linearly with page depth because the database must scan all skipped rows:
 
 \`\`\`
 Offset pagination: SELECT * FROM posts ORDER BY id LIMIT 20 OFFSET 10000;
@@ -1027,7 +1027,7 @@ Cursor pagination: SELECT * FROM posts WHERE id > 10000 ORDER BY id LIMIT 20;
     Time: O(limit) → O(20) = constant, regardless of depth
 \`\`\`
 
-**Benchmark comparison (1M row table)**:
+Benchmark comparison (1M row table):
 
 | Page depth | Offset (ms) | Cursor (ms) |
 |---|---|---|
@@ -1038,18 +1038,18 @@ Cursor pagination: SELECT * FROM posts WHERE id > 10000 ORDER BY id LIMIT 20;
 | Page 50,000 | 900 | 2 |
 | Page 100,000 | 1,800 | 2 |
 
-**Why offset is O(n)**:
+Why offset is O(n):
 - Even with an index, most databases cannot "jump" to an offset — they must traverse the index entries sequentially
 - PostgreSQL's OFFSET literally counts and discards rows
 - MySQL has the same behavior with LIMIT offset, count
 
-**Additional problem — the shifting window**: User reads Page 1: [A, B, C, D, E]. A new item X is inserted at position 3. With offset pagination, Page 2: [E, F, G, H, I] — user sees E twice. With cursor pagination (after=E), Page 2: [F, G, H, I, J] — correct, no duplicates.
+Additional problem — the shifting window: User reads Page 1: [A, B, C, D, E]. A new item X is inserted at position 3. With offset pagination, Page 2: [E, F, G, H, I] — user sees E twice. With cursor pagination (after=E), Page 2: [F, G, H, I, J] — correct, no duplicates.
 
-**When offset is acceptable**: Small datasets (<10K rows), admin dashboards, or when "jump to page N" is a hard requirement.`
+When offset is acceptable: Small datasets (<10K rows), admin dashboards, or when "jump to page N" is a hard requirement.`
       },
       {
         question: 'How do you implement cursor pagination for complex sort orders?',
-        answer: `**Challenge**: Cursor pagination is straightforward for single-column sorts (WHERE id > :cursor), but complex when sorting by non-unique columns (e.g., ORDER BY created_at, id).
+        answer: `Challenge: Cursor pagination is straightforward for single-column sorts (WHERE id > :cursor), but complex when sorting by non-unique columns (e.g., ORDER BY created_at, id).
 
 \`\`\`
 Simple cursor (single unique column):
@@ -1071,7 +1071,7 @@ Compound cursor (non-unique sort column):
   LIMIT 20
 \`\`\`
 
-**Cursor encoding**:
+Cursor encoding:
 \`\`\`
   // Encode cursor (server-side)
   function encodeCursor(lastItem) {
@@ -1090,7 +1090,7 @@ Compound cursor (non-unique sort column):
   }
 \`\`\`
 
-**API response format** (Relay-style):
+API response format (Relay-style):
 \`\`\`
   {
     "edges": [
@@ -1106,16 +1106,16 @@ Compound cursor (non-unique sort column):
   }
 \`\`\`
 
-**Index requirement**: The sort columns MUST have a composite index matching the ORDER BY clause. Without it, the database falls back to a sequential scan.
+Index requirement: The sort columns MUST have a composite index matching the ORDER BY clause. Without it, the database falls back to a sequential scan.
 \`\`\`
   CREATE INDEX idx_posts_cursor ON posts (created_at DESC, id DESC);
 \`\`\``
       },
       {
         question: 'How do you handle total count with cursor pagination?',
-        answer: `**Problem**: \`SELECT COUNT(*) FROM posts WHERE ...\` is expensive on large tables — it requires a full index scan in PostgreSQL (MVCC means no cached row count).
+        answer: `Problem: \`SELECT COUNT(*) FROM posts WHERE ...\` is expensive on large tables — it requires a full index scan in PostgreSQL (MVCC means no cached row count).
 
-**Cost of exact COUNT(*)**:
+Cost of exact COUNT(*):
 
 | Table size | COUNT(*) time | Page query time |
 |---|---|---|
@@ -1124,7 +1124,7 @@ Compound cursor (non-unique sort column):
 | 100M rows | 8,000ms | 2ms |
 | 1B rows | 80,000ms | 2ms |
 
-**Strategies to avoid expensive counts**:
+Strategies to avoid expensive counts:
 
 \`\`\`
 Strategy 1: No total count (recommended)
@@ -1156,7 +1156,7 @@ Strategy 4: Count with cap
   -- UI: "Showing page 1 of 10,000+ results"
 \`\`\`
 
-**Recommendation by use case**:
+Recommendation by use case:
 | Use case | Strategy | Rationale |
 |----------|----------|-----------|
 | Social feed | No count | Infinite scroll, count is meaningless |
@@ -1164,11 +1164,11 @@ Strategy 4: Count with cap
 | Admin dashboard | Cached count | Admin expects exact numbers, cache is acceptable |
 | Export / download | Exact count (async) | Need progress bar, compute in background job |
 
-**API design tip**: Make total count an opt-in parameter (\`?include_count=true\`) so the default fast path does not pay the cost.`
+API design tip: Make total count an opt-in parameter (\`?include_count=true\`) so the default fast path does not pay the cost.`
       },
       {
         question: 'Compare offset, cursor, and keyset pagination for API design.',
-        answer: `**Side-by-side comparison**:
+        answer: `Side-by-side comparison:
 
 \`\`\`
 Offset:    GET /posts?page=5&size=20
@@ -1182,7 +1182,7 @@ Keyset:    GET /posts?last_id=80&size=20
            (same SQL as cursor, but cursor is opaque, keyset is explicit)
 \`\`\`
 
-**Comparison matrix**:
+Comparison matrix:
 
 | Feature | Offset | Cursor | Keyset |
 |---------|--------|--------|--------|
@@ -1195,24 +1195,24 @@ Keyset:    GET /posts?last_id=80&size=20
 | Cacheability | Yes (page=5 is stable) | No (cursor changes) | Limited |
 | Total count needed? | Typically yes | No | No |
 
-**Decision flowchart**:
+Decision flowchart:
 
 1. Is the dataset small (<10K rows)?
-   - **Yes** → Offset is fine.
-   - **No** → continue.
+   - Yes → Offset is fine.
+   - No → continue.
 2. Does the UI need "jump to page N"?
-   - **Yes** → Offset with a count cap (accept the perf hit).
-   - **No** → continue.
+   - Yes → Offset with a count cap (accept the perf hit).
+   - No → continue.
 3. Is the sort column unique and indexed?
-   - **Yes** → **Keyset** (simpler implementation).
-   - **No** → **Cursor** (handles compound sorts).
+   - Yes → Keyset (simpler implementation).
+   - No → Cursor (handles compound sorts).
 
-**Industry examples**:
-- **Stripe**: Cursor (\`starting_after=ch_xxx\`) — financial data, must be consistent
-- **GitHub GraphQL**: Cursor (Relay spec) — edges, nodes, pageInfo
-- **GitHub REST**: Offset + Link header — legacy, simpler
-- **Slack**: Cursor (\`cursor=dGVhbTpDMDYx\`) — real-time data, no page jumping
-- **Elasticsearch**: Scroll API (cursor) for deep pagination, from/size (offset) for shallow`
+Industry examples:
+- Stripe: Cursor (\`starting_after=ch_xxx\`) — financial data, must be consistent
+- GitHub GraphQL: Cursor (Relay spec) — edges, nodes, pageInfo
+- GitHub REST: Offset + Link header — legacy, simpler
+- Slack: Cursor (\`cursor=dGVhbTpDMDYx\`) — real-time data, no page jumping
+- Elasticsearch: Scroll API (cursor) for deep pagination, from/size (offset) for shallow`
       },
     ],
 
@@ -1275,18 +1275,18 @@ Required Indexes:
       'In interviews, always connect idempotency to real-world scenarios: double-charging a credit card, duplicate order placement',
     ],
 
-    introduction: `**Idempotency** is the property of an operation where performing it multiple times produces the same result as performing it once. In distributed systems, network failures, timeouts, and retries are inevitable — a client that does not receive a response cannot know whether the server processed the request or not. Without idempotency, retrying a payment request could charge a customer twice; retrying an order submission could create duplicate orders.
+    introduction: `Idempotency is the property of an operation where performing it multiple times produces the same result as performing it once. In distributed systems, network failures, timeouts, and retries are inevitable — a client that does not receive a response cannot know whether the server processed the request or not. Without idempotency, retrying a payment request could charge a customer twice; retrying an order submission could create duplicate orders.
 
-The standard implementation uses an **idempotency key**: the client generates a unique identifier (typically a UUID) and includes it with every request. The server stores the key alongside the result of the first execution. On subsequent requests with the same key, the server returns the stored result without re-executing the operation. This transforms any non-idempotent operation (like creating a charge) into an idempotent one.
+The standard implementation uses an idempotency key: the client generates a unique identifier (typically a UUID) and includes it with every request. The server stores the key alongside the result of the first execution. On subsequent requests with the same key, the server returns the stored result without re-executing the operation. This transforms any non-idempotent operation (like creating a charge) into an idempotent one.
 
-**Stripe's idempotency implementation** is the industry reference: clients send an \`Idempotency-Key\` header with POST requests. The server stores the key, request parameters, and response for 24 hours. If a retry arrives with the same key, Stripe returns the original response. If the parameters differ (same key, different amount), Stripe returns an error — preventing misuse of idempotency keys. This pattern is now standard in payment processing, order management, and any system where **exactly-once semantics** are critical for correctness.`,
+Stripe's idempotency implementation is the industry reference: clients send an \`Idempotency-Key\` header with POST requests. The server stores the key, request parameters, and response for 24 hours. If a retry arrives with the same key, Stripe returns the original response. If the parameters differ (same key, different amount), Stripe returns an error — preventing misuse of idempotency keys. This pattern is now standard in payment processing, order management, and any system where exactly-once semantics are critical for correctness.`,
 
     keyQuestions: [
       {
         question: 'How do you implement an idempotency layer for a payment API?',
-        answer: `**Architecture**: Client generates a UUID idempotency key. Server checks a deduplication store before processing.
+        answer: `Architecture: Client generates a UUID idempotency key. Server checks a deduplication store before processing.
 
-**Idempotent payment flow** — Client sends \`POST /charges\` with \`Idempotency-Key: 550e8400-...\` header and JSON body. Server flow:
+Idempotent payment flow — Client sends \`POST /charges\` with \`Idempotency-Key: 550e8400-...\` header and JSON body. Server flow:
 
 1. BEGIN TRANSACTION
 2. \`SELECT * FROM idempotency_keys WHERE key = '550e8400...' FOR UPDATE\`
@@ -1295,7 +1295,7 @@ The standard implementation uses an **idempotency key**: the client generates a 
 5. If key EXISTS and status=processing: return 409 Conflict (client should wait/poll)
 6. COMMIT and return response to client.
 
-**Idempotency key table**:
+Idempotency key table:
 \`\`\`
   CREATE TABLE idempotency_keys (
     key           UUID PRIMARY KEY,
@@ -1312,15 +1312,15 @@ The standard implementation uses an **idempotency key**: the client generates a 
   CREATE INDEX idx_idempotency_expires ON idempotency_keys (expires_at);
 \`\`\`
 
-**Critical edge cases**:
-1. **Same key, different params**: Return 422 error (prevent key reuse for different operations)
-2. **Request still processing**: Return 409 Conflict with Retry-After header
-3. **Server crash during processing**: Background job detects stale "processing" records and retries or rolls back
-4. **Key expiration**: Cron job deletes keys older than 24 hours`
+Critical edge cases:
+1. Same key, different params: Return 422 error (prevent key reuse for different operations)
+2. Request still processing: Return 409 Conflict with Retry-After header
+3. Server crash during processing: Background job detects stale "processing" records and retries or rolls back
+4. Key expiration: Cron job deletes keys older than 24 hours`
       },
       {
         question: 'Which HTTP methods are naturally idempotent and why?',
-        answer: `**HTTP method idempotency** (per RFC 7231):
+        answer: `HTTP method idempotency (per RFC 7231):
 
 | Method | Idempotent | Safe | Explanation |
 |---|---|---|---|
@@ -1332,7 +1332,7 @@ The standard implementation uses an **idempotency key**: the client generates a 
 | POST | No | No | Creates new resource each time |
 | PATCH | No* | No | Depends on implementation |
 
-**Why PUT is idempotent but POST is not**:
+Why PUT is idempotent but POST is not:
 \`\`\`
   PUT /users/42  { name: "Alice", age: 30 }
   Result: User 42 is now { name: "Alice", age: 30 }
@@ -1345,7 +1345,7 @@ The standard implementation uses an **idempotency key**: the client generates a 
   → Not idempotent ✗
 \`\`\`
 
-**PATCH can be idempotent or not**:
+PATCH can be idempotent or not:
 \`\`\`
   Idempotent PATCH (absolute update):
     PATCH /users/42  { age: 30 }
@@ -1357,7 +1357,7 @@ The standard implementation uses an **idempotency key**: the client generates a 
     Repeat: age becomes 32 ✗
 \`\`\`
 
-**DELETE edge case**:
+DELETE edge case:
 \`\`\`
   DELETE /users/42
   First:  200 OK (user deleted)
@@ -1368,14 +1368,14 @@ The standard implementation uses an **idempotency key**: the client generates a 
   Idempotency is about state, not response codes.
 \`\`\`
 
-**Design implications**:
+Design implications:
 - Safe methods (GET, HEAD, OPTIONS): Can be cached, retried freely
 - Idempotent methods (PUT, DELETE): Safe to retry on timeout
 - Non-idempotent methods (POST): MUST use idempotency keys for retry safety`
       },
       {
         question: 'How does Stripe implement idempotency and what can we learn from it?',
-        answer: `**Stripe's idempotency design** is widely considered the gold standard:
+        answer: `Stripe's idempotency design is widely considered the gold standard:
 
 \`\`\`
 Client sends:
@@ -1401,7 +1401,7 @@ Stripe server behavior:
     → Return 409: "Request is already being processed"
 \`\`\`
 
-**Stripe's key design decisions**:
+Stripe's key design decisions:
 
 | Decision | Rationale |
 |----------|-----------|
@@ -1411,7 +1411,7 @@ Stripe server behavior:
 | POST only | GET/PUT/DELETE are already idempotent |
 | Key stored with user scope | Keys are unique per API key, not globally |
 
-**Stripe's recommended retry strategy**:
+Stripe's recommended retry strategy:
 \`\`\`
   function chargeWithRetry(params) {
     const idempotencyKey = uuid();  // Generate ONCE
@@ -1432,7 +1432,7 @@ Stripe server behavior:
   }
 \`\`\`
 
-**Lessons for your own implementation**:
+Lessons for your own implementation:
 1. Make the idempotency key a client responsibility — the server should not generate it
 2. Store the complete response, not just a success/failure flag
 3. Compare request parameters to prevent key misuse
@@ -1441,13 +1441,13 @@ Stripe server behavior:
       },
       {
         question: 'How do you handle idempotency across distributed microservices?',
-        answer: `**Challenge**: A single user action (e.g., "place order") triggers multiple services — each must be individually idempotent.
+        answer: `Challenge: A single user action (e.g., "place order") triggers multiple services — each must be individually idempotent.
 
 ![Idempotency keys propagated across microservices](/diagrams/scalable/idempotency-microservices.png)
 
 The client supplies a single \`Idempotency-Key: req_abc123\` to the API Gateway. The Order Service derives a deterministic per-service key (\`order_abc123\`) and uses its own dedup table; it then propagates further-derived keys to Payment (\`pay_abc123\`, forwarded to Stripe's \`Idempotency-Key\`), Inventory (\`inv_abc123\`), and Notification (\`notif_abc123\`). Each service deduplicates independently, but a retry of the original client call regenerates the same chain of keys.
 
-**Key propagation pattern**:
+Key propagation pattern:
 \`\`\`
   // API Gateway receives client idempotency key
   clientKey = "req_abc123"
@@ -1462,28 +1462,28 @@ The client supplies a single \`Idempotency-Key: req_abc123\` to the API Gateway.
   // Each service deduplicates independently
 \`\`\`
 
-**Saga pattern with idempotent steps**:
+Saga pattern with idempotent steps:
 
-1. **Create Order** (idempotent via \`order_key\`)
+1. Create Order (idempotent via \`order_key\`)
    - Success → continue to step 2.
    - Already exists → skip to step 2.
-2. **Reserve Inventory** (idempotent via \`inventory_key\`)
+2. Reserve Inventory (idempotent via \`inventory_key\`)
    - Success → continue to step 3.
    - Already reserved → skip to step 3.
    - Failed → compensate: Cancel Order.
-3. **Charge Payment** (idempotent via \`payment_key\`)
+3. Charge Payment (idempotent via \`payment_key\`)
    - Success → continue to step 4.
    - Already charged → skip to step 4.
    - Failed → compensate: Release Inventory, Cancel Order.
-4. **Send Confirmation** (idempotent via \`notif_key\`)
+4. Send Confirmation (idempotent via \`notif_key\`)
    - Success → done.
    - Already sent → done.
 
-**Critical design rules**:
-1. **Derive downstream keys from upstream key**: Ensures deterministic deduplication across retries
-2. **Each service owns its own idempotency store**: No shared dedup table across services
-3. **Compensating actions must also be idempotent**: Refund with the same key should not refund twice
-4. **Log the idempotency key chain**: For debugging, trace which derived keys were used in each service`
+Critical design rules:
+1. Derive downstream keys from upstream key: Ensures deterministic deduplication across retries
+2. Each service owns its own idempotency store: No shared dedup table across services
+3. Compensating actions must also be idempotent: Refund with the same key should not refund twice
+4. Log the idempotency key chain: For debugging, trace which derived keys were used in each service`
       },
     ],
 
@@ -1539,16 +1539,16 @@ Idempotency Key Lifecycle:
       'Know the difference between lock-based isolation (MySQL) and MVCC-based isolation (PostgreSQL)',
     ],
 
-    introduction: `**SQL isolation levels** define how concurrent transactions interact with each other — specifically, what data changes made by one transaction are visible to another concurrent transaction. The SQL standard defines four isolation levels, each preventing an increasing set of anomalies at the cost of reduced concurrency. Understanding these trade-offs is essential for designing correct, performant database applications.
+    introduction: `SQL isolation levels define how concurrent transactions interact with each other — specifically, what data changes made by one transaction are visible to another concurrent transaction. The SQL standard defines four isolation levels, each preventing an increasing set of anomalies at the cost of reduced concurrency. Understanding these trade-offs is essential for designing correct, performant database applications.
 
-The four standard levels are: **Read Uncommitted** (lowest, allows dirty reads), **Read Committed** (prevents dirty reads, PostgreSQL default), **Repeatable Read** (prevents non-repeatable reads, MySQL default), and **Serializable** (highest, prevents all anomalies). In practice, most databases implement these differently from the SQL standard — PostgreSQL uses **Multi-Version Concurrency Control** (MVCC) with snapshot isolation for Repeatable Read, and **Serializable Snapshot Isolation** (SSI) for Serializable. MySQL InnoDB uses a combination of MVCC and gap locks.
+The four standard levels are: Read Uncommitted (lowest, allows dirty reads), Read Committed (prevents dirty reads, PostgreSQL default), Repeatable Read (prevents non-repeatable reads, MySQL default), and Serializable (highest, prevents all anomalies). In practice, most databases implement these differently from the SQL standard — PostgreSQL uses Multi-Version Concurrency Control (MVCC) with snapshot isolation for Repeatable Read, and Serializable Snapshot Isolation (SSI) for Serializable. MySQL InnoDB uses a combination of MVCC and gap locks.
 
-The critical interview insight is that stronger isolation is not always better. **Serializable** prevents all anomalies but can reduce throughput due to increased aborts (in SSI) or blocking (in 2PL). Most production applications use **Read Committed** and handle edge cases with explicit locking (\`SELECT ... FOR UPDATE\`) or application-level invariant checks. The art is choosing the weakest isolation level that still guarantees correctness for your specific use case.`,
+The critical interview insight is that stronger isolation is not always better. Serializable prevents all anomalies but can reduce throughput due to increased aborts (in SSI) or blocking (in 2PL). Most production applications use Read Committed and handle edge cases with explicit locking (\`SELECT ... FOR UPDATE\`) or application-level invariant checks. The art is choosing the weakest isolation level that still guarantees correctness for your specific use case.`,
 
     keyQuestions: [
       {
         question: 'What anomalies does each isolation level prevent?',
-        answer: `**Three classic anomalies** that isolation levels address:
+        answer: `Three classic anomalies that isolation levels address:
 
 \`\`\`
 1. Dirty Read: Reading uncommitted data from another transaction
@@ -1567,7 +1567,7 @@ The critical interview insight is that stronger isolation is not always better. 
    Tx1: SELECT * FROM orders WHERE status = 'pending';  → 6 rows (new row!)
 \`\`\`
 
-**Anomaly prevention matrix**:
+Anomaly prevention matrix:
 
 | Isolation Level | Dirty Read | Non-Repeatable Read | Phantom | Write Skew |
 |---|---|---|---|---|
@@ -1578,7 +1578,7 @@ The critical interview insight is that stronger isolation is not always better. 
 
 \\* PostgreSQL's Repeatable Read (snapshot isolation) prevents phantoms but allows write skew. MySQL's Repeatable Read uses gap locks to prevent some phantoms but behavior differs from PostgreSQL.
 
-**Write skew** (the most subtle anomaly):
+Write skew (the most subtle anomaly):
 \`\`\`
   Rule: At least one doctor must be on call at all times.
   Currently: Alice=on_call, Bob=on_call
@@ -1595,9 +1595,9 @@ The critical interview insight is that stronger isolation is not always better. 
       },
       {
         question: 'How does PostgreSQL implement isolation levels with MVCC?',
-        answer: `**PostgreSQL uses MVCC** (Multi-Version Concurrency Control) for all isolation levels — readers never block writers and writers never block readers.
+        answer: `PostgreSQL uses MVCC (Multi-Version Concurrency Control) for all isolation levels — readers never block writers and writers never block readers.
 
-**MVCC basics** — each row has hidden system columns. UPDATE creates a new row version; the old version remains until VACUUM removes it.
+MVCC basics — each row has hidden system columns. UPDATE creates a new row version; the old version remains until VACUUM removes it.
 
 | xmin | xmax | data | meaning |
 |---|---|---|---|
@@ -1605,7 +1605,7 @@ The critical interview insight is that stronger isolation is not always better. 
 | 100 | 105 | Alice, 30 | Deleted by tx 105 |
 | 105 | 0 | Alice, 31 | New version by 105 |
 
-**Read Committed (PostgreSQL default)**:
+Read Committed (PostgreSQL default):
 \`\`\`
   Each STATEMENT sees a fresh snapshot
   Tx1: BEGIN;
@@ -1615,7 +1615,7 @@ The critical interview insight is that stronger isolation is not always better. 
   (Non-repeatable read is allowed)
 \`\`\`
 
-**Repeatable Read (Snapshot Isolation)**:
+Repeatable Read (Snapshot Isolation):
 \`\`\`
   Transaction sees ONE snapshot taken at first statement
   Tx1: BEGIN ISOLATION LEVEL REPEATABLE READ;
@@ -1627,7 +1627,7 @@ The critical interview insight is that stronger isolation is not always better. 
        → Tx1 must retry
 \`\`\`
 
-**Serializable (SSI — Serializable Snapshot Isolation)**:
+Serializable (SSI — Serializable Snapshot Isolation):
 \`\`\`
   Same as Repeatable Read PLUS detection of serialization anomalies
   Uses "predicate locks" (SIReadLock) to track read dependencies:
@@ -1642,11 +1642,11 @@ The critical interview insight is that stronger isolation is not always better. 
        (SSI detected rw-dependency cycle between Tx1 and Tx2)
 \`\`\`
 
-**Key PostgreSQL behavior**: SSI is optimistic — transactions run without blocking, and the system aborts one transaction only when it detects an actual cycle. This provides much higher throughput than traditional 2PL serializable implementations.`
+Key PostgreSQL behavior: SSI is optimistic — transactions run without blocking, and the system aborts one transaction only when it detects an actual cycle. This provides much higher throughput than traditional 2PL serializable implementations.`
       },
       {
         question: 'How does MySQL InnoDB isolation differ from PostgreSQL?',
-        answer: `**MySQL InnoDB** uses MVCC + locking (a hybrid approach), while PostgreSQL is pure MVCC. The differences matter in practice.
+        answer: `MySQL InnoDB uses MVCC + locking (a hybrid approach), while PostgreSQL is pure MVCC. The differences matter in practice.
 
 \`\`\`
 Default isolation levels:
@@ -1675,7 +1675,7 @@ Key behavioral differences:
    PostgreSQL identical for RR
 \`\`\`
 
-**Comparison table**:
+Comparison table:
 
 | Behavior | PostgreSQL (RR) | MySQL InnoDB (RR) |
 |----------|----------------|-------------------|
@@ -1686,7 +1686,7 @@ Key behavioral differences:
 | Performance under contention | More aborts, less blocking | More blocking, fewer aborts |
 | Write skew prevention | Not prevented (need Serializable) | Not prevented |
 
-**MySQL's "Repeatable Read" is stronger than standard**:
+MySQL's "Repeatable Read" is stronger than standard:
 \`\`\`
   Standard SQL RR: Allows phantom reads
   MySQL InnoDB RR: Gap locks prevent MOST phantoms
@@ -1695,13 +1695,13 @@ Key behavioral differences:
                    (but allows write skew)
 \`\`\`
 
-**Practical advice**:
+Practical advice:
 - For PostgreSQL: Use Read Committed + explicit \`SELECT ... FOR UPDATE\` for critical sections. Use Serializable for complex invariants (doctor on-call example).
 - For MySQL: Repeatable Read is usually sufficient. Be aware of gap lock deadlocks under high write contention.`
       },
       {
         question: 'When should you use Serializable isolation and what is the performance cost?',
-        answer: `**Use Serializable when** your application has invariants that span multiple reads and writes, and application-level locking is too complex or error-prone.
+        answer: `Use Serializable when your application has invariants that span multiple reads and writes, and application-level locking is too complex or error-prone.
 
 \`\`\`
 Scenarios requiring Serializable:
@@ -1719,8 +1719,8 @@ Scenarios requiring Serializable:
    Financial ledgers where any anomaly is unacceptable
 \`\`\`
 
-**Performance cost (PostgreSQL SSI)**:
-**Throughput comparison (pgbench, 64 clients)**:
+Performance cost (PostgreSQL SSI):
+Throughput comparison (pgbench, 64 clients):
 
 | Isolation Level | TPS | Abort Rate | Avg Latency |
 |---|---|---|---|
@@ -1729,12 +1729,12 @@ Scenarios requiring Serializable:
 | Serializable (SSI) | 12,000 | 5-15% | 5ms |
 | Serializable (2PL) | 3,000 | 0% | 20ms (blocking) |
 
-**PostgreSQL SSI overhead**:
+PostgreSQL SSI overhead:
 - Memory: SIReadLocks consume ~270 bytes each. High-volume systems may need \`max_pred_locks_per_transaction\` tuning.
 - Aborts: 5-15% of transactions may be aborted under moderate contention. Application must handle retries.
 - Throughput: ~10-20% lower than Read Committed for conflict-free workloads (lock tracking overhead).
 
-**Retry pattern for SSI**:
+Retry pattern for SSI:
 \`\`\`
   async function withSerializableRetry(fn, maxRetries = 3) {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -1755,7 +1755,7 @@ Scenarios requiring Serializable:
   }
 \`\`\`
 
-**When NOT to use Serializable**:
+When NOT to use Serializable:
 - Read-heavy workloads (reports, dashboards) — Read Committed is fine
 - Simple CRUD without cross-row invariants
 - When \`SELECT ... FOR UPDATE\` solves the specific problem more efficiently
@@ -1818,18 +1818,18 @@ Lock Types (MySQL InnoDB):
       'The ARIES recovery algorithm (used by most databases) has three phases: Analysis, Redo, Undo',
     ],
 
-    introduction: `The **Write-Ahead Log** (WAL) is the most fundamental mechanism for ensuring database durability. The protocol is deceptively simple: before any change is applied to the actual data pages on disk, a record of that change must be written to a sequential, append-only log file and fsynced to durable storage. If the database process crashes after writing the WAL record but before updating the data pages, the system replays the log on startup and reconstructs a consistent state.
+    introduction: `The Write-Ahead Log (WAL) is the most fundamental mechanism for ensuring database durability. The protocol is deceptively simple: before any change is applied to the actual data pages on disk, a record of that change must be written to a sequential, append-only log file and fsynced to durable storage. If the database process crashes after writing the WAL record but before updating the data pages, the system replays the log on startup and reconstructs a consistent state.
 
-Every major relational database relies on WAL: **PostgreSQL**, **MySQL/InnoDB**, **SQLite**, **SQL Server**, and **Oracle**. Beyond relational databases, the pattern extends to LSM-tree engines (**RocksDB**, **LevelDB**, **Cassandra**), distributed consensus systems (**etcd Raft log**, **ZooKeeper ZAB**), and message brokers (**Kafka's commit log**). The WAL is, conceptually, the source of truth — the data files are merely a materialized view of the log.
+Every major relational database relies on WAL: PostgreSQL, MySQL/InnoDB, SQLite, SQL Server, and Oracle. Beyond relational databases, the pattern extends to LSM-tree engines (RocksDB, LevelDB, Cassandra), distributed consensus systems (etcd Raft log, ZooKeeper ZAB), and message brokers (Kafka's commit log). The WAL is, conceptually, the source of truth — the data files are merely a materialized view of the log.
 
-The performance characteristics of WAL are favorable because log writes are **sequential** (append-only), which is the fastest I/O pattern for both SSDs and HDDs. The main bottleneck is **fsync** — forcing the operating system to flush its page cache to physical storage. Modern databases use **group commit** to amortize the fsync cost across many transactions, achieving tens of thousands of commits per second while maintaining full durability.`,
+The performance characteristics of WAL are favorable because log writes are sequential (append-only), which is the fastest I/O pattern for both SSDs and HDDs. The main bottleneck is fsync — forcing the operating system to flush its page cache to physical storage. Modern databases use group commit to amortize the fsync cost across many transactions, achieving tens of thousands of commits per second while maintaining full durability.`,
 
     keyQuestions: [
       {
         question: 'How does the WAL protocol guarantee durability and atomicity?',
-        answer: `**WAL protocol guarantees**: If the WAL record for a transaction is fsynced to disk, the transaction is durable — even if the database crashes immediately after.
+        answer: `WAL protocol guarantees: If the WAL record for a transaction is fsynced to disk, the transaction is durable — even if the database crashes immediately after.
 
-**Write path with WAL**:
+Write path with WAL:
 
 | Step | Action | Notes |
 |---|---|---|
@@ -1840,7 +1840,7 @@ The performance characteristics of WAL are favorable because log writes are **se
 
 ![WAL write path](/diagrams/scalable/wal-write-path.png)
 
-**Crash scenarios**:
+Crash scenarios:
 \`\`\`
   Crash at step 1 (before fsync):
     WAL record not durable → transaction lost
@@ -1858,7 +1858,7 @@ The performance characteristics of WAL are favorable because log writes are **se
     Everything is durable → no recovery needed
 \`\`\`
 
-**Atomicity via WAL**:
+Atomicity via WAL:
 - Each transaction's WAL records are marked with BEGIN and COMMIT/ABORT
 - On recovery, only transactions with a COMMIT record are redone
 - Transactions without COMMIT are undone (rolled back)
@@ -1866,13 +1866,13 @@ The performance characteristics of WAL are favorable because log writes are **se
       },
       {
         question: 'What is group commit and how does it improve throughput?',
-        answer: `**Problem**: Fsync is slow (~1-10ms on SSD, ~10-20ms on HDD). If every transaction fsyncs individually, throughput is limited to 100-1000 TPS.
+        answer: `Problem: Fsync is slow (~1-10ms on SSD, ~10-20ms on HDD). If every transaction fsyncs individually, throughput is limited to 100-1000 TPS.
 
-**Without group commit (individual fsync)**: Tx1 → WAL write → fsync (2ms) → done. Tx2 → WAL write → fsync (2ms) → done. Tx3 → WAL write → fsync (2ms) → done. Throughput: ~500 TPS (1000ms / 2ms).
+Without group commit (individual fsync): Tx1 → WAL write → fsync (2ms) → done. Tx2 → WAL write → fsync (2ms) → done. Tx3 → WAL write → fsync (2ms) → done. Throughput: ~500 TPS (1000ms / 2ms).
 
-**With group commit (batched fsync)**: Tx1, Tx2, Tx3 all WAL-write, then a single fsync (2ms) commits all three together. Throughput: ~15,000+ TPS (many transactions per fsync).
+With group commit (batched fsync): Tx1, Tx2, Tx3 all WAL-write, then a single fsync (2ms) commits all three together. Throughput: ~15,000+ TPS (many transactions per fsync).
 
-**How it works in PostgreSQL**:
+How it works in PostgreSQL:
 \`\`\`
   1. Transaction writes WAL record to shared WAL buffer
   2. Transaction signals "ready to commit"
@@ -1892,7 +1892,7 @@ The performance characteristics of WAL are favorable because log writes are **se
     2.5ms   All transactions committed
 \`\`\`
 
-**PostgreSQL tuning**:
+PostgreSQL tuning:
 \`\`\`
   wal_writer_delay = 200ms     # How long leader waits for group
   commit_delay = 10us          # Additional delay to grow the group
@@ -1903,17 +1903,17 @@ The performance characteristics of WAL are favorable because log writes are **se
     commit_siblings = 10
 \`\`\`
 
-**Trade-off**: Group commit adds slight latency to individual transactions (they wait for the group) but dramatically improves overall throughput. With 100 concurrent transactions, one fsync serves all 100 — a 100x improvement in fsync efficiency.`
+Trade-off: Group commit adds slight latency to individual transactions (they wait for the group) but dramatically improves overall throughput. With 100 concurrent transactions, one fsync serves all 100 — a 100x improvement in fsync efficiency.`
       },
       {
         question: 'How does WAL-based replication work in PostgreSQL?',
-        answer: `**PostgreSQL streaming replication**: The leader ships its WAL stream to replicas, which replay it to maintain identical copies.
+        answer: `PostgreSQL streaming replication: The leader ships its WAL stream to replicas, which replay it to maintain identical copies.
 
-**Architecture** — Leader receives client writes, writes WAL, then ships the WAL stream continuously to Replica 1 and Replica 2 (both read-only). Each replica replays the WAL records in LSN order (LSN:100, LSN:101, LSN:102, LSN:103, ...) to keep its state identical to the leader.
+Architecture — Leader receives client writes, writes WAL, then ships the WAL stream continuously to Replica 1 and Replica 2 (both read-only). Each replica replays the WAL records in LSN order (LSN:100, LSN:101, LSN:102, LSN:103, ...) to keep its state identical to the leader.
 
 ![WAL streaming replication](/diagrams/scalable/wal-replication.png)
 
-**Synchronous vs Asynchronous replication**:
+Synchronous vs Asynchronous replication:
 \`\`\`
   Asynchronous (default):
     Leader: WAL write → fsync → ACK client → ship to replica (async)
@@ -1931,7 +1931,7 @@ The performance characteristics of WAL are favorable because log writes are **se
     synchronous_commit = on                 # Wait for sync replica
 \`\`\`
 
-**Replication lag monitoring**:
+Replication lag monitoring:
 \`\`\`
   On leader:
     SELECT client_addr, state,
@@ -1945,7 +1945,7 @@ The performance characteristics of WAL are favorable because log writes are **se
     -- 10.0.1.3    | streaming | 0        | 524288
 \`\`\`
 
-**Failover process**:
+Failover process:
 1. Leader becomes unavailable (health check fails)
 2. Replica with least replay lag is promoted: \`pg_promote()\`
 3. Promoted replica starts accepting writes
@@ -1955,9 +1955,9 @@ The performance characteristics of WAL are favorable because log writes are **se
       },
       {
         question: 'What is the ARIES crash recovery algorithm?',
-        answer: `**ARIES** (Algorithm for Recovery and Isolation Exploiting Semantics) is the standard crash recovery algorithm used by most modern databases (PostgreSQL, MySQL, SQL Server, DB2).
+        answer: `ARIES (Algorithm for Recovery and Isolation Exploiting Semantics) is the standard crash recovery algorithm used by most modern databases (PostgreSQL, MySQL, SQL Server, DB2).
 
-**ARIES has three phases**. The WAL on disk after a crash looks like \`[Checkpoint][E1][E2][E3][E4][E5][E6][E7][CRASH]\`. Recovery proceeds:
+ARIES has three phases. The WAL on disk after a crash looks like \`[Checkpoint][E1][E2][E3][E4][E5][E6][E7][CRASH]\`. Recovery proceeds:
 
 | Phase | Name | What it does |
 |---|---|---|
@@ -1965,7 +1965,7 @@ The performance characteristics of WAL are favorable because log writes are **se
 | 2 | REDO (repeat history) | Replay ALL WAL records from checkpoint forward, even for aborted transactions. Brings data pages to their exact state at crash. |
 | 3 | UNDO (rollback incomplete transactions) | For each transaction in the undo list, walk backward through its WAL records, apply UNDO (compensating) actions, write a CLR (Compensation Log Record) to WAL. Data pages now reflect only committed transactions. |
 
-**Why redo EVERYTHING, even aborted transactions?**
+Why redo EVERYTHING, even aborted transactions?
 \`\`\`
   Scenario:
     Tx1: UPDATE balance=50 (committed, but page not flushed)
@@ -1981,7 +1981,7 @@ The performance characteristics of WAL are favorable because log writes are **se
   redo only committed transactions.
 \`\`\`
 
-**Compensation Log Records (CLR)**:
+Compensation Log Records (CLR):
 \`\`\`
   During UNDO:
     Tx2's WAL:  [SET name='Bob' (old='Alice')]
@@ -1993,7 +1993,7 @@ The performance characteristics of WAL are favorable because log writes are **se
     Prevents infinite undo loops
 \`\`\`
 
-**Performance insight**: ARIES recovery time is proportional to the amount of WAL since the last checkpoint — not the database size. This is why frequent checkpointing (every 5-15 minutes) is important for fast recovery.`
+Performance insight: ARIES recovery time is proportional to the amount of WAL since the last checkpoint — not the database size. This is why frequent checkpointing (every 5-15 minutes) is important for fast recovery.`
       },
     ],
 
@@ -2054,24 +2054,24 @@ ARIES Recovery Phases:
       'Snapshot isolation (MVCC-based) prevents dirty reads, non-repeatable reads, and phantoms but allows write skew',
     ],
 
-    introduction: `**Multi-Version Concurrency Control** (MVCC) is the concurrency mechanism used by virtually all modern relational databases — PostgreSQL, MySQL InnoDB, Oracle, SQL Server (snapshot isolation mode), and CockroachDB. The core principle is that instead of locking rows to prevent concurrent access, the database maintains **multiple versions** of each row. Readers see a consistent snapshot of the database at a specific point in time, while writers create new versions without disturbing existing ones.
+    introduction: `Multi-Version Concurrency Control (MVCC) is the concurrency mechanism used by virtually all modern relational databases — PostgreSQL, MySQL InnoDB, Oracle, SQL Server (snapshot isolation mode), and CockroachDB. The core principle is that instead of locking rows to prevent concurrent access, the database maintains multiple versions of each row. Readers see a consistent snapshot of the database at a specific point in time, while writers create new versions without disturbing existing ones.
 
-The revolutionary property of MVCC is that **readers never block writers and writers never block readers**. A long-running analytical query can read a consistent snapshot while concurrent transactions insert, update, and delete rows — the query sees the versions that existed at the time it started, and the new versions are invisible to it. This is a dramatic improvement over lock-based concurrency, where a write lock on a row would block all readers until the transaction commits.
+The revolutionary property of MVCC is that readers never block writers and writers never block readers. A long-running analytical query can read a consistent snapshot while concurrent transactions insert, update, and delete rows — the query sees the versions that existed at the time it started, and the new versions are invisible to it. This is a dramatic improvement over lock-based concurrency, where a write lock on a row would block all readers until the transaction commits.
 
-However, MVCC is not without costs. Old versions must be **garbage collected** (VACUUM in PostgreSQL, purge thread in MySQL) — and if this process falls behind, the database accumulates **bloat** (wasted space from dead tuples). Long-running transactions exacerbate this because they prevent the garbage collector from removing versions that might still be visible to the transaction's snapshot. Understanding MVCC internals is essential for diagnosing performance problems like table bloat, VACUUM lag, and transaction ID wraparound.`,
+However, MVCC is not without costs. Old versions must be garbage collected (VACUUM in PostgreSQL, purge thread in MySQL) — and if this process falls behind, the database accumulates bloat (wasted space from dead tuples). Long-running transactions exacerbate this because they prevent the garbage collector from removing versions that might still be visible to the transaction's snapshot. Understanding MVCC internals is essential for diagnosing performance problems like table bloat, VACUUM lag, and transaction ID wraparound.`,
 
     keyQuestions: [
       {
         question: 'How does PostgreSQL implement MVCC with xmin/xmax?',
-        answer: `**PostgreSQL MVCC** stores all row versions in the main heap table, using hidden system columns to determine visibility.
+        answer: `PostgreSQL MVCC stores all row versions in the main heap table, using hidden system columns to determine visibility.
 
-**Every row (tuple) has hidden columns**. \`xmin\` is the transaction ID that created this version; \`xmax\` is the transaction ID that deleted/updated this version (0 = alive).
+Every row (tuple) has hidden columns. \`xmin\` is the transaction ID that created this version; \`xmax\` is the transaction ID that deleted/updated this version (0 = alive).
 
 | xmin | xmax | data | meaning |
 |---|---|---|---|
 | 100 | 0 | Alice, 30 | Created by Tx 100, alive |
 
-**UPDATE creates two tuples** — \`Tx 105: UPDATE users SET age=31 WHERE name='Alice';\`
+UPDATE creates two tuples — \`Tx 105: UPDATE users SET age=31 WHERE name='Alice';\`
 
 Before:
 
@@ -2086,7 +2086,7 @@ After:
 | 100 | 105 | Alice, 30 | dead (marked by Tx 105) |
 | 105 | 0 | Alice, 31 | new live version |
 
-**Visibility check** (simplified):
+Visibility check (simplified):
 \`\`\`
   Is tuple visible to transaction T (snapshot_xid = 103)?
 
@@ -2102,7 +2102,7 @@ After:
   Result: T sees Alice with age=30 (the version before Tx 105)
 \`\`\`
 
-**Snapshot data structure** (pg_snapshot):
+Snapshot data structure (pg_snapshot):
 \`\`\`
   xmin:       100  (oldest active transaction)
   xmax:       106  (first unassigned transaction ID)
@@ -2117,9 +2117,9 @@ After:
       },
       {
         question: 'How does MySQL InnoDB MVCC differ from PostgreSQL?',
-        answer: `**MySQL InnoDB** stores only the latest version in the main table page and keeps old versions in the **undo log** (rollback segment).
+        answer: `MySQL InnoDB stores only the latest version in the main table page and keeps old versions in the undo log (rollback segment).
 
-**PostgreSQL approach (versions in heap)** — the heap page holds every version side-by-side:
+PostgreSQL approach (versions in heap) — the heap page holds every version side-by-side:
 
 | xmin | xmax | data | state |
 |---|---|---|---|
@@ -2129,9 +2129,9 @@ After:
 
 Old versions live alongside current ones → bloat.
 
-**MySQL InnoDB approach (latest in page, old in undo)** — the clustered index page holds only the latest version (PK=1 → Alice, 31; PK=2 → Bob, 25). Each row carries a \`roll_ptr\` pointing into the undo log (rollback segment), which holds the previous version (PK=1 → Alice, 30) and chains backward through more \`roll_ptr\` links to older versions. Snapshot reads walk the undo chain to find the version visible to their snapshot.
+MySQL InnoDB approach (latest in page, old in undo) — the clustered index page holds only the latest version (PK=1 → Alice, 31; PK=2 → Bob, 25). Each row carries a \`roll_ptr\` pointing into the undo log (rollback segment), which holds the previous version (PK=1 → Alice, 30) and chains backward through more \`roll_ptr\` links to older versions. Snapshot reads walk the undo chain to find the version visible to their snapshot.
 
-**Key differences**:
+Key differences:
 
 | Aspect | PostgreSQL | MySQL InnoDB |
 |--------|-----------|-------------|
@@ -2143,7 +2143,7 @@ Old versions live alongside current ones → bloat.
 | Index impact | Dead tuples in indexes too | Only live tuples in secondary indexes |
 | HOT updates | Yes (Heap-Only Tuple) if no indexed col changes | N/A (in-place) |
 
-**Why this matters**:
+Why this matters:
 \`\`\`
   Long-running transaction impact:
 
@@ -2160,14 +2160,14 @@ Old versions live alongside current ones → bloat.
     Fix: Kill long transaction, undo space reclaimed automatically
 \`\`\`
 
-**PostgreSQL advantage**: Simpler architecture, no undo log management
-**MySQL advantage**: Table stays compact, less index bloat`
+PostgreSQL advantage: Simpler architecture, no undo log management
+MySQL advantage: Table stays compact, less index bloat`
       },
       {
         question: 'What causes table bloat in PostgreSQL and how do you fix it?',
-        answer: `**Table bloat** occurs when dead tuples (old MVCC versions) accumulate faster than VACUUM can clean them up.
+        answer: `Table bloat occurs when dead tuples (old MVCC versions) accumulate faster than VACUUM can clean them up.
 
-**Bloat lifecycle**:
+Bloat lifecycle:
 
 | Scenario | Stage | Size | Live tuples | Dead tuples |
 |---|---|---|---|---|
@@ -2178,13 +2178,13 @@ Old versions live alongside current ones → bloat.
 | Bloat | Continuous UPDATEs | 30GB | 1M | 5M |
 | Bloat | After VACUUM | 28GB | 1M | 4M (only some removed) |
 
-**Common causes**:
-1. **Long-running transactions**: Prevent VACUUM from removing versions visible to that transaction
-2. **Aggressive UPDATE patterns**: Frequent updates to the same rows create many dead versions
-3. **VACUUM throttling**: autovacuum too slow (default settings too conservative for high-write tables)
-4. **Disabled autovacuum**: Some teams disable it (bad idea!) for "performance"
+Common causes:
+1. Long-running transactions: Prevent VACUUM from removing versions visible to that transaction
+2. Aggressive UPDATE patterns: Frequent updates to the same rows create many dead versions
+3. VACUUM throttling: autovacuum too slow (default settings too conservative for high-write tables)
+4. Disabled autovacuum: Some teams disable it (bad idea!) for "performance"
 
-**Monitoring bloat**:
+Monitoring bloat:
 \`\`\`
   -- Estimated bloat ratio
   SELECT relname, n_live_tup, n_dead_tup,
@@ -2199,7 +2199,7 @@ Old versions live alongside current ones → bloat.
   -- If heap_size >> expected (rows * avg_row_size), bloat is present
 \`\`\`
 
-**Fixing bloat**:
+Fixing bloat:
 \`\`\`
   Option 1: Tune autovacuum (prevent future bloat)
     ALTER TABLE orders SET (
@@ -2219,9 +2219,9 @@ Old versions live alongside current ones → bloat.
       },
       {
         question: 'How does MVCC interact with indexes in PostgreSQL?',
-        answer: `**PostgreSQL indexes point to heap tuples** (including dead ones). This creates unique challenges for MVCC.
+        answer: `PostgreSQL indexes point to heap tuples (including dead ones). This creates unique challenges for MVCC.
 
-**Index to heap relationship** — A B-tree index on \`name\` looks like:
+Index to heap relationship — A B-tree index on \`name\` looks like:
 
 | Index entry | Points to | Heap row | State |
 |---|---|---|---|
@@ -2231,7 +2231,7 @@ Old versions live alongside current ones → bloat.
 
 Problem: the index has TWO entries for "Alice" — one dead, one live. An index scan must visit the heap to check visibility (MVCC check).
 
-**Visibility map optimization**:
+Visibility map optimization:
 \`\`\`
   Visibility Map: bitmap, 1 bit per heap page
     0 = page has dead tuples (must check visibility)
@@ -2246,7 +2246,7 @@ Problem: the index has TWO entries for "Alice" — one dead, one live. An index 
   This is why regular VACUUM is critical for index-only scan performance
 \`\`\`
 
-**HOT updates (Heap-Only Tuples)**:
+HOT updates (Heap-Only Tuples):
 \`\`\`
   Normal UPDATE (indexed column changes):
     1. Create new heap tuple
@@ -2269,7 +2269,7 @@ Problem: the index has TWO entries for "Alice" — one dead, one live. An index 
     -- Target: >90% HOT updates for frequently updated tables
 \`\`\`
 
-**Index bloat mitigation**:
+Index bloat mitigation:
 - Regular VACUUM removes dead heap tuples and cleans index entries pointing to them
 - REINDEX rebuilds indexes without dead entries (online in PostgreSQL 12+)
 - Design indexes carefully — fewer indexes = less MVCC overhead per UPDATE
@@ -2330,24 +2330,24 @@ Visibility Check Algorithm (PostgreSQL):
       'For financial systems, at-least-once delivery with deduplication at the consumer is the practical standard',
     ],
 
-    introduction: `**Delivery semantics** describe the guarantees a messaging system provides about whether and how many times a message will be delivered to a consumer. The three levels are **at-most-once** (message may be lost but never duplicated), **at-least-once** (message is never lost but may be duplicated), and **exactly-once** (message is delivered precisely once). This is one of the most frequently discussed topics in distributed systems design because the choice fundamentally affects system correctness, complexity, and performance.
+    introduction: `Delivery semantics describe the guarantees a messaging system provides about whether and how many times a message will be delivered to a consumer. The three levels are at-most-once (message may be lost but never duplicated), at-least-once (message is never lost but may be duplicated), and exactly-once (message is delivered precisely once). This is one of the most frequently discussed topics in distributed systems design because the choice fundamentally affects system correctness, complexity, and performance.
 
-The uncomfortable truth is that **exactly-once delivery is theoretically impossible** in a distributed system with unreliable networks (a consequence of the Two Generals Problem). What systems like Kafka actually provide is **effectively exactly-once** through a combination of idempotent producers, transactional writes, and consumer-side deduplication. The message may technically be delivered more than once at the network level, but the system ensures it is processed exactly once at the application level.
+The uncomfortable truth is that exactly-once delivery is theoretically impossible in a distributed system with unreliable networks (a consequence of the Two Generals Problem). What systems like Kafka actually provide is effectively exactly-once through a combination of idempotent producers, transactional writes, and consumer-side deduplication. The message may technically be delivered more than once at the network level, but the system ensures it is processed exactly once at the application level.
 
-In practice, most production systems use **at-least-once delivery** (the message is retried until acknowledged) combined with **idempotent consumers** (processing a message twice produces the same result as processing it once). This combination provides strong guarantees without the complexity and performance overhead of distributed transactions. The critical design decision is where to place the deduplication logic — in the broker (Kafka exactly-once), in the consumer (idempotency keys), or in the database (unique constraints).`,
+In practice, most production systems use at-least-once delivery (the message is retried until acknowledged) combined with idempotent consumers (processing a message twice produces the same result as processing it once). This combination provides strong guarantees without the complexity and performance overhead of distributed transactions. The critical design decision is where to place the deduplication logic — in the broker (Kafka exactly-once), in the consumer (idempotency keys), or in the database (unique constraints).`,
 
     keyQuestions: [
       {
         question: 'What are the three delivery semantics and when do you use each?',
-        answer: `**Three delivery guarantees**:
+        answer: `Three delivery guarantees:
 
 ![Delivery semantics — at-most / at-least / exactly once](/diagrams/scalable/delivery-semantics.png)
 
-- **At-most-once** — producer sends without waiting for ACK; broker may or may not deliver; consumer may miss the message. Never duplicated, possibly lost.
-- **At-least-once** — producer retries until the broker ACKs; consumer ACKs after processing. If the consumer's ACK is lost, the broker redelivers and the consumer processes again. Never lost, possibly duplicated.
-- **Exactly-once (effectively)** — idempotent producer with sequence numbers, transactional broker writes with deduplication, and an idempotent consumer. Coordinated across all three components — the network may still redeliver, but the system processes each message exactly once.
+- At-most-once — producer sends without waiting for ACK; broker may or may not deliver; consumer may miss the message. Never duplicated, possibly lost.
+- At-least-once — producer retries until the broker ACKs; consumer ACKs after processing. If the consumer's ACK is lost, the broker redelivers and the consumer processes again. Never lost, possibly duplicated.
+- Exactly-once (effectively) — idempotent producer with sequence numbers, transactional broker writes with deduplication, and an idempotent consumer. Coordinated across all three components — the network may still redeliver, but the system processes each message exactly once.
 
-**When to use each**:
+When to use each:
 
 | Semantic | Use case | Example |
 |----------|----------|---------|
@@ -2355,7 +2355,7 @@ In practice, most production systems use **at-least-once delivery** (the message
 | At-least-once | Most business events, notifications | Order events, email triggers, webhooks |
 | Exactly-once | Financial transactions, inventory | Payment processing, stock trades |
 
-**Cost comparison**:
+Cost comparison:
 \`\`\`
                  Complexity    Latency    Throughput
   At-most-once:    Low          Low        Highest
@@ -2363,13 +2363,13 @@ In practice, most production systems use **at-least-once delivery** (the message
   Exactly-once:    High         Higher     Lower
 \`\`\`
 
-**Key insight**: At-least-once with idempotent consumers is the sweet spot for most systems. It provides strong guarantees with manageable complexity. Reserve exactly-once for scenarios where duplication has financial or safety consequences.`
+Key insight: At-least-once with idempotent consumers is the sweet spot for most systems. It provides strong guarantees with manageable complexity. Reserve exactly-once for scenarios where duplication has financial or safety consequences.`
       },
       {
         question: 'How does Kafka achieve exactly-once semantics?',
-        answer: `**Kafka exactly-once** is built on three pillars: idempotent producer, transactional writes, and consumer isolation.
+        answer: `Kafka exactly-once is built on three pillars: idempotent producer, transactional writes, and consumer isolation.
 
-**Pillar 1 — Idempotent Producer.** Producer assigns a sequence number to each message; broker deduplicates based on \`(ProducerID, SequenceNumber)\`.
+Pillar 1 — Idempotent Producer. Producer assigns a sequence number to each message; broker deduplicates based on \`(ProducerID, SequenceNumber)\`.
 
 | Producer send | Broker action |
 |---|---|
@@ -2379,17 +2379,17 @@ In practice, most production systems use **at-least-once delivery** (the message
 
 Config: \`enable.idempotence=true\`.
 
-**Pillar 2 — Transactional Writes.** Multiple writes to different partitions/topics are atomic. Inside \`BEGIN TRANSACTION ... COMMIT TRANSACTION\`, the producer stages writes to \`orders-topic\` partition 0, \`inventory-topic\` partition 2, and the consumer offset update. All three become visible atomically on commit, or all are rolled back on failure.
+Pillar 2 — Transactional Writes. Multiple writes to different partitions/topics are atomic. Inside \`BEGIN TRANSACTION ... COMMIT TRANSACTION\`, the producer stages writes to \`orders-topic\` partition 0, \`inventory-topic\` partition 2, and the consumer offset update. All three become visible atomically on commit, or all are rolled back on failure.
 
 Config: \`transactional.id="order-processor-1"\`.
 
-**Pillar 3 — Consumer \`read_committed\`.** Consumer only sees messages from committed transactions. Messages from aborted transactions are skipped.
+Pillar 3 — Consumer \`read_committed\`. Consumer only sees messages from committed transactions. Messages from aborted transactions are skipped.
 
 Config: \`isolation.level=read_committed\`.
 
-**End-to-end flow**: idempotent Producer (assigns seq numbers, retries safely) → Kafka Broker (deduplicates & stores atomically) → Consumer with read_committed (only sees committed messages). Each hop preserves exactly-once semantics.
+End-to-end flow: idempotent Producer (assigns seq numbers, retries safely) → Kafka Broker (deduplicates & stores atomically) → Consumer with read_committed (only sees committed messages). Each hop preserves exactly-once semantics.
 
-**Consume-transform-produce pattern**:
+Consume-transform-produce pattern:
 \`\`\`
   consumer.beginTransaction();
   records = consumer.poll();
@@ -2405,17 +2405,17 @@ Config: \`isolation.level=read_committed\`.
   // If crash here → transaction aborted → consumer re-reads, no duplicates
 \`\`\`
 
-**Performance cost**: ~3-5% throughput reduction compared to at-least-once (extra round-trips for transaction coordination). For most use cases, this is acceptable.`
+Performance cost: ~3-5% throughput reduction compared to at-least-once (extra round-trips for transaction coordination). For most use cases, this is acceptable.`
       },
       {
         question: 'How do you implement at-least-once with idempotent consumers?',
-        answer: `**Pattern**: Producer retries on failure. Consumer uses deduplication to handle duplicates.
+        answer: `Pattern: Producer retries on failure. Consumer uses deduplication to handle duplicates.
 
-**Architecture** — Producer App retries on timeout → Message Queue (Kafka/SQS/RabbitMQ) → Consumer with built-in deduplication, which checks a Dedup Store (Redis/DB) before processing each message.
+Architecture — Producer App retries on timeout → Message Queue (Kafka/SQS/RabbitMQ) → Consumer with built-in deduplication, which checks a Dedup Store (Redis/DB) before processing each message.
 
 ![At-least-once with idempotent consumer](/diagrams/scalable/atleast-once-dedup.png)
 
-**Consumer deduplication strategies**:
+Consumer deduplication strategies:
 
 \`\`\`
 Strategy 1: Message ID deduplication (explicit)
@@ -2448,7 +2448,7 @@ Strategy 3: Conditional write (optimistic)
   -- Natural deduplication via version check
 \`\`\`
 
-**Dedup store considerations**:
+Dedup store considerations:
 
 | Store | Latency | Durability | TTL support | Use case |
 |-------|---------|-----------|-------------|----------|
@@ -2457,7 +2457,7 @@ Strategy 3: Conditional write (optimistic)
 | DynamoDB | 5-10ms | Strong | Native (TTL) | Serverless, auto-scaling |
 | In-memory | <0.1ms | None | Manual | Single-consumer, restart-safe with replay |
 
-**Critical edge case: consume-then-crash**:
+Critical edge case: consume-then-crash:
 \`\`\`
   1. Consumer reads message
   2. Consumer processes message (writes to DB)
@@ -2471,7 +2471,7 @@ Strategy 3: Conditional write (optimistic)
       },
       {
         question: 'What is the transactional outbox pattern and how does it ensure reliable messaging?',
-        answer: `**Problem**: Writing to a database and publishing to a message queue are two separate operations. If the app crashes between them, the system is inconsistent.
+        answer: `Problem: Writing to a database and publishing to a message queue are two separate operations. If the app crashes between them, the system is inconsistent.
 
 \`\`\`
 Unsafe pattern (dual write):
@@ -2487,7 +2487,7 @@ Unsafe pattern (dual write):
   → Inconsistency
 \`\`\`
 
-**Transactional outbox solution**:
+Transactional outbox solution:
 
 Step 1 — within a single database transaction: \`INSERT INTO orders (...)\`, then \`INSERT INTO outbox (topic='order-events', key='order:42', payload='{"event":"created",...}', status='pending')\`, then \`COMMIT\`. Both writes are atomic.
 
@@ -2497,7 +2497,7 @@ Alternative — CDC (Change Data Capture): instead of polling the outbox table, 
 
 ![Transactional outbox + CDC](/diagrams/scalable/transactional-outbox.png)
 
-**Outbox table schema**:
+Outbox table schema:
 \`\`\`
   CREATE TABLE outbox (
     id            BIGSERIAL PRIMARY KEY,
@@ -2514,7 +2514,7 @@ Alternative — CDC (Change Data Capture): instead of polling the outbox table, 
     WHERE status = 'pending';
 \`\`\`
 
-**Relay vs CDC trade-offs**:
+Relay vs CDC trade-offs:
 | Aspect | Polling relay | CDC (Debezium) |
 |--------|-------------|----------------|
 | Latency | 100ms-5s (poll interval) | ~100ms (real-time from WAL) |
@@ -2581,16 +2581,16 @@ Transactional Outbox Entry:
       'Error budget policies: if budget is exhausted, freeze feature releases and focus on reliability',
     ],
 
-    introduction: `**SLI** (Service Level Indicator), **SLO** (Service Level Objective), and **SLA** (Service Level Agreement) form a hierarchy for defining, measuring, and communicating service reliability. Originating from Google's **Site Reliability Engineering** (SRE) practice, these concepts provide a data-driven framework for making trade-offs between feature velocity and reliability investment.
+    introduction: `SLI (Service Level Indicator), SLO (Service Level Objective), and SLA (Service Level Agreement) form a hierarchy for defining, measuring, and communicating service reliability. Originating from Google's Site Reliability Engineering (SRE) practice, these concepts provide a data-driven framework for making trade-offs between feature velocity and reliability investment.
 
-An **SLI** is a quantitative measure of some aspect of service health — such as the proportion of requests that return successfully within 200ms. An **SLO** is the target value for that SLI — for example, "99.9% of requests must succeed within 200ms, measured over a 30-day rolling window." An **SLA** is a formal business contract that specifies consequences (usually financial penalties) if the service fails to meet certain SLOs. The relationship is: SLI measures reality, SLO sets the engineering target, and SLA sets the business commitment (typically less aggressive than the SLO to provide a buffer).
+An SLI is a quantitative measure of some aspect of service health — such as the proportion of requests that return successfully within 200ms. An SLO is the target value for that SLI — for example, "99.9% of requests must succeed within 200ms, measured over a 30-day rolling window." An SLA is a formal business contract that specifies consequences (usually financial penalties) if the service fails to meet certain SLOs. The relationship is: SLI measures reality, SLO sets the engineering target, and SLA sets the business commitment (typically less aggressive than the SLO to provide a buffer).
 
-The most powerful concept in this framework is the **error budget**: the difference between 100% and the SLO target. A 99.9% availability SLO means 0.1% of requests can fail — that is the error budget. When the budget is healthy, teams can ship features aggressively (accepting some risk). When the budget is nearly exhausted, teams shift focus to reliability work. This transforms the "reliability vs velocity" debate from a political argument into a data-driven decision.`,
+The most powerful concept in this framework is the error budget: the difference between 100% and the SLO target. A 99.9% availability SLO means 0.1% of requests can fail — that is the error budget. When the budget is healthy, teams can ship features aggressively (accepting some risk). When the budget is nearly exhausted, teams shift focus to reliability work. This transforms the "reliability vs velocity" debate from a political argument into a data-driven decision.`,
 
     keyQuestions: [
       {
         question: 'What is the relationship between SLI, SLO, and SLA?',
-        answer: `**Hierarchy**:
+        answer: `Hierarchy:
 \`\`\`
   SLI (Indicator)  →  What you MEASURE
   SLO (Objective)  →  What you TARGET
@@ -2610,7 +2610,7 @@ The most powerful concept in this framework is the **error budget**: the differe
     Status: Well within SLA (99.95% >> 99.5%)
 \`\`\`
 
-**Why SLO is stricter than SLA** — the SLO sits inside the SLA, leaving a buffer of headroom for engineering. Missing the SLO triggers an internal alert; missing the SLA triggers a refund.
+Why SLO is stricter than SLA — the SLO sits inside the SLA, leaving a buffer of headroom for engineering. Missing the SLO triggers an internal alert; missing the SLA triggers a refund.
 
 | Availability | Role | Owner | Trigger on miss |
 |---|---|---|---|
@@ -2618,9 +2618,9 @@ The most powerful concept in this framework is the **error budget**: the differe
 | 99.9% | SLO target | SRE + Dev | Internal alert, error-budget burn |
 | 99.95% | Current measured | — | Healthy (above SLO) |
 
-The buffer between SLA (99.5%) and SLO (99.9%) gives engineering early warning **before** an SLA breach — there is room to react, freeze deploys, and recover without paying out customer credits.
+The buffer between SLA (99.5%) and SLO (99.9%) gives engineering early warning before an SLA breach — there is room to react, freeze deploys, and recover without paying out customer credits.
 
-**Common SLI types for web services**:
+Common SLI types for web services:
 
 | SLI Category | What to measure | Example SLO |
 |-------------|----------------|-------------|
@@ -2633,7 +2633,7 @@ The buffer between SLA (99.5%) and SLO (99.9%) gives engineering early warning *
       },
       {
         question: 'How do error budgets work and how do they drive engineering decisions?',
-        answer: `**Error budget** = 1 - SLO target. It quantifies how much unreliability is acceptable.
+        answer: `Error budget = 1 - SLO target. It quantifies how much unreliability is acceptable.
 
 \`\`\`
 Error budget calculation:
@@ -2650,7 +2650,7 @@ Error budget calculation:
     0.1% × 25.92B = 25.92 million failed requests allowed
 \`\`\`
 
-**Error budget policy**:
+Error budget policy:
 \`\`\`
   Budget status:              Engineering response:
 | Budget remaining | State | Action |
@@ -2661,7 +2661,7 @@ Error budget calculation:
 | 0% (exhausted) | Full stop | All hands on reliability; no feature work until budget recovers |
 \`\`\`
 
-**Burn rate alerting** (Google SRE recommended):
+Burn rate alerting (Google SRE recommended):
 \`\`\`
   Normal burn rate: 1x (using budget evenly over 30 days)
   = 43.2 min / 30 days = 1.44 min/day allowed downtime
@@ -2678,7 +2678,7 @@ Error budget calculation:
 
 A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which is 2% of the monthly budget consumed in 1 hour — critical.
 
-**Why error budgets are powerful**:
+Why error budgets are powerful:
 - Transforms "should we ship this risky feature?" into a data question
 - Gives product teams and SRE a shared metric to negotiate on
 - Creates natural incentive: teams that cause outages consume their own budget
@@ -2686,9 +2686,9 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
       },
       {
         question: 'What are the four golden signals and how do you implement them?',
-        answer: `**The four golden signals** (from Google SRE) are the minimum monitoring for any service:
+        answer: `The four golden signals (from Google SRE) are the minimum monitoring for any service:
 
-**1. LATENCY — how long requests take.** Measure: request duration histogram. Alert: p99 > 500ms for 5 minutes.
+1. LATENCY — how long requests take. Measure: request duration histogram. Alert: p99 > 500ms for 5 minutes.
 
 | Percentile | Value |
 |---|---|
@@ -2697,7 +2697,7 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | p99 | 350ms (SLI threshold) |
 | p99.9 | 1.2s |
 
-**2. TRAFFIC — how much demand the service receives.** Measure: requests per second by endpoint. Alert: < 1,000 RPS (unexpected drop) or > 18,000 RPS (near capacity).
+2. TRAFFIC — how much demand the service receives. Measure: requests per second by endpoint. Alert: < 1,000 RPS (unexpected drop) or > 18,000 RPS (near capacity).
 
 | Metric | Value |
 |---|---|
@@ -2705,7 +2705,7 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | Peak | 15,000 RPS |
 | Capacity | 20,000 RPS |
 
-**3. ERRORS — rate of failed requests.** Measure: response codes, explicit errors. Alert: 5xx rate > 0.1% for 5 minutes.
+3. ERRORS — rate of failed requests. Measure: response codes, explicit errors. Alert: 5xx rate > 0.1% for 5 minutes.
 
 | Error type | Rate |
 |---|---|
@@ -2713,7 +2713,7 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | 4xx | 2.1% |
 | Timeout | 0.01% |
 
-**4. SATURATION — how full the service is.** Measure: resource utilization. Alert: CPU > 80% for 10 minutes, connections > 90%.
+4. SATURATION — how full the service is. Measure: resource utilization. Alert: CPU > 80% for 10 minutes, connections > 90%.
 
 | Resource | Utilization |
 |---|---|
@@ -2722,7 +2722,7 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | Disk | 45% |
 | Connections | 850/1000 |
 
-**Implementation with Prometheus + Grafana**:
+Implementation with Prometheus + Grafana:
 \`\`\`
   # Latency histogram
   http_request_duration_seconds_bucket{
@@ -2743,17 +2743,17 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
   process_cpu_seconds_total / machine_cpu_cores
 \`\`\`
 
-**Key insight for interviews**: Measure SLIs from the client's perspective whenever possible. Server-side metrics miss network latency, DNS resolution time, TLS handshake overhead, and load balancer queuing time. Use synthetic monitoring (external probes) to complement server-side metrics.`
+Key insight for interviews: Measure SLIs from the client's perspective whenever possible. Server-side metrics miss network latency, DNS resolution time, TLS handshake overhead, and load balancer queuing time. Use synthetic monitoring (external probes) to complement server-side metrics.`
       },
       {
         question: 'How do you set appropriate SLOs for a new service?',
-        answer: `**SLO-setting framework** (practical approach for a new service):
+        answer: `SLO-setting framework (practical approach for a new service):
 
-**Step 1: Identify critical user journeys.** E-commerce checkout flow: 1) View product page → 2) Add to cart → 3) Enter payment info → 4) Submit order (most critical) → 5) Receive confirmation.
+Step 1: Identify critical user journeys. E-commerce checkout flow: 1) View product page → 2) Add to cart → 3) Enter payment info → 4) Submit order (most critical) → 5) Receive confirmation.
 
-**Step 2: Define SLIs for each journey.** Product page: availability + latency (p99 < 500ms). Add to cart: availability + correctness. Submit order: availability + latency + correctness. Confirmation: availability + freshness (< 30s delay).
+Step 2: Define SLIs for each journey. Product page: availability + latency (p99 < 500ms). Add to cart: availability + correctness. Submit order: availability + latency + correctness. Confirmation: availability + freshness (< 30s delay).
 
-**Step 3: Set initial SLOs based on user expectations.**
+Step 3: Set initial SLOs based on user expectations.
 
 | SLI | SLO | Rationale |
 |---|---|---|
@@ -2762,11 +2762,11 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | Error rate | < 0.1% | 1 in 1000 fails |
 | Order correctness | 99.99% | Financial accuracy |
 
-**Step 4: Measure for 2-4 weeks (baseline).** Actual performance: availability 99.95% (meeting SLO), latency p99 320ms (meeting SLO), error rate 0.08% (meeting SLO).
+Step 4: Measure for 2-4 weeks (baseline). Actual performance: availability 99.95% (meeting SLO), latency p99 320ms (meeting SLO), error rate 0.08% (meeting SLO).
 
-**Step 5: Refine SLOs based on data.** If easily meeting SLO → tighten it (99.9% → 99.95%). If barely meeting SLO → keep it (invest in reliability). If not meeting SLO → loosen it or invest immediately.
+Step 5: Refine SLOs based on data. If easily meeting SLO → tighten it (99.9% → 99.95%). If barely meeting SLO → keep it (invest in reliability). If not meeting SLO → loosen it or invest immediately.
 
-**Common mistakes in SLO-setting**:
+Common mistakes in SLO-setting:
 
 | Mistake | Why it's wrong | Better approach |
 |---------|---------------|----------------|
@@ -2776,7 +2776,7 @@ A 14.4x burn rate sustained for 1 hour = 14.4 × (43.2/720) = 0.864 min, which i
 | No error budget policy | SLO has no teeth | Define actions when budget depletes |
 | Measuring server-side only | Misses client-facing issues | Synthetic monitoring + RUM |
 
-**SLO documentation template**:
+SLO documentation template:
 \`\`\`
   Service: Payment API
   Owner: Payments team
@@ -2850,29 +2850,29 @@ Error Budget Tracking:
       'Point-in-time recovery (PITR) in PostgreSQL uses base backup + WAL replay to restore to any second',
     ],
 
-    introduction: `**RPO** (Recovery Point Objective) and **RTO** (Recovery Time Objective) are the two fundamental metrics for disaster recovery planning. RPO defines the maximum acceptable amount of data loss measured in time — if your RPO is 1 hour, you can tolerate losing up to 1 hour of data in a disaster. RTO defines the maximum acceptable downtime — if your RTO is 15 minutes, the system must be operational within 15 minutes of a failure.
+    introduction: `RPO (Recovery Point Objective) and RTO (Recovery Time Objective) are the two fundamental metrics for disaster recovery planning. RPO defines the maximum acceptable amount of data loss measured in time — if your RPO is 1 hour, you can tolerate losing up to 1 hour of data in a disaster. RTO defines the maximum acceptable downtime — if your RTO is 15 minutes, the system must be operational within 15 minutes of a failure.
 
-These are fundamentally **business decisions**, not technical ones. A payment processing system might require RPO=0 (zero data loss) and RTO<1 minute (near-instant recovery), while a marketing analytics dashboard might accept RPO=24 hours and RTO=4 hours. The technical architecture and cost follow directly from these requirements: tighter RPO/RTO demands more sophisticated (and expensive) infrastructure — synchronous replication across regions, hot standby databases, automated failover, and continuous data protection.
+These are fundamentally business decisions, not technical ones. A payment processing system might require RPO=0 (zero data loss) and RTO<1 minute (near-instant recovery), while a marketing analytics dashboard might accept RPO=24 hours and RTO=4 hours. The technical architecture and cost follow directly from these requirements: tighter RPO/RTO demands more sophisticated (and expensive) infrastructure — synchronous replication across regions, hot standby databases, automated failover, and continuous data protection.
 
-The classic mistake is designing for RPO=0 and RTO=0 for every system. This is prohibitively expensive and operationally complex. A mature organization classifies services into **tiers** based on business impact and assigns appropriate RPO/RTO targets to each tier. The most critical tier (Tier 1: payments, authentication) gets active-active multi-region with synchronous replication. The least critical tier (Tier 4: internal tools, batch reports) gets nightly backups with manual recovery.`,
+The classic mistake is designing for RPO=0 and RTO=0 for every system. This is prohibitively expensive and operationally complex. A mature organization classifies services into tiers based on business impact and assigns appropriate RPO/RTO targets to each tier. The most critical tier (Tier 1: payments, authentication) gets active-active multi-region with synchronous replication. The least critical tier (Tier 4: internal tools, batch reports) gets nightly backups with manual recovery.`,
 
     keyQuestions: [
       {
         question: 'What are RPO and RTO and how do they drive architecture decisions?',
-        answer: `**Definitions**:
+        answer: `Definitions:
 
 | Marker | Event | Measures |
 |---|---|---|
 | t₀ | Last recoverable state (backup, replica checkpoint) | — |
-| t₁ | Disaster strikes — service goes down | **RPO = t₁ − t₀** (data lost between last good state and the failure) |
-| t₂ | Service fully restored | **RTO = t₂ − t₁** (downtime users actually experience) |
+| t₁ | Disaster strikes — service goes down | RPO = t₁ − t₀ (data lost between last good state and the failure) |
+| t₂ | Service fully restored | RTO = t₂ − t₁ (downtime users actually experience) |
 
-- **RPO** (Recovery Point Objective) is the maximum *data loss* you can tolerate.
-- **RTO** (Recovery Time Objective) is the maximum *downtime* you can tolerate.
+- RPO (Recovery Point Objective) is the maximum *data loss* you can tolerate.
+- RTO (Recovery Time Objective) is the maximum *downtime* you can tolerate.
 
 Both are business decisions set per-tier: a payments tier may target RPO=0 / RTO<1m via synchronous multi-region replication, while an analytics tier may accept RPO=24h / RTO=4h via nightly backups.
 
-**Architecture implications**:
+Architecture implications:
 
 | RPO | Required technology | Cost |
 |---|---|---|
@@ -2890,7 +2890,7 @@ Both are business decisions set per-tier: a payments tier may target RPO=0 / RTO
 | < 4 hours | Cold standby, restore backup | $ |
 | < 24 hours | Rebuild from backup | ¢ |
 
-**Example: E-commerce platform**:
+Example: E-commerce platform:
 | Service | RPO | RTO | Strategy |
 |---------|-----|-----|----------|
 | Payment processing | 0 | <1 min | Sync replication, active-active |
@@ -2901,25 +2901,25 @@ Both are business decisions set per-tier: a payments tier may target RPO=0 / RTO
       },
       {
         question: 'What are the DR tiers and how do you implement each?',
-        answer: `**Four DR tiers** from least to most resilient:
+        answer: `Four DR tiers from least to most resilient:
 
-**Tier 4: Cold Standby** (RPO: hours-days, RTO: hours-days). Primary Active site sends nightly backups to a Cold Site that is powered off. Recovery: ship backup → start servers → restore → test → go live. Cost: $ (only backup storage).
+Tier 4: Cold Standby (RPO: hours-days, RTO: hours-days). Primary Active site sends nightly backups to a Cold Site that is powered off. Recovery: ship backup → start servers → restore → test → go live. Cost: $ (only backup storage).
 
-**Tier 3: Warm Standby** (RPO: minutes-hours, RTO: minutes-hours). Primary Active site does async replication to a Warm Site that is running but behind. Recovery: catch up replication → promote → redirect traffic.
+Tier 3: Warm Standby (RPO: minutes-hours, RTO: minutes-hours). Primary Active site does async replication to a Warm Site that is running but behind. Recovery: catch up replication → promote → redirect traffic.
   Cost: $$ (running infrastructure, reduced capacity)
 
 Tier 2: Hot Standby (RPO: seconds, RTO: minutes)
-**Tier 2: Hot Standby** — Primary Active site (handles writes) and Hot Site (running, reads OK) are connected via sync or async replication. Failover is fast because the hot site is already serving read traffic.
+Tier 2: Hot Standby — Primary Active site (handles writes) and Hot Site (running, reads OK) are connected via sync or async replication. Failover is fast because the hot site is already serving read traffic.
   Recovery: Promote standby → Redirect traffic (automated)
   Cost: $$$ (full infrastructure, serving read traffic)
 
 Tier 1: Active-Active (RPO: 0, RTO: seconds)
-**Tier 1: Active-Active** — Site A (R+W) and Site B (R+W) are linked by sync replication. Both sites accept writes simultaneously; recovery is essentially instantaneous because traffic just shifts to the surviving site.
+Tier 1: Active-Active — Site A (R+W) and Site B (R+W) are linked by sync replication. Both sites accept writes simultaneously; recovery is essentially instantaneous because traffic just shifts to the surviving site.
   Recovery: Traffic already balanced, failed site removed
   Cost: $$$$ (full infrastructure at both sites, conflict resolution)
 \`\`\`
 
-**Implementation details for Tier 2 (Hot Standby — PostgreSQL)**:
+Implementation details for Tier 2 (Hot Standby — PostgreSQL):
 \`\`\`
   Primary (us-east-1):
     postgresql.conf:
@@ -2943,12 +2943,12 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
       },
       {
         question: 'How does point-in-time recovery (PITR) work?',
-        answer: `**PITR** allows you to restore a database to any specific moment in time — not just the time of the last backup.
+        answer: `PITR allows you to restore a database to any specific moment in time — not just the time of the last backup.
 
-**PITR components**:
+PITR components:
 
-- **Base backup** (full snapshot, taken weekly or daily) — a full copy of all data files at t=Sunday 2AM (\`pg_basebackup\` or physical snapshot).
-- **Continuous WAL archiving** — every WAL segment shipped to storage:
+- Base backup (full snapshot, taken weekly or daily) — a full copy of all data files at t=Sunday 2AM (\`pg_basebackup\` or physical snapshot).
+- Continuous WAL archiving — every WAL segment shipped to storage:
 
 | Segment | Day | Time |
 |---|---|---|
@@ -2960,9 +2960,9 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
 | WAL6 | Wed | 4PM |
 | WAL7 | Thu | 1PM |
 
-**PITR to Wednesday 11:30 AM**: 1) Restore base backup from Sunday 2AM. 2) Replay WAL1 through WAL5 (up to Wed 11:30 AM). 3) Stop replay at \`target_time = '2024-01-10 11:30:00'\`. 4) Database is now in the exact state of Wed 11:30 AM.
+PITR to Wednesday 11:30 AM: 1) Restore base backup from Sunday 2AM. 2) Replay WAL1 through WAL5 (up to Wed 11:30 AM). 3) Stop replay at \`target_time = '2024-01-10 11:30:00'\`. 4) Database is now in the exact state of Wed 11:30 AM.
 
-**PostgreSQL PITR configuration**:
+PostgreSQL PITR configuration:
 \`\`\`
   # On primary: archive WAL to S3
   archive_mode = on
@@ -2974,7 +2974,7 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
   recovery_target_action = 'promote'
 \`\`\`
 
-**PITR use cases**:
+PITR use cases:
 \`\`\`
   1. Accidental DELETE:
      "Someone ran DELETE FROM users WHERE active=false"
@@ -2991,7 +2991,7 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
      RPO: 5 minutes of data loss (from 2:55 to 3:00)
 \`\`\`
 
-**RPO of PITR**:
+RPO of PITR:
 \`\`\`
   RPO depends on WAL archiving frequency:
   - Continuous WAL archiving: RPO ≈ seconds (only un-archived WAL lost)
@@ -3004,9 +3004,9 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
       },
       {
         question: 'How do you test disaster recovery and what should the runbook contain?',
-        answer: `**DR testing**: An untested DR plan is not a plan. Regular DR drills validate that failover actually works.
+        answer: `DR testing: An untested DR plan is not a plan. Regular DR drills validate that failover actually works.
 
-**DR testing cadence**:
+DR testing cadence:
 
 | Frequency | Drill | What it covers |
 |---|---|---|
@@ -3014,21 +3014,21 @@ Tier 1: Active-Active (RPO: 0, RTO: seconds)
 | Quarterly | Failover drill | Simulate primary failure, execute failover runbook, measure actual RTO, failback to primary |
 | Annually | Full DR exercise | Simulate region-wide outage, all teams execute their runbooks, measure end-to-end recovery, update runbooks based on findings |
 
-**DR runbook template** — DISASTER RECOVERY RUNBOOK: Payment Database.
+DR runbook template — DISASTER RECOVERY RUNBOOK: Payment Database.
 
-**Targets and ownership**: RPO target 0 (sync replication); RTO target < 5 minutes; on-call \`payments-oncall@company.com\`; escalation to VP Engineering if > 15 min.
+Targets and ownership: RPO target 0 (sync replication); RTO target < 5 minutes; on-call \`payments-oncall@company.com\`; escalation to VP Engineering if > 15 min.
 
-**Detection**:
+Detection:
 1. PagerDuty alert: "primary DB unreachable"
 2. Verify via \`pg_isready -h primary-host\`
 3. Check AWS console for region status
 
-**Decision checklist**:
+Decision checklist:
 - Is this a transient issue? Wait 2 min.
 - Is the entire region down? Execute DR.
 - Is only the DB instance down? Restart.
 
-**Failover execution**:
+Failover execution:
 \`\`\`
 # 1. Promote standby
 patronictl failover payments-cluster
@@ -3045,11 +3045,11 @@ curl https://api.example.com/health
 # 5. Monitor for 30 minutes
 \`\`\`
 
-**Failback (when primary region recovers)**: 1) Rebuild old primary as new standby. 2) Wait for replication to catch up. 3) Planned failover back during maintenance.
+Failback (when primary region recovers): 1) Rebuild old primary as new standby. 2) Wait for replication to catch up. 3) Planned failover back during maintenance.
 
-**Audit trail**: Last tested 2024-01-15; last actual RTO 3 min 42 sec.
+Audit trail: Last tested 2024-01-15; last actual RTO 3 min 42 sec.
 
-**Common DR testing failures**:
+Common DR testing failures:
 | Failure | Root cause | Prevention |
 |---------|-----------|------------|
 | Backup corrupted | No integrity verification | Verify checksums after each backup |
@@ -3111,16 +3111,16 @@ DR Test Tracking:
       'ULID encodes millisecond timestamp + 80 bits of randomness in a 26-character Crockford Base32 string',
     ],
 
-    introduction: `Generating unique identifiers in a distributed system is a deceptively complex problem. A single-database auto-increment column works perfectly for a monolith, but fails in distributed architectures where multiple nodes must independently generate IDs without coordination. The ID must be **globally unique** (no collisions across billions of IDs), and ideally **sortable by creation time** (for efficient database indexing) and **compact** (to minimize storage and network overhead).
+    introduction: `Generating unique identifiers in a distributed system is a deceptively complex problem. A single-database auto-increment column works perfectly for a monolith, but fails in distributed architectures where multiple nodes must independently generate IDs without coordination. The ID must be globally unique (no collisions across billions of IDs), and ideally sortable by creation time (for efficient database indexing) and compact (to minimize storage and network overhead).
 
-The three dominant strategies are **UUID** (Universally Unique Identifier — 128-bit, standardized by RFC 4122/9562), **ULID** (Universally Unique Lexicographically Sortable Identifier — 128-bit, time-ordered), and **Snowflake** (Twitter's 64-bit, timestamp-embedded ID scheme). Each makes different trade-offs between uniqueness guarantees, sortability, size, and operational complexity.
+The three dominant strategies are UUID (Universally Unique Identifier — 128-bit, standardized by RFC 4122/9562), ULID (Universally Unique Lexicographically Sortable Identifier — 128-bit, time-ordered), and Snowflake (Twitter's 64-bit, timestamp-embedded ID scheme). Each makes different trade-offs between uniqueness guarantees, sortability, size, and operational complexity.
 
-The critical insight for system design interviews is the **database performance impact** of ID choice. Random UUIDs (v4) cause severe B-tree index fragmentation because each new ID inserts into a random position in the index, turning sequential I/O into random I/O. Time-ordered IDs (ULID, UUID v7, Snowflake) insert at the end of the index — maintaining sequential write patterns and dramatically improving write throughput. This single factor can mean the difference between 10,000 and 100,000 inserts per second on the same hardware.`,
+The critical insight for system design interviews is the database performance impact of ID choice. Random UUIDs (v4) cause severe B-tree index fragmentation because each new ID inserts into a random position in the index, turning sequential I/O into random I/O. Time-ordered IDs (ULID, UUID v7, Snowflake) insert at the end of the index — maintaining sequential write patterns and dramatically improving write throughput. This single factor can mean the difference between 10,000 and 100,000 inserts per second on the same hardware.`,
 
     keyQuestions: [
       {
         question: 'Why do random UUIDs cause index performance problems?',
-        answer: `**B-tree index behavior with random vs sequential IDs**:
+        answer: `B-tree index behavior with random vs sequential IDs:
 
 \`\`\`
 Sequential IDs (auto-increment, ULID, Snowflake):
@@ -3140,7 +3140,7 @@ Random UUIDs (v4):
   Random I/O → slow.
 \`\`\`
 
-**Benchmark (PostgreSQL, 100M rows, B-tree primary key)**:
+Benchmark (PostgreSQL, 100M rows, B-tree primary key):
 
 | ID Type | Insert Rate | Index Size | Cache Hit Rate |
 |---|---|---|---|
@@ -3151,12 +3151,12 @@ Random UUIDs (v4):
 
 UUID v4 is roughly 7x slower and the index is 3x larger.
 
-**Why UUID v4 index is larger**:
+Why UUID v4 index is larger:
 - Random inserts cause page splits at random positions
 - Page splits create half-empty pages (fill factor drops to ~50-70%)
 - Sequential inserts keep pages ~90% full
 
-**Why cache hit rate drops**:
+Why cache hit rate drops:
 \`\`\`
   Buffer pool: 4GB (can hold ~50% of index)
 
@@ -3169,19 +3169,19 @@ UUID v4 is roughly 7x slower and the index is 3x larger.
     → 62% cache hit rate → frequent disk reads
 \`\`\`
 
-**Solution**: Use time-ordered IDs (UUID v7, ULID) or Snowflake. They maintain sequential insert patterns while providing global uniqueness.`
+Solution: Use time-ordered IDs (UUID v7, ULID) or Snowflake. They maintain sequential insert patterns while providing global uniqueness.`
       },
       {
         question: 'How do ULID, UUID v7, and Snowflake IDs compare?',
-        answer: `**Side-by-side comparison**:
+        answer: `Side-by-side comparison:
 
-**UUID v4 (random)** — example \`550e8400-e29b-41d4-a716-446655440000\`. 128 bits = 16 bytes. Format: 32 hex chars + 4 hyphens = 36 chars. No timestamp, no sortability.
+UUID v4 (random) — example \`550e8400-e29b-41d4-a716-446655440000\`. 128 bits = 16 bytes. Format: 32 hex chars + 4 hyphens = 36 chars. No timestamp, no sortability.
 
-**UUID v7 (time-ordered, RFC 9562)** — example \`018f4d8e-7c00-7000-8000-000000000001\`. 128 bits = 48 bits unix_ms timestamp + 4 bits version (=7) + 74 bits random. Sortable by creation time.
+UUID v7 (time-ordered, RFC 9562) — example \`018f4d8e-7c00-7000-8000-000000000001\`. 128 bits = 48 bits unix_ms timestamp + 4 bits version (=7) + 74 bits random. Sortable by creation time.
 
-**ULID** — example \`01HYK3ABCMPQRST5678WXYZ90\` (26 chars, Crockford Base32). 128 bits = 48 bits unix_ms timestamp + 80 bits randomness. Lexicographically sortable as a string.
+ULID — example \`01HYK3ABCMPQRST5678WXYZ90\` (26 chars, Crockford Base32). 128 bits = 48 bits unix_ms timestamp + 80 bits randomness. Lexicographically sortable as a string.
 
-**Snowflake ID** — example \`1541815603606036480\`. 64 bits = 8 bytes:
+Snowflake ID — example \`1541815603606036480\`. 64 bits = 8 bytes:
 
 | Bits | Field | Notes |
 |---|---|---|
@@ -3190,7 +3190,7 @@ UUID v4 is roughly 7x slower and the index is 3x larger.
 | 10 | worker ID | 1024 unique workers |
 | 12 | sequence | 4096 IDs per ms per worker |
 
-**Comparison matrix**:
+Comparison matrix:
 
 | Feature | UUID v4 | UUID v7 | ULID | Snowflake |
 |---------|---------|---------|------|-----------|
@@ -3204,17 +3204,17 @@ UUID v4 is roughly 7x slower and the index is 3x larger.
 | Index performance | Poor | Good | Good | Excellent (smallest) |
 | Standard | RFC 4122 | RFC 9562 | Spec (ulid.dev) | Custom |
 
-**When to use each**:
-- **UUID v7**: New standard, broad library support, works as PostgreSQL UUID type
-- **ULID**: String-sortable, great for APIs and URLs, no hyphens
-- **Snowflake**: Best performance (64-bit), requires worker ID coordination
-- **UUID v4**: Legacy compatibility only, avoid for new designs with B-tree PKs`
+When to use each:
+- UUID v7: New standard, broad library support, works as PostgreSQL UUID type
+- ULID: String-sortable, great for APIs and URLs, no hyphens
+- Snowflake: Best performance (64-bit), requires worker ID coordination
+- UUID v4: Legacy compatibility only, avoid for new designs with B-tree PKs`
       },
       {
         question: 'How does Twitter Snowflake work and what are its failure modes?',
-        answer: `**Snowflake architecture**: Each node generates locally unique IDs using a combination of timestamp, worker ID, and sequence number.
+        answer: `Snowflake architecture: Each node generates locally unique IDs using a combination of timestamp, worker ID, and sequence number.
 
-**Snowflake ID layout (64 bits)**:
+Snowflake ID layout (64 bits):
 
 | Bits | Field | Capacity |
 |---|---|---|
@@ -3225,7 +3225,7 @@ UUID v4 is roughly 7x slower and the index is 3x larger.
 
 Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000 × 1024 ≈ 4 billion IDs/second.
 
-**ID generation algorithm**:
+ID generation algorithm:
 \`\`\`
   function generateId():
     timestamp = currentTimeMs() - EPOCH
@@ -3243,7 +3243,7 @@ Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000
     return (timestamp << 22) | (workerId << 12) | sequence
 \`\`\`
 
-**Failure modes**:
+Failure modes:
 
 \`\`\`
 1. Clock skew (most dangerous):
@@ -3270,26 +3270,26 @@ Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000
         Twitter's epoch: 2010-11-04 → runs until ~2079
 \`\`\`
 
-**Operational considerations**:
-- **Worker ID assignment**: Use ZooKeeper or database to assign unique worker IDs. When a worker restarts, it should get the same ID (or a guaranteed-new one).
-- **Monitoring**: Alert on clock drift > 100ms between servers (NTP should keep drift < 10ms).
-- **Extracting timestamp from ID**: \`timestamp = (id >> 22) + EPOCH\` — useful for debugging and time-range queries.`
+Operational considerations:
+- Worker ID assignment: Use ZooKeeper or database to assign unique worker IDs. When a worker restarts, it should get the same ID (or a guaranteed-new one).
+- Monitoring: Alert on clock drift > 100ms between servers (NTP should keep drift < 10ms).
+- Extracting timestamp from ID: \`timestamp = (id >> 22) + EPOCH\` — useful for debugging and time-range queries.`
       },
       {
         question: 'How do you choose an ID strategy for a new microservice?',
-        answer: `**Decision framework**:
+        answer: `Decision framework:
 
 1. Do you need IDs to be sortable by creation time?
-   - **No** → **UUID v4** (simplest, no coordination needed).
-   - **Yes** → continue.
+   - No → UUID v4 (simplest, no coordination needed).
+   - Yes → continue.
 2. Is 64-bit (BIGINT) storage critical?
-   - **Yes** → **Snowflake** (best performance, requires coordination).
-   - **No** → continue.
+   - Yes → Snowflake (best performance, requires coordination).
+   - No → continue.
 3. Do you need a standard format?
-   - **Yes** → **UUID v7** (RFC 9562, native DB support).
-   - **No** → **ULID** (string-sortable, URL-friendly).
+   - Yes → UUID v7 (RFC 9562, native DB support).
+   - No → ULID (string-sortable, URL-friendly).
 
-**Practical recommendations by use case**:
+Practical recommendations by use case:
 
 | Use case | Recommended ID | Rationale |
 |----------|---------------|-----------|
@@ -3300,7 +3300,7 @@ Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000
 | Analytics/data warehouse | Snowflake | Compact, embeds timestamp for partitioning |
 | Legacy system migration | UUID v4 | Compatible with existing UUID columns |
 
-**Migration from auto-increment to distributed IDs**:
+Migration from auto-increment to distributed IDs:
 \`\`\`
   Phase 1: Add new ID column alongside auto-increment
     ALTER TABLE orders ADD COLUMN distributed_id UUID;
@@ -3319,7 +3319,7 @@ Max throughput per worker: 4,096,000 IDs/second. Max throughput total: 4,096,000
     ALTER TABLE orders ADD PRIMARY KEY (id);
 \`\`\`
 
-**PostgreSQL UUID v7 generation** (native in PG 17+, or via extension):
+PostgreSQL UUID v7 generation (native in PG 17+, or via extension):
 \`\`\`
   -- PostgreSQL 17+
   SELECT uuidv7();
@@ -3402,30 +3402,30 @@ Database Column Types:
       'Active-active is required when users in different regions need low-latency writes simultaneously',
     ],
 
-    introduction: `**Active-passive** and **active-active** are the two fundamental high-availability deployment topologies for distributed systems. In **active-passive** (also called primary-standby or master-slave), one instance handles all traffic while one or more standby instances remain ready to take over if the primary fails. In **active-active** (also called multi-master or multi-primary), multiple instances simultaneously handle traffic, including writes, with changes replicated bidirectionally.
+    introduction: `Active-passive and active-active are the two fundamental high-availability deployment topologies for distributed systems. In active-passive (also called primary-standby or master-slave), one instance handles all traffic while one or more standby instances remain ready to take over if the primary fails. In active-active (also called multi-master or multi-primary), multiple instances simultaneously handle traffic, including writes, with changes replicated bidirectionally.
 
-The choice between these topologies is one of the most impactful architectural decisions in system design. **Active-passive** is simpler, avoids write conflicts entirely (since only one node accepts writes), and is well-supported by all major databases (PostgreSQL streaming replication, MySQL replication, Redis Sentinel). The trade-off is that failover takes time (seconds to minutes), and the standby resources are underutilized during normal operation (though they can serve read traffic as hot standbys).
+The choice between these topologies is one of the most impactful architectural decisions in system design. Active-passive is simpler, avoids write conflicts entirely (since only one node accepts writes), and is well-supported by all major databases (PostgreSQL streaming replication, MySQL replication, Redis Sentinel). The trade-off is that failover takes time (seconds to minutes), and the standby resources are underutilized during normal operation (though they can serve read traffic as hot standbys).
 
-**Active-active** provides the highest availability and lowest latency for globally distributed users — a user in Tokyo writes to a local node without waiting for a round-trip to Virginia. However, it introduces the fundamental challenge of **write conflicts**: two users updating the same record at two different sites simultaneously. Resolving these conflicts requires strategies like **Last-Write-Wins** (LWW), **Conflict-Free Replicated Data Types** (CRDTs), or **application-level merge logic**. The operational complexity is significantly higher, which is why most systems use active-passive unless the business requirements demand multi-region writes.`,
+Active-active provides the highest availability and lowest latency for globally distributed users — a user in Tokyo writes to a local node without waiting for a round-trip to Virginia. However, it introduces the fundamental challenge of write conflicts: two users updating the same record at two different sites simultaneously. Resolving these conflicts requires strategies like Last-Write-Wins (LWW), Conflict-Free Replicated Data Types (CRDTs), or application-level merge logic. The operational complexity is significantly higher, which is why most systems use active-passive unless the business requirements demand multi-region writes.`,
 
     keyQuestions: [
       {
         question: 'When should you choose active-active vs active-passive?',
-        answer: `**Decision framework**:
+        answer: `Decision framework:
 
-1. Do users in multiple regions need low-latency **writes**?
-   - **No** → **Active-Passive** (simpler, cheaper).
-   - **Yes** → continue.
+1. Do users in multiple regions need low-latency writes?
+   - No → Active-Passive (simpler, cheaper).
+   - Yes → continue.
 2. Can you tolerate eventual consistency?
-   - **No** → **Active-Passive with cross-region sync writes** (high latency but strong consistency).
-   - **Yes** → **Active-Active with conflict resolution** (low latency, eventual consistency).
+   - No → Active-Passive with cross-region sync writes (high latency but strong consistency).
+   - Yes → Active-Active with conflict resolution (low latency, eventual consistency).
 
-**Architecture comparison**:
+Architecture comparison:
 
-- **Active-Passive** — Primary in us-east-1 handles all R+W. Async replication ships data to a Standby in eu-west-1 (R only). All writes pay the cross-region penalty (≈200ms for EU users). Failover means promoting the standby — typically 30-60s of downtime.
-- **Active-Active** — Site A in us-east-1 (R+W) and Site B in eu-west-1 (R+W) replicate bidirectionally. Writes are served locally at both sites (<10ms). No failover needed (traffic shifts automatically). Conflicts must be resolved (LWW, CRDT, or app-level merge).
+- Active-Passive — Primary in us-east-1 handles all R+W. Async replication ships data to a Standby in eu-west-1 (R only). All writes pay the cross-region penalty (≈200ms for EU users). Failover means promoting the standby — typically 30-60s of downtime.
+- Active-Active — Site A in us-east-1 (R+W) and Site B in eu-west-1 (R+W) replicate bidirectionally. Writes are served locally at both sites (<10ms). No failover needed (traffic shifts automatically). Conflicts must be resolved (LWW, CRDT, or app-level merge).
 
-**Comparison matrix**:
+Comparison matrix:
 
 | Aspect | Active-Passive | Active-Active |
 |--------|---------------|---------------|
@@ -3438,15 +3438,15 @@ The choice between these topologies is one of the most impactful architectural d
 | Cost | Lower | Higher (2x compute, conflict infra) |
 | Database support | All databases | Few (CockroachDB, Cassandra, DynamoDB) |
 
-**Real-world examples**:
-- **Active-Passive**: Most PostgreSQL deployments, Redis Sentinel, traditional enterprise apps
-- **Active-Active**: DynamoDB Global Tables, CockroachDB multi-region, Cassandra multi-DC, DNS (anycast)`
+Real-world examples:
+- Active-Passive: Most PostgreSQL deployments, Redis Sentinel, traditional enterprise apps
+- Active-Active: DynamoDB Global Tables, CockroachDB multi-region, Cassandra multi-DC, DNS (anycast)`
       },
       {
         question: 'How do you handle write conflicts in active-active systems?',
-        answer: `**Write conflicts** occur when two sites modify the same data simultaneously, and the system must decide which version wins.
+        answer: `Write conflicts occur when two sites modify the same data simultaneously, and the system must decide which version wins.
 
-**Conflict scenario**:
+Conflict scenario:
 
 | Time | Site A (US) | Site B (EU) |
 |---|---|---|
@@ -3456,7 +3456,7 @@ The choice between these topologies is one of the most impactful architectural d
 
 Both sites now hold conflicting values for the same key. Which value should win?
 
-**Conflict resolution strategies**:
+Conflict resolution strategies:
 
 \`\`\`
 Strategy 1: Last-Write-Wins (LWW)
@@ -3495,7 +3495,7 @@ Strategy 4: Conflict Detection + User Resolution
   Con: Poor user experience, only for rare conflicts
 \`\`\`
 
-**DynamoDB Global Tables (LWW)**:
+DynamoDB Global Tables (LWW):
 \`\`\`
   Region us-east-1: PUT {pk:"user:1", name:"Bob",   _ts:100}
   Region eu-west-1: PUT {pk:"user:1", name:"Charlie",_ts:101}
@@ -3508,21 +3508,21 @@ Strategy 4: Conflict Detection + User Resolution
   Data loss: "Bob" update is silently lost
 \`\`\`
 
-**Recommendation**: Use LWW for non-critical data (user preferences, last-seen timestamps). Use CRDTs or app-level merge for critical data (shopping carts, inventories, financial balances).`
+Recommendation: Use LWW for non-critical data (user preferences, last-seen timestamps). Use CRDTs or app-level merge for critical data (shopping carts, inventories, financial balances).`
       },
       {
         question: 'What is the split-brain problem and how do you prevent it?',
-        answer: `**Split-brain** occurs when a network partition causes both sides to believe they are the active primary, leading to divergent writes.
+        answer: `Split-brain occurs when a network partition causes both sides to believe they are the active primary, leading to divergent writes.
 
-**Normal operation** — Primary (R+W) and Standby (R) exchange heartbeats; one writer, one read replica.
+Normal operation — Primary (R+W) and Standby (R) exchange heartbeats; one writer, one read replica.
 
-**Network partition** — Heartbeat link breaks. Primary thinks: "I'm still primary." Standby thinks: "Primary is dead, I'll promote myself."
+Network partition — Heartbeat link breaks. Primary thinks: "I'm still primary." Standby thinks: "Primary is dead, I'll promote myself."
 
-**Split brain** — Now there are two primaries. Client A writes to the old primary; Client B writes to the new primary. Result: data divergence — two different states with conflicting writes.
+Split brain — Now there are two primaries. Client A writes to the old primary; Client B writes to the new primary. Result: data divergence — two different states with conflicting writes.
 
 ![Split-brain network partition](/diagrams/scalable/split-brain.png)
 
-**Prevention strategies**:
+Prevention strategies:
 
 \`\`\`
 Strategy 1: Fencing tokens
@@ -3555,7 +3555,7 @@ Strategy 3: Quorum-based consensus
   Used by: etcd (Raft), ZooKeeper (ZAB), CockroachDB
 \`\`\`
 
-**Quorum in practice (ZooKeeper-based fencing)** — sequence:
+Quorum in practice (ZooKeeper-based fencing) — sequence:
 
 1. Primary renews its leader lock with epoch=5 against ZooKeeper (3-node cluster).
 2. Network partition cuts the Primary off from ZooKeeper.
@@ -3569,13 +3569,13 @@ The fencing token (epoch) prevents the partitioned primary from doing any furthe
       },
       {
         question: 'Design a high-availability architecture for a global e-commerce platform.',
-        answer: `**Requirements**: Users in US, EU, and APAC need low-latency reads. Writes must be strongly consistent for orders/payments.
+        answer: `Requirements: Users in US, EU, and APAC need low-latency reads. Writes must be strongly consistent for orders/payments.
 
-**Hybrid architecture: active-passive writes, active-active reads.** Route 53 (latency-based DNS) splits traffic across three regions: US-EAST-1, EU-WEST-1, and AP-SOUTHEAST. Each region runs ALB → App tier (US-EAST-1 is R+W, EU and AP are R only) → Aurora (US-EAST-1 PRIMARY R+W, others READ REPLICA, replicating from the primary) → local Redis cache.
+Hybrid architecture: active-passive writes, active-active reads. Route 53 (latency-based DNS) splits traffic across three regions: US-EAST-1, EU-WEST-1, and AP-SOUTHEAST. Each region runs ALB → App tier (US-EAST-1 is R+W, EU and AP are R only) → Aurora (US-EAST-1 PRIMARY R+W, others READ REPLICA, replicating from the primary) → local Redis cache.
 
 ![Hybrid global active-passive architecture](/diagrams/scalable/global-active-passive.png)
 
-**Traffic routing by operation type**:
+Traffic routing by operation type:
 \`\`\`
   Reads (product pages, search, user profiles):
     → Served locally at nearest region (low latency)
@@ -3592,7 +3592,7 @@ The fencing token (epoch) prevents the partitioned primary from doing any furthe
     → RPO=0, RTO<1min
 \`\`\`
 
-**Failover plan**:
+Failover plan:
 \`\`\`
   Primary (US-EAST-1) failure:
   1. Aurora Global Database auto-promotes EU-WEST-1 to primary (<2 min)
@@ -3603,7 +3603,7 @@ The fencing token (epoch) prevents the partitioned primary from doing any furthe
   6. RPO: <1 second (Aurora replication lag)
 \`\`\`
 
-**Why not full active-active for writes?**
+Why not full active-active for writes?
 \`\`\`
   Active-active writes would require:
   ✗ Conflict resolution for orders (unacceptable for financial data)
