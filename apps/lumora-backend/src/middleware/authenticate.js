@@ -80,11 +80,11 @@ export async function authenticate(req, res, next) {
       return res.status(401).json({ error: 'User account inactive' });
     }
 
-    // Set admin flag for usage bypass — env-only, no in-source fallback.
-    // If OWNER_EMAILS / ADMIN_EMAILS is unset, nobody gets is_admin (fail closed).
+    // is_admin: DB column takes precedence (set via admin UI toggleAdmin).
+    // Env-var list is an additional bypass so Railway-configured emails always work.
     const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
       .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    user.is_admin = !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+    user.is_admin = !!user.is_admin || (!!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
 
     req.user = user;
     next();
