@@ -746,7 +746,6 @@ export default function FormattedContent({ content, inline = false }) {
           <p
             key={`p-${blockIdx}-${lineIdx}`}
             className="text-[var(--text-secondary)] text-[15px] leading-[1.7] my-3 landing-body"
-            style={{ maxWidth: '72ch' }}
           >
             {formatInlineText(trimmed)}
           </p>,
