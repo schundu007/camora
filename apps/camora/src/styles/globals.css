@@ -2726,8 +2726,9 @@ figure:has(> .viz-caption) {
   border-radius: 6px 6px 0 0;
   margin-top: 1.1rem;
   margin-bottom: 0;
-  background: color-mix(in srgb, var(--accent) 14%, var(--bg-elevated));
-  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-bottom: none;
 }
 .qa-q .qa-label {
   flex-shrink: 0;
@@ -2746,7 +2747,7 @@ figure:has(> .viz-caption) {
 }
 .qa-q .qa-body {
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.45;
   font-family: inherit;
@@ -2757,8 +2758,9 @@ figure:has(> .viz-caption) {
   border-radius: 0 0 6px 6px;
   margin-top: 0;
   margin-bottom: 0.25rem;
-  background: color-mix(in srgb, var(--accent) 4%, var(--bg-elevated));
-  border-left: 3px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 3%, var(--bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-top: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
 }
 .qa-a .qa-label {
   display: none;
@@ -2766,8 +2768,8 @@ figure:has(> .viz-caption) {
 .qa-a .qa-body {
   display: block;
   color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.65;
   font-family: inherit;
 }
 

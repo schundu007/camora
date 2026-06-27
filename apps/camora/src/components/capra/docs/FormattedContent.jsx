@@ -373,11 +373,11 @@ export default function FormattedContent({ content, inline = false }) {
         if (currentList.length === 0) return;
         const items = currentList;
         currentSection.body.push(
-          <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-1.5 my-2 ml-8">
+          <ul key={`list-${blockIdx}-${listKeyCounter++}`} className="grid grid-cols-1 gap-2 my-3 ml-6">
             {items.map((item, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0" />
-                <span className="text-[var(--text-secondary)] text-sm leading-relaxed landing-body">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-[0.45em] flex-shrink-0" />
+                <span className="text-[var(--text-secondary)] text-[15px] leading-[1.7] landing-body">
                   {formatInlineText(item)}
                 </span>
               </li>
@@ -408,7 +408,7 @@ export default function FormattedContent({ content, inline = false }) {
                   >
                     {String(item.n).padStart(2, '0')}
                   </span>
-                  <span className={`text-sm leading-relaxed landing-body ${isHeader ? 'font-semibold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                  <span className={`text-[15px] leading-[1.7] landing-body ${isHeader ? 'font-semibold text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
                     {formatInlineText(text)}
                   </span>
                 </li>
@@ -475,13 +475,16 @@ export default function FormattedContent({ content, inline = false }) {
             {entries.map((entry, i) => (
               <div
                 key={i}
-                className="pl-4"
-                style={{ borderLeft: '2px solid color-mix(in oklab, var(--accent) 40%, transparent)' }}
+                className="p-3 rounded-md"
+                style={{
+                  border: '1px solid color-mix(in oklab, var(--accent) 20%, var(--border))',
+                  background: 'color-mix(in oklab, var(--accent) 5%, transparent)',
+                }}
               >
                 <dt className="font-semibold text-[var(--text-primary)] text-[15px] leading-tight landing-display mb-1">
                   {entry.term}
                 </dt>
-                <dd className="text-[var(--text-secondary)] text-[14px] leading-[1.65] landing-body m-0">
+                <dd className="text-[var(--text-secondary)] text-[15px] leading-[1.65] landing-body m-0">
                   {formatInlineText(entry.definition)}
                 </dd>
               </div>
@@ -562,7 +565,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
+                className="landing-display"
               >
                 {formatInlineText(headerText)}
               </h3>,
@@ -616,7 +619,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+                className="landing-display"
               >
                 {formatInlineText(label)}
               </h4>,
@@ -635,7 +638,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h3
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--accent)] font-bold text-[18px] mt-8 mb-2 first:mt-0 landing-display tracking-tight leading-tight"
+                className="landing-display"
               >
                 {formatInlineText(text)}
               </h3>,
@@ -644,7 +647,7 @@ export default function FormattedContent({ content, inline = false }) {
             openSection(
               <h4
                 key={`h-${blockIdx}-${lineIdx}`}
-                className="text-[var(--accent)] font-bold text-[15px] mt-6 mb-1.5 first:mt-0 landing-display tracking-tight"
+                className="landing-display"
               >
                 {formatInlineText(text)}
               </h4>,
@@ -745,7 +748,7 @@ export default function FormattedContent({ content, inline = false }) {
         pushBody(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
-            className="text-[var(--text-secondary)] text-[15px] leading-[1.7] my-3 landing-body"
+            className="text-[var(--text-primary)] text-[17px] leading-[1.75] my-4 landing-body"
           >
             {formatInlineText(trimmed)}
           </p>,
@@ -760,18 +763,18 @@ export default function FormattedContent({ content, inline = false }) {
   // gold-leaf rail (PPT parent → child grammar). A leading section with
   // no header skips the rail so intro paragraphs aren't pushed in.
   const elements = sections.map((sec, i) => (
-    <div key={`sec-${i}`}>
+    <section key={`sec-${i}`}>
       {sec.header}
       {sec.body.length > 0 && (
         sec.header
           ? (
-            <div className="pl-4 ml-1">
+            <div className="pl-6 ml-2 pt-1 border-l border-[var(--border)]">
               {sec.body}
             </div>
           )
           : sec.body
       )}
-    </div>
+    </section>
   ));
 
   // `prep-content` opts this surface into the docs design system (navy
