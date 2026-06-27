@@ -121,8 +121,8 @@ export const comparisonTopics = [
     icon: 'gitBranch',
     color: '#f97316',
     description: 'When to use AWS-native container orchestration versus Kubernetes.',
-    introduction: '## Overview
-ECS is AWS-native container orchestration designed for simplicity. EKS is managed Kubernetes that gives you access to the full CNCF ecosystem. The decision comes down to team expertise, multi-cloud ambitions, and the complexity your workloads require.',
+    introduction: `## Overview
+ECS is AWS-native container orchestration designed for simplicity. EKS is managed Kubernetes that gives you access to the full CNCF ecosystem. The decision comes down to team expertise, multi-cloud ambitions, and the complexity your workloads require.`,
     whenToUse: 'ECS: AWS-only shops, smaller teams, simpler web services, Fargate-based workloads. EKS: multi-cloud portability, existing Kubernetes expertise, complex scheduling and affinity needs, CNCF tooling requirements.',
     keyConcepts: [
       { title: 'Control Plane Cost', description: 'ECS control plane is fully managed and free. EKS charges $0.10 per hour per cluster (approximately $72 per month) plus the cost of worker nodes and add-ons.' },
@@ -176,8 +176,8 @@ ECS is AWS-native container orchestration designed for simplicity. EKS is manage
     icon: 'layers',
     color: '#f97316',
     description: 'Architectural tradeoffs between containerized services and function-as-a-service platforms.',
-    introduction: '## Overview
-Containers package your application and its dependencies into a portable image that runs consistently across environments. Serverless abstracts the infrastructure entirely, letting you deploy individual functions triggered by events. The choice affects cost, latency, operational burden, and deployment granularity.',
+    introduction: `## Overview
+Containers package your application and its dependencies into a portable image that runs consistently across environments. Serverless abstracts the infrastructure entirely, letting you deploy individual functions triggered by events. The choice affects cost, latency, operational burden, and deployment granularity.`,
     whenToUse: 'Containers: complex applications, stateful services, predictable traffic, custom runtimes or binaries. Serverless: event-driven workflows, low-traffic APIs, scheduled tasks, glue code, and workloads where operational simplicity outweighs fine-grained control.',
     keyConcepts: [
       { title: 'Unit of Deployment', description: 'Containers deploy an entire application process with its runtime. Serverless deploys individual functions, each potentially written in a different language and deployed independently.' },
@@ -229,8 +229,8 @@ Containers package your application and its dependencies into a portable image t
     icon: 'server',
     color: '#f97316',
     description: 'Serverless containers versus self-managed EC2 nodes for ECS and EKS workloads.',
-    introduction: '## Overview
-Fargate runs containers without you managing the underlying EC2 instances. The EC2 launch type gives you direct access to instance configuration, GPU support, custom AMIs, and the ability to use Savings Plans and Reserved Instances for cost optimization. Fargate trades cost efficiency at scale for operational simplicity.',
+    introduction: `## Overview
+Fargate runs containers without you managing the underlying EC2 instances. The EC2 launch type gives you direct access to instance configuration, GPU support, custom AMIs, and the ability to use Savings Plans and Reserved Instances for cost optimization. Fargate trades cost efficiency at scale for operational simplicity.`,
     whenToUse: 'Fargate: teams that want zero node management, variable workloads, dev and staging environments, security-sensitive workloads requiring strong task isolation. EC2: GPU workloads, cost optimization at scale with Reserved Instances, custom AMIs, DaemonSet-style sidecar patterns.',
     keyConcepts: [
       { title: 'Node Management', description: 'Fargate removes EC2 node provisioning, patching, and scaling entirely. EC2 launch type requires managing Auto Scaling Groups, launch templates, AMI updates, and node capacity.' },
@@ -275,8 +275,8 @@ Fargate runs containers without you managing the underlying EC2 instances. The E
     icon: 'cpu',
     color: '#f97316',
     description: 'Choosing the right EC2 instance family for compute, memory, storage, and accelerated workloads.',
-    introduction: '## Overview
-EC2 offers over 600 instance types grouped into families optimized for different workload profiles. General purpose instances balance CPU and memory. Compute-optimized instances provide higher CPU ratios. Memory-optimized instances are designed for in-memory databases. Choosing poorly means paying for capacity you do not use or running into bottlenecks you cannot escape without downtime.',
+    introduction: `## Overview
+EC2 offers over 600 instance types grouped into families optimized for different workload profiles. General purpose instances balance CPU and memory. Compute-optimized instances provide higher CPU ratios. Memory-optimized instances are designed for in-memory databases. Choosing poorly means paying for capacity you do not use or running into bottlenecks you cannot escape without downtime.`,
     whenToUse: 'T-series: burstable dev and low-traffic workloads. M-series: general-purpose web servers and application servers. C-series: CPU-bound batch processing and HPC. R-series: in-memory databases and caching. I-series: high IOPS storage. P/G-series: machine learning and GPU compute.',
     keyConcepts: [
       { title: 'Instance Families', description: 'T (burstable general purpose), M (balanced), C (compute optimized), R (memory optimized), I (storage optimized), P/G (GPU accelerated), X (extreme memory). The number after the family letter indicates the generation; newer generations offer better price-performance.' },
@@ -324,8 +324,8 @@ EC2 offers over 600 instance types grouped into families optimized for different
     icon: 'database',
     color: '#3b82f6',
     description: 'Choosing the right AWS storage service for objects, files, or block-level access.',
-    introduction: '## Overview
-S3 is object storage accessed via HTTP API. EBS is block storage attached to a single EC2 instance like a virtual hard drive. EFS is a managed NFS file system that can be mounted by multiple instances simultaneously. Each targets a different access pattern, and choosing the wrong one creates unnecessary cost or compatibility problems.',
+    introduction: `## Overview
+S3 is object storage accessed via HTTP API. EBS is block storage attached to a single EC2 instance like a virtual hard drive. EFS is a managed NFS file system that can be mounted by multiple instances simultaneously. Each targets a different access pattern, and choosing the wrong one creates unnecessary cost or compatibility problems.`,
     whenToUse: 'S3: static assets, backups, data lake, media files, application artifacts. EBS: root volumes, databases requiring low-latency block access on a single instance. EFS: shared file systems needed by multiple EC2 instances or containers simultaneously.',
     keyConcepts: [
       { title: 'Access Pattern', description: 'S3 uses HTTP PUT and GET operations; not mountable as a file system natively. EBS is a block device mountable as a file system on exactly one EC2 instance at a time (Multi-Attach is an exception for io1/io2). EFS is NFS v4 mountable by thousands of instances concurrently.' },
@@ -379,8 +379,8 @@ S3 is object storage accessed via HTTP API. EBS is block storage attached to a s
     icon: 'database',
     color: '#3b82f6',
     description: 'Relational SQL databases versus managed NoSQL for AWS workloads.',
-    introduction: '## Overview
-RDS provides managed relational databases (PostgreSQL, MySQL, Aurora) with ACID transactions, complex queries, and joins. DynamoDB is a managed key-value and document store designed for single-digit millisecond latency at any scale. The choice centers on data model, query flexibility, and consistency requirements.',
+    introduction: `## Overview
+RDS provides managed relational databases (PostgreSQL, MySQL, Aurora) with ACID transactions, complex queries, and joins. DynamoDB is a managed key-value and document store designed for single-digit millisecond latency at any scale. The choice centers on data model, query flexibility, and consistency requirements.`,
     whenToUse: 'RDS: complex relational data models, ad-hoc queries, reporting, applications requiring joins and transactions across multiple tables. DynamoDB: single-table access patterns, high-throughput key-value or document lookups, global tables, serverless architectures needing auto-scaling storage.',
     keyConcepts: [
       { title: 'Data Model Flexibility', description: 'RDS stores data in normalized tables with defined schemas. DynamoDB stores items in tables with a mandatory partition key and optional sort key; you can store heterogeneous attributes per item but query flexibility is limited to the key structure.' },
@@ -433,8 +433,8 @@ RDS provides managed relational databases (PostgreSQL, MySQL, Aurora) with ACID 
     icon: 'database',
     color: '#3b82f6',
     description: 'Relational versus non-relational database models and when each fits.',
-    introduction: '## Overview
-SQL databases organize data into tables with predefined schemas, enforce relationships via foreign keys, and support ACID transactions and joins. NoSQL databases sacrifice some of these guarantees in exchange for horizontal scalability, flexible schemas, and optimized access patterns. Neither is universally superior; the right choice depends on data shape, query patterns, and scale requirements.',
+    introduction: `## Overview
+SQL databases organize data into tables with predefined schemas, enforce relationships via foreign keys, and support ACID transactions and joins. NoSQL databases sacrifice some of these guarantees in exchange for horizontal scalability, flexible schemas, and optimized access patterns. Neither is universally superior; the right choice depends on data shape, query patterns, and scale requirements.`,
     whenToUse: 'SQL: financial systems, ERPs, applications with complex relationships, reporting, multi-table transactions. NoSQL: user profiles, product catalogs, real-time personalization, IoT sensor data, session stores, content delivery at global scale.',
     keyConcepts: [
       { title: 'Schema Flexibility', description: 'SQL enforces a rigid schema at the table level; adding a column requires a migration. NoSQL document stores like MongoDB allow each document to have different fields. This is powerful for evolving data models but makes data integrity harder to enforce at the database level.' },
@@ -486,8 +486,8 @@ SQL databases organize data into tables with predefined schemas, enforce relatio
     icon: 'database',
     color: '#3b82f6',
     description: 'When to use Aurora\'s distributed storage engine versus standard RDS managed databases.',
-    introduction: '## Overview
-Aurora is AWS\'s cloud-native relational database that reimagines the storage layer. Instead of replicating the full database instance, Aurora replicates data six times across three AZs at the storage level, separating compute from storage. Standard RDS runs unmodified PostgreSQL, MySQL, MariaDB, Oracle, or SQL Server with synchronous replication to a standby instance.',
+    introduction: `## Overview
+Aurora is AWS\'s cloud-native relational database that reimagines the storage layer. Instead of replicating the full database instance, Aurora replicates data six times across three AZs at the storage level, separating compute from storage. Standard RDS runs unmodified PostgreSQL, MySQL, MariaDB, Oracle, or SQL Server with synchronous replication to a standby instance.`,
     whenToUse: 'Aurora: high-availability production workloads, applications that benefit from Aurora Serverless v2 auto-scaling, read-heavy workloads requiring up to 15 read replicas, multi-master write scaling. RDS: specific engine version requirements, Oracle or SQL Server licensing, migration from on-premises with engine compatibility constraints, cost-sensitive smaller workloads.',
     keyConcepts: [
       { title: 'Storage Architecture', description: 'Aurora stores data in a distributed storage cluster of six copies across three AZs automatically. There is no standby instance to failover to; instead the compute layer reconnects to the storage layer within 30 seconds of failure.' },
@@ -532,8 +532,8 @@ Aurora is AWS\'s cloud-native relational database that reimagines the storage la
     icon: 'zap',
     color: '#3b82f6',
     description: 'When to use Redis versus Memcached for distributed caching on AWS.',
-    introduction: '## Overview
-Both Redis and Memcached are in-memory data stores available as managed services through ElastiCache. Redis supports rich data structures, persistence, replication, and pub/sub. Memcached is a simple, multi-threaded key-value cache optimized for pure horizontal scaling. Redis has become the default choice for most use cases due to its additional capabilities at comparable performance.',
+    introduction: `## Overview
+Both Redis and Memcached are in-memory data stores available as managed services through ElastiCache. Redis supports rich data structures, persistence, replication, and pub/sub. Memcached is a simple, multi-threaded key-value cache optimized for pure horizontal scaling. Redis has become the default choice for most use cases due to its additional capabilities at comparable performance.`,
     whenToUse: 'Redis: session storage, leaderboards, rate limiting, pub/sub messaging, geospatial queries, persistent cache that survives restarts. Memcached: purely stateless caching with extremely simple key-value access, horizontal scaling to many nodes, multi-threaded CPU utilization on large instance types.',
     keyConcepts: [
       { title: 'Data Structure Support', description: 'Redis supports strings, hashes, lists, sets, sorted sets, bitmaps, HyperLogLog, streams, and geospatial indexes. Memcached stores only opaque byte strings with no server-side data manipulation.' },
@@ -578,8 +578,8 @@ Both Redis and Memcached are in-memory data stores available as managed services
     icon: 'barChart',
     color: '#3b82f6',
     description: 'Provisioned columnar warehouse versus serverless SQL-on-S3 for analytical queries.',
-    introduction: '## Overview
-Redshift is a managed columnar data warehouse that stores data on dedicated nodes, supporting petabyte-scale analytics with consistent query performance. Athena is a serverless interactive query service that runs SQL directly against data in S3 using Presto, charging per terabyte of data scanned. The choice depends on query frequency, data volume, and whether you want to manage cluster capacity.',
+    introduction: `## Overview
+Redshift is a managed columnar data warehouse that stores data on dedicated nodes, supporting petabyte-scale analytics with consistent query performance. Athena is a serverless interactive query service that runs SQL directly against data in S3 using Presto, charging per terabyte of data scanned. The choice depends on query frequency, data volume, and whether you want to manage cluster capacity.`,
     whenToUse: 'Redshift: frequent complex analytical queries, dashboards requiring sub-second latency, workloads that benefit from distribution keys and sort keys, organizations with data already loaded into Redshift. Athena: ad-hoc exploration of S3 data lakes, infrequent queries, ETL pipelines that query raw files, pay-per-query cost model.',
     keyConcepts: [
       { title: 'Query Execution Model', description: 'Redshift runs queries on dedicated compute nodes using massively parallel processing (MPP). Athena spins up Presto workers on demand per query with no persistent cluster. Redshift delivers consistent latency; Athena has variable startup latency per query.' },
@@ -626,8 +626,8 @@ Redshift is a managed columnar data warehouse that stores data on dedicated node
     icon: 'send',
     color: '#8b5cf6',
     description: 'Queue-based point-to-point messaging versus topic-based fan-out delivery.',
-    introduction: '## Overview
-SQS is a distributed message queue where a single consumer processes each message. SNS is a pub/sub notification service that delivers messages to all subscribers simultaneously. They solve different problems and are frequently used together in a fan-out pattern where SNS distributes to multiple SQS queues.',
+    introduction: `## Overview
+SQS is a distributed message queue where a single consumer processes each message. SNS is a pub/sub notification service that delivers messages to all subscribers simultaneously. They solve different problems and are frequently used together in a fan-out pattern where SNS distributes to multiple SQS queues.`,
     whenToUse: 'SQS: work queues where exactly one consumer should process each job, buffering between services, retry and dead-letter patterns. SNS: broadcasting events to multiple systems simultaneously, sending notifications across email, SMS, HTTP, Lambda, and SQS simultaneously.',
     keyConcepts: [
       { title: 'Delivery Model', description: 'SQS holds messages until a consumer polls and deletes them. A message is delivered to exactly one consumer. SNS pushes messages to all subscribers at the moment of publish; there is no persistence after delivery.' },
@@ -679,8 +679,8 @@ SQS is a distributed message queue where a single consumer processes each messag
     icon: 'send',
     color: '#8b5cf6',
     description: 'Work queues versus event routing for decoupled AWS architectures.',
-    introduction: '## Overview
-SQS is a durable message queue for worker patterns. EventBridge is a serverless event bus that routes events from AWS services, SaaS applications, and custom sources to targets based on content-based routing rules. EventBridge is optimized for event-driven integration and routing; SQS is optimized for reliable work distribution.',
+    introduction: `## Overview
+SQS is a durable message queue for worker patterns. EventBridge is a serverless event bus that routes events from AWS services, SaaS applications, and custom sources to targets based on content-based routing rules. EventBridge is optimized for event-driven integration and routing; SQS is optimized for reliable work distribution.`,
     whenToUse: 'SQS: reliable work queues where processing order or exactly-once delivery matters, buffering, retry with backoff. EventBridge: routing CloudWatch events, integrating SaaS tools, multi-target fan-out with content-based filtering, scheduled events (cron), cross-account and cross-region event delivery.',
     keyConcepts: [
       { title: 'Routing Capability', description: 'EventBridge rules can filter and route events based on any field in the event payload using content-based filtering rules. SQS has no routing; all messages go to a single queue.' },
@@ -725,8 +725,8 @@ SQS is a durable message queue for worker patterns. EventBridge is a serverless 
     icon: 'send',
     color: '#8b5cf6',
     description: 'High-throughput distributed log versus managed message queue for event streaming.',
-    introduction: '## Overview
-Apache Kafka is a distributed event log designed for high-throughput, ordered, replayable event streams. SQS is a fully managed simple message queue for point-to-point work distribution. Kafka retains messages for configurable periods and allows any consumer group to replay from any offset. SQS deletes messages once consumed.',
+    introduction: `## Overview
+Apache Kafka is a distributed event log designed for high-throughput, ordered, replayable event streams. SQS is a fully managed simple message queue for point-to-point work distribution. Kafka retains messages for configurable periods and allows any consumer group to replay from any offset. SQS deletes messages once consumed.`,
     whenToUse: 'Kafka: event sourcing, change data capture, audit logs, multiple independent consumer groups reading the same stream, streaming analytics pipelines. SQS: work queues, task distribution, simple point-to-point messaging without replay requirements.',
     keyConcepts: [
       { title: 'Message Retention and Replay', description: 'Kafka retains messages for a configurable retention period (default 7 days, unlimited with tiered storage). Any consumer group can seek to any offset and replay historical events. SQS deletes messages after they are consumed; replay is impossible without re-publishing.' },
@@ -778,8 +778,8 @@ Apache Kafka is a distributed event log designed for high-throughput, ordered, r
     icon: 'send',
     color: '#8b5cf6',
     description: 'AWS-native data streaming versus open-source distributed event log.',
-    introduction: '## Overview
-Amazon Kinesis Data Streams is a fully managed data streaming service tightly integrated with the AWS ecosystem. Apache Kafka (available via MSK) is the open-source standard for high-throughput event streaming with a rich ecosystem. Both serve similar use cases but differ in integration, operational model, and ecosystem portability.',
+    introduction: `## Overview
+Amazon Kinesis Data Streams is a fully managed data streaming service tightly integrated with the AWS ecosystem. Apache Kafka (available via MSK) is the open-source standard for high-throughput event streaming with a rich ecosystem. Both serve similar use cases but differ in integration, operational model, and ecosystem portability.`,
     whenToUse: 'Kinesis: AWS-native real-time data pipelines, existing AWS ecosystem integration (Lambda, Firehose, Analytics), teams that want zero Kafka operations. Kafka/MSK: multi-cloud or hybrid architectures, existing Kafka expertise, Kafka-native tooling (Kafka Connect, Kafka Streams, ksqlDB), high-throughput streaming analytics.',
     keyConcepts: [
       { title: 'Shard vs Partition Model', description: 'Kinesis organizes streams into shards, each supporting 1 MB/s writes and 2 MB/s reads. Adding shards scales capacity but requires explicit resharding. Kafka uses partitions, which can be freely increased (but not decreased) without service interruption.' },
@@ -824,8 +824,8 @@ Amazon Kinesis Data Streams is a fully managed data streaming service tightly in
     icon: 'send',
     color: '#8b5cf6',
     description: 'Traditional AMQP message broker versus AWS-managed queue service.',
-    introduction: '## Overview
-RabbitMQ is an open-source message broker implementing the AMQP protocol with rich routing, exchange types, and consumer acknowledgment semantics. SQS is a fully managed AWS queue service with simpler semantics and zero operational overhead. RabbitMQ offers more expressive routing; SQS eliminates all broker management.',
+    introduction: `## Overview
+RabbitMQ is an open-source message broker implementing the AMQP protocol with rich routing, exchange types, and consumer acknowledgment semantics. SQS is a fully managed AWS queue service with simpler semantics and zero operational overhead. RabbitMQ offers more expressive routing; SQS eliminates all broker management.`,
     whenToUse: 'RabbitMQ: complex routing topologies with topic and fanout exchanges, existing AMQP clients, message priorities, per-message TTL, consumer acknowledgment patterns. SQS: serverless workloads, AWS-native architectures, teams prioritizing operational simplicity over routing flexibility.',
     keyConcepts: [
       { title: 'Exchange and Binding Model', description: 'RabbitMQ routes messages through exchanges (direct, fanout, topic, headers) to queues via bindings. This provides expressive content-based routing at the broker level. SQS is a flat queue with no routing layer.' },
@@ -872,8 +872,8 @@ RabbitMQ is an open-source message broker implementing the AMQP protocol with ri
     icon: 'gitMerge',
     color: '#22c55e',
     description: 'Cloud-native CI/CD versus self-hosted automation server.',
-    introduction: '## Overview
-GitHub Actions is a cloud-native CI/CD platform built into GitHub, using YAML workflow files committed alongside code. Jenkins is a self-hosted open-source automation server with thousands of plugins and a long history in enterprise environments. Actions eliminates infrastructure management; Jenkins provides unlimited customization at the cost of operational burden.',
+    introduction: `## Overview
+GitHub Actions is a cloud-native CI/CD platform built into GitHub, using YAML workflow files committed alongside code. Jenkins is a self-hosted open-source automation server with thousands of plugins and a long history in enterprise environments. Actions eliminates infrastructure management; Jenkins provides unlimited customization at the cost of operational burden.`,
     whenToUse: 'GitHub Actions: code hosted on GitHub, cloud-native teams, modern workflows, serverless runners, GitHub ecosystem integration. Jenkins: self-hosted on-premises compute requirements, compliance environments that prohibit cloud CI, existing Jenkins investment, complex plugin-dependent workflows.',
     keyConcepts: [
       { title: 'Infrastructure Model', description: 'GitHub Actions runs on GitHub-hosted runners (Ubuntu, macOS, Windows) or self-hosted runners in your own infrastructure. Jenkins runs on servers you provision, patch, and scale.' },
@@ -925,8 +925,8 @@ GitHub Actions is a cloud-native CI/CD platform built into GitHub, using YAML wo
     icon: 'gitMerge',
     color: '#22c55e',
     description: 'Comparing two leading cloud-native CI/CD platforms for modern DevOps teams.',
-    introduction: '## Overview
-GitLab CI/CD is deeply integrated into the GitLab DevOps platform, covering the full SDLC from planning to monitoring. GitHub Actions is deeply integrated with GitHub, the dominant code hosting platform. Both use YAML configuration, support self-hosted runners, and provide marketplace/component ecosystems. The choice often follows your code hosting platform.',
+    introduction: `## Overview
+GitLab CI/CD is deeply integrated into the GitLab DevOps platform, covering the full SDLC from planning to monitoring. GitHub Actions is deeply integrated with GitHub, the dominant code hosting platform. Both use YAML configuration, support self-hosted runners, and provide marketplace/component ecosystems. The choice often follows your code hosting platform.`,
     whenToUse: 'GitLab CI: code on GitLab, need for integrated DevOps platform (boards, security scanning, container registry, package registry, Kubernetes integration), self-hosted GitLab for compliance. GitHub Actions: code on GitHub, deep GitHub ecosystem integration (Issues, PRs, GitHub Packages), large open-source contributor base.',
     keyConcepts: [
       { title: 'Pipeline Structure', description: 'GitLab CI uses stages with jobs that run in parallel within a stage. GitHub Actions uses jobs with steps, allowing more granular dependency control with the needs keyword. GitLab\'s stage model is simpler; Actions provides more flexibility for complex DAGs.' },
@@ -971,8 +971,8 @@ GitLab CI/CD is deeply integrated into the GitLab DevOps platform, covering the 
     icon: 'gitMerge',
     color: '#22c55e',
     description: 'Dedicated CI/CD SaaS platform versus GitHub-integrated workflow automation.',
-    introduction: '## Overview
-CircleCI is a dedicated CI/CD platform with advanced caching, parallelism, resource class configuration, and first-class Docker Layer Caching. GitHub Actions is GitHub-native with tight integration to repository events and the GitHub ecosystem. CircleCI historically led on build speed optimization; GitHub Actions has closed the gap while offering tighter GitHub integration.',
+    introduction: `## Overview
+CircleCI is a dedicated CI/CD platform with advanced caching, parallelism, resource class configuration, and first-class Docker Layer Caching. GitHub Actions is GitHub-native with tight integration to repository events and the GitHub ecosystem. CircleCI historically led on build speed optimization; GitHub Actions has closed the gap while offering tighter GitHub integration.`,
     whenToUse: 'CircleCI: teams that need advanced Docker Layer Caching, fine-grained resource classes (ARM, GPU, large memory), sophisticated test parallelism, CircleCI orbs ecosystem. GitHub Actions: teams wanting CI configuration to live fully within GitHub, tight integration with GitHub Checks API, simpler OIDC-based cloud authentication.',
     keyConcepts: [
       { title: 'Docker Layer Caching', description: 'CircleCI offers paid Docker Layer Caching that stores intermediate Docker image layers between builds, dramatically reducing build times for Docker-heavy pipelines. GitHub Actions caches Docker layers only via third-party Actions with manual configuration.' },
@@ -1017,8 +1017,8 @@ CircleCI is a dedicated CI/CD platform with advanced caching, parallelism, resou
     icon: 'gitMerge',
     color: '#22c55e',
     description: 'GitOps continuous delivery tools for Kubernetes compared.',
-    introduction: '## Overview
-Argo CD and Flux are the two dominant GitOps tools for Kubernetes continuous delivery. Both reconcile the state of a Kubernetes cluster with a Git repository as the source of truth. Argo CD emphasizes a rich web UI and application-centric model. Flux emphasizes composability, a pure pull-based controller model, and a CLI-first experience. Both are CNCF projects.',
+    introduction: `## Overview
+Argo CD and Flux are the two dominant GitOps tools for Kubernetes continuous delivery. Both reconcile the state of a Kubernetes cluster with a Git repository as the source of truth. Argo CD emphasizes a rich web UI and application-centric model. Flux emphasizes composability, a pure pull-based controller model, and a CLI-first experience. Both are CNCF projects.`,
     whenToUse: 'Argo CD: teams that want a rich visual dashboard for deployment status, multi-tenant Argo CD installations, ApplicationSets for fleet management. Flux: teams that prefer a Kubernetes-native controller approach, GitOps Toolkit composability, Helm and Kustomize without a centralized UI dependency.',
     keyConcepts: [
       { title: 'Reconciliation Model', description: 'Both tools continuously compare the desired state in Git against live cluster state and reconcile differences. Argo CD uses a centralized server component. Flux distributes reconciliation across specialized controllers (source-controller, kustomize-controller, helm-controller).' },
@@ -1063,8 +1063,8 @@ Argo CD and Flux are the two dominant GitOps tools for Kubernetes continuous del
     icon: 'gitMerge',
     color: '#22c55e',
     description: 'Enterprise multi-cloud delivery platform versus Kubernetes-native GitOps tool.',
-    introduction: '## Overview
-Spinnaker is a multi-cloud continuous delivery platform developed by Netflix supporting complex canary and blue-green pipelines across AWS, GCP, Azure, and Kubernetes. Argo CD is a Kubernetes-native GitOps continuous delivery tool focused on declarative deployment. Spinnaker excels at complex multi-stage delivery pipelines across heterogeneous clouds; Argo CD excels at Kubernetes GitOps workflows.',
+    introduction: `## Overview
+Spinnaker is a multi-cloud continuous delivery platform developed by Netflix supporting complex canary and blue-green pipelines across AWS, GCP, Azure, and Kubernetes. Argo CD is a Kubernetes-native GitOps continuous delivery tool focused on declarative deployment. Spinnaker excels at complex multi-stage delivery pipelines across heterogeneous clouds; Argo CD excels at Kubernetes GitOps workflows.`,
     whenToUse: 'Spinnaker: multi-cloud deployments, complex bake-deploy-verify pipelines, Netflix-style canary analysis with Kayenta, organizations already invested in Spinnaker. Argo CD: Kubernetes-only environments, GitOps workflows, simpler deployment model, teams that want a modern CNCF-backed tool.',
     keyConcepts: [
       { title: 'Deployment Model', description: 'Spinnaker uses a pipeline-based model with stages (Bake, Deploy, Manual Judgment, Canary Analysis). Argo CD uses a declarative GitOps model where the cluster state is driven by Git commits without explicit pipeline stages.' },
@@ -1111,8 +1111,8 @@ Spinnaker is a multi-cloud continuous delivery platform developed by Netflix sup
     icon: 'activity',
     color: '#06b6d4',
     description: 'AWS-native monitoring versus third-party unified observability platform.',
-    introduction: '## Overview
-CloudWatch is the native AWS monitoring service for metrics, logs, dashboards, and alarms. Datadog is a third-party SaaS observability platform providing unified metrics, logs, traces, and APM across any cloud or on-premises infrastructure. CloudWatch is tightly integrated with AWS services at low cost; Datadog provides a richer feature set with better cross-cloud and application-layer visibility.',
+    introduction: `## Overview
+CloudWatch is the native AWS monitoring service for metrics, logs, dashboards, and alarms. Datadog is a third-party SaaS observability platform providing unified metrics, logs, traces, and APM across any cloud or on-premises infrastructure. CloudWatch is tightly integrated with AWS services at low cost; Datadog provides a richer feature set with better cross-cloud and application-layer visibility.`,
     whenToUse: 'CloudWatch: AWS-only infrastructure, tight budget, basic alerting and dashboards, CloudWatch Insights for ad-hoc log analysis. Datadog: multi-cloud or hybrid environments, deep APM and distributed tracing, advanced anomaly detection, unified metric-log-trace correlation, custom dashboards.',
     keyConcepts: [
       { title: 'Data Unification', description: 'Datadog correlates metrics, logs, and traces under a single timeline and UI, enabling one-click navigation from a latency spike metric to the traces that caused it to the logs from those traces. CloudWatch separates these in distinct services (Metrics, Logs, X-Ray) with limited cross-linking.' },
@@ -1164,8 +1164,8 @@ CloudWatch is the native AWS monitoring service for metrics, logs, dashboards, a
     icon: 'activity',
     color: '#06b6d4',
     description: 'Open-source pull-based metrics versus commercial SaaS observability.',
-    introduction: '## Overview
-Prometheus is the CNCF standard for Kubernetes monitoring, using a pull-based scraping model with a powerful query language (PromQL). Datadog is a commercial SaaS that ingests Prometheus metrics alongside its own agents, providing unified storage, dashboards, and alerting. The choice is between full control and operational overhead versus managed service simplicity at commercial pricing.',
+    introduction: `## Overview
+Prometheus is the CNCF standard for Kubernetes monitoring, using a pull-based scraping model with a powerful query language (PromQL). Datadog is a commercial SaaS that ingests Prometheus metrics alongside its own agents, providing unified storage, dashboards, and alerting. The choice is between full control and operational overhead versus managed service simplicity at commercial pricing.`,
     whenToUse: 'Prometheus: Kubernetes-native monitoring, PromQL-based alerting with Alertmanager, open-source toolchain, cost-sensitive environments with large metric volumes. Datadog: teams wanting zero monitoring infrastructure management, unified metrics and APM, built-in anomaly detection and forecasting.',
     keyConcepts: [
       { title: 'Scrape vs Push Model', description: 'Prometheus scrapes metrics by polling HTTP /metrics endpoints on defined intervals. Datadog agents push metrics to Datadog servers. Pull-based models make it easy to detect when a target goes down (scrape failure); push-based models work better for short-lived processes.' },
@@ -1218,8 +1218,8 @@ Prometheus is the CNCF standard for Kubernetes monitoring, using a pull-based sc
     icon: 'barChart',
     color: '#06b6d4',
     description: 'Multi-source metrics dashboarding versus Elasticsearch-centric log analytics.',
-    introduction: '## Overview
-Grafana is an open-source visualization platform that connects to dozens of data sources (Prometheus, Loki, InfluxDB, CloudWatch, Elasticsearch, PostgreSQL) to build unified dashboards. Kibana is the visualization layer of the Elastic Stack, designed primarily for querying Elasticsearch indices. Grafana is the dashboard standard for metrics; Kibana excels at full-text log search and analytics on Elasticsearch.',
+    introduction: `## Overview
+Grafana is an open-source visualization platform that connects to dozens of data sources (Prometheus, Loki, InfluxDB, CloudWatch, Elasticsearch, PostgreSQL) to build unified dashboards. Kibana is the visualization layer of the Elastic Stack, designed primarily for querying Elasticsearch indices. Grafana is the dashboard standard for metrics; Kibana excels at full-text log search and analytics on Elasticsearch.`,
     whenToUse: 'Grafana: multi-source dashboards, Prometheus metrics visualization, Loki log correlation alongside metrics, unified observability dashboards. Kibana: deep log search and analytics on Elasticsearch data, Elastic APM, security analytics with Elastic SIEM, log aggregation from Logstash or Beats.',
     keyConcepts: [
       { title: 'Data Source Support', description: 'Grafana supports over 60 data sources as plugins without storing data itself. Kibana is tightly coupled to Elasticsearch and its Lucene query syntax. Using Kibana for non-Elasticsearch data requires custom plugins or data ingestion into Elasticsearch.' },
@@ -1264,8 +1264,8 @@ Grafana is an open-source visualization platform that connects to dozens of data
     icon: 'activity',
     color: '#06b6d4',
     description: 'CNCF distributed tracing versus the original open-source trace aggregation system.',
-    introduction: '## Overview
-Zipkin pioneered distributed tracing and defined many of the trace context propagation standards used today. Jaeger, developed by Uber and donated to CNCF, is a modern distributed tracing system with better scalability, adaptive sampling, and Kubernetes-native deployment. Both support the OpenTelemetry data model, making the backend choice increasingly decoupled from instrumentation.',
+    introduction: `## Overview
+Zipkin pioneered distributed tracing and defined many of the trace context propagation standards used today. Jaeger, developed by Uber and donated to CNCF, is a modern distributed tracing system with better scalability, adaptive sampling, and Kubernetes-native deployment. Both support the OpenTelemetry data model, making the backend choice increasingly decoupled from instrumentation.`,
     whenToUse: 'Jaeger: new tracing installations, Kubernetes-native architectures, CNCF ecosystem alignment, adaptive sampling, deeper Prometheus and Grafana integration. Zipkin: existing Zipkin instrumentation, simpler deployment requirements, Spring Cloud Sleuth compatibility.',
     keyConcepts: [
       { title: 'Adaptive Sampling', description: 'Jaeger supports adaptive sampling that automatically adjusts sampling rates per service and endpoint based on observed traffic, ensuring low-traffic operations are sampled at higher rates. Zipkin uses fixed rate or probabilistic sampling without per-endpoint adaptation.' },
@@ -1310,8 +1310,8 @@ Zipkin pioneered distributed tracing and defined many of the trace context propa
     icon: 'activity',
     color: '#06b6d4',
     description: 'Full-text log indexing versus label-based log aggregation for observability.',
-    introduction: '## Overview
-The ELK Stack (Elasticsearch, Logstash, Kibana) provides full-text search and analytics over logs by indexing every field of every log line. Grafana Loki indexes only log stream labels (not log content), storing compressed log chunks in object storage. Loki is dramatically cheaper and simpler for operational log viewing; ELK is necessary for complex free-text log search and security analytics.',
+    introduction: `## Overview
+The ELK Stack (Elasticsearch, Logstash, Kibana) provides full-text search and analytics over logs by indexing every field of every log line. Grafana Loki indexes only log stream labels (not log content), storing compressed log chunks in object storage. Loki is dramatically cheaper and simpler for operational log viewing; ELK is necessary for complex free-text log search and security analytics.`,
     whenToUse: 'ELK: security event correlation (SIEM), compliance log auditing requiring full-text search, complex log analytics across unstructured fields, Elastic APM integration. Loki: Kubernetes pod log aggregation, cost-sensitive environments, teams using Grafana for metrics who want log correlation.',
     keyConcepts: [
       { title: 'Indexing Strategy', description: 'Elasticsearch indexes every field of every log document by default, enabling sub-second full-text queries across petabytes but at high storage and CPU cost. Loki indexes only log stream labels (Kubernetes pod, namespace, app name) and stores log lines compressed; queries filter by labels then grep the raw log lines.' },
@@ -1358,8 +1358,8 @@ The ELK Stack (Elasticsearch, Logstash, Kibana) provides full-text search and an
     icon: 'layers',
     color: '#f59e0b',
     description: 'Instant environment swap versus gradual traffic shifting for zero-downtime releases.',
-    introduction: '## Overview
-Blue-green deployment maintains two identical environments. The inactive environment receives the new version, and traffic is atomically switched. Canary deployment gradually shifts a small percentage of traffic to the new version, monitoring for errors before full rollout. Blue-green provides instant rollback; canary limits blast radius during rollout.',
+    introduction: `## Overview
+Blue-green deployment maintains two identical environments. The inactive environment receives the new version, and traffic is atomically switched. Canary deployment gradually shifts a small percentage of traffic to the new version, monitoring for errors before full rollout. Blue-green provides instant rollback; canary limits blast radius during rollout.`,
     whenToUse: 'Blue-green: database schema changes that are non-backward-compatible, critical financial or healthcare systems requiring instant rollback, environments where gradual rollout is impractical. Canary: high-traffic production systems where testing with real traffic is valuable, when you want to validate new code behavior with a subset of users before full rollout.',
     keyConcepts: [
       { title: 'Traffic Switch Mechanism', description: 'Blue-green switches traffic instantaneously at the load balancer level (DNS or ALB target group weight). Canary adjusts traffic weights gradually (5% -> 25% -> 50% -> 100%) over minutes or hours.' },
@@ -1411,8 +1411,8 @@ Blue-green deployment maintains two identical environments. The inactive environ
     icon: 'layers',
     color: '#f59e0b',
     description: 'Incremental in-place replacement versus full environment swap for production releases.',
-    introduction: '## Overview
-Rolling deployment replaces instances one by one (or in small batches), maintaining service capacity throughout the update. Blue-green keeps a complete parallel environment and atomically switches traffic. Rolling is simpler and cheaper; blue-green provides instant rollback and avoids mixed-version coexistence during deployment.',
+    introduction: `## Overview
+Rolling deployment replaces instances one by one (or in small batches), maintaining service capacity throughout the update. Blue-green keeps a complete parallel environment and atomically switches traffic. Rolling is simpler and cheaper; blue-green provides instant rollback and avoids mixed-version coexistence during deployment.`,
     whenToUse: 'Rolling: default for most Kubernetes workloads, cost-sensitive environments, backward-compatible changes. Blue-green: changes requiring a clean cutover with no mixed-version period, financial systems, situations where instant rollback capability is non-negotiable.',
     keyConcepts: [
       { title: 'Mixed Version Window', description: 'During a rolling deployment, old and new versions serve traffic simultaneously for the duration of the rollout. This requires API backward compatibility and database schema compatibility. Blue-green has no mixed-version window after the switch.' },
@@ -1464,8 +1464,8 @@ Rolling deployment replaces instances one by one (or in small batches), maintain
     icon: 'layers',
     color: '#f59e0b',
     description: 'Deployment strategies and update patterns for containerized versus serverless workloads.',
-    introduction: '## Overview
-ECS and Lambda deployments follow different lifecycle models. ECS supports blue-green via CodeDeploy or rolling updates via service update. Lambda uses function versioning, aliases, and traffic shifting to achieve equivalent deployment strategies. Understanding each model is critical for implementing zero-downtime deployments and safe rollbacks.',
+    introduction: `## Overview
+ECS and Lambda deployments follow different lifecycle models. ECS supports blue-green via CodeDeploy or rolling updates via service update. Lambda uses function versioning, aliases, and traffic shifting to achieve equivalent deployment strategies. Understanding each model is critical for implementing zero-downtime deployments and safe rollbacks.`,
     whenToUse: 'ECS deployment patterns: services with stateful connections, gradual traffic shifting across multiple services, blue-green with CodeDeploy for compliance-required rollback documentation. Lambda deployment patterns: function aliases for version management, traffic shifting for canary Lambda releases, automated rollbacks via CloudWatch alarms.',
     keyConcepts: [
       { title: 'Lambda Versions and Aliases', description: 'Each Lambda publish creates an immutable numbered version. Aliases are named pointers to specific versions. An alias can have a routing configuration that splits traffic between two versions with configurable weights (e.g., 95% to stable, 5% to canary).' },
@@ -1510,8 +1510,8 @@ ECS and Lambda deployments follow different lifecycle models. ECS supports blue-
     icon: 'layers',
     color: '#f59e0b',
     description: 'Kubernetes package manager with templating versus configuration overlay system.',
-    introduction: '## Overview
-Helm packages Kubernetes manifests as charts with a Go templating engine, enabling parameterized deployment of complex applications. Kustomize uses a base-and-overlay model that modifies plain YAML without templating, treating configuration as data rather than code. Helm is better for distributing reusable packages; Kustomize is better for environment-specific customization without template complexity.',
+    introduction: `## Overview
+Helm packages Kubernetes manifests as charts with a Go templating engine, enabling parameterized deployment of complex applications. Kustomize uses a base-and-overlay model that modifies plain YAML without templating, treating configuration as data rather than code. Helm is better for distributing reusable packages; Kustomize is better for environment-specific customization without template complexity.`,
     whenToUse: 'Helm: deploying open-source applications published as Helm charts (Nginx, Prometheus, Kafka), managing complex multi-resource applications with many configurable parameters. Kustomize: environment-specific overlays on top of base manifests, managing patches without introducing template syntax, GitOps workflows where plain YAML is preferred.',
     keyConcepts: [
       { title: 'Templating vs Overlay', description: 'Helm templates replace values in YAML using Go template syntax. Kustomize applies strategic merge patches and JSON patches on top of base YAML without modifying the base files. Helm is more powerful but harder to debug; Kustomize is simpler but less flexible for deep customization.' },
@@ -1565,8 +1565,8 @@ Helm packages Kubernetes manifests as charts with a Go templating engine, enabli
     icon: 'globe',
     color: '#14b8a6',
     description: 'Layer 7 application load balancing versus Layer 4 network load balancing on AWS.',
-    introduction: '## Overview
-Application Load Balancer operates at Layer 7, terminating HTTP and HTTPS connections and enabling content-based routing, sticky sessions, authentication integration, and WebSocket support. Network Load Balancer operates at Layer 4, passing TCP and UDP connections through to targets with extremely low latency and without modifying packet headers. Each solves a distinct set of problems.',
+    introduction: `## Overview
+Application Load Balancer operates at Layer 7, terminating HTTP and HTTPS connections and enabling content-based routing, sticky sessions, authentication integration, and WebSocket support. Network Load Balancer operates at Layer 4, passing TCP and UDP connections through to targets with extremely low latency and without modifying packet headers. Each solves a distinct set of problems.`,
     whenToUse: 'ALB: HTTP/HTTPS microservices, path-based or host-based routing, WebSocket, gRPC, AWS WAF integration, Cognito authentication offloading. NLB: TCP pass-through, TLS offloading at extreme throughput, preserving client source IP, static IP requirements, non-HTTP protocols (MQTT, custom TCP).',
     keyConcepts: [
       { title: 'OSI Layer', description: 'ALB terminates Layer 7 connections, inspects HTTP headers, and makes routing decisions based on path, host, query string, and headers. NLB passes Layer 4 TCP or UDP flows to targets without inspection, maintaining ultra-low latency and preserving TCP flow semantics.' },
@@ -1618,8 +1618,8 @@ Application Load Balancer operates at Layer 7, terminating HTTP and HTTPS connec
     icon: 'globe',
     color: '#14b8a6',
     description: 'Direct VPC-to-VPC connections versus centralized hub-and-spoke network topology.',
-    introduction: '## Overview
-VPC Peering creates a direct routing connection between two VPCs. Transit Gateway acts as a regional network hub that connects multiple VPCs, VPNs, and Direct Connect connections through a central router. VPC Peering is simpler and cheaper for a small number of connections; Transit Gateway becomes essential when the number of VPCs exceeds 5 to 10.',
+    introduction: `## Overview
+VPC Peering creates a direct routing connection between two VPCs. Transit Gateway acts as a regional network hub that connects multiple VPCs, VPNs, and Direct Connect connections through a central router. VPC Peering is simpler and cheaper for a small number of connections; Transit Gateway becomes essential when the number of VPCs exceeds 5 to 10.`,
     whenToUse: 'VPC Peering: two to five VPCs, simple point-to-point connectivity, lowest latency and cost. Transit Gateway: many VPCs requiring a meshed or hub-and-spoke topology, shared services VPC, on-premises connectivity via VPN or Direct Connect through a central gateway, cross-account and cross-region routing.',
     keyConcepts: [
       { title: 'Transitive Routing', description: 'VPC Peering is non-transitive. If VPC A peers with VPC B and VPC B peers with VPC C, traffic cannot flow from A to C through B. Each pair that needs connectivity requires its own peering. Transit Gateway is transitive by design: all attached VPCs can route to each other through the gateway.' },
@@ -1664,8 +1664,8 @@ VPC Peering creates a direct routing connection between two VPCs. Transit Gatewa
     icon: 'globe',
     color: '#14b8a6',
     description: 'Service endpoint exposure versus full VPC routing for private connectivity.',
-    introduction: '## Overview
-AWS PrivateLink exposes a specific service endpoint (backed by NLB) to consumers in other VPCs without allowing full VPC routing. VPC Peering or Transit Gateway create full bidirectional routing between VPC CIDR blocks. PrivateLink is preferred for exposing services to external customers or untrusted VPCs; peering is appropriate for first-party VPCs requiring broad connectivity.',
+    introduction: `## Overview
+AWS PrivateLink exposes a specific service endpoint (backed by NLB) to consumers in other VPCs without allowing full VPC routing. VPC Peering or Transit Gateway create full bidirectional routing between VPC CIDR blocks. PrivateLink is preferred for exposing services to external customers or untrusted VPCs; peering is appropriate for first-party VPCs requiring broad connectivity.`,
     whenToUse: 'PrivateLink: SaaS service exposure to customer VPCs, exposing a microservice to partners or tenants without VPC-level access, keeping CIDR blocks private from consumers. VPC Peering: first-party VPCs owned by the same organization, internal shared services, when multiple endpoints from the same VPC are needed.',
     keyConcepts: [
       { title: 'Access Scope', description: 'PrivateLink exposes only the specific service (TCP port on NLB) to consumers; they cannot route to any other resource in the provider VPC. VPC Peering or TGW exposes the full CIDR block of the provider VPC, allowing routing to any resource within it.' },
@@ -1710,8 +1710,8 @@ AWS PrivateLink exposes a specific service endpoint (backed by NLB) to consumers
     icon: 'globe',
     color: '#14b8a6',
     description: 'Global CDN with edge caching versus regional application load balancer for web traffic.',
-    introduction: '## Overview
-CloudFront is a global content delivery network that caches responses at edge locations worldwide, reducing latency for geographically distributed users and offloading origin traffic. ALB distributes traffic to backend targets within a region. CloudFront sits in front of ALB for global applications; ALB is used directly for regional or internal APIs.',
+    introduction: `## Overview
+CloudFront is a global content delivery network that caches responses at edge locations worldwide, reducing latency for geographically distributed users and offloading origin traffic. ALB distributes traffic to backend targets within a region. CloudFront sits in front of ALB for global applications; ALB is used directly for regional or internal APIs.`,
     whenToUse: 'CloudFront: globally distributed user bases, static asset delivery, API caching, DDoS mitigation via Shield, WAF at the edge, reducing origin load. ALB: regional applications, internal microservice routing, gRPC, WebSocket, applications where caching is undesirable or inapplicable.',
     keyConcepts: [
       { title: 'Edge Caching', description: 'CloudFront caches responses at 400+ edge locations worldwide. A user in Tokyo requesting a US-origin API served through CloudFront may receive a cached response from the Tokyo edge with sub-50ms latency versus 150ms for a direct origin request.' },
@@ -1756,8 +1756,8 @@ CloudFront is a global content delivery network that caches responses at edge lo
     icon: 'globe',
     color: '#14b8a6',
     description: 'Choosing the right DNS routing policy for traffic management, failover, and geo-distribution.',
-    introduction: '## Overview
-Route 53 supports eight routing policies that determine how DNS queries are answered when multiple records exist for the same name. Choosing the correct policy directly affects application availability, latency, compliance with data residency requirements, and disaster recovery behavior. Simple routing is the default; the others serve specific architectural needs.',
+    introduction: `## Overview
+Route 53 supports eight routing policies that determine how DNS queries are answered when multiple records exist for the same name. Choosing the correct policy directly affects application availability, latency, compliance with data residency requirements, and disaster recovery behavior. Simple routing is the default; the others serve specific architectural needs.`,
     whenToUse: 'Simple: single resource, no traffic management. Weighted: A/B testing, canary DNS migration, traffic shifting between endpoints. Latency: routing users to the lowest-latency region. Failover: active-passive disaster recovery. Geolocation: data residency compliance, language-based routing. Geoproximity: complex regional traffic distribution with bias. Multi-value: basic multi-IP round-robin with health checking. IP-based: CIDR-based routing for on-premises or known IP ranges.',
     keyConcepts: [
       { title: 'Weighted Routing', description: 'Assign numeric weights to records. Route 53 distributes queries proportionally to the weight of each record. Setting one record to 100 and another to 5 sends approximately 5% of traffic to the second record. Use for canary deployments, load distribution, and gradual migration between environments.' },

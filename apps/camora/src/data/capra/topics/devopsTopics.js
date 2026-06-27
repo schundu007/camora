@@ -37446,8 +37446,8 @@ Hooks are the extensibility layer that DevOps teams use to enforce quality gates
     color: '#3b82f6',
     questions: 3,
     description: 'Organizational, technical, and cultural changes required to adopt TBD with CD, and how to sequence them.',
-    introduction: '## Overview
-Trunk-based development with continuous deployment requires sequenced investment in safety mechanisms before shortening branch lifetimes. Build the safety net first, then reduce branch lifetime, then enable progressive delivery.',
+    introduction: `## Overview
+Trunk-based development with continuous deployment requires sequenced investment in safety mechanisms before shortening branch lifetimes. Build the safety net first, then reduce branch lifetime, then enable progressive delivery.`,
     keyQuestions: [
       {
         question: 'Your team wants to adopt trunk-based development with continuous deployment. What organizational, technical, and cultural changes are required, and how do you sequence them?',
@@ -37492,8 +37492,8 @@ spec:
     color: '#f59e0b',
     questions: 2,
     description: 'Designing CI runner fleets with spot/preemptible instances, warm pools, and cross-region spot arbitrage to minimize cost while handling burst.',
-    introduction: '## Overview
-CI runner cost is dominated by idle capacity during off-hours and cold-start latency during burst. The solution is a hybrid reserved/spot fleet with a warm pool and spot interruption handling.',
+    introduction: `## Overview
+CI runner cost is dominated by idle capacity during off-hours and cold-start latency during burst. The solution is a hybrid reserved/spot fleet with a warm pool and spot interruption handling.`,
     keyQuestions: [
       {
         question: 'How do you design a cost-optimized CI runner fleet that scales to burst capacity during business hours but minimizes cost overnight?',
@@ -37518,8 +37518,8 @@ CI runner cost is dominated by idle capacity during off-hours and cold-start lat
     color: '#ef4444',
     questions: 2,
     description: 'SLSA levels, SBOM generation, provenance attestation, and dependency pinning to secure the software supply chain end-to-end.',
-    introduction: '## Overview
-Supply chain attacks target the build system and dependencies rather than the application itself. Defense requires verifiable provenance for every artifact and a full inventory of every component.',
+    introduction: `## Overview
+Supply chain attacks target the build system and dependencies rather than the application itself. Defense requires verifiable provenance for every artifact and a full inventory of every component.`,
     keyQuestions: [
       {
         question: 'How do you implement software supply chain security end-to-end in a CI/CD pipeline?',
@@ -37547,8 +37547,8 @@ Supply chain attacks target the build system and dependencies rather than the ap
     color: '#f97316',
     questions: 2,
     description: 'Systematic approach to diagnosing why alerts stopped firing during a production incident.',
-    introduction: '## Overview
-A broken alerting pipeline is a silent failure: the system is on fire and nobody gets paged. Diagnose it by segmenting it into stages and checking each stage independently.',
+    introduction: `## Overview
+A broken alerting pipeline is a silent failure: the system is on fire and nobody gets paged. Diagnose it by segmenting it into stages and checking each stage independently.`,
     keyQuestions: [
       {
         question: 'Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?',
@@ -43281,8 +43281,8 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
     icon: 'activity',
     color: '#3b82f6',
     description: 'DORA 2024 State of DevOps: 39 capabilities across 5 clusters, new AI category, 5 performance levels. How elite performers differ.',
-    introduction: '## Overview
-DORA (DevOps Research and Assessment) has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified 39 capabilities organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new AI capabilities cluster — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.',
+    introduction: `## Overview
+DORA (DevOps Research and Assessment) has published annual State of DevOps Reports since 2014. The 2024 edition surveyed 39,000+ professionals and identified 39 capabilities organized across five clusters predicting elite software delivery performance.\n\nThe 2024 report introduced a new AI capabilities cluster — the first time AI tools appear as a distinct research variable. Elite performers deploy 182× more frequently than low performers, with 2,604× shorter lead times.`,
     keyConcepts: [
       { title: 'The Four Key DORA Metrics', description: 'Deployment Frequency: how often you deploy to production. Lead Time for Changes: commit-to-production time. Mean Time to Restore (MTTR): recovery time from production failure. Change Failure Rate: percentage of deployments causing incidents. Elite thresholds: on-demand deploys, <1hr lead time, <1hr MTTR, <5% CFR.' },
       { title: 'AI Capabilities Cluster (New in 2024)', description: 'Six capabilities added in 2024: AI-assisted code review, test generation, documentation, code assistance (Copilot/Cursor), incident response augmentation, and AI as a team collaborator in architecture decisions. Organizations with mature AI capability scores show 1.6× higher deployment frequency and 1.4× lower change failure rates.' },
@@ -43309,8 +43309,8 @@ DORA (DevOps Research and Assessment) has published annual State of DevOps Repor
     icon: 'filter',
     color: '#06b6d4',
     description: 'OTel Collector: receivers, processors, exporters. Tail-based vs head-based sampling. Agent/Gateway topology. Kubernetes Operator.',
-    introduction: '## Overview
-OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.',
+    introduction: `## Overview
+OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that receives, processes, and exports traces, metrics, and logs. It decouples instrumented services from observability backends — you reconfigure sampling or add a new destination without redeploying applications.\n\nThe collector sits between your services and backends (Jaeger, Prometheus, Datadog, Grafana Cloud), handling protocol conversion, sampling decisions, attribute enrichment, PII redaction, and fan-out to multiple destinations.`,
     keyConcepts: [
       { title: 'Pipeline Components: Receivers → Processors → Exporters', description: 'Receivers accept telemetry: OTLP (gRPC/HTTP), Jaeger, Zipkin, Prometheus scrape, Fluentd, StatsD. Processors transform data: batch, memory limiter (always first!), attribute enrichment, filter, tail-based sampling, PII redaction. Exporters ship to backends: OTLP, Prometheus remote write, Jaeger, Datadog, Grafana OTLP, AWS X-Ray. Each pipeline is configured per signal type (traces/metrics/logs) in YAML.' },
       { title: 'Head-Based vs Tail-Based Sampling', description: 'Head-based: sampling decision made at trace start — fast, zero memory overhead, cannot sample based on outcome (errors, slow spans). Tail-based: buffers all spans for a complete trace before deciding — enables "100% errors, 1% success" strategies. The tailsampling processor must see ALL spans for a trace, requiring sticky routing (all pods of a service → same Gateway collector via TraceID hash).' },
@@ -43337,8 +43337,8 @@ OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that r
     icon: 'globe',
     color: '#14b8a6',
     description: 'Gateway API v1 (GA Oct 2023): GatewayClass/Gateway/HTTPRoute hierarchy. Role-oriented design, traffic splitting, ReferenceGrants.',
-    introduction: '## Overview
-Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a role-oriented resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.',
+    introduction: `## Overview
+Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 2024. It is the next-generation replacement for the Ingress API, designed with a role-oriented resource model — infrastructure providers manage GatewayClass, cluster operators manage Gateway, application developers manage Routes.\n\nGateway API is more expressive, portable, and extensible than Ingress: traffic splitting, header routing, and gRPC routing are native features, not annotation hacks.`,
     keyConcepts: [
       { title: 'Three-Tier Hierarchy: GatewayClass → Gateway → Routes', description: 'GatewayClass (cluster-scoped): maps a name to a controller implementation (Envoy Gateway, Istio, Kong, Cilium). Gateway (namespace-scoped): instantiates a load balancer — specifies listeners (port, protocol, TLS cert ref). HTTPRoute / GRPCRoute / TCPRoute / TLSRoute (namespace-scoped): routing rules — hostname, path, header matching, traffic splitting via weighted BackendRefs.' },
       { title: 'Role-Oriented Design', description: 'Infrastructure Provider defines GatewayClasses (e.g., platform team creates cloud LB classes). Cluster Operator creates Gateways (selects GatewayClass, configures TLS, sets listeners). Application Developer creates Routes pointing to their Services — no cluster-level RBAC needed. This is a fundamental improvement over Ingress where all config was in one resource requiring elevated permissions.' },
@@ -43365,8 +43365,8 @@ Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 20
     icon: 'layers',
     color: '#8b5cf6',
     description: 'CNCF Platform Engineering Whitepaper: 5 maturity levels, 13 capability domains, measuring platform ROI and developer satisfaction.',
-    introduction: '## Overview
-The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.',
+    introduction: `## Overview
+The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.`,
     keyConcepts: [
       { title: '5 Maturity Levels', description: '1. Provisional: ad-hoc, undocumented, built for immediate need. 2. Operationalized: documented, repeatable, but manually triggered. 3. Scalable: self-service, automated, handles multiple teams. 4. Optimizing: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. 5. Leading: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
       { title: '13 Capability Domains', description: 'A mature IDP covers: (1) artifact/image store, (2) CI/CD pipelines, (3) cloud/environment provisioning, (4) developer portal, (5) IDP orchestration layer, (6) observability, (7) policy/governance, (8) RBAC/access control, (9) secrets management, (10) service catalog/registry, (11) service mesh, (12) testing frameworks, (13) toolchain selection/standardization. Not all domains need full coverage at once — prioritize by team pain points.' },
@@ -43393,8 +43393,8 @@ The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform e
     icon: 'lock',
     color: '#0891b2',
     description: 'Secrets in GitOps: SOPS+age, Sealed Secrets, External Secrets Operator (ESO). Vault integration patterns. When to use each approach.',
-    introduction: '## Overview
-GitOps stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: encrypt in Git (SOPS, Sealed Secrets), reference externally (External Secrets Operator, Vault agent), and hybrid (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.',
+    introduction: `## Overview
+GitOps stores all configuration in Git as the single source of truth — but secrets (API keys, passwords, TLS certificates) must never be committed in plaintext. This creates a fundamental tension: how do you declaratively manage secrets alongside other config without exposing sensitive values?\n\nThree main patterns have emerged: encrypt in Git (SOPS, Sealed Secrets), reference externally (External Secrets Operator, Vault agent), and hybrid (ESO syncing from Vault into Kubernetes Secrets). Each has distinct operational tradeoffs.`,
     keyConcepts: [
       { title: 'SOPS + age: Encrypted Values in Git', description: 'SOPS (Secrets OPerationS, Mozilla) encrypts specific values within YAML/JSON/ENV files — you can read the structure, not the values. age is the modern encryption backend (replacing PGP). Workflow: `sops --encrypt --age <pubkey> secrets.yaml > secrets.enc.yaml` → commit encrypted file → ArgoCD/Flux decrypts at deploy using age private key in a cluster Secret. Pros: simple, works with any backend. Cons: key rotation complexity, decryption key must exist in-cluster.' },
       { title: 'Sealed Secrets: Cluster-Bound Encryption', description: 'Sealed Secrets (Bitnami/CNCF) generates a `SealedSecret` CRD that can only be decrypted by the controller running in a specific cluster. You encrypt with `kubeseal --cert <cluster-pub-cert>` and commit the sealed YAML. The Sealed Secrets controller decrypts it into a standard Kubernetes Secret. Pros: dead simple, GitOps-native. Cons: sealed secrets are cluster-bound (cannot share across clusters), key rotation requires re-sealing all secrets.' },
