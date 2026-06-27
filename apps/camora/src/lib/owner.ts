@@ -27,8 +27,8 @@ export function isOwnerEmail(email: string | null | undefined): boolean {
   return OWNER_EMAILS.includes(email.toLowerCase());
 }
 
-export function isOwner(user: { email?: string | null } | null | undefined): boolean {
-  return isOwnerEmail(user?.email);
+export function isOwner(user: { email?: string | null; is_admin?: boolean } | null | undefined): boolean {
+  return !!(user?.is_admin || isOwnerEmail(user?.email));
 }
 
 export { OWNER_EMAILS };
