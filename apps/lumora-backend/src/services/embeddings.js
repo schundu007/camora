@@ -17,7 +17,9 @@ const CACHE_MAX = 2000;
 
 let _client = null;
 function client() {
-  if (!_client) _client = new CohereClient({ token: process.env.COHERE_API_KEY });
+  const key = process.env.COHERE_API_KEY;
+  if (!key) return null;
+  if (!_client) _client = new CohereClient({ token: key });
   return _client;
 }
 
@@ -45,6 +47,7 @@ function hash(s) {
 const inflight = new Map();
 
 export async function embedQuery(text) {
+  if (!client()) return null;
   const key = hash(text);
   const cached = cacheGet(key);
   if (cached) return cached;
@@ -64,7 +67,7 @@ export async function embedQuery(text) {
 }
 
 export async function embedBatch(texts, inputType = 'search_document') {
-  if (texts.length === 0) return [];
+  if (texts.length === 0 || !client()) return [];
   const out = new Array(texts.length);
   const missIdxs = [];
   const missTexts = [];
