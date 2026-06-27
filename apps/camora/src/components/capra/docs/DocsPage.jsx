@@ -784,17 +784,34 @@ export default function DocsPage({ onBack }) {
     }
 
     const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    return topics
-      .filter(topic => {
-        if (!words.length) return true;
-        const haystack = [
-          topic.title,
-          topic.subtitle,
-          topic.description,
-          topic.id,
-        ].filter(Boolean).join(' ').toLowerCase();
-        return words.every(w => haystack.includes(w));
-      })
+    if (!words.length) return [...topics].sort((a, b) => {
+      if (sortOrder === 'a-z') return a.title.localeCompare(b.title);
+      if (sortOrder === 'z-a') return b.title.localeCompare(a.title);
+      if (sortOrder === 'most') return b.questions - a.questions;
+      if (sortOrder === 'least') return a.questions - b.questions;
+      return 0;
+    });
+    const scored = topics.map(topic => {
+      const haystack = [
+        topic.title,
+        topic.subtitle,
+        topic.description,
+        topic.id,
+        ...(Array.isArray(topic.concepts) ? topic.concepts : []),
+        ...(Array.isArray(topic.tags) ? topic.tags : []),
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matched = words.filter(w => haystack.includes(w)).length;
+      return { topic, matched };
+    }).filter(({ matched }) => matched > 0);
+
+    // Primary: all words match. Fallback: best partial match (≥ half words).
+    const allMatch = scored.filter(({ matched }) => matched === words.length);
+    const results = allMatch.length > 0
+      ? allMatch
+      : scored.filter(({ matched }) => matched >= Math.ceil(words.length / 2))
+               .sort((a, b) => b.matched - a.matched);
+
+    return results.map(({ topic }) => topic)
       .sort((a, b) => {
         if (roleFilteredIds) {
           const aIdx = [...roleFilteredIds].indexOf(a.id);
