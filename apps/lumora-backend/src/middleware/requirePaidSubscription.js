@@ -74,8 +74,7 @@ export async function requirePaidSubscription(req, res, next) {
       status,
     });
   } catch (err) {
-    // Fail closed on DB errors — better to send a paywall than free AI.
-    // (Stripe webhooks are idempotent; transient DB issues recover quickly.)
+    console.error('[requirePaidSubscription] DB error uid=%s msg=%s', req.user?.id, err?.message || err);
     return res.status(503).json({
       error: 'Could not verify subscription. Please retry.',
       code: 'SUBSCRIPTION_CHECK_FAILED',
