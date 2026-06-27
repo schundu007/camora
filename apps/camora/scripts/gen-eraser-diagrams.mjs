@@ -175,6 +175,8 @@ function getPort(el, port) {
   }
 }
 
+const stripMd = s => (s || '').replace(/\*\*/g, '').replace(/\*([^*]+)\*/g, '$1').replace(/^#+\s*/gm, '');
+
 function wrapText(ctx, text, maxWidth) {
   const words = (text || '').split(' ');
   const lines = [];
@@ -252,7 +254,7 @@ async function renderFreeform(elements, outPath) {
       ctx.font = `${fs}px Arial, sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
-      const lines = wrapText(ctx, (t.text || ''), (w - 16));
+      const lines = wrapText(ctx, stripMd(t.text), (w - 16));
       for (const line of lines) {
         ctx.fillText(line, x + 8, textY);
         textY += fs * 1.4;
@@ -295,7 +297,7 @@ async function renderFreeform(elements, outPath) {
       ctx.font         = `${fs}px Arial, sans-serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
-      const lines = wrapText(ctx, (t.text || ''), (e.width || 50) * S * 1.2);
+      const lines = wrapText(ctx, stripMd(t.text), (e.width || 50) * S * 1.2);
       for (const line of lines) {
         ctx.fillText(line, cx, labelY);
         labelY += fs * 1.3;
@@ -309,7 +311,7 @@ async function renderFreeform(elements, outPath) {
     if (!rawText.trim()) continue;
 
     const isHeading = rawText.startsWith('#');
-    const clean     = rawText.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+    const clean     = stripMd(rawText);
     const fs        = isHeading ? 18 * S * 0.5 : (e.fontSize || 13) * S * 0.5;
 
     ctx.fillStyle    = isHeading ? '#0f172a' : '#475569';
@@ -371,7 +373,7 @@ async function renderFreeform(elements, outPath) {
       ctx.fillStyle    = '#475569';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(e.label, midX, midY);
+      ctx.fillText(stripMd(e.label), midX, midY);
     }
   }
 
