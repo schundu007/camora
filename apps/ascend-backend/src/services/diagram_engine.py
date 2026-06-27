@@ -208,30 +208,23 @@ graph_attr = {
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "bgcolor": "white",
-    "pad": "0.4",
-    # Layout tuning, post user-feedback:
-    # - splines=ortho: right-angle connectors; previous "spline" produced
-    #   diagonal crossings that read as spaghetti when the diagram had
-    #   8+ nodes.
-    # - nodesep / ranksep raised so labels don't touch their neighbors
-    #   and clusters have visible gaps.
-    # - ratio dropped: compress forced graphviz to flatten the layout
-    #   into a tall narrow rectangle on TB direction; default
-    #   (no ratio) lets the engine pick a natural aspect.
-    # - size kept at 14,8 with the fixed-aspect ! marker so the panel
-    #   has a stable canvas to fit-to-width against.
+    "pad": "0.5",
     "dpi": "130",
-    "nodesep": "0.45",
-    "ranksep": "0.65",
+    "nodesep": "0.30",
+    "ranksep": "0.45",
     "splines": "ortho",
+    "size": "20,11!",
 }
 
 node_attr = {
-    "fontsize": "14",
+    "fontsize": "13",
     "fontname": "DejaVu Sans Bold",
     "fontcolor": "#111827",
     "imagepos": "tc",
     "labelloc": "b",
+    "width": "1.0",
+    "height": "1.0",
+    "margin": "0.2,0.15",
 }
 
 edge_attr = {
@@ -264,6 +257,7 @@ CLUSTER_COLORS = {
     "async":   '{"bgcolor": "#fce7f3", "style": "rounded", "pencolor": "#db2777", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#831843"}',
     "monitor": '{"bgcolor": "#f3f4f6", "style": "rounded", "pencolor": "#6b7280", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#1f2937"}',
     "sub":     '{"bgcolor": "#f0fdf4", "style": "dashed", "pencolor": "#22c55e", "penwidth": "1.5", "fontsize": "13", "fontname": "DejaVu Sans"}',
+    "ai":      '{"bgcolor": "#f0e6ff", "style": "rounded", "pencolor": "#7c3aed", "penwidth": "2.5", "fontsize": "16", "fontname": "DejaVu Sans Bold", "fontcolor": "#4c1d95"}',
 }
 
 # ── Edge color presets ─────────────────────────────────────────────────────
@@ -291,6 +285,9 @@ def build_import_list(provider):
     lines.append("  from diagrams.onprem.queue import Kafka, RabbitMQ")
     lines.append("  from diagrams.onprem.monitoring import Grafana, Prometheus")
     lines.append("  from diagrams.onprem.network import Nginx")
+    lines.append("  # AI/ML orchestration — use these generic shapes (no cloud icon required):")
+    lines.append("  from diagrams.programming.flowchart import Action  # LangGraph, LangChain, MCP Server, AI Agent, Tool Executor, RAG Pipeline")
+    lines.append("  from diagrams.generic.blank import Blank  # Any AI service without a provider icon (Vector DB, LLM API, Embedding Model)")
     return "\n".join(lines)
 
 
@@ -687,25 +684,35 @@ Connection discipline (CRITICAL):
 Preserve the real architectural points: load balancer, primary store,
 cache layer, async queue (if domain demands it). Don't over-simplify."""
     else:
-        scope = """DETAILED MODE: 12-16 nodes in 4-5 clusters MAX.
-Clusters: "Edge & Security" (CDN + WAF), "Application Tier" (LB + 2-4 services),
-"Data Tier" (cache + DB), "Async Processing" (queue + workers if applicable),
-"Observability" (one metrics + one logs node). Skip "Observability" if the
-core architecture doesn't depend on it.
+        scope = f"""DETAILED MODE: 14-20 nodes in 5-6 clusters. HORIZONTAL MULTI-ROW LAYOUT.
+Standard clusters (left → right columns): "Edge & Security" (CDN + WAF + API GW, stacked vertically),
+"Application Tier" (LB + 2-4 services stacked), "Data Tier" (cache + DB + object store stacked),
+"Async Processing" (queue + 1-2 workers), "Observability" (metrics + logs, compact).
+
+For AI CHATBOT / RAG / AGENT / LLM questions: ADD an "AI / LLM Tier" cluster between
+Application and Data tiers with these nodes (use diagrams.programming.flowchart.Action for all):
+  Action("LLM\\\\nService")          — the language model endpoint (Claude / GPT / Gemini)
+  Action("LangGraph\\\\nOrchestrator") or Action("LangChain\\\\nChain")  — orchestration layer
+  Action("MCP\\\\nServer")           — tool/function execution via Model Context Protocol
+  Action("AI Agent\\\\nExecutor")    — agent loop / tool dispatcher
+  Action("RAG\\\\nPipeline")         — retrieval-augmented generation if applicable
+  Blank("Vector DB\\\\n(pgvector)")  — vector store for embeddings
+Use AI cluster: graph_attr={CLUSTER_COLORS["ai"]}
 
 Connection discipline:
 - Each node 2-4 edges max. NO mesh / fully-connected clusters.
-- Async path is its OWN flow — don't connect every app service to the queue,
-  pick the one that publishes and draw a single edge to the queue.
+- Async path is its OWN flow — only the publishing service connects to the queue.
 - NO replica nodes (group them as "DB Cluster" with 1 node).
 - NO nested sub-clusters.
-- Keep the layout linear-with-side-branches: main path goes Edge → App → Data,
-  side cluster (Async or Observability) reaches in once.
+- STACK nodes vertically within each cluster to fill height — do not leave single-node clusters.
 
-Goal: senior interview-grade diagram that's still scannable in 60 seconds."""
+Goal: senior interview-grade, horizontally spread, scannable in 60 seconds."""
 
     direction_hint = (
-        "LAYOUT DIRECTION: Left-to-right (LR). Position upstream nodes (clients, DNS, CDN) on the LEFT and downstream data stores on the RIGHT."
+        "LAYOUT DIRECTION: Left-to-right (LR). Arrange clusters as VERTICAL COLUMNS reading left → right: clients → edge → app tier → data tier. "
+        "Stack multiple nodes VERTICALLY within each cluster column (2-4 nodes per column). "
+        "This creates a wide multi-column grid that fills horizontal canvas efficiently. "
+        "Do NOT create a single tall vertical chain — distribute nodes across ALL clusters."
         if direction == "LR" else
         "LAYOUT DIRECTION: Top-to-bottom (TB). Position upstream nodes (clients, DNS, CDN) at the TOP and downstream data stores at the BOTTOM."
     )
@@ -731,8 +738,9 @@ PART 1 — IMPORTS: Only import the specific {provider} node classes you actuall
 PART 2 — BODY: The indented code (4 spaces) that goes inside `with Diagram(...):`
 
 CLUSTER graph_attr PRESETS — copy exactly:
-  Edge/CDN cluster:   graph_attr={CLUSTER_COLORS["edge"]}
+  Edge/CDN cluster:    graph_attr={CLUSTER_COLORS["edge"]}
   Application cluster: graph_attr={CLUSTER_COLORS["app"]}
+  AI/LLM cluster:      graph_attr={CLUSTER_COLORS["ai"]}
   Data cluster:        graph_attr={CLUSTER_COLORS["data"]}
   Async cluster:       graph_attr={CLUSTER_COLORS["async"]}
   Monitoring cluster:  graph_attr={CLUSTER_COLORS["monitor"]}
@@ -846,6 +854,12 @@ def _build_class_to_import(provider):
     mapping["Splunk"] = "from diagrams.onprem.monitoring import Splunk"
     mapping["Nginx"] = "from diagrams.onprem.network import Nginx"
     mapping["HAProxy"] = "from diagrams.onprem.network import HAProxy"
+    # AI/LLM framework shapes
+    mapping["Action"] = "from diagrams.programming.flowchart import Action"
+    mapping["Blank"] = "from diagrams.generic.blank import Blank"
+    mapping["Decision"] = "from diagrams.programming.flowchart import Decision"
+    mapping["Document"] = "from diagrams.programming.flowchart import Document"
+    mapping["Database"] = "from diagrams.programming.flowchart import Database"
     mapping["Traefik"] = "from diagrams.onprem.network import Traefik"
     mapping["Consul"] = "from diagrams.onprem.network import Consul"
     mapping["Envoy"] = "from diagrams.onprem.network import Envoy"
