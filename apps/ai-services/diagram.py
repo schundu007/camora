@@ -52,27 +52,37 @@ class DiagramResponse(BaseModel):
 
 _PROVIDER_IMPORTS = {
     "aws": (
-        "from diagrams.aws.compute import EC2, ECS, Lambda\n"
-        "from diagrams.aws.database import RDS, Dynamodb, ElastiCache\n"
-        "from diagrams.aws.network import ELB, CloudFront, Route53, APIGateway\n"
-        "from diagrams.aws.storage import S3\n"
-        "from diagrams.aws.integration import SQS, SNS\n"
-        "from diagrams.aws.security import IAM, Cognito\n"
-        "from diagrams.aws.analytics import Kinesis"
+        "from diagrams.aws.compute import EC2, ECS, Lambda, Fargate, EKS, ElasticBeanstalk\n"
+        "from diagrams.aws.database import RDS, Dynamodb, ElastiCache, Aurora, Redshift\n"
+        "from diagrams.aws.network import ELB, CloudFront, Route53, APIGateway, VPC, DirectConnect\n"
+        "from diagrams.aws.storage import S3, EBS, EFS\n"
+        "from diagrams.aws.integration import SQS, SNS, Eventbridge, StepFunctions\n"
+        "from diagrams.aws.security import IAM, Cognito, WAF, Shield, SecretsManager, KMS\n"
+        "from diagrams.aws.analytics import Kinesis, KinesisDataFirehose, ManagedStreamingForKafka, Glue, Athena\n"
+        "from diagrams.aws.management import Cloudwatch, Cloudtrail\n"
+        "from diagrams.aws.devtools import Codebuild, Codepipeline\n"
+        "# IMPORTANT: For Firehose use KinesisDataFirehose. For Kafka/MSK use ManagedStreamingForKafka. No MSK shorthand."
     ),
     "gcp": (
-        "from diagrams.gcp.compute import ComputeEngine, Functions, Run\n"
-        "from diagrams.gcp.database import SQL, Datastore, Memorystore\n"
+        "from diagrams.gcp.compute import ComputeEngine, Functions, Run, GKE, AppEngine\n"
+        "from diagrams.gcp.database import SQL, Datastore, Memorystore, Bigtable, Spanner, Firestore\n"
         "from diagrams.gcp.network import LoadBalancing, CDN, DNS\n"
         "from diagrams.gcp.storage import GCS\n"
-        "from diagrams.gcp.analytics import PubSub, BigQuery"
+        "from diagrams.gcp.analytics import PubSub, BigQuery, Dataflow, Dataproc\n"
+        "from diagrams.gcp.operations import Monitoring, Logging\n"
+        "from diagrams.gcp.security import IAP, KMS\n"
+        "# IMPORTANT: No PubSubLite class - use PubSub. No Trace class - use Monitoring. No standalone Alerts - use Monitoring."
     ),
     "azure": (
-        "from diagrams.azure.compute import VM, FunctionApps, ContainerInstances\n"
+        "from diagrams.azure.compute import VM, FunctionApps, ContainerInstances, AKS, AppServices\n"
         "from diagrams.azure.database import SQLDatabases, CosmosDb, CacheForRedis\n"
         "from diagrams.azure.network import LoadBalancers, FrontDoors, ApplicationGateway\n"
-        "from diagrams.azure.storage import BlobStorage\n"
-        "from diagrams.azure.integration import ServiceBus"
+        "from diagrams.azure.storage import BlobStorage, DataLakeStorage\n"
+        "from diagrams.azure.integration import ServiceBus, LogicApps, EventGridTopics\n"
+        "from diagrams.azure.analytics import StreamAnalyticsJobs, Databricks, EventHubs\n"
+        "from diagrams.azure.monitor import Monitor, ApplicationInsights\n"
+        "from diagrams.azure.security import KeyVaults\n"
+        "# IMPORTANT: No WebApp class - use AppServices. No EventGrid shorthand - use EventGridTopics. No standalone Relay/BillingFn - use FunctionApps."
     ),
 }
 
@@ -107,6 +117,8 @@ IMPORTANT:
 - Do NOT use `os.system()` or any shell commands.
 - The code must be a single self-contained script.
 - Only import from the `diagrams` package.
+- ONLY use class names listed in the AVAILABLE IMPORTS above — do NOT invent class names. If a service has no exact match, use the closest available class (e.g. use KinesisDataFirehose for Firehose, MSK for Kafka, AppServices for WebApp).
+- The Diagram title MUST be plain text — no markdown (`**`, `*`, `_`). No bold or italic markers.
 - The Diagram context manager MUST include `show=False, filename="output", outformat="png", direction="LR"`.
 
 Generate a diagram for this architecture question:
@@ -406,6 +418,14 @@ def _sanitize_code(code: str) -> str:
     except SyntaxError as exc:
         raise ValueError(f"Generated code is not valid Python: {exc.msg}") from exc
     _ast_walk_safe(tree)
+
+    # Strip markdown bold/italic markers from the Diagram title string.
+    # LLMs occasionally wrap the title in **...** or *...* from markdown habits.
+    def _strip_bold(m: _re.Match) -> str:
+        quote = m.group(1)
+        title = m.group(2).replace("**", "").replace("*", "")
+        return f'Diagram({quote}{title}{quote}'
+    code = _re.sub(r'Diagram\s*\((["\'])(.+?)\1', _strip_bold, code, count=1)
 
     # Ensure show=False is present
     if "show=False" not in code:
