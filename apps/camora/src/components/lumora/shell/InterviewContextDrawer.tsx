@@ -10,6 +10,13 @@ import {
   INTERVIEW_CONTEXT_UPDATED_EVENT,
   type InterviewContext,
 } from '../../../lib/interview-context';
+import {
+  listCompanyPreps,
+  getActiveCompanyKey,
+  setActiveCompanyKey,
+  ASSISTANT_UPDATED_EVENT,
+  type CompanyPrepListItem,
+} from '../../../lib/companyContext';
 import { dialogConfirm } from '../../shared/Dialog';
 
 interface DocItem {
@@ -50,10 +57,18 @@ interface Props {
 export const InterviewContextDrawer = ({ open, onClose }: Props) => {
   const { token } = useAuth();
   const [mode, setMode] = useState<'list' | 'create'>('list');
+
+  // Prep Kit workspaces (primary source of "active interviews")
+  const [prepItems, setPrepItems] = useState<CompanyPrepListItem[]>(() => listCompanyPreps());
+  const [activePrepKey, setActivePrepKeyState] = useState<string | null>(() => getActiveCompanyKey());
+
+  // File-based contexts (secondary — created from uploaded docs)
+  const [fileContexts, setFileContexts] = useState<InterviewContext[]>(() => listInterviewContexts());
+  const [activeFileCtxId, setActiveFileCtxIdState] = useState<string | null>(() => getActiveInterviewContextId());
+
+  // "New Interview" form state
   const [docs, setDocs] = useState<DocItem[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
-  const [contexts, setContexts] = useState<InterviewContext[]>(() => listInterviewContexts());
-  const [activeId, setActiveIdState] = useState<string | null>(() => getActiveInterviewContextId());
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +76,11 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<'jd' | 'resume' | 'doc'>('doc');
 
-  const refreshContexts = useCallback(() => {
-    setContexts(listInterviewContexts());
-    setActiveIdState(getActiveInterviewContextId());
+  const refreshAll = useCallback(() => {
+    setPrepItems(listCompanyPreps());
+    setActivePrepKeyState(getActiveCompanyKey());
+    setFileContexts(listInterviewContexts());
+    setActiveFileCtxIdState(getActiveInterviewContextId());
   }, []);
 
   const fetchDocs = useCallback(async () => {
@@ -81,12 +98,17 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
 
   useEffect(() => {
     if (!open) return;
-    refreshContexts();
-    fetchDocs();
-    const update = () => refreshContexts();
+    refreshAll();
+    const update = () => refreshAll();
     window.addEventListener(INTERVIEW_CONTEXT_UPDATED_EVENT, update);
-    return () => window.removeEventListener(INTERVIEW_CONTEXT_UPDATED_EVENT, update);
-  }, [open, fetchDocs, refreshContexts]);
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener(INTERVIEW_CONTEXT_UPDATED_EVENT, update);
+      window.removeEventListener(ASSISTANT_UPDATED_EVENT, update);
+      window.removeEventListener('storage', update);
+    };
+  }, [open, refreshAll]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,32 +117,49 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const handleActivate = (id: string) => {
-    setActiveInterviewContextId(id);
-    setActiveIdState(id);
+  // ── Prep Kit activation ──
+  const handleActivatePrep = (key: string) => {
+    setActiveCompanyKey(key);
+    setActiveInterviewContextId(null);
+    refreshAll();
     onClose();
   };
 
-  const handleDeactivate = () => {
-    setActiveInterviewContextId(null);
-    setActiveIdState(null);
+  const handleDeactivatePrep = () => {
+    setActiveCompanyKey(null);
+    refreshAll();
   };
 
-  const handleDelete = async (ctx: InterviewContext) => {
+  // ── File context activation ──
+  const handleActivateFileCtx = (id: string) => {
+    setActiveInterviewContextId(id);
+    setActiveCompanyKey(null);
+    refreshAll();
+    onClose();
+  };
+
+  const handleDeactivateFileCtx = () => {
+    setActiveInterviewContextId(null);
+    refreshAll();
+  };
+
+  const handleDeleteFileCtx = async (ctx: InterviewContext) => {
     const ok = await dialogConfirm({
       title: `Delete "${ctx.name}"?`,
-      message: 'This removes the interview context. Your uploaded documents are not affected.',
+      message: 'This removes the context config. Your uploaded documents are not affected.',
       confirmLabel: 'Delete',
       tone: 'danger',
     });
     if (!ok) return;
     deleteInterviewContext(ctx.id);
-    refreshContexts();
+    refreshAll();
   };
 
+  // ── New Interview (file-based) ──
   const handleNewClick = () => {
     setForm(EMPTY_FORM);
     setError(null);
+    fetchDocs();
     setMode('create');
   };
 
@@ -180,8 +219,8 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
 
       saveInterviewContext(ctx);
       setActiveInterviewContextId(ctx.id);
-      setActiveIdState(ctx.id);
-      refreshContexts();
+      setActiveCompanyKey(null);
+      refreshAll();
       setMode('list');
     } catch {
       setError('Failed to load document content. Please try again.');
@@ -191,6 +230,8 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
   };
 
   if (!open) return null;
+
+  const hasAnyItem = prepItems.length > 0 || fileContexts.length > 0;
 
   return (
     <div
@@ -227,12 +268,12 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                 Interview Context
               </span>
               <h2 className="text-[18px] font-extrabold tracking-tight" style={{ color: 'var(--cam-primary)' }}>
-                {mode === 'create' ? 'New Interview' : 'Your Interviews'}
+                {mode === 'create' ? 'New Context from Files' : 'Your Interviews'}
               </h2>
               <p className="text-[12.5px] mt-1" style={{ color: 'var(--text-secondary)' }}>
                 {mode === 'create'
-                  ? 'Pick documents from your library — Sona will use them for tailored answers.'
-                  : 'Activate a context so Sona knows which role and documents to use.'}
+                  ? 'Upload or pick documents — Sona will use them for tailored answers.'
+                  : 'Activate an interview so Sona knows your JD, resume, and prep materials.'}
               </p>
             </div>
             <button
@@ -250,14 +291,15 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {mode === 'list' && (
-            <div className="px-4 py-3">
-              {contexts.length === 0 ? (
+            <div className="px-4 py-3 space-y-4">
+              {!hasAnyItem ? (
                 <div className="py-10 text-center">
                   <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-subtle)' }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
                   </div>
-                  <p className="text-[14px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>No interview contexts yet</p>
-                  <p className="text-[12px] mb-4" style={{ color: 'var(--text-muted)' }}>Create one to let Sona give you role-specific answers.</p>
+                  <p className="text-[14px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>No interviews found</p>
+                  <p className="text-[12px] mb-1" style={{ color: 'var(--text-muted)' }}>Add company prep workspaces in the Documents sidebar,</p>
+                  <p className="text-[12px] mb-4" style={{ color: 'var(--text-muted)' }}>or create a context from uploaded files below.</p>
                   <button
                     type="button"
                     onClick={handleNewClick}
@@ -265,80 +307,154 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                     style={{ background: 'var(--cam-primary)', color: '#fff' }}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                    New Interview
+                    New from Files
                   </button>
                 </div>
               ) : (
-                <ul className="space-y-2">
-                  {contexts.map(ctx => {
-                    const isActive = ctx.id === activeId;
-                    const parts = [
-                      ctx.cachedJd && 'JD',
-                      ctx.cachedResume && 'Resume',
-                      ctx.cachedDocs?.length ? `${ctx.cachedDocs.length} doc${ctx.cachedDocs.length > 1 ? 's' : ''}` : null,
-                    ].filter(Boolean) as string[];
-                    return (
-                      <li key={ctx.id}>
-                        <div
-                          className="flex items-start gap-3 p-3 rounded-xl"
-                          style={{
-                            background: isActive ? 'color-mix(in srgb, var(--cam-gold-leaf) 10%, var(--bg-elevated))' : 'var(--bg-elevated)',
-                            border: isActive ? '1px solid var(--cam-gold-leaf)' : '1px solid var(--border)',
-                          }}
-                        >
-                          <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: isActive ? 'var(--cam-primary)' : 'var(--border)' }} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[14px] font-bold truncate" style={{ color: isActive ? 'var(--cam-primary)' : 'var(--text-primary)' }}>{ctx.name}</span>
-                              {isActive && (
-                                <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>Active</span>
-                              )}
-                            </div>
-                            {(ctx.company || ctx.role) && (
-                              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                                {[ctx.role, ctx.company].filter(Boolean).join(' · ')}
-                              </p>
-                            )}
-                            {parts.length > 0 && (
-                              <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>{parts.join(' · ')}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {!isActive ? (
-                              <button
-                                type="button"
-                                onClick={() => handleActivate(ctx.id)}
-                                className="text-[11px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                                style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                <>
+                  {/* ── Prep Kit workspaces ── */}
+                  {prepItems.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] mb-2 px-1" style={{ color: 'var(--text-muted)' }}>
+                        Prep Kit Workspaces
+                      </p>
+                      <ul className="space-y-2">
+                        {prepItems.map(item => {
+                          const isActive = item.key === activePrepKey && !activeFileCtxId;
+                          const badges = [
+                            item.hasJd && 'JD',
+                            item.hasResume && 'Resume',
+                          ].filter(Boolean) as string[];
+                          return (
+                            <li key={item.key}>
+                              <div
+                                className="flex items-start gap-3 p-3 rounded-xl"
+                                style={{
+                                  background: isActive ? 'color-mix(in srgb, var(--cam-gold-leaf) 10%, var(--bg-elevated))' : 'var(--bg-elevated)',
+                                  border: isActive ? '1px solid var(--cam-gold-leaf)' : '1px solid var(--border)',
+                                }}
                               >
-                                Activate
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={handleDeactivate}
-                                className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                                style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: isActive ? 'var(--cam-primary)' : (item.ready ? '#22c55e' : 'var(--border)') }} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[14px] font-bold truncate" style={{ color: isActive ? 'var(--cam-primary)' : 'var(--text-primary)' }}>{item.key}</span>
+                                    {isActive && (
+                                      <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>Active</span>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                                    {badges.length ? badges.join(' · ') : 'No materials yet'}
+                                    {item.hasGeneratedSections && ' · Prep sections'}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {!isActive ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleActivatePrep(item.key)}
+                                      className="text-[11px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                                      style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                                    >
+                                      Activate
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={handleDeactivatePrep}
+                                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                                      style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                    >
+                                      Deactivate
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* ── File-based contexts (if any saved) ── */}
+                  {fileContexts.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] mb-2 px-1" style={{ color: 'var(--text-muted)' }}>
+                        File Contexts
+                      </p>
+                      <ul className="space-y-2">
+                        {fileContexts.map(ctx => {
+                          const isActive = ctx.id === activeFileCtxId;
+                          const parts = [
+                            ctx.cachedJd && 'JD',
+                            ctx.cachedResume && 'Resume',
+                            ctx.cachedDocs?.length ? `${ctx.cachedDocs.length} doc${ctx.cachedDocs.length > 1 ? 's' : ''}` : null,
+                          ].filter(Boolean) as string[];
+                          return (
+                            <li key={ctx.id}>
+                              <div
+                                className="flex items-start gap-3 p-3 rounded-xl"
+                                style={{
+                                  background: isActive ? 'color-mix(in srgb, var(--cam-gold-leaf) 10%, var(--bg-elevated))' : 'var(--bg-elevated)',
+                                  border: isActive ? '1px solid var(--cam-gold-leaf)' : '1px solid var(--border)',
+                                }}
                               >
-                                Deactivate
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(ctx)}
-                              className="flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-70"
-                              style={{ color: 'var(--danger)', border: '1px solid var(--border)' }}
-                              aria-label="Delete"
-                              title="Delete"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" /></svg>
-                            </button>
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                                <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ background: isActive ? 'var(--cam-primary)' : 'var(--border)' }} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[14px] font-bold truncate" style={{ color: isActive ? 'var(--cam-primary)' : 'var(--text-primary)' }}>{ctx.name}</span>
+                                    {isActive && (
+                                      <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>Active</span>
+                                    )}
+                                  </div>
+                                  {(ctx.company || ctx.role) && (
+                                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                                      {[ctx.role, ctx.company].filter(Boolean).join(' · ')}
+                                    </p>
+                                  )}
+                                  {parts.length > 0 && (
+                                    <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>{parts.join(' · ')}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {!isActive ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleActivateFileCtx(ctx.id)}
+                                      className="text-[11px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                                      style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                                    >
+                                      Activate
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={handleDeactivateFileCtx}
+                                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                                      style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                                    >
+                                      Deactivate
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteFileCtx(ctx)}
+                                    className="flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-70"
+                                    style={{ color: 'var(--danger)', border: '1px solid var(--border)' }}
+                                    aria-label="Delete"
+                                    title="Delete"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" /></svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -466,7 +582,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                 style={{ background: 'var(--cam-primary)', color: '#fff' }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                New Interview
+                New from Files
               </button>
             </>
           ) : (
