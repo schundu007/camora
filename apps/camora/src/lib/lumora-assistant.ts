@@ -4,8 +4,6 @@
  * AICompanionPanel so all three Lumora windows pass identical personalization
  * to the backend.
  */
-import { getActiveInterviewContext } from './interview-context';
-
 export type StoryArchetype =
   | 'Conflict' | 'Leadership' | 'Failure' | 'Ambiguity'
   | 'Influence' | 'Innovation' | 'Collaboration' | 'Growth'
@@ -61,30 +59,11 @@ export async function parseResumeToStories(resume: string, token: string, apiUrl
 
 export function getActiveAssistant(): LumoraAssistant | null {
   try {
-    // 1. Interview Context — explicit selection from Lumora's context picker.
-    //    Has highest priority because the user explicitly said "I'm interviewing here."
-    const ctx = getActiveInterviewContext();
-    if (ctx && (ctx.cachedJd || ctx.cachedResume)) {
-      const studyDocs: LumoraStudyDoc[] = (ctx.cachedDocs ?? []).map(d => ({
-        name: d.name,
-        content: d.content.slice(0, 20_000),
-      }));
-      return {
-        id: `ctx:${ctx.id}`,
-        name: ctx.name,
-        company: ctx.company,
-        role: ctx.role,
-        resume: ctx.cachedResume,
-        jobDescription: ctx.cachedJd,
-        studyDocs: studyDocs.length ? studyDocs : undefined,
-      };
-    }
-
-    // 2. Prep Kit — the user's active prep workspace.
+    // 1. Prep Kit — the user's active prep workspace (single source of truth).
     const fromPrepKit = getAssistantFromPrepKit();
     if (fromPrepKit) return fromPrepKit;
 
-    // 3. Legacy lumora_assistants fallback.
+    // 2. Legacy lumora_assistants fallback.
     const stored = localStorage.getItem('lumora_assistants');
     const list = stored ? (JSON.parse(stored) as LumoraAssistant[]) : [];
     return list[0] || null;
