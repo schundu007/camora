@@ -243,6 +243,13 @@ export const documentsAPI = {
       method: 'POST',
       body: JSON.stringify({ query }),
     }, token),
+
+  getContent: (token: string, filename: string) =>
+    fetchAPI<{ filename: string; content: string; size: number }>(
+      `/api/v1/documents/content/${encodeURIComponent(filename)}`,
+      {},
+      token,
+    ),
 };
 
 // Audio preferences — mic/speaker/capture-method choices. Schema-
