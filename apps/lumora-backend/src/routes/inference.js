@@ -404,6 +404,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       model: preferredModel || null,
       route: 'stream',
       cloudProvider: cloudProvider || null,
+      systemContext: systemContext || null,
     });
     const cached = bypassCache ? null : await cacheGet(cacheKey);
     if (bypassCache) {

@@ -111,7 +111,7 @@ export function buildAnswerCacheKey(parts) {
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
   // v10: CLOUD_FORBIDDEN enforcement added (2026-06-26) — invalidates stale v9 entries with wrong provider services.
-  return `lumora:answer:v10:${h}`;
+  return `lumora:answer:v11:${h}`;
 }
 
 async function cacheGetFromDb(key) {
