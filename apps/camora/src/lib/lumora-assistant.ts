@@ -4,6 +4,7 @@
  * AICompanionPanel so all three Lumora windows pass identical personalization
  * to the backend.
  */
+import { getActiveInterviewContext } from './interview-context';
 
 export type StoryArchetype =
   | 'Conflict' | 'Leadership' | 'Failure' | 'Ambiguity'
@@ -60,22 +61,33 @@ export async function parseResumeToStories(resume: string, token: string, apiUrl
 
 export function getActiveAssistant(): LumoraAssistant | null {
   try {
-    // Prep Kit (`lumora_prep_v8`) is the canonical source for live
-    // behavioral context — its `activeCompany` is what the user
-    // explicitly switched to in /lumora/prepkit (or via the in-panel
-    // CompanyContextPicker). Reading from `lumora_assistants` first
-    // would silently ignore those switches, which was the original bug:
-    // user picks "Fireworks SRE" in the picker → Sona keeps answering
-    // with whatever was stored in lumora_assistants[0] from a previous
-    // setup. Now Prep Kit wins; lumora_assistants is the fallback for
-    // older flows where no Prep Kit data exists.
+    // 1. Interview Context — explicit selection from Lumora's context picker.
+    //    Has highest priority because the user explicitly said "I'm interviewing here."
+    const ctx = getActiveInterviewContext();
+    if (ctx && (ctx.cachedJd || ctx.cachedResume)) {
+      const studyDocs: LumoraStudyDoc[] = (ctx.cachedDocs ?? []).map(d => ({
+        name: d.name,
+        content: d.content.slice(0, 20_000),
+      }));
+      return {
+        id: `ctx:${ctx.id}`,
+        name: ctx.name,
+        company: ctx.company,
+        role: ctx.role,
+        resume: ctx.cachedResume,
+        jobDescription: ctx.cachedJd,
+        studyDocs: studyDocs.length ? studyDocs : undefined,
+      };
+    }
+
+    // 2. Prep Kit — the user's active prep workspace.
     const fromPrepKit = getAssistantFromPrepKit();
     if (fromPrepKit) return fromPrepKit;
 
+    // 3. Legacy lumora_assistants fallback.
     const stored = localStorage.getItem('lumora_assistants');
     const list = stored ? (JSON.parse(stored) as LumoraAssistant[]) : [];
-    const explicit = list[0];
-    return explicit || null;
+    return list[0] || null;
   } catch {
     return null;
   }

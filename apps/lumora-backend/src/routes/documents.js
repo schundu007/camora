@@ -212,6 +212,26 @@ router.get('/list', async (req, res, next) => {
 });
 
 /**
+ * GET /content/:filename — Fetch full text content of a single document.
+ */
+router.get('/content/:filename', async (req, res, next) => {
+  try {
+    const safeName = sanitizeFilename(req.params.filename);
+    const result = await query(
+      `SELECT filename, content, size FROM lumora_user_documents WHERE user_id = $1 AND filename = $2`,
+      [req.user.id, safeName],
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `Document '${req.params.filename}' not found` });
+    }
+    const row = result.rows[0];
+    res.json({ filename: row.filename, content: row.content, size: row.size });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * DELETE /:filename — Delete a document.
  */
 router.delete('/:filename', async (req, res, next) => {

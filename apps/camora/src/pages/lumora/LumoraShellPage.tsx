@@ -26,6 +26,8 @@ import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
+import { InterviewContextPill } from '../../components/lumora/shell/InterviewContextPill';
+import { InterviewContextDrawer } from '../../components/lumora/shell/InterviewContextDrawer';
 
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
@@ -40,6 +42,7 @@ export const LumoraShellPage = () => {
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
   const [sessionsOpen, setSessionsOpen] = useState(false);
+  const [contextDrawerOpen, setContextDrawerOpen] = useState(false);
   const [, setCopilotOpen] = useState(false);
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
   const [copilotFullscreen, setCopilotFullscreen] = useState(false);
@@ -548,6 +551,13 @@ export const LumoraShellPage = () => {
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
 
+            {/* Interview context pill — shows active interview name, opens
+                the context drawer to create/switch contexts. Hidden on
+                mobile (hamburger sheet covers secondary controls there). */}
+            <div className="hidden md:block">
+              <InterviewContextPill onOpen={() => setContextDrawerOpen(true)} />
+            </div>
+
             {/* Mobile hamburger — pinned right, matches SiteNav and TopBar.
                 Opens a dropdown with secondary Lumora destinations and
                 utilities (theme, audio check). */}
@@ -1049,6 +1059,13 @@ export const LumoraShellPage = () => {
       )}
 
     </div>
+
+    {/* Interview context drawer — global z-[100] overlay */}
+    <InterviewContextDrawer
+      open={contextDrawerOpen}
+      onClose={() => setContextDrawerOpen(false)}
+    />
+
     </SpeakerAudioProvider>
   );
 }
