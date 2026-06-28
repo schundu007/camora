@@ -40,6 +40,12 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
   }, [open, onClose]);
 
   const handleActivate = (key: string) => {
+    // Evict any stale file-based interview contexts left from prior sessions
+    // so they can never override the prep kit selection.
+    try {
+      localStorage.removeItem('lumora_interview_contexts_v1');
+      localStorage.removeItem('lumora_interview_contexts_v1_active');
+    } catch { /* ignore */ }
     setActiveCompanyKey(key);
     onClose();
   };
