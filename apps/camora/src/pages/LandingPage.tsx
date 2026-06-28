@@ -147,6 +147,15 @@ const HIGHLIGHTS = [
   'Cara AI Guide',
 ];
 
+const HERO_STATS = [
+  { value: '1,000+', label: 'Matched roles' },
+  { value: '750+', label: 'Topics' },
+  { value: '9,500+', label: 'Problems' },
+  { value: '<1s', label: 'AI latency' },
+];
+
+const FEATURE_SPANS = [2, 1, 1, 2, 2, 1];
+
 const TESTIMONIALS = [
   {
     name: 'Shreya Patel',
@@ -249,7 +258,7 @@ export default function LandingPage() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(54,131,220,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(54,131,220,0.07) 1px, transparent 1px)',
+              'linear-gradient(rgba(54,131,220,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(54,131,220,0.11) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
           }}
         />
@@ -257,10 +266,10 @@ export default function LandingPage() {
         <div
           aria-hidden="true"
           className="absolute bottom-0 inset-x-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.25) 35%, rgba(99,102,241,0.2) 65%, transparent 95%)' }}
+          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.35) 35%, rgba(201,162,39,0.22) 58%, transparent 95%)' }}
         />
 
-        <Container className="relative pt-10 pb-10 md:pt-16 md:pb-14">
+        <Container className="relative pt-16 pb-16 md:pt-24 md:pb-20">
           {/* Centered headline block */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
@@ -271,7 +280,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.h1
-              className="mt-5 font-display text-[38px] sm:text-[48px] md:text-[56px] lg:text-[64px] font-bold tracking-tight leading-[1.0]"
+              className="mt-5 font-display text-[52px] sm:text-[66px] md:text-[82px] lg:text-[100px] font-bold tracking-[-0.028em] leading-[0.92]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
@@ -281,12 +290,12 @@ export default function LandingPage() {
             </motion.h1>
 
             <motion.p
-              className="mt-6 text-base sm:text-lg leading-relaxed text-[var(--text-secondary)]"
+              className="mt-6 text-base sm:text-lg leading-relaxed text-[var(--text-secondary)] max-w-lg"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
             >
-              1,000+ matched roles · 1,500+ study topics · 9,500+ problems · Live AI in the room.
+              The complete engineer career platform — apply, study, practice, and win.
             </motion.p>
 
             <motion.div
@@ -307,7 +316,21 @@ export default function LandingPage() {
               </MagneticCTA>
             </motion.div>
 
-            <motion.div className="flex justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}>
+            <motion.div
+              className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px w-full max-w-2xl bg-[var(--border)] rounded-xl overflow-hidden"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            >
+              {HERO_STATS.map((stat) => (
+                <div key={stat.label} className="bg-[var(--bg-surface)] flex flex-col items-center justify-center py-4 px-3">
+                  <span className="font-display text-[26px] sm:text-[30px] font-bold tracking-tight text-[var(--cam-primary)] leading-none">{stat.value}</span>
+                  <span className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{stat.label}</span>
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div className="flex justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.24, delay: 0.30, ease: [0.23, 1, 0.32, 1] }}>
               <VisitorCountLine />
             </motion.div>
           </div>
@@ -381,7 +404,7 @@ export default function LandingPage() {
                     >
                       <span
                         className="text-[52px] font-bold leading-none select-none"
-                        style={{ color: step.color, opacity: 0.2, fontFamily: 'var(--font-code)', letterSpacing: '-0.04em' }}
+                        style={{ color: step.color, opacity: 0.38, fontFamily: 'var(--font-code)', letterSpacing: '-0.04em' }}
                       >
                         0{i + 1}
                       </span>
@@ -457,27 +480,52 @@ export default function LandingPage() {
           </Reveal>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FEATURES.map((f, i) => (
-                <Reveal key={f.title} delay={i * 0.06}>
-                  <SurfaceCard interactive padding="lg" className="h-full group border-t-2 border-[var(--accent)]">
-                    <div className="flex items-center justify-between gap-2">
-                      <Eyebrow tone="accent">{f.label}</Eyebrow>
-                      <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--cam-primary)] whitespace-nowrap">{f.stat} {f.statLabel}</span>
-                    </div>
-                    <h3 className="mt-3 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">
-                      {f.title}
-                    </h3>
-                    <ul className="mt-3 space-y-1.5">
-                      {f.bullets.map((b) => (
-                        <li key={b} className="flex items-start gap-2 text-base text-[var(--text-secondary)]">
-                          <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
+            {FEATURES.map((f, i) => {
+              const span = FEATURE_SPANS[i];
+              const isLarge = span === 2;
+              return (
+                <Reveal key={f.title} delay={i * 0.06} className={isLarge ? 'md:col-span-2' : ''}>
+                  <SurfaceCard interactive padding="none" className="h-full group border-t-2 border-[var(--accent)]">
+                    {isLarge ? (
+                      <div className="flex flex-col sm:flex-row gap-6 p-7">
+                        <div className="shrink-0 flex flex-col items-start sm:items-center sm:justify-start sm:pt-1 min-w-[80px]">
+                          <span className="font-display text-[52px] font-bold leading-none tracking-tight text-[var(--cam-primary)]">{f.stat}</span>
+                          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] mt-1 whitespace-nowrap">{f.statLabel}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Eyebrow tone="accent">{f.label}</Eyebrow>
+                          <h3 className="mt-2 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">{f.title}</h3>
+                          <ul className="mt-3 space-y-1.5">
+                            {f.bullets.map((b) => (
+                              <li key={b} className="flex items-start gap-2 text-base text-[var(--text-secondary)]">
+                                <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                                {b}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-7">
+                        <div className="flex items-center justify-between gap-2">
+                          <Eyebrow tone="accent">{f.label}</Eyebrow>
+                          <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--cam-primary)] whitespace-nowrap">{f.stat} {f.statLabel}</span>
+                        </div>
+                        <h3 className="mt-3 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">{f.title}</h3>
+                        <ul className="mt-3 space-y-1.5">
+                          {f.bullets.map((b) => (
+                            <li key={b} className="flex items-start gap-2 text-base text-[var(--text-secondary)]">
+                              <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </SurfaceCard>
                 </Reveal>
-            ))}
+              );
+            })}
           </div>
 
           {/* Highlights — flat divided list */}
@@ -604,97 +652,52 @@ export default function LandingPage() {
       {/* ═══════════ FINAL CTA ═══════════ */}
       <Section tone="surface" spacing="md">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl px-8 py-10 md:px-14 md:py-12" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            {/* Animated aurora gradient */}
+          <div
+            className="relative overflow-hidden rounded-3xl px-8 py-14 md:px-14 md:py-16"
+            style={{
+              background: 'linear-gradient(140deg, var(--cam-primary-dk) 0%, var(--cam-primary) 55%, color-mix(in oklab, var(--cam-primary) 85%, var(--cam-primary-lt)) 100%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            {/* Subtle dot grid */}
             <div
               aria-hidden="true"
-              className="cam-cta-aurora absolute inset-0 opacity-70"
+              className="absolute inset-0 pointer-events-none"
               style={{
-                background:
-                  'radial-gradient(ellipse 80% 60% at 30% 20%, rgba(37,99,235,0.16), transparent 55%),' +
-                  'radial-gradient(ellipse 50% 60% at 70% 80%, rgba(212,160,67,0.09), transparent 55%),' +
-                  'radial-gradient(ellipse 60% 50% at 90% 10%, rgba(37,99,235,0.10), transparent 50%)',
-                animation: 'ctaAurora 14s ease-in-out infinite alternate',
-              }}
-            />
-            {/* Grid overlay */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 opacity-[0.15]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)',
+                backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
                 backgroundSize: '54px 54px',
-                maskImage: 'radial-gradient(ellipse 70% 60% at 30% 30%, black, transparent 75%)',
               }}
             />
-            {/* Decorative glow ring */}
+            {/* Right-side ambient glow */}
             <div
               aria-hidden="true"
-              className="cam-cta-ring absolute pointer-events-none"
-              style={{
-                width: 320, height: 320, borderRadius: '50%',
-                border: '1px solid rgba(37,99,235,0.12)',
-                top: '50%', right: '20%',
-                transform: 'translateY(-50%)',
-                animation: 'ctaRing 8s ease-in-out infinite alternate',
-                boxShadow: '0 0 60px rgba(37,99,235,0.08), inset 0 0 60px rgba(37,99,235,0.04)',
-              }}
+              className="absolute inset-y-0 right-0 w-2/3 pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse 70% 80% at 85% 50%, rgba(255,255,255,0.07), transparent 70%)' }}
             />
-            {/* Floating decorative particles */}
-            <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden">
-              <span className="cam-cta-float absolute top-[22%] right-[12%] w-2 h-2 rounded-full"
-                style={{ background: 'rgba(37,99,235,0.45)', animation: 'ctaFloat 5s ease-in-out 0s infinite' }}
-              />
-              <span className="cam-cta-float absolute top-[60%] right-[25%] w-1.5 h-1.5 rounded-full"
-                style={{ background: 'rgba(212,160,67,0.3)', animation: 'ctaFloat 6s ease-in-out 1s infinite' }}
-              />
-              <span className="cam-cta-float absolute top-[35%] right-[40%] w-2.5 h-2.5 rounded-full"
-                style={{ background: 'rgba(37,99,235,0.28)', animation: 'ctaFloat 7s ease-in-out 2s infinite' }}
-              />
-            </div>
             <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
               <div>
                 <Eyebrow tone="inverse">Ready when you are</Eyebrow>
-                <h2 className="mt-3 font-display text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1]">
+                <h2 className="mt-3 font-display text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1] text-white">
                   Start free.<br />
                   <span className="text-[var(--cam-gold-leaf-lt)]">Win the offer.</span>
                 </h2>
-                <p className="mt-3 max-w-md text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p className="mt-3 max-w-md text-[14px] leading-relaxed text-white/70">
                   One free hour, no card required. Pick a plan when you're ready; top-ups never expire.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <MagneticCTA strength={6}>
-                  <CTAButton to={heroCtaHref} variant="primary" size="lg" trailingArrow>
+                  <CTAButton to={heroCtaHref} variant="inverse-primary" size="lg" trailingArrow>
                     {heroCta}
                   </CTAButton>
                 </MagneticCTA>
                 <MagneticCTA strength={4}>
-                  <CTAButton to="/pricing" variant="secondary" size="lg">
+                  <CTAButton to="/pricing" variant="inverse-secondary" size="lg">
                     See pricing
                   </CTAButton>
                 </MagneticCTA>
               </div>
             </div>
-            <style>{`
-              @keyframes ctaAurora {
-                0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-                50%  { transform: translate(2%, -2%) rotate(1deg) scale(1.04); }
-                100% { transform: translate(-1%, 1%) rotate(-0.5deg) scale(0.97); }
-              }
-              @keyframes ctaRing {
-                0%   { transform: translateY(-50%) scale(0.9); opacity: 0.4; }
-                100% { transform: translateY(-50%) scale(1.15); opacity: 1; }
-              }
-              @keyframes ctaFloat {
-                0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
-                50%      { transform: translateY(-16px) scale(1.2); opacity: 1; }
-              }
-              @media (prefers-reduced-motion: reduce) {
-                .cam-cta-aurora, .cam-cta-ring, .cam-cta-float { animation: none !important; }
-              }
-            `}</style>
           </div>
         </Container>
       </Section>
