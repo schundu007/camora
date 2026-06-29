@@ -31,6 +31,7 @@ export default function AdminMobilePage() {
         { id: 'rejection-risks', label: 'Rejection risks' },
         { id: 'ci', label: 'CI — build-mobile.yml' },
         { id: 'ios-pipeline', label: 'CI — deploy-ios.yml' },
+        { id: 'android-pipeline', label: 'CI — deploy-android.yml' },
         { id: 'post-v1', label: 'After v1 is live' },
       ]}
     >
@@ -409,6 +410,67 @@ git push origin mobile-v1.0.0`}</pre>
               For fully automated Stage 5, add three secrets:
               <code className="ml-1">ASC_API_KEY_ID</code>, <code>ASC_API_ISSUER_ID</code>, <code>ASC_API_PRIVATE_KEY</code>{' '}
               (contents of <code>AuthKey_*.p8</code>). Stage 5 falls back gracefully to a manual link if absent.
+            </li>
+          </ol>
+        </DocsCallout>
+      </section>
+
+      <section id="android-pipeline" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">
+          CI — deploy-android.yml{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> 3 automated · <HumanIcon /> 2 human gates
+          </span>
+        </h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Full Android deployment pipeline triggered via <strong>Actions → Deploy Android → Run workflow</strong>. Accepts a <code>rollout</code> input (default 20%) for the Play Store production rollout percentage.
+        </p>
+        <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border)' }}>
+          <table className="w-full text-sm">
+            <thead style={{ background: 'var(--bg-elevated)' }}>
+              <tr>
+                <th className="text-left px-4 py-2.5 font-semibold">Stage</th>
+                <th className="text-left px-4 py-2.5 font-semibold">Role</th>
+                <th className="text-left px-4 py-2.5 font-semibold">What happens</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">1 — Preflight + build</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Validates secrets → <code>eas build --platform android --wait --json</code> → captures build ID</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">2 — Play Internal gate</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><HumanIcon /> Human</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>GitHub emails you → "Review pending deployments" → Approve</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">3 — Play Internal upload</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}><code>eas submit --platform android --track internal --id &lt;build-id&gt;</code></td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">4 — Device test gate</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><HumanIcon /> Human</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Install via opt-in link in Play Console, run device checklist, Approve</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">5 — Play Store production</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}><code>eas submit --track production --rollout &lt;pct&gt;</code>; falls back to manual Play Console link if service account secret absent</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <DocsCallout variant="note" label="One-time setup">
+          <ol className="list-decimal pl-4 space-y-1 text-[14px]">
+            <li>GitHub → Settings → Environments → create <code>android-play-internal-gate</code>, add yourself as required reviewer</li>
+            <li>GitHub → Settings → Environments → create <code>android-play-store-gate</code>, add yourself as required reviewer</li>
+            <li>
+              Add <code>GOOGLE_SERVICE_ACCOUNT_KEY_JSON</code> secret — paste the full contents of{' '}
+              <code>apps/mobile/store/play-service-account.json</code> (see Phase 3 step 9).
+              Stages 3 and 5 fall back gracefully to manual links if absent.
             </li>
           </ol>
         </DocsCallout>
