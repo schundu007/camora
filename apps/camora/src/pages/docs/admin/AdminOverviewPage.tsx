@@ -104,6 +104,7 @@ export default function AdminOverviewPage() {
           <li><Link to="/docs/admin/lumora-live" className="text-[var(--accent)] underline">Live Session architecture</Link> — audio capture, transcription, Sona stream, voice filter, diagrams, bounded contexts.</li>
           <li><Link to="/docs/admin/lumora-coding" className="text-[var(--accent)] underline">Coding architecture</Link> — solver pipeline, system prompt + JSON contract, 3-pass reliability, JSON extraction.</li>
           <li><Link to="/docs/admin/lumora-design" className="text-[var(--accent)] underline">System Design architecture</Link> — tagged-text answer rendering, diagram generation pipeline, three-tier cache, code sanitizer.</li>
+          <li><Link to="/docs/admin/mobile" className="text-[var(--accent)] underline">Mobile publishing</Link> — iOS App Store + Play Store submission runbook, agent vs human breakdown, rejection risk mitigations.</li>
         </ul>
       </section>
 

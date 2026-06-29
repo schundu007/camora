@@ -74,6 +74,7 @@ const AdminLumoraCodingPage = lazy(() => import('./pages/docs/admin/AdminLumoraC
 const AdminLumoraDesignPage = lazy(() => import('./pages/docs/admin/AdminLumoraDesignPage'));
 const PlaygroundDocsPage = lazy(() => import('./pages/docs/PlaygroundDocsPage'));
 const AdminPlaygroundPage = lazy(() => import('./pages/docs/admin/AdminPlaygroundPage'));
+const AdminMobilePage = lazy(() => import('./pages/docs/admin/AdminMobilePage'));
 const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
@@ -534,6 +535,7 @@ export const App = () => {
           <Route path="/docs/admin/lumora-design" element={<OwnerRoute><AdminLumoraDesignPage /></OwnerRoute>} />
           <Route path="/docs/playground" element={<PlaygroundDocsPage />} />
           <Route path="/docs/admin/playground" element={<OwnerRoute><AdminPlaygroundPage /></OwnerRoute>} />
+          <Route path="/docs/admin/mobile" element={<OwnerRoute><AdminMobilePage /></OwnerRoute>} />
           <Route path="/admin/teams" element={<OwnerRoute><AdminTeamsPage /></OwnerRoute>} />
           <Route path="/admin/playground/observe" element={<OwnerRoute><AdminPlaygroundObservePage /></OwnerRoute>} />
           <Route path="/admin/api-keys" element={<OwnerRoute><AdminApiKeysPage /></OwnerRoute>} />
