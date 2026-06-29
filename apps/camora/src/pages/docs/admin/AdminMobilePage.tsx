@@ -29,7 +29,8 @@ export default function AdminMobilePage() {
         { id: 'phase-5', label: 'Phase 5 — TestFlight + Play Internal' },
         { id: 'phase-6', label: 'Phase 6 — Store review' },
         { id: 'rejection-risks', label: 'Rejection risks' },
-        { id: 'ci', label: 'CI build' },
+        { id: 'ci', label: 'CI — build-mobile.yml' },
+        { id: 'ios-pipeline', label: 'CI — deploy-ios.yml' },
         { id: 'post-v1', label: 'After v1 is live' },
       ]}
     >
@@ -337,16 +338,80 @@ eas submit --platform android --latest  # uploads .aab to Play Internal`}</pre>
 
       <section id="ci" className="mb-10 scroll-mt-24">
         <h2 className="text-2xl font-bold mb-3">
-          CI build{' '}
-          <span className="text-base font-normal ml-2 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-            <AgentIcon /> Agent triggers · <HumanIcon /> Human sets EXPO_TOKEN once
+          CI — build-mobile.yml{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> tag-triggered · fire and forget
           </span>
         </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Automated builds via <code>.github/workflows/build-mobile.yml</code> — triggers on <code>mobile-v*</code> tags or <code>workflow_dispatch</code>. Requires <code>EXPO_TOKEN</code> secret in GitHub repo Settings → Secrets → Actions.
+          Triggers on <code>mobile-v*</code> tags or <code>workflow_dispatch</code>. Fires <code>eas build --no-wait</code> and exits — no human gates, no submission. Use this to queue a build without going through the full deploy pipeline.
         </p>
-        <pre className="rounded-lg p-4 text-sm overflow-x-auto" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{`git tag mobile-v1.0.0
+        <pre className="rounded-lg p-4 text-sm overflow-x-auto mb-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{`git tag mobile-v1.0.0
 git push origin mobile-v1.0.0`}</pre>
+        <p className="text-[15px]" style={{ color: 'var(--text-secondary)' }}>
+          Required secret: <code>EXPO_TOKEN</code> (Settings → Secrets → Actions).
+        </p>
+      </section>
+
+      <section id="ios-pipeline" className="mb-10 scroll-mt-24">
+        <h2 className="text-2xl font-bold mb-3">
+          CI — deploy-ios.yml{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> 3 automated · <HumanIcon /> 2 human gates
+          </span>
+        </h2>
+        <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+          Full deployment pipeline triggered manually via <strong>Actions → Deploy iOS → Run workflow</strong>. Waits for the EAS build to finish, captures the build ID, and threads it through 5 stages with two human approval gates.
+        </p>
+        <div className="rounded-lg overflow-hidden mb-4" style={{ border: '1px solid var(--border)' }}>
+          <table className="w-full text-sm">
+            <thead style={{ background: 'var(--bg-elevated)' }}>
+              <tr>
+                <th className="text-left px-4 py-2.5 font-semibold">Stage</th>
+                <th className="text-left px-4 py-2.5 font-semibold">Role</th>
+                <th className="text-left px-4 py-2.5 font-semibold">What happens</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">1 — Preflight + build</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Checks <code>eas.json</code> has no placeholders → <code>eas build --wait --json</code> → captures build ID</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">2 — TestFlight gate</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><HumanIcon /> Human</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>GitHub emails you → "Review pending deployments" → Approve</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">3 — TestFlight upload</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}><code>eas submit --platform ios --id &lt;build-id&gt;</code></td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">4 — Device test gate</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><HumanIcon /> Human</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Install from TestFlight, run device checklist, Approve</td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5 font-medium">5 — App Store submit</td>
+                <td className="px-4 py-2.5"><span className="inline-flex items-center gap-1"><AgentIcon /> Agent</span></td>
+                <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Submits via ASC API; falls back to a direct App Store Connect link if secrets absent</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <DocsCallout variant="note" label="One-time setup">
+          <ol className="list-decimal pl-4 space-y-1 text-[14px]">
+            <li>GitHub → Settings → Environments → create <code>ios-testflight-gate</code>, add yourself as required reviewer</li>
+            <li>GitHub → Settings → Environments → create <code>ios-appstore-gate</code>, add yourself as required reviewer</li>
+            <li>
+              For fully automated Stage 5, add three secrets:
+              <code className="ml-1">ASC_API_KEY_ID</code>, <code>ASC_API_ISSUER_ID</code>, <code>ASC_API_PRIVATE_KEY</code>{' '}
+              (contents of <code>AuthKey_*.p8</code>). Stage 5 falls back gracefully to a manual link if absent.
+            </li>
+          </ol>
+        </DocsCallout>
       </section>
 
       <section id="post-v1" className="mb-10 scroll-mt-24">
