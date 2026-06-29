@@ -178,19 +178,41 @@ eas submit --platform android --latest  # uploads .aab to Play Internal
 
 ---
 
-## CI Build (GitHub Actions)
+## CI Workflows (GitHub Actions)
 
-> ⚡ Agent triggers; 🔑 Human must set `EXPO_TOKEN` secret once.
+> ⚡ Agent triggers; 🔑 Human must set secrets once.
 
-Automated builds via `.github/workflows/build-mobile.yml`:
-- Triggered by `mobile-v*` tags or `workflow_dispatch`
-- Uses `expo/expo-github-action@v8`
-- Requires `EXPO_TOKEN` secret set in GitHub repo settings (Settings → Secrets → Actions)
+### build-mobile.yml — tag-triggered build (fire and forget)
+
+Triggered by `mobile-v*` tags or `workflow_dispatch`. Fires an EAS build with `--no-wait` and exits. No human gates, no submission. Use to queue a build without going through the full deploy pipeline.
 
 ```bash
-# Tag a release to trigger CI build
 git tag mobile-v1.0.0
 git push origin mobile-v1.0.0
 ```
+
+Required secret: `EXPO_TOKEN` (Settings → Secrets → Actions).
+
+---
+
+### deploy-ios.yml — 5-stage deployment pipeline with human gates
+
+Triggered manually via `workflow_dispatch` (Actions → Deploy iOS → Run workflow). Waits for the build to complete and threads a build ID through each stage.
+
+| Stage | Role | What happens |
+|-------|------|-------------|
+| 1 — Preflight + build | ⚡ Agent | Checks `eas.json` has no placeholders → `eas build --wait --json` → captures build ID |
+| 2 — TestFlight gate | 🔑 Human | GitHub emails you → "Review pending deployments" → Approve |
+| 3 — TestFlight upload | ⚡ Agent | `eas submit --platform ios --id <build-id>` |
+| 4 — Device test gate | 🔑 Human | Install from TestFlight, run the checklist, Approve |
+| 5 — App Store review | ⚡ Agent | Submits via ASC API; falls back to a direct App Store Connect link if secrets absent |
+
+**One-time setup (do this before first run):**
+1. GitHub → Settings → Environments → create `ios-testflight-gate`, add yourself as required reviewer
+2. GitHub → Settings → Environments → create `ios-appstore-gate`, add yourself as required reviewer
+3. Add secrets for Stage 5 automation (optional — Stage 5 falls back gracefully if absent):
+   - `ASC_API_KEY_ID` — Key ID from App Store Connect API Keys
+   - `ASC_API_ISSUER_ID` — Issuer ID from App Store Connect
+   - `ASC_API_PRIVATE_KEY` — full contents of `AuthKey_*.p8`
 
 Full native runbook with per-platform detail lives at `apps/mobile/PUBLISHING.md`.
