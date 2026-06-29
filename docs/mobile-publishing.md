@@ -3,9 +3,9 @@
 Publishing runbook for `apps/mobile` (Expo + EAS). Each step is marked with who does the work.
 
 **Legend:**
-- 🤖 **Agent** — Claude can run this unattended
-- 👤 **Human** — requires your Apple/Google account, browser login, or legal sign-off
-- 🤝 **Handoff** — agent prepares, human clicks final "Submit"
+- ⚡ **Agent** — Claude can run this unattended
+- 🔑 **Human** — requires your Apple/Google account, browser login, or legal sign-off
+- 🚀 **Handoff** — agent prepares, human clicks final "Submit"
 
 ---
 
@@ -15,16 +15,16 @@ Publishing runbook for `apps/mobile` (Expo + EAS). Each step is marked with who 
 
 | Step | Who | Notes |
 |------|-----|-------|
-| Enroll in Apple Developer Program (developer.apple.com) | 👤 Human | $99/yr. Takes 24–48 hrs to verify. |
-| Get D-U-N-S number if registering as Cariara LLC | 👤 Human | Free via Apple. Up to a week — start immediately if needed. |
-| Complete tax + banking forms in App Store Connect | 👤 Human | account.apple.com → Agreements. ~30 min in browser. |
-| Create Google Play Console account | 👤 Human | $25 one-time. Verify identity + complete tax/banking forms. |
+| Enroll in Apple Developer Program (developer.apple.com) | 🔑 Human | $99/yr. Takes 24–48 hrs to verify. |
+| Get D-U-N-S number if registering as Cariara LLC | 🔑 Human | Free via Apple. Up to a week — start immediately if needed. |
+| Complete tax + banking forms in App Store Connect | 🔑 Human | account.apple.com → Agreements. ~30 min in browser. |
+| Create Google Play Console account | 🔑 Human | $25 one-time. Verify identity + complete tax/banking forms. |
 
 ---
 
 ## Phase 1 — Local Tooling
 
-> 🤖 Agent handles this entirely.
+> ⚡ Agent handles this entirely.
 
 ```bash
 cd apps/mobile
@@ -42,7 +42,7 @@ After `eas init`, commit the updated `app.json`.
 
 ## Phase 2 — App Store Connect Setup
 
-> 👤 Human does initial app creation; 🤖 Agent can fill `eas.json` once IDs are known.
+> 🔑 Human does initial app creation; ⚡ Agent can fill `eas.json` once IDs are known.
 
 1. App Store Connect → My Apps → **+** → New App
 2. Bundle ID: `com.cariara.camora` (must match `app.json`)
@@ -63,7 +63,7 @@ After `eas init`, commit the updated `app.json`.
 
 ## Phase 3 — Play Console Setup
 
-> 👤 Human does browser setup; 🤖 Agent can wire up the service account key.
+> 🔑 Human does browser setup; ⚡ Agent can wire up the service account key.
 
 1. Play Console → Create app → name: **"Camora — Interview Prep & Audio"**
 2. Default language: English (US), free app
@@ -84,7 +84,7 @@ After `eas init`, commit the updated `app.json`.
 
 ## Phase 4 — First Build
 
-> 🤖 Agent runs this unattended (~15 min iOS, ~10 min Android).
+> ⚡ Agent runs this unattended (~15 min iOS, ~10 min Android).
 
 ```bash
 cd apps/mobile
@@ -108,7 +108,7 @@ EAS handles certificates, provisioning profiles, and the Android upload keystore
 
 ## Phase 5 — Submit to TestFlight + Play Internal
 
-> 🤖 Agent runs the submit commands; 👤 Human installs and tests on real device.
+> ⚡ Agent runs the submit commands; 🔑 Human installs and tests on real device.
 
 ```bash
 cd apps/mobile
@@ -130,7 +130,7 @@ eas submit --platform android --latest  # uploads .aab to Play Internal
 
 ## Phase 6 — Submit for Store Review
 
-> 🤝 Handoff — agent can prepare everything; human clicks final submit.
+> 🚀 Handoff — agent can prepare everything; human clicks final submit.
 
 **iOS:**
 1. App Store Connect → your app → TestFlight → select build → **"Submit to App Store"**
@@ -180,7 +180,7 @@ eas submit --platform android --latest  # uploads .aab to Play Internal
 
 ## CI Build (GitHub Actions)
 
-> 🤖 Agent triggers; 👤 Human must set `EXPO_TOKEN` secret once.
+> ⚡ Agent triggers; 🔑 Human must set `EXPO_TOKEN` secret once.
 
 Automated builds via `.github/workflows/build-mobile.yml`:
 - Triggered by `mobile-v*` tags or `workflow_dispatch`
