@@ -856,6 +856,7 @@ export default function DashboardPage({ mode: modeProp, embedded = false } = {})
                 provider={provider}
                 model={model}
                 isMobile={isMobile}
+                cloudProvider={cloudProvider}
               />
             )}
           </main>
@@ -1109,7 +1110,7 @@ function CodingLayout({
   onSolve, onFetchUrl, onScreenshot, onClear, onFollowUpQuestion, isProcessingFollowUp,
   onExpandSystemDesign, onGenerateEraserDiagram, onExplanationsUpdate,
   codeDisplayRef, editorSettings, showAscendAssistant, onCloseAscendAssistant, provider, model,
-  qaHistory, isMobile,
+  qaHistory, isMobile, cloudProvider,
 }) {
   const [mobileTab, setMobileTab] = useState('problem');
   const [activeApproach, setActiveApproach] = useState(0);

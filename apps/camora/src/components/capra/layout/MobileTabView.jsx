@@ -44,6 +44,7 @@ export default function MobileTabView({ tabs, activeTab, onTabChange, children, 
     if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
 
     const currentIndex = tabs.findIndex((t) => t.id === active);
+    if (currentIndex === -1) return;
     if (dx < 0 && currentIndex < tabs.length - 1) {
       setActive(tabs[currentIndex + 1].id);
     } else if (dx > 0 && currentIndex > 0) {
