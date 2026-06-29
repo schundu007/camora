@@ -169,20 +169,28 @@ function detectCompany(input: {
   jdFile?: string;
   resumeFile?: string;
 }): string | undefined {
+  // 0. Workspace label wins first — user explicitly named it, most authoritative.
+  //    If the label contains a known company token, return it immediately.
+  if (input.label) {
+    for (const token of COMPANY_TOKENS) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'i');
+      if (re.test(input.label)) return token;
+    }
+  }
+
+  // 1. Scan JD + filenames only — intentionally NOT the resume.
+  //    The resume mentions many companies (past employers, GitHub repos, tools)
+  //    and will outrank the actual target company from the JD.
   const haystack = [
     input.jdFile || '',
     input.resumeFile || '',
     input.jd || '',
-    input.resume || '',
   ].join(' \n ');
   if (!haystack.trim()) return undefined;
 
-  // 1. Check known company tokens — case-insensitive whole-word match.
-  //    Score by frequency so "NVIDIA Robotics DevOps" + "NVIDIA is hiring"
-  //    beats a one-off mention of a competitor.
   const scores: Record<string, number> = {};
   for (const token of COMPANY_TOKENS) {
-    // Word boundaries; allow dot in "Fly.io" / "D.E. Shaw"
     const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'gi');
     const matches = haystack.match(re);
@@ -193,8 +201,7 @@ function detectCompany(input: {
   const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
   if (best) return best[0];
 
-  // 2. Fall back to the user's workspace label if it isn't a generic
-  //    placeholder.
+  // 2. Fall back to the user's workspace label if it isn't a generic placeholder.
   const generic = ['my session', 'session', 'default', 'untitled', 'new', 'test'];
   if (input.label && !generic.includes(input.label.trim().toLowerCase())) {
     return input.label;
