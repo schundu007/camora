@@ -215,4 +215,23 @@ Triggered manually via `workflow_dispatch` (Actions → Deploy iOS → Run workf
    - `ASC_API_ISSUER_ID` — Issuer ID from App Store Connect
    - `ASC_API_PRIVATE_KEY` — full contents of `AuthKey_*.p8`
 
+---
+
+### deploy-android.yml — 5-stage deployment pipeline with human gates
+
+Triggered manually via `workflow_dispatch` (Actions → Deploy Android → Run workflow). Accepts a `rollout` input (default 20%) for the production rollout percentage.
+
+| Stage | Role | What happens |
+|-------|------|-------------|
+| 1 — Preflight + build | ⚡ Agent | Validates secrets → `eas build --platform android --wait --json` → captures build ID |
+| 2 — Play Internal gate | 🔑 Human | GitHub emails you → "Review pending deployments" → Approve |
+| 3 — Play Internal upload | ⚡ Agent | `eas submit --platform android --track internal --id <build-id>` |
+| 4 — Device test gate | 🔑 Human | Install via opt-in link, run checklist, Approve |
+| 5 — Play Store production | ⚡ Agent | `eas submit --track production --rollout <pct>`; falls back to manual Play Console link if service account secret absent |
+
+**One-time setup:**
+1. GitHub → Settings → Environments → create `android-play-internal-gate`, add yourself as required reviewer
+2. GitHub → Settings → Environments → create `android-play-store-gate`, add yourself as required reviewer
+3. Add `GOOGLE_SERVICE_ACCOUNT_KEY_JSON` secret — paste the full contents of `apps/mobile/store/play-service-account.json` (see Phase 3 step 9). Stages 3 and 5 fall back gracefully to manual links if absent.
+
 Full native runbook with per-platform detail lives at `apps/mobile/PUBLISHING.md`.
