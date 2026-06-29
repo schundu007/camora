@@ -613,12 +613,19 @@ ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant st
 [/HEADLINE]
 
 [PITCH]
-A flowing 4–6 sentence narrative (NOT bullets) that:
-1. Opens with current/most recent role and a concrete signature accomplishment (named system + metric).
-2. Threads the TOP 3–4 JD requirements through specific past projects with NAMED systems and METRICS. If the JD calls for X and the candidate did X at Trackonomy/OSDU/etc., name the company AND the system AND the metric. NO generic claims like "extensive experience in CI/CD" — always: "at Trackonomy I owned the Jenkins + Azure DevOps Pipelines + GitHub Actions stack for C++ embedded firmware CI" / "at OSDU I ran 1000s of GitLab-CI pipeline runs" / "I built agent-based caching that cut a build from 8 hours to 20–25 minutes".
-3. For any JD requirement the candidate doesn't directly match, BRIDGE — name the closest analog in the candidate's experience and state willingness to ramp ("I haven't shipped Isaac ROS specifically, but I've done multi-arch C++ CI for embedded targets which translates directly").
-4. Closes with WHY this role + WHY now — one sentence tying their trajectory to the company's mission.
-Total: 200–280 words. At ~140 wpm that's 85–120 seconds — fits the interviewer's attention window and leaves room for follow-ups.
+CRITICAL — DO NOT restate the [HEADLINE]. The pitch must NOT open with "I am/I'm a [title] with X years" — the interviewer just heard that. Repeating it is the #1 amateur mistake and wastes 8 seconds.
+
+Open DIRECTLY with a named company + project + metric. First word should be "At", "In", or a verb ("I built…", "I led…", "I own…"). Example: "At Trackonomy, I owned the full CI/CD stack — Jenkins, Azure DevOps, GitHub Actions — for C++ embedded firmware, and I cut build time from 8 hours to 20 minutes."
+
+A flowing 6–8 sentence narrative (NOT bullets) structured as:
+1. Sentence 1–2: Flagship accomplishment — most JD-relevant project with NAMED system + metric. Jump straight in, no title restatement.
+2. Sentence 3–4: Second and third most JD-relevant experiences — different companies/systems, concrete numbers.
+3. Sentence 5–6: Address any JD gaps with BRIDGE — name closest analog + ramp statement ("I haven't shipped X specifically, but I've done Y which translates directly").
+4. Sentence 7–8: WHY this role + WHY now — tie trajectory to the company's specific mission/challenge.
+
+NO generic claims. Every sentence must have a named company, system, OR metric. "Extensive experience in CI/CD" → BANNED. "At OSDU I ran 1000s of GitLab-CI runs across 14 repos" → CORRECT.
+
+WORD COUNT: MINIMUM 220 words, target 260. Count before submitting. Under 200 words = under 85 seconds of speech = the interviewer runs out of content and awkward silence fills the room. This pitch must fill 90–120 seconds of confident, unhurried speech at 140 wpm.
 [/PITCH]
 
 [JD_COVERAGE]
@@ -636,10 +643,9 @@ ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}
 ${cultureFrame}${companyBriefing}
 
 Write the pitch now. Treat it as the most important 90 seconds of the candidate's day.`;
-    // Pitch needs more headroom than a STAR answer — full pitch +
-    // headline + JD coverage grid runs ~400-450 tokens; 1500 leaves
-    // breathing room without inviting filler.
-    maxTokens = 1500;
+    // 260-word pitch + headline + JD grid ≈ 500-600 tokens; 2000 gives
+    // room for the longer mandatory pitch without ever hitting the ceiling.
+    maxTokens = 2000;
   } else if (isShortMode) {
     // Load behavioral story anchor — inject the best pre-parsed STAR story for
     // the detected archetype so Claude uses the exact right experience/metric
