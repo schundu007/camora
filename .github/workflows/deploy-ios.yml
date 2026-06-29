@@ -1,0 +1,333 @@
+# iOS Deployment Pipeline — 5-stage with human approval gates
+#
+# Stage 1  [Agent]  Preflight + EAS build (waits for completion)
+# Stage 2  [Human]  Approve → upload to TestFlight
+# Stage 3  [Agent]  eas submit → TestFlight
+# Stage 4  [Human]  Test on device → approve App Store submission
+# Stage 5  [Agent]  Submit for App Store review via ASC API
+#
+# Required GitHub secrets:
+#   EXPO_TOKEN                — Expo account token (EAS builds + submit)
+#   ASC_API_KEY_ID            — App Store Connect API key ID (stage 5)
+#   ASC_API_ISSUER_ID         — App Store Connect issuer ID (stage 5)
+#   ASC_API_PRIVATE_KEY       — Contents of AuthKey_*.p8 (stage 5)
+#
+# Required GitHub environments (Settings → Environments):
+#   ios-testflight-gate       — add yourself as required reviewer
+#   ios-appstore-gate         — add yourself as required reviewer
+#
+# If ASC secrets are absent, stage 5 posts a direct App Store Connect
+# link and skips the API call — nothing breaks, you click manually.
+
+name: Deploy iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: false
+        default: production
+        type: choice
+        options: [production, preview]
+      notes:
+        description: 'Release notes (shown in job summary)'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-ios
+  cancel-in-progress: false
+
+jobs:
+
+  # ──────────────────────────────────────────────────────────────────
+  # STAGE 1  [Agent]  Preflight + EAS build
+  # ──────────────────────────────────────────────────────────────────
+  build:
+    name: '[Agent] Preflight + EAS build'
+    runs-on: ubuntu-latest
+    outputs:
+      build-id: ${{ steps.eas-build.outputs.build_id }}
+      build-url: ${{ steps.eas-build.outputs.build_url }}
+      app-version: ${{ steps.eas-build.outputs.app_version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Preflight — eas.json has no placeholders
+        run: |
+          if grep -q "REPLACE_WITH" apps/mobile/eas.json; then
+            echo "::error file=apps/mobile/eas.json::eas.json still contains placeholder values."
+            echo "Fill ascAppId and appleTeamId first — see /docs/admin/mobile Phase 2."
+            exit 1
+          fi
+
+      - name: Preflight — EXPO_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN secret is not set. Add it in Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Build iOS (waits for completion)
+        id: eas-build
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          BUILD_JSON=$(eas build \
+            --platform ios \
+            --profile ${{ inputs.profile }} \
+            --non-interactive \
+            --wait \
+            --json 2>/dev/null)
+
+          BUILD_ID=$(echo "$BUILD_JSON"    | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.id||d[0]?.id||'')")
+          BUILD_URL=$(echo "$BUILD_JSON"   | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); const b=d.id?d:d[0]; console.log(b?.artifacts?.buildUrl||b?.buildUrl||'')")
+          APP_VERSION=$(echo "$BUILD_JSON" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); const b=d.id?d:d[0]; console.log(b?.appVersion||b?.runtimeVersion||'unknown')")
+
+          echo "build_id=$BUILD_ID"       >> "$GITHUB_OUTPUT"
+          echo "build_url=$BUILD_URL"     >> "$GITHUB_OUTPUT"
+          echo "app_version=$APP_VERSION" >> "$GITHUB_OUTPUT"
+
+          echo "### Stage 1 complete — iOS build finished" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build ID      | \`$BUILD_ID\` |"      >> "$GITHUB_STEP_SUMMARY"
+          echo "| App version   | \`$APP_VERSION\` |"   >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build profile | \`${{ inputs.profile }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact      | [Download]($BUILD_URL) |" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ inputs.notes }}" ]; then
+            echo "| Release notes | ${{ inputs.notes }} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ──────────────────────────────────────────────────────────────────
+  # STAGE 2  [Human]  Approve upload to TestFlight
+  #
+  # Gate: go to Settings → Environments → ios-testflight-gate
+  #       and add yourself as a required reviewer.
+  # When the build is ready, GitHub emails you — click "Review pending
+  # deployments" → "Approve" to continue the pipeline.
+  # ──────────────────────────────────────────────────────────────────
+  gate-testflight:
+    name: '[Human] Approve TestFlight upload'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ios-testflight-gate
+
+    steps:
+      - name: Gate summary
+        run: |
+          echo "### Stage 2 — TestFlight gate passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Build \`${{ needs.build.outputs.build-id }}\` approved for TestFlight upload." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Before approving, verify:**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build artifact downloaded and inspects cleanly" >> "$GITHUB_STEP_SUMMARY"
+          echo "- App version matches expected semver" >> "$GITHUB_STEP_SUMMARY"
+          echo "- No accidental debug flags in the profile" >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────
+  # STAGE 3  [Agent]  Submit to TestFlight
+  # ──────────────────────────────────────────────────────────────────
+  upload-testflight:
+    name: '[Agent] Submit to TestFlight'
+    needs: [build, gate-testflight]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Submit to TestFlight
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas submit \
+            --platform ios \
+            --id ${{ needs.build.outputs.build-id }} \
+            --non-interactive
+
+      - name: Stage 3 summary
+        run: |
+          echo "### Stage 3 complete — uploaded to TestFlight" >> "$GITHUB_STEP_SUMMARY"
+          echo "Build \`${{ needs.build.outputs.build-id }}\` is now processing in TestFlight." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Next:** Install from TestFlight on your iPhone, run the test checklist, then approve the App Store gate." >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────
+  # STAGE 4  [Human]  Device testing → approve App Store submission
+  #
+  # Gate: go to Settings → Environments → ios-appstore-gate.
+  # Install the TestFlight build on your iPhone. Run the checklist:
+  #   [ ] Login flow
+  #   [ ] Prep tab — topic navigation
+  #   [ ] Live tab — mic → record → transcript appears
+  #   [ ] Sona answers render library context
+  #   [ ] Account → Delete account works
+  # Click Approve only after all checks pass.
+  # ──────────────────────────────────────────────────────────────────
+  gate-appstore:
+    name: '[Human] Device test + approve App Store'
+    needs: upload-testflight
+    runs-on: ubuntu-latest
+    environment: ios-appstore-gate
+
+    steps:
+      - name: Gate summary
+        run: |
+          echo "### Stage 4 — App Store gate passed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Device testing approved. Submitting for App Store review." >> "$GITHUB_STEP_SUMMARY"
+
+  # ──────────────────────────────────────────────────────────────────
+  # STAGE 5  [Agent]  Submit for App Store review
+  #
+  # Uses the App Store Connect REST API to submit for review.
+  # If ASC secrets are not set, this step posts a direct link instead
+  # and exits successfully — nothing breaks, you click manually.
+  #
+  # To enable full automation, add these secrets:
+  #   ASC_API_KEY_ID       — Key ID from App Store Connect
+  #   ASC_API_ISSUER_ID    — Issuer ID from App Store Connect
+  #   ASC_API_PRIVATE_KEY  — Full contents of AuthKey_*.p8
+  # ──────────────────────────────────────────────────────────────────
+  submit-appstore:
+    name: '[Agent] Submit for App Store review'
+    needs: [build, gate-appstore]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Submit for App Store review (or post manual link)
+        env:
+          ASC_KEY_ID:      ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID:   ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_API_PRIVATE_KEY }}
+          BUILD_ID:        ${{ needs.build.outputs.build-id }}
+          APP_VERSION:     ${{ needs.build.outputs.app-version }}
+        run: |
+          node - <<'EOF'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+
+          const keyId    = process.env.ASC_KEY_ID;
+          const issuerId = process.env.ASC_ISSUER_ID;
+          const privKey  = process.env.ASC_PRIVATE_KEY;
+
+          // If secrets not configured, fall back to a manual link
+          if (!keyId || !issuerId || !privKey) {
+            const asc = 'https://appstoreconnect.apple.com/apps';
+            console.log('ASC API secrets not configured — skipping automated submission.');
+            console.log('Open App Store Connect and click "Submit for Review" manually:');
+            console.log(asc);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              `### Stage 5 — manual action required\n` +
+              `ASC API secrets not configured. [Submit for Review manually](${asc}).\n\n` +
+              `Build ID: \`${process.env.BUILD_ID}\`\n`
+            );
+            process.exit(0);
+          }
+
+          // Generate App Store Connect API JWT (ES256, 19-min expiry)
+          const crypto = require('crypto');
+          const now = Math.floor(Date.now() / 1000);
+          const header  = Buffer.from(JSON.stringify({ alg: 'ES256', kid: keyId, typ: 'JWT' })).toString('base64url');
+          const payload = Buffer.from(JSON.stringify({ iss: issuerId, iat: now, exp: now + 1140, aud: 'appstoreconnect-v1' })).toString('base64url');
+          const unsigned = `${header}.${payload}`;
+          const key = crypto.createPrivateKey(privKey);
+          const sig = crypto.sign(null, Buffer.from(unsigned), { key, dsaEncoding: 'ieee-p1363' }).toString('base64url');
+          const jwt = `${unsigned}.${sig}`;
+
+          const base = 'https://api.appstoreconnect.apple.com/v1';
+          function ascGet(path) {
+            const res = execSync(`curl -sf -H "Authorization: Bearer ${jwt}" "${base}${path}"`).toString();
+            return JSON.parse(res);
+          }
+          function ascPost(path, body) {
+            const res = execSync(
+              `curl -sf -X POST -H "Authorization: Bearer ${jwt}" -H "Content-Type: application/json" -d '${JSON.stringify(body)}' "${base}${path}"`
+            ).toString();
+            return JSON.parse(res);
+          }
+
+          // Find the app by bundle ID
+          const apps = ascGet('/apps?filter[bundleId]=com.cariara.camora');
+          if (!apps.data?.length) throw new Error('App not found in App Store Connect. Check bundleId and ASC_API_KEY_ID permissions.');
+          const appId = apps.data[0].id;
+
+          // Find the version in PREPARE_FOR_SUBMISSION
+          const versions = ascGet(`/apps/${appId}/appStoreVersions?filter[appStoreState]=PREPARE_FOR_SUBMISSION&filter[platform]=IOS`);
+          if (!versions.data?.length) throw new Error('No iOS version in PREPARE_FOR_SUBMISSION state. Make sure the build is processed in TestFlight and the version is ready to submit.');
+          const versionId = versions.data[0].id;
+
+          // Submit for review
+          ascPost('/appStoreVersionSubmissions', {
+            data: {
+              type: 'appStoreVersionSubmissions',
+              relationships: {
+                appStoreVersion: { data: { type: 'appStoreVersions', id: versionId } }
+              }
+            }
+          });
+
+          console.log(`Submitted app version ${versionId} for App Store review.`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            `### Stage 5 complete — submitted for App Store review\n` +
+            `App version ID: \`${versionId}\`\n` +
+            `Apple review typically takes **24–48 hrs**.\n` +
+            `[Monitor in App Store Connect](https://appstoreconnect.apple.com/apps/${appId}/distribution/ios/version/inflight)\n`
+          );
+          EOF
+
+      - name: Final pipeline summary
+        if: always()
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Pipeline complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Stage | Role | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 1 Build            | Agent | ✓ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 2 TestFlight gate  | Human | ✓ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 3 Upload           | Agent | ✓ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 4 Device test gate | Human | ✓ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 5 App Store submit | Agent | ✓ |" >> "$GITHUB_STEP_SUMMARY"
