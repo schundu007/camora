@@ -108,13 +108,16 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
     const jd = (doc.jd || '').trim();
     const resume = (doc.resume || '').trim();
     if (!jd && !resume) return null;
-    const company = detectCompany({
-      label: key,
-      jd,
-      resume,
-      jdFile: doc.jdFile,
-      resumeFile: doc.resumeFile,
-    }) || (key && key !== 'My Session' ? key : undefined);
+    // The workspace label is the canonical company name — users name workspaces
+    // after the company they're interviewing with ("ASML-BUILD-ENG", "Salesforce-L").
+    // detectCompany() scanning JD text is too noisy: "Scale", "Linear", "Notion",
+    // "Box", "X", etc. are COMPANY_TOKENS that are also common English words and
+    // they produce false positives in any tech JD.
+    // Only fall back to JD scanning when the label is a known generic placeholder.
+    const GENERIC_LABELS = new Set(['my session', 'session', 'default', 'untitled', 'new', 'test', 'my interview', 'interview']);
+    const company = key && !GENERIC_LABELS.has(key.trim().toLowerCase())
+      ? key
+      : detectCompany({ label: null, jd, jdFile: doc.jdFile, resumeFile: doc.resumeFile }) || undefined;
 
     const studyDocs: LumoraStudyDoc[] = Array.isArray(doc.studyDocs)
       ? doc.studyDocs.filter(d => d && typeof d.content === 'string' && d.content.trim())
