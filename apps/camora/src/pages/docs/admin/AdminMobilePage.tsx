@@ -1,7 +1,18 @@
 import DocsPageLayout from '../_layout';
 import DocsCallout from '../../../components/shared/docs/DocsCallout';
+import { Icon } from '../../../components/shared/Icons';
 
 export default function AdminMobilePage() {
+  const AgentIcon = () => (
+    <Icon name="robot" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+  );
+  const HumanIcon = () => (
+    <Icon name="user" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+  );
+  const HandoffIcon = () => (
+    <Icon name="rocket" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+  );
+
   return (
     <DocsPageLayout
       title="Mobile publishing"
@@ -28,15 +39,21 @@ export default function AdminMobilePage() {
           <table className="w-full text-sm">
             <tbody>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5 font-semibold w-28">⚡ Agent</td>
+                <td className="px-4 py-2.5 font-semibold w-32">
+                  <span className="inline-flex items-center gap-1.5"><AgentIcon /> Agent</span>
+                </td>
                 <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Claude can run this unattended via CLI or CI</td>
               </tr>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5 font-semibold">🔑 Human</td>
+                <td className="px-4 py-2.5 font-semibold">
+                  <span className="inline-flex items-center gap-1.5"><HumanIcon /> Human</span>
+                </td>
                 <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Requires your Apple/Google account, browser login, or legal sign-off</td>
               </tr>
               <tr>
-                <td className="px-4 py-2.5 font-semibold">🚀 Handoff</td>
+                <td className="px-4 py-2.5 font-semibold">
+                  <span className="inline-flex items-center gap-1.5"><HandoffIcon /> Handoff</span>
+                </td>
                 <td className="px-4 py-2.5" style={{ color: 'var(--text-secondary)' }}>Agent prepares everything; human clicks the final submit button</td>
               </tr>
             </tbody>
@@ -45,7 +62,12 @@ export default function AdminMobilePage() {
       </section>
 
       <section id="phase-0" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 0 — Accounts <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>🔑 Human · one-time · ~3 days</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 0 — Accounts{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <HumanIcon /> Human · one-time · ~3 days
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
           Must complete before any build can ship. Start the D-U-N-S number request immediately — it can take up to a week.
         </p>
@@ -85,7 +107,12 @@ export default function AdminMobilePage() {
       </section>
 
       <section id="phase-1" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 1 — Local tooling <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>⚡ Agent · ~30 min</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 1 — Local tooling{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> Agent · ~30 min
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Agent runs all of this. The <code>eas login</code> step opens a browser for one human click, then the agent continues.
         </p>
@@ -100,7 +127,12 @@ eas init          # links repo to EAS; writes extra.eas.projectId into app.json`
       </section>
 
       <section id="phase-2" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 2 — App Store Connect setup <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>🔑 Human · ~2 hrs</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 2 — App Store Connect setup{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <HumanIcon /> Human · ~2 hrs
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Steps 1–9 are browser-only in App Store Connect. Steps 10–12 can be handed to the agent once you have the IDs.
         </p>
@@ -114,9 +146,9 @@ eas init          # links repo to EAS; writes extra.eas.projectId into app.json`
           <li>Upload screenshots per <code>apps/mobile/store/screenshots-checklist.md</code></li>
           <li>Fill <strong>App Privacy</strong> section from <code>apps/mobile/store/privacy-answers.md</code></li>
           <li>Fill <strong>App Review Information</strong> — sign-in credentials, contact email/phone, reviewer notes</li>
-          <li>⚡ Copy the <strong>numeric App ID</strong> (top of App Information) → paste into <code>eas.json</code> <code>submit.production.ios.ascAppId</code></li>
-          <li>⚡ Copy your <strong>Apple Team ID</strong> (account.apple.com → Membership) → paste into <code>eas.json</code> <code>submit.production.ios.appleTeamId</code></li>
-          <li>⚡ Commit the updated <code>eas.json</code></li>
+          <li><span className="inline-flex items-center gap-1"><AgentIcon /></span> Copy the <strong>numeric App ID</strong> (top of App Information) → paste into <code>eas.json</code> <code>submit.production.ios.ascAppId</code></li>
+          <li><span className="inline-flex items-center gap-1"><AgentIcon /></span> Copy your <strong>Apple Team ID</strong> (account.apple.com → Membership) → paste into <code>eas.json</code> <code>submit.production.ios.appleTeamId</code></li>
+          <li><span className="inline-flex items-center gap-1"><AgentIcon /></span> Commit the updated <code>eas.json</code></li>
         </ol>
         <DocsCallout variant="warning" label="Current blocker">
           <code>eas.json</code> still has placeholder values — <code>REPLACE_WITH_APP_STORE_CONNECT_APP_ID</code> and{' '}
@@ -125,7 +157,12 @@ eas init          # links repo to EAS; writes extra.eas.projectId into app.json`
       </section>
 
       <section id="phase-3" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 3 — Play Console setup <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>🔑 Human · ~2 hrs</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 3 — Play Console setup{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <HumanIcon /> Human · ~2 hrs
+          </span>
+        </h2>
         <ol className="list-decimal pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li>Play Console → Create app → name: <strong>Camora — Interview Prep &amp; Audio</strong></li>
           <li>Default language: English (US), free app</li>
@@ -136,7 +173,7 @@ eas init          # links repo to EAS; writes extra.eas.projectId into app.json`
           <li>Upload feature graphic (1024×500) — <strong>Play rejects without it</strong></li>
           <li>App access → provide test credentials for reviewers</li>
           <li>
-            ⚡ Service account for <code>eas submit</code>:
+            <span className="inline-flex items-center gap-1"><AgentIcon /></span> Service account for <code>eas submit</code>:
             <ul className="list-disc pl-6 mt-2 space-y-1">
               <li>Google Cloud Console → IAM → Service Accounts → create <code>play-publisher</code>, grant "Service Account User"</li>
               <li>Create a JSON key, download it</li>
@@ -148,7 +185,12 @@ eas init          # links repo to EAS; writes extra.eas.projectId into app.json`
       </section>
 
       <section id="phase-4" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 4 — First build <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>⚡ Agent · ~15 min iOS / ~10 min Android</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 4 — First build{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> Agent · ~15 min iOS / ~10 min Android
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           EAS handles certificates, provisioning profiles, and the Android upload keystore automatically. The very first iOS build prompts for App Store Connect credentials — one browser sign-in, then agent continues.
         </p>
@@ -162,7 +204,12 @@ eas build --platform all --profile production`}</pre>
       </section>
 
       <section id="phase-5" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 5 — TestFlight + Play Internal <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>⚡ Agent submits · 🔑 Human tests</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 5 — TestFlight + Play Internal{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> Agent submits · <HumanIcon /> Human tests
+          </span>
+        </h2>
         <pre className="rounded-lg p-4 text-sm overflow-x-auto mb-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>{`cd apps/mobile
 eas submit --platform ios --latest      # uploads .ipa to TestFlight
 eas submit --platform android --latest  # uploads .aab to Play Internal`}</pre>
@@ -181,7 +228,12 @@ eas submit --platform android --latest  # uploads .aab to Play Internal`}</pre>
       </section>
 
       <section id="phase-6" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">Phase 6 — Submit for store review <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>🚀 Handoff</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          Phase 6 — Submit for store review{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <HandoffIcon /> Handoff
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Agent prepares everything; human clicks final submit.
         </p>
@@ -284,7 +336,12 @@ eas submit --platform android --latest  # uploads .aab to Play Internal`}</pre>
       </section>
 
       <section id="ci" className="mb-10 scroll-mt-24">
-        <h2 className="text-2xl font-bold mb-3">CI build <span className="text-base font-normal ml-2" style={{ color: 'var(--text-muted)' }}>⚡ Agent triggers · 🔑 Human sets EXPO_TOKEN once</span></h2>
+        <h2 className="text-2xl font-bold mb-3">
+          CI build{' '}
+          <span className="text-base font-normal ml-2 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <AgentIcon /> Agent triggers · <HumanIcon /> Human sets EXPO_TOKEN once
+          </span>
+        </h2>
         <p className="text-[15px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
           Automated builds via <code>.github/workflows/build-mobile.yml</code> — triggers on <code>mobile-v*</code> tags or <code>workflow_dispatch</code>. Requires <code>EXPO_TOKEN</code> secret in GitHub repo Settings → Secrets → Actions.
         </p>
