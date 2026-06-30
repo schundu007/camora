@@ -151,8 +151,10 @@ export async function retrieve(opts) {
     // CRAG: grade chunks for relevance before injecting into prompt.
     // Runs only when RAG_USE_GRADING=true; fails open on timeout.
     const gradedChunks = await gradeChunks(question, chunks);
+    // Drop weak top-K junk (cosine distance > 0.5) before grounding/citations.
+    const relevantChunks = applyRelevanceFloor(gradedChunks);
 
-    const lowConfidence = detectLowConfidence(gradedChunks);
+    const lowConfidence = detectLowConfidence(relevantChunks);
     import('./retrievalLogger.js').then(({ logRetrieval }) =>
       logRetrieval({
         userId,
@@ -165,7 +167,7 @@ export async function retrieve(opts) {
         usedRerank: willRerank,
       }).catch(() => {}),
     );
-    return { chunks: gradedChunks, timedOut: false, latencyMs, lowConfidence };
+    return { chunks: relevantChunks, timedOut: false, latencyMs, lowConfidence };
   } finally {
     clearTimeout(timer);
   }
@@ -174,6 +176,24 @@ export async function retrieve(opts) {
 const LOW_RERANK_THRESHOLD = 0.20;
 const LOW_RRF_THRESHOLD = 0.025;
 const HIGH_DISTANCE_THRESHOLD = 0.5;
+
+/**
+ * Relevance floor — drop chunks that are only weakly related to the query.
+ * A chunk judged solely by raw cosine distance (no rerank/RRF signal) is
+ * dropped when distance > HIGH_DISTANCE_THRESHOLD (0.5). This stops weak
+ * top-K junk (e.g. a "ChatGPT Clone" project chunk surfacing for a
+ * behavioral question at distance 0.82) from grounding the answer or
+ * showing in the Sources panel. Rerank/RRF-scored chunks (warm kit) keep
+ * their own ordering and are left untouched.
+ */
+function applyRelevanceFloor(chunks) {
+  if (!Array.isArray(chunks) || chunks.length === 0) return chunks;
+  return chunks.filter((c) => {
+    if (typeof c.rerankScore === 'number' || typeof c.rrfScore === 'number') return true;
+    if (typeof c.distance === 'number') return c.distance <= HIGH_DISTANCE_THRESHOLD;
+    return true;
+  });
+}
 
 function detectLowConfidence(chunks) {
   if (!chunks || chunks.length === 0) return true;
