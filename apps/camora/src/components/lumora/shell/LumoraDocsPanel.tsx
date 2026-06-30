@@ -721,6 +721,43 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     );
   }
 
+  // Behavioral companyContext — interviewFormat / whatTheyLookFor / knownQuestions / culturalFit
+  if (data.companyContext && typeof data.companyContext === 'object') {
+    mark('companyContext');
+    const cc = data.companyContext;
+    els.push(
+      <div key="companyContext" className="rounded-xl p-4" style={paperCard(LC.medium.fg)}>
+        <SectionHeading label="Company Insights" color={LC.medium.fg} />
+        <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          {cc.interviewFormat && (
+            <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Interview Format</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.interviewFormat}</div>
+            </div>
+          )}
+          {cc.whatTheyLookFor && (
+            <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>What They Look For</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.whatTheyLookFor}</div>
+            </div>
+          )}
+          {cc.culturalFit && (
+            <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Cultural Fit</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.culturalFit}</div>
+            </div>
+          )}
+          {cc.knownQuestions && (
+            <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Known Questions</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{Array.isArray(cc.knownQuestions) ? cc.knownQuestions.join(' · ') : cc.knownQuestions}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   // Company Insights — amber accent (LC landing's "Companies & Candidates" tone)
   if (data.companyInsights) {
     mark('companyInsights');
