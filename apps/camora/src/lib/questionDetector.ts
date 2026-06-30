@@ -138,7 +138,57 @@ const WHISPER_HALLUCINATIONS = [
   '...',
   '. . .',
   '..',
+  // Screen-share / presentation hallucinations: Whisper hears slide-change
+  // sounds or silence and loops these phrases.
+  'the next slide is the slide',
+  'the next slide is a little bit more',
+  'the next slide is a little bit',
+  'the next slide is',
+  'next slide please',
+  'next slide',
+  'mmhmm',
+  'mm-hmm',
+  'mhm',
 ];
+
+/**
+ * True if the utterance is a repeated short phrase — Whisper on silence
+ * often produces the same 4-6 word fragment dozens of times.
+ * Catches "the next slide is the slide. the next slide is the slide."
+ * even though exact-match won't (it's multi-sentence now).
+ */
+function hasRepeatedPhrase(text: string): boolean {
+  const clean = text.replace(/[.,!?;:\-]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const words = clean.split(' ');
+  if (words.length < 6) return false;
+
+  // Slide-change loop: "the next slide" appearing 2+ times is always garbage
+  if ((clean.match(/the next slide/g) || []).length >= 2) return true;
+
+  // Any 3-6 word phrase repeating 3+ times
+  for (let len = 3; len <= 6; len++) {
+    for (let i = 0; i <= words.length - len * 2; i++) {
+      const phrase = words.slice(i, i + len).join(' ');
+      if (!phrase.trim()) continue;
+      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const count = (clean.match(new RegExp(escaped, 'g')) || []).length;
+      if (count >= 3) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * True if the utterance looks like garbled slide-text Whisper is
+ * hallucinating from screen audio. Signature: high density of single-
+ * or two-character tokens like "T4, TI-664, TPEM, T5, vLT, RPC".
+ */
+function isGarbled(text: string): boolean {
+  const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
+  if (tokens.length < 8) return false;
+  const shortCount = tokens.filter(t => t.length <= 3).length;
+  return shortCount / tokens.length > 0.55;
+}
 
 /**
  * True if the utterance is a known Whisper hallucination — phantom
@@ -147,14 +197,32 @@ const WHISPER_HALLUCINATIONS = [
 function isWhisperHallucination(raw: string): boolean {
   const text = (raw || '').trim().toLowerCase();
   if (!text) return false;
-  // Exact-match the whole transcript against a known hallucination.
   if (WHISPER_HALLUCINATIONS.includes(text)) return true;
   // Pure punctuation / dots
   if (/^[.\s]+$/.test(text)) return true;
   // Single repeated word (e.g. "you you you you")
   if (/^(\S+)(\s+\1)+$/i.test(text)) return true;
+  // Repeated mmhmm with punctuation variants ("Mmhmm. Mmhmm. Mmhmm.")
+  if (/^(mm+h*m+\.?\s*)+$/i.test(text)) return true;
+  // Repeated-phrase loop (slide-change hallucination)
+  if (hasRepeatedPhrase(text)) return true;
+  // Garbled slide-text dump
+  if (isGarbled(text)) return true;
   return false;
 }
+
+/**
+ * Interviewer wrap-up patterns — the interviewer is closing the session
+ * and asking the CANDIDATE if they have questions. Sona must not answer.
+ */
+const INTERVIEW_CLOSE_PATTERNS = [
+  /do you have any(?:\s+last(?:\s+minute)?)?\s+questions?\s+for\s+(?:me|us)/i,
+  /(?:we(?:'re|\s+are)|i(?:'m|\s+am))\s+(?:at|out of)\s+time/i,
+  /went by very fast/i,
+  /thank you for (?:sharing|your time|meeting|joining|taking the time)/i,
+  /nice (?:meeting|talking to|speaking with) you/i,
+  /we(?:'ll|\s+will)\s+(?:be\s+in touch|reach out|get back to you)/i,
+];
 
 /**
  * True if the utterance looks like something Sona should attempt to answer.
@@ -164,12 +232,16 @@ export function isQuestion(raw: string): boolean {
   if (!text) return false;
 
   // Whisper hallucination filter (silence / noise produces phantom
-  // "Thanks for watching" / "Subscribe" / "Bye" transcripts) — these
-  // must NEVER hit the LLM or the answer panel fills with nonsense.
+  // "Thanks for watching" / "Subscribe" / "Bye" / "The next slide" transcripts)
+  // — these must NEVER hit the LLM or the answer panel fills with nonsense.
   if (isWhisperHallucination(text)) return false;
 
   // Too short to be a meaningful question ("ok", "yeah sure", etc.)
   if (text.length < 12) return false;
+
+  // Interviewer wrapping up — "do you have any questions for me?" is directed
+  // at the candidate, not a question Sona should answer.
+  if (INTERVIEW_CLOSE_PATTERNS.some(p => p.test(text))) return false;
 
   // Utterances that trail off with a pleasantry ("...? Thank you very much.")
   // are background conversation — interviewer wrapping up small talk or
@@ -216,6 +288,7 @@ export function questionReason(raw: string): { isQuestion: boolean; reason: stri
   if (!text) return { isQuestion: false, reason: 'empty' };
   if (isWhisperHallucination(text)) return { isQuestion: false, reason: 'whisper hallucination' };
   if (text.length < 12) return { isQuestion: false, reason: 'too short' };
+  if (INTERVIEW_CLOSE_PATTERNS.some(p => p.test(text))) return { isQuestion: false, reason: 'interview close / wrap-up' };
   if (/(?:thank you|thanks|thank u)(?:\s+(?:very|so)\s+much)?[\s.,!]*$/i.test(text)) return { isQuestion: false, reason: 'pleasantry close' };
   if (text.endsWith('?')) return { isQuestion: true, reason: 'ends with ?' };
   if (text.split(/\s+/).length < 4) return { isQuestion: false, reason: 'too few words' };
