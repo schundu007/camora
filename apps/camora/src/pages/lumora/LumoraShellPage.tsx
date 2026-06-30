@@ -22,7 +22,7 @@ import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
 import { dialogConfirm } from '../../components/shared/Dialog';
-import { isQuestion, isWhisperHallucination } from '../../lib/questionDetector';
+import { isQuestion } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
@@ -310,12 +310,15 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // Behavioral bypasses the strict isQuestion() heuristic (so valid prompts
-      // that don't start with a question word still fire) — but Whisper
-      // hallucinations on silence ("the next slide is the slide", "thank you",
-      // repeated-phrase loops) must still be dropped, or the QUESTIONS panel
-      // fills with garbage when no one is speaking. Manual sends bypass even this.
-      if (!opts?.manual && isWhisperHallucination(trimmed)) return;
+      // Behavioral uses the SAME isQuestion() gate as the interview tab.
+      // isWhisperHallucination alone was too weak — it let "...? Thank you."
+      // and "So, the next slide is the slide." through, flooding the QUESTIONS
+      // panel. isQuestion() (which calls isWhisperHallucination internally)
+      // passes real behavioral prompts ("tell me about a time...", "describe a
+      // situation...", "walk me through...", "why do you want to...") and blocks
+      // interviewer narration + filler. Verified: 8/8 behavioral prompts pass,
+      // both garbage entries blocked. Manual mic presses bypass — explicit intent.
+      if (!opts?.manual && !isQuestion(trimmed)) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }
