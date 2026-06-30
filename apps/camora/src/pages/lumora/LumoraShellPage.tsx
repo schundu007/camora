@@ -310,14 +310,17 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // Behavioral is a LIVE interview: the interviewer is asking questions, so
-      // dispatch every committed transcript that isn't outright Whisper noise.
-      // The previous isQuestion() shape-gate (+ rejoin buffer) was dropping real
-      // prompts — unpunctuated questions, statements, single utterances that the
-      // buffer swallowed — which manifested as "Q&A completely stopped". The
-      // backend whisper filter + isWhisperHallucination already strip silence
-      // and slide-loop garbage, so anything that survives is worth answering.
+      // Filter Whisper noise, then gate on isQuestion() so interviewer
+      // narration/filler ("So, as a", "So that's a problem. Yeah.", "you can
+      // see the next slide") doesn't pollute the QUESTIONS panel. Two upstream
+      // fixes make this gate safe (it was dropping real questions before):
+      //   1. isGarbled() no longer false-flags short-word questions as garbage.
+      //   2. backend de-dupes Whisper's stutter so real questions survive.
+      // So real prompts ("how do you pin toolchains in CI", "what are hermetic
+      // builds?") pass while narration is dropped. Manual mic press bypasses the
+      // shape check (explicit intent), never the hallucination filter.
       if (isWhisperHallucination(trimmed)) return;
+      if (!opts?.manual && !isQuestion(trimmed)) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }
