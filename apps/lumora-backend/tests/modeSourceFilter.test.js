@@ -35,11 +35,12 @@ describe('sourcesForMode', () => {
     ]));
   });
 
-  it('behavioral mode covers behavioral + projects', () => {
+  it('behavioral mode has no KB sources — grounds only on user docs + stories', () => {
+    // Behavioral intentionally pulls no generic Capra KB (capra-behavioral
+    // tip sheets, capra-projects write-ups polluted personalized answers).
+    // Answers ground on the user's own resume/JD/cover letter + STAR stories.
     const s = sourcesForMode('behavioral');
-    expect(s).toEqual(expect.arrayContaining([
-      'capra-behavioral', 'capra-projects',
-    ]));
+    expect(s).toEqual([]);
   });
 
   it('KNOWN_MODES enumerates exactly the gated modes (general not included)', () => {
@@ -51,7 +52,8 @@ describe('sourcesForMode', () => {
     for (const mode of KNOWN_MODES) {
       const sources = sourcesForMode(mode);
       expect(sources).toBeInstanceOf(Array);
-      expect(sources.length).toBeGreaterThan(0);
+      // behavioral intentionally has zero KB sources; other modes must be non-empty.
+      if (mode !== 'behavioral') expect(sources.length).toBeGreaterThan(0);
       for (const src of sources) {
         expect(src).toMatch(/^capra-/);
       }
