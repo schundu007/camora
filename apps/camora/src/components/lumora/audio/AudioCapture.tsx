@@ -88,6 +88,9 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
       }
     }
   }
+  // Any CJK character = Whisper hallucinating slide/screen content.
+  // This never appears in real English interview speech, so one char is enough.
+  if (/[一-鿿㐀-䶿　-〿＀-￯぀-ヿ]/.test(text)) return false;
   const nonAscii = [...text].filter(c => c.charCodeAt(0) > 0x7f).length;
   if (nonAscii / text.length > 0.08) return false;
   const last = text.slice(-1);
