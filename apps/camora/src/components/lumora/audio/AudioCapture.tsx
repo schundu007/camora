@@ -332,7 +332,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       ? Date.now() - accumulationStartedAtRef.current
       : 0;
     if (heldFor >= MAX_ACCUM_MS && accumulatedTextRef.current.trim().length > 5) {
-      if (isQuestion(accumulatedTextRef.current.trim())) {
+      if (locked || isQuestion(accumulatedTextRef.current.trim())) {
         flushAccumulatedText();
       } else {
         // Garbage/noise accumulated during silence — clear without sending to Sona.
@@ -343,7 +343,6 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
           questionCheckTimerRef.current = null;
         }
         onLiveTranscription?.('');
-        if (locked) window.dispatchEvent(new CustomEvent('lumora:behavioral-live-transcript', { detail: { text: '' } }));
         incrementDroppedChunks();
         setStatus('filter', 'Noise cleared');
         setTimeout(() => setStatus('listen', 'Listening...'), 1500);
@@ -408,12 +407,11 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         questionCheckTimerRef.current = window.setTimeout(attemptFlush, 300);
         return;
       }
-      if (!isQuestion(accumulatedTextRef.current.trim())) {
+      if (!locked && !isQuestion(accumulatedTextRef.current.trim())) {
         // Not a real question (background narration, noise) — discard without sending.
         accumulatedTextRef.current = '';
         accumulationStartedAtRef.current = 0;
         onLiveTranscription?.('');
-        if (locked) window.dispatchEvent(new CustomEvent('lumora:behavioral-live-transcript', { detail: { text: '' } }));
         incrementDroppedChunks();
         setStatus('filter', 'Noise cleared');
         setTimeout(() => setStatus('listen', 'Listening...'), 1500);
