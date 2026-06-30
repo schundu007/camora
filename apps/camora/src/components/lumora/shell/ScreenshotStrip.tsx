@@ -383,7 +383,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
           style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
         >
-          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact />
+          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />
         </div>
       )}
 
