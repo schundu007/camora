@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// embeddings.js short-circuits to null when COHERE_API_KEY is absent (BM25-only
+// fallback). Set a dummy key so the (mocked) CohereClient is constructed; the
+// vi.mock below replaces the real SDK so no network call is made.
+process.env.COHERE_API_KEY = 'test-cohere-key';
+
 const embedMock = vi.fn();
 vi.mock('cohere-ai', () => ({
   CohereClient: vi.fn(function () {
