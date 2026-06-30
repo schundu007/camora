@@ -71,7 +71,15 @@ export const SpeakerAudioProvider = ({
         const result = await transcriptionAPI.transcribe(token, blob, 'speaker.webm', filterUserVoice);
         const text = result.text?.trim();
         if (result.skipped) {
-          console.warn('[SpeakerAudio] backend skipped', { reason: result.reason, text });
+          // Log the reason inline (not a collapsed object) so a dropped
+          // utterance is debuggable at a glance: 'hallucination_filtered'
+          // (backend Whisper VAD discarded the audio) vs a voice-match drop
+          // (room-mic filter removed the user's own voice).
+          console.warn(
+            `[SpeakerAudio] backend skipped — reason: ${result.reason || 'unknown'}` +
+            (typeof result.interviewer_ratio === 'number' ? ` (interviewer_ratio: ${result.interviewer_ratio})` : '') +
+            (text ? ` text: "${text}"` : ''),
+          );
           return;
         }
         if (!text) {

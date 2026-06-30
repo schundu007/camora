@@ -23,6 +23,7 @@ import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBa
 import { useTheme } from '../../hooks/useTheme';
 import { dialogConfirm } from '../../components/shared/Dialog';
 import { isQuestion, isWhisperHallucination } from '../../lib/questionDetector';
+import { rejoinBehavioral, BEHAVIORAL_CARRY_MS } from '../../lib/behavioralRejoin';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
@@ -289,6 +290,19 @@ export const LumoraShellPage = () => {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
+  // Behavioral rejoin buffer: holds a clean-but-not-yet-a-question fragment so
+  // a question split across two flushes ("what are hermetic" … "deterministic
+  // builds") can be stitched back together before the isQuestion gate runs.
+  const behavioralCarryRef = useRef('');
+  const behavioralCarryTimerRef = useRef<number | null>(null);
+  const clearBehavioralCarry = useCallback(() => {
+    behavioralCarryRef.current = '';
+    if (behavioralCarryTimerRef.current) {
+      clearTimeout(behavioralCarryTimerRef.current);
+      behavioralCarryTimerRef.current = null;
+    }
+  }, []);
+
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
@@ -311,19 +325,39 @@ export const LumoraShellPage = () => {
     }
     if (tab === 'behavioral') {
       // Behavioral uses the SAME isQuestion() gate as the interview tab.
-      // isWhisperHallucination alone was too weak — it let "...? Thank you."
+      // isWhisperHallucination alone is too weak — it let "...? Thank you."
       // and "So, the next slide is the slide." through, flooding the QUESTIONS
       // panel. isQuestion() (which calls isWhisperHallucination internally)
       // passes real behavioral prompts ("tell me about a time...", "describe a
       // situation...", "walk me through...", "why do you want to...") and blocks
-      // interviewer narration + filler. Verified: 8/8 behavioral prompts pass,
-      // both garbage entries blocked. Manual mic presses bypass the question-
-      // SHAPE check (explicit intent) — but NEVER bypass the Whisper-hallucination
-      // filter: a manual press that captures silence/noise produces garbage like
-      // "So, tb Cz, as a So, dc" which must never reach the QUESTIONS panel.
-      if (isWhisperHallucination(trimmed)) return;
-      if (!opts?.manual && !isQuestion(trimmed)) return;
-      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
+      // interviewer narration + filler.
+      //
+      // Manual mic press = explicit intent: bypass the question-SHAPE check but
+      // NEVER the hallucination filter (a manual press on silence produces
+      // garbage like "So, tb Cz, as a So, dc"). Clear any pending carry too.
+      if (opts?.manual) {
+        clearBehavioralCarry();
+        if (isWhisperHallucination(trimmed)) return;
+        window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
+        return;
+      }
+      // Auto: the interviewer's question can flush in two pieces when they pause
+      // mid-sentence ("what are hermetic" … "deterministic and reproducible
+      // builds"). Each fragment fails isQuestion() alone, so without rejoin the
+      // whole question vanishes (preview showed it, gate dropped it). rejoin
+      // holds a clean fragment and re-tests the concatenation; a lone
+      // non-question fragment ages out via the carry timeout and never fires.
+      const result = rejoinBehavioral(behavioralCarryRef.current, trimmed);
+      if (result.action === 'fire') {
+        clearBehavioralCarry();
+        window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: result.text } }));
+      } else if (result.action === 'buffer') {
+        behavioralCarryRef.current = result.carry;
+        if (behavioralCarryTimerRef.current) clearTimeout(behavioralCarryTimerRef.current);
+        behavioralCarryTimerRef.current = window.setTimeout(clearBehavioralCarry, BEHAVIORAL_CARRY_MS);
+      } else {
+        clearBehavioralCarry();
+      }
       return;
     }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
@@ -331,7 +365,7 @@ export const LumoraShellPage = () => {
     if (isWhisperHallucination(trimmed)) return;
     if (!opts?.manual && !isQuestion(trimmed)) return;
     handleSubmit(text);
-  }, [handleSubmit]);
+  }, [handleSubmit, clearBehavioralCarry]);
 
   const handleSnapped = useCallback((entry: ScreenshotEntry) => {
     setScreenshots(prev => {

@@ -182,12 +182,21 @@ function hasRepeatedPhrase(text: string): boolean {
  * True if the utterance looks like garbled slide-text Whisper is
  * hallucinating from screen audio. Signature: high density of single-
  * or two-character tokens like "T4, TI-664, TPEM, T5, vLT, RPC".
+ *
+ * NOTE: a pure token-length test is WRONG for English — real questions are
+ * dense with short function words ("how do you pin X in CI", "how do you
+ * handle a merge conflict") and would false-positive, killing the question
+ * before it ever reaches Sona. So only count short tokens that look
+ * CODE-LIKE: they contain a digit ("t4", "664") or have no vowel ("rpc",
+ * "vlt"). Real words almost always carry a vowel; slide-dump acronyms don't.
  */
 function isGarbled(text: string): boolean {
   const tokens = text.replace(/[.,!?;:-]+/g, ' ').trim().split(/\s+/);
   if (tokens.length < 5) return false;
-  const shortCount = tokens.filter(t => t.length <= 3).length;
-  return shortCount / tokens.length > 0.65;
+  const codeLike = tokens.filter(t => t.length <= 3 && (/\d/.test(t) || !/[aeiouy]/i.test(t))).length;
+  // 0.4 keeps manual-press silence garbage dying ("So, tb Cz, as a So, dc" →
+  // tb/cz/dc are vowelless = 0.43) while real short-word questions stay at 0.
+  return codeLike / tokens.length > 0.4;
 }
 
 /**
