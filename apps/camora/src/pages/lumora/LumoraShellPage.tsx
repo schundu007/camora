@@ -22,7 +22,7 @@ import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
 import { dialogConfirm } from '../../components/shared/Dialog';
-import { isQuestion } from '../../lib/questionDetector';
+import { isQuestion, isWhisperHallucination } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
@@ -317,12 +317,18 @@ export const LumoraShellPage = () => {
       // passes real behavioral prompts ("tell me about a time...", "describe a
       // situation...", "walk me through...", "why do you want to...") and blocks
       // interviewer narration + filler. Verified: 8/8 behavioral prompts pass,
-      // both garbage entries blocked. Manual mic presses bypass — explicit intent.
+      // both garbage entries blocked. Manual mic presses bypass the question-
+      // SHAPE check (explicit intent) — but NEVER bypass the Whisper-hallucination
+      // filter: a manual press that captures silence/noise produces garbage like
+      // "So, tb Cz, as a So, dc" which must never reach the QUESTIONS panel.
+      if (isWhisperHallucination(trimmed)) return;
       if (!opts?.manual && !isQuestion(trimmed)) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
+    // Manual presses bypass the shape check but never the hallucination filter.
+    if (isWhisperHallucination(trimmed)) return;
     if (!opts?.manual && !isQuestion(trimmed)) return;
     handleSubmit(text);
   }, [handleSubmit]);
