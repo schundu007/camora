@@ -12,6 +12,23 @@ import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
 import type { Citation } from '@/types';
 
+// Quiet-window (ms) after the last transcription fragment before the assembled
+// question is submitted. Long enough to bridge natural mid-sentence pauses,
+// short enough to feel responsive once the interviewer stops talking.
+const COALESCE_MS = 1200;
+
+const normalizeQ = (s: string): string => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
+// Two questions count as duplicates when, after normalizing whitespace/case,
+// they are equal or one contains the other. Catches continuation fragments and
+// the same utterance arriving from two entry paths.
+const isDuplicateQuestion = (a: string, b: string): boolean => {
+  const na = normalizeQ(a);
+  const nb = normalizeQ(b);
+  if (!na || !nb) return false;
+  return na === nb || na.includes(nb) || nb.includes(na);
+};
+
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
 const C = {
   base: 'var(--bg-surface)', surface: 'var(--bg-elevated)', elevated: 'var(--cam-primary)',
@@ -529,6 +546,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // are preserved and drained one-by-one as each answer completes.
   const pendingQuestionRef = useRef<string[]>([]);
 
+  // The question whose answer is currently streaming. Used to dedup: a
+  // continuation fragment or a repeat of the in-flight question must not be
+  // re-queued (it would answer the same thing twice).
+  const activeQuestionRef = useRef<string>('');
+
+  // Fragment-coalescing buffer for continuous (behavioral) transcription.
+  // A real interviewer question is often flushed by Whisper's VAD as several
+  // segments across natural mid-sentence pauses ("Tell me about a time…" …
+  // "…how did you handle it?"). Each segment used to be a separate ask() that
+  // ABORTED the answer the previous segment started — so nothing ever finished.
+  // We now buffer segments and only submit once the speaker has been quiet for
+  // COALESCE_MS, assembling the full question as one ask().
+  const coalesceBufferRef = useRef<string>('');
+  const coalesceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Ask a question — streams independently
   const ask = useCallback(async (question: string) => {
     // Defensive: an upstream caller occasionally hands us a non-string
@@ -542,16 +574,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     const trimmed = question.trim();
     if (!trimmed || !token) return;
     if (streaming) {
-      pendingQuestionRef.current.push(trimmed);
-      // Behavioral: abort current stream so Sona starts on the new question
-      // immediately. The abort fires onComplete → streaming=false → FIFO drain
-      // picks the next question from the queue in order.
-      if (embedded) streamAbortRef.current?.abort();
+      // Let the in-flight answer finish, then answer this next. Do NOT abort
+      // the current stream — aborting on every incoming transcription was the
+      // root cause of answers never completing in a live interview. Dedup so a
+      // continuation fragment or a duplicate (same utterance arriving from two
+      // entry paths) of the active or last-queued question isn't re-answered.
+      const lastQueued = pendingQuestionRef.current[pendingQuestionRef.current.length - 1] || '';
+      if (!isDuplicateQuestion(trimmed, activeQuestionRef.current) && !isDuplicateQuestion(trimmed, lastQueued)) {
+        pendingQuestionRef.current.push(trimmed);
+      }
       return;
     }
 
     const modePrefix = answerMode === 'short' ? '[SHORT] ' : '[DETAILED] ';
 
+    activeQuestionRef.current = trimmed;
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
     setStreamText('');
@@ -657,6 +694,35 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const askRef = useRef(ask);
   useEffect(() => { askRef.current = ask; }, [ask]);
 
+  // Coalesce continuous-transcription fragments into a single question. Each
+  // new fragment restarts the quiet-window timer; the assembled question is
+  // submitted only after COALESCE_MS with no new fragment. A fragment already
+  // contained in the buffer (same utterance arriving twice) doesn't re-append.
+  const submitCoalesced = useCallback((text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    const buf = coalesceBufferRef.current;
+    if (!buf) {
+      coalesceBufferRef.current = t;
+    } else if (!normalizeQ(buf).includes(normalizeQ(t))) {
+      coalesceBufferRef.current = `${buf} ${t}`;
+    }
+    if (coalesceTimerRef.current) clearTimeout(coalesceTimerRef.current);
+    coalesceTimerRef.current = setTimeout(() => {
+      const full = coalesceBufferRef.current.trim();
+      coalesceBufferRef.current = '';
+      coalesceTimerRef.current = null;
+      if (full) askRef.current?.(full);
+    }, COALESCE_MS);
+  }, []);
+
+  // On unmount: drop any buffered fragment and abort an in-flight stream so we
+  // stop billing tokens the browser will never render.
+  useEffect(() => () => {
+    if (coalesceTimerRef.current) clearTimeout(coalesceTimerRef.current);
+    streamAbortRef.current?.abort();
+  }, []);
+
   // Register with the Sona ask-callback registry so the page-level
   // voice router (LumoraBottomBar's mic + dispatchTranscript) can
   // forward routed transcripts here without a React-tree dependency.
@@ -712,16 +778,17 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     // Whisper hallucination garbage ("So, tb Cz, as a So, dc") must never reach
     // the QUESTIONS panel — not via manual presses, not via embedded behavioral.
     if (isWhisperHallucination(text)) return;
-    if (opts?.manual || embedded) {
-      askRef.current?.(text);
-      return;
-    }
+    // Explicit mic press = one deliberate utterance → answer immediately.
+    if (opts?.manual) { askRef.current?.(text); return; }
+    // Continuous behavioral capture → coalesce VAD fragments into one question
+    // so a multi-segment interviewer question isn't split into several asks.
+    if (embedded) { submitCoalesced(text); return; }
     // Non-embedded (floating Sona): gate on isQuestion so monologues / acknowledgments don't fire.
     if (!isQuestion(text)) {
       return;
     }
     askRef.current?.(text);
-  }, [embedded]);
+  }, [embedded, submitCoalesced]);
 
   // Keep the registry-bound ref in sync with the latest handler.
   // handleAutoTranscription has [] deps so it never rebuilds, but
@@ -739,11 +806,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       const detail = (e as CustomEvent<{ text?: string }>).detail;
       const text = typeof detail?.text === 'string' ? detail.text.trim() : '';
       if (!text) return;
-      askRef.current?.(text);
+      submitCoalesced(text);
     };
     window.addEventListener('lumora:behavioral-question', handler);
     return () => window.removeEventListener('lumora:behavioral-question', handler);
-  }, [embedded]);
+  }, [embedded, submitCoalesced]);
 
   useEffect(() => {
     if (!embedded) return;
