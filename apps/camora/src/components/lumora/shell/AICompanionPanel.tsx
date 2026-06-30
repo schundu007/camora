@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { dialogConfirm } from '@/components/shared/Dialog';
-import { isQuestion } from '@/lib/questionDetector';
+import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -709,6 +709,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       return;
     }
     setLiveTranscript(''); // question is committed — clear live preview
+    // Whisper hallucination garbage ("So, tb Cz, as a So, dc") must never reach
+    // the QUESTIONS panel — not via manual presses, not via embedded behavioral.
+    if (isWhisperHallucination(text)) return;
     if (opts?.manual || embedded) {
       askRef.current?.(text);
       return;
