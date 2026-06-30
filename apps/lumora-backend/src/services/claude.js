@@ -91,7 +91,7 @@ function isCodingQuestion(question) {
  * candidate can read aloud as a single continuous block. Match against
  * the cleaned question (no [SHORT] prefix).
  */
-function isElevatorPitch(question) {
+export function isElevatorPitch(question) {
   const q = String(question || '').toLowerCase().trim();
   const PHRASES = [
     'tell me about yourself',
