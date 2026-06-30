@@ -13,6 +13,8 @@ import {
   CODING_SYSTEM_PROMPT,
   getDefaultResumeContext,
   getDefaultTechnicalContext,
+  selectModel,
+  getAnthropicClient,
 } from './claude.js';
 import { getApiKey } from './adminConfig.js';
 
@@ -59,6 +61,7 @@ export async function* streamResponseGemini(question, history, options = {}) {
     designKind = 'system',
     mode = 'general',
     model: rawModel = null,
+    plan = null,
     signal = null,
   } = options;
   const model = rawModel || DEFAULT_MODEL;
@@ -144,38 +147,78 @@ ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
   yield { event: 'stream_start', data: { question, is_design: isDesign, is_coding: isCoding } };
 
   const chunks = [];
+  let inputTokens = 0;
+  let outputTokens = 0;
+  const recentHistory = history.slice(-6);
 
   try {
-    const client = getGeminiClient();
-    const geminiModel = client.getGenerativeModel({
-      model,
-      systemInstruction,
-    });
+    // PRIMARY: Claude (Anthropic) — restored as Sona's interview LLM. Every
+    // prompt/grounding/pitch/design decision above is provider-neutral, so only
+    // the streaming call differs. Ephemeral cache_control on the system block
+    // keeps repeat-question TTFT low.
+    const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isBehavioral || isShortMode ? 'behavioral' : 'general');
+    const claudeModel = (rawModel && /claude/i.test(rawModel)) ? rawModel : selectModel(plan, questionType);
+    const messages = [
+      ...recentHistory.map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+      { role: 'user', content: cleanQuestion },
+    ];
+    const stream = getAnthropicClient().messages.stream({
+      model: claudeModel,
+      max_tokens: maxOutputTokens,
+      temperature: 0.2,
+      system: [{ type: 'text', text: systemInstruction, cache_control: { type: 'ephemeral' } }],
+      messages,
+    }, signal ? { signal } : undefined);
 
-    const geminiHistory = toGeminiHistory(history.slice(-6));
-    const chat = geminiModel.startChat({
-      history: geminiHistory,
-      generationConfig: {
-        maxOutputTokens,
-        temperature: 0.2,
-      },
-    });
-
-    const result = await chat.sendMessageStream(cleanQuestion);
-
-    for await (const chunk of result.stream) {
-      if (signal?.aborted) break;
-      const token = chunk.text();
-      if (token) {
-        chunks.push(token);
-        yield { event: 'token', data: { t: token } };
+    for await (const event of stream) {
+      if (signal?.aborted) { try { stream.controller?.abort(); } catch { /* noop */ } break; }
+      if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+        chunks.push(event.delta.text);
+        yield { event: 'token', data: { t: event.delta.text } };
       }
+    }
+    if (signal?.aborted) return;
+    const finalMessage = await stream.finalMessage();
+    if (finalMessage.usage) {
+      inputTokens = finalMessage.usage.input_tokens || 0;
+      outputTokens = finalMessage.usage.output_tokens || 0;
     }
   } catch (err) {
     if (signal?.aborted) return;
-    console.error('Gemini stream error:', err);
-    yield { event: 'error', data: { msg: err.message || String(err) } };
-    return;
+    console.error('Claude stream error:', err);
+    // FALLBACK: Claude errored BEFORE any token streamed (rate limit / key
+    // exhausted / overloaded — the exact failure that drove the original Gemini
+    // migration). Fall back to Gemini so the candidate still gets an answer.
+    // If tokens already streamed, surface the error rather than restart.
+    if (chunks.length === 0) {
+      console.warn('[Sona] Claude unavailable — falling back to Gemini', model);
+      try {
+        const client = getGeminiClient();
+        const geminiModel = client.getGenerativeModel({ model, systemInstruction });
+        const chat = geminiModel.startChat({
+          history: toGeminiHistory(recentHistory),
+          generationConfig: { maxOutputTokens, temperature: 0.2 },
+        });
+        const result = await chat.sendMessageStream(cleanQuestion);
+        for await (const chunk of result.stream) {
+          if (signal?.aborted) break;
+          const token = chunk.text();
+          if (token) {
+            chunks.push(token);
+            yield { event: 'token', data: { t: token } };
+          }
+        }
+        if (signal?.aborted) return;
+      } catch (gerr) {
+        if (signal?.aborted) return;
+        console.error('Gemini fallback stream error:', gerr);
+        yield { event: 'error', data: { msg: gerr.message || String(gerr) } };
+        return;
+      }
+    } else {
+      yield { event: 'error', data: { msg: err.message || String(err) } };
+      return;
+    }
   }
 
   if (signal?.aborted) return;
@@ -193,8 +236,8 @@ ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
         parsed,
         is_design: isDesign,
         is_coding: isCoding,
-        input_tokens: 0,
-        output_tokens: 0,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
         latency_ms: latencyMs,
       },
     };
