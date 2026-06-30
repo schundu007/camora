@@ -37,8 +37,13 @@ const MODE_SOURCES = Object.freeze({
     'capra-database',         // db design context
   ],
   behavioral: [
-    'capra-behavioral',       // STAR / archetype prompts
-    'capra-projects',         // project narratives + framing
+    // Behavioral answers ground ONLY on the candidate's own resume / JD /
+    // cover letter (user-tier docs) + their saved STAR stories (injected
+    // separately by storyAnchor). No generic Capra KB: the tip-sheet topic
+    // "Failures & Mistakes" (capra-behavioral) and project write-ups like
+    // "ChatGPT Clone" (capra-projects) polluted personalized answers and the
+    // Sources panel. Empty list → `WHERE source = ANY('{}')` returns zero KB
+    // rows, and warm-kit gating keeps only tier==='user' chunks.
   ],
   sre: [
     'capra-sre',              // SLI/SLO/SLA, incident, on-call
