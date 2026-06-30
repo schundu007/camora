@@ -197,6 +197,9 @@ function isGarbled(text: string): boolean {
  * Even a few such tokens in short text is a strong garbage signal.
  */
 function hasGarbageTokens(text: string): boolean {
+  // CJK characters never appear in English interview speech — they are
+  // Whisper hallucinations from slide content or screen-shared foreign text.
+  if (/[一-鿿㐀-䶿　-〿＀-￯぀-ヿ]/.test(text)) return true;
   const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
   if (tokens.length < 3) return false;
   const garbageCount = tokens.filter(t =>
@@ -204,8 +207,10 @@ function hasGarbageTokens(text: string): boolean {
     /^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(t) ||
     /(.)\1{2,}/i.test(t)
   ).length;
-  // 2+ garbage tokens in short text, or >20% in longer text
-  return tokens.length <= 10 ? garbageCount >= 2 : garbageCount / tokens.length > 0.2;
+  // 2+ garbage tokens in short text, or >12% in longer text.
+  // Slide OCR garbage typically hits 13–15% digit-letter tokens; real
+  // tech questions with one version token (OAuth2, HTTP2) stay under 10%.
+  return tokens.length <= 10 ? garbageCount >= 2 : garbageCount / tokens.length > 0.12;
 }
 
 /**
