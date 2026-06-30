@@ -131,7 +131,11 @@ export const SpeakerAudioProvider = ({
     onMethodResolved: handleMethodResolved,
     silenceThreshold: 0.012,
     silenceDuration: 1200,
-    minSpeechDuration: 400,
+    // 150ms (was 400) — a short interviewer question ("Why that approach?",
+    // "And then?") used to be silently dropped here before it ever reached
+    // transcription. The downstream coalescer + isBehavioralPrompt() gate now
+    // filter noise, so it's safe to let short utterances through to Whisper.
+    minSpeechDuration: 150,
     maxRecordingDuration: 12000,
   });
 

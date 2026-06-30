@@ -333,6 +333,69 @@ export function isQuestion(raw: string): boolean {
 }
 
 /**
+ * Acknowledgment / agreement / filler tokens. An utterance made ENTIRELY of
+ * these is the interviewer reacting ("yeah okay that makes sense, cool") — not
+ * a prompt directed at the candidate. Used only by isBehavioralPrompt() to
+ * reject pure back-channel without rejecting real questions.
+ */
+const ACK_TOKENS = new Set([
+  'yeah', 'yep', 'yup', 'yes', 'no', 'nope', 'nah', 'okay', 'ok', 'kay',
+  'sure', 'right', 'cool', 'nice', 'good', 'great', 'perfect', 'awesome',
+  'exactly', 'correct', 'absolutely', 'definitely', 'totally', 'gotcha',
+  'got', 'it', 'makes', 'make', 'sense', 'i', 'see', 'that', 'this',
+  'is', 'was', 'so', 'well', 'um', 'uh', 'uhh', 'hmm', 'mhm', 'mm', 'mmhmm',
+  'alright', 'thanks', 'thank', 'you', 'interesting', 'wow', 'oh', 'ah',
+  'and', 'but', 'then', 'now', 'like', 'just', 'really', 'very', 'a', 'the',
+  'of', 'to', 'for', 'fine', 'fair', 'enough', 'point',
+]);
+
+/**
+ * Behavioral-mode gate — DELIBERATELY recall-favoring, the inverse of
+ * isQuestion()'s precision-first policy.
+ *
+ * Why a separate gate: real behavioral prompts are phrased as invitations and
+ * statements, not interrogatives — "I'd love to hear about a time you led",
+ * "Let's talk about a failure", "I'm curious how you handled that". isQuestion()
+ * rejects all of these (no question-word opener, no terminal "?", which Whisper
+ * routinely drops anyway). Applied to behavioral, it silently ate ~90% of real
+ * questions. Removing the gate entirely is the opposite failure — every "yeah,
+ * okay" back-channel pollutes the QUESTIONS panel (churned 4× on 2026-06-29).
+ *
+ * This is the third option: ACCEPT anything that isn't clearly noise. In a live
+ * interview a missed question is catastrophic; a stray answer is a deletable
+ * card. So we reject only the unambiguous non-prompts — Whisper hallucinations,
+ * very short utterances, interview wrap-up, and pure acknowledgment/filler —
+ * and let everything else through. Do NOT re-tighten this toward isQuestion();
+ * that reintroduces the 90% drop. See project_behavioral_question_gate memory.
+ */
+export function isBehavioralPrompt(raw: string): boolean {
+  const text = (raw || '').trim().toLowerCase();
+  if (!text) return false;
+
+  // Whisper silence/noise phantoms — never a real prompt.
+  if (isWhisperHallucination(text)) return false;
+
+  // Interviewer wrapping up ("do you have any questions for me?", "we're at time").
+  if (INTERVIEW_CLOSE_PATTERNS.some(p => p.test(text))) return false;
+
+  // Trails off into a pleasantry — background small-talk, not a prompt.
+  if (/(?:thank you|thanks|thank u)(?:\s+(?:very|so)\s+much)?[\s.,!]*$/i.test(text)) return false;
+
+  const words = text.split(/\s+/).filter(Boolean);
+  // Sub-4-word utterances are acknowledgments/filler ("yeah for sure", "okay
+  // got it"), not interview prompts. Real behavioral questions are sentences.
+  if (words.length < 4) return false;
+
+  // Reject only if EVERY meaningful token is acknowledgment/filler — i.e. the
+  // interviewer is reacting, not asking. A single content word (a noun/verb
+  // outside the ack set) is enough to treat it as a prompt and let it through.
+  const contentWords = words.filter(w => !ACK_TOKENS.has(w.replace(/[^a-z']/g, '')));
+  if (contentWords.length < 2) return false;
+
+  return true;
+}
+
+/**
  * Debug helper — returns the reason a string was classified the way it was.
  * Useful for surfacing "not detected as a question" hints in the UI.
  */

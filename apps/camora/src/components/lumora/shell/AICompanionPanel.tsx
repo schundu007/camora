@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { dialogConfirm } from '@/components/shared/Dialog';
-import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
+import { isQuestion, isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -712,7 +712,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       const full = coalesceBufferRef.current.trim();
       coalesceBufferRef.current = '';
       coalesceTimerRef.current = null;
-      if (full) askRef.current?.(full);
+      // Gate the COMPLETE assembled utterance (not the fragments) with the
+      // recall-favoring behavioral gate: answer anything that isn't clearly
+      // Whisper noise, interview wrap-up, or pure acknowledgment/filler. This
+      // is where narration is filtered now that the per-fragment isQuestion()
+      // gate in LumoraShellPage was removed (it ate ~90% of real questions).
+      // Manual mic presses never reach here — they ask() directly upstream.
+      if (full && isBehavioralPrompt(full)) askRef.current?.(full);
     }, COALESCE_MS);
   }, []);
 
@@ -803,9 +809,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   useEffect(() => {
     if (!embedded) return;
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ text?: string }>).detail;
+      const detail = (e as CustomEvent<{ text?: string; manual?: boolean }>).detail;
       const text = typeof detail?.text === 'string' ? detail.text.trim() : '';
       if (!text) return;
+      // Manual mic press = one deliberate utterance → answer immediately,
+      // skipping both the coalescer and the behavioral gate (explicit intent).
+      if (detail?.manual) { askRef.current?.(text); return; }
       submitCoalesced(text);
     };
     window.addEventListener('lumora:behavioral-question', handler);
