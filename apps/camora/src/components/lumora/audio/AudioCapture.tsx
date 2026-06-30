@@ -90,7 +90,7 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
   }
   // Any CJK character = Whisper hallucinating slide/screen content.
   // This never appears in real English interview speech, so one char is enough.
-  if (/[一-鿿㐀-䶿　-〿＀-￯぀-ヿ]/.test(text)) return false;
+  if (/[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef\u3040-\u30ff]/.test(text)) return false;
   const nonAscii = [...text].filter(c => c.charCodeAt(0) > 0x7f).length;
   if (nonAscii / text.length > 0.08) return false;
   const last = text.slice(-1);
@@ -1175,21 +1175,33 @@ const UnifiedMicButton = ({
         </span>
       )}
 
-      {/* Behavioral locked mode — always-on LIVE pill, not a toggle */}
+      {/* Behavioral mode — LIVE toggle. Same on/off control as AUTO (so the
+          candidate can pause Sona mid-interview), just branded LIVE and tuned
+          for the faster behavioral timing. ON = pulsing accent, OFF = paused. */}
       {locked ? (
-        <span
-          className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded select-none"
+        <button
+          type="button"
+          onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
+          className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
           style={{
-            color: 'var(--cam-accent-fill-text)',
-            background: 'var(--cam-accent-fill)',
-            border: '1px solid var(--accent)',
+            color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+            background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+            border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
             fontFamily: 'var(--font-mono)',
+            boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
           }}
-          title="Sona is always listening during behavioral interviews"
+          title={isAutoOn
+            ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
+            : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.'}
+          aria-pressed={isAutoOn}
         >
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-          LIVE
-        </span>
+          {isAutoOn ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+              LIVE
+            </span>
+          ) : 'LIVE'}
+        </button>
       ) : (
         /* AUTO toggle — coding/design tabs */
         <button
