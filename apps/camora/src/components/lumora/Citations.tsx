@@ -47,22 +47,19 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
     ? (c.topicTitle ? `Your past attempt: ${c.topicTitle}` : 'Your past attempt')
     : docKindLabel(c.docKind);
 
-  // Secondary detail — source path / section / language.
-  const secondary = isKb
-    ? [c.source, c.section].filter(Boolean).join(' / ')
+  // Secondary detail — source path / section / language. Strip internal
+  // plumbing that must NEVER reach the user: raw chunk indices ("body:2",
+  // "body:0") and internal KB codenames ("capra-behavioral", "capra-projects").
+  // KB drops c.source (the codename) and shows only the human section.
+  const rawSecondary = isKb
+    ? (c.section || null)
     : isCode
     ? [c.language, c.section].filter(Boolean).join(' / ')
-    : c.section || null;
-
-  // Distance badge — format to 3 decimals, colour-coded by proximity.
-  const dist = typeof c.distance === 'number' ? c.distance.toFixed(3) : null;
-  // 0–0.25 = strong match (navy), 0.25–0.50 = moderate (muted), 0.50+ = weak (dim)
-  const distColor =
-    c.distance < 0.25
-      ? 'var(--cam-primary)'
-      : c.distance < 0.5
-      ? 'var(--text-secondary)'
-      : 'var(--text-muted)';
+    : null; // user docs: c.section is "body:N" — never user-meaningful
+  const secondary =
+    rawSecondary && !/^body:\s*\d+$/i.test(rawSecondary.trim()) && !/\bcapra[-_]/i.test(rawSecondary)
+      ? rawSecondary
+      : null;
 
   return (
     <div
@@ -139,17 +136,6 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
           </p>
         )}
       </div>
-
-      {/* Distance score */}
-      {dist !== null && (
-        <span
-          className="shrink-0 text-[10px] font-mono tabular-nums mt-0.5"
-          style={{ color: distColor }}
-          title={`Cosine distance: ${dist} (lower = closer match)`}
-        >
-          {dist}
-        </span>
-      )}
     </div>
   );
 }
@@ -157,7 +143,17 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
 export const Citations = ({ citations }: CitationsProps) => {
   const [open, setOpen] = useState(false);
 
-  if (citations.length === 0) return null;
+  // Dedupe by source identity so the panel doesn't show "Resume / Resume /
+  // Resume" once the per-chunk body:N detail is stripped. Keep first hit.
+  const seen = new Set<string>();
+  const deduped = citations.filter((c) => {
+    const key = `${c.tier}|${(c.docKind || c.topicTitle || c.topicId || c.source || '').toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  if (deduped.length === 0) return null;
 
   return (
     <div
@@ -196,7 +192,7 @@ export const Citations = ({ citations }: CitationsProps) => {
             fontFamily: 'var(--font-mono)',
           }}
         >
-          {citations.length}
+          {deduped.length}
         </span>
 
         {/* Chevron */}
@@ -223,7 +219,7 @@ export const Citations = ({ citations }: CitationsProps) => {
       {/* Expanded list */}
       {open && (
         <div className="px-3 pt-1 pb-2">
-          {citations.map((c, i) => (
+          {deduped.map((c, i) => (
             <CitationRow key={i} c={c} index={i} />
           ))}
         </div>
