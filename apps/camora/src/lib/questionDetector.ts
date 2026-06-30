@@ -187,7 +187,7 @@ function isGarbled(text: string): boolean {
   const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
   if (tokens.length < 5) return false;
   const shortCount = tokens.filter(t => t.length <= 3).length;
-  return shortCount / tokens.length > 0.45;
+  return shortCount / tokens.length > 0.65;
 }
 
 /**
