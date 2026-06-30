@@ -1294,15 +1294,21 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
             <p style={{ ...S.p, margin: 0 }}>{data.summary}</p>
           </div>
         )}
-        {data.companyInsights && typeof data.companyInsights === 'object' && (
-          <div style={S.callout('violet')}>
-            <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: 'var(--accent-text)' }}>Company Insights</h4>
-            {data.companyInsights.interviewFormat && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Interview Format:</strong> {data.companyInsights.interviewFormat}</p>}
-            {data.companyInsights.culture && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Culture:</strong> {data.companyInsights.culture}</p>}
-            {data.companyInsights.values && Array.isArray(data.companyInsights.values) && <p style={{ ...S.p, margin: 0 }}><strong>Values:</strong> {data.companyInsights.values.join(' · ')}</p>}
-            {data.companyInsights.recentNews && <p style={{ ...S.p, margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>{data.companyInsights.recentNews}</p>}
-          </div>
-        )}
+        {(data.companyContext || data.companyInsights) && typeof (data.companyContext || data.companyInsights) === 'object' && (() => {
+          const cc = data.companyContext || data.companyInsights;
+          return (
+            <div style={S.callout('violet')}>
+              <h4 style={{ ...S.h4, margin: '0 0 8px 0', color: 'var(--accent-text)' }}>Company Insights</h4>
+              {cc.interviewFormat && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Interview Format:</strong> {cc.interviewFormat}</p>}
+              {cc.whatTheyLookFor && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>What They Look For:</strong> {cc.whatTheyLookFor}</p>}
+              {cc.culturalFit && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Cultural Fit:</strong> {cc.culturalFit}</p>}
+              {cc.knownQuestions && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Known Questions:</strong> {Array.isArray(cc.knownQuestions) ? cc.knownQuestions.join(', ') : cc.knownQuestions}</p>}
+              {cc.culture && <p style={{ ...S.p, margin: '0 0 4px' }}><strong>Culture:</strong> {cc.culture}</p>}
+              {cc.values && Array.isArray(cc.values) && <p style={{ ...S.p, margin: 0 }}><strong>Values:</strong> {cc.values.join(' · ')}</p>}
+              {cc.recentNews && <p style={{ ...S.p, margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>{cc.recentNews}</p>}
+            </div>
+          );
+        })()}
 
         {Array.isArray(questions) && questions.length > 0 && questions.map((q: any, i: number) => (
           <div key={i} style={{ marginBottom: '24px' }}>
@@ -1559,13 +1565,13 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
             </h3>
             {(t.description || t.detail || t.overview) && <p style={S.p}>{t.description || t.detail || t.overview}</p>}
-            {t.keyConceptsToReview && Array.isArray(t.keyConceptsToReview) && (
-              <div><h4 style={S.h4}>Key Concepts to Review</h4><ul style={S.ul}>{t.keyConceptsToReview.map((c: string, j: number) => <li key={j} style={S.li}>{c}</li>)}</ul></div>
+            {t.conceptsToKnow && Array.isArray(t.conceptsToKnow) && (
+              <div><h4 style={S.h4}>Key Concepts to Review</h4><ul style={S.ul}>{t.conceptsToKnow.map((c: string, j: number) => <li key={j} style={S.li}>{c}</li>)}</ul></div>
             )}
-            {t.interviewQuestions && Array.isArray(t.interviewQuestions) && (
+            {t.questions && Array.isArray(t.questions) && (
               <div>
                 <h4 style={S.h4}>Likely Practice Questions</h4>
-                {t.interviewQuestions.map((q: any, j: number) => (
+                {t.questions.map((q: any, j: number) => (
                   <div key={j} style={{ marginBottom: '12px', marginLeft: '20px' }}>
                     <p style={{ ...S.p, fontWeight: 600, margin: '0 0 4px' }}>{typeof q === 'string' ? q : q.question}</p>
                     {q.answer && <div style={S.callout('green')}><p style={{ ...S.p, margin: 0, fontSize: '13px' }}>{q.answer}</p></div>}

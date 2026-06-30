@@ -110,6 +110,12 @@ WORD COUNT: MINIMUM 220 words, target 260.
 For each top JD requirement, one line: "<requirement> → <proof point in 6–10 words>". 4–6 lines max.
 [/JD_COVERAGE]
 
+═══ CONSISTENCY RULES ═══
+- ALWAYS lead the [PITCH] with the same flagship accomplishment — the most JD-relevant one. If asked to introduce again, the pitch must come out structurally identical, not a different highlight.
+- ALWAYS use the same NAMED systems + numeric metrics from the resume. Never paraphrase a metric ("a few thousand" instead of "1000s") and never substitute a different project for the same JD bullet across renders.
+- Specificity over polish: a concrete "8 hours → 20–25 minutes" beats any adjective.
+- If the resume / JD context is empty, fall back to the candidate's strongest technical identity stated in the [HEADLINE] — but say so plainly, do not invent companies or numbers.
+
 ${resume ? `=== CANDIDATE BACKGROUND ===\n${resume}` : ''}
 ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
     maxOutputTokens = 2000;
