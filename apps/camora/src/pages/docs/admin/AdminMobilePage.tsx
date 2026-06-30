@@ -2,17 +2,17 @@ import DocsPageLayout from '../_layout';
 import DocsCallout from '../../../components/shared/docs/DocsCallout';
 import { Icon } from '../../../components/shared/Icons';
 
-export default function AdminMobilePage() {
-  const AgentIcon = () => (
-    <Icon name="robot" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
-  );
-  const HumanIcon = () => (
-    <Icon name="user" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
-  );
-  const HandoffIcon = () => (
-    <Icon name="rocket" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
-  );
+const AgentIcon = () => (
+  <Icon name="robot" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+);
+const HumanIcon = () => (
+  <Icon name="user" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+);
+const HandoffIcon = () => (
+  <Icon name="rocket" size={14} className="inline-block align-middle -mt-0.5 text-[var(--accent)]" />
+);
 
+export default function AdminMobilePage() {
   return (
     <DocsPageLayout
       title="Mobile publishing"
