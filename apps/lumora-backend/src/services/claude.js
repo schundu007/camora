@@ -24,6 +24,8 @@ const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-6';
 function selectModel(plan, questionType) {
   const paid = plan && plan !== 'free';
   if (!paid) return MODEL;
+  // Behavioral stays on Haiku — STAR answers don't benefit from Sonnet
+  if (questionType === 'behavioral') return MODEL;
   return MODEL_PAID;
 }
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
