@@ -36,6 +36,7 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
     file,
     language: 'en',
     prompt: TECHNICAL_PROMPT,
+    temperature: 0,
   });
 
   if (typeof response === 'string') return response.trim();
