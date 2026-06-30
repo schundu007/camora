@@ -310,18 +310,17 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
-      // Filter Whisper noise, then gate on isQuestion() so interviewer
-      // narration/filler ("So, as a", "So that's a problem. Yeah.", "you can
-      // see the next slide") doesn't pollute the QUESTIONS panel. Two upstream
-      // fixes make this gate safe (it was dropping real questions before):
-      //   1. isGarbled() no longer false-flags short-word questions as garbage.
-      //   2. backend de-dupes Whisper's stutter so real questions survive.
-      // So real prompts ("how do you pin toolchains in CI", "what are hermetic
-      // builds?") pass while narration is dropped. Manual mic press bypasses the
-      // shape check (explicit intent), never the hallucination filter.
+      // Filter Whisper noise only — do NOT apply the strict isQuestion() shape
+      // gate here. isQuestion() is precision-first ("What/How…?" interrogatives)
+      // and rejected the way behavioral questions are actually phrased ("I'd
+      // love to hear about a time you led", "Let's talk about a failure"), which
+      // silently ate ~90% of real questions. The downstream coalescer
+      // (submitCoalesced in AICompanionPanel) assembles VAD fragments into the
+      // full utterance and applies the recall-favoring isBehavioralPrompt()
+      // gate to the COMPLETE text — gating here, per-fragment, drops questions
+      // before they can be reassembled. Manual presses skip the coalescer entirely.
       if (isWhisperHallucination(trimmed)) return;
-      if (!opts?.manual && !isQuestion(trimmed)) return;
-      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
+      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: opts?.manual === true } }));
       return;
     }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
