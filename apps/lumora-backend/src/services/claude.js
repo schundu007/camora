@@ -594,7 +594,10 @@ export async function* streamResponse(question, history, options = {}) {
   // Elevator-pitch path — detected ahead of the generic short-mode
   // branch so "tell me about yourself" gets a 90-120 sec JD-mapped
   // narrative instead of an ARCHETYPE + STAR breakdown.
-  const isPitch = isShortMode && isElevatorPitch(cleanQuestion);
+  // Fires for copilot [SHORT] prefix AND for live behavioral mode — the
+  // UI sends mode='behavioral' without a [SHORT] prefix, so isShortMode
+  // alone would always miss it.
+  const isPitch = (isShortMode || isBehavioral) && isElevatorPitch(cleanQuestion);
 
   if (isPitch) {
     systemPrompt = `You ARE the candidate in a LIVE interview happening right now. The interviewer just asked the candidate to introduce themselves. Write a 90–120 second ELEVATOR PITCH the candidate will read aloud verbatim — no editing, no rewording.
