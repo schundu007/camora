@@ -27,10 +27,16 @@ window.addEventListener('vite:preloadError', () => {
   window.location.reload();
 });
 
+// PWA removed. Actively unregister any previously-installed service worker and
+// purge its caches — returning users who installed the old PWA cached a
+// network-first SW that would otherwise keep serving stale '/' indefinitely.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
+  navigator.serviceWorker.getRegistrations()
+    .then((regs) => regs.forEach((r) => r.unregister()))
+    .catch(() => {});
+}
+if (typeof caches !== 'undefined') {
+  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
 }
 
 // Tag the body when running inside the Electron desktop build so CSS can
