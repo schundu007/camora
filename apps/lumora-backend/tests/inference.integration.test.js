@@ -54,6 +54,33 @@ vi.mock('@anthropic-ai/sdk', () => {
   return { default: FakeAnthropic };
 });
 
+// streamResponse() now streams via Gemini (getGeminiClient), not Anthropic.
+// Mock the Google SDK so the assembled `systemInstruction` — which carries the
+// prepended retrievedContext + JD systemContext — is captured without a network
+// call. (The Anthropic mock above is kept harmless for any legacy code paths.)
+vi.mock('@google/generative-ai', () => {
+  function GoogleGenerativeAI() {
+    return {
+      getGenerativeModel(cfg) {
+        capturedCalls.push({ kind: 'gemini', systemInstruction: cfg?.systemInstruction, args: cfg });
+        return {
+          async generateContentStream() {
+            return {
+              stream: (async function* () {
+                yield { text: () => 'ok' };
+              })(),
+              response: Promise.resolve({
+                usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 1 },
+              }),
+            };
+          },
+        };
+      },
+    };
+  }
+  return { GoogleGenerativeAI };
+});
+
 // Mock companyContext + companyCulture + cloudHint to no-ops to keep
 // the test focused on the prompt-assembly path.
 vi.mock('../src/services/companyContext.js', () => ({
@@ -77,7 +104,10 @@ function findCapturedSystem() {
   // Normalize to a plain string for assertion.
   const call = capturedCalls[capturedCalls.length - 1];
   if (!call) throw new Error('SDK was not called');
-  const sys = call.args.system;
+  // streamResponse streams via Gemini: the system prompt is passed as
+  // `systemInstruction` to getGenerativeModel(). (Legacy Anthropic path put it
+  // in `args.system` as [{type,text}] blocks — still handled for safety.)
+  const sys = call.systemInstruction ?? call.args?.system;
   if (Array.isArray(sys)) return sys.map((b) => b.text).join('\n');
   return String(sys || '');
 }
