@@ -239,7 +239,28 @@ router.post(
         /^(\s*thank you\.?\s*)+$/i,
         /^\s*$/,
       ];
-      const trimmed = rawText.trim();
+      // De-dupe Whisper's duplicate-phrase artifact ("What is Bazel? What is
+      // Bazel?") BEFORE filtering. Whisper routinely stutters a REAL question
+      // on short audio; the repetition filter below would otherwise discard the
+      // whole question. Collapse consecutive duplicate sentences + immediately
+      // repeated phrases. A pure single-word loop ("Marvin Marvin Marvin")
+      // collapses to one word and is then caught by the short-noise filter, so
+      // genuine garbage still dies — but real stuttered questions survive.
+      const dedupeRepeats = (t) => {
+        if (!t) return t;
+        const sentences = t.split(/(?<=[.?!])\s+/);
+        const kept = [];
+        for (const s of sentences) {
+          const norm = s.trim().toLowerCase().replace(/[.?!,]+$/, '');
+          if (!norm) continue;
+          if (kept.length && kept[kept.length - 1].norm === norm) continue;
+          kept.push({ raw: s.trim(), norm });
+        }
+        let out = kept.map((s) => s.raw).join(' ') || t.trim();
+        out = out.replace(/(.{3,60}?)(?:[,\s]+\1)+/gi, '$1');
+        return out.trim();
+      };
+      const trimmed = dedupeRepeats(rawText.trim());
       const isHallucinationByPattern = HALLUCINATION_PATTERNS.some(p => p.test(trimmed));
 
       // Single short token without punctuation is almost always
