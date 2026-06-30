@@ -56,7 +56,7 @@ interface LumoraTopBarProps {
 }
 
 export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarProps) => {
-  const { status } = useSessionStore();
+  const { status, droppedChunks } = useSessionStore();
   const [showSettings, setShowSettings] = useState(false);
   const { theme } = useTheme();
 
@@ -124,10 +124,20 @@ export const LumoraTopBar = ({ onTranscription, inline = false }: LumoraTopBarPr
             status.state === 'ready' ? 'bg-[var(--cam-gold-leaf-lt)]' :
             status.state === 'error' ? 'bg-red-400' :
             status.state === 'warn' ? 'bg-amber-400' :
+            status.state === 'filter' ? 'bg-orange-400 animate-pulse' :
             (status.state === 'listen' || status.state === 'write') ? 'bg-[var(--cam-gold-leaf-lt)] animate-pulse' :
             ''
           }`} />
           <span className="hidden lg:inline text-xs font-bold" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-text)' }}>{status.message}</span>
+          {droppedChunks > 0 && (
+            <span
+              className="hidden lg:inline text-xs font-bold px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(251,146,60,0.18)', color: '#fb923c', fontFamily: 'var(--font-sans)' }}
+              title={`${droppedChunks} noise chunk${droppedChunks === 1 ? '' : 's'} filtered this session`}
+            >
+              {droppedChunks} filtered
+            </span>
+          )}
         </div>
 
         {/* AI hour budget chip — shown during live interview when running

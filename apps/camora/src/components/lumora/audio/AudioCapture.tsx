@@ -237,6 +237,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     setVoiceEnrolled,
     setVoiceFilterEnabled,
     setIsEnrolling,
+    incrementDroppedChunks,
   } = useSessionStore();
 
   // Get selected audio device
@@ -485,9 +486,9 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
           if (result.reason === 'hallucination_filtered') {
-            // Whisper hallucination — mic is already restarting via
-            // handleRecordingStop. No-op here.
-            setStatus('listen', 'Listening...');
+            incrementDroppedChunks();
+            setStatus('filter', 'Noise filtered');
+            setTimeout(() => setStatus('listen', 'Listening...'), 1500);
             dlog('chunk_skipped', { reason: 'hallucination' });
           } else {
             consecutiveFilteredRef.current += 1;
@@ -545,7 +546,9 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
           if (result.reason === 'hallucination_filtered') {
-            setStatus('ready', 'No speech detected - try again');
+            incrementDroppedChunks();
+            setStatus('filter', 'Noise filtered');
+            setTimeout(() => setStatus('ready', 'No speech detected - try again'), 1500);
           } else {
             const ratio = result.interviewer_ratio;
             const msg = ratio !== undefined

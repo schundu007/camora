@@ -27,11 +27,12 @@ interface SessionState {
 
   // Status
   status: {
-    state: 'idle' | 'ready' | 'listen' | 'transcribe' | 'search' | 'write' | 'error' | 'warn';
+    state: 'idle' | 'ready' | 'listen' | 'transcribe' | 'search' | 'write' | 'error' | 'warn' | 'filter';
     message: string;
   };
 
   // Audio
+  droppedChunks: number;
   audioLevel: number;
   threshold: number;
   vadThreshold?: number;
@@ -152,6 +153,7 @@ interface SessionState {
   setParsedBlocks: (blocks: ParsedBlock[]) => void;
   setError: (error: string | null) => void;
   setStatus: (state: SessionState['status']['state'], message: string) => void;
+  incrementDroppedChunks: () => void;
   setAudioLevel: (level: number) => void;
   setThreshold: (threshold: number) => void;
   setIsRecording: (isRecording: boolean) => void;
@@ -197,6 +199,7 @@ const initialState = {
     state: 'idle' as const,
     message: 'Ready to assist',
   },
+  droppedChunks: 0,
   audioLevel: 0,
   threshold: 0.015, // Higher threshold to avoid false voice detection from background noise
   isRecording: false,
@@ -269,6 +272,9 @@ export const useSessionStore = create<SessionState>()(
     set({
       status: { state, message },
     }),
+
+  incrementDroppedChunks: () =>
+    set((s) => ({ droppedChunks: s.droppedChunks + 1 })),
 
   setAudioLevel: (level) => set({ audioLevel: level }),
 
