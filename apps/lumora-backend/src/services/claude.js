@@ -873,4 +873,4 @@ For technical questions, map STAR to the technical context (Situation = the prob
   }
 }
 
-export { MODEL, isDesignQuestion, isCodingQuestion, buildGeneralPrompt, CODING_SYSTEM_PROMPT, getDefaultResumeContext, getDefaultTechnicalContext };
+export { MODEL, selectModel, getAnthropicClient, isDesignQuestion, isCodingQuestion, buildGeneralPrompt, CODING_SYSTEM_PROMPT, getDefaultResumeContext, getDefaultTechnicalContext };
