@@ -7,6 +7,7 @@ import { parseAnswer } from './answerParser.js';
 import {
   isDesignQuestion,
   isCodingQuestion,
+  isElevatorPitch,
   buildGeneralPrompt,
   buildDesignPrompt,
   CODING_SYSTEM_PROMPT,
@@ -66,11 +67,13 @@ export async function* streamResponseGemini(question, history, options = {}) {
 
   const isShortMode = question.startsWith('[SHORT] ');
   const cleanQuestion = isShortMode ? question.slice(8) : question;
+  const isBehavioral = mode === 'behavioral';
 
   const isDesignHeuristic = isDesignQuestion(cleanQuestion);
   const isCodingHeuristic = !isDesignHeuristic && isCodingQuestion(cleanQuestion);
-  const isDesign = mode === 'design' ? true : (mode === 'coding' ? false : isDesignHeuristic);
-  const isCoding = mode === 'coding' ? true : (mode === 'design' ? false : isCodingHeuristic);
+  const isDesign = mode === 'design' ? true : (mode === 'coding' || isBehavioral ? false : isDesignHeuristic);
+  const isCoding = mode === 'coding' ? true : (mode === 'design' || isBehavioral ? false : isCodingHeuristic);
+  const isPitch = (isShortMode || isBehavioral) && isElevatorPitch(cleanQuestion);
 
   const groundedContext = retrievedContext
     ? `${retrievedContext}\n\n${systemContext || ''}`.trim()
@@ -81,7 +84,36 @@ export async function* streamResponseGemini(question, history, options = {}) {
   let systemInstruction;
   let maxOutputTokens;
 
-  if (isCoding) {
+  if (isPitch) {
+    systemInstruction = `You ARE the candidate in a LIVE interview happening right now. The interviewer just asked the candidate to introduce themselves. Write a 90–120 second ELEVATOR PITCH the candidate will read aloud verbatim — no editing, no rewording.
+
+═══ VOICE — NON-NEGOTIABLE ═══
+- FIRST PERSON throughout. "I'm a…", "I've owned…", "I led…", "I built…".
+- NEVER write "you" / "your" / "the candidate" / third-person references.
+- This is the candidate's spoken intro — one continuous, confident pitch, NOT bullet points.
+- ALWAYS respond in English regardless of the language of the question or transcription.
+
+═══ STRUCTURE (locked — do not deviate) ═══
+The output MUST have EXACTLY these sections in this order with the labels verbatim:
+
+[HEADLINE]
+ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant strength. ~25 words.
+[/HEADLINE]
+
+[PITCH]
+CRITICAL — DO NOT restate the [HEADLINE]. Open DIRECTLY with a named company + project + metric. First word: "At", "In", or a verb ("I built…", "I led…"). A flowing 6–8 sentence narrative (NOT bullets): (1) flagship accomplishment with NAMED system + metric, (2) second/third JD-relevant experiences with metrics, (3) gap bridges — name closest analog + ramp statement, (4) why this role + why now.
+NO generic claims. Every sentence must have a named company, system, OR metric.
+WORD COUNT: MINIMUM 220 words, target 260.
+[/PITCH]
+
+[JD_COVERAGE]
+For each top JD requirement, one line: "<requirement> → <proof point in 6–10 words>". 4–6 lines max.
+[/JD_COVERAGE]
+
+${resume ? `=== CANDIDATE BACKGROUND ===\n${resume}` : ''}
+${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
+    maxOutputTokens = 2000;
+  } else if (isCoding) {
     const codingGrounding = retrievedContext ? `${retrievedContext}\n\n---\n\n` : '';
     systemInstruction = codingGrounding + CODING_SYSTEM_PROMPT;
     maxOutputTokens = MAX_TOKENS_DESIGN;
