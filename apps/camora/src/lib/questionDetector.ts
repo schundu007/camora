@@ -185,9 +185,27 @@ function hasRepeatedPhrase(text: string): boolean {
  */
 function isGarbled(text: string): boolean {
   const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
-  if (tokens.length < 8) return false;
+  if (tokens.length < 5) return false;
   const shortCount = tokens.filter(t => t.length <= 3).length;
-  return shortCount / tokens.length > 0.55;
+  return shortCount / tokens.length > 0.45;
+}
+
+/**
+ * True if the utterance contains garbled tokens characteristic of Whisper
+ * hallucinating slide/screen content: digit-letter mixing ("RRf0", "WF3HV2"),
+ * 4+ consecutive consonants ("kNjihru", "zbbzb"), or 3+ repeated chars.
+ * Even a few such tokens in short text is a strong garbage signal.
+ */
+function hasGarbageTokens(text: string): boolean {
+  const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
+  if (tokens.length < 3) return false;
+  const garbageCount = tokens.filter(t =>
+    /[a-z]\d|\d[a-z]/i.test(t) ||
+    /^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(t) ||
+    /(.)\1{2,}/i.test(t)
+  ).length;
+  // 2+ garbage tokens in short text, or >20% in longer text
+  return tokens.length <= 10 ? garbageCount >= 2 : garbageCount / tokens.length > 0.2;
 }
 
 /**
@@ -206,8 +224,10 @@ function isWhisperHallucination(raw: string): boolean {
   if (/^(mm+h*m+\.?\s*)+$/i.test(text)) return true;
   // Repeated-phrase loop (slide-change hallucination)
   if (hasRepeatedPhrase(text)) return true;
-  // Garbled slide-text dump
+  // Garbled slide-text dump (short token density)
   if (isGarbled(text)) return true;
+  // Garbled via digit-letter mixing / consecutive consonants
+  if (hasGarbageTokens(text)) return true;
   return false;
 }
 
@@ -248,8 +268,16 @@ export function isQuestion(raw: string): boolean {
   // thanking someone else. Block even when the text starts with a question word.
   if (/(?:thank you|thanks|thank u)(?:\s+(?:very|so)\s+much)?[\s.,!]*$/i.test(text)) return false;
 
-  // Ends with "?" — obvious question (checked before word count so "Why two pointers?" passes)
-  if (text.endsWith('?')) return true;
+  // Ends with "?" — strong signal, but require at least 5 words so bare fragments
+  // like "What are you?" or "So, D?" don't auto-fire Sona. Exception: classic
+  // short interview prompts that start with a question word are fine at 3+ words.
+  if (text.endsWith('?')) {
+    const wordCount = text.split(/\s+/).length;
+    if (wordCount >= 5) return true;
+    if (wordCount >= 3 && QUESTION_STARTERS.some(s => text.startsWith(s))) return true;
+    if (wordCount >= 3 && INTERVIEW_VERBS_ANYWHERE.some(v => text.includes(v))) return true;
+    // Too short and no clear interview signal — fall through to further checks
+  }
 
   if (text.split(/\s+/).length < 4) return false;
 
