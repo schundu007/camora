@@ -158,7 +158,7 @@ const WHISPER_HALLUCINATIONS = [
  * even though exact-match won't (it's multi-sentence now).
  */
 function hasRepeatedPhrase(text: string): boolean {
-  const clean = text.replace(/[.,!?;:\-]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const clean = text.replace(/[.,!?;:-]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
   const words = clean.split(' ');
   if (words.length < 6) return false;
 
@@ -184,7 +184,7 @@ function hasRepeatedPhrase(text: string): boolean {
  * or two-character tokens like "T4, TI-664, TPEM, T5, vLT, RPC".
  */
 function isGarbled(text: string): boolean {
-  const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
+  const tokens = text.replace(/[.,!?;:-]+/g, ' ').trim().split(/\s+/);
   if (tokens.length < 5) return false;
   const shortCount = tokens.filter(t => t.length <= 3).length;
   return shortCount / tokens.length > 0.65;
@@ -199,8 +199,8 @@ function isGarbled(text: string): boolean {
 function hasGarbageTokens(text: string): boolean {
   // CJK characters never appear in English interview speech — they are
   // Whisper hallucinations from slide content or screen-shared foreign text.
-  if (/[一-鿿㐀-䶿　-〿＀-￯぀-ヿ]/.test(text)) return true;
-  const tokens = text.replace(/[.,!?;:\-]+/g, ' ').trim().split(/\s+/);
+  if (/[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef\u3040-\u30ff]/.test(text)) return true;
+  const tokens = text.replace(/[.,!?;:-]+/g, ' ').trim().split(/\s+/);
   if (tokens.length < 3) return false;
   const garbageCount = tokens.filter(t =>
     /[a-z]\d|\d[a-z]/i.test(t) ||
