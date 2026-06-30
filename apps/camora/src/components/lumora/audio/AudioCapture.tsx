@@ -332,21 +332,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       ? Date.now() - accumulationStartedAtRef.current
       : 0;
     if (heldFor >= MAX_ACCUM_MS && accumulatedTextRef.current.trim().length > 5) {
-      if (locked || isQuestion(accumulatedTextRef.current.trim())) {
-        flushAccumulatedText();
-      } else {
-        // Garbage/noise accumulated during silence — clear without sending to Sona.
-        accumulatedTextRef.current = '';
-        accumulationStartedAtRef.current = 0;
-        if (questionCheckTimerRef.current) {
-          clearTimeout(questionCheckTimerRef.current);
-          questionCheckTimerRef.current = null;
-        }
-        onLiveTranscription?.('');
-        incrementDroppedChunks();
-        setStatus('filter', 'Noise cleared');
-        setTimeout(() => setStatus('listen', 'Listening...'), 1500);
-      }
+      flushAccumulatedText();
       return;
     }
 
@@ -405,16 +391,6 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         : 0;
       if (Date.now() - lastSpeechAtRef.current < holdMs && held < MAX_ACCUM_MS) {
         questionCheckTimerRef.current = window.setTimeout(attemptFlush, 300);
-        return;
-      }
-      if (!locked && !isQuestion(accumulatedTextRef.current.trim())) {
-        // Not a real question (background narration, noise) — discard without sending.
-        accumulatedTextRef.current = '';
-        accumulationStartedAtRef.current = 0;
-        onLiveTranscription?.('');
-        incrementDroppedChunks();
-        setStatus('filter', 'Noise cleared');
-        setTimeout(() => setStatus('listen', 'Listening...'), 1500);
         return;
       }
       flushAccumulatedText();
