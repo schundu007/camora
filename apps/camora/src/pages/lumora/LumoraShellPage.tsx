@@ -22,7 +22,7 @@ import { AudioSetupWizard } from '../../components/lumora/audio/AudioSetupWizard
 import { SilentStreamBanner } from '../../components/lumora/audio/SilentStreamBanner';
 import { useTheme } from '../../hooks/useTheme';
 import { dialogConfirm } from '../../components/shared/Dialog';
-import { isQuestion } from '../../lib/questionDetector';
+import { isQuestion, isWhisperHallucination } from '../../lib/questionDetector';
 import { LumoraProfilePage, AssistantsPage } from './lumora-shell/profile-and-assistants';
 import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
@@ -310,6 +310,12 @@ export const LumoraShellPage = () => {
       return;
     }
     if (tab === 'behavioral') {
+      // Behavioral bypasses the strict isQuestion() heuristic (so valid prompts
+      // that don't start with a question word still fire) — but Whisper
+      // hallucinations on silence ("the next slide is the slide", "thank you",
+      // repeated-phrase loops) must still be dropped, or the QUESTIONS panel
+      // fills with garbage when no one is speaking. Manual sends bypass even this.
+      if (!opts?.manual && isWhisperHallucination(trimmed)) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed } }));
       return;
     }

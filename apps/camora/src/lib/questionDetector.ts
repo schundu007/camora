@@ -217,10 +217,21 @@ function hasGarbageTokens(text: string): boolean {
  * True if the utterance is a known Whisper hallucination — phantom
  * transcription that must be discarded before any auto-submit.
  */
-function isWhisperHallucination(raw: string): boolean {
+export function isWhisperHallucination(raw: string): boolean {
   const text = (raw || '').trim().toLowerCase();
   if (!text) return false;
   if (WHISPER_HALLUCINATIONS.includes(text)) return true;
+  // Re-test list membership after stripping leading fillers ("so,", "and",
+  // "okay") and trailing punctuation — "So, the next slide is the slide."
+  // is the same hallucination as the bare phrase but won't exact-match.
+  const normalized = text
+    .replace(/^(so|and|okay|ok|well|now|right|alright|um|uh)[\s,]+/i, '')
+    .replace(/[\s.,!?]+$/g, '');
+  if (WHISPER_HALLUCINATIONS.includes(normalized)) return true;
+  // "the next slide is the slide" / "slide is slide" loops — Whisper's
+  // signature silence/screen-share hallucination. Substring + word-repeat.
+  if (/\bnext slide is\b/i.test(text)) return true;
+  if (/\b(\w+)\s+is\s+(?:the\s+)?\1\b/i.test(text)) return true;
   // Pure punctuation / dots
   if (/^[.\s]+$/.test(text)) return true;
   // Single repeated word (e.g. "you you you you")
