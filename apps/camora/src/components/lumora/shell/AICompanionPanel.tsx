@@ -1140,8 +1140,25 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {messages.map((msg, origIdx) => msg.role !== 'user' ? null : (
                 <div
                   key={origIdx}
-                  className="group px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    // Jump the answer panel to the AI reply that follows this
+                    // question (the first 'ai' message after origIdx).
+                    let aiIdx = -1;
+                    for (let j = origIdx + 1; j < messages.length; j++) {
+                      if (messages[j].role === 'ai') { aiIdx = j; break; }
+                      if (messages[j].role === 'user') break; // answer not arrived yet
+                    }
+                    if (aiIdx >= 0) {
+                      document.getElementById(`sona-answer-${aiIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    setMobileRailOpen(false);
+                  }}
+                  className="group px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2 cursor-pointer transition-colors"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
                 >
                   <div className="flex-1 min-w-0">
                     <p className="break-words">
@@ -1154,7 +1171,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     <span className="text-[8px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <button
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.stopPropagation(); // don't trigger the card's scroll-to-answer
                       const ok = await dialogConfirm({
                         title: 'Delete this Q&A?',
                         message: 'Removes both the question and Sona\'s answer.',
@@ -1207,8 +1225,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 {messages.map((msg, i) => msg.role !== 'ai' ? null : (
                   <div
                     key={i}
+                    id={`sona-answer-${i}`}
                     className="rounded-lg overflow-hidden group"
                     style={{
+                      scrollMarginTop: 12,
                       background: 'var(--bg-surface)',
                       border: '1px solid var(--border)',
                       boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
