@@ -27,6 +27,12 @@ function getTranscriptionClient() {
   throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
 }
 
+// Whisper no-speech threshold. Segments with no_speech_prob above this are
+// silence/noise (room echo, Meet compression artifacts, loud speaker bleed).
+// 0.6 is intentionally conservative — better to drop a borderline chunk than
+// to send room noise to the LLM.
+const NO_SPEECH_THRESHOLD = 0.6;
+
 export async function transcribe(audioBuffer, filename = 'audio.webm') {
   const { client, model } = getTranscriptionClient();
   const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
@@ -37,10 +43,20 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
     language: 'en',
     prompt: TECHNICAL_PROMPT,
     temperature: 0,
+    response_format: 'verbose_json',
   });
 
-  if (typeof response === 'string') return response.trim();
+  // verbose_json gives us per-segment no_speech_prob so we can drop silence.
+  if (response?.segments?.length) {
+    const avgNoSpeech = response.segments.reduce((s, seg) => s + (seg.no_speech_prob ?? 0), 0) / response.segments.length;
+    if (avgNoSpeech > NO_SPEECH_THRESHOLD) {
+      console.log(`[Whisper] Dropping chunk — avg no_speech_prob=${avgNoSpeech.toFixed(2)}`);
+      return '';
+    }
+  }
+
   if (typeof response?.text === 'string') return response.text.trim();
+  if (typeof response === 'string') return response.trim();
   console.warn('[Whisper] Unexpected response shape, dropping chunk:', typeof response);
   return '';
 }
