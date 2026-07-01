@@ -21,6 +21,7 @@ const PREPARE_ITEMS = [
 
 const PRACTICE_ITEMS = [
   { id: 'practice', label: 'Practice', icon: 'code', href: '/capra/practice' },
+  { id: 'flashcards', label: 'Flashcards', icon: 'layers', href: '/capra/flashcards' },
   { id: 'plan', label: 'Study Plan', icon: 'calendar', href: '/capra/plan' },
   { id: 'achievements', label: 'Achievements', icon: 'trophy', href: '/profile?tab=achievements' },
 ];
