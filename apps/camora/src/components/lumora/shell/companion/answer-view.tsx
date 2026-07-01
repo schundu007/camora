@@ -378,8 +378,10 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
 
 /* ── RichText — single-pass markdown renderer.
    Parses ## headings, | tables |, - bullets, ``` code ```, numbered lists,
-   and plain paragraphs into typed segments, then renders each one. */
-const RichText = ({ text }: { text: string }) => {
+   and plain paragraphs into typed segments, then renders each one.
+   Exported so the prep-kit document panel (LumoraDocsPanel) renders the
+   same book-style prose instead of leaking literal **bold** / `code` / ##. */
+export const RichText = ({ text }: { text: string }) => {
   if (!text) return null;
 
   const BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
