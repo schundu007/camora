@@ -263,7 +263,7 @@ export const SpeakerAudioPill = () => {
     unsupported: 'Browser unsupported',
     idle: 'Connect speaker',
     connecting: 'Connecting…',
-    live: 'Speaker ON',
+    live: 'LIVE',
     error: 'Reconnect',
   }[state];
 
@@ -321,7 +321,7 @@ export const SpeakerAudioPill = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 010-7.072m-2.828 9.9a9 9 0 010-12.728" />
         </svg>
       )}
-      <span className="hidden xl:inline">{label}</span>
+      <span className={state === 'live' ? 'inline' : 'hidden xl:inline'}>{label}</span>
       {state === 'live' && (
         <span className="flex items-end gap-0.5 h-3" aria-hidden="true">
           {[0, 1, 2, 3].map((i) => {
