@@ -5,7 +5,7 @@ import { useSessionStore } from '@/stores/session-store';
 import { transcriptionAPI, speakerAPI } from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { isQuestion } from '@/lib/questionDetector';
-import { SpeakerAudioPill } from './SpeakerAudio';
+import { SpeakerAudioPill, useSpeakerAudio } from './SpeakerAudio';
 
 // Backward-compatible alias for the old SystemAudioButton — the
 // implementation now lives in SpeakerAudio.tsx as SpeakerAudioPill,
@@ -255,6 +255,12 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // In the mic-only fallback (this never turns true) the mic IS the interviewer
   // source, so AUTO stays on as before.
   const speakerEverConnected = useSessionStore((s) => s.speakerAudio.everConnected);
+  // Whether the dedicated interviewer stream (desktop loopback / shared tab /
+  // virtual mic) is live RIGHT NOW. When it is, the behavioral LIVE toggle
+  // reflects and controls THIS stream (start/stop) instead of the candidate
+  // mic, so desktop users still get a visible, clickable LIVE chip.
+  const speakerActive = useSessionStore((s) => s.speakerAudio.active);
+  const speaker = useSpeakerAudio();
 
   // Accumulated transcription text for Live mode (chunks build up a full question)
   const accumulatedTextRef = useRef('');
@@ -1008,6 +1014,16 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // toggles AUTO off while a manual capture is in flight, the manual
   // capture continues; we just won't restart auto when it finishes.
   const handleModeToggle = useCallback(() => {
+    // When a dedicated interviewer stream owns "live" (desktop loopback /
+    // shared tab / virtual mic), the LIVE control pauses/resumes THAT stream
+    // instead of the candidate mic. The mic stays manual-only so the
+    // candidate's own voice never floods the Q&A. This is the single choke
+    // point for the LIVE button AND the ` / Cmd+Shift+A shortcuts, so none of
+    // them can accidentally revive the muted mic loop.
+    if (locked && speakerEverConnected) {
+      if (speaker.active) speaker.stop(); else void speaker.start();
+      return;
+    }
     // Functional setState reads the LATEST continuousMode at execution
     // time. The previous closure-based read snapshotted the value at
     // the time handleModeToggle was created — when the keyboard
@@ -1058,7 +1074,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         }
       });
     }
-  }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
+  }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode, locked, speakerEverConnected, speaker]);
 
   // Keyboard shortcuts — Backquote toggles AUTO, Escape stops AUTO.
   // The manual one-shot mic was removed per user request, so Cmd+M
@@ -1189,11 +1205,15 @@ const UnifiedMicButton = ({
 }) => {
   const isAutoOn = continuousMode;
   const isAsking = recordingModeUI === 'manual';
-  // Behavioral: the LIVE (continuous) candidate-mic toggle only makes sense in
-  // the mic-only fallback, where the mic IS the interviewer source. Once a
-  // separate interviewer stream is live, questions come from that stream and
-  // the candidate mic is manual-only ("Ask Sona"), so hide the LIVE toggle.
-  const showLiveToggle = locked ? !speakerEverConnected : false;
+  // Behavioral: always show a LIVE chip so the candidate can see (and toggle)
+  // whether Sona is listening — on every platform, desktop included.
+  //   • mic-only fallback  → LIVE reflects/controls the candidate mic loop.
+  //   • interviewer stream → LIVE reflects/controls THAT stream (desktop
+  //     loopback / shared tab / virtual mic) via the shared SpeakerAudio
+  //     context, so it mirrors the same start/stop the pill would.
+  const showLiveToggle = locked;
+  const liveControlsSpeaker = locked && speakerEverConnected;
+  const liveOn = liveControlsSpeaker ? speakerActive : isAutoOn;
 
   const inner = (
     <>
@@ -1219,18 +1239,22 @@ const UnifiedMicButton = ({
               onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
               className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
               style={{
-                color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-                background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
-                border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
+                color: liveOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+                background: liveOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+                border: `1px solid ${liveOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
                 fontFamily: 'var(--font-mono)',
-                boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
+                boxShadow: liveOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
               }}
-              title={isAutoOn
-                ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
-                : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.'}
-              aria-pressed={isAutoOn}
+              title={liveControlsSpeaker
+                ? (liveOn
+                    ? 'LIVE — Sona is listening to the interviewer audio and answers each question. Click to pause.'
+                    : 'Paused — interviewer audio capture is stopped. Click to resume listening.')
+                : (liveOn
+                    ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
+                    : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.')}
+              aria-pressed={liveOn}
             >
-              {isAutoOn ? (
+              {liveOn ? (
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
                   LIVE
