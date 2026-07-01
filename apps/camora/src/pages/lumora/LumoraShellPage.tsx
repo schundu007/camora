@@ -6,6 +6,7 @@ import { dispatchTranscript } from '../../lib/voice-router';
 import { SessionPanel } from '../../components/lumora/session/SessionPanel';
 import { SessionSidebar } from '../../components/lumora/session/SessionSidebar';
 import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
+import { PracticePanel } from '../../components/lumora/shell/PracticePanel';
 import { LumoraCalendar } from '../../components/lumora/shell/LumoraCalendar';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { useStreamingSession } from '../../hooks/useStreamingSession';
@@ -128,6 +129,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/fix') ? 'cofix' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
+    location.pathname.includes('/practice') ? 'practice' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
     location.pathname.includes('/sessions') ? 'sessions' :
@@ -751,6 +753,15 @@ export const LumoraShellPage = () => {
                   />
                 </Suspense>
               </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Practice tab — Sona quizzes you (active recall). Keep-alive so the
+              prep-question load + résumé fetch only fire once. */}
+          {mountedTabs.has('practice') && (
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
+              style={{ display: activeTab === 'practice' ? undefined : 'none' }}>
+              <PracticePanel />
             </div>
           )}
 
