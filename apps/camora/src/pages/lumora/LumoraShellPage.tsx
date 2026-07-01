@@ -293,7 +293,7 @@ export const LumoraShellPage = () => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
 
-  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean }) => {
+  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean; source?: 'interviewer' }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const tab = activeTabRef.current;
@@ -320,7 +320,26 @@ export const LumoraShellPage = () => {
       // gate to the COMPLETE text — gating here, per-fragment, drops questions
       // before they can be reassembled. Manual presses skip the coalescer entirely.
       if (isWhisperHallucination(trimmed)) return;
-      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: opts?.manual === true } }));
+      // Speaker attribution. In behavioral mode the QUESTION source must be the
+      // INTERVIEWER, never the candidate. Two streams reach this handler:
+      //   • the interviewer's dedicated stream (desktop loopback / shared tab /
+      //     virtual mic) — tagged source:'interviewer' at the provider, and
+      //   • the candidate's own mic (ScreenshotStrip AudioCapture, locked) —
+      //     untagged.
+      // Once a separate interviewer stream has connected this session
+      // (speakerAudio.everConnected), the candidate mic's AUTO transcripts are
+      // the candidate ANSWERING — they used to be dispatched as "questions",
+      // polluting the panel and making Sona answer the candidate's own voice
+      // (the "captures my voice, misses 90% of the interviewer" bug). Drop them.
+      // Manual mic presses (deliberate "ask Sona this") always go through. When
+      // no separate stream ever connected (mic-only fallback) the mic IS the
+      // interviewer source, so nothing is suppressed.
+      const isManual = opts?.manual === true;
+      const fromInterviewer = opts?.source === 'interviewer';
+      if (!isManual && !fromInterviewer && useSessionStore.getState().speakerAudio.everConnected) {
+        return;
+      }
+      window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));
       return;
     }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
@@ -348,7 +367,7 @@ export const LumoraShellPage = () => {
   }, []);
 
   return (
-    <SpeakerAudioProvider onTranscription={handleTranscription}>
+    <SpeakerAudioProvider onTranscription={(text) => handleTranscription(text, { source: 'interviewer' })}>
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
