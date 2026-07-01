@@ -1708,6 +1708,29 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </section>
               )}
 
+              {/* ── SERVICES USED (cloud provider services) ── mirrors the
+                  compact left-panel diagram legend, but in the main answer
+                  body so it's visible alongside Technologies/API/Data Model. */}
+              {sd.cloudServices && sd.cloudServices.length > 0 && (
+                <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                  <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
+                    <div className="w-1.5 h-5 rounded-full" style={{ background: `linear-gradient(to bottom, var(--cam-primary), ${t.dotColor})` }} />
+                    <h2 className="text-sm font-bold" style={{ color: 'var(--cam-strip-heading)' }}>Services Used</h2>
+                    <div className="ml-auto"><SectionCopyBtn getText={() => (sd.cloudServices || []).map(s => `${s.name}: ${s.role}`).join('\n')} title="Copy services used" /></div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {sd.cloudServices.map((svc, i) => (
+                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                          <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{svc.name}</span>
+                          {svc.role && <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{svc.role}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* ── TRADEOFFS + EDGE CASES ── */}
               {(() => {
                 // Cap at 5. Anything more is noise — interview-grade designs
