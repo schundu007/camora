@@ -12,6 +12,7 @@ import { prepAPI } from '../../../lib/api-client';
 import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '../../../lib/prepDownload';
 import { useCloudProvider } from '../../../hooks/useCloudProvider';
 import CloudProviderSelector from '../../shared/CloudProviderSelector';
+import { stripInlineMarkdown, isImageUrl } from '../../../lib/text-utils';
 import Chip from '@/components/shared/ui/Chip';
 import { ResearchDocsCard } from '../prep/ResearchDocsCard';
 
@@ -246,9 +247,13 @@ const tryParseJsonValue = (s: string): any  => {
  *  the whole panel goes blank. */
 const safeText = (v: any): string  => {
   if (v === null || v === undefined) return '';
-  if (typeof v === 'string') return v;
+  if (typeof v === 'string') return stripInlineMarkdown(v);
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-  if (Array.isArray(v)) return v.map(safeText).filter(Boolean).join(', ');
+  // Sentence arrays (elevator-pitch openingHook, keyAchievement…) arrive as
+  // ["…experience.", "My expertise…"]. Comma-joining them produced the
+  // "experience., My" artifact; stripInlineMarkdown heals ".," → ". " on the
+  // joined result while short token lists (tech stacks) keep their commas.
+  if (Array.isArray(v)) return stripInlineMarkdown(v.map(safeText).filter(Boolean).join(', '));
   if (typeof v === 'object') {
     // Object dropped where text was expected — turn it into a readable
     // "key: value, key: value" line instead of crashing.
@@ -269,7 +274,22 @@ const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
     // Heal stringified JSON — if the value is a JSON-shaped string, parse and recurse
     const parsed = tryParseJsonValue(val);
     if (parsed !== null) return <ValueRenderer val={parsed} depth={depth} />;
-    return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{val}</span>;
+    // A bare image URL (e.g. a generated architecture diagram) renders as the
+    // actual image, not the raw link text.
+    if (isImageUrl(val)) {
+      return (
+        <img
+          src={val.trim()}
+          alt="Diagram"
+          loading="lazy"
+          className="max-w-full rounded-lg mt-1"
+          style={{ border: '1px solid var(--border)' }}
+        />
+      );
+    }
+    const clean = stripInlineMarkdown(val);
+    if (!clean) return null;
+    return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{clean}</span>;
   }
   if (typeof val === 'number' || typeof val === 'boolean') {
     return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{String(val)}</span>;
@@ -280,7 +300,7 @@ const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
     // Array of primitives — comma-join for inline display
     const allPrimitive = val.every((x) => typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean');
     if (allPrimitive) {
-      return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{val.map(String).join(', ')}</span>;
+      return <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{stripInlineMarkdown(val.map(String).join(', '))}</span>;
     }
     // Array of objects — render each as a nested card
     return (
@@ -295,7 +315,7 @@ const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
   }
 
   if (typeof val === 'object') {
-    const entries = Object.entries(val).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0));
+    const entries = Object.entries(val).filter(([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0));
     if (entries.length === 0) return null;
     return (
       <div className="space-y-2">
@@ -1163,7 +1183,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 {q.tips && (qRendered.add('tips'),
                   <div className="rounded-lg p-3 text-xs leading-relaxed" style={paperCard(LC.gold)}>
                     <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.gold }}>Tip:</span>
-                    <span style={{ color: 'var(--text-primary)' }}>{Array.isArray(q.tips) ? q.tips.join(' ') : q.tips}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{Array.isArray(q.tips) ? q.tips.map(safeText).filter(Boolean).join(' ') : safeText(q.tips)}</span>
                   </div>
                 )}
 
@@ -2271,7 +2291,7 @@ const FormattedJD = ({ text }: { text: string }) => {
     <div className="flex flex-col gap-3 md:gap-4">
       {heroTitle && (
         <div
-          className="relative rounded-2xl overflow-hidden px-6 pl-7 py-6"
+          className="relative rounded-2xl overflow-hidden px-6 py-6"
           style={cardChrome}
         >
           <NavyStrip />
@@ -2287,7 +2307,7 @@ const FormattedJD = ({ text }: { text: string }) => {
 
       {metadata.length > 0 && (
         <div
-          className="relative rounded-2xl px-5 pl-7 py-4 grid gap-x-6 gap-y-4 overflow-hidden"
+          className="relative rounded-2xl px-5 py-4 grid gap-x-6 gap-y-4 overflow-hidden"
           style={{
             ...cardChrome,
             // Inner metadata pairs flow at minmax 180 — these ARE small
@@ -2350,7 +2370,7 @@ const FormattedJD = ({ text }: { text: string }) => {
             <NavyStrip />
             {sec.title && (
               <div
-                className="px-5 pl-7 py-3 flex items-center gap-3"
+                className="px-5 py-3 flex items-center gap-3"
                 style={{
                   borderBottom: '1px solid color-mix(in srgb, var(--cam-gold-leaf) 30%, transparent)',
                 }}
@@ -2368,7 +2388,7 @@ const FormattedJD = ({ text }: { text: string }) => {
                 </span>
               </div>
             )}
-            <div className="px-5 pl-7 py-4 flex flex-col gap-1.5">
+            <div className="px-5 py-4 flex flex-col gap-1.5">
               {sec.items.map((item, j) => {
                 if (item.kind === 'para') {
                   return (
@@ -2434,13 +2454,11 @@ const FormattedJD = ({ text }: { text: string }) => {
   );
 }
 
-const NavyStrip = () => (
-  <span
-    aria-hidden="true"
-    className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full pointer-events-none"
-    style={{ background: 'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)' }}
-  />
-);
+// Left navy accent bar removed per user request — the vertical blue lines on
+// the Job Description cards were distracting. Kept as a no-op so the three call
+// sites don't need touching; the `pl-7` that reserved space for it was reduced
+// to `pl-5`.
+const NavyStrip = () => null;
 
 export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void }) => {
   const { token } = useAuth();
@@ -2876,10 +2894,19 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         credentials: 'include',
         body: JSON.stringify({
           section,
+          // The selected company (dropdown label, e.g. "Coupang-Infra"). Without
+          // this the backend can't extract a company from most JDs and the LLM
+          // emits "target company name was not provided" across every section
+          // (and leaks [Company Name] placeholders into the pitch). This is the
+          // single field that unblocks HR questions, company insights, and the
+          // elevator pitch.
+          companyName: prepData.activeCompany || undefined,
           jobDescription: state.jd,
           resume: state.resume,
           coverLetter: state.coverLetter,
-          prepMaterial: state.prepMaterials,
+          // Key must be `prepMaterials` (plural) — the backend reads that; the
+          // old singular `prepMaterial` was silently dropped.
+          prepMaterials: state.prepMaterials,
           // Backend reads `documentation` as a {name,content}[] array and
           // injects every entry into the prompt — see ascendPrep.js.
           documentation: state.studyDocs,
@@ -2902,7 +2929,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
       setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
       setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: `Error generating ${label}` } } }));
     }
-  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, cloudProvider]);
+  }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, cloudProvider, prepData.activeCompany]);
 
   /** Generate ALL sections in parallel — each runs independently */
   const handleGenerate = useCallback(async () => {

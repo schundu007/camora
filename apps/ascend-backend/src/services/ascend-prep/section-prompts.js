@@ -27,12 +27,16 @@ Five sections, in this order:
   1. Opening Hook (15-20s) — name, title, years, the headline skill that maps to the JD's #1 requirement.
   2. Key Achievement #1 (30-40s) — story matching JD requirement #1. Action verbs, single number for impact.
   3. Key Achievement #2 (30-40s) — story matching a DIFFERENT JD requirement. Different metric.
-  4. Why This Company (20-30s) — one specific thing about THIS company (recent product, mission, scale).
-  5. Closing (10-15s) — restate the match between candidate's strengths and the role.
+  4. Why This Company (20-30s) — one specific thing about THIS company (recent product, mission, scale). Use the real company name from TARGET COMPANY above. If no company name is available, speak to the role/mission from the JD — never invent one.
+  5. Closing (10-15s) — restate the fit in DIFFERENT words than the Opening Hook, adding forward intent (what you'll do in the role), not a repeat of the hook.
 
 techStack: every technology in the JD plus every one mentioned in the pitch. Category, years, relevance to role.
 talkingPoints: 3-5 phrases the candidate can lean on if interrupted.
-tips: one paragraph on delivery (pace, eye contact, where to pause).`,
+tips: one paragraph on delivery (pace, eye contact, where to pause).
+
+Hard rules:
+  • Output ONLY final, speakable text. NEVER emit bracketed placeholders like [Company Name] or [mention a recent product] — if you lack a specific, write a real sentence from the JD/resume instead.
+  • Do not reuse the same achievement, metric, or phrasing across sections.`,
 
   hr: `Generate HR-screen prep tailored to THIS company.
 
@@ -45,7 +49,7 @@ questions: 6-10 HR questions THIS company is known to ask (Glassdoor, Blind, lev
 salaryNegotiation: their actual comp model (base/equity/bonus split), realistic range for the role's level at this company, two negotiation moves that work HERE.
 questionsToAsk: 3-6 questions to ask the recruiter that demonstrate research.
 
-Reject generic content. If you can't tie a question to this company specifically, drop it.`,
+Prefer company-specific questions (Glassdoor, Blind, levels.fyi). If company specifics are unknown, still return standard HR-screen questions for this role and level — ALWAYS return at least 6 questions, never fewer. Output only final text; never emit bracketed placeholders.`,
 
   'hiring-manager': `Generate hiring-manager-round prep for this role.
 
