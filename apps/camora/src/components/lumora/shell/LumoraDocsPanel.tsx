@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { JSX } from 'react';
+import type { JSX, CSSProperties } from 'react';
 import hljs from '@/lib/hljs';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getAuthHeaders } from '../../../utils/authHeaders';
@@ -13,6 +13,7 @@ import { sectionsToPrepSections, downloadPrepAsPdf, downloadPrepAsDocx } from '.
 import { useCloudProvider } from '../../../hooks/useCloudProvider';
 import CloudProviderSelector from '../../shared/CloudProviderSelector';
 import { stripInlineMarkdown, isImageUrl } from '../../../lib/text-utils';
+import { RichText } from './companion/answer-view';
 import Chip from '@/components/shared/ui/Chip';
 import { ResearchDocsCard } from '../prep/ResearchDocsCard';
 
@@ -415,6 +416,26 @@ const SchemaTables = ({ schema, accent }: { schema: any[]; accent: string }) => 
   );
 }
 
+/** True for content that reads better rendered as book-style RichText —
+ *  multi-line prose, headings, bullet/numbered lists, tables, or fenced code. */
+const hasBlockMarkdown = (s: string): boolean =>
+  /\n/.test(s) || /```/.test(s) || /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+[.)]\s|>\s|\|)/.test(s);
+
+/** Book-style prose renderer for prep-kit fields. Block/multi-line content
+ *  renders via RichText (bold, `code`, bullets, headings, tables) so no raw
+ *  markdown ever shows. Single-line content is stripped of inline markdown and
+ *  rendered inline, preserving the caller's color/size. Objects fall back to
+ *  the safe "key: value" coercion. */
+const Prose = ({ value, className, style }: { value: any; className?: string; style?: CSSProperties }) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    if (!value.trim()) return null;
+    if (hasBlockMarkdown(value)) return <RichText text={value} />;
+    return <span className={className} style={style}>{stripInlineMarkdown(value)}</span>;
+  }
+  return <span className={className} style={style}>{safeText(value)}</span>;
+};
+
 // ─────────────────────────────────────────────────────────────────────────
 // LeetCode-inspired primitives — uses LC's actual palette hardcoded so the
 // visual language comes through regardless of the active app theme.
@@ -632,7 +653,7 @@ const ExampleBlock = ({ example, index }: { example: any; index: number }) => {
         {example.explanation && (
           <p className="text-xs mt-1.5 leading-relaxed font-sans" style={{ color: 'var(--text-secondary)' }}>
             <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Explanation:</span>
-            {example.explanation}
+            {safeText(example.explanation)}
           </p>
         )}
       </div>
@@ -651,14 +672,14 @@ const ApproachCard = ({ approach, index }: { approach: any; index: number }) => 
       >
         <div className="flex items-baseline gap-2 flex-wrap mb-2">
           <Chip variant="default">Approach {index + 1}</Chip>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{approach.name}</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{safeText(approach.name)}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {approach.timeComplexity && <ComplexityBadge kind="time" value={approach.timeComplexity} />}
           {approach.spaceComplexity && <ComplexityBadge kind="space" value={approach.spaceComplexity} />}
         </div>
         {approach.description && (
-          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{approach.description}</p>
+          <div className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}><Prose value={approach.description} /></div>
         )}
       </div>
       <div className="px-4 py-3 space-y-3">
@@ -675,7 +696,7 @@ const ApproachCard = ({ approach, index }: { approach: any; index: number }) => 
                   >
                     {l.line}
                   </code>
-                  <span className="leading-relaxed pt-1" style={{ color: 'var(--text-secondary)' }}>{l.explanation}</span>
+                  <span className="leading-relaxed pt-1" style={{ color: 'var(--text-secondary)' }}>{safeText(l.explanation)}</span>
                 </div>
               ))}
             </div>
@@ -718,7 +739,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     data = extractJSON(content);
     if (!data) {
       const text = content.replace(/^"|"$/g, '').replace(/\\n/g, '\n').replace(/\\"/g, '"');
-      return <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{text}</div>;
+      return <div className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}><Prose value={text} /></div>;
     }
   }
   if (!data) return <div className="text-sm" style={{ color: 'var(--text-muted)' }}>No content available</div>;
@@ -773,7 +794,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
         >
           <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: `linear-gradient(180deg, ${LC.gold} 0%, ${LC.navy} 100%)` }} />
           <SectionHeading label="Summary" color={LC.navy} />
-          <p className="text-[15px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}>{data.summary}</p>
+          <div className="text-[15px] leading-[1.65]" style={{ color: 'var(--text-primary)' }}><Prose value={data.summary} /></div>
         </div>
       );
     }
@@ -791,9 +812,9 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
             <div className="flex-1 pt-0.5">
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {(s.bullets || []).map((b: string, j: number) => (
-                  <span key={j}>{j === 0 ? <><strong style={{ color: 'var(--cam-primary)' }}>{String(b).split(' ').slice(0, 3).join(' ')}</strong> {String(b).split(' ').slice(3).join(' ')}</> : ` ${b}`}</span>
+                  <span key={j}>{j === 0 ? <><strong style={{ color: 'var(--cam-primary)' }}>{safeText(b).split(' ').slice(0, 3).join(' ')}</strong> {safeText(b).split(' ').slice(3).join(' ')}</> : ` ${safeText(b)}`}</span>
                 ))}
-                {s.title && !s.bullets?.length && <>{s.title}</>}
+                {s.title && !s.bullets?.length && <>{safeText(s.title)}</>}
               </p>
               {s.duration && <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{s.duration}</span>}
             </div>
@@ -814,25 +835,25 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
           {cc.interviewFormat && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Interview Format</div>
-              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.interviewFormat}</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.interviewFormat} /></div>
             </div>
           )}
           {cc.whatTheyLookFor && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>What They Look For</div>
-              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.whatTheyLookFor}</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.whatTheyLookFor} /></div>
             </div>
           )}
           {cc.culturalFit && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Cultural Fit</div>
-              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{cc.culturalFit}</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.culturalFit} /></div>
             </div>
           )}
           {cc.knownQuestions && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
               <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Known Questions</div>
-              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{Array.isArray(cc.knownQuestions) ? cc.knownQuestions.join(' · ') : cc.knownQuestions}</div>
+              <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{Array.isArray(cc.knownQuestions) ? cc.knownQuestions.map(safeText).filter(Boolean).join(' · ') : safeText(cc.knownQuestions)}</div>
             </div>
           )}
         </div>
@@ -848,7 +869,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
       <div key="insights" className="rounded-xl p-4" style={paperCard(LC.medium.fg)}>
         <SectionHeading label="Company Insights" color={LC.medium.fg} />
         {typeof ci === 'string' ? (
-          <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>{ci}</p>
+          <div className="text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={ci} /></div>
         ) : Array.isArray(ci) ? (
           <ValueRenderer val={ci} />
         ) : typeof ci === 'object' ? (
@@ -918,7 +939,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
             Questions could not be displayed. Click <strong style={{ color: LC.navy }}>Re-generate</strong> to retry.
           </p>
         ) : (
-          <p className="text-[14px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{rawQuestions}</p>
+          <div className="text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={rawQuestions} /></div>
         )}
       </div>
     );
@@ -972,7 +993,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[16px] font-bold leading-snug tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+                    <h3 className="text-[16px] font-bold leading-snug tracking-tight" style={{ color: 'var(--text-primary)' }}>{safeText(title)}</h3>
                     <div className="flex items-center gap-1.5 flex-wrap mt-2">
                       {q.difficulty && <DifficultyPill value={q.difficulty} />}
                       {chips.map((c, ci) => <TagChip key={ci} label={c.label} color={c.color} />)}
@@ -1020,7 +1041,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                     <div>
                       <SectionHeading label="Problem" color={LC.problem} />
                       <div className="rounded-lg p-3" style={{ background: `${LC.problem}06`, border: `1px solid ${LC.problem}25` }}>
-                        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{text}</p>
+                        <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={text} /></div>
                       </div>
                     </div>
                   );
@@ -1034,7 +1055,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                     <div>
                       <SectionHeading label="Suggested Answer" color={LC.examples} />
                       <div className="rounded-lg p-3" style={{ background: `${LC.examples}06`, border: `1px solid ${LC.examples}25` }}>
-                        <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-primary)' }}>{text}</p>
+                        <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={text} /></div>
                       </div>
                     </div>
                   );
@@ -1055,7 +1076,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         {stars.map((s) => q[s.key] && (
                           <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: `${s.accent}10`, border: `1px solid ${s.accent}40` }}>
                             <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
-                            <span className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-primary)' }}>{Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]}</span>
+                            <div className="flex-1 text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]} /></div>
                           </div>
                         ))}
                       </div>
@@ -1741,8 +1762,8 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
               <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <span style={{ color: f.color }}>•</span>
                 <span>
-                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{it.label}</span>
-                  {it.sub && <span className="ml-1.5 text-[var(--text-muted)]">— {it.sub}</span>}
+                  <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{safeText(it.label)}</span>
+                  {it.sub && <span className="ml-1.5 text-[var(--text-muted)]">— {safeText(it.sub)}</span>}
                 </span>
               </li>
             ))}
@@ -1769,9 +1790,9 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
       <div key={f.key} className="rounded-lg p-3" style={{ background: f.bg, border: `1px solid ${f.border}` }}>
         <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
         {Array.isArray(val) ? (
-          <ul className="space-y-1">{val.map((t: string, i: number) => <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {t}</li>)}</ul>
+          <ul className="space-y-1">{val.map((t: string, i: number) => <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {safeText(t)}</li>)}</ul>
         ) : typeof val === 'string' ? (
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{val}</p>
+          <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={val} /></div>
         ) : (
           <div className="space-y-1">{Object.entries(val).map(([k, v]) => (
             <p key={k} className="text-sm"><strong className="text-xs uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{safeText(v)}</span></p>

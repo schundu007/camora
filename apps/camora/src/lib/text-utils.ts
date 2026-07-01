@@ -8,9 +8,14 @@
 export function stripInlineMarkdown(s: string): string {
   return (s || '')
     .replace(/`+/g, '')                       // inline-code backticks
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1 ($2)') // [text](url) -> text (url)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')   // [text](anything-else) -> text
     .replace(/\*\*/g, '')                      // bold
+    .replace(/\b__([^_]+)__\b/g, '$1')         // __bold__
     .replace(/(^|[\s(])\*(?=\S)/g, '$1')       // italic / "* " bullet openers
     .replace(/\*/g, '')                        // any stray asterisks
+    .replace(/^\s{0,3}[-+]\s+/gm, '')          // "- " / "+ " list markers
+    .replace(/^\s{0,3}>\s?/gm, '')             // blockquote markers
     .replace(/^#{1,6}\s+/gm, '')               // ATX headings
     .replace(/~~([^~]+)~~/g, '$1')             // strikethrough
     .replace(/([.!?])\s*,\s+/g, '$1 ')         // "experience., My" -> "experience. My"
