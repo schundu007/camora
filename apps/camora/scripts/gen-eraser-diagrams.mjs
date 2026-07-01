@@ -214,6 +214,14 @@ async function renderFreeform(elements, outPath) {
   const positioned = elements.filter(e => e.x != null && e.y != null && e.width != null && e.height != null);
   if (positioned.length === 0) throw new Error('No positioned elements to render');
 
+  // Guardrail: refuse to render a degenerate diagram. A real architecture
+  // diagram has many nodes; a failed/empty API response yields 0-2. Writing a
+  // near-empty PNG over a good one — or, as happened with the old
+  // browser-screenshot pipeline, a login-wall capture — is worse than skipping.
+  // Throw so the task is marked failed and the existing good file is untouched.
+  const contentEls = elements.filter(e => ['Group', 'Shape', 'Icon', 'Textbox'].includes(e.tag)).length;
+  if (contentEls < 3) throw new Error(`Degenerate diagram: only ${contentEls} content elements — refusing to write`);
+
   const minX = Math.min(...positioned.map(e => e.x)) - PAD;
   const minY = Math.min(...positioned.map(e => e.y)) - PAD;
   const maxX = Math.max(...positioned.map(e => e.x + (e.width || 0))) + PAD;
@@ -391,7 +399,11 @@ async function renderFreeform(elements, outPath) {
   }
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, canvas.toBuffer('image/png'));
+  // Atomic write — render to a temp file then rename, so a crash mid-encode can
+  // never leave a truncated PNG in place of a good one.
+  const tmp = `${outPath}.tmp`;
+  fs.writeFileSync(tmp, canvas.toBuffer('image/png'));
+  fs.renameSync(tmp, outPath);
 }
 
 // ── Task runner ───────────────────────────────────────────────────────────────
