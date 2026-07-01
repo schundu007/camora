@@ -1174,6 +1174,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     handleToggle={handleToggle}
     recordingModeUI={recordingModeUI}
     speakerEverConnected={speakerEverConnected}
+    speakerActive={speakerActive}
     compact={compact}
     locked={locked}
   />;
@@ -1192,7 +1193,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, compact, locked,
+  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
@@ -1200,6 +1201,7 @@ const UnifiedMicButton = ({
   handleToggle: () => void;
   recordingModeUI: 'idle' | 'auto' | 'manual';
   speakerEverConnected: boolean;
+  speakerActive: boolean;
   compact?: boolean;
   locked?: boolean;
 }) => {
