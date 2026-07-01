@@ -246,6 +246,16 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // Get selected audio device
   const { selectedDeviceId } = useAudioDevices();
 
+  // Whether a separate interviewer stream (desktop loopback / shared tab /
+  // virtual mic) has connected this session. When it has, behavioral question
+  // capture is OWNED by that stream — the candidate mic switches to a manual
+  // "Ask Sona" press-to-talk and its continuous AUTO loop is retired (its
+  // transcripts are dropped downstream anyway, and running it wastes Whisper
+  // calls + shows a misleading live preview of the candidate's own voice).
+  // In the mic-only fallback (this never turns true) the mic IS the interviewer
+  // source, so AUTO stays on as before.
+  const speakerEverConnected = useSessionStore((s) => s.speakerAudio.everConnected);
+
   // Accumulated transcription text for Live mode (chunks build up a full question)
   const accumulatedTextRef = useRef('');
   const lastChunkTimeRef = useRef(0);
@@ -1105,6 +1115,24 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     return () => document.removeEventListener('keydown', handleAutoShortcut, true);
   }, [handleModeToggle]);
 
+  // Behavioral: hand question capture to the interviewer stream once it's live.
+  // See speakerEverConnected above. Stops the candidate mic's continuous loop
+  // and drops continuousMode so only the manual "Ask Sona" button remains. We
+  // set userPausedRef so the heartbeat / visibility safety nets don't revive
+  // the loop. mic-only fallback never reaches here (everConnected stays false),
+  // so there the AUTO loop keeps running as the interviewer source.
+  useEffect(() => {
+    if (!locked || !speakerEverConnected) return;
+    if (recordingModeRef.current === 'auto') {
+      userPausedRef.current = true;
+      stopRecording();
+      setRecordingMode('idle');
+      setIsRecording(false);
+      stopListenTimer();
+    }
+    if (continuousModeRef.current) setContinuousMode(false);
+  }, [locked, speakerEverConnected, stopRecording, setRecordingMode, setIsRecording, stopListenTimer]);
+
   // Hydration: set mounted after all hooks
   useEffect(() => {
     setMounted(true);
@@ -1123,17 +1151,13 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     );
   }
 
-  // Reference handleToggle so the keydown listener wiring above doesn't
-  // get tree-shaken complaints — the manual mic button has been
-  // removed from the UI per user request, but the underlying
-  // function stays reachable for the Cmd+M / backtick shortcuts
-  // (kept in case power users want them).
-  void handleToggle;
-  void recordingModeUI;
   return <UnifiedMicButton
     continuousMode={continuousMode}
     audioLevel={audioLevel}
     handleModeToggle={handleModeToggle}
+    handleToggle={handleToggle}
+    recordingModeUI={recordingModeUI}
+    speakerEverConnected={speakerEverConnected}
     compact={compact}
     locked={locked}
   />;
@@ -1152,15 +1176,24 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, compact, locked,
+  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
+  handleToggle: () => void;
+  recordingModeUI: 'idle' | 'auto' | 'manual';
+  speakerEverConnected: boolean;
   compact?: boolean;
   locked?: boolean;
 }) => {
   const isAutoOn = continuousMode;
+  const isAsking = recordingModeUI === 'manual';
+  // Behavioral: the LIVE (continuous) candidate-mic toggle only makes sense in
+  // the mic-only fallback, where the mic IS the interviewer source. Once a
+  // separate interviewer stream is live, questions come from that stream and
+  // the candidate mic is manual-only ("Ask Sona"), so hide the LIVE toggle.
+  const showLiveToggle = locked ? !speakerEverConnected : false;
 
   const inner = (
     <>
@@ -1179,29 +1212,67 @@ const UnifiedMicButton = ({
           candidate can pause Sona mid-interview), just branded LIVE and tuned
           for the faster behavioral timing. ON = pulsing accent, OFF = paused. */}
       {locked ? (
-        <button
-          type="button"
-          onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
-          className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
-          style={{
-            color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-            background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
-            border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
-            fontFamily: 'var(--font-mono)',
-            boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
-          }}
-          title={isAutoOn
-            ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
-            : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.'}
-          aria-pressed={isAutoOn}
-        >
-          {isAutoOn ? (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-              LIVE
-            </span>
-          ) : 'LIVE'}
-        </button>
+        <>
+          {showLiveToggle && (
+            <button
+              type="button"
+              onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
+              className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
+              style={{
+                color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+                background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+                border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
+                fontFamily: 'var(--font-mono)',
+                boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
+              }}
+              title={isAutoOn
+                ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
+                : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.'}
+              aria-pressed={isAutoOn}
+            >
+              {isAutoOn ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+                  LIVE
+                </span>
+              ) : 'LIVE'}
+            </button>
+          )}
+          {/* Manual press-to-ask — speak a question in your OWN voice and Sona
+              answers it. Click once to start, click again to send (no hold).
+              Bypasses the interviewer-only gate via the manual flag, and runs
+              alongside the always-on interviewer stream. */}
+          <button
+            type="button"
+            onClick={(e) => { handleToggle(); e.currentTarget.blur(); }}
+            className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors inline-flex items-center gap-1.5"
+            style={{
+              color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+              background: isAsking ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+              border: `1px solid ${isAsking ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
+              fontFamily: 'var(--font-mono)',
+              boxShadow: isAsking ? '0 0 0 2px var(--accent-subtle)' : 'none',
+            }}
+            title={isAsking
+              ? 'Listening to your question — click to send it to Sona.'
+              : 'Ask Sona in your own voice — click, speak your question, click again to send.'}
+            aria-pressed={isAsking}
+          >
+            {isAsking ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+                SEND
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z" />
+                </svg>
+                ASK
+              </>
+            )}
+          </button>
+        </>
       ) : (
         /* AUTO toggle — coding/design tabs */
         <button
