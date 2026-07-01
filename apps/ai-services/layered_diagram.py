@@ -101,7 +101,7 @@ def render_layered(spec: dict, out_path: Path) -> None:
         label="",
         labelloc="t",
         size="16,40",
-        dpi="200",
+        dpi="150",
     )
     g.attr("node", shape="none", margin="0")
 
@@ -214,15 +214,15 @@ def render_flow(spec: dict, out_path: Path) -> None:
         bgcolor=BG_GRAPH,
         rankdir="LR",
         splines="ortho",
-        nodesep="0.6",
-        ranksep="0.7",
-        pad="0.6",
+        nodesep="0.32",
+        ranksep="0.45",
+        pad="0.4",
         fontname=FONT_BODY,
         fontcolor="#0f172a",
         label="",
         labelloc="t",
         size="16,!",
-        dpi="200",
+        dpi="150",
     )
     g.attr(
         "node",
