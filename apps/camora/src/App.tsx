@@ -32,6 +32,7 @@ const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const HRLibraryPage = lazy(() => import('./pages/capra/HRLibraryPage'));
 const MCQPage          = lazy(() => import('./pages/capra/MCQPage'));
 const QuizSessionPage  = lazy(() => import('./pages/capra/QuizSessionPage'));
+const FlashcardsPage   = lazy(() => import('./pages/capra/FlashcardsPage'));
 const JobsPage = lazy(() => import('./pages/JobsPage'));
 const JobPrepPage = lazy(() => import('./pages/JobPrepPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
@@ -586,6 +587,7 @@ export const App = () => {
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
+          <Route path="/capra/flashcards"   element={<ShellRoute><FlashcardsPage /></ShellRoute>} />
           <Route path="/capra/k8s" element={<ShellRoute><K8sPathPage /></ShellRoute>} />
           <Route path="/capra/learn/python" element={<ShellRoute><PythonLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
