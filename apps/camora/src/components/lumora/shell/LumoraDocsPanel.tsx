@@ -333,6 +333,68 @@ const GenericField = ({ label, val }: { label: string; val: any }) => {
   );
 }
 
+/** Compact "key: value" rows — renders a JSON payload (API request/response)
+ *  as readable labelled lines instead of a raw JSON.stringify blob. */
+const KeyValueRows = ({ obj, accent }: { obj: Record<string, any>; accent: string }) => {
+  const entries = Object.entries(obj || {}).filter(([, v]) => v !== null && v !== undefined);
+  if (entries.length === 0) {
+    return <div className="text-xs font-mono italic" style={{ color: 'var(--text-muted)' }}>None</div>;
+  }
+  return (
+    <div className="space-y-0.5">
+      {entries.map(([k, v]) => (
+        <div key={k} className="flex gap-1.5 text-[12px] leading-relaxed font-mono">
+          <span className="font-semibold shrink-0" style={{ color: accent }}>{k}:</span>
+          <span className="break-words" style={{ color: 'var(--text-primary)' }}>{safeText(v)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Compact database schema — renders each table's columns as a dense table
+ *  (Column · Type · Constraint) instead of one oversized card per column. */
+const SchemaTables = ({ schema, accent }: { schema: any[]; accent: string }) => {
+  const tables = (schema || []).filter((t) => t && typeof t === 'object');
+  if (tables.length === 0) return null;
+  return (
+    <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+      {tables.map((t, ti) => {
+        const cols = Array.isArray(t.columns) ? t.columns.filter((c: any) => c && typeof c === 'object') : [];
+        return (
+          <div key={ti} className="rounded-lg overflow-hidden self-start" style={{ border: `1px solid ${accent}30` }}>
+            <div className="px-3 py-1.5 font-mono text-[12px] font-bold" style={{ background: `${accent}15`, color: accent }}>
+              {safeText(t.table || t.name)}
+            </div>
+            {cols.length > 0 ? (
+              <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Column', 'Type', 'Constraint'].map((h) => (
+                      <th key={h} className="text-left px-3 py-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: `1px solid ${accent}22` }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cols.map((c: any, ci: number) => (
+                    <tr key={ci} style={{ borderBottom: ci < cols.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <td className="px-3 py-1 font-mono text-[12px]" style={{ color: 'var(--text-primary)' }}>{safeText(c.name)}</td>
+                      <td className="px-3 py-1 font-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>{safeText(c.type)}</td>
+                      <td className="px-3 py-1 font-mono text-[11px]" style={{ color: c.constraint ? accent : 'var(--text-muted)' }}>{c.constraint ? safeText(c.constraint) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="px-3 py-2"><ValueRenderer val={t} /></div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // LeetCode-inspired primitives — uses LC's actual palette hardcoded so the
 // visual language comes through regardless of the active app theme.
@@ -1249,12 +1311,30 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 {q.databaseDesign && typeof q.databaseDesign === 'object' && (() => {
                   qRendered.add('databaseDesign');
                   const db = q.databaseDesign;
+                  const schema = Array.isArray(db.schema) ? db.schema : null;
+                  // Fields beyond `schema` (relationships, indexes, notes…) still
+                  // get the generic card so nothing is dropped.
+                  const rest = Object.entries(db).filter(([k, v]) => k !== 'schema' && v != null && !(Array.isArray(v) && v.length === 0));
                   return (
                     <div>
                       <SectionHeading label="Database Design" color={LC.database} />
-                      <div className="rounded-lg p-3" style={paperCard(LC.database)}>
-                        <ValueRenderer val={db} />
-                      </div>
+                      {schema && schema.length > 0 ? (
+                        <SchemaTables schema={schema} accent={LC.database} />
+                      ) : (
+                        <div className="rounded-lg p-3" style={paperCard(LC.database)}>
+                          <ValueRenderer val={db} />
+                        </div>
+                      )}
+                      {schema && rest.length > 0 && (
+                        <div className="rounded-lg p-3 mt-2 space-y-2" style={paperCard(LC.database)}>
+                          {rest.map(([k, v]) => (
+                            <div key={k}>
+                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.database }}>{fmtKey(k)}</div>
+                              <ValueRenderer val={v} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -1278,7 +1358,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                                 <div>
                                   <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Request</div>
                                   {typeof e.request === 'object' ? (
-                                    <pre className="font-mono text-[11px] p-2 rounded overflow-x-auto" style={{ background: `${LC.api}08`, color: 'var(--text-primary)', border: `1px solid ${LC.api}20` }}>{JSON.stringify(e.request, null, 2)}</pre>
+                                    <div className="p-2 rounded" style={{ background: `${LC.api}08`, border: `1px solid ${LC.api}20` }}><KeyValueRows obj={e.request} accent={LC.api} /></div>
                                   ) : (
                                     <div className="font-mono" style={{ color: 'var(--text-primary)' }}>{safeText(e.request)}</div>
                                   )}
@@ -1288,7 +1368,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                                 <div>
                                   <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Response</div>
                                   {typeof e.response === 'object' ? (
-                                    <pre className="font-mono text-[11px] p-2 rounded overflow-x-auto" style={{ background: `${LC.api}08`, color: 'var(--text-primary)', border: `1px solid ${LC.api}20` }}>{JSON.stringify(e.response, null, 2)}</pre>
+                                    <div className="p-2 rounded" style={{ background: `${LC.api}08`, border: `1px solid ${LC.api}20` }}><KeyValueRows obj={e.response} accent={LC.api} /></div>
                                   ) : (
                                     <div className="font-mono" style={{ color: 'var(--text-primary)' }}>{safeText(e.response)}</div>
                                   )}
@@ -1674,7 +1754,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{val}</p>
         ) : (
           <div className="space-y-1">{Object.entries(val).map(([k, v]) => (
-            <p key={k} className="text-sm"><strong className="text-xs uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{typeof v === 'string' ? v : Array.isArray(v) ? (v as string[]).join(', ') : JSON.stringify(v)}</span></p>
+            <p key={k} className="text-sm"><strong className="text-xs uppercase" style={{ color: 'var(--text-muted)' }}>{k.replace(/([A-Z])/g, ' $1').trim()}: </strong><span style={{ color: 'var(--text-secondary)' }}>{safeText(v)}</span></p>
           ))}</div>
         )}
       </div>
