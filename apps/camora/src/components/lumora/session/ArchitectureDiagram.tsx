@@ -292,7 +292,10 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
           onMouseUp={() => { dragRef.current.active = false; setIsDragging(false); }}
           onMouseLeave={() => { dragRef.current.active = false; setIsDragging(false); }}
         >
-          <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: 'min-content' }}>
+          {/* At scale 1 the wrapper is exactly the panel width so the diagram
+              fits horizontally (no L→R scroll). minWidth:min-content only
+              kicks in once zoomed past 100%, so panning still works then. */}
+          <div style={{ width: `${Math.round(scale * 100)}%`, minWidth: scale > 1 ? 'min-content' : undefined }}>
             <img src={imageUrl} alt={`Architecture: ${question.slice(0, 50)}`} draggable={false}
               style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>

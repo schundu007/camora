@@ -102,7 +102,7 @@ def _build_system_prompt(question: str, cloud_provider: str, detail_text: str) -
 REQUIREMENTS:
 1. The diagram should primarily use the `{cloud_provider}` provider, but you may also import from `diagrams.generic.*` and `diagrams.onprem.*` for components that don't have a clean provider equivalent (CI/CD, k8s, monitoring stacks).
 2. Use `from diagrams import Diagram, Cluster, Edge` and relevant {cloud_provider} node imports.
-3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "spline", "nodesep": "0.6", "ranksep": "1.2", "fontsize": "12", "dpi": "200", "concentrate": "true", "pad": "0.4"}}, node_attr={{"fontsize": "10", "margin": "0.25,0.06", "labelloc": "b", "width": "0.8", "height": "0.8"}})`. `direction="LR"` (left-to-right) lays layers side-by-side. DO NOT use direction="TB".
+3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "spline", "nodesep": "0.35", "ranksep": "0.5", "fontsize": "12", "dpi": "150", "concentrate": "true", "pad": "0.3"}}, node_attr={{"fontsize": "10", "margin": "0.2,0.05", "labelloc": "b", "width": "0.8", "height": "0.8"}})`. `direction="LR"` (left-to-right) lays layers side-by-side. Keep nodesep/ranksep TIGHT so services sit close together — no wasted whitespace. DO NOT use direction="TB".
 4. Group related services with `Cluster(...)` blocks AND give each cluster `graph_attr={{"bgcolor": "<pastel hex>", "pencolor": "<darker hex>", "style": "rounded", "fontsize": "13"}}` so the layers are visually distinct (e.g. Edge → Application → Data → Async → Observability are separate colored regions).
 5. Use SHORT labels — 1-2 words max per node (e.g. `EC2("API GW")` not `EC2("API Gateway Service")`). For compound names use `\\n` (e.g. `Lambda("Build\\nQueue")`). Long labels overflow the icon box and make the diagram unreadable.
 6. Use `Edge(label="…")` on the hot-path connections ONLY — 3 labeled edges MAX total. All other connections must be unlabeled (`>>`). Too many labeled edges cause overlapping text and make the diagram unreadable. Keep cross-cluster edges to a minimum — prefer connecting adjacent clusters only.
@@ -153,7 +153,7 @@ from diagrams.generic.storage import Storage
 from diagrams.programming.flowchart import Action, Document, Database, InputOutput, Decision
 
    `Blank` is the default — use it for ANY component that would otherwise be an AWS/GCP/Azure/Terraform/Ansible/ArgoCD logo. The label carries the meaning ("Provisioning API\\n(Cluster Spec)", "Terraform\\nAPI-driven CSPs", "Ansible\\nnode bootstrap"). Use `Document` for spec-files (IP lists, kubeconfigs), `Database` for state stores, `Storage` for blob/object storage, `InputOutput` for external feeds. Network shapes (Subnet/Switch/Router/Firewall) only when actually drawing network topology.
-3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "spline", "nodesep": "0.6", "ranksep": "1.2", "fontsize": "12", "dpi": "200", "compound": "true", "concentrate": "true", "pad": "0.4", "bgcolor": "white"}}, node_attr={{"fontsize": "10", "margin": "0.25,0.06"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right. DO NOT use direction="TB".
+3. The Diagram constructor MUST be `Diagram("…", show=False, filename="output", outformat="png", direction="LR", graph_attr={{"splines": "spline", "nodesep": "0.35", "ranksep": "0.5", "fontsize": "12", "dpi": "150", "compound": "true", "concentrate": "true", "pad": "0.3", "bgcolor": "white"}}, node_attr={{"fontsize": "10", "margin": "0.2,0.05"}})`. Horizontal layout is REQUIRED — the per-CSP columns must read left-to-right. Keep nodesep/ranksep TIGHT so nodes sit close together. DO NOT use direction="TB".
 4. Use NESTED `Cluster` blocks with colored backgrounds + thick borders, mirroring the reference whiteboard style:
    - Control Plane / Orchestration   (bgcolor=#E8F0FF, pencolor=#3B5BDB, fontcolor=#1E40AF)
    - IaC & Config Management         (bgcolor=#FFFBEB, pencolor=#C9A227, fontcolor=#92400E)
@@ -440,21 +440,30 @@ def _sanitize_code(code: str) -> str:
     if 'direction="LR"' not in code and "direction='LR'" not in code:
         code = _re.sub(r'Diagram\s*\(', 'Diagram(direction="LR", ', code, count=1)
 
-    # Inject dpi="200" into graph_attr for crisp PNG output.
-    # Clamp nodesep/ranksep down to avoid wasted whitespace, and cap fontsize
-    # at 13 so cluster labels don't dwarf the node icons.
+    # Normalize graph_attr for a COMPACT, panel-friendly PNG:
+    #   • dpi 150 — crisp text but ~44% smaller pixels than 200, so the
+    #     diagram fits the design panel without heavy T→B / L→R scrolling.
+    #   • ranksep 0.5 / nodesep 0.35 — clamp DOWN hard (and inject when the
+    #     LLM omitted them) to kill the wasted whitespace between services.
+    #   • fontsize ≤ 13 so cluster labels don't dwarf the nodes.
     def _patch_graph_attr(m: _re.Match) -> str:
         inner = m.group(1)
         if '"dpi"' not in inner and "'dpi'" not in inner:
-            inner = '"dpi": "200", ' + inner
+            inner = '"dpi": "150", ' + inner
         else:
-            inner = _re.sub(r'"dpi"\s*:\s*"\d+"', '"dpi": "200"', inner)
-        inner = _re.sub(r'"nodesep"\s*:\s*"([\d.]+)"',
-                        lambda fm: '"nodesep": "0.5"' if float(fm.group(1)) > 0.5 else fm.group(0),
-                        inner)
-        inner = _re.sub(r'"ranksep"\s*:\s*"([\d.]+)"',
-                        lambda fm: '"ranksep": "0.9"' if float(fm.group(1)) > 0.9 else fm.group(0),
-                        inner)
+            inner = _re.sub(r'"dpi"\s*:\s*"\d+"', '"dpi": "150"', inner)
+        if '"nodesep"' in inner or "'nodesep'" in inner:
+            inner = _re.sub(r'"nodesep"\s*:\s*"([\d.]+)"',
+                            lambda fm: '"nodesep": "0.35"' if float(fm.group(1)) > 0.35 else fm.group(0),
+                            inner)
+        else:
+            inner = '"nodesep": "0.35", ' + inner
+        if '"ranksep"' in inner or "'ranksep'" in inner:
+            inner = _re.sub(r'"ranksep"\s*:\s*"([\d.]+)"',
+                            lambda fm: '"ranksep": "0.5"' if float(fm.group(1)) > 0.5 else fm.group(0),
+                            inner)
+        else:
+            inner = '"ranksep": "0.5", ' + inner
         inner = _re.sub(r'"fontsize"\s*:\s*"(\d+)"',
                         lambda fm: '"fontsize": "12"' if int(fm.group(1)) > 13 else fm.group(0),
                         inner)
