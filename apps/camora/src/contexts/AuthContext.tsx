@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { setStoredToken } from '../utils/tokenStore';
+import { setStoredUserId } from '../utils/userStore';
+import { clearAllPrepCaches, purgeLegacyGlobalPrep } from '../lib/prepStorage';
 import { isOwnerEmail } from '../lib/owner';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -112,7 +114,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokenState(next);
     setStoredToken(next);
   }, []);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUserState] = useState<AuthUser | null>(null);
+  // Mirror the user id to the module-level userStore so non-hook helpers
+  // (prepStorage, live-assistant, company picker) can scope browser-local
+  // caches per user. Written synchronously at every call site — same
+  // pattern as setToken above — so the id is in place before any consumer
+  // reads it on the next render.
+  const setUser = useCallback((next: AuthUser | null) => {
+    setUserState(next);
+    setStoredUserId(next ? (next.id || next.email || null) : null);
+  }, []);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [hasResume, setHasResume] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,6 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // overwrites the faster one — token can flip back to undefined
     // mid-session in development.
     let cancelled = false;
+    // One-time cleanup: the pre-fix Prep Kit cache lived under an unscoped
+    // global key that any account on this browser could inherit. Discard it
+    // — the server holds each user's real prep and hydrates it on mount.
+    purgeLegacyGlobalPrep();
     async function init() {
       // Dev mode: auto-authenticate as dev user
       if (DEV_MODE) {
@@ -398,6 +413,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    // Wipe every per-user Prep Kit cache so the next account on this browser
+    // can never render or backfill the previous user's prep. setUser(null)
+    // above already cleared the stored user id.
+    clearAllPrepCaches();
     setOnboardingCompleted(null);
     setSubscription(null);
     // Reset subscriptionLoading too — leaving it `true` after logout strands

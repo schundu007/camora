@@ -7,10 +7,11 @@ import {
   ASSISTANT_UPDATED_EVENT,
   type CompanyPrepListItem,
 } from '../../../lib/companyContext';
+import { PREP_BASE_KEY } from '../../../lib/prepStorage';
 
 /**
  * Behavioral-tab quick switcher for Lumora Prep Kit company workspaces.
- * Reads from `lumora_prep_v8` localStorage — the same store the
+ * Reads the per-user Prep Kit cache (prepStorage) — the same store the
  * /lumora/prepkit page writes to. Picking a workspace here is identical
  * to opening Prep Kit, switching the dropdown to that company, and
  * coming back: Sona's next stream uses that workspace's JD / resume /
@@ -40,7 +41,8 @@ const CompanyContextPicker = () => {
     // Also listen to storage events so a change in another tab is
     // reflected here.
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'lumora_prep_v8') refresh();
+      // Prep caches are now per-user (lumora_prep_v9::<uid>); react to any.
+      if (e.key && e.key.startsWith(`${PREP_BASE_KEY}::`)) refresh();
     };
     window.addEventListener('storage', onStorage);
     return () => {

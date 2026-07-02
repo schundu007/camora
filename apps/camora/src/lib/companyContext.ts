@@ -15,7 +15,8 @@
  * those preps are written to a different surface.
  */
 
-const STORAGE_KEY = 'lumora_prep_v8';
+import { readPrepRaw, writePrepRaw } from './prepStorage';
+
 export const ASSISTANT_UPDATED_EVENT = 'lumora:assistant-updated';
 
 export interface CompanyPrepListItem {
@@ -37,22 +38,15 @@ interface PrepKitData {
   data?: Record<string, any>;
 }
 
+// Both go through the per-user prepStorage helpers so this surface reads and
+// writes the SAME user-scoped, owner-stamped cache as the Prep Kit panel —
+// never the old global key that leaked across accounts on a shared browser.
 function readPrepKit(): PrepKitData | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as PrepKitData;
-  } catch {
-    return null;
-  }
+  return readPrepRaw() as PrepKitData | null;
 }
 
 function writePrepKit(prep: PrepKitData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prep));
-  } catch {
-    /* localStorage may be locked */
-  }
+  writePrepRaw(prep);
 }
 
 /**
