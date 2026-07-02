@@ -1180,10 +1180,25 @@ app.post('/api/admin/grant-trial', apiLimiter, authenticate, async (req, res) =>
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + parseInt(days));
 
+    // On conflict, ALSO reset plan_type→'free' and status→'active' so the
+    // trial actually activates. getSubscriptionStatus only honors a trial when
+    // plan_type='free', so updating trial_ends_at alone left admin-granted
+    // accounts stuck on a stale non-free plan → "Free trial exhausted".
+    // A genuinely active PAID plan is preserved (admins grant trials to free
+    // users, and we must not downgrade a paying customer).
     await query(
       `INSERT INTO ascend_subscriptions (user_id, plan_type, status, trial_ends_at)
        VALUES ($2, 'free', 'active', $1)
-       ON CONFLICT (user_id) DO UPDATE SET trial_ends_at = $1`,
+       ON CONFLICT (user_id) DO UPDATE SET
+         trial_ends_at = $1,
+         plan_type = CASE
+           WHEN ascend_subscriptions.plan_type IN ('pro_monthly','pro_yearly','team')
+                AND ascend_subscriptions.status = 'active'
+           THEN ascend_subscriptions.plan_type ELSE 'free' END,
+         status = CASE
+           WHEN ascend_subscriptions.plan_type IN ('pro_monthly','pro_yearly','team')
+                AND ascend_subscriptions.status = 'active'
+           THEN ascend_subscriptions.status ELSE 'active' END`,
       [trialEnd.toISOString(), userId]
     );
 
