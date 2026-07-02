@@ -199,7 +199,6 @@ function CapacityPlanningGrid({ estimation }) {
 
 function EraserDiagramSection({ topicId, count }) {
   const [provider, setProvider] = useState('aws');
-  const [showVoice, setShowVoice] = useState(false);
   const [failed, setFailed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   useEffect(() => { setFailed(false); }, [topicId, provider]);
@@ -609,6 +608,7 @@ export default function TopicDetail({
   const isAdmin = user?.email === 'chundubabu@gmail.com';
   const [adminRegenStatus, setAdminRegenStatus] = useState('');
   const [diagramPanelOpen, setDiagramPanelOpen] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
   // Cloud-aware string translator. AWS service names in plain-text fields
   // ({topicDetails.description}, {fmtCloud(entity.description)}, etc.) get swapped to
   // the chosen cloud's equivalents at render time. FormattedContent is
