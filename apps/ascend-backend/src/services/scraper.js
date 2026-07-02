@@ -558,60 +558,70 @@ export async function fetchProblemFromUrl(url, electronCookies = null, req = nul
       headers['Cookie'] = cookies;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-    let response;
-    try {
-      response = await fetch(url, { headers, signal: controller.signal });
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        throw new Error(`${platform} did not respond in time. Use screenshot or copy-paste instead.`);
-      }
-      throw err;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-
-    if (!response.ok) {
-      if (response.status === 403 || response.status === 401) {
-        const authMsg = cookies
-          ? 'Session may have expired. Try syncing again from the extension.'
-          : 'Authentication required. Install the Chundu extension and login to the platform.';
-        throw new Error(authMsg);
-      }
-      throw new Error(`Failed to fetch URL: ${response.status}`);
-    }
-
-    const html = await response.text();
-    const $ = cheerio.load(html);
-
-    // Extract code template BEFORE removing script tags
-    const templateResult = extractCodeTemplate($, platform, html);
-
-    // Remove non-content elements
-    $('script, style, nav, header, footer, aside, .ads, [class*="sidebar"], [class*="comment"]').remove();
-
-    // HackerRank renders its description math as MathJax SVG, which cheerio's
-    // .text() drops entirely (every variable/number vanishes). Prefer the REST
-    // API's clean LaTeX-bearing fields; fall back to HTML scraping if it fails.
+    // HackerRank's problem page is a Cloudflare-guarded SPA that frequently
+    // 403s from datacenter IPs (like our Railway host), and it renders math as
+    // MathJax SVG that cheerio's .text() drops entirely. Its REST API returns
+    // clean LaTeX-bearing JSON and needs no HTML, so try it FIRST. Previously
+    // the HTML fetch below ran first and threw on a 403 before we ever reached
+    // the REST call — which is why HackerRank URLs "weren't detected".
     let problemText = null;
     if (platform === 'hackerrank') {
       problemText = await fetchHackerRankRest(url, headers);
     }
 
-    // Try platform-specific extraction next
-    if (!problemText) problemText = extractContent($, platform);
+    // Fetch the page HTML. When REST already gave us the problem (HackerRank),
+    // this is best-effort — used only for the starter-code template — so an
+    // HTTP error or timeout here must NOT abort the whole fetch.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    let response = null;
+    try {
+      response = await fetch(url, { headers, signal: controller.signal });
+    } catch (err) {
+      if (!problemText) {
+        if (err.name === 'AbortError') {
+          throw new Error(`${platform} did not respond in time. Use screenshot or copy-paste instead.`);
+        }
+        throw err;
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    let $ = null;
+    let html = '';
+    let templateResult = null;
+    if (response && response.ok) {
+      html = await response.text();
+      $ = cheerio.load(html);
+      // Extract code template BEFORE removing script tags
+      templateResult = extractCodeTemplate($, platform, html);
+      // Remove non-content elements
+      $('script, style, nav, header, footer, aside, .ads, [class*="sidebar"], [class*="comment"]').remove();
+    } else if (!problemText) {
+      // No REST fallback text — surface the auth/HTTP error as before.
+      if (response && (response.status === 403 || response.status === 401)) {
+        const authMsg = cookies
+          ? 'Session may have expired. Try syncing again from the extension.'
+          : 'Authentication required. Install the Chundu extension and login to the platform.';
+        throw new Error(authMsg);
+      }
+      throw new Error(`Failed to fetch URL: ${response ? response.status : 'no response'}`);
+    }
+
+    // Platform-specific extraction (skip when REST already gave us text).
+    if (!problemText && $) problemText = extractContent($, platform);
 
     // Fallback to body text if extraction failed
-    if (!problemText || problemText.length < 100) {
+    if ((!problemText || problemText.length < 100) && $) {
       problemText = $('body').text();
     }
 
     // Clean up the text
-    problemText = cleanText(problemText);
+    problemText = cleanText(problemText || '');
 
     // Extract examples if available
-    const examples = extractExamples($);
+    const examples = $ ? extractExamples($) : [];
 
     if (!problemText || problemText.length < 20) {
       // Platform-specific error messages
