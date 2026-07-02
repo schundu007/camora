@@ -4,6 +4,8 @@
  * AICompanionPanel so all three Lumora windows pass identical personalization
  * to the backend.
  */
+import { readPrepRaw } from './prepStorage';
+
 export type StoryArchetype =
   | 'Conflict' | 'Leadership' | 'Failure' | 'Ambiguity'
   | 'Influence' | 'Innovation' | 'Collaboration' | 'Growth'
@@ -84,9 +86,10 @@ export function getActiveAssistant(): LumoraAssistant | null {
  */
 export function getAssistantFromPrepKit(): LumoraAssistant | null {
   try {
-    const raw = localStorage.getItem('lumora_prep_v8');
-    if (!raw) return null;
-    const prep = JSON.parse(raw) as {
+    // Per-user Prep Kit cache. readPrepRaw() is scoped to the logged-in user
+    // and refuses a blob owned by anyone else, so Sona's live context can
+    // never be built from another account's resume/JD on a shared browser.
+    const prep = readPrepRaw() as {
       activeCompany: string | null;
       companies: string[];
       data: Record<string, {
@@ -100,7 +103,8 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
         studyMaterials?: string;
         studyMaterialsFile?: string;
       }>;
-    };
+    } | null;
+    if (!prep) return null;
     const key = prep.activeCompany;
     if (!key) return null;
     const doc = prep.data?.[key];

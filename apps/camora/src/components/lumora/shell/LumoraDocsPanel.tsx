@@ -16,8 +16,8 @@ import { stripInlineMarkdown, isImageUrl } from '../../../lib/text-utils';
 import { RichText } from './companion/answer-view';
 import Chip from '@/components/shared/ui/Chip';
 import { ResearchDocsCard } from '../prep/ResearchDocsCard';
+import { readPrepRaw, writePrepRaw } from '../../../lib/prepStorage';
 
-const STORAGE_KEY = 'lumora_prep_v8'; // v8: fix rawContent unwrapping
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 interface StudyDoc {
@@ -1830,11 +1830,14 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
   return <div className="space-y-4">{els}</div>;
 }
 
+// Reads the CURRENT USER's prep cache only. readPrepRaw() is scoped by
+// the logged-in user id and refuses a blob stamped for anyone else, so a
+// shared browser can never seed one account's panel with another's prep.
+// Unknown user (not yet hydrated) → null → empty INITIAL_STATE.
 const loadPrepData = (): PrepData  => {
   try {
-    const r = localStorage.getItem(STORAGE_KEY);
-    if (!r) return INITIAL_STATE;
-    const data = JSON.parse(r) as PrepData;
+    const data = readPrepRaw() as PrepData | null;
+    if (!data) return INITIAL_STATE;
     // Clean up any rawContent wrappers from previously cached data,
     // and migrate legacy single-string studyMaterials into studyDocs[].
     for (const company of Object.keys(data.data || {})) {
@@ -1850,7 +1853,7 @@ const loadPrepData = (): PrepData  => {
   } catch { return INITIAL_STATE; }
 }
 const savePrepData = (s: PrepData) => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+  writePrepRaw(s);
 }
 
 const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPaste, onClickOverride }: {
@@ -2630,9 +2633,16 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           // server. Counting "any company key exists" wasn't enough
           // because the auto-create runs after this hydrate's first
           // paint with exactly one empty company.
+          // Ownership guard (defense in depth): only ever backfill a local
+          // cache that is stamped for THIS user. readPrepRaw() returns null
+          // for a missing cache or one owned by a different account, so a
+          // shared browser can never push the previous user's prep into this
+          // user's server row — the leak that made another user's kit appear
+          // under a fresh account.
+          const ownLocal = readPrepRaw();
           const hasSubstantiveContent = (() => {
-            if (!prepData?.data) return false;
-            for (const c of Object.values(prepData.data)) {
+            if (!ownLocal?.data) return false;
+            for (const c of Object.values(ownLocal.data as Record<string, DocState>)) {
               if (!c) continue;
               const anyText = [c.jd, c.resume, c.coverLetter, c.prepMaterials]
                 .some((s) => typeof s === 'string' && s.trim().length > 0);
