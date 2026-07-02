@@ -57,6 +57,7 @@ import http from 'http';
 import net from 'net';
 import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
+import { tryHandleDictateUpgrade } from './services/dictateLive.js';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
 import { k8sPathRouter } from './routes/k8sPath.js';
 import { playgroundRouter } from './routes/playground.js';
@@ -1687,6 +1688,10 @@ function proxyWs(socket, head, host, port, path, rawHeaders) {
 }
 
 server.on('upgrade', async (req, socket, head) => {
+  // Live dictation bridge → Deepgram realtime STT. Handles (or rejects) the
+  // upgrade itself when the path matches.
+  if (tryHandleDictateUpgrade(req, socket, head)) return;
+
   const wsMatch = req.url?.match(/^\/playground\/ws\/([a-f0-9-]+)(?:\?.*)?$/);
   const pgIdeMatch = req.url?.startsWith('/pg-ide');
 
