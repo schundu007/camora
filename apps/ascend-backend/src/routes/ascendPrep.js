@@ -14,8 +14,11 @@ const router = Router();
 // into source. Operators set OWNER_EMAILS / ADMIN_EMAILS on Railway.
 const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 
-// Daily prep cap: 1/day free, 3/day paid, unlimited for admins
-const PREP_DAILY_LIMIT_FREE = 1;
+// Daily prep cap, counted per DISTINCT company-prep (not per section — one
+// "Generate all" fans out to ~7 section calls for a single company). Free
+// must be ≥2 so a single company (count 1) always clears the cap even when
+// the parallel section calls race under Redis latency.
+const PREP_DAILY_LIMIT_FREE = 3;
 const PREP_DAILY_LIMIT_PAID = 3;
 
 // Daily counter is held in Redis (matches solve.js's pattern). The
@@ -58,7 +61,12 @@ async function checkPrepDailyLimit(userId, isPaid, email, companyName) {
  * Check subscription OR free usage for webapp users (freemium model)
  * Returns true if allowed (Electron or subscription or free allowance remaining)
  */
-async function checkFeatureAccess(req, res, featureType = 'design') {
+// Normalize a company label into a stable cache-key fragment.
+function prepCompanySlug(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'x';
+}
+
+async function checkFeatureAccess(req, res, featureType = 'design', companyName) {
   // Resolve token from Authorization header OR cariara_sso cookie. Without
   // the cookie fallback, any SPA fetch firing before tokenStore is populated
   // 401s even though credentials:'include' carries a valid SSO cookie.
@@ -102,6 +110,25 @@ async function checkFeatureAccess(req, res, featureType = 'design') {
       return true;
     }
 
+    // Per-PREP freemium gate: a single "generate all" fans out to ~7 section
+    // calls for one company. Charging the free allowance per section exhausts
+    // it after section 1 and blocks the rest with "Free trial exhausted". When
+    // this company already cleared the gate today, allow the remaining
+    // sections through without re-charging. Fail SAFE: any cache error falls
+    // through to the real gate below (never a free bypass).
+    const today = new Date().toISOString().slice(0, 10);
+    const grantKey = companyName ? `prep_grant:${decoded.id}:${featureType}:${today}:${prepCompanySlug(companyName)}` : null;
+    if (grantKey) {
+      try {
+        if (await cacheGet(grantKey)) {
+          req.userId = decoded.id;
+          req.userEmail = decoded.email;
+          req.featureAccess = { allowed: true, hasSubscription: false, prepGranted: true };
+          return true;
+        }
+      } catch { /* fall through to the real gate */ }
+    }
+
     // Check subscription OR free usage (freemium model)
     const canUseResult = await freeUsageService.canUseFeature(decoded.id, featureType);
     console.log('[AscendPrep] Feature access check:', canUseResult);
@@ -127,6 +154,10 @@ async function checkFeatureAccess(req, res, featureType = 'design') {
       freeRemaining: canUseResult.freeRemaining,
       planType: canUseResult.planType
     });
+
+    // Mark this company-prep as granted for today so the sibling section
+    // calls (and same-day regenerations) don't each re-charge the allowance.
+    if (grantKey) { try { await cacheSet(grantKey, 1, 86400); } catch { /* best effort */ } }
 
     req.userId = decoded.id;
     req.userEmail = decoded.email;
@@ -292,8 +323,9 @@ router.post('/stream', async (req, res) => {
 
 // Regenerate a single section
 router.post('/section', async (req, res) => {
-  // Check subscription OR free usage first
-  if (!await checkFeatureAccess(req, res, 'design')) return;
+  // Check subscription OR free usage first. Pass the company so the ~7-section
+  // fan-out for one prep counts as a single free use, not seven.
+  if (!await checkFeatureAccess(req, res, 'design', req.body?.companyName)) return;
 
   // Check daily prep limit
   const isPaidSection = req.featureAccess?.hasSubscription || false;
@@ -363,8 +395,10 @@ router.post('/section', async (req, res) => {
       }
     }
 
-    // Deduct free usage for webapp users after successful completion
-    if (req.userId && req.featureAccess && !req.featureAccess.hasSubscription) {
+    // Deduct free usage after successful completion — but only once per prep.
+    // prepGranted means a sibling section of this same company already spent
+    // the allowance, so the remaining sections must not double-charge it.
+    if (req.userId && req.featureAccess && !req.featureAccess.hasSubscription && !req.featureAccess.prepGranted) {
       try {
         const usedFree = await freeUsageService.useFreeAllowance(req.userId, 'design');
         console.log('[AscendPrep] Section - Deducted free allowance for user:', req.userId, 'success:', usedFree);
