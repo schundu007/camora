@@ -20,16 +20,20 @@ interface Props {
   onInterim: (text: string) => void;
   onFinal: (text: string) => void;
   disabled?: boolean;
+  /** Increment to toggle recording from a parent keyboard shortcut. */
+  toggleSignal?: number;
 }
 
 const RECORDER_MIME = 'audio/webm;codecs=opus';
 const GROQ_TICK_MS = 1200;
 const WS_BASE = (import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com').replace(/^http/, 'ws');
 
-export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = false }: Props) => {
+export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = false, toggleSignal }: Props) => {
   const { token } = useAuth();
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
+  const recordingRef = useRef(false);
+  useEffect(() => { recordingRef.current = recording; }, [recording]);
 
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -196,6 +200,15 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     try { recorderRef.current?.stop(); } catch {}
     // ws is closed inside the recorder's onstop for the WS path.
   }, []);
+
+  // Toggle from a parent keyboard shortcut (Space in the Ask composer).
+  const prevToggleRef = useRef(toggleSignal);
+  useEffect(() => {
+    if (toggleSignal === undefined || prevToggleRef.current === toggleSignal) return;
+    prevToggleRef.current = toggleSignal;
+    if (disabled || busy) return;
+    if (recordingRef.current) stop(); else start();
+  }, [toggleSignal, disabled, busy, start, stop]);
 
   useEffect(() => () => {
     if (tickRef.current) clearInterval(tickRef.current);

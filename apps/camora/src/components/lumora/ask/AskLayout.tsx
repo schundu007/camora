@@ -196,6 +196,8 @@ export const AskLayout = () => {
   const [showHistory, setShowHistory]   = useState(false);
   // Pasted / dropped screenshots staged for the next message (data URLs).
   const [pending, setPending]           = useState<{ id: string; dataUrl: string }[]>([]);
+  // Bumped by the Space shortcut to toggle the dictation mic.
+  const [micToggle, setMicToggle]       = useState(0);
 
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -350,6 +352,34 @@ export const AskLayout = () => {
   };
 
   const sans: React.CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
+  const kbdStyle: React.CSSProperties = {
+    fontFamily: 'ui-monospace, monospace', fontSize: '9px', lineHeight: 1,
+    padding: '2px 5px', borderRadius: 4, color: 'var(--text-muted)',
+    background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)',
+  };
+
+  // Single-stroke shortcut: Space toggles dictation when you're not mid-typing
+  // (composer empty or focus outside it). Esc stops an active dictation. Plain
+  // Space still types a space when the composer already has text.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      const inEmptyComposer = el === inputRef.current && !input.trim();
+      // Don't hijack Space where it has a native meaning: typing in a field, or
+      // activating a focused button/link. Fire from empty composer or plain
+      // page background only.
+      const interactive = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' ||
+        tag === 'A' || tag === 'SELECT' || !!el?.isContentEditable || el?.getAttribute('role') === 'button';
+      if (!interactive || inEmptyComposer) {
+        e.preventDefault();
+        setMicToggle(n => n + 1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [input]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -560,13 +590,16 @@ export const AskLayout = () => {
               style={{ color: 'var(--text-primary)', ...sans }}
             />
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ to send · ⇧↵ new line · 📷 paste to attach</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ send · ⇧↵ new line · Space talk · 📷 paste</span>
               <div className="flex items-center gap-2">
                 {/* Live dictation — text types into the composer as you talk
                     (re-transcribes the growing clip ~1/sec via the backend, so
                     it works in both web and the Electron desktop app). The
-                    transcript is appended after whatever was already typed. */}
+                    transcript is appended after whatever was already typed.
+                    Space toggles it (single-stroke) when not mid-typing. */}
+                <span className="hidden sm:inline" style={kbdStyle} title="Toggle dictation">Space</span>
                 <StreamingMicButton
+                  toggleSignal={micToggle}
                   onStart={() => { dictationBaseRef.current = input; }}
                   onInterim={(t) => {
                     const base = dictationBaseRef.current.trim();
@@ -580,6 +613,7 @@ export const AskLayout = () => {
                   }}
                   disabled={streaming}
                 />
+                <span className="hidden sm:inline" style={kbdStyle} title="Send">↵</span>
                 <button
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}
