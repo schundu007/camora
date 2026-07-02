@@ -11,7 +11,7 @@ import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 import Chip from '@/components/shared/ui/Chip';
-import { SonaMicButton } from '@/components/lumora/shell/SonaMicButton';
+import { StreamingMicButton } from './StreamingMicButton';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('py', python);
@@ -199,6 +199,7 @@ export const AskLayout = () => {
 
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const dictationBaseRef = useRef(''); // input text captured when dictation starts
   const hasMessages = messages.length > 0;
 
   const MAX_PENDING = 4;
@@ -561,13 +562,21 @@ export const AskLayout = () => {
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
               <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ to send · ⇧↵ new line · 📷 paste to attach</span>
               <div className="flex items-center gap-2">
-                {/* Voice input — records, transcribes, and appends into the
-                    composer. Reuses the same SonaMicButton as the live Sona
-                    sidebar; the user still reviews/edits before sending. */}
-                <SonaMicButton
-                  onText={(t) => {
-                    const clean = t.trim();
-                    if (clean) setInput((prev) => (prev.trim() ? prev.trim() + ' ' + clean : clean));
+                {/* Live dictation — text types into the composer as you talk
+                    (re-transcribes the growing clip ~1/sec via the backend, so
+                    it works in both web and the Electron desktop app). The
+                    transcript is appended after whatever was already typed. */}
+                <StreamingMicButton
+                  onStart={() => { dictationBaseRef.current = input; }}
+                  onInterim={(t) => {
+                    const base = dictationBaseRef.current.trim();
+                    setInput(base && t ? base + ' ' + t : (t || base));
+                  }}
+                  onFinal={(t) => {
+                    const base = dictationBaseRef.current.trim();
+                    const next = base && t ? base + ' ' + t : (t || base);
+                    setInput(next);
+                    dictationBaseRef.current = next;
                   }}
                   disabled={streaming}
                 />
