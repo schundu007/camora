@@ -218,6 +218,76 @@ function cleanText(text) {
 }
 
 /**
+ * Convert inline LaTeX / TeX math (as delivered in HackerRank's clean REST
+ * fields — `$n$`, `$1 \le n \le 100$`) into readable Unicode text. Without
+ * this the math is either lost (SVG in body_html) or shows as raw `$...$`.
+ */
+function latexToText(s) {
+  if (!s || typeof s !== 'string') return '';
+  let t = s;
+  // Drop the math delimiters, keep the inner expression.
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, '$1').replace(/\$([^$]*)\$/g, '$1');
+  t = t.replace(/\\\(([\s\S]*?)\\\)/g, '$1').replace(/\\\[([\s\S]*?)\\\]/g, '$1');
+  const SYMBOLS = [
+    [/\\leq\b/g, '≤'], [/\\le\b/g, '≤'], [/\\geq\b/g, '≥'], [/\\ge\b/g, '≥'],
+    [/\\neq\b/g, '≠'], [/\\ne\b/g, '≠'], [/\\lt\b/g, '<'], [/\\gt\b/g, '>'],
+    [/\\times\b/g, '×'], [/\\cdot\b/g, '·'], [/\\div\b/g, '÷'], [/\\pm\b/g, '±'],
+    [/\\ldots\b/g, '…'], [/\\dots\b/g, '…'], [/\\cdots\b/g, '…'], [/\\infty\b/g, '∞'],
+    [/\\rightarrow\b/g, '→'], [/\\to\b/g, '→'], [/\\leftarrow\b/g, '←'],
+    [/\\Rightarrow\b/g, '⇒'], [/\\sum\b/g, '∑'], [/\\prod\b/g, '∏'], [/\\sqrt\b/g, '√'],
+    [/\\alpha\b/g, 'α'], [/\\beta\b/g, 'β'], [/\\gamma\b/g, 'γ'], [/\\theta\b/g, 'θ'],
+    [/\\lambda\b/g, 'λ'], [/\\mu\b/g, 'μ'], [/\\pi\b/g, 'π'], [/\\mod\b/g, 'mod'],
+    [/\\%/g, '%'], [/\\\$/g, '$'], [/\\&/g, '&'], [/\\_/g, '_'], [/\\#/g, '#'],
+    [/\\,/g, ' '], [/\\;/g, ' '], [/\\:/g, ' '], [/\\!/g, ''], [/\\ /g, ' '],
+  ];
+  for (const [re, rep] of SYMBOLS) t = t.replace(re, rep);
+  t = t.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  t = t.replace(/\^\{([^{}]*)\}/g, '^$1').replace(/_\{([^{}]*)\}/g, '_$1');
+  // Any remaining \command{inner} → inner; lone \command → dropped.
+  t = t.replace(/\\[a-zA-Z]+\s*\{([^{}]*)\}/g, '$1').replace(/\\[a-zA-Z]+/g, '');
+  t = t.replace(/[{}]/g, '');
+  return t;
+}
+
+/**
+ * Fetch a HackerRank challenge via its REST API and assemble the problem from
+ * the clean, LaTeX-bearing structured fields. The scraped HTML page renders
+ * math as MathJax SVG (glyph paths — no text nodes), so cheerio's .text()
+ * silently drops every variable/number. The REST payload keeps the real math.
+ */
+async function fetchHackerRankRest(url, headers) {
+  try {
+    const m = url.match(/hackerrank\.com\/(?:contests\/([^/]+)\/)?challenges\/([^/?#]+)/i);
+    if (!m) return null;
+    const contest = m[1] || 'master';
+    const slug = m[2];
+    const restUrl = `https://www.hackerrank.com/rest/contests/${contest}/challenges/${slug}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    let resp;
+    try {
+      resp = await fetch(restUrl, { headers: { ...headers, Accept: 'application/json' }, signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    const d = json?.model || json;
+    if (!d || typeof d.problem_statement !== 'string') return null;
+    const parts = [];
+    if (d.name) parts.push(String(d.name));
+    parts.push(latexToText(d.problem_statement));
+    if (d.input_format) parts.push('Input Format\n' + latexToText(d.input_format));
+    if (d.constraints) parts.push('Constraints\n' + latexToText(d.constraints));
+    if (d.output_format) parts.push('Output Format\n' + latexToText(d.output_format));
+    const text = cleanText(parts.join('\n\n'));
+    return text && text.length >= 40 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Extract examples/test cases from the page
  */
 function extractExamples($) {
@@ -521,8 +591,16 @@ export async function fetchProblemFromUrl(url, electronCookies = null, req = nul
     // Remove non-content elements
     $('script, style, nav, header, footer, aside, .ads, [class*="sidebar"], [class*="comment"]').remove();
 
-    // Try platform-specific extraction first
-    let problemText = extractContent($, platform);
+    // HackerRank renders its description math as MathJax SVG, which cheerio's
+    // .text() drops entirely (every variable/number vanishes). Prefer the REST
+    // API's clean LaTeX-bearing fields; fall back to HTML scraping if it fails.
+    let problemText = null;
+    if (platform === 'hackerrank') {
+      problemText = await fetchHackerRankRest(url, headers);
+    }
+
+    // Try platform-specific extraction next
+    if (!problemText) problemText = extractContent($, platform);
 
     // Fallback to body text if extraction failed
     if (!problemText || problemText.length < 100) {
