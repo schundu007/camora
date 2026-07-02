@@ -105,6 +105,43 @@ async function runMigrations() {
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(255)');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ');
     await query('ALTER TABLE ascend_subscriptions ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ');
+
+    // Keep ascend_can_use_feature() in sync with the app's access model.
+    // The original DB function (a) never checked trials and (b) matched the
+    // stale plan names ('monthly','quarterly_pro','lifetime','pro'), so every
+    // admin-granted trial AND every real 'pro_monthly'/'pro_yearly'/'team'
+    // subscriber hit "Free trial exhausted" once their free usage ran out.
+    // This CREATE OR REPLACE recognizes active trials (plan_type='free' +
+    // future trial_ends_at) and both current and legacy paid plan names.
+    await query(`
+      CREATE OR REPLACE FUNCTION public.ascend_can_use_feature(p_user_id integer, p_feature text)
+      RETURNS jsonb LANGUAGE plpgsql AS $fn$
+      DECLARE
+        v_sub RECORD; v_col_used TEXT; v_col_limit TEXT; v_used INTEGER; v_limit INTEGER;
+      BEGIN
+        SELECT plan_type, status, trial_ends_at INTO v_sub FROM ascend_subscriptions WHERE user_id = p_user_id;
+        IF v_sub.status = 'active' AND v_sub.plan_type IN
+           ('pro_monthly','pro_yearly','team','monthly','quarterly_pro','lifetime','pro') THEN
+          RETURN jsonb_build_object('allowed', true, 'hasSubscription', true, 'reason', 'Active subscription');
+        END IF;
+        IF v_sub.plan_type = 'free' AND v_sub.trial_ends_at IS NOT NULL AND v_sub.trial_ends_at > now() THEN
+          RETURN jsonb_build_object('allowed', true, 'hasSubscription', true, 'reason', 'Active trial');
+        END IF;
+        v_col_used := p_feature || '_used'; v_col_limit := p_feature || '_limit';
+        PERFORM 1 FROM ascend_free_usage WHERE user_id = p_user_id;
+        IF NOT FOUND THEN
+          RETURN jsonb_build_object('allowed', true, 'hasSubscription', false, 'freeRemaining', 2, 'freeUsed', 0, 'freeLimit', 2);
+        END IF;
+        EXECUTE format('SELECT %I, %I FROM ascend_free_usage WHERE user_id = $1', v_col_used, v_col_limit) INTO v_used, v_limit USING p_user_id;
+        IF v_used < v_limit THEN
+          RETURN jsonb_build_object('allowed', true, 'hasSubscription', false, 'freeRemaining', v_limit - v_used, 'freeUsed', v_used, 'freeLimit', v_limit);
+        ELSE
+          RETURN jsonb_build_object('allowed', false, 'hasSubscription', false, 'freeTrialExhausted', true, 'freeUsed', v_used, 'freeLimit', v_limit, 'reason', 'Free trial exhausted. Please subscribe to continue.');
+        END IF;
+      END;
+      $fn$;
+    `);
+    console.log('[Migrations] ascend_can_use_feature() synced (trials + current plan names)');
     // JWT generation counter — every issued token carries this value as `gen`.
     // Incrementing this column invalidates every outstanding token for the
     // user (logout-all-sessions / suspicious-activity revocation). Default 1
