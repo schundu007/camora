@@ -20,10 +20,19 @@ const wss = new WebSocketServer({ noServer: true });
 
 // nova-2, interim results on, punctuation + smart formatting. No `encoding`
 // param: MediaRecorder sends webm/opus which Deepgram detects from the
-// container stream.
+// container stream. Technical terms are boosted so the live view mis-hears
+// them less often (e.g. "Kafka" not "Kate's"); the authoritative final is
+// re-transcribed with Whisper on the client anyway.
+const KEYWORDS = [
+  'Kafka', 'Kubernetes', 'Redis', 'Postgres', 'PostgreSQL', 'GraphQL', 'Nginx',
+  'Docker', 'microservices', 'Cassandra', 'DynamoDB', 'Terraform', 'gRPC',
+  'OAuth', 'JWT', 'Elasticsearch', 'RabbitMQ', 'Zookeeper', 'sharding',
+  'idempotent', 'latency', 'throughput', 'API', 'SQL', 'NoSQL', 'CDN',
+];
 const DG_URL =
   'wss://api.deepgram.com/v1/listen' +
-  '?model=nova-2&language=en&interim_results=true&punctuate=true&smart_format=true&endpointing=300';
+  '?model=nova-2&language=en&interim_results=true&punctuate=true&smart_format=true&endpointing=300' +
+  KEYWORDS.map(k => `&keywords=${encodeURIComponent(k)}:2`).join('');
 
 function keyIsUsable() {
   const k = process.env.DEEPGRAM_API_KEY || '';
