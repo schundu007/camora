@@ -2,8 +2,58 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
+import { r2, R2_BUCKET } from '../lib/r2.js';
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const router = Router();
+
+// Screenshot attachments on an Ask message. Accepts data URLs from the
+// client, caps count/size, uploads each to R2 (private bucket), and returns
+// both the Gemini vision `parts` (inlineData) and the DB rows to persist.
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 6 MB per image
+const ALLOWED_IMAGE_MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+
+function parseDataUrl(u) {
+  if (typeof u !== 'string') return null;
+  const m = u.match(/^data:([^;]+);base64,(.+)$/);
+  if (!m) return null;
+  const mimeType = m[1].toLowerCase();
+  if (!ALLOWED_IMAGE_MIME.has(mimeType)) return null;
+  const data = m[2];
+  if (Buffer.byteLength(data, 'base64') > MAX_IMAGE_BYTES) return null;
+  return { mimeType, data };
+}
+
+async function processImages(images, userId, convId) {
+  if (!Array.isArray(images) || !images.length) return { parts: [], stored: [] };
+  const parsed = images.map(parseDataUrl).filter(Boolean).slice(0, MAX_IMAGES);
+  const parts = [];
+  const stored = [];
+  for (let i = 0; i < parsed.length; i++) {
+    const { mimeType, data } = parsed[i];
+    parts.push({ inlineData: { mimeType, data } });
+    // Only persist to R2 when we have a conversation to attach it to; the
+    // vision `parts` are still sent to the model either way.
+    if (userId && convId) {
+      const ext = mimeType.split('/')[1] || 'png';
+      const key = `ask/${userId}/${convId}/${Date.now()}-${i}.${ext}`;
+      try {
+        await r2.send(new PutObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: key,
+          Body: Buffer.from(data, 'base64'),
+          ContentType: mimeType,
+        }));
+        stored.push({ key, mimeType });
+      } catch (e) {
+        console.warn('[Ask] image R2 upload failed (non-fatal):', e.message);
+      }
+    }
+  }
+  return { parts, stored };
+}
 
 let _genAI = null;
 let _genAIKey = null;
@@ -119,33 +169,42 @@ async function fetchGeminiDraft(message, history, geminiKey, timeoutMs = 6000) {
 // POST /stream — streaming ask
 router.post('/stream', async (req, res) => {
   try {
-    const { message, history = [], provider = 'claude', conversationId } = req.body;
-    if (!message?.trim()) return res.status(400).json({ error: 'message required' });
+    const { message, history = [], provider = 'claude', conversationId, images = [] } = req.body;
+    const hasImages = Array.isArray(images) && images.length > 0;
+    if (!message?.trim() && !hasImages) return res.status(400).json({ error: 'message or image required' });
+    // When only a screenshot is sent, give the model an explicit instruction.
+    const effectiveMessage = message?.trim() || 'Please look at the attached screenshot and help.';
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const isCode = CODE_RE.test(message);
+    const isCode = CODE_RE.test(effectiveMessage);
     const system = isCode ? SYS_CODE : SYS_GENERAL;
     const userId = req.user?.id;
+    const dbContent = message?.trim() || '📷 Screenshot';
 
-    // Persist conversation + user message — isolated so a missing table never kills the stream
+    // Persist conversation + user message — isolated so a missing table never kills the stream.
+    // Screenshots are uploaded to R2 (keyed by conv) and the keys stored on the
+    // user row; `imageParts` (inlineData) always builds so the model sees them.
     let convId = conversationId || null;
+    let imageParts = [];
     try {
-      if (userId) {
-        if (!convId) {
-          const { rows } = await query(
-            `INSERT INTO lumora_ask_conversations (user_id, title, provider) VALUES ($1, $2, $3) RETURNING id`,
-            [userId, message.slice(0, 120), provider]
-          );
-          convId = rows[0].id;
-          res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
-        }
+      if (userId && !convId) {
+        const { rows } = await query(
+          `INSERT INTO lumora_ask_conversations (user_id, title, provider) VALUES ($1, $2, $3) RETURNING id`,
+          [userId, dbContent.slice(0, 120), provider]
+        );
+        convId = rows[0].id;
+        res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
+      }
+      const { parts, stored } = await processImages(images, userId, convId);
+      imageParts = parts;
+      if (userId && convId) {
         await query(
-          `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'user', $2)`,
-          [convId, message]
+          `INSERT INTO lumora_ask_messages (conversation_id, role, content, images) VALUES ($1, 'user', $2, $3)`,
+          [convId, dbContent, stored.length ? JSON.stringify(stored) : null]
         );
       }
     } catch (dbErr) {
@@ -155,8 +214,16 @@ router.post('/stream', async (req, res) => {
 
     const msgs = [
       ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content: message },
+      { role: 'user', content: effectiveMessage },
     ];
+
+    // Gemini contents — attach the pasted screenshots (inlineData) to the last
+    // user turn only. Reused by every Gemini branch below.
+    const geminiContents = msgs.map((m, i) => {
+      const parts = [{ text: m.content }];
+      if (i === msgs.length - 1 && imageParts.length) parts.push(...imageParts);
+      return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+    });
 
     let full = '';
 
@@ -176,10 +243,7 @@ router.post('/stream', async (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               system_instruction: { parts: [{ text: SYS_CODE }] },
-              contents: msgs.map(m => ({
-                role: m.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: m.content }],
-              })),
+              contents: geminiContents,
               generationConfig: { maxOutputTokens: 8000, temperature: 0.1 },
             }),
           }
@@ -222,7 +286,7 @@ router.post('/stream', async (req, res) => {
     let finalSystem = system;
     if (isCode && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
-      const draft = await fetchGeminiDraft(message, history, geminiKey);
+      const draft = await fetchGeminiDraft(effectiveMessage, history, geminiKey);
       if (draft) {
         finalSystem = SYS_CODE_DUAL(draft);
         res.write(`data: ${JSON.stringify({ status: 'Verifying with Gemini…' })}\n\n`);
@@ -240,10 +304,7 @@ router.post('/stream', async (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               system_instruction: { parts: [{ text: system }] },
-              contents: msgs.map(m => ({
-                role: m.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: m.content }],
-              })),
+              contents: geminiContents,
               generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
             }),
           }
@@ -285,7 +346,10 @@ router.post('/stream', async (req, res) => {
       try {
         const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: finalSystem });
         const _msgs = msgs.map(m => (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : (m.content || '')));
-        const _stream = await _model.generateContentStream(_msgs.join('\n\n'));
+        // Single user turn: joined text + any pasted screenshots (inlineData).
+        const _stream = await _model.generateContentStream({
+          contents: [{ role: 'user', parts: [{ text: _msgs.join('\n\n') }, ...imageParts] }],
+        });
         for await (const chunk of _stream.stream) {
           const token = chunk.text();
           if (token) {
@@ -350,10 +414,21 @@ router.get('/history/:id', async (req, res) => {
     );
     if (!conv) return res.status(404).json({ error: 'not found' });
     const { rows } = await query(
-      `SELECT role, content FROM lumora_ask_messages WHERE conversation_id = $1 ORDER BY created_at ASC`,
+      `SELECT role, content, images FROM lumora_ask_messages WHERE conversation_id = $1 ORDER BY created_at ASC`,
       [req.params.id]
     );
-    res.json({ messages: rows });
+    // Presign each stored screenshot (private bucket) so the browser can load
+    // it directly from R2 — no server proxy. jsonb comes back already-parsed.
+    const messages = await Promise.all(rows.map(async (r) => {
+      const images = Array.isArray(r.images)
+        ? await Promise.all(r.images.map(async (im) => ({
+            url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: R2_BUCKET, Key: im.key }), { expiresIn: 3600 }),
+            mimeType: im.mimeType,
+          })))
+        : [];
+      return { role: r.role, content: r.content, images };
+    }));
+    res.json({ messages });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

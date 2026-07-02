@@ -29,7 +29,8 @@ SyntaxHighlighter.registerLanguage('sh', bash);
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
-interface Msg { role: 'user' | 'assistant'; content: string; }
+interface MsgImage { url?: string; dataUrl?: string }
+interface Msg { role: 'user' | 'assistant'; content: string; images?: MsgImage[]; }
 interface Conv { id: string; title: string; provider: string; updated_at: string; }
 
 type Provider = 'claude' | 'gemini';
@@ -193,10 +194,41 @@ export const AskLayout = () => {
   const [convId, setConvId]             = useState<string | null>(null);
   const [history, setHistory]           = useState<Conv[]>([]);
   const [showHistory, setShowHistory]   = useState(false);
+  // Pasted / dropped screenshots staged for the next message (data URLs).
+  const [pending, setPending]           = useState<{ id: string; dataUrl: string }[]>([]);
 
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasMessages = messages.length > 0;
+
+  const MAX_PENDING = 4;
+  const addImageFiles = useCallback((files: File[]) => {
+    const imgs = files.filter(f => f.type.startsWith('image/'));
+    if (!imgs.length) return;
+    imgs.slice(0, MAX_PENDING).forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        if (dataUrl.startsWith('data:image/')) {
+          setPending(prev => prev.length >= MAX_PENDING ? prev : [...prev, { id: `${f.name}-${dataUrl.length}-${prev.length}`, dataUrl }]);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+  }, []);
+
+  const onComposerPaste = useCallback((e: React.ClipboardEvent) => {
+    const files = Array.from(e.clipboardData?.items || [])
+      .filter(it => it.kind === 'file' && it.type.startsWith('image/'))
+      .map(it => it.getAsFile())
+      .filter((f): f is File => !!f);
+    if (files.length) { e.preventDefault(); addImageFiles(files); }
+  }, [addImageFiles]);
+
+  const onComposerDrop = useCallback((e: React.DragEvent) => {
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (files.some(f => f.type.startsWith('image/'))) { e.preventDefault(); addImageFiles(files); }
+  }, [addImageFiles]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -214,7 +246,8 @@ export const AskLayout = () => {
     try {
       const r = await fetch(`${API_URL}/api/v1/ask/history/${id}`, { credentials: 'include' });
       const d = await r.json();
-      setMessages(d.messages || []);
+      // Images come back as absolute presigned R2 URLs — use directly.
+      setMessages((d.messages || []) as Msg[]);
       setConvId(id);
       setShowHistory(false);
     } catch {}
@@ -241,9 +274,11 @@ export const AskLayout = () => {
 
   const handleSubmit = useCallback(async (text?: string) => {
     const msg = (text ?? input).trim();
-    if (!msg || streaming) return;
+    const imgs = pending;
+    if ((!msg && imgs.length === 0) || streaming) return;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: msg }]);
+    setPending([]);
+    setMessages(prev => [...prev, { role: 'user', content: msg, images: imgs.map(i => ({ dataUrl: i.dataUrl })) }]);
     setStreaming(true);
     setStreamText('');
 
@@ -253,6 +288,7 @@ export const AskLayout = () => {
         history: messages.map(m => ({ role: m.role, content: m.content })),
         provider,
         conversationId: convId,
+        images: imgs.map(i => i.dataUrl),
       });
       const resp = await fetch(`${API_URL}/api/v1/ask/stream`, {
         method: 'POST',
@@ -302,7 +338,7 @@ export const AskLayout = () => {
       setStreamText('');
       inputRef.current?.focus();
     }
-  }, [input, messages, streaming, provider, convId]);
+  }, [input, pending, messages, streaming, provider, convId]);
 
   const startNew = () => {
     setMessages([]);
@@ -397,8 +433,25 @@ export const AskLayout = () => {
           {messages.map((m, i) => (
             <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
               {m.role === 'user' ? (
-                <div className="max-w-[75%] px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf-dk)', color: '#FFFFFF', ...sans }}>
-                  {m.content}
+                <div className="max-w-[75%] flex flex-col items-end gap-2">
+                  {!!m.images?.length && (
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {m.images.map((im, k) => (
+                        <img
+                          key={k}
+                          src={im.url || im.dataUrl}
+                          alt="attachment"
+                          className="rounded-lg max-h-40 object-cover"
+                          style={{ border: '1px solid var(--cam-gold-leaf-dk)' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {m.content && (
+                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf-dk)', color: '#FFFFFF', ...sans }}>
+                      {m.content}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <AskResponse content={m.content} />
@@ -472,19 +525,41 @@ export const AskLayout = () => {
           </div>
 
           {/* Input box */}
-          <div className="relative rounded-2xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf-dk)', boxShadow: '0 0 0 1px rgba(217,181,67,0.1), 0 4px 20px rgba(0,0,0,0.3)' }}>
+          <div
+            className="relative rounded-2xl"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf-dk)', boxShadow: '0 0 0 1px rgba(217,181,67,0.1), 0 4px 20px rgba(0,0,0,0.3)' }}
+            onDrop={onComposerDrop}
+            onDragOver={e => e.preventDefault()}
+          >
+            {/* Staged screenshot thumbnails */}
+            {pending.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-4 pt-3">
+                {pending.map((p) => (
+                  <div key={p.id} className="relative">
+                    <img src={p.dataUrl} alt="pending attachment" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--cam-gold-leaf-dk)' }} />
+                    <button
+                      onClick={() => setPending(prev => prev.filter(x => x.id !== p.id))}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
+                      style={{ background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--text-primary)' }}
+                      aria-label="Remove image"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
+              onPaste={onComposerPaste}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-              placeholder="Ask anything…"
+              placeholder="Ask anything… (paste or drop a screenshot)"
               rows={1}
               className="w-full resize-none px-5 pt-3 pb-10 text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
               style={{ color: 'var(--text-primary)', ...sans }}
             />
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ to send · ⇧↵ new line</span>
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ to send · ⇧↵ new line · 📷 paste to attach</span>
               <div className="flex items-center gap-2">
                 {/* Voice input — records, transcribes, and appends into the
                     composer. Reuses the same SonaMicButton as the live Sona
@@ -498,7 +573,7 @@ export const AskLayout = () => {
                 />
                 <button
                   onClick={() => handleSubmit()}
-                  disabled={!input.trim() || streaming}
+                  disabled={(!input.trim() && pending.length === 0) || streaming}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30 hover:opacity-85"
                   style={{ background: 'var(--cam-gold-leaf)' }}
                 >
