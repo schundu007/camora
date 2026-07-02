@@ -98,22 +98,28 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     interimRef.current = '';
     const mime = MediaRecorder.isTypeSupported(RECORDER_MIME) ? RECORDER_MIME : '';
     mimeRef.current = mime || 'audio/webm';
+    chunksRef.current = [];
     const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
     recorderRef.current = rec;
     rec.ondataavailable = async (e) => {
-      if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+      if (e.data.size === 0) return;
+      // Keep the raw audio for the accurate Whisper final, and stream it to
+      // Deepgram for the live interim.
+      chunksRef.current.push(e.data);
+      if (ws.readyState === WebSocket.OPEN) {
         try { ws.send(await e.data.arrayBuffer()); } catch {}
       }
     };
-    rec.onstop = () => {
+    rec.onstop = async () => {
       setRecording(false); setBusy(true);
       try { ws.close(); } catch {}
-      // Give Deepgram a moment to flush the final segment.
-      window.setTimeout(() => {
-        onFinal(fullText());
-        setBusy(false);
-        releaseMedia();
-      }, 700);
+      // Authoritative final: re-transcribe the whole clip with Whisper (Groq),
+      // which is more accurate on technical terms than realtime STT — this
+      // corrects the rough live text (e.g. "Kate's" → "Kafka's") on stop.
+      await groqTranscribe(true);
+      setBusy(false);
+      chunksRef.current = [];
+      releaseMedia();
     };
     ws.onmessage = (ev) => {
       try {
@@ -130,7 +136,7 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     };
     rec.start(250); // small chunks → low-latency streaming
     setRecording(true);
-  }, [onInterim, onFinal, releaseMedia]);
+  }, [onInterim, onFinal, releaseMedia, groqTranscribe]);
 
   const start = useCallback(async () => {
     if (!token || disabled) return;
