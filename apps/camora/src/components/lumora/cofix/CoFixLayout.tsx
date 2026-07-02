@@ -409,7 +409,25 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         body: JSON.stringify({ code: testCode, language: effectiveLang, test_cases: [] }),
       });
       const data = await resp.json();
-      const rawOut = (data.direct_output || data.output || '(no output)').trim();
+      let rawOut = (data.direct_output || data.output || '(no output)').trim();
+      // Fallback: when the solution reads from stdin (input()/sys.stdin), its
+      // read fires before the appended test line and EOFs → "(no stdin input)".
+      // If the test input is itself a self-contained statement (starts with a
+      // print/console.log/echo), run it ON ITS OWN so we get real output
+      // instead of the misleading stdin message.
+      const solutionReadsStdin = /\b(input\s*\(|sys\.stdin|readline\s*\(|prompt\s*\()/.test(cleanCode);
+      const testIsSelfContained = /^\s*(print|console\.log|echo|System\.out|puts|fmt\.Print)/.test(String(tc.input ?? ''));
+      if (rawOut.includes('(no stdin input)') && solutionReadsStdin && testIsSelfContained) {
+        const resp2 = await fetch(`${API_URL}/api/v1/coding/execute`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ code: String(tc.input), language: effectiveLang, test_cases: [] }),
+        });
+        const data2 = await resp2.json();
+        const alt = (data2.direct_output || data2.output || '').trim();
+        if (alt && !alt.includes('(no stdin input)')) rawOut = alt;
+      }
       const output = rawOut.startsWith('(no output) —') ? '(no output)' : rawOut;
       const err = !resp.ok || output.startsWith('Error:') || output.startsWith('Traceback') || /^error:/i.test(output);
       setCustomTests(prev => prev.map(t => t.id === id ? { ...t, running: false, result: output, isErr: err } : t));
