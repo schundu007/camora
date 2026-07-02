@@ -11,6 +11,7 @@ import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 import Chip from '@/components/shared/ui/Chip';
+import { SonaMicButton } from '@/components/lumora/shell/SonaMicButton';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('py', python);
@@ -484,17 +485,29 @@ export const AskLayout = () => {
             />
             <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
               <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ to send · ⇧↵ new line</span>
-              <button
-                onClick={() => handleSubmit()}
-                disabled={!input.trim() || streaming}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30 hover:opacity-85"
-                style={{ background: 'var(--cam-gold-leaf)' }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a0e1a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="19" x2="12" y2="5" />
-                  <polyline points="5 12 12 5 19 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Voice input — records, transcribes, and appends into the
+                    composer. Reuses the same SonaMicButton as the live Sona
+                    sidebar; the user still reviews/edits before sending. */}
+                <SonaMicButton
+                  onText={(t) => {
+                    const clean = t.trim();
+                    if (clean) setInput((prev) => (prev.trim() ? prev.trim() + ' ' + clean : clean));
+                  }}
+                  disabled={streaming}
+                />
+                <button
+                  onClick={() => handleSubmit()}
+                  disabled={!input.trim() || streaming}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30 hover:opacity-85"
+                  style={{ background: 'var(--cam-gold-leaf)' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a0e1a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5" />
+                    <polyline points="5 12 12 5 19 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
