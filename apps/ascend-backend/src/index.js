@@ -689,6 +689,10 @@ async function runMigrations() {
       )`,
       'CREATE INDEX IF NOT EXISTS idx_ask_conv_user ON lumora_ask_conversations(user_id, updated_at DESC)',
       'CREATE INDEX IF NOT EXISTS idx_ask_msg_conv ON lumora_ask_messages(conversation_id, created_at ASC)',
+      // Pasted/attached screenshots on an Ask message. Array of
+      // { key, mimeType } — the R2 object key is streamed back via the
+      // authed /api/v1/ask/image proxy (bucket is private).
+      `ALTER TABLE lumora_ask_messages ADD COLUMN IF NOT EXISTS images JSONB`,
     ];
     for (const sql of lumoraMigrations) {
       try { await query(sql); } catch { /* table or index may already exist */ }
@@ -894,7 +898,7 @@ app.use(
 );
 
 // Body parsing
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '25mb' })); // 25mb: Ask Sona accepts pasted screenshots (base64) in the request body
 
 // Static file serving for generated diagrams
 const DIAGRAM_OUTPUT_DIR = process.env.DIAGRAM_OUTPUT_DIR || '/tmp/chundu_diagrams';
