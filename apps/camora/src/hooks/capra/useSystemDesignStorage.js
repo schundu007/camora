@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { systemDesignStore } from '@/lib/userScopedStorage';
 
-const STORAGE_KEY = 'chundu_system_design_sessions';
 const MAX_SESSIONS = 50; // Limit to prevent storage bloat
+// Storage is per-user (systemDesignStore); the old global
+// `chundu_system_design_sessions` key is migrated on first read and removed,
+// so saved designs can't leak across accounts on a shared browser.
 
 /**
  * Custom hook for persisting system design sessions
@@ -16,12 +19,8 @@ export function useSystemDesignStorage() {
   useEffect(() => {
     const loadSessions = async () => {
       try {
-        let storedSessions = {};
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          storedSessions = JSON.parse(stored);
-        }
-        setSessions(storedSessions || {});
+        const storedSessions = systemDesignStore.read();
+        setSessions(storedSessions && typeof storedSessions === 'object' ? storedSessions : {});
       } catch (error) {
         console.error('Failed to load system design sessions:', error);
         setSessions({});
@@ -36,7 +35,7 @@ export function useSystemDesignStorage() {
   // Save sessions helper
   const persistSessions = useCallback(async (updatedSessions) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+      systemDesignStore.write(updatedSessions);
       setSessions(updatedSessions);
     } catch (error) {
       console.error('Failed to save system design sessions:', error);
@@ -47,7 +46,7 @@ export function useSystemDesignStorage() {
         );
         const idsToRemove = sortedIds.slice(0, 10);
         idsToRemove.forEach(id => delete updatedSessions[id]);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+        systemDesignStore.write(updatedSessions);
         setSessions(updatedSessions);
       }
     }
@@ -84,7 +83,7 @@ export function useSystemDesignStorage() {
       idsToRemove.forEach(id => delete updatedSessions[id]);
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+    systemDesignStore.write(updatedSessions);
     setSessions(updatedSessions);
     setCurrentSessionId(sessionId);
     return sessionId;
@@ -110,7 +109,7 @@ export function useSystemDesignStorage() {
       [sessionId]: updatedSession
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+    systemDesignStore.write(updatedSessions);
     setSessions(updatedSessions);
   }, [sessions]);
 
@@ -157,7 +156,7 @@ export function useSystemDesignStorage() {
     const updatedSessions = { ...sessions };
     delete updatedSessions[sessionId];
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+    systemDesignStore.write(updatedSessions);
     setSessions(updatedSessions);
 
     if (currentSessionId === sessionId) {

@@ -12,6 +12,7 @@ import { SectionCard } from '../../components/capra/ui';
 import { SessionTimer } from '../../components/shared/timer/SessionTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 import Chip from '@/components/shared/ui/Chip';
+import { challengeStatsStore } from '@/lib/userScopedStorage';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
@@ -512,8 +513,8 @@ function renderMd(text) {
 
 function getStats() {
   try {
-    const raw = localStorage.getItem('camora_challenge_stats');
-    if (raw) return JSON.parse(raw);
+    const stored = challengeStatsStore.read();
+    if (stored) return stored;
   } catch { /* ignore */ }
   return {
     totalCompleted: 0,
@@ -531,7 +532,7 @@ function getStats() {
 }
 
 function saveStats(stats) {
-  localStorage.setItem('camora_challenge_stats', JSON.stringify(stats));
+  challengeStatsStore.write(stats);
 }
 
 function getCategoryScore(stats, cat) {
@@ -1485,7 +1486,7 @@ export default function PracticePage() {
                               tone: 'danger',
                             });
                             if (ok) {
-                              localStorage.removeItem('camora_challenge_stats');
+                              challengeStatsStore.clear();
                               setStats(getStats());
                             }
                           }}

@@ -1,17 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { codingHistoryStore } from '@/lib/userScopedStorage';
 
-const STORAGE_KEY = 'chundu_coding_history';
-const OLD_STORAGE_KEY = 'ascend_coding_history';
 const MAX_ENTRIES = 30; // Limit to prevent localStorage bloat
 
-// Migrate old storage key if needed
-function migrateStorage() {
-  const oldData = localStorage.getItem(OLD_STORAGE_KEY);
-  if (oldData && !localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, oldData);
-  }
-}
-migrateStorage();
+// Storage is per-user (codingHistoryStore). The old global keys
+// `chundu_coding_history` / `ascend_coding_history` are migrated into the
+// current user's scoped key on first read and then removed, so coding
+// solutions can no longer leak across accounts on a shared browser.
 
 /**
  * Custom hook for persisting coding problem history
@@ -23,9 +18,8 @@ export function useCodingHistory() {
   // Load history from localStorage on mount and deduplicate
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const parsed = codingHistoryStore.read();
+      if (Array.isArray(parsed)) {
         // Deduplicate: keep only one entry per unique problem (first 200 chars)
         const seen = new Set();
         const deduped = parsed.filter(entry => {
@@ -36,7 +30,7 @@ export function useCodingHistory() {
         });
         // Save deduped version if changed
         if (deduped.length !== parsed.length) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(deduped));
+          codingHistoryStore.write(deduped);
         }
         setHistory(deduped);
       }
@@ -48,14 +42,14 @@ export function useCodingHistory() {
   // Save history to localStorage whenever it changes
   const persistHistory = useCallback((updatedHistory) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+      codingHistoryStore.write(updatedHistory);
       setHistory(updatedHistory);
     } catch (error) {
       console.error('Failed to save coding history:', error);
       // If storage is full, try removing oldest entries
       if (error.name === 'QuotaExceededError') {
         const trimmed = updatedHistory.slice(0, MAX_ENTRIES - 10);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        codingHistoryStore.write(trimmed);
         setHistory(trimmed);
       }
     }
@@ -165,7 +159,7 @@ export function useCodingHistory() {
    * Clear all history
    */
   const clearHistory = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    codingHistoryStore.clear();
     setHistory([]);
   }, []);
 

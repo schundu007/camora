@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { setStoredToken } from '../utils/tokenStore';
 import { setStoredUserId } from '../utils/userStore';
 import { clearAllPrepCaches, purgeLegacyGlobalPrep } from '../lib/prepStorage';
+import { clearAllUserScopedStores } from '../lib/userScopedStorage';
 import { isOwnerEmail } from '../lib/owner';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -417,6 +418,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // can never render or backfill the previous user's prep. setUser(null)
     // above already cleared the stored user id.
     clearAllPrepCaches();
+    // Wipe all other per-user caches (coding/design history, whiteboards,
+    // interview contexts, voice JD/resume/prep, Sona transcripts, progress).
+    clearAllUserScopedStores();
     setOnboardingCompleted(null);
     setSubscription(null);
     // Reset subscriptionLoading too — leaving it `true` after logout strands

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import type { SqlProblem } from '@/data/capra/sqlProblems';
 import { SQL_PROBLEMS, SQL_CATEGORIES } from '@/data/capra/sqlProblems';
 import { useTheme } from '@/hooks/useTheme';
+import { sqlSolvedStore } from '@/lib/userScopedStorage';
 // Load sql.js from CDN — bypasses Vite bundling entirely
 const SQL_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3';
 const loadSqlJs = (): Promise<any> => {
@@ -227,8 +228,8 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   const [outputTab, setOutputTab] = useState<OutputTab>('output');
   const [solved, setSolved] = useState<Set<number>>(() => {
     try {
-      const stored = localStorage.getItem('sql_playground_solved');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
+      const stored = sqlSolvedStore.read();
+      return Array.isArray(stored) ? new Set(stored) : new Set();
     } catch {
       return new Set();
     }
@@ -261,7 +262,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   // ── Persist solved state ────────────────────────────────────────────────
   useEffect(() => {
     try {
-      localStorage.setItem('sql_playground_solved', JSON.stringify([...solved]));
+      sqlSolvedStore.write([...solved]);
     } catch { /* ignore */ }
   }, [solved]);
 
