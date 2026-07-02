@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { whiteboardStore } from '@/lib/userScopedStorage';
 
-const STORAGE_KEY = 'camora_practice_whiteboards';
 const MAX_SCENES = 50;
 
 interface WhiteboardScene {
@@ -17,9 +17,8 @@ export function useWhiteboardState(totalQuestions: number) {
   // Load saved scenes from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed: (WhiteboardScene | null)[] = JSON.parse(stored);
+      const parsed = whiteboardStore.read() as (WhiteboardScene | null)[] | null;
+      if (parsed) {
         if (Array.isArray(parsed)) {
           setScenes((prev) => {
             const merged = [...prev];
@@ -42,11 +41,11 @@ export function useWhiteboardState(totalQuestions: number) {
       try {
         // Only keep non-null scenes to save space
         const trimmed = updatedScenes.slice(0, MAX_SCENES);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+        whiteboardStore.write(trimmed);
       } catch (err) {
         if ((err as any)?.name === 'QuotaExceededError') {
           console.warn('localStorage quota exceeded for whiteboards, clearing old data');
-          localStorage.removeItem(STORAGE_KEY);
+          whiteboardStore.clear();
         }
       }
     }, 800);
@@ -93,7 +92,7 @@ export function useWhiteboardState(totalQuestions: number) {
 
   const clearAll = useCallback(() => {
     setScenes(new Array(totalQuestions).fill(null));
-    localStorage.removeItem(STORAGE_KEY);
+    whiteboardStore.clear();
   }, [totalQuestions]);
 
   return { saveScene, getScene, clearScene, clearAll };

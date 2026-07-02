@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getSystemContext } from '@/lib/lumora-assistant';
+import { sonaSidebarStoreFor } from '@/lib/userScopedStorage';
 import { useSessionStore } from '@/stores/session-store';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
@@ -47,22 +48,18 @@ interface CodingSonaSidebarProps {
   listenTrigger?: number;
 }
 
-const STORAGE_PREFIX = 'lumora_sona_sidebar_';
-
+// Per-user, per-surface store (sonaSidebarStoreFor) — chat history is scoped
+// to the logged-in user so a shared browser can't expose one account's Sona
+// follow-ups to another. Legacy global `lumora_sona_sidebar_<surface>` keys
+// migrate in on first read and are cleared on logout.
 const loadHistory = (surface: string): ChatMessage[]  => {
-  try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + surface);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.slice(-50); // cap history to keep storage small
-  } catch { return []; }
+  const parsed = sonaSidebarStoreFor(surface).read();
+  if (!Array.isArray(parsed)) return [];
+  return parsed.slice(-50); // cap history to keep storage small
 }
 
 const saveHistory = (surface: string, msgs: ChatMessage[]) => {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + surface, JSON.stringify(msgs.slice(-50)));
-  } catch { /* ignore quota errors */ }
+  sonaSidebarStoreFor(surface).write(msgs.slice(-50));
 }
 
 export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: CodingSonaSidebarProps) => {
@@ -101,7 +98,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
         setMessages([]);
         setStreamText('');
         setError(null);
-        localStorage.removeItem(STORAGE_PREFIX + surface);
+        sonaSidebarStoreFor(surface).clear();
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -5,12 +5,11 @@ import { techInterviewTopics, interviewCheatsheet, behavioralQuestions } from '.
 import { SOLUTIONS } from './Blind75PracticePage';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
+import { blind75CompletedStore } from '@/lib/userScopedStorage';
 
 /* ──────────────────────────────── Constants ──────────────────────────────── */
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
-
-const STORAGE_KEY = 'blind75_completed';
 
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
@@ -304,14 +303,14 @@ const totalBehavioralQuestions = Object.values(behavioralQuestions).reduce((n: n
 
 function loadCompleted(): Set<number> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return new Set(JSON.parse(raw));
+    const stored = blind75CompletedStore.read();
+    if (Array.isArray(stored)) return new Set(stored);
   } catch { /* ignore */ }
   return new Set();
 }
 
 function saveCompleted(ids: Set<number>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+  blind75CompletedStore.write([...ids]);
 }
 
 /* ──────────────────────────────── Component ──────────────────────────────── */

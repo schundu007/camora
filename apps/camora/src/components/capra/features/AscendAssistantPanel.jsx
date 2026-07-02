@@ -3,6 +3,7 @@ import { dialogConfirm } from '../../shared/Dialog';
 import CodeBlock from '../shared/CodeBlock.jsx';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
+import { voiceJdStore, voiceResumeStore, voicePrepStore, ascendAssistantHistoryStore } from '@/lib/userScopedStorage';
 
 
 // COMPACT markdown renderer - tables side-by-side, minimal spacing
@@ -277,9 +278,9 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
   // Context documents for better answers
   const [expandedContext, setExpandedContext] = useState(null); // 'jd', 'resume', 'prep', or null
-  const [jobDescription, setJobDescription] = useState(() => localStorage.getItem('voice_jd') || '');
-  const [resume, setResume] = useState(() => localStorage.getItem('voice_resume') || '');
-  const [prepMaterial, setPrepMaterial] = useState(() => localStorage.getItem('voice_prep') || '');
+  const [jobDescription, setJobDescription] = useState(() => voiceJdStore.read() || '');
+  const [resume, setResume] = useState(() => voiceResumeStore.read() || '');
+  const [prepMaterial, setPrepMaterial] = useState(() => voicePrepStore.read() || '');
   const [uploadingFile, setUploadingFile] = useState(null);
 
   // Transcription provider: 'openai' (Whisper) or 'deepgram' (Nova-2)
@@ -294,16 +295,16 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
   // Save context and settings to localStorage
   useEffect(() => {
-    localStorage.setItem('voice_jd', jobDescription);
+    voiceJdStore.write(jobDescription);
   }, [jobDescription]);
   useEffect(() => {
     localStorage.setItem('voice_transcription_provider', transcriptionProvider);
   }, [transcriptionProvider]);
   useEffect(() => {
-    localStorage.setItem('voice_resume', resume);
+    voiceResumeStore.write(resume);
   }, [resume]);
   useEffect(() => {
-    localStorage.setItem('voice_prep', prepMaterial);
+    voicePrepStore.write(prepMaterial);
   }, [prepMaterial]);
 
   // Handle file upload and text extraction
@@ -366,13 +367,9 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
   // Load conversation history from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('ascend_assistant_history');
-    if (saved) {
-      try {
-        setConversationHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load conversation history:', e);
-      }
+    const saved = ascendAssistantHistoryStore.read();
+    if (Array.isArray(saved)) {
+      setConversationHistory(saved);
     }
   }, []);
 
@@ -387,7 +384,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     };
     setConversationHistory(prev => {
       const updated = [...prev, entry];
-      localStorage.setItem('ascend_assistant_history', JSON.stringify(updated));
+      ascendAssistantHistoryStore.write(updated);
       return updated;
     });
   }, []);
@@ -402,7 +399,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
     });
     if (ok) {
       setConversationHistory([]);
-      localStorage.removeItem('ascend_assistant_history');
+      ascendAssistantHistoryStore.clear();
     }
   }, []);
 

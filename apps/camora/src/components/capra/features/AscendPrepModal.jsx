@@ -4,6 +4,7 @@ import InputPanel from '../prep/InputPanel';
 import OutputPanel from '../prep/OutputPanel';
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 import { useIsMobile } from '../../../hooks/capra/useIsMobile';
+import { prepCompaniesStore } from '@/lib/userScopedStorage';
 import { getAuthHeaders } from '../../../utils/authHeaders.js';
 
 
@@ -168,16 +169,17 @@ function cleanupContent(content) {
 
 // Load company data from localStorage
 function loadCompanyData() {
-  const stored = localStorage.getItem('prepCompanies');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.error('Failed to parse company data:', e);
-    }
+  // Per-user store — the legacy global `prepCompanies` blob migrates into the
+  // current user's scoped key on first read, so cached JD/resume can't leak
+  // across accounts on a shared browser.
+  const stored = prepCompaniesStore.read();
+  if (stored && typeof stored === 'object') {
+    return stored;
   }
 
-  // Check for legacy data and migrate
+  // Check for older legacy data (pre-prepCompanies) and migrate. These need a
+  // reshape into the { companies, activeCompany, data } structure, so they are
+  // handled here rather than by the store's verbatim migration.
   const legacyInputs = localStorage.getItem('prepInputs');
   const legacyGenerated = localStorage.getItem('prepGenerated');
 
@@ -194,8 +196,8 @@ function loadCompanyData() {
       },
     };
 
-    // Save migrated data and clean up legacy
-    localStorage.setItem('prepCompanies', JSON.stringify(migratedData));
+    // Save migrated data (per-user) and clean up legacy globals
+    prepCompaniesStore.write(migratedData);
     localStorage.removeItem('prepInputs');
     localStorage.removeItem('prepGenerated');
 
@@ -210,9 +212,9 @@ function loadCompanyData() {
   };
 }
 
-// Save company data to localStorage
+// Save company data to the per-user store
 function saveCompanyData(companyData) {
-  localStorage.setItem('prepCompanies', JSON.stringify(companyData));
+  prepCompaniesStore.write(companyData);
 }
 
 // Get auth token for cloud sync (reads SSO cookie)
