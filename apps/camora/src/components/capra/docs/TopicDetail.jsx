@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Icon } from '../../shared/Icons.jsx';
 import { CompanyLogo, getCompanyLogoSrc } from '../../shared/CompanyLogo.tsx';
 import FormattedContent from './FormattedContent.jsx';
+import TopicVoiceAgent from './TopicVoiceAgent';
 import YamlBreakdown from './YamlBreakdown.jsx';
 import CodeBlock from '../shared/CodeBlock.jsx';
 import CloudArchitectureDiagram from './CloudArchitectureDiagram.jsx';
@@ -198,6 +199,7 @@ function CapacityPlanningGrid({ estimation }) {
 
 function EraserDiagramSection({ topicId, count }) {
   const [provider, setProvider] = useState('aws');
+  const [showVoice, setShowVoice] = useState(false);
   const [failed, setFailed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   useEffect(() => { setFailed(false); }, [topicId, provider]);
@@ -1018,8 +1020,25 @@ export default function TopicDetail({
             <Icon name="sparkles" size={15} />
             <span className="hidden sm:inline">Ask AI</span>
           </button>
+          {/* Voice — talk to Sona about this topic (Read / Teach / Quiz / Ask) */}
+          <button
+            onClick={() => setShowVoice(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors landing-body border"
+            style={{ background: 'transparent', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
+            title="Talk to Sona about this topic"
+          >
+            <Icon name="mic" size={15} />
+            <span className="hidden sm:inline">Voice</span>
+          </button>
         </div>
       </div>
+
+      <TopicVoiceAgent
+        topic={topicDetails}
+        open={showVoice}
+        onClose={() => setShowVoice(false)}
+        locked={isLocked}
+      />
 
       {/* ── LOCKED CONTENT — show ~40% preview then paywall ── */}
       {isLocked && (
