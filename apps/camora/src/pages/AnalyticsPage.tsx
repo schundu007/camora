@@ -62,17 +62,21 @@ function RefreshBtn({ onClick, loading }: { onClick: () => void; loading: boolea
   );
 }
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage({ section = 'admin' }: { section?: 'analytics' | 'admin' }) {
   const { token } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    document.title = 'Analytics | Camora';
+    document.title = (section === 'analytics' ? 'Analytics' : 'Admin') + ' | Camora';
     return () => { document.title = 'Camora'; };
-  }, []);
-  const validTabs: Tab[] = ['analytics', 'users', 'emails'];
+  }, [section]);
+  // Analytics and Admin (user management + emails) are separate surfaces on
+  // separate routes. The tab set — and the default — is scoped to the section
+  // so /analytics never shows user/email management and /admin never shows
+  // site analytics.
+  const allowedTabs: Tab[] = section === 'analytics' ? ['analytics'] : ['users', 'emails'];
   const tabParam = searchParams.get('tab') as Tab;
-  const tab: Tab = validTabs.includes(tabParam) ? tabParam : 'analytics';
+  const tab: Tab = allowedTabs.includes(tabParam) ? tabParam : allowedTabs[0];
   const setTab = (t: Tab) => setSearchParams({ tab: t }, { replace: true });
 
   // Analytics state
@@ -310,8 +314,14 @@ export default function AnalyticsPage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-12 pb-16">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--cam-strip-heading)' }}>Admin <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Dashboard</span></h1>
-          <p className="mt-1" style={{ color: 'var(--cam-strip-text)' }}>Analytics, user management & emails</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--cam-strip-heading)' }}>
+            {section === 'analytics'
+              ? <>Site <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Analytics</span></>
+              : <>Admin <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Dashboard</span></>}
+          </h1>
+          <p className="mt-1" style={{ color: 'var(--cam-strip-text)' }}>
+            {section === 'analytics' ? 'Page views, visitors & usage' : 'User management & emails'}
+          </p>
         </div>
         <svg aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100" className="absolute left-0 bottom-0 w-full pointer-events-none" style={{ height: '5vh', display: 'block' }}>
           <polygon fill="var(--bg-app)" points="0,0 100,100 0,100" />
@@ -319,18 +329,21 @@ export default function AnalyticsPage() {
       </section>
       <div className="page-wrap py-8">
 
-        {/* Tabs */}
-        <div className="tab-group mb-8">
-          {(['analytics', 'users', 'emails'] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`tab-group-item capitalize${tab === t ? ' tab-group-item-active' : ''}`}
-            >
-              {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
-            </button>
-          ))}
-        </div>
+        {/* Tabs — only shown when the section has more than one (i.e. Admin:
+            Users + Emails). Analytics is a single view, so no tab bar. */}
+        {allowedTabs.length > 1 && (
+          <div className="tab-group mb-8">
+            {allowedTabs.map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`tab-group-item capitalize${tab === t ? ' tab-group-item-active' : ''}`}
+              >
+                {t === 'users' ? `Users (${totalUsers})` : t === 'emails' ? `Emails (${emails.length})` : t}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ── Analytics Tab ── */}
         {tab === 'analytics' && (
