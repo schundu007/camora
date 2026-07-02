@@ -15,20 +15,24 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
+# Enterprise light palette — matches the white Eraser architecture diagrams.
+# Muted, low-chroma: PROS/CONS are signalled by a small coloured header label
+# and a coloured bullet only; body text stays neutral slate and sans-serif so
+# the tables read as clean documentation, not a red/green wall.
 BG        = "#ffffff"
-BORDER    = "#e2e8f0"
-TITLE_BG  = "#1e3a5f"
-TITLE_FG  = "#ffffff"
-PROS_BG   = "#f0fdf4"
-PROS_FG   = "#047857"
-CONS_BG   = "#fff1f2"
-CONS_FG   = "#be123c"
-REC_BG    = "#eff6ff"
-REC_FG    = "#1e40af"
-OPT_BG    = "#f8fafc"
+BORDER    = "#e5e9f0"
+TITLE_BG  = "#1e293b"   # slate-800 header bar
+TITLE_FG  = "#f8fafc"
+OPT_BG    = "#f4f6fa"   # column header
 OPT_FG    = "#1e293b"
-MONO      = "Courier New"
-SANS      = "Arial"
+BODY_FG   = "#334155"   # slate-700 — all bullet text
+PROS_BG   = "#f7fbf8"   # barely-there tint
+PROS_FG   = "#0f7a52"   # muted emerald — label + bullet only
+CONS_BG   = "#fdf7f7"
+CONS_FG   = "#b4413c"   # muted brick — label + bullet only
+REC_BG    = "#f6f8fc"
+REC_FG    = "#1e3a5f"   # navy
+SANS      = "Helvetica"
 
 
 @dataclass
@@ -60,9 +64,11 @@ def _wrap(text: str, width: int = 36) -> str:
 
 
 def _bullet_rows(items: list[str], fg: str, bg: str, width: int = 36) -> str:
+    # Coloured bullet, neutral sans body — the colour cue without a colour wall.
     rows = "".join(
         f'<TR><TD ALIGN="LEFT" BGCOLOR="{bg}">'
-        f'<FONT COLOR="{fg}" FACE="{MONO}" POINT-SIZE="11">• {_wrap(item, width)}</FONT>'
+        f'<FONT COLOR="{fg}" FACE="{SANS}" POINT-SIZE="11"><B>•</B> </FONT>'
+        f'<FONT COLOR="{BODY_FG}" FACE="{SANS}" POINT-SIZE="11">{_wrap(item, width)}</FONT>'
         f"</TD></TR>"
         for item in items
     )
