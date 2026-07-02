@@ -15,6 +15,7 @@ export interface SonaVoice {
   supported: boolean;
   speaking: boolean;
   speak(text: string): void;
+  speakOne(text: string, onDone?: () => void): void;
   enqueue(text: string): void;
   flushSentences(buffer: string): string;
   cancel(): void;
@@ -81,6 +82,26 @@ export function useSonaVoice(opts: { rate?: number; onEnd?: () => void } = {}): 
     enqueue(text);
   }, [enqueue]);
 
+  // Speak exactly one utterance and fire onDone when it finishes. Used by the
+  // read-along loop so highlighting stays in lock-step with the audio.
+  const speakOne = useCallback((text: string, onDone?: () => void) => {
+    const t = text.trim();
+    if (!synth || !t) { onDone?.(); return; }
+    synth.cancel();
+    queue.current = [];
+    draining.current = false;
+    setSpeaking(true);
+    const u = new SpeechSynthesisUtterance(t);
+    const v = pickVoice();
+    if (v) u.voice = v;
+    u.rate = rate;
+    let fired = false;
+    const finish = () => { if (fired) return; fired = true; onDone?.(); };
+    u.onend = finish;
+    u.onerror = finish;
+    synth.speak(u);
+  }, [rate]);
+
   const cancel = useCallback(() => {
     if (!synth) return;
     queue.current = [];
@@ -101,5 +122,5 @@ export function useSonaVoice(opts: { rate?: number; onEnd?: () => void } = {}): 
   // Stop any speech if the component using this hook unmounts.
   useEffect(() => () => { if (synth) synth.cancel(); }, []);
 
-  return { supported: !!synth, speaking, speak, enqueue, flushSentences, cancel };
+  return { supported: !!synth, speaking, speak, speakOne, enqueue, flushSentences, cancel };
 }

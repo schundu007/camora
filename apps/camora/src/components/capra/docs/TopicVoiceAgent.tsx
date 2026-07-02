@@ -1,27 +1,28 @@
 /**
- * TopicVoiceAgent — one switchable voice agent for any Prepare topic.
+ * TopicVoiceAgent — a compact voice bar for any Prepare topic (no popup).
  *
- * Modes: Read (TTS of the topic's own content, no LLM), Teach / Quiz / Ask
- * (LLM, grounded in the topic). Reuses the existing mic → /transcribe →
- * streamResponse loop (same as PracticePanel) and speaks replies via
- * useSonaVoice. Deliberately decoupled from sonaRegistry / voice-router /
- * useSessionStore so it is safe on the free Prepare surface.
+ * Read  : highlights the topic's OWN content in place (blocks under
+ *         `.prep-content`) and reads them aloud — no duplicated text.
+ * Teach : one crisp spoken explanation (≤60 words), markdown stripped.
+ * Quiz  : speaks a question → mic answer → short spoken grade.
+ * Ask   : mic → short spoken answer grounded in the topic.
+ *
+ * Reuses transcribe + streamResponse (like PracticePanel); speaks via
+ * useSonaVoice. No sonaRegistry / voice-router / useSessionStore coupling.
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
+import { stripInlineMarkdown } from '@/lib/text-utils';
 import { SonaMicButton } from '@/components/lumora/shell/SonaMicButton';
 import { Icon } from '@/components/shared/Icons';
 import { useSonaVoice } from './useSonaVoice';
 import {
-  buildReadBlocks,
   buildSystemContext,
   buildDirective,
   pickQuizQuestions,
   type VoiceMode,
 } from '@/lib/topic-voice-context';
-
-type Line = { who: 'sona' | 'you'; text: string };
 
 const MODES: Array<{ id: VoiceMode; label: string; llm: boolean }> = [
   { id: 'read', label: 'Read', llm: false },
@@ -29,6 +30,24 @@ const MODES: Array<{ id: VoiceMode; label: string; llm: boolean }> = [
   { id: 'quiz', label: 'Quiz', llm: true },
   { id: 'ask', label: 'Ask', llm: true },
 ];
+
+const HL_CLASS = 'sona-read-hl';
+const HL_STYLE_ID = 'sona-read-style';
+
+/** Strip markdown/headings so nothing is spoken or shown as raw **bold** / #head. */
+const clean = (s: string): string =>
+  stripInlineMarkdown(s || '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+function ensureHighlightStyle() {
+  if (typeof document === 'undefined' || document.getElementById(HL_STYLE_ID)) return;
+  const el = document.createElement('style');
+  el.id = HL_STYLE_ID;
+  el.textContent = `.${HL_CLASS}{background:color-mix(in oklab, var(--accent) 15%, transparent);box-shadow:-3px 0 0 0 var(--accent);border-radius:4px;transition:background .2s ease;}`;
+  document.head.appendChild(el);
+}
 
 interface Props {
   topic: any;
@@ -40,45 +59,74 @@ interface Props {
 export default function TopicVoiceAgent({ topic, open, onClose, locked = false }: Props) {
   const { token } = useAuth();
   const [mode, setMode] = useState<VoiceMode>('read');
-  const [log, setLog] = useState<Line[]>([]);
+  const [caption, setCaption] = useState('');
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const [quizIdx, setQuizIdx] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
-  const bufferRef = useRef('');
   const voice = useSonaVoice({ rate: 1 });
 
   const systemContext = useMemo(() => (topic ? buildSystemContext(topic) : ''), [topic]);
-  const readBlocks = useMemo(() => (topic ? buildReadBlocks(topic) : []), [topic]);
   const quizQuestions = useMemo(() => (topic ? pickQuizQuestions(topic) : []), [topic]);
 
-  const push = useCallback((who: Line['who'], text: string) => {
-    setLog((l) => [...l, { who, text }]);
+  // ── Read-along: highlight the topic's real content blocks in place ──
+  const readEls = useRef<HTMLElement[]>([]);
+  const readIdx = useRef(0);
+  const readActive = useRef(false);
+
+  const clearHighlight = useCallback(() => {
+    readEls.current.forEach((e) => e.classList.remove(HL_CLASS));
   }, []);
 
-  // Update (replace) the last Sona line while tokens stream in.
-  const setLastSona = useCallback((text: string) => {
-    setLog((l) => {
-      const next = [...l];
-      for (let i = next.length - 1; i >= 0; i--) {
-        if (next[i].who === 'sona') { next[i] = { who: 'sona', text }; return next; }
-      }
-      return [...next, { who: 'sona', text }];
-    });
-  }, []);
-
-  const stopAll = useCallback(() => {
-    abortRef.current?.abort();
+  const stopRead = useCallback(() => {
+    readActive.current = false;
     voice.cancel();
-    setBusy(false);
-  }, [voice]);
+    clearHighlight();
+    setReading(false);
+  }, [voice, clearHighlight]);
 
+  const readNext = useCallback(() => {
+    if (!readActive.current) return;
+    const els = readEls.current;
+    const i = readIdx.current;
+    if (i >= els.length) { readActive.current = false; setReading(false); clearHighlight(); return; }
+    clearHighlight();
+    const el = els[i];
+    el.classList.add(HL_CLASS);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setCaption((el.textContent || '').trim().slice(0, 140));
+    voice.speakOne(el.textContent || '', () => {
+      if (!readActive.current) return;
+      readIdx.current = i + 1;
+      readNext();
+    });
+  }, [voice, clearHighlight]);
+
+  const startRead = useCallback(() => {
+    stopRead();
+    ensureHighlightStyle();
+    const nodes = document.querySelectorAll(
+      '.prep-content h1, .prep-content h2, .prep-content h3, .prep-content h4, .prep-content p, .prep-content li',
+    );
+    const els = (Array.from(nodes) as HTMLElement[]).filter(
+      (e) => (e.textContent || '').trim().length > 1 && e.offsetParent !== null,
+    );
+    if (!els.length) { setCaption('No readable content found on this topic.'); return; }
+    readEls.current = els;
+    readIdx.current = 0;
+    readActive.current = true;
+    setReading(true);
+    readNext();
+  }, [stopRead, readNext]);
+
+  // ── LLM modes (Teach / Quiz / Ask): short, clean, spoken ──
   const runLLM = useCallback(async (userText: string) => {
     if (!token) return;
-    stopAll();
+    abortRef.current?.abort();
+    voice.cancel();
     setBusy(true);
-    bufferRef.current = '';
+    setCaption('…');
     let full = '';
-    push('sona', '');
     const ctrl = new AbortController();
     abortRef.current = ctrl;
     const question = mode === 'quiz'
@@ -94,56 +142,57 @@ export default function TopicVoiceAgent({ topic, open, onClose, locked = false }
         signal: ctrl.signal,
         onToken: (data: any) => {
           const t = typeof data === 'string' ? data : (data?.t ?? data?.token ?? data?.text ?? data?.content ?? '');
-          if (!t) return;
-          full += t;
-          setLastSona(full);
-          bufferRef.current = voice.flushSentences(bufferRef.current + t);
+          if (t) { full += t; setCaption(clean(full)); }
         },
-        onError: () => { setLastSona(full || 'Sorry — I could not answer that. Please try again.'); },
+        onError: () => { setCaption(clean(full) || 'Sorry — please try again.'); },
         onComplete: () => {},
       } as any);
     } catch {
-      setLastSona(full || 'Sorry — something went wrong. Please try again.');
+      setCaption(clean(full) || 'Sorry — something went wrong.');
     } finally {
-      if (bufferRef.current.trim()) { voice.enqueue(bufferRef.current); bufferRef.current = ''; }
+      const spoken = clean(full);
+      setCaption(spoken || '(no answer)');
+      if (spoken) voice.speak(spoken);        // speak the whole short, clean reply
       setBusy(false);
-      if (mode === 'quiz' && quizQuestions.length) {
-        setQuizIdx((i) => (i + 1) % quizQuestions.length);
-      }
+      if (mode === 'quiz' && quizQuestions.length) setQuizIdx((n) => (n + 1) % quizQuestions.length);
     }
-  }, [token, mode, quizIdx, quizQuestions, systemContext, voice, push, setLastSona, stopAll]);
+  }, [token, mode, quizIdx, quizQuestions, systemContext, voice]);
 
   const onMicText = useCallback((text: string) => {
     const t = text.trim();
     if (!t) return;
-    voice.cancel(); // barge-in: never talk over the user
-    push('you', t);
-    if (mode !== 'read') runLLM(t);
-  }, [mode, runLLM, voice, push]);
-
-  const startRead = useCallback(() => {
-    stopAll();
-    setLog([]);
-    for (const b of readBlocks) { push('sona', b); voice.enqueue(b); }
-  }, [readBlocks, voice, push, stopAll]);
+    voice.cancel();               // barge-in
+    setCaption(`“${t}”`);
+    runLLM(t);
+  }, [runLLM, voice]);
 
   const askQuizQuestion = useCallback(() => {
     const q = quizQuestions[quizIdx];
     if (!q) return;
     voice.cancel();
-    push('sona', q);
+    setCaption(q);
     voice.speak(q);
-  }, [quizQuestions, quizIdx, voice, push]);
-
-  const teachOpener = useCallback(() => {
-    runLLM('Teach me this topic from the beginning, as if I am new to it.');
-  }, [runLLM]);
+  }, [quizQuestions, quizIdx, voice]);
 
   const switchMode = useCallback((m: VoiceMode) => {
-    stopAll();
+    stopRead();
+    voice.cancel();
     setMode(m);
-    setLog([]);
-  }, [stopAll]);
+    setCaption('');
+  }, [stopRead, voice]);
+
+  const handleClose = useCallback(() => {
+    stopRead();
+    voice.cancel();
+    onClose();
+  }, [stopRead, voice, onClose]);
+
+  // Cleanup on unmount / close so highlights never linger on the page.
+  useEffect(() => {
+    if (!open) { stopRead(); voice.cancel(); }
+    return () => { readActive.current = false; clearHighlight(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
@@ -155,105 +204,67 @@ export default function TopicVoiceAgent({ topic, open, onClose, locked = false }
       role="dialog"
       aria-label={`Voice — ${topic?.title || 'topic'}`}
       style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(440px, 100vw)',
-        zIndex: 60, display: 'flex', flexDirection: 'column',
-        background: 'var(--bg-elevated)', borderLeft: '1px solid var(--cam-gold-leaf)',
-        boxShadow: '-12px 0 40px -20px rgba(20,20,40,0.5)',
+        position: 'fixed', left: '50%', bottom: 16, transform: 'translateX(-50%)',
+        width: 'min(720px, 96vw)', zIndex: 60,
+        background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf)',
+        borderRadius: 14, boxShadow: '0 18px 50px -22px rgba(20,20,40,0.55)',
+        padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8,
       }}
     >
-      {/* Header */}
-      <div className="cam-hero-strip" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px' }}>
-        <span style={{ display: 'inline-flex', width: 28, height: 28, borderRadius: '50%', background: 'var(--cam-primary)', color: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="sparkles" />
+      {/* Row 1 — modes + actions + mic + close */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ display: 'inline-flex', width: 26, height: 26, borderRadius: '50%', background: 'var(--cam-primary)', color: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Icon name="sparkles" size={14} />
         </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-eyebrow" style={{ color: 'var(--cam-gold-leaf-text)' }}>Sona · Voice</div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {topic?.title || 'This topic'}
-          </div>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {MODES.map((m) => (
+            <button key={m.id} type="button" className={`chip ${mode === m.id ? 'chip-active' : ''}`} onClick={() => switchMode(m.id)}>
+              {m.label}
+            </button>
+          ))}
         </div>
-        <button type="button" className="btn-ghost" onClick={() => { stopAll(); onClose(); }} aria-label="Close voice agent">
-          <Icon name="x" />
-        </button>
-      </div>
 
-      {/* Mode selector (chips) */}
-      <div style={{ padding: '10px 12px', gap: 6, display: 'flex', borderBottom: '1px solid var(--border)' }}>
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className={`chip ${mode === m.id ? 'chip-active' : ''}`}
-            onClick={() => switchMode(m.id)}
-          >
-            {m.label}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {mode === 'read' && (
+            reading
+              ? <button type="button" className="btn-secondary" onClick={stopRead}>■ Stop</button>
+              : <button type="button" className="btn-primary" onClick={startRead}>▶ Read aloud</button>
+          )}
+          {mode === 'quiz' && !llmLocked && (
+            <button type="button" className="btn-primary" onClick={askQuizQuestion} disabled={busy}>New question</button>
+          )}
+          {(mode === 'teach' || mode === 'quiz' || mode === 'ask') && !llmLocked && (
+            voice.speaking
+              ? <button type="button" className="btn-secondary" onClick={voice.cancel}>■ Stop</button>
+              : mode === 'teach'
+                ? <button type="button" className="btn-primary" onClick={() => runLLM('Teach me this topic — the single most important idea.')} disabled={busy}>{busy ? 'Thinking…' : '▶ Teach'}</button>
+                : null
+          )}
+          {/* Mic — prominent, click-to-talk (no auto-start) for the conversational modes */}
+          {(mode === 'teach' || mode === 'quiz' || mode === 'ask') && !llmLocked && (
+            <SonaMicButton onText={onMicText} disabled={busy} />
+          )}
+          <button type="button" className="btn-ghost" onClick={handleClose} aria-label="Close voice">
+            <Icon name="x" size={15} />
           </button>
-        ))}
+        </div>
       </div>
 
-      {/* Transcript */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {log.length === 0 && (
-          <p className="text-caption" style={{ color: 'var(--text-muted)' }}>
-            {mode === 'read' && 'Press Play and Sona will read this topic aloud.'}
-            {mode === 'teach' && 'Press Start and Sona will teach this topic — tap the mic anytime to ask.'}
-            {mode === 'quiz' && 'Press New question, answer out loud, and Sona will grade you.'}
-            {mode === 'ask' && 'Tap the mic and ask Sona anything about this topic.'}
-          </p>
-        )}
-        {log.map((line, i) => (
-          <div
-            key={i}
-            style={{
-              alignSelf: line.who === 'you' ? 'flex-end' : 'flex-start',
-              maxWidth: '85%', padding: '8px 11px', borderRadius: 12,
-              fontSize: 13, lineHeight: 1.5,
-              background: line.who === 'you' ? 'var(--cam-primary)' : 'var(--bg-surface)',
-              color: line.who === 'you' ? '#fff' : 'var(--text-primary)',
-              border: line.who === 'you' ? 'none' : '1px solid var(--border)',
-            }}
-          >
-            {line.text || '…'}
-          </div>
-        ))}
-      </div>
-
-      {/* Controls */}
-      <div style={{ borderTop: '1px solid var(--border)', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        {!voice.supported && (
-          <span className="text-caption" style={{ color: 'var(--warning-text)' }}>
-            This browser can’t speak aloud — showing the transcript instead.
+      {/* Row 2 — one-line status / caption */}
+      <div style={{ minHeight: 20, fontSize: 12.5, lineHeight: 1.5, color: 'var(--text-secondary)' }}>
+        {llmLocked ? (
+          <span>Teach, Quiz and Ask need a subscription — <a href="/pricing" style={{ color: 'var(--cam-primary)', fontWeight: 600 }}>upgrade</a>, or use <button type="button" className="btn-ghost" style={{ padding: 0, color: 'var(--cam-primary)' }} onClick={() => switchMode('read')}>Read</button> (free).</span>
+        ) : !voice.supported ? (
+          <span style={{ color: 'var(--warning-text)' }}>This browser can’t speak aloud — text only.</span>
+        ) : caption ? (
+          <span style={{ color: 'var(--text-primary)' }}>{caption}</span>
+        ) : (
+          <span style={{ color: 'var(--text-muted)' }}>
+            {mode === 'read' && 'Reads this topic aloud and highlights each part as it goes.'}
+            {mode === 'teach' && 'Tap Teach for a 20-second explainer, or ask via the mic.'}
+            {mode === 'quiz' && 'Tap New question, then answer out loud with the mic.'}
+            {mode === 'ask' && 'Tap the mic and ask anything about this topic.'}
           </span>
-        )}
-        {voice.supported && llmLocked && (
-          <div className="text-caption" style={{ color: 'var(--text-secondary)' }}>
-            Teach, Quiz, and Ask need a subscription. <a href="/pricing" style={{ color: 'var(--cam-primary)', fontWeight: 600 }}>Upgrade</a> — or use <button type="button" className="btn-ghost" style={{ padding: 0 }} onClick={() => switchMode('read')}>Read</button> (free).
-          </div>
-        )}
-        {voice.supported && !llmLocked && (
-          <>
-            {mode === 'read' && (
-              voice.speaking
-                ? <button type="button" className="btn-secondary" onClick={voice.cancel}>Stop</button>
-                : <button type="button" className="btn-primary" onClick={startRead}>▶ Play</button>
-            )}
-            {mode === 'teach' && (
-              <button type="button" className="btn-primary" onClick={teachOpener} disabled={busy}>
-                {busy ? 'Sona is speaking…' : '▶ Start lesson'}
-              </button>
-            )}
-            {mode === 'quiz' && (
-              <button type="button" className="btn-primary" onClick={askQuizQuestion} disabled={busy}>New question</button>
-            )}
-            {(mode === 'teach' || mode === 'quiz' || mode === 'ask') && (
-              <div style={{ marginLeft: 'auto' }}>
-                <SonaMicButton onText={onMicText} autoMode disabled={busy} />
-              </div>
-            )}
-            {(mode === 'teach' || mode === 'ask' || busy) && voice.speaking && (
-              <button type="button" className="btn-ghost" onClick={voice.cancel} style={{ marginLeft: 'auto' }}>Stop voice</button>
-            )}
-          </>
         )}
       </div>
     </div>
