@@ -800,10 +800,17 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     }
   }
 
-  // Pitch Sections
-  if (data.pitchSections || data.chSections) {
-    mark('pitchSections', 'chSections');
-    const sections = data.pitchSections || data.chSections;
+  // Pitch Sections — accept the canonical `pitchSections` key plus loose
+  // aliases some generations emit (`chSections`, a bare `pitch` array) so the
+  // elevator pitch always renders here (first, as numbered cards) instead of
+  // falling through to the generic catch-all at the bottom of the builder.
+  const pitchArr =
+    data.pitchSections ||
+    data.chSections ||
+    (Array.isArray(data.pitch) && data.pitch.some((p: any) => p && typeof p === 'object' && (p.bullets || p.title)) ? data.pitch : null);
+  if (pitchArr) {
+    mark('pitchSections', 'chSections', 'pitch');
+    const sections = pitchArr;
     els.push(
       <div key="pitch" className="space-y-4">
         {sections.map((s: any, i: number) => (
@@ -2072,7 +2079,12 @@ const FormattedJD = ({ text }: { text: string }) => {
   const isHeader = (line: string): boolean => {
     const t = line.trim();
     if (!t || t.length > 80) return false;
-    if (SECTION_PATTERNS.some(p => p.test(t))) return true;
+    // A line that reads as a full sentence (terminal punctuation, or simply
+    // long) is body content even when it opens with a section keyword — e.g.
+    // "Experience with cloud services and distributed data structures."
+    // Without this guard such lines become empty, title-only JD cards.
+    const looksLikeSentence = /[.!?]$/.test(t) || t.length > 55;
+    if (SECTION_PATTERNS.some(p => p.test(t)) && !looksLikeSentence) return true;
     // Title-case short lines without punctuation at end
     if (t.length < 50 && !t.endsWith('.') && !t.endsWith(',') && !t.startsWith('-') && !t.startsWith('•') && /^[A-Z]/.test(t) && !/^\d/.test(t)) {
       const words = t.split(/\s+/);
@@ -2271,6 +2283,45 @@ const FormattedJD = ({ text }: { text: string }) => {
     }
   }
 
+  // Render the JD as scannable bullet points: split each paragraph into
+  // sentences and promote every one to its own bullet (common abbreviations
+  // like "e.g." / "Ph.D." / "U.S." are shielded from the split). Existing
+  // bullet / numbered items pass through untouched. Any card that ends up
+  // with no body (a stray heading) is dropped so no empty cards render.
+  const splitSentences = (raw: string): string[] => {
+    const ABBR = /^(e\.g|i\.e|etc|vs|approx|Dr|Mr|Mrs|Ms|Ph\.D|U\.S|Inc|Ltd|Corp|Sr|Jr|No)$/i;
+    const s = String(raw);
+    const out: string[] = [];
+    let buf = '';
+    for (let i = 0; i < s.length; i++) {
+      buf += s[i];
+      if (/[.!?]/.test(s[i])) {
+        const rest = s.slice(i + 1);
+        const nextChar = (rest.match(/\S/) || [''])[0];
+        const brokeOnSpace = rest.length === 0 || /^\s/.test(rest);
+        if (brokeOnSpace && /[A-Z("“]/.test(nextChar)) {
+          const lastWord = (buf.trim().match(/(\S+)[.!?]$/) || ['', ''])[1];
+          if (!ABBR.test(lastWord)) { out.push(buf.trim()); buf = ''; }
+        }
+      }
+    }
+    if (buf.trim()) out.push(buf.trim());
+    return out.filter(Boolean);
+  };
+  const bulleted: ContentSection[] = content
+    .map((sec) => {
+      const items: JDItem[] = [];
+      for (const it of sec.items) {
+        if (it.kind === 'para') {
+          for (const sentence of splitSentences(it.text)) items.push({ text: sentence, kind: 'bullet' });
+        } else {
+          items.push(it);
+        }
+      }
+      return { ...sec, items };
+    })
+    .filter((sec) => sec.items.length > 0);
+
   // Section type → glyph. The chrome is identical across every section
   // (navy strip + gold-leaf border + glassy pill label, per docs design
   // system); the glyph + uppercase title is what distinguishes a section
@@ -2382,7 +2433,7 @@ const FormattedJD = ({ text }: { text: string }) => {
         </div>
       )}
 
-      {content.map((sec, i) => {
+      {bulleted.map((sec, i) => {
         const tone = (sec as any).color as 'warning' | 'success' | 'muted' | undefined;
         const icon = iconForSection(sec.title, tone);
         return (
@@ -2971,7 +3022,18 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     toGenerate.forEach(s => { initStatus[s] = 'generating'; });
     setSectionStatus(prev => ({ ...prev, ...initStatus }));
 
-    await Promise.allSettled(toGenerate.map(s => generateOneSection(s)));
+    // Bounded concurrency: each section is one Gemini call server-side, and the
+    // free tier rate-limits bursts. Run a small pool (was: all-at-once, which
+    // 429'd every section but the first) so every section actually completes.
+    const POOL = 4;
+    const queue = [...toGenerate];
+    const worker = async () => {
+      while (queue.length) {
+        const s = queue.shift();
+        if (s) await generateOneSection(s);
+      }
+    };
+    await Promise.allSettled(Array.from({ length: Math.min(POOL, queue.length) }, worker));
     setGenerating(false);
   }, [state.jd, state.resume, state.coverLetter, state.prepMaterials, state.studyDocs, token, generateOneSection, selectedSections]);
 
