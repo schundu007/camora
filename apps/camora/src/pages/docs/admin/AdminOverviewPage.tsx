@@ -122,7 +122,7 @@ export default function AdminOverviewPage() {
         </p>
         <ul className="list-disc pl-6 space-y-2 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
           <li><Link to="/admin/teams" className="text-[var(--accent)] underline">/admin/teams</Link> — every team + pending refund queue + auto-topup kill switches.</li>
-          <li><Link to="/analytics" className="text-[var(--accent)] underline">/analytics</Link> — page views, user list, grant trial.</li>
+          <li><Link to="/admin" className="text-[var(--accent)] underline">/admin</Link> — page views, user list, grant trial.</li>
           <li><code>/api/v1/teams/admin/*</code> — REST surface for the admin dashboard.</li>
         </ul>
       </section>

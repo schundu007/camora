@@ -313,6 +313,16 @@ const CapraRootRedirect = () => {
   return <Navigate to={tail ? `${target}?${tail}` : target} replace />;
 }
 
+/**
+ * The admin dashboard now lives at /admin. /analytics is kept as a redirect
+ * alias so old bookmarks and the ?tab= deep links (e.g. /analytics?tab=users)
+ * still resolve to the right tab.
+ */
+const AnalyticsAliasRedirect = () => {
+  const { search } = useLocation();
+  return <Navigate to={`/admin${search}`} replace />;
+}
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, onboardingCompleted, hasResume } = useAuth();
   const location = useLocation();
@@ -617,7 +627,8 @@ export const App = () => {
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
           {/* ── Analytics ─────────────────────────────── */}
-          <Route path="/analytics" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
+          <Route path="/admin" element={<ShellRoute><AnalyticsPage /></ShellRoute>} />
+          <Route path="/analytics" element={<AnalyticsAliasRedirect />} />
 
           {/* ── Company Questions ─────────────── */}
           <Route path="/company-questions/:company" element={<CompanyQuestionsPage />} />
