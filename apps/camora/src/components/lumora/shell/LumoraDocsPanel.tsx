@@ -2927,6 +2927,11 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
     let result: any = null;
     let chunks = '';
     let buffer = '';
+    // Capture a backend-sent error (daily limit, auth, generation failure)
+    // instead of swallowing it — previously the error was thrown inside the
+    // JSON.parse try/catch and eaten, so every failure surfaced as the
+    // useless "No content received". Surface the real message instead.
+    let streamError: string | null = null;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -2941,7 +2946,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           const parsed = JSON.parse(t.slice(6));
           if (parsed.done && parsed.result) result = parsed.result;
           else if (parsed.chunk) chunks += parsed.chunk;
-          else if (parsed.error) throw new Error(parsed.error);
+          else if (parsed.error) streamError = String(parsed.error);
         } catch {}
       }
     }
@@ -2951,10 +2956,12 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         const parsed = JSON.parse(buffer.trim().slice(6));
         if (parsed.done && parsed.result) result = parsed.result;
         else if (parsed.chunk) chunks += parsed.chunk;
+        else if (parsed.error) streamError = String(parsed.error);
       } catch {}
     }
 
     if (result) return formatPrepContent(result);
+    if (streamError) return { __error: streamError };
     if (chunks) { try { return formatPrepContent(JSON.parse(chunks)); } catch { return formatPrepContent(chunks); } }
     return null;
   };
@@ -3005,6 +3012,12 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
       }
 
       const content = await readSSE(res);
+      if (content && (content as any).__error) {
+        // Backend told us why (daily limit, auth, generation failure) — show it.
+        setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: { summary: (content as any).__error } } }));
+        setSectionStatus(prev => ({ ...prev, [section]: 'error' }));
+        return;
+      }
       setState(prev => ({ ...prev, sections: { ...prev.sections, [section]: content || { summary: `No content received for ${label}` } } }));
       setSectionStatus(prev => ({ ...prev, [section]: content ? 'done' : 'error' }));
     } catch {

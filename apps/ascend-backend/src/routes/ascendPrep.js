@@ -5,7 +5,7 @@ import * as pythonDiagrams from '../services/pythonDiagrams.js';
 import { verifyJWT } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
-import { cacheGet, cacheSet } from '../services/redis.js';
+import { cacheGet, cacheSet, cacheKeys } from '../services/redis.js';
 
 const router = Router();
 
@@ -25,10 +25,27 @@ const PREP_DAILY_LIMIT_PAID = 3;
 // /api/ascend/prep call hits ascendPrepService which is the heaviest
 // Claude path in the codebase, so unrestricted access here was the
 // single biggest LLM-cost leak.
-async function checkPrepDailyLimit(userId, isPaid, email) {
+async function checkPrepDailyLimit(userId, isPaid, email, companyName) {
   if (email && ADMIN_EMAILS.includes(email.toLowerCase())) return true;
   const today = new Date().toISOString().slice(0, 10);
   const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
+
+  // Per-section generation fans out ~7 parallel requests for ONE prep (one
+  // company). Counting each section would blow the daily limit on a single
+  // "Generate all" click. When a company is known, dedupe by company so the
+  // whole fan-out counts as ONE prep. Parallel calls write the SAME company
+  // key, so the increment is idempotent and race-safe.
+  if (companyName) {
+    const company = String(companyName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'x';
+    const myKey = `prep_daily_co:${userId}:${today}:${company}`;
+    if (await cacheGet(myKey)) return true; // this prep already counted today
+    const existing = await cacheKeys(`prep_daily_co:${userId}:${today}:*`);
+    if ((existing?.length || 0) >= limit) return false;
+    await cacheSet(myKey, 1, 86400);
+    return true;
+  }
+
+  // Bulk /generate — a single request already represents one prep.
   const key = `prep_daily:${userId}:${today}`;
   const count = (await cacheGet(key)) || 0;
   if (count >= limit) return false;
@@ -280,7 +297,7 @@ router.post('/section', async (req, res) => {
 
   // Check daily prep limit
   const isPaidSection = req.featureAccess?.hasSubscription || false;
-  if (!(await checkPrepDailyLimit(req.userId, isPaidSection, req.userEmail || req.user?.email))) {
+  if (!(await checkPrepDailyLimit(req.userId, isPaidSection, req.userEmail || req.user?.email, req.body?.companyName))) {
     const limit = isPaidSection ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
     res.setHeader('Content-Type', 'text/event-stream');
     res.write(`data: ${JSON.stringify({
