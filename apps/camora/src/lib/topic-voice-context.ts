@@ -61,13 +61,16 @@ export function buildSystemContext(topic: TopicLike): string {
 
 /** Per-mode instruction prepended to the model context. */
 export function buildDirective(mode: VoiceMode): string {
+  // Every reply is spoken aloud AND shown as a short caption, so brevity and
+  // plain text (no markdown/headings/bullets/bold/code) are hard requirements.
+  const PLAIN = 'Reply in plain spoken English only: no markdown, no #headings, no **bold**, no bullet points, no code fences.';
   switch (mode) {
     case 'teach':
-      return 'You are Sona, a friendly expert tutor. Explain this topic clearly and conversationally in short spoken sentences (your reply is read aloud). Plain language, no markdown, no code fences. Keep it under ~150 words unless asked to go deeper.';
+      return `You are Sona, a friendly expert tutor. Teach this topic in at most 3 short sentences (≤60 words total) — the single most important idea, crisply. ${PLAIN} If the learner asks to go deeper, add one more short point.`;
     case 'quiz':
-      return 'You are Sona running an active-recall quiz. The user just answered aloud. Grade their answer briefly — say Correct, Partly right, or Not quite, give the single most important correction, then stop. Plain spoken sentences, no markdown.';
+      return `You are Sona running an active-recall quiz. The user just answered aloud. In ONE or TWO short sentences: say Correct, Partly right, or Not quite, then the single most important correction. ${PLAIN}`;
     case 'ask':
-      return "You are Sona, a topic tutor. Answer the user's spoken question using the topic context below. Be concise and conversational (read aloud). Plain sentences, no markdown, no code fences.";
+      return `You are Sona, a topic tutor. Answer the user's spoken question about this topic in at most 3 short sentences. ${PLAIN}`;
     case 'read':
     default:
       return 'Narrate the provided content in a natural speaking cadence.';
