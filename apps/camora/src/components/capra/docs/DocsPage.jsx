@@ -786,6 +786,12 @@ export default function DocsPage({ onBack }) {
     else if (activePage === 'ddia') topics = ddiaTopics;
     else return [];
 
+    // Drop any falsy entries. heavyData is seeded from a cached payload, and
+    // JSON round-tripping turns an `undefined` array slot into `null` — a
+    // single null topic would white-screen every category renderer that reads
+    // `t.id`. Keep the array dense so no downstream consumer ever sees a hole.
+    topics = (topics || []).filter(Boolean);
+
     // Apply role-based filtering when navigating from a job prep page
     const roleFilteredIds = getRoleFilteredIds(activePage);
     if (roleFilteredIds) {
@@ -3281,8 +3287,8 @@ export default function DocsPage({ onBack }) {
                 return (
                   <div className="mb-6">
                     <div className="space-y-3">
-                    {catMap.cats.map((category) => {
-                      const categoryTopics = filteredTopics.filter(t => catMap.map[t.id] === category.id);
+                    {catMap.cats.filter(Boolean).map((category) => {
+                      const categoryTopics = filteredTopics.filter(t => t && catMap.map[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
