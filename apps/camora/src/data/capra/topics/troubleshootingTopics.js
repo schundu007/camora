@@ -1416,8 +1416,7 @@ The describe output shows \`FailedGetScale\` or \`AbleToScale\` conditions with 
       'https://keda.sh/docs/2.12/concepts/',
     ],
   },
-,
-{
+  {
     id: 'ts-lambda-cold-starts',
     title: 'Lambda Cold Start Latency',
     icon: 'cloud',
