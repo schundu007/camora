@@ -21,6 +21,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../hooks/useTheme';
 import { useCelebration } from '../../shared/Celebration';
 import { generateSlug, getProblemBySlug } from '../../../data/capra/problems.js';
+import { SQL_PROBLEM_TITLES } from '../../../data/capra/sqlProblemTitles.ts';
 import { useCloudFormatter } from '../../../hooks/useCloudFormatter.ts';
 import CloudProviderSelector from '../../shared/CloudProviderSelector.tsx';
 import {
@@ -1756,18 +1757,23 @@ export default function TopicDetail({
                   // /playground?tab=sql), which reads ?sqlProblem=<title> and
                   // preloads it. The old /capra/practice?view=sql-editor target
                   // was a view that no longer exists → blank page.
+                  // SQL items only get a Solve deep-link when the problem
+                  // actually exists in the interactive catalog. Open-ended
+                  // concept/design prompts (no schema → expected output) render
+                  // as a non-clickable study item instead of opening a wrong
+                  // problem.
+                  const solvable = isSqlTopic
+                    ? SQL_PROBLEM_TITLES.has(problemName.toLowerCase())
+                    : true;
                   const href = isSqlTopic
                     ? `/playground?tab=sql&sqlProblem=${encodeURIComponent(problemName)}`
                     : `/capra/coding?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
-                  return (
-                    <Link
-                      key={i}
-                      to={href}
-                      className={`grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors cursor-pointer group hover:bg-[var(--bg-elevated)] ${i % 2 === 0 ? 'bg-[var(--bg-surface)]' : 'bg-[var(--bg-elevated)]'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[var(--border)]' : ''}`}
-                    >
+                  const rowClass = `grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-2.5 transition-colors group ${i % 2 === 0 ? 'bg-[var(--bg-surface)]' : 'bg-[var(--bg-elevated)]'} ${i < topicDetails.commonProblems.length - 1 ? 'border-b border-[var(--border)]' : ''}`;
+                  const cells = (
+                    <>
                       <span className="text-xs text-[var(--text-muted)] landing-mono">{i + 1}</span>
-                      <span className="text-sm text-[var(--text-primary)] truncate group-hover:text-[var(--accent)] transition-colors landing-body pr-2">{problemName}</span>
+                      <span className={`text-sm truncate landing-body pr-2 ${solvable ? 'text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors' : 'text-[var(--text-secondary)]'}`}>{problemName}</span>
                       <span className="flex justify-center">
                         {difficulty ? (
                           <Chip variant={
@@ -1778,9 +1784,21 @@ export default function TopicDetail({
                         ) : <span className="text-[var(--text-muted)] text-xs">—</span>}
                       </span>
                       <span className="flex justify-center">
-                        <Chip variant="default">Solve</Chip>
+                        {solvable
+                          ? <Chip variant="default">Solve</Chip>
+                          : <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">Study</span>}
                       </span>
+                    </>
+                  );
+
+                  return solvable ? (
+                    <Link key={i} to={href} className={`${rowClass} cursor-pointer hover:bg-[var(--bg-elevated)]`}>
+                      {cells}
                     </Link>
+                  ) : (
+                    <div key={i} className={rowClass}>
+                      {cells}
+                    </div>
                   );
                 })}
               </div>
