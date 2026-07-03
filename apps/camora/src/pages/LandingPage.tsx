@@ -271,7 +271,7 @@ export default function LandingPage() {
 
         <Container className="relative pt-12 pb-12 md:pt-16 md:pb-16">
           {/* Centered headline block */}
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+          <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
 
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}>
               <Pill tone="accent" withDot>
@@ -280,13 +280,13 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.h1
-              className="mt-4 font-display text-[48px] sm:text-[60px] md:text-[76px] lg:text-[92px] font-bold tracking-[-0.028em] leading-[0.92]"
+              className="mt-4 w-full max-w-5xl font-display text-[26px] sm:text-[48px] md:text-[64px] lg:text-[78px] font-bold tracking-[-0.028em] leading-[1.02]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
             >
-              <span className="block text-[var(--text-primary)]">Apply, prep, practice.</span>
-              <span className="block text-[var(--cam-primary)]">Land the offer.</span>
+              <span className="block whitespace-nowrap text-[var(--text-primary)]">Apply, prep, practice.</span>
+              <span className="block whitespace-nowrap text-[var(--cam-primary)]">Land the offer.</span>
             </motion.h1>
 
             <motion.div
