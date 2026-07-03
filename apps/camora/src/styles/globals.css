@@ -2615,10 +2615,12 @@ figure:has(> .viz-caption) {
   line-height: 1.4;
   padding: 0.1em 0.4em;
   border-radius: 5px;
-  background: var(--bg-elevated);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  color: var(--accent-text);
-  font-weight: 500;
+  /* Commands / inline code always read bold + colored so they stand out
+     from prose in every topic (backtick tokens in topic data). */
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  font-weight: 700;
   font-feature-settings: 'liga' 0;
   white-space: nowrap;
 }
